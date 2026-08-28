@@ -31146,3 +31146,232 @@ read-only Base capability exists, isolated from every Bitcoin capability
 already in this codebase, that a future construction milestone can build
 on top of without having invented any of its own network or account
 observation machinery from scratch.
+
+## 0.8.91 — Explicit Base Publication Transaction Construction
+
+0.8.90 gave this codebase the correct read-only foundation for Base: an
+explicit, real capability that observes a chain and an account, and
+nothing more. This milestone moves from OBSERVING an account to
+explicitly PLANNING a Base publication transaction — narrowly, and
+without ever signing or broadcasting anything.
+
+```text
+ContentReference
+      │
+      ▼
+contentHash
+      │
+      ├──────────────────────┐
+      │                      │
+      ▼                      ▼
+Base account observation   injected Base RPC reads
+(0.8.90, already OBSERVED)   (nonce, gas estimate, fee figures — new)
+      │                      │
+      └──────────┬───────────┘
+                 ▼
+   BasePublicationTransactionPlanner.plan()          (new, base/)
+                 │
+                 ▼
+       Base transaction plan            an UNSIGNED PLAN, not a
+                 │                      transaction
+                 ▼
+             Review                     (a later milestone's own concern)
+```
+
+**Why construction, and why now.** The Bitcoin pipeline (0.8.47 onward)
+already demonstrated the lifecycle a blockchain capability travels:
+funding/account observation, then construction, review, signing,
+finalization, broadcast, confirmation. 0.8.90 reproduced the FIRST stage
+for Base. This milestone reproduces the SECOND — never the whole pipeline
+at once — and answers exactly one question: given an already-OBSERVED
+Base account and a content hash, what would an explicit Base publication
+transaction actually look like? Base's account/gas model is different
+enough from Bitcoin's UTXO/PSBT model that this milestone builds no
+`BitcoinAnchorTransactionPlan`-shaped clone for it — see "No generic
+BlockchainTransactionPlan" below.
+
+**The key architectural decision: an ordinary EVM transaction, not a
+smart contract.** A Base publication transaction is, deliberately, plain:
+`from` (the observed account), `to`, `value: 0`, and `data` carrying the
+publication commitment — nothing else, and no `ForkBuildRegistry`
+contract of any kind. `application/BasePublicationCommitmentEncoding.js`
+settles the one encoding question this milestone's own proposal named as
+needing to be settled now, because it becomes part of the durable meaning
+of a Base publication: `data` is the raw `contentHash` bytes,
+`0x`-prefixed, nothing wrapped around them — no ABI encoding, no function
+selector, no ForkBuild-specific tag. This mirrors `anchoring/
+BitcoinAnchorTransactionBuilder.js`'s own OP_RETURN output
+(`{ dataHex: contentHash }`) exactly, one chain over.
+
+**The transaction destination: self-transfer.** `to` is always the
+identical address as `from`. Two other options were considered and
+rejected: a dedicated ForkBuild publication address (rejected — it would
+introduce an address-management problem this codebase would then own
+forever: generating, storing, rotating, and explaining a recipient
+nobody's content is actually "sent to"), and a smart contract (rejected
+outright for this milestone, alongside the "no contract" decision above).
+Self-transfer needs no second party this codebase must maintain, while
+still putting the commitment into a real, priced Base transaction with a
+real, spendable `to` address.
+
+**Fee/gas observation belongs here — and stays a read, never a
+commitment.** Unlike 0.8.90, this milestone extends `base/
+BaseJsonRpcClient.js` with exactly the four further reads a plan needs:
+`eth_getTransactionCount`, `eth_estimateGas`, `eth_gasPrice`,
+`eth_maxPriorityFeePerGas` — six methods wrapped in total, still never
+`eth_sendRawTransaction`. `base/BasePublicationTransactionPlanner.js`
+prices `maxFeePerGas` directly from `eth_gasPrice`'s own "current price"
+quote and carries `maxPriorityFeePerGas` through from
+`eth_maxPriorityFeePerGas` independently — it never reconciles the two
+into a single "correct" number, and never claims a single observed gas
+value is the final network cost; Base's own documentation distinguishes
+L2 execution fees from the L1 security component, and this milestone
+does not pretend otherwise. A plan freezes the values it was constructed
+with: `fee observation ≠ fee commitment ≠ broadcast`. If the network
+changes afterward, that does not silently mutate an existing plan — a
+person creates another one, explicitly, mirroring this codebase's own
+"one explicit action = one explicit attempt."
+
+**No generic `BlockchainTransactionPlan`.** Bitcoin plans in
+`selected inputs`/`fee`/`change`; Base plans in `nonce`/`gas limit`/
+`max fee per gas`/`priority fee`/`value`/`data`. `application/
+BitcoinAnchorTransactionConstructionCoordinator.js` and `application/
+BasePublicationTransactionPlanCoordinator.js` stay two entirely separate
+classes with two entirely separate plan shapes — neither imports the
+other, and neither is squeezed into a shared shape merely to look
+symmetric. Both eventually produce, at a LATER milestone, an
+`application/BlockchainPublicationIdentity.js` (0.8.89) — never here; see
+"No publication identity yet" below.
+
+**No publication identity yet.** A planned transaction is not a
+publication. `base/BasePublicationTransactionPlanner.js` and
+`application/BasePublicationTransactionPlanCoordinator.js` never
+construct an `application/BlockchainPublicationIdentity.js` — there is no
+`chainReference` yet (no transaction hash exists until something is
+actually broadcast), and nothing in this milestone signs, finalizes, or
+broadcasts anything. See docs/Principles.md, "A Transaction Plan Is Not A
+Publication (0.8.91)."
+
+**`nativeBalanceWei`, and every wei-denominated figure this milestone
+reads, stays a decimal-digit string, never a Number.** `gasPriceWei` and
+`maxPriorityFeePerGasWei` are decoded by `base/BaseJsonRpcClient.js`
+through `BigInt`, exactly like `balanceWei` already is (0.8.90); the
+affordability check in `base/BasePublicationTransactionPlanner.js` is
+performed entirely in `BigInt`. `nonce`/`gasLimit` stay plain, safe
+integers, exactly like `chainId` already is — see that file's own header
+on why that is a genuine safety net, not a silent precision loss.
+
+New files:
+- `application/BasePublicationCommitmentEncoding.js` — new;
+  `encodeBasePublicationCommitment(contentHash)` / `decodeBasePublicationCommitment(data)`,
+  the symmetric, lossless, raw-bytes commitment encoding — see this
+  milestone's own "The key architectural decision" above.
+- `application/BasePublicationTransactionPlanState.js` — new;
+  `BasePublicationTransactionPlanState` (frozen `{ IDLE, CONSTRUCTING,
+  CONSTRUCTED, UNAVAILABLE, FAILED }`) and
+  `isValidBasePublicationTransactionPlanState(value)`. UNAVAILABLE (an
+  RPC read failed) and FAILED (every read answered, but the account
+  cannot afford the resulting plan) are deliberately two separate values
+  — never conflated, mirroring the identical distinction `application/
+  BaseNetworkObservationState.js`'s own CHAIN_MISMATCH/UNAVAILABLE
+  already draws one milestone earlier.
+- `base/BasePublicationTransactionPlanner.js` — new;
+  `BasePublicationTransactionPlanner#plan({ contentHash, address,
+  network, chainId, nativeBalanceWei })`, the async coordinator wiring an
+  injected `rpcSource` (any object shaped like the four new `base/
+  BaseJsonRpcClient.js` methods) into a raw plan result. Self-transfer,
+  fee-figures-as-read, never signs or broadcasts — see this file's own
+  header.
+- `application/BasePublicationTransactionPlanCoordinator.js` — new; the
+  thin, UI-facing bridge from an already-OBSERVED `BaseAccountObservation`
+  plus a caller-supplied `publicationId`/`contentHash` to an already-built
+  plan, mirroring `application/
+  BitcoinAnchorTransactionConstructionCoordinator.js` (0.8.61) exactly,
+  one chain over — asynchronous, unlike that class, because the planner
+  it wraps genuinely awaits real network reads.
+- `application/BasePublicationTransactionPlanView.js` — new;
+  `describeBasePublicationTransactionPlanStateLabel(state)` and
+  `describeBasePublicationTransactionPlan(outcome)`, mirroring
+  `application/BitcoinAnchorTransactionConstructionView.js`'s own shape.
+  Every wei-denominated field stays a string; no `valid`/`safe`/
+  `recommended`/`optimal`/`trusted` field of any kind.
+- `application/CreateBasePublicationTransactionPlannerUseCase.js`,
+  `application/CreateBasePublicationTransactionPlanCoordinatorUseCase.js`
+  — new; the identical composition-root wiring shape every domain class
+  in this codebase already has its own `Create*UseCase.js` for.
+
+Changed:
+- `base/BaseJsonRpcClient.js` — four new wrapped methods:
+  `fetchTransactionCount(address)`, `fetchGasEstimate({ from, to, value,
+  data })`, `fetchGasPrice()`, `fetchMaxPriorityFeePerGas()`. Still never
+  throws for an operational failure; still never wraps
+  `eth_sendRawTransaction`.
+- `ui/views/DecentralizedPublicationsView.js` — a new, per-publication
+  "Base Publication Transaction" card (rendered only when
+  `basePublicationTransactionPlanCoordinator` is provided), mirroring the
+  "Bitcoin Anchor Transaction" card immediately above it one chain over:
+  an explicit "Create Base Transaction Plan" action, disabled until a
+  Base account has actually been observed (0.8.90's own "Base Network"
+  panel), never re-observing an account on its own. No `[Sign]`/
+  `[Broadcast]` action anywhere in this card.
+- `ui/main.js` — wires `basePublicationTransactionPlanner` and
+  `basePublicationTransactionPlanCoordinator` as real, `app.provide()`d
+  instances, reusing the SAME `baseJsonRpcClient` instance `baseNetworkObserver`
+  already reads through (0.8.90) — one shared RPC client, never a second,
+  disconnected one.
+
+New tests:
+- `tests/BasePublicationTransactionConstruction.test.js` — the commitment
+  encoding's symmetry and rejection of malformed input; `base/
+  BaseJsonRpcClient.js`'s four new methods' real wire behavior against a
+  fake transport; `BasePublicationTransactionPlanner`'s self-transfer
+  semantics, insufficient-balance-vs-unavailable distinction, and
+  caller-contract violations; `BasePublicationTransactionPlanState`'s
+  closed vocabulary; `BasePublicationTransactionPlanCoordinator`'s
+  caller-contract violations, state mapping, and construction
+  immutability; both describe*() views' fixed field sets, with every
+  wei-denominated figure proven to survive end to end as an exact string
+  well past `Number.MAX_SAFE_INTEGER`. Plus two flagship proofs: (1) a
+  real Bitcoin construction pipeline sitting right beside a real Base one
+  never shares a plan shape, is never signed, and never broadcasts
+  anything; (2) a constructed plan is frozen, and a later, unrelated Base
+  construction — against a genuinely different observed nonce and fee
+  figures — never mutates an earlier one.
+
+Deliberately excluded, exactly as this milestone's own proposal named up
+front:
+- **Signing, private-key access, or any wallet signing method.** No
+  `signTransaction()` call anywhere in this milestone — `base/
+  BaseWalletConnection.js` still exposes no signing capability of any
+  kind (0.8.90), and nothing in this milestone asks it to change.
+- **`eth_sendRawTransaction`, broadcast, or confirmation observation.**
+  `base/BaseJsonRpcClient.js` still never wraps a write method — see that
+  file's own header.
+- **A smart contract of any kind, on any chain.** See "The key
+  architectural decision" above.
+- **Automatic gas refresh, automatic plan regeneration, automatic retry,
+  or fee optimization.** A plan is priced once, at construction, from
+  whatever the network reported at that moment — refreshing means
+  constructing again, explicitly.
+- **Transaction replacement, or nonce management beyond the single nonce
+  this plan itself needs.** No "speed up," no "cancel," no nonce
+  reservation across multiple plans.
+- **Persistent transaction queues.** A constructed plan lives in this
+  page's own reactive state, exactly like a Bitcoin construction already
+  does — nothing here is written to any catalog or archive.
+- **Publication identity creation of any kind.** See "No publication
+  identity yet" above.
+- **A `GenericEvmNetworkObserver`/`EvmTransaction`/`EvmPublisher`
+  abstraction, or a generic `BlockchainTransactionPlan`.** See "No
+  generic BlockchainTransactionPlan" above.
+
+What's left, and deliberately unbuilt: this milestone's own proposal
+anticipates the remaining Base lifecycle as its own, separately sized
+future milestones — transaction review, signing, signed-transaction
+verification, broadcast, and confirmation observation — each mirroring
+the identical Bitcoin sequence (0.8.59, 0.8.62–0.8.65) one chain over,
+but no such milestone is designed yet. Only once that complete lifecycle
+exists would this codebase connect a real Base publication into
+`application/PublicationObservationArchive.js` — which observations are
+actually durable is a question this milestone deliberately leaves for
+that later point, exactly as 0.8.90's own header already reserved it.

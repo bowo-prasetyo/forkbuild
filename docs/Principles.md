@@ -16913,3 +16913,75 @@ auto-connects; every observation is a fresh read, never a cached or
 remembered one.
 
 See `docs/Roadmap.md`, 0.8.90, for the full milestone entry.
+
+## A Transaction Plan Is Not A Publication (0.8.91)
+
+**Planning a Base transaction is not publishing anything.**
+`base/BasePublicationTransactionPlanner.js#plan()` and `application/
+BasePublicationTransactionPlanCoordinator.js#construct()` turn an
+already-OBSERVED Base account and a content hash into an unsigned
+transaction plan — a `from`, a `to`, a `value`, a `data` payload, a
+nonce, a gas limit, and fee figures — and stop exactly there. Neither
+class constructs an `application/BlockchainPublicationIdentity.js`
+(0.8.89): there is no `chainReference` yet, because no transaction hash
+exists until something is actually signed and broadcast. This extends
+`docs/Roadmap.md`, 0.8.90's own "No publication identity is manufactured
+by observing an account," one stage further down the same pipeline —
+`content → commitment → transaction plan → review → signed transaction →
+broadcast → observation → publication identity`, and this milestone
+builds exactly one of those arrows, the third.
+
+**An ordinary EVM transaction, never a smart contract.** A Base
+publication transaction carries its commitment in transaction `data`,
+exactly as `anchoring/BitcoinAnchorTransactionBuilder.js`'s own OP_RETURN
+output already carries a Bitcoin one — the identical decision made one
+chain later, at the identical narrowness. `application/
+BasePublicationCommitmentEncoding.js` encodes that commitment as the raw
+`contentHash` bytes, `0x`-prefixed, with no ABI encoding, no function
+selector, and no ForkBuild-specific tag — none of which this milestone's
+own transaction has anything to execute or interpret them, since no
+contract exists to receive them.
+
+**Self-transfer, not a maintained recipient.** `to` is always the
+identical address as `from`. A dedicated ForkBuild publication address
+was considered and rejected — it would make this codebase responsible
+for generating, storing, rotating, and explaining a recipient address
+forever, for a "destination" content is not conceptually sent to at all.
+Self-transfer needs no second party of any kind, while still producing a
+real, priced Base transaction.
+
+**Fee observation is a read, never a commitment, and a plan freezes what
+it was built from.** `base/BasePublicationTransactionPlanner.js` reads a
+nonce, a gas estimate, and current fee figures at the moment `plan()` is
+called, and every field the resulting `construction` carries is frozen
+immediately (`application/
+BasePublicationTransactionPlanCoordinator.js#construct()`,
+`Object.freeze()`). If the network's own gas price changes a moment
+later, that never mutates an already-returned plan — a person who wants
+a fresher price calls `construct()` again, explicitly, mirroring this
+codebase's own established discipline that one explicit action produces
+one explicit, immutable result, never a live value that drifts underneath
+whoever is holding it.
+
+**No generic transaction-plan abstraction, even with two chains now
+producing one each.** `application/
+BitcoinAnchorTransactionConstructionCoordinator.js` and `application/
+BasePublicationTransactionPlanCoordinator.js` remain two separate
+classes with two separate result shapes — `{ inputs, outputs, feeSats }`
+for Bitcoin, `{ nonce, gasLimit, maxFeePerGas, maxPriorityFeePerGas,
+value, data }` for Base — never squeezed into one `BlockchainTransactionPlan`
+merely because both now exist. This extends `docs/Roadmap.md`, 0.8.89's
+own rejection of a universal transaction abstraction "from anticipation
+alone" — the two mechanics really are this different, and forcing them
+into a shared shape would only hide that.
+
+**Every wei-denominated figure this milestone reads stays a
+decimal-digit string, end to end.** `base/BaseJsonRpcClient.js` decodes
+`eth_gasPrice`/`eth_maxPriorityFeePerGas` through `BigInt`, exactly as it
+already decodes a native balance (0.8.90); `base/
+BasePublicationTransactionPlanner.js`'s own affordability check —
+whether the observed balance covers the estimated worst-case cost — is
+performed entirely in `BigInt`, never a floating-point `Number`, at any
+point in the pipeline from RPC response to the view a person reads.
+
+See `docs/Roadmap.md`, 0.8.91, for the full milestone entry.

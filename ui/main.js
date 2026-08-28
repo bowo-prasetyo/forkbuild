@@ -67,6 +67,8 @@ import { CreateBaseInjectedProviderWalletAdapterUseCase } from '../application/C
 import { CreateBaseWalletConnectionUseCase } from '../application/CreateBaseWalletConnectionUseCase.js';
 import { CreateBaseJsonRpcClientUseCase } from '../application/CreateBaseJsonRpcClientUseCase.js';
 import { CreateBaseNetworkObserverUseCase } from '../application/CreateBaseNetworkObserverUseCase.js';
+import { CreateBasePublicationTransactionPlannerUseCase } from '../application/CreateBasePublicationTransactionPlannerUseCase.js';
+import { CreateBasePublicationTransactionPlanCoordinatorUseCase } from '../application/CreateBasePublicationTransactionPlanCoordinatorUseCase.js';
 import { CreateBitcoinAnchorBroadcastCoordinatorUseCase } from '../application/CreateBitcoinAnchorBroadcastCoordinatorUseCase.js';
 import { CreateBitcoinAnchorConfirmationCoordinatorUseCase } from '../application/CreateBitcoinAnchorConfirmationCoordinatorUseCase.js';
 import { CreateIpfsRemotePublicationCoordinatorUseCase } from '../application/CreateIpfsRemotePublicationCoordinatorUseCase.js';
@@ -922,6 +924,28 @@ const { baseNetworkObserver } = new CreateBaseNetworkObserverUseCase().execute({
     rpcSource: baseJsonRpcClient
 });
 
+// 0.8.91 — Explicit Base Publication Transaction Construction. Closes the
+// gap 0.8.90's own "What's left, and deliberately unbuilt" named
+// directly: an explicit "Create Base Transaction Plan" action. Reuses the
+// SAME `baseJsonRpcClient` instance `baseNetworkObserver` immediately
+// above already reads through — one shared RPC client, never a second,
+// disconnected one — because `base/BasePublicationTransactionPlanner.js`
+// needs nothing from a Base RPC endpoint that `base/
+// BaseJsonRpcClient.js` doesn't already, honestly, wrap (see that file's
+// own header, "SIX METHODS ARE WRAPPED, AND NO OTHERS").
+// `basePublicationTransactionPlanCoordinator` is a deliberately thin
+// wiring on top of the planner, mirroring exactly how
+// `bitcoinAnchorTransactionConstructionCoordinator` below wires the 0.8.47
+// Bitcoin builder one chain over — see application/
+// BasePublicationTransactionPlanCoordinator.js's own header on why it
+// takes no publicationCatalog and never re-observes an account itself.
+const { basePublicationTransactionPlanner } = new CreateBasePublicationTransactionPlannerUseCase().execute({
+    rpcSource: baseJsonRpcClient
+});
+const { coordinator: basePublicationTransactionPlanCoordinator } = new CreateBasePublicationTransactionPlanCoordinatorUseCase().execute({
+    basePublicationTransactionPlanner
+});
+
 // 0.8.61 — Explicit Bitcoin Anchor Transaction Construction UI. Closes the
 // gap 0.8.60's own "Deliberately excluded" list named directly: "wiring a
 // 'Create Transaction Plan' action into this page." `bitcoinAnchorTransactionBuilder`
@@ -1105,6 +1129,8 @@ app.provide('bitcoinWalletFundingObserver', bitcoinWalletFundingObserver);
 // 0.8.90 — Explicit Base Network & Account Observation.
 app.provide('baseWalletConnection', baseWalletConnection);
 app.provide('baseNetworkObserver', baseNetworkObserver);
+// 0.8.91 — Explicit Base Publication Transaction Construction.
+app.provide('basePublicationTransactionPlanCoordinator', basePublicationTransactionPlanCoordinator);
 // 0.8.61 — Explicit Bitcoin Anchor Transaction Construction UI.
 app.provide('bitcoinAnchorTransactionConstructionCoordinator', bitcoinAnchorTransactionConstructionCoordinator);
 // 0.8.62 — Explicit Reviewed Bitcoin Anchor Signing UI.

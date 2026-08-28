@@ -129,6 +129,8 @@ import { BaseWalletConnectionState } from '../../application/BaseWalletConnectio
 import { describeBaseWalletConnection } from '../../application/BaseWalletConnectionView.js';
 import { BaseNetworkObservationState } from '../../application/BaseNetworkObservationState.js';
 import { describeBaseAccountObservation } from '../../application/BaseAccountObservationView.js';
+import { BasePublicationTransactionPlanState } from '../../application/BasePublicationTransactionPlanState.js';
+import { describeBasePublicationTransactionPlan } from '../../application/BasePublicationTransactionPlanView.js';
 
 // 0.7.5 — Decentralized Publication UX & Resolution.
 // 0.7.6 — Multi-Peer Publication Retrieval & Replication.
@@ -789,6 +791,21 @@ const BITCOIN_ANCHOR_TRANSACTION_CONSTRUCTION_BADGE_CLASSES = {
     [BitcoinAnchorTransactionConstructionState.FAILED]: 'peer-badge--failed'
 };
 
+// 0.8.91 — Explicit Base Publication Transaction Construction. Mirrors
+// BITCOIN_ANCHOR_TRANSACTION_CONSTRUCTION_BADGE_CLASSES immediately above,
+// one chain over, with one addition: UNAVAILABLE reads the identical red
+// FAILED does — unlike BASE_ACCOUNT_OBSERVATION_BADGE_CLASSES's own
+// CHAIN_MISMATCH (a real, non-actionable fact about which network a
+// wallet happens to be on), an unreachable RPC endpoint while pricing a
+// plan is exactly the actionable, retry-now failure every other
+// UNAVAILABLE badge on this page already reads red for.
+const BASE_PUBLICATION_TRANSACTION_PLAN_BADGE_CLASSES = {
+    [BasePublicationTransactionPlanState.CONSTRUCTING]: 'peer-badge--pending',
+    [BasePublicationTransactionPlanState.CONSTRUCTED]: 'peer-badge--authenticated',
+    [BasePublicationTransactionPlanState.UNAVAILABLE]: 'peer-badge--failed',
+    [BasePublicationTransactionPlanState.FAILED]: 'peer-badge--failed'
+};
+
 // 0.8.68 — Explicit Remote IPFS Publishing Configuration & UX. Mirrors
 // BITCOIN_ANCHOR_BROADCAST_BADGE_CLASSES immediately above exactly, one
 // external boundary over: PUBLISHING reads pending, PUBLISHED reads the
@@ -1012,6 +1029,19 @@ export default {
         // explicitly-triggered observation, never a background poll.
         const baseWalletConnection = inject('baseWalletConnection', null);
         const baseNetworkObserver = inject('baseNetworkObserver', null);
+        // 0.8.91 — Explicit Base Publication Transaction Construction.
+        // Optional — absent here, no "Create Base Transaction Plan" action
+        // ever renders, the identical degrade-gracefully posture every
+        // optional coordinator on this page already holds. ONE shared
+        // instance, exactly like `bitcoinAnchorTransactionConstructionCoordinator`
+        // below: constructing a plan for one publication uses no state
+        // that is specific to any other. See application/
+        // BasePublicationTransactionPlanCoordinator.js's own header on why
+        // this never observes an account itself — this page still
+        // requires an explicit, already-OBSERVED
+        // `baseAccountObservationState.observation` before "Create Base
+        // Transaction Plan" does anything.
+        const basePublicationTransactionPlanCoordinator = inject('basePublicationTransactionPlanCoordinator', null);
         // 0.8.59/0.8.62 — Explicit Bitcoin Anchor Transaction Review &
         // Signing UI. `bitcoinAnchorTransactionReview` is now this page's
         // OWN reactive holder (declared below, alongside
@@ -3592,6 +3622,68 @@ export default {
             return BASE_ACCOUNT_OBSERVATION_BADGE_CLASSES[view.state] || 'peer-badge--pending';
         }
 
+        function isBaseAccountObserved() {
+            const view = baseAccountObservationView();
+            return Boolean(view && view.state === BaseNetworkObservationState.OBSERVED);
+        }
+
+        // 0.8.91 — Explicit Base Publication Transaction Construction.
+        //
+        // The ONE place this page ever calls
+        // `basePublicationTransactionPlanCoordinator.construct()` — never
+        // triggered automatically by observing or refreshing a Base
+        // account, never on page load, and never re-run on a timer; only
+        // an explicit "Create Base Transaction Plan" click, exactly one
+        // entry at a time. Unlike `constructBitcoinAnchorTransaction()`
+        // below (fully synchronous), `construct()` here genuinely awaits
+        // real Base RPC reads — CONSTRUCTING is set before the call and
+        // replaced by whatever the coordinator resolves to.
+        //
+        // Uses the account observation exactly as last observed —
+        // `baseAccountObservationState.observation` — never a fresher one
+        // fetched here; see application/
+        // BasePublicationTransactionPlanCoordinator.js's own header on why
+        // staleness is never silently resolved by re-observing on this
+        // entry's behalf.
+        //
+        // A thrown error (a caller-contract violation — e.g. no account
+        // has been observed at all yet) is caught HERE, at the UI
+        // boundary, and turned into its own honest FAILED outcome —
+        // mirroring exactly how `constructBitcoinAnchorTransaction()`
+        // below already handles its own coordinator's thrown errors.
+        async function constructBasePublicationTransaction(entry) {
+            if (!basePublicationTransactionPlanCoordinator) return;
+            entry.basePublicationTransactionConstruction = { state: BasePublicationTransactionPlanState.CONSTRUCTING, construction: null, reason: null };
+            try {
+                entry.basePublicationTransactionConstruction = await basePublicationTransactionPlanCoordinator.construct({
+                    publicationId: entry.publication.id,
+                    contentHash: entry.publication.contentReference.hash,
+                    accountObservation: baseAccountObservationState.observation
+                });
+            } catch (error) {
+                entry.basePublicationTransactionConstruction = { state: BasePublicationTransactionPlanState.FAILED, construction: null, reason: error.message };
+            }
+        }
+
+        // Pure projection of `entry.basePublicationTransactionConstruction`
+        // through application/BasePublicationTransactionPlanView.js's own
+        // `describeBasePublicationTransactionPlan()` — the identical "the
+        // UI owns no facts of its own, it only projects an injected
+        // collaborator's own result" discipline every other `*View()`
+        // function on this page already holds. `null` whenever nothing
+        // has been constructed for this entry yet — the section below
+        // simply does not render either way.
+        function basePublicationTransactionPlanView(entry) {
+            if (!entry.basePublicationTransactionConstruction) return null;
+            return describeBasePublicationTransactionPlan(entry.basePublicationTransactionConstruction);
+        }
+
+        function basePublicationTransactionPlanBadgeClass(entry) {
+            const view = basePublicationTransactionPlanView(entry);
+            if (!view) return 'peer-badge--pending';
+            return BASE_PUBLICATION_TRANSACTION_PLAN_BADGE_CLASSES[view.state] || 'peer-badge--pending';
+        }
+
         // 0.8.61 — Explicit Bitcoin Anchor Transaction Construction UI.
         //
         // The ONE place this page ever calls
@@ -5470,6 +5562,10 @@ export default {
             baseWalletConnectionView, baseWalletConnectionBadgeClass, isBaseWalletConnected, isBaseWalletConnecting,
             baseNetworkObserver, baseAccountObservationState, observeBaseAccount,
             baseAccountObservationView, baseAccountObservationBadgeClass, BaseNetworkObservationState,
+            isBaseAccountObserved,
+            basePublicationTransactionPlanCoordinator, constructBasePublicationTransaction,
+            basePublicationTransactionPlanView, basePublicationTransactionPlanBadgeClass,
+            BasePublicationTransactionPlanState,
             bitcoinAnchorTransactionConstructionCoordinator, constructBitcoinAnchorTransaction,
             bitcoinAnchorTransactionConstructionView, bitcoinAnchorTransactionConstructionBadgeClass,
             BitcoinAnchorTransactionConstructionState,
@@ -7571,6 +7667,82 @@ export default {
                                             plan constructed {{ formatWhen(bitcoinAnchorTransactionConstructionView(entry).constructedAt) }}.
                                             The observed funding may already be stale by now — this plan records what it was built from, it
                                             does not claim those inputs are still spendable.
+                                        </p>
+                                    </template>
+                                </template>
+                            </div>
+                        </div>
+
+                        <!-- 0.8.91 — Explicit Base Publication Transaction
+                             Construction. One card per publication, hidden
+                             entirely absent basePublicationTransactionPlanCoordinator
+                             (the identical degrade-gracefully posture every
+                             optional section on this page already holds),
+                             mirroring the "Bitcoin Anchor Transaction" card
+                             immediately above one chain over: it turns an
+                             OBSERVED Base account into an unsigned Base
+                             transaction PLAN — never a signature, never a
+                             broadcast, never itself a publication identity.
+                             "Create Base Transaction Plan" is disabled
+                             until a Base account has actually been
+                             observed (the "Base Network" panel above) —
+                             this card never observes an account on its
+                             own, and never re-observes it, even when the
+                             observation shown there has gone stale since.
+                             See application/
+                             BasePublicationTransactionPlanCoordinator.js's
+                             own header. -->
+                        <div v-if="basePublicationTransactionPlanCoordinator" class="evidence-list">
+                            <div class="evidence-anchor-card">
+                                <div class="evidence-anchor-header">
+                                    <span class="evidence-anchor-type">Base Publication Transaction</span>
+                                    <span v-if="basePublicationTransactionPlanView(entry)" class="peer-badge"
+                                        :class="basePublicationTransactionPlanBadgeClass(entry)">
+                                        {{ basePublicationTransactionPlanView(entry).stateLabel }}
+                                    </span>
+                                </div>
+                                <p class="form-hint form-hint--neutral">
+                                    Turns the Base account observed above into an unsigned, self-transfer
+                                    transaction plan carrying THIS publication's own content hash as raw
+                                    transaction data. Nothing is signed or broadcast by constructing this — it
+                                    only names the nonce, gas limit, and fee figures the account was observed
+                                    with, and the exact bytes the transaction would carry.
+                                </p>
+                                <p v-if="!isBaseAccountObserved()" class="form-hint form-hint--neutral">
+                                    Observe a Base account above before creating a transaction plan.
+                                </p>
+                                <div class="identity-mgmt-actions">
+                                    <button class="action-btn action-btn--primary"
+                                            :disabled="!isBaseAccountObserved() || (basePublicationTransactionPlanView(entry) && basePublicationTransactionPlanView(entry).state === BasePublicationTransactionPlanState.CONSTRUCTING)"
+                                            @click="constructBasePublicationTransaction(entry)">
+                                        {{ basePublicationTransactionPlanView(entry) && basePublicationTransactionPlanView(entry).state === BasePublicationTransactionPlanState.CONSTRUCTING ? 'Constructing…' : 'Create Base Transaction Plan' }}
+                                    </button>
+                                </div>
+
+                                <template v-if="basePublicationTransactionPlanView(entry)">
+                                    <p v-if="basePublicationTransactionPlanView(entry).reason" class="form-hint form-hint--neutral">
+                                        {{ basePublicationTransactionPlanView(entry).reason }}
+                                    </p>
+
+                                    <template v-if="basePublicationTransactionPlanView(entry).state === BasePublicationTransactionPlanState.CONSTRUCTED">
+                                        <dl class="evidence-fields">
+                                            <div class="evidence-field"><dt>Network</dt><dd>{{ basePublicationTransactionPlanView(entry).network }}</dd></div>
+                                            <div class="evidence-field"><dt>Chain ID</dt><dd>{{ basePublicationTransactionPlanView(entry).chainId }}</dd></div>
+                                            <div class="evidence-field"><dt>Content hash</dt><dd>{{ basePublicationTransactionPlanView(entry).contentHash }}</dd></div>
+                                            <div class="evidence-field"><dt>From</dt><dd>{{ shortId(basePublicationTransactionPlanView(entry).from) }}</dd></div>
+                                            <div class="evidence-field"><dt>To</dt><dd>{{ shortId(basePublicationTransactionPlanView(entry).to) }} (self-transfer)</dd></div>
+                                            <div class="evidence-field"><dt>Value</dt><dd>{{ basePublicationTransactionPlanView(entry).value }} wei</dd></div>
+                                            <div class="evidence-field"><dt>Nonce</dt><dd>{{ basePublicationTransactionPlanView(entry).nonce }}</dd></div>
+                                            <div class="evidence-field"><dt>Gas limit</dt><dd>{{ basePublicationTransactionPlanView(entry).gasLimit }}</dd></div>
+                                            <div class="evidence-field"><dt>Max fee per gas</dt><dd>{{ basePublicationTransactionPlanView(entry).maxFeePerGas }} wei</dd></div>
+                                            <div class="evidence-field"><dt>Priority fee</dt><dd>{{ basePublicationTransactionPlanView(entry).maxPriorityFeePerGas }} wei</dd></div>
+                                            <div class="evidence-field"><dt>Data</dt><dd>{{ basePublicationTransactionPlanView(entry).data }}</dd></div>
+                                        </dl>
+                                        <p class="form-hint form-hint--neutral">
+                                            Account observed {{ formatWhen(basePublicationTransactionPlanView(entry).accountObservedAt) }};
+                                            plan constructed {{ formatWhen(basePublicationTransactionPlanView(entry).constructedAt) }}.
+                                            The observed balance and fee figures may already be stale by now — this plan records what
+                                            it was built from, it does not claim the network still prices gas this way.
                                         </p>
                                     </template>
                                 </template>
