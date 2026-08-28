@@ -33680,3 +33680,160 @@ events in the UI, an explicit reference/fork relationship durable enough
 to support `REFERENCED_PUBLICATION`/`FORKED_PUBLICATION`, and — only after
 all of that — a scoring and leaderboard projection the original proposal
 was careful to place last, not first.
+
+## 0.8.103 — Achievement Badge Presentation
+
+0.8.102 named its own next step up front: "a future milestone can compose
+`describeAchievementEvents()` unchanged into a badge view." This milestone
+is that badge view, and nothing more — the key distinction driving it:
+
+> An achievement event is evidence of a threshold crossing; a badge is a
+> human-facing presentation of that achievement.
+
+```text
+Publication Records (0.8.80/0.8.99)
+        │
+        ▼
+Achievement Events (0.8.102) — describeAchievementEvents(), UNCHANGED
+        │
+        ▼
+Achievement Badge View (0.8.103) — describeAchievementBadges()
+    { achievementKind, title, description, icon, earnedAt,
+      sourcePublicationIdentity, sourceAnchorId, index }
+```
+
+**A HUMAN-FACING PRESENTATION OF AN ACHIEVEMENT EVENT, NEVER A SECOND
+ACHIEVEMENT SYSTEM.** `application/AchievementBadgeView.js`'s own
+`describeAchievementBadges()` calls `application/AchievementEvent.js`'s own
+`describeAchievementEvents()` (0.8.102) UNCHANGED and formats its output.
+Every badge's own `achievementKind` is exactly the achievement event's own
+`achievementKind` — never renamed, widened, or narrowed. `AchievementKind`
+still names exactly six values; this milestone invents no seventh. A
+badge's own `title` reuses the achievement event's own `label` verbatim —
+no second wording for the same fact. `description` and `icon` are this
+file's own genuinely new contribution: a longer, human-readable sentence
+and a purely decorative glyph, distinct per achievement kind, and neither
+carries a fact `AchievementEvent.js` did not already state.
+
+**A PROJECTION OVER ALREADY-DURABLE FACTS, NEVER A NEW DURABLE
+COLLECTION.** Exactly like `describeAchievementEvents()` itself,
+`describeAchievementBadges()` is computed fresh, every time, from whatever
+the archive's own `bitcoinAnchorPublicationRecords` and
+`baseAnchorPublicationRecords` already hold. `application/
+PublicationObservationArchive.js` gains nothing from this milestone — no
+tenth collection, no `SCHEMA_VERSION` bump, no new `appendXxx()` method. No
+badge database, no server account, no badge counter, no mutable "earned"
+flag, no expiration, no network call, no scoring, no ranking, no trust
+assessment. If the archive produces six achievement events today, this
+file produces six badges tomorrow after restart — the identical
+byte-for-byte determinism `describeAchievementEvents()` itself already
+guarantees, because this file adds no state of its own for a restart to
+lose.
+
+**`sourcePublicationIdentity` IS THE EXACT INSTANCE THE ACHIEVEMENT EVENT
+ALREADY CARRIES — NEVER RECONSTRUCTED FROM `contentHash`, TIMESTAMPS, OR
+RECORD POSITION.** A badge never rebuilds an identity by hand; it is the
+identical `BlockchainPublicationIdentity` (0.8.89) object the achievement
+event already attributed to the completing record, passed through
+unchanged. That gives a clean chain of attribution: badge → event → exact
+publication identity → exact blockchain identity.
+
+**`sourceAnchorId` IS A NAVIGATION CONVENIENCE, NEVER A SECOND IDENTITY.**
+A Bitcoin publication's own `chainReference` is that record's own `txid`,
+not the `anchorId` this codebase's own Bitcoin lifecycle timeline
+(0.8.81) is keyed by. To let a person follow a Bitcoin badge to that
+already-existing timeline, `describeAchievementBadges()` locates the exact
+originating record — from the SAME `bitcoinAnchorPublicationRecords` array
+`describeAchievementEvents()` already read — using that record's own
+`toBlockchainPublicationIdentity().sameAs()`, the one sanctioned equality
+`BlockchainPublicationIdentity.js` itself defines (0.8.89), and reads that
+record's own `anchorId` off it. This is never a new, general "find a
+Bitcoin record by txid" lookup: `application/
+BitcoinAnchorPublicationRecordHistory.js`'s own header still holds
+`findBitcoinAnchorPublicationRecordByAnchorId()` as "the ONLY lookup this
+file offers," unchanged — this milestone adds no method there, and performs
+a local, one-off identity match entirely within `AchievementBadgeView.js`
+itself. A Base badge needs no such lookup at all: its own `chainReference`
+already IS the `txid` Base's own lifecycle timeline (0.8.101) already keys
+by, so `sourceAnchorId` is always `null` for a Base (or any non-Bitcoin)
+badge, and the UI reaches Base's own lifecycle timeline through
+`sourcePublicationIdentity.chainReference` directly. A Bitcoin record
+absent from the array handed in never yields a fabricated `sourceAnchorId`
+— no match, no guess, `null`.
+
+**NO SCORING, NO RANKING, NO TRUST ASSESSMENT — THE SAME RESTRAINT ONE
+LAYER UP.** No badge carries a `points`, `score`, `rank`, `level`, `tier`,
+`status`, `confidence`, `trusted`, or `valid` field. See `docs/
+Principles.md`, "An Achievement Describes An Attributable Fact, Not A
+Person's Worth (0.8.102)" — a badge is a presentation of that same fact,
+not a new claim about a person's worth.
+
+**UI: AN "ACHIEVEMENTS" CARD ON `DecentralizedPublicationsView.js`,
+COLLAPSED BY DEFAULT, ZERO NETWORK OPERATIONS.** Mirrors the same
+`identity-mgmt-card` / expanded-by-key `reactive()` pattern "Historical
+Bitcoin Anchor Evidence" and "Bitcoin/Base Anchor Publications" above
+already use. Expanding a badge reveals its own exact
+`sourcePublicationIdentity` (blockchain, content hash, chain reference,
+created-at) — badge → achievement event → publication identity — and,
+where this replica can resolve it, a "View Publication Lifecycle Above"
+action that opens the exact same, already-existing Bitcoin or Base
+lifecycle disclosure built in 0.8.81/0.8.101, by the exact same
+anchorId/txid those cards already key on — never a new lifecycle view of
+its own. A Bitcoin badge whose own `sourceAnchorId` could not be resolved
+offers no such link — never a guessed one.
+
+New files:
+- `application/AchievementBadgeView.js` — `describeAchievementBadges(bitcoinAnchorPublicationRecords,
+  baseAnchorPublicationRecords)`, the pure projection composing
+  `describeAchievementEvents()` (0.8.102) unchanged; and
+  `reconstructAchievementBadges(archive)`, the one, thin archive-reading
+  entry point, mirroring `application/AchievementEvent.js`'s own
+  `reconstructAchievementEvents()` exactly.
+
+Changed:
+- `ui/views/DecentralizedPublicationsView.js` — one new "Achievements"
+  card, collapsed by default, reading `reconstructAchievementBadges()`
+  unchanged; no change to any existing card, computation, or durable
+  state.
+- `tests.html` — register the new test file.
+
+New tests:
+- `tests/AchievementBadgeView.test.js` — an empty archive earns no
+  badges; a badge reuses its achievement event's own achievementKind/
+  title/earnedAt/sourcePublicationIdentity/index verbatim; every badge
+  carries a distinct, non-empty description and icon per kind, with
+  `AchievementKind` still closed at six values; `sourceAnchorId` names
+  the exact originating Bitcoin record and is always `null` for Base,
+  never fabricated when no matching record exists; malformed/absent
+  inputs never throw; the flagship two-chains-one-contentHash,
+  out-of-order-timestamps, interleaved-argument-position scenario, proving
+  `sourceAnchorId` is never conflated across chains either;
+  `reconstructAchievementBadges()`'s own reload equivalence through real,
+  persisted storage, with zero network access; and no verdict/score/
+  points/rank vocabulary anywhere in a badge.
+
+Deliberately excluded, for the same reasons 0.8.102 named up front:
+- **Points, scores, achievement levels, and any leaderboard or ranking
+  projection.** Still real, separately sized future work — see 0.8.102's
+  own "Deliberately excluded."
+- **A subject/owner/user identity field.** Unchanged from 0.8.102 — a
+  badge is still attributable to a publication record, never to a wallet
+  or "user" concept this codebase has never built.
+- **`REFERENCED_PUBLICATION`/`FORKED_PUBLICATION` badges, or any
+  IPFS-scoped badge vocabulary.** No durable reference/fork relationship
+  or IPFS-scoped achievement vocabulary exists yet for a badge to present
+  — see 0.8.102's own identical exclusions, unchanged.
+- **Cross-replica/cross-archive badge aggregation of any kind.** This
+  milestone answers "what can THIS replica's own archive present,"
+  exactly like 0.8.102's own achievement events before it.
+- **A general "find Bitcoin record by txid" lookup on `application/
+  BitcoinAnchorPublicationRecordHistory.js`.** See "`sourceAnchorId` Is A
+  Navigation Convenience" above for why that file's own stated "ONLY
+  lookup" restraint stays unchanged.
+
+What's left, and deliberately unbuilt: an explicit publication reference/
+fork relationship durable enough to support `REFERENCED_PUBLICATION`/
+`FORKED_PUBLICATION` achievement kinds (and, eventually, badges for them),
+and — only after all of that — a scoring and leaderboard projection over
+already-attributed achievement data, never a new kind of fact an
+achievement event or badge carries.

@@ -119,6 +119,8 @@ import {
     BaseAnchorPublicationLifecycleTimelineEntryKind,
     reconstructBaseAnchorPublicationLifecycleTimeline
 } from '../../application/BaseAnchorPublicationLifecycleTimelineView.js';
+import { BlockchainKind } from '../../application/BlockchainKind.js';
+import { reconstructAchievementBadges } from '../../application/AchievementBadgeView.js';
 import {
     PublicationObservationArchiveImportOutcome,
     exportPublicationObservationArchive,
@@ -2143,6 +2145,62 @@ export default {
                     return item.stateLabel + (item.blockNumber != null ? ` — block ${item.blockNumber.toLocaleString()}` : '');
                 default:
                     return '';
+            }
+        }
+
+        // 0.8.103 — Achievement Badge Presentation.
+        //
+        // A HUMAN-FACING PRESENTATION OVER application/AchievementEvent.js's
+        // OWN ACHIEVEMENT EVENTS (0.8.102) — composed unchanged through
+        // application/AchievementBadgeView.js's own
+        // reconstructAchievementBadges(), never a second, competing
+        // achievement computation inline here. Collapsed by default, and
+        // computes nothing of its own: every field a badge shows is read
+        // straight off reconstructAchievementBadges()'s own output.
+        // Performs zero network operations. Mirrors the same
+        // expanded-by-key reactive() pattern "Historical Bitcoin Anchor
+        // Evidence"/"Bitcoin Anchor Publications" above already use.
+        const achievementsExpanded = ref(false);
+        const achievementBadgeExpanded = reactive({});
+
+        function toggleAchievements() {
+            achievementsExpanded.value = !achievementsExpanded.value;
+        }
+
+        // Pure projection — never a second, competing badge computation
+        // inline here.
+        function achievementBadgesView() {
+            return reconstructAchievementBadges(publicationObservationArchive.value);
+        }
+
+        function toggleAchievementBadge(index) {
+            achievementBadgeExpanded[index] = !achievementBadgeExpanded[index];
+        }
+
+        function isAchievementBadgeExpanded(index) {
+            return Boolean(achievementBadgeExpanded[index]);
+        }
+
+        // "Badge → achievement event → publication identity → lifecycle."
+        // Never a new lifecycle view of its own — this opens the exact
+        // same "Bitcoin Anchor Publications"/"Base Anchor Publications"
+        // lifecycle disclosures already built above, by the exact same
+        // anchorId/txid those cards already key on. A Bitcoin badge whose
+        // own sourceAnchorId this replica could not resolve (see
+        // application/AchievementBadgeView.js's own header on why that can
+        // honestly happen) opens nothing — never a guessed anchorId.
+        function canViewAchievementBadgeLifecycle(badge) {
+            return badge.sourcePublicationIdentity.blockchain === BlockchainKind.BASE
+                || Boolean(badge.sourceAnchorId);
+        }
+
+        function viewAchievementBadgeLifecycle(badge) {
+            if (badge.sourcePublicationIdentity.blockchain === BlockchainKind.BITCOIN && badge.sourceAnchorId) {
+                bitcoinAnchorPublicationsExpanded.value = true;
+                bitcoinAnchorPublicationLifecycleExpanded[badge.sourceAnchorId] = true;
+            } else if (badge.sourcePublicationIdentity.blockchain === BlockchainKind.BASE) {
+                baseAnchorPublicationsExpanded.value = true;
+                baseAnchorPublicationLifecycleExpanded[badge.sourcePublicationIdentity.chainReference] = true;
             }
         }
 
@@ -6132,6 +6190,9 @@ export default {
             BaseAnchorPublicationLifecycleTimelineEntryKind,
             toggleBaseAnchorPublicationLifecycle, isBaseAnchorPublicationLifecycleExpanded,
             baseAnchorPublicationLifecycleTimelineView, baseAnchorPublicationLifecycleEntryDetail,
+            achievementsExpanded, toggleAchievements, achievementBadgesView,
+            toggleAchievementBadge, isAchievementBadgeExpanded,
+            canViewAchievementBadgeLifecycle, viewAchievementBadgeLifecycle,
             decentralizationContrast,
             knowledgeSynchronizationCoordinator, synchronizeWithPeers, synchronizationView, synchronizationBadgeClass, synchronizationButtonLabel,
             toggleReplicaKnowledge, acquisitionBreakdownSentence,
@@ -7473,6 +7534,82 @@ export default {
                                         <p v-if="item.reason" class="form-hint form-hint--neutral">{{ item.reason }}</p>
                                     </li>
                                 </ul>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- 0.8.103 — Achievement Badge Presentation. A human-facing
+                 presentation of application/AchievementEvent.js's own
+                 achievement events (0.8.102) — composed unchanged through
+                 application/AchievementBadgeView.js's own
+                 reconstructAchievementBadges(). An achievement event is
+                 evidence of a threshold crossing; a badge is a
+                 human-facing presentation of that same achievement — this
+                 card invents no new achievement, no points, no score, no
+                 rank, and no leaderboard. Every badge names the exact
+                 publication record that earned it; expanding one shows
+                 its own exact sourcePublicationIdentity and, where this
+                 replica can resolve it, a link back to that exact
+                 publication's own already-existing lifecycle timeline
+                 above — badge → achievement event → publication identity
+                 → lifecycle. Collapsed by default. Performs ZERO network
+                 operations. -->
+            <div class="identity-mgmt-card">
+                <div class="identity-mgmt-card-header">
+                    <span class="identity-mgmt-name">Achievements</span>
+                    <span class="peer-badge peer-badge--pending">Persisted locally</span>
+                </div>
+                <p class="form-hint form-hint--neutral">
+                    A human-facing presentation of this replica's own achievement events, each one
+                    attributed to the exact durable publication record that earned it. A badge is
+                    never a score, a rank, or a statement about a person's worth — only a threshold
+                    this replica's own publications have crossed, and when.
+                </p>
+                <dl class="evidence-fields">
+                    <div class="evidence-field"><dt>Badges earned</dt><dd>{{ achievementBadgesView().count }}</dd></div>
+                </dl>
+                <div class="identity-mgmt-actions">
+                    <button type="button" class="action-btn action-btn--secondary" @click="toggleAchievements">
+                        {{ achievementsExpanded ? 'Hide Achievements' : 'Show Achievements' }}
+                    </button>
+                </div>
+                <div v-if="achievementsExpanded" class="evidence-inspection-adapter">
+                    <span class="evidence-inspection-adapter-title">Achievement Badges</span>
+                    <p v-if="achievementBadgesView().count === 0" class="form-hint form-hint--neutral">
+                        No achievements earned yet. Publishing a blockchain-anchored record elsewhere on
+                        this page earns one automatically, the moment its own threshold is crossed.
+                    </p>
+                    <ul v-else class="replica-knowledge-claim-list">
+                        <li v-for="badge in achievementBadgesView().badges" :key="badge.index" class="replica-knowledge-claim">
+                            <button type="button" class="peer-action-btn" @click="toggleAchievementBadge(badge.index)">
+                                {{ badge.icon }} {{ badge.title }}
+                            </button>
+                            <p class="form-hint form-hint--neutral">
+                                {{ badge.description }} — earned {{ formatWhen(badge.earnedAt) }}
+                            </p>
+
+                            <div v-if="isAchievementBadgeExpanded(badge.index)" class="evidence-list">
+                                <span class="evidence-convergence-title">Source Publication</span>
+                                <dl class="evidence-fields">
+                                    <div class="evidence-field"><dt>Blockchain</dt><dd>{{ badge.sourcePublicationIdentity.blockchain }}</dd></div>
+                                    <div class="evidence-field"><dt>Content hash</dt><dd>{{ badge.sourcePublicationIdentity.contentHash }}</dd></div>
+                                    <div class="evidence-field"><dt>Chain reference</dt><dd>{{ badge.sourcePublicationIdentity.chainReference }}</dd></div>
+                                    <div class="evidence-field"><dt>Created</dt><dd>{{ formatWhen(badge.sourcePublicationIdentity.createdAt) }}</dd></div>
+                                </dl>
+                                <p class="form-hint form-hint--neutral">
+                                    This badge is a presentation of one achievement event — it names the exact
+                                    publication identity that earned it, never a score or a rank.
+                                </p>
+                                <button v-if="canViewAchievementBadgeLifecycle(badge)" type="button" class="action-btn action-btn--secondary"
+                                        @click="viewAchievementBadgeLifecycle(badge)">
+                                    View Publication Lifecycle Above
+                                </button>
+                                <p v-else class="form-hint form-hint--neutral">
+                                    This replica could not resolve this badge's own source anchor to a publication
+                                    lifecycle timeline above.
+                                </p>
                             </div>
                         </li>
                     </ul>
