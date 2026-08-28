@@ -1,3 +1,6 @@
+import { BlockchainKind } from './BlockchainKind.js';
+import { BlockchainPublicationIdentity } from './BlockchainPublicationIdentity.js';
+
 // 0.8.80 — Explicit Bitcoin Anchor Publication Lifecycle Record.
 //
 // Every stage from application/BitcoinAnchorFundingObservationState.js
@@ -45,6 +48,26 @@
 // in tests/BitcoinAnchorPublicationRecord.test.js for the concrete
 // two-publications-one-contentHash proof.
 //
+// 0.8.89 — MULTI-BLOCKCHAIN PUBLICATION DOMAIN BOUNDARY. This class
+// predates having a second blockchain in the codebase, so nothing above
+// ever needed to say the word "Bitcoin" as DATA — only as this class's
+// own name. `blockchain` and `toBlockchainPublicationIdentity()` below
+// close that gap, additively: `blockchain` is a computed constant
+// (`BlockchainKind.BITCOIN`), never a stored field, so `toJSON()`'s own
+// shape — unchanged since 0.8.80 — needs no migration and no persisted
+// archive needs rewriting. `toBlockchainPublicationIdentity()` projects
+// this record's own `contentHash`/`txid`/`createdAt` onto application/
+// BlockchainPublicationIdentity.js's chain-independent shape, mapping
+// `txid` to that shape's `chainReference` — the same opaque-pointer slot
+// a future Base publication record would fill with its own transaction
+// hash. See that file's own header for why `blockchain` +
+// `chainReference` together, and never `contentHash` alone, is the only
+// identity two publications are ever compared by — the reason a Bitcoin
+// publication and a same-`contentHash` Base publication can never be
+// mistaken for one another. Every PSBT/UTXO/signing/broadcast mechanic
+// below this class stays exactly where it already lived; this addition
+// touches identity vocabulary only.
+//
 // IMMUTABLE, AND NEVER GIVEN A SECOND CONSTRUCTOR PATH. Every field is
 // validated once, at construction, and frozen; there is no setter, no
 // `withXxx()` wither, and no way to produce a "corrected" record other
@@ -82,6 +105,25 @@ export class BitcoinAnchorPublicationRecord {
     get txid() { return this._txid; }
     get network() { return this._network; }
     get createdAt() { return this._createdAt; }
+
+    // Always `BlockchainKind.BITCOIN` — computed, never stored. See this
+    // file's own 0.8.89 header note above for why this is a constant
+    // rather than a persisted field.
+    get blockchain() { return BlockchainKind.BITCOIN; }
+
+    // Projects this record onto application/BlockchainPublicationIdentity.js's
+    // chain-independent shape — `txid` fills that shape's `chainReference`
+    // slot. See that class's own header for why `blockchain` +
+    // `chainReference`, never `contentHash` alone, is the only identity
+    // two publications are ever compared by.
+    toBlockchainPublicationIdentity() {
+        return new BlockchainPublicationIdentity({
+            blockchain: this.blockchain,
+            contentHash: this._contentHash,
+            chainReference: this._txid,
+            createdAt: this._createdAt
+        });
+    }
 
     toJSON() {
         return {
