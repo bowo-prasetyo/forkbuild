@@ -28326,10 +28326,13 @@ Deliberately excluded, exactly as 0.8.74's own proposal named up front:
   OP_RETURN hash and reporting `HASH_MATCH`/`HASH_MISMATCH`/`UNAVAILABLE`).
   This milestone deliberately gives a person the transparent, ordered
   facts first; a deliberate cross-domain comparison over those same facts
-  is real, separately sized future work (0.8.76 — this codebase's own
-  0.8.75 turned out to be a different, more urgent gap instead: nothing
-  built since 0.8.56 survived a page reload at all. See "0.8.75 — Durable
-  Publication Observation Records" immediately below).
+  is real, separately sized future work (0.8.77 — this codebase's own
+  0.8.75 and 0.8.76 each turned out to be different, more urgent gaps
+  instead: first, nothing built since 0.8.56 survived a page reload at
+  all; then, once it did, nothing compared two of those surviving
+  observations against each other at all. See "0.8.75 — Durable
+  Publication Observation Records" and "0.8.76 — Bitcoin Anchor Chain
+  Placement Change Observation" immediately below).
 
 What's left, and deliberately unbuilt: explicit Bitcoin ↔ IPFS
 content-hash reconciliation, any form of automatic correlation between the
@@ -28531,13 +28534,197 @@ Deliberately excluded, exactly as this milestone's own proposal named up front:
   facts; it does not reinterpret them — see docs/Principles.md, "No
   Reorganization Detection" (0.8.56) and "The UI Displays Observations; It
   Does Not Turn Them Into A Verdict" (0.8.57), both held here unchanged.
-- **Explicit Bitcoin ↔ IPFS content-hash reconciliation.** Pushed to
-  0.8.76 — see that milestone's own placeholder above, updated to point
-  here.
+- **Explicit Bitcoin ↔ IPFS content-hash reconciliation.** Still pushed
+  forward — see "0.8.76 — Bitcoin Anchor Chain Placement Change
+  Observation" immediately below, which claims this milestone's own
+  reserved number for a different, now more urgent gap; content-hash
+  reconciliation moves to 0.8.77.
 
 What's left, and deliberately unbuilt: explicit Bitcoin ↔ IPFS
-content-hash reconciliation (0.8.76), any form of automatic correlation
+content-hash reconciliation (0.8.77), any form of automatic correlation
 between the two domains, any combined publication status of any kind, and
 any remote or shared archive — each its own, separately sized milestone,
 exactly like every "Deliberately excluded" list in this document before
 it.
+
+## 0.8.76 — Bitcoin Anchor Chain Placement Change Observation
+
+application/BitcoinAnchorConfirmationObservationHistory.js's own header
+(0.8.56) named this exact future gap the day it was written: "A history
+whose two CONFIRMED entries named two DIFFERENT `blockHash` values for
+the same txid would look different — a possible chain reorganization —
+but this file does not compare entries against one another, does not
+flag disagreement... Comparing sequential observations and naming what a
+disagreement between them means is real, separately sized future work."
+0.8.75 then made that same history survive a page reload. Both pieces
+have sat unused since: nothing in this codebase has ever compared two
+confirmation observations of the same anchor against each other. This
+milestone is that comparison, and nothing more.
+
+```text
+application/BitcoinAnchorConfirmationObservationHistory.js's own
+history array (0.8.56, unchanged; now durable across a reload via 0.8.75)
+      │
+      │  observeBitcoinAnchorChainPlacementChanges(history)
+      ▼
+application/BitcoinAnchorChainPlacementObserver.js   (THIS MILESTONE, new)
+      │  selects the same-anchor observations, in order, and compares
+      │  each adjacent pair via...
+      ▼
+application/BitcoinAnchorChainPlacementObservation.js   (THIS MILESTONE, new)
+      │  ...a pure, two-argument comparison —
+      │  UNCHANGED / PLACEMENT_CHANGED / INSUFFICIENT_OBSERVATIONS / INCOMPARABLE
+      ▼
+application/BitcoinAnchorChainPlacementObservationView.js   (THIS
+MILESTONE, new) — narrates each comparison, preserving both observations
+whole, for "Compare Confirmation Observations" on `ui/views/
+DecentralizedPublicationsView.js`.
+```
+
+**A CHANGED OBSERVATION IS NOT AUTOMATICALLY A REORGANIZATION.** This is
+the one boundary this entire milestone exists to hold — see
+docs/Principles.md, "A Changed Observation Is Not Automatically A
+Reorganization (0.8.76)." Two successive CONFIRMED observations of the
+same txid naming two different `blockHash` values give this codebase
+exactly one new fact to report: *the observed block placement changed
+between these two observations.* `PLACEMENT_CHANGED` is a description of
+a difference between two records this replica already held — never a
+claim that a chain reorganization occurred, that either block is invalid,
+that a double spend happened, that finality was lost, that the
+transaction is unsafe, or that either observation is more trustworthy
+than the other. No `REORG_DETECTED`, `status`, `confidence`, `trusted`,
+`valid`, `canonical`, or `reliable` field exists anywhere in this
+milestone's output. The word "reorganization" is welcome in this
+document and in code comments, exactly as it already appears in 0.8.56's
+own header — it is the OUTPUT VOCABULARY, the actual field values a
+person or a future caller reads, that must never assert it.
+
+**A COMPARISON, NOT A NEW OBSERVER.** `application/
+BitcoinAnchorChainPlacementObserver.js` performs zero network access —
+unlike anchoring/BitcoinAnchorConfirmationObserver.js (0.8.54), it takes
+no `confirmationSource` and calls nothing. It answers a strictly
+narrower, different question than that class already answers:
+`BitcoinAnchorConfirmationObserver` answers "what does the network report
+right now?"; this milestone's own observer answers "how do two records
+this replica ALREADY HOLDS differ from each other?" Nothing on this page
+gains a new way to reach the Bitcoin network; this milestone is a pure
+read over facts 0.8.54/0.8.56/0.8.75 already produced and already kept.
+
+**ONLY CONFIRMED OBSERVATIONS OF THE SAME TXID ARE EVER COMPARED FOR
+PLACEMENT.** `compareBitcoinAnchorChainPlacementObservations(previous,
+later)` reports `INCOMPARABLE` whenever either side is not `CONFIRMED`
+(application/BitcoinAnchorConfirmationState.js, 0.8.54, unchanged) or the
+two observations name different `txid` values — never `UNCHANGED`, and
+never `PLACEMENT_CHANGED`. A `NOT_CONFIRMED` observation followed by a
+`CONFIRMED` one is ordinary confirmation progress, not evidence a
+placement changed; a `CONFIRMED` observation followed by an `UNAVAILABLE`
+one means this replica's source could not presently answer, never that
+the transaction disappeared from any block it was previously observed
+in. Only `blockHash`/`blockHeight` on two `CONFIRMED` records — the two
+fields anchoring/BitcoinAnchorConfirmationObserver.js's own header already
+promised would never be discarded — are ever compared; `confirmationCount`
+differing alone, with `blockHash` and `blockHeight` unchanged, is ordinary
+confirmation-depth progress and reports `UNCHANGED`.
+
+**AN OBSERVATION THAT DISAGREES WITH ITSELF IS STILL ONLY REPORTED, NEVER
+ARBITRATED.** Two `CONFIRMED` observations naming the identical
+`blockHash` but two different `blockHeight` values are a real, if
+unusual, disagreement between two facts an untrusted external
+`confirmationSource` reported at two different moments (see anchoring/
+BitcoinAnchorConfirmationObserver.js's own header on why every field of a
+CONFIRMED report is already treated as an untrusted external claim, never
+independently derived). This milestone does not decide which of the two
+values is correct, does not discard either one, and does not treat a
+same-hash/different-height pair specially — it reports `PLACEMENT_CHANGED`
+exactly as it would for a changed `blockHash`, and preserves BOTH complete
+observations in its own output so a person can see the disagreement
+itself and judge it, rather than have this milestone silently pick one
+field as authoritative.
+
+**SELECTING "THE SAME ANCHOR IDENTITY" NEVER REORDERS OR FILTERS ON
+ANYTHING BUT TXID.** `observeBitcoinAnchorChainPlacementChanges()` accepts
+exactly the array `application/BitcoinAnchorConfirmationObservationHistory.js`
+already produces — ordinarily already scoped to one anchor's own history,
+the same array `entry.bitcoinAnchorConfirmationHistories[anchorId]`
+already holds. The one defensive step this function performs beyond
+0.8.56's own array — narrowing to observations sharing the first entry's
+own `txid` — exists only to guard against a caller-supplied history that,
+by mistake, mixed two anchors' observations together; it is never
+required for, and never changes the outcome of, a correctly-scoped
+single-anchor history. Every comparison's own `previousObservationIndex`/
+`laterObservationIndex` names that observation's own 1-based position in
+the ORIGINAL array the caller supplied — never a position in the
+filtered subset — so a person reading "changed between observation 2 and
+observation 3" can find observation 2 and observation 3 in the exact
+"Confirmation History" list already on screen.
+
+**NEITHER THE CONFIRMATION HISTORY NOR THE DURABLE ARCHIVE IS EVER
+TOUCHED.** Every function this milestone adds only ever reads a `history`
+argument it is given; none of them import `appendBitcoinAnchorConfirmationObservationHistoryEntry()`,
+none of them import anything from `application/PublicationObservationArchive.js`
+or `storage/`, and none of them accept a coordinator, observer, or
+storage provider of their own. Calling `observeBitcoinAnchorChainPlacementChanges()`
+a hundred times over the same history produces the identical result every
+time, and the history array (and every observation object inside it) is
+byte-identical, by reference, before and after every call.
+
+New files:
+- `application/BitcoinAnchorChainPlacementObservation.js` — new;
+  `BitcoinAnchorChainPlacementObservationOutcome` (`UNCHANGED`,
+  `PLACEMENT_CHANGED`, `INSUFFICIENT_OBSERVATIONS`, `INCOMPARABLE`),
+  `isValidBitcoinAnchorChainPlacementObservationOutcome()`, and
+  `compareBitcoinAnchorChainPlacementObservations(previous, later)` — the
+  pure, two-argument comparison this entire milestone is built around.
+- `application/BitcoinAnchorChainPlacementObserver.js` — new;
+  `observeBitcoinAnchorChainPlacementChanges(history)` — selects the
+  same-anchor observations from an existing application/
+  BitcoinAnchorConfirmationObservationHistory.js array, in order, and
+  compares each adjacent pair.
+- `application/BitcoinAnchorChainPlacementObservationView.js` — new;
+  `describeBitcoinAnchorChainPlacementObservationOutcomeLabel(outcome)`
+  and `describeBitcoinAnchorChainPlacementObservations(result)` — pure
+  presentation, preserving both observations of a `PLACEMENT_CHANGED`
+  comparison in full.
+- `ui/views/DecentralizedPublicationsView.js` — a "Compare Confirmation
+  Observations" button alongside the existing "Show/Hide Confirmation
+  History" button, shown once an anchor's own confirmation history holds
+  at least two observations; expands to the per-comparison narration
+  above, with no "danger" styling of any kind for `PLACEMENT_CHANGED`.
+- `tests/BitcoinAnchorChainPlacementObservation.test.js` — new.
+
+Deliberately excluded, exactly as this milestone's own proposal named up front:
+- **Any claim that a reorganization, invalidation, double spend, loss of
+  finality, or fraud occurred.** The single most important exclusion this
+  milestone holds — see docs/Principles.md, "A Changed Observation Is Not
+  Automatically A Reorganization (0.8.76)."
+- **Any correlation with additional chain evidence** (competing-chain
+  work, mempool state, a second data source cross-checked against the
+  first). This milestone compares exactly the observations this replica
+  already recorded, against each other, and nothing else — a genuinely
+  stronger analysis correlating a placement change against outside
+  evidence is real, separately sized future work.
+- **Any automatic comparison, polling, or network call of any kind.**
+  Comparison happens only on an explicit "Compare Confirmation
+  Observations" click, exactly like every other explicit action on this
+  page; nothing here re-checks confirmation status itself — that remains
+  `bitcoinAnchorConfirmationCoordinator.observeConfirmation()`'s (0.8.54)
+  own, separate, still-explicit action.
+- **Persistence of any new kind.** This milestone reads application/
+  BitcoinAnchorConfirmationObservationHistory.js's own array (durable
+  since 0.8.75 for whichever observations were explicitly archived) and
+  writes nothing new of its own anywhere.
+- **A combined score, confidence, or health value over a comparison, or
+  over a sequence of comparisons.** Three straight `UNCHANGED`
+  comparisons are never narrated as "stable" or "healthy," and one
+  `PLACEMENT_CHANGED` comparison among them is never narrated as
+  "unhealthy" or "at risk" — each comparison's own outcome stands alone.
+- **Explicit Bitcoin ↔ IPFS content-hash reconciliation.** Unchanged,
+  separately sized future work — see 0.8.74's own "Deliberately
+  excluded" list, now pointing to 0.8.77.
+
+What's left, and deliberately unbuilt: correlating an observed placement
+change against any additional chain evidence, any automatic
+re-observation of confirmation status, explicit Bitcoin ↔ IPFS
+content-hash reconciliation (0.8.77), and any combined publication status
+of any kind — each its own, separately sized milestone, exactly like
+every "Deliberately excluded" list in this document before it.

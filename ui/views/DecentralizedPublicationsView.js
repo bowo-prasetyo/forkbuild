@@ -74,6 +74,8 @@ import { BitcoinAnchorConfirmationState } from '../../application/BitcoinAnchorC
 import { BitcoinAnchorContentProofState } from '../../application/BitcoinAnchorContentProofState.js';
 import { appendBitcoinAnchorConfirmationObservationHistoryEntry } from '../../application/BitcoinAnchorConfirmationObservationHistory.js';
 import { describeBitcoinAnchorConfirmationObservationHistoryDetails, describeBitcoinAnchorConfirmationObservationDetail } from '../../application/BitcoinAnchorConfirmationObservationHistoryDetailView.js';
+import { observeBitcoinAnchorChainPlacementChanges } from '../../application/BitcoinAnchorChainPlacementObserver.js';
+import { describeBitcoinAnchorChainPlacementObservations } from '../../application/BitcoinAnchorChainPlacementObservationView.js';
 import { describeBitcoinAnchorContentProof } from '../../application/BitcoinAnchorContentProofView.js';
 import { BitcoinWalletConnectionState } from '../../application/BitcoinWalletConnectionState.js';
 import { describeBitcoinWalletConnection } from '../../application/BitcoinWalletConnectionView.js';
@@ -1842,6 +1844,18 @@ export default {
                 bitcoinAnchorConfirmationHistories: {},
                 bitcoinAnchorConfirmationHistoryExpanded: {},
                 bitcoinAnchorConfirmationHistoryEntryExpanded: {},
+                // 0.8.76 — Bitcoin Anchor Chain Placement Change
+                // Observation. Gates only the "Compare Confirmation
+                // Observations" disclosure below the existing
+                // "Confirmation History" one — mirroring
+                // `bitcoinAnchorConfirmationHistoryExpanded` exactly, one
+                // sibling disclosure over. Comparing is read-only and
+                // synchronous (application/
+                // BitcoinAnchorChainPlacementObserver.js makes no network
+                // call), so this key needs no matching "in flight"/"error"
+                // state the way `bitcoinAnchorReconciliations[anchorId]`
+                // does — there is nothing here that can fail.
+                bitcoinAnchorChainPlacementComparisonExpanded: {},
                 // 0.8.74 — Cross-Domain Publication Observation Timeline.
                 // Gates the "Show/Hide Cross-Domain Timeline" disclosure,
                 // placed as a SIBLING to the existing IPFS and Bitcoin
@@ -2601,6 +2615,38 @@ export default {
         function isBitcoinAnchorConfirmationHistoryEntryExpanded(entry, anchorView, index) {
             const bucket = entry.bitcoinAnchorConfirmationHistoryEntryExpanded[anchorView.anchorId];
             return Boolean(bucket && bucket[index]);
+        }
+
+        // 0.8.76 — Bitcoin Anchor Chain Placement Change Observation.
+        //
+        // Pure, synchronous, always re-derived from THIS anchor's own
+        // `bitcoinAnchorConfirmationHistories[anchorId]` — the SAME array
+        // `bitcoinAnchorConfirmationHistoryView()` above already narrates,
+        // never a second, separately maintained history. Composes
+        // application/BitcoinAnchorChainPlacementObserver.js's own
+        // `observeBitcoinAnchorChainPlacementChanges()` (which performs no
+        // network access — it only compares observations this replica
+        // already recorded) with application/
+        // BitcoinAnchorChainPlacementObservationView.js's own
+        // `describeBitcoinAnchorChainPlacementObservations()`, exactly
+        // mirroring `bitcoinAnchorConfirmationHistoryView()`'s own
+        // observer-then-view composition, one layer over. There is no
+        // "Compare" button handler that performs work of its own — every
+        // click only toggles `toggleBitcoinAnchorChainPlacementComparison()`
+        // below; the comparison itself is already complete the moment
+        // this function is called.
+        function bitcoinAnchorChainPlacementComparisonView(entry, anchorView) {
+            const history = entry.bitcoinAnchorConfirmationHistories[anchorView.anchorId] || [];
+            return describeBitcoinAnchorChainPlacementObservations(observeBitcoinAnchorChainPlacementChanges(history));
+        }
+
+        function toggleBitcoinAnchorChainPlacementComparison(entry, anchorView) {
+            entry.bitcoinAnchorChainPlacementComparisonExpanded[anchorView.anchorId] =
+                !entry.bitcoinAnchorChainPlacementComparisonExpanded[anchorView.anchorId];
+        }
+
+        function isBitcoinAnchorChainPlacementComparisonExpanded(entry, anchorView) {
+            return Boolean(entry.bitcoinAnchorChainPlacementComparisonExpanded[anchorView.anchorId]);
         }
 
         // 0.8.58 — Explicit Bitcoin Wallet Connection & Signing UX.
@@ -4584,6 +4630,7 @@ export default {
             bitcoinAnchorConfirmationBadgeClass, bitcoinAnchorContentProofBadgeClass, bitcoinAnchorReconcileButtonLabel,
             bitcoinAnchorConfirmationHistoryView, toggleBitcoinAnchorConfirmationHistory, isBitcoinAnchorConfirmationHistoryExpanded,
             toggleBitcoinAnchorConfirmationHistoryEntry, isBitcoinAnchorConfirmationHistoryEntryExpanded,
+            bitcoinAnchorChainPlacementComparisonView, toggleBitcoinAnchorChainPlacementComparison, isBitcoinAnchorChainPlacementComparisonExpanded,
             bitcoinWalletConnection, bitcoinWalletConnectionState, connectBitcoinWallet, disconnectBitcoinWallet,
             bitcoinWalletConnectionView, bitcoinWalletConnectionBadgeClass, isBitcoinWalletConnected, isBitcoinWalletConnecting,
             bitcoinAnchorTransactionReview, bitcoinAnchorTransactionReviewView, bitcoinAnchorTransactionReviewWalletMatchView,
@@ -6146,6 +6193,56 @@ export default {
                                                 @click="toggleBitcoinAnchorConfirmationHistory(entry, anchorView)">
                                             {{ isBitcoinAnchorConfirmationHistoryExpanded(entry, anchorView) ? 'Hide Confirmation History' : 'Show Confirmation History' }}
                                         </button>
+                                        <!-- 0.8.76 — Bitcoin Anchor Chain Placement Change
+                                             Observation. Shown once THIS anchor's own history holds at
+                                             least two observations to compare — never before, since
+                                             application/BitcoinAnchorChainPlacementObserver.js's own
+                                             INSUFFICIENT_OBSERVATIONS outcome would be the only
+                                             possible result with fewer. Comparing is a pure, read-only
+                                             re-derivation of the SAME history "Show Confirmation
+                                             History" already narrates — never a new network call. -->
+                                        <button v-if="(entry.bitcoinAnchorConfirmationHistories[anchorView.anchorId] || []).length > 1"
+                                                class="action-btn action-btn--secondary"
+                                                @click="toggleBitcoinAnchorChainPlacementComparison(entry, anchorView)">
+                                            {{ isBitcoinAnchorChainPlacementComparisonExpanded(entry, anchorView) ? 'Hide Placement Comparison' : 'Compare Confirmation Observations' }}
+                                        </button>
+                                    </div>
+
+                                    <!-- Each comparison names only whether the observed block
+                                         placement between two already-recorded observations stayed
+                                         the same or changed — never a reorganization, invalidation,
+                                         or trust verdict. See docs/Principles.md, "A Changed
+                                         Observation Is Not Automatically A Reorganization (0.8.76)."
+                                         No "danger" styling of any kind is applied to a changed
+                                         comparison; it is narrated in the same neutral voice as an
+                                         unchanged one. -->
+                                    <div v-if="isBitcoinAnchorChainPlacementComparisonExpanded(entry, anchorView)">
+                                        <p v-if="bitcoinAnchorChainPlacementComparisonView(entry, anchorView).count === 0" class="form-hint form-hint--neutral">
+                                            Not enough confirmed observations exist yet to compare block placement.
+                                        </p>
+                                        <ul v-else class="replica-knowledge-claim-list">
+                                            <li v-for="(comparison, index) in bitcoinAnchorChainPlacementComparisonView(entry, anchorView).comparisons" :key="index" class="replica-knowledge-claim">
+                                                <p class="form-hint form-hint--neutral">{{ comparison.outcomeLabel }}</p>
+                                                <dl v-if="comparison.previousBlock || comparison.laterBlock" class="evidence-fields">
+                                                    <div v-if="comparison.previousBlock" class="evidence-field">
+                                                        <dt>Previous block</dt>
+                                                        <dd>
+                                                            {{ comparison.previousBlock.blockHash || '(not confirmed)' }}
+                                                            <span v-if="comparison.previousBlock.blockHeight !== null">— height {{ comparison.previousBlock.blockHeight }}, {{ comparison.previousBlock.confirmationCount }} confirmation(s)</span>
+                                                            — observed {{ formatWhen(comparison.previousBlock.observedAt) }}
+                                                        </dd>
+                                                    </div>
+                                                    <div v-if="comparison.laterBlock" class="evidence-field">
+                                                        <dt>Later block</dt>
+                                                        <dd>
+                                                            {{ comparison.laterBlock.blockHash || '(not confirmed)' }}
+                                                            <span v-if="comparison.laterBlock.blockHeight !== null">— height {{ comparison.laterBlock.blockHeight }}, {{ comparison.laterBlock.confirmationCount }} confirmation(s)</span>
+                                                            — observed {{ formatWhen(comparison.laterBlock.observedAt) }}
+                                                        </dd>
+                                                    </div>
+                                                </dl>
+                                            </li>
+                                        </ul>
                                     </div>
 
                                     <!-- The full chronological narration of every past "Reconcile"
