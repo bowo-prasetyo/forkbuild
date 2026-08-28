@@ -32022,3 +32022,251 @@ does not decide" discipline (0.8.52) one chain over. No such milestone is
 designed yet. Confirmation observation (0.8.96) and Base publication
 identity + durable archive integration (0.8.97+) remain further out
 still.
+
+## 0.8.95 — Explicit Base Transaction Broadcast
+
+0.8.94 stopped the instant it had a genuinely, independently,
+cryptographically verified transaction — its own header named exactly
+what was still missing: "It does NOT mean broadcast, accepted by Base,
+included in a block, confirmed, published, or immutable... those remain
+entirely separate, later facts (0.8.95 and 0.8.96)." This milestone is
+that missing capability, held to the identical principle `anchoring/
+BitcoinAnchorTransactionBroadcaster.js` (0.8.52) already established one
+chain over:
+
+```text
+Broadcast publishes an already-finalized transaction; it does not
+construct, sign, modify, or re-verify one.
+```
+
+```text
+Base account observation                     (0.8.90, unchanged)
+        │
+        ▼
+Base transaction construction                (0.8.91, unchanged)
+        │
+        ▼
+Base transaction review                      (0.8.92, unchanged)
+        │
+        ▼
+Explicit reviewed signing                    (0.8.93, unchanged)
+        │
+        ▼
+Explicit verification & finalization         (0.8.94, unchanged)
+        │
+        ▼
+┌──────────────────────────┐
+│ Explicit broadcast         │             (THIS MILESTONE — new)
+│                          │
+│ base/BaseTransactionBroadcaster.js
+│ base/BaseJsonRpcClient.js#broadcastRawTransaction()
+└──────────────────────────┘
+        │
+        ▼
+{ broadcasted: true, txid }
+        │
+        ▼
+future confirmation observation               (0.8.96, not yet designed)
+```
+
+**The central invariant: broadcast submits the exact finalized bytes; it
+never reconstructs, re-signs, or re-verifies them.**
+`base/BaseTransactionBroadcaster.js#broadcast({ finalizedTransaction })`
+takes exactly the `finalizedTransaction` object `base/
+BaseSignedTransactionFinalizer.js#finalize()` (0.8.94) produces on
+success, hands its `rawTransaction` field unchanged to an injected
+`rpcSource`, and translates whatever it reports into a narrow,
+three-outcome vocabulary. No plan is read, no content hash is consumed,
+and no nonce or fee is ever fetched fresh — see this milestone's own test
+"B," which changes what the network currently reports for nonce and fees
+after finalization and proves the broadcaster reads neither.
+
+**Exactly one new write, and no others.** `base/
+BaseJsonRpcClient.js#broadcastRawTransaction(rawTransaction)` wraps
+`eth_sendRawTransaction` — the seventh method this class has ever wrapped,
+and the first that writes. Still never `eth_getTransactionReceipt`, still
+never any polling, still never a fee-bump or replacement path. Resolves to
+`{ broadcasted: true, txid }`, a definite `{ broadcasted: false, reason }`
+for a real JSON-RPC error object, or `{ broadcasted: false, unavailable:
+true, reason }` for everything else this class cannot presently make
+sense of (unreachable, a timeout, a non-2xx response, a malformed
+result). The six existing read methods are entirely unchanged — see this
+milestone's own test "O," which proves `fetchChainId()` still reports
+only its own original `{ available: false, reason }` shape.
+
+**A definite RPC rejection is classified distinctly from mere
+unavailability — the first time this distinction has ever mattered to
+`base/BaseJsonRpcClient.js`.** Every read method already collapsed any
+failure into one `available: false` shape, because no caller of a read
+ever needed to tell "the endpoint said no" apart from "the endpoint
+couldn't be reached" — a failed read is simply retried. A broadcast is
+different: silently resubmitting a rejected transaction without a
+person's own explicit decision would be exactly the kind of automatic
+retry this milestone refuses to build. `_call()`'s own internal `rpcError`
+flag — set only when the endpoint was actually reached and returned a
+real JSON-RPC `error` object — is read by `broadcastRawTransaction()`
+alone; the six read methods never look at it.
+
+**The network's own returned transaction hash is exposed unchanged — a
+deliberate, explained difference from the Bitcoin boundary this milestone
+otherwise mirrors.** `anchoring/BitcoinAnchorTransactionBroadcaster.js`
+never trusts an external broadcaster's own claimed txid, because an
+Esplora-style HTTP endpoint's self-reported identifier is exactly the kind
+of unverified claim this codebase refuses at every prior boundary. Base's
+own JSON-RPC contract is different: `eth_sendRawTransaction`'s result, on
+success, is DEFINED to be the transaction hash — the network-returned
+identifier this milestone's own proposal names directly, and `base/
+BaseJsonRpcClient.js#broadcastRawTransaction()` already validates it is a
+genuine 32-byte hex hash before `base/BaseTransactionBroadcaster.js` ever
+sees it. This class exposes it unchanged, with no further normalization —
+see this milestone's own test "H."
+
+**BROADCASTED means exactly one thing, and nothing broader.** Base's own
+JSON-RPC endpoint accepted the finalized transaction submission and
+returned a transaction hash. It does NOT mean mined, included in a block,
+confirmed, finalized by the network, or publication completed —
+`BROADCASTED ≠ CONFIRMED`, the identical discipline this codebase already
+holds for Bitcoin (0.8.64). `application/
+BaseTransactionBroadcastState.js` and `application/
+BaseTransactionBroadcastView.js` carry no `confirmed`, `confirmations`,
+`blockNumber`, or `blockHash` field of any kind, and the view's own test
+proves a `confirmed`/`confirmations` field smuggled onto a coordinator
+outcome is never exposed through the projection.
+
+**No automatic retry, of any kind, ever.** One explicit "Broadcast
+Transaction" click means exactly one `eth_sendRawTransaction` call. A
+REJECTED or UNAVAILABLE result is the end of that attempt — this
+milestone holds no catch-and-retry, no exponential backoff, and no
+fee-bump path. A person clicks "Broadcast Again," explicitly, to make
+another attempt — proven directly by this milestone's own flagship test
+"G": a REJECTED first attempt and a BROADCASTED second, explicit attempt
+are two wholly independent RPC calls, never one call retrying internally.
+
+**No signer, no finalizer, and no confirmation observer are ever imported
+or called here.** `base/BaseTransactionBroadcaster.js` holds no
+dependency on `base/BaseTransactionSigner.js`, `base/
+BaseSignedTransactionFinalizer.js`, or any future confirmation-observation
+capability — broadcasting an already-finalized artifact needs none of
+them. Proven directly by this milestone's own tests "C," "D," and "E":
+`signCalls === 0`, `finalizationCalls === 0`, `receiptCalls === 0`
+throughout every broadcast.
+
+**Broadcasting is an explicit, separate action from finalization — never
+automatic.** `ui/views/DecentralizedPublicationsView.js`'s own "Broadcast
+Transaction" button appears only once finalization has reached FINALIZED,
+and is never clicked automatically on that transition. A fresh "Create
+Base Transaction Plan," "Sign Reviewed Transaction," or "Verify &
+Finalize Transaction" click retires any previous broadcast outcome —
+never leaves a stale BROADCASTED/REJECTED result showing against a
+transaction that click is about to replace, exactly as `application/
+BaseSignedTransactionFinalizationState.js`'s own header already requires
+one stage earlier.
+
+New files:
+- `base/BaseTransactionBroadcaster.js` — new; `broadcast({
+  finalizedTransaction })` hands `finalizedTransaction.rawTransaction`,
+  completely unmodified, to an injected `rpcSource`, and translates its
+  response into `{ broadcasted: true, txid }`, `{ broadcasted: false,
+  reason }`, or `{ broadcasted: false, unavailable: true, reason }`.
+  Throws only for a malformed `finalizedTransaction` — a caller-contract
+  violation, checked before the injected `rpcSource` is ever consulted.
+  Imports no signer, finalizer, or confirmation-observation capability of
+  any kind.
+- `application/BaseTransactionBroadcastState.js` — new; the closed
+  IDLE/BROADCASTING/BROADCASTED/REJECTED/UNAVAILABLE/FAILED vocabulary,
+  mirroring `application/BitcoinAnchorBroadcastState.js` (0.8.64) exactly,
+  one chain over.
+- `application/BaseTransactionBroadcastCoordinator.js` — new; a
+  deliberately thin `broadcast({ finalized, finalizedTransaction })`
+  wiring turning `base/BaseTransactionBroadcaster.js`'s own outcome into
+  the six-value state vocabulary. Requires `finalized === true` and a real
+  `finalizedTransaction`, thrown as a caller-contract violation otherwise
+  — never silently accepting a merely-SIGNED artifact.
+- `application/BaseTransactionBroadcastView.js` — new;
+  `describeBaseTransactionBroadcast()`, the pure projection into `{
+  state, stateLabel, reason, txid }`. Never exposes a confirmation-shaped
+  field of any kind.
+- `application/CreateBaseTransactionBroadcasterUseCase.js`,
+  `application/CreateBaseTransactionBroadcastCoordinatorUseCase.js` — new
+  composition-root factories, mirroring this codebase's own established
+  `Create*UseCase.js` pattern.
+
+Changed:
+- `base/BaseJsonRpcClient.js` — adds exactly one write,
+  `broadcastRawTransaction(rawTransaction)`, wrapping
+  `eth_sendRawTransaction`. `_call()` now also reports an internal
+  `rpcError` flag, distinguishing a definite JSON-RPC error object from
+  every other failure mode — read only by `broadcastRawTransaction()`
+  itself; the six existing read methods are byte-for-byte unchanged in
+  their own return shape.
+- `ui/main.js` — wires `baseTransactionBroadcaster` (reusing the SAME
+  shared `baseJsonRpcClient` instance every other Base capability already
+  reads through) and `baseTransactionBroadcastCoordinator`.
+- `ui/views/DecentralizedPublicationsView.js` — a new "Broadcast" section
+  inside the existing "Base Transaction Review" card, shown once
+  finalization reaches FINALIZED, with an explicit "Broadcast Transaction"
+  / "Broadcast Again" button. A fresh "Create Base Transaction Plan,"
+  "Sign Reviewed Transaction," or "Verify & Finalize Transaction" click
+  retires any previous broadcast outcome, exactly as `application/
+  BaseTransactionBroadcastState.js`'s own header requires.
+
+New tests:
+- `tests/BaseTransactionBroadcast.test.js` — flagship proofs: (A) a
+  genuinely, cryptographically finalized transaction (a real chain: plan →
+  sign → finalize, no mocks) is broadcast with byte-for-byte identical
+  `rawTransaction` bytes; (B) changing the network's current nonce/fee
+  figures after finalization changes nothing submitted, and none of those
+  reads ever occur; (G) a REJECTED attempt is never automatically retried
+  — a second, explicit attempt is its own wholly independent RPC call.
+  Plus: no signer/finalizer/confirmation-observer dependency of any kind;
+  exactly one RPC submission per explicit call; the network-returned hash
+  exposed unchanged; artifact isolation across unrelated plans; Bitcoin
+  broadcaster isolation; the full coordinator state mapping and
+  caller-contract violations; the closed, confirmation-free state/view
+  vocabulary; and `base/BaseJsonRpcClient.js#broadcastRawTransaction()`'s
+  own rejection-vs-unavailability classification, proven not to have
+  changed the six existing read methods' own return shape.
+
+Deliberately excluded, exactly as this milestone's own proposal named up
+front:
+- **Receipt fetching, block confirmation, or any Base publication
+  record.** `base/BaseTransactionBroadcaster.js` imports no confirmation
+  or receipt capability of any kind. See docs/Roadmap.md, 0.8.96 and
+  0.8.97+.
+- **Automatic broadcasting triggered by a FINALIZED result.** Broadcasting
+  is its own explicit "Broadcast Transaction" click.
+- **Automatic retry, backoff, re-signing, or reconstruction of any kind
+  after REJECTED, UNAVAILABLE, or FAILED.** One click means one RPC call;
+  a person decides whether to click again.
+- **Nonce management, fee repricing, or transaction replacement of any
+  kind.** Those remain `base/BasePublicationTransactionPlanner.js`'s own
+  job (0.8.91), unchanged and unrevisited; broadcasting a transaction
+  whose fee has since become too low is reported as REJECTED or
+  UNAVAILABLE, never silently repriced.
+- **`eth_getTransactionReceipt`, `eth_getBlockByNumber`, or any other Base
+  JSON-RPC method.** `base/BaseJsonRpcClient.js` wraps exactly seven
+  methods, and no others.
+- **A `safe`/`trusted`/`confirmed`/`ready` verdict of any kind.**
+  `application/BaseTransactionBroadcastState.js`'s own BROADCASTED names
+  only the one narrow fact this boundary checked — Base's own RPC endpoint
+  accepted the submission — never a broader claim about what happens to it
+  next.
+- **A durable Base publication record, or any correlation by content
+  hash.** The distinction between a broadcast result (`txid`,
+  `broadcastedAt`) and a future `BasePublicationRecord` (`blockchain`,
+  `contentHash`, `txid`, `createdAt`) is deliberate — this milestone
+  builds only the former. See `docs/Roadmap.md`, 0.8.80, "A Publication
+  Record Establishes Identity," for the identical distinction already held
+  for Bitcoin.
+
+What's left, and deliberately unbuilt: this milestone's own proposal
+anticipates 0.8.96 as explicit Base confirmation observation — asking
+whether a BROADCASTED transaction has subsequently been mined, mirroring
+`anchoring/BitcoinAnchorConfirmationObserver.js`'s own "observing never
+retries or reconstructs a broadcast" discipline (0.8.54/0.8.65) one chain
+over. No such milestone is designed yet. Chain-placement/observation
+analysis (0.8.97) and Base publication identity + durable archive
+integration (0.8.98) remain further out still — and, per this milestone's
+own proposal, worth revisiting on their own merits once 0.8.96 exists,
+rather than mechanically copying every remaining Bitcoin milestone onto
+Base.

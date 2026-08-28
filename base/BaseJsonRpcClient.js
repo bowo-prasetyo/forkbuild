@@ -1,6 +1,7 @@
 const DEFAULT_RPC_URL = 'https://mainnet.base.org';
 const DEFAULT_TIMEOUT_MS = 8000;
 const HEX_QUANTITY_PATTERN = /^0x[0-9a-fA-F]+$/;
+const TX_HASH_PATTERN = /^0x[0-9a-fA-F]{64}$/;
 
 // 0.8.90 — Explicit Base Network & Account Observation.
 // 0.8.91 — Explicit Base Publication Transaction Construction.
@@ -15,19 +16,20 @@ const HEX_QUANTITY_PATTERN = /^0x[0-9a-fA-F]+$/;
 // using the standard Ethereum JSON-RPC methods Base itself documents
 // supporting.
 //
-// SIX METHODS ARE WRAPPED, AND NO OTHERS. 0.8.90 shipped exactly
+// SEVEN METHODS ARE WRAPPED, AND NO OTHERS. 0.8.90 shipped exactly
 // `eth_chainId`/`eth_getBalance`, read-only observation of a chain and an
-// account. 0.8.91 adds exactly the four further reads a transaction PLAN
+// account. 0.8.91 added exactly the four further reads a transaction PLAN
 // needs to construct itself — `eth_getTransactionCount`, `eth_estimateGas`,
-// `eth_gasPrice`, `eth_maxPriorityFeePerGas` — and stops there. Still
-// never `eth_sendRawTransaction`, still never `eth_getBlockByNumber`, and
-// still no other method Base's JSON-RPC surface exposes: every method
-// this class wraps reads a fact, and not one of them submits, signs, or
-// commits anything. See this file's own constructor for why nothing
-// resembling a write path exists here to even accidentally call. Wrapping
-// `eth_sendRawTransaction` remains real, separately sized future work for
-// whichever later milestone actually broadcasts (see docs/Roadmap.md,
-// 0.8.91, "What I would explicitly exclude").
+// `eth_gasPrice`, `eth_maxPriorityFeePerGas`. 0.8.95 adds exactly ONE write
+// — `eth_sendRawTransaction` — and stops there. Still never
+// `eth_getTransactionReceipt`, still never `eth_getBlockByNumber`, and
+// still no other method Base's JSON-RPC surface exposes: the six read
+// methods still read a fact, and `broadcastRawTransaction()` still does
+// nothing but submit the exact bytes it is handed — no receipt retrieval,
+// no polling, no confirmation logic of any kind (see docs/Roadmap.md,
+// 0.8.95, "What I would deliberately exclude"). See this file's own
+// constructor for why nothing resembling a fee-bump or replacement path
+// exists here to even accidentally call.
 //
 // `fetchImpl` is the identical injection point every HTTP-speaking adapter
 // in this codebase already establishes (anchoring/
@@ -55,13 +57,37 @@ const HEX_QUANTITY_PATTERN = /^0x[0-9a-fA-F]+$/;
 //                    | { available: false, reason }
 //   fetchMaxPriorityFeePerGas() -> { available: true, maxPriorityFeePerGasWei }
 //                    | { available: false, reason }
+//   broadcastRawTransaction(rawTransaction) -> { broadcasted: true, txid }
+//                    | { broadcasted: false, reason }
+//                        — the endpoint was reached and returned a definite
+//                          JSON-RPC error object: a DEFINITE no.
+//                    | { broadcasted: false, unavailable: true, reason }
+//                        — cannot PRESENTLY tell: unreachable, a timeout, a
+//                          non-2xx response, or a malformed result.
 //
 // NEVER THROWS. Every failure this class can distinguish — an unreachable
 // host, a timeout, a non-2xx response, a JSON-RPC error object, or an
 // unparseable/malformed quantity — is translated into the `available:
-// false` form, mirroring exactly how every Esplora adapter in this
-// codebase's anchoring/ layer already never throws for an operational
-// failure.
+// false` (or, for `broadcastRawTransaction()`, `broadcasted: false`) form,
+// mirroring exactly how every Esplora adapter in this codebase's
+// anchoring/ layer already never throws for an operational failure.
+//
+// `broadcastRawTransaction()` DISTINGUISHES A DEFINITE RPC REJECTION FROM
+// MERE UNAVAILABILITY — THE SIX READ METHODS NEVER NEEDED TO. Every read
+// method above collapses ANY failure into one `available: false` shape,
+// because no caller of a read has ever needed to tell "the endpoint said
+// no" apart from "the endpoint couldn't be reached" — a failed read is
+// simply retried. A broadcast is different: `base/
+// BaseTransactionBroadcaster.js` (0.8.95) must tell a DEFINITE rejection
+// (never safe to silently resubmit without a person's own explicit
+// decision) apart from not presently being able to tell (safe to retry).
+// So, and only for this one method, `_call()`'s own `rpcError` flag —
+// set only when the endpoint was actually reached and returned a real
+// JSON-RPC `error` object — is read and surfaced as the `unavailable`
+// distinction below. Every other failure this class can observe for a
+// broadcast — unreachable, timeout, non-2xx, or a malformed/missing
+// result even on an `ok` response — is `unavailable: true`, never a
+// rejection.
 //
 // EVERY WEI-DENOMINATED QUANTITY IS ALWAYS A DECIMAL-DIGIT STRING, NEVER
 // A NUMBER. See application/BaseAccountObservation.js's own header, "WHY
@@ -187,6 +213,38 @@ export class BaseJsonRpcClient {
         return { available: true, maxPriorityFeePerGasWei };
     }
 
+    // 0.8.95 — Explicit Base Transaction Broadcast.
+    //
+    // Resolves to exactly one of:
+    //
+    //   { broadcasted: true, txid }
+    //       — `txid` is exactly Base's own `eth_sendRawTransaction` result,
+    //         unchanged — see this file's own header.
+    //   { broadcasted: false, reason }
+    //       — the endpoint was reached and returned a definite JSON-RPC
+    //         error object (e.g. a rejected nonce, insufficient funds,
+    //         "already known").
+    //   { broadcasted: false, unavailable: true, reason }
+    //       — cannot presently tell: unreachable, a timeout, a non-2xx
+    //         response, or a response this class cannot make sense of.
+    //
+    // `rawTransaction` is submitted exactly as given — this method encodes
+    // nothing, re-signs nothing, and never reads a nonce or a fee of its
+    // own. Never throws — see this file's own header.
+    async broadcastRawTransaction(rawTransaction) {
+        const result = await this._call('eth_sendRawTransaction', [rawTransaction]);
+        if (!result.ok) {
+            return result.rpcError
+                ? { broadcasted: false, reason: result.reason }
+                : { broadcasted: false, unavailable: true, reason: result.reason };
+        }
+
+        if (typeof result.value !== 'string' || !TX_HASH_PATTERN.test(result.value)) {
+            return { broadcasted: false, unavailable: true, reason: `${this._rpcUrl} returned a malformed eth_sendRawTransaction result` };
+        }
+        return { broadcasted: true, txid: result.value };
+    }
+
     async _call(method, params) {
         const controller = new AbortController();
         const timer = setTimeout(() => controller.abort(), this._timeoutMs);
@@ -199,27 +257,32 @@ export class BaseJsonRpcClient {
                 body: JSON.stringify({ jsonrpc: '2.0', id: 1, method, params })
             });
         } catch (error) {
-            return { ok: false, reason: `BaseJsonRpcClient: could not reach ${this._rpcUrl} — ${error.message}` };
+            return { ok: false, rpcError: false, reason: `BaseJsonRpcClient: could not reach ${this._rpcUrl} — ${error.message}` };
         } finally {
             clearTimeout(timer);
         }
 
         if (!response.ok) {
-            return { ok: false, reason: `BaseJsonRpcClient: ${this._rpcUrl} returned ${response.status} for ${method}` };
+            return { ok: false, rpcError: false, reason: `BaseJsonRpcClient: ${this._rpcUrl} returned ${response.status} for ${method}` };
         }
 
         let body;
         try {
             body = await response.json();
         } catch (error) {
-            return { ok: false, reason: `BaseJsonRpcClient: could not parse ${this._rpcUrl}'s ${method} response — ${error.message}` };
+            return { ok: false, rpcError: false, reason: `BaseJsonRpcClient: could not parse ${this._rpcUrl}'s ${method} response — ${error.message}` };
         }
         if (!body || typeof body !== 'object') {
-            return { ok: false, reason: `BaseJsonRpcClient: ${this._rpcUrl} returned a non-object ${method} response` };
+            return { ok: false, rpcError: false, reason: `BaseJsonRpcClient: ${this._rpcUrl} returned a non-object ${method} response` };
         }
         if (body.error) {
+            // Reached, and DEFINITELY refused this call — see this file's
+            // own header, "`broadcastRawTransaction()` DISTINGUISHES A
+            // DEFINITE RPC REJECTION FROM MERE UNAVAILABILITY." The six
+            // read methods above never read this flag; only
+            // `broadcastRawTransaction()` does.
             const message = (body.error && typeof body.error.message === 'string' && body.error.message) || 'unknown RPC error';
-            return { ok: false, reason: `BaseJsonRpcClient: ${this._rpcUrl} reported an error for ${method} — ${message}` };
+            return { ok: false, rpcError: true, reason: `BaseJsonRpcClient: ${this._rpcUrl} reported an error for ${method} — ${message}` };
         }
 
         return { ok: true, value: body.result };
