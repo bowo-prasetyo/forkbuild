@@ -16026,3 +16026,73 @@ byte-identical to analyzing the live archive directly — the durability
 this milestone, they are what it is built directly on top of.
 
 See `docs/Roadmap.md`, 0.8.77, for the full milestone entry.
+
+## Correlate Evidence By Explicit Identity, Never By Resemblance (0.8.78)
+
+**A shared `contentHash` is never evidence of a shared anchor.** Two
+Bitcoin anchors can easily carry byte-identical `contentHash` values — the
+same content anchored twice, in two entirely separate transactions — and
+remain two completely separate anchors, each with its own broadcast,
+confirmation, content-proof, chain-placement, and consistency evidence.
+`application/BitcoinAnchorObservationEvidence.js`'s own
+`composeBitcoinAnchorObservationEvidence()` extends the identical
+restraint `application/PublicationObservationTimelineView.js`'s own
+principle already holds for `recordIndex`/`anchorId` (0.8.74) and
+`application/PublicationObservationArchive.js`'s own header already holds
+for its anchorId-keyed maps (0.8.75) into a new place: correlating a
+single Bitcoin anchor's OWN evidence, gathered from five independent
+streams, without ever letting a coincidental resemblance between two
+different anchors' own facts stand in for a real, shared identity.
+
+**`anchorId` is the one and only correlation key — required, explicit,
+and never derived.** `composeBitcoinAnchorObservationEvidence()` throws
+if it is missing, empty, or not a string, before touching anything else
+it was given. It is never read from a `txid`, a `contentHash`, a
+`blockHash`, or a position in some other, unrelated collection — an
+observation's own `txid` is carried through completely unchanged inside
+its own evidence bundle, but is never consulted to decide WHICH bundle it
+belongs in. The flagship test in `tests/BitcoinAnchorObservationEvidence.test.js`
+proves this directly: two anchors, sharing one identical `contentHash`,
+with different `txid` values and independently sized confirmation
+histories, drawn from one shared candidate pool the test deliberately
+constructs — and neither anchor's own broadcast, confirmation, or
+content-proof observation ever appears under the other's evidence.
+
+**A composition of already-recorded observations, never a new source of
+truth, and never a hidden "super analyzer" over 0.8.76 or 0.8.77.**
+Every observation this file is handed — broadcast, confirmation,
+content-proof — is carried through completely unchanged, under an
+`{ index, observation }` wrapper naming only that observation's own
+1-based position within the one array a caller supplied for this one
+anchor. `chainPlacementObservations`/`consistencyFindings` are carried
+through EXACTLY as `application/BitcoinAnchorChainPlacementObserver.js`'s
+own `observeBitcoinAnchorChainPlacementChanges()` (0.8.76) and
+`application/BitcoinAnchorObservationConsistencyAnalyzer.js`'s own
+`analyzeBitcoinAnchorObservationConsistency()` (0.8.77) already produced
+them — by reference, provably, in the test suite's own Section F — never
+recomputed, re-derived, or second-guessed. That keeps both of those
+milestones exactly as independently testable as they already were; this
+milestone adds no analysis of its own, anywhere.
+
+**The result stays a collection of independently produced facts — there
+is no overall Bitcoin-anchor verdict.** The identical restraint docs/
+Principles.md, "The UI Displays Observations; It Does Not Turn Them Into
+A Verdict (0.8.57)," already holds, extended here across five sections at
+once rather than two: four confirmation observations and one
+`HASH_MISMATCH` content-proof observation sit next to each other,
+unscored and uncombined, exactly as every prior composition milestone's
+own principle already insists. There is no `status`, `confidence`,
+`health`, `trusted`, `valid`, `canonical`, `reliable`, or verdict field
+anywhere in this milestone's output, at either the composition or the
+presentation layer — proven directly in the test suite's own Section H.
+
+**A missing collection is an honest empty collection, never a fabricated
+entry.** A discovered anchor — another replica's own already-catalogued,
+signed claim — carries no broadcast observation of its own on this
+replica's page, because this replica never itself observed one being
+broadcast; its evidence bundle reports `broadcastObservations: { count:
+0, observations: [] }` rather than inventing one, the identical restraint
+`application/PublicationObservationTimelineView.js`'s own principle
+already holds for the identical fact (0.8.74).
+
+See `docs/Roadmap.md`, 0.8.78, for the full milestone entry.

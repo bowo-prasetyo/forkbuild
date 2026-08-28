@@ -28942,6 +28942,163 @@ What's left, and deliberately unbuilt: selecting, repairing, or deleting
 an inconsistent observation; confirmation-count-versus-tip-height
 comparison; correlating a finding against any additional chain evidence;
 any automatic re-analysis; explicit Bitcoin ↔ IPFS content-hash
-reconciliation (0.8.78); and any combined publication status of any
-kind — each its own, separately sized milestone, exactly like every
-"Deliberately excluded" list in this document before it.
+reconciliation; and any combined publication status of any kind — each
+its own, separately sized milestone, exactly like every "Deliberately
+excluded" list in this document before it. (0.8.77's own list above
+pointed the content-hash reconciliation work at "0.8.78" — that number
+turned out to be a different, more urgent gap instead, exactly as 0.8.74's
+own "0.8.75/0.8.76/0.8.77" chain of reserved-then-reassigned numbers
+already did twice before it; content-hash reconciliation remains real,
+separately sized, unnumbered future work.)
+
+## 0.8.78 — Bitcoin Anchor Observation Evidence Correlation
+
+Every Bitcoin-domain milestone since 0.8.54 answers its own, narrow
+question about one anchor, and every one of them is shown on its own,
+independent disclosure today: "Bitcoin Anchor" (0.8.57) shows the current
+broadcast/confirmation/content-proof reconciliation, "Show Confirmation
+History" (0.8.56) shows the full confirmation sequence, "Compare
+Confirmation Observations" (0.8.76) shows whether that sequence's own
+block placement changed, and "Observation Consistency" (0.8.77) shows
+whether it is internally self-contradictory. Nowhere does a person see
+all five of one anchor's own facts side by side. This milestone is
+exactly that — and nothing more:
+
+```text
+Bitcoin Anchor (anchorId)
+├── broadcastObservations       (application/BitcoinAnchorBroadcastView.js, 0.8.64)
+├── confirmationObservations    (application/BitcoinAnchorConfirmationObservationHistory.js, 0.8.56)
+├── contentProofObservations    (application/BitcoinAnchorContentProofView.js, 0.8.57)
+├── chainPlacementObservations  (application/BitcoinAnchorChainPlacementObserver.js, 0.8.76)
+└── consistencyFindings         (application/BitcoinAnchorObservationConsistencyAnalyzer.js, 0.8.77)
+```
+
+**CORRELATE EVIDENCE BY EXPLICIT IDENTITY, NEVER BY RESEMBLANCE.** This is
+the one rule this entire milestone exists to enforce, extending the
+identical restraint application/PublicationObservationTimelineView.js's
+own header (0.8.74) and application/PublicationObservationArchive.js's own
+header (0.8.75) already hold for `anchorId`/`recordIndex` one layer up, to
+a genuinely new place: correlating a Bitcoin anchor's own evidence
+WITHIN its own domain, never across it. `anchorId` is a required,
+explicit, caller-supplied string; this milestone's own composer never
+derives it from a `txid`, a `contentHash`, or a `blockHash` carried by any
+observation it is handed, and never guesses it from a position in some
+other, unrelated collection. Two anchors can share an identical
+`contentHash` (the same content anchored twice, in two separate Bitcoin
+transactions) and still be two entirely separate anchors, each with its
+own, non-overlapping evidence — the flagship test in tests/
+BitcoinAnchorObservationEvidence.test.js constructs exactly this scenario
+and proves neither anchor's own evidence ever leaks into the other's.
+
+**A PURE COMPOSITION OF ALREADY-RECORDED OBSERVATIONS, NEVER A NEW SOURCE
+OF TRUTH, AND NEVER A HIDDEN "SUPER ANALYZER."** application/
+BitcoinAnchorObservationEvidence.js's own `composeBitcoinAnchorObservationEvidence()`
+invents no new fact. Every broadcast/confirmation/content-proof
+observation it is handed is carried through completely unchanged, under a
+`{ index, observation }` wrapper naming only that observation's own
+1-based position within the array the caller supplied for this one
+anchor. `chainPlacementObservations`/`consistencyFindings` are carried
+through EXACTLY as 0.8.76's own `observeBitcoinAnchorChainPlacementChanges()`
+and 0.8.77's own `analyzeBitcoinAnchorObservationConsistency()` already
+produced them — this milestone deliberately recomputes neither analysis
+itself, keeping both exactly as independently testable as they already
+were. See docs/Principles.md, "The UI Displays Observations; It Does Not
+Turn Them Into A Verdict (0.8.57)," held here once more, one layer up: five
+independently produced facts sit next to each other, unscored and
+uncombined — there is no combined `status`, `confidence`, `health`,
+`trusted`, `valid`, `canonical`, `reliable`, or verdict field anywhere in
+this milestone's output, and no overall Bitcoin-anchor verdict of any
+kind.
+
+**A MISSING COLLECTION IS AN HONEST EMPTY COLLECTION, NEVER A FABRICATED
+ENTRY.** A discovered anchor (another replica's own already-catalogued
+claim) carries no broadcast observation of its own on this page — this
+replica never itself observed one — so its evidence bundle honestly
+reports `broadcastObservations: { count: 0, observations: [] }`, the
+identical restraint application/PublicationObservationTimelineView.js's
+own header (0.8.74) already holds for the identical fact, one section
+over.
+
+New files:
+- `application/BitcoinAnchorObservationEvidence.js` — new;
+  `composeBitcoinAnchorObservationEvidence({ anchorId,
+  broadcastObservations, confirmationObservations,
+  contentProofObservations, chainPlacementObservations,
+  consistencyFindings })` — the pure, explicit-identity composition this
+  entire milestone is built around. Throws if `anchorId` is missing,
+  empty, or not a string; every other argument defaults to an empty
+  collection.
+- `application/BitcoinAnchorObservationEvidenceView.js` — new;
+  `describeBitcoinAnchorObservationEvidence(evidence)` — pure
+  presentation, reusing application/BitcoinAnchorBroadcastView.js,
+  application/BitcoinAnchorConfirmationObservationHistoryView.js,
+  application/BitcoinAnchorContentProofView.js, application/
+  BitcoinAnchorChainPlacementObservationView.js, and application/
+  BitcoinAnchorObservationConsistencyView.js's own `describe*()` functions
+  unchanged for every state label it shows — inventing no new vocabulary
+  of its own.
+
+Changed:
+- `ui/views/DecentralizedPublicationsView.js` — a "Bitcoin Anchor
+  Evidence" button, a sibling to the existing "Compare Confirmation
+  Observations" (0.8.76) and "Observation Consistency" (0.8.77) buttons,
+  shown whenever this anchor holds any confirmation or content-proof
+  observation at all; expands to the five-section count-only disclosure
+  above, with `index`-numbered entries for each observation. New state:
+  `entry.bitcoinAnchorObservationEvidenceExpanded`. New functions:
+  `bitcoinAnchorObservationEvidenceView()`,
+  `toggleBitcoinAnchorObservationEvidence()`,
+  `isBitcoinAnchorObservationEvidenceExpanded()`.
+
+New tests:
+- `tests/BitcoinAnchorObservationEvidence.test.js` — the flagship
+  two-anchors-sharing-a-contentHash scenario described above, plus:
+  `anchorId` is required and rejected when missing/empty/non-string; the
+  evidence object cannot manufacture an anchor identity from a txid;
+  missing collections stay empty rather than fabricated;
+  chainPlacementObservations/consistencyFindings are carried through
+  byte-identical to what 0.8.76/0.8.77 already produced; neither a source
+  array nor its observations are ever mutated; repeated calls are
+  byte-identical; no aggregate verdict of any kind; the view layer reuses
+  every existing `describe*()` function's own vocabulary unchanged; and a
+  persistence round trip through application/PublicationObservationArchive.js's
+  own toJSON()/fromJSON() (0.8.75) produces byte-identical evidence to
+  composing over the live archive.
+
+Deliberately excluded, exactly as this milestone's own proposal named up front:
+- **Any overall Bitcoin-anchor verdict.** The single most important
+  exclusion this milestone holds, restated directly: this milestone
+  answers "what evidence exists about this anchor, across every
+  independent stream this replica has recorded," never "is this anchor
+  good." The result stays a collection of independently produced facts.
+- **Recomputing 0.8.76's own placement comparison or 0.8.77's own
+  consistency analysis.** Both are composed exactly as their own,
+  unchanged functions already produced them — see "A pure composition..."
+  above.
+- **Any correlation by content hash, txid alone, block hash, or a
+  position guessed from another collection.** `anchorId` is the one and
+  only correlation key this milestone ever reads — see "Correlate
+  Evidence By Explicit Identity, Never By Resemblance" above, and the
+  flagship test's own two-anchors-one-contentHash scenario.
+- **Any new persistence, network call, or history.** This milestone reads
+  only what application/BitcoinAnchorConfirmationObservationHistory.js
+  (0.8.56), application/BitcoinAnchorContentProofView.js (0.8.57), 0.8.76,
+  and 0.8.77 already hold in memory (or, once archived, durably since
+  0.8.75) — it writes nothing new anywhere.
+- **Explicit Bitcoin ↔ IPFS content-hash reconciliation.** Still real,
+  separately sized, unnumbered future work — this milestone correlates
+  evidence WITHIN the Bitcoin domain only; it never reads an IPFS
+  publication record or compares against one.
+- **A dedicated evidence inspection screen of its own.** This milestone's
+  own disclosure is a count-and-list projection, nested inside the
+  existing "Bitcoin Anchor" card exactly like every disclosure before it
+  — a genuinely separate, dedicated inspection experience is real,
+  separately sized future work (0.8.79).
+
+What's left, and deliberately unbuilt: an overall Bitcoin-anchor verdict
+of any kind; a dedicated evidence inspection UI (0.8.79); explicit Bitcoin
+↔ IPFS content-hash reconciliation; and — once evidence correlation and
+its own inspection UI both exist — chain-event interpretation, a much
+more consequential, and therefore much later, milestone — each its own,
+separately sized piece of work, exactly like every "Deliberately
+excluded" list in this document before it.

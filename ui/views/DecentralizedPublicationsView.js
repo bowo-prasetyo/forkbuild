@@ -93,6 +93,8 @@ import { describeBitcoinAnchorSignedPsbtFinalization } from '../../application/B
 import { BitcoinAnchorBroadcastState } from '../../application/BitcoinAnchorBroadcastState.js';
 import { describeBitcoinAnchorBroadcast } from '../../application/BitcoinAnchorBroadcastView.js';
 import { describePublicationObservationTimeline, PublicationObservationTimelineDomain, PublicationObservationTimelineEntryKind } from '../../application/PublicationObservationTimelineView.js';
+import { composeBitcoinAnchorObservationEvidence } from '../../application/BitcoinAnchorObservationEvidence.js';
+import { describeBitcoinAnchorObservationEvidence } from '../../application/BitcoinAnchorObservationEvidenceView.js';
 import { PublicationObservationArchive } from '../../application/PublicationObservationArchive.js';
 import { describePublicationObservationArchive } from '../../application/PublicationObservationArchiveView.js';
 import { LocalStoragePublicationObservationArchive } from '../../storage/LocalStoragePublicationObservationArchive.js';
@@ -1870,6 +1872,22 @@ export default {
                 // `bitcoinAnchorChainPlacementComparisonExpanded` above
                 // already holds.
                 bitcoinAnchorObservationConsistencyExpanded: {},
+                // 0.8.78 — Bitcoin Anchor Observation Evidence Correlation.
+                // Gates the "Bitcoin Anchor Evidence" disclosure — a
+                // SIBLING to "Compare Confirmation Observations" (0.8.76)
+                // and "Observation Consistency" (0.8.77) above it, never
+                // nested inside either one. This disclosure composes
+                // exactly what those two, and "Show Confirmation History"
+                // (0.8.56) and the "Bitcoin Anchor" card's own current
+                // reconciliation (0.8.57) immediately above, already read
+                // and already show — application/
+                // BitcoinAnchorObservationEvidence.js recomputes none of
+                // their analysis, so this key needs no matching "in
+                // flight"/"error" state either, the identical reasoning
+                // `bitcoinAnchorChainPlacementComparisonExpanded` (0.8.76)
+                // and `bitcoinAnchorObservationConsistencyExpanded`
+                // (0.8.77) both already hold.
+                bitcoinAnchorObservationEvidenceExpanded: {},
                 // 0.8.74 — Cross-Domain Publication Observation Timeline.
                 // Gates the "Show/Hide Cross-Domain Timeline" disclosure,
                 // placed as a SIBLING to the existing IPFS and Bitcoin
@@ -2694,6 +2712,60 @@ export default {
 
         function isBitcoinAnchorObservationConsistencyExpanded(entry, anchorView) {
             return Boolean(entry.bitcoinAnchorObservationConsistencyExpanded[anchorView.anchorId]);
+        }
+
+        // 0.8.78 — Bitcoin Anchor Observation Evidence Correlation.
+        //
+        // Composes application/BitcoinAnchorObservationEvidence.js's own
+        // `composeBitcoinAnchorObservationEvidence()` — which recomputes
+        // NOTHING of its own — over exactly the same, already-in-memory
+        // facts this anchor's own cards above already read:
+        // `entry.bitcoinAnchorConfirmationHistories[anchorId]` (the SAME
+        // array `bitcoinAnchorConfirmationHistoryView()`,
+        // `bitcoinAnchorChainPlacementComparisonView()`, and
+        // `bitcoinAnchorObservationConsistencyView()` above already read),
+        // `entry.bitcoinAnchorReconciliations[anchorId].contentProof` (the
+        // SAME single current reconciliation `bitcoinAnchorReconciliationView()`
+        // already reads — there is no content-proof HISTORY to read,
+        // exactly as that function's own header already explains), and
+        // 0.8.76/0.8.77's own placement/consistency results, called fresh
+        // here exactly as `bitcoinAnchorChainPlacementComparisonView()`/
+        // `bitcoinAnchorObservationConsistencyView()` above already call
+        // them. `anchorView.anchorId` — this anchor's own EXPLICIT
+        // identity — is the one and only key used throughout; nothing
+        // here reads or infers from `contentHash` or `txid`.
+        //
+        // NO BROADCAST OBSERVATION FOR A DISCOVERED ANCHOR, EVER — the
+        // identical restraint `crossDomainPublicationObservationTimelineView()`
+        // (0.8.74) already holds, one section over: every `anchorView`
+        // this loop iterates over (`entry.evidence.anchors`) is an
+        // already-catalogued, discovered claim, never a transaction THIS
+        // replica itself broadcast, so it honestly contributes an empty
+        // `broadcastObservations` section — never a fabricated one. See
+        // that function's own header for the full reasoning.
+        function bitcoinAnchorObservationEvidenceView(entry, anchorView) {
+            const anchorId = anchorView.anchorId;
+            const history = entry.bitcoinAnchorConfirmationHistories[anchorId] || [];
+            const reconciliation = entry.bitcoinAnchorReconciliations[anchorId];
+            const contentProofObservations = (reconciliation && reconciliation.contentProof) ? [reconciliation.contentProof] : [];
+
+            return describeBitcoinAnchorObservationEvidence(composeBitcoinAnchorObservationEvidence({
+                anchorId,
+                broadcastObservations: [],
+                confirmationObservations: history,
+                contentProofObservations,
+                chainPlacementObservations: observeBitcoinAnchorChainPlacementChanges(history),
+                consistencyFindings: analyzeBitcoinAnchorObservationConsistency(history)
+            }));
+        }
+
+        function toggleBitcoinAnchorObservationEvidence(entry, anchorView) {
+            entry.bitcoinAnchorObservationEvidenceExpanded[anchorView.anchorId] =
+                !entry.bitcoinAnchorObservationEvidenceExpanded[anchorView.anchorId];
+        }
+
+        function isBitcoinAnchorObservationEvidenceExpanded(entry, anchorView) {
+            return Boolean(entry.bitcoinAnchorObservationEvidenceExpanded[anchorView.anchorId]);
         }
 
         // 0.8.58 — Explicit Bitcoin Wallet Connection & Signing UX.
@@ -4679,6 +4751,7 @@ export default {
             toggleBitcoinAnchorConfirmationHistoryEntry, isBitcoinAnchorConfirmationHistoryEntryExpanded,
             bitcoinAnchorChainPlacementComparisonView, toggleBitcoinAnchorChainPlacementComparison, isBitcoinAnchorChainPlacementComparisonExpanded,
             bitcoinAnchorObservationConsistencyView, toggleBitcoinAnchorObservationConsistency, isBitcoinAnchorObservationConsistencyExpanded,
+            bitcoinAnchorObservationEvidenceView, toggleBitcoinAnchorObservationEvidence, isBitcoinAnchorObservationEvidenceExpanded,
             bitcoinWalletConnection, bitcoinWalletConnectionState, connectBitcoinWallet, disconnectBitcoinWallet,
             bitcoinWalletConnectionView, bitcoinWalletConnectionBadgeClass, isBitcoinWalletConnected, isBitcoinWalletConnecting,
             bitcoinAnchorTransactionReview, bitcoinAnchorTransactionReviewView, bitcoinAnchorTransactionReviewWalletMatchView,
@@ -6269,6 +6342,24 @@ export default {
                                                 @click="toggleBitcoinAnchorObservationConsistency(entry, anchorView)">
                                             {{ isBitcoinAnchorObservationConsistencyExpanded(entry, anchorView) ? 'Hide Observation Consistency' : 'Observation Consistency' }}
                                         </button>
+                                        <!-- 0.8.78 — Bitcoin Anchor Observation Evidence
+                                             Correlation. A SIBLING to "Compare Confirmation
+                                             Observations" (0.8.76) and "Observation Consistency"
+                                             (0.8.77) above, shown whenever this anchor holds ANY
+                                             recorded fact at all — never gated behind the
+                                             two-or-more-observations condition those two share,
+                                             since application/BitcoinAnchorObservationEvidence.js
+                                             also bundles this anchor's own content-proof
+                                             observation, which those two never read. Composing
+                                             evidence is a pure, read-only re-derivation of facts
+                                             the cards above already show — never a new network
+                                             call. -->
+                                        <button v-if="bitcoinAnchorObservationEvidenceView(entry, anchorView).confirmationObservations.count > 0
+                                                       || bitcoinAnchorObservationEvidenceView(entry, anchorView).contentProofObservations.count > 0"
+                                                class="action-btn action-btn--secondary"
+                                                @click="toggleBitcoinAnchorObservationEvidence(entry, anchorView)">
+                                            {{ isBitcoinAnchorObservationEvidenceExpanded(entry, anchorView) ? 'Hide Bitcoin Anchor Evidence' : 'Bitcoin Anchor Evidence' }}
+                                        </button>
                                     </div>
 
                                     <!-- Each comparison names only whether the observed block
@@ -6347,6 +6438,65 @@ export default {
                                             </li>
                                         </ul>
                                     </div>
+
+                                    <!-- 0.8.78 — Bitcoin Anchor Observation Evidence
+                                         Correlation. Puts this anchor's own five independent
+                                         facts — broadcast, confirmation, content-proof,
+                                         chain-placement comparisons, and consistency findings
+                                         — side by side, each still in its own domain's own
+                                         vocabulary, under this one explicit anchorId. This is
+                                         NOT a combined verdict: a person reading this section
+                                         still sees "4 confirmation observations" and "1
+                                         content-proof observation" as two entirely separate
+                                         facts, never a single "well evidenced" or "verified"
+                                         summary. See docs/Principles.md, "The UI Displays
+                                         Observations; It Does Not Turn Them Into A Verdict
+                                         (0.8.57)," and application/
+                                         BitcoinAnchorObservationEvidence.js's own header,
+                                         "Correlate Evidence By Explicit Identity, Never By
+                                         Resemblance." -->
+                                    <ul v-if="isBitcoinAnchorObservationEvidenceExpanded(entry, anchorView)" class="replica-knowledge-claim-list">
+                                        <li class="replica-knowledge-claim">
+                                            <p class="form-hint form-hint--neutral">
+                                                Broadcast observations: {{ bitcoinAnchorObservationEvidenceView(entry, anchorView).broadcastObservations.count }}
+                                            </p>
+                                            <ul v-if="bitcoinAnchorObservationEvidenceView(entry, anchorView).broadcastObservations.count > 0">
+                                                <li v-for="item in bitcoinAnchorObservationEvidenceView(entry, anchorView).broadcastObservations.observations" :key="item.index">
+                                                    {{ item.stateLabel }} — {{ item.broadcastedAt ? formatWhen(item.broadcastedAt) : 'no timestamp recorded' }}
+                                                </li>
+                                            </ul>
+                                        </li>
+                                        <li class="replica-knowledge-claim">
+                                            <p class="form-hint form-hint--neutral">
+                                                Confirmation observations: {{ bitcoinAnchorObservationEvidenceView(entry, anchorView).confirmationObservations.count }}
+                                            </p>
+                                            <ul v-if="bitcoinAnchorObservationEvidenceView(entry, anchorView).confirmationObservations.count > 0">
+                                                <li v-for="item in bitcoinAnchorObservationEvidenceView(entry, anchorView).confirmationObservations.observations" :key="item.index">
+                                                    Confirmation observation #{{ item.index }} — {{ formatWhen(item.observedAt) }} — {{ item.stateLabel }}
+                                                </li>
+                                            </ul>
+                                        </li>
+                                        <li class="replica-knowledge-claim">
+                                            <p class="form-hint form-hint--neutral">
+                                                Content-proof observations: {{ bitcoinAnchorObservationEvidenceView(entry, anchorView).contentProofObservations.count }}
+                                            </p>
+                                            <ul v-if="bitcoinAnchorObservationEvidenceView(entry, anchorView).contentProofObservations.count > 0">
+                                                <li v-for="item in bitcoinAnchorObservationEvidenceView(entry, anchorView).contentProofObservations.observations" :key="item.index">
+                                                    Content-proof observation #{{ item.index }} — {{ formatWhen(item.observedAt) }} — {{ item.stateLabel }}
+                                                </li>
+                                            </ul>
+                                        </li>
+                                        <li class="replica-knowledge-claim">
+                                            <p class="form-hint form-hint--neutral">
+                                                Chain-placement comparisons: {{ bitcoinAnchorObservationEvidenceView(entry, anchorView).chainPlacementObservations.count }}
+                                            </p>
+                                        </li>
+                                        <li class="replica-knowledge-claim">
+                                            <p class="form-hint form-hint--neutral">
+                                                Consistency findings: {{ bitcoinAnchorObservationEvidenceView(entry, anchorView).consistencyFindings.count }}
+                                            </p>
+                                        </li>
+                                    </ul>
 
                                     <!-- The full chronological narration of every past "Reconcile"
                                          click's own confirmation observation for THIS anchor — a
