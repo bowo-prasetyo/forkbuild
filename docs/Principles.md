@@ -16715,3 +16715,77 @@ determination of any kind — the flagship restraint every milestone since
 rather than a single value.
 
 See `docs/Roadmap.md`, 0.8.87, for the full milestone entry.
+
+## A Replacement Review Composes Existing Information; It Does Not Authorize Replacement (0.8.88)
+
+**Archive comparison may inform an explicit replacement decision, but it
+must never make that decision automatically.** `application/
+PublicationObservationArchiveReplacementReview.js`'s own
+`describePublicationObservationArchiveReplacementReview(currentArchive, externalArchive)`
+connects 0.8.86's own inspection and 0.8.87's own difference to 0.8.82's
+own explicit replacement action — without ever becoming a second
+replacement mechanism itself, and without ever deciding which archive
+should win:
+
+```text
+Inspect  (0.8.86)  →  what does the external archive contain?
+Compare  (0.8.85)  →  are the two fingerprints equal?
+Diff     (0.8.87)  →  which durable facts explain that answer?
+Review   (0.8.88)  →  what would explicit replacement change?
+                       NEVER: should replacement happen?
+```
+
+**"Review," deliberately never "reconciliation."** Reconciliation implies
+this codebase has authority to determine how two differing histories
+should be resolved; it does not. A review states `A ≠ B` and explains
+*how* — it never concludes `B should replace A`. That conclusion belongs
+to a person, exactly as `docs/Roadmap.md`'s own 0.8.82 proposal already
+required for replacement itself.
+
+**A pure composition of already-existing projections — no new
+interpretation of the facts it reads.** A review's own `difference` field
+is 0.8.87's own difference result, embedded whole, never recomputed a
+second, competing way; its own `current`/`external` fields are each a
+plain composition of `describePublicationObservationArchive()` and
+`describePublicationObservationArchiveProvenance()` — the identical two
+functions 0.8.86's own inspection already calls for the external side,
+applied here to both sides. This mirrors every prior milestone's own
+"reuse, never reinvent" discipline: 0.8.85 reused 0.8.84's own fingerprint
+algorithm; 0.8.87 reused `toJSON()`'s own canonical serialization and
+0.8.84's own algorithm; 0.8.88 reuses 0.8.87's own difference and two
+already-existing views, in full.
+
+**The external archive remains ephemeral until replacement is explicitly
+confirmed.** Inspecting, comparing, and reviewing never assign anything to
+the current archive — only an explicit "Replace Current Archive" click
+does, through 0.8.82/0.8.83's own existing, unchanged import mechanism.
+This yields one clean invariant, restated as this milestone's own flagship
+test: inspection, comparison, and review cannot mutate the current
+archive; replacement alone changes current durable state.
+
+**No second replacement implementation.** This milestone introduces no
+`reviewAndReplaceArchive()` that secretly parses, validates, restamps
+provenance, persists, and replaces in one call. `ui/views/
+DecentralizedPublicationsView.js`'s own "Replace Current Archive" button on
+the Replacement Review card calls the SAME `importPublicationObservationArchive()`/
+`recordPublicationObservationArchiveImport()` pair 0.8.82/0.8.83 already
+established, over the same already-inspected text — never a parallel path.
+
+**Importing an archive changes its provenance perspective, and a review
+does not hide this.** 0.8.83's own `importPublicationObservationArchive()`
+restamps every fact `IMPORTED` regardless of what the exported JSON
+claimed — so `fingerprint(exported A) ≠ fingerprint(imported A)`, even
+though the underlying factual observations are identical. A replacement
+review shows the external archive's own fingerprint exactly as inspected,
+BEFORE any such restamping; it makes no attempt to predict or disguise
+that the durable fingerprint which actually results after replacement will
+differ from it.
+
+**No vocabulary that turns a count into a verdict.** Never "external
+archive is better," "newer," "more complete," "correct," "stale,"
+"recommended," "safe," or "trusted" — not as a field, not as a computed
+flag. "External archive: 9 observations; current archive: 7 observations"
+is what a review reports; a person reading those numbers, not the review
+itself, decides what they mean.
+
+See `docs/Roadmap.md`, 0.8.88, for the full milestone entry.

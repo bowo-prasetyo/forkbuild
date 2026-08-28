@@ -30582,7 +30582,159 @@ Deliberately excluded, exactly as this milestone's own proposal named up front:
   enum as the primary result.** `hasFactDifference`/`hasProvenanceDifference`
   summarize; the six collections' own independent counts carry the detail.
 
+What's left: 0.8.88 connects this difference to 0.8.82's own explicit
+replacement action, behind an explicit review step — see below. Full
+reconciliation — merging, synchronizing, or choosing between two archives'
+own differing facts at record level — stays deliberately unbuilt beyond
+that.
+
+## 0.8.88 — Explicit Publication Archive Replacement Review
+
+0.8.84 through 0.8.87 gave a person every read-only step needed to
+understand how an external archive differs from the current one —
+identity, comparison, inspection, and a structural difference. None of
+them ever connected to 0.8.82's own explicit replacement action: a person
+could inspect and diff an external archive all day, and "Replace Current
+Archive" would still know nothing about any of it. This milestone is that
+connective layer, and only that.
+
+```text
+0.8.84  Fingerprint            archive identity
+0.8.85  Fingerprint comparison equality / difference
+0.8.86  External inspection    external state visibility
+0.8.87  Archive difference     structural explanation
+0.8.88  Replacement review     what would explicit replacement change?
+```
+
+**Archive comparison may inform an explicit replacement decision, but it
+must never make that decision automatically.** The existing "Replace
+Current Archive" action (0.8.82) is conceptually still separate from
+inspection and comparison; this milestone connects those pieces without
+introducing reconciliation:
+
+```text
+External Archive → Inspect → Compare → Difference Projection →
+Explicit Replacement Review → user deliberately chooses →
+Replace Current Archive
+```
+
+**"Review," deliberately never "reconciliation."** Reconciliation implies
+this codebase has authority to determine how conflicting histories should
+be resolved; it does not. `A ≠ B`, and this codebase can explain "A
+differs from B because…" — but it cannot legitimately conclude "B should
+replace A" from those facts alone. The user makes that decision.
+
+**A small application-level model that composes existing information —
+it creates no new interpretation of it.** `application/
+PublicationObservationArchiveReplacementReview.js`'s own
+`describePublicationObservationArchiveReplacementReview(currentArchive, externalArchive)`
+embeds 0.8.87's own difference result whole (never recomputing a second,
+competing diff) and adds both archives' own factual and provenance counts,
+read through the identical `describePublicationObservationArchive()`/
+`describePublicationObservationArchiveProvenance()` projections 0.8.86's
+own inspection already calls for the external side — applied here to
+both sides. No new fingerprinting, no new diffing, no new counting logic.
+
+**The external archive remains ephemeral until replacement is explicitly
+confirmed.** Inspecting, comparing, and reviewing never assign anything to
+`publicationObservationArchive.value` — only an explicit "Replace Current
+Archive" click does. This yields a clean state machine: Current A →
+inspect external B (ephemeral) → compare/review (review only) → explicit
+confirmation → Current = B. Nothing before that last, explicit step
+touches current state.
+
+**Replacement reuses the existing 0.8.82/0.8.83 import mechanism — no
+second replacement implementation.** This milestone introduces no
+`reviewAndReplaceArchive()` that secretly performs parsing, validation,
+provenance restamping, persistence, and replacement in one call. The
+"Replace Current Archive" button on the new Replacement Review card calls
+the SAME `importPublicationObservationArchive()`/
+`recordPublicationObservationArchiveImport()` pair already established,
+over the same already-inspected text.
+
+**Importing changes provenance perspective, and the review does not hide
+it.** 0.8.83's own import restamps every fact `IMPORTED`, so
+`fingerprint(exported A) ≠ fingerprint(imported A)` even though the
+underlying factual observations are identical. The review shows the
+external archive's own fingerprint exactly as inspected — before any such
+restamping — and makes no attempt to disguise that actual replacement
+produces a different durable fingerprint.
+
+**No vocabulary that turns a count into a verdict.** Never "external
+archive is better/newer/more complete/correct," never "current archive is
+stale," never "recommended replacement," "safe to replace," or "trusted/
+verified archive." "External archive: 9 observations; current archive: 7
+observations" is what the review reports; interpreting those numbers is
+left to the person reading them.
+
+New files:
+- `application/PublicationObservationArchiveReplacementReview.js` — new;
+  `describePublicationObservationArchiveReplacementReview(currentArchive, externalArchive)`.
+  Returns a frozen `{ currentFingerprint, externalFingerprint, same,
+  difference, current, external }`, where `difference` is 0.8.87's own
+  complete difference result embedded unchanged, and `current`/`external`
+  are each a frozen `{ publicationCount, observationCount,
+  ipfsPublicationCount, ipfsVerificationCount, bitcoinBroadcastCount,
+  bitcoinConfirmationCount, bitcoinContentProofCount,
+  bitcoinAnchorPublicationRecordCount, localFactCount, importedFactCount,
+  totalFactCount, archiveImportCount }` for that archive alone. Throws for
+  a non-`PublicationObservationArchive` argument, in either position.
+
+Changed:
+- `ui/views/DecentralizedPublicationsView.js` — the existing "Archive
+  Difference" projection (0.8.87) gains one additional, explicit action —
+  "Review Replacement" — available once a difference has already been
+  computed. Clicking it reconstructs the external archive from the
+  already-inspected text and calls this milestone's own
+  `describePublicationObservationArchiveReplacementReview()` against the
+  current archive, rendering both fingerprints and both archives' own
+  facts/provenance/import-event counts side by side. The resulting
+  "Replacement Review" card offers "Cancel" (dismisses the review; nothing
+  was ever mutated) and "Replace Current Archive" (calls the existing
+  `importPublicationObservationArchive()`/
+  `recordPublicationObservationArchiveImport()` pair over the same
+  inspected text, persists, and resets the inspection/comparison/review
+  state) — never a second replacement implementation. Any change to the
+  inspected text, or a fresh "Compare" click, invalidates a stale review
+  the identical way it already invalidates a stale difference.
+
+New tests:
+- `tests/PublicationObservationArchiveReplacementReview.test.js` — the
+  flagship: reviewing (repeatedly) never moves the current archive; only
+  an explicit `importPublicationObservationArchive()` call does. Plus: the
+  review embeds 0.8.87's own difference result byte-identically, never
+  recomputing it; current/external factual and provenance counts agree
+  exactly with the embedded difference's own `importEvents` counts;
+  identical archives still expose full side-by-side counts; a non-archive
+  argument always throws, in either position; no mutation of either
+  archive and full determinism; zero network operations and a
+  read-the-source guarantee against wallet/signer/pinning/network/storage
+  imports; no trust/confidence/authentic/newer/better/correct/recommend/
+  winner/merge/reconcile/safe/stale vocabulary anywhere in the result's
+  own field names, including the nested `current`/`external` objects; and
+  a dedicated demonstration that the fingerprint a review shows for the
+  external archive genuinely differs from the fingerprint that results
+  once that archive is actually imported and restamped (0.8.83).
+
+Deliberately excluded, exactly as this milestone's own proposal named up front:
+- **Archive merging, synchronization, peer-to-peer archive exchange, or
+  automatic replacement of any kind.** "Replace Current Archive" stays an
+  explicit, person-initiated action this milestone never calls on its own.
+- **Replacement recommendations, conflict resolution, three-way merge,
+  semantic reconciliation, or record-level merge.** "External has more
+  records" is never made equivalent to "external should replace current."
+- **Trust scoring, archive signing, notarization, or blockchain anchoring
+  of the fingerprint itself.**
+- **Automatic external archive retrieval.** The external archive is always
+  a file already chosen, or text already pasted — never fetched.
+- **A second replacement implementation.** No `reviewAndReplaceArchive()`
+  that performs parsing, validation, provenance restamping, persistence,
+  and replacement in one call — replacement stays exactly where 0.8.82/
+  0.8.83 already put it.
+
 What's left, and deliberately unbuilt: any explicit reconciliation model —
 merging, synchronizing, or choosing between two archives' own differing
-facts — now that identity-aware matching rules exist for every collection.
-Deliberately not designed yet.
+facts — now that identity-aware matching rules exist for every collection,
+and a review step exists to inform, but never make, an explicit
+replacement decision. Deliberately not designed yet; the next
+architectural need may become clearer from actual usage.
