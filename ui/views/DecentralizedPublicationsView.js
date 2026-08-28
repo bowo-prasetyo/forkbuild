@@ -114,6 +114,11 @@ import {
     BitcoinAnchorPublicationLifecycleTimelineEntryKind,
     reconstructBitcoinAnchorPublicationLifecycleTimeline
 } from '../../application/BitcoinAnchorPublicationLifecycleTimelineView.js';
+import { describeBaseAnchorPublicationRecordHistory } from '../../application/BaseAnchorPublicationRecordHistoryView.js';
+import {
+    BaseAnchorPublicationLifecycleTimelineEntryKind,
+    reconstructBaseAnchorPublicationLifecycleTimeline
+} from '../../application/BaseAnchorPublicationLifecycleTimelineView.js';
 import {
     PublicationObservationArchiveImportOutcome,
     exportPublicationObservationArchive,
@@ -2078,6 +2083,64 @@ export default {
                     return item.outcomeLabel;
                 case BitcoinAnchorPublicationLifecycleTimelineEntryKind.CONSISTENCY:
                     return item.stateLabel;
+                default:
+                    return '';
+            }
+        }
+
+        // 0.8.99 — Durable Base Publication Identity Record.
+        //
+        // The Base counterpart to `bitcoinAnchorPublicationsExpanded`/
+        // `bitcoinAnchorPublicationRecordHistoryView()` above, one chain
+        // over: lists only the txids this replica minted an explicit
+        // PUBLICATION IDENTITY for — never every txid this archive happens
+        // to hold a Base fact for.
+        const baseAnchorPublicationsExpanded = ref(false);
+
+        function toggleBaseAnchorPublications() {
+            baseAnchorPublicationsExpanded.value = !baseAnchorPublicationsExpanded.value;
+        }
+
+        // Pure projection — never a second, competing record listing
+        // computed inline here.
+        function baseAnchorPublicationRecordHistoryView() {
+            return describeBaseAnchorPublicationRecordHistory(publicationObservationArchive.value.baseAnchorPublicationRecords);
+        }
+
+        // 0.8.101 — Base Anchor Publication Lifecycle Timeline.
+        //
+        // Mirrors `bitcoinAnchorPublicationLifecycleExpanded`/
+        // `toggleBitcoinAnchorPublicationLifecycle()`/
+        // `isBitcoinAnchorPublicationLifecycleExpanded()`/
+        // `bitcoinAnchorPublicationLifecycleTimelineView()` above exactly,
+        // one chain over — scoped by `txid`, Base's own correlation key,
+        // rather than Bitcoin's own `anchorId`. Collapsed by default, and
+        // computes nothing of its own: every field a row shows is read
+        // straight off reconstructBaseAnchorPublicationLifecycleTimeline()'s
+        // own output. Performs zero network operations. Only ever shows a
+        // PUBLICATION entry and INCLUSION_OBSERVATION entries — see
+        // application/BaseAnchorPublicationLifecycleTimelineView.js's own
+        // header on why this domain's timeline names no BROADCAST stage.
+        const baseAnchorPublicationLifecycleExpanded = reactive({});
+
+        function toggleBaseAnchorPublicationLifecycle(txid) {
+            baseAnchorPublicationLifecycleExpanded[txid] = !baseAnchorPublicationLifecycleExpanded[txid];
+        }
+
+        function isBaseAnchorPublicationLifecycleExpanded(txid) {
+            return Boolean(baseAnchorPublicationLifecycleExpanded[txid]);
+        }
+
+        function baseAnchorPublicationLifecycleTimelineView(txid) {
+            return reconstructBaseAnchorPublicationLifecycleTimeline(publicationObservationArchive.value, txid);
+        }
+
+        function baseAnchorPublicationLifecycleEntryDetail(item) {
+            switch (item.kind) {
+                case BaseAnchorPublicationLifecycleTimelineEntryKind.PUBLICATION:
+                    return `Content hash ${item.contentHash} — txid ${item.txid} — ${item.network}`;
+                case BaseAnchorPublicationLifecycleTimelineEntryKind.INCLUSION_OBSERVATION:
+                    return item.stateLabel + (item.blockNumber != null ? ` — block ${item.blockNumber.toLocaleString()}` : '');
                 default:
                     return '';
             }
@@ -6065,6 +6128,10 @@ export default {
             BitcoinAnchorPublicationLifecycleTimelineEntryKind,
             toggleBitcoinAnchorPublicationLifecycle, isBitcoinAnchorPublicationLifecycleExpanded,
             bitcoinAnchorPublicationLifecycleTimelineView, bitcoinAnchorPublicationLifecycleEntryDetail,
+            baseAnchorPublicationsExpanded, toggleBaseAnchorPublications, baseAnchorPublicationRecordHistoryView,
+            BaseAnchorPublicationLifecycleTimelineEntryKind,
+            toggleBaseAnchorPublicationLifecycle, isBaseAnchorPublicationLifecycleExpanded,
+            baseAnchorPublicationLifecycleTimelineView, baseAnchorPublicationLifecycleEntryDetail,
             decentralizationContrast,
             knowledgeSynchronizationCoordinator, synchronizeWithPeers, synchronizationView, synchronizationBadgeClass, synchronizationButtonLabel,
             toggleReplicaKnowledge, acquisitionBreakdownSentence,
@@ -7325,7 +7392,84 @@ export default {
                                         <span class="peer-badge peer-badge--pending">
                                             {{ formatWhen(item.observedAt) }} — {{ item.label }}
                                         </span>
-                                        <p class="form-hint form-hint--neutral">{{ bitcoinAnchorPublicationLifecycleEntryDetail(item) }}</p>
+                        <p class="form-hint form-hint--neutral">{{ bitcoinAnchorPublicationLifecycleEntryDetail(item) }}</p>
+                                        <p v-if="item.reason" class="form-hint form-hint--neutral">{{ item.reason }}</p>
+                                    </li>
+                                </ul>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- 0.8.99 — Durable Base Publication Identity Record; 0.8.101
+                 — Base Anchor Publication Lifecycle Timeline. The Base
+                 counterpart to "Bitcoin Anchor Publications" above, one
+                 chain over: only the txids this replica minted an explicit
+                 PUBLICATION IDENTITY for — { contentHash, txid, network,
+                 createdAt } — never a confirmed/included/valid/trusted/
+                 status field of any kind. "Show Publication Lifecycle"
+                 interleaves that identity with every recorded inclusion
+                 observation for this exact txid into one chronological
+                 read — never a BROADCAST entry, since this codebase has
+                 never made a Base broadcast fact durable (see application/
+                 BaseAnchorPublicationLifecycleTimelineView.js's own
+                 header). Performs ZERO network operations. -->
+            <div class="identity-mgmt-card">
+                <div class="identity-mgmt-card-header">
+                    <span class="identity-mgmt-name">Base Anchor Publications</span>
+                    <span class="peer-badge peer-badge--pending">Persisted locally</span>
+                </div>
+                <p class="form-hint form-hint--neutral">
+                    Every Base publication attempt this replica has minted a durable identity for —
+                    created the moment a transaction is finalized, independent of whether its broadcast
+                    later succeeds. A publication record names WHAT was published, AS WHICH transaction,
+                    and on WHICH network — never whether it was later included in a block.
+                </p>
+                <dl class="evidence-fields">
+                    <div class="evidence-field"><dt>Publications</dt><dd>{{ baseAnchorPublicationRecordHistoryView().count }}</dd></div>
+                </dl>
+                <div class="identity-mgmt-actions">
+                    <button type="button" class="action-btn action-btn--secondary" @click="toggleBaseAnchorPublications">
+                        {{ baseAnchorPublicationsExpanded ? 'Hide Publications' : 'Show Publications' }}
+                    </button>
+                </div>
+                <div v-if="baseAnchorPublicationsExpanded" class="evidence-inspection-adapter">
+                    <span class="evidence-inspection-adapter-title">Publication Identities</span>
+                    <p v-if="baseAnchorPublicationRecordHistoryView().count === 0" class="form-hint form-hint--neutral">
+                        No Base publication identity minted yet. Finalizing a Base transaction elsewhere on
+                        this page creates one automatically.
+                    </p>
+                    <ul v-else class="replica-knowledge-claim-list">
+                        <li v-for="publicationRow in baseAnchorPublicationRecordHistoryView().records" :key="publicationRow.txid" class="replica-knowledge-claim">
+                            <span class="peer-badge peer-badge--pending">{{ publicationRow.txid }}</span>
+                            <p class="form-hint form-hint--neutral">
+                                Content hash: {{ publicationRow.contentHash }} ·
+                                Txid: {{ publicationRow.txid }} ·
+                                Network: {{ publicationRow.network }} ·
+                                Created: {{ formatWhen(publicationRow.createdAt) }}
+                            </p>
+
+                            <!-- 0.8.101 — Base Anchor Publication Lifecycle
+                                 Timeline. Collapsed by default. Missing
+                                 stages (no inclusion observation yet)
+                                 simply produce no entry — never a
+                                 fabricated "missing" or "failed" row. -->
+                            <button type="button" class="peer-action-btn" @click="toggleBaseAnchorPublicationLifecycle(publicationRow.txid)">
+                                {{ isBaseAnchorPublicationLifecycleExpanded(publicationRow.txid) ? 'Hide Publication Lifecycle' : 'Show Publication Lifecycle' }}
+                            </button>
+                            <div v-if="isBaseAnchorPublicationLifecycleExpanded(publicationRow.txid)" class="evidence-list">
+                                <span class="evidence-convergence-title">Publication Lifecycle</span>
+                                <p v-if="!baseAnchorPublicationLifecycleTimelineView(publicationRow.txid)" class="form-hint form-hint--neutral">
+                                    No lifecycle timeline available for this txid.
+                                </p>
+                                <ul v-else class="replica-knowledge-claim-list">
+                                    <li v-for="(item, timelineIndex) in baseAnchorPublicationLifecycleTimelineView(publicationRow.txid).entries"
+                                        :key="timelineIndex" class="replica-knowledge-claim">
+                                        <span class="peer-badge peer-badge--pending">
+                                            {{ formatWhen(item.observedAt) }} — {{ item.label }}
+                                        </span>
+                                        <p class="form-hint form-hint--neutral">{{ baseAnchorPublicationLifecycleEntryDetail(item) }}</p>
                                         <p v-if="item.reason" class="form-hint form-hint--neutral">{{ item.reason }}</p>
                                     </li>
                                 </ul>

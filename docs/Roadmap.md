@@ -33361,3 +33361,151 @@ publication identity with no direct way to ask "what have I observed
 about THIS ONE" — is closed, for Base, in the narrowest possible way: one
 pure projection function, keyed by the one identity Base has always used,
 leaking nothing between publications that merely resemble one another.
+
+## 0.8.101 — Base Anchor Publication Lifecycle Timeline
+
+0.8.99 gave a Base publication its own durable IDENTITY
+(`BaseAnchorPublicationRecord`). 0.8.100 already correlates that identity,
+by its own explicit `txid`, to every inclusion observation this replica
+has recorded for it. Neither one answers the plain question a person
+looking at ONE Base publication actually has: "what happened to this, and
+in what order?" This milestone is that one, single, chronological read,
+scoped to exactly one Base publication record — the Base counterpart to
+`BitcoinAnchorPublicationLifecycleTimelineView.js` (0.8.81), one chain
+over:
+
+```text
+BaseAnchorPublicationRecord (0.8.99, identity)
+     │
+     │  createdAt
+     ▼
+Publication record created
+     │
+     └──► Inclusion observation(s)   (application/BaseAnchorPublicationObservation.js, 0.8.100)
+                │
+                ▼  chronologically sorted
+     one Publication Lifecycle Timeline
+```
+
+**ONLY TWO ENTRY KINDS — PUBLICATION AND INCLUSION_OBSERVATION — A
+DELIBERATE DIFFERENCE FROM BITCOIN'S SIX, NOT AN OVERSIGHT.** Bitcoin's own
+lifecycle timeline presents broadcast, confirmation, content-proof,
+chain-placement, and consistency entries because every one of those is
+backed by its own durable archive collection. Base has never made a
+broadcast fact durable — `BaseTransactionBroadcastCoordinator.js`'s own
+outcome (0.8.95) is consumed once by a page's own ephemeral session state,
+and `PublicationObservationArchive.js` has never grown a
+`baseBroadcastRecords` collection to persist it into. This milestone
+introduces no such collection either: "no new factual records" is its own
+constraint, and a timeline is a projection over what is already durable,
+never a reason to durably record something new. A stage this codebase has
+never made durable simply has no fact for a timeline to present — the same
+"absence is simply absence" restraint 0.8.81 already held, applied one
+layer further back. Should a future milestone give Base's own broadcast
+outcome the identical durable treatment `bitcoinBroadcastRecords` already
+has, this file's own BROADCAST entry could be added the exact same way
+Bitcoin's already was — deliberately out of scope here.
+
+**A LIFECYCLE TIMELINE PRESENTS RECORDED FACTS IN TEMPORAL ORDER; IT DOES
+NOT INFER MISSING STAGES OR INTERPRET THEM** — 0.8.81's own restraint, held
+here again. A publication with no inclusion observation contributes no
+inclusion-observation entry — never a fabricated "Inclusion missing" row.
+Repeated observations stay repeated: three explicit "Observe Transaction"
+clicks against the same transaction produce three INCLUSION_OBSERVATION
+entries, never collapsed because their `txid` is identical, and an
+`UNAVAILABLE` observation is never dropped from the presented history —
+a replica's own honest "could not tell" moment stays on the record exactly
+like `INCLUDED` or `NOT_INCLUDED` does.
+
+**A COMPOSITION OF ALREADY-ESTABLISHED PROJECTIONS, NEVER A NEW SOURCE OF
+TRUTH.** `describeBaseAnchorPublicationLifecycleTimeline()` invents no new
+observation, state, or label of its own. It calls
+`describeBaseAnchorPublicationObservations()` (0.8.100) and
+`describeBaseTransactionInclusionObservationHistory()` (0.8.96), UNCHANGED.
+Its own new work is exactly two things: flattening the publication
+identity and that narrated observation history into one array of timeline
+entries, each carrying its own explicit `kind` and 1-based `index`, and
+sorting that array chronologically.
+
+**EVERY ENTRY CARRIES THE SAME `txid`, NEVER INFERRED FROM `contentHash`**
+— 0.8.100's own correlation key, held here again, one layer up. The
+flagship test constructs two publications sharing one `contentHash` under
+two different `txid`s, with deliberately interleaved append order and
+observation timestamps, and proves each publication's own timeline is
+chronologically correct and never leaks into the other's.
+
+**ZERO NEW DURABLE STATE.** This milestone adds nothing to `application/
+PublicationObservationArchive.js`. A timeline is computed fresh, every
+time, from whatever the archive's own `baseAnchorPublicationRecords`
+(0.8.99) and `baseTransactionInclusionObservationsByTransactionHash`
+(0.8.96/0.8.97) already hold.
+
+New files:
+- `application/BaseAnchorPublicationLifecycleTimelineView.js` — new;
+  `BaseAnchorPublicationLifecycleTimelineEntryKind` (`PUBLICATION`,
+  `INCLUSION_OBSERVATION`); `describeBaseAnchorPublicationLifecycleTimeline(publicationRecord,
+  observationsByTransactionHash)` — the pure projection, no archive
+  access, no network access; and
+  `reconstructBaseAnchorPublicationLifecycleTimeline(archive, txid)` — the
+  one, thin archive-reading entry point, mirroring `application/
+  BitcoinAnchorPublicationLifecycleTimelineView.js`'s own
+  `reconstructBitcoinAnchorPublicationLifecycleTimeline()` (0.8.81), one
+  chain over. Returns `null` when no publication record exists for
+  `txid` — the identical "no record, no inspection" restraint held once
+  more.
+
+Changed:
+- `ui/views/DecentralizedPublicationsView.js` — a new "Base Anchor
+  Publications" card, the Base counterpart to the existing "Bitcoin Anchor
+  Publications" card (0.8.80), listing every txid this replica minted a
+  durable Base publication identity for; each row gains a "Show
+  Publication Lifecycle" toggle, collapsed by default. New state:
+  `baseAnchorPublicationsExpanded`, `baseAnchorPublicationLifecycleExpanded`.
+
+New tests:
+- `tests/BaseAnchorPublicationLifecycleTimeline.test.js` — a fresh
+  publication's timeline is exactly one entry; a full, single-publication
+  timeline is chronologically correct with repeated and `UNAVAILABLE`
+  observations preserved rather than collapsed or dropped; malformed and
+  absent inputs never throw; the flagship two-publications-one-
+  contentHash-interleaved-histories scenario; and
+  `reconstructBaseAnchorPublicationLifecycleTimeline()`'s own reload
+  equivalence through real, persisted storage, with zero network access
+  and "no record, no timeline" for a txid holding Base facts but no minted
+  publication identity; and no verdict vocabulary or fabricated entry kind
+  anywhere in this milestone's own new surface.
+
+Deliberately excluded, exactly as this milestone's own proposal named up front:
+- **A `BROADCAST` timeline entry.** See "Only Two Entry Kinds" above —
+  this codebase has never made a Base broadcast fact durable, so this
+  timeline names no stage for it.
+- **A new `baseBroadcastRecords` archive collection, or any other new
+  durable state.** See "Zero New Durable State" above.
+- **A `GenericPublicationLifecycleTimeline` abstraction unifying Bitcoin
+  and Base semantics.** `docs/Principles.md`'s own restraint against a
+  universal transaction abstraction (0.8.89) extends here unchanged:
+  Bitcoin's own six-entry-kind timeline and Base's own two-entry-kind
+  timeline stay two separate projections, never normalized toward each
+  other merely because their own UI narrations end up looking similar.
+- **Confirmation terminology, finality analysis, reorganization
+  detection, or execution-/receipt-status interpretation.** Every
+  inclusion-observation entry stays exactly what `BaseTransactionInclusionObservationState.js`
+  (0.8.96) already named — `INCLUDED`, `NOT_INCLUDED`, `UNAVAILABLE` —
+  never promoted to a Bitcoin-shaped `CONFIRMED`.
+- **Automatic observation, polling, lifecycle scoring, "publication
+  status," cross-chain lifecycle merging, content-hash correlation, or
+  observation deduplication.** This timeline presents recorded facts; it
+  never triggers a new one and never ranks or collapses the ones it
+  already has.
+
+What's left, and deliberately unbuilt: whether a future milestone should
+give Base's own broadcast outcome the identical durable treatment
+`bitcoinBroadcastRecords` already has, letting this timeline gain its own
+BROADCAST entry; and whether the next major direction should be
+cross-chain publication inspection — reading a Bitcoin lifecycle timeline
+and a Base lifecycle timeline side by side for content that was published
+to both — rather than another low-level, chain-specific feature. With
+this addition, Bitcoin and Base each now carry the full identity →
+correlated observations → lifecycle presentation arc, independently and
+without a shared abstraction forcing their genuinely different semantics
+together.
