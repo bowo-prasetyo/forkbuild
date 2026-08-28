@@ -63,6 +63,10 @@ import { CreateBitcoinAnchorSignedPsbtFinalizerUseCase } from '../application/Cr
 import { CreateBitcoinAnchorSignedPsbtFinalizationCoordinatorUseCase } from '../application/CreateBitcoinAnchorSignedPsbtFinalizationCoordinatorUseCase.js';
 import { CreateBitcoinEsploraTransactionBroadcasterUseCase } from '../application/CreateBitcoinEsploraTransactionBroadcasterUseCase.js';
 import { CreateBitcoinAnchorTransactionBroadcasterUseCase } from '../application/CreateBitcoinAnchorTransactionBroadcasterUseCase.js';
+import { CreateBaseInjectedProviderWalletAdapterUseCase } from '../application/CreateBaseInjectedProviderWalletAdapterUseCase.js';
+import { CreateBaseWalletConnectionUseCase } from '../application/CreateBaseWalletConnectionUseCase.js';
+import { CreateBaseJsonRpcClientUseCase } from '../application/CreateBaseJsonRpcClientUseCase.js';
+import { CreateBaseNetworkObserverUseCase } from '../application/CreateBaseNetworkObserverUseCase.js';
 import { CreateBitcoinAnchorBroadcastCoordinatorUseCase } from '../application/CreateBitcoinAnchorBroadcastCoordinatorUseCase.js';
 import { CreateBitcoinAnchorConfirmationCoordinatorUseCase } from '../application/CreateBitcoinAnchorConfirmationCoordinatorUseCase.js';
 import { CreateIpfsRemotePublicationCoordinatorUseCase } from '../application/CreateIpfsRemotePublicationCoordinatorUseCase.js';
@@ -891,6 +895,33 @@ const { bitcoinWalletFundingObserver } = new CreateBitcoinWalletFundingObserverU
     fundingSource: bitcoinEsploraWalletFundingSource
 });
 
+// 0.8.90 — Explicit Base Network & Account Observation. The first UI
+// wiring for a real, concrete Base capability — everything before this
+// milestone only ever RESERVED `BlockchainKind.BASE` (0.8.89). Mirrors
+// `bitcoinInjectedProviderWalletAdapter`/`bitcoinWalletConnection`
+// immediately above exactly, one chain over: `injectedProvider` is
+// `window.ethereum` when a compatible extension happens to be installed in
+// this browser, and `null` otherwise — a first-class, expected outcome
+// base/BaseInjectedProviderWalletAdapter.js's own header already names.
+// `baseWalletConnection` is provided as ONE shared instance across the
+// whole app, exactly like `bitcoinWalletConnection`; it exposes an account
+// address and NOTHING resembling a signing capability — see base/
+// BaseWalletConnection.js's own header. `baseJsonRpcClient` needs no
+// wallet and no private key at all — reading a chain id or a native
+// balance is public information, read fresh only on an explicit "Observe
+// Base Account" click; see base/BaseNetworkObserver.js's own header on why
+// this is the ONE place this app ever asks a Base RPC endpoint anything.
+const { baseInjectedProviderWalletAdapter } = new CreateBaseInjectedProviderWalletAdapterUseCase().execute({
+    injectedProvider: (typeof window !== 'undefined' && window.ethereum) ? window.ethereum : null
+});
+const { baseWalletConnection } = new CreateBaseWalletConnectionUseCase().execute({
+    provider: baseInjectedProviderWalletAdapter
+});
+const { baseJsonRpcClient } = new CreateBaseJsonRpcClientUseCase().execute();
+const { baseNetworkObserver } = new CreateBaseNetworkObserverUseCase().execute({
+    rpcSource: baseJsonRpcClient
+});
+
 // 0.8.61 — Explicit Bitcoin Anchor Transaction Construction UI. Closes the
 // gap 0.8.60's own "Deliberately excluded" list named directly: "wiring a
 // 'Create Transaction Plan' action into this page." `bitcoinAnchorTransactionBuilder`
@@ -1071,6 +1102,9 @@ app.provide('bitcoinAnchorProofReconciliationView', bitcoinAnchorProofReconcilia
 app.provide('bitcoinWalletConnection', bitcoinWalletConnection);
 // 0.8.60 — Explicit Bitcoin Anchor Funding & Address Preparation.
 app.provide('bitcoinWalletFundingObserver', bitcoinWalletFundingObserver);
+// 0.8.90 — Explicit Base Network & Account Observation.
+app.provide('baseWalletConnection', baseWalletConnection);
+app.provide('baseNetworkObserver', baseNetworkObserver);
 // 0.8.61 — Explicit Bitcoin Anchor Transaction Construction UI.
 app.provide('bitcoinAnchorTransactionConstructionCoordinator', bitcoinAnchorTransactionConstructionCoordinator);
 // 0.8.62 — Explicit Reviewed Bitcoin Anchor Signing UI.

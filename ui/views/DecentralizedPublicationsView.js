@@ -125,6 +125,10 @@ import {
 } from '../../application/PublicationObservationArchiveInspection.js';
 import { describePublicationObservationArchiveDifference } from '../../application/PublicationObservationArchiveDifference.js';
 import { describePublicationObservationArchiveReplacementReview } from '../../application/PublicationObservationArchiveReplacementReview.js';
+import { BaseWalletConnectionState } from '../../application/BaseWalletConnectionState.js';
+import { describeBaseWalletConnection } from '../../application/BaseWalletConnectionView.js';
+import { BaseNetworkObservationState } from '../../application/BaseNetworkObservationState.js';
+import { describeBaseAccountObservation } from '../../application/BaseAccountObservationView.js';
 
 // 0.7.5 — Decentralized Publication UX & Resolution.
 // 0.7.6 — Multi-Peer Publication Retrieval & Replication.
@@ -700,6 +704,31 @@ const BITCOIN_ANCHOR_FUNDING_BADGE_CLASSES = {
     [BitcoinAnchorFundingObservationState.UNAVAILABLE]: 'peer-badge--failed'
 };
 
+// 0.8.90 — Explicit Base Network & Account Observation. Mirrors
+// BITCOIN_WALLET_CONNECTION_BADGE_CLASSES above exactly, one chain over —
+// CONNECTED names an account identity, nothing about signing capability
+// (base/BaseWalletConnection.js exposes none), and UNAVAILABLE reads red
+// for the identical reason: a missing/locked/unreachable wallet extension
+// is a definite, actionable fact a person can resolve right now.
+const BASE_WALLET_CONNECTION_BADGE_CLASSES = {
+    [BaseWalletConnectionState.CONNECTED]: 'peer-badge--authenticated',
+    [BaseWalletConnectionState.CONNECTING]: 'peer-badge--pending',
+    [BaseWalletConnectionState.DISCONNECTED]: 'peer-badge--pending',
+    [BaseWalletConnectionState.UNAVAILABLE]: 'peer-badge--failed'
+};
+
+// 0.8.90 — Explicit Base Network & Account Observation. Mirrors
+// BITCOIN_ANCHOR_FUNDING_BADGE_CLASSES immediately above, one chain over.
+// CHAIN_MISMATCH reads amber, not red — a real, reachable EVM network this
+// codebase simply does not recognize as Base is not the actionable,
+// resolvable failure UNAVAILABLE is; see application/
+// BaseNetworkObservationState.js's own header.
+const BASE_ACCOUNT_OBSERVATION_BADGE_CLASSES = {
+    [BaseNetworkObservationState.OBSERVED]: 'peer-badge--authenticated',
+    [BaseNetworkObservationState.CHAIN_MISMATCH]: 'peer-badge--pending',
+    [BaseNetworkObservationState.UNAVAILABLE]: 'peer-badge--failed'
+};
+
 // 0.8.61 — Explicit Bitcoin Anchor Transaction Construction UI. Mirrors
 // BITCOIN_ANCHOR_FUNDING_BADGE_CLASSES immediately above, one step later in
 // the pipeline: CONSTRUCTING reads amber (an attempt is in flight, not yet
@@ -967,6 +996,22 @@ export default {
         // always a fresh, explicitly-triggered observation, never a
         // background poll.
         const bitcoinWalletFundingObserver = inject('bitcoinWalletFundingObserver', null);
+        // 0.8.90 — Explicit Base Network & Account Observation. Optional —
+        // absent here, the "Base Network" section simply never renders,
+        // the identical degrade-gracefully posture every optional
+        // coordinator on this page already holds. Page-level, not per
+        // evidence card, and entirely unrelated to `bitcoinWalletConnection`/
+        // `bitcoinWalletFundingObserver` above — there is no Base
+        // publication or anchor yet for a section to attach to, and
+        // connecting a Base wallet reads or changes no Bitcoin state at
+        // all. See base/BaseWalletConnection.js's own header on why this
+        // exposes an account address and NOTHING resembling a signing
+        // capability, and base/BaseNetworkObserver.js's own header on why
+        // this is the ONE place this page ever asks a Base RPC endpoint
+        // for a chain id or a native balance — always a fresh,
+        // explicitly-triggered observation, never a background poll.
+        const baseWalletConnection = inject('baseWalletConnection', null);
+        const baseNetworkObserver = inject('baseNetworkObserver', null);
         // 0.8.59/0.8.62 — Explicit Bitcoin Anchor Transaction Review &
         // Signing UI. `bitcoinAnchorTransactionReview` is now this page's
         // OWN reactive holder (declared below, alongside
@@ -1109,6 +1154,34 @@ export default {
             error: null
         });
         const bitcoinAnchorFundingUtxosExpanded = ref(false);
+
+        // 0.8.90 — Explicit Base Network & Account Observation. Mirrors
+        // `bitcoinWalletConnectionState` above exactly, one chain over —
+        // ONE shared reactive mirror of `baseWalletConnection`'s own
+        // `status`/`account`, copied in after every explicit
+        // connect()/disconnect() call rather than watched, for the
+        // identical reason: Vue cannot see through a plain class
+        // instance's own mutations.
+        const baseWalletConnectionState = reactive({
+            status: BaseWalletConnectionState.DISCONNECTED,
+            account: null,
+            reason: null
+        });
+
+        // 0.8.90 — Explicit Base Network & Account Observation. Mirrors
+        // `bitcoinAnchorFundingState` above exactly, one chain over: ONE
+        // shared, page-level holder for the single Base account
+        // observation this page ever asks for. `observation` is `null`
+        // until `observeBaseAccount()` below is explicitly clicked, and is
+        // replaced wholesale — never merged or patched — by every
+        // subsequent click, exactly as base/BaseNetworkObserver.js's own
+        // header requires ("A FRESH READ, NEVER A CACHED OR REMEMBERED
+        // ONE").
+        const baseAccountObservationState = reactive({
+            observing: false,
+            observation: null,
+            error: null
+        });
 
         // 0.8.59/0.8.62 — Explicit Bitcoin Anchor Transaction Review &
         // Signing UI. ONE shared reactive holder for the single,
@@ -3420,6 +3493,105 @@ export default {
             return Boolean(view && view.state === BitcoinAnchorFundingObservationState.OBSERVED);
         }
 
+        // 0.8.90 — Explicit Base Network & Account Observation. Mirrors
+        // connectBitcoinWallet()/disconnectBitcoinWallet() above exactly,
+        // one chain over — the ONE place this page ever calls
+        // `baseWalletConnection.connect()`. No auto-connect, no
+        // reconnect-on-page-load, no polling.
+        async function connectBaseWallet() {
+            if (!baseWalletConnection) return;
+            baseWalletConnectionState.status = BaseWalletConnectionState.CONNECTING;
+            baseWalletConnectionState.reason = null;
+            let result;
+            try {
+                result = await baseWalletConnection.connect();
+            } catch (error) {
+                baseWalletConnectionState.status = baseWalletConnection.status;
+                baseWalletConnectionState.account = null;
+                baseWalletConnectionState.reason = error.message;
+                return;
+            }
+            baseWalletConnectionState.status = baseWalletConnection.status;
+            baseWalletConnectionState.account = baseWalletConnection.account;
+            baseWalletConnectionState.reason = result.connected ? null : result.reason;
+        }
+
+        // Local-only, honestly — see base/BaseWalletConnection.js's own
+        // header, "DISCONNECT IS LOCAL-ONLY, HONESTLY."
+        function disconnectBaseWallet() {
+            if (!baseWalletConnection) return;
+            baseWalletConnection.disconnect();
+            baseWalletConnectionState.status = baseWalletConnection.status;
+            baseWalletConnectionState.account = null;
+            baseWalletConnectionState.reason = null;
+            // A disconnected wallet's own address can no longer be relied
+            // on — the last observation stays visible as a dated fact
+            // (never silently erased), but nothing here re-fetches it
+            // against whatever wallet connects next.
+        }
+
+        // Pure projection of `baseWalletConnectionState` through
+        // application/BaseWalletConnectionView.js's own
+        // `describeBaseWalletConnection()`.
+        function baseWalletConnectionView() {
+            return describeBaseWalletConnection(baseWalletConnectionState);
+        }
+
+        function baseWalletConnectionBadgeClass() {
+            return BASE_WALLET_CONNECTION_BADGE_CLASSES[baseWalletConnectionView().state] || 'peer-badge--pending';
+        }
+
+        function isBaseWalletConnected() {
+            return baseWalletConnectionView().state === BaseWalletConnectionState.CONNECTED;
+        }
+
+        function isBaseWalletConnecting() {
+            return baseWalletConnectionView().state === BaseWalletConnectionState.CONNECTING;
+        }
+
+        // 0.8.90 — Explicit Base Network & Account Observation.
+        //
+        // The ONE place this page ever calls
+        // `baseNetworkObserver.observeAccount()` — never triggered
+        // automatically on connecting the wallet, on page load, or on a
+        // timer; only an explicit "Observe Base Account"/"Refresh
+        // Observation" click. Mirrors observeBitcoinAnchorFunding() above:
+        // the injected collaborator performs the observation and returns a
+        // fresh, frozen record, and this page copies it into its own
+        // reactive state wholesale — never merged with whatever the
+        // previous observation said.
+        async function observeBaseAccount() {
+            if (!baseNetworkObserver || !isBaseWalletConnected()) return;
+            baseAccountObservationState.observing = true;
+            baseAccountObservationState.error = null;
+            let observation;
+            try {
+                observation = await baseNetworkObserver.observeAccount({ address: baseWalletConnectionState.account });
+            } catch (error) {
+                baseAccountObservationState.observing = false;
+                baseAccountObservationState.error = error.message;
+                return;
+            }
+            baseAccountObservationState.observing = false;
+            baseAccountObservationState.observation = observation;
+        }
+
+        // Pure projection of `baseAccountObservationState.observation`
+        // through application/BaseAccountObservationView.js's own
+        // `describeBaseAccountObservation()`. `null` whenever nothing has
+        // been observed yet — the section below simply does not render
+        // either way.
+        function baseAccountObservationView() {
+            if (!baseAccountObservationState.observation) return null;
+            return describeBaseAccountObservation(baseAccountObservationState.observation);
+        }
+
+        function baseAccountObservationBadgeClass() {
+            const view = baseAccountObservationView();
+            if (!view) return 'peer-badge--pending';
+            return BASE_ACCOUNT_OBSERVATION_BADGE_CLASSES[view.state] || 'peer-badge--pending';
+        }
+
         // 0.8.61 — Explicit Bitcoin Anchor Transaction Construction UI.
         //
         // The ONE place this page ever calls
@@ -5294,6 +5466,10 @@ export default {
             bitcoinWalletFundingObserver, bitcoinAnchorFundingState, observeBitcoinAnchorFunding,
             bitcoinAnchorFundingView, bitcoinAnchorFundingBadgeClass, isBitcoinAnchorFundingObserved,
             bitcoinAnchorFundingUtxosExpanded, toggleBitcoinAnchorFundingUtxosExpanded,
+            baseWalletConnection, baseWalletConnectionState, connectBaseWallet, disconnectBaseWallet,
+            baseWalletConnectionView, baseWalletConnectionBadgeClass, isBaseWalletConnected, isBaseWalletConnecting,
+            baseNetworkObserver, baseAccountObservationState, observeBaseAccount,
+            baseAccountObservationView, baseAccountObservationBadgeClass, BaseNetworkObservationState,
             bitcoinAnchorTransactionConstructionCoordinator, constructBitcoinAnchorTransaction,
             bitcoinAnchorTransactionConstructionView, bitcoinAnchorTransactionConstructionBadgeClass,
             BitcoinAnchorTransactionConstructionState,
@@ -5400,6 +5576,86 @@ export default {
                         requested from the wallet.
                     </p>
                 </div>
+            </div>
+
+            <!-- 0.8.90 — Explicit Base Network & Account Observation. A
+                 page-level panel, entirely unrelated to the Bitcoin
+                 sections above and below it — there is no Base
+                 publication or anchor yet for this to attach to, and
+                 nothing here reads or changes any Bitcoin state. Absent
+                 baseWalletConnection, this section simply never renders,
+                 the identical degrade-gracefully posture every optional
+                 section on this page already holds. Every field shown is
+                 read straight off the last real observation this page
+                 asked for — see application/BaseAccountObservationView.js's
+                 own header. Nothing here constructs, signs, or broadcasts
+                 anything; "Observe Base Account" asks the SAME question
+                 again, fresh, and base/BaseWalletConnection.js exposes no
+                 signing capability of any kind for this section to even
+                 offer. See docs/Principles.md, "Network Observation Does
+                 Not Establish Publication Authority (0.8.90)." -->
+            <div v-if="baseWalletConnection" class="identity-mgmt-card">
+                <div class="identity-mgmt-card-header">
+                    <span class="identity-mgmt-name">Base Network</span>
+                </div>
+                <p class="form-hint form-hint--neutral">
+                    Observing an account here never constructs, signs, or broadcasts a transaction — it is a fact
+                    about a moment, read fresh every time this is asked.
+                </p>
+
+                <div class="evidence-inspection-adapter">
+                    <span class="peer-badge" :class="baseWalletConnectionBadgeClass()">
+                        {{ baseWalletConnectionView().stateLabel }}
+                    </span>
+                    <dl v-if="isBaseWalletConnected()" class="evidence-fields">
+                        <div class="evidence-field"><dt>Account</dt><dd>{{ shortId(baseWalletConnectionView().address) }}</dd></div>
+                    </dl>
+                    <p v-if="baseWalletConnectionState.reason" class="form-hint form-hint--neutral">
+                        {{ baseWalletConnectionState.reason }}
+                    </p>
+                </div>
+                <div class="identity-mgmt-actions">
+                    <button v-if="!isBaseWalletConnected()" class="action-btn action-btn--secondary"
+                            :disabled="isBaseWalletConnecting()"
+                            @click="connectBaseWallet()">
+                        {{ isBaseWalletConnecting() ? 'Connecting…' : 'Connect Base Wallet' }}
+                    </button>
+                    <button v-else class="action-btn action-btn--secondary" @click="disconnectBaseWallet()">
+                        Disconnect
+                    </button>
+                </div>
+
+                <template v-if="baseNetworkObserver && isBaseWalletConnected()">
+                    <button type="button" class="peer-action-btn" :disabled="baseAccountObservationState.observing" @click="observeBaseAccount">
+                        {{ baseAccountObservationState.observing ? 'Observing…' : (baseAccountObservationView() ? 'Refresh Observation' : 'Observe Base Account') }}
+                    </button>
+                    <p v-if="baseAccountObservationState.error" class="form-hint form-hint--neutral">{{ baseAccountObservationState.error }}</p>
+
+                    <div v-if="baseAccountObservationView()" class="evidence-inspection-adapter">
+                        <span class="peer-badge" :class="baseAccountObservationBadgeClass()">{{ baseAccountObservationView().stateLabel }}</span>
+
+                        <dl v-if="baseAccountObservationView().state === BaseNetworkObservationState.OBSERVED" class="evidence-fields">
+                            <div class="evidence-field"><dt>Network</dt><dd>{{ baseAccountObservationView().network }}</dd></div>
+                            <div class="evidence-field"><dt>Chain ID</dt><dd>{{ baseAccountObservationView().chainId }}</dd></div>
+                            <div class="evidence-field"><dt>Account</dt><dd>{{ shortId(baseAccountObservationView().address) }}</dd></div>
+                            <div class="evidence-field"><dt>Native balance</dt><dd>{{ baseAccountObservationView().nativeBalanceWei }} wei</dd></div>
+                            <div class="evidence-field"><dt>Observed at</dt><dd>{{ baseAccountObservationView().observedAt }}</dd></div>
+                        </dl>
+
+                        <!-- A connected network that answers but is not
+                             Base is never silently relabeled — the actual
+                             chain id observed is always shown, never
+                             discarded. See application/
+                             BaseNetworkObservationState.js's own header. -->
+                        <dl v-else-if="baseAccountObservationView().state === BaseNetworkObservationState.CHAIN_MISMATCH" class="evidence-fields">
+                            <div class="evidence-field"><dt>Chain ID</dt><dd>{{ baseAccountObservationView().chainId }}</dd></div>
+                        </dl>
+
+                        <p v-if="baseAccountObservationView().reason" class="form-hint form-hint--neutral">
+                            {{ baseAccountObservationView().reason }}
+                        </p>
+                    </div>
+                </template>
             </div>
 
             <!-- 0.8.59/0.8.62 — Explicit Bitcoin Anchor Transaction Review

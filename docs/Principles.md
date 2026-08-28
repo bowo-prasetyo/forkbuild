@@ -16854,3 +16854,62 @@ byte-identical to the one 0.8.80 shipped, so no already-persisted
 needed to change to keep passing.
 
 See `docs/Roadmap.md`, 0.8.89, for the full milestone entry.
+
+## Network Observation Does Not Establish Publication Authority (0.8.90)
+
+**A blockchain capability may observe network and account facts without
+ever acquiring the authority to publish.** `base/BaseNetworkObserver.js`
+and `base/BaseWalletConnection.js` are this codebase's first real Base
+capabilities — and both are read-only. `BaseNetworkObserver#observeAccount()`
+reads a chain id and a native balance; it never constructs, signs,
+estimates gas for, or broadcasts anything, and no method on either class
+could be repurposed into doing so without being extended first. This
+extends the capability/fact separation this codebase has held for Bitcoin
+since 0.8.47 across a second chain, at the earliest possible point: before
+any Base write path exists at all.
+
+**Account identity is not signing capability.** `anchoring/
+BitcoinWalletConnection.js`'s own `CONNECTED` state pairs an account with
+a real `.wallet.signPsbt()` capability, because that class exists
+specifically to feed `anchoring/BitcoinAnchorWalletSigner.js`. `base/
+BaseWalletConnection.js` deliberately does not: it exposes `.status` and
+`.account`, and nothing else — no `.wallet` getter, no `signTransaction()`,
+no method of any shape that could be mistaken for a signing capability. A
+browser's injected EIP-1193 provider genuinely can grant an application an
+address without granting it a signature — `base/
+BaseInjectedProviderWalletAdapter.js` calls exactly one provider method,
+`request({ method: 'eth_requestAccounts' })`, and this codebase's own
+domain layer never asks for more than that until a future milestone
+explicitly builds a Base signer.
+
+**Blockchain identity is never inferred from a superficially compatible
+RPC surface answering.** This extends "Correlate Evidence By Explicit
+Identity, Never By Resemblance (0.8.78)" across a third axis. Ethereum
+mainnet, Optimism, and every other EVM chain answer `eth_chainId` and
+`eth_getBalance` exactly as readily as Base itself does. `application/
+BaseChainId.js` is the closed map of chain ids this codebase actually
+recognizes as Base; `BaseNetworkObserver#observeAccount()` checks every
+observed chain id against it BEFORE reading a balance, and reports
+`CHAIN_MISMATCH` — never `OBSERVED`, never a guessed `network` label —
+for anything else. The chain id actually observed is still always
+carried on a mismatch, honestly, never discarded and never silently
+replaced with a Base default.
+
+**No publication identity is manufactured by observing an account.**
+`application/BaseAccountObservation.js` carries exactly `address`,
+`network`, `chainId`, `nativeBalanceWei`, `reason`, and `observedAt` —
+nothing resembling `application/BlockchainPublicationIdentity.js`'s own
+`contentHash`/`chainReference` pair (0.8.89). Observing an account is not
+publishing anything, and `BlockchainKind.BASE` still names no publisher,
+signer, broadcaster, or confirmation observer after this milestone ships.
+
+**A single explicit action, never automatic.** Connecting a Base wallet
+and observing a Base account are two separate, explicit clicks in `ui/
+views/DecentralizedPublicationsView.js`'s own "Base Network" panel —
+mirroring exactly the explicit-action discipline `anchoring/
+BitcoinWalletConnection.js` and `anchoring/BitcoinWalletFundingObserver.js`
+already hold. Nothing here polls, retries, auto-refreshes, or
+auto-connects; every observation is a fresh read, never a cached or
+remembered one.
+
+See `docs/Roadmap.md`, 0.8.90, for the full milestone entry.
