@@ -16305,3 +16305,73 @@ BitcoinAnchorDurableEvidenceView.js`'s own "restoring a fact is not
 observing it again" restraint (0.8.79) exactly, one presentation layer up.
 
 See `docs/Roadmap.md`, 0.8.81, for the full milestone entry.
+
+## An Archive Export Contains Facts, Not Capabilities Or Conclusions (0.8.82)
+
+**Exporting is a serialization boundary, not a second storage adapter.**
+`application/PublicationObservationArchiveExport.js`'s own
+`exportPublicationObservationArchive()` and
+`importPublicationObservationArchive()` carry no `StorageProvider`, invent
+no second schema, and reuse `application/PublicationObservationArchive.js`'s
+own `toJSON()`/`fromJSON()` entirely unchanged. The exported payload IS
+that method's own output — no wrapping envelope, no `exportedAt`, no
+second schema version competing with `SCHEMA_VERSION`. Two archives
+holding identical facts export to byte-identical JSON, and exporting the
+same archive twice produces byte-identical output: the act of exporting
+inserts no new fact of its own. This is docs/Principles.md, "The UI
+Displays Observations; It Does Not Turn Them Into A Verdict (0.8.57)," held
+once more — an export is a copy, never a new observation about the act of
+copying.
+
+**Malformed import input is a named rejection, never a silent empty
+archive — a deliberate divergence from how corrupted storage already
+degrades.** `PublicationObservationArchive.fromJSON()` has held, since
+0.8.75, that corrupted persisted data and a genuinely empty archive
+produce the identical result: `PublicationObservationArchive.empty()`. That
+is the right call for a browser silently corrupting its own localStorage,
+where no person took an explicit action to warn about. A person choosing
+a file and clicking "Import" is a different situation entirely — silently
+treating an unrelated file as an empty archive would erase whatever they
+actually held without ever telling them so. `PublicationObservationArchive.isValidJSON()`
+(new this milestone, wrapping the identical `validateArchiveJSON()` that
+class's own `fromJSON()` already relied on internally) is the one seam
+that lets `importPublicationObservationArchive()` return `INVALID_ARCHIVE`
+for genuinely malformed input while still importing a well-formed, merely
+empty archive successfully. Two situations that looked identical to
+`fromJSON()` at the storage layer are, correctly, two different outcomes
+at the explicit-action layer.
+
+**Import replaces; it never merges — because the function accepts nothing
+to merge into.** `importPublicationObservationArchive(payload)` takes no
+"current archive" argument. This is not a policy choice enforced by
+discipline alone — it is a structural fact about the function's own
+signature: there is nothing here to merge with, so nothing here can merge.
+Which observation came first, whether a duplicate matters, which archive
+owns a shared `anchorId` — a merge would have to answer all three, and
+this milestone answers none of them, deliberately. A caller that wants an
+imported archive to become the active one performs that assignment
+itself, exactly once, from an explicit confirmation click —
+`ui/views/DecentralizedPublicationsView.js`'s own
+`confirmPublicationArchiveImport()` is the only place in this codebase
+that does.
+
+**An export contains recorded facts, never a derived projection, and
+never a capability.** The six collections `toJSON()` already serializes —
+IPFS publication records and verification observations, Bitcoin broadcast,
+confirmation, and content-proof observations, and Bitcoin publication
+records — are exactly what an export carries. `chainPlacementObservations`,
+`consistencyFindings`, and any lifecycle timeline stay derived, exactly as
+`application/BitcoinAnchorDurableEvidenceView.js` (0.8.79) and
+`application/BitcoinAnchorPublicationLifecycleTimelineView.js` (0.8.81)
+already established — an imported archive reconstructs them fresh,
+through the identical, unchanged reconstruction code a live archive
+already uses, rather than trusting a stale, previously computed copy.
+And because nothing on `PublicationObservationArchive` can ever hold a
+wallet reference, a signing capability, a private key, or a
+pinning-provider credential in the first place (see that class's own
+header, "No Capabilities, No Credentials, No Wallet State Of Any Kind"),
+none can ever reach an export of it either — this milestone adds no new
+enforcement of that boundary, because the boundary already existed one
+layer down.
+
+See `docs/Roadmap.md`, 0.8.82, for the full milestone entry.

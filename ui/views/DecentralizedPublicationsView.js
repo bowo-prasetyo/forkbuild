@@ -107,6 +107,11 @@ import {
     BitcoinAnchorPublicationLifecycleTimelineEntryKind,
     reconstructBitcoinAnchorPublicationLifecycleTimeline
 } from '../../application/BitcoinAnchorPublicationLifecycleTimelineView.js';
+import {
+    PublicationObservationArchiveImportOutcome,
+    exportPublicationObservationArchive,
+    importPublicationObservationArchive
+} from '../../application/PublicationObservationArchiveExport.js';
 
 // 0.7.5 — Decentralized Publication UX & Resolution.
 // 0.7.6 — Multi-Peer Publication Retrieval & Replication.
@@ -1371,6 +1376,79 @@ export default {
         function clearPublicationObservationArchive() {
             publicationObservationArchive.value = PublicationObservationArchive.empty();
             publicationObservationArchiveStorage.clear();
+        }
+
+        // 0.8.82 — Durable Publication Archive Export & Import.
+        //
+        // A portable copy of the SAME durable archive the "Observation
+        // Archive" card above already reads — never a second, competing
+        // archive of its own. Exporting reads `publicationObservationArchive.value`
+        // as it stands at the moment of the click; nothing here is
+        // fetched, verified, or reconciled. Mirrors ui/views/
+        // IdentityManagementView.js's own export UI shape exactly: a
+        // `data:` URI a person clicks to download, never a
+        // programmatically triggered download.
+        const publicationArchiveExportedPackage = reactive({ json: '', fileName: '', downloadHref: '' });
+
+        function exportPublicationArchive() {
+            const json = JSON.stringify(exportPublicationObservationArchive(publicationObservationArchive.value), null, 2);
+            publicationArchiveExportedPackage.json = json;
+            publicationArchiveExportedPackage.fileName = 'publication-observation-archive-export.json';
+            publicationArchiveExportedPackage.downloadHref = 'data:application/json;charset=utf-8,' + encodeURIComponent(json);
+        }
+
+        // Import state. `publicationArchiveImportOutcome` re-validates
+        // `publicationArchiveImportText` on every change — a pure,
+        // read-only preview computed via application/
+        // PublicationObservationArchiveExport.js's own
+        // `importPublicationObservationArchive()`, never itself touching
+        // `publicationObservationArchive.value`. Replacing the current
+        // archive happens ONLY inside `confirmPublicationArchiveImport()`
+        // below, from an explicit, separate click — the "explicit
+        // confirmation before replacing" this milestone's own proposal
+        // requires.
+        const showPublicationArchiveImportForm = ref(false);
+        const publicationArchiveImportText = ref('');
+
+        function togglePublicationArchiveImportForm() {
+            showPublicationArchiveImportForm.value = !showPublicationArchiveImportForm.value;
+            publicationArchiveImportText.value = '';
+        }
+
+        function onPublicationArchiveImportFileChosen(event) {
+            const file = event.target.files && event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = () => { publicationArchiveImportText.value = String(reader.result || ''); };
+            reader.readAsText(file);
+        }
+
+        const publicationArchiveImportOutcome = computed(() => {
+            const text = publicationArchiveImportText.value.trim();
+            if (!text) return null;
+            return importPublicationObservationArchive(text);
+        });
+
+        const publicationArchiveImportPreview = computed(() => {
+            const outcome = publicationArchiveImportOutcome.value;
+            if (!outcome || outcome.outcome !== PublicationObservationArchiveImportOutcome.IMPORTED) return null;
+            return describePublicationObservationArchive(outcome.archive);
+        });
+
+        // THE ONE PLACE THIS MILESTONE EVER REPLACES THE CURRENT ARCHIVE.
+        // Never a merge — see application/PublicationObservationArchiveExport
+        // .js's own header. A person has already seen
+        // `publicationArchiveImportPreview` above before this is ever
+        // reachable; this function itself re-checks the outcome rather
+        // than trusting that preview alone, so a stale click can never
+        // import something that failed validation.
+        function confirmPublicationArchiveImport() {
+            const outcome = publicationArchiveImportOutcome.value;
+            if (!outcome || outcome.outcome !== PublicationObservationArchiveImportOutcome.IMPORTED) return;
+            publicationObservationArchive.value = outcome.archive;
+            persistPublicationObservationArchive();
+            showPublicationArchiveImportForm.value = false;
+            publicationArchiveImportText.value = '';
         }
 
         // 0.8.79 — Durable Bitcoin Anchor Evidence Restoration & Historical
@@ -4911,6 +4989,11 @@ export default {
             PublicationObservationTimelineEntryKind, PublicationObservationTimelineDomain,
             publicationObservationArchiveView, publicationObservationArchiveExpanded,
             togglePublicationObservationArchive, clearPublicationObservationArchive,
+            publicationArchiveExportedPackage, exportPublicationArchive,
+            showPublicationArchiveImportForm, togglePublicationArchiveImportForm,
+            publicationArchiveImportText, onPublicationArchiveImportFileChosen,
+            publicationArchiveImportOutcome, publicationArchiveImportPreview,
+            confirmPublicationArchiveImport, PublicationObservationArchiveImportOutcome,
             historicalBitcoinAnchorsExpanded, toggleHistoricalBitcoinAnchors, historicalBitcoinAnchorArchiveView,
             toggleHistoricalBitcoinAnchorEntry, isHistoricalBitcoinAnchorEntryExpanded, historicalBitcoinAnchorEvidenceView,
             bitcoinAnchorPublicationsExpanded, toggleBitcoinAnchorPublications, bitcoinAnchorPublicationRecordHistoryView,
@@ -5450,6 +5533,74 @@ export default {
                             <p v-if="item.reason" class="form-hint form-hint--neutral">{{ item.reason }}</p>
                         </li>
                     </ul>
+                </div>
+            </div>
+
+            <!-- 0.8.82 — Durable Publication Archive Export & Import.
+                 A portable copy of the SAME durable archive the
+                 "Observation Archive" card immediately above already
+                 reads — never a second, competing archive of its own.
+                 EXPORT is read-only over the current archive and performs
+                 ZERO network operations. IMPORT never merges with the
+                 current archive — it is an explicit REPLACEMENT, gated
+                 behind an explicit confirmation click, and a malformed or
+                 non-archive file is rejected outright rather than
+                 silently treated as an empty archive. See application/
+                 PublicationObservationArchiveExport.js's own header. -->
+            <div class="identity-mgmt-card">
+                <div class="identity-mgmt-card-header">
+                    <span class="identity-mgmt-name">Publication Archive</span>
+                    <span class="peer-badge peer-badge--pending">Export / Import</span>
+                </div>
+                <p class="form-hint form-hint--neutral">
+                    A portable copy of the recorded facts above — publication identities and
+                    observations only, never a wallet connection, a signing capability, a
+                    private key, or any pinning-provider credential. Exporting performs no
+                    network operation of its own. Importing REPLACES the current archive
+                    entirely — it never merges with it.
+                </p>
+                <div class="identity-mgmt-actions">
+                    <button type="button" class="action-btn action-btn--secondary" @click="exportPublicationArchive">
+                        Export Archive
+                    </button>
+                    <button type="button" class="action-btn action-btn--secondary" @click="togglePublicationArchiveImportForm">
+                        {{ showPublicationArchiveImportForm ? 'Cancel Import' : 'Import Archive' }}
+                    </button>
+                </div>
+
+                <div v-if="publicationArchiveExportedPackage.json" class="evidence-inspection-adapter">
+                    <span class="evidence-inspection-adapter-title">Exported Archive</span>
+                    <textarea class="form-input identity-export-json" rows="6" readonly :value="publicationArchiveExportedPackage.json"></textarea>
+                    <div class="identity-mgmt-actions">
+                        <a class="modal-btn modal-btn--primary" :href="publicationArchiveExportedPackage.downloadHref" :download="publicationArchiveExportedPackage.fileName">Download Archive Export</a>
+                    </div>
+                </div>
+
+                <div v-if="showPublicationArchiveImportForm" class="evidence-inspection-adapter">
+                    <span class="evidence-inspection-adapter-title">Import Archive</span>
+                    <label class="form-field">
+                        <span class="form-label">Exported archive file</span>
+                        <input type="file" accept="application/json" @change="onPublicationArchiveImportFileChosen" class="form-input" />
+                    </label>
+                    <textarea v-model="publicationArchiveImportText" class="form-input identity-export-json" rows="6"
+                              placeholder="…or paste the exported archive JSON here"></textarea>
+
+                    <p v-if="publicationArchiveImportOutcome && publicationArchiveImportOutcome.outcome === PublicationObservationArchiveImportOutcome.INVALID_ARCHIVE"
+                       class="identity-unlock-error">
+                        This is not a valid publication archive export — nothing was changed.
+                    </p>
+
+                    <div v-if="publicationArchiveImportPreview" class="identity-import-preview">
+                        <p><strong>Imported archive holds:</strong> {{ publicationArchiveImportPreview.publicationCount }} publication(s), {{ publicationArchiveImportPreview.observationCount }} observation(s).</p>
+                        <p class="form-hint form-hint--neutral">
+                            Replacing discards every fact currently in the Observation Archive above
+                            ({{ publicationObservationArchiveView().publicationCount }} publication(s),
+                            {{ publicationObservationArchiveView().observationCount }} observation(s)) — this cannot be undone.
+                        </p>
+                        <button type="button" class="action-btn action-btn--danger" @click="confirmPublicationArchiveImport">
+                            Replace Current Archive
+                        </button>
+                    </div>
                 </div>
             </div>
 

@@ -400,6 +400,23 @@ export class PublicationObservationArchive {
         return new PublicationObservationArchive();
     }
 
+    // True iff `json` satisfies `fromJSON()`'s own strict contract exactly
+    // — the SAME `validateArchiveJSON()` that method already calls,
+    // exposed as a predicate. `fromJSON()` itself deliberately erases the
+    // difference between "malformed input" and "a validly empty archive,"
+    // both becoming `PublicationObservationArchive.empty()` — the right
+    // call for storage a browser silently corrupted (see storage/
+    // LocalStoragePublicationObservationArchive.js's own header), but the
+    // wrong one for application/PublicationObservationArchiveExport.js's
+    // own `importPublicationObservationArchive()`, which must tell a
+    // person "that file is not a publication archive export" rather than
+    // silently treating it as an empty one. This method is that seam —
+    // added by 0.8.82 without changing `fromJSON()`'s own existing
+    // behavior at all.
+    static isValidJSON(json) {
+        return validateArchiveJSON(json) !== null;
+    }
+
     // Reconstructs an archive from `toJSON()`'s own output — STRICTLY.
     // Malformed persisted data (invalid JSON already failed before this
     // method is ever called — see storage/

@@ -29587,3 +29587,188 @@ without turning either into a verdict; an overall Bitcoin-anchor verdict of
 any kind; and explicit Bitcoin ↔ IPFS content-hash reconciliation — each
 its own, separately sized piece of work, exactly like every "Deliberately
 excluded" list in this document before it.
+
+## 0.8.82 — Durable Publication Archive Export & Import
+
+0.8.75 through 0.8.81 built a durable, cross-domain observation archive,
+reconstructed derived evidence over it, and a chronological lifecycle
+timeline over that — but every one of those facts has only ever lived
+inside one browser's own localStorage. A person could inspect their own
+history; they could not take it with them, move it to another browser or
+device, or keep an archival copy independent of this application's own
+storage at all. This milestone adds exactly that — explicit, portable
+export and import of the archive, with every identity and observation
+preserved exactly:
+
+```text
+PublicationObservationArchive
+        │  toJSON()                       (0.8.75, unchanged)
+        ▼
+exportPublicationObservationArchive()     (THIS MILESTONE)
+        │
+        ▼
+   a file, a clipboard, anywhere outside this process's own memory
+        │
+        ▼
+importPublicationObservationArchive()     (THIS MILESTONE)
+        │  fromJSON()                     (0.8.75, unchanged)
+        ▼
+PublicationObservationArchive
+```
+
+**AN EXPORTED ARCHIVE IS A PORTABLE REPRESENTATION OF RECORDED FACTS, NOT
+AN EXPORT OF CAPABILITIES OR CONCLUSIONS — THE FLAGSHIP INVARIANT.** The
+exported payload is exactly `PublicationObservationArchive.toJSON()`'s own
+six collections — IPFS publication records, IPFS verification
+observations, Bitcoin broadcast observations, Bitcoin confirmation
+observations, Bitcoin content-proof observations, and Bitcoin publication
+records — and nothing else. No wallet reference, signing capability,
+private key, pinning-provider credential, or configured endpoint could
+ever reach it, for the identical reason none can reach `toJSON()` itself
+(see that class's own header, "No Capabilities, No Credentials, No Wallet
+State Of Any Kind"). No `chainPlacementObservations`, `consistencyFindings`,
+or `lifecycleTimeline` is ever exported either — those stay derived,
+recomputed fresh from the durable facts every time, exactly as `application/
+BitcoinAnchorDurableEvidenceView.js` (0.8.79) and `application/
+BitcoinAnchorPublicationLifecycleTimelineView.js` (0.8.81) already hold.
+
+**NOT A THIRD STORAGE ADAPTER.** `application/
+PublicationObservationArchiveExport.js` carries no `StorageProvider`, no
+`save()`/`load()`/`clear()` — it is a pure, synchronous pair of functions
+over a value, mirroring neither storage/
+LocalStoragePublicationObservationArchive.js's own shape nor its own
+localStorage-specific corruption handling. It reuses `PublicationObservationArchive`'s
+own `toJSON()`/`fromJSON()` entirely unchanged; this milestone adds no
+second, competing serialization of the same facts.
+
+**DETERMINISTIC EXPORT: NO `exportedAt`, NO ENVELOPE, NO SECOND SCHEMA
+VERSION.** Two archives holding identical facts export to byte-identical
+JSON. In particular, the act of clicking "Export" inserts no timestamp of
+its own into the payload — doing so would make exporting a fact's copy
+into a new observation about it, exactly what docs/Principles.md, "The UI
+Displays Observations; It Does Not Turn Them Into A Verdict (0.8.57),"
+already forbids one layer over. The exported payload carries exactly the
+fields `PublicationObservationArchive.toJSON()` already produces — no
+wrapping envelope, and no export-specific schema version competing with
+that class's own `SCHEMA_VERSION`.
+
+**MALFORMED INPUT IS `INVALID_ARCHIVE`, NEVER A SILENT EMPTY ARCHIVE — THE
+ONE DELIBERATE DIVERGENCE FROM 0.8.75's OWN STORAGE BEHAVIOR.**
+`PublicationObservationArchive.fromJSON()` treats corrupted storage and a
+genuinely empty archive identically, by design — the right call for a
+browser silently corrupting localStorage, where there is no explicit human
+action to warn about. Import is different: a person explicitly chose a
+file and clicked "Import." Silently replacing their real archive with an
+empty one because that file happened to be something else entirely would
+be dangerous, not graceful. `PublicationObservationArchive.isValidJSON()`
+(this milestone's one small addition to that class) is the seam that lets
+`importPublicationObservationArchive()` tell the two apart before ever
+calling `fromJSON()` — a well-formed but genuinely empty archive still
+imports successfully; anything that fails that class's own strict
+structural contract returns `INVALID_ARCHIVE` with a `null` archive
+instead.
+
+**IMPORT NEVER MERGES — IT IS AN EXPLICIT REPLACEMENT, GATED BEHIND AN
+EXPLICIT CONFIRMATION.** `importPublicationObservationArchive()` takes no
+"current archive" argument at all — structurally, it cannot merge, because
+it has nothing to merge into. `ui/views/DecentralizedPublicationsView.js`'s
+own `confirmPublicationArchiveImport()` is the one place this codebase
+ever assigns an imported archive to `publicationObservationArchive.value`,
+and it does so only after a person has already seen a preview (the
+imported archive's own publication/observation counts) and clicked a
+separately labeled, danger-styled "Replace Current Archive" button —
+never automatically on file selection or paste. Archive merging — which
+observation came first, whether a duplicate is intentional, which archive
+owns a shared `anchorId` — raises real questions this milestone
+deliberately does not answer; see "Deliberately excluded" below.
+
+**IMPORT NEVER TRIGGERS ANY OBSERVATION OF ITS OWN.** Restoring a fact is
+not observing it again — the identical restraint `application/
+BitcoinAnchorDurableEvidenceView.js`'s own `reconstructBitcoinAnchorDurableEvidence()`
+already holds (0.8.79), extended here to the file boundary: importing an
+archive never verifies IPFS content, never checks a Bitcoin confirmation,
+never broadcasts or republishes anything, never connects a wallet, and
+never infers that an imported publication belongs to the current user. It
+only ever reconstructs `PublicationObservationArchive` instances from
+already-recorded JSON.
+
+New files:
+- `application/PublicationObservationArchiveExport.js` — new;
+  `PublicationObservationArchiveImportOutcome` (`IMPORTED`,
+  `INVALID_ARCHIVE`); `exportPublicationObservationArchive(archive)` —
+  requires a genuine `PublicationObservationArchive` instance (mirroring
+  storage/LocalStoragePublicationObservationArchive.js's own `save()`
+  contract), returns `archive.toJSON()`'s own output unchanged; and
+  `importPublicationObservationArchive(payload)` — accepts either a raw
+  JSON string or an already-parsed value, returns a frozen `{ outcome,
+  archive }`. Pure, synchronous, zero network or storage access of its
+  own.
+
+Changed:
+- `application/PublicationObservationArchive.js` — one new method,
+  `static isValidJSON(json)`, exposing the exact predicate its own
+  `fromJSON()` already used internally to decide "malformed vs. empty" —
+  no other behavior on this class changes, and `SCHEMA_VERSION` stays at
+  2.
+- `ui/views/DecentralizedPublicationsView.js` — a new "Publication
+  Archive" card, alongside the existing "Observation Archive" (0.8.75) and
+  "Historical Bitcoin Anchor Evidence" (0.8.79) cards: "Export Archive"
+  produces a downloadable JSON file via a `data:` URI link, mirroring
+  `ui/views/IdentityManagementView.js`'s own export UI shape exactly;
+  "Import Archive" opens a file-or-paste form showing a live, read-only
+  preview of the imported archive's own counts, with the actual
+  replacement gated behind an explicit "Replace Current Archive" click.
+  New state: `publicationArchiveExportedPackage`,
+  `showPublicationArchiveImportForm`, `publicationArchiveImportText`.
+
+New tests:
+- `tests/PublicationObservationArchiveExport.test.js` — the flagship
+  scenario described above (two Bitcoin publication records, one shared
+  `contentHash`, different `anchorId`/`txid`, interleaved broadcast/
+  confirmation/content-proof observations, plus an IPFS publication
+  verified twice; export, destroy every in-memory reference, import,
+  reconstruct the cross-domain summary and both publications' own
+  lifecycle timelines — all byte-identical, zero network calls, zero
+  cross-contamination between the two anchors), plus deterministic export,
+  duplicate identities/observations surviving the round trip
+  undeduplicated, malformed input rejected as `INVALID_ARCHIVE` (distinct
+  from a genuinely empty archive, which still imports), import holding no
+  state of its own across calls, no capability/credential field anywhere
+  in exported output, and export's own instance-required/never-mutates
+  contract.
+- Also files, for the first time, the pre-existing `tests/
+  PublicationObservationArchive.test.js` (0.8.75) into `tests.html`'s own
+  test list — an omission from that milestone, carried unnoticed through
+  0.8.76–0.8.81.
+
+Deliberately excluded, exactly as this milestone's own proposal named up front:
+- **Merging an imported archive with the current one.** No "which
+  observation came first," no deduplication, no arbitration over a shared
+  `anchorId` — import is a full replacement, never a merge. If archive
+  merging becomes useful later, it deserves its own milestone with an
+  explicit identity/conflict model.
+- **Exporting `chainPlacementObservations`, `consistencyFindings`, or any
+  lifecycle timeline as a durable collection.** Those stay derived, exactly
+  as 0.8.79 and 0.8.81 already established — an imported archive produces
+  them fresh, from the same reconstruction code a live archive already
+  uses.
+- **Any `exportedAt`, envelope, or second schema version wrapping the
+  archive's own `toJSON()` output.** The export IS the archive's own
+  serialization, unchanged.
+- **Any capability, credential, or wallet-related field of any kind.** See
+  application/PublicationObservationArchive.js's own header — none could
+  ever reach this milestone's export in the first place.
+- **Automatically verifying, broadcasting, republishing, or connecting a
+  wallet on import.** Import only ever reconstructs recorded facts.
+- **A migration path, or any change to `SCHEMA_VERSION`.** This milestone
+  reuses the archive's existing 0.8.80 schema exactly; `fromJSON()`'s own
+  "wrong schemaVersion" behavior is unchanged.
+
+What's left, and deliberately unbuilt: explicit archive provenance — factual
+metadata distinguishing an imported historical record from one this replica
+generated locally, without ever scoring an imported record as more or less
+trustworthy than a local one; archive merging, with its own explicit
+identity/conflict model; an overall Bitcoin-anchor verdict of any kind; and
+explicit Bitcoin ↔ IPFS content-hash reconciliation — each its own,
+separately sized piece of work, exactly like every "Deliberately excluded"
+list in this document before it.
