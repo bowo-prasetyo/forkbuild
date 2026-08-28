@@ -17654,3 +17654,71 @@ file offers. When no matching record can be found, `sourceAnchorId` is
 `null` — never a guess.
 
 See `docs/Roadmap.md`, 0.8.103, for the full milestone entry.
+
+## A Reference Is A Fact One Publication States About Another; It Is Never Inferred, And Never A Verdict (0.8.104)
+
+**A publication reference exists only when a person explicitly records
+one — never because two publications resemble each other.** This extends
+`docs/Principles.md`, "Correlate Evidence By Explicit Identity, Never By
+Resemblance (0.8.78)," across a new axis: a shared `contentHash`, similar
+text, a matching timestamp, or even a shared author is never evidence
+that one publication references another. `application/
+CreatePublicationReferenceRecordUseCase.js` is never called from a
+finalization, broadcast, or observation flow — unlike the publication
+records it names, which mint automatically the instant a transaction
+finalizes, a reference is minted only by an explicit, person-initiated
+action, every time.
+
+**Both sides of a reference are reached by projection, never assembled by
+hand.** `application/PublicationReferenceRecord.js`'s own
+`sourcePublicationIdentity`/`referencedPublicationIdentity` are ordinary
+`BlockchainPublicationIdentity` (0.8.89) instances, reached the one way
+that class's own header already sanctions: by calling an already-durable
+publication record's own `toBlockchainPublicationIdentity()`. Nothing in
+this milestone's own new surface — not the record, not its use case, not
+the UI that calls it — ever constructs one from a bare
+`{ blockchain, contentHash, chainReference }` object a caller typed by
+hand. A reference is exactly as trustworthy as the identity records it
+points at, and no more manufactured than they already are.
+
+**A reference is compared only by identity, never by content — the
+identical cross-chain rule held one relationship further.** Two
+references naming different `chainReference`s that happen to share a
+`contentHash` remain two independent relationships; a Bitcoin identity and
+a Base identity sharing an identical `contentHash` AND an identical raw
+`chainReference` string are still never the same referenced publication.
+`BlockchainPublicationIdentity#sameAs()` — blockchain AND chainReference,
+`contentHash` carried but never compared — is the only equality a
+reference ever recognizes, on either side.
+
+**Reference count and distinct referencing publisher count are two
+different facts, and this milestone keeps them deliberately unmerged.**
+Four reference records naming the same referenced publication, from two
+distinct sources, is not "two references" — it is four independent facts,
+each with its own `createdAt`, each surviving persistence undeduplicated.
+Collapsing multiplicity into a single reduced number is a real question a
+later achievement or scoring milestone gets to answer explicitly, on
+purpose, never something this durable record silently discards on its
+way into storage.
+
+**A reference is made durable, unlike the achievements and badges that
+may one day read it, because it is itself an externally attributable
+fact.** `application/PublicationObservationArchive.js`'s own ninth
+collection, `publicationReferenceRecords`, is held to the identical
+append-only, provenance-tagged, export/import/fingerprint/diff/inspect
+discipline every collection before it already holds — a reference
+survives application restart, archive export, archive import, inspection,
+fingerprinting, and difference comparison, exactly like a publication
+identity record already does.
+
+**Never called "fork" — an interpretation is not the same as a fact.**
+"Fork," "derivative," and "citation" are all readings of a reference this
+milestone declines to bake in. `PublicationReferenceRecord` carries no
+`referenceKind`, no `weight`, no `strength`, and no verdict of any kind —
+see `docs/Principles.md`, "The UI Displays Observations; It Does Not Turn
+Them Into A Verdict (0.8.57)," held here once more, over a relationship
+between two publications rather than a fact about one. `A -> B` is
+established first; a more specific, provable relationship is a genuinely
+later, separate milestone's decision to make.
+
+See `docs/Roadmap.md`, 0.8.104, for the full milestone entry.

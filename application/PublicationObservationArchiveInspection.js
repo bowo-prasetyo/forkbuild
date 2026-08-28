@@ -83,6 +83,15 @@ import { describePublicationObservationArchiveFingerprint } from './PublicationO
 // chain-placement comparison, or a consistency finding; an inspection is a
 // structural index, not a derived evidence bundle.
 //
+// `publicationReferenceRecordCount` (0.8.104) IS A COUNT, DELIBERATELY
+// NEVER A FOURTH IDENTITY LIST. A publication reference record names TWO
+// identities, not one — there is no single, natural key to list the way
+// `anchorId`/`recordIndex`/`txid` already are. This milestone adds exactly
+// the one count application/PublicationObservationArchive.js's own
+// `publicationReferenceRecordCount` already exposes, and nothing more; a
+// structural per-publication reference index, if ever needed, is separate,
+// future work.
+//
 // THE RESULT IS A PLAIN, FROZEN, ONE-LEVEL DATA SHAPE — NEVER A NEW
 // DOMAIN OBJECT, NEVER ANOTHER DURABLE ARCHIVE HISTORY. Deliberately NOT a
 // `PublicationObservationArchiveInspectionRecord` class, and never held
@@ -172,6 +181,7 @@ function describeExternalArchiveInspection(archive) {
         bitcoinAnchorPublicationRecordCount: archive.bitcoinAnchorPublicationRecordCount,
         baseTransactionInclusionObservationCount: summary.baseTransactionInclusionCount,
         baseAnchorPublicationRecordCount: archive.baseAnchorPublicationRecordCount,
+        publicationReferenceRecordCount: archive.publicationReferenceRecordCount,
 
         localFactCount: provenance.localFactCount,
         importedFactCount: provenance.importedFactCount,

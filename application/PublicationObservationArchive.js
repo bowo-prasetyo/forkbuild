@@ -7,12 +7,15 @@ import { appendBitcoinAnchorPublicationRecordHistoryEntry } from './BitcoinAncho
 import { appendBaseTransactionInclusionObservationHistoryEntry } from './BaseTransactionInclusionObservationHistory.js';
 import { BaseAnchorPublicationRecord } from './BaseAnchorPublicationRecord.js';
 import { appendBaseAnchorPublicationRecordHistoryEntry } from './BaseAnchorPublicationRecordHistory.js';
+import { isValidBlockchainKind } from './BlockchainKind.js';
+import { PublicationReferenceRecord } from './PublicationReferenceRecord.js';
+import { appendPublicationReferenceRecordHistoryEntry } from './PublicationReferenceRecordHistory.js';
 import {
     PublicationObservationArchiveProvenanceOrigin,
     isValidPublicationObservationArchiveProvenanceOrigin
 } from './PublicationObservationArchiveProvenance.js';
 
-const SCHEMA_VERSION = 5;
+const SCHEMA_VERSION = 6;
 
 // 0.8.75 — Durable Publication Observation Records.
 //
@@ -333,6 +336,48 @@ const SCHEMA_VERSION = 5;
 // exactly like `bitcoinAnchorPublicationRecordProvenance` already does.
 // `withUniformProvenance()` now also restamps this eighth collection
 // uniformly; nothing else about that method changes.
+//
+// 0.8.104 — Explicit Publication Reference Relationship. Adds a NINTH,
+// independent collection: `publicationReferenceRecords` — an append-only
+// sequence of application/PublicationReferenceRecord.js instances, each
+// naming one publication's own EXPLICIT `sourcePublicationIdentity ->
+// referencedPublicationIdentity` relationship, both sides application/
+// BlockchainPublicationIdentity.js (0.8.89) instances. Unlike every prior
+// collection, this one describes a relationship BETWEEN TWO publications
+// rather than a fact about one — but it is held to the identical
+// discipline: never merged into, keyed by, or cross-referenced against any
+// other collection; never deduplicated; never inferred from a shared
+// `contentHash`, matching content, or any other resemblance — see that
+// class's own header for the full rationale.
+//
+// `appendPublicationReferenceRecord()` REUSES `application/
+// PublicationReferenceRecordHistory.js`'s OWN, UNCHANGED
+// `appendPublicationReferenceRecordHistoryEntry()` — mirroring exactly how
+// `appendBaseAnchorPublicationRecord()` above already reuses
+// `appendBaseAnchorPublicationRecordHistoryEntry()`. This class invents no
+// new relationship-construction behavior of its own.
+//
+// THIS MILESTONE BUMPS SCHEMA_VERSION TO 6 — a payload persisted by 0.8.75
+// through 0.8.103 (schemaVersion 5) degrades to
+// `PublicationObservationArchive.empty()` on load, the identical,
+// already-tested "wrong schemaVersion" behavior this class's own
+// `fromJSON()` has held since 0.8.75; no migration path is added, because
+// none of this class's own prior principles ever promised one.
+//
+// `publicationCount`/`observationCount`/`bitcoinAnchorPublicationRecordCount`/
+// `baseAnchorPublicationRecordCount` STAY UNCHANGED — a publication
+// reference record is neither a publication-shaped fact, an
+// observation-shaped fact, nor a durable IDENTITY of a single publication;
+// it is a relationship between two identities this archive may or may not
+// separately hold records for. See `publicationReferenceRecordCount` below
+// for its own, entirely separate count.
+//
+// PROVENANCE EXTENDS IDENTICALLY — a NINTH parallel provenance collection,
+// `publicationReferenceRecordProvenance`, holds one `LOCAL`/`IMPORTED` tag
+// per record at the identical array position, exactly like
+// `baseAnchorPublicationRecordProvenance` already does. `withUniformProvenance()`
+// now also restamps this ninth collection uniformly; nothing else about
+// that method changes.
 export class PublicationObservationArchive {
     constructor({
         ipfsPublicationRecords = [],
@@ -351,6 +396,8 @@ export class PublicationObservationArchive {
         baseTransactionInclusionObservationProvenanceByTransactionHash = {},
         baseAnchorPublicationRecords = [],
         baseAnchorPublicationRecordProvenance = [],
+        publicationReferenceRecords = [],
+        publicationReferenceRecordProvenance = [],
         archiveImportEvents = []
     } = {}) {
         this._ipfsPublicationRecords = Object.freeze([...ipfsPublicationRecords]);
@@ -393,6 +440,8 @@ export class PublicationObservationArchive {
         );
         this._baseAnchorPublicationRecords = Object.freeze([...baseAnchorPublicationRecords]);
         this._baseAnchorPublicationRecordProvenance = Object.freeze([...baseAnchorPublicationRecordProvenance]);
+        this._publicationReferenceRecords = Object.freeze([...publicationReferenceRecords]);
+        this._publicationReferenceRecordProvenance = Object.freeze([...publicationReferenceRecordProvenance]);
         this._archiveImportEvents = Object.freeze([...archiveImportEvents]);
         Object.freeze(this);
     }
@@ -413,6 +462,8 @@ export class PublicationObservationArchive {
     get baseTransactionInclusionObservationProvenanceByTransactionHash() { return this._baseTransactionInclusionObservationProvenanceByTransactionHash; }
     get baseAnchorPublicationRecords() { return this._baseAnchorPublicationRecords; }
     get baseAnchorPublicationRecordProvenance() { return this._baseAnchorPublicationRecordProvenance; }
+    get publicationReferenceRecords() { return this._publicationReferenceRecords; }
+    get publicationReferenceRecordProvenance() { return this._publicationReferenceRecordProvenance; }
     get archiveImportEvents() { return this._archiveImportEvents; }
 
     // The static schema version this class currently serializes to and
@@ -457,6 +508,18 @@ export class PublicationObservationArchive {
     // BaseAnchorPublicationRecord.js's own header.
     get baseAnchorPublicationRecordCount() {
         return this._baseAnchorPublicationRecords.length;
+    }
+
+    // The count of durable publication REFERENCE records this archive
+    // holds — a relationship between two publication identities, never a
+    // fact about one. Never combined with `publicationCount`,
+    // `observationCount`, `bitcoinAnchorPublicationRecordCount`, or
+    // `baseAnchorPublicationRecordCount`, and never reduced to "distinct
+    // referencing publishers" — see application/PublicationReferenceRecord.js's
+    // own header, "One Further Rule," for why reference count and distinct
+    // referencer count stay two separate, unmerged facts.
+    get publicationReferenceRecordCount() {
+        return this._publicationReferenceRecords.length;
     }
 
     // The count of OBSERVATION-shaped facts this archive holds — every
@@ -506,7 +569,8 @@ export class PublicationObservationArchive {
             + countOriginMatchesByKey(this._bitcoinContentProofObservationProvenanceByAnchorId, origin)
             + countOriginMatches(this._bitcoinAnchorPublicationRecordProvenance, origin)
             + countOriginMatchesByKey(this._baseTransactionInclusionObservationProvenanceByTransactionHash, origin)
-            + countOriginMatches(this._baseAnchorPublicationRecordProvenance, origin);
+            + countOriginMatches(this._baseAnchorPublicationRecordProvenance, origin)
+            + countOriginMatches(this._publicationReferenceRecordProvenance, origin);
     }
 
     _fields() {
@@ -527,6 +591,8 @@ export class PublicationObservationArchive {
             baseTransactionInclusionObservationProvenanceByTransactionHash: this._baseTransactionInclusionObservationProvenanceByTransactionHash,
             baseAnchorPublicationRecords: this._baseAnchorPublicationRecords,
             baseAnchorPublicationRecordProvenance: this._baseAnchorPublicationRecordProvenance,
+            publicationReferenceRecords: this._publicationReferenceRecords,
+            publicationReferenceRecordProvenance: this._publicationReferenceRecordProvenance,
             archiveImportEvents: this._archiveImportEvents
         };
     }
@@ -729,6 +795,25 @@ export class PublicationObservationArchive {
         });
     }
 
+    // 0.8.104 — Appends `record` (an application/PublicationReferenceRecord.js
+    // instance) and returns a NEW archive. This is the ONE durable write
+    // path for an explicit publication reference relationship — see
+    // application/CreatePublicationReferenceRecordUseCase.js for the one
+    // place this codebase constructs one before appending it here. A
+    // missing/falsy `record` is a no-op, mirroring every other appendXxx()
+    // method's identical tolerance. Never deduplicates, never merges two
+    // references naming the same source/referenced pair, never infers a
+    // reference from anything this archive already holds — see application/
+    // PublicationReferenceRecord.js's own header.
+    appendPublicationReferenceRecord(record, origin = PublicationObservationArchiveProvenanceOrigin.LOCAL) {
+        if (!record || !isValidPublicationObservationArchiveProvenanceOrigin(origin)) return this;
+        return new PublicationObservationArchive({
+            ...this._fields(),
+            publicationReferenceRecords: appendPublicationReferenceRecordHistoryEntry(this._publicationReferenceRecords, record),
+            publicationReferenceRecordProvenance: Object.freeze([...this._publicationReferenceRecordProvenance, origin])
+        });
+    }
+
     // Replaces EVERY provenance entry this archive holds — across all
     // EIGHT factual collections — with `origin`, uniformly.
     // `archiveImportEvents` and every factual collection are untouched;
@@ -761,7 +846,8 @@ export class PublicationObservationArchive {
                 this._baseTransactionInclusionObservationProvenanceByTransactionHash,
                 (origins) => Object.freeze(origins.map(() => origin))
             ),
-            baseAnchorPublicationRecordProvenance: Object.freeze(this._baseAnchorPublicationRecordProvenance.map(() => origin))
+            baseAnchorPublicationRecordProvenance: Object.freeze(this._baseAnchorPublicationRecordProvenance.map(() => origin)),
+            publicationReferenceRecordProvenance: Object.freeze(this._publicationReferenceRecordProvenance.map(() => origin))
         });
     }
 
@@ -862,6 +948,8 @@ export class PublicationObservationArchive {
             ),
             baseAnchorPublicationRecords: this._baseAnchorPublicationRecords.map((record) => record.toJSON()),
             baseAnchorPublicationRecordProvenance: [...this._baseAnchorPublicationRecordProvenance],
+            publicationReferenceRecords: this._publicationReferenceRecords.map((record) => record.toJSON()),
+            publicationReferenceRecordProvenance: [...this._publicationReferenceRecordProvenance],
             archiveImportEvents: this._archiveImportEvents.map(serializeArchiveImportEvent)
         };
     }
@@ -948,6 +1036,8 @@ export class PublicationObservationArchive {
             baseTransactionInclusionObservationProvenanceByTransactionHash: validated.baseTransactionInclusionObservationProvenanceByTransactionHash,
             baseAnchorPublicationRecords: validated.baseAnchorPublicationRecords.map((record) => BaseAnchorPublicationRecord.fromJSON(record)),
             baseAnchorPublicationRecordProvenance: validated.baseAnchorPublicationRecordProvenance,
+            publicationReferenceRecords: validated.publicationReferenceRecords.map((record) => PublicationReferenceRecord.fromJSON(record)),
+            publicationReferenceRecordProvenance: validated.publicationReferenceRecordProvenance,
             archiveImportEvents: validated.archiveImportEvents.map(deserializeArchiveImportEvent)
         });
     }
@@ -1015,6 +1105,8 @@ const BITCOIN_CONTENT_PROOF_OBSERVATION_FIELDS = ['state', 'contentHash', 'reaso
 const BITCOIN_ANCHOR_PUBLICATION_RECORD_FIELDS = ['anchorId', 'contentHash', 'txid', 'network', 'createdAt'];
 const BASE_TRANSACTION_INCLUSION_OBSERVATION_FIELDS = ['state', 'txid', 'blockHash', 'blockNumber', 'transactionIndex', 'confirmationCount', 'reason', 'observedAt'];
 const BASE_ANCHOR_PUBLICATION_RECORD_FIELDS = ['contentHash', 'txid', 'network', 'createdAt'];
+const BLOCKCHAIN_PUBLICATION_IDENTITY_FIELDS = ['blockchain', 'contentHash', 'chainReference', 'createdAt'];
+const PUBLICATION_REFERENCE_RECORD_FIELDS = ['sourcePublicationIdentity', 'referencedPublicationIdentity', 'createdAt'];
 
 function isPlainObject(value) {
     return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
@@ -1072,6 +1164,30 @@ function validateBaseAnchorPublicationRecord(record) {
     if (typeof record.contentHash !== 'string' || !record.contentHash) return null;
     if (typeof record.txid !== 'string' || !record.txid) return null;
     if (typeof record.network !== 'string' || !record.network) return null;
+    if (!isValidTimestamp(record.createdAt)) return null;
+    return record;
+}
+
+// 0.8.104 — a nested `BlockchainPublicationIdentity` (0.8.89) JSON shape,
+// validated to the identical strictness every other nested fact in this
+// file already holds: exactly its own four fields, a known
+// `BlockchainKind`, non-empty `contentHash`/`chainReference`, and a valid
+// `createdAt` timestamp.
+function validateBlockchainPublicationIdentityJSON(value) {
+    if (!isPlainObject(value) || !hasOnlyKeys(value, BLOCKCHAIN_PUBLICATION_IDENTITY_FIELDS)) return null;
+    if (!BLOCKCHAIN_PUBLICATION_IDENTITY_FIELDS.every((key) => key in value)) return null;
+    if (!isValidBlockchainKind(value.blockchain)) return null;
+    if (typeof value.contentHash !== 'string' || !value.contentHash) return null;
+    if (typeof value.chainReference !== 'string' || !value.chainReference) return null;
+    if (!isValidTimestamp(value.createdAt)) return null;
+    return value;
+}
+
+function validatePublicationReferenceRecord(record) {
+    if (!isPlainObject(record) || !hasOnlyKeys(record, PUBLICATION_REFERENCE_RECORD_FIELDS)) return null;
+    if (!PUBLICATION_REFERENCE_RECORD_FIELDS.every((key) => key in record)) return null;
+    if (!validateBlockchainPublicationIdentityJSON(record.sourcePublicationIdentity)) return null;
+    if (!validateBlockchainPublicationIdentityJSON(record.referencedPublicationIdentity)) return null;
     if (!isValidTimestamp(record.createdAt)) return null;
     return record;
 }
@@ -1161,6 +1277,8 @@ const TOP_LEVEL_FIELDS = [
     'baseTransactionInclusionObservationProvenanceByTransactionHash',
     'baseAnchorPublicationRecords',
     'baseAnchorPublicationRecordProvenance',
+    'publicationReferenceRecords',
+    'publicationReferenceRecordProvenance',
     'archiveImportEvents'
 ];
 
@@ -1225,6 +1343,11 @@ function validateArchiveJSON(json) {
     const baseAnchorPublicationRecordProvenance = validateProvenanceArray(json.baseAnchorPublicationRecordProvenance, baseAnchorPublicationRecords.length);
     if (!baseAnchorPublicationRecordProvenance) return null;
 
+    const publicationReferenceRecords = validateArray(json.publicationReferenceRecords, validatePublicationReferenceRecord);
+    if (!publicationReferenceRecords) return null;
+    const publicationReferenceRecordProvenance = validateProvenanceArray(json.publicationReferenceRecordProvenance, publicationReferenceRecords.length);
+    if (!publicationReferenceRecordProvenance) return null;
+
     const archiveImportEvents = validateArray(json.archiveImportEvents, validateArchiveImportEvent);
     if (!archiveImportEvents) return null;
 
@@ -1245,6 +1368,8 @@ function validateArchiveJSON(json) {
         baseTransactionInclusionObservationProvenanceByTransactionHash,
         baseAnchorPublicationRecords,
         baseAnchorPublicationRecordProvenance,
+        publicationReferenceRecords,
+        publicationReferenceRecordProvenance,
         archiveImportEvents
     };
 }
