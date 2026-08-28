@@ -103,6 +103,10 @@ import { reconstructBitcoinAnchorDurableEvidence } from '../../application/Bitco
 import { CreateBitcoinAnchorPublicationRecordUseCase } from '../../application/CreateBitcoinAnchorPublicationRecordUseCase.js';
 import { describeBitcoinAnchorPublicationRecordHistory } from '../../application/BitcoinAnchorPublicationRecordHistoryView.js';
 import { inspectBitcoinAnchorPublication } from '../../application/BitcoinAnchorPublicationInspectionView.js';
+import {
+    BitcoinAnchorPublicationLifecycleTimelineEntryKind,
+    reconstructBitcoinAnchorPublicationLifecycleTimeline
+} from '../../application/BitcoinAnchorPublicationLifecycleTimelineView.js';
 
 // 0.7.5 — Decentralized Publication UX & Resolution.
 // 0.7.6 — Multi-Peer Publication Retrieval & Replication.
@@ -1456,6 +1460,51 @@ export default {
         // `historicalBitcoinAnchorEvidenceView()` above.
         function bitcoinAnchorPublicationInspectionView(anchorId) {
             return inspectBitcoinAnchorPublication(publicationObservationArchive.value, anchorId);
+        }
+
+        // 0.8.81 — Bitcoin Anchor Publication Lifecycle Timeline.
+        //
+        // A THIRD, DIFFERENT DISCLOSURE FOR THE SAME ROW — never a
+        // replacement for "Inspect Observations" above. That disclosure
+        // groups this publication's own five fact categories UNDER THEIR
+        // OWN HEADINGS; this one interleaves the exact same, already-described
+        // facts into ONE chronological read. Neither is more authoritative
+        // than the other — they are two different projections over the
+        // identical durable facts. Collapsed by default, and computes
+        // nothing of its own: every field a row shows is read straight off
+        // reconstructBitcoinAnchorPublicationLifecycleTimeline()'s own
+        // output. Performs zero network operations.
+        const bitcoinAnchorPublicationLifecycleExpanded = reactive({});
+
+        function toggleBitcoinAnchorPublicationLifecycle(anchorId) {
+            bitcoinAnchorPublicationLifecycleExpanded[anchorId] = !bitcoinAnchorPublicationLifecycleExpanded[anchorId];
+        }
+
+        function isBitcoinAnchorPublicationLifecycleExpanded(anchorId) {
+            return Boolean(bitcoinAnchorPublicationLifecycleExpanded[anchorId]);
+        }
+
+        function bitcoinAnchorPublicationLifecycleTimelineView(anchorId) {
+            return reconstructBitcoinAnchorPublicationLifecycleTimeline(publicationObservationArchive.value, anchorId);
+        }
+
+        function bitcoinAnchorPublicationLifecycleEntryDetail(item) {
+            switch (item.kind) {
+                case BitcoinAnchorPublicationLifecycleTimelineEntryKind.PUBLICATION:
+                    return `Content hash ${item.contentHash} — txid ${item.txid} — ${item.network}`;
+                case BitcoinAnchorPublicationLifecycleTimelineEntryKind.BROADCAST:
+                    return item.stateLabel + (item.txid ? ` — txid ${item.txid}` : '');
+                case BitcoinAnchorPublicationLifecycleTimelineEntryKind.CONFIRMATION:
+                    return item.stateLabel + (item.blockHeight != null ? ` — block height ${item.blockHeight}` : '');
+                case BitcoinAnchorPublicationLifecycleTimelineEntryKind.CONTENT_PROOF:
+                    return item.stateLabel;
+                case BitcoinAnchorPublicationLifecycleTimelineEntryKind.CHAIN_PLACEMENT:
+                    return item.outcomeLabel;
+                case BitcoinAnchorPublicationLifecycleTimelineEntryKind.CONSISTENCY:
+                    return item.stateLabel;
+                default:
+                    return '';
+            }
         }
 
         // Every currently AUTHENTICATED peer, in registry order — the
@@ -4866,6 +4915,9 @@ export default {
             toggleHistoricalBitcoinAnchorEntry, isHistoricalBitcoinAnchorEntryExpanded, historicalBitcoinAnchorEvidenceView,
             bitcoinAnchorPublicationsExpanded, toggleBitcoinAnchorPublications, bitcoinAnchorPublicationRecordHistoryView,
             toggleBitcoinAnchorPublicationInspection, isBitcoinAnchorPublicationInspectionExpanded, bitcoinAnchorPublicationInspectionView,
+            BitcoinAnchorPublicationLifecycleTimelineEntryKind,
+            toggleBitcoinAnchorPublicationLifecycle, isBitcoinAnchorPublicationLifecycleExpanded,
+            bitcoinAnchorPublicationLifecycleTimelineView, bitcoinAnchorPublicationLifecycleEntryDetail,
             decentralizationContrast,
             knowledgeSynchronizationCoordinator, synchronizeWithPeers, synchronizationView, synchronizationBadgeClass, synchronizationButtonLabel,
             toggleReplicaKnowledge, acquisitionBreakdownSentence,
@@ -5593,6 +5645,36 @@ export default {
                                     verdict. See "Historical Bitcoin Anchor Evidence" above for the full, per-observation
                                     breakdown of this same anchorId.
                                 </p>
+                            </div>
+
+                            <!-- 0.8.81 — Bitcoin Anchor Publication Lifecycle
+                                 Timeline. A third, different projection over
+                                 the SAME durable facts "Inspect Observations"
+                                 above already shows grouped by category —
+                                 this one interleaves them into one
+                                 chronological read, scoped to this exact
+                                 anchorId alone. Collapsed by default. Missing
+                                 stages (no broadcast, no content-proof, and
+                                 so on) simply produce no entry — never a
+                                 fabricated "missing" or "failed" row. -->
+                            <button type="button" class="peer-action-btn" @click="toggleBitcoinAnchorPublicationLifecycle(publicationRow.anchorId)">
+                                {{ isBitcoinAnchorPublicationLifecycleExpanded(publicationRow.anchorId) ? 'Hide Publication Lifecycle' : 'Show Publication Lifecycle' }}
+                            </button>
+                            <div v-if="isBitcoinAnchorPublicationLifecycleExpanded(publicationRow.anchorId)" class="evidence-list">
+                                <span class="evidence-convergence-title">Publication Lifecycle</span>
+                                <p v-if="!bitcoinAnchorPublicationLifecycleTimelineView(publicationRow.anchorId)" class="form-hint form-hint--neutral">
+                                    No lifecycle timeline available for this anchorId.
+                                </p>
+                                <ul v-else class="replica-knowledge-claim-list">
+                                    <li v-for="(item, timelineIndex) in bitcoinAnchorPublicationLifecycleTimelineView(publicationRow.anchorId).entries"
+                                        :key="timelineIndex" class="replica-knowledge-claim">
+                                        <span class="peer-badge peer-badge--pending">
+                                            {{ formatWhen(item.observedAt) }} — {{ item.label }}
+                                        </span>
+                                        <p class="form-hint form-hint--neutral">{{ bitcoinAnchorPublicationLifecycleEntryDetail(item) }}</p>
+                                        <p v-if="item.reason" class="form-hint form-hint--neutral">{{ item.reason }}</p>
+                                    </li>
+                                </ul>
                             </div>
                         </li>
                     </ul>
