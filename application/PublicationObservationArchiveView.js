@@ -30,13 +30,25 @@ import { describePublicationObservationTimeline } from './PublicationObservation
 // are never added into one number. This view adds per-domain breakdowns
 // of each (`ipfsPublicationCount`, `bitcoinBroadcastCount`,
 // `ipfsVerificationCount`, `bitcoinConfirmationCount`,
-// `bitcoinContentProofCount`) for a caller that wants more detail than
-// the page-level "Publications: N / Observations: N" summary, but still
-// never a `status`, `confidence`, `health`, `trusted`, `valid`,
-// `canonical`, or `reliable` field of any kind, over any of them,
-// individually or combined. See docs/Principles.md, "The UI Displays
-// Observations; It Does Not Turn Them Into A Verdict (0.8.57)," held here
-// once more for an archive's own summary counts.
+// `bitcoinContentProofCount`, and — 0.8.97 — `baseTransactionInclusionCount`)
+// for a caller that wants more detail than the page-level "Publications: N
+// / Observations: N" summary, but still never a `status`, `confidence`,
+// `health`, `trusted`, `valid`, `canonical`, or `reliable` field of any
+// kind, over any of them, individually or combined. See docs/Principles.md,
+// "The UI Displays Observations; It Does Not Turn Them Into A Verdict
+// (0.8.57)," held here once more for an archive's own summary counts.
+//
+// 0.8.97 — `baseTransactionInclusionCount` IS A SUMMARY COUNT ONLY; THE
+// `entries` TIMELINE BELOW STAYS UNTOUCHED. Base transaction inclusion
+// observations are NOT folded into `timeline`/`entries` below — this
+// milestone deliberately answers only "can a Base observation survive
+// restart and export/import," never "does it participate in the unified
+// chronological timeline." See application/PublicationObservationArchive.js's
+// own 0.8.97 header, and docs/Roadmap.md, 0.8.97, "Deliberately excluded,"
+// for why `application/PublicationObservationTimelineView.js`'s own
+// `describePublicationObservationTimeline()` is called with the identical
+// IPFS/Bitcoin arguments it already took before this milestone — a Base
+// collection intentionally never reaches it.
 //
 // A NON-ARCHIVE INPUT NEVER THROWS. `describePublicationObservationArchive()`
 // treats anything that is not a genuine `PublicationObservationArchive`
@@ -57,6 +69,7 @@ export function describePublicationObservationArchive(archive) {
     const ipfsVerificationCount = sumHistoryLengths(safeArchive.ipfsContentVerificationObservationsByRecordIndex);
     const bitcoinConfirmationCount = sumHistoryLengths(safeArchive.bitcoinConfirmationObservationsByAnchorId);
     const bitcoinContentProofCount = sumHistoryLengths(safeArchive.bitcoinContentProofObservationsByAnchorId);
+    const baseTransactionInclusionCount = sumHistoryLengths(safeArchive.baseTransactionInclusionObservationsByTransactionHash);
 
     const timeline = describePublicationObservationTimeline({
         ipfs: {
@@ -78,6 +91,7 @@ export function describePublicationObservationArchive(archive) {
         ipfsVerificationCount,
         bitcoinConfirmationCount,
         bitcoinContentProofCount,
+        baseTransactionInclusionCount,
         entryCount: timeline.count,
         entries: timeline.entries
     });

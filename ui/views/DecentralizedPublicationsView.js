@@ -1576,6 +1576,26 @@ export default {
             persistPublicationObservationArchive();
         }
 
+        // 0.8.97 — Durable Base Transaction Inclusion Observation Archive.
+        //
+        // Mirrors `archiveBitcoinConfirmationObservation()` above exactly,
+        // one chain over: appends to the SAME durable, page-level archive
+        // every other archiveXxx() function here already writes to, keyed
+        // by the exact `txid` a real BROADCASTED outcome named — never
+        // `contentHash`. Called automatically, immediately after every
+        // explicit "Observe Transaction" click reaches its own outcome —
+        // see `observeBaseTransactionInclusion()` below — never behind a
+        // second, separate "Archive Observation" button: this page already
+        // established that "network observation" and "durable archival"
+        // are two different actions bridged by one automatic append, not
+        // two person-initiated clicks, for every other observation kind on
+        // this page, and Base's own durable archival mirrors that
+        // established behavior rather than inventing a second UX.
+        function archiveBaseTransactionInclusionObservation(transactionHash, observation) {
+            publicationObservationArchive.value = publicationObservationArchive.value.appendBaseTransactionInclusionObservation(transactionHash, observation);
+            persistPublicationObservationArchive();
+        }
+
         // Pure projection over `publicationObservationArchive` through
         // application/PublicationObservationArchiveView.js's own
         // `describePublicationObservationArchive()` — never a second,
@@ -1829,8 +1849,9 @@ export default {
             publicationArchiveReplacementReviewResult.value = null;
         }
 
-        // A plain, UI-local list pairing each of the six durable
-        // collections' own difference with its own display label — pure
+        // A plain, UI-local list pairing each of the seven durable
+        // collections' own difference (0.8.97 adds Base transaction
+        // inclusion observations) with its own display label — pure
         // presentation wiring over `publicationArchiveDifferenceResult`'s
         // own already-computed counts, computing no new count of its own.
         function publicationArchiveDifferenceCollectionRows() {
@@ -1842,7 +1863,8 @@ export default {
                 { label: 'Bitcoin broadcast observations', collection: difference.bitcoinBroadcastRecords },
                 { label: 'Bitcoin confirmation observations', collection: difference.bitcoinConfirmationObservationsByAnchorId },
                 { label: 'Bitcoin content-proof observations', collection: difference.bitcoinContentProofObservationsByAnchorId },
-                { label: 'Bitcoin publication records', collection: difference.bitcoinAnchorPublicationRecords }
+                { label: 'Bitcoin publication records', collection: difference.bitcoinAnchorPublicationRecords },
+                { label: 'Base transaction inclusion observations', collection: difference.baseTransactionInclusionObservationsByTransactionHash }
             ];
         }
 
@@ -4102,6 +4124,9 @@ export default {
                 entry.baseTransactionInclusionOutcome = observation;
                 entry.baseTransactionInclusionHistory =
                     appendBaseTransactionInclusionObservationHistoryEntry(entry.baseTransactionInclusionHistory || [], observation);
+                // 0.8.97 — archived durably, keyed by the SAME txid this
+                // page's own broadcast fact was archived under.
+                archiveBaseTransactionInclusionObservation(broadcast.txid, observation);
             } catch (error) {
                 entry.baseTransactionInclusionError = error.message;
             } finally {
@@ -6740,6 +6765,7 @@ export default {
                             <div class="evidence-field"><dt>Bitcoin confirmation observations</dt><dd>{{ publicationArchiveInspectionOutcome.inspection.bitcoinConfirmationCount }}</dd></div>
                             <div class="evidence-field"><dt>Bitcoin content-proof observations</dt><dd>{{ publicationArchiveInspectionOutcome.inspection.bitcoinContentProofCount }}</dd></div>
                             <div class="evidence-field"><dt>Bitcoin publication records</dt><dd>{{ publicationArchiveInspectionOutcome.inspection.bitcoinAnchorPublicationRecordCount }}</dd></div>
+                            <div class="evidence-field"><dt>Base transaction inclusion observations</dt><dd>{{ publicationArchiveInspectionOutcome.inspection.baseTransactionInclusionObservationCount }}</dd></div>
                             <div class="evidence-field"><dt>Local facts</dt><dd>{{ publicationArchiveInspectionOutcome.inspection.localFactCount }}</dd></div>
                             <div class="evidence-field"><dt>Imported facts</dt><dd>{{ publicationArchiveInspectionOutcome.inspection.importedFactCount }}</dd></div>
                             <div class="evidence-field"><dt>Import events</dt><dd>{{ publicationArchiveInspectionOutcome.inspection.archiveImportCount }}</dd></div>
@@ -6750,6 +6776,9 @@ export default {
                         </p>
                         <p v-if="publicationArchiveInspectionOutcome.inspection.ipfsPublicationRecordIndexes.length > 0" class="form-hint form-hint--neutral">
                             IPFS publication record indexes: {{ publicationArchiveInspectionOutcome.inspection.ipfsPublicationRecordIndexes.join(', ') }}
+                        </p>
+                        <p v-if="publicationArchiveInspectionOutcome.inspection.baseTransactionHashes.length > 0" class="form-hint form-hint--neutral">
+                            Base transaction hashes: {{ publicationArchiveInspectionOutcome.inspection.baseTransactionHashes.join(', ') }}
                         </p>
                         <p class="form-hint form-hint--neutral">
                             This is a read-only look at the file above — it changes nothing about the
@@ -8463,7 +8492,21 @@ export default {
                                      every observation is preserved, never
                                      overwritten. See base/
                                      BaseTransactionInclusionObserver.js's
-                                     own header. -->
+                                     own header.
+
+                                     0.8.97 — Durable Base Transaction
+                                     Inclusion Observation Archive. Every
+                                     observation this click produces is ALSO
+                                     appended, automatically, to the SAME
+                                     durable "Observation Archive" card
+                                     below that every other observation on
+                                     this page already writes to — never a
+                                     second, separate "Archive Observation"
+                                     button, mirroring exactly how a Bitcoin
+                                     confirmation check already archives
+                                     itself the moment it completes. See
+                                     archiveBaseTransactionInclusionObservation()
+                                     above. -->
                                 <div v-if="baseTransactionInclusionObservationCoordinator && baseTransactionBroadcastView(entry).state === BaseTransactionBroadcastState.BROADCASTED"
                                      class="evidence-inspection-adapter">
                                     <span class="evidence-inspection-adapter-title">Base Transaction Inclusion</span>

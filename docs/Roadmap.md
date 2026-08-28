@@ -32497,3 +32497,223 @@ once this milestone's own observation capability has been exercised, per
 this milestone's own proposal, rather than prematurely modifying
 `application/PublicationObservationArchive.js`'s own schema every time a
 new Base observation capability appears.
+
+## 0.8.97 — Durable Base Transaction Inclusion Observation Archive
+
+0.8.90 through 0.8.96 built a complete Base publication transaction
+lifecycle — account observation, construction, review, signing,
+finalization, broadcast, inclusion observation, and (0.8.96) inclusion
+observation history — but every one of those facts, past broadcasting,
+lives only in `ui/views/DecentralizedPublicationsView.js`'s own ephemeral
+component state, reset the moment the Publication Center reopens. Bitcoin
+already crossed this exact boundary at 0.8.75: `PublicationObservationArchive`
+gives its own confirmation observations a durable home, surviving restart
+and export/import. Base stops one stage short of it:
+
+```text
+Base inclusion history           (0.8.96, ephemeral)
+        │
+        X   ← application lifetime only
+        │
+PublicationObservationArchive    (0.8.75–0.8.83, durable)
+```
+
+This milestone bridges exactly that gap, and only that gap:
+
+```text
+A Base inclusion observation becomes durable only when explicitly
+appended to the publication observation archive.
+```
+
+**A SEVENTH, INDEPENDENT COLLECTION — NEVER A GENERIC
+`blockchainTransactionObservations`, AND NEVER MERGED INTO
+`bitcoinConfirmationObservationsByAnchorId` — THE FLAGSHIP INVARIANT.**
+`application/PublicationObservationArchive.js` gains
+`baseTransactionInclusionObservationsByTransactionHash`, keyed by the exact
+`txid` a real BROADCASTED outcome named — never `contentHash`. Base's own
+observation model (an observer-computed `confirmationCount`, no separate
+`anchorId` identity, `blockNumber`/`transactionIndex` instead of
+`blockHeight`) stays exactly as distinct from Bitcoin's as 0.8.89
+("Multi-Blockchain Publication Domain Boundary") already established —
+this milestone extends that boundary's own restraint to durability, rather
+than relaxing it the moment a second chain needed a durable home:
+
+```text
+1. ipfsPublicationRecords
+2. ipfsContentVerificationObservations
+3. bitcoinBroadcastRecords
+4. bitcoinConfirmationObservations
+5. bitcoinContentProofObservations
+6. bitcoinAnchorPublicationRecords
+7. baseTransactionInclusionObservations         (THIS MILESTONE)
+```
+
+**EVERY STATE `base/BaseTransactionInclusionObserver.js` (0.8.96) ALREADY
+PRODUCES IS ARCHIVED EXACTLY AS OBSERVED — INCLUDED, NOT_INCLUDED, AND
+UNAVAILABLE ALIKE.** The archive represents what was observed, including
+an inability to obtain the requested observation, never only successful
+ones — the identical convention `bitcoinConfirmationObservationsByAnchorId`
+already holds for NOT_CONFIRMED (every field present, inapplicable ones
+`null`). No new "observation failure" abstraction is introduced for this:
+UNAVAILABLE already is this class's own existing observation vocabulary.
+
+**IDENTITY ISOLATION, EXTENDED ONE CHAIN OVER.** Two Base transactions that
+commit the identical `contentHash` under two different `txid`s remain two
+entirely independent observation histories:
+
+```text
+Base transaction A                 Base transaction B
+contentHash = X          =         contentHash = X   (same!)
+txid = H1                          txid = H2
+
+H1 → [observation₁, observation₂, ...]
+H2 → [observation₁, observation₂, ...]              (entirely separate)
+```
+
+This is the Base extension of the strongest identity rule this codebase
+has held since 0.8.78 ("Correlate Evidence By Explicit Identity, Never By
+Resemblance").
+
+**PROVENANCE, FINGERPRINT, EXPORT/IMPORT, DIFFERENCE, AND INSPECTION ALL
+EXTEND THROUGH THEIR OWN EXISTING MACHINERY — NO SECOND MECHANISM OF ANY
+KIND.** A seventh parallel provenance collection,
+`baseTransactionInclusionObservationProvenanceByTransactionHash`, follows
+0.8.83's own `LOCAL`/`IMPORTED` rule unchanged — an imported Base
+observation becomes `IMPORTED` via `withUniformProvenance()`, regardless of
+what it claimed before export. 0.8.84's own fingerprint algorithm needs no
+change at all: it hashes `toJSON()`'s own canonical output, and that output
+now includes the seventh collection, so an archive with a Base observation
+already fingerprints differently from one without. 0.8.82's own
+export/import path needs no change either: `toJSON()`/`fromJSON()` already
+carry the new fields through. `application/
+PublicationObservationArchiveDifference.js` gains one more keyed-collection
+comparison (`transactionHash`, never `contentHash`), using the identical
+position-by-position, never-a-set comparison every other keyed collection
+already uses. `application/PublicationObservationArchiveInspection.js`
+gains `baseTransactionInclusionObservationCount` and a `baseTransactionHashes`
+identity list, mirroring `bitcoinAnchorIds` exactly.
+
+**THIS MILESTONE BUMPS SCHEMA_VERSION TO 4** — a payload persisted by
+0.8.75 through 0.8.96 (schemaVersion 3) degrades to
+`PublicationObservationArchive.empty()` on load, the identical,
+already-tested "wrong schemaVersion" behavior this class has held since
+0.8.75; no migration path is added, because none of this class's own prior
+principles ever promised one.
+
+**`observationCount` NOW ALSO COUNTS BASE INCLUSION OBSERVATIONS** — the
+identical OBSERVATION shape an IPFS verification or a Bitcoin confirmation
+check already contributes to that count, extended to a third domain.
+`publicationCount` and `bitcoinAnchorPublicationRecordCount` are
+deliberately unaffected: a Base inclusion observation is an observation,
+never a publication-shaped fact, and this milestone mints no Base
+counterpart to `BitcoinAnchorPublicationRecord`.
+
+**THE CROSS-DOMAIN TIMELINE IS DELIBERATELY, ENTIRELY UNTOUCHED.**
+`application/PublicationObservationTimelineView.js` is not modified, not
+imported by anything new, and not fed a Base collection of any kind — see
+application/PublicationObservationArchiveView.js's own header. This
+milestone answers exactly one question: can a Base inclusion observation
+survive application restart and archive export/import? Whether Base
+observations participate in the unified chronological timeline is 0.8.98's
+own, separately sized question, not this one's.
+
+**DURABLE ARCHIVAL MIRRORS THE ESTABLISHED BITCOIN UX — NO SECOND "ARCHIVE
+OBSERVATION" BUTTON.** `ui/views/DecentralizedPublicationsView.js`'s own
+`observeBaseTransactionInclusion()` already calls
+`baseTransactionInclusionObservationCoordinator.observeInclusion()` on an
+explicit "Observe Transaction" click; this milestone adds exactly one more
+line to that same click handler —
+`archiveBaseTransactionInclusionObservation(broadcast.txid, observation)`
+— mirroring the identical automatic-append `archiveBitcoinConfirmationObservation()`
+already performs the moment a Bitcoin confirmation check completes. Network
+observation and durable archival remain two different actions
+(`docs/Principles.md`), bridged automatically at the one place this
+codebase already bridges every other observation on this page — never a
+second, separate person-initiated archival click.
+
+New files:
+- `tests/DurableBaseTransactionInclusionObservationArchive.test.js` — new;
+  the flagship restart/round-trip scenario (broadcast, observe twice,
+  persist through real storage, destroy every in-memory reference, reload
+  — history preserved exactly, then a further LOCAL observation appends
+  alongside two now-IMPORTED ones), identity isolation (two Base
+  transactions sharing one `contentHash` keep independent histories
+  surviving export/import), NOT_INCLUDED/UNAVAILABLE archived exactly as
+  observed, `observationCount`'s own extension, the schemaVersion 3 → 4
+  degrade, the difference projection's seventh collection (including
+  duplicates never absorbed), the fingerprint's automatic sensitivity to a
+  Base fact or provenance change, the inspection view's new count and
+  identity list, and proof the cross-domain timeline stays byte-identical
+  whether or not a Base observation exists.
+
+Changed:
+- `application/PublicationObservationArchive.js` — the new
+  `baseTransactionInclusionObservationsByTransactionHash`/
+  `baseTransactionInclusionObservationProvenanceByTransactionHash`
+  collections, `appendBaseTransactionInclusionObservation()` (reusing
+  `application/BaseTransactionInclusionObservationHistory.js`'s own,
+  UNCHANGED append function, exactly like every other `appendXxx()` in this
+  file reuses its own domain's history function), `observationCount`'s
+  extension, `withUniformProvenance()`'s extension, `SCHEMA_VERSION` 3 → 4,
+  and the matching `toJSON()`/`fromJSON()`/validation wiring. Every one of
+  the six pre-existing collections is otherwise untouched, and
+  `base/BaseTransactionInclusionObserver.js`/`application/
+  BaseTransactionInclusionObservationHistory.js` (0.8.96) are byte-for-byte
+  unchanged.
+- `application/PublicationObservationArchiveDifference.js` — one more
+  keyed-collection comparison, `baseTransactionInclusionObservationsByTransactionHash`,
+  using the identical `diffKeyedCollection()` every other keyed collection
+  already uses.
+- `application/PublicationObservationArchiveView.js` — a new
+  `baseTransactionInclusionCount` summary field, mirroring
+  `bitcoinConfirmationCount`; the `entries` timeline projection itself is
+  UNCHANGED — see this milestone's own "Deliberately excluded" below.
+- `application/PublicationObservationArchiveInspection.js` — a new
+  `baseTransactionInclusionObservationCount` field and a
+  `baseTransactionHashes` identity list, mirroring `bitcoinAnchorIds`.
+- `application/PublicationObservationArchiveReplacementReview.js` — a new
+  `baseTransactionInclusionCount` field on each side's own summary, reading
+  straight off the view's own new field, no new counting logic.
+- `ui/views/DecentralizedPublicationsView.js` — a new
+  `archiveBaseTransactionInclusionObservation()` helper, called
+  automatically at the end of `observeBaseTransactionInclusion()`; the
+  "Inspect External Archive" card's own dl gains a "Base transaction
+  inclusion observations" row and a "Base transaction hashes" identity
+  line; the archive difference card's own collection rows gain a seventh,
+  "Base transaction inclusion observations" row.
+
+Deliberately excluded, exactly as this milestone's own proposal named up front:
+- **Cross-domain publication timeline integration.**
+  `application/PublicationObservationTimelineView.js` is not modified — see
+  "The Cross-Domain Timeline Is Deliberately, Entirely Untouched" above.
+  That is 0.8.98's own, separately sized milestone.
+- **Cross-chain publication evidence correlation.** Reserved for 0.8.99.
+- **A generic `blockchainTransactionObservations` collection.** Bitcoin and
+  Base keep their own, deliberately distinct observation shapes and
+  collections — see "A Seventh, Independent Collection" above.
+- **Execution-result (`receipt.status`) interpretation, just because
+  receipts are now persisted.** `base/BaseJsonRpcClient.js#fetchTransactionReceipt()`
+  still decodes no `status` field (0.8.96, unchanged); whether a receipt's
+  own execution succeeded or reverted remains its own, later, separately
+  sized question.
+- **Reorganization detection, transaction replacement, or nonce-based
+  correlation of any kind.** A later INCLUDED observation naming a
+  different `blockHash` than an earlier one is preserved, unflagged, in the
+  archive — identical to 0.8.96's own restraint, now simply durable.
+- **Archive merging or synchronization.** Import still replaces, never
+  merges — 0.8.82's own boundary, untouched.
+- **Automatic persistence beyond the established observation → archive
+  boundary.** Archiving stays bound to the one explicit "Observe
+  Transaction" click — see "Durable Archival Mirrors The Established
+  Bitcoin UX" above.
+- **Trust/confidence/reliability scoring of any kind.** See Section K of
+  this milestone's own flagship test.
+- **A Base counterpart to `BitcoinAnchorPublicationRecord`.** Base mints no
+  durable publication-identity record in this milestone —
+  `publicationCount`/`bitcoinAnchorPublicationRecordCount` stay unaffected.
+
+What's left, and deliberately unbuilt: Base observation timeline
+integration (0.8.98) and Base publication evidence correlation (0.8.99)
+remain further out still — worth building on their own merits once this
+milestone's own durability boundary has been exercised, exactly as this
+milestone's own proposal anticipated.

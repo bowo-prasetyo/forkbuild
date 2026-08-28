@@ -203,19 +203,20 @@ function run() {
     // ---------------------------------------------------------------
     {
         // sha256(canonical JSON of PublicationObservationArchive.empty(),
-        // schemaVersion 3, archiveImportEvents stripped) — independently
-        // verified against Node's own `crypto.createHash('sha256')` while
-        // authoring this test. This is not merely a self-consistency
-        // check: it proves the hand-rolled SHA-256 implementation in
-        // application/PublicationObservationArchiveFingerprint.js produces
-        // the SAME digest a standard SHA-256 implementation does over the
-        // identical bytes.
-        const EXPECTED_EMPTY_ARCHIVE_FINGERPRINT = '2a6942a9bda87cdb8f5f2dbc0f466077ef4f2d8130637d2ea66482af55e46229';
+        // schemaVersion 4 (0.8.97), archiveImportEvents stripped) —
+        // independently verified against Node's own
+        // `crypto.createHash('sha256')` while authoring this test. This is
+        // not merely a self-consistency check: it proves the hand-rolled
+        // SHA-256 implementation in application/
+        // PublicationObservationArchiveFingerprint.js produces the SAME
+        // digest a standard SHA-256 implementation does over the identical
+        // bytes.
+        const EXPECTED_EMPTY_ARCHIVE_FINGERPRINT = '7f4b815dd7d5a63a941d49c556ce46466d5493fa83823bc22f89ac676738189f';
         assert(fingerprintPublicationObservationArchive(PublicationObservationArchive.empty()) === EXPECTED_EMPTY_ARCHIVE_FINGERPRINT, '14. sha256 of the empty archive\'s own canonical content matches the independently computed vector');
 
         let single = PublicationObservationArchive.empty();
         single = single.appendBitcoinConfirmationObservation('anchor-1', confirmed({ txid: TXID_A, blockHash: BLOCK_A, blockHeight: 1, confirmationCount: 1, observedAt: new Date('2026-01-01T00:00:00Z') }));
-        const EXPECTED_SINGLE_OBSERVATION_FINGERPRINT = '3be86c56e05cc87baab1b56f57f55f77c9a045bbc29771613a6deb00f7c7bec6';
+        const EXPECTED_SINGLE_OBSERVATION_FINGERPRINT = '8c639c8cb8c1dcfbda05cefaaf037d110e0e470b8a4d2267eaac1a69b3e32716';
         assert(fingerprintPublicationObservationArchive(single) === EXPECTED_SINGLE_OBSERVATION_FINGERPRINT, '15. sha256 of a one-observation archive matches the independently computed vector');
     }
     console.log('✓ Section D: the hand-rolled SHA-256 implementation matches independently computed vectors, not merely itself');
