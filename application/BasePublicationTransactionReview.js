@@ -99,11 +99,14 @@ const DECIMAL_PATTERN = /^\d+$/;
 // BROADCAST. `describeBasePublicationTransactionReview()` reads no clock,
 // consults no wallet, and never mutates `plan`. It creates no
 // `application/BlockchainPublicationIdentity.js` (0.8.89) — there has been
-// no publication yet, only a plan and a review of it. Connecting "here is
-// a reviewed plan" to "here is that plan, signed" remains its own,
-// separately sized, future milestone — exactly as `application/
-// BasePublicationTransactionPlanCoordinator.js`'s own header (0.8.91)
-// already reserved that identical sequencing.
+// no publication yet, only a plan and a review of it.
+//
+// `requireRealBasePublicationTransactionPlan()` IS EXPORTED, 0.8.93. The
+// exact same field-by-field re-validation this file already performed
+// internally is now also `base/BaseTransactionSigner.js`'s own precondition
+// before it ever builds a transaction request from a plan — never a second,
+// independently-drifting copy of these checks. Nothing about the checks
+// themselves, or this function's own behavior, changes.
 export function describeBasePublicationTransactionReview(plan) {
     requireRealPlan(plan);
 
@@ -120,6 +123,10 @@ export function describeBasePublicationTransactionReview(plan) {
         contentHash: decodeBasePublicationCommitment(plan.data),
         transactionData: plan.data
     });
+}
+
+export function requireRealBasePublicationTransactionPlan(plan) {
+    requireRealPlan(plan);
 }
 
 function requireRealPlan(plan) {

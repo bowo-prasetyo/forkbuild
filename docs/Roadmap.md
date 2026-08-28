@@ -31534,3 +31534,237 @@ capability receive merely an account address and a content hash and
 reconstruct a transaction independently — mirroring `anchoring/
 BitcoinAnchorReviewedPsbtSigner.js`'s own identity-binding discipline
 (0.8.62) one chain over. No such milestone is designed yet.
+
+## 0.8.93 — Explicit Base Reviewed Transaction Signing
+
+0.8.92 gave this codebase a real, honest projection of an already-
+CONSTRUCTED Base plan — something a person can actually look at before
+authorizing it. Nothing since has ever turned that review into a real
+signature. This milestone is that missing capability crossing, and
+deliberately nothing more: the point this codebase's own proposal named
+directly as crossing "from facts and presentation into user-authorized
+capability use."
+
+```text
+Base account observation                     (0.8.90, unchanged)
+        │
+        ▼
+Base transaction construction                (0.8.91, unchanged)
+        │
+        ▼
+Base transaction review                      (0.8.92, unchanged)
+        │
+        ▼
+┌──────────────────────────┐
+│ Explicit signing          │               (THIS MILESTONE — new)
+│                          │
+│ base/BaseTransactionSigner.js
+│ base/BaseReviewedTransactionSigner.js
+│ base/BaseInjectedProviderWalletTransactionSigner.js
+└──────────────────────────┘
+        │
+        ▼
+{ signed: true, rawTransaction }
+        │
+        ▼
+future inspection/verification               (0.8.94, not yet designed)
+```
+
+**The central invariant: signing authorizes the exact reviewed plan; it
+never reconstructs or modifies it.** `base/BaseTransactionSigner.js`'s own
+`requestSignature({ plan })` builds the transactionRequest it hands to a
+wallet from `plan`'s own already-frozen fields alone — no RPC call, no
+fresh nonce, no fresh gas estimate, no fresh fee read, and no fee, nonce,
+or gas value it chooses on its own. `base/
+BaseReviewedTransactionSigner.js` sits above it and adds exactly one
+precondition, mirroring `anchoring/BitcoinAnchorReviewedPsbtSigner.js`'s
+own identity-binding discipline (0.8.59) one chain over: `requestSignature({
+plan, reviewedTransaction })` independently re-derives
+`describeBasePublicationTransactionReview(plan)` — the SAME 0.8.92
+projection a person was actually shown — and compares it, field by field,
+against the caller-supplied `reviewedTransaction` BEFORE the wallet is
+ever consulted. Any disagreement is refused as a definite `{ signed: false,
+reason }`, never `unavailable`, and never silently signed anyway.
+
+**A signer receives the already-constructed plan; it is never handed a
+bare `contentHash` and an account and left to reconstruct a transaction
+independently.** `requireRealBasePublicationTransactionPlan()` — a small,
+additive export off `application/BasePublicationTransactionReview.js`,
+reusing 0.8.92's own field-by-field re-validation verbatim rather than
+duplicating it — is `base/BaseTransactionSigner.js`'s own precondition,
+checked before a transactionRequest is ever built. A caller offering
+anything less than a real, already-CONSTRUCTED plan is a caller-contract
+violation and throws.
+
+**The transaction type is explicit, never left for the wallet to guess.**
+`plan.maxFeePerGas`/`plan.maxPriorityFeePerGas` already committed this
+codebase to EIP-1559 pricing (0.8.91) — `base/BaseTransactionSigner.js`
+names that commitment structurally, stamping `type: '0x2'` on every
+transactionRequest it builds, together with `chainId`, `nonce`, `gas`
+(from the plan's own `gasLimit`), `maxFeePerGas`, `maxPriorityFeePerGas`,
+`from`, `to`, `value`, and `data` — the complete, explicit transaction
+contract this milestone's own proposal named as needing to be settled
+before 0.8.94's own inspection stage could be clean.
+
+**A wallet's own signing capability is deliberately separate from
+`base/BaseWalletConnection.js`.** 0.8.90's own account-connection class
+was built to expose `.status`/`.account` and "NO SIGNING METHOD OF ANY
+KIND" — this milestone preserves that unweakened rather than widening
+`BaseWalletConnection` into a capability holding both an account and a
+signature. `base/BaseInjectedProviderWalletTransactionSigner.js` is a
+wholly separate, standalone class reading the SAME `window.ethereum` (or
+`null`) `ui/main.js` already hands `BaseInjectedProviderWalletAdapter`,
+translating only `eth_signTransaction`'s own hex-quantity JSON-RPC
+parameter shape — never `eth_sendTransaction` (which would broadcast),
+`eth_sign`, or `personal_sign`. The application layer never needs to know
+signing ultimately came from an EIP-1193 provider — it only ever calls
+`wallet.signTransaction(transactionRequest)`, the identical narrow
+contract shape `anchoring/BitcoinAnchorWalletSigner.js`'s own `wallet`
+already holds one chain over.
+
+**Signing stops at SIGNED — no finalization, no inspection, no
+broadcast.** A successful result is `{ signed: true, rawTransaction }`,
+nothing more: `base/BaseTransactionSigner.js` never decodes
+`rawTransaction`, never checks it corresponds to `plan` cryptographically
+or even structurally, and never calls anything broadcast-shaped. That
+correspondence check — genuinely confirming a wallet's claimed signature
+belongs to the exact transaction this milestone asked to have signed — is
+this codebase's own deliberately separate next milestone; see "What's
+left," below.
+
+**Signing result states follow the established vocabulary pattern, with
+DECLINED and UNAVAILABLE kept honestly distinct.**
+`application/BaseReviewedSigningState.js` names IDLE/SIGNING/SIGNED/
+DECLINED/UNAVAILABLE/FAILED, mirroring `application/
+BitcoinAnchorReviewedSigningState.js`'s own vocabulary (0.8.62) exactly,
+one chain over. A wallet's own explicit rejection and a review-mismatch
+refusal both reach DECLINED — a definite, non-retriable no — while "no
+wallet is currently available to ask" (no extension installed, a wallet
+that does not implement `eth_signTransaction` at all, a locked wallet)
+reaches UNAVAILABLE, a genuinely retriable condition. FAILED is reserved
+for a collaborator producing a result this codebase refuses to accept as
+real — a wallet claiming `signed: true` while returning no
+`rawTransaction` at all.
+
+**Every explicit "Sign Reviewed Transaction" click is its own, fresh
+attempt — never a retry.** `application/BaseReviewedSigningCoordinator.js`
+performs no internal retry, no automatic reconnect, and no automatic
+re-construction. A DECLINED result stays DECLINED; a second click creates
+an entirely new, distinct SIGNING → (SIGNED|DECLINED|UNAVAILABLE|FAILED)
+attempt — the identical Bitcoin signing discipline this codebase already
+holds, held here one chain over. `ui/views/DecentralizedPublicationsView.js`'s
+own `constructBasePublicationTransaction()` resets
+`entry.baseReviewedTransactionSigningOutcome` to `null` on every fresh
+construction — a fresh plan always starts unsigned again, never
+inheriting a previous plan's own SIGNED/DECLINED/etc. outcome.
+
+**The signer never mutates the plan it signs, and never touches an
+unrelated one.** `plan` stays frozen and byte-identical before and after
+`requestSignature()` — no `signedTransaction`/`signature`/`rawTransaction`
+field is ever written onto it. The signed artifact is returned
+separately, never merged into the plan object a caller already holds.
+
+**No browser-side private-key handling, anywhere.** No `privateKey`,
+`privateKeyHex`, `mnemonic`, or `seedPhrase` field or method exists on any
+class this milestone introduces — the identical hard boundary `anchoring/
+BitcoinAnchorWalletSigner.js`'s own header already holds: ForkBuild
+requests authorization, and the wallet controls the keys and performs the
+signing.
+
+New files:
+- `base/BaseTransactionSigner.js` — new; the narrow, wallet-facing signing
+  capability. `requestSignature({ plan })` builds a transactionRequest
+  from `plan`'s own frozen fields alone and hands it to an injected
+  `wallet.signTransaction()`. Never observes an account, never queries a
+  network, never estimates gas, never chooses a fee, never inspects the
+  wallet's own claimed result, and never broadcasts.
+- `base/BaseReviewedTransactionSigner.js` — new; sits above the narrow
+  signer, binding it to a caller-supplied, already-shown review via
+  `requestSignature({ plan, reviewedTransaction })`. A mismatch is refused
+  before the wallet is ever consulted.
+- `base/BaseInjectedProviderWalletTransactionSigner.js` — new; the one
+  concrete EIP-1193 `wallet` this milestone ships, translating
+  `eth_signTransaction`'s own hex-quantity parameter shape and nothing
+  else.
+- `application/BaseReviewedSigningState.js` — new; the closed
+  IDLE/SIGNING/SIGNED/DECLINED/UNAVAILABLE/FAILED vocabulary.
+- `application/BaseReviewedSigningCoordinator.js` — new; a deliberately
+  thin `sign({ wallet, plan, reviewedTransaction })` wiring turning
+  `base/BaseReviewedTransactionSigner.js`'s three-way outcome into the
+  six-value state vocabulary. Constructs a fresh signer on every call —
+  never a remembered wallet.
+- `application/BaseReviewedSigningView.js` — new; `describeBaseReviewedSigning()`,
+  the pure projection into `{ state, stateLabel, reason,
+  hasRawTransaction }`. Never exposes the raw signed transaction itself.
+- `application/CreateBaseReviewedTransactionSignerUseCase.js`,
+  `application/CreateBaseReviewedSigningCoordinatorUseCase.js`,
+  `application/CreateBaseInjectedProviderWalletTransactionSignerUseCase.js`
+  — new composition-root factories, mirroring this codebase's own
+  established `Create*UseCase.js` pattern.
+
+Changed:
+- `application/BasePublicationTransactionReview.js` — additive only: its
+  own internal field-by-field plan validator is now also exported as
+  `requireRealBasePublicationTransactionPlan()`, reused verbatim by `base/
+  BaseTransactionSigner.js` rather than duplicated. `describeBasePublicationTransactionReview()`
+  itself is unchanged.
+- `ui/main.js` — wires `baseInjectedProviderWalletTransactionSigner`
+  (reading the same `window.ethereum`/`null` `baseInjectedProviderWalletAdapter`
+  already reads, for a wholly separate purpose) and
+  `baseReviewedSigningCoordinator`.
+- `ui/views/DecentralizedPublicationsView.js` — a new "Signing" section
+  inside the existing "Base Transaction Review" card, with an explicit
+  "Sign Reviewed Transaction" button. States plainly that signing
+  authorizes the exact transaction reviewed above, does not reconstruct
+  or modify it, and does not broadcast it.
+
+New tests:
+- `tests/BaseReviewedTransactionSigning.test.js` — flagship proofs: (1)
+  exact-plan binding — the wallet receives a transactionRequest built
+  only from the reviewed plan's own fields, including an explicit `type:
+  '0x2'`; (2) no reconstruction — a later, unrelated construction against
+  fresh network figures never changes what an earlier plan signs with;
+  (3) no broadcast — 0 broadcast-shaped calls of any kind; (4) a DECLINED
+  attempt never auto-retries; (5) plan isolation — signing one plan
+  mutates neither it nor any other, unrelated plan; (6) no private-key,
+  seed, mnemonic, or password field anywhere in this milestone's own
+  public surface. Plus: review-mismatch refusal before the wallet is ever
+  consulted, the full coordinator state mapping, the closed state/view
+  vocabulary, and the concrete EIP-1193 adapter's own format translation.
+
+Deliberately excluded, exactly as this milestone's own proposal named up
+front:
+- **Reconstructing a transaction from a bare `contentHash` and an
+  account.** See "A signer receives the already-constructed plan" above.
+- **Choosing a nonce, gas limit, or fee of any kind.** Those remain
+  `base/BasePublicationTransactionPlanner.js`'s own job (0.8.91),
+  unchanged.
+- **Any signing method added to `base/BaseWalletConnection.js`.** See "A
+  wallet's own signing capability is deliberately separate" above.
+- **Cryptographic or structural inspection of the wallet's claimed
+  signature.** See "Signing stops at SIGNED" above — this is 0.8.94's own
+  job.
+- **`eth_sendTransaction`, `eth_sendRawTransaction`, broadcast, or
+  confirmation observation of any kind.**
+- **Automatic retry, automatic wallet reconnect, or automatic
+  re-construction of a plan after a DECLINED/UNAVAILABLE/FAILED
+  attempt.** See "Every explicit click is its own, fresh attempt" above.
+- **Any private-key, seed, mnemonic, or wallet-password handling in
+  ForkBuild's own application state.** See "No browser-side private-key
+  handling" above.
+- **A `safe`/`trusted`/`validated`/`ready` verdict of any kind about a
+  signing attempt.** `application/BaseReviewedSigningState.js`'s own
+  SIGNED names only that a wallet returned SOME rawTransaction for a plan
+  that still matched its own review — never that ForkBuild has looked
+  inside it.
+
+What's left, and deliberately unbuilt: this milestone's own proposal
+anticipates 0.8.94 as explicit inspection of the signed artifact —
+genuinely confirming a wallet's claimed signature corresponds to the
+exact transaction that was reviewed and signed, mirroring `anchoring/
+BitcoinAnchorSignedPsbtInspector.js`'s own structural-correspondence
+discipline (0.8.50) and, eventually, `anchoring/
+BitcoinAnchorSignedPsbtFinalizer.js`'s own cryptographic verification
+(0.8.51) — one chain over, for an EIP-1559 typed transaction rather than a
+BIP174 PSBT. No such milestone is designed yet. Broadcast (0.8.95) and
+confirmation observation (0.8.96) remain further out still.

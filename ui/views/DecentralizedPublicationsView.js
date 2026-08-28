@@ -132,6 +132,8 @@ import { describeBaseAccountObservation } from '../../application/BaseAccountObs
 import { BasePublicationTransactionPlanState } from '../../application/BasePublicationTransactionPlanState.js';
 import { describeBasePublicationTransactionPlan } from '../../application/BasePublicationTransactionPlanView.js';
 import { describeBasePublicationTransactionReview } from '../../application/BasePublicationTransactionReview.js';
+import { BaseReviewedSigningState } from '../../application/BaseReviewedSigningState.js';
+import { describeBaseReviewedSigning } from '../../application/BaseReviewedSigningView.js';
 
 // 0.7.5 — Decentralized Publication UX & Resolution.
 // 0.7.6 — Multi-Peer Publication Retrieval & Replication.
@@ -807,6 +809,21 @@ const BASE_PUBLICATION_TRANSACTION_PLAN_BADGE_CLASSES = {
     [BasePublicationTransactionPlanState.FAILED]: 'peer-badge--failed'
 };
 
+// 0.8.93 — Explicit Base Reviewed Transaction Signing. Mirrors
+// BITCOIN_ANCHOR_REVIEWED_SIGNING_BADGE_CLASSES immediately above,
+// one chain over: SIGNING reads amber (an attempt in flight, not yet a
+// fact), SIGNED reads the same "authenticated" green every other
+// successful outcome on this page earns, and DECLINED/UNAVAILABLE/FAILED
+// all read the identical red every other actionable, resolvable failure
+// on this page already reads.
+const BASE_REVIEWED_SIGNING_BADGE_CLASSES = {
+    [BaseReviewedSigningState.SIGNING]: 'peer-badge--pending',
+    [BaseReviewedSigningState.SIGNED]: 'peer-badge--authenticated',
+    [BaseReviewedSigningState.DECLINED]: 'peer-badge--failed',
+    [BaseReviewedSigningState.UNAVAILABLE]: 'peer-badge--failed',
+    [BaseReviewedSigningState.FAILED]: 'peer-badge--failed'
+};
+
 // 0.8.68 — Explicit Remote IPFS Publishing Configuration & UX. Mirrors
 // BITCOIN_ANCHOR_BROADCAST_BADGE_CLASSES immediately above exactly, one
 // external boundary over: PUBLISHING reads pending, PUBLISHED reads the
@@ -1043,6 +1060,16 @@ export default {
         // `baseAccountObservationState.observation` before "Create Base
         // Transaction Plan" does anything.
         const basePublicationTransactionPlanCoordinator = inject('basePublicationTransactionPlanCoordinator', null);
+        // 0.8.93 — Explicit Base Reviewed Transaction Signing. Optional —
+        // absent either, the "Sign Reviewed Transaction" button simply
+        // never renders, the identical degrade-gracefully posture every
+        // optional section on this page already holds.
+        // `baseInjectedProviderWalletTransactionSigner` is a wholly
+        // separate signing capability from `baseWalletConnection` — see
+        // `base/BaseWalletConnection.js`'s own header on why account
+        // identity is never widened into a signing capability.
+        const baseInjectedProviderWalletTransactionSigner = inject('baseInjectedProviderWalletTransactionSigner', null);
+        const baseReviewedSigningCoordinator = inject('baseReviewedSigningCoordinator', null);
         // 0.8.59/0.8.62 — Explicit Bitcoin Anchor Transaction Review &
         // Signing UI. `bitcoinAnchorTransactionReview` is now this page's
         // OWN reactive holder (declared below, alongside
@@ -3655,6 +3682,14 @@ export default {
         async function constructBasePublicationTransaction(entry) {
             if (!basePublicationTransactionPlanCoordinator) return;
             entry.basePublicationTransactionConstruction = { state: BasePublicationTransactionPlanState.CONSTRUCTING, construction: null, reason: null };
+            // 0.8.93 — Explicit Base Reviewed Transaction Signing. A fresh
+            // plan always starts unsigned again — never leaves a previous
+            // plan's own SIGNED/DECLINED/etc. outcome showing against a
+            // transaction this click is about to replace. See
+            // `application/BaseReviewedSigningState.js`'s own header,
+            // "IDLE... the state after a person constructs (or
+            // reconstructs) a Base transaction plan."
+            entry.baseReviewedTransactionSigningOutcome = null;
             try {
                 entry.basePublicationTransactionConstruction = await basePublicationTransactionPlanCoordinator.construct({
                     publicationId: entry.publication.id,
@@ -3711,6 +3746,60 @@ export default {
             if (!entry.basePublicationTransactionConstruction) return null;
             if (entry.basePublicationTransactionConstruction.state !== BasePublicationTransactionPlanState.CONSTRUCTED) return null;
             return describeBasePublicationTransactionReview(entry.basePublicationTransactionConstruction.construction.plan);
+        }
+
+        // 0.8.93 — Explicit Base Reviewed Transaction Signing.
+        //
+        // THE ONE EXPLICIT ACTION THIS WHOLE REVIEW EXISTS TO GATE — nothing
+        // above this function ever signs anything. Hands
+        // `application/BaseReviewedSigningCoordinator.js#sign()` the exact
+        // plan the review card above was built from, and the exact review
+        // object it already rendered on screen (`reviewedTransaction`) —
+        // never a hash, never a bare account, and never anything this
+        // function reconstructs itself. See `base/
+        // BaseReviewedTransactionSigner.js`'s own header on why a plan that
+        // has drifted from `reviewedTransaction` is refused before the
+        // wallet is ever consulted.
+        //
+        // EVERY CLICK IS ITS OWN FRESH ATTEMPT — NEVER A RETRY. No
+        // catch-and-resign, no automatic reconnect, no automatic
+        // re-construction. A DECLINED/UNAVAILABLE/FAILED outcome stays
+        // exactly that until this function is explicitly called again.
+        async function signBaseReviewedTransaction(entry) {
+            if (!baseReviewedSigningCoordinator) return;
+            const review = basePublicationTransactionReviewView(entry);
+            if (!review || entry.basePublicationTransactionConstruction.state !== BasePublicationTransactionPlanState.CONSTRUCTED) return;
+            const plan = entry.basePublicationTransactionConstruction.construction.plan;
+
+            entry.baseReviewedTransactionSigningOutcome = { state: BaseReviewedSigningState.SIGNING, rawTransaction: null, reason: null };
+            try {
+                entry.baseReviewedTransactionSigningOutcome = await baseReviewedSigningCoordinator.sign({
+                    wallet: baseInjectedProviderWalletTransactionSigner,
+                    plan,
+                    reviewedTransaction: review
+                });
+            } catch (error) {
+                entry.baseReviewedTransactionSigningOutcome = { state: BaseReviewedSigningState.FAILED, rawTransaction: null, reason: error.message };
+            }
+        }
+
+        // Pure projection of `entry.baseReviewedTransactionSigningOutcome`
+        // through `application/BaseReviewedSigningView.js`'s own
+        // `describeBaseReviewedSigning()` — the identical "the UI owns no
+        // facts of its own, it only projects an injected collaborator's own
+        // result" discipline every other `*View()` function on this page
+        // already holds. Never `null` — an entry with no signing attempt
+        // yet simply projects as IDLE.
+        function baseReviewedTransactionSigningView(entry) {
+            return describeBaseReviewedSigning(entry.baseReviewedTransactionSigningOutcome || null);
+        }
+
+        function baseReviewedTransactionSigningBadgeClass(entry) {
+            return BASE_REVIEWED_SIGNING_BADGE_CLASSES[baseReviewedTransactionSigningView(entry).state] || 'peer-badge--pending';
+        }
+
+        function isBaseReviewedTransactionSigning(entry) {
+            return baseReviewedTransactionSigningView(entry).state === BaseReviewedSigningState.SIGNING;
         }
 
         // 0.8.61 — Explicit Bitcoin Anchor Transaction Construction UI.
@@ -5596,6 +5685,9 @@ export default {
             basePublicationTransactionPlanView, basePublicationTransactionPlanBadgeClass,
             BasePublicationTransactionPlanState,
             basePublicationTransactionReviewView,
+            baseReviewedSigningCoordinator, signBaseReviewedTransaction,
+            baseReviewedTransactionSigningView, baseReviewedTransactionSigningBadgeClass, isBaseReviewedTransactionSigning,
+            BaseReviewedSigningState,
             bitcoinAnchorTransactionConstructionCoordinator, constructBitcoinAnchorTransaction,
             bitcoinAnchorTransactionConstructionView, bitcoinAnchorTransactionConstructionBadgeClass,
             BitcoinAnchorTransactionConstructionState,
@@ -7821,6 +7913,60 @@ export default {
                                     <dl class="evidence-fields">
                                         <div class="evidence-field"><dd>{{ basePublicationTransactionReviewView(entry).transactionData }}</dd></div>
                                     </dl>
+                                </div>
+
+                                <!-- 0.8.93 — Explicit Base Reviewed
+                                     Transaction Signing. The ONE explicit
+                                     action this whole review exists to
+                                     gate: nothing above this button ever
+                                     signs anything. Absent
+                                     baseReviewedSigningCoordinator, this
+                                     section simply never renders. Clicking
+                                     it performs exactly one operation: the
+                                     exact plan and the exact review shown
+                                     above, unmodified, are handed to the
+                                     signing capability — see base/
+                                     BaseReviewedTransactionSigner.js's own
+                                     header on why a wallet is never asked
+                                     to sign anything that has drifted from
+                                     what is shown above. Signing produces
+                                     a signed transaction ARTIFACT; it does
+                                     not broadcast it. -->
+                                <div v-if="baseReviewedSigningCoordinator" class="evidence-inspection-adapter">
+                                    <span class="evidence-inspection-adapter-title">Signing</span>
+                                    <p class="form-hint form-hint--neutral">
+                                        Signing authorizes the exact transaction reviewed above. It does not
+                                        reconstruct or modify it, and it does not broadcast it.
+                                    </p>
+                                    <button type="button" class="peer-action-btn"
+                                        :disabled="isBaseReviewedTransactionSigning(entry)"
+                                        @click="signBaseReviewedTransaction(entry)">
+                                        {{ isBaseReviewedTransactionSigning(entry) ? 'Waiting for wallet…' : 'Sign Reviewed Transaction' }}
+                                    </button>
+
+                                    <span v-if="baseReviewedTransactionSigningView(entry).state !== BaseReviewedSigningState.IDLE" class="peer-badge"
+                                        :class="baseReviewedTransactionSigningBadgeClass(entry)">
+                                        {{ baseReviewedTransactionSigningView(entry).stateLabel }}
+                                    </span>
+                                    <p v-if="baseReviewedTransactionSigningView(entry).reason" class="form-hint form-hint--neutral">
+                                        {{ baseReviewedTransactionSigningView(entry).reason }}
+                                    </p>
+
+                                    <!-- SIGNED here names only that the wallet
+                                         returned SOME signed artifact for a
+                                         plan that still matched its own
+                                         review — never that ForkBuild has
+                                         inspected or cryptographically
+                                         verified it, and never that it has
+                                         been broadcast. Those remain their
+                                         own, separately sized, explicit next
+                                         steps (0.8.94, 0.8.95). -->
+                                    <p v-if="baseReviewedTransactionSigningView(entry).state === BaseReviewedSigningState.SIGNED"
+                                       class="form-hint form-hint--neutral">
+                                        The wallet returned a signed transaction. ForkBuild has not yet
+                                        inspected, verified, or broadcast it — those are separate, explicit
+                                        steps.
+                                    </p>
                                 </div>
                             </div>
                         </div>

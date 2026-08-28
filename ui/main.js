@@ -69,6 +69,8 @@ import { CreateBaseJsonRpcClientUseCase } from '../application/CreateBaseJsonRpc
 import { CreateBaseNetworkObserverUseCase } from '../application/CreateBaseNetworkObserverUseCase.js';
 import { CreateBasePublicationTransactionPlannerUseCase } from '../application/CreateBasePublicationTransactionPlannerUseCase.js';
 import { CreateBasePublicationTransactionPlanCoordinatorUseCase } from '../application/CreateBasePublicationTransactionPlanCoordinatorUseCase.js';
+import { CreateBaseInjectedProviderWalletTransactionSignerUseCase } from '../application/CreateBaseInjectedProviderWalletTransactionSignerUseCase.js';
+import { CreateBaseReviewedSigningCoordinatorUseCase } from '../application/CreateBaseReviewedSigningCoordinatorUseCase.js';
 import { CreateBitcoinAnchorBroadcastCoordinatorUseCase } from '../application/CreateBitcoinAnchorBroadcastCoordinatorUseCase.js';
 import { CreateBitcoinAnchorConfirmationCoordinatorUseCase } from '../application/CreateBitcoinAnchorConfirmationCoordinatorUseCase.js';
 import { CreateIpfsRemotePublicationCoordinatorUseCase } from '../application/CreateIpfsRemotePublicationCoordinatorUseCase.js';
@@ -946,6 +948,23 @@ const { coordinator: basePublicationTransactionPlanCoordinator } = new CreateBas
     basePublicationTransactionPlanner
 });
 
+// 0.8.93 — Explicit Base Reviewed Transaction Signing. Closes the gap
+// 0.8.92's own "What's left, and deliberately unbuilt" named directly: an
+// explicit "Sign Reviewed Transaction" action. `baseInjectedProviderWalletTransactionSigner`
+// reads the SAME `window.ethereum` (or `null`) `baseInjectedProviderWalletAdapter`
+// above already does — one shared browser capability, read twice for two
+// deliberately separate purposes (connecting an account vs. signing a
+// transaction), never widened into one object doing both. See
+// `application/CreateBaseInjectedProviderWalletTransactionSignerUseCase.js`'s
+// own header. `baseReviewedSigningCoordinator` takes no collaborator up
+// front — see `application/BaseReviewedSigningCoordinator.js`'s own header
+// on why it constructs a fresh signer on every explicit sign() call
+// instead.
+const { baseInjectedProviderWalletTransactionSigner } = new CreateBaseInjectedProviderWalletTransactionSignerUseCase().execute({
+    injectedProvider: (typeof window !== 'undefined' && window.ethereum) ? window.ethereum : null
+});
+const { coordinator: baseReviewedSigningCoordinator } = new CreateBaseReviewedSigningCoordinatorUseCase().execute();
+
 // 0.8.61 — Explicit Bitcoin Anchor Transaction Construction UI. Closes the
 // gap 0.8.60's own "Deliberately excluded" list named directly: "wiring a
 // 'Create Transaction Plan' action into this page." `bitcoinAnchorTransactionBuilder`
@@ -1131,6 +1150,9 @@ app.provide('baseWalletConnection', baseWalletConnection);
 app.provide('baseNetworkObserver', baseNetworkObserver);
 // 0.8.91 — Explicit Base Publication Transaction Construction.
 app.provide('basePublicationTransactionPlanCoordinator', basePublicationTransactionPlanCoordinator);
+// 0.8.93 — Explicit Base Reviewed Transaction Signing.
+app.provide('baseInjectedProviderWalletTransactionSigner', baseInjectedProviderWalletTransactionSigner);
+app.provide('baseReviewedSigningCoordinator', baseReviewedSigningCoordinator);
 // 0.8.61 — Explicit Bitcoin Anchor Transaction Construction UI.
 app.provide('bitcoinAnchorTransactionConstructionCoordinator', bitcoinAnchorTransactionConstructionCoordinator);
 // 0.8.62 — Explicit Reviewed Bitcoin Anchor Signing UI.
