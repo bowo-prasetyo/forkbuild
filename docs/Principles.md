@@ -18386,3 +18386,80 @@ each merge exactly what this file reports as missing from their own side,
 and the identical difference, recomputed afterward, reports none at all.
 
 See `docs/Roadmap.md`, 0.8.117, for the full milestone entry.
+
+## A Synchronization Exchange Transports Evidence; A Fingerprint-Only Request Can Never Transport A Minimal Diff (0.8.118)
+
+0.8.116 and 0.8.117 both assume a caller already holds BOTH archives being
+compared, side by side, in the same process. That is the natural shape for
+a replica inspecting an external payload it just received — but it is not
+the shape two independent replicas that have never met are actually in.
+`application/AchievementEvidenceExchange.js` is the missing, PORTABLE
+messages those two replicas send each other instead: a request naming
+almost nothing, and a response carrying evidence, never a conclusion.
+
+**The request carries almost nothing — never the requester's own evidence,
+never a per-collection fingerprint, never a diff.** A request is exactly
+`{ protocolVersion, evidenceFingerprint }` — 0.8.116's own whole-evidence-set
+fingerprint, unchanged, wearing a protocol envelope. It is deliberately
+smaller than it could usefully be: even 0.8.116's own `collectionFingerprints`
+stay unsent, so a replica never discloses more about its own evidence than
+one number.
+
+**A fingerprint is a one-way digest — it tells the other side THAT
+evidence differs, never WHICH facts differ.** This is not a limitation
+this milestone works around; it is the fact that shapes the whole
+response. Computing an exact, minimal `sourceOnly`/`targetOnly`-style
+difference the way 0.8.117 already can would require the requester to
+disclose its own evidence collections in the request, or a second
+negotiation round — either directly contradicting "the request carries
+almost nothing," above. So when fingerprints disagree, the response
+supplies the responder's ENTIRE evidence set instead — deliberately never
+framed as "what you personally lack." This stays correct by construction,
+not merely approximately so: `mergeAchievementEvidence()`'s own identity
+rule (0.8.115) treats every fact the requester already holds as a silent
+no-op the moment it is merged back in, so a requester who applies the
+response ends up exactly caught up to the responder's own evidence —
+never more, never less — regardless of how much of the payload happened to
+be redundant on the requester's own side.
+
+**One exchange is deliberately one-directional.** Applying a response
+folds the responder's evidence into the requester's own archive; it never
+hands anything back. Two replicas that want full, mutual convergence issue
+the identical exchange in BOTH directions — each independently, neither
+waiting on the other. `tests/AchievementEvidenceExchange.test.js`'s own
+flagship does exactly this, and only after both directions have applied do
+the two replicas' own fingerprints agree.
+
+**"Nothing to exchange" is an explicit, well-formed result, never an
+error.** Equal fingerprints produce `sameEvidence: true` and an `evidence`
+payload whose four collections are explicitly empty, not absent — still a
+genuine, importable payload, and applying it is a documented no-op:
+`mergeAchievementEvidence()` itself already returns the exact same archive
+instance it was given when nothing new is named (0.8.115), and an
+empty-collections payload is the smallest possible instance of exactly
+that case.
+
+**Exchange, never networking.** This milestone introduces no peer, socket,
+discovery mechanism, WebRTC, server, or transport of any kind, and no
+automatic, periodic, or background synchronization — no polling, no timer,
+no retry loop. Every step runs exactly once, exactly when a caller
+explicitly calls it, over plain, JSON-safe values. `tests/
+AchievementEvidenceExchange.test.js`'s own flagship proves this codebase
+can already test its entire decentralized synchronization model inside one
+process, holding two independent archives side by side and passing plain
+objects between them by hand — no infrastructure of any kind.
+
+**The exchange transports evidence, never conclusions — the same
+restraint every file in this family already holds, held here one layer
+up.** Neither message carries an achievement event, a badge, a statistic,
+a rank, or a leaderboard position. `evidence` is exactly
+`exportAchievementEvidence()`'s own shape, reused verbatim. This
+milestone's own flagship proves the point sharply: after converging
+through nothing but these plain request/response messages, both replicas
+independently RECOMPUTE byte-identical achievement events, statistics,
+ranking, and leaderboard — and none of those four conclusions ever once
+appears inside an exchanged message. A decentralized network never needs a
+central server to hand out a leaderboard; it needs only a way to agree on
+the evidence, portably, and this milestone is that way.
+
+See `docs/Roadmap.md`, 0.8.118, for the full milestone entry.
