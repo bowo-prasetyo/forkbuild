@@ -123,6 +123,7 @@ import { BlockchainKind } from '../../application/BlockchainKind.js';
 import { reconstructAchievementBadges } from '../../application/AchievementBadgeView.js';
 import { CreatePublicationReferenceRecordUseCase } from '../../application/CreatePublicationReferenceRecordUseCase.js';
 import { describePublicationReferenceRecordHistory } from '../../application/PublicationReferenceRecordHistoryView.js';
+import { reconstructPublicationReferenceGraph } from '../../application/PublicationReferenceGraphView.js';
 import {
     PublicationObservationArchiveImportOutcome,
     exportPublicationObservationArchive,
@@ -2251,6 +2252,49 @@ export default {
         // computed inline here.
         function publicationReferenceRecordHistoryView() {
             return describePublicationReferenceRecordHistory(publicationObservationArchive.value.publicationReferenceRecords);
+        }
+
+        // 0.8.105 — Publication Reference Graph Projection.
+        //
+        // A READ-ONLY RECONSTRUCTION OF THE "PUBLICATION REFERENCES" CARD'S
+        // OWN ALREADY-DURABLE RECORDS ABOVE — never a second, competing
+        // input path. Nothing here mints, edits, or removes a
+        // PublicationReferenceRecord; recording a reference still happens
+        // exclusively through recordPublicationReference() above. This card
+        // only groups those SAME records into a graph shape — application/
+        // PublicationReferenceGraphView.js's own
+        // reconstructPublicationReferenceGraph(), UNCHANGED — so a person
+        // can see a publication's own outgoing/incoming reference counts
+        // without counting rows by hand. Collapsed by default, and every
+        // node within it collapsed by default too. Performs ZERO network
+        // operations.
+        const publicationReferenceGraphExpanded = ref(false);
+        const publicationReferenceGraphNodeExpanded = reactive({});
+
+        function togglePublicationReferenceGraph() {
+            publicationReferenceGraphExpanded.value = !publicationReferenceGraphExpanded.value;
+        }
+
+        // Pure projection — never a second, competing graph computation
+        // inline in the template.
+        function publicationReferenceGraphView() {
+            return reconstructPublicationReferenceGraph(publicationObservationArchive.value);
+        }
+
+        // Node expansion is keyed by the identical `blockchain:chainReference`
+        // shorthand knownPublicationIdentityOptions() above already uses for
+        // the same two fields — never a second identity shape invented here.
+        function publicationReferenceGraphNodeKey(node) {
+            return `${node.identity.blockchain}:${node.identity.chainReference}`;
+        }
+
+        function togglePublicationReferenceGraphNode(node) {
+            const key = publicationReferenceGraphNodeKey(node);
+            publicationReferenceGraphNodeExpanded[key] = !publicationReferenceGraphNodeExpanded[key];
+        }
+
+        function isPublicationReferenceGraphNodeExpanded(node) {
+            return Boolean(publicationReferenceGraphNodeExpanded[publicationReferenceGraphNodeKey(node)]);
         }
 
         // 0.8.103 — Achievement Badge Presentation.
@@ -6298,6 +6342,8 @@ export default {
             publicationReferencesExpanded, togglePublicationReferences, knownPublicationIdentityOptions,
             publicationReferenceSourceKey, publicationReferenceReferencedKey, publicationReferenceError,
             recordPublicationReference, publicationReferenceRecordHistoryView,
+            publicationReferenceGraphExpanded, togglePublicationReferenceGraph, publicationReferenceGraphView,
+            togglePublicationReferenceGraphNode, isPublicationReferenceGraphNodeExpanded,
             achievementsExpanded, toggleAchievements, achievementBadgesView,
             toggleAchievementBadge, isAchievementBadgeExpanded,
             canViewAchievementBadgeLifecycle, viewAchievementBadgeLifecycle,
@@ -7733,6 +7779,84 @@ export default {
                                 Referenced content hash: {{ referenceRow.referencedPublicationIdentity.contentHash }} ·
                                 Recorded: {{ formatWhen(referenceRow.createdAt) }}
                             </p>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- 0.8.105 — Publication Reference Graph Projection. A
+                 read-only RECONSTRUCTION of the "Publication References"
+                 card's own already-durable records above — never a
+                 second, competing input path; a reference is still ever
+                 minted only through that card's own "Record Reference"
+                 button. This card only groups the same records into a
+                 graph shape: one node per publication identity that
+                 appears as either side of any reference, each carrying
+                 its own outgoing/incoming reference counts and the exact
+                 edges behind them. Two A -> B references stay two
+                 entries here, never collapsed into one. Node identity is
+                 blockchain + chainReference alone — never contentHash.
+                 These remain plain factual counts, never a score or a
+                 rank: "7 incoming references" states a fact, it does not
+                 mean "better." Collapsed by default, every node
+                 collapsed by default too. Performs ZERO network
+                 operations. -->
+            <div class="identity-mgmt-card">
+                <div class="identity-mgmt-card-header">
+                    <span class="identity-mgmt-name">Publication Reference Graph</span>
+                    <span class="peer-badge peer-badge--pending">Persisted locally</span>
+                </div>
+                <p class="form-hint form-hint--neutral">
+                    The same recorded references above, grouped by publication so this replica's own
+                    reference graph is inspectable at a glance. A publication's outgoing/incoming counts
+                    are plain, attributable facts — never a score, a rank, or a claim that one
+                    publication is more valuable than another.
+                </p>
+                <dl class="evidence-fields">
+                    <div class="evidence-field"><dt>Edges</dt><dd>{{ publicationReferenceGraphView().edgeCount }}</dd></div>
+                    <div class="evidence-field"><dt>Publications</dt><dd>{{ publicationReferenceGraphView().nodes.length }}</dd></div>
+                    <div class="evidence-field"><dt>Distinct sources</dt><dd>{{ publicationReferenceGraphView().distinctSourcePublicationCount }}</dd></div>
+                    <div class="evidence-field"><dt>Distinct referenced</dt><dd>{{ publicationReferenceGraphView().distinctReferencedPublicationCount }}</dd></div>
+                </dl>
+                <div class="identity-mgmt-actions">
+                    <button type="button" class="action-btn action-btn--secondary" @click="togglePublicationReferenceGraph">
+                        {{ publicationReferenceGraphExpanded ? 'Hide Reference Graph' : 'Show Reference Graph' }}
+                    </button>
+                </div>
+                <div v-if="publicationReferenceGraphExpanded" class="evidence-inspection-adapter">
+                    <span class="evidence-inspection-adapter-title">Publications In This Graph</span>
+                    <p v-if="publicationReferenceGraphView().nodes.length === 0" class="form-hint form-hint--neutral">
+                        No references recorded yet — record one above and it appears here.
+                    </p>
+                    <ul v-else class="replica-knowledge-claim-list">
+                        <li v-for="node in publicationReferenceGraphView().nodes" :key="node.identity.blockchain + ':' + node.identity.chainReference" class="replica-knowledge-claim">
+                            <button type="button" class="peer-action-btn" @click="togglePublicationReferenceGraphNode(node)">
+                                {{ node.identity.blockchain }}:{{ shortId(node.identity.chainReference) }}
+                            </button>
+                            <p class="form-hint form-hint--neutral">
+                                Outgoing references: {{ node.outgoingReferenceCount }} ·
+                                Incoming references: {{ node.incomingReferenceCount }}
+                            </p>
+
+                            <div v-if="isPublicationReferenceGraphNodeExpanded(node)" class="evidence-list">
+                                <p v-if="node.outgoingReferenceCount === 0 && node.incomingReferenceCount === 0" class="form-hint form-hint--neutral">
+                                    No edges touch this publication.
+                                </p>
+                                <template v-if="node.outgoingReferenceCount > 0">
+                                    <p class="form-hint form-hint--neutral"><strong>References →</strong></p>
+                                    <p v-for="(edge, edgeIndex) in node.outgoingReferences" :key="'out-' + edgeIndex" class="form-hint form-hint--neutral">
+                                        {{ edge.referencedPublicationIdentity.blockchain }}:{{ shortId(edge.referencedPublicationIdentity.chainReference) }}
+                                        — recorded {{ formatWhen(edge.createdAt) }}
+                                    </p>
+                                </template>
+                                <template v-if="node.incomingReferenceCount > 0">
+                                    <p class="form-hint form-hint--neutral"><strong>← Referenced by</strong></p>
+                                    <p v-for="(edge, edgeIndex) in node.incomingReferences" :key="'in-' + edgeIndex" class="form-hint form-hint--neutral">
+                                        {{ edge.sourcePublicationIdentity.blockchain }}:{{ shortId(edge.sourcePublicationIdentity.chainReference) }}
+                                        — recorded {{ formatWhen(edge.createdAt) }}
+                                    </p>
+                                </template>
+                            </div>
                         </li>
                     </ul>
                 </div>

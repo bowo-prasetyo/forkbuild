@@ -17722,3 +17722,59 @@ established first; a more specific, provable relationship is a genuinely
 later, separate milestone's decision to make.
 
 See `docs/Roadmap.md`, 0.8.104, for the full milestone entry.
+
+## A Reference Graph Is Grouped From Durable Facts, And Stays As Uninterpreted As They Are (0.8.105)
+
+**Grouping is not scoring.** `application/PublicationReferenceGraphView.js`
+takes 0.8.104's own flat, append-only `publicationReferenceRecords` and
+arranges them by publication — one node per identity, each carrying its
+own `outgoingReferences`/`incomingReferences` — but arranging facts by
+who they're about is not the same act as judging them. A node's own
+`incomingReferenceCount` states "this many reference records point here,"
+nothing more; it is never dressed up, sorted by, or presented as
+"popularity," "influence," or "importance." See `docs/Principles.md`,
+"The UI Displays Observations; It Does Not Turn Them Into A Verdict
+(0.8.57)," held here once more, over a graph shape rather than a single
+observation.
+
+**A projection recomputes; it does not accumulate a second, competing
+truth.** Exactly as `docs/Principles.md`'s own "A Badge Presents An
+Achievement; It Does Not Redefine It (0.8.103)" already held one layer
+up, `describePublicationReferenceGraph()` invents no new durable fact —
+`application/PublicationObservationArchive.js` gains nothing from this
+milestone, no cached graph, no node database, no mutable edge. Calling it
+twice against a byte-identical archive returns a byte-identical graph,
+because there is no state anywhere for a second call to have drifted
+from.
+
+**Two A -> B references stay two edges inside a graph, exactly as they
+stayed two records inside the archive that fed it.** A projection that
+collapsed multiplicity while grouping would silently discard the exact
+fact 0.8.104's own "Reference Count And Distinct Referencing Publisher
+Count Are Two Different Facts" existed to protect. Grouping by publication
+is additive, never lossy: every edge a node's own `outgoingReferences`/
+`incomingReferences` lists is the same edge object the graph's own flat
+`edges` list already carries, attributed, never merged.
+
+**Node identity is the one already-sanctioned identity — never a second
+key invented for convenience's own sake.** Grouping needs some way to
+decide "is this the same publication I've already seen," and it uses
+exactly `BlockchainPublicationIdentity#sameAs()`'s own two fields —
+`blockchain` and `chainReference` — never `contentHash`, and never a new
+notion of "close enough." A shorthand string key built from those same
+two fields is an implementation detail, not a second identity; two
+identities sharing a `contentHash` across chains remain two separate
+nodes, exactly as they remain two separate publications everywhere else
+in this codebase.
+
+**A graph-shape count is not the achievement-shape reduction it sits next
+to.** `distinctSourcePublicationCount`/`distinctReferencedPublicationCount`
+answer "how large is this graph" — a fact about the projection as a
+whole — never "how many distinct publications reference this one
+specific publication," the narrower, per-node reduction `docs/
+Roadmap.md`, 0.8.104's own "Deliberately excluded," left as real,
+separate, later work. A milestone that projects durable facts stays
+disciplined about which question it is actually answering, even when two
+answers would use the identical word "distinct."
+
+See `docs/Roadmap.md`, 0.8.105, for the full milestone entry.
