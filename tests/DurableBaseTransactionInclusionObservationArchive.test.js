@@ -257,7 +257,7 @@ async function run() {
     // not valid under whatever the CURRENT schema is.
     // ---------------------------------------------------------------
     {
-        assert(PublicationObservationArchive.SCHEMA_VERSION === 7, '35. SCHEMA_VERSION is now 7 (bumped to 4 by 0.8.97, to 5 by 0.8.99, to 6 by 0.8.104, then to 7 by 0.8.108)');
+        assert(PublicationObservationArchive.SCHEMA_VERSION === 8, '35. SCHEMA_VERSION is now 8 (bumped to 4 by 0.8.97, to 5 by 0.8.99, to 6 by 0.8.104, to 7 by 0.8.108, then to 8 by 0.8.130)');
 
         let archive = PublicationObservationArchive.empty();
         archive = archive.appendBaseTransactionInclusionObservation(TXID_H, included({ txid: TXID_H, blockNumber: 1, confirmationCount: 1, observedAt: new Date('2026-08-05T00:00:00Z') }));

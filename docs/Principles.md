@@ -18585,3 +18585,67 @@ decides whether it agrees; neither one, nor their combination, is ever a
 verdict about which conclusion is "right."
 
 See `docs/Roadmap.md`, 0.8.121, for the full milestone entry.
+
+## A Stored Claim Is A Historical Signed Statement; Its Current Verification Result Is A Derived Observation (0.8.130)
+
+0.8.121-0.8.129 built a complete claim subsystem — signing, exchange,
+receipt, verification, and three read-only projections — entirely over a
+plain, in-memory array with nowhere durable to live. 0.8.130 gave that
+array a durable home inside `application/PublicationObservationArchive.js`,
+and in doing so had to hold, once more, the single distinction the entire
+subsystem exists to protect: a claim received and durably recorded is a
+fact about the PAST — what a signer asserted, at the moment they signed
+it, and what this replica's own clock saw arrive. Whether that assertion
+still agrees with reality is a fact about the PRESENT, computed fresh,
+every time, against whatever evidence this replica currently holds.
+
+**Persisting a claim never freezes its verification result alongside it.**
+`application/LeaderboardClaimRecord.js`'s own fields —
+`claim`/`receivedAt`/`origin` — are the entire durable receipt; there is
+no `matches`, `signatureValid`, or `verifiedAt` field anywhere near it,
+in memory or on disk. `application/PublicationObservationArchive.js`'s own
+`leaderboardClaimRecords` collection stores exactly that receipt, and
+nothing more, mirroring the identical restraint every other durable
+collection in that archive already holds — no `status`, `confidence`, or
+`health` field is ever computed over a stored fact and cached beside it.
+
+**Mutating an archive's own evidence never touches, reallocates the
+contents of, or invalidates its stored claim history.** Every
+`appendXxx()` method on `PublicationObservationArchive` returns a new
+archive instance holding every OTHER collection completely unchanged —
+the exact same frozen `LeaderboardClaimRecord` instances, in the exact
+same order, with the exact same `receivedAt`/`origin`. Recomputing
+verification against that new archive can, and often will, produce a
+genuinely different answer for the identical, unmodified stored claim —
+this is not a bug the reconstruction functions work around, it is the
+whole reason verification is recomputed on demand rather than persisted.
+
+**Only one function is ever allowed to read the archive's own claim
+collection directly.** `application/PublisherLeaderboardClaimHistoryView.js`'s
+own `reconstructPublisherLeaderboardClaimHistory(archive)` is that one
+seam; `application/PublisherLeaderboardClaimHistoryDifference.js`,
+`PublisherLeaderboardClaimHistoryStatisticsView.js`,
+`PublisherLeaderboardClaimHistoryTimelineView.js`, and
+`PublisherLeaderboardClaimVerificationHistoryView.js` all compose on top
+of the plain array it returns, never reading `archive.leaderboardClaimRecords`
+themselves. A durable archive integration that let every downstream
+projection independently reach into the archive's own collection would
+have made "what does the claim history actually contain" a question with
+as many answers as there are files asking it; this milestone deliberately
+keeps it one.
+
+**A received signed claim is never achievement evidence, and a
+whole-archive fingerprint is never the same question as an evidence
+fingerprint.** `application/AchievementEvidenceFingerprint.js`'s own
+`reconstructAchievementEvidenceFingerprint()` — four named collections,
+untouched by this milestone — answers "do two replicas agree on the
+achievement-relevant FACTS?" `application/PublicationObservationArchiveFingerprint.js`'s
+own whole-archive `fingerprintPublicationObservationArchive()` answers a
+different question — "what exact durable archive state does this replica
+represent?" — and naturally, correctly, now includes claim receipts,
+because they genuinely are part of that state. Collapsing the two into
+one fingerprint would have made it impossible to ask either question
+precisely; this milestone holds them apart, exactly as 0.8.116's own
+header already required.
+
+See `docs/Roadmap.md`, 0.8.130, for the full milestone entry.

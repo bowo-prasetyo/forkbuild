@@ -105,9 +105,21 @@ export class LeaderboardClaimRecord {
 
     static fromJSON(json) {
         if (!json) return null;
-        const claim = PublisherLeaderboardSnapshotClaim.fromJSON(json.claim);
-        if (!claim) return null;
+        // 0.8.130 — `PublisherLeaderboardSnapshotClaim.fromJSON()` (core,
+        // UNCHANGED) throws when `json.claim` is PRESENT but structurally
+        // incomplete (e.g. missing `evidenceFingerprint`) — its own
+        // constructor's validation, not a null-safe parse. Before archive
+        // integration this method was only ever exercised on already-valid
+        // data (never fed genuinely untrusted JSON), so that throw was
+        // unreachable in practice. application/PublicationObservationArchive.js's
+        // own `fromJSON()` (0.8.130) now feeds this method exactly that —
+        // a possibly-corrupted archive payload — so both calls that can
+        // throw on malformed input belong inside the SAME try/catch,
+        // exactly like every other `fromJSON()` in this codebase's own
+        // "malformed input degrades to null, never a throw" contract.
         try {
+            const claim = PublisherLeaderboardSnapshotClaim.fromJSON(json.claim);
+            if (!claim) return null;
             return new LeaderboardClaimRecord({ claim, receivedAt: json.receivedAt, origin: json.origin });
         } catch {
             return null;

@@ -298,7 +298,7 @@ async function run() {
         const publicationIdentity = identity({ blockchain: BlockchainKind.BITCOIN, contentHash: CONTENT_HASH_SHARED_AB, chainReference: BITCOIN_TXID_A, createdAt });
         const record = new PublisherPublicationAssociationRecord({ publisherIdentity, publicationIdentity, createdAt });
 
-        assert(PublicationObservationArchive.SCHEMA_VERSION === 7, '49. SCHEMA_VERSION is now 7 (bumped from 6 by 0.8.108)');
+        assert(PublicationObservationArchive.SCHEMA_VERSION === 8, '49. SCHEMA_VERSION is now 8 (bumped from 6 by 0.8.108, then to 8 by 0.8.130)');
 
         let archive = PublicationObservationArchive.empty();
         assert(archive.publisherPublicationAssociationRecords.length === 0, '50. a fresh archive holds no publisher association records');

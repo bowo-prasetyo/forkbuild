@@ -51,6 +51,24 @@ function assert(condition, message) {
     if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
 }
 
+// 0.8.130 — reconstructPublisherLeaderboardClaimHistoryDifference() now
+// reads each side's history from an archive rather than accepting one
+// directly (see application/PublisherLeaderboardClaimHistoryDifference.js's
+// own 0.8.130 update). This helper folds a plain claim-record array into a
+// fresh `PublicationObservationArchive`, preserving each record's own
+// `origin` as the archive-level provenance tag it was appended under —
+// and, since `appendLeaderboardClaimRecord()` appends the ORIGINAL record
+// reference rather than a copy, `archive.leaderboardClaimRecords` still
+// holds the exact same `LeaderboardClaimRecord` instances the caller
+// started with.
+function archiveFromClaimHistory(history) {
+    let archive = PublicationObservationArchive.empty();
+    for (const record of history) {
+        archive = archive.appendLeaderboardClaimRecord(record, record.origin);
+    }
+    return archive;
+}
+
 class InMemoryStorageProvider extends StorageProvider {
     constructor() { super(); this._data = new Map(); }
     save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
@@ -365,13 +383,14 @@ function run() {
         const targetHistory = [];
 
         const described = describePublisherLeaderboardClaimHistoryDifference(sourceHistory, targetHistory);
-        const reconstructed = reconstructPublisherLeaderboardClaimHistoryDifference(sourceHistory, targetHistory);
-        assert(reconstructed.sameHistory === described.sameHistory && reconstructed.sourceOnly[0] === described.sourceOnly[0], '46. reconstruct() and describe() agree exactly, sharing the same original record instances');
+        const reconstructed = reconstructPublisherLeaderboardClaimHistoryDifference(archiveFromClaimHistory(sourceHistory), archiveFromClaimHistory(targetHistory));
+        assert(reconstructed.sameHistory === described.sameHistory && reconstructed.sourceOnly[0] === described.sourceOnly[0], '46. reconstruct() and describe() agree exactly, sharing the same original record instances, now read from an archive on each side');
 
         assert(describePublisherLeaderboardClaimHistoryDifference().sameHistory === true, '47. calling with no arguments defaults to two empty histories, never throws');
         assert(describePublisherLeaderboardClaimHistoryDifference(null, undefined).sameHistory === true, '48. null/undefined histories degrade to empty, never throw');
         assert(describePublisherLeaderboardClaimHistoryDifference('not an array', 42).sameHistory === true, '49. malformed non-array histories degrade to empty, never throw');
         assert(describePublisherLeaderboardClaimHistoryDifference([null, {}, 'x'], [claim]).sameHistory === true, '50. non-LeaderboardClaimRecord entries are silently excluded from both sides');
+        assert(reconstructPublisherLeaderboardClaimHistoryDifference(null, undefined).sameHistory === true, '50a. reconstruct() with a malformed/absent archive on either side degrades to empty, never throws');
 
         const keys = Object.keys(described).sort();
         assert(serialize(keys) === serialize(['sameHistory', 'sourceCount', 'sourceOnly', 'sourceOnlyCount', 'targetCount', 'targetOnly', 'targetOnlyCount'].sort()), '51. the result carries exactly the documented, factual fields');

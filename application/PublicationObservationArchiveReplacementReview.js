@@ -2,6 +2,7 @@ import { PublicationObservationArchive } from './PublicationObservationArchive.j
 import { describePublicationObservationArchive } from './PublicationObservationArchiveView.js';
 import { describePublicationObservationArchiveProvenance } from './PublicationObservationArchiveProvenanceView.js';
 import { describePublicationObservationArchiveDifference } from './PublicationObservationArchiveDifference.js';
+import { reconstructPublisherLeaderboardClaimHistoryDifference } from './PublisherLeaderboardClaimHistoryDifference.js';
 
 // 0.8.88 — Explicit Publication Archive Replacement Review.
 //
@@ -115,6 +116,24 @@ import { describePublicationObservationArchiveDifference } from './PublicationOb
 // where it would start being. No network-based archive retrieval, peer
 // exchange, signed archives, or blockchain notarization. See
 // docs/Roadmap.md, 0.8.88, "Deliberately excluded," for the complete list.
+//
+// 0.8.130 — `leaderboardClaimHistoryDifference` joins this file's own
+// result, ALONGSIDE `difference` rather than folded into it. `difference`
+// (0.8.87, UNCHANGED) already reports `leaderboardClaimRecords` (0.8.130)
+// as an eleventh POSITIONAL collection, exactly like every other durable
+// fact this archive holds — see that file's own header. This SEPARATE
+// field is the RECEIPT-IDENTITY, multiset-aware claim-history difference
+// application/PublisherLeaderboardClaimHistoryDifference.js's own
+// `reconstructPublisherLeaderboardClaimHistoryDifference()` (0.8.127,
+// newly archive-aware) already computes — a genuinely different
+// comparison, because two archives that reordered how they received the
+// SAME receipts, or that grew from unrelated ancestors, share no common
+// append-only prefix `difference`'s own positional walk assumes. Both
+// fields describe the identical underlying collection from two different,
+// independently useful angles; neither is more authoritative than the
+// other, and neither computes any verification, trust, or "which side is
+// correct" judgment — the identical restraint this file's own header
+// already holds, one collection further.
 export function describePublicationObservationArchiveReplacementReview(currentArchive, externalArchive) {
     if (!(currentArchive instanceof PublicationObservationArchive)) {
         throw new Error('describePublicationObservationArchiveReplacementReview() requires a PublicationObservationArchive as currentArchive');
@@ -124,6 +143,7 @@ export function describePublicationObservationArchiveReplacementReview(currentAr
     }
 
     const difference = describePublicationObservationArchiveDifference(currentArchive, externalArchive);
+    const leaderboardClaimHistoryDifference = reconstructPublisherLeaderboardClaimHistoryDifference(currentArchive, externalArchive);
 
     return Object.freeze({
         currentFingerprint: difference.currentFingerprint,
@@ -131,6 +151,7 @@ export function describePublicationObservationArchiveReplacementReview(currentAr
         same: difference.same,
 
         difference,
+        leaderboardClaimHistoryDifference,
 
         current: describeReplacementReviewSide(currentArchive),
         external: describeReplacementReviewSide(externalArchive)
@@ -159,6 +180,7 @@ function describeReplacementReviewSide(archive) {
         baseAnchorPublicationRecordCount: archive.baseAnchorPublicationRecordCount,
         publicationReferenceRecordCount: archive.publicationReferenceRecordCount,
         publisherPublicationAssociationRecordCount: archive.publisherPublicationAssociationRecordCount,
+        leaderboardClaimRecordCount: archive.leaderboardClaimRecordCount,
 
         localFactCount: provenance.localFactCount,
         importedFactCount: provenance.importedFactCount,
