@@ -41,6 +41,20 @@ function assert(condition, message) {
     if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
 }
 
+// 0.8.130 — reconstructPublisherLeaderboardClaimHistoryTimeline() now
+// reads its history from an archive rather than accepting one directly
+// (see application/PublisherLeaderboardClaimHistoryTimelineView.js's own
+// 0.8.130 update). This helper folds a plain claim-record array into a
+// fresh `PublicationObservationArchive`, preserving each record's own
+// `origin` as the archive-level provenance tag it was appended under.
+function archiveFromClaimHistory(history) {
+    let archive = PublicationObservationArchive.empty();
+    for (const record of history) {
+        archive = archive.appendLeaderboardClaimRecord(record, record.origin);
+    }
+    return archive;
+}
+
 class InMemoryStorageProvider extends StorageProvider {
     constructor() { super(); this._data = new Map(); }
     save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
@@ -361,8 +375,8 @@ function run() {
         const timelineTwice = describePublisherLeaderboardClaimHistoryTimeline(history);
         assert(serialize(timelineOnce) === serialize(timelineTwice), '49. repeated calls on an identical history are byte-identical');
 
-        const reconstructed = reconstructPublisherLeaderboardClaimHistoryTimeline(history);
-        assert(serialize(timelineOnce) === serialize(reconstructed), '50. reconstruct() and describe() agree exactly on an identical history');
+        const reconstructed = reconstructPublisherLeaderboardClaimHistoryTimeline(archiveFromClaimHistory(history));
+        assert(serialize(timelineOnce) === serialize(reconstructed), '50. reconstruct() and describe() agree exactly on an identical history, now read from an archive');
     }
     console.log('✓ Section J: repeated computation over the same history produces byte-identical timelines, and reconstruct()/describe() agree');
 

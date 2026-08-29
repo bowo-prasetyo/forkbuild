@@ -12,12 +12,14 @@ import { PublicationReferenceRecord } from './PublicationReferenceRecord.js';
 import { appendPublicationReferenceRecordHistoryEntry } from './PublicationReferenceRecordHistory.js';
 import { PublisherPublicationAssociationRecord } from './PublisherPublicationAssociationRecord.js';
 import { appendPublisherPublicationAssociationRecordHistoryEntry } from './PublisherPublicationAssociationRecordHistory.js';
+import { LeaderboardClaimRecord } from './LeaderboardClaimRecord.js';
+import { appendLeaderboardClaimHistoryEntry } from './LeaderboardClaimHistory.js';
 import {
     PublicationObservationArchiveProvenanceOrigin,
     isValidPublicationObservationArchiveProvenanceOrigin
 } from './PublicationObservationArchiveProvenance.js';
 
-const SCHEMA_VERSION = 7;
+const SCHEMA_VERSION = 8;
 
 // 0.8.75 — Durable Publication Observation Records.
 //
@@ -423,6 +425,105 @@ const SCHEMA_VERSION = 7;
 // like `publicationReferenceRecordProvenance` already does.
 // `withUniformProvenance()` now also restamps this tenth collection
 // uniformly; nothing else about that method changes.
+//
+// 0.8.130 — Durable Signed Leaderboard Claim History Archive Integration.
+// Adds an ELEVENTH, independent collection: `leaderboardClaimRecords` — an
+// append-only sequence of application/LeaderboardClaimRecord.js (0.8.123)
+// instances, i.e. the RECEIPTS a replica has ever recorded for a received,
+// signed `PublisherLeaderboardSnapshotClaim` — never the claim's own
+// evidence, never a verification result, never a ranking. This is
+// `application/LeaderboardClaimHistory.js`'s own plain, in-memory array
+// (0.8.121-0.8.129's "LeaderboardClaimHistory"), finally given the same
+// durable home every other observed/recorded fact in this archive already
+// has — see application/PublisherLeaderboardClaimHistoryView.js's own new
+// `reconstructPublisherLeaderboardClaimHistory()` for the ONE place that
+// array is now read back out of an archive.
+//
+//   PublicationObservationArchive
+//   ├── Bitcoin anchor publications
+//   ├── Base anchor publications
+//   ├── publication references
+//   ├── publisher-publication associations
+//   └── leaderboard claim records            ← NEW (0.8.130)
+//
+// A RECEIPT, STILL NEVER A VERDICT — HELD HERE ONCE MORE, ONE LAYER UP.
+// This archive computes no `trusted`/`valid`/`current`/`authoritative`
+// field over `leaderboardClaimRecords`, exactly as it computes none over
+// any of its other ten collections — see application/
+// LeaderboardClaimRecord.js's own header, "A Receipt, Never A Verdict." A
+// claim's CURRENT relationship to this replica's own evidence remains
+// exactly and only application/PublisherLeaderboardClaimVerificationHistoryView.js's
+// own job (0.8.125, UNCHANGED), computed fresh, on demand, by reconstructing
+// this replica's own current snapshot from this SAME archive's other
+// collections and comparing it against a stored claim — never cached,
+// never stored, never derived here.
+//
+// `appendLeaderboardClaimRecord()` REUSES `application/
+// LeaderboardClaimHistory.js`'s OWN, UNCHANGED `appendLeaderboardClaimHistoryEntry()`
+// — mirroring exactly how every other `appendXxx()` above reuses its own
+// domain's existing append function. This class invents no new
+// receipt-construction behavior of its own; multiplicity (the SAME signed
+// claim received twice, directly and relayed, is TWO independent entries)
+// is preserved exactly as 0.8.123 already established — never deduplicated,
+// never merged, never reordered.
+//
+// THIS MILESTONE BUMPS SCHEMA_VERSION TO 8 — THE SAME CONSERVATIVE
+// MIGRATION PHILOSOPHY HELD SINCE 0.8.75, WITHOUT EXCEPTION. A payload
+// persisted by 0.8.75 through 0.8.129 (schemaVersion 7) degrades to
+// `PublicationObservationArchive.empty()` on load — never a partial
+// reconstruction, never an attempt to infer historical claims that were
+// never durably recorded in the first place. `PublicationObservationArchive.empty()`
+// trivially satisfies "a pre-0.8.130 archive loads with `leaderboardClaimRecords: []`"
+// — it is not a special case this milestone adds, it is the SAME "wrong
+// schemaVersion, whole archive degrades" rule every prior schema bump
+// already established, restated here once more. No migration path is
+// added, because none of this class's own prior principles ever promised
+// one.
+//
+// `publicationCount`/`observationCount`/`bitcoinAnchorPublicationRecordCount`/
+// `baseAnchorPublicationRecordCount`/`publicationReferenceRecordCount`/
+// `publisherPublicationAssociationRecordCount` STAY UNCHANGED — a
+// leaderboard claim record is neither a publication-shaped fact, an
+// observation-shaped fact, a durable IDENTITY of a single publication, nor
+// a relationship between two publications or a publisher and a
+// publication; it is a durable receipt of a signed, externally authored
+// statement. See `leaderboardClaimRecordCount` below for its own, entirely
+// separate count.
+//
+// PROVENANCE EXTENDS IDENTICALLY — an ELEVENTH parallel provenance
+// collection, `leaderboardClaimRecordProvenance`, holds one `LOCAL`/
+// `IMPORTED` tag per record at the identical array position, exactly like
+// `publisherPublicationAssociationRecordProvenance` already does. Note this
+// is DELIBERATELY REDUNDANT with `LeaderboardClaimRecord`'s own `origin`
+// field (0.8.123, which already reuses this exact vocabulary one layer
+// down) — the archive's own parallel provenance array describes how the
+// RECORD entered THIS ARCHIVE (import vs. local append), while the record's
+// own `origin` getter is a fixed field of the receipt itself, never
+// rewritten by `withUniformProvenance()`. The two can, and often will,
+// agree; `withUniformProvenance()` restamping the archive's own parallel
+// array to `IMPORTED` on a whole-archive import never reaches into, or
+// rewrites, any individual `LeaderboardClaimRecord`'s own frozen `origin`
+// — exactly as it already never rewrites any other record's own fields.
+// `withUniformProvenance()` now also restamps this eleventh collection
+// uniformly; nothing else about that method changes.
+//
+// FINGERPRINTING: THE WHOLE-ARCHIVE FINGERPRINT NATURALLY EXTENDS; THE
+// NARROWER ACHIEVEMENT-EVIDENCE FINGERPRINT DELIBERATELY DOES NOT. application/
+// PublicationObservationArchiveFingerprint.js's own `fingerprintPublicationObservationArchive()`
+// hashes every field `toJSON()` produces except `archiveImportEvents` — so
+// it picks up `leaderboardClaimRecords`/`leaderboardClaimRecordProvenance`
+// automatically, unmodified by this milestone, because a whole-archive
+// fingerprint answers "what exact durable archive state does this replica
+// represent?" and a claim receipt is now part of that durable state.
+// application/AchievementEvidenceFingerprint.js's own narrower
+// `reconstructAchievementEvidenceFingerprint()` reads exactly four
+// collections by name (`bitcoinAnchorPublicationRecords`,
+// `baseAnchorPublicationRecords`, `publicationReferenceRecords`,
+// `publisherPublicationAssociationRecords`) and is UNTOUCHED by this
+// milestone — a received signed claim is not achievement evidence, and
+// folding it into that fingerprint would break the boundary 0.8.116's own
+// header exists to hold. See that file's own header, "Evidence Only —
+// Never A Conclusion, Never Provenance, Never A Clock."
 export class PublicationObservationArchive {
     constructor({
         ipfsPublicationRecords = [],
@@ -445,6 +546,8 @@ export class PublicationObservationArchive {
         publicationReferenceRecordProvenance = [],
         publisherPublicationAssociationRecords = [],
         publisherPublicationAssociationRecordProvenance = [],
+        leaderboardClaimRecords = [],
+        leaderboardClaimRecordProvenance = [],
         archiveImportEvents = []
     } = {}) {
         this._ipfsPublicationRecords = Object.freeze([...ipfsPublicationRecords]);
@@ -491,6 +594,8 @@ export class PublicationObservationArchive {
         this._publicationReferenceRecordProvenance = Object.freeze([...publicationReferenceRecordProvenance]);
         this._publisherPublicationAssociationRecords = Object.freeze([...publisherPublicationAssociationRecords]);
         this._publisherPublicationAssociationRecordProvenance = Object.freeze([...publisherPublicationAssociationRecordProvenance]);
+        this._leaderboardClaimRecords = Object.freeze([...leaderboardClaimRecords]);
+        this._leaderboardClaimRecordProvenance = Object.freeze([...leaderboardClaimRecordProvenance]);
         this._archiveImportEvents = Object.freeze([...archiveImportEvents]);
         Object.freeze(this);
     }
@@ -515,6 +620,8 @@ export class PublicationObservationArchive {
     get publicationReferenceRecordProvenance() { return this._publicationReferenceRecordProvenance; }
     get publisherPublicationAssociationRecords() { return this._publisherPublicationAssociationRecords; }
     get publisherPublicationAssociationRecordProvenance() { return this._publisherPublicationAssociationRecordProvenance; }
+    get leaderboardClaimRecords() { return this._leaderboardClaimRecords; }
+    get leaderboardClaimRecordProvenance() { return this._leaderboardClaimRecordProvenance; }
     get archiveImportEvents() { return this._archiveImportEvents; }
 
     // The static schema version this class currently serializes to and
@@ -585,6 +692,21 @@ export class PublicationObservationArchive {
         return this._publisherPublicationAssociationRecords.length;
     }
 
+    // The count of durable leaderboard CLAIM RECEIPTS this archive holds —
+    // a signed, externally authored statement this replica has recorded
+    // receiving, never a fact about a publication or a relationship
+    // between two publications. Never combined with `publicationCount`,
+    // `observationCount`, `bitcoinAnchorPublicationRecordCount`,
+    // `baseAnchorPublicationRecordCount`, `publicationReferenceRecordCount`,
+    // or `publisherPublicationAssociationRecordCount` — see
+    // application/LeaderboardClaimRecord.js's own header. Counts RECEIPTS,
+    // not distinct claims: the identical claim received twice counts
+    // twice, exactly as `application/LeaderboardClaimHistory.js`'s own
+    // multiplicity rule already requires.
+    get leaderboardClaimRecordCount() {
+        return this._leaderboardClaimRecords.length;
+    }
+
     // The count of OBSERVATION-shaped facts this archive holds — every
     // IPFS content-verification attempt, every Bitcoin confirmation
     // check, every Bitcoin content-proof reconciliation, and (0.8.97)
@@ -634,7 +756,8 @@ export class PublicationObservationArchive {
             + countOriginMatchesByKey(this._baseTransactionInclusionObservationProvenanceByTransactionHash, origin)
             + countOriginMatches(this._baseAnchorPublicationRecordProvenance, origin)
             + countOriginMatches(this._publicationReferenceRecordProvenance, origin)
-            + countOriginMatches(this._publisherPublicationAssociationRecordProvenance, origin);
+            + countOriginMatches(this._publisherPublicationAssociationRecordProvenance, origin)
+            + countOriginMatches(this._leaderboardClaimRecordProvenance, origin);
     }
 
     _fields() {
@@ -659,6 +782,8 @@ export class PublicationObservationArchive {
             publicationReferenceRecordProvenance: this._publicationReferenceRecordProvenance,
             publisherPublicationAssociationRecords: this._publisherPublicationAssociationRecords,
             publisherPublicationAssociationRecordProvenance: this._publisherPublicationAssociationRecordProvenance,
+            leaderboardClaimRecords: this._leaderboardClaimRecords,
+            leaderboardClaimRecordProvenance: this._leaderboardClaimRecordProvenance,
             archiveImportEvents: this._archiveImportEvents
         };
     }
@@ -901,8 +1026,32 @@ export class PublicationObservationArchive {
         });
     }
 
+    // 0.8.130 — Appends `record` (an application/LeaderboardClaimRecord.js
+    // instance) and returns a NEW archive. This is the ONE durable write
+    // path for a received, signed leaderboard claim receipt — see
+    // application/ReceivePublisherLeaderboardSnapshotClaimIntoArchiveUseCase.js
+    // for the one place this codebase constructs one before appending it
+    // here. Reuses `application/LeaderboardClaimHistory.js`'s own,
+    // UNCHANGED `appendLeaderboardClaimHistoryEntry()` — mirroring exactly
+    // how every other `appendXxx()` above reuses its own domain's existing
+    // append function. A missing/falsy `record`, or one that is not a
+    // genuine `LeaderboardClaimRecord` instance, is a no-op, mirroring
+    // every other appendXxx() method's identical tolerance. Never
+    // deduplicates, never merges two receipts naming the same claim, never
+    // infers a receipt from anything this archive already holds — the
+    // identical multiplicity 0.8.123 already established for
+    // `LeaderboardClaimHistory` itself.
+    appendLeaderboardClaimRecord(record, origin = PublicationObservationArchiveProvenanceOrigin.LOCAL) {
+        if (!(record instanceof LeaderboardClaimRecord) || !isValidPublicationObservationArchiveProvenanceOrigin(origin)) return this;
+        return new PublicationObservationArchive({
+            ...this._fields(),
+            leaderboardClaimRecords: appendLeaderboardClaimHistoryEntry(this._leaderboardClaimRecords, record),
+            leaderboardClaimRecordProvenance: Object.freeze([...this._leaderboardClaimRecordProvenance, origin])
+        });
+    }
+
     // Replaces EVERY provenance entry this archive holds — across all
-    // EIGHT factual collections — with `origin`, uniformly.
+    // ELEVEN factual collections — with `origin`, uniformly.
     // `archiveImportEvents` and every factual collection are untouched;
     // only the eight PARALLEL provenance collections change. An invalid
     // `origin` is a no-op. See this file's own header for why application/
@@ -935,7 +1084,8 @@ export class PublicationObservationArchive {
             ),
             baseAnchorPublicationRecordProvenance: Object.freeze(this._baseAnchorPublicationRecordProvenance.map(() => origin)),
             publicationReferenceRecordProvenance: Object.freeze(this._publicationReferenceRecordProvenance.map(() => origin)),
-            publisherPublicationAssociationRecordProvenance: Object.freeze(this._publisherPublicationAssociationRecordProvenance.map(() => origin))
+            publisherPublicationAssociationRecordProvenance: Object.freeze(this._publisherPublicationAssociationRecordProvenance.map(() => origin)),
+            leaderboardClaimRecordProvenance: Object.freeze(this._leaderboardClaimRecordProvenance.map(() => origin))
         });
     }
 
@@ -1040,6 +1190,8 @@ export class PublicationObservationArchive {
             publicationReferenceRecordProvenance: [...this._publicationReferenceRecordProvenance],
             publisherPublicationAssociationRecords: this._publisherPublicationAssociationRecords.map((record) => record.toJSON()),
             publisherPublicationAssociationRecordProvenance: [...this._publisherPublicationAssociationRecordProvenance],
+            leaderboardClaimRecords: this._leaderboardClaimRecords.map((record) => record.toJSON()),
+            leaderboardClaimRecordProvenance: [...this._leaderboardClaimRecordProvenance],
             archiveImportEvents: this._archiveImportEvents.map(serializeArchiveImportEvent)
         };
     }
@@ -1130,6 +1282,8 @@ export class PublicationObservationArchive {
             publicationReferenceRecordProvenance: validated.publicationReferenceRecordProvenance,
             publisherPublicationAssociationRecords: validated.publisherPublicationAssociationRecords.map((record) => PublisherPublicationAssociationRecord.fromJSON(record)),
             publisherPublicationAssociationRecordProvenance: validated.publisherPublicationAssociationRecordProvenance,
+            leaderboardClaimRecords: validated.leaderboardClaimRecords.map((record) => LeaderboardClaimRecord.fromJSON(record)),
+            leaderboardClaimRecordProvenance: validated.leaderboardClaimRecordProvenance,
             archiveImportEvents: validated.archiveImportEvents.map(deserializeArchiveImportEvent)
         });
     }
@@ -1201,6 +1355,7 @@ const BLOCKCHAIN_PUBLICATION_IDENTITY_FIELDS = ['blockchain', 'contentHash', 'ch
 const PUBLICATION_REFERENCE_RECORD_FIELDS = ['sourcePublicationIdentity', 'referencedPublicationIdentity', 'createdAt'];
 const PUBLISHER_IDENTITY_FIELDS = ['publisherId'];
 const PUBLISHER_PUBLICATION_ASSOCIATION_RECORD_FIELDS = ['publisherIdentity', 'publicationIdentity', 'createdAt'];
+const LEADERBOARD_CLAIM_RECORD_FIELDS = ['claim', 'receivedAt', 'origin'];
 
 function isPlainObject(value) {
     return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
@@ -1317,6 +1472,23 @@ export function validatePublisherPublicationAssociationRecord(record) {
     return record;
 }
 
+// 0.8.130 — a `LeaderboardClaimRecord` (0.8.123) JSON shape. Top-level
+// shape (exactly `claim`/`receivedAt`/`origin`, nothing more) is checked
+// here, to the identical strictness every other record in this file
+// already holds; the DEEP validation — is `claim` a genuine, structurally
+// verifiable `PublisherLeaderboardSnapshotClaim`? is it signed? is
+// `receivedAt` a real date? is `origin` a real provenance value? — is
+// delegated entirely to `LeaderboardClaimRecord.fromJSON()` itself
+// (0.8.123, UNCHANGED) rather than reimplemented here a second time. See
+// this file's own 0.8.130 header, "Do Not Create A Second Archive-Specific
+// Claim Parser."
+function validateLeaderboardClaimRecord(record) {
+    if (!isPlainObject(record) || !hasOnlyKeys(record, LEADERBOARD_CLAIM_RECORD_FIELDS)) return null;
+    if (!LEADERBOARD_CLAIM_RECORD_FIELDS.every((key) => key in record)) return null;
+    if (!LeaderboardClaimRecord.fromJSON(record)) return null;
+    return record;
+}
+
 export function validateArray(value, itemValidator) {
     if (!Array.isArray(value)) return null;
     const validated = [];
@@ -1406,6 +1578,8 @@ const TOP_LEVEL_FIELDS = [
     'publicationReferenceRecordProvenance',
     'publisherPublicationAssociationRecords',
     'publisherPublicationAssociationRecordProvenance',
+    'leaderboardClaimRecords',
+    'leaderboardClaimRecordProvenance',
     'archiveImportEvents'
 ];
 
@@ -1480,6 +1654,11 @@ function validateArchiveJSON(json) {
     const publisherPublicationAssociationRecordProvenance = validateProvenanceArray(json.publisherPublicationAssociationRecordProvenance, publisherPublicationAssociationRecords.length);
     if (!publisherPublicationAssociationRecordProvenance) return null;
 
+    const leaderboardClaimRecords = validateArray(json.leaderboardClaimRecords, validateLeaderboardClaimRecord);
+    if (!leaderboardClaimRecords) return null;
+    const leaderboardClaimRecordProvenance = validateProvenanceArray(json.leaderboardClaimRecordProvenance, leaderboardClaimRecords.length);
+    if (!leaderboardClaimRecordProvenance) return null;
+
     const archiveImportEvents = validateArray(json.archiveImportEvents, validateArchiveImportEvent);
     if (!archiveImportEvents) return null;
 
@@ -1504,6 +1683,8 @@ function validateArchiveJSON(json) {
         publicationReferenceRecordProvenance,
         publisherPublicationAssociationRecords,
         publisherPublicationAssociationRecordProvenance,
+        leaderboardClaimRecords,
+        leaderboardClaimRecordProvenance,
         archiveImportEvents
     };
 }

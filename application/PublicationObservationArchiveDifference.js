@@ -22,10 +22,13 @@ import { fingerprintPublicationObservationArchive } from './PublicationObservati
 //                      │
 //                      ▼
 //   { currentFingerprint, externalFingerprint, same,
-//     ten collection differences (0.8.97 adds
+//     eleven collection differences (0.8.97 adds
 //     baseTransactionInclusionObservationsByTransactionHash; 0.8.99 adds
 //     baseAnchorPublicationRecords; 0.8.104 adds publicationReferenceRecords;
-//     0.8.108 adds publisherPublicationAssociationRecords),
+//     0.8.108 adds publisherPublicationAssociationRecords; 0.8.130 adds
+//     leaderboardClaimRecords — a durable claim RECEIPT, never achievement
+//     evidence and never a verification result; see application/
+//     PublicationObservationArchive.js's own 0.8.130 header),
 //     hasFactDifference, hasProvenanceDifference, importEvents }
 //
 // AN ARCHIVE DIFFERENCE DESCRIBES STRUCTURAL DIFFERENCES BETWEEN TWO
@@ -218,6 +221,10 @@ export function describePublicationObservationArchiveDifference(currentArchive, 
         currentJSON.publisherPublicationAssociationRecords, currentJSON.publisherPublicationAssociationRecordProvenance,
         externalJSON.publisherPublicationAssociationRecords, externalJSON.publisherPublicationAssociationRecordProvenance
     );
+    const leaderboardClaimRecords = diffPositionalCollection(
+        currentJSON.leaderboardClaimRecords, currentJSON.leaderboardClaimRecordProvenance,
+        externalJSON.leaderboardClaimRecords, externalJSON.leaderboardClaimRecordProvenance
+    );
 
     const collections = {
         ipfsPublicationRecords,
@@ -229,7 +236,8 @@ export function describePublicationObservationArchiveDifference(currentArchive, 
         baseTransactionInclusionObservationsByTransactionHash,
         baseAnchorPublicationRecords,
         publicationReferenceRecords,
-        publisherPublicationAssociationRecords
+        publisherPublicationAssociationRecords,
+        leaderboardClaimRecords
     };
 
     const hasFactDifference = Object.values(collections).some(
@@ -264,7 +272,9 @@ export function describePublicationObservationArchiveDifference(currentArchive, 
 
 // Compares two ARRAY-shaped collections (`ipfsPublicationRecords`,
 // `bitcoinBroadcastRecords`, `bitcoinAnchorPublicationRecords`,
-// `baseAnchorPublicationRecords`) by array position — this archive's own
+// `baseAnchorPublicationRecords`, `publicationReferenceRecords`,
+// `publisherPublicationAssociationRecords`, `leaderboardClaimRecords`
+// (0.8.130)) by array position — this archive's own
 // append-only history position, per this
 // file's own header. `currentFacts`/`externalFacts` are already-canonical
 // `toJSON()` output (plain, JSON-serializable objects); `currentProvenance`/

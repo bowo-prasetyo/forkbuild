@@ -1,4 +1,5 @@
 import { LeaderboardClaimRecord } from './LeaderboardClaimRecord.js';
+import { reconstructPublisherLeaderboardClaimHistory } from './PublisherLeaderboardClaimHistoryView.js';
 
 // 0.8.128 — Claim History Statistics Projection.
 //
@@ -179,12 +180,18 @@ export function describePublisherLeaderboardClaimHistoryStatistics(history) {
     });
 }
 
-// reconstructPublisherLeaderboardClaimHistoryStatistics() — presently a
-// thin, identity wrapper around `describePublisherLeaderboardClaimHistoryStatistics()`.
-// See this file's own header, "The identical split... even though there
-// is still no archive to reconstruct from."
-export function reconstructPublisherLeaderboardClaimHistoryStatistics(history) {
-    return describePublisherLeaderboardClaimHistoryStatistics(history);
+// reconstructPublisherLeaderboardClaimHistoryStatistics() — 0.8.130's own
+// promised archive-reading entry point, mirroring every other
+// `reconstructXxx()` in this family exactly: it pulls this replica's own
+// stored `LeaderboardClaimHistory` straight out of `archive` via
+// application/PublisherLeaderboardClaimHistoryView.js's own
+// `reconstructPublisherLeaderboardClaimHistory()` (0.8.130) — the ONE seam
+// that understands the archive's own `leaderboardClaimRecords` collection
+// — and hands it, unchanged, to the pure computation above. An
+// invalid/missing `archive` degrades to `PublicationObservationArchive.empty()`
+// (via that same function), never a throw.
+export function reconstructPublisherLeaderboardClaimHistoryStatistics(archive) {
+    return describePublisherLeaderboardClaimHistoryStatistics(reconstructPublisherLeaderboardClaimHistory(archive));
 }
 
 // The one, uniform first-appearance tally this file uses for all three

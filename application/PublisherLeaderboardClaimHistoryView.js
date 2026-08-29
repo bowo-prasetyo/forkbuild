@@ -1,4 +1,5 @@
 import { LeaderboardClaimRecord } from './LeaderboardClaimRecord.js';
+import { PublicationObservationArchive } from './PublicationObservationArchive.js';
 
 // 0.8.123 — Signed Leaderboard Claim Archive: the narration layer.
 //
@@ -66,4 +67,40 @@ export function describePublisherLeaderboardClaimHistory(history) {
         .map((record) => describePublisherLeaderboardClaimHistoryEntry(record))
         .filter((entry) => entry !== null);
     return Object.freeze({ claimCount: claims.length, claims: Object.freeze(claims) });
+}
+
+// 0.8.130 — reconstructPublisherLeaderboardClaimHistory(): THE ONE,
+// archive-reading extraction boundary. `LeaderboardClaimHistory` (0.8.123)
+// is, and remains, exactly what every file in this family already calls it
+// — "the plain, in-memory array of `LeaderboardClaimRecord`." Before this
+// milestone it was a caller-held array with nowhere durable to live; now
+// application/PublicationObservationArchive.js's own `leaderboardClaimRecords`
+// collection (0.8.130) IS that durable home. This function is the single
+// seam between the two: it reads `archive.leaderboardClaimRecords` and
+// returns it UNCHANGED — the exact array every downstream projection in
+// this family (`PublisherLeaderboardClaimHistoryDifference.js`,
+// `PublisherLeaderboardClaimHistoryStatisticsView.js`,
+// `PublisherLeaderboardClaimHistoryTimelineView.js`) already expects, so
+// composing further from it requires no second extraction anywhere else —
+// see this codebase's own diagram, "only the first function needs to
+// understand the archive collection."
+//
+// DELIBERATELY RETURNS THE RAW ARRAY, NEVER THIS FILE'S OWN NARRATED
+// `{ claimCount, claims }` SHAPE. `describePublisherLeaderboardClaimHistory()`
+// above is a presentation projection over a `LeaderboardClaimHistory`; this
+// function reconstructs the `LeaderboardClaimHistory` itself, one layer
+// below that projection — the identical distinction application/
+// PublisherLeaderboardSnapshot.js's own `reconstructPublisherLeaderboardSnapshot()`
+// already draws relative to whatever narrates a snapshot. A caller wanting
+// the narrated view of an archive's own claim history still calls
+// `describePublisherLeaderboardClaimHistory(reconstructPublisherLeaderboardClaimHistory(archive))`
+// itself, explicitly, exactly as every other reconstruct/describe pair in
+// this codebase already composes.
+//
+// AN INVALID/MISSING `archive` DEGRADES TO AN EMPTY HISTORY, NEVER A
+// THROW — the identical tolerance every other `reconstructXxx()` entry
+// point in this family already holds.
+export function reconstructPublisherLeaderboardClaimHistory(archive) {
+    const safeArchive = archive instanceof PublicationObservationArchive ? archive : PublicationObservationArchive.empty();
+    return safeArchive.leaderboardClaimRecords;
 }

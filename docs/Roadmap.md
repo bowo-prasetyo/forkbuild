@@ -38293,3 +38293,242 @@ any judgment about whether a claim was, or still is, valid. It never
 integrates claim history into the durable evidence archive — that remains
 0.8.130's own, genuinely separate, later work, and the final milestone of
 the claim-history subsystem's own foundational arc (0.8.121-0.8.129).
+
+## 0.8.130 — Durable Signed Leaderboard Claim History Archive Integration
+
+0.8.121-0.8.129 built a complete, standalone claim subsystem — signing
+(0.8.121), portable single-claim exchange (0.8.122), a durable receipt
+(0.8.123), verification (0.8.124), verification history (0.8.125),
+portable claim-history exchange (0.8.126), and three read-only
+projections over a caller-held history (difference 0.8.127, statistics
+0.8.128, timeline 0.8.129) — every one of them deliberately over a plain,
+in-memory `LeaderboardClaimHistory` array, with nowhere durable to live.
+This milestone answers exactly the question those nine milestones
+deliberately deferred:
+
+```text
+Can a replica persist, reload, export, inspect, compare, and replace its
+signed leaderboard claim history as durable evidence of what claims it
+has received?
+```
+
+Not "are these claims trustworthy?" — that remains 0.8.121-0.8.125's job,
+entirely unchanged.
+
+```text
+PublicationObservationArchive
+├── Bitcoin anchor publications
+├── Base anchor publications
+├── publication references
+├── publisher-publication associations
+└── leaderboard claim records            ← NEW
+```
+
+**AN ELEVENTH, INDEPENDENT COLLECTION — `leaderboardClaimRecords` —
+HOLDS `LeaderboardClaimRecord` RECEIPTS DIRECTLY, NEVER A SEPARATE
+`LeaderboardClaimHistory` WRAPPER.** `application/LeaderboardClaimHistory.js`
+(0.8.123) is, and remains, exactly what every file in this family already
+calls it: "the plain, in-memory array of `LeaderboardClaimRecord`." This
+milestone gives that array a durable home — the archive's own flat
+collection — and keeps the history abstraction a VIEW over it, per
+`application/PublisherLeaderboardClaimHistoryView.js`'s own new
+`reconstructPublisherLeaderboardClaimHistory(archive)`, THE ONE seam that
+understands the archive's own collection. Every downstream projection
+(difference/statistics/timeline/verification-history) continues composing
+that plain array, unchanged in its own pure computation.
+
+**SCHEMA_VERSION ADVANCES 7 → 8, WITH THE IDENTICAL CONSERVATIVE
+MIGRATION PHILOSOPHY HELD SINCE 0.8.75, WITHOUT EXCEPTION.** A payload
+persisted by 0.8.75 through 0.8.129 (schemaVersion 7) degrades to
+`PublicationObservationArchive.empty()` on load — the SAME "wrong
+schemaVersion, whole archive degrades" rule every prior schema bump
+already established, never a special case. `PublicationObservationArchive.empty()`
+trivially satisfies "a pre-0.8.130 archive loads with
+`leaderboardClaimRecords: []`" — because claims cannot be reconstructed
+from evidence; a signed claim is a separately authored durable fact, and
+no migration path pretends otherwise.
+
+**THE ARCHIVE'S NEW API MIRRORS EVERY EXISTING COLLECTION'S OWN
+DISCIPLINE EXACTLY.** `appendLeaderboardClaimRecord(record, origin)`
+reuses `application/LeaderboardClaimHistory.js`'s own, UNCHANGED
+`appendLeaderboardClaimHistoryEntry()` — never a new construction path.
+Adding a claim receipt never mutates the existing archive instance.
+Repeated identical receipts remain independently stored, exactly as
+0.8.123 already established for `LeaderboardClaimHistory` on its own. An
+eleventh parallel provenance collection, `leaderboardClaimRecordProvenance`,
+holds one `LOCAL`/`IMPORTED` tag per record — deliberately redundant with,
+and never rewriting, `LeaderboardClaimRecord`'s own frozen `origin` field:
+the archive's tag describes how the RECORD entered THIS ARCHIVE; the
+record's own field is a fixed fact about the receipt itself.
+
+**A NEW, SEPARATE PERSISTENCE BOUNDARY —
+`ReceivePublisherLeaderboardSnapshotClaimIntoArchiveUseCase` — RATHER
+THAN CHANGING 0.8.123's OWN CONTRACT.** `ReceivePublisherLeaderboardSnapshotClaimUseCase`
+remains responsible for the claim-history operation (import, structural
+validation, receipt construction), completely unchanged, and never
+silently gains archive-writing behavior. The new use case DELEGATES to
+it, passing `archive.leaderboardClaimRecords` as the history array that
+class already expects, then appends the resulting record via
+`appendLeaderboardClaimRecord()`:
+
+```text
+portable payload
+      │  ReceivePublisherLeaderboardSnapshotClaimUseCase#execute()  (0.8.123, UNCHANGED)
+      ▼
+LeaderboardClaimRecord
+      │  archive.appendLeaderboardClaimRecord()  (0.8.130)
+      ▼
+new PublicationObservationArchive
+```
+
+No semantic verification, no ranking, no trust decision, and no automatic
+evidence synchronization — the identical exclusions 0.8.123's own use case
+already held, restated one layer up.
+
+**`reconstructPublisherLeaderboardClaimHistoryDifference()`/
+`reconstructPublisherLeaderboardClaimHistoryStatistics()`/
+`reconstructPublisherLeaderboardClaimHistoryTimeline()` BECOME REAL
+ARCHIVE-READING FUNCTIONS — EXACTLY AS 0.8.127-0.8.129's OWN HEADERS
+PROMISED.** Each was, until now, a thin identity wrapper accepting a
+history directly; each now accepts an archive (or a pair of archives, for
+the difference) and derives the history through
+`reconstructPublisherLeaderboardClaimHistory()` — the ONE function that
+understands the archive's own collection. Their own pure `describeXxx()`
+computations are completely untouched; only the archive-reading seam
+changes.
+
+```text
+Archive
+   │
+   ▼
+Claim History  (reconstructPublisherLeaderboardClaimHistory())
+   │
+   ├── Verification History  (0.8.125, unchanged signature — still takes
+   │                           a history and an archive as two separate
+   │                           arguments)
+   ├── Difference             (now archive-aware, one archive per side)
+   ├── Statistics             (now archive-aware)
+   └── Timeline               (now archive-aware)
+```
+
+**SERIALIZATION REUSES THE EXISTING CLAIM/SIGNATURE/ORIGIN VALIDATION
+MACHINERY — NO SECOND ARCHIVE-SPECIFIC CLAIM PARSER.** The archive's own
+strict `validateLeaderboardClaimRecord()` checks only the record's own
+top-level shape (`claim`/`receivedAt`/`origin`, nothing more) before
+delegating ALL deep validation to `LeaderboardClaimRecord.fromJSON()`
+(0.8.123, UNCHANGED) — the identical claim/signature/origin machinery
+0.8.123 and 0.8.126 already established. Fixing this seam surfaced a
+genuine, previously-unreachable bug: `LeaderboardClaimRecord.fromJSON()`
+called the nested `PublisherLeaderboardSnapshotClaim.fromJSON()` OUTSIDE
+its own try/catch, so a present-but-structurally-incomplete claim would
+throw instead of degrading to `null`. Before this milestone that path was
+unreachable — claim records were never durably persisted, so
+`fromJSON()` only ever saw already-valid data. Archive integration is the
+first caller to feed it genuinely untrusted JSON, so the fix (moving that
+call inside the existing try/catch) closes the gap this milestone's own
+architecture newly exposed.
+
+**FINGERPRINTING DELIBERATELY DIVERGES BY DESIGN, NOT BY OVERSIGHT.**
+`application/AchievementEvidenceFingerprint.js`'s own
+`reconstructAchievementEvidenceFingerprint()` reads exactly four named
+evidence collections and is UNTOUCHED — a received signed claim is not
+achievement evidence, and folding it in would break the boundary 0.8.116's
+own header exists to hold. `application/PublicationObservationArchiveFingerprint.js`'s
+own WHOLE-ARCHIVE `fingerprintPublicationObservationArchive()` hashes
+every `toJSON()` field except `archiveImportEvents`, so it naturally,
+automatically picks up `leaderboardClaimRecords`/
+`leaderboardClaimRecordProvenance` — unmodified by this milestone, because
+a claim receipt genuinely is part of the durable archive state that
+function already answers for.
+
+**ARCHIVE DIFFERENCE GAINS TWO INDEPENDENT ANGLES ON THE SAME
+COLLECTION, NEITHER REPLACING THE OTHER.** `application/
+PublicationObservationArchiveDifference.js`'s own whole-archive positional
+diff (0.8.87, UNCHANGED in behavior) gains `leaderboardClaimRecords` as an
+ordinary eleventh positional collection — array-position identity,
+exactly like every other collection there, keeping its own `same` (driven
+by the whole-archive fingerprint) consistent with what it reports.
+`application/PublicationObservationArchiveReplacementReview.js` separately
+gains `leaderboardClaimHistoryDifference`, delegating to the newly
+archive-aware `reconstructPublisherLeaderboardClaimHistoryDifference()`
+(0.8.127) — a RECEIPT-IDENTITY, multiset-aware comparison, genuinely
+different from a positional walk because two archives need share no
+common append-only prefix. `application/AchievementEvidenceDifference.js`
+stays about exactly its own four evidence collections, untouched. No
+verification result ever enters either difference.
+
+**REPLACEMENT REVIEW AND EXTERNAL INSPECTION BOTH GAIN
+`leaderboardClaimRecordCount` AS ANOTHER INDEPENDENTLY INSPECTABLE
+COUNT — NEVER A TRUST JUDGMENT.** The replacement logic preserves claim
+multiplicity, `receivedAt`, `origin`, exact claim contents, and
+signatures, and never "upgrades" a claim merely because it is
+cryptographically valid — a `LOCAL` claim and an `IMPORTED` claim remain
+different provenance facts, exactly as 0.8.83 already established one
+layer down.
+
+**EXPORT/IMPORT STAY SEPARATE-SCOPE PROTOCOLS, NEVER MERGED.** 0.8.122's
+single-claim exchange and 0.8.126's claim-history exchange are UNCHANGED —
+neither is replaced. Archive-level export/import (`application/
+PublicationObservationArchiveExport.js`) gains the new durable collection
+automatically, through `toJSON()`/`fromJSON()`, using the exact
+serialization rules already established; `recordPublicationObservationArchiveImport()`'s
+own `importedEntryCount` now also sums `leaderboardClaimRecordCount`.
+Claim-history exchange transports a history independently; archive export
+transports the complete archive, claim history included — two different
+scopes, deliberately kept apart.
+
+**THE FLAGSHIP TEST.** A replica receives four claim records — the
+identical claim A once LOCAL and once IMPORTED, claim B IMPORTED, and a
+third signer's claim C IMPORTED — into a durable
+`PublicationObservationArchive`. Save, destroy all in-memory state,
+reload: the same claim count, the same multiplicity, the same receipt
+timestamps, the same origins, and the same claim signatures survive
+exactly. Independently reconstructing verification history, statistics,
+and timeline from the reloaded archive produces byte-identical results to
+what was computed before persistence — and remains byte-identical through
+a further export/import hop. See `tests/
+PublicationObservationArchiveLeaderboardClaimIntegration.test.js`.
+
+**A SECOND, PERMANENT ARCHITECTURAL REGRESSION TEST.** An archive holds
+evidence E and a claim C signed against E. The archive's evidence is then
+mutated to E' — WITHOUT touching the stored claim record in any way.
+After reconstruction: claim history unchanged, claim record unchanged
+(the exact same frozen instance), but verification changed (the
+signature is still genuinely valid; the claim no longer agrees with this
+replica's own, now-different evidence). This captures, permanently, the
+principle this whole subsystem exists to hold: a stored claim is a
+historical signed statement; its current verification result is a
+derived observation about the relationship between that statement and
+current local evidence.
+
+Deliberately excluded:
+
+- **No archive merging, synchronization, reconciliation, or conflict
+  resolution of any kind.** Replacement stays exactly where 0.8.82/0.8.88
+  already put it — an explicit, person-initiated action.
+- **No claim identity reconciliation across archives.** Two archives that
+  each independently received the identical claim remain two structurally
+  identical, independently counted receipts — this milestone deduplicates
+  nothing.
+- **No automatic evidence-claim synchronization.** Receiving a claim never
+  triggers re-verification, ranking, or any write to any other collection.
+- **No signing, no peer discovery, no transport mechanism.** Every
+  transport primitive this milestone touches (0.8.122/0.8.126/archive
+  export) already existed; this milestone adds no new one.
+- **No trust, authenticity, freshness, or "which replica is correct"
+  determination anywhere.** See every section above.
+- **No changes to `AchievementEvidenceFingerprint.js` or
+  `AchievementEvidenceDifference.js`.** A claim receipt is not achievement
+  evidence — see "Fingerprinting deliberately diverges," above.
+
+What's left, and deliberately unbuilt: this milestone integrates the
+signed leaderboard claim subsystem into durable archive storage — persist,
+reload, export, import, inspect, compare, and review — without ever
+turning a received claim into an authoritative truth. It never builds
+archive-level, incremental, peer-to-peer synchronization of claim
+history — replicas today still exchange full archives or full claim
+histories, never incremental deltas negotiated over a live connection.
+That question — how replicas can exchange archive-level state safely and
+incrementally, rather than exchanging individual evidence and
+claim-history layers independently — is real, genuinely harder, and
+separately sized future work.

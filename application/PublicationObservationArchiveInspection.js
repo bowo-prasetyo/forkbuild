@@ -100,6 +100,15 @@ import { describePublicationObservationArchiveFingerprint } from './PublicationO
 // `publisherPublicationAssociationRecordCount` already exposes, never a
 // per-publisher structural index.
 //
+// `leaderboardClaimRecordCount` (0.8.130) IS THE IDENTICAL KIND OF COUNT,
+// ONE RECEIPT SHAPE OVER. A leaderboard claim receipt names neither a
+// publication nor a relationship between two identities — it is a durable
+// record of a signed statement this replica received. This inspection
+// exposes only the plain count application/PublicationObservationArchive.js's
+// own `leaderboardClaimRecordCount` already exposes, never a per-signer
+// structural index and never any verification result over the receipts it
+// counts — see application/LeaderboardClaimRecord.js's own header.
+//
 // THE RESULT IS A PLAIN, FROZEN, ONE-LEVEL DATA SHAPE — NEVER A NEW
 // DOMAIN OBJECT, NEVER ANOTHER DURABLE ARCHIVE HISTORY. Deliberately NOT a
 // `PublicationObservationArchiveInspectionRecord` class, and never held
@@ -191,6 +200,7 @@ function describeExternalArchiveInspection(archive) {
         baseAnchorPublicationRecordCount: archive.baseAnchorPublicationRecordCount,
         publicationReferenceRecordCount: archive.publicationReferenceRecordCount,
         publisherPublicationAssociationRecordCount: archive.publisherPublicationAssociationRecordCount,
+        leaderboardClaimRecordCount: archive.leaderboardClaimRecordCount,
 
         localFactCount: provenance.localFactCount,
         importedFactCount: provenance.importedFactCount,

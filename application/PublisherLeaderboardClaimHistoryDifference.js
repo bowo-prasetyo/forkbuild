@@ -1,4 +1,5 @@
 import { LeaderboardClaimRecord } from './LeaderboardClaimRecord.js';
+import { reconstructPublisherLeaderboardClaimHistory } from './PublisherLeaderboardClaimHistoryView.js';
 
 // 0.8.127 — Claim History Difference Projection.
 //
@@ -165,12 +166,21 @@ export function describePublisherLeaderboardClaimHistoryDifference(sourceHistory
     });
 }
 
-// reconstructPublisherLeaderboardClaimHistoryDifference() — presently a
-// thin, identity wrapper around `describePublisherLeaderboardClaimHistoryDifference()`.
-// See this file's own header, "The identical split... even though there is
-// no archive to reconstruct from yet."
-export function reconstructPublisherLeaderboardClaimHistoryDifference(sourceHistory, targetHistory) {
-    return describePublisherLeaderboardClaimHistoryDifference(sourceHistory, targetHistory);
+// reconstructPublisherLeaderboardClaimHistoryDifference() — 0.8.130's own
+// promised archive-reading entry point, mirroring every other
+// `reconstructXxx()` in this family: it pulls EACH side's own stored
+// `LeaderboardClaimHistory` straight out of its own archive via
+// application/PublisherLeaderboardClaimHistoryView.js's own
+// `reconstructPublisherLeaderboardClaimHistory()` (0.8.130), then hands
+// both, unchanged, to the pure computation above. An invalid/missing
+// `sourceArchive`/`targetArchive` degrades to
+// `PublicationObservationArchive.empty()` independently on each side,
+// never a throw.
+export function reconstructPublisherLeaderboardClaimHistoryDifference(sourceArchive, targetArchive) {
+    return describePublisherLeaderboardClaimHistoryDifference(
+        reconstructPublisherLeaderboardClaimHistory(sourceArchive),
+        reconstructPublisherLeaderboardClaimHistory(targetArchive)
+    );
 }
 
 // The multiset (bag) subtraction `from - against`, preserving

@@ -1,4 +1,5 @@
 import { LeaderboardClaimRecord } from './LeaderboardClaimRecord.js';
+import { reconstructPublisherLeaderboardClaimHistory } from './PublisherLeaderboardClaimHistoryView.js';
 
 // 0.8.129 — Claim History Timeline Projection.
 //
@@ -200,10 +201,15 @@ export function describePublisherLeaderboardClaimHistoryTimeline(history) {
     });
 }
 
-// reconstructPublisherLeaderboardClaimHistoryTimeline() — presently a thin,
-// identity wrapper around `describePublisherLeaderboardClaimHistoryTimeline()`.
-// See this file's own header, "The identical split... even though there is
-// still no archive to reconstruct from."
-export function reconstructPublisherLeaderboardClaimHistoryTimeline(history) {
-    return describePublisherLeaderboardClaimHistoryTimeline(history);
+// reconstructPublisherLeaderboardClaimHistoryTimeline() — 0.8.130's own
+// promised archive-reading entry point, mirroring
+// `reconstructPublisherLeaderboardClaimHistoryStatistics()` exactly, one
+// projection over: it pulls this replica's own stored `LeaderboardClaimHistory`
+// straight out of `archive` via application/
+// PublisherLeaderboardClaimHistoryView.js's own
+// `reconstructPublisherLeaderboardClaimHistory()` (0.8.130), then hands it,
+// unchanged, to the pure computation above. An invalid/missing `archive`
+// degrades to `PublicationObservationArchive.empty()`, never a throw.
+export function reconstructPublisherLeaderboardClaimHistoryTimeline(archive) {
+    return describePublisherLeaderboardClaimHistoryTimeline(reconstructPublisherLeaderboardClaimHistory(archive));
 }
