@@ -35837,3 +35837,157 @@ stated alongside it (which archive, whose replica, as of when), rendering
 what this milestone already computed rather than computing anything new.
 After 0.8.114, pause and observe how the system behaves before adding any
 gamification, portable export, or cross-replica leaderboard merge.
+
+## 0.8.114 — Portable Achievement & Leaderboard Evidence Export
+
+0.8.113's own "What's left" line, immediately above, named the leaderboard
+UI as the next step and explicitly cautioned against building portable
+export before pausing to observe. Sitting down to plan that UI surfaced a
+prior, more fundamental question the project's own original premise had
+never actually been tested against: every achievement, badge, statistic,
+rank, and leaderboard this codebase computes has, so far, only ever been
+computed over ONE replica's own archive. A "decentralized achievement
+system without a central achievement server" that has never been asked to
+reconstruct its own conclusions on a SECOND replica, from nothing but
+durable facts, has not yet demonstrated the one property its entire design
+exists to provide. That question outranks the UI — a leaderboard UI built
+on an unproven reconstruction story would just be a more polished way to
+display an unverified claim. This milestone tests the claim first;
+`docs/Roadmap.md`'s own note above about pausing before "portable export"
+is deliberately overridden here, in favor of testing the foundation the
+whole gamification stack has been quietly resting on since 0.8.102.
+
+```text
+Alice's replica                              Bob's replica
+
+Durable evidence                             (the SAME evidence, and
+   │   exportAchievementEvidence()            nothing else Alice held)
+   ▼        (THIS MILESTONE)                       │
+a JSON payload  ─────────────────────────────▶  importAchievementEvidence()
+                                                     (THIS MILESTONE)
+                                                     │
+                                                     ▼
+                                               Durable evidence
+                                                     │
+                                                     ▼  (every arrow below
+                                               Achievement events          UNCHANGED —
+                                                     │                     0.8.102/0.8.106,
+                                                     ▼                     0.8.111, 0.8.112,
+                                               Publisher statistics        0.8.113, exactly
+                                                     │                     as they already
+                                                     ▼                     existed)
+                                               Ranking policy
+                                                     │
+                                                     ▼
+                                               Leaderboard
+```
+
+**WE EXPORT EVIDENCE, NEVER CONCLUSIONS — THE ONE RULE THIS ENTIRE
+MILESTONE EXISTS TO ENFORCE.** `application/AchievementEvidenceExport.js`'s
+own `exportAchievementEvidence()` carries nothing resembling an
+achievement event, a badge, a statistic, a rank, or a leaderboard
+position — no `achievementKind`, no `badgeCount`, no `rank`, no `score`,
+no `points`, no `leaderboard`. A malicious or mistaken exporter cannot
+declare "I am rank #1" and have Bob believe it: Bob's replica never
+receives a rank at all, only the publication-identity and relationship
+facts a rank is computed FROM. Bob recomputes the claim himself, over the
+identical, unchanged pipeline every prior milestone already built. See
+`docs/Principles.md`, "Evidence Is Portable; Achievements Are Derivable;
+Rankings Are Policy; Leaderboards Are Presentation (0.8.114)."
+
+**THE MINIMUM DURABLE SOURCE COLLECTIONS NECESSARY, TRACED FROM THE ACTUAL
+PIPELINE — NOT GUESSED.** `application/PublicationObservationArchive.js`
+holds ten factual collections. This milestone exports exactly four:
+`bitcoinAnchorPublicationRecords` (0.8.80), `baseAnchorPublicationRecords`
+(0.8.99), `publicationReferenceRecords` (0.8.104), and
+`publisherPublicationAssociationRecords` (0.8.108). This is not an
+editorial trim — it is the exact set `application/AchievementEvent.js`'s
+own `reconstructAchievementEvents()` and `application/
+PublisherAssociationView.js`'s own `reconstructDistinctPublisherIdentifiers()`
+read, and every later stage (badges, statistics, ranking, the leaderboard)
+composes only those two functions. The milestone proposal that named this
+work floated "relevant observation histories" as worth exporting
+alongside the four record collections; tracing the achievement pipeline's
+own actual reads shows there are none — no achievement, badge, statistic,
+rank, or leaderboard fact in this codebase is ever computed from a
+Bitcoin confirmation observation, a content-proof observation, a Base
+inclusion observation, an IPFS verification observation, or a broadcast
+attempt. Exporting them would not make Bob's reconstruction more
+complete; it would just be a second, unjustified copy of `application/
+PublicationObservationArchiveExport.js`'s own, already-existing,
+WHOLE-archive export, sized by guesswork instead of by what the pipeline
+actually reads.
+
+**PROVENANCE IS NEVER EXPORTED.** `docs/Principles.md`'s own "Provenance
+Describes Where A Fact Entered This Archive, It Does Not Establish
+Whether The Fact Is True (0.8.83)" already implies this: whether a record
+was `LOCAL` or `IMPORTED` in Alice's own archive describes ALICE's own
+ingestion history, never a fact about the publication itself, and it is
+meaningless to Bob, who stamps every fact `IMPORTED` in his own archive
+the moment it arrives regardless of what Alice's copy said. The exported
+payload carries no provenance field for any of its four collections.
+
+**IMPORT NEVER MERGES, AND CONSTRUCTS A GENUINE, ORDINARY ARCHIVE — NOT A
+NEW "PARTIAL ARCHIVE" TYPE.** `importAchievementEvidence()` returns a
+real `PublicationObservationArchive` instance — the SAME class every
+other file in this codebase already reconstructs achievement facts from —
+holding only these four collections populated, every other collection at
+its own ordinary empty default. It is handed straight to
+`reconstructAchievementEvents()`, `reconstructPublisherAchievementStatistics()`,
+`reconstructPublisherRanking()`, and `reconstructPublisherLeaderboard()`,
+all four UNCHANGED. Exactly like `application/
+PublicationObservationArchiveExport.js`'s own `importPublicationObservationArchive()`,
+this function never merges the imported evidence into an archive the
+caller already holds. Blending imported evidence with a replica's own
+pre-existing facts — duplicate records, conflicting provenance, "did I
+already import this from someone else" — is real, separately sized,
+later work; see "Deliberately excluded," below.
+
+**MALFORMED INPUT IS `INVALID_EVIDENCE`, NEVER A SILENT PARTIAL OR EMPTY
+ARCHIVE.** `application/PublicationObservationArchive.js` gained four
+newly-EXPORTED (unchanged) validators — `validateBitcoinAnchorPublicationRecord()`,
+`validateBaseAnchorPublicationRecord()`, `validatePublicationReferenceRecord()`,
+`validatePublisherPublicationAssociationRecord()` — plus its own
+`validateArray()` helper, so `application/AchievementEvidenceExport.js`
+validates exactly the same record shape, to the exact same strictness,
+that a full archive import already enforces one layer up. Never a second,
+independently-drifting copy of "what a genuine record looks like."
+
+Deliberately excluded:
+- **Any merge with an existing, non-empty archive.** Blending imported
+  evidence into a replica that already holds its own facts — duplicate
+  records, conflicting provenance for the identical fact, "have I already
+  imported this evidence from a different peer" — is real, separately
+  sized work. Real, separately sized, later work — 0.8.115.
+- **Any durable "evidence import happened" event.** `application/
+  PublicationObservationArchive.js`'s own `archiveImportEvents` collection
+  describes a WHOLE-archive import, keyed to that class's own
+  `SCHEMA_VERSION`; this milestone's own evidence payload versions itself
+  independently and deliberately mints no analogous durable event —
+  recording provenance-of-import for evidence ties closely to the merge
+  question above, and belongs with it.
+- **Any leaderboard UI, achievement gallery, or "my publisher profile"
+  card.** Still real, separately sized, later work — this milestone
+  proves the reconstruction is trustworthy; presenting it is its own
+  project.
+- **Federated exchange, peer discovery, or any transport mechanism.**
+  This milestone answers "can evidence be portable at all," using a plain
+  JSON payload a caller moves by whatever means it already has (a file, a
+  clipboard, a message). It invents no protocol for HOW two replicas find
+  each other or automatically exchange evidence.
+- **Any richer per-record field, subject identity, or trust score on the
+  exported evidence.** The four collections round-trip exactly what
+  `application/PublicationObservationArchive.js` already durably holds
+  for them — nothing added, nothing summarized.
+
+What's left, and deliberately unbuilt: 0.8.115 defines explicit merge
+semantics for importing evidence into an archive that already holds its
+own facts. 0.8.116 is the flagship integration test this milestone's own
+design already makes possible but does not itself assert end-to-end
+across two fully independent archives built by two unrelated code paths —
+proving, once and for all, that a leaderboard computed on one replica and
+a leaderboard computed on another, from nothing but exchanged evidence,
+are the same leaderboard. Only after that: a leaderboard UI, a publisher
+profile page, and eventually federated evidence exchange across several
+ForkBuild nodes with no central achievement server anywhere in the
+picture.

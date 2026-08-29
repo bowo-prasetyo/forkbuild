@@ -1241,7 +1241,18 @@ function validateBitcoinBroadcastRecord(record) {
     return record;
 }
 
-function validateBitcoinAnchorPublicationRecord(record) {
+// 0.8.114 — this record-level validator, and
+// `validateBaseAnchorPublicationRecord()`/`validatePublicationReferenceRecord()`/
+// `validatePublisherPublicationAssociationRecord()`/`validateArray()` below,
+// are EXPORTED (unchanged) so application/AchievementEvidenceExport.js's
+// own, deliberately NARROWER `importAchievementEvidence()` can validate
+// exactly these four record shapes with the identical strictness this
+// file already holds for a full archive import — never a second,
+// independently-maintained copy of "what a genuine BitcoinAnchorPublicationRecord
+// JSON shape looks like." See that file's own header for why it exports
+// only these four durable, identity-shaped collections and none of this
+// archive's other seven.
+export function validateBitcoinAnchorPublicationRecord(record) {
     if (!isPlainObject(record) || !hasOnlyKeys(record, BITCOIN_ANCHOR_PUBLICATION_RECORD_FIELDS)) return null;
     if (!BITCOIN_ANCHOR_PUBLICATION_RECORD_FIELDS.every((key) => key in record)) return null;
     if (typeof record.anchorId !== 'string' || !record.anchorId) return null;
@@ -1252,7 +1263,7 @@ function validateBitcoinAnchorPublicationRecord(record) {
     return record;
 }
 
-function validateBaseAnchorPublicationRecord(record) {
+export function validateBaseAnchorPublicationRecord(record) {
     if (!isPlainObject(record) || !hasOnlyKeys(record, BASE_ANCHOR_PUBLICATION_RECORD_FIELDS)) return null;
     if (!BASE_ANCHOR_PUBLICATION_RECORD_FIELDS.every((key) => key in record)) return null;
     if (typeof record.contentHash !== 'string' || !record.contentHash) return null;
@@ -1277,7 +1288,7 @@ function validateBlockchainPublicationIdentityJSON(value) {
     return value;
 }
 
-function validatePublicationReferenceRecord(record) {
+export function validatePublicationReferenceRecord(record) {
     if (!isPlainObject(record) || !hasOnlyKeys(record, PUBLICATION_REFERENCE_RECORD_FIELDS)) return null;
     if (!PUBLICATION_REFERENCE_RECORD_FIELDS.every((key) => key in record)) return null;
     if (!validateBlockchainPublicationIdentityJSON(record.sourcePublicationIdentity)) return null;
@@ -1297,7 +1308,7 @@ function validatePublisherIdentityJSON(value) {
     return value;
 }
 
-function validatePublisherPublicationAssociationRecord(record) {
+export function validatePublisherPublicationAssociationRecord(record) {
     if (!isPlainObject(record) || !hasOnlyKeys(record, PUBLISHER_PUBLICATION_ASSOCIATION_RECORD_FIELDS)) return null;
     if (!PUBLISHER_PUBLICATION_ASSOCIATION_RECORD_FIELDS.every((key) => key in record)) return null;
     if (!validatePublisherIdentityJSON(record.publisherIdentity)) return null;
@@ -1306,7 +1317,7 @@ function validatePublisherPublicationAssociationRecord(record) {
     return record;
 }
 
-function validateArray(value, itemValidator) {
+export function validateArray(value, itemValidator) {
     if (!Array.isArray(value)) return null;
     const validated = [];
     for (const item of value) {

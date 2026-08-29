@@ -18109,3 +18109,75 @@ human Alice" is strongest, and precisely why 0.8.113's own test suite
 asserts it directly rather than trusting the temptation never arises.
 
 See `docs/Roadmap.md`, 0.8.113, for the full milestone entry.
+
+## Evidence Is Portable; Achievements Are Derivable; Rankings Are Policy; Leaderboards Are Presentation (0.8.114)
+
+**A conclusion that cannot be independently recomputed by the party
+receiving it is not evidence — it is a claim.** Every stage this codebase
+has built since 0.8.102 — achievement events, badges, statistics, a
+ranking, a leaderboard — is DERIVED, computed fresh from durable facts,
+never itself durable. That discipline was always, implicitly, a portability
+story waiting to be tested: if a conclusion is nothing but a pure function
+of durable facts, then handing another replica the identical facts must
+let it compute the identical conclusion, with no need to also hand over
+the conclusion itself. `application/AchievementEvidenceExport.js` is the
+first milestone that actually tests this claim, by literally destroying
+the exporting replica's own archive reference between export and import
+and reconstructing the achievement pipeline's full output on a
+completely separate replica from nothing but the transported evidence —
+see `tests/AchievementEvidenceExport.test.js`'s own FLAGSHIP.
+
+**Export evidence, never conclusions — a rule enforceable by construction,
+not by promise.** `exportAchievementEvidence()`'s result is validated,
+on import, against an exact, closed field list — four collections and a
+schema version, nothing else. A payload hand-edited to add `"rank": 1` or
+`"badgeCount": 37` does not "come through as untrusted data to be
+ignored" — it makes the ENTIRE payload `INVALID_EVIDENCE`, the identical
+"reject the whole thing the moment any part fails" contract `application/
+PublicationObservationArchive.js`'s own `fromJSON()` already holds one
+layer down. There is no code path anywhere in this pipeline that reads a
+rank, a score, or a badge count off an imported payload and trusts it —
+every one of those fields is computed by the importing replica itself, or
+it does not exist for that replica at all.
+
+**The four exported collections are not a policy choice — they are a
+traced fact about what the pipeline reads.** `application/AchievementEvent.js`'s
+own `reconstructAchievementEvents()` reads exactly `bitcoinAnchorPublicationRecords`,
+`baseAnchorPublicationRecords`, and `publicationReferenceRecords` off an
+archive; `application/PublisherAssociationView.js`'s own
+`reconstructDistinctPublisherIdentifiers()` reads exactly
+`publisherPublicationAssociationRecords`. No achievement, badge,
+statistic, rank, or leaderboard fact in this codebase has ever been
+computed from an observation — not a Bitcoin confirmation, not a
+content-proof reconciliation, not a Base inclusion check, not an IPFS
+verification, not a broadcast attempt. This is not a case for judgment
+calls about what "seems relevant enough to include" — it is a claim
+falsifiable by reading the four files this pipeline actually is, and this
+milestone's own header traces exactly that reading rather than asserting
+it.
+
+**Provenance belongs to the archive it describes, never to the fact
+crossing between two archives.** `docs/Principles.md`'s own "Provenance
+Describes Where A Fact Entered This Archive; It Does Not Establish
+Whether The Fact Is True (0.8.83)" already implies this milestone's own
+narrower rule: Alice's own `LOCAL`/`IMPORTED` labels describe Alice's own
+ingestion history, and are simply never transmitted — Bob does not
+receive them, discard them, or need to reconcile them, because they were
+never his to know in the first place. Every fact that enters Bob's
+archive through `importAchievementEvidence()` is stamped `IMPORTED`,
+unconditionally, for the one reason that is always true regardless of
+Alice's own history: it entered Bob's own archive through import.
+
+**A narrower export is not a smaller trust boundary — it is a more
+honest one.** `application/PublicationObservationArchiveExport.js`
+already exports an entire archive faithfully, for the genuinely different
+purpose of one replica restoring or relocating its own complete state.
+This milestone's own export exists for a different purpose entirely —
+letting a SECOND, unrelated replica recompute a SPECIFIC derived result —
+and a payload sized to that purpose, rather than to "everything this
+replica happens to hold," is the more honest artifact: every field in it
+is there because some downstream computation actually reads it, and
+nothing in it invites a receiving replica to trust something it was never
+asked to.
+
+See `docs/Roadmap.md`, 0.8.114, for the full milestone entry.
