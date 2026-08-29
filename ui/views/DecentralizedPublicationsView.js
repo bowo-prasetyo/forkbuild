@@ -121,6 +121,7 @@ import {
 } from '../../application/BaseAnchorPublicationLifecycleTimelineView.js';
 import { BlockchainKind } from '../../application/BlockchainKind.js';
 import { reconstructAchievementBadges } from '../../application/AchievementBadgeView.js';
+import { reconstructAchievementProfile } from '../../application/AchievementProfileView.js';
 import { CreatePublicationReferenceRecordUseCase } from '../../application/CreatePublicationReferenceRecordUseCase.js';
 import { describePublicationReferenceRecordHistory } from '../../application/PublicationReferenceRecordHistoryView.js';
 import { reconstructPublicationReferenceGraph } from '../../application/PublicationReferenceGraphView.js';
@@ -2351,6 +2352,36 @@ export default {
                 baseAnchorPublicationsExpanded.value = true;
                 baseAnchorPublicationLifecycleExpanded[badge.sourcePublicationIdentity.chainReference] = true;
             }
+        }
+
+        // 0.8.107 — Achievement Profile Projection.
+        //
+        // A PUBLICATION-IDENTITY-SCOPED REDUCTION OVER THE "ACHIEVEMENTS"
+        // CARD'S OWN ACHIEVEMENT EVENTS ABOVE — application/
+        // AchievementProfileView.js's own reconstructAchievementProfile(),
+        // never a second, competing achievement computation inline here.
+        // Deliberately publication-centric, NEVER a human/wallet profile —
+        // see that file's own header on why publication identity and human
+        // identity stay deliberately distinct. The dropdown below is
+        // populated from the SAME knownPublicationIdentityOptions() the
+        // "Publication References" card above already uses — never a
+        // free-text field, and never a profile guessed from a shared
+        // content hash. Collapsed by default. Performs ZERO network
+        // operations.
+        const achievementProfileExpanded = ref(false);
+        const achievementProfileSelectedKey = ref('');
+
+        function toggleAchievementProfile() {
+            achievementProfileExpanded.value = !achievementProfileExpanded.value;
+        }
+
+        // Pure projection — never a second, competing achievement
+        // computation inline in the template. No publication selected yet
+        // yields a valid, empty profile (application/
+        // AchievementProfileView.js's own Section A) — never an error.
+        function achievementProfileView() {
+            const identity = findKnownPublicationIdentity(achievementProfileSelectedKey.value);
+            return reconstructAchievementProfile(publicationObservationArchive.value, identity);
         }
 
         // Every currently AUTHENTICATED peer, in registry order — the
@@ -6347,6 +6378,8 @@ export default {
             achievementsExpanded, toggleAchievements, achievementBadgesView,
             toggleAchievementBadge, isAchievementBadgeExpanded,
             canViewAchievementBadgeLifecycle, viewAchievementBadgeLifecycle,
+            achievementProfileExpanded, toggleAchievementProfile,
+            achievementProfileSelectedKey, achievementProfileView,
             decentralizationContrast,
             knowledgeSynchronizationCoordinator, synchronizeWithPeers, synchronizationView, synchronizationBadgeClass, synchronizationButtonLabel,
             toggleReplicaKnowledge, acquisitionBreakdownSentence,
@@ -7935,6 +7968,76 @@ export default {
                             </div>
                         </li>
                     </ul>
+                </div>
+            </div>
+
+            <!-- 0.8.107 — Achievement Profile Projection. A
+                 publication-identity-scoped reduction over the
+                 "Achievements" card's own achievement events above —
+                 application/AchievementProfileView.js's own
+                 reconstructAchievementProfile(). Deliberately NOT a user
+                 or wallet profile: ForkBuild can state that a publication
+                 identity earned an achievement, never yet that a person
+                 did, because no durable record here links a publication
+                 to a human. Choosing a publication below shows only ITS
+                 OWN earned achievements, matched by sameAs() — never
+                 inferred from a shared content hash, timestamp, or
+                 author. Collapsed by default. Performs ZERO network
+                 operations. -->
+            <div class="identity-mgmt-card">
+                <div class="identity-mgmt-card-header">
+                    <span class="identity-mgmt-name">Achievement Profile</span>
+                    <span class="peer-badge peer-badge--pending">Persisted locally</span>
+                </div>
+                <p class="form-hint form-hint--neutral">
+                    A publication identity's own slice of this replica's achievement events — never a
+                    human or wallet profile. ForkBuild can state that a publication earned an
+                    achievement; it cannot yet state that a person did, because no durable record here
+                    links a publication identity to a human identity.
+                </p>
+                <div class="identity-mgmt-actions">
+                    <button type="button" class="action-btn action-btn--secondary" @click="toggleAchievementProfile">
+                        {{ achievementProfileExpanded ? 'Hide Achievement Profile' : 'Show Achievement Profile' }}
+                    </button>
+                </div>
+                <div v-if="achievementProfileExpanded" class="evidence-inspection-adapter">
+                    <span class="evidence-inspection-adapter-title">Choose A Publication</span>
+                    <p v-if="knownPublicationIdentityOptions().length === 0" class="form-hint form-hint--neutral">
+                        No publication identities recorded yet — publish a Bitcoin or Base anchor above
+                        first.
+                    </p>
+                    <label v-else class="form-field">
+                        <span class="form-label">Publication</span>
+                        <select v-model="achievementProfileSelectedKey" class="form-input">
+                            <option value="" disabled>Choose a publication…</option>
+                            <option v-for="option in knownPublicationIdentityOptions()" :key="'profile-' + option.key" :value="option.key">
+                                {{ option.label }}
+                            </option>
+                        </select>
+                    </label>
+
+                    <template v-if="achievementProfileSelectedKey">
+                        <span class="evidence-inspection-adapter-title">Achievement Profile</span>
+                        <dl class="evidence-fields">
+                            <div class="evidence-field"><dt>Publication</dt><dd>{{ achievementProfileView().publicationIdentity.blockchain }} — {{ shortId(achievementProfileView().publicationIdentity.chainReference) }}</dd></div>
+                            <div class="evidence-field"><dt>Achievements</dt><dd>{{ achievementProfileView().achievementCount }}</dd></div>
+                        </dl>
+                        <p v-if="achievementProfileView().achievementCount === 0" class="form-hint form-hint--neutral">
+                            This publication has not earned any achievements yet.
+                        </p>
+                        <ul v-else class="replica-knowledge-claim-list">
+                            <li v-for="(achievement, achievementIndex) in achievementProfileView().achievements" :key="achievementIndex" class="replica-knowledge-claim">
+                                <span class="peer-badge peer-badge--pending">🏆 {{ achievement.label }}</span>
+                                <p class="form-hint form-hint--neutral">
+                                    Earned {{ formatWhen(achievement.observedAt) }}
+                                </p>
+                            </li>
+                        </ul>
+                        <p class="form-hint form-hint--neutral">
+                            These achievements belong to this publication identity — not necessarily to
+                            any particular person.
+                        </p>
+                    </template>
                 </div>
             </div>
 
