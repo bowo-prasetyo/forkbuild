@@ -37465,3 +37465,173 @@ never integrates this history into `PublicationObservationArchive` as a
 formal, exportable collection. Above all, it never turns "received" into
 "trusted" — that conflation remains the one line every future milestone in
 this family is expected to keep refusing to cross.
+
+
+## 0.8.124 — Claim Verification Projection
+
+0.8.123 gave a replica a durable place to keep a received signed claim —
+explicitly a receipt, never a verdict — and left the verdict-shaped
+question exactly where 0.8.121 already answers it: run
+`verifyPublisherLeaderboardSnapshotClaim()` yourself, separately, whenever
+you choose to ask. This milestone is that "whenever you choose to ask,"
+made concrete for the one durable unit 0.8.123 actually stores — a
+`LeaderboardClaimRecord` — rather than a bare claim:
+
+```text
+LeaderboardClaimHistory
+        │
+        ▼
+stored claims (LeaderboardClaimRecord, 0.8.123, UNCHANGED)
+        │
+        ├───────────────┐
+        │               │
+        ▼               ▼
+signature verification  local snapshot reconstruction
+  (0.8.121, UNCHANGED)    (0.8.119, UNCHANGED)
+        │               │
+        └───────┬───────┘
+                ▼
+       comparison facts
+                │
+                ▼
+{ signerIdentityId, claimCreatedAt, receivedAt,
+  signatureValid,
+  evidenceFingerprintMatches, policyVersionMatches, snapshotFingerprintMatches,
+  matches }
+```
+
+**A PROJECTION, NEVER A NEW VERIFIER.** `application/
+PublisherLeaderboardClaimVerificationView.js` computes nothing 0.8.121
+does not already compute. `signatureValid`, `evidenceFingerprintMatches`,
+`policyVersionMatches`, `snapshotFingerprintMatches`, and `matches` are
+`describePublisherLeaderboardSnapshotClaimVerification()`'s (0.8.121,
+UNCHANGED) own result, carried through byte for byte. This file adds
+exactly three fields on top — `signerIdentityId`, `claimCreatedAt`,
+`receivedAt` — read straight off the record and its own claim, the
+identical "carried through unchanged, never re-derived" restraint
+`application/PublisherLeaderboardClaimHistoryView.js`'s own header already
+holds. There is no second verification taxonomy: no `trusted`, `valid`,
+`current`, `authoritative`, `verified`, `score`, or `rank` field, and the
+five 0.8.120/0.8.121 comparison names are reused exactly, never renamed or
+redefined.
+
+**A SIGNED CLAIM IS NOT A PERMANENTLY VALID ASSERTION ABOUT THE CURRENT
+STATE — THE ONE DISTINCTION THIS MILESTONE EXISTS TO MAKE EXPLICIT.** A
+claim never changes shape once signed (0.8.123's own rule, unchanged).
+The local snapshot this file compares it against can change from one call
+to the next as new evidence arrives. Calling this file's own function
+twice over the IDENTICAL stored record, once before and once after that
+evidence changes, is expected to return two genuinely different results:
+
+```text
+Day 1:  matches === true    (this replica's evidence still agrees)
+Day 2:  matches === false   (new evidence arrived; the claim did not
+                              change — the replica's own reality did)
+```
+
+This is exactly analogous to the distinction between durable evidence and
+a derived, recomputed achievement already held elsewhere in this
+codebase, applied here one relationship up, over a signed conclusion
+instead of a raw fact.
+
+**THREE SITUATIONS, ALL EXPLICITLY TESTABLE, NONE COLLAPSED INTO
+ANOTHER.** (1) Signed and matching — every one of the four 0.8.121 facts
+is true, and `matches` is true: the signer signed the snapshot, and this
+replica independently reconstructs the same one. (2) Signed but different
+from this replica — `signatureValid` true, `matches` false. This is NOT
+by itself evidence of fraud: the signer's own replica may simply hold
+genuinely different evidence — see 0.8.121's own header, "a valid
+signature means 'the signer genuinely signed this' — never 'this claim is
+true.'" (3) Cryptographically invalid — `signatureValid` false, yet the
+three semantic comparison facts are STILL computed independently, never
+implicitly forced false by `signatureValid` alone — preserving the exact
+separation 0.8.120/0.8.121 already established.
+
+**DOES NOT PERSIST THE VERIFICATION RESULT — THE MOST IMPORTANT DESIGN
+CONSTRAINT THIS MILESTONE HOLDS.** Neither of this file's two functions
+writes anything — not to the record, not to `LeaderboardClaimRecord`, not
+to `LeaderboardClaimHistory`, not to any archive. The record is read,
+never mutated (it is already frozen), and this milestone invents no
+sibling "verification record" to store a result in either. Every call
+recomputes fresh, from whatever local snapshot or archive is handed to it
+at that moment — the identical "computed fresh, every time, never
+persisted" restraint 0.8.120's own header already holds for a bare
+snapshot comparison, held here once more over a signed one.
+
+**ONE CLAIM/RECORD IS THE FUNDAMENTAL UNIT — NOT THE WHOLE HISTORY.** This
+milestone deliberately stops at a single `LeaderboardClaimRecord`. It
+never takes a `LeaderboardClaimHistory` array, never loops over one, and
+never produces a collection-shaped projection — that composition is real,
+separately sized, later work ("0.8.125 — Publisher Claim Verification
+History View"), built on top of this milestone's own two functions rather
+than folded into them now.
+
+**TWO LAYERS, MIRRORING 0.8.120/0.8.121's OWN SPLIT EXACTLY.**
+`describePublisherLeaderboardClaimVerification(claimRecord, localSnapshot,
+verifier)` is the pure projection — no archive, no clock, no network,
+deterministic on identical input. `reconstructPublisherLeaderboardClaimVerification(claimRecord,
+archive, verifier)` is the one, thin, archive-reading convenience
+boundary: it pulls this replica's own current snapshot straight out of
+`reconstructPublisherLeaderboardSnapshot()` (0.8.119, UNCHANGED) and hands
+it to the pure function above.
+
+**A MALFORMED/ABSENT RECORD PROJECTS TO `null`, NEVER A THROW, AND NEVER A
+FABRICATED VERDICT.** Unlike 0.8.121's own claim-shaped tolerance (a
+malformed bare claim degrades to `matches: false`, because a claim's only
+meaningful content is its signer and signature), a malformed
+`LeaderboardClaimRecord` here has no `receivedAt` to honestly report at
+all — there is no receipt to project a comparison onto in the first
+place — so this file returns `null` rather than inventing one, the
+identical tolerance `application/PublisherLeaderboardClaimHistoryView.js#describePublisherLeaderboardClaimHistoryEntry()`
+already holds.
+
+**FLAGSHIP.** Alice and Bob hold the identical evidence at signing time.
+Alice reconstructs her leaderboard, creates a signed claim, and exports
+it; Bob imports it and stores it as a `LeaderboardClaimRecord` (0.8.122/
+0.8.123, UNCHANGED). Verifying it against Bob's own, currently identical
+evidence returns `signatureValid`/`evidenceFingerprintMatches`/
+`policyVersionMatches`/`snapshotFingerprintMatches`/`matches` all `true`.
+Bob then adds a new publication/evidence fact of his own — without
+touching Alice's stored claim in any way. Re-verifying the IDENTICAL,
+unmodified record now returns `signatureValid` still `true`,
+`evidenceFingerprintMatches`/`snapshotFingerprintMatches`/`matches` now
+`false`. The signed claim did not change; the local evidence did — that
+single scenario demonstrates why a signed claim is never a permanently
+valid assertion about the current state.
+
+Deliberately excluded:
+- **Storing, caching, or memoizing a verification result anywhere.** See
+  "Does Not Persist The Verification Result," above.
+- **A collection-shaped projection over an entire `LeaderboardClaimHistory`.**
+  Real, separately sized, later work — "0.8.125 — Publisher Claim
+  Verification History View."
+- **Trust scores, reputation, "verified publisher" labels, consensus, or
+  any evaluative vocabulary beyond the five 0.8.120/0.8.121 comparison
+  names.** This milestone reuses that vocabulary exactly; it invents none
+  of its own.
+- **Automatic verification on receipt.** `ReceivePublisherLeaderboardSnapshotClaimUseCase`
+  (0.8.123, UNCHANGED) still never calls into this milestone's own
+  functions — verification remains a caller's own, separate, explicit
+  step.
+- **Exchanging claim receipts between replicas, claim difference/
+  multiplicity projections, or a historical claim timeline.** "Portable
+  Claim Receipt Exchange," "Claim Difference Projection," "Claim Snapshot
+  Comparison," and "Historical Claim Timeline" all remain genuinely
+  separate, later questions.
+- **Integrating `LeaderboardClaimRecord` into `PublicationObservationArchive`.**
+  Explicitly deferred by 0.8.123, and left deferred here too — this
+  milestone establishes verification semantics cleanly first.
+
+What's left, and deliberately unbuilt: this milestone proves a stored
+signed claim and a replica's own current, independently reconstructed
+evidence can be composed into one honest, non-persisted set of comparison
+facts — never that a claim on file remains true forever, never that
+receiving or storing a claim makes it more authoritative, and never that
+the three semantic facts should be inferred from `signatureValid` alone.
+It never runs this composition across a whole history at once, never
+exchanges the durable receipts themselves between replicas, and never
+folds this file's own verdict-shaped output back into the durable,
+non-evaluative receipt 0.8.123 stores. Above all, it never lets a signed
+claim be treated as a permanently valid assertion about the current
+state — a caller must always ask again, against whatever evidence it
+currently holds, to get an honest answer.
