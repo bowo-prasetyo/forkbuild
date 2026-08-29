@@ -129,6 +129,7 @@ import { PublisherIdentityRecord } from '../../application/PublisherIdentityReco
 import { CreatePublisherPublicationAssociationRecordUseCase } from '../../application/CreatePublisherPublicationAssociationRecordUseCase.js';
 import { describePublisherPublicationAssociationRecordHistory } from '../../application/PublisherPublicationAssociationRecordHistoryView.js';
 import { reconstructPublisherAssociatedPublications, reconstructDistinctPublisherIdentifiers } from '../../application/PublisherAssociationView.js';
+import { reconstructPublisherAchievementProfile } from '../../application/PublisherAchievementProfileView.js';
 import {
     PublicationObservationArchiveImportOutcome,
     exportPublicationObservationArchive,
@@ -2477,6 +2478,38 @@ export default {
             return reconstructPublisherAssociatedPublications(
                 publicationObservationArchive.value,
                 new PublisherIdentityRecord({ publisherId: publisherAssociationSelectedPublisherId.value })
+            );
+        }
+
+        // 0.8.109 — Publisher Achievement Profile Projection.
+        //
+        // A PUBLISHER-SCOPED REDUCTION OVER THE SAME ACHIEVEMENT EVENTS THE
+        // "ACHIEVEMENT PROFILE" CARD ABOVE ALREADY READS, THROUGH THE SAME
+        // "PUBLISHER ASSOCIATIONS" RECORDS THE CARD ABOVE ALREADY RECORDS —
+        // application/PublisherAchievementProfileView.js's own
+        // reconstructPublisherAchievementProfile(), never a second,
+        // competing achievement or association computation inline here.
+        // The publisher dropdown reuses the SAME distinctPublisherIdentifiersView()
+        // the "Publisher Associations" card already populates — never a
+        // free-text field, and never a profile inferred from a shared
+        // content hash or wallet. Collapsed by default. Performs ZERO
+        // network operations.
+        const publisherAchievementProfileExpanded = ref(false);
+        const publisherAchievementProfileSelectedPublisherId = ref('');
+
+        function togglePublisherAchievementProfile() {
+            publisherAchievementProfileExpanded.value = !publisherAchievementProfileExpanded.value;
+        }
+
+        // Pure projection — never a second, competing achievement
+        // aggregation computed inline in the template. No publisher
+        // selected yet yields `null` — never an error, and never a profile
+        // guessed from a shared content hash or wallet.
+        function publisherAchievementProfileView() {
+            if (!publisherAchievementProfileSelectedPublisherId.value) return null;
+            return reconstructPublisherAchievementProfile(
+                publicationObservationArchive.value,
+                new PublisherIdentityRecord({ publisherId: publisherAchievementProfileSelectedPublisherId.value })
             );
         }
 
@@ -6480,6 +6513,8 @@ export default {
             publisherAssociationPublisherId, publisherAssociationPublicationKey, publisherAssociationError,
             recordPublisherAssociation, publisherPublicationAssociationRecordHistoryView,
             distinctPublisherIdentifiersView, publisherAssociationSelectedPublisherId, publisherAssociationProfileView,
+            publisherAchievementProfileExpanded, togglePublisherAchievementProfile,
+            publisherAchievementProfileSelectedPublisherId, publisherAchievementProfileView,
             decentralizationContrast,
             knowledgeSynchronizationCoordinator, synchronizeWithPeers, synchronizationView, synchronizationBadgeClass, synchronizationButtonLabel,
             toggleReplicaKnowledge, acquisitionBreakdownSentence,
@@ -8260,6 +8295,81 @@ export default {
                             This is an explicit claim, not a verified fact — it states that this publisher
                             identity was associated with these publications, never that this replica has
                             proven who controls them.
+                        </p>
+                    </template>
+                </div>
+            </div>
+
+            <!-- 0.8.109 — Publisher Achievement Profile Projection. A
+                 publisher-scoped reduction over the SAME achievement
+                 events the "Achievement Profile" card above already
+                 reads, aggregated across every publication the
+                 "Publisher Associations" card above has EXPLICITLY
+                 recorded for this publisher — application/
+                 PublisherAchievementProfileView.js's own
+                 reconstructPublisherAchievementProfile(). Deliberately NOT
+                 a claim of ownership or human identity: this states that a
+                 publisher who explicitly claims these publications has
+                 these achievements to show for them, never that this
+                 replica has proven who controls any of them. Collapsed by
+                 default. Performs ZERO network operations. -->
+            <div class="identity-mgmt-card">
+                <div class="identity-mgmt-card-header">
+                    <span class="identity-mgmt-name">Publisher Achievement Profile</span>
+                    <span class="peer-badge peer-badge--pending">Persisted locally</span>
+                </div>
+                <p class="form-hint form-hint--neutral">
+                    A publisher's own achievements, aggregated across every publication that publisher
+                    has explicitly claimed above — never inferred from a shared content hash or wallet,
+                    and never a score, rank, or leaderboard entry.
+                </p>
+                <div class="identity-mgmt-actions">
+                    <button type="button" class="action-btn action-btn--secondary" @click="togglePublisherAchievementProfile">
+                        {{ publisherAchievementProfileExpanded ? 'Hide Publisher Achievement Profile' : 'Show Publisher Achievement Profile' }}
+                    </button>
+                </div>
+                <div v-if="publisherAchievementProfileExpanded" class="evidence-inspection-adapter">
+                    <span class="evidence-inspection-adapter-title">Choose A Publisher</span>
+                    <p v-if="distinctPublisherIdentifiersView().length === 0" class="form-hint form-hint--neutral">
+                        No publisher has been associated with anything yet — record one in "Publisher
+                        Associations" above first.
+                    </p>
+                    <label v-else class="form-field">
+                        <span class="form-label">Publisher</span>
+                        <select v-model="publisherAchievementProfileSelectedPublisherId" class="form-input">
+                            <option value="" disabled>Choose a publisher…</option>
+                            <option v-for="publisherId in distinctPublisherIdentifiersView()" :key="'achievement-profile-' + publisherId" :value="publisherId">
+                                {{ publisherId }}
+                            </option>
+                        </select>
+                    </label>
+
+                    <template v-if="publisherAchievementProfileSelectedPublisherId">
+                        <span class="evidence-inspection-adapter-title">Publisher Achievement Profile</span>
+                        <dl class="evidence-fields">
+                            <div class="evidence-field"><dt>Publisher</dt><dd>{{ publisherAchievementProfileView().publisherIdentity.publisherId }}</dd></div>
+                            <div class="evidence-field"><dt>Associated publications</dt><dd>{{ publisherAchievementProfileView().publicationIdentityCount }}</dd></div>
+                            <div class="evidence-field"><dt>Achievements earned</dt><dd>{{ publisherAchievementProfileView().achievementCount }}</dd></div>
+                            <div class="evidence-field"><dt>Distinct achievement kinds</dt><dd>{{ publisherAchievementProfileView().distinctAchievementKindCount }}</dd></div>
+                        </dl>
+                        <p v-if="publisherAchievementProfileView().achievementCount === 0" class="form-hint form-hint--neutral">
+                            None of this publisher's associated publications have earned an achievement
+                            yet.
+                        </p>
+                        <ul v-else class="replica-knowledge-claim-list">
+                            <li v-for="(achievement, achievementIndex) in publisherAchievementProfileView().achievements" :key="achievementIndex" class="replica-knowledge-claim">
+                                <span class="peer-badge peer-badge--pending">🏆 {{ achievement.label }}</span>
+                                <p class="form-hint form-hint--neutral">
+                                    Earned {{ formatWhen(achievement.observedAt) }} by
+                                    {{ achievement.sourcePublicationIdentity.blockchain }} —
+                                    {{ shortId(achievement.sourcePublicationIdentity.chainReference) }}
+                                </p>
+                            </li>
+                        </ul>
+                        <p class="form-hint form-hint--neutral">
+                            These achievements belong to the publications this publisher has explicitly
+                            claimed — never proof that this publisher controls, owns, or is the human
+                            behind any of them.
                         </p>
                     </template>
                 </div>
