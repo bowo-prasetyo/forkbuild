@@ -35297,13 +35297,11 @@ Deliberately excluded:
   control.** Unchanged from 0.8.108/0.8.109's own deferral — an
   association remains a claim, never a proof.
 - **A factual publisher achievement statistics or summary projection.**
-  Real, separately sized, later work — see "What's left" below.
+  Built next, at 0.8.111 — see that milestone's own entry below.
 
-What's left, and deliberately unbuilt: 0.8.111 defines a factual publisher
-achievement statistics projection over this exact aggregate — publication
-count, achievement count, distinct achievement-kind count, first/latest
-achievement timestamps, and similar directly-derived facts — still no
-score. Only after that: 0.8.112 defines a decentralized achievement ranking
+What's left, and deliberately unbuilt: 0.8.111 (below) defines a factual
+publisher achievement statistics projection over this exact aggregate.
+Only after that: 0.8.112 defines a decentralized achievement ranking
 projection's semantics carefully, still no leaderboard UI, before 0.8.113
 presents one with an explicit dataset scope, because a locally computed
 leaderboard is only ever authoritative over the archive it was computed
@@ -35312,3 +35310,191 @@ different, equally honest rankings. A badge vocabulary for reference-derived
 achievement kinds remains real, separate, later work on top of
 `AchievementBadgeView.js` itself, not something this milestone's own
 publisher-scoped composition can add on its own.
+
+## 0.8.111 — Publisher Achievement Statistics Projection
+
+0.8.110's own header named this milestone's exact scope: "a factual
+publisher achievement statistics or summary projection... real, separately
+sized, later work." This milestone is that projection, and only that — the
+missing answer to "what measurable facts exist about this publisher's own
+explicitly associated publications and their derived achievements," asked
+without deciding whether those facts are good, bad, important, or worthy of
+a higher rank.
+
+```text
+Publisher Achievement Profile (0.8.109, UNCHANGED)
+      │
+Publisher Achievement Badges (0.8.110, UNCHANGED)
+      │
+      │  describePublisherAchievementStatistics()   (THIS MILESTONE)
+      ▼
+Publisher Achievement Statistics
+    { publisherIdentity, publicationIdentityCount,
+      achievementCount, distinctAchievementKindCount,
+      badgeCount, distinctBadgeKindCount,
+      achievementKindCounts, blockchainPublicationCounts }
+```
+
+**DESCRIBES MEASURABLE FACTS; NEVER DECIDES WHETHER THEY ARE GOOD, BAD,
+IMPORTANT, OR WORTHY OF A HIGHER RANK.** The one boundary this milestone
+exists to hold. Every field answers one plain, closed question about the
+publisher's own already-computed profile and badges — "how many," "how
+many distinct," "how many of each" — and none of them orders publishers
+against one another or produces a single combined figure a ranking could
+sort by. See `docs/Principles.md`, "An Achievement Describes An
+Attributable Fact, Not A Person's Worth (0.8.102)," held here once more,
+at the layer where the temptation to add "just one combined number" is
+strongest, precisely because this file exists to feed a future ranking
+policy, never to pre-compute one.
+
+**COMPOSES TWO EXISTING, ALREADY PUBLISHER-SCOPED PROJECTIONS — NO
+PARALLEL ASSOCIATION LOOKUP, NO PARALLEL ACHIEVEMENT ENGINE, NO PARALLEL
+BADGE ENGINE.** `application/PublisherAchievementStatisticsView.js`'s own
+`describePublisherAchievementStatistics(profile, badges)` receives the
+publisher's own already-computed `PublisherAchievementProfile` (0.8.109,
+UNCHANGED) and the publisher's own already-computed
+`PublisherAchievementBadges` (0.8.110, UNCHANGED) — both ALREADY reduced to
+this one publisher's own slice, unlike 0.8.110's own composition, which
+still had to filter an archive-wide badge array down. There is nothing left
+to filter here, only to count and tally.
+`reconstructPublisherAchievementStatistics(archive, publisherIdentity)`
+delegates its archive safety entirely to the two reconstructions it
+composes — it never performs its own `instanceof` check, because
+`reconstructPublisherAchievementProfile()` and
+`reconstructPublisherAchievementBadges()` already tolerate an
+invalid/missing archive on their own.
+
+**`publicationIdentityCount`, `achievementCount`, AND
+`distinctAchievementKindCount` ARE THE PROFILE'S OWN FIELDS, ECHOED
+VERBATIM.** `badgeCount` and `distinctBadgeKindCount` are the badges
+projection's own `badgeCount`/`distinctAchievementKindCount`, echoed
+verbatim — renamed `distinctBadgeKindCount` on this result only to avoid
+colliding with the profile's own, wider field of the identical name, never
+because the underlying fact changed. `badgeCount` can be strictly less than
+`achievementCount` — inherited, unchanged, from 0.8.110's own documented
+gap: reference-derived achievement kinds have no badge vocabulary yet, and
+this milestone states both counts side by side rather than reconciling the
+gap away.
+
+**`achievementKindCounts` NAMES ONLY THE ACHIEVEMENT KINDS THE PROFILE
+ACTUALLY CONTAINS, EACH WITH ITS OWN TALLY, IN FIRST-APPEARANCE ORDER** —
+mirroring `achievementKinds`'s own convention at every layer below, never a
+full enumeration of the closed, eleven-value (and growing) `AchievementKind`
+vocabulary. A publisher-scoped kind (one of 0.8.106's own five) can occur
+more than once for the same publisher — once per distinct publication that
+independently earns it — and this field's own `count` states exactly how
+many achievement EVENTS of that kind exist, never collapsed to "was this
+kind earned at all."
+
+**`blockchainPublicationCounts` NAMES EVERY VALUE OF THE CLOSED
+`BlockchainKind` VOCABULARY, IN ITS OWN FIXED ORDER, EACH WITH AN EXPLICIT
+COUNT** — deliberately the opposite convention from `achievementKindCounts`
+immediately above. `BlockchainKind` is a small, genuinely closed vocabulary
+— the one ForkBuild's own multi-chain publication model is built around —
+so naming every value explicitly, every time, is cheap, and keeps a future
+caller from needing to already know the full vocabulary just to render
+"Bitcoin 0 · Base 4" correctly for a publisher who has never published on
+Bitcoin. Each entry's own `count` tallies the profile's own already-
+deduplicated `publicationIdentities` by `blockchain` — a plain tally, never
+a second, competing publication-identity reduction.
+
+**FOUR COUNTS, FOUR DIFFERENT FACTS, NONE COLLAPSED INTO ANOTHER.**
+`achievementCount` counts EVENTS; `distinctAchievementKindCount` counts
+KINDS; `badgeCount` counts the subset of events this replica can currently
+present as a badge; `distinctBadgeKindCount` counts distinct badge kinds.
+None is derivable from another without re-reading the underlying profile or
+badges — a caller who wants one reads that field directly.
+
+**NO SCORE, NO RANK, NO LEVEL, NO TIER, NO XP, NO REPUTATION, NO WEIGHT, NO
+RATING, NO PERCENTILE — NOT EVEN AN "OBVIOUS" ONE.** No field on this
+result is a `score`, `points`, `rank`, `level`, `tier`, `xp`,
+`reputation`, `weight`, `rating`, `percentile`, `achievementScore`,
+`publisherScore`, or `reputationScore`, individually or combined, and this
+milestone computes no single number that sums, weights, or otherwise
+combines two or more of its own fields into one.
+
+**NO NEW DURABLE STATE, NO SCHEMA_VERSION BUMP.**
+`application/PublicationObservationArchive.js` gains nothing from this
+milestone — no thirteenth collection, no cached statistics object, no
+network call. A publisher's own achievement statistics are computed fresh,
+every time, from this replica's own already-durable association records
+and already-computable achievement events and badges.
+
+New files:
+- `application/PublisherAchievementStatisticsView.js` — pure projection;
+  `describePublisherAchievementStatistics(profile, badges)` /
+  `reconstructPublisherAchievementStatistics(archive, publisherIdentity)`
+  (an already-computed publisher achievement profile + an already-computed
+  publisher achievement badges result in, statistics out); composes
+  `application/PublisherAchievementProfileView.js` and `application/
+  PublisherAchievementBadgeView.js` unchanged; no archive access of its
+  own beyond the one thin reconstruction entry point, which itself performs
+  no validity check of its own — both composed reconstructions already
+  tolerate an invalid/missing archive.
+
+Changed:
+- `ui/views/DecentralizedPublicationsView.js` — one new "Publisher
+  Achievement Statistics" card, collapsed by default; reuses the existing
+  `distinctPublisherIdentifiersView()` every other publisher-scoped card on
+  this page already populates; no change to any existing card, computation,
+  or durable state.
+- `tests.html` — register the new test file.
+
+New tests:
+- `tests/PublisherAchievementStatisticsView.test.js` — a publisher with an
+  empty profile/badges producing all-zero statistics, `blockchainPublicationCounts`
+  still naming both chains at zero; a publisher's own single associated
+  publication's counts matching the profile/badges this file composes,
+  verbatim; statistics for an unassociated publication's achievements
+  excluded even when genuinely earned; duplicate associations never
+  inflating `publicationIdentityCount` or `blockchainPublicationCounts`;
+  `achievementCount`/`distinctAchievementKindCount`/`badgeCount`/
+  `distinctBadgeKindCount` proven as four different facts, including a
+  publisher whose only achievement is reference-derived so `badgeCount` is
+  zero while `achievementCount` is nonzero; malformed/absent inputs never
+  throwing; the FLAGSHIP — Alice explicitly claims two Bitcoin publications
+  and a Base publication plus a duplicate association, Bob explicitly
+  claims a different Base publication, all four sharing one `contentHash`,
+  with two cross-chain references from Alice's own publications to Bob's —
+  proving publication/blockchain/achievement/badge counts are all correctly
+  and exclusively tallied, `FIRST_REFERENCE_CREATED` and
+  `FIRST_CROSS_CHAIN_REFERENCE` each counted twice (once per independently
+  earning publication), reordering associations never changing the result,
+  and repeated reconstruction being byte-identical; `reconstructPublisherAchievementStatistics()`
+  composing the archive's own existing profile/badge reconstructions with
+  reload equivalence, zero network access, and no archive mutation; and no
+  score/rank/level/tier/xp/reputation/weight/rating/percentile vocabulary
+  anywhere, including no "obvious" combined `achievementScore`/
+  `publisherScore`/`reputationScore`.
+
+Deliberately excluded:
+- **Any score, rank, level, tier, XP, reputation, weight, rating, or
+  percentile — even an "obvious" combined one.** Still real, separately
+  sized future work — see 0.8.102's own "Deliberately excluded," held here
+  once more, at the layer closest to a future ranking policy.
+- **First/latest achievement timestamp fields.** Every achievement this
+  file counts already carries its own `observedAt` in the profile's own
+  `achievements` array (0.8.109, unchanged); this milestone adds no
+  redundant, separately-maintained timestamp summary that could drift from
+  that array. A future milestone that genuinely needs one can derive it
+  from `achievements` directly, the same way this file derives
+  `achievementKindCounts`.
+- **Any decentralized achievement ranking projection, or its semantics.**
+  Real, separately sized, later work — see "What's left" below.
+- **Any new durable state, or any change to `PublicationObservationArchive.js`.**
+  This milestone is a pure projection over two already-existing ones; it
+  adds no collection, no schema version bump, and no cached statistics
+  object.
+
+What's left, and deliberately unbuilt: 0.8.112 defines a decentralized
+achievement ranking projection's semantics carefully over this exact
+aggregate — still no leaderboard UI — before 0.8.113 presents one with an
+explicit dataset scope, because a locally computed leaderboard is only ever
+authoritative over the archive it was computed from, and two replicas
+holding different archives can legitimately produce different, equally
+honest rankings. Deciding what "decentralized" means for that future
+leaderboard — "publisher identities ranked by recorded ForkBuild
+achievements," never "the world's top publishers," because publisher
+association remains an explicit local claim, not a cryptographic proof of
+human identity — is real, separate work for 0.8.112/0.8.113 to settle
+before either ships.

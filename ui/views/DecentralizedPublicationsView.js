@@ -131,6 +131,7 @@ import { describePublisherPublicationAssociationRecordHistory } from '../../appl
 import { reconstructPublisherAssociatedPublications, reconstructDistinctPublisherIdentifiers } from '../../application/PublisherAssociationView.js';
 import { reconstructPublisherAchievementProfile } from '../../application/PublisherAchievementProfileView.js';
 import { reconstructPublisherAchievementBadges } from '../../application/PublisherAchievementBadgeView.js';
+import { reconstructPublisherAchievementStatistics } from '../../application/PublisherAchievementStatisticsView.js';
 import {
     PublicationObservationArchiveImportOutcome,
     exportPublicationObservationArchive,
@@ -2564,6 +2565,38 @@ export default {
         // card already resolved a lifecycle link for.
         const canViewPublisherAchievementBadgeLifecycle = canViewAchievementBadgeLifecycle;
         const viewPublisherAchievementBadgeLifecycle = viewAchievementBadgeLifecycle;
+
+        // 0.8.111 — Publisher Achievement Statistics Projection.
+        //
+        // A PURE TALLY OVER THE SAME TWO ALREADY PUBLISHER-SCOPED
+        // PROJECTIONS THE TWO CARDS ABOVE ALREADY COMPUTE — application/
+        // PublisherAchievementStatisticsView.js's own
+        // reconstructPublisherAchievementStatistics(), never a second,
+        // competing achievement, association, or badge computation inline
+        // here. States measurable facts only — never decides whether they
+        // are good, bad, important, or worthy of a higher rank; never a
+        // score, rank, level, or leaderboard entry. The publisher dropdown
+        // reuses the SAME distinctPublisherIdentifiersView() every other
+        // publisher-scoped card on this page already populates. Collapsed
+        // by default. Performs ZERO network operations.
+        const publisherAchievementStatisticsExpanded = ref(false);
+        const publisherAchievementStatisticsSelectedPublisherId = ref('');
+
+        function togglePublisherAchievementStatistics() {
+            publisherAchievementStatisticsExpanded.value = !publisherAchievementStatisticsExpanded.value;
+        }
+
+        // Pure projection — never a second, competing statistics
+        // computation inline in the template. No publisher selected yet
+        // yields `null` — never an error, and never statistics guessed
+        // from a shared content hash or wallet.
+        function publisherAchievementStatisticsView() {
+            if (!publisherAchievementStatisticsSelectedPublisherId.value) return null;
+            return reconstructPublisherAchievementStatistics(
+                publicationObservationArchive.value,
+                new PublisherIdentityRecord({ publisherId: publisherAchievementStatisticsSelectedPublisherId.value })
+            );
+        }
 
         // Every currently AUTHENTICATED peer, in registry order — the
         // full candidate list this page now hands to application/
@@ -6571,6 +6604,8 @@ export default {
             publisherAchievementBadgesSelectedPublisherId, publisherAchievementBadgesView,
             togglePublisherAchievementBadge, isPublisherAchievementBadgeExpanded,
             canViewPublisherAchievementBadgeLifecycle, viewPublisherAchievementBadgeLifecycle,
+            publisherAchievementStatisticsExpanded, togglePublisherAchievementStatistics,
+            publisherAchievementStatisticsSelectedPublisherId, publisherAchievementStatisticsView,
             decentralizationContrast,
             knowledgeSynchronizationCoordinator, synchronizeWithPeers, synchronizationView, synchronizationBadgeClass, synchronizationButtonLabel,
             toggleReplicaKnowledge, acquisitionBreakdownSentence,
@@ -8531,6 +8566,79 @@ export default {
                             These badges present achievements already earned by publications this publisher
                             has explicitly claimed — never proof that this publisher controls, owns, or is
                             the human behind any of them.
+                        </p>
+                    </template>
+                </div>
+            </div>
+
+            <!-- 0.8.111 — Publisher Achievement Statistics Projection. A
+                 pure tally over the "Publisher Achievement Profile" and
+                 "Publisher Achievement Badges" cards above — application/
+                 PublisherAchievementStatisticsView.js's own
+                 reconstructPublisherAchievementStatistics(). Describes
+                 measurable facts about this publisher's own explicitly
+                 associated publications and their derived achievements —
+                 never decides whether those facts are good, bad,
+                 important, or worthy of a higher rank. No score, rank,
+                 level, tier, or leaderboard entry anywhere on this card.
+                 Collapsed by default. Performs ZERO network operations. -->
+            <div class="identity-mgmt-card">
+                <div class="identity-mgmt-card-header">
+                    <span class="identity-mgmt-name">Publisher Achievement Statistics</span>
+                    <span class="peer-badge peer-badge--pending">Persisted locally</span>
+                </div>
+                <p class="form-hint form-hint--neutral">
+                    Measurable facts about a publisher's explicitly associated publications and their
+                    derived achievements — never a score, rank, level, or leaderboard entry. These
+                    facts alone do not decide who is "better" than anyone else.
+                </p>
+                <div class="identity-mgmt-actions">
+                    <button type="button" class="action-btn action-btn--secondary" @click="togglePublisherAchievementStatistics">
+                        {{ publisherAchievementStatisticsExpanded ? 'Hide Publisher Achievement Statistics' : 'Show Publisher Achievement Statistics' }}
+                    </button>
+                </div>
+                <div v-if="publisherAchievementStatisticsExpanded" class="evidence-inspection-adapter">
+                    <span class="evidence-inspection-adapter-title">Choose A Publisher</span>
+                    <p v-if="distinctPublisherIdentifiersView().length === 0" class="form-hint form-hint--neutral">
+                        No publisher has been associated with anything yet — record one in "Publisher
+                        Associations" above first.
+                    </p>
+                    <label v-else class="form-field">
+                        <span class="form-label">Publisher</span>
+                        <select v-model="publisherAchievementStatisticsSelectedPublisherId" class="form-input">
+                            <option value="" disabled>Choose a publisher…</option>
+                            <option v-for="publisherId in distinctPublisherIdentifiersView()" :key="'achievement-statistics-' + publisherId" :value="publisherId">
+                                {{ publisherId }}
+                            </option>
+                        </select>
+                    </label>
+
+                    <template v-if="publisherAchievementStatisticsSelectedPublisherId">
+                        <span class="evidence-inspection-adapter-title">Publisher Achievement Statistics</span>
+                        <dl class="evidence-fields">
+                            <div class="evidence-field"><dt>Publisher</dt><dd>{{ publisherAchievementStatisticsView().publisherIdentity.publisherId }}</dd></div>
+                            <div class="evidence-field"><dt>Associated publications</dt><dd>{{ publisherAchievementStatisticsView().publicationIdentityCount }}</dd></div>
+                            <div class="evidence-field"><dt>Achievements earned</dt><dd>{{ publisherAchievementStatisticsView().achievementCount }}</dd></div>
+                            <div class="evidence-field"><dt>Distinct achievement kinds</dt><dd>{{ publisherAchievementStatisticsView().distinctAchievementKindCount }}</dd></div>
+                            <div class="evidence-field"><dt>Badges earned</dt><dd>{{ publisherAchievementStatisticsView().badgeCount }}</dd></div>
+                            <div class="evidence-field"><dt>Distinct badge kinds</dt><dd>{{ publisherAchievementStatisticsView().distinctBadgeKindCount }}</dd></div>
+                            <div v-for="chain in publisherAchievementStatisticsView().blockchainPublicationCounts" :key="chain.blockchain" class="evidence-field">
+                                <dt>{{ chain.blockchain }} publications</dt><dd>{{ chain.count }}</dd>
+                            </div>
+                        </dl>
+                        <p v-if="publisherAchievementStatisticsView().achievementKindCounts.length === 0" class="form-hint form-hint--neutral">
+                            None of this publisher's associated publications have earned an achievement
+                            yet.
+                        </p>
+                        <ul v-else class="replica-knowledge-claim-list">
+                            <li v-for="entry in publisherAchievementStatisticsView().achievementKindCounts" :key="entry.achievementKind" class="replica-knowledge-claim">
+                                <span class="peer-badge peer-badge--pending">{{ entry.achievementKind }} — {{ entry.count }}</span>
+                            </li>
+                        </ul>
+                        <p class="form-hint form-hint--neutral">
+                            These are plain counts of already-earned facts — never a score, rank, level,
+                            tier, or leaderboard entry, and never proof that this publisher controls,
+                            owns, or is the human behind any of the publications counted above.
                         </p>
                     </template>
                 </div>
