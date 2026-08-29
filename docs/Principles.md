@@ -17861,3 +17861,67 @@ crossed, by this exact record, at this point in the durable record
 history — and nothing more.
 
 See `docs/Roadmap.md`, 0.8.106, for the full milestone entry.
+
+## A Publication Profile Names What A Publication Earned, Never Who Earned It (0.8.107)
+
+**A reduction over an existing vocabulary is not license to invent a new
+one.** `application/AchievementProfileView.js`'s own `describeAchievementProfile()`
+computes nothing `application/AchievementEvent.js` did not already compute
+— it keeps the achievement events whose own `sourcePublicationIdentity`
+`sameAs()` (0.8.89) one supplied identity, in their existing chronological
+order, and returns the exact frozen event objects unchanged. This extends
+`docs/Principles.md`, "A Badge Presents An Achievement; It Does Not Redefine
+It (0.8.103)," one layer further: a profile presents a SLICE of the
+achievement vocabulary, never a second, competing computation of it.
+
+**A profile composes an existing reconstruction; it never re-derives a
+threshold by hand.** `reconstructAchievementProfile()` calls `application/
+AchievementEvent.js`'s own `reconstructAchievementEvents()` unchanged and
+filters its output — it never reads a durable record collection off the
+archive directly, and never recomputes a threshold crossing this codebase
+already knows how to compute one layer down. Two independent achievement
+engines that could quietly drift apart is exactly the failure mode this
+discipline exists to prevent.
+
+**Publication identity and human identity remain deliberately distinct —
+this milestone states that restraint in its own name.** ForkBuild can
+prove "publication X performed or received relationship Y"; it cannot yet
+prove "human Z performed Y" — those are different claims, and no durable
+record in this codebase links a `BlockchainPublicationIdentity` to a
+wallet, a signer, or a cross-replica "user." A wallet address recurring
+across several publications is not evidence those publications share a
+publisher, for the identical reason `docs/Principles.md`, "Blockchain
+Identity Is Explicit; A Shared Reference Is Never Evidence Of A Shared
+Publication (0.8.89)," already forbids inferring shared identity from a
+shared `contentHash`: resemblance — of content, or of a repeated wallet —
+is never identity. `describeAchievementProfile()` therefore accepts
+exactly one genuine `BlockchainPublicationIdentity` and produces exactly
+one publication's own profile — never a `userId`, wallet owner, account
+owner, or publisher name, and never an aggregation across publications a
+person merely appears to control.
+
+**Identity is `blockchain` + `chainReference` via `sameAs()`, never
+`contentHash` — held here once more, one layer up.** Two publications
+sharing an identical `contentHash` across two different chains keep two
+entirely separate profiles; the achievements one earns never leak into the
+other's. This is the same rule `docs/Principles.md` has now held at every
+layer built since 0.8.89 — the identity, the reference, the graph, the
+reference-derived achievement, and now the profile over all of them —
+applied once more rather than assumed to already be obvious.
+
+**An empty profile is a valid answer, never an error.** A
+`BlockchainPublicationIdentity` this replica has never seen earn anything
+still produces `{ publicationIdentity, achievements: [], achievementCount: 0 }`
+— the same restraint `application/PublicationReferenceGraphView.js`'s own
+`findPublicationReferenceGraphNode()` (0.8.105) already holds for an
+untouched identity, held here one layer up: absence of evidence is stated
+plainly, never converted into a thrown exception or a fabricated default.
+
+**A count is not a score.** `achievementCount` states `achievements.length`
+and nothing more — it is never a reputation figure, a leaderboard input, or
+a claim about a person's worth. See `docs/Principles.md`, "An Achievement
+Describes An Attributable Fact, Not A Person's Worth (0.8.102)," held here
+once more, over a publication's own slice of that vocabulary rather than
+the whole of it.
+
+See `docs/Roadmap.md`, 0.8.107, for the full milestone entry.

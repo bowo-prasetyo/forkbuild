@@ -34453,3 +34453,176 @@ kept distinct before any leaderboard could honestly claim "Top Users"
 projection (0.8.109) and its leaderboard UI (0.8.110+), reconstructed
 entirely from each replica's own local publication/reference graph, never
 a central server.
+
+## 0.8.107 — Achievement Profile Projection
+
+0.8.102/0.8.106 gave this codebase a closed, deterministic vocabulary of
+achievement events, each one already attributed to an explicit
+`BlockchainPublicationIdentity` (0.8.89) — but only ever surfaced as "every
+achievement this replica's entire archive can attribute," never as "what,
+exactly, does THIS publication have to show for itself." This milestone is
+the reduction that answers the second, narrower question, over the exact
+same vocabulary, computing nothing new:
+
+```text
+Achievement Events (0.8.102/0.8.106) — reconstructAchievementEvents(), UNCHANGED
+      │
+      ▼
+Achievement Profile (0.8.107) — describeAchievementProfile()/reconstructAchievementProfile()
+  { publicationIdentity, achievements, achievementCount }
+```
+
+```text
+Base publication B
+    ↓
+FIRST_PUBLICATION
+BASE_PUBLISHER
+FIRST_REFERENCE_RECEIVED
+REFERENCED_BY_10_PUBLICATIONS
+
+(achievements belonging to unrelated publications never appear here)
+```
+
+A REORDERING OF THE PLAN 0.8.106's OWN "WHAT'S LEFT" NAMED, MADE EXPLICIT
+HERE RATHER THAN SILENTLY. 0.8.106 named its own next two milestones as "a
+distinct-referencing-publisher reduction over the reference graph" (as
+0.8.107) and "an achievement profile projection... (0.8.108)." This
+milestone takes the achievement-profile work and builds it now, under the
+0.8.107 number, because it is the one a person can act on immediately —
+the reference graph (0.8.105) already exposes a distinct-referencing count
+per node for anyone who needs it, while a per-publication achievement view
+was still missing entirely. The distinct-referencing-publisher reduction
+as its own general, queryable fact remains real, separately sized, later
+work — folded into "What's left" below, unnumbered, rather than claimed by
+a milestone number it would only occupy nominally.
+
+**A REDUCTION BY EXPLICIT IDENTITY, NEVER A NEW ACHIEVEMENT ENGINE.**
+`describeAchievementProfile()` invents no new `AchievementKind`, no new
+threshold, and computes nothing `application/AchievementEvent.js` did not
+already compute. Given an already-computed `events` array and one
+`BlockchainPublicationIdentity`, it keeps the events whose own
+`sourcePublicationIdentity` `sameAs()` (0.8.89) that identity, in
+chronological order — nothing more. Every achievement object surviving
+that filter is the EXACT frozen event instance `describeAchievementEvents()`
+already produced, never copied, renamed, or re-scored.
+
+**`reconstructAchievementProfile()` CONSUMES THE ARCHIVE'S OWN EXISTING
+ACHIEVEMENT RECONSTRUCTION — NO PARALLEL ACHIEVEMENT ENGINE.** It calls
+`reconstructAchievementEvents()` (0.8.102/0.8.106) UNCHANGED and hands its
+own `events` straight to `describeAchievementProfile()`. It never reads
+`bitcoinAnchorPublicationRecords`, `baseAnchorPublicationRecords`, or
+`publicationReferenceRecords` off the archive itself, and never re-derives
+a threshold crossing by hand.
+
+**A PUBLICATION IDENTITY'S PROFILE, DELIBERATELY NOT YET A USER'S.**
+ForkBuild can state "publication X earned achievement Y" today; it cannot
+yet state "human Z earned Y," because no durable record anywhere in this
+codebase links a publication identity to a human, a wallet, or an account.
+This milestone introduces no `userId`, wallet owner, account owner, or
+publisher name — inventing that link here, silently, just to make a
+profile feel more personal, would be exactly the kind of resemblance-based
+inference `docs/Principles.md`, "Correlate Evidence By Explicit Identity,
+Never By Resemblance (0.8.78)," already forbids, one layer up. A wallet
+address is not automatically a human identity either — even a wallet that
+appears repeatedly is never silently declared "this wallet = this person."
+That explicit publisher/publication association — mirroring 0.8.104's own
+"the association exists because someone explicitly established it, not
+because ForkBuild inferred it" — is real, separately sized, later work;
+this milestone does not anticipate it or leave a placeholder field for it.
+
+**IDENTITY IS `blockchain` + `chainReference` VIA `sameAs()` — NEVER
+`contentHash`, THE SAME RULE HELD AT EVERY LAYER BELOW.** The flagship test
+publishes the same content on both Bitcoin and Base, gives each its own,
+genuinely distinct achievements, and confirms each identity's own profile
+names only its own — never the other's, despite the shared `contentHash`.
+
+**EVERY ACHIEVEMENT SURVIVING THE FILTER IS PRESERVED VERBATIM, DUPLICATES
+INCLUDED, CHRONOLOGICAL ORDER PRESERVED.** Achievements are placed into one
+fixed, reproducible source order (their own existing array position) and
+only THAT fixed-order sequence is stably sorted by `observedAt`, ties
+broken by that same fixed source order — the identical two-step ordering
+`describeAchievementEvents()` itself already performs.
+
+**NO SCORE, NO RANK, NO LEVEL, NO TRUST.** `achievementCount` is a plain
+count of `achievements.length` — never a score, a reputation figure, or a
+leaderboard input of its own. See `docs/Principles.md`, "An Achievement
+Describes An Attributable Fact, Not A Person's Worth (0.8.102)," held here
+once more.
+
+**NO NEW DURABLE STATE.** `application/PublicationObservationArchive.js`
+gains nothing from this milestone — no eleventh collection, no cached
+profile, no mutable "profile" record, no network call.
+
+**UI: AN "ACHIEVEMENT PROFILE" CARD ON `DecentralizedPublicationsView.js`,
+COLLAPSED BY DEFAULT, ZERO NETWORK OPERATIONS.** A dropdown, populated from
+the exact same `knownPublicationIdentityOptions()` the "Publication
+References" card already uses, lets a person choose one already-durable
+publication identity; the card then shows that identity's own achievement
+count and each achievement's own label and earned-at timestamp. The card's
+own copy states plainly that these achievements belong to a publication
+identity, not necessarily to a human being.
+
+New files:
+- `application/AchievementProfileView.js` — pure projection;
+  `describeAchievementProfile(publicationIdentity, achievementEvents)`
+  (identity + already-computed events in, profile out) and
+  `reconstructAchievementProfile(archive, publicationIdentity)` (thin
+  archive-reading entry point that composes `reconstructAchievementEvents()`
+  unchanged, mirroring `reconstructAchievementBadges()`/
+  `reconstructPublicationReferenceGraph()`).
+
+Changed:
+- `ui/views/DecentralizedPublicationsView.js` — one new "Achievement
+  Profile" card, collapsed by default; no change to any existing card,
+  computation, or durable state.
+- `tests.html` — register the new test file.
+
+New tests:
+- `tests/AchievementProfileView.test.js` — an identity with zero matching
+  achievements producing a valid, empty profile; a single publication's
+  own achievements attributed verbatim (exact frozen event instances) and
+  in chronological order; achievements belonging to a different identity
+  correctly excluded; `publicationIdentity` on the result being the exact
+  instance the caller supplied, never reconstructed from an event's own
+  copy; malformed/absent inputs never throwing; a FLAGSHIP — two
+  publications sharing one `contentHash` across Bitcoin and Base, each
+  with its own distinct publication- and reference-derived achievements,
+  profiled separately with zero conflation; `reconstructAchievementProfile()`
+  composing the archive's own existing achievement reconstruction with
+  reload equivalence and zero network access; and no verdict/score/points/
+  rank vocabulary anywhere, with every achievement staying frozen.
+
+Deliberately excluded:
+- **A distinct-referencing-publisher reduction as its own, general,
+  queryable fact.** Named by 0.8.106 under this milestone's own number;
+  built instead as the achievement-profile work above — see this
+  milestone's own "A Reordering..." entry. Remains real, separately sized,
+  unnumbered future work.
+- **A subject/owner/user identity field, a wallet-to-publication
+  association, or any inference that two publications share a publisher.**
+  Unchanged from 0.8.102/0.8.104/0.8.106 — see this milestone's own "A
+  Publication Identity's Profile, Deliberately Not Yet A User's" above.
+- **Badges in an achievement profile.** This milestone reduces
+  `application/AchievementEvent.js`'s own events, never
+  `application/AchievementBadgeView.js`'s own badges — a profile shows an
+  achievement's own `label`, never a badge's `title`/`description`/`icon`.
+  Presenting a profile as badges is real, separate, later work on that
+  file.
+- **Any leaderboard, ranking, or scoring projection.** Still real,
+  separately sized future work — see 0.8.102's own "Deliberately
+  excluded," held here once more.
+- **Any cross-replica or "canonical" profile reconciliation.** A profile is
+  computed entirely from THIS replica's own archive, exactly like the
+  events and records it is built from.
+
+What's left, and deliberately unbuilt: a distinct-referencing-publisher
+reduction over the reference graph as its own, general, queryable fact; an
+explicit, user-created association between a publisher identity and a
+`BlockchainPublicationIdentity` — mirroring 0.8.104's own "the association
+exists because someone explicitly established it, not because ForkBuild
+inferred it" (0.8.108) — and only after that, aggregating an associated
+publisher's own achievements across multiple publications, and — only once
+identity attribution and aggregation semantics are sufficiently explicit —
+a decentralized achievement ranking projection and its leaderboard UI,
+reconstructed entirely from each replica's own local publication/reference
+graph, never a central server.
