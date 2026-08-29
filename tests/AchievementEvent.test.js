@@ -2,6 +2,7 @@ import { BitcoinAnchorPublicationRecord } from '../application/BitcoinAnchorPubl
 import { BaseAnchorPublicationRecord } from '../application/BaseAnchorPublicationRecord.js';
 import { BlockchainKind } from '../application/BlockchainKind.js';
 import { BlockchainPublicationIdentity } from '../application/BlockchainPublicationIdentity.js';
+import { PublicationReferenceRecord } from '../application/PublicationReferenceRecord.js';
 import { PublicationObservationArchive } from '../application/PublicationObservationArchive.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { LocalStoragePublicationObservationArchive } from '../storage/LocalStoragePublicationObservationArchive.js';
@@ -35,7 +36,38 @@ import {
 // Section H: reconstructAchievementEvents() over a real, persisted
 //            archive — reload equivalence, zero network access
 // Section I: no verdict/score/points/rank vocabulary anywhere, and
-//            AchievementKind is a closed, six-value vocabulary
+//            AchievementKind is a closed, eleven-value vocabulary
+//
+// 0.8.106 — Reference-Derived Achievement Events.
+//
+// Section J: backward compatibility — an omitted/empty third argument
+//            leaves the six 0.8.102 achievements byte-for-byte unchanged
+// Section K: FIRST_REFERENCE_CREATED / FIRST_REFERENCE_RECEIVED fire once
+//            each, attributed to the source/referenced identity
+//            respectively, carrying the triggering reference
+// Section L: reference record count and distinct referencing publication
+//            count are different facts — repeated A -> B references never
+//            re-fire FIRST_REFERENCE_CREATED/RECEIVED and never advance a
+//            distinct-source threshold
+// Section M: REFERENCED_BY_10_PUBLICATIONS fires exactly once, at the 10th
+//            DISTINCT referencing publication, never the 10th reference
+//            record; REFERENCED_BY_100_PUBLICATIONS never fires early
+// Section N: FIRST_CROSS_CHAIN_REFERENCE fires strictly on
+//            source.blockchain !== referenced.blockchain, once per distinct
+//            source; the reverse direction is a separate occurrence; a
+//            same-chain reference never fires it
+// Section O: FLAGSHIP — ten distinct referencing publications (one of them
+//            referencing twice), a shared contentHash across two otherwise
+//            distinct identities, a cross-chain reference among them,
+//            deliberately out-of-order createdAt timestamps and interleaved
+//            array positions; correct chronological attribution, no
+//            identity conflation, determinism, and zero network/storage
+//            mutation
+// Section P: reconstructAchievementEvents() composes publication AND
+//            reference achievements over a real, persisted archive — reload
+//            equivalence
+// Section Q: no verdict/score/points/rank vocabulary anywhere in this
+//            milestone's own new surface, including `triggeringReference`
 
 function assert(condition, message) {
     if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
@@ -83,6 +115,19 @@ function bitcoinRecord({ anchorId, contentHash, txid, network = 'mainnet', creat
 
 function baseRecord({ contentHash, txid, network = 'base-mainnet', createdAt }) {
     return new BaseAnchorPublicationRecord({ contentHash, txid, network, createdAt });
+}
+
+// 0.8.106 — a lightweight identity helper, mirroring
+// tests/PublicationReferenceRecord.test.js's own `identity()` exactly, used
+// where a scenario needs many distinct publication identities (Section O's
+// own ten-distinct-referencer flagship) without constructing a full
+// Bitcoin/BaseAnchorPublicationRecord for each one.
+function identity({ blockchain, contentHash, chainReference, createdAt }) {
+    return new BlockchainPublicationIdentity({ blockchain, contentHash, chainReference, createdAt });
+}
+
+function referenceRecord({ source, referenced, createdAt }) {
+    return new PublicationReferenceRecord({ sourcePublicationIdentity: source, referencedPublicationIdentity: referenced, createdAt });
 }
 
 function kindsOf(result) {
@@ -260,7 +305,7 @@ async function run() {
     // AchievementKind is closed.
     // ---------------------------------------------------------------
     {
-        assert(Object.keys(AchievementKind).length === 6, '44. AchievementKind names exactly six values — no badge, points, or leaderboard vocabulary sneaked in under this milestone');
+        assert(Object.keys(AchievementKind).length === 11, '44. AchievementKind names exactly eleven values (six from 0.8.102, five reference-derived from 0.8.106) — no badge, points, or leaderboard vocabulary sneaked in under either milestone');
         assert(Object.isFrozen(AchievementKind), '45. AchievementKind is frozen, never mutated at runtime');
 
         const btc = bitcoinRecord({ anchorId: 'i-anchor', contentHash: 'i-content', txid: 'i'.repeat(64), createdAt: new Date('2026-04-01T00:00:00Z') });
@@ -273,6 +318,264 @@ async function run() {
     }
     console.log('✓ Section I: no verdict/score/points/rank vocabulary anywhere, and AchievementKind is a closed vocabulary');
 
+    // =================================================================
+    // 0.8.106 — Reference-Derived Achievement Events.
+    // =================================================================
+
+    // ---------------------------------------------------------------
+    // Section J — backward compatibility: an omitted/empty third
+    // argument leaves the 0.8.102 achievements byte-for-byte unchanged.
+    // ---------------------------------------------------------------
+    {
+        const btc = bitcoinRecord({ anchorId: 'j-anchor', contentHash: 'j-content', txid: 'j'.repeat(64), createdAt: new Date('2026-05-01T00:00:00Z') });
+        const base = baseRecord({ contentHash: 'j-content-2', txid: 'k'.repeat(64), createdAt: new Date('2026-05-02T00:00:00Z') });
+
+        const withoutThirdArg = describeAchievementEvents([btc], [base]);
+        const withEmptyThirdArg = describeAchievementEvents([btc], [base], []);
+        assert(withoutThirdArg.count === 4, '47. omitting the third argument still earns exactly the four 0.8.102 achievements (FIRST_PUBLICATION, BITCOIN_PUBLISHER, BASE_PUBLISHER, MULTI_CHAIN_PUBLISHER)');
+        assert(JSON.stringify(withoutThirdArg.events.map(serializeEvent)) === JSON.stringify(withEmptyThirdArg.events.map(serializeEvent)), '48. an omitted third argument and an explicit empty array produce byte-identical results');
+        assert(!withoutThirdArg.events.some((event) => 'triggeringReference' in event), '49. no publication-derived event ever carries a triggeringReference field');
+    }
+    console.log('✓ Section J: an omitted/empty third argument leaves the 0.8.102 achievements byte-for-byte unchanged');
+
+    // ---------------------------------------------------------------
+    // Section K — FIRST_REFERENCE_CREATED / FIRST_REFERENCE_RECEIVED.
+    // ---------------------------------------------------------------
+    {
+        const alice = identity({ blockchain: BlockchainKind.BITCOIN, contentHash: 'k-alice', chainReference: 'k-alice-txid', createdAt: new Date('2026-06-01T00:00:00Z') });
+        const bob = identity({ blockchain: BlockchainKind.BITCOIN, contentHash: 'k-bob', chainReference: 'k-bob-txid', createdAt: new Date('2026-06-01T00:00:00Z') });
+        const createdAt = new Date('2026-06-02T00:00:00Z');
+        const aliceReferencesBob = referenceRecord({ source: alice, referenced: bob, createdAt });
+
+        const result = describeAchievementEvents([], [], [aliceReferencesBob]);
+        assert(result.count === 2, '50. a single reference earns exactly FIRST_REFERENCE_CREATED and FIRST_REFERENCE_RECEIVED');
+        const created = result.events.find((e) => e.achievementKind === AchievementKind.FIRST_REFERENCE_CREATED);
+        const received = result.events.find((e) => e.achievementKind === AchievementKind.FIRST_REFERENCE_RECEIVED);
+        assert(created.sourcePublicationIdentity.sameAs(alice), "51. FIRST_REFERENCE_CREATED is attributed to the reference's own source (Alice)");
+        assert(received.sourcePublicationIdentity.sameAs(bob), "52. FIRST_REFERENCE_RECEIVED is attributed to the reference's own referenced identity (Bob)");
+        assert(created.observedAt.getTime() === createdAt.getTime(), "53. observedAt is the triggering reference's own createdAt");
+        assert(created.triggeringReference.sourcePublicationIdentity.sameAs(alice) && created.triggeringReference.referencedPublicationIdentity.sameAs(bob), '54. triggeringReference names the exact reference that earned the achievement');
+        assert(created.triggeringReference.createdAt.getTime() === createdAt.getTime(), '55. triggeringReference.createdAt matches the record it was reached from');
+        assert(Object.isFrozen(created.triggeringReference), '56. triggeringReference is itself frozen');
+    }
+    console.log('✓ Section K: FIRST_REFERENCE_CREATED / FIRST_REFERENCE_RECEIVED fire once each, attributed correctly, carrying triggeringReference');
+
+    // ---------------------------------------------------------------
+    // Section L — reference record count and distinct referencing
+    // publication count are different facts.
+    // ---------------------------------------------------------------
+    {
+        const alice = identity({ blockchain: BlockchainKind.BASE, contentHash: 'l-alice', chainReference: 'l-alice-txid', createdAt: new Date('2026-07-01T00:00:00Z') });
+        const bob = identity({ blockchain: BlockchainKind.BITCOIN, contentHash: 'l-bob', chainReference: 'l-bob-txid', createdAt: new Date('2026-07-01T00:00:00Z') });
+        const carol = identity({ blockchain: BlockchainKind.BITCOIN, contentHash: 'l-carol', chainReference: 'l-carol-txid', createdAt: new Date('2026-07-01T00:00:00Z') });
+
+        const records = [
+            referenceRecord({ source: alice, referenced: bob, createdAt: new Date('2026-07-02T00:00:00Z') }),
+            referenceRecord({ source: alice, referenced: bob, createdAt: new Date('2026-07-03T00:00:00Z') }),
+            referenceRecord({ source: alice, referenced: bob, createdAt: new Date('2026-07-04T00:00:00Z') }),
+            referenceRecord({ source: carol, referenced: bob, createdAt: new Date('2026-07-05T00:00:00Z') })
+        ];
+
+        const result = describeAchievementEvents([], [], records);
+        const createdEvents = result.events.filter((e) => e.achievementKind === AchievementKind.FIRST_REFERENCE_CREATED);
+        const receivedEvents = result.events.filter((e) => e.achievementKind === AchievementKind.FIRST_REFERENCE_RECEIVED);
+        assert(receivedEvents.length === 1, '57. four reference records naming the same referenced publication still earn exactly ONE FIRST_REFERENCE_RECEIVED — never one per record');
+        assert(createdEvents.length === 2, "58. FIRST_REFERENCE_CREATED fires once per distinct SOURCE — Alice once (her first of three), Carol once — never once per record");
+        assert(createdEvents.some((e) => e.sourcePublicationIdentity.sameAs(alice)) && createdEvents.some((e) => e.sourcePublicationIdentity.sameAs(carol)), '59. both Alice and Carol individually earn their own FIRST_REFERENCE_CREATED');
+        assert(!result.events.some((e) => e.achievementKind === AchievementKind.REFERENCED_BY_10_PUBLICATIONS), '60. two distinct referencing publications never cross the 10-distinct-source threshold');
+    }
+    console.log('✓ Section L: reference record count and distinct referencing publication count are kept separate');
+
+    // ---------------------------------------------------------------
+    // Section M — REFERENCED_BY_10_PUBLICATIONS / _100_PUBLICATIONS.
+    // ---------------------------------------------------------------
+    {
+        const zed = identity({ blockchain: BlockchainKind.BASE, contentHash: 'm-zed', chainReference: 'm-zed-txid', createdAt: new Date('2026-08-01T00:00:00Z') });
+        const sources = [];
+        for (let i = 1; i <= 10; i++) {
+            sources.push(identity({ blockchain: BlockchainKind.BITCOIN, contentHash: `m-source-${i}`, chainReference: `m-source-${i}-txid`, createdAt: new Date('2026-08-01T00:00:00Z') }));
+        }
+        function mDay(n) { return new Date(`2026-08-${String(n).padStart(2, '0')}T00:00:00Z`); }
+
+        const records = [
+            referenceRecord({ source: sources[0], referenced: zed, createdAt: mDay(2) }),
+            referenceRecord({ source: sources[0], referenced: zed, createdAt: mDay(3) }) // s1's duplicate — never advances the distinct-source count
+        ];
+        for (let i = 1; i < 10; i++) {
+            records.push(referenceRecord({ source: sources[i], referenced: zed, createdAt: mDay(3 + i) }));
+        }
+
+        const result = describeAchievementEvents([], [], records);
+        const milestone10 = result.events.filter((e) => e.achievementKind === AchievementKind.REFERENCED_BY_10_PUBLICATIONS);
+        assert(milestone10.length === 1, '61. REFERENCED_BY_10_PUBLICATIONS fires exactly once despite 11 raw reference records');
+        assert(milestone10[0].sourcePublicationIdentity.sameAs(zed), '62. it is attributed to Zed, the referenced publication, never a source');
+        assert(milestone10[0].triggeringReference.sourcePublicationIdentity.sameAs(sources[9]), "63. it is attributed to the 10th DISTINCT source's own record, never the 11th raw record's own duplicate source");
+        assert(!result.events.some((e) => e.achievementKind === AchievementKind.REFERENCED_BY_100_PUBLICATIONS), '64. REFERENCED_BY_100_PUBLICATIONS never fires with only 10 distinct referencing publications');
+
+        // Nine distinct sources (s1 twice + s2..s9) never cross the
+        // 10-distinct-source threshold.
+        const nineDistinctRecords = records.slice(0, 10);
+        const shortResult = describeAchievementEvents([], [], nineDistinctRecords);
+        assert(!shortResult.events.some((e) => e.achievementKind === AchievementKind.REFERENCED_BY_10_PUBLICATIONS), '65. nine distinct referencing publications never cross the 10-distinct-source threshold');
+    }
+    console.log('✓ Section M: REFERENCED_BY_10_PUBLICATIONS fires exactly once, at the 10th DISTINCT referencing publication');
+
+    // ---------------------------------------------------------------
+    // Section N — FIRST_CROSS_CHAIN_REFERENCE.
+    // ---------------------------------------------------------------
+    {
+        const a = identity({ blockchain: BlockchainKind.BITCOIN, contentHash: 'n-a', chainReference: 'n-a-txid', createdAt: new Date('2026-09-01T00:00:00Z') });
+        const b = identity({ blockchain: BlockchainKind.BASE, contentHash: 'n-b', chainReference: 'n-b-txid', createdAt: new Date('2026-09-01T00:00:00Z') });
+        const c = identity({ blockchain: BlockchainKind.BASE, contentHash: 'n-c', chainReference: 'n-c-txid', createdAt: new Date('2026-09-01T00:00:00Z') });
+        const d = identity({ blockchain: BlockchainKind.BITCOIN, contentHash: 'n-d', chainReference: 'n-d-txid', createdAt: new Date('2026-09-01T00:00:00Z') });
+
+        // A (Bitcoin) -> B (Base): cross-chain.
+        const aToB = referenceRecord({ source: a, referenced: b, createdAt: new Date('2026-09-02T00:00:00Z') });
+        // A (Bitcoin) -> C (Base): a SECOND cross-chain reference from the
+        // SAME source — never re-fires FIRST_CROSS_CHAIN_REFERENCE.
+        const aToC = referenceRecord({ source: a, referenced: c, createdAt: new Date('2026-09-03T00:00:00Z') });
+        // B (Base) -> D (Bitcoin): the REVERSE direction, a genuinely
+        // different source — fires again, attributed to B this time.
+        const bToD = referenceRecord({ source: b, referenced: d, createdAt: new Date('2026-09-04T00:00:00Z') });
+        // D (Bitcoin) -> A (Bitcoin): same-chain — never fires at all.
+        const dToA = referenceRecord({ source: d, referenced: a, createdAt: new Date('2026-09-05T00:00:00Z') });
+
+        const result = describeAchievementEvents([], [], [aToB, aToC, bToD, dToA]);
+        const crossChainEvents = result.events.filter((e) => e.achievementKind === AchievementKind.FIRST_CROSS_CHAIN_REFERENCE);
+        assert(crossChainEvents.length === 2, "66. FIRST_CROSS_CHAIN_REFERENCE fires exactly twice — once for A, once for B's own reverse-direction reference — never for the same-chain D -> A reference, and never a second time for A's own second cross-chain reference");
+        assert(crossChainEvents[0].sourcePublicationIdentity.sameAs(a), '67. the first cross-chain achievement is attributed to A, the first source to cross chains');
+        assert(crossChainEvents[0].triggeringReference.referencedPublicationIdentity.sameAs(b), "68. it is attributed to the record that actually completed it (A -> B), not A's later, redundant A -> C reference");
+        assert(crossChainEvents[1].sourcePublicationIdentity.sameAs(b), '69. the reverse direction (B referencing something back) is attributed to B — a separate, independent occurrence, never assumed already earned');
+        assert(!result.events.some((e) => e.achievementKind === AchievementKind.FIRST_CROSS_CHAIN_REFERENCE && e.triggeringReference.sourcePublicationIdentity.sameAs(d)), '70. D -> A never earns FIRST_CROSS_CHAIN_REFERENCE — both identities are on Bitcoin');
+    }
+    console.log("✓ Section N: FIRST_CROSS_CHAIN_REFERENCE fires strictly on source.blockchain !== referenced.blockchain, once per distinct source");
+
+    // ---------------------------------------------------------------
+    // Section O — FLAGSHIP: ten distinct referencing publications (one
+    // referencing twice), a shared contentHash across two otherwise
+    // distinct sources, a cross-chain reference among them, deliberately
+    // out-of-order createdAt timestamps and interleaved array positions.
+    // ---------------------------------------------------------------
+    {
+        const wendy = identity({ blockchain: BlockchainKind.BASE, contentHash: 'o-wendy', chainReference: 'o-wendy-txid', createdAt: new Date('2026-10-01T00:00:00Z') });
+        const SHARED_CONTENT_HASH = 'o-shared-content-hash';
+        function oDay(n) { return new Date(`2026-10-${String(n).padStart(2, '0')}T00:00:00Z`); }
+
+        const s = [
+            identity({ blockchain: BlockchainKind.BITCOIN, contentHash: 'o-s1', chainReference: 'o-s1-txid', createdAt: oDay(1) }), // cross-chain relative to Wendy
+            identity({ blockchain: BlockchainKind.BASE, contentHash: 'o-s2', chainReference: 'o-s2-txid', createdAt: oDay(1) }),
+            identity({ blockchain: BlockchainKind.BASE, contentHash: SHARED_CONTENT_HASH, chainReference: 'o-s3-txid', createdAt: oDay(1) }),
+            identity({ blockchain: BlockchainKind.BASE, contentHash: 'o-s4', chainReference: 'o-s4-txid', createdAt: oDay(1) }),
+            identity({ blockchain: BlockchainKind.BASE, contentHash: 'o-s5', chainReference: 'o-s5-txid', createdAt: oDay(1) }),
+            identity({ blockchain: BlockchainKind.BASE, contentHash: 'o-s6', chainReference: 'o-s6-txid', createdAt: oDay(1) }),
+            identity({ blockchain: BlockchainKind.BASE, contentHash: SHARED_CONTENT_HASH, chainReference: 'o-s7-txid', createdAt: oDay(1) }), // shares s3's contentHash, different chainReference — never merged
+            identity({ blockchain: BlockchainKind.BASE, contentHash: 'o-s8', chainReference: 'o-s8-txid', createdAt: oDay(1) }),
+            identity({ blockchain: BlockchainKind.BASE, contentHash: 'o-s9', chainReference: 'o-s9-txid', createdAt: oDay(1) }),
+            identity({ blockchain: BlockchainKind.BASE, contentHash: 'o-s10', chainReference: 'o-s10-txid', createdAt: oDay(1) })
+        ];
+
+        // Chronological truth (by createdAt, ascending): s1@2, s2@3, s3@4,
+        // s4@5, s1-dup@6, s5@7, s6@8, s7@9, s8@10, s9@11, s10@12 — s10's
+        // own record is the one that chronologically completes the 10th
+        // DISTINCT referencing publication.
+        const s1First = referenceRecord({ source: s[0], referenced: wendy, createdAt: oDay(2) });
+        const s2 = referenceRecord({ source: s[1], referenced: wendy, createdAt: oDay(3) });
+        const s3 = referenceRecord({ source: s[2], referenced: wendy, createdAt: oDay(4) });
+        const s4 = referenceRecord({ source: s[3], referenced: wendy, createdAt: oDay(5) });
+        const s1Dup = referenceRecord({ source: s[0], referenced: wendy, createdAt: oDay(6) });
+        const s5 = referenceRecord({ source: s[4], referenced: wendy, createdAt: oDay(7) });
+        const s6 = referenceRecord({ source: s[5], referenced: wendy, createdAt: oDay(8) });
+        const s7 = referenceRecord({ source: s[6], referenced: wendy, createdAt: oDay(9) });
+        const s8 = referenceRecord({ source: s[7], referenced: wendy, createdAt: oDay(10) });
+        const s9 = referenceRecord({ source: s[8], referenced: wendy, createdAt: oDay(11) });
+        const s10 = referenceRecord({ source: s[9], referenced: wendy, createdAt: oDay(12) });
+
+        // Deliberately scrambled ARRAY order — NOT chronological order —
+        // to prove the computation sorts by createdAt itself, rather than
+        // trusting array/insertion position.
+        const records = [s10, s1Dup, s3, s7, s1First, s5, s9, s2, s6, s4, s8];
+        const recordsSnapshot = [...records];
+
+        const { result, networkCallOccurred } = await withoutNetworkAccess(() => describeAchievementEvents([], [], records));
+        assert(networkCallOccurred === false, '71. computing reference-derived achievements performs zero network access');
+        assert(records.length === recordsSnapshot.length && records.every((r, i) => r === recordsSnapshot[i]), '72. the input array itself is never reordered or mutated');
+
+        const milestone10 = result.events.filter((e) => e.achievementKind === AchievementKind.REFERENCED_BY_10_PUBLICATIONS);
+        assert(milestone10.length === 1, '73. REFERENCED_BY_10_PUBLICATIONS fires exactly once — a shared contentHash across s3/s7 never collapses them into one distinct source, and s1s duplicate never inflates the count early');
+        assert(milestone10[0].triggeringReference.sourcePublicationIdentity.sameAs(s[9]), "74. it is attributed to s10's own record — the chronologically 10th distinct source — never the record that merely happens to sit first in the scrambled array");
+        assert(milestone10[0].observedAt.getTime() === oDay(12).getTime(), '75. observedAt is the true chronological completion time, despite the scrambled array order');
+
+        const crossChain = result.events.find((e) => e.achievementKind === AchievementKind.FIRST_CROSS_CHAIN_REFERENCE);
+        assert(crossChain.sourcePublicationIdentity.sameAs(s[0]), '76. FIRST_CROSS_CHAIN_REFERENCE is attributed to s1, the one Bitcoin source referencing a Base publication');
+        assert(crossChain.triggeringReference.createdAt.getTime() === oDay(2).getTime(), "77. it is attributed to s1's own FIRST reference (day 2), never its later, redundant duplicate (day 6)");
+
+        const firstReceived = result.events.find((e) => e.achievementKind === AchievementKind.FIRST_REFERENCE_RECEIVED);
+        assert(firstReceived.triggeringReference.createdAt.getTime() === oDay(2).getTime(), "78. FIRST_REFERENCE_RECEIVED is attributed to Wendy's own true first reference, chronologically, never array position");
+
+        const createdEvents = result.events.filter((e) => e.achievementKind === AchievementKind.FIRST_REFERENCE_CREATED);
+        assert(createdEvents.length === 10, "79. exactly ten distinct sources each earn their own FIRST_REFERENCE_CREATED — s1's duplicate reference earns no second one");
+
+        // Determinism: repeated calls on byte-identical input are byte-identical.
+        const result2 = describeAchievementEvents([], [], records);
+        assert(JSON.stringify(result.events.map(serializeEvent)) === JSON.stringify(result2.events.map(serializeEvent)), '80. repeated calls on identical input produce byte-identical output');
+
+        assertNeverScored(result, 'flagshipReferenceResult');
+    }
+    console.log('✓ Section O: FLAGSHIP — ten distinct referencing publications, shared contentHash never conflated, cross-chain detection, chronological attribution despite scrambled array order, determinism, zero network/storage mutation');
+
+    // ---------------------------------------------------------------
+    // Section P — reconstructAchievementEvents() composes publication AND
+    // reference achievements over a real, persisted archive.
+    // ---------------------------------------------------------------
+    {
+        const provider = new InMemoryStorageProvider();
+        const persistence = new LocalStoragePublicationObservationArchive(provider);
+
+        const btc = bitcoinRecord({ anchorId: 'p-anchor', contentHash: 'p-btc-content', txid: 'p'.repeat(64), createdAt: new Date('2026-11-01T00:00:00Z') });
+        const base = baseRecord({ contentHash: 'p-base-content', txid: 'q'.repeat(64), createdAt: new Date('2026-11-02T00:00:00Z') });
+
+        let archive = PublicationObservationArchive.empty();
+        archive = archive.appendBitcoinAnchorPublicationRecord(btc);
+        archive = archive.appendBaseAnchorPublicationRecord(base);
+
+        const reference = new PublicationReferenceRecord({
+            sourcePublicationIdentity: btc.toBlockchainPublicationIdentity(),
+            referencedPublicationIdentity: base.toBlockchainPublicationIdentity(),
+            createdAt: new Date('2026-11-03T00:00:00Z')
+        });
+        archive = archive.appendPublicationReferenceRecord(reference);
+
+        const { result: liveResult, networkCallOccurred } = await withoutNetworkAccess(() => reconstructAchievementEvents(archive));
+        assert(networkCallOccurred === false, '81. reconstructAchievementEvents() with reference records present still performs zero network access');
+        assert(liveResult.events.some((e) => e.achievementKind === AchievementKind.FIRST_REFERENCE_CREATED), '82. the composed result includes reference-derived achievements alongside the existing publication-derived ones');
+        assert(liveResult.events.some((e) => e.achievementKind === AchievementKind.FIRST_CROSS_CHAIN_REFERENCE), "83. it correctly detects the cross-chain reference between the archive's own Bitcoin and Base publications");
+        assert(liveResult.events.some((e) => e.achievementKind === AchievementKind.FIRST_PUBLICATION), '84. the existing 0.8.102 publication achievements are still present, unchanged, alongside the new ones');
+
+        persistence.save(archive);
+        const restored = persistence.load();
+        const reconstructed = reconstructAchievementEvents(restored);
+        assert(JSON.stringify(reconstructed.events.map(serializeEvent)) === JSON.stringify(liveResult.events.map(serializeEvent)), '85. reload equivalence holds for the composed publication + reference achievement result');
+    }
+    console.log('✓ Section P: reconstructAchievementEvents() composes publication and reference achievements, with reload equivalence');
+
+    // ---------------------------------------------------------------
+    // Section Q — no verdict vocabulary anywhere in the reference-derived
+    // surface, including triggeringReference.
+    // ---------------------------------------------------------------
+    {
+        const alice = identity({ blockchain: BlockchainKind.BITCOIN, contentHash: 'q-alice', chainReference: 'q-alice-txid', createdAt: new Date('2026-12-01T00:00:00Z') });
+        const bob = identity({ blockchain: BlockchainKind.BASE, contentHash: 'q-bob', chainReference: 'q-bob-txid', createdAt: new Date('2026-12-01T00:00:00Z') });
+        const record = referenceRecord({ source: alice, referenced: bob, createdAt: new Date('2026-12-02T00:00:00Z') });
+        const result = describeAchievementEvents([], [], [record]);
+        assertNeverScored(result, 'referenceNoVerdictResult');
+        for (const event of result.events) {
+            assert(Object.isFrozen(event), '86. every reference-derived event is frozen');
+            if (event.triggeringReference) assert(Object.isFrozen(event.triggeringReference), '87. triggeringReference is itself frozen');
+        }
+        assert(Object.keys(AchievementKind).length === 11, '88. AchievementKind still names exactly eleven values — this section adds no new vocabulary of its own');
+    }
+    console.log('✓ Section Q: no verdict/score/points/rank vocabulary anywhere in the reference-derived surface, including triggeringReference');
+
     console.log('\nAll AchievementEvent tests passed.');
 }
 
@@ -282,6 +585,14 @@ function serializeEvent(event) {
         label: event.label,
         observedAt: event.observedAt.toISOString(),
         sourcePublicationIdentity: event.sourcePublicationIdentity.toJSON(),
+        // 0.8.106 — present only on reference-derived events; `undefined`
+        // is dropped by JSON.stringify(), so a publication-derived event's
+        // own serialization is byte-for-byte unchanged from 0.8.102.
+        triggeringReference: event.triggeringReference ? {
+            sourcePublicationIdentity: event.triggeringReference.sourcePublicationIdentity.toJSON(),
+            referencedPublicationIdentity: event.triggeringReference.referencedPublicationIdentity.toJSON(),
+            createdAt: event.triggeringReference.createdAt.toISOString()
+        } : undefined,
         index: event.index
     };
 }

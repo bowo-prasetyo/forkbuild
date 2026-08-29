@@ -149,6 +149,17 @@ function achievementBadge(event, bitcoinAnchorPublicationRecords) {
     });
 }
 
+// 0.8.106 note: `describeAchievementEvents()` later gained a third,
+// optional `publicationReferenceRecords` parameter, extending
+// `AchievementKind` with five reference-derived values. This file calls it
+// with only its own original two arguments — deliberately, this milestone
+// (0.8.103) is untouched by that later one — so that third parameter
+// always defaults to an empty array here, and none of the five
+// reference-derived kinds (nor the `triggeringReference` field their events
+// carry) ever reaches a badge. Presenting those as badges, should a future
+// milestone want to, is real, separate, later work on this file, not a
+// side effect of 0.8.106 having been built.
+//
 // The pure computation. Receives the archive's own two blockchain
 // publication identity record arrays — the identical shape
 // `describeAchievementEvents()` itself accepts — and returns

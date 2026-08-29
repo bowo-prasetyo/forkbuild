@@ -34253,3 +34253,203 @@ after identity attribution and aggregation semantics are sufficiently
 explicit — a decentralized achievement ranking projection (0.8.109) and
 its leaderboard UI (0.8.110+), reconstructed entirely from each replica's
 own local publication/reference graph, never a central server.
+
+## 0.8.106 — Reference-Derived Achievement Events
+
+0.8.102 built a closed, six-value achievement vocabulary over a single
+publication's own existence; 0.8.104/0.8.105 gave this codebase its first
+durable, then inspectable, fact about TWO publications together. This
+milestone is the composition those three left waiting: five new,
+deterministic achievement kinds derived from an explicit
+`PublicationReferenceRecord` (0.8.104), read chronologically — never from
+0.8.105's own already-grouped, present-tense graph — and attributed to an
+explicit publication identity, never to "the archive" as a whole.
+
+```text
+PublicationReferenceRecord (0.8.104), durable, append-only
+      │
+      │  describeAchievementEvents(bitcoin, base, publicationReferenceRecords)
+      ▼
+FIRST_REFERENCE_CREATED / FIRST_REFERENCE_RECEIVED /
+REFERENCED_BY_10_PUBLICATIONS / REFERENCED_BY_100_PUBLICATIONS /
+FIRST_CROSS_CHAIN_REFERENCE
+```
+
+```text
+Alice -> Bob   (Alice's first reference: FIRST_REFERENCE_CREATED for Alice,
+                FIRST_REFERENCE_RECEIVED for Bob)
+Alice -> Bob   (a repeat — no new event; Alice already earned hers)
+Carol -> Bob   (Carol's first reference: FIRST_REFERENCE_CREATED for Carol —
+                Bob already earned his own FIRST_REFERENCE_RECEIVED)
+```
+
+**A THIRD, OPTIONAL ARGUMENT — NEVER A BREAKING CHANGE.**
+`describeAchievementEvents()` gains one new parameter,
+`publicationReferenceRecords = []`, appended after 0.8.102's own two,
+both unchanged. Every call site written before this milestone —
+`application/AchievementBadgeView.js`'s own `describeAchievementBadges()`
+chief among them — keeps compiling and keeps returning its own identical
+six-achievement result, because an omitted third argument defaults to an
+empty array, which contributes zero additional events. `application/
+AchievementBadgeView.js` itself is deliberately UNCHANGED by this
+milestone: it still calls `describeAchievementEvents()` with only its own
+two arguments, so none of the five kinds below — nor the
+`triggeringReference` field their events carry — ever reaches a badge yet.
+
+**EVERY REFERENCE-DERIVED ACHIEVEMENT IS ATTRIBUTED TO AN EXPLICIT
+PUBLICATION IDENTITY, EACH FIRING ONCE PER DISTINCT IDENTITY — A GENUINE
+DIFFERENCE FROM 0.8.102's OWN ARCHIVE-WIDE, AT-MOST-ONCE-EVER KINDS.**
+A reference names TWO publications, and a graph can have arbitrarily many
+of them each independently crossing the identical threshold — Alice's own
+first outgoing reference and Carol's own first outgoing reference are two
+separate facts, not the same fact re-observed:
+
+- `FIRST_REFERENCE_CREATED` — attributed to the reference's own
+  `sourcePublicationIdentity`, the first time THAT publication creates ANY
+  outgoing reference.
+- `FIRST_REFERENCE_RECEIVED` — attributed to the reference's own
+  `referencedPublicationIdentity`, the first time ANY reference points at
+  it.
+- `REFERENCED_BY_10_PUBLICATIONS` / `REFERENCED_BY_100_PUBLICATIONS` —
+  attributed to `referencedPublicationIdentity`, the moment its own count
+  of DISTINCT referencing publications — never raw reference records —
+  first reaches 10 / 100.
+- `FIRST_CROSS_CHAIN_REFERENCE` — attributed to `sourcePublicationIdentity`,
+  the first time it creates a reference whose own referenced identity
+  names a different `blockchain`. The reverse direction is a separate
+  source identity, and therefore a separate, independent occurrence of the
+  same kind — never assumed already earned.
+
+**"REFERENCED BY 10 PUBLICATIONS" MEANS 10 DISTINCT SOURCE IDENTITIES,
+NEVER 10 REFERENCE RECORDS.** Alice referencing Bob three times is three
+durable `PublicationReferenceRecord`s (0.8.104's own "Reference Count And
+Distinct Referencing Publisher Count Are Two Different Facts") but ONE
+distinct referencing publication — her second and third A -> B records
+advance no threshold this file tracks, because the SET of distinct source
+identities Bob has been seen from did not grow.
+
+**EVERY REFERENCE-DERIVED EVENT CARRIES ITS OWN `triggeringReference` — THE
+ACTUAL RECORD THAT CROSSED THE THRESHOLD, NEVER A RESTATED COUNT.** A
+person reading "Bob earned REFERENCED_BY_10_PUBLICATIONS" is entitled to
+ask "because of which reference, exactly?" — this milestone answers with
+`triggeringReference: { sourcePublicationIdentity,
+referencedPublicationIdentity, createdAt }`, the exact
+`PublicationReferenceRecord` that completed it, narrated in the identical
+shape `application/PublicationReferenceRecordHistoryView.js`'s own
+`describePublicationReferenceRecordHistoryEntry()` already uses. The five
+0.8.102 kinds carry no such field — a single completing publication record
+already IS the fact there.
+
+**CHRONOLOGICAL, NEVER "TODAY'S GRAPH REINTERPRETED BACKWARDS" — THE SAME
+DISCIPLINE 0.8.102/0.8.81 ALREADY HELD.** This milestone never reads
+0.8.105's own already-computed graph and infers, after the fact, when a
+threshold must have been crossed — that would silently assume today's node
+counts describe history, which they do not once records are deleted,
+re-imported, or observed out of order. Every `PublicationReferenceRecord`
+is instead placed into one fixed, reproducible source order and only THAT
+fixed-order sequence is ever stably sorted, by `createdAt`, ties broken by
+that same source order — word for word 0.8.102's own two-step ordering,
+extended to references. If the 10th distinct publisher references Bob at
+time T, the event's own `observedAt` — and its `triggeringReference.createdAt`
+— is T, whatever order this replica happened to observe the underlying
+records in.
+
+**NODE IDENTITY IS `blockchain` + `chainReference` — NEVER `contentHash`,
+AND CROSS-CHAIN IS `source.blockchain !== referenced.blockchain` — NOTHING
+ELSE.** Every grouping decision is made through
+`BlockchainPublicationIdentity#sameAs()`'s (0.8.89) own two fields, via the
+identical shorthand key `application/PublicationReferenceGraphView.js`'s
+own `identityKey()` (0.8.105) already established — reimplemented locally,
+never imported, since this file composes no other projection file's
+internals. `FIRST_CROSS_CHAIN_REFERENCE` reads exactly one comparison —
+both identities' own `blockchain` fields — and nothing about `contentHash`
+or any other resemblance-based signal.
+
+**NO NEW DURABLE COLLECTION, NO SCHEMA_VERSION BUMP.**
+`application/PublicationObservationArchive.js` gains nothing from this
+milestone — it already held `publicationReferenceRecords` since 0.8.104,
+unchanged. Deleting or changing a `PublicationReferenceRecord` naturally
+changes which reference-derived achievement events this file computes on
+the next call.
+
+**STILL NO POINTS, REPUTATION, XP, LEVELS, RARITY, "POPULAR" LABELS,
+LEADERBOARDS, ACHIEVEMENT SCORES, WEIGHTED REFERENCES, TRUST, OR
+"INFLUENCER" CLASSIFICATIONS.** Every one of those is an interpretation of
+the graph 0.8.105 already refused to bake in; this milestone states
+exactly one thing per event — "this explicitly defined threshold was
+crossed, by this exact record, at this point in the durable record
+history" — and nothing more.
+
+Changed:
+- `application/AchievementEvent.js` — `AchievementKind` extended to eleven
+  values (`FIRST_REFERENCE_CREATED`, `FIRST_REFERENCE_RECEIVED`,
+  `REFERENCED_BY_10_PUBLICATIONS`, `REFERENCED_BY_100_PUBLICATIONS`,
+  `FIRST_CROSS_CHAIN_REFERENCE`); `describeAchievementEvents()` gains a
+  third, optional `publicationReferenceRecords = []` parameter, strictly
+  additive; `reconstructAchievementEvents()` now also reads the archive's
+  own `publicationReferenceRecords`.
+- `tests/AchievementEvent.test.js` — new Sections J through Q; Section I's
+  vocabulary-size assertion updated from six to eleven.
+- `tests/AchievementBadgeView.test.js` — Section C's vocabulary-size
+  assertion updated from six to eleven (badges themselves are unaffected —
+  `describeAchievementBadges()` still calls `describeAchievementEvents()`
+  with only its own original two arguments).
+
+New tests: FIRST_REFERENCE_CREATED/FIRST_REFERENCE_RECEIVED firing once
+each, carrying `triggeringReference`; reference-record-count vs.
+distinct-referencing-publication-count kept separate (Alice referencing
+Bob three times, Carol once, still earns exactly one
+FIRST_REFERENCE_RECEIVED and two FIRST_REFERENCE_CREATED events);
+REFERENCED_BY_10_PUBLICATIONS firing exactly once, at the 10th DISTINCT
+source, never the 10th raw record, and never early at nine;
+FIRST_CROSS_CHAIN_REFERENCE firing strictly on differing `blockchain`,
+once per distinct source, with the reverse direction a separate
+occurrence and a same-chain reference never firing it; a FLAGSHIP with ten
+distinct referencing publications (one referencing twice), a shared
+`contentHash` across two otherwise-distinct sources that stays unmerged, a
+cross-chain reference among them, deliberately out-of-order `createdAt`
+timestamps and a scrambled array order, correct chronological attribution,
+determinism, and zero network/storage mutation;
+`reconstructAchievementEvents()` composing publication AND reference
+achievements over a real, persisted archive with reload equivalence; no
+verdict/score/points/rank vocabulary anywhere in the new surface,
+including inside `triggeringReference`; and backward compatibility — an
+omitted/empty third argument leaves the 0.8.102 achievements byte-for-byte
+unchanged.
+
+Deliberately excluded:
+- **Badges for these five kinds.** `application/AchievementBadgeView.js`
+  is untouched — it never passes `publicationReferenceRecords` through, so
+  none of these events reach a badge yet. Presenting them is real,
+  separate, later work on that file.
+- **A distinct-referencing-publisher reduction as its own, general,
+  per-publication fact.** This milestone tracks a distinct-source count
+  internally, only to decide when `REFERENCED_BY_10_PUBLICATIONS`/
+  `_100_PUBLICATIONS` cross — it exposes no general "how many distinct
+  publications reference X" query of its own. That remains 0.8.107's own,
+  separately sized work.
+- **A subject/owner/user identity field.** Unchanged from 0.8.102/0.8.104
+  — every event is attributed to an explicit `BlockchainPublicationIdentity`,
+  never a wallet, signer, or cross-replica "user."
+- **Any leaderboard, ranking, or scoring projection.** Still real,
+  separately sized future work — see 0.8.102's own "Deliberately
+  excluded," held here once more.
+- **Higher-order reference achievements** — a "referenced by another
+  publication that is ITSELF highly referenced" or any other
+  second-order/transitive reduction over the graph. This milestone reads
+  only direct, one-hop reference facts; a transitive reduction is a
+  genuinely later, separate decision.
+- **Any cross-replica or "canonical" achievement reconciliation.** Every
+  event here is computed entirely from THIS replica's own archive, exactly
+  like the records and graph it is built from.
+
+What's left, and deliberately unbuilt: a distinct-referencing-publisher
+reduction over the reference graph as its own, general, queryable fact
+(0.8.107), an achievement profile projection aggregating a publisher's own
+earned achievement events/badges without introducing scores — and the
+point where publication identity and human/user identity are carefully
+kept distinct before any leaderboard could honestly claim "Top Users"
+(0.8.108), and — only after that — a decentralized achievement ranking
+projection (0.8.109) and its leaderboard UI (0.8.110+), reconstructed
+entirely from each replica's own local publication/reference graph, never
+a central server.
