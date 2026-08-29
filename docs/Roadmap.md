@@ -38157,3 +38157,139 @@ full multiset fidelity, never any judgment about which claims are true,
 current, or worth preferring. It never narrates the history
 chronologically, and never integrates claim history into the durable
 evidence archive — each remains genuinely separate, later work.
+
+## 0.8.129 — Claim History Timeline Projection
+
+0.8.128 answered "what measurable facts exist in this replica's own stored
+claim history?" — plain counts, tallied without regard to order. It
+deliberately never answered a narrower, order-sensitive question a set of
+counts is not shaped to answer either: "what happened, and in what
+chronological order, in this replica's own stored claim history?" This
+milestone is that projection, and nothing more — a temporal NARRATION
+layer, never another verification or ranking layer:
+
+```text
+LeaderboardClaimHistory (0.8.123, UNCHANGED)
+       │
+       │  describePublisherLeaderboardClaimHistoryTimeline()  (THIS MILESTONE)
+       ▼
+{ entries: [{ claimId, signerIdentityId, evidenceFingerprint,
+              policyVersion, snapshotFingerprint, claimCreatedAt,
+              receivedAt, origin }, ...],
+  entryCount }
+```
+
+Each timeline entry is derived directly from one genuine
+`LeaderboardClaimRecord`.
+
+**`claimCreatedAt` VS `receivedAt` — THE ONE DISTINCTION THIS MILESTONE
+EXISTS TO MAKE OBSERVABLE.** These are two different clocks, never
+collapsed:
+
+```text
+claimCreatedAt   — when the SIGNER created the claim, on the signer's own
+                    clock (`claim.createdAt`, 0.8.121, UNCHANGED)
+receivedAt       — when THIS REPLICA'S OWN clock saw the claim arrive
+                    (`record.receivedAt`, 0.8.123, UNCHANGED)
+```
+
+For example, claim A created 10:00 and received by this replica at 10:05,
+versus claim B created 09:55 and received by this replica at 11:00: A
+appears BEFORE B in this replica's own timeline, because the question this
+milestone answers is "when did this fact enter THIS REPLICA'S OWN
+history," never "in what order did signers create their claims." The
+original claim creation time remains visible on every entry as separate
+metadata — never discarded, never used for ordering.
+
+**THE TIMELINE ORDERS BY RECEPTION, NOT CREATION.** Entries are sorted by
+(1) `receivedAt` ascending, then (2) original `history` array position as
+the tie-break — and by nothing else. `claimCreatedAt` never determines
+position, signer identity is never a tie-break, claim id is never a
+tie-break, and no comparison is locale-dependent. The history-array
+position is the tie-break specifically because two receipts can
+legitimately share an identical `receivedAt`, and `history` itself is
+already an append-only, oldest-first sequence (0.8.123, UNCHANGED) — the
+one order carrying no invented meaning.
+
+**A PROJECTION OF HISTORY, NEVER A DEDUPLICATED CLAIM LIST — THE IDENTICAL
+RESTRAINT 0.8.128'S OWN "NO DEDUPLICATION OF HISTORY" ALREADY HOLDS.** The
+same claim received three times (once LOCAL, twice IMPORTED) produces
+THREE timeline entries, one per receipt — never collapsed because the
+underlying `claimId` repeats. `entryCount` is a receipt count, in the same
+sense 0.8.128's own `claimCount` is a receipt count, never a distinct-claim
+count.
+
+**EACH ENTRY IS A NEW, PLAIN, FROZEN OBJECT OF NAMED SCALAR FIELDS —
+NEVER THE ORIGINAL `LeaderboardClaimRecord`, AND NEVER `record.toJSON()`.**
+A deliberate departure from 0.8.127's own `sourceOnly`/`targetOnly` shape
+(the original record instances): a timeline entry is a narration for a
+reader, not a unit fed back into 0.8.126's own import/apply pipeline —
+`claimId` rather than a nested `claim` object, `claimCreatedAt` named
+distinctly from `receivedAt` so the two clocks are never confused by a
+reader skimming field names alone. Both timestamps are serialized as ISO
+strings, exactly as `LeaderboardClaimRecord#toJSON()` already serializes
+`receivedAt`, so a timeline entry is trivially JSON-safe and
+byte-comparable.
+
+**ARCHITECTURAL BOUNDARY: A RECEIPT LOG, NEVER A VERDICT — THE IDENTICAL
+BOUNDARY 0.8.127/0.8.128 ALREADY HOLD.** This milestone's module imports
+nothing from `application/PublisherLeaderboardSnapshotClaimVerification.js`,
+`application/PublisherLeaderboardClaimVerificationView.js`, or
+`application/PublisherLeaderboardClaimVerificationHistoryView.js`
+(0.8.120/0.8.124/0.8.125). The timeline can only ever say "this claim
+receipt exists in the history, and these are its associated timestamps and
+metadata" — never "was this claim valid when it was received?" A claim
+appears in the timeline even if its signature is currently invalid; a
+claim whose semantic verification outcome later changes remains the SAME
+historical receipt, at the SAME timeline position, forever. No `valid`,
+`verified`, `trusted`, `confidence`, `status`, `score`, `rank`, or
+`reputation` field anywhere in the result.
+
+**`describePublisherLeaderboardClaimHistoryTimeline()`/
+`reconstructPublisherLeaderboardClaimHistoryTimeline()` — THE IDENTICAL
+SPLIT EVERY OTHER FILE IN THE CLAIM-HISTORY FAMILY ALREADY HOLDS.** The
+reconstruction function is presently a thin, identity wrapper around the
+pure computation, exactly mirroring 0.8.127/0.8.128's own reconstruction —
+kept distinct so a future milestone that integrates claim history into
+`PublicationObservationArchive` (0.8.130) can teach it to accept an
+archive without disturbing the pure computation or any caller already
+using it directly.
+
+**NO `sequence` FIELD IN THIS FIRST VERSION — DELIBERATELY.** The
+internal, stable tie-break (original `history` array position) is kept as
+an implementation detail, never exposed as a named field. A future version
+may add one, but only if it means exactly "original history position,"
+never a newly invented event number.
+
+**THE FLAGSHIP TEST.** Claim A: created 10:00, received 10:30. Claim B:
+created 10:20, received 10:25. Claim C: created 10:10, received 10:40. The
+timeline is B → A → C — the order this replica received them — even
+though creation order would be A → C → B. Every entry still reports its
+own, original `claimCreatedAt` unchanged. Layered into the same history, a
+duplicate-receipt scenario for claim A (received once LOCAL at 10:30, then
+IMPORTED twice at an identical, later instant) remains three separate
+timeline entries, never deduplicated.
+
+Deliberately excluded:
+- **Any verification, trust, or "was this claim valid when it was
+  received" determination.** See "Architectural boundary," above.
+- **No semantic interpretation.** No `valid`, `verified`, `trusted`,
+  `trust`, `confidence`, `status`, `score`, `rank`, or `reputation` field
+  or computation, anywhere.
+- **Any ranking, scoring, or "best signer" determination.** 0.8.112's own,
+  already-built, explicitly evaluative `PublisherRankingPolicy.js` remains
+  the only place that concern lives.
+- **A `sequence` field.** See "No `sequence` field in this first version,"
+  above.
+- **Archive integration.** Integrating `LeaderboardClaimHistory` into
+  `PublicationObservationArchive` remains 0.8.130's own, separately sized,
+  substantial question.
+
+What's left, and deliberately unbuilt: this milestone narrates exactly what
+this replica's own stored claim history contains and in what order it
+arrived, distinguishing a signer's own creation clock from this replica's
+own reception clock at every entry, with full multiset fidelity — never
+any judgment about whether a claim was, or still is, valid. It never
+integrates claim history into the durable evidence archive — that remains
+0.8.130's own, genuinely separate, later work, and the final milestone of
+the claim-history subsystem's own foundational arc (0.8.121-0.8.129).
