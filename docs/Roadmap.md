@@ -34084,11 +34084,172 @@ Deliberately excluded:
   separately sized future work — see 0.8.102's own "Deliberately
   excluded," held here once more.
 
+What's left, and deliberately unbuilt: this milestone's own
+`publicationReferenceRecords` are raw, append-only, and ungrouped — before
+composing them into `REFERENCED_PUBLICATION`/`REFERENCED_BY_10_PUBLICATIONS`
+-shaped achievement events, they are first projected into an inspectable,
+auditable graph shape (0.8.105 — see that milestone's own entry below),
+never scored or ranked. Reference-derived achievement events and badges
+(0.8.106), a distinct-referencing-publisher reduction over that same
+graph (0.8.107), and — only after all of those, and only once identity
+attribution and aggregation semantics are sufficiently explicit — an
+achievement scoring and leaderboard projection reconstructed entirely
+from each replica's own local publication/reference graph, never a
+central server (0.8.108/0.8.109+), stay real, separately sized, later
+work.
+
+## 0.8.105 — Publication Reference Graph Projection
+
+0.8.104 gave this codebase its first durable fact ABOUT TWO PUBLICATIONS
+TOGETHER, and deliberately stopped there: an append-only, ungrouped list
+of `PublicationReferenceRecord`s, narrated oldest-first with no
+per-publication view. This milestone is the projection that turns that
+raw material into something the UI — and later the achievement system —
+can safely consume: a deterministic, inspectable graph over the SAME
+already-durable records, computing no new fact and minting nothing.
+
+```text
+Publication Reference Records (0.8.104), append-only, oldest first
+      │
+      │  describePublicationReferenceRecordHistory()   (0.8.104, UNCHANGED)
+      ▼
+Publication Reference Graph (0.8.105)
+  { edgeCount, edges,
+    distinctSourcePublicationCount, distinctReferencedPublicationCount,
+    nodes: [ { identity, outgoingReferences, outgoingReferenceCount,
+               incomingReferences, incomingReferenceCount }, ... ] }
+```
+
+```text
+Publication A
+    ├── references → Publication B
+    ├── references → Publication C
+    └── references → Publication B
+
+Publication B
+    └── referenced by → Publication A   (TWO edges — never collapsed to one)
+```
+
+**TWO A -> B REFERENCES STAY TWO EDGES.** Exactly as `application/
+PublicationReferenceRecordHistory.js`'s own header already established,
+this milestone never collapses multiplicity while grouping: a
+publication's own `outgoingReferences`/`incomingReferences` carry every
+edge that touches it, one entry per underlying `PublicationReferenceRecord`
+— the identical edge objects `describePublicationReferenceRecordHistory()`
+(0.8.104) itself already produced, reused unchanged, never re-narrated a
+second time.
+
+**NODE IDENTITY IS `blockchain` + `chainReference` — NEVER `contentHash`.**
+A graph node is looked up and grouped exclusively through
+`BlockchainPublicationIdentity#sameAs()`'s (0.8.89) own two fields. Two
+publications carrying byte-identical content, published independently
+under two different `chainReference`s (or on two different chains,
+sharing an identical `chainReference` string), remain two entirely
+separate nodes — the identical cross-chain discipline 0.8.89 and 0.8.104
+already held, extended one layer up over the graph those records form.
+
+**`distinctSourcePublicationCount`/`distinctReferencedPublicationCount`
+ARE GRAPH-SHAPE FACTS, NEVER THE EXCLUDED PER-PUBLICATION REDUCTION.**
+0.8.104's own "Deliberately excluded" named a distinct-referencing-
+PUBLISHER count — "how many different publications reference THIS ONE
+publication" — as real, separate, later work (now 0.8.107, below). This
+milestone builds something narrower and already in scope for a graph
+projection: how many distinct publications appear as a source (or as a
+referenced target) ANYWHERE in the graph — a fact about the graph's own
+size and shape, never a per-publication popularity reduction.
+
+**NODES ARE ORDERED BY FIRST APPEARANCE WALKING `edges` OLDEST FIRST —
+NEVER BY REFERENCE COUNT.** Sorting nodes by their own
+`incomingReferenceCount` would silently manufacture a ranking this
+milestone exists to avoid. Node order is fully deterministic for a given
+archive, and carries no meaning beyond which publication a reference
+happened to touch first.
+
+**NO VERDICT, NO WEIGHT, NO SCORE, NO RANK.** "Publication B has 7
+incoming references" is a fact this milestone states plainly; it is never
+dressed up as "Publication B is better," and neither `PublicationReferenceGraphView.js`
+nor its UI card carries a `weight`, `strength`, `popularity`, `influence`,
+`score`, or `rank` field anywhere.
+
+**A RECONSTRUCTION, NEVER A NEW DURABLE COLLECTION.** `application/
+PublicationObservationArchive.js` gains nothing from this milestone — no
+tenth collection, no `SCHEMA_VERSION` bump, no new `appendXxx()` method,
+no cached graph, no mutable node. The graph is recomputed fresh, every
+time, from `publicationReferenceRecords` the archive already holds —
+mirroring `application/AchievementBadgeView.js`'s own restraint (0.8.103)
+one layer up.
+
+**UI: A "PUBLICATION REFERENCE GRAPH" CARD ON `DecentralizedPublicationsView.js`,
+COLLAPSED BY DEFAULT, ZERO NETWORK OPERATIONS.** A read-only
+reconstruction of the existing "Publication References" card's own
+already-durable records — never a second, competing input path; a
+reference is still ever minted only through that card's own "Record
+Reference" button. Each publication is shown as its own row —
+`blockchain`, `chainReference`, outgoing/incoming reference counts — and
+can be expanded, individually, to reveal the actual source/referenced
+identities and `createdAt` behind those counts.
+
+New files:
+- `application/PublicationReferenceGraphView.js` — pure projection;
+  `describePublicationReferenceGraph()` (raw records in, graph out) and
+  `reconstructPublicationReferenceGraph()` (thin archive-reading entry
+  point, mirroring `reconstructAchievementBadges()`); a `findPublicationReferenceGraphNode()`
+  convenience lookup by `sameAs()` over an already-computed graph's own
+  `nodes`.
+
+Changed:
+- `ui/views/DecentralizedPublicationsView.js` — one new "Publication
+  Reference Graph" card, collapsed by default; no change to any existing
+  card, computation, or durable state.
+- `tests.html` — register the new test file.
+
+New tests:
+- `tests/PublicationReferenceGraphView.test.js` — empty/malformed input;
+  a single edge producing a two-node graph; the FLAGSHIP — Bob's three
+  references and Carol's one staying four independent edges, correctly
+  attributed to each of their own nodes; a publication that is both a
+  source and a referenced target elsewhere staying one node, not two;
+  distinct source/referenced publication counts kept separate from the
+  flat edge count; the cross-chain never-correlated-by-`contentHash`
+  proof restated one layer up, over nodes; `findPublicationReferenceGraphNode()`
+  returning `null` for an untouched or malformed identity; reconstruction
+  over a real, persisted archive with reload equivalence and zero network
+  access; determinism; node ordering by first appearance rather than by
+  reference count; and no verdict/score/weight/rank vocabulary anywhere
+  in this milestone's own new surface.
+
+Deliberately excluded:
+- **Any per-publication distinct-referencing-publisher reduction.** Still
+  0.8.104's own named, separate future work — see this milestone's own
+  `distinctSourcePublicationCount`/`distinctReferencedPublicationCount`
+  entry above for why those are graph-shape facts, not that reduction.
+  Real, separately sized future work — see "What's left" below.
+- **`REFERENCED_PUBLICATION`/`FORKED_PUBLICATION` achievement kinds, or
+  any badge for them.** This milestone builds the inspectable graph those
+  achievement kinds would read; it touches neither `application/
+  AchievementEvent.js` nor `application/AchievementBadgeView.js`. That
+  composition is real, separately sized future work.
+- **Any sorting, filtering, search, or pagination over nodes or edges.**
+  The graph is small and complete; a person reads it directly. Sorting by
+  reference count in particular is excluded on principle, not just scope
+  — see this milestone's own "Nodes Are Ordered By First Appearance"
+  above.
+- **Any leaderboard, ranking, or scoring projection.** Still real,
+  separately sized future work — see 0.8.102's own "Deliberately
+  excluded," held here once more.
+- **Any cross-replica or "canonical" graph merging.** A graph is
+  projected entirely from THIS replica's own archive, exactly like the
+  records it is built from — see 0.8.104's own "Deliberately excluded,"
+  "Archive Merging, Cross-Replica Reference Reconciliation."
+
 What's left, and deliberately unbuilt: composing this milestone's own
-`publicationReferenceRecords` into `REFERENCED_PUBLICATION`/
-`REFERENCED_BY_10_PUBLICATIONS`-shaped achievement events and badges
-(0.8.105), a distinct-referencing-publisher reduction over the same raw
-material (0.8.106), and — only after both of those — an achievement
-scoring and leaderboard projection reconstructed entirely from each
-replica's own local publication/reference graph, never a central server
-(0.8.107/0.8.108).
+graph into `REFERENCED_PUBLICATION`/`REFERENCED_BY_10_PUBLICATIONS`-shaped
+achievement events and badges (0.8.106), a distinct-referencing-publisher
+reduction over the same graph (0.8.107), an achievement profile
+projection aggregating a publisher's own earned achievement events/badges
+without introducing scores (0.8.108 — reordered ahead of ranking so
+aggregation semantics are settled before anything is ranked), and — only
+after identity attribution and aggregation semantics are sufficiently
+explicit — a decentralized achievement ranking projection (0.8.109) and
+its leaderboard UI (0.8.110+), reconstructed entirely from each replica's
+own local publication/reference graph, never a central server.
