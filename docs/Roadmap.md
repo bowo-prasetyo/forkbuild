@@ -37635,3 +37635,121 @@ non-evaluative receipt 0.8.123 stores. Above all, it never lets a signed
 claim be treated as a permanently valid assertion about the current
 state — a caller must always ask again, against whatever evidence it
 currently holds, to get an honest answer.
+
+## 0.8.125 — Claim Verification History Projection
+
+0.8.124 deliberately stopped at a single `LeaderboardClaimRecord` — see
+that milestone's own header, "ONE CLAIM/RECORD IS THE FUNDAMENTAL UNIT —
+NOT THE WHOLE HISTORY." This milestone is exactly the collection
+composition it named and deferred, built entirely on top of it, never
+alongside it:
+
+```text
+LeaderboardClaimHistory                   reconstructPublisherLeaderboardSnapshot()
+(0.8.123, UNCHANGED — every record         (0.8.119, UNCHANGED — THIS
+ ever received, in order)                   replica's own current evidence)
+           │                                            │
+           │  ONE reconstruction, shared by every claim │
+           └──────────────────┬─────────────────────────┘
+                              ▼
+            for each record, unchanged, in order:
+  describePublisherLeaderboardClaimVerification(record, localSnapshot)
+                           (0.8.124, UNCHANGED)
+                              │
+                              ▼
+ { claimCount, verifications: [ { signerIdentityId, claimCreatedAt,
+   receivedAt, signatureValid, evidenceFingerprintMatches,
+   policyVersionMatches, snapshotFingerprintMatches, matches }, ... ] }
+```
+
+**A PROJECTION OF A PROJECTION, NEVER A NEW VERIFIER.** `application/
+PublisherLeaderboardClaimVerificationHistoryView.js` computes nothing
+0.8.124 does not already compute. Every entry in `verifications` is
+exactly `describePublisherLeaderboardClaimVerification()`'s (0.8.124,
+UNCHANGED) own result for that one record, carried through byte for byte
+— this file only iterates and wraps. There is no second verification
+taxonomy, and in particular no collapsed `verificationStatus` field: the
+five 0.8.120/0.8.121 comparison names are reused exactly, one relationship
+over, for every entry.
+
+**HISTORY MULTIPLICITY IS PRESERVED — NEVER DEDUPLICATED.** The same
+signed claim received three times is three entries here, in the exact
+order `LeaderboardClaimHistory` (0.8.123, UNCHANGED) already holds them —
+never collapsed into one, never counted, never averaged. This is
+`application/LeaderboardClaimHistory.js`'s own rule, unchanged, held here
+once more: claim identity ≠ receipt identity. A caller wanting to know how
+many DISTINCT claims are on file is asking a genuinely different, later
+question — this milestone answers neither; it only projects the history
+exactly as it stands.
+
+**ONE SHARED SNAPSHOT, RECONSTRUCTED EXACTLY ONCE — NOT PRIMARILY FOR
+PERFORMANCE.** `reconstructPublisherLeaderboardClaimVerificationHistory()`
+calls `reconstructPublisherLeaderboardSnapshot()` (0.8.119, UNCHANGED) one
+time, before looping, and hands the identical `localSnapshot` instance to
+`describePublisherLeaderboardClaimVerification()` for every record in
+turn — never once per claim inside the loop. This makes the architecture
+explicit rather than merely fast: every claim on file is evaluated against
+the SAME explicitly reconstructed state, at the same instant.
+
+**TWO LAYERS, MIRRORING 0.8.124's OWN SPLIT EXACTLY, ONE RELATIONSHIP
+OVER.** `describePublisherLeaderboardClaimVerificationHistory(claimRecords,
+localSnapshot, verifier)` is the pure projection. `reconstructPublisherLeaderboardClaimVerificationHistory(claimHistory,
+archive, verifier)` is the one, thin, archive-reading convenience
+boundary: it reconstructs this replica's own current snapshot exactly
+once, then hands it to the pure function above.
+
+**A MALFORMED/ABSENT HISTORY PROJECTS TO `{ claimCount: 0, verifications:
+[] }`, NEVER A THROW.** A malformed individual entry inside an otherwise
+genuine array is silently skipped rather than aborting the whole
+projection, because 0.8.124's own function already returns `null` for
+exactly that record; this milestone filters those `null`s out rather than
+inventing a fabricated entry for them.
+
+**FLAGSHIP.** One local snapshot is evaluated against three historical
+claims from three different signers. Alice and Bob sign against the
+identical E1/P1/S1 evidence; Carol signs against her own, genuinely
+different E2/P1/S2 evidence. With this replica's own local archive
+currently representing E1/P1/S1, the projection independently exposes
+Alice and Bob as signature-valid and matching, and Carol as
+signature-valid but NOT matching — never fraud by itself. This replica
+then receives new local evidence that happens to land on exactly what
+Carol signed, without touching any stored claim in any way. Re-projecting
+the identical, unmodified history now shows Alice and Bob still
+signature-valid but NO LONGER matching, and Carol now matching — the
+signed claims never changed; this replica's own evidence did.
+
+Deliberately excluded:
+- **Aggregate trust scores, "trusted publisher" status, majority voting,
+  newest-claim-wins logic, claim expiration, automatic claim removal or
+  replacement, reputation, or ranking of signers.** This milestone reuses
+  0.8.120/0.8.121's own five-boolean vocabulary exactly; it invents none
+  of its own, and in particular never introduces a `verificationStatus`
+  field.
+- **Automatic persistence of verification results, or network
+  synchronization.** Every call recomputes fresh; nothing is written back
+  onto any record or any history.
+- **A "distinct claims on file" or "claims received more than once"
+  count.** Real, separately sized, later work, exactly as
+  `application/LeaderboardClaimHistory.js`'s own header already draws this
+  same line for reference counts vs. distinct referencer counts.
+- **Exchanging claim verification histories between replicas, a claim
+  difference projection, a claim identity/multiplicity projection, or a
+  historical claim timeline.** "Portable Claim-History Exchange," "Claim
+  Difference Projection," "Claim Identity/Multiplicity Projection," and
+  "Historical Claim Timeline" all remain genuinely separate, later
+  questions.
+- **Integrating `LeaderboardClaimHistory` into
+  `PublicationObservationArchive`.** Explicitly deferred by 0.8.123, and
+  left deferred here too.
+
+What's left, and deliberately unbuilt: this milestone proves an entire
+stored claim history and a replica's own current, independently
+reconstructed evidence can be composed into one honest, non-persisted
+collection of comparison facts, reconstructing that evidence exactly once
+regardless of how many claims are on file — never that a claim history
+converges toward one answer, never that repeated receipt of the same claim
+should be collapsed, and never that any entry's five comparison facts
+should be reduced to a single verdict. It never exchanges claim histories
+between replicas, never computes a difference or a distinct-claim count,
+and never integrates claim history into the durable evidence archive
+itself — each remains genuinely separate, later work.
