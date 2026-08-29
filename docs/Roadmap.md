@@ -38035,3 +38035,125 @@ having recorded the same receipts. It never performs the reconciliation
 its own report makes possible, never reduces a history to statistics, and
 never integrates claim history into the durable evidence archive — each
 remains genuinely separate, later work.
+
+## 0.8.128 — Claim History Statistics Projection
+
+0.8.127 answered "what, exactly, does each replica have that the other
+one lacks?" It deliberately never answered a narrower, single-replica
+question that a difference isn't shaped to answer either: "what
+measurable facts exist in THIS replica's own stored claim history, on its
+own?" This milestone is that projection, and nothing more — the
+claim-history analogue of `application/PublisherAchievementStatisticsView.js`
+(0.8.111), one subject over:
+
+```text
+LeaderboardClaimHistory (0.8.123, UNCHANGED)
+       │
+       │  describePublisherLeaderboardClaimHistoryStatistics()  (THIS MILESTONE)
+       ▼
+{ claimCount, distinctClaimIdCount, distinctSignerIdentityIdCount,
+  distinctSnapshotFingerprintCount, distinctEvidenceFingerprintCount,
+  signerIdentityCounts, snapshotFingerprintCounts,
+  evidenceFingerprintCounts }
+```
+
+**THE QUESTION IS "WHAT MEASURABLE FACTS EXIST?" — NEVER "WHICH CLAIMS ARE
+TRUSTWORTHY?", "WHICH SIGNER IS BETTER?", OR "WHICH CLAIM IS CURRENTLY
+VALID?"** Every field answers a plain, closed, factual question about a
+history a caller already holds — "how many," "how many distinct," "how
+many of each" — and none of them orders signers against one another,
+weighs one claim above another, or determines whether any claim on file
+still agrees with a replica's own current evidence. A ranking POLICY built
+on these exact facts is real, separately sized, later work; this milestone
+supplies the raw material, never the verdict.
+
+**RECEIPT IDENTITY IS NOT CLAIM IDENTITY — THE ONE DISTINCTION THIS
+MILESTONE MAKES OBSERVABLE.** A single signed claim can arrive at a
+replica more than once (0.8.123's own multiplicity rule, UNCHANGED), and
+each arrival is its own, independent `LeaderboardClaimRecord` — its own
+receipt. `claimCount` counts RECEIPTS — every stored record, including
+every duplicate arrival of the identical claim. `distinctClaimIdCount`
+counts CLAIMS — the claim's own durable `id`, each counted once no matter
+how many times received. Concretely, given:
+
+```text
+Claim A / Alice / snapshot X / evidence E   (received twice)
+Claim B / Alice / snapshot X / evidence E
+Claim C / Bob   / snapshot Y / evidence F
+```
+
+```text
+claimCount                        = 4
+distinctClaimIdCount              = 3
+distinctSignerIdentityIdCount     = 2
+distinctSnapshotFingerprintCount  = 2
+distinctEvidenceFingerprintCount  = 2
+```
+
+The two receipts of claim A never collapse `claimCount`, and never
+collapse into a single entry anywhere else in the result either.
+
+**NO DEDUPLICATION OF HISTORY — ONLY THE EXPLICITLY NAMED `distinct*`
+COUNTS DEDUPLICATE.** `signerIdentityCounts`, `snapshotFingerprintCounts`,
+and `evidenceFingerprintCounts` each tally EVERY stored receipt — a signer
+with three receipts on file, whether for one claim received three times
+or three distinct claims, is reported with `count: 3` either way. The
+input history itself remains a sequence/multiset throughout.
+
+**COUNT MAPS PRESERVE FIRST-APPEARANCE ORDER — NEVER ALPHABETICAL, NEVER
+SORTED BY COUNT.** Mirroring `PublisherAchievementStatisticsView.js`'s own
+`achievementKindCounts` convention exactly: each count map lists only the
+values that actually occur in the history, ordered by when that value
+first appears while scanning the history in its own existing order —
+oldest received first.
+
+**COMPARES STORED RECEIPTS, NEVER VERIFICATION RESULTS — THE IDENTICAL
+ARCHITECTURAL BOUNDARY 0.8.127 ALREADY HOLDS.** This milestone's module
+imports nothing from `application/PublisherLeaderboardSnapshotClaimVerification.js`,
+`application/PublisherLeaderboardClaimVerificationView.js`, or
+`application/PublisherLeaderboardClaimVerificationHistoryView.js`
+(0.8.120/0.8.124/0.8.125). A replica's own statistics over its stored
+claim history never change merely because its own current evidence
+changes and a claim's verification outcome flips.
+
+**`describePublisherLeaderboardClaimHistoryStatistics()`/
+`reconstructPublisherLeaderboardClaimHistoryStatistics()` — THE IDENTICAL
+SPLIT EVERY OTHER FILE IN THE CLAIM-HISTORY FAMILY ALREADY HOLDS.** The
+reconstruction function is presently a thin, identity wrapper around the
+pure computation, exactly mirroring 0.8.127's own reconstruction — kept
+distinct so a future milestone that integrates claim history into
+`PublicationObservationArchive` (0.8.130) can teach it to accept an
+archive without disturbing the pure computation or any caller already
+using it directly.
+
+**THE FLAGSHIP TEST.** Alice signs claim A, received three times (once
+LOCAL, twice IMPORTED, at three different `receivedAt`s). Alice also signs
+claim B, over the same snapshot as A. Bob signs claim C, over a genuinely
+different snapshot. The result reports `claimCount = 5`,
+`distinctClaimIdCount = 3`, `distinctSignerIdentityIdCount = 2`,
+`distinctSnapshotFingerprintCount = 2`, `distinctEvidenceFingerprintCount
+= 2` — the three receipts of claim A never collapse `claimCount` down to
+`distinctClaimIdCount`.
+
+Deliberately excluded:
+- **Any verification, trust, or "which claim is currently valid"
+  determination.** See "Compares stored receipts, never verification
+  results," above.
+- **No semantic interpretation.** No `valid`, `verified`, `trusted`,
+  `trust`, `confidence`, `score`, `rank`, or `reputation` field or
+  computation, anywhere.
+- **A historical claim timeline, or archive integration.** "Historical
+  Claim Timeline" (0.8.129) and integrating `LeaderboardClaimHistory` into
+  `PublicationObservationArchive` (0.8.130) remain genuinely separate,
+  later questions.
+- **Any ranking, scoring, or "best signer" determination.** 0.8.112's own,
+  already-built, explicitly evaluative `PublisherRankingPolicy.js` remains
+  the only place that concern lives.
+
+What's left, and deliberately unbuilt: this milestone states exactly what
+is measurable about a replica's own stored claim history — receipt counts,
+distinct-claim counts, and per-signer/snapshot/evidence tallies — with
+full multiset fidelity, never any judgment about which claims are true,
+current, or worth preferring. It never narrates the history
+chronologically, and never integrates claim history into the durable
+evidence archive — each remains genuinely separate, later work.
