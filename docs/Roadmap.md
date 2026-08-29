@@ -37753,3 +37753,141 @@ should be reduced to a single verdict. It never exchanges claim histories
 between replicas, never computes a difference or a distinct-claim count,
 and never integrates claim history into the durable evidence archive
 itself — each remains genuinely separate, later work.
+
+
+## 0.8.126 — Portable Claim History Exchange
+
+0.8.122 proved one signed claim can travel between two replicas. 0.8.123
+gave a replica a durable, ordered place to keep every claim it has ever
+received. Neither one ever let a replica hand its ENTIRE stored history to
+another replica in one call. This milestone is that missing step, built
+entirely on top of both, unchanged:
+
+```text
+history (LeaderboardClaimHistory, 0.8.123, UNCHANGED)
+     │  exportPublisherLeaderboardClaimHistory()   (THIS MILESTONE)
+     ▼
+{ protocolVersion: 1, claims: [ { claim, receivedAt, origin }, ... ] }
+     │  importPublisherLeaderboardClaimHistory()   (THIS MILESTONE)
+     │    — each entry structurally verified via
+     │      importPublisherLeaderboardSnapshotClaim()   (0.8.122, UNCHANGED)
+     ▼
+validated LeaderboardClaimRecord[]
+     │  applyPublisherLeaderboardClaimHistoryExchange()   (THIS MILESTONE)
+     │    — appended via appendLeaderboardClaimHistoryEntry()   (0.8.123, UNCHANGED)
+     ▼
+the receiver's OWN history, now also holding every genuinely new receipt
+```
+
+**THE PAYLOAD CARRIES RECEIPTS, NEVER CONCLUSIONS.** Each entry is exactly
+`LeaderboardClaimRecord#toJSON()`'s own wire shape — `{ claim, receivedAt,
+origin }` — never a new shape invented here. No verification result
+(0.8.121/0.8.124/0.8.125's own `signatureValid`/`evidenceFingerprintMatches`/
+`policyVersionMatches`/`snapshotFingerprintMatches`/`matches` vocabulary),
+no local snapshot, no evidence fingerprint the receiver derives on its own,
+no leaderboard, no statistics, no achievements, and no trust judgment ever
+appears in this payload. A receiver who wants any of those recomputes them
+independently, against its own current evidence, as its own, separate,
+explicit next step.
+
+**EVERY CLAIM IS STRUCTURALLY VERIFIED ON IMPORT, NEVER SEMANTICALLY, AND
+NEVER BY A SECOND, COMPETING PATH.** `importPublisherLeaderboardClaimHistory()`
+runs each entry's own `claim` through `importPublisherLeaderboardSnapshotClaim()`
+(0.8.122, UNCHANGED) — the identical structural signature check 0.8.122
+already performs for one claim, reused per entry rather than reimplemented.
+It never asks whether any claim's fingerprints agree with the receiving
+replica's own reconstructed snapshot — that remains 0.8.121's/0.8.124's/
+0.8.125's own, entirely separate, later question.
+
+**THE KEY DESIGN QUESTION: RECEIPT IDENTITY, NOT CLAIM IDENTITY, GOVERNS
+DEDUPLICATION.** 0.8.123's own rule is preserved unchanged: the same claim
+received twice is two historical entries, never collapsed into one. But
+applying the identical exported payload to the identical target history a
+second time must not endlessly re-append the same receipts. This milestone
+resolves the tension with one explicit rule:
+
+```text
+receiptIdentity = structural identity of (claim, receivedAt, origin)
+```
+
+— exact structural equality of a record's own complete `toJSON()` output,
+mirroring `application/AchievementEvidenceMerge.js`'s own
+`canonicalRecordKey()` (0.8.115), applied here to a record shape that
+already carries its own receipt metadata as ordinary fields. Concretely:
+same claim + same receivedAt + same origin is the same receipt (a repeat
+application appends nothing); same claim with a different receivedAt, or a
+different origin, is always a distinct receipt, kept alongside the other.
+
+**`RECEIVEDAT`/`ORIGIN` TRAVEL AS DATA, UNCHANGED — A DELIBERATE DEPARTURE
+FROM 0.8.115'S OWN "ALWAYS RE-STAMP `IMPORTED`" RULE.** Achievement
+evidence provenance lives outside the record itself (a parallel array on
+`PublicationObservationArchive`), so 0.8.115 correctly re-stamps it on
+every merge. A `LeaderboardClaimRecord`'s `receivedAt`/`origin` are fields
+OF the record itself, already part of what 0.8.123's own `toJSON()`/
+`fromJSON()` round-trips verbatim. This milestone follows that established
+contract: a record's `receivedAt`/`origin` survive transport exactly as
+exported, the identical way `claim.createdAt` already survives 0.8.115's
+own evidence merge unregenerated. Regenerating `receivedAt` to "now" on
+every import would also make exchange-level idempotency impossible — the
+identical payload applied at two different moments would never compare
+equal.
+
+**A STRUCTURALLY INVALID OR FORGED ENTRY IS SKIPPED, NEVER FATAL TO THE
+WHOLE HISTORY — A DELIBERATE, NAMED DEPARTURE FROM THIS CODEBASE'S USUAL
+"REJECT THE WHOLE PAYLOAD" DISCIPLINE FOR A COLLECTION PAYLOAD.**
+`importPublisherLeaderboardClaimHistory()` still rejects the whole payload
+outright (`INVALID_HISTORY`) when its own top-level envelope
+(`protocolVersion`/`claims`) is malformed — the same closed-envelope
+discipline 0.8.122 already holds for a single claim. But once the envelope
+itself is genuine, one malformed or forged entry deep inside an otherwise
+genuine history does not discard every other entry alongside it — every
+rejection is reported, by index and reason, in `rejections`.
+
+**FLAGSHIP.** Three replicas. Alice holds claim A (signed by Alice
+herself) and her own receipt for claim B (signed by Bob, which Alice
+separately received). Bob holds his own, genuinely distinct receipt for
+the SAME claim B (he signed it himself, at his own moment in time) and
+claim C (signed by Eve, which he received). Carol starts empty. Carol
+applies Alice's exported history, then Bob's, and ends up holding four
+receipts — A, B (Alice's own), B (Bob's own), C — because the two B
+receipts genuinely differ in `receivedAt` and `origin`, never collapsed
+into one. Carol then repeats the exact same two exchanges: her history
+does not grow, and each apply call returns the exact same history
+instance it was given, not merely an equal one — proving exchange-level
+idempotency without weakening 0.8.123's own multiplicity rule.
+
+**ONE PARTICULARLY USEFUL NEGATIVE TEST.** A claim valid against evidence
+E1 is transported to a replica holding genuinely different evidence E2.
+The stored claim is byte-identical to the original signed claim — the
+transported claim is never altered to reflect the receiver's own,
+independently-computed, differing verification result. Transported claim
+≠ current verification result remains true across an entire history, not
+merely one claim.
+
+Deliberately excluded:
+- **Verification of any kind performed by this milestone itself.** No
+  `PublicationObservationArchive`, no `verifyPublisherLeaderboardSnapshotClaim()`
+  call, no evidence fingerprint comparison — grep this milestone's own
+  module and none of it appears.
+- **Automatic, periodic, or background synchronization.** Every step here
+  runs only when a caller explicitly calls it — the identical restraint
+  `application/AchievementEvidenceExchange.js` (0.8.118) already holds.
+- **A claim-history difference projection, a claim identity/multiplicity
+  projection, or a historical claim timeline.** "Claim History Difference
+  Projection" (0.8.127), "Claim Identity/Multiplicity Projection"
+  (0.8.128), and "Historical Claim Timeline" (0.8.129) all remain
+  genuinely separate, later questions.
+- **Integrating `LeaderboardClaimHistory` into
+  `PublicationObservationArchive`.** Explicitly deferred by 0.8.123, and
+  left deferred here too (0.8.130).
+
+What's left, and deliberately unbuilt: this milestone proves an entire
+stored claim history can move between replicas as a small, portable
+payload and land on the far side holding exactly the receipts it did not
+already have — never that receiving a history says anything about whether
+any claim in it is true relative to the receiver's own evidence, and never
+that the same receipt exchanged twice should accumulate. It never computes
+a difference between two histories, never distinguishes distinct claims
+from duplicate receipts as its own labeled projection, and never
+integrates claim history into the durable evidence archive itself — each
+remains genuinely separate, later work.
