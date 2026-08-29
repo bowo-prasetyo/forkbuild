@@ -37144,3 +37144,162 @@ already lets them exchange raw evidence — a "Portable Signed-Claim
 Export/Import" milestone, and a durable claim archive, remain genuinely
 separate, later questions this milestone deliberately declines to
 pre-build.
+
+## 0.8.122 — Portable Signed Leaderboard Claim Exchange
+
+0.8.121's own "What's left," above, named this milestone directly:
+"Portable Signed-Claim Export/Import." 0.8.121 created and verified a
+signed claim entirely LOCALLY — nothing ever moved it anywhere. This
+milestone is the missing step in between, the identical question 0.8.118
+already answered for raw evidence, asked here one layer up, over a SIGNED
+CONCLUSION instead of a durable fact:
+
+```text
+Alice's replica                              Bob's replica
+
+claim (signed, 0.8.121, UNCHANGED)
+   │  exportPublisherLeaderboardSnapshotClaim()
+   ▼
+a JSON payload  ──────────────────────────────►  importPublisherLeaderboardSnapshotClaim()
+                                                         │
+                                                         ▼
+                                                  a hydrated claim,
+                                                  structurally verified
+                                                         │
+                                                         ▼  (a caller's own,
+                                                  verifyPublisherLeaderboardSnapshotClaim()  separate, explicit
+                                                  (0.8.121, UNCHANGED)                        next step)
+                                                         │
+                                                         ▼
+                                                  { matches, signatureValid,
+                                                    evidenceFingerprintMatches,
+                                                    policyVersionMatches,
+                                                    snapshotFingerprintMatches }
+```
+
+**TRANSPORT INTRODUCES NO NEW TRUST SEMANTICS — THE ONE RULE THIS
+MILESTONE EXISTS TO ENFORCE.** `application/PublisherLeaderboardSnapshotClaimExchange.js`
+does not re-decide what a valid signature means, does not re-decide what
+"matches" means, and does not compare a claim against any archive. It has
+exactly two jobs: turn a claim a replica already holds into portable JSON,
+and turn portable JSON back into a claim instance that replica can hand to
+the UNCHANGED 0.8.121 verifier — never a second, competing verification
+path.
+
+**THE TRANSPORTED PAYLOAD CARRIES ONLY THE CLAIM.** The payload is exactly
+`PublisherLeaderboardSnapshotClaim#toJSON()`'s own closed, nine-field wire
+shape:
+
+```text
+{ kind, schemaVersion, id, evidenceFingerprint, policyVersion,
+  snapshotFingerprint, signerIdentityId, createdAt, signature }
+```
+
+Not the evidence. Not achievement events, badges, or statistics. Not the
+leaderboard itself. Not publisher associations. Not the ranking policy
+object. Not any private signing material. A naive reading of "the claim"
+might expect `id`/`createdAt` dropped as bookkeeping, leaving five fields —
+that shape does NOT travel, deliberately: `core/PublisherLeaderboardSnapshotClaim.js#getSigningDescriptor()`
+binds both `id` and `createdAt` into the exact canonical envelope that gets
+hashed and signed, so stripping them would leave a recipient unable to
+reconstruct the descriptor the signature was actually computed over, and
+every genuinely signed claim would reject as forged. `kind`/`schemaVersion`
+ride along for the same "free to include now, self-describing envelope"
+reason `core/BlueprintLineageClaim.js` already established. What the
+five-field intuition gets right — and what this milestone's own closed,
+nine-field validation guarantees by construction — is the SPIRIT of the
+rule: no evidence, no achievement/badge/statistic/leaderboard vocabulary,
+no publisher association, no policy object, no private key, ever.
+
+**EXPORT IS A THIN, TRUSTING PASSTHROUGH.** `exportPublisherLeaderboardSnapshotClaim()`
+requires a genuine, already-signed claim instance and performs no
+validation beyond that — the instance already went through
+`core/PublisherLeaderboardSnapshotClaim.js`'s own constructor validation
+and `CreatePublisherLeaderboardSnapshotClaimUseCase`'s own
+verify-before-return discipline the moment it came into being. There is
+nothing left to re-check.
+
+**IMPORT NEVER PERFORMS SEMANTIC VERIFICATION, AND NEVER TOUCHES AN
+ARCHIVE.** `importPublisherLeaderboardSnapshotClaim()` takes no archive
+parameter at all. It validates the payload's own shape, constructs a real
+claim instance, and checks the signature STRUCTURALLY — does
+`signerIdentityId` genuinely sign exactly this fingerprint triple? — via
+the UNCHANGED `identity/LocalAuthorizationVerifier.js#verifyPublisherLeaderboardSnapshotClaim()`.
+It never asks whether the claim's fingerprints agree with any replica's
+own reconstructed snapshot — that remains exactly, and only,
+`verifyPublisherLeaderboardSnapshotClaim(archive, claim, verifier)`'s own
+job (0.8.121, UNCHANGED), run as a caller's own, separate, explicit next
+step. Receiving a signed claim through this milestone NEVER causes
+ForkBuild to alter its own leaderboard, persist anything, or treat the
+claim as more than an unopened envelope until that separate call runs.
+
+**A STRUCTURALLY UNVERIFIABLE CLAIM IS AN EXPLICIT, NON-THROWING
+OUTCOME.** `PublisherLeaderboardSnapshotClaimImportOutcome` is exactly
+`IMPORTED` / `INVALID_CLAIM` / `UNVERIFIABLE_CLAIM` — neither a malformed
+payload nor a well-formed-but-forged one ever throws. Only a missing or
+malformed `verifier` argument throws — a programmer error, never untrusted
+external input, the identical distinction `application/PublisherLeaderboardSnapshotClaimVerification.js`
+already draws for its own `verifier` parameter.
+
+**THE FLAGSHIP SCENARIO.** Alice signs a claim over her own evidence.
+She exports it; the export crosses to Bob as plain JSON, round-tripped
+through `JSON.parse(JSON.stringify(...))` to prove no shared object
+reference is doing any work. Bob, holding byte-identical evidence, imports
+it (`IMPORTED` — the signature is genuinely Alice's) and then runs the
+UNCHANGED 0.8.121 verifier against his own archive: `signatureValid`,
+`evidenceFingerprintMatches`, `policyVersionMatches`, and
+`snapshotFingerprintMatches` are all true. No server, no trusted
+leaderboard, no trusted achievement result. Then the interesting failure:
+Bob's own evidence genuinely differs from Alice's (one extra anchored
+publication of his own). The import still succeeds — Alice's signature
+remains perfectly genuine — but `evidenceFingerprintMatches` and
+`snapshotFingerprintMatches` both read false. Bob can truthfully say
+"Alice really signed this claim" and, in the same breath, "this claim
+does not describe the leaderboard I independently derive from my
+evidence." Authentication and reproducibility remain independent
+dimensions, exactly as 0.8.121 established — importing a claim never
+collapses that distinction.
+
+**NO STORE, NO ARCHIVE COLLECTION, NO CLAIM HISTORY — DELIBERATELY OUT OF
+SCOPE, NOT MERELY OMITTED.** Unlike `application/PlaceNamingClaimExchange.js`
+and `application/BlueprintLineageExchange.js`, this milestone's two
+functions take no `store` and persist nothing — no class at all, mirroring
+`application/AchievementEvidenceExchange.js`'s own free-function shape one
+layer up. A received claim is never written into `application/PublicationObservationArchive.js`
+(no new collection, no `SCHEMA_VERSION` bump) and is never remembered
+across calls — importing the identical claim twice imports it twice,
+independently, with no deduplication. Receiving a signed claim never
+alters a replica's own leaderboard; the local leaderboard remains a
+function of local evidence and local policy alone.
+
+Deliberately excluded:
+- **Automatic claim generation, endorsement, trust scores, reputation,
+  claim weighting, "verified publisher" labels, consensus, or voting.**
+  See "Transport introduces no new trust semantics," above.
+- **Claim replacement, automatic synchronization, or leaderboard
+  persistence.** Every export/import runs only when a caller explicitly
+  calls it; nothing here polls, retries, or reaches for a network of any
+  kind.
+- **A durable claim registry able to retain multiple claims about the same
+  snapshot, from multiple signers, without collapsing them into a count.**
+  Real, separately sized, later work — see 0.8.123, below.
+- **An actual peer/socket/wire transport.** This milestone moves a plain
+  JSON payload between two functions inside one process (exactly like
+  0.8.118's own flagship moved evidence) — a real network boundary a
+  caller plugs into these two functions remains separate, later work,
+  its exact shape and number not committed to yet.
+
+What's left, and deliberately unbuilt: this milestone proves a signed
+leaderboard claim can travel between two independent replicas as a small,
+closed, portable JSON payload, and that the receiving replica's own
+existing 0.8.121 verification pipeline runs over it completely unchanged —
+never that a received claim is true, never that it should be trusted more
+than any other unopened envelope, and never that receiving one should
+change anything about the recipient's own leaderboard. It never persists
+an imported claim anywhere, and it never lets a replica retain and inspect
+MULTIPLE claims about the same snapshot side by side — a "Signed Claim
+Registry / History" milestone (0.8.123) remains real, separately sized,
+later work, where three different signers' claims about the identical
+snapshot are three independent facts, never three endorsements, until some
+later, explicit, separately named milestone deliberately decides to make
+that evaluative leap.
