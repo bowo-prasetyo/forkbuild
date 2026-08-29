@@ -7649,8 +7649,8 @@ export default {
             </div>
 
             <!-- 0.8.104 — Explicit Publication Reference Relationship. A
-                 durable, EXPLICIT `sourcePublicationIdentity ->
-                 referencedPublicationIdentity` fact between two ALREADY-
+                 durable, EXPLICIT sourcePublicationIdentity ->
+                 referencedPublicationIdentity fact between two ALREADY-
                  DURABLE publication identities — deliberately NOT called
                  "fork," and never auto-created: it exists only when a
                  person picks both sides here and clicks "Record
