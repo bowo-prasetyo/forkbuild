@@ -22,9 +22,16 @@ on-chain-observed anchor — a
 [Bitcoin Anchor Pipeline](#the-bitcoin-anchor-pipeline) and, one chain
 over, a [Base Anchor Pipeline](#the-base-anchor-pipeline) — plus the
 durable, cross-chain [Publication Observation Archive](#the-publication-observation-archive)
-both pipelines (and IPFS Publishing) quietly write their own facts into.
-None of these are required by any other, and none are required to use the
-rest of ForkBuild.
+both pipelines (and IPFS Publishing) quietly write their own facts into;
+and, built on top of the durable publication identities those two
+pipelines mint, an explicit [**Publication References**](#publication-references)
+relationship between two publications (and a graph view over all of
+them), an [**Achievements**](#achievements) system that quietly badges a
+publication identity's own milestones, and a [**Publisher
+Identity**](#publisher-identity) layer that lets you explicitly associate
+a self-declared publisher label with your publications and see that
+publisher's own achievements and stats. None of these are required by
+any other, and none are required to use the rest of ForkBuild.
 
 None of this is required to use ForkBuild. Skip this guide entirely if you
 just want to build, publish Documents, and explore — everything in
@@ -1285,6 +1292,229 @@ plan, a new sign, or a reload. The two durable exceptions are the
 publication record minted at finalization and the inclusion observations
 archived after every **Observe Transaction** click — both described above.
 
+## Publication References
+
+Two page-level cards, further down the Publications page, build directly
+on the durable publication identities the two pipelines above mint — not
+the anchors themselves, but the fact that one published record
+explicitly points at another.
+
+### Recording a reference
+
+```
+Publication References                          [Persisted locally]
+
+References recorded: 2
+
+[Show References]
+```
+
+Click **Show References** to expand a small form:
+
+- **Source publication (the one making the reference)** and **Referenced
+  publication (the one being pointed at)** — two dropdowns, each listing
+  every publication identity this replica currently knows from its own
+  Bitcoin and Base Anchor Publications records above (for example,
+  "Bitcoin — a1b2…c3d4 — content 9f8e…"). There's no free-text field, and
+  no way to name a publication that doesn't already have a durable
+  identity here.
+- **Record Reference** — disabled until both dropdowns are chosen. Click
+  it to durably record that fact.
+
+A publication can never reference itself — choosing the identical
+publication on both sides is rejected, with the reason shown inline,
+rather than silently accepted. Recording a reference is entirely your
+own explicit act: nothing on this page ever infers one from matching
+content, timestamps, or authors, and publishing or forking something
+elsewhere never creates one automatically.
+
+> **Deliberately not called "fork."** A reference is the plain fact that
+> one publication's identity points at another's. What that pointer
+> *means* — a fork, a citation, a response — is an interpretation this
+> record refuses to make; it states only that the pointer exists.
+
+Recorded references are listed underneath, oldest first, each showing
+both publications' blockchain and shortened identity, their content
+hashes, and when the reference was recorded. The same publication can be
+the source of several references, the target of several references, or
+both — nothing here deduplicates or limits that, and referencing the
+same publication twice is recorded as two separate references, never
+collapsed into one.
+
+### Publication Reference Graph
+
+A second card, **Publication Reference Graph**, groups those same
+recorded references — never a second, independently entered set — into a
+per-publication view:
+
+```
+Publication Reference Graph                     [Persisted locally]
+
+Edges: 5   Publications: 4
+Distinct sources: 3   Distinct referenced: 2
+
+[Show Reference Graph]
+```
+
+Expanding it lists every publication that appears on either side of at
+least one reference, with its own **Outgoing references** and **Incoming
+references** counts. Click a publication to expand it and see the exact
+edges behind those counts — which publications it references, and which
+reference it, each with when it was recorded. Two references between the
+same pair of publications are always shown as two separate lines here,
+never merged into one.
+
+> **A count is not a ranking.** "7 incoming references" is a plain,
+> attributable fact this graph states about a publication — never a
+> score, and never a claim that it's "more valuable" or "more popular"
+> than one with fewer. There's no leaderboard, weighting, or
+> "most-referenced" list anywhere in this graph.
+
+## Achievements
+
+Publishing on this page can, on its own, quietly earn a **publication
+identity** — never a person, a wallet, or an account — a badge the
+moment a specific, plainly named threshold is crossed. Nothing needs to
+be claimed or requested; a badge simply appears the instant its
+threshold is crossed by something you did elsewhere on this page.
+
+### The Achievements card
+
+```
+Achievements                                    [Persisted locally]
+
+Badges earned: 3
+
+[Show Achievements]
+```
+
+Expand it to see every badge this replica's own Bitcoin and Base
+publication records have earned so far:
+
+| Badge | Icon | Earned when |
+|---|---|---|
+| First publication | 🏆 | Your very first Bitcoin or Base anchor publication record is minted. |
+| Bitcoin publisher | ₿ | Your first Bitcoin anchor publication record. |
+| Base publisher | 🔵 | Your first Base anchor publication record. |
+| Multi-chain publisher | 🌐 | You've minted a publication record on more than one chain. |
+| Ten publications | 🔟 | Your 10th publication record, Bitcoin and Base combined. |
+| One hundred publications | 💯 | Your 100th. |
+
+Click a badge to expand it and see the exact **Source Publication** that
+earned it — its blockchain, content hash, chain reference, and when it
+was created — and, when this replica can resolve it, a **View
+Publication Lifecycle Above** button that jumps straight to that
+publication's own lifecycle timeline (see
+[Bitcoin Anchor Publications](#bitcoin-anchor-publications-a-durable-identity-and-lifecycle)
+and
+[Base Anchor Publications](#base-anchor-publications-a-durable-identity-and-lifecycle)
+above). A badge is a presentation of that one already-durable fact —
+never a new claim, a score, a rank, or a statement about anyone's worth.
+
+Five further thresholds — earned by making or receiving an explicit
+[Publication Reference](#publication-references) rather than by
+publishing — have no badge presentation here yet: **First reference
+created**, **First reference received**, **Referenced by 10
+publications**, **Referenced by 100 publications**, and **First
+cross-chain reference** (a reference between a Bitcoin and a Base
+publication). They're real, earned achievements this replica already
+tracks; you'll find them listed by name, not badge, in **Achievement
+Profile**, next.
+
+### Achievement Profile
+
+A publication identity's own complete slice of every achievement it's
+earned — badge-presented or not:
+
+```
+Achievement Profile
+
+[Show Achievement Profile]
+```
+
+Choose a publication from the dropdown (the same known publication
+identities every other card here draws from) to see its **Achievements**
+count and the full list — each shown as "🏆 *label*" with when it was
+earned.
+
+**Deliberately not a user or wallet profile.** This page can state that
+a *publication* earned an achievement, never yet that a *person* did,
+because nothing here durably links a publication identity to a human
+being.
+
+## Publisher Identity
+
+Everything above — anchor publications, references, achievements — is
+scoped to a **publication identity**: a specific record on a specific
+chain. Nothing about it names who published it, in any human sense.
+**Publisher Associations**, and the three cards built on top of it, let
+you say, explicitly, "publisher *X* claims this publication" — entirely
+at your own word.
+
+> **A publisher identifier is a bare, self-declared label — never a
+> verified identity.** Typing "Alice" here is not a login, a
+> cryptographic proof, or a claim this page checks against anything.
+> `Alice`, `alice`, and `ALICE` are three different publisher identities,
+> compared exactly, case for case. Nothing here infers a publisher from a
+> shared wallet, matching content, or a matching name — only from what
+> you explicitly typed and confirmed.
+
+### Publisher Associations
+
+```
+Publisher Associations                          [Persisted locally]
+
+Associations recorded: 2
+
+[Show Publisher Associations]
+```
+
+Expand it, then:
+
+- **Publisher identifier** — type a label (for example, "Publisher A");
+  a dropdown of identifiers you've already used elsewhere on this page
+  offers autocomplete, but typing a brand-new one is exactly as valid.
+- **Publication** — choose one of your known Bitcoin/Base publication
+  identities.
+- **Add Publication** — disabled until both are filled in. Click it to
+  durably record that this publisher claims that publication.
+
+**Recorded Associations** lists every one you've made, oldest first.
+Below that, **A Publisher's Associated Publications** lets you pick any
+publisher identifier that's been used at least once and see every
+publication currently associated with it, with its own content hash and
+when it was associated.
+
+This is stated plainly as **an explicit claim, not a verified fact** — it
+says the association was recorded, never that this replica has proven
+who actually controls those publications.
+
+### Publisher Achievement Profile, Badges, and Statistics
+
+Three further cards compose the same publisher/publication association
+with everything [Achievements](#achievements) above already computes —
+never a second, competing achievement engine — each answering a
+different question about one chosen publisher:
+
+| Card | Answers |
+|---|---|
+| **Publisher Achievement Profile** | The full list of achievements earned by *any* publication that publisher has claimed, each showing which publication earned it. |
+| **Publisher Achievement Badges** | The same, narrowed to only the achievements that already have a badge presentation in [Achievements](#achievements) — with the identical **View Publication Lifecycle Above** link. |
+| **Publisher Achievement Statistics** | Plain counts: associated publications, achievements earned, distinct achievement kinds, badges earned, distinct badge kinds, and a per-blockchain publication count — plus a breakdown of how many achievements were earned of each kind. |
+
+Each of the three has its own **Choose A Publisher** dropdown, populated
+from every publisher identifier **Publisher Associations** has recorded
+— choosing one is independent across the three cards, so picking a
+publisher in one doesn't select it in another. If no publisher has been
+associated with anything yet, each card says so and points back to
+**Publisher Associations**.
+
+All three carry the identical caveat as Publisher Associations: what
+they show is a fact about publications that publisher has *explicitly
+claimed*, never proof of who controls, owns, or is the human behind any
+of them — and none of the three ever produces a score, a rank, a level,
+a tier, or a leaderboard entry.
+
 ## Snapshot Placements
 
 Every publication card also has its own **Snapshot Placements** section —
@@ -1858,6 +2088,19 @@ by its own txid — visible again after a reload through that archive, the
 publication's own Publication Lifecycle disclosure, or (for Bitcoin)
 Historical Bitcoin Anchor Evidence, even though the pipeline's own
 in-progress wizard screen has gone back to a blank slate.
+
+**[Publication References](#publication-references) and [Publisher
+Identity](#publisher-identity) are durable; everything they're read
+through is recomputed fresh, so there's nothing to lose.** A recorded
+reference or publisher association is stored on this device and survives
+a reload exactly like a publication record does. The **Publication
+Reference Graph**, **Achievements**, **Achievement Profile**, and all
+three **Publisher Achievement …** cards never store anything of their
+own — each one is recomputed, from scratch, from the archive's own
+durable facts every time its card renders, so reloading the page changes
+nothing about what they show; only which dropdown option or which badge
+you'd expanded resets, the same as any other collapsed-by-default card
+on this page.
 
 **[The Publication Observation Archive](#the-publication-observation-archive)
 itself is the one place on this page built to survive a reload with no

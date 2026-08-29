@@ -63,7 +63,14 @@ top-level [docs/](..) folder.
    IPFS, Bitcoin, and Base facts alike, with its own combined timeline,
    export/import, non-replacing inspection and comparison of another
    device's archive, provenance, and a fingerprint you can check
-   against a peer's.
+   against a peer's, plus, built on top of those durable publication
+   identities, an explicit **Publication References** relationship
+   between two publications with a **Reference Graph** view over all of
+   them, an **Achievements** system that badges a publication's own
+   milestones (and a per-publication **Achievement Profile**), and a
+   **Publisher Identity** layer for explicitly associating a
+   self-declared publisher label with your publications and inspecting
+   that publisher's own achievement profile, badges, and statistics.
 
 ## Reference
 
