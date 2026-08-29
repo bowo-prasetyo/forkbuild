@@ -18529,3 +18529,59 @@ leaderboard; it needs only agreement on the evidence and the policy, and
 this milestone is the statement that agreement is sufficient.
 
 See `docs/Roadmap.md`, 0.8.119, for the full milestone entry.
+
+## A Valid Signature Proves Who Signed; It Never Proves The Claim Is True Relative To A Replica's Own Evidence (0.8.121)
+
+0.8.119 proved a leaderboard conclusion is reproducible. 0.8.120 proved
+that reproducibility is independently checkable, without ever trusting a
+supplied snapshot. Neither ever let a signing identity make a durable,
+attributable STATEMENT about a conclusion — a genuinely different kind of
+fact, about WHO, not about WHAT.
+
+**A signature authenticates the claim; it never authenticates the
+evidence, and it never authenticates the truth of the assertion.**
+`core/PublisherLeaderboardSnapshotClaim.js`'s own signature proves only
+that `signerIdentityId` genuinely signed exactly this
+`evidenceFingerprint`/`policyVersion`/`snapshotFingerprint` triple —
+nothing about whether the underlying achievement evidence is real, and
+nothing about whether the assertion holds relative to any particular
+replica's own reality. This is the identical, narrow claim
+`core/PublicationAnchor.js`'s own "External Anchoring Provides Evidence;
+It Does Not Establish Authority (0.8.0)" already makes, held here once
+more, one layer up, over a derived conclusion instead of a raw fact.
+
+**`signatureValid` and a replica's own semantic match are computed
+independently, and neither is ever inferred from the other.**
+`application/PublisherLeaderboardSnapshotClaimVerification.js` names four
+facts — `signatureValid`, `evidenceFingerprintMatches`,
+`policyVersionMatches`, `snapshotFingerprintMatches` — the first answering
+only "did the signer genuinely sign this?" without consulting any
+archive, the other three answering only "does MY OWN independent
+reconstruction agree?" without ever consulting the signature. A claim can
+be perfectly, genuinely signed, and still disagree entirely with a
+replica's own evidence — this is not a bug this file works around, it is
+the whole point. Bob, receiving nothing but a serialized claim — no
+server, no trusted leaderboard, no trusted achievement result — always
+independently reconstructs his own snapshot from his own evidence and
+checks the signature separately; the flagship test proves both halves
+matter by making one of them fail while the other genuinely succeeds.
+
+**The signer is always a cryptographic identity, never a publisher
+label.** `application/PublisherIdentityRecord.js` (0.8.108) remains "a
+bare, explicit, case-sensitive label representing a publisher" —
+human/application-level, never cryptographic — and this milestone never
+lets one silently stand in for a signing key. `signerIdentityId` is
+always a did:key `identity/SigningIdentity.js` identity. Turning "Alice"
+into "the person cryptographically controlling key X is Alice" would be a
+completely different, unearned claim; nothing in this codebase makes it
+without an identity holder's own Ed25519 signature standing behind it.
+
+**A signature never makes a ranking objectively correct.** A claim
+carries no `score`, `reputation`, `trust`, `confidence`, `quality`,
+`worthiness`, `authority`, or `verifiedPublisher` field — the identical
+vocabulary boundary every file in this family already holds. A signature
+establishes who signed what; a replica's own independent reconstruction
+decides whether it agrees; neither one, nor their combination, is ever a
+verdict about which conclusion is "right."
+
+See `docs/Roadmap.md`, 0.8.121, for the full milestone entry.

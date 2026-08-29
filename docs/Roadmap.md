@@ -36975,3 +36975,172 @@ portable bundle — that remains 0.8.121's own question, "Portable Publisher
 Profile Bundle." And it never moves a snapshot, or any exchange message,
 across an actual peer connection — that remains 0.8.122's own question,
 "Explicit Peer/Transport Boundary."
+
+## 0.8.121 — Signed Reproducible Leaderboard Snapshot Claim
+
+0.8.120's own header, above, sketched 0.8.121 as "Portable Publisher
+Profile Bundle." Before that work was taken up, the roadmap was
+deliberately redirected: 0.8.120 proved a leaderboard conclusion is
+independently CHECKABLE against a replica's own evidence; nothing yet
+existed to let a signing identity make a durable, attributable STATEMENT
+about one. That is a genuinely different, and genuinely more foundational,
+question than a portable bundle — so it became this milestone instead, and
+the bundle idea remains real, unbuilt, later work.
+
+0.8.119 proved a leaderboard CONCLUSION is reproducible. 0.8.120 proved
+that reproducibility is independently checkable — a replica never has to
+trust a snapshot, because it can always recompute its own and compare.
+Neither ever answered a question about WHO, only about WHAT. This
+milestone is that third statement:
+
+```text
+Durable Evidence
+       │
+       ▼
+Evidence Fingerprint                          (0.8.116, UNCHANGED)
+       │
+       ▼
+Leaderboard Snapshot                          (0.8.119, UNCHANGED)
+       │
+       ├──────────────────────┐
+       ▼                      ▼
+Reproducibility          Cryptographic
+verification (0.8.120)   attribution (THIS MILESTONE)
+       │                      │
+       └──────────┬───────────┘
+                  ▼
+            Signed Claim
+```
+
+`core/PublisherLeaderboardSnapshotClaim.js` is a small, immutable,
+REQUIRED-signature record — the same discipline every other signed claim
+in this codebase already holds (`PlaceNamingClaim`, `BlueprintAttribution`,
+`BlueprintLineageClaim`) — carrying exactly:
+
+```text
+{ evidenceFingerprint, policyVersion, snapshotFingerprint,
+  signerIdentityId, createdAt, signature }
+```
+
+**DOES NOT USE `application/PublisherIdentityRecord.js` AS THE SIGNER —
+THE ONE RULE THIS MILESTONE EXISTS TO ENFORCE.** 0.8.108's own
+`PublisherIdentityRecord` is "a bare, explicit, case-sensitive label
+representing a publisher" — never cryptographic. `signerIdentityId` is
+always a did:key `identity/SigningIdentity.js` identity, resolved through
+`identity/resolveSigningIdentityId.js` (UNCHANGED) exactly the way every
+other REQUIRED-signature claim already resolves its author. Turning
+"Alice" into "the person cryptographically controlling key X is Alice"
+would be a completely different, unearned claim, and this milestone never
+makes it — `core/PublisherLeaderboardSnapshotClaim.js` imports nothing
+from `application/PublisherIdentityRecord.js`.
+
+**THE CLAIM NAMES THE SNAPSHOT; IT NEVER CARRIES IT.** No leaderboard, no
+policy object, no achievement event ever appears on a claim. A verifier
+never reads a conclusion off a claim as if it were true — it independently
+reconstructs its OWN snapshot from its OWN archive and compares
+fingerprints, the identical "never trust a supplied conclusion" discipline
+0.8.120 already established, applied here to a SIGNED conclusion instead
+of a bare one.
+
+**TWO KINDS OF SNAPSHOT IDENTITY, NEITHER REPLACING THE OTHER.**
+0.8.119's own `(evidenceFingerprint, policy.version)` pair remains,
+untouched, the SEMANTIC identity — "would two replicas compute the same
+leaderboard?" `application/PublisherLeaderboardSnapshotFingerprint.js`
+adds a narrower, CRYPTOGRAPHIC digest — a SHA-256 over the COMPLETE
+snapshot (evidence fingerprint, full policy, full leaderboard) — because a
+signature authorizes exact bytes, never a semantic equivalence class.
+0.8.119's own header declined a snapshot hash for every purpose it ever
+served, and that restraint stands — `application/PublisherLeaderboardSnapshot.js`
+itself gains no new field and no new export. The new fingerprint lives
+beside it, in its own file, for the one purpose 0.8.119 never needed to
+serve.
+
+**THE SIGNATURE AUTHENTICATES THE CLAIM, NEVER THE EVIDENCE.** Three
+separate statements, never conflated: evidence says "these durable facts
+exist" (0.8.114-0.8.118); reproducibility says "these facts, under this
+policy, produce this leaderboard" (0.8.119/0.8.120); a signature says only
+"this signing identity signed this exact reproducible result" — the
+identical restraint `core/PublicationAnchor.js`'s own "External Anchoring
+Provides Evidence; It Does Not Establish Authority (0.8.0)" already holds,
+one layer up, over a derived conclusion instead of a raw fact.
+
+**A VALID SIGNATURE NEVER MEANS THE CLAIM IS TRUE RELATIVE TO A
+REPLICA'S OWN EVIDENCE — THE FLAGSHIP DISTINCTION.**
+`application/PublisherLeaderboardSnapshotClaimVerification.js` computes
+FOUR genuinely independent facts, never one derived from another:
+
+```text
+{ matches, signatureValid, evidenceFingerprintMatches,
+  policyVersionMatches, snapshotFingerprintMatches }
+```
+
+`signatureValid` answers only "did `signerIdentityId` genuinely sign
+exactly this fingerprint triple?" and never consults the local archive at
+all. The other three answer only "does MY OWN independent reconstruction
+agree?" and never consult the signature at all. `signatureValid: true`
+alongside `evidenceFingerprintMatches: false` is not a contradiction this
+file resolves — it is the single most important case the flagship test
+proves: Alice signs a genuine claim over her own evidence; Bob, holding
+evidence that genuinely differs from Alice's, receives ONLY the serialized
+claim (no server, no trusted leaderboard, no trusted achievement result)
+and finds the signature perfectly valid while every semantic fact reads
+false. A signature proves who signed; a replica's own reconstruction
+decides whether it agrees.
+
+**TAMPER-EVIDENT BY CONSTRUCTION.** Changing exactly one of
+`evidenceFingerprint`, `policyVersion`, `snapshotFingerprint`,
+`signerIdentityId`, or the raw signature bytes invalidates
+`signatureValid` — the canonical signing descriptor
+(`core/PublisherLeaderboardSnapshotClaim.js#getPublisherLeaderboardSnapshotClaimSigningDescriptor()`)
+covers all four semantic fields together, so no single-field forgery slips
+past `identity/LocalAuthorizationVerifier.js#verifyPublisherLeaderboardSnapshotClaim()`.
+Grafting one signer's genuine signature onto a claim naming a different
+`signerIdentityId` fails the identical way — a signature is never merely
+"someone signed something like this."
+
+**DELIBERATELY NON-EVALUATIVE.** No claim, and no verification result,
+ever carries `score`, `reputation`, `trust`, `confidence`, `quality`,
+`worthiness`, `authority`, or `verifiedPublisher` — the identical
+vocabulary boundary every file in this family already holds. A signature
+establishes who signed what; it does not, and structurally cannot,
+establish that a ranking is objectively correct.
+
+**SIGNING IS NEVER AUTOMATIC.** `application/CreatePublisherLeaderboardSnapshotClaimUseCase.js`
+is the ONE construction boundary — nothing in the achievement pipeline,
+ranking policy, or leaderboard projection ever calls it as a side effect.
+A claim is a durable, attributable, cryptographically binding STATEMENT
+that some identity deliberately chose to make; recomputing a leaderboard
+on every evidence change and silently re-signing a fresh claim about it
+would blur computation with endorsement.
+
+**IMMUTABLE — A CORRECTION IS A NEW CLAIM, NEVER A MUTATION OF AN OLD
+ONE'S SIGNATURE.** Exactly like `core/PlaceNamingClaim.js`/
+`core/BlueprintLineageClaim.js`, there is no path that changes what an
+existing signature covers. If a signer's understanding changes, the old
+signed claim remains exactly as signed, forever, and a new claim stands
+alongside it.
+
+**NO PERSISTENCE — DELIBERATELY OUT OF SCOPE, NOT MERELY OMITTED.**
+`CreatePublisherLeaderboardSnapshotClaimUseCase#execute()` returns a
+signed claim; it never touches `application/PublicationObservationArchive.js`
+— no new collection, no `SCHEMA_VERSION` bump. A durable claim archive is
+real, separately sized later work needing its own provenance tracking,
+fingerprinting, export/import, difference detection, and
+replacement-review integration, following the exact machinery every other
+durable collection in this codebase earned one milestone at a time (0.8.82
+through 0.8.90, for the archive itself) — never bolted on as a side effect
+of the signing primitive landing.
+
+What's left, and deliberately unbuilt: this milestone proves a signing
+identity can make a durable, cryptographically attributable statement
+about a reproducible leaderboard conclusion — never that the conclusion is
+correct, never that the signer is trustworthy, and never automatically. It
+never persists a claim anywhere, and it never packages a publisher's own
+evidence plus derived views into one portable bundle — "Portable Publisher
+Profile Bundle" remains real, unbuilt, later work, its exact shape and
+number not committed to yet. It never moves a claim across an actual peer
+connection, and it never lets two replicas exchange claims the way 0.8.118
+already lets them exchange raw evidence — a "Portable Signed-Claim
+Export/Import" milestone, and a durable claim archive, remain genuinely
+separate, later questions this milestone deliberately declines to
+pre-build.
