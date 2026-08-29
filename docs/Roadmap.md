@@ -38811,3 +38811,130 @@ never resolves a shared or differing fingerprint into a decision, never
 narrates how any one signer's claims evolved over time, and never runs on
 its own without an explicit caller — each remains genuinely separate,
 later work.
+
+## 0.8.133 — Claim Evolution Projection
+
+0.8.132's own "Deliberately excluded" list named the one question it never
+asked: "a temporal narration of how a signer's claims changed over
+successive snapshots." This milestone is that projection:
+
+```text
+LeaderboardClaimHistory (0.8.123, UNCHANGED)
+       │
+       │  describePublisherLeaderboardClaimEvolution()   (THIS MILESTONE)
+       ▼
+{ signerCount, claimCount,
+  signerEvolutions: [{ signerIdentityId, claimCount,
+                        claims: [{ claimId, claimCreatedAt, receivedAt,
+                                   evidenceFingerprint, policyVersion,
+                                   snapshotFingerprint, origin }] }] }
+```
+
+**The question is "how does one signer's own sequence of claims look?" —
+never "did that signer get better, worse, or more trustworthy?"** Grouping
+a signer's claims into a sequence is a structural fact about which claims a
+signer made and in what order they were created, never a verdict about the
+signer or about whether a later claim is any kind of improvement over an
+earlier one. "Evolution" names the milestone; it never names a field —
+grep the result and the word occurs only in the exported function names
+and this section's own prose, never as a key.
+
+**Claim identity, never receipt identity, governs every sequence — reusing,
+never re-deriving, 0.8.128's and 0.8.132's own distinction.** The top-level
+`claimCount` counts RECEIPTS, exactly as 0.8.128's and 0.8.132's own
+`claimCount` already do. A signer's own sequence, however, is built over
+DISTINCT CLAIMS, deduplicated by `claim.id` — the same claim received twice
+never appears twice in a `signerEvolutions` entry's own `claims` list, and
+never inflates that entry's own `claimCount`.
+
+**Grouped by `signerIdentityId`, then ordered within each group by
+`claimCreatedAt` — never by `receivedAt`.** Do not sort by `receivedAt` and
+call that "evolution": `receivedAt` is this replica's own clock, the moment
+THIS particular replica happened to learn of a claim, and says nothing
+about the order in which the signer produced their own successive claims.
+`claimCreatedAt` is the signer's own declared creation time — the one
+ordering key that describes the signer's own claim-making sequence rather
+than this replica's own reception history. But `claimCreatedAt` is not a
+globally authoritative chronology — it comes from the signer's own,
+unverified clock, and this file never claims it reflects true wall-clock
+order across different signers. `receivedAt` is retained on every entry as
+separate, independent metadata, so a reader who wants this replica's own
+reception order can still recover it from the same entries.
+`signerEvolutions` itself, and each signer's own group formation, is
+ordered by first appearance while scanning `history` in its own order — the
+identical discipline 0.8.128's and 0.8.132's own groupings already hold.
+
+**Evidence/snapshot change is observed, never interpreted.** A signer's
+successive claims can name genuinely different `evidenceFingerprint`,
+`policyVersion`, or `snapshotFingerprint` values — this file states exactly
+which values each successive claim names and draws no conclusion about
+whether the change represents improvement, regression, upgrade, downgrade,
+progress, maturity, or quality. The result carries no `improved`,
+`regressed`, `upgraded`, `downgraded`, `progress`, `maturity`, `quality`,
+`trust`, `confidence`, or `reputation` field anywhere.
+
+**Architectural boundary: structural facts about one signer's own stored
+claims, never a verification, trust, or ranking determination of any
+kind.** The identical boundary 0.8.127/0.8.128/0.8.129/0.8.132 already
+hold. This file imports nothing from
+`application/PublisherLeaderboardSnapshotClaimVerification.js`,
+`application/PublisherLeaderboardClaimVerificationView.js`, or
+`application/PublisherLeaderboardClaimVerificationHistoryView.js`
+(0.8.120/0.8.124/0.8.125).
+
+**`describePublisherLeaderboardClaimEvolution()`/
+`reconstructPublisherLeaderboardClaimEvolution()`** — the identical split
+every other file in the claim-history family already holds.
+`reconstructPublisherLeaderboardClaimEvolution()` pulls a replica's own
+stored `LeaderboardClaimHistory` straight out of an archive via
+`reconstructPublisherLeaderboardClaimHistory()` (0.8.130, UNCHANGED).
+
+**Synchronous, pure, no mutation, no storage, no network.** Malformed input
+(`null`/`undefined`/a non-array/non-`LeaderboardClaimRecord` entries)
+degrades to an empty result — `signerCount`/`claimCount` at zero, an empty
+`signerEvolutions` array — never a throw.
+
+**Flagship.** Alice signs three successive claims — A1 (evidence E1,
+snapshot S1), A2 (the same evidence E1, snapshot S2), A3 (genuinely
+different evidence E2, a new snapshot) — created, and reported, in that
+order regardless of the order they were received. Bob signs two claims —
+B1 (matching Alice's A1 exactly: same evidence, same snapshot S1) and B2
+(evidence E2, an independent snapshot of his own). Carol signs one claim —
+C1, matching Alice's A2 exactly (snapshot S2). One of Alice's claims (A2)
+is received twice, once LOCAL and once IMPORTED.
+`describePublisherLeaderboardClaimEvolution()` reports: `claimCount` 7
+(all receipts, including A2's duplicate); `signerCount` 3; Alice's own
+entry with `claimCount` 3 (A2's duplicate receipt never double-counted)
+and `claims` ordered `[A1, A2, A3]` by `claimCreatedAt`; Bob's own entry
+with `claims` ordered `[B1, B2]`; Carol's own entry with exactly `[C1]`;
+and the snapshot fingerprints A1/B1 share, and A2/C1 share, each reported
+independently within their own signer's own sequence — no shared snapshot
+ever merges two signers' sequences into one.
+
+Deliberately excluded:
+- **Any verification, trust, or "which claim is currently valid"
+  determination of any kind.** See "Architectural boundary," above.
+- **Any improvement/regression/quality judgment of any kind.** See
+  "Evidence/snapshot change is observed, never interpreted," above.
+- **A `creationOrder`/`receptionOrder` dual-ordering exposure.** See "Do
+  not sort by `receivedAt`," above; a later timeline-comparison milestone,
+  over the same underlying facts this file exposes, may add that.
+- **Cross-signer comparison of two signers' own sequences** (e.g. which
+  snapshots two signers both passed through). Composes 0.8.132's own
+  `sharedSnapshotGroups` with this file's own per-signer sequences, and is
+  genuinely separate, later work.
+- **A difference between two of a signer's own successive claims** (what
+  exactly changed between claim A and claim B). 0.8.134's own, separately
+  sized, later question, over two whole snapshots rather than one signer's
+  claim metadata.
+- **Automatic, periodic, or background computation of any kind.** This
+  function runs only when a caller explicitly calls it.
+
+What's left, and deliberately unbuilt: this milestone lets a replica see
+exactly how each signer's own stored claims sequence, by the signer's own
+declared creation time, without ever collapsing that sequence into a
+judgment about the signer or about whether any later claim in it is
+"better." It never compares two different signers' own sequences against
+each other, never diffs two successive claims down to what specifically
+changed, and never runs on its own without an explicit caller — each
+remains genuinely separate, later work.
