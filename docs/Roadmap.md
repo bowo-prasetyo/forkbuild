@@ -35675,3 +35675,165 @@ rank, publisher, achievements, achievement kinds, publications, and
 perhaps blockchain distribution — computing no ranking of its own. After
 0.8.113, pause and observe how the system behaves before adding any
 gamification.
+
+## 0.8.113 — Explicit Publisher Leaderboard Projection
+
+0.8.112's own "What's left" line named this milestone as presenting the
+ranking "as a leaderboard UI." Sitting down to build that UI surfaced a
+narrower, prior question it presupposes: what, exactly, does a leaderboard
+consist of, as DATA — separately from any table, card, or icon a UI would
+render it with? This milestone answers that narrower question, and only
+that — one further layer of pure projection before any pixel is drawn, the
+same discipline 0.8.109 through 0.8.112 already held at every layer below
+it. The UI surface itself remains real, separately sized, later work,
+renamed below to 0.8.114.
+
+```text
+Publisher Ranking (0.8.112, UNCHANGED)
+      │
+      │  describePublisherLeaderboard()   (THIS MILESTONE)
+      ▼
+Publisher Leaderboard
+    { policy, entryCount, entries: [{ rank, publisherIdentity,
+                                       achievementCount,
+                                       distinctAchievementKindCount,
+                                       publicationIdentityCount }] }
+```
+
+**RANKING ANSWERS HOW PUBLISHERS ARE ORDERED; THE LEADERBOARD ANSWERS HOW
+THAT ORDER IS PRESENTED.** See `docs/Principles.md`, "A Leaderboard Is A
+Presentation Of A Ranking, Never A Second Ranking System (0.8.113)."
+`application/PublisherLeaderboardView.js`'s own
+`describePublisherLeaderboard()` has no comparator, no criteria array, no
+tie-break, and no `sort()` call anywhere in the file. Every `rank` value
+on its result is the exact value 0.8.112 already assigned, in the exact
+order 0.8.112 already produced — this milestone proves that explicitly:
+feeding the projection a deliberately out-of-order, non-monotonic
+fabricated ranking (`rank` values `3, 1, 99`, in that array order) produces
+a leaderboard in that identical order, never re-sorted to `1, 3, 99`.
+
+**A LEADERBOARD ENTRY IS A DELIBERATELY NARROWER VIEW THAN A RANKING
+ENTRY.** A 0.8.112 ranking entry carries a sixth field, `statistics` — the
+entry's own complete `PublisherAchievementStatistics` (0.8.111), including
+`badgeCount`, `achievementKindCounts`, and `blockchainPublicationCounts`.
+This milestone's own entries deliberately do not carry it. `rank`,
+`publisherIdentity`, `achievementCount`, `distinctAchievementKindCount`,
+`publicationIdentityCount` are the leaderboard's five columns — exactly
+what 0.8.112's own header already sketched as this milestone's shape.
+Nothing is deleted or hidden: a caller wanting the deeper substrate reads
+it straight off 0.8.111's or 0.8.112's own results, unchanged; this
+projection is simply small enough to render as one table row.
+
+**THE POLICY IS PRESERVED WITH THE RESULT — ECHOED VERBATIM, NEVER
+RECOMPUTED.** `describePublisherLeaderboard()`'s result carries the input
+ranking's own exact `policy` object, by reference. "Rank #1" alone is
+unfalsifiable; "rank #1 under ranking policy version 1" is reproducible.
+If a policy version 2 ever ships, a leaderboard built from each version
+stays honestly distinguishable by this one field.
+
+**LEADERBOARD POSITIONS ARE NEVER PERSISTED — COMPUTED FRESH, EVERY TIME,
+EXACTLY LIKE THE RANKING BENEATH THEM.** There is no
+`PublisherLeaderboardRecord`, no new collection on `application/
+PublicationObservationArchive.js`, and no `SCHEMA_VERSION` bump. The
+durable facts remain exactly what they already were — publication,
+reference, publisher association, achievement event — and this milestone
+adds nothing beneath them; everything from `PublisherAchievementStatisticsView.js`
+(0.8.111) upward, this file included, stays reconstructable, never
+durable.
+
+**COMPOSES ONE EXISTING RECONSTRUCTION — NO PARALLEL RANKING ENGINE.**
+`reconstructPublisherLeaderboard(archive)` calls `reconstructPublisherRanking()`
+(0.8.112, UNCHANGED) exactly once and hands its result, unchanged, to the
+pure projection above.
+
+**PUBLISHER IDENTITY, NOT PERSON IDENTITY.** Every entry's own
+`publisherIdentity` field is the exact `PublisherIdentityRecord` (0.8.108)
+the ranking entry already carried. There is no bare `publisher` field on a
+leaderboard entry, and no `person` or `human` vocabulary anywhere on this
+milestone's result — a leaderboard says "publisher identity: Alice," never
+"person: Alice." This extends `docs/Principles.md`, "Publisher Identity Is
+Explicit And Self-Declared, Never Inferred (0.8.108)," to the one layer
+built specifically to be read by a human looking at a table — precisely
+where the temptation to collapse identity into "the person" is strongest.
+
+**A MALFORMED OR HAND-FABRICATED RANKING-SHAPED ENTRY IS SILENTLY
+EXCLUDED — NEVER REORDERED, NEVER RENUMBERED, NEVER THROWN ON.** An entry
+whose `rank` is not a positive integer, or whose `publisherIdentity` is
+not a genuine `PublisherIdentityRecord`, never appears on the leaderboard;
+surviving entries keep their own original `rank` values exactly as 0.8.112
+assigned them, even across a gap. This file corrects nothing about its
+input.
+
+**NO SCORE, NO POINTS, NO LEVEL, NO TIER, NO XP, NO REPUTATION, NO WEIGHT,
+NO RATING, NO PERCENTILE.** The identical vocabulary boundary 0.8.112
+already held, held here once more, one layer closer to what a user
+actually sees. `rank` is the one ordinal concept on this result, and it is
+0.8.112's own `rank`, never a second one this file computes.
+
+**NO LEADERBOARD UI, NO DASHBOARD, NO ACHIEVEMENT-BADGE ICONOGRAPHY,
+STILL.** This milestone renders nothing. It returns plain, frozen,
+presentation-shaped data — five columns per row, a policy, and a count —
+and nothing that puts a pixel on screen. Turning this data into an actual
+leaderboard table, a publisher profile card, or an achievement gallery is
+real, separately sized, later work, renamed below to 0.8.114.
+
+New files:
+- `application/PublisherLeaderboardView.js` — pure projection;
+  `describePublisherLeaderboard(ranking)` (an already-computed 0.8.112
+  `PublisherRanking` in, a `{ policy, entryCount, entries }` leaderboard
+  out) / `reconstructPublisherLeaderboard(archive)` (archive-reading entry
+  point, composing `reconstructPublisherRanking()`, 0.8.112, unchanged); no
+  archive access of its own beyond the one thin reconstruction entry
+  point.
+
+New tests:
+- `tests/PublisherLeaderboardView.test.js` — an absent/malformed ranking
+  producing a valid, empty leaderboard that still carries a policy
+  (falling back to `describePublisherRankingPolicy()`); the FLAGSHIP — a
+  real 0.8.112 ranking projected with `rank`, `publisherIdentity`, and the
+  three counts echoed verbatim, in the ranking's own exact order, with the
+  ranking entry's own `statistics` field proven absent from the narrower
+  leaderboard entry; a deliberately out-of-order, non-monotonic fabricated
+  ranking (`rank` values `3, 1, 99`) projected in that identical array
+  order, proving this file performs no sort of its own; the policy echoed
+  verbatim by reference, with a fallback proven when the input's own
+  policy is malformed or absent; malformed/absent inputs never throwing,
+  including a mix of malformed entries alongside one genuine entry inside
+  the same array; `reconstructPublisherLeaderboard()` over a real,
+  persisted archive matching `describePublisherLeaderboard(reconstructPublisherRanking(archive))`
+  exactly, with zero network access, no archive mutation, and reload
+  equivalence; and no
+  score/points/level/tier/xp/reputation/weight/rating/percentile/person/human
+  vocabulary anywhere, with the leaderboard result's exactly three
+  top-level fields and each entry's exactly five fields asserted directly.
+
+Deliberately excluded:
+- **Any leaderboard UI, dashboard, or achievement-badge iconography.**
+  This milestone returns data only. Real, separately sized, later work —
+  renamed below to 0.8.114.
+- **Any second ranking, sort, comparator, or tie-break.** The rank comes
+  exclusively from 0.8.112; this file has no criteria of its own, and the
+  FLAGSHIP-adjacent non-monotonic-rank test above exists specifically to
+  prove it.
+- **Any `PublisherLeaderboardRecord`, or any new durable state.** A
+  leaderboard is a presentation result, computed fresh every time, never
+  persisted — the identical discipline 0.8.112 already held over a rank.
+- **A "ranked snapshot" — a durable "leaderboard as observed on date X."**
+  A live leaderboard, computed fresh from an archive's own current state,
+  is what this milestone is. A historical snapshot has its own identity
+  and its own semantics (what happens when the archive it was taken from
+  later changes?) this milestone deliberately declines to answer.
+- **Any richer per-entry field — badge counts, achievement-kind
+  breakdowns, chain distribution.** Already available, unchanged, on
+  0.8.111's and 0.8.112's own results; duplicating them onto this
+  deliberately narrow, five-column projection is real, separate work only
+  if a future UI genuinely needs it inline rather than reading it from
+  0.8.112's own `statistics` field.
+
+What's left, and deliberately unbuilt: 0.8.114 turns this exact leaderboard
+data into an actual UI surface — a leaderboard table, a "my publisher
+profile" card, an achievement gallery — with an explicit dataset scope
+stated alongside it (which archive, whose replica, as of when), rendering
+what this milestone already computed rather than computing anything new.
+After 0.8.114, pause and observe how the system behaves before adding any
+gamification, portable export, or cross-replica leaderboard merge.
