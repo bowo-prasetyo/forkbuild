@@ -36559,7 +36559,7 @@ AchievementEvidenceExchange.test.js`'s own flagship proves this codebase
 can already test its entire decentralized synchronization model inside ONE
 process, holding two independent `PublicationObservationArchive` instances
 side by side and passing plain objects between them by hand — no
-infrastructure of any kind. A real transport (0.8.121, "Explicit
+infrastructure of any kind. A real transport (0.8.122, "Explicit
 Peer/Transport Boundary" — moving these exact three plain objects across an
 actual wire) is separately sized, later work.
 
@@ -36670,10 +36670,11 @@ Snapshot": a leaderboard identity derived from an evidence fingerprint plus
 a declared ranking policy version, so two replicas holding identical
 evidence and applying the identical policy can prove they'd produce the
 identical leaderboard, without either one needing to be trusted. Only
-after that: 0.8.120 would package a publisher's own evidence plus derived
-views into one portable bundle, and 0.8.121 would give this exact
-request/response/apply protocol an actual peer/transport boundary to move
-across.
+after that: 0.8.120 would independently verify an externally supplied
+snapshot against a replica's own reconstruction, 0.8.121 would package a
+publisher's own evidence plus derived views into one portable bundle, and
+0.8.122 would give this exact request/response/apply protocol an actual
+peer/transport boundary to move across.
 
 ## 0.8.119 — Reproducible Leaderboard Snapshot
 
@@ -36817,8 +36818,12 @@ Deliberately excluded:
 - **Any "as of" timestamp, display formatting, or UI of any kind.** This
   file returns plain, frozen, JSON-safe data, exactly like every
   `describeXxx()`/`reconstructXxx()` pair below it.
+- **Any verification of an externally supplied candidate snapshot against
+  this replica's own independent reconstruction.** That is 0.8.120's own,
+  separately sized question, "Reproducible Leaderboard Snapshot
+  Verification."
 - **Any portable bundle combining a publisher's own evidence with derived
-  views.** That is 0.8.120's own, separately sized question.
+  views.** That is 0.8.121's own, separately sized question.
 - **Any peer, transport, or synchronization mechanism of any kind.**
   0.8.118, UNCHANGED, already carries that responsibility.
 
@@ -36826,10 +36831,147 @@ What's left, and deliberately unbuilt: this milestone proves a leaderboard
 itself can be identified by exactly the two inputs that determine it —
 never a timestamp, never a count, never a second hash — and reproduced
 byte-identically by any replica holding the same evidence and applying the
-same policy. It never packages a publisher's own evidence plus derived
+same policy. It never asks whether a snapshot supplied from OUTSIDE this
+replica — a peer, an export, plain JSON passed hand to hand — actually
+corresponds to what this replica's own evidence independently produces —
+that is 0.8.120's own question, "Reproducible Leaderboard Snapshot
+Verification." It never packages a publisher's own evidence plus derived
 views (achievements, badges, statistics, leaderboard position) into one
 portable bundle a publisher could carry between replicas — that is
-0.8.120's own question, "Portable Publisher Profile Bundle." And it never
+0.8.121's own question, "Portable Publisher Profile Bundle." And it never
 moves a snapshot, or any of 0.8.118's own exchange messages, across an
-actual peer connection — that is 0.8.121's own question, "Explicit
+actual peer connection — that is 0.8.122's own question, "Explicit
 Peer/Transport Boundary."
+
+## 0.8.120 — Reproducible Leaderboard Snapshot Verification
+
+0.8.119 proved that a leaderboard CONCLUSION can be identified and
+reproduced independently, exactly like the evidence underneath it — two
+replicas holding byte-identical evidence and applying the identical
+ranking policy compute a byte-identical snapshot. It never asked what a
+decentralized network needs asked the moment a snapshot arrives from
+somewhere else — a peer, an export, a message passed hand to hand. This
+milestone is that question, answered as a comparison, never a second
+leaderboard engine, never a trust decision:
+
+```text
+Remote Snapshot
+      │
+      ▼
+  Verification
+      ▲
+      │
+Local Evidence ──► Local Snapshot   (0.8.119, UNCHANGED)
+```
+
+`application/PublisherLeaderboardSnapshotVerification.js` builds exactly
+two functions:
+
+```text
+describePublisherLeaderboardSnapshotVerification(localSnapshot, candidateSnapshot)
+     — the pure comparison: two already-computed snapshots in, four
+       independent comparison facts and one summary out
+
+verifyPublisherLeaderboardSnapshot(archive, candidateSnapshot)
+     — the ONE, thin, archive-reading entry point: reconstructs THIS
+       replica's own current snapshot via
+       reconstructPublisherLeaderboardSnapshot() (0.8.119, UNCHANGED) and
+       hands it, together with the externally supplied candidate, to the
+       pure function above
+```
+
+A replica never trusts a supplied snapshot; it recomputes its own and
+compares. `verifyPublisherLeaderboardSnapshot()` never reads a field off
+the candidate as if it were true — it independently reconstructs its own
+snapshot straight from its own archive, and the candidate is data to
+compare against, never an oracle.
+
+**VERIFICATION DESCRIBES COMPARISON FACTS; IT NEVER ASSIGNS TRUST OR
+REPUTATION** — the identical restraint `application/AchievementEvidenceFingerprint.js`'s
+own header already holds ("never described as verified, authentic,
+trusted, or in sync"), held here once more for the word "verification"
+itself. See `docs/Principles.md`, "The UI Displays Observations; It Does
+Not Turn Them Into A Verdict (0.8.57)" — a boolean comparison result is an
+observation about two snapshots, not a verdict about either replica that
+produced them.
+
+**A RESULT NAMES EXACTLY FOUR COMPARISON FACTS, EACH INDEPENDENTLY
+COMPUTED, PLUS ONE SUMMARY:**
+
+```text
+{ matches, evidenceFingerprintMatches, policyVersionMatches,
+  policyMatches, leaderboardMatches }
+```
+
+`evidenceFingerprintMatches` compares 0.8.116's own fingerprint strings
+with `===`. `policyVersionMatches` compares 0.8.112's own `policy.version`
+numbers with `===`. `policyMatches` compares the two COMPLETE policy
+objects — `version`, `criteria`, and `tieBreak` — field by field, never
+summarized to the version number alone. `leaderboardMatches` compares the
+two COMPLETE leaderboard results — every entry, every rank, in order —
+never merely their entry counts. None of the four is derived from another
+by shortcut — each is its own independent equality check, so a genuine
+divergence anywhere shows up as its own named fact rather than being
+masked by a coarser one reading true. `matches` is `true` exactly when all
+four of the others are `true`.
+
+**THE COMPARISON ITSELF IS PLAIN STRUCTURAL EQUALITY.** `evidenceFingerprintMatches`
+and `policyVersionMatches` compare primitives with `===`; `policyMatches`
+and `leaderboardMatches` compare `JSON.stringify()` of the two respective
+values — the identical notion of equality 0.8.119's own test file already
+used throughout to decide "these two snapshots are the same computation."
+No new hashing, no new comparator, no digest over anything.
+
+**NORMALIZATION REUSES 0.8.119's OWN TOLERANCE.** A candidate arriving
+from outside this replica is never assumed to be genuinely shaped like a
+snapshot. Rather than inventing a new fallback rule, both the local
+snapshot and the candidate are routed through
+`describePublisherLeaderboardSnapshot()` (0.8.119, UNCHANGED) before
+comparing — the exact same function, and therefore the exact same
+tolerance, that already degrades a non-genuine `evidenceFingerprint` to
+the canonical empty-evidence fingerprint and a non-genuine leaderboard to
+`describePublisherLeaderboard(undefined)`.
+
+**COMPOSES ONE EXISTING RECONSTRUCTION.** `verifyPublisherLeaderboardSnapshot()`
+calls `reconstructPublisherLeaderboardSnapshot()` (0.8.119, UNCHANGED)
+exactly once, for the LOCAL side only, and hands its result — together
+with the externally supplied candidate, untouched — to the pure function
+above. It never reconstructs a second snapshot for the candidate side; a
+candidate is compared AS SUPPLIED.
+
+**NAMING: "VERIFY," NOT "RECONSTRUCT," FOR THE ARCHIVE-READING ENTRY
+POINT** — a deliberate, narrow departure from this family's own
+`reconstructXxx()` convention, not an oversight. Every other archive-reading
+entry point in this family reconstructs ONE replica's own state from ITS
+OWN archive alone; `verifyPublisherLeaderboardSnapshot()` is the first
+entry point that takes a second input from OUTSIDE the archive and
+produces a COMPARISON, never a reconstruction of this replica's own state
+in isolation — so it is named for what it does. Its pure counterpart still
+follows the family's established `describeXxx()` naming exactly.
+
+Deliberately excluded:
+- **Any signature, public/private key, or cryptographic attribution of any
+  kind.** A signed claim naming WHO produced or endorses a reproducible
+  snapshot is a genuinely different, separately sized later question.
+- **Any "trusted"/"untrusted" vocabulary, confidence score, percentage
+  match, or partial-credit notion of "mostly matches."** Every one of the
+  five result fields is a plain boolean.
+- **Any automatic verification, publication, or synchronization,** any
+  peer discovery, or transport mechanism. A candidate snapshot arrives
+  here already, by whatever means; this file never fetches, requests, or
+  moves one.
+- **Any persistence of a verification result.** It is computed fresh,
+  every time, exactly like every snapshot and fingerprint it composes.
+
+What's left, and deliberately unbuilt: this milestone proves an externally
+supplied leaderboard conclusion can be independently checked against a
+replica's own evidence and policy — never trusted at face value, never
+re-derived from the candidate's own claims. It never asks WHO produced or
+endorses a verified snapshot — a signed claim naming an identity is
+genuinely different, separately sized later work this milestone
+deliberately declines to pre-build (see "Deliberately excluded," above).
+It never packages a publisher's own evidence plus derived views into one
+portable bundle — that remains 0.8.121's own question, "Portable Publisher
+Profile Bundle." And it never moves a snapshot, or any exchange message,
+across an actual peer connection — that remains 0.8.122's own question,
+"Explicit Peer/Transport Boundary."
