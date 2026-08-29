@@ -35093,14 +35093,222 @@ Deliberately excluded:
   `application/AchievementProfileView.js`, a publisher-scoped badge
   presentation is real, separately sized, later work.
 
-What's left, and deliberately unbuilt: a decentralized achievement ranking
-projection (0.8.110) defines ranking semantics carefully over this exact
-aggregate — still no leaderboard UI — before 0.8.111 presents one with an
+What's left, and deliberately unbuilt: 0.8.110 turns this aggregate into
+publisher-scoped badges, mirroring `application/AchievementBadgeView.js`'s
+own relationship to `application/AchievementEvent.js` one subject further —
+still no score, rank, or leaderboard. Only after that: 0.8.111 defines a
+factual publisher achievement statistics projection (publication count,
+achievement count, distinct achievement-kind count, first/latest
+achievement timestamps — still no score), 0.8.112 defines a decentralized
+achievement ranking projection's semantics carefully over that exact
+aggregate — still no leaderboard UI — and 0.8.113 presents one with an
 explicit dataset scope, because a locally computed leaderboard is only ever
 authoritative over the archive it was computed from, and two replicas
 holding different archives can legitimately produce different, equally
-honest rankings. A publisher-scoped achievement badge presentation, and a
-factual publisher achievement summary (publication count, achievement
-count, badge count, first/latest achievement timestamps — still no score),
-remain real, separately sized, later work on top of the aggregate this
-milestone establishes.
+honest rankings.
+
+## 0.8.110 — Publisher Achievement Badge Projection
+
+0.8.109's own header named this milestone's exact scope: "any badge
+presentation of a publisher's own achievements... mirroring
+`application/AchievementBadgeView.js`'s own relationship to
+`application/AchievementProfileView.js`, a publisher-scoped badge
+presentation is real, separately sized, later work." This milestone is
+that presentation, and only that — the missing answer to "show me what
+this publisher has to show for itself, as badges, not as a bare list of
+achievement events."
+
+```text
+AchievementEvent (0.8.102/0.8.106)
+      │
+      │  describeAchievementBadges()        (0.8.103, UNCHANGED)
+      ▼
+AchievementBadgeView — badges for THIS REPLICA'S WHOLE ARCHIVE
+
+PublisherPublicationAssociationRecord (0.8.108)
+      │
+      │  describePublisherAchievementProfile()   (0.8.109, UNCHANGED)
+      ▼
+Publisher Achievement Profile — this PUBLISHER's own achievement events
+      │
+      │  describePublisherAchievementBadges()    (THIS MILESTONE)
+      ▼
+Publisher Achievement Badges
+    { publisherIdentity, publicationIdentityCount, badges, badgeCount,
+      achievementKinds, distinctAchievementKindCount }
+```
+
+**A PRESENTATION OF ACHIEVEMENTS ALREADY EARNED BY AN EXPLICITLY ASSOCIATED
+PUBLICATION; NEVER A NEW ACHIEVEMENT.** The one principle this milestone
+exists to hold, one subject further than `AchievementBadgeView.js`'s own:
+"an achievement event is evidence of a threshold crossing; a badge is a
+human-facing presentation of that achievement." A publisher badge adds
+nothing to that statement except "and this publisher explicitly claims the
+publication that earned it" — a fact `PublisherPublicationAssociationRecord`
+(0.8.108) already, durably establishes. This milestone invents no new
+`AchievementKind`, no new threshold, no new badge description, no new badge
+icon, and no new `sourceAnchorId` lookup — every one of those already
+exists in `application/AchievementBadgeView.js` (0.8.103) and is reused
+here verbatim.
+
+**COMPOSES TWO EXISTING PROJECTIONS' OWN ALREADY-COMPUTED OUTPUT — NO
+PARALLEL BADGE ENGINE, NO PARALLEL PROFILE ENGINE.**
+`application/PublisherAchievementBadgeView.js`'s own
+`describePublisherAchievementBadges(profile, achievementBadges)` receives
+the publisher's own already-computed `PublisherAchievementProfile` (0.8.109,
+UNCHANGED) and the archive's own already-computed, already-shaped badge
+array (`application/AchievementBadgeView.js`'s own
+`describeAchievementBadges()`/`reconstructAchievementBadges()`, 0.8.103,
+UNCHANGED) and keeps only the badges that belong to an achievement the
+profile already decided is this publisher's own — never re-deriving a
+publication association, an achievement threshold, or a badge's own
+`description`/`icon`/`sourceAnchorId`.
+
+**A BADGE SURVIVES THE FILTER IFF THE PROFILE ALREADY NAMED THE SAME
+(achievementKind, sourcePublicationIdentity) PAIR — NEVER BY RE-DERIVING
+PUBLICATION MEMBERSHIP HERE A SECOND TIME.** `PublisherAchievementProfileView.js`
+already decided, once, which achievement events belong to this publisher.
+This milestone never repeats that reduction; it only asks whether the
+profile's own `achievements` array already contains an event matching a
+given badge's own `achievementKind` and `sourcePublicationIdentity` (via
+`BlockchainPublicationIdentity#sameAs()`, 0.8.89), trusting 0.8.109's own
+decision verbatim. Every badge surviving the filter is the EXACT frozen
+badge object `AchievementBadgeView.js` already produced — never copied,
+renamed, or reshaped.
+
+**REFERENCE-DERIVED ACHIEVEMENT KINDS HAVE NO BADGE PRESENTATION HERE —
+INHERITED, UNCHANGED, FROM `AchievementBadgeView.js`'s OWN SCOPE, NEVER A
+NEW GAP THIS MILESTONE INTRODUCES.** `application/AchievementBadgeView.js`'s
+own 0.8.103 header already documents, deliberately, that its
+`describeAchievementBadges()` never passes 0.8.106's own
+`publicationReferenceRecords` through, so none of the five reference-derived
+achievement kinds (`FIRST_REFERENCE_CREATED` and its siblings) ever becomes
+a badge there. This milestone composes that file's own output unchanged, so
+that same gap passes through here unchanged too: a publisher who genuinely
+earned `FIRST_REFERENCE_CREATED` sees it in the "Publisher Achievement
+Profile" card's own achievement list (0.8.109), but not as a badge on this
+milestone's own new card — `badgeCount` can therefore be strictly less than
+the profile's own `achievementCount`. This file's own
+`achievementKinds`/`distinctAchievementKindCount` describe only the
+achievement kinds actually represented among the surviving badges — never
+the profile's own, wider field of the same name — so those two counts never
+promise more than `badges` itself delivers.
+
+**UI: A "PUBLISHER ACHIEVEMENT BADGES" CARD ON
+`DecentralizedPublicationsView.js`, COLLAPSED BY DEFAULT, ZERO NETWORK
+OPERATIONS.** A dropdown reusing the SAME `distinctPublisherIdentifiersView()`
+every other publisher-scoped card on this page already populates shows,
+for whichever publisher a person picks, the exact badges
+`reconstructPublisherAchievementBadges()` computes — mirroring the
+"Achievements" card's own badge presentation (0.8.103) exactly, including
+its "badge → publication lifecycle" navigation, reused unchanged:
+
+```text
+Publisher Achievement Badges
+
+Publisher: Alice
+Associated publications: 2
+Badges earned: 3
+Distinct badge kinds: 3
+
+🏆 First publication — earned …
+₿ Bitcoin publisher — earned …
+🌐 Multi-chain publisher — earned …
+```
+
+No "verified owner," "top publisher," "score," or "rank" language appears
+anywhere on this card — only that these badges present achievements
+already earned by publications this publisher has explicitly claimed,
+never proof of who controls them.
+
+**NO NEW DURABLE STATE, NO SCHEMA_VERSION BUMP.**
+`application/PublicationObservationArchive.js` gains nothing from this
+milestone — no twelfth collection, no cached badge list, no network call.
+A publisher's own achievement badges are computed fresh, every time, from
+this replica's own already-durable association records and
+already-computable achievement events and badges.
+
+**NO SCORE, NO RANK, NO LEVEL, NO TRUST, NO LEADERBOARD INPUT OF ANY
+KIND.** `badgeCount`, `publicationIdentityCount`, and
+`distinctAchievementKindCount` are plain counts — never a score, a
+reputation figure, a weighted total, or a leaderboard input of their own.
+See `docs/Principles.md`, "An Achievement Describes An Attributable Fact,
+Not A Person's Worth (0.8.102)," held here once more, over a publisher's
+own badge presentation. A ranking projection over a publisher's own
+achievement facts is real, separately sized, later work — see "What's
+left" below.
+
+New files:
+- `application/PublisherAchievementBadgeView.js` — pure projection;
+  `describePublisherAchievementBadges(profile, achievementBadges)` /
+  `reconstructPublisherAchievementBadges(archive, publisherIdentity)`
+  (an already-computed publisher achievement profile + an already-computed
+  achievement badge array in, publisher-scoped badges out); composes
+  `application/PublisherAchievementProfileView.js` and `application/
+  AchievementBadgeView.js` unchanged; no archive access of its own beyond
+  the one thin reconstruction entry point.
+
+Changed:
+- `ui/views/DecentralizedPublicationsView.js` — one new "Publisher
+  Achievement Badges" card, collapsed by default; reuses the existing
+  "Achievements" card's own `canViewAchievementBadgeLifecycle()`/
+  `viewAchievementBadgeLifecycle()` (0.8.103) unchanged for its own
+  "view publication lifecycle" links; no change to any existing card,
+  computation, or durable state.
+- `tests.html` — register the new test file.
+
+New tests:
+- `tests/PublisherAchievementBadgeView.test.js` — a publisher with an
+  empty profile earning no badges; a publisher's own associated
+  publication's badges preserved as the exact frozen badge instances
+  `AchievementBadgeView.js` already produced; badges belonging to an
+  unassociated publication excluded even when genuinely earned; duplicate
+  associations never duplicating badges; reference-derived achievement
+  kinds present in the publisher's own profile but never fabricated into a
+  badge here, with `badgeCount`/`distinctAchievementKindCount` correctly
+  staying below the profile's own wider counts; malformed/absent inputs
+  never throwing; the FLAGSHIP — Alice explicitly claims a Bitcoin
+  publication (A) and a Base publication (B), plus a duplicate association
+  re-claiming A; Bob explicitly claims a different Base publication (C); A,
+  B, and C all share one `contentHash` — proving Alice's badges name only
+  what A and B earned, `sourceAnchorId` and every other badge field survive
+  the publisher-scoped filter unchanged, and Bob's own badges never include
+  Alice's `MULTI_CHAIN_PUBLISHER`; `reconstructPublisherAchievementBadges()`
+  composing the archive's own existing profile and badge reconstructions
+  with reload equivalence and zero network access; and no
+  verdict/score/points/rank vocabulary anywhere in this milestone's own new
+  surface.
+
+Deliberately excluded:
+- **Any score, rank, level, tier, or leaderboard.** Still real, separately
+  sized future work — see 0.8.102's own "Deliberately excluded," held here
+  once more.
+- **A badge vocabulary for reference-derived achievement kinds.** Named
+  explicitly above — `AchievementBadgeView.js`'s own 0.8.103 scope never
+  covered `FIRST_REFERENCE_CREATED` and its four siblings, and this
+  milestone composes that file's output unchanged rather than extending it.
+  Giving those five kinds their own badge description/icon, should a
+  future milestone want to, is real, separate, later work on
+  `AchievementBadgeView.js` itself.
+- **Any new durable state, or any change to `PublicationObservationArchive.js`.**
+  This milestone is a pure projection over two already-existing ones; it
+  adds no collection, no schema version bump, and no cached badge list.
+- **Signed association claims, or any cryptographic proof of publisher
+  control.** Unchanged from 0.8.108/0.8.109's own deferral — an
+  association remains a claim, never a proof.
+- **A factual publisher achievement statistics or summary projection.**
+  Real, separately sized, later work — see "What's left" below.
+
+What's left, and deliberately unbuilt: 0.8.111 defines a factual publisher
+achievement statistics projection over this exact aggregate — publication
+count, achievement count, distinct achievement-kind count, first/latest
+achievement timestamps, and similar directly-derived facts — still no
+score. Only after that: 0.8.112 defines a decentralized achievement ranking
+projection's semantics carefully, still no leaderboard UI, before 0.8.113
+presents one with an explicit dataset scope, because a locally computed
+leaderboard is only ever authoritative over the archive it was computed
+from, and two replicas holding different archives can legitimately produce
+different, equally honest rankings. A badge vocabulary for reference-derived
+achievement kinds remains real, separate, later work on top of
+`AchievementBadgeView.js` itself, not something this milestone's own
+publisher-scoped composition can add on its own.
