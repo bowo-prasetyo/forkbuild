@@ -18044,3 +18044,68 @@ reproducible computation over decentralized evidence, never a centralized
 authority's database.
 
 See `docs/Roadmap.md`, 0.8.112, for the full milestone entry.
+
+## A Leaderboard Is A Presentation Of A Ranking, Never A Second Ranking System (0.8.113)
+
+**Ranking answers how publishers are ordered; a leaderboard answers how
+that order is presented — and a presentation layer that quietly re-derives
+the thing beneath it is not a presentation layer at all.** `application/
+PublisherLeaderboardView.js`'s own `describePublisherLeaderboard()` has no
+comparator, no criteria array, no tie-break, and no `sort()` call
+anywhere in the file. Every `rank` value on its result is the exact value
+`describePublisherRanking()` (0.8.112) already assigned, in the exact
+order 0.8.112 already produced. This is `docs/Principles.md`, "A Ranking
+Is A Policy Output, Not A Discovered Property (0.8.112)," held one layer
+further: if a policy is the only legitimate source of an ordering, then
+every layer built ON a ranking must compose it, never quietly rebuild a
+second, competing one under the guise of "just formatting it."
+
+**A narrower view is not a smaller lie — it is an honest statement of
+what one layer is for.** A 0.8.112 ranking entry carries `statistics`, the
+entry's own complete `PublisherAchievementStatistics` (0.8.111). A 0.8.113
+leaderboard entry does not. This is not information hidden or deleted —
+0.8.111's and 0.8.112's own results are exactly as complete as they always
+were, reachable exactly as they always were — it is a second, deliberately
+smaller projection built for a deliberately narrower purpose: rendering
+one row of one table. `PublisherAchievementBadgeView.js`'s own 0.8.110
+relationship to 0.8.109's richer profile already held this same
+discipline one layer down; 0.8.113 holds it again, one layer up, right at
+the boundary where a UI is about to be built on top.
+
+**A rank without its policy is an unfalsifiable claim; a rank with its
+policy is a reproducible one.** `describePublisherLeaderboard()`'s result
+carries the input ranking's own exact `policy` object, by reference,
+never recomputed and never summarized down to a bare version number.
+"Publisher A is #1" invites the reader to treat #1 as an intrinsic fact;
+"Publisher A is #1 under ranking policy version 1" states plainly that a
+different, equally legitimate policy could produce a different #1 over
+the identical, untouched evidence — see `docs/Principles.md`, "A Ranking
+Is A Policy Output, Not A Discovered Property (0.8.112)," restated here at
+the layer a person actually reads.
+
+**A leaderboard position is exactly as disposable as the rank it
+presents.** There is no `PublisherLeaderboardRecord` for the identical
+reason there is no `PublisherRankingRecord` (0.8.112) one layer down — a
+leaderboard is computed fresh, every time, from an archive's own current
+state. Two replicas holding different archives, or the same replica
+re-rendered after its policy someday changes, can legitimately present
+different, equally honest leaderboards without a single historical fact
+ever moving. A durable "leaderboard as observed on a given date" is a
+genuinely different concept — its own identity, its own semantics for what
+happens when the archive it was drawn from later changes — and is
+deliberately not this milestone; see `docs/Roadmap.md`, 0.8.113, "What's
+left."
+
+**A leaderboard names a publisher identity, never a person.** Every entry's
+own `publisherIdentity` field is the exact, explicit, self-declared
+`PublisherIdentityRecord` (0.8.108) the ranking entry already carried —
+never renamed to a bare `publisher` field, and never accompanied by
+`person`- or `human`-shaped vocabulary anywhere on the result. This
+extends `docs/Principles.md`, "Publisher Identity Is Explicit And
+Self-Declared, Never Inferred (0.8.108)," to the layer built specifically
+to be read by a person looking at a table of names — precisely where the
+temptation to silently collapse "publisher identity: Alice" into "the
+human Alice" is strongest, and precisely why 0.8.113's own test suite
+asserts it directly rather than trusting the temptation never arises.
+
+See `docs/Roadmap.md`, 0.8.113, for the full milestone entry.
