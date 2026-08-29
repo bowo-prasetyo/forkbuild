@@ -183,9 +183,12 @@ import { describePublisherLeaderboard, reconstructPublisherLeaderboard } from '.
 // caller already has everything needed with plain field access and `===`.
 // No "as of" timestamp, no display formatting, no UI of any kind — this
 // file returns plain, frozen, JSON-safe data, exactly like every
-// `describeXxx()`/`reconstructXxx()` pair below it. No portable bundle
-// combining a publisher's own evidence with derived views — that is
-// 0.8.120's own, separately sized question. No peer, transport, or
+// `describeXxx()`/`reconstructXxx()` pair below it. No verification of an
+// externally supplied candidate snapshot against this replica's own
+// independent reconstruction — that is 0.8.120's own, separately sized
+// question, "Reproducible Leaderboard Snapshot Verification." No portable
+// bundle combining a publisher's own evidence with derived views — that is
+// 0.8.121's own, separately sized question. No peer, transport, or
 // synchronization mechanism of any kind — 0.8.118, UNCHANGED, already
 // carries that responsibility; this file is never involved in moving a
 // single byte between two replicas.

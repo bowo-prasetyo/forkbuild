@@ -78,7 +78,7 @@ import {
 // can already test its entire decentralized synchronization model inside
 // ONE process, holding two independent `PublicationObservationArchive`
 // instances side by side, and passing plain objects between them by hand
-// — no infrastructure of any kind. A real transport (0.8.121, "Explicit
+// — no infrastructure of any kind. A real transport (0.8.122, "Explicit
 // Peer/Transport Boundary" — moving these exact three plain objects across
 // an actual wire) is separately sized, later work, entirely untouched by
 // this file.
@@ -213,10 +213,11 @@ import {
 // portable JSON messages and the primitives this codebase already built —
 // it never asks whether two replicas that have converged can prove their
 // RESULTING leaderboard is reproducible without re-trusting either side's
-// own arithmetic (0.8.119, "Reproducible Leaderboard Snapshot"), never
+// own arithmetic (0.8.119, "Reproducible Leaderboard Snapshot," and
+// 0.8.120, "Reproducible Leaderboard Snapshot Verification"), never
 // packages a publisher's own evidence plus derived views into one portable
-// bundle (0.8.120), and never moves any of these three plain objects across
-// an actual peer connection (0.8.121, "Explicit Peer/Transport Boundary").
+// bundle (0.8.121), and never moves any of these three plain objects across
+// an actual peer connection (0.8.122, "Explicit Peer/Transport Boundary").
 export const AchievementEvidenceExchangeProtocolVersion = 1;
 
 // Must match `application/AchievementEvidenceExport.js`'s own
