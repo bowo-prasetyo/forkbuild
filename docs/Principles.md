@@ -17973,3 +17973,74 @@ threshold crossing remain two entirely different kinds of fact, and
 recording the former never fabricates the latter.
 
 See `docs/Roadmap.md`, 0.8.108, for the full milestone entry.
+
+## A Ranking Is A Policy Output, Not A Discovered Property (0.8.112)
+
+**Every fact this codebase has computed since 0.8.75 answers "what
+happened?" A ranking answers a different question in kind, not merely in
+scope: "given those facts, how should they be ordered?"** `application/
+PublisherRankingPolicy.js`'s own `describePublisherRanking()` is the first
+file in this codebase to answer the second question at all. "Publisher A
+is #1" means "Publisher A is first under ForkBuild's current ranking
+policy" — it does not, and can never, mean "Publisher A is objectively the
+best publisher." A rank is computed BY a policy, OVER facts a policy did
+not create and cannot change; it is never itself a fact about a publisher,
+and it is never persisted as though it were one. This extends `docs/
+Principles.md`, "An Achievement Describes An Attributable Fact, Not A
+Person's Worth (0.8.102)," to the one layer where the distinction matters
+most: the layer whose entire purpose is to produce an ordering.
+
+**A policy is data, not a hand-written comparator hiding its own rules.**
+`describePublisherRankingPolicy()` returns its criteria — which fields,
+in which order, compared which way — as a plain, frozen, inspectable
+array; `describePublisherRanking()`'s own comparator walks that exact
+array rather than repeating the same field names a second time inside an
+if/else chain a reader would have to trust separately. A caller, or a
+future test, can read the policy and know precisely what is and is not
+being compared, without reading the comparator's implementation at all.
+
+**A ranking is disposable; the facts it ranks are not.** Computing a
+ranking never mutates a single field of the statistics it was computed
+from — every entry echoes its own source `PublisherAchievementStatistics`
+(0.8.111) verbatim, the identical frozen object, never a copy. If this
+policy changes tomorrow, no historical fact requires migration: the exact
+same archive, re-ranked under a new policy, simply produces a new,
+equally honest ordering over evidence that never moved. There is no
+`PublisherRankingRecord` for the identical reason there is no
+`PublisherAchievementStatisticsRecord` one layer down (0.8.111) — a rank
+is a presentation result, computed fresh, every time.
+
+**No blockchain, achievement kind, or event carries an intrinsic
+multiplier.** The policy's three criteria are already-existing counts,
+compared in a declared order — never a weighted sum, never a per-chain
+bonus or penalty. A Bitcoin publication is not worth more than a Base
+publication because Bitcoin fees are higher, and Base does not earn a
+bonus for being cheaper; `blockchainPublicationCounts` (0.8.111) states
+chain distribution as its own, separate fact, and this policy never reads
+it. This is `docs/Principles.md`, "Blockchain Identity Is Explicit; A
+Shared Reference Is Never Evidence Of A Shared Publication (0.8.89),"
+held here once more: a chain is an identity, never a value judgment.
+
+**The ranked population is exactly the population that explicitly
+associated something — never a population this codebase infers.**
+`reconstructPublisherRanking()` composes `application/
+PublisherAssociationView.js`'s own `reconstructDistinctPublisherIdentifiers()`
+(0.8.108) unchanged; a publisher who never associated a publication is
+never ranked, and a publication nobody has ever claimed never contributes
+to anyone's ranking. This is `docs/Principles.md`, "Correlate Evidence By
+Explicit Identity, Never By Resemblance (0.8.78)," extended one further
+layer: over the population eligible to be ranked at all, not merely over
+one relationship or one aggregate.
+
+**Deterministic total ordering never depends on locale, machine, or
+moment.** The final tie-break compares a publisher identity's own exact
+`publisherId` string with plain code-unit comparison — never
+`localeCompare()`, never case-folding — so that `Alice`, `alice`, and
+`ALICE` (already three distinct identities under `application/
+PublisherIdentityRecord.js`'s own case-sensitive `sameAs()`, 0.8.108) sort
+into one fixed order everywhere. The same archive, ranked by the same
+policy, produces the same ranking on every replica — a genuinely
+reproducible computation over decentralized evidence, never a centralized
+authority's database.
+
+See `docs/Roadmap.md`, 0.8.112, for the full milestone entry.

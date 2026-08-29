@@ -35498,3 +35498,180 @@ achievements," never "the world's top publishers," because publisher
 association remains an explicit local claim, not a cryptographic proof of
 human identity — is real, separate work for 0.8.112/0.8.113 to settle
 before either ships.
+
+## 0.8.112 — Explicit Publisher Ranking Policy
+
+0.8.111's own header named this milestone's exact scope: "a ranking POLICY
+that turns these exact facts into an ordering is real, separately sized,
+later work." This milestone is that policy, and only that — the first
+file in this codebase that answers a genuinely different question than
+every layer built since 0.8.75. Every milestone through 0.8.111 answered
+"what happened?" This milestone introduces the first explicitly
+evaluative layer: "given those facts, according to an explicitly defined
+policy, how should publishers be ordered?"
+
+```text
+Publisher Achievement Statistics (0.8.111, UNCHANGED)
+      │
+      │  describePublisherRanking()   (THIS MILESTONE)
+      ▼
+Publisher Ranking
+    { policy, entries: [{ rank, publisherIdentity, achievementCount,
+                           distinctAchievementKindCount,
+                           publicationIdentityCount, statistics }] }
+```
+
+**A RANKING IS A POLICY OUTPUT, NEVER A DISCOVERED PROPERTY OF A
+PUBLISHER.** "Publisher A is #1" means "Publisher A is first under
+ForkBuild's current ranking policy" — never "Publisher A is objectively
+the best publisher." See `docs/Principles.md`, "A Ranking Is A Policy
+Output, Not A Discovered Property (0.8.112)." Every field through 0.8.111
+stayed factual for exactly this reason: so this milestone would have
+something honest to rank, without any of those layers quietly pre-judging
+the ordering themselves.
+
+**THE POLICY IS DELIBERATELY SIMPLE, VERSION 1, AND NOT CONFIGURABLE.**
+`application/PublisherRankingPolicy.js`'s own `describePublisherRankingPolicy()`
+returns a fixed, three-criterion policy, each criterion an already-existing
+fact from 0.8.111's own statistics result, compared descending, in this
+exact order: `achievementCount`, then `distinctAchievementKindCount`, then
+`publicationIdentityCount`. All three exist already — this milestone
+invents no fourth metric merely to manufacture a ranking. A final,
+deterministic tie-break — the publisher identity's own exact `publisherId`
+string, compared ascending — guarantees every ranking is a total order,
+never a partial one left to an unspecified sort implementation.
+
+**NO BLOCKCHAIN GETS AN INTRINSIC MULTIPLIER.** A Bitcoin publication is
+never worth more than a Base publication merely because Bitcoin fees are
+higher, and Base never receives a bonus for being cheaper. The policy
+reads none of `blockchainPublicationCounts` (0.8.111) — chain distribution
+stays exactly what it already was, a separate fact, never folded into an
+ordering.
+
+**IDENTITY ORDERING IS EXACT, CASE-SENSITIVE, AND NEVER LOCALE-SENSITIVE.**
+`PublisherIdentityRecord`'s own `sameAs()` (0.8.108) already treats
+`Alice`, `alice`, and `ALICE` as three distinct identities; this
+milestone's own tie-break compares their exact `publisherId` strings with
+plain `<`/`>` — ordering by UTF-16 code unit alone, never `localeCompare()`
+or any case-folding transform. The same archive produces the same ranking
+on every machine, in every locale, at every moment — no dependence on
+browser locale, operating system locale, or current time.
+
+**DETERMINISTIC TOTAL ORDERING WITH UNIQUE POSITIONS, NEVER COMPETITION
+RANKING.** Two publishers whose statistics are entirely identical still
+receive two different, adjacent rank numbers (e.g. 1 and 2), decided by
+the exact-identity tie-break — never the same rank number twice (never
+`1, 1, 3`). Their statistics remain visibly, honestly identical on the
+result; only `rank` differs, and only because a total order needs some
+deterministic answer to "which is listed first."
+
+**THE PUBLISHER POPULATION COMES FROM EXPLICIT ASSOCIATION ALONE.**
+`reconstructPublisherRanking(archive)` composes `application/
+PublisherAssociationView.js`'s own `reconstructDistinctPublisherIdentifiers()`
+(0.8.108, UNCHANGED) to learn which publisher identities exist to be
+ranked at all — never wallet discovery, transaction-sender inference,
+content-hash matching, social-identity inference, name normalization, or
+an external user directory. A publisher enters the ranking universe for
+exactly one reason: an explicit `PublisherPublicationAssociationRecord`
+names it.
+
+**COMPOSES TWO EXISTING RECONSTRUCTIONS — NO PARALLEL ASSOCIATION LOOKUP,
+NO PARALLEL ACHIEVEMENT ENGINE, NO PARALLEL STATISTICS ENGINE.**
+`reconstructPublisherRanking()` calls `reconstructDistinctPublisherIdentifiers()`
+(0.8.108, UNCHANGED) and, per publisher, `application/
+PublisherAchievementStatisticsView.js`'s own
+`reconstructPublisherAchievementStatistics()` (0.8.111, UNCHANGED) —
+composed, never recomputed. Every ranking entry's own `statistics` field
+is the exact, frozen statistics object it was ranked from, echoed
+verbatim — a caller wanting `badgeCount`, `achievementKindCounts`, or
+`blockchainPublicationCounts` reads them straight off it.
+
+**A RANK IS A PRESENTATION RESULT, COMPUTED FRESH, NEVER A PERSISTED
+RECORD.** There is no `PublisherRankingRecord`, no new collection on
+`application/PublicationObservationArchive.js`, and no `SCHEMA_VERSION`
+bump. If this policy changes later, no historical fact needs migration —
+only a fresh call to `describePublisherRanking()` over the same, untouched
+statistics.
+
+**NO SCORE, NO POINTS, NO LEVEL, NO TIER, NO XP, NO REPUTATION, NO WEIGHT,
+NO RATING, NO PERCENTILE.** `rank` is the one ordinal concept this
+milestone introduces, deliberately and narrowly. No `FIRST_PUBLICATION =
+10 points`, no per-achievement-kind point value, no combined "publisher
+score" a rank happens to be sorted by. See `docs/Principles.md`, "An
+Achievement Describes An Attributable Fact, Not A Person's Worth
+(0.8.102)," held here once more, at the layer built specifically to
+answer "how should these be ordered" without ever answering "how much is
+this publisher worth."
+
+**NO LEADERBOARD UI, NO NEW DURABLE STATE, NO SCHEMA_VERSION BUMP.** This
+milestone renders nothing — no leaderboard view, no new UI card. A locally
+computed ranking is only ever authoritative over the archive it was
+computed from, and two replicas holding different archives can
+legitimately produce different, equally honest rankings; presenting one,
+with an explicit dataset scope stated alongside it, is 0.8.113's own,
+separately sized work.
+
+New files:
+- `application/PublisherRankingPolicy.js` — pure projection;
+  `describePublisherRankingPolicy()` (the fixed policy definition, as
+  data) / `describePublisherRanking(publisherAchievementStatisticsList)`
+  (an array of already-computed publisher achievement statistics in, a
+  ranking out) / `reconstructPublisherRanking(archive)` (archive-reading
+  entry point, composing `reconstructDistinctPublisherIdentifiers()`,
+  0.8.108, and `reconstructPublisherAchievementStatistics()`, 0.8.111, both
+  unchanged); no archive access of its own beyond the one thin
+  reconstruction entry point.
+
+New tests:
+- `tests/PublisherRankingPolicy.test.js` — the fixed, versioned policy
+  definition returned as frozen data; an empty statistics list producing a
+  valid, empty ranking; a single publisher ranking #1; the FLAGSHIP — Alice
+  and Bob tying on `achievementCount`, `distinctAchievementKindCount`, AND
+  `publicationIdentityCount`, with Carol having fewer achievements but MORE
+  distinct achievement kinds and still ranking below them, proving the
+  ranking follows the declared field order rather than any other intuitive
+  notion of "better," Alice ranking above Bob only by the deterministic
+  exact-identity tie-break, and reordering the input never changing the
+  result; case-sensitive identity tie-break proving `Alice`/`alice`/`ALICE`
+  remain three distinct entries in a fixed, non-locale-sensitive order
+  matching plain string comparison; policy isolation — ranking never
+  mutating the input statistics, and two calls to
+  `describePublisherRankingPolicy()` never sharing a single mutable
+  instance; deterministic total ordering with unique, gapless ranks even
+  when every counted field ties across three publishers; malformed/absent
+  inputs never throwing, including deduplication of two statistics entries
+  naming the identical publisher; `reconstructPublisherRanking()` over a
+  real, persisted archive proving the ranked population comes from
+  explicit association alone (an archive publication nobody ever
+  associated never appears ranked), zero network access, no archive
+  mutation, and reload equivalence; and no
+  score/points/level/tier/xp/reputation/weight/rating/percentile
+  vocabulary anywhere, with `rank` named explicitly as the one ordinal
+  concept this milestone introduces.
+
+Deliberately excluded:
+- **Any weighted formula, per-achievement-kind point value, or per-chain
+  multiplier.** Version 1 of this policy ranks by three already-existing
+  facts, in a declared order, and nothing more. A more elaborate policy is
+  real, separate, later work, and would still need to answer the questions
+  this milestone's own header raised and declined to answer: why is one
+  achievement worth more than another, are reference achievements more
+  valuable than publication achievements, should Bitcoin and Base be
+  weighted equally, can a person game references, should old achievements
+  remain equally valuable, and does popularity become self-reinforcing.
+- **Any leaderboard UI, or any new UI card of any kind.** Real, separately
+  sized, later work — 0.8.113.
+- **Any `PublisherRankingRecord`, or any new durable state.** A rank is a
+  presentation result, computed fresh every time, never persisted.
+- **A configurable or pluggable ranking policy.** `describePublisherRankingPolicy()`
+  takes no arguments and returns exactly one, fixed policy. Multiple
+  policies (an achievement leaderboard, a publication leaderboard, a
+  cross-chain leaderboard) are real, separate, later work if ForkBuild ever
+  needs them — never half-built here.
+
+What's left, and deliberately unbuilt: 0.8.113 presents this exact ranking
+as a leaderboard UI, with an explicit dataset scope stated alongside it —
+rank, publisher, achievements, achievement kinds, publications, and
+perhaps blockchain distribution — computing no ranking of its own. After
+0.8.113, pause and observe how the system behaves before adding any
+gamification.
