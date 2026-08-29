@@ -36674,3 +36674,162 @@ after that: 0.8.120 would package a publisher's own evidence plus derived
 views into one portable bundle, and 0.8.121 would give this exact
 request/response/apply protocol an actual peer/transport boundary to move
 across.
+
+## 0.8.119 — Reproducible Leaderboard Snapshot
+
+0.8.116 through 0.8.118 gave two replicas a way to learn THAT their
+evidence differs (fingerprint), EXACTLY what differs (difference), and a
+portable way to CLOSE that gap (exchange). None of them ever asked the
+question that matters once evidence itself has converged: can the
+CONCLUSION — a leaderboard — be identified and reproduced independently,
+the same way the evidence underneath it already can be? This milestone is
+that question, answered as a projection, never a second ranking engine:
+
+```text
+Evidence fingerprint   (0.8.116, UNCHANGED)
+        +
+Ranking policy          (0.8.112, UNCHANGED, echoed verbatim by 0.8.113)
+        +
+Leaderboard              (0.8.113, UNCHANGED)
+        │
+        │  describePublisherLeaderboardSnapshot()   (THIS MILESTONE)
+        ▼
+Publisher Leaderboard Snapshot
+  { evidenceFingerprint, policy, leaderboard }
+```
+
+`application/PublisherLeaderboardSnapshot.js` builds exactly two functions,
+each composing existing computation, never a second one:
+
+```text
+describePublisherLeaderboardSnapshot(evidenceFingerprint, leaderboard)
+     — the pure composition: echo an already-computed fingerprint and an
+       already-computed leaderboard together, verbatim
+
+reconstructPublisherLeaderboardSnapshot(archive)
+     — the ONE, thin, archive-reading entry point: pulls
+       reconstructAchievementEvidenceFingerprint() (0.8.116) and
+       reconstructPublisherLeaderboard() (0.8.113), unchanged, and hands
+       both to the pure function above
+```
+
+Two replicas holding byte-identical evidence and applying the identical
+ranking policy produce a byte-identical snapshot — that is the entire
+reproducibility claim this milestone exists to state explicitly. Nothing
+about it is new arithmetic; every one of its three fields is an
+already-computed value from a milestone this codebase already shipped,
+carried together, for the first time.
+
+**A SNAPSHOT CARRIES EXACTLY THREE FIELDS — THE TWO INPUTS THAT MAKE A
+LEADERBOARD REPRODUCIBLE, AND THE LEADERBOARD ITSELF.** `evidenceFingerprint`
+is 0.8.116's own whole-evidence-set fingerprint — a 64-char lowercase hex
+string, the identical field name and shape 0.8.118's own exchange request
+already carries. `policy` is 0.8.112's own ranking policy object, echoed by
+reference — the EXACT SAME instance `leaderboard.policy` already carries
+(0.8.113 already preserves it verbatim). `leaderboard` is 0.8.113's own
+complete leaderboard result, unchanged. Nothing else lives on this result —
+no publisher count, no "as of" timestamp, no snapshot-scoped identifier
+beyond the two fields that already answer "what would make this
+reproducible."
+
+**SNAPSHOT IDENTITY IS THE PAIR (evidenceFingerprint, policy.version) —
+NEVER A TIMESTAMP, NEVER A PUBLISHER COUNT, NEVER A HASH OF THE
+LEADERBOARD ITSELF.** Two snapshots describe the identical computation
+exactly when their `evidenceFingerprint` strings match AND their
+`policy.version` numbers match. A timestamp is deliberately absent from
+this notion of identity: recomputing a snapshot from the identical
+evidence, under the identical policy, a minute later or a year later
+produces the IDENTICAL snapshot. This file does not export a dedicated
+`snapshotIdentity` field or comparison function — a caller already has
+everything needed with `a.evidenceFingerprint === b.evidenceFingerprint &&
+a.policy.version === b.policy.version`, the identical restraint 0.8.116's
+own header already held for comparing two fingerprints.
+
+**NO SNAPSHOT HASH — DELIBERATELY DECLINED, NOT MERELY OMITTED.** This
+milestone never computes a digest over the leaderboard itself.
+`evidenceFingerprint` already identifies the evidence; `policy` is already
+explicit, structured data a caller can compare field by field; and the
+leaderboard is a deterministic function of those two inputs alone (see
+"Leaderboard projection purity," below) — a second, leaderboard-scoped
+hash would add no information a caller does not already have, while
+inventing a second, competing notion of "the snapshot's true identity"
+alongside the pair that already serves that purpose.
+
+**POLICY PROVENANCE — THE EXACT POLICY OBJECT, NEVER A BARE VERSION
+NUMBER.** `snapshot.policy` is not `{ version: 1 }`; it is 0.8.112's own
+complete `describePublisherRankingPolicy()` result — `version`, `criteria`,
+and `tieBreak`, all three, exactly as 0.8.113 already preserves it on
+`leaderboard.policy`. `snapshot.policy` and `snapshot.leaderboard.policy`
+are the SAME object instance, by reference, never two independently
+produced copies that could silently drift apart. A future policy
+implementation could someday reinterpret what "version 1" means in the
+abstract; it can never reinterpret the exact `criteria` and `tieBreak`
+array this snapshot already carries, frozen, alongside it.
+
+**COMPOSES TWO EXISTING RECONSTRUCTIONS — NO PARALLEL FINGERPRINT ENGINE,
+NO PARALLEL RANKING ENGINE, NO PARALLEL LEADERBOARD PROJECTION.**
+`reconstructPublisherLeaderboardSnapshot()` calls
+`reconstructAchievementEvidenceFingerprint()` (0.8.116) and
+`reconstructPublisherLeaderboard()` (0.8.113) exactly once each, and hands
+their results, unchanged, to the pure function above — no `sort()` call,
+no hashing primitive, and no criteria array anywhere in this file.
+
+**DO NOT PERSIST A SNAPSHOT.** There is no `PublisherLeaderboardSnapshotRecord`,
+no new collection on `application/PublicationObservationArchive.js`, and no
+`SCHEMA_VERSION` bump. A snapshot is a derived artifact, reconstructable
+from an archive at any moment, never a fact ABOUT an archive that could go
+stale the instant the archive changes underneath it. Changing one
+achievement-driving evidence fact changes the reconstructed fingerprint,
+which changes the reconstructed snapshot — by construction, never by a
+migration this milestone would need to manage.
+
+**LEADERBOARD PROJECTION PURITY.** `describePublisherLeaderboardSnapshot()`
+receives an already-computed leaderboard and echoes it verbatim, by
+reference — it never reads `leaderboard.entries`, never iterates them,
+never re-derives `rank`. Exactly like `application/PublisherLeaderboardView.js`'s
+own relationship to 0.8.112's ranking, one layer down, this file composes
+one existing computation; it does not perform a second, competing one.
+
+**ARCHIVE ISOLATION.** `reconstructPublisherLeaderboardSnapshot()` touches
+an archive exactly twice — once through
+`reconstructAchievementEvidenceFingerprint()`, once through
+`reconstructPublisherLeaderboard()` — and both, transitively, read only the
+four evidence collections 0.8.114 already named "the achievement
+evidence." Recording a new confirmation observation, a new content-proof
+observation, or a new IPFS publication never changes a single field on a
+reconstructed snapshot.
+
+**MALFORMED/ABSENT INPUT IS TOLERATED, NEVER THROWN ON.** A non-genuine
+`evidenceFingerprint` degrades to the canonical empty-evidence fingerprint
+(0.8.116's own fingerprint over four empty collections); a leaderboard
+that is not genuinely shaped like 0.8.113's own result degrades to
+`describePublisherLeaderboard(undefined)`, 0.8.113's own well-defined
+empty leaderboard.
+
+Deliberately excluded:
+- **Any snapshot persistence, `leaderboardSnapshots` collection, or
+  server-generated leaderboard state.** See "Do not persist a snapshot,"
+  above.
+- **Any snapshot hash.** See "No snapshot hash," above.
+- **Any comparison function** (`compareLeaderboardSnapshots()`,
+  `MATCH`/`DIFFERENT`). A caller already has everything needed with plain
+  field access and `===`.
+- **Any "as of" timestamp, display formatting, or UI of any kind.** This
+  file returns plain, frozen, JSON-safe data, exactly like every
+  `describeXxx()`/`reconstructXxx()` pair below it.
+- **Any portable bundle combining a publisher's own evidence with derived
+  views.** That is 0.8.120's own, separately sized question.
+- **Any peer, transport, or synchronization mechanism of any kind.**
+  0.8.118, UNCHANGED, already carries that responsibility.
+
+What's left, and deliberately unbuilt: this milestone proves a leaderboard
+itself can be identified by exactly the two inputs that determine it —
+never a timestamp, never a count, never a second hash — and reproduced
+byte-identically by any replica holding the same evidence and applying the
+same policy. It never packages a publisher's own evidence plus derived
+views (achievements, badges, statistics, leaderboard position) into one
+portable bundle a publisher could carry between replicas — that is
+0.8.120's own question, "Portable Publisher Profile Bundle." And it never
+moves a snapshot, or any of 0.8.118's own exchange messages, across an
+actual peer connection — that is 0.8.121's own question, "Explicit
+Peer/Transport Boundary."

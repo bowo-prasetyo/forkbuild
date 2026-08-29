@@ -18463,3 +18463,69 @@ central server to hand out a leaderboard; it needs only a way to agree on
 the evidence, portably, and this milestone is that way.
 
 See `docs/Roadmap.md`, 0.8.118, for the full milestone entry.
+
+## A Leaderboard Snapshot's Identity Is Its Evidence Fingerprint Plus Its Policy Version — Never A Timestamp, Never A Hash Of Itself (0.8.119)
+
+0.8.113 established that a leaderboard is a presentation of a ranking,
+never a second ranking system. 0.8.116 established that an evidence
+fingerprint identifies a replica's facts without authenticating or
+concluding anything about them. This principle joins the two: the
+CONCLUSION a leaderboard represents is itself identifiable and
+reproducible, by exactly the two facts that determine it — the evidence it
+was computed from, and the policy it was ordered by — and by nothing else.
+
+**Two snapshots describe the identical computation exactly when their
+evidence fingerprints match and their policy versions match.** Not when
+they were computed at the same moment; not when they name the same number
+of publishers; not when a hash computed over the rendered leaderboard
+happens to agree. `application/PublisherLeaderboardSnapshot.js`'s own
+`{ evidenceFingerprint, policy, leaderboard }` carries no field a caller
+would need beyond those two to decide whether two replicas would produce —
+or did produce — the same leaderboard. Recomputing a snapshot from
+identical evidence under an identical policy a year apart yields the
+identical snapshot; this is the whole of what "reproducible" means here.
+
+**A timestamp is not merely omitted — it is the wrong kind of fact for
+this identity to carry.** A "leaderboard as observed on date X" answers a
+different, legitimate question ("what did this look like then") that this
+milestone deliberately does not answer (see 0.8.113's own "What's left").
+Folding a timestamp into a snapshot's identity would make two byte-for-byte
+identical computations, run a second apart, register as two different
+snapshots — the exact failure mode this principle exists to rule out.
+
+**A second, snapshot-scoped hash is deliberately declined, not merely
+unbuilt.** The evidence fingerprint already identifies the evidence; the
+policy is already explicit, comparable data; the leaderboard is a pure,
+deterministic function of the two. A hash computed over the rendered
+leaderboard would tell a caller nothing those two fields don't already
+say, while creating a second, competing notion of "the snapshot's true
+identity" — the same ambiguity `docs/Principles.md`'s own "The UI Displays
+Observations; It Does Not Turn Them Into A Verdict (0.8.57)" already warns
+against one layer up.
+
+**The policy is preserved by reference, not summarized to a version
+number.** `snapshot.policy` is the exact object `describePublisherRankingPolicy()`
+produced — `criteria` and `tieBreak` included — and it is the SAME
+instance `snapshot.leaderboard.policy` already carries, never a second,
+independently-produced copy. "Policy version 1" alone is a claim a future
+policy implementation could someday reinterpret; the exact `criteria`
+array a snapshot carries alongside it cannot be.
+
+**A snapshot is a projection, computed fresh, never a durable record.**
+`reconstructPublisherLeaderboardSnapshot()` composes
+`reconstructAchievementEvidenceFingerprint()` (0.8.116) and
+`reconstructPublisherLeaderboard()` (0.8.113) — both unchanged — and
+performs no ranking, no sorting, and no hashing of its own. There is no
+`leaderboardSnapshots` collection, no `SCHEMA_VERSION` bump, and no way for
+a snapshot to go stale relative to the archive it describes: changing one
+achievement-driving fact changes the fingerprint, which changes the
+reconstructed snapshot, by construction. `tests/PublisherLeaderboardSnapshot.test.js`'s
+own flagship reruns 0.8.118's own Alice/Bob evidence-exchange scenario one
+layer up: their snapshots genuinely differ before any exchange, and are
+byte-identical, independently reconstructed, after a two-way exchange —
+without the snapshot itself ever appearing inside a request or a response.
+A decentralized network never needs a central authority to bless a
+leaderboard; it needs only agreement on the evidence and the policy, and
+this milestone is the statement that agreement is sufficient.
+
+See `docs/Roadmap.md`, 0.8.119, for the full milestone entry.
