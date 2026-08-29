@@ -21,6 +21,7 @@ import { getBlueprintLineageClaimSigningDescriptor } from '../core/BlueprintLine
 import { getDecentralizedPublicationSigningDescriptor } from '../core/DecentralizedPublication.js';
 import { getPublicationAnchorSigningDescriptor } from '../core/PublicationAnchor.js';
 import { getPublicationSnapshotPlacementSigningDescriptor } from '../core/PublicationSnapshotPlacement.js';
+import { getPublisherLeaderboardSnapshotClaimSigningDescriptor } from '../core/PublisherLeaderboardSnapshotClaim.js';
 import { computeContentHash } from '../serializer/contentHash.js';
 import * as Ed25519 from './Ed25519.js';
 
@@ -652,6 +653,43 @@ export class LocalAuthorizationVerifier extends AuthorizationVerifier {
             record.signature,
             record.placerIdentity
         );
+    }
+
+    // 0.8.121 — a PublisherLeaderboardSnapshotClaim is NEVER tolerated
+    // unsigned, the same REQUIRED discipline as verifyBlueprintLineageClaim()
+    // above. The signer MUST equal the claim's own `signerIdentityId` — a
+    // leaderboard snapshot claim has exactly one party to it, the
+    // identity asserting the snapshot. STRUCTURAL verification only:
+    // whether `evidenceFingerprint`/`policyVersion`/`snapshotFingerprint`
+    // actually match ANY replica's own independently reconstructed
+    // snapshot is never asked here — that is application/
+    // PublisherLeaderboardSnapshotClaimVerification.js's own, separate
+    // question, composed on top of this structural check rather than
+    // folded into it. A signature that verifies here proves only that
+    // `signerIdentityId` genuinely signed exactly this fingerprint triple;
+    // see that file's own header for why a valid signature never implies
+    // the claim is true relative to any particular replica's own
+    // evidence.
+    verifyPublisherLeaderboardSnapshotClaim(record) {
+        if (!record) {
+            return { valid: false, signed: false, reason: 'no publisher leaderboard snapshot claim' };
+        }
+        if (!record.signature) {
+            return { valid: false, signed: false, reason: 'a publisher leaderboard snapshot claim must be signed' };
+        }
+        const sig = Signature.fromJSON(record.signature);
+        if (!sig) {
+            return { valid: false, signed: true, reason: 'malformed signature' };
+        }
+        if (sig.signer !== record.signerIdentityId) {
+            return { valid: false, signed: true, reason: 'signer does not match the claim\'s own signerIdentityId' };
+        }
+        const publicKeyBytes = Ed25519.didKeyToPublicKey(sig.signer);
+        if (!publicKeyBytes) {
+            return { valid: false, signed: true, reason: 'unknown signer identity' };
+        }
+        const identity = { id: sig.signer, algorithm: 'Ed25519', publicKey: Ed25519.bytesToHex(publicKeyBytes) };
+        return this.verifyDescriptor(getPublisherLeaderboardSnapshotClaimSigningDescriptor(record), record.signature, identity);
     }
 
     // The core check, exposed for direct use (tests, future verifiers).
