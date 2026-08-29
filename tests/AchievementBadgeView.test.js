@@ -15,7 +15,7 @@ import { describeAchievementBadges, reconstructAchievementBadges } from '../appl
 //            label (as title), and sourcePublicationIdentity verbatim —
 //            never a second, competing vocabulary
 // Section C: every badge carries a non-empty description and icon, and
-//            AchievementKind stays a closed, six-value vocabulary
+//            AchievementKind stays closed (eleven values after 0.8.106)
 // Section D: sourceAnchorId — a Bitcoin badge's own navigation
 //            convenience — names the exact originating record's anchorId;
 //            a Base badge's sourceAnchorId is always null
@@ -142,7 +142,12 @@ async function run() {
             assert(typeof badge.icon === 'string' && badge.icon.length > 0, '12. every badge carries a non-empty icon');
             assert(Object.isFrozen(badge), '13. every badge is frozen');
         }
-        assert(Object.keys(AchievementKind).length === 6, '14. AchievementKind still names exactly six values — this milestone invents no new achievement');
+        // 0.8.106 extended the shared AchievementKind vocabulary with five
+        // reference-derived values; this milestone (0.8.103) still invents
+        // no achievement of its own, and describeAchievementBadges() never
+        // passes reference records through, so those five values never
+        // reach a badge here — see AchievementBadgeView.js's own header.
+        assert(Object.keys(AchievementKind).length === 11, '14. AchievementKind names exactly eleven values (six from 0.8.102, five reference-derived from 0.8.106) — this milestone invents no achievement of its own');
 
         // A scenario that earns all six achievement kinds at once: Base
         // publishes first, then 99 Bitcoin publications follow — the first
@@ -177,7 +182,7 @@ async function run() {
         assert(descriptions.size === 6, '18. every badge\'s own description is distinct — no two achievement kinds share a description');
         assert(icons.size === 6, '19. every badge\'s own icon is distinct — no two achievement kinds share an icon');
     }
-    console.log('✓ Section C: every badge carries a distinct description and icon per kind, and AchievementKind stays a closed, six-value vocabulary');
+    console.log('✓ Section C: every badge carries a distinct description and icon per kind, and AchievementKind stays a closed vocabulary');
 
     // ---------------------------------------------------------------
     // Section D — sourceAnchorId: a Bitcoin badge names its exact

@@ -17778,3 +17778,86 @@ disciplined about which question it is actually answering, even when two
 answers would use the identical word "distinct."
 
 See `docs/Roadmap.md`, 0.8.105, for the full milestone entry.
+
+## A Reference-Derived Achievement Is Attributed To A Publication, Never To The Archive As A Whole (0.8.106)
+
+**A reference names two publications, so its achievements are scoped to
+identities, not to the entire archive.** `application/AchievementEvent.js`'s
+own 0.8.102 kinds are each a fact about THIS REPLICA'S ENTIRE ARCHIVE ("its
+first publication ever") and fire at most once, ever. The five kinds this
+milestone adds — `FIRST_REFERENCE_CREATED`, `FIRST_REFERENCE_RECEIVED`,
+`REFERENCED_BY_10_PUBLICATIONS`, `REFERENCED_BY_100_PUBLICATIONS`,
+`FIRST_CROSS_CHAIN_REFERENCE` — are each scoped instead to ONE explicit
+`BlockchainPublicationIdentity` (0.8.89), and fire once per distinct
+identity: Alice's own first outgoing reference and Carol's own first
+outgoing reference are two separate facts, not the same fact re-observed.
+This is a genuine, deliberate widening of what "earned at most once" means
+in this codebase — never a loosening of it, since the SCOPE a kind is
+evaluated against is still exactly as closed and explicit as it always
+was.
+
+**Reference count and distinct referencing publication count remain two
+different facts, now carried through into an achievement threshold.**
+`docs/Principles.md`'s own "A Reference Graph Is Grouped From Durable
+Facts, And Stays As Uninterpreted As They Are (0.8.105)" already refused
+to collapse Alice's three references into "one count"; this milestone
+holds the identical line one layer up, at the exact moment that
+distinction becomes achievement-shaped. `REFERENCED_BY_10_PUBLICATIONS`
+fires only when the 10th DIFFERENT publication references one, never when
+the 10th raw reference RECORD arrives — Alice referencing Bob three times
+advances Bob's own distinct-source count by exactly one, not three.
+
+**An achievement event names the fact that completed it, never merely a
+number.** `triggeringReference` carries the exact `PublicationReferenceRecord`
+(0.8.104) that crossed the threshold — `sourcePublicationIdentity`,
+`referencedPublicationIdentity`, and `createdAt` — so "Bob was referenced
+by 10 publications" is never asserted without also naming which reference,
+by whom, at what time, actually completed it. This extends `docs/
+Principles.md`, "An Achievement Describes An Attributable Fact, Not A
+Person's Worth (0.8.102)," one layer further: attributability here means
+naming the evidence, not merely the conclusion.
+
+**History is read chronologically, never inferred backward from today's
+already-grouped graph.** This milestone never asks `application/
+PublicationReferenceGraphView.js`'s own already-computed graph "how many
+distinct sources does Bob have today" and works backward to guess when the
+10th must have arrived — that would silently assume today's node counts
+describe history, which they stop doing the moment a record is deleted,
+re-imported, or simply observed out of order. Every `PublicationReferenceRecord`
+is instead placed into one fixed source order, then stably sorted by its
+own `createdAt`, exactly mirroring `docs/Principles.md`'s own "Deterministic
+Ordering" discipline `application/AchievementEvent.js` already held for
+publication records at 0.8.102. If the 10th distinct publisher references
+Bob at time T, the achievement's own `earnedAt` is T — never "whenever this
+replica happened to notice."
+
+**Cross-chain is a fact about two `blockchain` fields, never about
+content.** `FIRST_CROSS_CHAIN_REFERENCE` reads exactly one comparison —
+`source.blockchain !== referenced.blockchain`, both drawn from the closed
+`BlockchainKind` vocabulary — and nothing about a shared `contentHash` or
+any other resemblance. This extends `docs/Principles.md`, "Correlate
+Evidence By Explicit Identity, Never By Resemblance (0.8.78)," across the
+one new axis a reference-derived achievement could have gotten wrong: a
+Bitcoin publication and a Base publication sharing a `contentHash` are
+still two entirely separate identities, exactly as they already are
+everywhere else in this codebase, and "cross-chain" is decided by
+`blockchain`, never by anything content-shaped.
+
+**Extending a closed vocabulary is not the same as widening what it may
+express.** `AchievementKind` grows from six values to eleven, and
+`describeAchievementEvents()` gains a third, optional parameter — but
+every 0.8.102 call site, `application/AchievementBadgeView.js`'s own
+`describeAchievementBadges()` chief among them, keeps returning its own
+byte-identical six-achievement result, because an omitted third argument
+defaults to an empty array that contributes nothing. A vocabulary can grow
+without any existing caller's own meaning shifting underneath it.
+
+**Still no points, reputation, XP, levels, rarity, "popular" labels,
+leaderboards, achievement scores, weighted references, trust, or
+"influencer" classifications.** Every one of those is an interpretation of
+the graph 0.8.105 already refused to bake in; this milestone states
+exactly one thing per event — this explicitly defined threshold was
+crossed, by this exact record, at this point in the durable record
+history — and nothing more.
+
+See `docs/Roadmap.md`, 0.8.106, for the full milestone entry.
