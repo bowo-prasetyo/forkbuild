@@ -18180,4 +18180,68 @@ is there because some downstream computation actually reads it, and
 nothing in it invites a receiving replica to trust something it was never
 asked to.
 
+## Evidence May Be Merged; Conclusions Must Be Recomputed (0.8.115)
+
+**A decentralized network is not one replica importing one dump — it is
+many replicas, each with their own history, continually receiving
+evidence from others without discarding what they already had.**
+0.8.114 proved evidence could travel between two replicas at all, but its
+own `importAchievementEvidence()` only ever constructs a bare, ISOLATED
+archive — it has nothing to say about a replica that already holds its
+own durable facts. `application/AchievementEvidenceMerge.js`'s own
+`mergeAchievementEvidence()` is the primitive that answers that question,
+and it answers it by holding the identical restraint 0.8.114 already
+established, one layer further in: evidence is the only thing that ever
+crosses between two archives. Merging Alice's evidence into Bob's archive
+can change what Bob's SEPARATE, SUBSEQUENT calls to
+`reconstructAchievementEvents()`/`reconstructPublisherAchievementStatistics()`/
+`reconstructPublisherRanking()`/`reconstructPublisherLeaderboard()`
+conclude — it can never hand Bob a conclusion directly. Import replaces;
+merge adds; neither ever concludes.
+
+**Deduplication identity must be exact, or it silently violates a
+restraint this codebase already made elsewhere.** `application/
+PublicationReferenceRecord.js`'s and `application/
+PublisherPublicationAssociationRecord.js`'s own headers already state,
+independently of merge, that exact-duplicate relationship records are
+allowed to coexist within a single archive — a person re-asserting the
+same fact twice produces two independent records, "NEVER DEDUPLICATED."
+`application/BitcoinAnchorPublicationRecord.js`'s own header states,
+independently of merge, that a shared `anchorId` or `txid` is never
+grounds to collapse two publication records into one. A merge identity
+narrower than "every field the record itself carries" — deduplicating by
+`anchorId` alone, or by `publisherIdentity` + `publicationIdentity` alone
+— would silently violate one or the other restraint the moment two
+genuinely distinct facts happened to share a partial key. Full
+structural equality is the only identity that collapses two records ONLY
+when they are, in every sense this codebase already recognizes, the
+identical fact — which is also exactly the condition under which merging
+them twice must be indistinguishable from merging them once. See
+`tests/AchievementEvidenceMerge.test.js`'s own flagship for the
+concrete proof that this identity is simultaneously idempotent (merging
+the same payload twice changes nothing) and non-destructive (two records
+differing in a single field, such as `createdAt`, are always both kept).
+
+**Reusing `importAchievementEvidence()` to validate a merge payload is not
+a shortcut — it is the same claim 0.8.114 already made, applied
+literally.** `mergeAchievementEvidence()` performs no second,
+independently-maintained check of "what a genuine evidence payload looks
+like." A payload malformed enough to fail `importAchievementEvidence()`
+is malformed enough to fail merging it into anything — there is no
+weaker standard a payload could meet for merge that it fails for import,
+because merge's own four collections and merge's own record shapes are
+exactly the ones 0.8.114 already validates.
+
+**Provenance still belongs to the archive it describes, held once more
+over a non-empty archive.** 0.8.114's own "Provenance belongs to the
+archive it describes, never to the fact crossing between two archives"
+already implies this milestone's own extension: a fact Bob already held
+keeps whatever provenance it already had; a fact newly incorporated by a
+merge is `IMPORTED`, unconditionally, regardless of whether Alice's own
+archive called it `LOCAL` or `IMPORTED` — because 0.8.114's own export
+already carries no provenance for merge to inherit in the first place.
+Provenance never accumulates into a pseudo-chain of custody as evidence
+passes through a third or fourth replica; it only ever describes the ONE
+archive currently holding the fact.
+
 See `docs/Roadmap.md`, 0.8.114, for the full milestone entry.

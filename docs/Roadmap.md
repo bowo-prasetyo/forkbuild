@@ -35991,3 +35991,200 @@ are the same leaderboard. Only after that: a leaderboard UI, a publisher
 profile page, and eventually federated evidence exchange across several
 ForkBuild nodes with no central achievement server anywhere in the
 picture.
+
+## 0.8.115 — Explicit Achievement Evidence Merge
+
+0.8.114's own "Deliberately excluded" list named exactly this gap:
+`importAchievementEvidence()` constructs a brand-new, ISOLATED archive out
+of a payload, and explicitly never merges it into an archive the caller
+already holds. That restraint was correct for what 0.8.114 set out to
+prove — that evidence can be portable at all — but it left the genuinely
+decentralized shape of the problem unbuilt: a real network is not one
+replica importing a single, one-time evidence dump into an otherwise-empty
+archive. It is several replicas, each with its own durable history, each
+periodically receiving evidence from several others, none of them willing
+to throw away what they already had to accept what someone else sends:
+
+```text
+Alice's evidence ──┐
+                   ├──► Bob's EXISTING archive, holding Bob's own,
+Carol's evidence ──┤    already-durable facts
+                   │
+Bob's own evidence ┘
+```
+
+`application/AchievementEvidenceMerge.js` is that missing primitive:
+`mergeAchievementEvidence(archive, payload)` folds a portable evidence
+payload — the identical four-collection shape 0.8.114 already defined —
+into an archive that already has its own history, preserving every fact
+the archive already held. `importAchievementEvidence()` itself is
+UNCHANGED, and stays exactly the safe, replacement-style constructor it
+already was; this milestone adds a second, additive operation beside it,
+never a second implementation of it:
+
+```text
+import  — replacement-style: payload  →  a brand new, isolated archive
+merge   — additive-style:    payload  +  an existing archive  →  a
+                              richer archive holding the union of both
+```
+
+**MERGE FACTS, NEVER CONCLUSIONS.** `mergeAchievementEvidence()` accepts
+only the same four evidence collections 0.8.114 already established —
+`bitcoinAnchorPublicationRecords`, `baseAnchorPublicationRecords`,
+`publicationReferenceRecords`, `publisherPublicationAssociationRecords` —
+by literally reusing `importAchievementEvidence()` to validate and
+isolate the incoming payload, never a second, independently-drifting copy
+of that validation. It never accepts, and there is no vocabulary in this
+payload shape for, an achievement event, a badge, a statistic, a rank, or
+a leaderboard position. See `docs/Principles.md`, "Evidence May Be
+Merged; Conclusions Must Be Recomputed (0.8.115)."
+
+**MERGE IS BORING, ON PURPOSE.** `mergeAchievementEvidence()` validates
+the payload, folds newly-seen records into the archive it was given, and
+returns a genuine `PublicationObservationArchive` — nothing more. It
+never imports or calls `application/AchievementEvent.js`, `application/
+PublisherAchievementStatisticsView.js`, `application/
+PublisherRankingPolicy.js`, or `application/PublisherLeaderboardView.js`.
+Recomputing achievements, statistics, ranking, or the leaderboard over
+the merged archive stays the caller's own, separate, explicit next step —
+exactly the same pipeline 0.8.111 through 0.8.113 already built, UNCHANGED,
+now simply given a richer archive to run over:
+
+```text
+mergeAchievementEvidence()
+     │
+     ▼
+reconstructAchievementEvents()                (0.8.102/0.8.106, UNCHANGED)
+     │
+     ▼
+reconstructPublisherAchievementStatistics()    (0.8.111, UNCHANGED)
+     │
+     ▼
+reconstructPublisherRanking()                  (0.8.112, UNCHANGED)
+     │
+     ▼
+reconstructPublisherLeaderboard()               (0.8.113, UNCHANGED)
+```
+
+**DEDUPLICATION IS AN EXPLICIT, DOCUMENTED IDENTITY, NEVER AN ACCIDENTAL
+CONSEQUENCE OF `concat()`.** Two replicas that already share some
+evidence — Bob re-merges Alice's export a second time, or Alice and Bob
+each independently recorded the identical fact — must not have that
+shared evidence silently double in Bob's own archive merely because it
+arrived twice. But `application/PublicationReferenceRecord.js`'s and
+`application/PublisherPublicationAssociationRecord.js`'s own headers
+already established, before this milestone existed, that exact-duplicate
+relationship records are deliberately allowed to coexist within a single
+archive — "NEVER DEDUPLICATED." This milestone draws its identity line at
+the one place that contradicts neither restraint: two records are treated
+as "the same evidence" by merge ONLY when they are identical in EVERY
+field they carry — never a narrower key such as `anchorId` or `txid`
+alone, which would silently collapse records this codebase's own record
+classes explicitly forbid collapsing.
+
+| Evidence | Merge identity (every field the record itself carries) |
+| --- | --- |
+| Bitcoin publication | `anchorId` + `contentHash` + `txid` + `network` + `createdAt` |
+| Base publication | `contentHash` + `txid` + `network` + `createdAt` |
+| Reference | `sourcePublicationIdentity` + `referencedPublicationIdentity` + `createdAt` |
+| Publisher association | `publisherIdentity` + `publicationIdentity` + `createdAt` |
+
+Concretely, this is exact structural equality of each record's own
+`toJSON()` output — the same canonical shape every record class already
+produces for persistence and export, reused rather than reinvented a
+third time. A live re-assertion (a person explicitly associating the same
+publisher with the same publication a second time, minting a fresh
+`createdAt`) is untouched by this restraint: it is a genuinely new record
+the moment its own `createdAt` differs, exactly as `application/
+PublisherPublicationAssociationRecord.js`'s own header already promises.
+
+**THIS MAKES MERGE IDEMPOTENT AND A TRUE NO-OP WHEN THERE IS NOTHING
+NEW.** `mergeAchievementEvidence(archive, evidence)` called twice with the
+byte-identical payload leaves the archive after the second call holding
+exactly what it held after the first — every record the second call would
+add already exists, so nothing is appended, and the function returns the
+EXACT SAME archive instance it was given (`result.archive === archive`),
+not merely an equal one. See `tests/AchievementEvidenceMerge.test.js`'s
+own flagship for the concrete proof, including that two evidence records
+differing in only one field (a repeated reference between the same two
+publications, minted at two different times) are never collapsed into
+one.
+
+**PROVENANCE FOLLOWS 0.8.114'S OWN RULE, ONE LAYER OVER A NON-EMPTY
+ARCHIVE.** Every record the archive already held keeps whatever
+provenance it already had — merge never rewrites an existing fact's own
+`LOCAL`/`IMPORTED` tag. Every record newly incorporated by a merge call is
+stamped `IMPORTED`, unconditionally, regardless of whether it was `LOCAL`
+or `IMPORTED` in the archive it came from — reached by reusing
+`application/PublicationObservationArchive.js`'s own, pre-existing
+`appendXxx(record, origin)` methods (every one already accepted an
+optional trailing `origin` argument since 0.8.83) with `origin` explicitly
+set to `IMPORTED`, never a second, competing archive-assembly path.
+Because 0.8.114's own export already never carries provenance, re-exporting
+merged evidence still carries none — provenance never becomes a
+pseudo-blockchain attached to the fact itself, no matter how many replicas
+it has already passed through.
+
+**MERGE REUSES THE ONE DURABLE WRITE PATH EACH RECORD KIND ALREADY HAS —
+NEVER A SECOND ONE.** Every newly-incorporated record is folded in by
+calling `archive.appendBitcoinAnchorPublicationRecord()` /
+`appendBaseAnchorPublicationRecord()` / `appendPublicationReferenceRecord()`
+/ `appendPublisherPublicationAssociationRecord()` — the SAME four methods
+every other durable write in this codebase already goes through. This
+milestone invents no new archive field, no new collection, and no bypass
+of `PublicationObservationArchive`'s own append-only, immutable-instance
+discipline.
+
+**`describeAchievementEvidenceMerge()` IS A REVIEW, NEVER A
+RECONCILIATION** — the identical restraint `application/
+PublicationObservationArchiveReplacementReview.js`'s own header (0.8.88)
+already holds for a whole-archive replacement decision, held here once
+more for a narrower, evidence-only one. It answers "what would merging
+this payload change?" with per-collection existing/incoming/new/duplicate
+counts, computes nothing that recommends, scores, or validates whether
+merging should happen, never mutates `archive`, and its own `outcome` is
+always exactly the `outcome` `mergeAchievementEvidence()` itself would
+return for the identical arguments.
+
+**MALFORMED INPUT IS `INVALID_EVIDENCE`, REUSED VERBATIM FROM 0.8.114.**
+Both `mergeAchievementEvidence()` and `describeAchievementEvidenceMerge()`
+validate `payload` by calling `importAchievementEvidence()` itself and
+inspecting its own outcome — never a second, independently-maintained
+validation path. A payload `importAchievementEvidence()` itself would
+reject is `INVALID_EVIDENCE` here too, for the identical reason, and
+`archive` is never touched when that happens.
+
+Deliberately excluded:
+- **Any conflict resolution beyond identity-based deduplication.** There
+  is no such thing as two evidence records "disagreeing" in this model —
+  every field is part of each record's own identity, so two records that
+  differ at all are simply two distinct facts, both kept, exactly as
+  `application/PublicationObservationArchive.js` already treats them
+  everywhere else.
+- **Any automatic recomputation of achievement events, statistics,
+  ranking, or the leaderboard.** Merge stays boring, on purpose — see
+  above. A caller runs the identical, unchanged reconstruction pipeline
+  itself, explicitly, whenever it wants the merged archive's own
+  conclusions.
+- **Any durable "an evidence merge happened" event.** Mirrors 0.8.114's
+  own identical exclusion of a durable "evidence import happened" event —
+  this payload versions itself independently of `application/
+  PublicationObservationArchive.js`'s own `archiveImportEvents`
+  vocabulary, which describes a whole-archive import only.
+- **Any merge UI, leaderboard UI, or "my publisher profile" card.** Still
+  real, separately sized, later work.
+- **Federated exchange, peer discovery, or any transport mechanism.** A
+  caller still moves `payload` by whatever means it already has; this
+  milestone invents no protocol for HOW two replicas find each other or
+  automatically exchange evidence.
+
+What's left, and deliberately unbuilt: 0.8.116 is the flagship
+integration test 0.8.114's own design, and this milestone's own merge
+primitive, already make possible but neither itself asserts end-to-end
+across two fully independent archives built by two unrelated code paths —
+proving, once and for all, that a leaderboard computed on one replica,
+after merging a second replica's own evidence, is the same leaderboard
+that replica would compute independently. Only after that: a leaderboard
+UI, a publisher profile page, and eventually federated evidence exchange
+across several ForkBuild nodes with no central achievement server
+anywhere in the picture.
