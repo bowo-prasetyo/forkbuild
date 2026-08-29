@@ -34913,3 +34913,194 @@ association claims — a cryptographic layer proving control of a key,
 carefully never oversold as proving a human identity — remain real,
 separate, later work on top of the plain relationship this milestone
 establishes.
+
+## 0.8.109 — Publisher Achievement Profile Projection
+
+0.8.108's own header named this milestone's exact scope, twice: "no
+achievement aggregation... that composition is 0.8.109's own scope," and,
+in its own "What's left," "0.8.109 aggregates a publisher's own associated
+publications' existing achievement profiles into one publisher achievement
+profile." This milestone is that composition, and only that — the missing
+answer to "across every publication this publisher explicitly claims, what
+does this publisher have to show for itself?"
+
+```text
+PublisherIdentityRecord
+        │
+        │ explicit associations (0.8.108)
+        ▼
+PublisherPublicationAssociationRecord
+        │
+        │ distinct publication identities
+        ▼
+AchievementEvent (0.8.102/0.8.106)
+        │
+        ▼
+Publisher Achievement Profile (0.8.109)
+    { publisherIdentity, publicationIdentities, publicationIdentityCount,
+      achievements, achievementCount,
+      achievementKinds, distinctAchievementKindCount }
+```
+
+**A PUBLISHER PROFILE AGGREGATES ACHIEVEMENTS ATTRIBUTED TO EXPLICITLY
+ASSOCIATED PUBLICATION IDENTITIES; IT DOES NOT INFER THAT A PERSON OWNS,
+CONTROLS, OR DESERVES THOSE IDENTITIES.** Every publication counted toward
+a publisher's own profile reached it through a real, durable
+`PublisherPublicationAssociationRecord` (0.8.108) — never through a shared
+`contentHash`, a shared wallet address, a shared name, temporal proximity,
+or any other resemblance. This extends `docs/Principles.md`, "Correlate
+Evidence By Explicit Identity, Never By Resemblance (0.8.78)," one further
+layer, exactly as 0.8.108 already extended it over the association itself.
+
+**A REDUCTION BY EXPLICIT ASSOCIATION, NEVER A NEW ACHIEVEMENT ENGINE, AND
+NEVER A NEW ASSOCIATION ENGINE.** `application/PublisherAchievementProfileView.js`
+composes two already-existing projections — `application/
+PublisherAssociationView.js`'s own `describePublisherAssociatedPublications()`
+(0.8.108, UNCHANGED) to learn which publications a publisher explicitly
+claims, and `application/AchievementEvent.js`'s own
+`describeAchievementEvents()`/`reconstructAchievementEvents()` (0.8.102/
+0.8.106, UNCHANGED) for the achievement events themselves — and invents no
+new relationship, no new `AchievementKind`, and no new threshold. Every
+achievement surviving the reduction is the EXACT frozen event instance
+those files already produced, mirroring `application/AchievementProfileView.js`'s
+own restraint (0.8.107) one subject further: that file reduces achievement
+events to one PUBLICATION's own slice; this one reduces them again, to the
+union of every publication one PUBLISHER has explicitly, durably claimed.
+
+**DUPLICATE ASSOCIATIONS NEVER DUPLICATE ACHIEVEMENTS — ASSOCIATION
+MULTIPLICITY IS HISTORICAL FACT; ACHIEVEMENT MULTIPLICITY COMES FROM
+ACHIEVEMENT EVENTS ALONE.** `PublisherPublicationAssociationRecord`'s own
+0.8.108 design deliberately allows a publisher to be associated with the
+same publication more than once — a genuine, honestly recorded historical
+fact, never deduplicated at that layer. This milestone reduces those
+associations to their DISTINCT publication identities first (compared by
+`BlockchainPublicationIdentity#sameAs()`, 0.8.89) before ever asking which
+achievements belong to them — a set-membership test, never a join that
+could multiply once per matching association. Alice associated with the
+same publication three times still has exactly the achievements that one
+publication earned, counted once each, never three times.
+
+**AN ACHIEVEMENT EVENT COUNT AND A DISTINCT ACHIEVEMENT-KIND COUNT ARE TWO
+DIFFERENT FACTS, NEITHER ONE SILENTLY COLLAPSED INTO THE OTHER.** A
+publisher who explicitly claims two publications, each of which
+independently earned its own `FIRST_REFERENCE_CREATED` (a kind scoped to
+ONE publication identity, and therefore capable of firing once PER
+publication), has genuinely earned TWO achievement events of the identical
+kind. `achievements`/`achievementCount` name that first fact — every
+surviving achievement EVENT, verbatim. `achievementKinds`/
+`distinctAchievementKindCount` name the second, genuinely different fact —
+how many distinct entries of the closed `AchievementKind` vocabulary this
+publisher's own work collectively touches, each counted once no matter how
+many of that publisher's own publications, or how many times, earned it.
+This file computes both, side by side, and never merges them into one
+number.
+
+**UI: A "PUBLISHER ACHIEVEMENT PROFILE" CARD ON
+`DecentralizedPublicationsView.js`, COLLAPSED BY DEFAULT, ZERO NETWORK
+OPERATIONS.** A dropdown reusing the SAME `distinctPublisherIdentifiersView()`
+the "Publisher Associations" card (0.8.108) already populates — never a
+free-text field — shows, for whichever publisher a person picks, the exact
+counts and achievements `reconstructPublisherAchievementProfile()` computes:
+
+```text
+Publisher Achievement Profile
+
+Publisher: Alice
+Associated publications: 2
+Achievements earned: 4
+Distinct achievement kinds: 3
+
+🏆 First publication — earned …
+🏆 Bitcoin publisher — earned …
+🏆 Base publisher — earned …
+🏆 First reference created — earned …
+```
+
+No "verified owner," "top publisher," "score," or "rank" language appears
+anywhere on this card — only "associated," "claimed," and an explicit note
+that these achievements belong to the publications this publisher has
+explicitly claimed, never proof of who controls them.
+
+**NO NEW DURABLE STATE, NO SCHEMA_VERSION BUMP.**
+`application/PublicationObservationArchive.js` gains nothing from this
+milestone — no eleventh collection, no cached profile, no network call. A
+publisher achievement profile is computed fresh, every time, from this
+replica's own already-durable association records and already-computable
+achievement events.
+
+**NO SCORE, NO RANK, NO LEVEL, NO TRUST, NO LEADERBOARD INPUT OF ANY
+KIND.** `achievementCount`, `publicationIdentityCount`, and
+`distinctAchievementKindCount` are plain counts — never a score, a
+reputation figure, a weighted total, or a leaderboard input of their own.
+See `docs/Principles.md`, "An Achievement Describes An Attributable Fact,
+Not A Person's Worth (0.8.102)," held here once more, over a publisher's
+own aggregate. A ranking projection over this exact aggregate is real,
+separately sized, later work — see "What's left" below.
+
+New files:
+- `application/PublisherAchievementProfileView.js` — pure projection;
+  `describePublisherAchievementProfile(publisherIdentity,
+  publisherPublicationAssociationRecords, achievementEvents)` /
+  `reconstructPublisherAchievementProfile(archive, publisherIdentity)`
+  (identity + already-durable association records + already-computed
+  achievement events in, profile out); composes `application/
+  PublisherAssociationView.js` and `application/AchievementEvent.js`
+  unchanged; no archive access of its own beyond the one thin
+  reconstruction entry point.
+
+Changed:
+- `ui/views/DecentralizedPublicationsView.js` — one new "Publisher
+  Achievement Profile" card, collapsed by default; no change to any
+  existing card, computation, or durable state.
+- `tests.html` — register the new test file.
+
+New tests:
+- `tests/PublisherAchievementProfileView.test.js` — a publisher with zero
+  associations producing a valid, empty profile; a publisher's own single
+  associated publication's achievements attributed verbatim; achievements
+  belonging to an unassociated publication excluded even when genuinely
+  earned; duplicate associations never duplicating achievements;
+  achievement-event count and distinct-achievement-kind count as two
+  separate, never-collapsed facts; malformed/absent inputs never throwing;
+  the FLAGSHIP — Alice explicitly claims a Bitcoin publication (A) and a
+  Base publication (B), plus a duplicate association re-claiming A; Bob
+  explicitly claims a different Base publication (C); A, B, and C all share
+  one `contentHash` — proving Alice's profile names only A and B, never C,
+  the duplicate association never inflates `publicationIdentityCount` or
+  `achievementCount`, association order never changes the result, and
+  Bob's profile never contains Alice's `MULTI_CHAIN_PUBLISHER`;
+  `reconstructPublisherAchievementProfile()` composing the archive's own
+  existing association and achievement reconstructions with reload
+  equivalence and zero network access; and no verdict/score/points/rank
+  vocabulary anywhere in this milestone's own new surface.
+
+Deliberately excluded:
+- **Any score, rank, level, tier, or leaderboard.** Still real, separately
+  sized future work — see 0.8.102's own "Deliberately excluded," held here
+  once more.
+- **Collapsing achievement-event count and distinct-achievement-kind count
+  into one number.** Named explicitly above and in this milestone's own
+  test suite — a publisher who earned the same kind twice, from two
+  different publications, genuinely earned it twice.
+- **Any new durable state, or any change to `PublicationObservationArchive.js`.**
+  This milestone is a pure projection over two already-existing ones; it
+  adds no collection, no schema version bump, and no cached profile.
+- **Signed association claims, or any cryptographic proof of publisher
+  control.** Unchanged from 0.8.108's own deferral — an association remains
+  a claim, never a proof.
+- **Any badge presentation of a publisher's own achievements.** Mirroring
+  `application/AchievementBadgeView.js`'s own relationship to
+  `application/AchievementProfileView.js`, a publisher-scoped badge
+  presentation is real, separately sized, later work.
+
+What's left, and deliberately unbuilt: a decentralized achievement ranking
+projection (0.8.110) defines ranking semantics carefully over this exact
+aggregate — still no leaderboard UI — before 0.8.111 presents one with an
+explicit dataset scope, because a locally computed leaderboard is only ever
+authoritative over the archive it was computed from, and two replicas
+holding different archives can legitimately produce different, equally
+honest rankings. A publisher-scoped achievement badge presentation, and a
+factual publisher achievement summary (publication count, achievement
+count, badge count, first/latest achievement timestamps — still no score),
+remain real, separately sized, later work on top of the aggregate this
+milestone establishes.
