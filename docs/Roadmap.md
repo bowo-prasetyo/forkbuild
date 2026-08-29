@@ -38532,3 +38532,147 @@ That question — how replicas can exchange archive-level state safely and
 incrementally, rather than exchanging individual evidence and
 claim-history layers independently — is real, genuinely harder, and
 separately sized future work.
+
+## 0.8.131 — Claim History Synchronization Exchange
+
+0.8.126 gave two replicas a way to TRANSPORT an entire claim history —
+export, import, apply — but blindly: exporting a whole history re-sends
+every receipt a replica has ever recorded, whether or not the other side
+already holds it. 0.8.127 gave two replicas a way to LEARN exactly which
+receipts differ — but purely as a read, moving nothing itself. Neither
+file was ever asked to work together in one call. This milestone is that
+missing connective layer, one level above both, unchanged:
+
+```text
+sourceHistory                                    targetHistory
+     │                                                 │
+     └──────────── describe the difference ────────────┘
+                 (0.8.127, UNCHANGED)
+                           │
+                           ▼
+                { sourceOnly, targetOnly, ... }
+                           │
+  exportPublisherLeaderboardClaimHistorySynchronization()   (THIS MILESTONE)
+      — exports ONLY sourceOnly, via exportPublisherLeaderboardClaimHistory()
+        (0.8.126, UNCHANGED)
+                           │
+                           ▼
+               { protocolVersion: 1, claims: [...] }
+                           │
+  applyPublisherLeaderboardClaimHistorySynchronization()   (THIS MILESTONE)
+      — delegates directly to applyPublisherLeaderboardClaimHistoryExchange()
+        (0.8.126, UNCHANGED)
+                           │
+                           ▼
+                 targetHistory, now also holding every receipt it was
+                 genuinely missing — nothing it already had, resent
+```
+
+**AN ORCHESTRATOR, NEVER A SECOND ENGINE — THE ONE RULE THIS MILESTONE
+EXISTS TO ENFORCE.** All four functions are thin compositions of code this
+milestone does not touch: `describePublisherLeaderboardClaimHistoryDifference()`/
+`reconstructPublisherLeaderboardClaimHistoryDifference()` (0.8.127),
+`exportPublisherLeaderboardClaimHistory()`/
+`applyPublisherLeaderboardClaimHistoryExchange()` (0.8.126), and
+`reconstructPublisherLeaderboardClaimHistory()` (0.8.130's own
+archive-reading seam). There is no second receipt-identity comparison, no
+second JSON envelope shape, no second append path, and no second
+archive-reading routine anywhere in it — every one of those already
+exists, exactly once, one or two files away. The only genuinely new idea
+is "export only what the difference says one side is missing."
+
+**DIRECTIONAL, EXPLICIT, AND NEVER RECIPROCAL ON ITS OWN.**
+`exportPublisherLeaderboardClaimHistorySynchronization(sourceHistory,
+targetHistory)` answers exactly one direction — "what does `source` have
+that `target` lacks?" — and produces a payload meant for `target` alone.
+It never also computes or returns the reverse; a caller wanting two
+replicas fully caught up calls this milestone's own functions twice, with
+the two histories swapped, exactly as 0.8.126's own header already
+documents for its own applier ("a caller wanting two replicas to fully
+converge runs the identical exchange in both directions").
+
+**FOUR FUNCTIONS, EACH A NAMED, THIN COMPOSITION.**
+`describePublisherLeaderboardClaimHistorySynchronization()` is a pure,
+unmodified passthrough to 0.8.127's own difference projection, returning
+its exact frozen shape byte for byte.
+`reconstructPublisherLeaderboardClaimHistorySynchronization()` is the
+archive-reading counterpart, likewise a pure passthrough to 0.8.127's own
+`reconstructPublisherLeaderboardClaimHistoryDifference()`.
+`exportPublisherLeaderboardClaimHistorySynchronization()` is the one
+genuinely new composition: compute the difference, then hand
+`difference.sourceOnly` — and only `sourceOnly` — to 0.8.126's own
+`exportPublisherLeaderboardClaimHistory()`. The resulting payload is
+EXACTLY 0.8.126's own wire shape, `{ protocolVersion: 1, claims: [...] }`
+— never a new envelope, never a "synchronization" field, never a diff
+summary riding alongside the receipts; a receiver cannot tell, from the
+payload alone, that it was produced by a synchronization call rather than
+a full export. When the two histories already agree, this exports a
+genuine, well-formed empty payload, never a special sentinel.
+`applyPublisherLeaderboardClaimHistorySynchronization()` is a direct,
+unmodified delegation to `applyPublisherLeaderboardClaimHistoryExchange()`
+— every structural verification rule, every receipt-identity
+deduplication rule, every per-entry rejection, and every idempotency
+guarantee 0.8.126 already proved applies here completely unchanged,
+because a synchronization payload IS an ordinary 0.8.126 history-exchange
+payload.
+
+**STRICT BOUNDARIES DELIBERATELY HELD, NOT MERELY OMITTED.** This
+milestone never performs semantic claim verification of any kind; never
+decides which signer is trustworthy or ranks/scores anyone; never deletes
+or replaces a receipt already on file (synchronization only ever APPENDS,
+via 0.8.126's own unchanged append path); never deduplicates two
+genuinely distinct receipts of the same claim (0.8.123's own multiplicity
+rule is inherited unchanged); never modifies any evidence collection on
+any archive (an archive is read only by the reconstruct entry point, and
+never written to by anything here); never reconstructs an achievement,
+ranking, or leaderboard; never introduces a synchronization-specific
+timestamp (a receipt's own `receivedAt` travels exactly as 0.8.126
+already carries it); never performs background or network I/O; never
+persists anything automatically; never invents a new receipt-identity
+rule (`receiptIdentity = structural identity of (claim, receivedAt,
+origin)` remains exactly 0.8.126's/0.8.127's own rule, imported by
+composition); and never introduces a new wire protocol or envelope shape.
+
+**FLAGSHIP.** Alice holds `[A, B, B1]`: her own claim A, a receipt for
+Bob's claim B she genuinely shares byte-for-byte with Bob, and her own
+additional, distinct receipt for that same claim B (`B1` — a genuinely
+different `receivedAt`/`origin`, not a different claim). Bob holds
+`[B, B2, C]`: his own copy of the shared B receipt, his own additional,
+distinct receipt for claim B (`B2`), and a received claim C. Running
+`exportPublisherLeaderboardClaimHistorySynchronization(aliceHistory,
+bobHistory)` then applying the result to Bob's own history folds Alice's
+exclusive receipts (`A`, `B1`) onto it. Running the identical pair the
+other direction — against Bob's and Alice's ORIGINAL histories — folds
+Bob's exclusive receipts (`B2`, `C`) onto Alice's. Both replicas now hold
+five receipts each, and a following `describePublisherLeaderboardClaimHistorySynchronization()`
+call reports `sameHistory === true`, `sourceOnlyCount === 0`,
+`targetOnlyCount === 0`, even though the two histories hold their five
+receipts in genuinely different orders (append-only history, never
+reordered). Crucially, `B1` and `B2` remain two separate receipts
+throughout — neither synchronization call ever collapses them. Repeating
+the identical pair of synchronization calls afterward is a genuine no-op,
+inherited unchanged from 0.8.126's own idempotency guarantee.
+
+Deliberately excluded:
+- **A claim conflict/agreement projection.** "Which claims share a
+  signer, an evidence fingerprint, or a snapshot fingerprint, without
+  collapsing that into a trust judgment" is real, separately sized, later
+  work.
+- **Automatic, periodic, or background synchronization of any kind.**
+  Every step here still runs only when a caller explicitly calls it,
+  exactly as every function it composes already requires.
+- **A bidirectional "synchronize both ways in one call" convenience
+  function.** See "Directional, explicit, and never reciprocal on its
+  own," above; a caller wanting full convergence still makes two explicit
+  calls, one per direction.
+- **Any verification, trust, or "which replica is correct"
+  determination.** See "Strict boundaries," above.
+
+What's left, and deliberately unbuilt: this milestone lets a replica send
+another replica exactly the receipts it is genuinely missing, and nothing
+else — never that receiving a synchronization payload says anything about
+whether any claim within it is true, and never that converging two
+histories collapses any receipt's own multiplicity. It never builds a
+bidirectional convenience wrapper, never introduces conflict/agreement
+vocabulary between claims, and never runs on its own without an explicit
+caller — each remains genuinely separate, later work.
