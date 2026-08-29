@@ -37891,3 +37891,147 @@ a difference between two histories, never distinguishes distinct claims
 from duplicate receipts as its own labeled projection, and never
 integrates claim history into the durable evidence archive itself — each
 remains genuinely separate, later work.
+
+## 0.8.127 — Claim History Difference Projection
+
+0.8.126 gave two replicas a way to learn THAT their claim histories differ
+and to converge them — export, import, apply. It deliberately never
+answered the question a replica actually has the moment it wants to
+converge deliberately rather than blindly re-exchanging everything it
+already holds: given two replicas' claim histories, exactly which claim
+receipts does each replica have that the other does not? This milestone is
+the claim-history analogue of "Achievement Evidence Difference" (0.8.117),
+one layer up — where that milestone diffs a replica's four EVIDENCE
+collections, this one diffs a replica's own `LeaderboardClaimHistory`
+(0.8.123's plain, ordered array of `LeaderboardClaimRecord`) — the
+RECEIPTS a replica has recorded, never the evidence beneath them and never
+any verification computed over them:
+
+```text
+Alice's history                          Bob's history
+     │  exportPublisherLeaderboardClaimHistory()  │
+     ▼    (0.8.126, UNCHANGED)                     ▼
+{ claims: [...] }                         { claims: [...] }
+                 │                                 │
+                 └──── "these differ somehow" ──────┘
+                           — but WHAT, exactly,      difference        (THIS MILESTONE)
+                             does each side have          │
+                             that the other lacks?         ▼
+                                                    { sourceOnly, targetOnly,
+                                                      sourceOnlyCount, targetOnlyCount,
+                                                      sameHistory }
+```
+
+**RECEIPT IDENTITY, NOT CLAIM IDENTITY, GOVERNS THE COMPARISON — THE
+IDENTICAL RULE 0.8.126 ALREADY ESTABLISHED FOR DEDUPLICATION, REUSED HERE
+UNCHANGED FOR DIFFERENCING.**
+
+```text
+receiptIdentity = structural identity of (claim, receivedAt, origin)
+```
+
+Same claim, same `receivedAt`, same `origin` is the same receipt. Same
+claim with a different `receivedAt`, or a different `origin`, is always a
+distinct receipt, kept on both sides. Two separately constructed
+`LeaderboardClaimRecord` instances carrying exactly the same serialized
+fields are the same receipt for this milestone's own purposes — comparison
+is by content, never by object identity or array position.
+
+**MULTISET DIFFERENCE, NEVER A SET DIFFERENCE — THE IDENTICAL DISCIPLINE
+0.8.117'S OWN `extractUnmatched()` ALREADY HOLDS, REUSED HERE OVER
+RECEIPTS.** `[A, A, B]` compared against `[A, B]` reports exactly one `A`
+as source-only — the second `A` has no counterpart left once the first has
+been matched — never zero and never two. This matters concretely here: the
+same claim received twice by one replica (0.8.123's own multiplicity rule,
+UNCHANGED) is two distinct historical entries, and a replica that has
+received it twice while its peer received it only once genuinely has one
+exclusive receipt, not zero.
+
+**EACH RESULT ELEMENT IS THE ORIGINAL, FROZEN `LeaderboardClaimRecord`
+INSTANCE — NEVER A `toJSON()` PROJECTION.** A deliberate departure from
+0.8.117's own `sourceOnly`/`targetOnly` shape (plain `toJSON()` objects),
+made because a `LeaderboardClaimRecord` is already the exact unit
+`exportPublisherLeaderboardClaimHistory()` and
+`appendLeaderboardClaimHistoryEntry()` (0.8.123/0.8.126, UNCHANGED) both
+consume directly — a caller wanting to reconcile two replicas hands either
+array straight to `exportPublisherLeaderboardClaimHistory()` without any
+further transformation.
+
+**COMPARES STORED RECEIPTS, NEVER VERIFICATION RESULTS — THE
+ARCHITECTURAL BOUNDARY THIS MILESTONE EXISTS TO HOLD.** This module
+imports nothing from `application/PublisherLeaderboardSnapshotClaimVerification.js`,
+`application/PublisherLeaderboardClaimVerificationView.js`, or
+`application/PublisherLeaderboardClaimVerificationHistoryView.js`
+(0.8.120/0.8.124/0.8.125). Two replicas holding the byte-identical receipt
+for claim X report no difference for that receipt, even when one
+replica's own current evidence makes that claim verify successfully and
+the other's own current evidence makes it fail — `signatureValid`/
+`evidenceFingerprintMatches`/`matches` are projections computed fresh, per
+replica, against evidence that keeps changing; a claim-history difference
+is a fact about which durable receipts each replica holds on file, and
+that fact does not change just because two replicas currently disagree
+about what those receipts mean.
+
+**`describePublisherLeaderboardClaimHistoryDifference()`/
+`reconstructPublisherLeaderboardClaimHistoryDifference()`.** The identical
+split every other file in the achievement/leaderboard family already
+holds, even though there is presently no archive to reconstruct from:
+`reconstructPublisherLeaderboardClaimHistoryDifference()` is a thin,
+identity wrapper around the pure `describe()` computation today —
+`LeaderboardClaimHistory` is already the plain, in-memory collection a
+caller holds directly. The two names are kept distinct anyway so a future
+milestone that integrates claim history into `PublicationObservationArchive`
+(0.8.130) can teach `reconstructPublisherLeaderboardClaimHistoryDifference()`
+to accept an archive on each side without disturbing the pure computation
+or any caller already using it directly.
+
+**FLAGSHIP.** Alice holds `[A, B, B1]`: her own claim A, a receipt for
+Bob's claim B that she genuinely shares byte-for-byte with Bob, and her
+own additional, distinct receipt for that same claim B (`B1` — different
+`receivedAt`/`origin`). Bob holds `[B, B2, C]`: his own copy of the shared
+B receipt, his own additional, distinct receipt for claim B (`B2`), and a
+received claim C. The difference reports Alice-only as `[A, B1]` and
+Bob-only as `[B2, C]` — the shared B receipt cancels out on both sides.
+Exporting each side's exclusive receipts and applying them via 0.8.126's
+own, unchanged `exportPublisherLeaderboardClaimHistory()` +
+`applyPublisherLeaderboardClaimHistoryExchange()` (this milestone performs
+neither step itself) converges both replicas to five receipts each; diffing
+again reports `sameHistory === true`, `sourceOnly: []`, `targetOnly: []` —
+even though the two histories now hold their five receipts in genuinely
+different orders.
+
+**ONE PARTICULARLY USEFUL NEGATIVE TEST.** The identical stored receipt
+for one claim is diffed as "no difference" between two replicas whose own,
+independently computed CURRENT verification of that receipt disagrees
+(one replica's evidence makes it match; the other's genuinely different
+evidence makes it fail). The difference result itself never carries
+`signatureValid`, `evidenceFingerprintMatches`, `matches`, or any other
+verification/trust vocabulary.
+
+Deliberately excluded:
+- **Any merge, export, or import.** `sourceOnly`/`targetOnly` are
+  read-only facts about the difference; folding either side's exclusive
+  receipts into the other history remains
+  `application/PublisherLeaderboardClaimHistoryExchange.js`'s own,
+  already-built job (0.8.126), one call away, entirely untouched by this
+  milestone's own module.
+- **Claim identity/multiplicity statistics, a historical claim timeline,
+  or archive integration.** "Claim History Statistics Projection"
+  (0.8.128), "Historical Claim Timeline" (0.8.129), and integrating
+  `LeaderboardClaimHistory` into `PublicationObservationArchive` (0.8.130)
+  all remain genuinely separate, later questions.
+- **Any verification, trust, or "which replica is correct"
+  determination.** See "Compares stored receipts, never verification
+  results," above.
+- **Automatic, periodic, or background comparison of any kind.** Every
+  step here runs only when a caller explicitly calls it.
+
+What's left, and deliberately unbuilt: this milestone proves exactly which
+claim receipts distinguish two replicas' histories, by content and with
+full multiset fidelity — never that receiving a difference report says
+anything about whether any claim within it is true, and never that a
+difference of zero says the two replicas agree about anything beyond
+having recorded the same receipts. It never performs the reconciliation
+its own report makes possible, never reduces a history to statistics, and
+never integrates claim history into the durable evidence archive — each
+remains genuinely separate, later work.
