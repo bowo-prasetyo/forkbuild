@@ -37303,3 +37303,165 @@ later work, where three different signers' claims about the identical
 snapshot are three independent facts, never three endorsements, until some
 later, explicit, separately named milestone deliberately decides to make
 that evaluative leap.
+
+
+## 0.8.123 — Signed Leaderboard Claim Archive
+
+0.8.121's own "What's left" named this milestone directly: a durable claim
+registry able to retain MULTIPLE claims about the same snapshot, from
+multiple signers, without collapsing them into a count. 0.8.122 proved a
+signed claim can travel between two replicas; it deliberately never gave a
+receiving replica anywhere to put one. This milestone is that missing
+place — deliberately modest, and deliberately not a trust system:
+
+```text
+payload (untrusted JSON / raw text)
+     │  importPublisherLeaderboardSnapshotClaim()   (0.8.122, UNCHANGED)
+     ▼
+a hydrated claim, structurally verified
+     │  new LeaderboardClaimRecord({ claim, receivedAt, origin })   (THIS MILESTONE)
+     ▼
+a durable receipt
+     │  appendLeaderboardClaimHistoryEntry()   (THIS MILESTONE)
+     ▼
+LeaderboardClaimHistory   ──────►   describePublisherLeaderboardClaimHistory()
+                                          │
+                                          ▼
+                                 { claimCount, claims: [...] }
+```
+
+**PERSIST A SIGNED CLAIM AS A RECEIVED STATEMENT — NEVER AS TRUE, CURRENT,
+AUTHORITATIVE, OR RANKED.** `application/LeaderboardClaimRecord.js` is a
+small, immutable triple: `{ claim, receivedAt, origin }`. `claim` is the
+EXACT `PublisherLeaderboardSnapshotClaim` instance a caller already holds
+— carried through unchanged, never copied field-by-field into a new
+shape, never re-signed. `receivedAt` and `origin` describe THIS REPLICA'S
+OWN INGESTION of that artifact; they are facts about the receiving, never
+facts the claim itself asserts. `origin` reuses `application/
+PublicationObservationArchiveProvenance.js`'s own `LOCAL`/`IMPORTED`
+vocabulary (0.8.83) rather than inventing a second one — a claim this
+replica received through 0.8.122's own exchange is `IMPORTED`; a claim
+this replica signed itself and chooses to keep in the same history is
+`LOCAL`. Neither is "more trustworthy" than the other — the identical
+restraint 0.8.83 already established for a whole archive's own facts,
+held here once more, one layer up, over a signed conclusion instead of a
+raw one.
+
+**AN APPEND-ONLY HISTORY THAT PRESERVES MULTIPLICITY, THE IDENTICAL
+DISCIPLINE `application/PublicationReferenceRecordHistory.js` (0.8.104)
+ALREADY HOLDS.** `application/LeaderboardClaimHistory.js` offers exactly
+four operations over a plain array: `appendLeaderboardClaimHistoryEntry()`
+and three lookups — `findLeaderboardClaimRecordsBySignerIdentityId()`,
+`findLeaderboardClaimRecordsBySnapshotFingerprint()`,
+`findLeaderboardClaimRecordsByEvidenceFingerprint()`. The identical claim
+received twice — directly, and relayed through a second peer — is TWO
+independent records here, never collapsed into one. Three different
+signers each claiming the identical snapshot is three independent
+records, never a count, an average, or an endorsement. The three
+`findXxx()` functions are LOOKUPS, not trust decisions: each answers a
+narrow, factual "which records on file name this exact signer / snapshot
+/ evidence set" — never "which of these claims should I believe." A
+caller wanting to know whether a found record's claim still agrees with
+local evidence still runs `application/
+PublisherLeaderboardSnapshotClaimVerification.js` (0.8.121, UNCHANGED)
+itself, separately. If a future milestone wants deduplication or a
+distinct-claim count, that is an explicitly separate projection built on
+top of this file — this file computes neither.
+
+**THE ONE NEW APPLICATION BOUNDARY: `application/
+ReceivePublisherLeaderboardSnapshotClaimUseCase.js`.** Four steps,
+exactly, never a fifth: (1) accept an imported signed claim, (2)
+structurally validate it is a genuine claim — by delegating to 0.8.122's
+own `importPublisherLeaderboardSnapshotClaim()`, never re-implementing
+that check, (3) create the durable `LeaderboardClaimRecord`, (4) append
+it. It never performs semantic verification against the local archive: it
+never calls `verifyPublisherLeaderboardSnapshotClaim()`, never reads
+`application/PublicationObservationArchive.js`, and never compares a
+received claim against this replica's own evidence. That separation is
+the point — a claim can be cryptographically genuine and structurally
+valid while being semantically inconsistent with current local evidence,
+or valid when signed but no longer matching evidence that has since
+changed. The archive preserves the STATEMENT exactly as it arrived; it
+never rewrites what was received based on today's computation. Never
+throws for malformed or unverifiable input — `INVALID_CLAIM` and
+`UNVERIFIABLE_CLAIM` are 0.8.122's own outcomes, reported back unchanged;
+only a missing/malformed verifier or an invalid `origin` throws. `history`
+is taken and returned, never held as hidden instance state — the
+identical immutable-input/immutable-output shape `PublicationObservationArchive`'s
+own `.with...()` methods already hold.
+
+**A DELIBERATELY FACTUAL PROJECTION: `application/
+PublisherLeaderboardClaimHistoryView.js`.** `describePublisherLeaderboardClaimHistory()`
+returns `{ claimCount, claims: [...] }`, each entry exactly `{ id,
+signerIdentityId, evidenceFingerprint, policyVersion, snapshotFingerprint,
+createdAt, receivedAt, origin }` — every field carried through unchanged
+from the record and its own claim, in the same order `history` already
+holds them. No `trusted`, `valid`, `current`, `authoritative`, `verified`,
+`score`, `rank`, or `matches` field is persisted or presented anywhere in
+this file's output. `application/PublisherLeaderboardSnapshotClaimVerification.js`
+(0.8.121, UNCHANGED) remains the ONLY authority for the question it was
+designed to answer — whether a signature is valid, and whether a claim's
+fingerprints agree with a particular replica's own reconstructed snapshot
+— and this view never computes, caches, or narrates that answer on its
+behalf.
+
+**THE ARCHITECTURAL RULE THIS MILESTONE EXISTS TO HOLD THE LINE ON.**
+This codebase now has enough primitives to accidentally assemble a
+"trusted publishers" system: signature → claim → stored claim → "verified
+publisher" → reputation. This milestone deliberately stops one step
+short of that: signature → claim → durable receipt → explicit comparison
+(a caller's own, separate call into 0.8.121's unchanged verifier). No
+claim, and no record, is ever treated as more authoritative for having
+been received, received more than once, or received from a particular
+signer.
+
+**NOT YET A NINTH `PublicationObservationArchive` COLLECTION —
+DELIBERATELY, NOT MERELY OMITTED.** Every prior durable relationship this
+codebase has made "durable" in the fullest sense (`publicationReferenceRecords`,
+`publisherPublicationAssociationRecords`, and the collections before them)
+earned that status by integrating into `PublicationObservationArchive`
+with its own provenance array, fingerprint contribution, export/import,
+difference detection, and replacement-review integration — machinery
+0.8.121's own header named as "the exact machinery every other durable
+collection in this codebase already earned one milestone at a time (0.8.82
+through 0.8.90, for the archive itself)." A `LeaderboardClaimHistory` is
+durable in the sense that matters for this milestone — an explicit,
+immutable, append-only, in-memory record of what has been received — but
+it is not yet wired into that central archive's own SCHEMA_VERSION,
+export, or replacement-review machinery. Doing so is real, separately
+sized, later work this milestone deliberately declines to pre-build,
+exactly the restraint 0.8.121/0.8.122 already modeled for the claim
+primitive itself.
+
+Deliberately excluded:
+- **Trust scores, reputation, "verified publisher" labels, consensus, or
+  voting of any kind.** See "The Architectural Rule," above.
+- **Automatic semantic verification on receipt.** `ReceivePublisherLeaderboardSnapshotClaimUseCase`
+  never calls `verifyPublisherLeaderboardSnapshotClaim()` — that remains a
+  caller's own, separate, explicit step, run whenever it chooses to ask,
+  against whichever archive it currently holds.
+- **Deduplication of any kind.** The identical claim received twice is
+  two records, always — see `application/LeaderboardClaimHistory.js`'s
+  own header.
+- **A ninth `PublicationObservationArchive` collection, with its own
+  provenance array, fingerprint contribution, export/import, difference
+  detection, or replacement-review integration.** See "Not Yet A Ninth
+  Collection," above.
+- **Cross-replica claim comparison, claim conflict/multiplicity
+  projections, or a claim lifecycle view.** Real, separately sized, later
+  work — "Claim Verification History Projection," "Claim Comparison
+  Across Replicas," "Claim Conflict/Multiplicity Projection," and "Claim
+  Lifecycle View" all remain genuinely separate, later questions.
+
+What's left, and deliberately unbuilt: this milestone proves a received
+signed claim can be kept, alongside every other claim this replica has
+ever received, as an honest, unranked receipt — never that a claim on file
+is true, current, or preferred over any other claim about the identical
+snapshot. It never compares a stored claim against this replica's own
+evidence automatically, and it never lets two replicas exchange the
+receipts themselves (a "Portable Claim Receipt Exchange" milestone remains
+separate, later work, distinct from 0.8.122's own claim-only exchange). It
+never integrates this history into `PublicationObservationArchive` as a
+formal, exportable collection. Above all, it never turns "received" into
+"trusted" — that conflation remains the one line every future milestone in
+this family is expected to keep refusing to cross.
