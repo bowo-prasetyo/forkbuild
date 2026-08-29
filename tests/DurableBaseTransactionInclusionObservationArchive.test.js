@@ -249,14 +249,15 @@ async function run() {
     // ---------------------------------------------------------------
     // Section F — schemaVersion 3 → 4; a pre-0.8.97 payload degrades to an
     // empty archive. SCHEMA_VERSION itself has since been bumped again, to
-    // 5 by 0.8.99's own baseAnchorPublicationRecords collection, and to 6
-    // by 0.8.104's own publicationReferenceRecords collection — this
-    // section still only asserts the ONE fact that stays true regardless:
-    // a schemaVersion-3 payload (predating 0.8.97 entirely) is not valid
-    // under whatever the CURRENT schema is.
+    // 5 by 0.8.99's own baseAnchorPublicationRecords collection, to 6 by
+    // 0.8.104's own publicationReferenceRecords collection, and to 7 by
+    // 0.8.108's own publisherPublicationAssociationRecords collection —
+    // this section still only asserts the ONE fact that stays true
+    // regardless: a schemaVersion-3 payload (predating 0.8.97 entirely) is
+    // not valid under whatever the CURRENT schema is.
     // ---------------------------------------------------------------
     {
-        assert(PublicationObservationArchive.SCHEMA_VERSION === 6, '35. SCHEMA_VERSION is now 6 (bumped to 4 by 0.8.97, to 5 by 0.8.99, then to 6 by 0.8.104)');
+        assert(PublicationObservationArchive.SCHEMA_VERSION === 7, '35. SCHEMA_VERSION is now 7 (bumped to 4 by 0.8.97, to 5 by 0.8.99, to 6 by 0.8.104, then to 7 by 0.8.108)');
 
         let archive = PublicationObservationArchive.empty();
         archive = archive.appendBaseTransactionInclusionObservation(TXID_H, included({ txid: TXID_H, blockNumber: 1, confirmationCount: 1, observedAt: new Date('2026-08-05T00:00:00Z') }));

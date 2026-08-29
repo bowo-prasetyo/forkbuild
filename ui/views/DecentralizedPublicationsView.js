@@ -125,6 +125,10 @@ import { reconstructAchievementProfile } from '../../application/AchievementProf
 import { CreatePublicationReferenceRecordUseCase } from '../../application/CreatePublicationReferenceRecordUseCase.js';
 import { describePublicationReferenceRecordHistory } from '../../application/PublicationReferenceRecordHistoryView.js';
 import { reconstructPublicationReferenceGraph } from '../../application/PublicationReferenceGraphView.js';
+import { PublisherIdentityRecord } from '../../application/PublisherIdentityRecord.js';
+import { CreatePublisherPublicationAssociationRecordUseCase } from '../../application/CreatePublisherPublicationAssociationRecordUseCase.js';
+import { describePublisherPublicationAssociationRecordHistory } from '../../application/PublisherPublicationAssociationRecordHistoryView.js';
+import { reconstructPublisherAssociatedPublications, reconstructDistinctPublisherIdentifiers } from '../../application/PublisherAssociationView.js';
 import {
     PublicationObservationArchiveImportOutcome,
     exportPublicationObservationArchive,
@@ -2382,6 +2386,98 @@ export default {
         function achievementProfileView() {
             const identity = findKnownPublicationIdentity(achievementProfileSelectedKey.value);
             return reconstructAchievementProfile(publicationObservationArchive.value, identity);
+        }
+
+        // 0.8.108 — Explicit Publisher Identity Association.
+        //
+        // A DELIBERATELY EXPLICIT, PERSON-INITIATED ACTION — NEVER
+        // AUTOMATIC. Exactly like `recordPublicationReference()` above,
+        // nothing here is ever called from a finalization, broadcast, or
+        // observation flow. An association exists only when a person types
+        // a publisher identifier, picks one ALREADY-DURABLE publication
+        // identity from the dropdown below (the SAME
+        // `knownPublicationIdentityOptions()` the "Publication References"
+        // card already uses — never a free-text publication field), and
+        // clicks "Add Publication" — see application/
+        // CreatePublisherPublicationAssociationRecordUseCase.js's own
+        // header, "No Automatic Call Site."
+        //
+        // A PUBLISHER IDENTIFIER IS A BARE, EXPLICIT LABEL — NEVER A
+        // CRYPTOGRAPHIC IDENTITY, AND NEVER NORMALIZED. See application/
+        // PublisherIdentityRecord.js's own header: "Publisher A" and
+        // "publisher a" are two different publishers here, deliberately.
+        const publisherAssociationsExpanded = ref(false);
+        const publisherAssociationPublisherId = ref('');
+        const publisherAssociationPublicationKey = ref('');
+        const publisherAssociationError = ref('');
+        const publisherAssociationSelectedPublisherId = ref('');
+
+        function togglePublisherAssociations() {
+            publisherAssociationsExpanded.value = !publisherAssociationsExpanded.value;
+        }
+
+        // Pure projection — never a second, competing association listing
+        // computed inline here.
+        function publisherPublicationAssociationRecordHistoryView() {
+            return describePublisherPublicationAssociationRecordHistory(publicationObservationArchive.value.publisherPublicationAssociationRecords);
+        }
+
+        // Every DISTINCT publisher identifier this archive's own
+        // association records already name — a convenience for choosing an
+        // existing publisher below, never a second identity a caller could
+        // construct from this string alone.
+        function distinctPublisherIdentifiersView() {
+            return reconstructDistinctPublisherIdentifiers(publicationObservationArchive.value);
+        }
+
+        // Stateless — application/CreatePublisherPublicationAssociationRecordUseCase.js
+        // takes no collaborator of its own, so this is constructed
+        // directly, mirroring exactly how
+        // `createPublicationReferenceRecordUseCase` above is already
+        // constructed.
+        const createPublisherPublicationAssociationRecordUseCase = new CreatePublisherPublicationAssociationRecordUseCase();
+
+        // The one place this page ever mints a durable publisher
+        // association — never automatic, never inferred, only ever the
+        // exact publisher/publication pair a person explicitly chose
+        // above. `PublisherIdentityRecord`'s/`PublisherPublicationAssociationRecord`'s
+        // own constructors are the ONLY validation performed (an empty
+        // publisher identifier, a missing publication selection) — this
+        // handler adds no second validation pass of its own, it only turns
+        // that constructor's own thrown error into a plain, displayed
+        // message rather than an uncaught exception.
+        function recordPublisherAssociation() {
+            publisherAssociationError.value = '';
+            const publicationIdentity = findKnownPublicationIdentity(publisherAssociationPublicationKey.value);
+            if (!publisherAssociationPublisherId.value.trim() || !publicationIdentity) {
+                publisherAssociationError.value = 'Type a publisher identifier and choose a publication first.';
+                return;
+            }
+            try {
+                publicationObservationArchive.value = createPublisherPublicationAssociationRecordUseCase.execute(publicationObservationArchive.value, {
+                    publisherId: publisherAssociationPublisherId.value,
+                    publicationIdentity
+                });
+                persistPublicationObservationArchive();
+                publisherAssociationPublisherId.value = '';
+                publisherAssociationPublicationKey.value = '';
+            } catch (error) {
+                publisherAssociationError.value = error.message;
+            }
+        }
+
+        // A publisher-scoped reduction over the SAME association records
+        // above — application/PublisherAssociationView.js's own
+        // reconstructPublisherAssociatedPublications(), never a second,
+        // competing computation inline here. No publisher selected yet
+        // yields `null` — never an error, and never a profile guessed from
+        // a shared content hash or wallet.
+        function publisherAssociationProfileView() {
+            if (!publisherAssociationSelectedPublisherId.value) return null;
+            return reconstructPublisherAssociatedPublications(
+                publicationObservationArchive.value,
+                new PublisherIdentityRecord({ publisherId: publisherAssociationSelectedPublisherId.value })
+            );
         }
 
         // Every currently AUTHENTICATED peer, in registry order — the
@@ -6380,6 +6476,10 @@ export default {
             canViewAchievementBadgeLifecycle, viewAchievementBadgeLifecycle,
             achievementProfileExpanded, toggleAchievementProfile,
             achievementProfileSelectedKey, achievementProfileView,
+            publisherAssociationsExpanded, togglePublisherAssociations,
+            publisherAssociationPublisherId, publisherAssociationPublicationKey, publisherAssociationError,
+            recordPublisherAssociation, publisherPublicationAssociationRecordHistoryView,
+            distinctPublisherIdentifiersView, publisherAssociationSelectedPublisherId, publisherAssociationProfileView,
             decentralizationContrast,
             knowledgeSynchronizationCoordinator, synchronizeWithPeers, synchronizationView, synchronizationBadgeClass, synchronizationButtonLabel,
             toggleReplicaKnowledge, acquisitionBreakdownSentence,
@@ -8036,6 +8136,130 @@ export default {
                         <p class="form-hint form-hint--neutral">
                             These achievements belong to this publication identity — not necessarily to
                             any particular person.
+                        </p>
+                    </template>
+                </div>
+            </div>
+
+            <!-- 0.8.108 — Explicit Publisher Identity Association. A
+                 durable, EXPLICIT publisherIdentity -> publicationIdentity
+                 fact — never inferred from a shared content hash, a
+                 shared wallet address, a shared name, or temporal
+                 proximity. A publisher identifier is a bare, explicit
+                 label a person types — never a cryptographic identity,
+                 never verified, never an "owner" claim. The publication
+                 dropdown is populated entirely from this archive's own
+                 "Bitcoin/Base Anchor Publications" identities above —
+                 never a free-text field. Collapsed by default. Performs
+                 ZERO network operations. -->
+            <div class="identity-mgmt-card">
+                <div class="identity-mgmt-card-header">
+                    <span class="identity-mgmt-name">Publisher Associations</span>
+                    <span class="peer-badge peer-badge--pending">Persisted locally</span>
+                </div>
+                <p class="form-hint form-hint--neutral">
+                    An explicit, durable record that a publisher identity claims a publication — never
+                    inferred from matching wallets, matching content, or matching names. A publisher
+                    identifier is a bare, explicit label, never a cryptographic proof of ownership or of
+                    the human behind it.
+                </p>
+                <dl class="evidence-fields">
+                    <div class="evidence-field"><dt>Associations recorded</dt><dd>{{ publisherPublicationAssociationRecordHistoryView().count }}</dd></div>
+                </dl>
+                <div class="identity-mgmt-actions">
+                    <button type="button" class="action-btn action-btn--secondary" @click="togglePublisherAssociations">
+                        {{ publisherAssociationsExpanded ? 'Hide Publisher Associations' : 'Show Publisher Associations' }}
+                    </button>
+                </div>
+                <div v-if="publisherAssociationsExpanded" class="evidence-inspection-adapter">
+                    <span class="evidence-inspection-adapter-title">Associate A Publication With A Publisher</span>
+                    <p v-if="knownPublicationIdentityOptions().length === 0" class="form-hint form-hint--neutral">
+                        At least one publication identity (Bitcoin or Base, above) is needed before an
+                        association can be recorded.
+                    </p>
+                    <template v-else>
+                        <label class="form-field">
+                            <span class="form-label">Publisher identifier</span>
+                            <input v-model="publisherAssociationPublisherId" type="text" class="form-input"
+                                   list="publisher-association-known-identifiers" placeholder="e.g. Publisher A">
+                            <datalist id="publisher-association-known-identifiers">
+                                <option v-for="publisherId in distinctPublisherIdentifiersView()" :key="publisherId" :value="publisherId"></option>
+                            </datalist>
+                        </label>
+                        <label class="form-field">
+                            <span class="form-label">Publication</span>
+                            <select v-model="publisherAssociationPublicationKey" class="form-input">
+                                <option value="" disabled>Choose a publication…</option>
+                                <option v-for="option in knownPublicationIdentityOptions()" :key="'assoc-' + option.key" :value="option.key">
+                                    {{ option.label }}
+                                </option>
+                            </select>
+                        </label>
+                        <div class="identity-mgmt-actions">
+                            <button type="button" class="action-btn action-btn--secondary"
+                                    :disabled="!publisherAssociationPublisherId.trim() || !publisherAssociationPublicationKey"
+                                    @click="recordPublisherAssociation">
+                                Add Publication
+                            </button>
+                        </div>
+                        <p v-if="publisherAssociationError" class="identity-unlock-error">{{ publisherAssociationError }}</p>
+                    </template>
+
+                    <span class="evidence-inspection-adapter-title">Recorded Associations</span>
+                    <p v-if="publisherPublicationAssociationRecordHistoryView().count === 0" class="form-hint form-hint--neutral">
+                        No associations recorded yet.
+                    </p>
+                    <ul v-else class="replica-knowledge-claim-list">
+                        <li v-for="(associationRow, associationIndex) in publisherPublicationAssociationRecordHistoryView().records" :key="associationIndex" class="replica-knowledge-claim">
+                            <span class="peer-badge peer-badge--pending">
+                                {{ associationRow.publisherIdentity.publisherId }} —
+                                {{ associationRow.publicationIdentity.blockchain }}:{{ shortId(associationRow.publicationIdentity.chainReference) }}
+                            </span>
+                            <p class="form-hint form-hint--neutral">
+                                Content hash: {{ associationRow.publicationIdentity.contentHash }} ·
+                                Recorded: {{ formatWhen(associationRow.createdAt) }}
+                            </p>
+                        </li>
+                    </ul>
+
+                    <span class="evidence-inspection-adapter-title">A Publisher's Associated Publications</span>
+                    <p v-if="distinctPublisherIdentifiersView().length === 0" class="form-hint form-hint--neutral">
+                        No publisher has been associated with anything yet — record one above and it
+                        appears here.
+                    </p>
+                    <label v-else class="form-field">
+                        <span class="form-label">Publisher</span>
+                        <select v-model="publisherAssociationSelectedPublisherId" class="form-input">
+                            <option value="" disabled>Choose a publisher…</option>
+                            <option v-for="publisherId in distinctPublisherIdentifiersView()" :key="'view-' + publisherId" :value="publisherId">
+                                {{ publisherId }}
+                            </option>
+                        </select>
+                    </label>
+
+                    <template v-if="publisherAssociationSelectedPublisherId">
+                        <dl class="evidence-fields">
+                            <div class="evidence-field"><dt>Publisher</dt><dd>{{ publisherAssociationProfileView().publisherIdentity.publisherId }}</dd></div>
+                            <div class="evidence-field"><dt>Associated publications</dt><dd>{{ publisherAssociationProfileView().associationCount }}</dd></div>
+                        </dl>
+                        <p v-if="publisherAssociationProfileView().associationCount === 0" class="form-hint form-hint--neutral">
+                            This publisher has not been associated with any publication.
+                        </p>
+                        <ul v-else class="replica-knowledge-claim-list">
+                            <li v-for="(association, associationIndex) in publisherAssociationProfileView().associations" :key="associationIndex" class="replica-knowledge-claim">
+                                <span class="peer-badge peer-badge--pending">
+                                    {{ association.publicationIdentity.blockchain }} — {{ shortId(association.publicationIdentity.chainReference) }}
+                                </span>
+                                <p class="form-hint form-hint--neutral">
+                                    Content hash: {{ association.publicationIdentity.contentHash }} ·
+                                    Associated: {{ formatWhen(association.createdAt) }}
+                                </p>
+                            </li>
+                        </ul>
+                        <p class="form-hint form-hint--neutral">
+                            This is an explicit claim, not a verified fact — it states that this publisher
+                            identity was associated with these publications, never that this replica has
+                            proven who controls them.
                         </p>
                     </template>
                 </div>

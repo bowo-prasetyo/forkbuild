@@ -17925,3 +17925,51 @@ once more, over a publication's own slice of that vocabulary rather than
 the whole of it.
 
 See `docs/Roadmap.md`, 0.8.107, for the full milestone entry.
+
+**A relationship record states association, never ownership or human
+identity.** `application/PublisherPublicationAssociationRecord.js`'s own
+`{ publisherIdentity, publicationIdentity, createdAt }` says exactly one
+thing — "this publisher identity is explicitly associated with this
+publication identity" — and nothing more. It does not say "this is the
+legal owner," and it does not say "this person is definitely the human
+behind it." This extends `docs/Principles.md`, 0.8.107's own "Publication
+identity and human identity remain deliberately distinct" paragraph, one
+further layer: even an EXPLICIT association between a publisher label and
+a publication stops short of claiming legal ownership or proven human
+identity behind either side.
+
+**Relationships are facts when explicitly established, not when merely
+inferred from resemblance.** No `PublisherPublicationAssociationRecord`
+is ever created from an identical `contentHash`, an identical wallet
+address, an identical name, temporal proximity, common references, or
+common achievement patterns — see `docs/Principles.md`, "Correlate
+Evidence By Explicit Identity, Never By Resemblance (0.8.78)," held here
+once more, over a relationship between a publisher and a publication
+rather than between two publications (0.8.104) or within one identity
+(0.8.89). A wallet address recurring across several publications is never
+silently declared "this wallet = this publisher" — the identical
+restraint 0.8.107 already held for a shared wallet as evidence of a
+shared human, extended here to a publisher label as well.
+
+**A publisher identity is a bare, explicit label — never a cryptographic
+identity, and never normalized.** `application/PublisherIdentityRecord.js`'s
+own `sameAs()` compares `publisherId` by exact, case-sensitive string
+equality alone — "Publisher A" and "publisher a" are different publishers,
+deliberately, because normalizing them into "the same publisher" would
+itself be exactly the resemblance-based inference the paragraph above
+forbids. This class is also kept scrupulously distinct, in its own file's
+header, from `identity/SigningIdentity.js`'s own pre-existing
+`Publication.publisherIdentity` (0.2.16) — a real, Ed25519-keyed
+cryptographic identity belonging to the peer-to-peer publication protocol.
+The two share a name in English only; a person could type "Publisher A"
+into a text field and mint one of these, and could never do the same for
+the other.
+
+**An association manufactures no achievement.** `application/
+CreatePublisherPublicationAssociationRecordUseCase.js` touches neither
+`application/AchievementEvent.js` nor
+`application/AchievementBadgeView.js` — a relationship fact and a
+threshold crossing remain two entirely different kinds of fact, and
+recording the former never fabricates the latter.
+
+See `docs/Roadmap.md`, 0.8.108, for the full milestone entry.

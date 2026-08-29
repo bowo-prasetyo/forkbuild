@@ -241,7 +241,7 @@ async function run() {
         const referenced = identity({ blockchain: BlockchainKind.BITCOIN, contentHash: CONTENT_HASH_ALICE, chainReference: BITCOIN_TXID_ALICE, createdAt });
         const record = new PublicationReferenceRecord({ sourcePublicationIdentity: source, referencedPublicationIdentity: referenced, createdAt });
 
-        assert(PublicationObservationArchive.SCHEMA_VERSION === 6, '35. SCHEMA_VERSION is now 6 (bumped from 5 by 0.8.104)');
+        assert(PublicationObservationArchive.SCHEMA_VERSION === 7, '35. SCHEMA_VERSION is now 7 (bumped from 5 by 0.8.104, then to 7 by 0.8.108)');
 
         let archive = PublicationObservationArchive.empty();
         assert(archive.publicationReferenceRecords.length === 0, '36. a fresh archive holds no publication reference records');

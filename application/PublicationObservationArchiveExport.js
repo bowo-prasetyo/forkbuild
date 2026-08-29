@@ -182,5 +182,6 @@ export function recordPublicationObservationArchiveImport(archive, { importedAt 
         importedArchiveSchemaVersion: PublicationObservationArchive.SCHEMA_VERSION,
         importedEntryCount: archive.publicationCount + archive.observationCount + archive.bitcoinAnchorPublicationRecordCount
             + archive.baseAnchorPublicationRecordCount + archive.publicationReferenceRecordCount
+            + archive.publisherPublicationAssociationRecordCount
     });
 }

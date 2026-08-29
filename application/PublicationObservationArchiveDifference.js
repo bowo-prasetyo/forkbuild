@@ -22,9 +22,10 @@ import { fingerprintPublicationObservationArchive } from './PublicationObservati
 //                      │
 //                      ▼
 //   { currentFingerprint, externalFingerprint, same,
-//     nine collection differences (0.8.97 adds
+//     ten collection differences (0.8.97 adds
 //     baseTransactionInclusionObservationsByTransactionHash; 0.8.99 adds
-//     baseAnchorPublicationRecords; 0.8.104 adds publicationReferenceRecords),
+//     baseAnchorPublicationRecords; 0.8.104 adds publicationReferenceRecords;
+//     0.8.108 adds publisherPublicationAssociationRecords),
 //     hasFactDifference, hasProvenanceDifference, importEvents }
 //
 // AN ARCHIVE DIFFERENCE DESCRIBES STRUCTURAL DIFFERENCES BETWEEN TWO
@@ -73,7 +74,8 @@ import { fingerprintPublicationObservationArchive } from './PublicationObservati
 //
 //   `ipfsPublicationRecords` / `bitcoinBroadcastRecords` /
 //   `bitcoinAnchorPublicationRecords` / `baseAnchorPublicationRecords`
-//   (0.8.99) / `publicationReferenceRecords` (0.8.104) — array POSITION
+//   (0.8.99) / `publicationReferenceRecords` (0.8.104) /
+//   `publisherPublicationAssociationRecords` (0.8.108) — array POSITION
 //   (this archive's own append-only history position — the identical
 //   meaning `ipfsPublicationRecords`' own `recordIndex` already carries,
 //   see application/PublicationObservationArchive.js's own header).
@@ -212,6 +214,10 @@ export function describePublicationObservationArchiveDifference(currentArchive, 
         currentJSON.publicationReferenceRecords, currentJSON.publicationReferenceRecordProvenance,
         externalJSON.publicationReferenceRecords, externalJSON.publicationReferenceRecordProvenance
     );
+    const publisherPublicationAssociationRecords = diffPositionalCollection(
+        currentJSON.publisherPublicationAssociationRecords, currentJSON.publisherPublicationAssociationRecordProvenance,
+        externalJSON.publisherPublicationAssociationRecords, externalJSON.publisherPublicationAssociationRecordProvenance
+    );
 
     const collections = {
         ipfsPublicationRecords,
@@ -222,7 +228,8 @@ export function describePublicationObservationArchiveDifference(currentArchive, 
         bitcoinAnchorPublicationRecords,
         baseTransactionInclusionObservationsByTransactionHash,
         baseAnchorPublicationRecords,
-        publicationReferenceRecords
+        publicationReferenceRecords,
+        publisherPublicationAssociationRecords
     };
 
     const hasFactDifference = Object.values(collections).some(
