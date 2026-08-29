@@ -38676,3 +38676,138 @@ histories collapses any receipt's own multiplicity. It never builds a
 bidirectional convenience wrapper, never introduces conflict/agreement
 vocabulary between claims, and never runs on its own without an explicit
 caller — each remains genuinely separate, later work.
+
+## 0.8.132 — Claim Agreement & Divergence Projection
+
+0.8.127 through 0.8.129 each answered a question about a single replica's
+own stored claim history in isolation — what differs between two
+histories, what measurable facts exist in one history, and in what order
+those facts arrived. 0.8.131's own "Deliberately excluded" list named the
+one question none of them ever asked: "which claims share a signer, an
+evidence fingerprint, or a snapshot fingerprint, without collapsing that
+into a trust judgment." This milestone is that projection:
+
+```text
+LeaderboardClaimHistory (0.8.123, UNCHANGED)
+       │
+       │  describePublisherLeaderboardClaimAgreement()   (THIS MILESTONE)
+       ▼
+{ claimCount, distinctClaimIdCount,
+  sharedSnapshotGroups, sharedEvidenceGroups, signerClaimGroups,
+  differingSnapshotPairs }
+```
+
+**The question is "what do these claims have in common, or not, with one
+another?" — never "which claim is right?"** A claim signed by Alice and a
+claim signed by Bob that name the identical `snapshotFingerprint` are
+related by a plain, observable fact: two independent signers each attest
+to the exact same reproducible conclusion. That fact is real and worth
+surfacing on its own — it is not evidence that either signer is
+trustworthy, not a step toward resolving a "conflict," and not a vote.
+This file counts relationships, never verdicts, holding the identical
+restraint `application/PublisherLeaderboardClaimHistoryStatisticsView.js`'s
+own header already states: "An Achievement Describes An Attributable
+Fact, Not A Person's Worth (0.8.102)."
+
+**"Agreement" and "divergence" name the milestone; they never name a
+field.** Grep the new module and neither word appears in its own data
+model. `sharedSnapshotGroups`/`sharedEvidenceGroups`/`signerClaimGroups`/
+`differingSnapshotPairs` each name an observable STRUCTURAL fact rather
+than a judgment — a reader is free to attach whichever verdict they like
+on top; this file supplies only the underlying relationship.
+
+**Claim identity, never receipt identity, governs every group and pair —
+reusing, never re-deriving, 0.8.128's own distinction.** `claimCount`
+counts RECEIPTS, exactly as 0.8.128's own field already does. But a
+relationship between "the same claim received twice" is not a
+relationship at all — it is one claim, observed twice — so every group and
+pair is computed over DISTINCT CLAIMS, deduplicated by `claim.id`, exactly
+as `distinctClaimIdCount` already counts them.
+
+**Three shared-field groupings, each independent of the other two:**
+`sharedSnapshotGroups` (identical `snapshotFingerprint` — the strongest
+relationship this file expresses), `sharedEvidenceGroups` (identical
+`evidenceFingerprint`, regardless of policy or snapshot), and
+`signerClaimGroups` (identical `signerIdentityId`). Each grouping only
+ever reports a value shared by two or more distinct claims — a value named
+by exactly one claim produces no entry, unlike 0.8.128's own count maps,
+which tally every value including singletons. A caller wanting the
+complete tally already has 0.8.128; this file answers only "which claims
+share something with at least one other claim."
+
+**A common evidence fingerprint does not imply a common snapshot — the
+one distinction this milestone exists to make observable, via
+`differingSnapshotPairs`.** Two claims can share an `evidenceFingerprint`
+while naming two different `snapshotFingerprint`s — most plausibly signed
+under two different ranking policy versions, though this file draws no
+such inference and states only the two fingerprints observed. Every
+unordered pair of distinct claims sharing an evidence fingerprint yet
+differing in snapshot fingerprint is reported; a pair sharing the
+identical snapshot fingerprint is not divergence and never appears there —
+that relationship is exactly what `sharedSnapshotGroups` already reports,
+on the other side of this same distinction.
+
+**Architectural boundary: structural facts about stored claims, never a
+verification, trust, or ranking determination of any kind.** The new file
+imports nothing from `application/PublisherLeaderboardSnapshotClaimVerification.js`,
+`application/PublisherLeaderboardClaimVerificationView.js`, or
+`application/PublisherLeaderboardClaimVerificationHistoryView.js`
+(0.8.120/0.8.124/0.8.125). Two signers sharing a snapshot fingerprint are
+reported as sharing a snapshot fingerprint, full stop — never as
+"corroborating one another," and this file never consults either
+replica's own CURRENT evidence to decide whether the shared conclusion
+still holds.
+
+**Groups and pairs are ordered by first appearance, never sorted** — the
+identical discipline 0.8.128's own count maps already hold.
+
+**`describePublisherLeaderboardClaimAgreement()`/
+`reconstructPublisherLeaderboardClaimAgreement()`** — the identical split
+every other file in the claim-history family already holds.
+`reconstructPublisherLeaderboardClaimAgreement()` pulls a replica's own
+stored `LeaderboardClaimHistory` straight out of an archive via
+`reconstructPublisherLeaderboardClaimHistory()` (0.8.130, UNCHANGED).
+
+**Synchronous, pure, no mutation, no storage, no network.** Malformed
+input (`null`/`undefined`/a non-array/non-`LeaderboardClaimRecord`
+entries) degrades to an empty result — every count zero, every group/pair
+array empty — never a throw.
+
+**Flagship.** Alice signs claim A (evidence E1, policy 1, snapshot S1) and
+claim B (the SAME evidence E1, a later policy version, snapshot S3 — a
+genuinely different reproducible conclusion). Bob signs claim C over the
+identical evidence, policy, and snapshot as A. Carol signs claim D over
+wholly unrelated evidence E2. `describePublisherLeaderboardClaimAgreement()`
+reports: `sharedSnapshotGroups` naming exactly A and C (same evidence,
+same policy, same snapshot, different signer); `sharedEvidenceGroups`
+naming A, B, and C, never D (A/B share evidence by construction, C by
+reconstructing the identical archive as A); `signerClaimGroups` naming
+exactly A and B (Alice's own two claims, over genuinely different
+snapshots); and `differingSnapshotPairs` naming both A↔B and B↔C (every
+pair within the shared-evidence group whose snapshot fingerprints
+genuinely differ), but never A↔C (identical snapshot) and nothing
+involving D (no shared evidence at all).
+
+Deliberately excluded:
+- **Any verification, trust, or "which claim is currently valid"
+  determination of any kind.** See "Architectural boundary," above.
+- **Any resolution, merge, or "which claim wins" mechanism.** A shared or
+  differing fingerprint is reported and nothing is done about it.
+- **Any ranking, scoring, or "best signer" determination.** See 0.8.112's
+  own, already-built, explicitly evaluative `PublisherRankingPolicy.js`
+  for where that concern lives.
+- **A temporal narration of how a signer's claims changed over successive
+  snapshots.** A genuinely different, separately sized, later question
+  (0.8.133), over the same underlying facts this file exposes.
+- **Automatic, periodic, or background computation of any kind.** This
+  function runs only when a caller explicitly calls it.
+
+What's left, and deliberately unbuilt: this milestone lets a replica see
+exactly which of its stored claims share a signer, an evidence
+fingerprint, or a snapshot fingerprint with one another — and, distinctly,
+which claims share evidence while genuinely diverging on the resulting
+snapshot — without ever collapsing any of that into a trust judgment. It
+never resolves a shared or differing fingerprint into a decision, never
+narrates how any one signer's claims evolved over time, and never runs on
+its own without an explicit caller — each remains genuinely separate,
+later work.
