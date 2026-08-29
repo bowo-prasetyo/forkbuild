@@ -121,6 +121,8 @@ import {
 } from '../../application/BaseAnchorPublicationLifecycleTimelineView.js';
 import { BlockchainKind } from '../../application/BlockchainKind.js';
 import { reconstructAchievementBadges } from '../../application/AchievementBadgeView.js';
+import { CreatePublicationReferenceRecordUseCase } from '../../application/CreatePublicationReferenceRecordUseCase.js';
+import { describePublicationReferenceRecordHistory } from '../../application/PublicationReferenceRecordHistoryView.js';
 import {
     PublicationObservationArchiveImportOutcome,
     exportPublicationObservationArchive,
@@ -2146,6 +2148,109 @@ export default {
                 default:
                     return '';
             }
+        }
+
+        // 0.8.104 — Explicit Publication Reference Relationship.
+        //
+        // A DELIBERATELY EXPLICIT, PERSON-INITIATED ACTION — NEVER
+        // AUTOMATIC. Unlike `archiveBitcoinAnchorPublicationRecord()`/
+        // `archiveBaseAnchorPublicationRecord()` above, nothing here is
+        // ever called from a finalization, broadcast, or observation flow.
+        // A reference exists only when a person explicitly picks two
+        // ALREADY-DURABLE publication identities from the dropdowns below
+        // and clicks "Record Reference" — see application/
+        // CreatePublicationReferenceRecordUseCase.js's own header, "No
+        // Automatic Call Site."
+        //
+        // BOTH DROPDOWNS ARE POPULATED ENTIRELY FROM THIS ARCHIVE'S OWN
+        // ALREADY-DURABLE `bitcoinAnchorPublicationRecords`/
+        // `baseAnchorPublicationRecords` — NEVER A FREE-TEXT FIELD. Exactly
+        // as application/BlockchainPublicationIdentity.js's own header
+        // requires ("A Projection Target, Never A Replacement"), every
+        // identity offered here is reached by calling an existing
+        // record's own `toBlockchainPublicationIdentity()` — never
+        // assembled by hand from typed `blockchain`/`contentHash`/
+        // `chainReference` strings. This is a genuine, honest scope limit
+        // for this milestone's own first version: only publications this
+        // replica already holds a durable identity record for — its own,
+        // or ones an archive import already brought in — can be named on
+        // EITHER side of a reference; naming an arbitrary publication this
+        // replica has never independently recorded is left to the archive
+        // import/inspection machinery already built (0.8.82/0.8.86),
+        // never a new, hand-typed identity path this card would otherwise
+        // need to invent.
+        const publicationReferencesExpanded = ref(false);
+        const publicationReferenceSourceKey = ref('');
+        const publicationReferenceReferencedKey = ref('');
+        const publicationReferenceError = ref('');
+
+        function togglePublicationReferences() {
+            publicationReferencesExpanded.value = !publicationReferencesExpanded.value;
+        }
+
+        // Pure projection — never a second, competing identity list
+        // computed inline in the template. `key` is `blockchain:chainReference`
+        // — unique per publication identity, exactly the pair application/
+        // BlockchainPublicationIdentity.js's own `sameAs()` already
+        // recognizes as identity, never `contentHash`.
+        function knownPublicationIdentityOptions() {
+            const bitcoinOptions = publicationObservationArchive.value.bitcoinAnchorPublicationRecords.map((record) => {
+                const identity = record.toBlockchainPublicationIdentity();
+                return { key: `${identity.blockchain}:${identity.chainReference}`, identity, label: `Bitcoin — ${shortId(identity.chainReference)} — content ${shortId(identity.contentHash)}` };
+            });
+            const baseOptions = publicationObservationArchive.value.baseAnchorPublicationRecords.map((record) => {
+                const identity = record.toBlockchainPublicationIdentity();
+                return { key: `${identity.blockchain}:${identity.chainReference}`, identity, label: `Base — ${shortId(identity.chainReference)} — content ${shortId(identity.contentHash)}` };
+            });
+            return Object.freeze([...bitcoinOptions, ...baseOptions]);
+        }
+
+        function findKnownPublicationIdentity(key) {
+            const match = knownPublicationIdentityOptions().find((option) => option.key === key);
+            return match ? match.identity : null;
+        }
+
+        // Stateless — application/CreatePublicationReferenceRecordUseCase.js
+        // takes no collaborator of its own, so this is constructed
+        // directly rather than injected, mirroring exactly how
+        // `createBaseAnchorPublicationRecordUseCase` above is already
+        // constructed.
+        const createPublicationReferenceRecordUseCase = new CreatePublicationReferenceRecordUseCase();
+
+        // The one place this page ever mints a durable publication
+        // reference — never automatic, never inferred, only ever the
+        // exact source/referenced pair a person explicitly chose above.
+        // `PublicationReferenceRecord`'s own constructor is the ONLY
+        // validation performed (a missing selection, or the identical
+        // publication chosen on both sides) — this handler adds no second
+        // validation pass of its own, it only turns that constructor's own
+        // thrown error into a plain, displayed message rather than an
+        // uncaught exception.
+        function recordPublicationReference() {
+            publicationReferenceError.value = '';
+            const sourceIdentity = findKnownPublicationIdentity(publicationReferenceSourceKey.value);
+            const referencedIdentity = findKnownPublicationIdentity(publicationReferenceReferencedKey.value);
+            if (!sourceIdentity || !referencedIdentity) {
+                publicationReferenceError.value = 'Choose a source and a referenced publication first.';
+                return;
+            }
+            try {
+                publicationObservationArchive.value = createPublicationReferenceRecordUseCase.execute(publicationObservationArchive.value, {
+                    sourcePublicationIdentity: sourceIdentity,
+                    referencedPublicationIdentity: referencedIdentity
+                });
+                persistPublicationObservationArchive();
+                publicationReferenceSourceKey.value = '';
+                publicationReferenceReferencedKey.value = '';
+            } catch (error) {
+                publicationReferenceError.value = error.message;
+            }
+        }
+
+        // Pure projection — never a second, competing history narration
+        // computed inline here.
+        function publicationReferenceRecordHistoryView() {
+            return describePublicationReferenceRecordHistory(publicationObservationArchive.value.publicationReferenceRecords);
         }
 
         // 0.8.103 — Achievement Badge Presentation.
@@ -6190,6 +6295,9 @@ export default {
             BaseAnchorPublicationLifecycleTimelineEntryKind,
             toggleBaseAnchorPublicationLifecycle, isBaseAnchorPublicationLifecycleExpanded,
             baseAnchorPublicationLifecycleTimelineView, baseAnchorPublicationLifecycleEntryDetail,
+            publicationReferencesExpanded, togglePublicationReferences, knownPublicationIdentityOptions,
+            publicationReferenceSourceKey, publicationReferenceReferencedKey, publicationReferenceError,
+            recordPublicationReference, publicationReferenceRecordHistoryView,
             achievementsExpanded, toggleAchievements, achievementBadgesView,
             toggleAchievementBadge, isAchievementBadgeExpanded,
             canViewAchievementBadgeLifecycle, viewAchievementBadgeLifecycle,
@@ -7535,6 +7643,96 @@ export default {
                                     </li>
                                 </ul>
                             </div>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- 0.8.104 — Explicit Publication Reference Relationship. A
+                 durable, EXPLICIT `sourcePublicationIdentity ->
+                 referencedPublicationIdentity` fact between two ALREADY-
+                 DURABLE publication identities — deliberately NOT called
+                 "fork," and never auto-created: it exists only when a
+                 person picks both sides here and clicks "Record
+                 Reference." Both dropdowns are populated entirely from
+                 this archive's own "Bitcoin/Base Anchor Publications"
+                 identities above — never a free-text field, and never a
+                 reference inferred from a shared content hash, matching
+                 snapshot, or timestamp. A reference record carries no
+                 weight, no score, and no "fork" classification of its
+                 own — see application/PublicationReferenceRecord.js's own
+                 header. Collapsed by default. Performs ZERO network
+                 operations. -->
+            <div class="identity-mgmt-card">
+                <div class="identity-mgmt-card-header">
+                    <span class="identity-mgmt-name">Publication References</span>
+                    <span class="peer-badge peer-badge--pending">Persisted locally</span>
+                </div>
+                <p class="form-hint form-hint--neutral">
+                    An explicit, durable record that one publication references another — never inferred
+                    from matching content, timestamps, or authors. Both publications must already have a
+                    durable identity above; a reference is never a "fork" classification, only a plain,
+                    attributable fact: this publication points at that one.
+                </p>
+                <dl class="evidence-fields">
+                    <div class="evidence-field"><dt>References recorded</dt><dd>{{ publicationReferenceRecordHistoryView().count }}</dd></div>
+                </dl>
+                <div class="identity-mgmt-actions">
+                    <button type="button" class="action-btn action-btn--secondary" @click="togglePublicationReferences">
+                        {{ publicationReferencesExpanded ? 'Hide References' : 'Show References' }}
+                    </button>
+                </div>
+                <div v-if="publicationReferencesExpanded" class="evidence-inspection-adapter">
+                    <span class="evidence-inspection-adapter-title">Record A New Reference</span>
+                    <p v-if="knownPublicationIdentityOptions().length < 2" class="form-hint form-hint--neutral">
+                        At least two publication identities (Bitcoin or Base, above) are needed before a
+                        reference can be recorded.
+                    </p>
+                    <template v-else>
+                        <label class="form-field">
+                            <span class="form-label">Source publication (the one making the reference)</span>
+                            <select v-model="publicationReferenceSourceKey" class="form-input">
+                                <option value="" disabled>Choose a publication…</option>
+                                <option v-for="option in knownPublicationIdentityOptions()" :key="'src-' + option.key" :value="option.key">
+                                    {{ option.label }}
+                                </option>
+                            </select>
+                        </label>
+                        <label class="form-field">
+                            <span class="form-label">Referenced publication (the one being pointed at)</span>
+                            <select v-model="publicationReferenceReferencedKey" class="form-input">
+                                <option value="" disabled>Choose a publication…</option>
+                                <option v-for="option in knownPublicationIdentityOptions()" :key="'ref-' + option.key" :value="option.key">
+                                    {{ option.label }}
+                                </option>
+                            </select>
+                        </label>
+                        <div class="identity-mgmt-actions">
+                            <button type="button" class="action-btn action-btn--secondary"
+                                    :disabled="!publicationReferenceSourceKey || !publicationReferenceReferencedKey"
+                                    @click="recordPublicationReference">
+                                Record Reference
+                            </button>
+                        </div>
+                        <p v-if="publicationReferenceError" class="identity-unlock-error">{{ publicationReferenceError }}</p>
+                    </template>
+
+                    <span class="evidence-inspection-adapter-title">Recorded References</span>
+                    <p v-if="publicationReferenceRecordHistoryView().count === 0" class="form-hint form-hint--neutral">
+                        No references recorded yet.
+                    </p>
+                    <ul v-else class="replica-knowledge-claim-list">
+                        <li v-for="(referenceRow, referenceIndex) in publicationReferenceRecordHistoryView().records" :key="referenceIndex" class="replica-knowledge-claim">
+                            <span class="peer-badge peer-badge--pending">
+                                {{ referenceRow.sourcePublicationIdentity.blockchain }}:{{ shortId(referenceRow.sourcePublicationIdentity.chainReference) }}
+                                references
+                                {{ referenceRow.referencedPublicationIdentity.blockchain }}:{{ shortId(referenceRow.referencedPublicationIdentity.chainReference) }}
+                            </span>
+                            <p class="form-hint form-hint--neutral">
+                                Source content hash: {{ referenceRow.sourcePublicationIdentity.contentHash }} ·
+                                Referenced content hash: {{ referenceRow.referencedPublicationIdentity.contentHash }} ·
+                                Recorded: {{ formatWhen(referenceRow.createdAt) }}
+                            </p>
                         </li>
                     </ul>
                 </div>

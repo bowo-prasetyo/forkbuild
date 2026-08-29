@@ -157,6 +157,7 @@ function describeReplacementReviewSide(archive) {
         bitcoinAnchorPublicationRecordCount: archive.bitcoinAnchorPublicationRecordCount,
         baseTransactionInclusionCount: summary.baseTransactionInclusionCount,
         baseAnchorPublicationRecordCount: archive.baseAnchorPublicationRecordCount,
+        publicationReferenceRecordCount: archive.publicationReferenceRecordCount,
 
         localFactCount: provenance.localFactCount,
         importedFactCount: provenance.importedFactCount,

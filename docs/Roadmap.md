@@ -33837,3 +33837,258 @@ fork relationship durable enough to support `REFERENCED_PUBLICATION`/
 and — only after all of that — a scoring and leaderboard projection over
 already-attributed achievement data, never a new kind of fact an
 achievement event or badge carries.
+
+## 0.8.104 — Explicit Publication Reference Relationship
+
+0.8.103's own "What's left" named this milestone before it existed: "an
+explicit publication reference/fork relationship durable enough to
+support `REFERENCED_PUBLICATION`/`FORKED_PUBLICATION` achievement kinds."
+This is that relationship, and only that — the missing ingredient for a
+genuinely social, decentralized achievement: not "I published something,"
+but "another publication explicitly points at mine."
+
+```text
+Alice's publication A
+       ↑
+       │  references
+       │
+Bob's publication B
+```
+
+```text
+Publication Records (0.8.80/0.8.99)
+        │
+        │  toBlockchainPublicationIdentity()             (0.8.89, UNCHANGED)
+        ▼
+PublicationReferenceRecord (0.8.104)
+    { sourcePublicationIdentity, referencedPublicationIdentity, createdAt }
+```
+
+**DELIBERATELY NOT CALLED "FORK."** A reference is the plain, factual
+primitive: one publication's own identity explicitly points at another's.
+"Fork," "derivative," "citation," and "response" are all INTERPRETATIONS
+of a reference this milestone refuses to make. A future milestone may add
+a `referenceKind` this class does not carry today, once this codebase
+actually has a protocol-level way to prove one of those interpretations —
+see this milestone's own "Deliberately excluded" below. First establish
+`A -> B`; a more specific, explicit relationship is real, separate, later
+work.
+
+**BOTH SIDES ARE `BlockchainPublicationIdentity` (0.8.89) INSTANCES — NEVER
+A SECOND, COMPETING IDENTITY SHAPE, AND NEVER ASSEMBLED BY HAND.**
+`application/PublicationReferenceRecord.js` invents no `{ blockchain, txid }`
+pair of its own; it reuses 0.8.89's own chain-independent identity
+verbatim, held to the identical "A Projection Target, Never A Replacement"
+discipline that class's own header already established: an identity
+named by a reference is reached by calling an already-durable publication
+record's own `toBlockchainPublicationIdentity()` — never constructed from
+raw strings a caller assembled by hand. `application/
+CreatePublicationReferenceRecordUseCase.js` — the one place this codebase
+is expected to construct a `PublicationReferenceRecord` — enforces exactly
+that boundary by accepting only already-projected identities, performing
+no assembly of its own.
+
+**NEVER CORRELATED BY `contentHash` — THE ONE RULE THIS ENTIRE MILESTONE
+EXISTS TO ENFORCE.** Two references naming different `chainReference`s
+that happen to share a `contentHash` are two entirely independent
+relationships:
+
+```text
+Bitcoin:txAAA → Base:txBBB
+Bitcoin:txCCC → Base:txBBB
+```
+
+are different references even when `txAAA`'s and `txCCC`'s own
+publications hold byte-identical content. Likewise, a Bitcoin identity and
+a Base identity sharing an identical `contentHash` AND an identical raw
+`chainReference` string remain two different publications — referencing
+one is never confused with referencing the other, the identical
+`BlockchainPublicationIdentity#sameAs()` cross-chain rule 0.8.89 already
+established, held here across a relationship between two identities
+rather than one. See this milestone's own flagship test (`tests/
+PublicationReferenceRecord.test.js`, Section G) for the concrete proof.
+
+**A PUBLICATION NEVER REFERENCES ITSELF.** `sourcePublicationIdentity` and
+`referencedPublicationIdentity` naming the SAME identity (via `sameAs()`,
+never `contentHash` equality) is rejected at construction — a genuine
+domain rule: a reference states that one publication points at ANOTHER.
+
+**NEVER AUTOMATICALLY CREATED — THIS MILESTONE'S OWN CENTRAL RULE.**
+ForkBuild never scans content and decides two publications are related.
+Nothing here infers a reference from a matching `contentHash`, matching
+text, similar snapshots, timestamps, shared authors, or identical
+transaction data — a reference exists only when a person explicitly
+records one. `CreatePublicationReferenceRecordUseCase.execute()` is never
+called from any finalization, broadcast, or observation flow — unlike
+`CreateBitcoinAnchorPublicationRecordUseCase`/
+`CreateBaseAnchorPublicationRecordUseCase`, which mint their own records
+automatically the moment a transaction finalizes. This extends `docs/
+Principles.md`, "Correlate Evidence By Explicit Identity, Never By
+Resemblance (0.8.78)," one layer over a relationship between two
+publications rather than evidence for one.
+
+**REFERENCE COUNT AND DISTINCT REFERENCING PUBLISHER COUNT ARE TWO
+DIFFERENT FACTS, DELIBERATELY NEVER MERGED.** Bob referencing Alice's
+publication A three times, plus Carol referencing it once, is FOUR
+independent `PublicationReferenceRecord` entries — never collapsed into
+"one referencer" or "four references" as a single number.
+`application/PublicationReferenceRecordHistory.js` never deduplicates,
+never groups by source, and computes no distinct-referencer count of its
+own; that reduction is real, separately sized future work (see
+"Deliberately excluded" below) — this milestone keeps the raw material
+honest and uncollapsed so that future count can be built correctly.
+
+**MADE DURABLE — UNLIKE ACHIEVEMENTS AND BADGES.** A reference is itself
+an externally attributable fact, worth surviving exactly like every other
+durable fact this codebase already keeps.
+`application/PublicationObservationArchive.js` gains a NINTH,
+independent collection — `publicationReferenceRecords` — through the
+exact same provenance/fingerprint/export/import/difference/inspection
+machinery every prior collection already uses:
+`appendPublicationReferenceRecord()` (LOCAL by default),
+`publicationReferenceRecordProvenance` (LOCAL/IMPORTED, 0.8.83),
+`publicationReferenceRecordCount` (never combined with any other count),
+inclusion in `toJSON()`/`fromJSON()`, `withUniformProvenance()`,
+`application/PublicationObservationArchiveDifference.js`'s own positional
+diff, `application/PublicationObservationArchiveInspection.js`'s own
+structural summary, and `application/
+PublicationObservationArchiveReplacementReview.js`'s own side-by-side
+counts. `SCHEMA_VERSION` bumps 5 -> 6 — a payload persisted by 0.8.75
+through 0.8.103 degrades to `PublicationObservationArchive.empty()` on
+load, the identical, already-tested "wrong schemaVersion" behavior this
+class's own `fromJSON()` has held since 0.8.75.
+
+**`publicationCount`/`observationCount`/`bitcoinAnchorPublicationRecordCount`/
+`baseAnchorPublicationRecordCount` STAY UNCHANGED.** A publication
+reference record is neither a publication-shaped fact, an
+observation-shaped fact, nor a durable IDENTITY of a single publication —
+it is a relationship between two identities this archive may or may not
+separately hold records for. It gets its own, entirely separate
+`publicationReferenceRecordCount`, never folded into any of the four
+already-established counts.
+
+**UI: A "PUBLICATION REFERENCES" CARD ON `DecentralizedPublicationsView.js`,
+COLLAPSED BY DEFAULT, ZERO NETWORK OPERATIONS.** Mirrors the same
+`identity-mgmt-card` pattern "Bitcoin/Base Anchor Publications" above
+already use — but unlike those cards, nothing here is wired into any
+finalization flow. Both a "source" and a "referenced" dropdown are
+populated entirely from this archive's own already-durable
+`bitcoinAnchorPublicationRecords`/`baseAnchorPublicationRecords` — never a
+free-text field a person could use to type an unproven identity into
+existence. Choosing both and clicking "Record Reference" is the ONE call
+site for `CreatePublicationReferenceRecordUseCase`; a self-reference or a
+missing selection surfaces that use case's own thrown error as a plain
+message, never a silent no-op or an uncaught exception.
+
+New files:
+- `application/PublicationReferenceRecord.js` — the durable identity-pair
+  relationship, `{ sourcePublicationIdentity, referencedPublicationIdentity,
+  createdAt }`, both sides `BlockchainPublicationIdentity` (0.8.89)
+  instances; immutable; rejects a non-identity side and a self-reference at
+  construction; `toJSON()`/`fromJSON()`.
+- `application/PublicationReferenceRecordHistory.js` — append-only, never
+  mutates, never deduplicates; `findPublicationReferenceRecordsBySource()`/
+  `findPublicationReferenceRecordsByReferenced()`, both matching through
+  `sameAs()` alone, never `contentHash`.
+- `application/PublicationReferenceRecordHistoryView.js` — plain
+  narration, oldest first, carrying each record's own identity instances
+  through unchanged, never scored.
+- `application/CreatePublicationReferenceRecordUseCase.js` — the one
+  construction boundary; accepts only already-projected
+  `BlockchainPublicationIdentity` instances; throws for an invalid
+  reference; never mutates the archive it was given; never called
+  automatically by any other flow in this codebase.
+
+Changed:
+- `application/PublicationObservationArchive.js` — ninth collection
+  `publicationReferenceRecords`/`publicationReferenceRecordProvenance`;
+  `appendPublicationReferenceRecord()`; `publicationReferenceRecordCount`;
+  `SCHEMA_VERSION` 5 -> 6.
+- `application/PublicationObservationArchiveDifference.js` — a ninth
+  positional collection diff, `publicationReferenceRecords`.
+- `application/PublicationObservationArchiveExport.js` —
+  `recordPublicationObservationArchiveImport()`'s own `importedEntryCount`
+  now also sums `publicationReferenceRecordCount`.
+- `application/PublicationObservationArchiveInspection.js` — inspection
+  summaries gain `publicationReferenceRecordCount`.
+- `application/PublicationObservationArchiveReplacementReview.js` — each
+  side's own summary gains `publicationReferenceRecordCount`.
+- `ui/views/DecentralizedPublicationsView.js` — one new "Publication
+  References" card, collapsed by default; no change to any existing card,
+  computation, or durable state.
+- `tests/DurableBaseTransactionInclusionObservationArchive.test.js` — its
+  own hardcoded `SCHEMA_VERSION === 5` assertion updated to 6.
+- `tests/PublicationObservationArchiveFingerprint.test.js` — its own two
+  independently-computed SHA-256 vectors (over `PublicationObservationArchive
+  .empty()` and a one-observation archive) recomputed for the now-nine-
+  collection canonical `toJSON()` shape; the hand-rolled implementation
+  still matches Node's own `crypto.createHash('sha256')` exactly.
+- `tests.html` — register the new test file.
+
+New tests:
+- `tests/PublicationReferenceRecord.test.js` — construction/validation/
+  immutability, self-reference rejection (via `sameAs()`, never
+  `contentHash`), a bare hand-assembled object rejected in place of a
+  genuine `BlockchainPublicationIdentity`; append-only history with
+  explicit-identity-only lookup; plain narration; the archive's ninth
+  collection surviving a real persist/destroy/reload cycle, with a
+  pre-0.8.104 (schemaVersion 5) payload and a malformed record (missing
+  field, smuggled extra field, unknown nested blockchain) degrading the
+  whole archive to empty; the one construction-boundary use case; the
+  FLAGSHIP — Bob referencing Alice's publication three times and Carol
+  once, four independent records surviving persistence undeduplicated,
+  with reference count (4) and distinct referencer count (2) proven to
+  stay two separate, unmerged facts; the cross-chain
+  never-correlated-by-`contentHash` proof; recording a reference
+  manufacturing no publication record, observation, or timeline entry in
+  either direction; and no verdict/score/weight/rank vocabulary anywhere
+  in this milestone's own new surface.
+
+Deliberately excluded:
+- **Any `referenceKind`, "fork," "derivative," or "citation"
+  classification.** This milestone establishes `A -> B`, nothing more — a
+  more specific, explicit relationship is real, later work, and only once
+  this codebase has an actual protocol-level way to prove one, never a
+  content-similarity heuristic.
+- **Any automatic, inferred, or content-similarity-based reference
+  creation.** No scanning for matching `contentHash`, text, snapshots,
+  timestamps, or authors — see this milestone's own "Never Automatically
+  Created" above.
+- **`REFERENCED_PUBLICATION`/`FORKED_PUBLICATION` achievement kinds, or
+  any badge for them.** This milestone builds the durable relationship
+  those achievement kinds would read; it computes no achievement event, no
+  badge, and touches neither `application/AchievementEvent.js` nor
+  `application/AchievementBadgeView.js`. That composition is real,
+  separately sized future work — see "What's left" below.
+- **A distinct-referencing-publisher count, or any other reduction over
+  `publicationReferenceRecords`.** See "Reference Count And Distinct
+  Referencing Publisher Count" above — the raw, uncollapsed material is
+  this milestone's own scope; the reduction is separate, future work.
+- **Naming an arbitrary publication this replica has never independently
+  recorded a durable identity for, on either side of a reference.** Both
+  dropdowns in the UI are populated only from this archive's own
+  `bitcoinAnchorPublicationRecords`/`baseAnchorPublicationRecords` — a
+  free-text identity field would mean assembling a
+  `BlockchainPublicationIdentity` by hand, exactly what that class's own
+  header forbids. Referencing a publication this replica has not itself
+  recorded is reached by importing/inspecting the archive that holds it
+  (0.8.82/0.8.86, unchanged), never a new hand-typed path this milestone
+  invents.
+- **Archive merging, cross-replica reference reconciliation, or any
+  "canonical" reference graph.** A reference is scoped to THIS replica's
+  own archive, exactly like every other durable fact before it; different
+  replicas may hold different, equally honest views of the same
+  publication's own reference graph — see `docs/Principles.md`,
+  "Inspecting An External Archive Never Touches The Current One (0.8.86)."
+- **Any leaderboard, ranking, or scoring projection.** Still real,
+  separately sized future work — see 0.8.102's own "Deliberately
+  excluded," held here once more.
+
+What's left, and deliberately unbuilt: composing this milestone's own
+`publicationReferenceRecords` into `REFERENCED_PUBLICATION`/
+`REFERENCED_BY_10_PUBLICATIONS`-shaped achievement events and badges
+(0.8.105), a distinct-referencing-publisher reduction over the same raw
+material (0.8.106), and — only after both of those — an achievement
+scoring and leaderboard projection reconstructed entirely from each
+replica's own local publication/reference graph, never a central server
+(0.8.107/0.8.108).
