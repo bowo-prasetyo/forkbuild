@@ -10,12 +10,14 @@ import { appendBaseAnchorPublicationRecordHistoryEntry } from './BaseAnchorPubli
 import { isValidBlockchainKind } from './BlockchainKind.js';
 import { PublicationReferenceRecord } from './PublicationReferenceRecord.js';
 import { appendPublicationReferenceRecordHistoryEntry } from './PublicationReferenceRecordHistory.js';
+import { PublisherPublicationAssociationRecord } from './PublisherPublicationAssociationRecord.js';
+import { appendPublisherPublicationAssociationRecordHistoryEntry } from './PublisherPublicationAssociationRecordHistory.js';
 import {
     PublicationObservationArchiveProvenanceOrigin,
     isValidPublicationObservationArchiveProvenanceOrigin
 } from './PublicationObservationArchiveProvenance.js';
 
-const SCHEMA_VERSION = 6;
+const SCHEMA_VERSION = 7;
 
 // 0.8.75 — Durable Publication Observation Records.
 //
@@ -378,6 +380,49 @@ const SCHEMA_VERSION = 6;
 // `baseAnchorPublicationRecordProvenance` already does. `withUniformProvenance()`
 // now also restamps this ninth collection uniformly; nothing else about
 // that method changes.
+//
+// 0.8.108 — Explicit Publisher Identity Association. Adds a TENTH,
+// independent collection: `publisherPublicationAssociationRecords` — an
+// append-only sequence of application/PublisherPublicationAssociationRecord.js
+// instances, each naming one EXPLICIT `publisherIdentity ->
+// publicationIdentity` relationship — a `PublisherIdentityRecord` (0.8.108,
+// a bare, user-supplied label, never a cryptographic identity) on one side,
+// a `BlockchainPublicationIdentity` (0.8.89) on the other. Like
+// `publicationReferenceRecords` before it, this collection describes a
+// relationship rather than a fact about one publication — held to the
+// identical discipline: never merged into, keyed by, or cross-referenced
+// against any other collection; never deduplicated; never inferred from a
+// shared `contentHash`, a shared wallet, or any other resemblance — see
+// that class's own header for the full rationale.
+//
+// `appendPublisherPublicationAssociationRecord()` REUSES `application/
+// PublisherPublicationAssociationRecordHistory.js`'s OWN, UNCHANGED
+// `appendPublisherPublicationAssociationRecordHistoryEntry()` — mirroring
+// exactly how `appendPublicationReferenceRecord()` above already reuses
+// `appendPublicationReferenceRecordHistoryEntry()`. This class invents no
+// new relationship-construction behavior of its own.
+//
+// THIS MILESTONE BUMPS SCHEMA_VERSION TO 7 — a payload persisted by 0.8.75
+// through 0.8.107 (schemaVersion 6) degrades to
+// `PublicationObservationArchive.empty()` on load, the identical,
+// already-tested "wrong schemaVersion" behavior this class's own
+// `fromJSON()` has held since 0.8.75; no migration path is added, because
+// none of this class's own prior principles ever promised one.
+//
+// `publicationCount`/`observationCount`/`bitcoinAnchorPublicationRecordCount`/
+// `baseAnchorPublicationRecordCount`/`publicationReferenceRecordCount` STAY
+// UNCHANGED — a publisher association is neither a publication-shaped
+// fact, an observation-shaped fact, nor a relationship BETWEEN TWO
+// publications; it is a relationship between a publisher and a
+// publication. See `publisherPublicationAssociationRecordCount` below for
+// its own, entirely separate count.
+//
+// PROVENANCE EXTENDS IDENTICALLY — a TENTH parallel provenance collection,
+// `publisherPublicationAssociationRecordProvenance`, holds one
+// `LOCAL`/`IMPORTED` tag per record at the identical array position, exactly
+// like `publicationReferenceRecordProvenance` already does.
+// `withUniformProvenance()` now also restamps this tenth collection
+// uniformly; nothing else about that method changes.
 export class PublicationObservationArchive {
     constructor({
         ipfsPublicationRecords = [],
@@ -398,6 +443,8 @@ export class PublicationObservationArchive {
         baseAnchorPublicationRecordProvenance = [],
         publicationReferenceRecords = [],
         publicationReferenceRecordProvenance = [],
+        publisherPublicationAssociationRecords = [],
+        publisherPublicationAssociationRecordProvenance = [],
         archiveImportEvents = []
     } = {}) {
         this._ipfsPublicationRecords = Object.freeze([...ipfsPublicationRecords]);
@@ -442,6 +489,8 @@ export class PublicationObservationArchive {
         this._baseAnchorPublicationRecordProvenance = Object.freeze([...baseAnchorPublicationRecordProvenance]);
         this._publicationReferenceRecords = Object.freeze([...publicationReferenceRecords]);
         this._publicationReferenceRecordProvenance = Object.freeze([...publicationReferenceRecordProvenance]);
+        this._publisherPublicationAssociationRecords = Object.freeze([...publisherPublicationAssociationRecords]);
+        this._publisherPublicationAssociationRecordProvenance = Object.freeze([...publisherPublicationAssociationRecordProvenance]);
         this._archiveImportEvents = Object.freeze([...archiveImportEvents]);
         Object.freeze(this);
     }
@@ -464,6 +513,8 @@ export class PublicationObservationArchive {
     get baseAnchorPublicationRecordProvenance() { return this._baseAnchorPublicationRecordProvenance; }
     get publicationReferenceRecords() { return this._publicationReferenceRecords; }
     get publicationReferenceRecordProvenance() { return this._publicationReferenceRecordProvenance; }
+    get publisherPublicationAssociationRecords() { return this._publisherPublicationAssociationRecords; }
+    get publisherPublicationAssociationRecordProvenance() { return this._publisherPublicationAssociationRecordProvenance; }
     get archiveImportEvents() { return this._archiveImportEvents; }
 
     // The static schema version this class currently serializes to and
@@ -522,6 +573,18 @@ export class PublicationObservationArchive {
         return this._publicationReferenceRecords.length;
     }
 
+    // The count of durable publisher-publication ASSOCIATION records this
+    // archive holds — a relationship between an explicit publisher
+    // identity and a publication identity, never a fact about one
+    // publication and never a relationship between two publications. Never
+    // combined with `publicationCount`, `observationCount`,
+    // `bitcoinAnchorPublicationRecordCount`, `baseAnchorPublicationRecordCount`,
+    // or `publicationReferenceRecordCount` — see application/
+    // PublisherPublicationAssociationRecord.js's own header.
+    get publisherPublicationAssociationRecordCount() {
+        return this._publisherPublicationAssociationRecords.length;
+    }
+
     // The count of OBSERVATION-shaped facts this archive holds — every
     // IPFS content-verification attempt, every Bitcoin confirmation
     // check, every Bitcoin content-proof reconciliation, and (0.8.97)
@@ -570,7 +633,8 @@ export class PublicationObservationArchive {
             + countOriginMatches(this._bitcoinAnchorPublicationRecordProvenance, origin)
             + countOriginMatchesByKey(this._baseTransactionInclusionObservationProvenanceByTransactionHash, origin)
             + countOriginMatches(this._baseAnchorPublicationRecordProvenance, origin)
-            + countOriginMatches(this._publicationReferenceRecordProvenance, origin);
+            + countOriginMatches(this._publicationReferenceRecordProvenance, origin)
+            + countOriginMatches(this._publisherPublicationAssociationRecordProvenance, origin);
     }
 
     _fields() {
@@ -593,6 +657,8 @@ export class PublicationObservationArchive {
             baseAnchorPublicationRecordProvenance: this._baseAnchorPublicationRecordProvenance,
             publicationReferenceRecords: this._publicationReferenceRecords,
             publicationReferenceRecordProvenance: this._publicationReferenceRecordProvenance,
+            publisherPublicationAssociationRecords: this._publisherPublicationAssociationRecords,
+            publisherPublicationAssociationRecordProvenance: this._publisherPublicationAssociationRecordProvenance,
             archiveImportEvents: this._archiveImportEvents
         };
     }
@@ -814,6 +880,27 @@ export class PublicationObservationArchive {
         });
     }
 
+    // 0.8.108 — Appends `record` (an application/
+    // PublisherPublicationAssociationRecord.js instance) and returns a NEW
+    // archive. This is the ONE durable write path for an explicit
+    // publisher-publication association — see application/
+    // CreatePublisherPublicationAssociationRecordUseCase.js for the one
+    // place this codebase constructs one before appending it here. A
+    // missing/falsy `record` is a no-op, mirroring every other appendXxx()
+    // method's identical tolerance. Never deduplicates, never merges two
+    // associations naming the same publisher/publication pair, never
+    // infers an association from anything this archive already holds —
+    // see application/PublisherPublicationAssociationRecord.js's own
+    // header.
+    appendPublisherPublicationAssociationRecord(record, origin = PublicationObservationArchiveProvenanceOrigin.LOCAL) {
+        if (!record || !isValidPublicationObservationArchiveProvenanceOrigin(origin)) return this;
+        return new PublicationObservationArchive({
+            ...this._fields(),
+            publisherPublicationAssociationRecords: appendPublisherPublicationAssociationRecordHistoryEntry(this._publisherPublicationAssociationRecords, record),
+            publisherPublicationAssociationRecordProvenance: Object.freeze([...this._publisherPublicationAssociationRecordProvenance, origin])
+        });
+    }
+
     // Replaces EVERY provenance entry this archive holds — across all
     // EIGHT factual collections — with `origin`, uniformly.
     // `archiveImportEvents` and every factual collection are untouched;
@@ -847,7 +934,8 @@ export class PublicationObservationArchive {
                 (origins) => Object.freeze(origins.map(() => origin))
             ),
             baseAnchorPublicationRecordProvenance: Object.freeze(this._baseAnchorPublicationRecordProvenance.map(() => origin)),
-            publicationReferenceRecordProvenance: Object.freeze(this._publicationReferenceRecordProvenance.map(() => origin))
+            publicationReferenceRecordProvenance: Object.freeze(this._publicationReferenceRecordProvenance.map(() => origin)),
+            publisherPublicationAssociationRecordProvenance: Object.freeze(this._publisherPublicationAssociationRecordProvenance.map(() => origin))
         });
     }
 
@@ -950,6 +1038,8 @@ export class PublicationObservationArchive {
             baseAnchorPublicationRecordProvenance: [...this._baseAnchorPublicationRecordProvenance],
             publicationReferenceRecords: this._publicationReferenceRecords.map((record) => record.toJSON()),
             publicationReferenceRecordProvenance: [...this._publicationReferenceRecordProvenance],
+            publisherPublicationAssociationRecords: this._publisherPublicationAssociationRecords.map((record) => record.toJSON()),
+            publisherPublicationAssociationRecordProvenance: [...this._publisherPublicationAssociationRecordProvenance],
             archiveImportEvents: this._archiveImportEvents.map(serializeArchiveImportEvent)
         };
     }
@@ -1038,6 +1128,8 @@ export class PublicationObservationArchive {
             baseAnchorPublicationRecordProvenance: validated.baseAnchorPublicationRecordProvenance,
             publicationReferenceRecords: validated.publicationReferenceRecords.map((record) => PublicationReferenceRecord.fromJSON(record)),
             publicationReferenceRecordProvenance: validated.publicationReferenceRecordProvenance,
+            publisherPublicationAssociationRecords: validated.publisherPublicationAssociationRecords.map((record) => PublisherPublicationAssociationRecord.fromJSON(record)),
+            publisherPublicationAssociationRecordProvenance: validated.publisherPublicationAssociationRecordProvenance,
             archiveImportEvents: validated.archiveImportEvents.map(deserializeArchiveImportEvent)
         });
     }
@@ -1107,6 +1199,8 @@ const BASE_TRANSACTION_INCLUSION_OBSERVATION_FIELDS = ['state', 'txid', 'blockHa
 const BASE_ANCHOR_PUBLICATION_RECORD_FIELDS = ['contentHash', 'txid', 'network', 'createdAt'];
 const BLOCKCHAIN_PUBLICATION_IDENTITY_FIELDS = ['blockchain', 'contentHash', 'chainReference', 'createdAt'];
 const PUBLICATION_REFERENCE_RECORD_FIELDS = ['sourcePublicationIdentity', 'referencedPublicationIdentity', 'createdAt'];
+const PUBLISHER_IDENTITY_FIELDS = ['publisherId'];
+const PUBLISHER_PUBLICATION_ASSOCIATION_RECORD_FIELDS = ['publisherIdentity', 'publicationIdentity', 'createdAt'];
 
 function isPlainObject(value) {
     return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
@@ -1188,6 +1282,26 @@ function validatePublicationReferenceRecord(record) {
     if (!PUBLICATION_REFERENCE_RECORD_FIELDS.every((key) => key in record)) return null;
     if (!validateBlockchainPublicationIdentityJSON(record.sourcePublicationIdentity)) return null;
     if (!validateBlockchainPublicationIdentityJSON(record.referencedPublicationIdentity)) return null;
+    if (!isValidTimestamp(record.createdAt)) return null;
+    return record;
+}
+
+// 0.8.108 — a nested `PublisherIdentityRecord` (0.8.108) JSON shape,
+// validated to the identical strictness every other nested fact in this
+// file already holds: exactly its own one field, a non-empty
+// `publisherId`.
+function validatePublisherIdentityJSON(value) {
+    if (!isPlainObject(value) || !hasOnlyKeys(value, PUBLISHER_IDENTITY_FIELDS)) return null;
+    if (!PUBLISHER_IDENTITY_FIELDS.every((key) => key in value)) return null;
+    if (typeof value.publisherId !== 'string' || !value.publisherId) return null;
+    return value;
+}
+
+function validatePublisherPublicationAssociationRecord(record) {
+    if (!isPlainObject(record) || !hasOnlyKeys(record, PUBLISHER_PUBLICATION_ASSOCIATION_RECORD_FIELDS)) return null;
+    if (!PUBLISHER_PUBLICATION_ASSOCIATION_RECORD_FIELDS.every((key) => key in record)) return null;
+    if (!validatePublisherIdentityJSON(record.publisherIdentity)) return null;
+    if (!validateBlockchainPublicationIdentityJSON(record.publicationIdentity)) return null;
     if (!isValidTimestamp(record.createdAt)) return null;
     return record;
 }
@@ -1279,6 +1393,8 @@ const TOP_LEVEL_FIELDS = [
     'baseAnchorPublicationRecordProvenance',
     'publicationReferenceRecords',
     'publicationReferenceRecordProvenance',
+    'publisherPublicationAssociationRecords',
+    'publisherPublicationAssociationRecordProvenance',
     'archiveImportEvents'
 ];
 
@@ -1348,6 +1464,11 @@ function validateArchiveJSON(json) {
     const publicationReferenceRecordProvenance = validateProvenanceArray(json.publicationReferenceRecordProvenance, publicationReferenceRecords.length);
     if (!publicationReferenceRecordProvenance) return null;
 
+    const publisherPublicationAssociationRecords = validateArray(json.publisherPublicationAssociationRecords, validatePublisherPublicationAssociationRecord);
+    if (!publisherPublicationAssociationRecords) return null;
+    const publisherPublicationAssociationRecordProvenance = validateProvenanceArray(json.publisherPublicationAssociationRecordProvenance, publisherPublicationAssociationRecords.length);
+    if (!publisherPublicationAssociationRecordProvenance) return null;
+
     const archiveImportEvents = validateArray(json.archiveImportEvents, validateArchiveImportEvent);
     if (!archiveImportEvents) return null;
 
@@ -1370,6 +1491,8 @@ function validateArchiveJSON(json) {
         baseAnchorPublicationRecordProvenance,
         publicationReferenceRecords,
         publicationReferenceRecordProvenance,
+        publisherPublicationAssociationRecords,
+        publisherPublicationAssociationRecordProvenance,
         archiveImportEvents
     };
 }

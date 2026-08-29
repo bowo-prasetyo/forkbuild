@@ -92,6 +92,14 @@ import { describePublicationObservationArchiveFingerprint } from './PublicationO
 // structural per-publication reference index, if ever needed, is separate,
 // future work.
 //
+// `publisherPublicationAssociationRecordCount` (0.8.108) IS THE IDENTICAL
+// KIND OF COUNT, ONE RELATIONSHIP SHAPE OVER. A publisher-publication
+// association names a publisher identity and a publication identity, not
+// one publication alone — this inspection exposes only the plain count
+// `application/PublicationObservationArchive.js`'s own
+// `publisherPublicationAssociationRecordCount` already exposes, never a
+// per-publisher structural index.
+//
 // THE RESULT IS A PLAIN, FROZEN, ONE-LEVEL DATA SHAPE — NEVER A NEW
 // DOMAIN OBJECT, NEVER ANOTHER DURABLE ARCHIVE HISTORY. Deliberately NOT a
 // `PublicationObservationArchiveInspectionRecord` class, and never held
@@ -182,6 +190,7 @@ function describeExternalArchiveInspection(archive) {
         baseTransactionInclusionObservationCount: summary.baseTransactionInclusionCount,
         baseAnchorPublicationRecordCount: archive.baseAnchorPublicationRecordCount,
         publicationReferenceRecordCount: archive.publicationReferenceRecordCount,
+        publisherPublicationAssociationRecordCount: archive.publisherPublicationAssociationRecordCount,
 
         localFactCount: provenance.localFactCount,
         importedFactCount: provenance.importedFactCount,

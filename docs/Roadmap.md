@@ -34626,3 +34626,290 @@ identity attribution and aggregation semantics are sufficiently explicit —
 a decentralized achievement ranking projection and its leaderboard UI,
 reconstructed entirely from each replica's own local publication/reference
 graph, never a central server.
+
+## 0.8.108 — Explicit Publisher Identity Association
+
+0.8.107's own header named the missing bridge explicitly: "publication
+identity and human identity remain deliberately distinct... that explicit
+publisher/publication association... is real, separately sized, later
+work." This milestone is that bridge, and only that — the first durable
+fact answering "which publications does a publisher claim to control or
+represent," without ever pretending a publication IS a person.
+
+```text
+Publisher Identity
+       │
+       ├── Publication A
+       ├── Publication B
+       └── Publication C
+```
+
+```text
+PublisherIdentityRecord (0.8.108)
+    { publisherId }
+       │
+       │  explicit, person-initiated association
+       ▼
+BlockchainPublicationIdentity (0.8.89)
+
+PublisherPublicationAssociationRecord (0.8.108)
+    { publisherIdentity, publicationIdentity, createdAt }
+```
+
+**A RELATIONSHIP RECORD, PHILOSOPHICALLY IDENTICAL TO
+`PublicationReferenceRecord` (0.8.104) — ONE SIDE JUST ISN'T A
+PUBLICATION.** This record says exactly one thing: "this publisher
+identity is explicitly associated with this publication identity." It does
+NOT say "this is the legal owner," and it does NOT say "this person is
+definitely the human behind it." That distinction is the entire point of
+this milestone.
+
+**NOT CALLED "USER IDENTITY," AND DELIBERATELY NOT A LEADERBOARD YET.** A
+publisher identity is a bare, explicit, user-supplied label —
+`application/PublisherIdentityRecord.js`'s own `{ publisherId }` — never a
+login account, never a wallet, never a cryptographic identity. It is kept
+scrupulously distinct, in its own file's header, from `identity/
+SigningIdentity.js`'s own pre-existing `Publication.publisherIdentity`
+(0.2.16) — an unrelated, real, Ed25519-keyed concept belonging to the
+peer-to-peer publication protocol, which this milestone does not touch,
+extend, or reuse. Sharing a name in English is the only thing the two have
+in common.
+
+**WHY NOT A WALLET ADDRESS AS THE PUBLISHER IDENTITY?** Suppose a Bitcoin
+address X anchors publication A and a Base address Y anchors publication
+B. It is tempting to conclude X and Y are "the same user" — but there is no
+cryptographic basis for that conclusion, and this milestone refuses to
+make it. Likewise, a single Bitcoin address X anchoring publications A, B,
+and C does not prove all three were created by the same human — addresses
+get reused, delegated, and shared for reasons this codebase cannot
+observe. So this milestone never automatically aggregates publications
+merely because their transaction senders are related; a publisher
+association is an explicit fact a person records, exactly like a
+publication reference (0.8.104) is.
+
+**NEVER INFERRED FROM RESEMBLANCE OF ANY KIND — THE ONE RULE THIS ENTIRE
+MILESTONE EXISTS TO ENFORCE.** No association is ever created from an
+identical `contentHash`, an identical wallet address, an identical name,
+temporal proximity, common references, or common achievement patterns.
+This extends `docs/Principles.md`, "Correlate Evidence By Explicit
+Identity, Never By Resemblance (0.8.78)," one further layer: over a
+relationship between a PUBLISHER and a publication, exactly as 0.8.104
+already extended it over a relationship between two publications.
+
+**BOTH SIDES ARE ALREADY-CONSTRUCTED, GENUINE INSTANCES.**
+`publicationIdentity` must be reached by calling an already-durable
+publication record's own `toBlockchainPublicationIdentity()` — never
+assembled from raw strings — the identical discipline
+`PublicationReferenceRecord` already holds. `publisherIdentity`, by
+contrast, has no prior durable record to project from: it is whatever
+label a person explicitly types, and `application/
+CreatePublisherPublicationAssociationRecordUseCase.js` is the one place
+this codebase turns that raw string into a genuine `PublisherIdentityRecord`.
+
+**EQUALITY IS EXACT, CASE-SENSITIVE STRING EQUALITY — NEVER NORMALIZED.**
+"Publisher A" and "publisher a" are two different publishers under
+`PublisherIdentityRecord#sameAs()`. Normalizing them into "the same
+publisher" would itself be exactly the resemblance-based inference this
+milestone exists to forbid.
+
+**THE ASSOCIATION ITSELF CREATES NO ACHIEVEMENT.**
+`CreatePublisherPublicationAssociationRecordUseCase` touches neither
+`application/AchievementEvent.js` nor
+`application/AchievementBadgeView.js` — associating a publisher with a
+publication is a relationship fact, never a threshold crossing. The
+existing achievement machinery is completely unchanged by this milestone.
+
+**NEVER DEDUPLICATED, NEVER AUTOMATICALLY CREATED.** Re-associating the
+identical publisher/publication pair twice produces two independent
+records, mirroring `PublicationReferenceRecord`'s own restraint exactly.
+`CreatePublisherPublicationAssociationRecordUseCase.execute()` is never
+called from any finalization, broadcast, or observation flow — an
+association exists only when a person explicitly types a publisher
+identifier, chooses an already-durable publication identity, and clicks
+"Add Publication."
+
+**MADE DURABLE.** `application/PublicationObservationArchive.js` gains a
+TENTH, independent collection — `publisherPublicationAssociationRecords` —
+through the exact same provenance/fingerprint/export/import/difference/
+inspection/replacement-review machinery every prior collection already
+uses: `appendPublisherPublicationAssociationRecord()` (LOCAL by default),
+`publisherPublicationAssociationRecordProvenance` (LOCAL/IMPORTED, 0.8.83),
+`publisherPublicationAssociationRecordCount` (never combined with any
+other count), inclusion in `toJSON()`/`fromJSON()`,
+`withUniformProvenance()`, `application/
+PublicationObservationArchiveDifference.js`'s own positional diff,
+`application/PublicationObservationArchiveInspection.js`'s own structural
+summary, `application/PublicationObservationArchiveReplacementReview.js`'s
+own side-by-side counts, and `application/
+PublicationObservationArchiveExport.js`'s own `importedEntryCount`.
+`SCHEMA_VERSION` bumps 6 -> 7 — a payload persisted by 0.8.75 through
+0.8.107 degrades to `PublicationObservationArchive.empty()` on load, the
+identical, already-tested "wrong schemaVersion" behavior this class's own
+`fromJSON()` has held since 0.8.75.
+
+**A PUBLISHER-SCOPED REDUCTION, MIRRORING THE ACHIEVEMENT PROFILE (0.8.107)
+ONE SUBJECT OVER.** `application/PublisherAssociationView.js`'s own
+`describePublisherAssociatedPublications(publisherIdentity, records)` /
+`reconstructPublisherAssociatedPublications(archive, publisherIdentity)`
+reduce the raw, append-only association records to one publisher's own
+slice — `{ publisherIdentity, associations, associationCount }` — exactly
+as `AchievementProfileView.js` reduces achievement events to one
+publication's own slice. This is a read-only projection; it invents no new
+durable state, and computes no achievement aggregation (that composition
+is 0.8.109's own scope — see "What's left" below).
+
+**UI: A "PUBLISHER ASSOCIATIONS" CARD ON `DecentralizedPublicationsView.js`,
+COLLAPSED BY DEFAULT, ZERO NETWORK OPERATIONS.** A text field (with a
+datalist of already-used publisher identifiers, for convenience only —
+typing a new one is always allowed) plus the SAME publication dropdown the
+"Publication References" card already uses, and an "Add Publication"
+button. A second dropdown lets a person choose an already-used publisher
+identifier and see its own associated publications, mirroring the
+milestone's own flagship shape:
+
+```text
+Publisher Associations
+
+Publisher: Publisher A
+Associated Publications: 3
+
+• Bitcoin — tx-123…
+• Base — 0xabc…
+• Base — 0xdef…
+```
+
+No "verified owner," "authentic publisher," "trusted," or "official"
+language appears anywhere on this card — only "associated," "recorded,"
+and an explicit note that this is a claim, not a verified fact.
+
+New files:
+- `application/PublisherIdentityRecord.js` — the bare, explicit, immutable
+  publisher label, `{ publisherId }`; exact case-sensitive `sameAs()`;
+  `toJSON()`/`fromJSON()`; deliberately carries no `createdAt` of its own
+  (see that file's own header) and no cryptographic material whatsoever.
+- `application/PublisherPublicationAssociationRecord.js` — the durable
+  identity-pair relationship, `{ publisherIdentity, publicationIdentity,
+  createdAt }`; immutable; rejects a non-`PublisherIdentityRecord` or
+  non-`BlockchainPublicationIdentity` side at construction;
+  `toJSON()`/`fromJSON()`.
+- `application/PublisherPublicationAssociationRecordHistory.js` —
+  append-only, never mutates, never deduplicates;
+  `findPublisherPublicationAssociationRecordsByPublisher()`/
+  `findPublisherPublicationAssociationRecordsByPublication()`, both
+  matching through `sameAs()` alone.
+- `application/PublisherPublicationAssociationRecordHistoryView.js` —
+  plain narration, oldest first, carrying each record's own identity
+  instances through unchanged, never scored.
+- `application/CreatePublisherPublicationAssociationRecordUseCase.js` —
+  the one construction boundary; the one place a raw `publisherId` string
+  becomes a genuine `PublisherIdentityRecord`; throws for an invalid
+  association; never mutates the archive it was given; never called
+  automatically by any other flow in this codebase.
+- `application/PublisherAssociationView.js` — pure projection;
+  `describePublisherAssociatedPublications(publisherIdentity, records)` /
+  `reconstructPublisherAssociatedPublications(archive, publisherIdentity)`
+  (identity + already-durable records in, profile out) and
+  `describeDistinctPublisherIdentifiers()`/
+  `reconstructDistinctPublisherIdentifiers()` for populating a "choose an
+  existing publisher" list.
+
+Changed:
+- `application/PublicationObservationArchive.js` — tenth collection
+  `publisherPublicationAssociationRecords`/
+  `publisherPublicationAssociationRecordProvenance`;
+  `appendPublisherPublicationAssociationRecord()`;
+  `publisherPublicationAssociationRecordCount`; `SCHEMA_VERSION` 6 -> 7.
+- `application/PublicationObservationArchiveDifference.js` — a tenth
+  positional collection diff, `publisherPublicationAssociationRecords`.
+- `application/PublicationObservationArchiveExport.js` —
+  `recordPublicationObservationArchiveImport()`'s own `importedEntryCount`
+  now also sums `publisherPublicationAssociationRecordCount`.
+- `application/PublicationObservationArchiveInspection.js` — inspection
+  summaries gain `publisherPublicationAssociationRecordCount`.
+- `application/PublicationObservationArchiveReplacementReview.js` — each
+  side's own summary gains `publisherPublicationAssociationRecordCount`.
+- `ui/views/DecentralizedPublicationsView.js` — one new "Publisher
+  Associations" card, collapsed by default; no change to any existing
+  card, computation, or durable state.
+- `tests/PublicationReferenceRecord.test.js` — its own hardcoded
+  `SCHEMA_VERSION === 6` assertion updated to 7.
+- `tests/DurableBaseTransactionInclusionObservationArchive.test.js` — its
+  own hardcoded `SCHEMA_VERSION === 6` assertion updated to 7.
+- `tests/PublicationObservationArchiveFingerprint.test.js` — its own two
+  independently-computed SHA-256 vectors (over
+  `PublicationObservationArchive.empty()` and a one-observation archive)
+  recomputed for the now-ten-collection canonical `toJSON()` shape; the
+  hand-rolled implementation still matches Node's own
+  `crypto.createHash('sha256')` exactly.
+- `tests.html` — register the new test file.
+
+New tests:
+- `tests/PublisherPublicationAssociationRecord.test.js` — construction/
+  validation/immutability of both new classes, including exact
+  case-sensitive `sameAs()` and rejection of hand-assembled raw objects;
+  append-only history with explicit-identity-only lookup by publisher and
+  by publication, including undeduplicated re-association; plain
+  narration; the archive's tenth collection surviving a real persist/
+  destroy/reload cycle, with a pre-0.8.108 (schemaVersion 6) payload and a
+  malformed record (missing field, smuggled extra field, empty nested
+  `publisherId`) degrading the whole archive to empty, and provenance
+  restamping uniformly; the one construction-boundary use case; the
+  publisher-scoped reduction view, empty-safe and never scored; the
+  FLAGSHIP — Publisher P explicitly claims a Bitcoin publication (A) and a
+  Base publication (B), Publisher Q explicitly claims a different Base
+  publication (C), all three sharing one `contentHash` — proving P's
+  profile contains exactly A and B, Q's profile contains exactly C, the
+  shared `contentHash` never causes a cross-publisher association, the
+  cross-chain association works normally, and the result survives a real
+  persist/destroy/reload cycle with byte-identical repeated
+  reconstruction and provenance restamping; a second cross-chain
+  never-correlated-by-`contentHash`-or-shared-`chainReference` proof; an
+  association manufacturing no achievement event and leaving every
+  existing publication achievement profile byte-unchanged; and no
+  verdict/score/weight/owner/verified vocabulary anywhere in this
+  milestone's own new surface.
+
+Deliberately excluded:
+- **Any automatic, inferred, wallet-based, or content-similarity-based
+  association.** No scanning for a matching wallet address, `contentHash`,
+  name, timestamp, or achievement pattern — see this milestone's own "Why
+  Not A Wallet Address As The Publisher Identity" above.
+- **Any "verified owner," "authentic publisher," "trusted," or "official"
+  language or field.** An association states a claim, never a proof — see
+  `docs/Principles.md`, "The UI Displays Observations; It Does Not Turn
+  Them Into A Verdict (0.8.57)," held here once more.
+- **A publisher achievement profile, aggregating achievements across a
+  publisher's associated publications.** This milestone builds the durable
+  relationship that aggregation would read; it computes no combined
+  achievement count and touches neither `application/AchievementEvent.js`
+  nor `application/AchievementProfileView.js`. That composition is real,
+  separately sized future work — see "What's left" below (0.8.109).
+- **Signed association claims, or any cryptographic proof of publisher
+  control.** Named explicitly as a future layer this milestone's own
+  record shape is designed to support cleanly — an association today is a
+  claim; a signature could someday prove control of a key, but never
+  "this human is behind it." Building that mechanism now would be
+  premature: this milestone establishes the plain relationship first.
+- **Any leaderboard, ranking, or scoring projection.** Still real,
+  separately sized future work — see 0.8.102's own "Deliberately
+  excluded," held here once more.
+- **Archive merging, cross-replica association reconciliation, or any
+  "canonical" publisher registry.** An association is scoped to THIS
+  replica's own archive, exactly like every other durable fact before it —
+  see `docs/Principles.md`, "Inspecting An External Archive Never Touches
+  The Current One (0.8.86)."
+
+What's left, and deliberately unbuilt: 0.8.109 aggregates a publisher's own
+associated publications' existing achievement profiles into one publisher
+achievement profile — still no points or ranking, and preserving the
+distinction between achievement EVENT count and distinct achievement-KIND
+count rather than silently collapsing either. Only after that: 0.8.110
+defines an achievement ranking projection's semantics carefully, and
+0.8.111 presents it as a leaderboard UI with an explicit dataset scope —
+because a locally computed leaderboard is only ever authoritative over the
+archive it was computed from, and two replicas holding different archives
+can legitimately produce different, equally honest rankings. Signed
+association claims — a cryptographic layer proving control of a key,
+carefully never oversold as proving a human identity — remain real,
+separate, later work on top of the plain relationship this milestone
+establishes.
