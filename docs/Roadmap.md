@@ -36322,3 +36322,166 @@ existing archive-difference machinery one layer up, narrowed to these four
 evidence collections — the natural next step toward an explicit evidence
 synchronization exchange (0.8.118) with no central achievement server
 anywhere in the picture.
+
+## 0.8.117 — Achievement Evidence Difference Projection
+
+0.8.116 gave two replicas a fast, cheap way to learn THAT their evidence
+differs — compare two fingerprints. It deliberately never answered the
+question a replica actually has the moment that comparison comes back
+different:
+
+```text
+Alice's archive                         Bob's archive
+     │  reconstructAchievementEvidenceFingerprint()   │
+     ▼                                                 ▼
+{ fingerprint: X }                       { fingerprint: Y }
+                 │                                 │
+                 └──────────── X !== Y ─────────────┘
+                          "something differs" —
+                                but WHAT?
+```
+
+`application/AchievementEvidenceDifference.js`'s own
+`reconstructAchievementEvidenceDifference(sourceArchive, targetArchive)`
+(and its pure counterpart `describeAchievementEvidenceDifference(...)`) is
+that primitive — the exact same four evidence collections 0.8.114 already
+named "the achievement evidence," compared for exactly which durable facts
+each side holds that the other doesn't.
+
+**THIS BUILDS ON `application/PublicationObservationArchiveDifference.js`'s
+OWN 0.8.87 SHAPE — AS A NAMING AND RESULT CONVENTION, NEVER AS A SECOND,
+COMPETING COMPARISON ENGINE IMPORTED WHOLESALE.** That file's own
+position-by-position walk assumes both archives share one common,
+append-only history — the natural shape when 0.8.86's own inspection flow
+lets a replica compare an external payload against the archive it already
+holds. Two independent replicas' achievement evidence carries no such
+assumption: Alice's own `bitcoinAnchorPublicationRecords[0]` and Bob's own
+`bitcoinAnchorPublicationRecords[0]` are two entirely unrelated facts that
+merely happen to share an array index. So this file compares by CONTENT,
+using the identical multiset discipline 0.8.116's own fingerprint already
+established for this exact evidence — never by array position.
+
+**THE CRUCIAL DISTINCTION: THE FINGERPRINT IS NEVER AUTHORITATIVE FOR THIS
+FILE'S OWN EQUALITY QUESTION** — a deliberate reversal of
+`PublicationObservationArchiveDifference.js`'s own 0.8.87 choice, made for
+a different reason than that file had. There, `same` is computed directly
+from the fingerprint comparison because a settled, authoritative
+whole-archive fingerprint (0.8.84) already existed to lean on. Here, this
+milestone's own `sameEvidence` is computed from the ACTUAL per-collection
+multiset comparison, never from `sourceFingerprint === targetFingerprint`
+— precisely so the cryptographic fingerprint never quietly becomes this
+codebase's authentication or trust mechanism for evidence equality. A
+fingerprint stays exactly what 0.8.116's own header already declared it:
+an identity for an evidence SET, nothing more.
+
+```text
+fingerprint
+    │
+    ▼
+fast indication ("different")
+    │
+    ▼
+explicit evidence difference ("here is exactly what's missing, on
+                                each side")
+```
+
+`tests/AchievementEvidenceDifference.test.js`'s own Section M demonstrates
+— rather than assumes — that the two independently-computed answers always
+agree: `sourceFingerprint === targetFingerprint` if and only if
+`sameEvidence`, because both are, by construction, two different ways of
+asking whether the same four multisets hold the same content.
+
+**MULTISET DIFFERENCE, NEVER A POSITIONAL WALK, AND NEVER A SET
+DIFFERENCE EITHER.** `[A, A, B]` compared against `[A, B]` reports exactly
+one `A` as source-only — never zero (a naive `Set`-based "is A present
+somewhere?" check) and never two (comparing without ever consuming a
+match). This is the identical restraint 0.8.116's own fingerprint already
+holds for the same evidence, and 0.8.115's own merge already holds for the
+same underlying reason (`application/PublicationReferenceRecord.js`'s and
+`application/PublisherPublicationAssociationRecord.js`'s own "NEVER
+DEDUPLICATED" headers). See `tests/AchievementEvidenceDifference.test.js`'s
+own Section F for the concrete proof.
+
+**IDENTITY IS EXACT STRUCTURAL EQUALITY — THE IDENTICAL RULE 0.8.115'S OWN
+MERGE ALREADY ESTABLISHED, REUSED HERE RATHER THAN RE-DERIVED.** Two
+records are "the same evidence" only when every field their own
+`toJSON()` output carries is identical — never a narrower key like
+`anchorId` or `txid` alone. A record differing in even one field —
+including `createdAt` — is genuinely distinct evidence, reported as
+exclusive to whichever side holds it.
+
+**EACH COLLECTION IS A SEPARATE, NAMED SLOT**, exactly mirroring 0.8.116's
+own structural separation: a Bitcoin publication and a Base publication
+sharing an identical-looking `contentHash` never cancel each other out
+across the two collections' own, independently computed differences.
+
+**THE RESULT NAMES EVIDENCE, NEVER GIVES ORDERS.** `sourceOnly`/
+`targetOnly` are each record's own canonical `toJSON()` shape — the
+identical shape `exportAchievementEvidence()`/`mergeAchievementEvidence()`
+already produce and consume — so a caller can hand either array straight
+into `mergeAchievementEvidence()` as a payload's own collection, without
+any further transformation. `tests/AchievementEvidenceDifference.test.js`'s
+own flagship (Section N) does exactly this: Alice and Bob, starting with
+genuinely disjoint evidence, each merge exactly what this file reports as
+missing from their own side, and afterward the identical difference
+reports no difference at all.
+
+**AN EVIDENCE DIFFERENCE DESCRIBES ABSENCE, NEVER TRUTH.** An evidence
+difference describes what records are absent from one replica relative to
+another; it does not establish that either replica is truthful, authentic,
+authoritative, or complete. Someone can still manufacture evidence — a
+fabricated record diffs exactly like a genuine one, because this file, like
+0.8.116's own fingerprint and 0.8.115's own merge before it, has no concept
+of "verified" to begin with. See docs/Principles.md, "The UI Displays
+Observations; It Does Not Turn Them Into A Verdict (0.8.57)," held here
+once more.
+
+**`describeAchievementEvidenceDifference()`/`reconstructAchievementEvidenceDifference()`
+IS THE IDENTICAL SPLIT EVERY OTHER FILE IN THE ACHIEVEMENT FAMILY ALREADY
+HOLDS**, doubled over a source side and a target side rather than one. An
+invalid/missing archive on either side of `reconstructAchievementEvidenceDifference()`
+degrades to `PublicationObservationArchive.empty()` — never an error —
+exactly like `reconstructAchievementEvidenceFingerprint()` already does.
+
+Deliberately excluded:
+- **Any merge, export, or import.** `sourceOnly`/`targetOnly` are
+  read-only facts about the difference; folding either side's exclusive
+  evidence into the other archive is `application/AchievementEvidenceMerge.js`'s
+  own, already-built job, one call away, entirely untouched by this file.
+- **Any achievement event, badge, statistic, rank, or leaderboard
+  vocabulary of any kind.** This file imports none of `application/
+  AchievementEvent.js`, `PublisherAchievementStatisticsView.js`,
+  `PublisherRankingPolicy.js`, or `PublisherLeaderboardView.js`.
+- **Any trust, authenticity, freshness, or "which replica is correct"
+  determination.** See "An evidence difference describes absence, never
+  truth," above.
+- **Any signing, peer discovery, transport mechanism, or automatic
+  comparison of any kind.** This function runs only when a caller
+  explicitly calls it.
+
+What's left, and deliberately unbuilt: this milestone can tell a replica
+exactly which facts it lacks; it deliberately never moves those facts
+anywhere on its own, and never decides when a comparison should even
+happen. 0.8.118 is the natural next step: an explicit, portable
+request/response protocol —
+
+```text
+"I have fingerprint X."
+        │
+        ▼
+"You differ."
+        │
+        ▼
+"Here are the evidence facts I lack."
+        │
+        ▼
+mergeAchievementEvidence()
+        │
+        ▼
+new fingerprint
+```
+
+— still with no transport or peer discovery of its own; only after that
+would federated evidence exchange across several ForkBuild nodes, with no
+central achievement server anywhere in the picture, become the natural
+next question.

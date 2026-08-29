@@ -18325,3 +18325,64 @@ authority to declare a rank; it needs only agreement on the evidence, and
 this milestone is what makes that agreement checkable.
 
 See `docs/Roadmap.md`, 0.8.116, for the full milestone entry.
+
+## An Evidence Difference Names Missing Facts; It Is Never The Authority On Whether Two Replicas Agree (0.8.117)
+
+0.8.116 gave two replicas a cheap way to learn THAT their achievement
+evidence differs — compare two fingerprints. It deliberately never
+answered the question a replica actually has the moment that comparison
+comes back different: WHICH facts, exactly, does each side hold that the
+other doesn't? `application/AchievementEvidenceDifference.js` answers
+exactly that, over the identical four evidence collections 0.8.114 already
+named "the achievement evidence" — and holds the fingerprint itself at
+arm's length while doing it.
+
+**A fingerprint is a fast indication that something differs; an evidence
+difference is the explicit account of what.** This milestone deliberately
+reverses `application/PublicationObservationArchiveDifference.js`'s own
+0.8.87 choice to let a settled, authoritative whole-archive fingerprint
+decide equality. Here, `sameEvidence` is computed from the actual
+per-collection multiset comparison, never from
+`sourceFingerprint === targetFingerprint` — so a cryptographic digest never
+quietly becomes this codebase's authentication or trust mechanism for
+evidence equality. `tests/AchievementEvidenceDifference.test.js`'s own
+Section M demonstrates, rather than assumes, that the two
+independently-computed answers agree — because both are, by construction,
+two different ways of asking whether the same four multisets hold the same
+content, not because one is derived from the other.
+
+**A difference over a durable evidence set must be a MULTISET difference,
+never a positional walk and never a set difference.** `[A, A, B]` compared
+against `[A, B]` reports exactly one `A` as exclusive to the first side —
+never zero, and never two — the identical multiplicity discipline
+0.8.116's own fingerprint and 0.8.115's own merge already hold for this
+exact evidence, for the identical underlying reason
+(`application/PublicationReferenceRecord.js`'s and `application/
+PublisherPublicationAssociationRecord.js`'s own "NEVER DEDUPLICATED"
+headers). Two independent replicas' evidence carries no common,
+append-only history to walk position-by-position — comparing by content,
+not by array index, is not a stylistic choice here; it is the only
+question that is even coherent to ask.
+
+**An evidence difference describes absence, never truth.** It names
+exactly which durable facts are missing from one replica relative to
+another. It does not, and cannot, establish that either replica is
+truthful, authentic, authoritative, or complete — a fabricated record
+diffs exactly like a genuine one, because this file, like 0.8.116's own
+fingerprint and 0.8.115's own merge before it, has no concept of
+"verified" to begin with. See "The UI Displays Observations; It Does Not
+Turn Them Into A Verdict (0.8.57)," held here once more, one layer
+narrower.
+
+**The result names evidence, never gives orders.** `sourceOnly`/
+`targetOnly` are each record's own canonical `toJSON()` shape — the
+identical shape `exportAchievementEvidence()`/`mergeAchievementEvidence()`
+already produce and consume — so the facts this milestone reports as
+missing can be handed straight into `mergeAchievementEvidence()` with no
+further transformation. This milestone's own flagship
+(`tests/AchievementEvidenceDifference.test.js`'s own Section N) proves
+this end to end: two replicas starting with genuinely disjoint evidence
+each merge exactly what this file reports as missing from their own side,
+and the identical difference, recomputed afterward, reports none at all.
+
+See `docs/Roadmap.md`, 0.8.117, for the full milestone entry.
