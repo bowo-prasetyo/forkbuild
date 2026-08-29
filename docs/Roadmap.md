@@ -36188,3 +36188,137 @@ that replica would compute independently. Only after that: a leaderboard
 UI, a publisher profile page, and eventually federated evidence exchange
 across several ForkBuild nodes with no central achievement server
 anywhere in the picture.
+
+## 0.8.116 — Achievement Evidence Set Fingerprint
+
+0.8.114 made achievement evidence portable; 0.8.115 made it composable
+without destroying local history. Both left one question unanswered that
+a genuinely decentralized network needs answered BEFORE it exchanges
+anything at all: two replicas that have never compared notes — do they
+already hold the same evidence? `application/AchievementEvidenceFingerprint.js`'s
+own `reconstructAchievementEvidenceFingerprint(archive)` (and its pure
+counterpart `describeAchievementEvidenceFingerprint(...)`) is that
+primitive — a deterministic identity for the evidence SET itself, never
+for any conclusion computed over it:
+
+```text
+Alice's archive                         Bob's archive
+     │  reconstructAchievementEvidenceFingerprint()   │
+     ▼                                                 ▼
+{ algorithm, fingerprint,               { algorithm, fingerprint,
+  collectionFingerprints }                collectionFingerprints }
+                │                                 │
+                └──────────── same? ──────────────┘
+                     same evidence set, byte-for-byte
+```
+
+**A FINGERPRINT IDENTIFIES AN EVIDENCE SET; IT NEVER AUTHENTICATES IT OR
+ESTABLISHES ITS TRUTH** — `application/PublicationObservationArchiveFingerprint.js`'s
+own 0.8.84 invariant, held here once more, one layer narrower. A matching
+fingerprint means the four evidence collections 0.8.114 already named as
+"the achievement evidence" are byte-identical between two replicas.
+Nothing more. See docs/Principles.md, "The UI Displays Observations; It
+Does Not Turn Them Into A Verdict (0.8.57)."
+
+**EVIDENCE ONLY — NEVER A CONCLUSION, NEVER PROVENANCE, NEVER A CLOCK.**
+This module reads exactly `bitcoinAnchorPublicationRecords`,
+`baseAnchorPublicationRecords`, `publicationReferenceRecords`, and
+`publisherPublicationAssociationRecords` off a `PublicationObservationArchive`
+— the identical minimum 0.8.114's own header already traced from the
+actual achievement pipeline — and nothing else. It never imports
+`application/AchievementEvent.js`, `PublisherAchievementStatisticsView.js`,
+`PublisherRankingPolicy.js`, or `PublisherLeaderboardView.js`; it inserts
+no export-time or fingerprint-time timestamp; and because provenance
+(`LOCAL`/`IMPORTED`) lives entirely in `archive`'s own parallel
+`*Provenance` arrays — never inside a record's own `toJSON()` shape — this
+module never needs to strip it before hashing. A `LOCAL` record and an
+otherwise-identical `IMPORTED` record are, and can only ever be, the
+identical fingerprint input. This is a DELIBERATE, documented difference
+from 0.8.84's own whole-archive fingerprint, which INCLUDES provenance on
+purpose — that fingerprint answers "is this the same durable archive,
+ingestion history included?"; this one answers the narrower question a
+synchronization protocol actually needs: "do two replicas agree on the
+achievement-relevant FACTS?"
+
+**CANONICALIZATION IS SORTED, NEVER DEDUPLICATED — A MULTISET
+FINGERPRINT.** Each of the four collections is canonicalized
+independently: every record's own `toJSON()` output is serialized and the
+resulting strings are sorted lexicographically before being joined into
+one canonical array. Sorting buys order independence — two replicas that
+ingested the identical facts in different sequences (guaranteed to happen
+in a decentralized network) fingerprint identically. Sorting is not
+deduplication: `application/PublicationReferenceRecord.js`'s and
+`application/PublisherPublicationAssociationRecord.js`'s own "NEVER
+DEDUPLICATED" headers mean a legitimately retained duplicate record sorts
+adjacent to its twin and both remain in the canonical text — a collection
+holding a genuine duplicate fingerprints differently from the
+otherwise-identical collection holding only one copy.
+
+**EACH COLLECTION IS A SEPARATE, NAMED SLOT.** A Bitcoin publication and a
+Base publication are never the same identity even when they share a
+`contentHash` and an identical-looking chain reference — `application/
+BitcoinAnchorPublicationRecord.js`'s and `application/
+BaseAnchorPublicationRecord.js`'s own headers already establish that.
+Hashing the two collections separately, under two fixed, differently-named
+slots, holds that boundary structurally rather than by convention.
+
+**THE TOP-LEVEL FINGERPRINT IS A HASH OF THE FOUR COLLECTION FINGERPRINTS
+TOGETHER, IN A FIXED FIELD ORDER** — never a second, competing notion of
+"the whole evidence set's own shape." This keeps `collectionFingerprints`
+independently useful: a future synchronization milestone can compare two
+replicas collection-by-collection to learn WHICH kind of evidence differs,
+without a second hashing scheme.
+
+**SHA-256 FROM FIRST PRINCIPLES, DELIBERATELY DUPLICATED, NOT IMPORTED —**
+the identical restraint, and identical reasoning, as `application/
+PublicationObservationArchiveFingerprint.js`'s own 0.8.84 header:
+`crypto.subtle.digest()` is Promise-only and unfit for a value computed
+alongside every other synchronous `describeXxx()`/`reconstructXxx()`
+projection in this codebase. Independently cross-checked against Node's
+own `crypto.createHash('sha256')` while authoring this milestone's own
+tests.
+
+**`describeAchievementEvidenceFingerprint()`/`reconstructAchievementEvidenceFingerprint()`
+IS THE IDENTICAL SPLIT EVERY OTHER FILE IN THE ACHIEVEMENT FAMILY ALREADY
+HOLDS** — `application/AchievementEvent.js`'s own `describeAchievementEvents()`/
+`reconstructAchievementEvents()`, `application/PublisherAchievementProfileView.js`'s
+own `describePublisherAchievementProfile()`/`reconstructPublisherAchievementProfile()`
+— not a new convention invented for this milestone. The pure function
+receives plain, already-extracted evidence arrays (tolerating malformed or
+absent entries exactly like every other `describeXxx()` in this family);
+the thin, archive-reading wrapper degrades a non-archive input to
+`PublicationObservationArchive.empty()`, never an error.
+
+**THE FLAGSHIP THIS MILESTONE ACTUALLY DELIVERS ON 0.8.115'S OWN "WHAT'S
+LEFT."** `tests/AchievementEvidenceFingerprint.test.js`'s own Section K
+builds two fully independent replicas' archives, has each merge the
+other's exported evidence (0.8.115, unchanged), and shows their
+independently reconstructed evidence fingerprints match — and, going one
+step further than a fingerprint alone requires, that their independently
+recomputed achievement events, ranking, and leaderboard are also
+byte-identical, all without either replica ever exchanging one of those
+conclusions directly. This is the exact end-to-end proof 0.8.115's own
+"What's left" flagged as still unbuilt, now demonstrated using the
+primitive this milestone was asked to build, rather than a bespoke
+integration test with no reusable artifact of its own.
+
+Deliberately excluded:
+- **Any comparison of two fingerprints (`MATCH`/`DIFFERENT`).** A caller
+  already has everything needed to compare two of this module's own
+  results with `===`; a dedicated comparison entry point — the way
+  `application/PublicationObservationArchiveFingerprintComparison.js`
+  (0.8.85) sits one milestone over `PublicationObservationArchiveFingerprint.js`
+  (0.8.84) — is separately sized later work, if it earns its keep.
+- **Any evidence difference/diffing ("what does A have that B lacks").**
+  That is 0.8.117's own, separately sized question.
+- **Any signing, public/private keys, "trusted evidence" vocabulary,
+  automatic comparison, publication, or synchronization of any kind, peer
+  discovery, or transport mechanism.** A fingerprint answers exactly one
+  question — what evidence does this replica currently hold? — and stops.
+
+What's left, and deliberately unbuilt: 0.8.117 can now ask "if two
+fingerprints differ, what evidence does A have that B lacks?" using the
+existing archive-difference machinery one layer up, narrowed to these four
+evidence collections — the natural next step toward an explicit evidence
+synchronization exchange (0.8.118) with no central achievement server
+anywhere in the picture.

@@ -18245,3 +18245,83 @@ passes through a third or fourth replica; it only ever describes the ONE
 archive currently holding the fact.
 
 See `docs/Roadmap.md`, 0.8.114, for the full milestone entry.
+
+## An Evidence Fingerprint Identifies A Replica's Facts; It Never Authenticates Or Concludes Anything About Them (0.8.116)
+
+**A matching evidence fingerprint means "these four evidence collections
+are byte-identical between two replicas" and nothing else.** `application/
+AchievementEvidenceFingerprint.js`'s own `reconstructAchievementEvidenceFingerprint()`
+hashes exactly `bitcoinAnchorPublicationRecords`, `baseAnchorPublicationRecords`,
+`publicationReferenceRecords`, and `publisherPublicationAssociationRecords`
+— the identical four collections 0.8.114 already named "the achievement
+evidence." It never means "verified," "authentic," "trusted," or "in
+sync" — this is `docs/Principles.md`, "The UI Displays Observations; It
+Does Not Turn Them Into A Verdict (0.8.57)," and "An Archive Fingerprint
+Identifies Durable Contents; It Does Not Establish Their Truth Or Origin
+(0.8.84)," both held once more, one layer narrower than a whole archive.
+
+**Provenance is deliberately EXCLUDED here, the mirror image of 0.8.84's
+deliberate INCLUSION of it.** 0.8.84's own whole-archive fingerprint
+folds in `LOCAL`/`IMPORTED` provenance on purpose, because that
+fingerprint answers "is this the same durable archive, ingestion history
+included?" This milestone answers a narrower, decentralized-network
+question — "do two replicas agree on the achievement-relevant FACTS?" —
+where two replicas that reached the identical facts by different paths
+(one typed it locally, the other received it from a peer) must compare
+equal. Provenance was never part of it to begin with: it lives entirely in
+`PublicationObservationArchive`'s own parallel `*Provenance` arrays, one
+layer outside every evidence record's own `toJSON()` shape this module
+reads — so a `LOCAL` record and an otherwise-identical `IMPORTED` record
+were always going to be the identical fingerprint input, not a case this
+module had to specially detect and normalize.
+
+**A fingerprint over a durable evidence set must be a MULTISET
+fingerprint, sorted for order independence but never deduplicated.**
+Two replicas that ingested the identical facts in different sequences —
+guaranteed to happen the moment evidence moves between independent
+replicas rather than one linear log — must fingerprint identically, so
+each collection's canonicalization sorts its own records' serialized
+`toJSON()` text before hashing. But `application/PublicationReferenceRecord.js`'s
+and `application/PublisherPublicationAssociationRecord.js`'s own headers
+already establish, independently of this milestone, that a person
+re-asserting the identical fact a second time produces a second,
+equally durable record — "NEVER DEDUPLICATED." A fingerprint that
+silently treated a collection as a SET rather than a MULTISET would make
+that second, legitimately retained record invisible to anyone comparing
+fingerprints — sorting achieves order independence without ever paying
+that price, because a genuine duplicate simply sorts adjacent to its twin
+and both remain in the canonical text.
+
+**Structural separation, not mere convention, is what keeps two chains
+from colliding.** `application/BitcoinAnchorPublicationRecord.js`'s and
+`application/BaseAnchorPublicationRecord.js`'s own headers already
+establish that a Bitcoin publication and a Base publication are never the
+same identity, even sharing a `contentHash` and an identical-looking
+chain reference. This milestone holds that boundary by hashing the two
+collections under two fixed, differently-named slots — never by trusting
+that their content will simply never happen to look alike.
+
+**A hash of hashes keeps the collection-level detail useful on its own,
+not merely an implementation detail of the top-level digest.** The
+overall fingerprint is `SHA-256` of the four collection fingerprints
+together, in one fixed field order — never a second, independently
+computed notion of "the whole evidence set's own canonical shape." A
+future synchronization milestone can compare two replicas
+collection-by-collection using the exact same `collectionFingerprints`
+this milestone already exposes, learning WHICH kind of evidence differs
+without this module inventing a second hashing scheme to make that
+possible.
+
+**This milestone's own flagship completes the proof 0.8.115 explicitly
+left unbuilt.** 0.8.115's own "What's left" named the exact end-to-end
+test this codebase still owed itself: two fully independent replicas,
+each merging the other's evidence, ending up with the same leaderboard.
+`tests/AchievementEvidenceFingerprint.test.js`'s own flagship proves
+exactly that — using a fingerprint match as the mechanical check, then
+confirming byte-identical achievement events, ranking, and leaderboard
+follow from it — without either replica ever exchanging one of those
+conclusions directly. A decentralized network never needs a central
+authority to declare a rank; it needs only agreement on the evidence, and
+this milestone is what makes that agreement checkable.
+
+See `docs/Roadmap.md`, 0.8.116, for the full milestone entry.
