@@ -1,3 +1,5 @@
+import { reconstructPublisherLeaderboardClaimSnapshotReconciliationDecisionHistory } from './PublisherLeaderboardClaimSnapshotReconciliationDecisionHistoryView.js';
+
 // 0.8.149 — Reconciliation Decision History Difference Projection.
 //
 // 0.8.146 gave a replica an append-only, in-memory collection of its own
@@ -105,35 +107,42 @@
 // is the pure computation, over two plain, in-memory decision-history
 // arrays (0.8.146's own shape).
 // `reconstructPublisherLeaderboardClaimSnapshotReconciliationDecisionHistoryDifference()`
-// below is presently a thin placeholder that reads no decision history from
-// either `sourceArchive`/`targetArchive` at all — `PublicationObservationArchive`
-// does not yet hold a reconciliation decision history collection (the
-// identical boundary 0.8.148's own `reconstructXxx()` already holds), so
-// this function always computes over two empty histories, regardless of
-// what either archive actually contains — a valid, `sameHistory: true`
-// result, never a throw. A future milestone that teaches
-// `PublicationObservationArchive` to hold a reconciliation decision history
-// can teach this one function to read it on each side, without disturbing
-// the pure computation above or any caller already using it directly.
+// below now reads each side's own history from `PublicationObservationArchive`'s
+// own `reconciliationDecisionRecords` collection (0.8.150), via `application/
+// PublisherLeaderboardClaimSnapshotReconciliationDecisionHistoryView.js`'s
+// own `reconstructPublisherLeaderboardClaimSnapshotReconciliationDecisionHistory()`
+// — the ONE seam that reads the archive, applied independently to each side
+// (mirroring `application/PublisherLeaderboardClaimHistoryDifference.js`'s
+// own 0.8.130 update), without disturbing the pure computation above or any
+// caller already using it directly.
 //
-// ARCHITECTURAL BOUNDARY — NO IMPORTS AT ALL, THE IDENTICAL BOUNDARY
-// 0.8.147'S OWN STATISTICS PROJECTION AND 0.8.148'S OWN TIMELINE PROJECTION
-// ALREADY HOLD. This file imports nothing from
+// ARCHITECTURAL BOUNDARY — NO IMPORTS FROM THE RECONCILIATION FAMILY, THE
+// IDENTICAL BOUNDARY 0.8.147'S OWN STATISTICS PROJECTION AND 0.8.148'S OWN
+// TIMELINE PROJECTION ALREADY HOLD. This file imports nothing from
 // `application/PublisherLeaderboardClaimSnapshotReconciliationDecisionHistory.js`,
 // `application/PublisherLeaderboardClaimSnapshotReconciliationDecision.js`,
 // `application/PublisherLeaderboardClaimSnapshotReconciliation.js`, or any
 // other module naming a plan, a candidate-selection boundary, a divergence,
-// a correspondence, a verification, a claim, a snapshot, or archive
-// reconstruction — it trusts nothing about how either history was produced
-// beyond its own documented shape, and never calls 0.8.144 through 0.8.148
-// to re-derive or double-check anything.
+// a correspondence, a verification, a claim, or a snapshot — it trusts
+// nothing about how either history was produced beyond its own documented
+// shape, and never calls 0.8.144 through 0.8.148 to re-derive or
+// double-check anything. 0.8.150 adds exactly ONE import — `application/
+// PublisherLeaderboardClaimSnapshotReconciliationDecisionHistoryView.js`'s
+// own `reconstructPublisherLeaderboardClaimSnapshotReconciliationDecisionHistory()`
+// — used ONLY by `reconstructPublisherLeaderboardClaimSnapshotReconciliationDecisionHistoryDifference()`
+// below to obtain each side's own `history` from an archive;
+// `describePublisherLeaderboardClaimSnapshotReconciliationDecisionHistoryDifference()`
+// itself still imports nothing and still trusts nothing about how either
+// `history` argument was produced.
 //
 // DELIBERATELY EXCLUDED — NOT THIS MILESTONE.
 // - **Any export, import, or application of the exclusive decisions found.**
 //   `sourceOnly`/`targetOnly` are read-only facts about the difference;
-//   folding either side's exclusive decisions into the other history is
-//   0.8.150's own, separately sized, later question ("Reconciliation
-//   Decision History Synchronization Exchange").
+//   folding either side's exclusive decisions into the other history is a
+//   future milestone's own, separately sized, later question ("Reconciliation
+//   Decision History Synchronization Exchange") — NOT 0.8.150, which is the
+//   archive persistence boundary alone (see this file's own 0.8.150 update,
+//   below).
 // - **Any interpretation of a difference as a conflict, inconsistency, or
 //   need for resolution.** See "No interpretation of the difference,"
 //   above.
@@ -173,13 +182,15 @@ export function describePublisherLeaderboardClaimSnapshotReconciliationDecisionH
 }
 
 // reconstructPublisherLeaderboardClaimSnapshotReconciliationDecisionHistoryDifference()
-// — see this file's own header, "The identical split," above.
-// `PublicationObservationArchive` does not yet hold a reconciliation
-// decision history collection, so this always computes over two empty
-// histories — a valid, `sameHistory: true` result, never a throw —
-// regardless of what either archive actually contains.
+// — see this file's own header, "The identical split," above. Either
+// invalid/missing archive degrades to `PublicationObservationArchive.empty()`
+// independently on that side, by way of the reconstruction seam it calls —
+// never a throw.
 export function reconstructPublisherLeaderboardClaimSnapshotReconciliationDecisionHistoryDifference(sourceArchive, targetArchive) {
-    return describePublisherLeaderboardClaimSnapshotReconciliationDecisionHistoryDifference([], []);
+    return describePublisherLeaderboardClaimSnapshotReconciliationDecisionHistoryDifference(
+        reconstructPublisherLeaderboardClaimSnapshotReconciliationDecisionHistory(sourceArchive),
+        reconstructPublisherLeaderboardClaimSnapshotReconciliationDecisionHistory(targetArchive)
+    );
 }
 
 // The multiset (bag) subtraction `from - against`, preserving

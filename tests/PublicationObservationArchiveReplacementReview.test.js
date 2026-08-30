@@ -236,7 +236,20 @@ async function run() {
         const fieldNames = JSON.stringify(Object.keys(review)).toLowerCase()
             + JSON.stringify(Object.keys(review.current)).toLowerCase()
             + JSON.stringify(Object.keys(review.external)).toLowerCase();
-        const FORBIDDEN_WORDS = ['trust', 'confidence', 'verified', 'authentic', 'reliable', 'health', 'score', 'newer', 'better', 'correct', 'recommend', 'winner', 'merge', 'reconcil', 'safe', 'stale'];
+        // 0.8.150 — 'reconcil' (the substring) is deliberately narrowed to
+        // the VERB forms ('reconcile'/'reconciled'/'reconciling') rather
+        // than banned outright: this file's own header already establishes
+        // "A review, never a reconciliation" as a restraint on this
+        // function's own ACTIONS, never a ban on naming an already-existing,
+        // non-judgmental subsystem. `reconciliationDecisionHistoryDifference`
+        // (0.8.150) is the NOUN naming 0.8.145-0.8.149's own established
+        // "reconciliation decision" vocabulary — the identical noun/verb
+        // distinction `application/PublisherLeaderboardClaimSnapshotReconciliationDecision.js`'s
+        // own header already draws throughout that whole family. The verb
+        // forms stay forbidden because THIS file performing "reconciliation"
+        // (an action) would violate that header's own restraint; a field
+        // merely NAMING the reconciliation-decision subsystem does not.
+        const FORBIDDEN_WORDS = ['trust', 'confidence', 'verified', 'authentic', 'reliable', 'health', 'score', 'newer', 'better', 'correct', 'recommend', 'winner', 'merge', 'reconcile', 'reconciled', 'reconciling', 'safe', 'stale'];
         for (const forbidden of FORBIDDEN_WORDS) {
             assert(!fieldNames.includes(forbidden), `26. the review result's own field names never mention "${forbidden}"`);
         }

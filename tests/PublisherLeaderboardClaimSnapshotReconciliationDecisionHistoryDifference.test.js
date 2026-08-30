@@ -342,16 +342,23 @@ async function run() {
         const D1 = decide(plan, { type: 'DIVERGENT_CORRESPONDENCE', claimId: claimB.id, snapshotIndex: 0 }, 'OBSERVE', T1);
         const history = historyOf(D1);
 
-        // reconstruct() does not yet read a decision history from any
-        // archive at all — PublicationObservationArchive does not yet hold
-        // one — so it always computes over two empty histories, regardless
-        // of what either archive contains.
-        const archiveA = PublicationObservationArchive.empty();
+        // 0.8.150 — reconstruct() now reads each side's own history from a
+        // real archive's own reconciliationDecisionRecords collection.
+        // Archive A holds D1; Archive B stays empty.
+        const archiveA = PublicationObservationArchive.empty().appendReconciliationDecisionRecord(D1);
         const archiveB = PublicationObservationArchive.empty();
         const reconstructed = reconstructPublisherLeaderboardClaimSnapshotReconciliationDecisionHistoryDifference(archiveA, archiveB);
+        const expectedDiff = describePublisherLeaderboardClaimSnapshotReconciliationDecisionHistoryDifference(history, []);
+        assert(reconstructed.sourceCount === 1 && reconstructed.targetCount === 0, '41. reconstruct() reports exactly the decisions each archive genuinely holds');
+        assert(reconstructed.sourceOnly.length === 1 && reconstructed.sourceOnly[0] === D1, '42. reconstruct() over archives holding the SAME decisions reports the identical sourceOnly/targetOnly split as describe() over the raw histories, holding the original decision object');
+        assert(reconstructed.sameHistory === expectedDiff.sameHistory, '42b. reconstruct() and describe() agree on sameHistory for the identical underlying decisions');
+
         const emptyDiff = describePublisherLeaderboardClaimSnapshotReconciliationDecisionHistoryDifference([], []);
-        assert(serialize(reconstructed) === serialize(emptyDiff), '41. reconstruct() presently always returns the empty-history difference result, a thin boundary pending decision-history/archive integration');
-        assert(reconstructed.sameHistory === true, '42. reconstruct() never fabricates a difference the archives do not genuinely hold');
+        const emptyReconstructed = reconstructPublisherLeaderboardClaimSnapshotReconciliationDecisionHistoryDifference(PublicationObservationArchive.empty(), PublicationObservationArchive.empty());
+        assert(serialize(emptyReconstructed) === serialize(emptyDiff), '42c. reconstruct() over two empty archives agrees exactly with describe() over two empty histories');
+
+        const invalidArchiveReconstructed = reconstructPublisherLeaderboardClaimSnapshotReconciliationDecisionHistoryDifference(null, undefined);
+        assert(serialize(invalidArchiveReconstructed) === serialize(emptyDiff), '42d. reconstruct() over invalid/missing archives degrades to the empty-history result, never a throw');
 
         assert(describePublisherLeaderboardClaimSnapshotReconciliationDecisionHistoryDifference().sameHistory === true, '43. calling with no arguments defaults to two empty histories, never throws');
         assert(describePublisherLeaderboardClaimSnapshotReconciliationDecisionHistoryDifference(null, undefined).sameHistory === true, '44. null/undefined histories degrade to empty, never throw');
@@ -376,10 +383,16 @@ async function run() {
             assert(!codeOnly.includes(term), `49. this file's own code never carries "${term}"`);
         }
 
+        // 0.8.150 — this file now imports exactly ONE module: the archive
+        // reconstruction seam (application/
+        // PublisherLeaderboardClaimSnapshotReconciliationDecisionHistoryView.js),
+        // used only by reconstructXxx() below. It still imports nothing from
+        // the reconciliation FAMILY itself (plan/candidate/decision).
         const importLines = moduleSource.split('\n').filter((line) => line.startsWith('import '));
-        assert(importLines.length === 0, '50. this file imports nothing from the reconciliation family');
+        assert(importLines.length === 1, '50. this file imports exactly one module');
+        assert(importLines[0].includes('PublisherLeaderboardClaimSnapshotReconciliationDecisionHistoryView.js'), '51. the one import is the 0.8.150 archive reconstruction seam, never the reconciliation family itself');
     }
-    console.log('✓ Section I: reconstruct() is a thin, archive-independent boundary, malformed/absent input degrades safely, the result carries no interpretive vocabulary, and the module imports nothing from the reconciliation family');
+    console.log('✓ Section I: reconstruct() now reads each side from an archive, malformed/absent input degrades safely, the result carries no interpretive vocabulary, and the module imports only the 0.8.150 archive reconstruction seam');
 
     console.log('\nAll PublisherLeaderboardClaimSnapshotReconciliationDecisionHistoryDifference tests passed.');
 }
