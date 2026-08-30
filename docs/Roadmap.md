@@ -39492,3 +39492,125 @@ projection — which historical snapshot a stored claim corresponds to,
 using the existing fingerprint relationships, without modifying either the
 claim or the snapshot — is genuinely separate, later work this milestone
 deliberately leaves unbuilt.
+
+## 0.8.137 — Historical Claim-to-Snapshot Association Projection
+
+0.8.135 answered "does this stored claim's signature check out, and does it
+semantically agree with a caller-supplied historical snapshot?" — four
+facts, one cryptographic, three structural, all four collapsed into one
+`matches` verdict. Its own "Deliberately excluded" list named a narrower,
+genuinely different question it never answered: which historical snapshot
+does a stored claim CORRESPOND TO — asked without touching a signature at
+all, and without collapsing anything into a verdict.
+
+```text
+LeaderboardClaimRecord              PublisherLeaderboardSnapshot
+(0.8.123, UNCHANGED)                 (0.8.119, UNCHANGED — an EXPLICITLY
+        │                            SUPPLIED artifact, NEVER searched for)
+        ├── claim.evidenceFingerprint         │
+        ├── claim.policyVersion               │
+        ├── claim.snapshotFingerprint          │
+        │                          three independent === comparisons,
+        │                          no verifier, no cryptographic check
+        └───────────┬──────────────┘
+                     ▼
+   describePublisherLeaderboardClaimSnapshotAssociation()
+                     │
+                     ▼
+{ claimId, signerIdentityId, claimCreatedAt,
+  snapshotFingerprint, evidenceFingerprint, policyVersion,
+  evidenceFingerprintMatches, policyVersionMatches, snapshotFingerprintMatches }
+```
+
+**Association answers "does this claim describe this snapshot?"; verification
+answers "is the claim's signature valid?"** This new module,
+`application/PublisherLeaderboardClaimSnapshotAssociationView.js`, computes
+no cryptographic check of any kind — it accepts no `verifier` argument and
+carries no `signatureValid` field. A claim may be cryptographically signed
+and associated with a snapshot; cryptographically signed but associated
+with a DIFFERENT snapshot; or cryptographically invalid yet still
+structurally associated with a snapshot — this file reports the identical
+three association facts in every one of those cases, because a forged or
+corrupted signature never changes what a claim's own asserted identifiers
+say. The flagship test's second half, signature independence, proves this
+directly: two claims sharing identical asserted identifiers, one genuinely
+signed and one deliberately tampered, produce byte-identical association
+facts.
+
+**Three independent facts, never collapsed into a `matches` verdict — a
+deliberate departure from 0.8.135's own shape.** 0.8.121's/0.8.135's own
+`matches` is a fair question for a VERIFICATION file to answer; this file
+is not one. A caller who wants a single collapsed boolean already has
+0.8.135's own `matches` (once a verifier is available); folding these three
+facts into a fourth one here would silently smuggle a verdict back into a
+file whose entire purpose is to keep the relationship legible instead.
+
+**The association basis is `===`, nothing more.** `claim.evidenceFingerprint`,
+`claim.policyVersion`, and `claim.snapshotFingerprint`
+(`core/PublisherLeaderboardSnapshotClaim.js`, 0.8.121, UNCHANGED) are the
+claim's own asserted identifiers, set once at signing time. The supplied
+snapshot's own identity is read the identical way 0.8.135's own
+`historicalXxx` fields already read it — `evidenceFingerprint`/`policyVersion`
+straight off `describePublisherLeaderboardSnapshot()` (0.8.119, UNCHANGED),
+`snapshotFingerprint` computed by
+`describePublisherLeaderboardSnapshotFingerprint()` (0.8.121, UNCHANGED)
+over that same normalized snapshot. Each of the three `*Matches` facts is
+one independent `===` comparison, always computed, never short-circuited
+by another.
+
+**The supplied snapshot's identity is echoed, unprefixed — unlike 0.8.135's
+own `historicalXxx` fields.** 0.8.135 prefixes its echoed fields to
+distinguish "the supplied historical snapshot" from "this replica's own
+current" snapshot elsewhere in that family. This file has no second
+snapshot to distinguish from — the caller supplies exactly one, explicitly
+— so `evidenceFingerprint`/`policyVersion`/`snapshotFingerprint` on the
+result simply name that one snapshot's own identity.
+
+**Most important design decision — do not automatically search a snapshot
+timeline.** The caller always supplies exactly `claimRecord` + `snapshot`,
+one specific historical artifact at a time — never `claimRecord` + a whole
+`snapshotTimeline` with this file picking "the best matching snapshot" out
+of it. The latter immediately raises ambiguity, tie-breaking,
+closest-timestamp, and duplicate-snapshot questions this codebase has
+deliberately declined to answer at every prior layer (0.8.135's own "Most
+important design decision," held once more here).
+
+**Flagship.** Three fabricated snapshots — `S1 = (E1, P1)`, `S2 = (E1, P2)`,
+`S3 = (E2, P2)` — and a claim signed over `S2`, associated explicitly with
+each of the three in turn:
+
+```text
+Claim → S1:  evidenceFingerprintMatches true   policyVersionMatches false  snapshotFingerprintMatches false
+Claim → S2:  evidenceFingerprintMatches true   policyVersionMatches true   snapshotFingerprintMatches true
+Claim → S3:  evidenceFingerprintMatches false  policyVersionMatches true   snapshotFingerprintMatches false
+```
+
+No two of the three calls produce the identical triple, and every call
+mixes `true` and `false` within itself — proof the three relationships are
+genuinely independent, never derived from one another.
+
+**A single primitive only — no sequence-wide projection yet.** This
+milestone deliberately ships only
+`describePublisherLeaderboardClaimSnapshotAssociation()`, the
+single-claim/single-snapshot association primitive. A collection-level
+projection — given a whole claim history and an explicitly supplied
+snapshot timeline, report every claim-to-snapshot relationship without
+selecting or judging any of them — is left for 0.8.138, composing this
+primitive rather than duplicating it.
+
+**Deliberately excluded — not this milestone.** Automatic snapshot
+selection. Claim verification or signature validation of any kind. Trust
+or reputation judgments, a "valid claim" status, or a collapsed `matches`
+verdict. Historical ordering or archive reconstruction — this file imports
+no `PublicationObservationArchive` anywhere. Persistence, claim
+modification, or snapshot modification. Ranking recomputation.
+Sequence-wide association — left for 0.8.138.
+
+What's left, and deliberately unbuilt: this milestone lets a caller
+explicitly ask whether one stored claim corresponds to one historical
+snapshot, along three independent structural dimensions, entirely separate
+from whether the claim's signature is valid. A collection-level projection
+— given a claim history and an explicitly supplied snapshot timeline,
+report the claim-to-snapshot relationships without selecting or judging
+them — is genuinely separate, later work this milestone deliberately
+leaves unbuilt.
