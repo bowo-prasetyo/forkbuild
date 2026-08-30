@@ -40301,3 +40301,96 @@ principle of its own; it composes two already-documented ones. `docs/
 Roadmap.md` updated;
 `PublisherLeaderboardClaimSnapshotReconciliationDecisionHistorySynchronization.test.js`
 registered in `tests.html`.
+
+## 0.8.153 — Historical Reconciliation Decision-to-Candidate Correspondence Projection
+
+0.8.146 through 0.8.152 all answer questions ABOUT a decision history —
+counts, chronology, difference, durability, portability, synchronization —
+but none of them states, plainly and by itself, the one fact every
+downstream reader of a decision history reaches for first: which
+reconciliation candidate does each historical decision refer to? This is
+deliberately narrower than "was the decision correct?" or "what should
+happen now?" — a new `application/
+PublisherLeaderboardClaimSnapshotReconciliationDecisionCandidateCorrespondenceView.js`
+with two functions,
+`describePublisherLeaderboardClaimSnapshotReconciliationDecisionCandidateCorrespondence()`
+and
+`reconstructPublisherLeaderboardClaimSnapshotReconciliationDecisionCandidateCorrespondence()`,
+mirroring the `describeXxx()`/`reconstructXxx()` split every projection in
+this family has held since 0.8.147.
+
+**This milestone must not call 0.8.144 to rediscover the candidate — the
+one architectural boundary it exists to hold.** A 0.8.145 decision record
+already embeds, by value, the exact candidate a caller explicitly selected
+at the moment the decision was recorded. This file reads that embedded
+`candidate` directly:
+
+```
+decision history -> embedded candidate -> correspondence projection
+```
+
+never:
+
+```
+decision history -> rebuild current plan -> rediscover candidate -> compare against decision
+```
+
+The underlying claims, snapshots, or archive may have changed in every way
+since a decision was recorded; none of that has any bearing here. A
+historical decision remains a historical record, and `describeXxx()`
+accordingly takes no plan, claim history, or snapshot list as an
+argument — only a decision history.
+
+**Candidate types remain closed.** All three of 0.8.144's own candidate
+shapes (`DIVERGENT_CORRESPONDENCE`, `CLAIM_WITHOUT_CORRESPONDING_SNAPSHOT`,
+`SNAPSHOT_WITHOUT_CORRESPONDING_CLAIM`) are embedded in each
+correspondence entry's own `candidate`, exactly as 0.8.145 recorded them —
+no fourth "UNKNOWN"/"UNRESOLVED" category, and no candidate-shape
+normalization of any kind.
+
+**The output is a plain, factual shape**: `{ decisionCount, candidateCount,
+correspondences: [{ decisionIndex, candidate, decision, decidedAt }, ...] }`.
+`decisionCount` counts stored history entries, exactly as `history.length`
+would; `candidateCount` counts distinct candidate identities, reusing
+0.8.147's own structural identity key (`type` plus whichever of
+`claimId`/`snapshotIndex` that type carries). `correspondences` preserves
+`history`'s own order — unlike 0.8.148's own timeline, this file never
+re-sorts by `decidedAt`, since it states no chronological claim of its
+own; `decisionIndex` names each surviving entry's own position after
+excluding non-genuine records, so a caller can always relate a
+correspondence entry back to its place in the supplied history.
+
+**Flagship test** proves the milestone's own worked example: a history of
+`D1 = C1 + OBSERVE + T1`, `D2 = C1 + DEFER + T2`, `D3 = C2 + OBSERVE + T3`,
+`D4 = C1 + OBSERVE + T1` (an exact duplicate of D1) reports
+`decisionCount: 4` and `candidateCount: 2` — D1 and D4 remain distinct
+history entries despite being byte-identical, D1 and D2 both correspond to
+the same candidate C1 despite differing dispositions, and neither a
+different disposition nor a different `decidedAt` ever creates a different
+candidate. A companion section proves the reverse distinction: the same
+claim genuinely diverging against two different snapshots is counted as
+two separate candidates, never collapsed to one. Further sections cover
+all three candidate shapes remaining closed with no manufactured fields,
+history-order preservation under out-of-order `decidedAt` values, no
+mutation of any supplied object, malformed-input tolerance, determinism,
+`reconstructXxx()`'s archive-reading boundary, and a permanent
+architectural regression test proving the module never imports 0.8.144's
+own candidate-selection function, the reconciliation plan view, or any
+other discovery module — its one import is 0.8.150's own archive
+reconstruction seam, used only by `reconstructXxx()`.
+
+**Deliberately excluded — not this milestone.** No rediscovering,
+refreshing, or verifying a candidate against a current plan, claim
+history, snapshot, or archive state — see "This milestone must not call
+0.8.144," above. No decision evolution by candidate, or narrating
+decisions grouped by the candidate they share over time — that is
+0.8.154's own, separately sized, later question. No candidate-type counts
+or other statistics beyond `decisionCount`/`candidateCount` — that style
+of aggregate stays where 0.8.147 already put it. No reconciliation
+ACTION, applying anything, or execution of any kind. No persistence or
+synchronization of any kind beyond the one archive-read seam
+`reconstructXxx()` already uses.
+
+`docs/Roadmap.md` and `docs/Principles.md` updated;
+`PublisherLeaderboardClaimSnapshotReconciliationDecisionCandidateCorrespondenceView.test.js`
+registered in `tests.html`.
