@@ -18846,3 +18846,51 @@ computation every `reconstructXxx()` in this family delegates to, imports
 nothing at all.
 
 See `docs/Roadmap.md`, 0.8.153, for the full milestone entry.
+
+## A Candidate's Decision History Is A Narration, Not A State Machine (0.8.154)
+
+0.8.148 already established, over the whole decision history at once,
+that a timeline is "a narration, never a state machine" — a later
+`DEFER` recorded against a candidate a caller previously `OBSERVE`d is
+stated plainly, in its own chronological place, with no claim that it
+supersedes, corrects, or resolves the earlier entry. 0.8.154 holds the
+identical line one relationship over, at the granularity where the
+temptation to say more is strongest: a single candidate's own,
+grouped, chronologically ordered sequence of recorded decisions.
+
+**Grouping by candidate does not entitle a projection to interpret the
+group.** It would be easy to look at a candidate's own sequence — OBSERVE,
+then DEFER, then OBSERVE again — and reach for words like "changed,"
+"reversed," "pending," or "the current disposition is OBSERVE." Every one
+of those words asserts something beyond what three independently recorded
+historical facts can support: that a later decision is somehow more
+authoritative than an earlier one, that the sequence represents a single
+evolving judgment rather than three separate judgments that happen to
+concern the same candidate, or that "current" is even a coherent question
+to ask of a decision log. `application/
+PublisherLeaderboardClaimSnapshotReconciliationCandidateDecisionEvolutionView.js`
+reports the sequence and stops: `{ candidate, decisionCount, decisions:
+[{ decision, decidedAt }] }`, ordered by `decidedAt`, and nothing about
+what the ordering implies.
+
+**"Evolution" names the milestone; it is not a claim about the data.**
+Exactly as 0.8.133's own header holds for a signer's claim sequence, the
+ordinary English word a reader reaches for first to describe "a sequence
+of things that happened to the same subject over time" is the milestone's
+own name and nowhere else — grep the result and "evolution" appears only
+as `candidateEvolutions`, a factual, structural label for "one candidate's
+own list of decisions," never a verdict about whether that list shows
+progress, correction, or resolution.
+
+**A candidate's decisions can only be narrated in terms of a candidate
+identity someone else already computed.** This milestone composes
+0.8.153's own decision-to-candidate correspondence rather than
+recomputing it, which is what makes its own restraint enforceable rather
+than aspirational: a file that never re-derives "which candidate" has no
+opportunity to smuggle in "and is that candidate now resolved" while doing
+so. The grouping key is 0.8.147's own structural candidate identity,
+reused unchanged a third time — `type` plus whichever of
+`claimId`/`snapshotIndex` that type carries — never a new identity scheme
+invented for grouping's own sake.
+
+See `docs/Roadmap.md`, 0.8.154, for the full milestone entry.
