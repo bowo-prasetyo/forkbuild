@@ -39834,3 +39834,98 @@ Correspondence Statistics" projection — how many claims have zero, one, or
 multiple corresponding historical snapshots, over the identical
 non-evaluative facts this milestone exposes — is genuinely separate, later
 work this milestone deliberately leaves unbuilt.
+
+## 0.8.140 — Historical Claim-to-Snapshot Correspondence Verification Projection
+
+0.8.139 answered "given a whole claim history and an explicitly supplied
+snapshot sequence, WHICH snapshots correspond to WHICH claims?" — purely
+structurally, by complete `snapshotFingerprint` agreement, never touching a
+signature. 0.8.135 answered a genuinely different question — "does THIS
+stored claim's signature check out, and does it semantically agree with
+THIS ONE explicitly supplied historical snapshot?" — but only ever for a
+single, caller-named pair, with no opinion about which pairs are worth
+asking that question of in the first place. This milestone is the
+composition of the two, finally built: 0.8.139 discovers WHICH pairs are
+eligible, and 0.8.135 is called once for every pair it discovered.
+
+New module, `application/PublisherLeaderboardClaimSnapshotCorrespondenceVerificationView.js`:
+`describePublisherLeaderboardClaimSnapshotCorrespondenceVerification(claimHistory, snapshots, verifier)`.
+
+**Correspondence determines which pairs are eligible for verification; it
+does not imply verification success — the one architectural rule this
+milestone exists to make explicit.** 0.8.139's own keep/discard decision
+answers a purely structural question and never touches a signature to
+answer it. A pair 0.8.139 kept can still fail 0.8.135's own verification —
+a genuinely corresponding pair whose signature is forged or corrupted.
+Every kept `snapshotMatches[]` entry carries BOTH layers, side by side,
+never merged: `association` is 0.8.139's own three structural facts for
+that pair, carried through byte for byte; `verification` is 0.8.135's own
+five facts — `signatureValid` among them — for that SAME pair, computed
+fresh.
+
+**A pair 0.8.139 never discovered never gets a verification result —
+absence of correspondence is never silently turned into a verification
+failure.** "These two artifacts don't correspond" and "this pair's
+verification failed" are different facts. A claim with no corresponding
+supplied snapshot is still kept as its own correspondence entry, with an
+empty `snapshotMatches`, exactly as 0.8.139 already reports it.
+
+**Reuses 0.8.139 and 0.8.135 unchanged — no second correspondence
+algorithm, no second cryptographic verification implementation.** Every
+`claimId`/`signerIdentityId`/`claimCreatedAt`/`matchingSnapshotCount`/
+`snapshotIndex`/`association.*` field is 0.8.139's own result, carried
+through byte for byte. Every `verification.*` fact is 0.8.135's own result
+for that one eligible pair, embedded whole and unmodified. This file's only
+original work is a single pass bridging `claimId` back to the genuine
+stored record 0.8.135 needs (0.8.139 deliberately reports `claimId`, never
+the record itself), plus assembling the two layers side by side.
+
+**A verifier is required exactly when a pair actually needs verifying —
+never eagerly, never silently tolerated.** `verifier` is handed straight to
+0.8.135 for each eligible pair; a claim history and snapshot sequence with
+zero eligible pairs never touches `verifier` at all and never throws.
+
+**No collapsed trust judgment.** No `trusted`, `validClaim`,
+`trustedSnapshot`, `confidence`, `reputation`, `score`, or `rank` field
+anywhere — 0.8.139's own three structural facts and 0.8.135's own five
+verification facts, kept visibly separate, are already sufficient.
+
+**Flagship.** `S1 = E1/P1`, `S2 = E2/P2`, `S3 = E3/P3`. Claim A signed over
+S1 with fully consistent asserted fields and a genuine signature — every
+fact true. Claim B signed over S2 with a genuine signature but asserting
+`policyVersion: 99` instead of S2's own P2 — kept by complete
+`snapshotFingerprint` agreement, `association.policyVersionMatches` and
+`verification.policyVersionMatches` both false, `verification.matches`
+false. Claim C signed over S3 with fully consistent asserted fields, then
+its signature bytes are tampered — `association` all true (a forged
+signature never changes what a claim's own fields assert),
+`verification.signatureValid` false, the three semantic verification facts
+still true, `verification.matches` false purely from the invalid
+signature. A + S2 — no correspondence at all — produces no
+`snapshotMatches` entry for that pair whatsoever, proving absence of
+correspondence is never turned into an invented verification failure.
+
+**Architectural boundary: imports 0.8.123's record class, 0.8.139, and
+0.8.135 only.** This file imports nothing from
+`application/PublisherLeaderboardClaimSnapshotAssociationView.js`,
+`application/PublisherLeaderboardSnapshotClaimVerification.js`, any
+signing or identity module, any archive module, any ranking module, or
+`application/PublisherLeaderboardSnapshotTimelineView.js` — grep it and
+none of that vocabulary appears.
+
+**Deliberately excluded — not this milestone.** Automatic snapshot
+reconstruction or archive access — `snapshots` is always an explicitly
+supplied array. Automatic snapshot selection or "best matching" snapshot
+selection — ambiguity is reported, never resolved. Trust/reputation
+judgments, confidence scores, claim ranking, or a collapsed verdict beyond
+0.8.135's own `matches`. A second correspondence algorithm or a second
+cryptographic verification implementation. Historical snapshot
+persistence, synchronization of any kind. New cryptographic primitives.
+
+What's left, and deliberately unbuilt: this milestone verifies exactly one
+caller-supplied claim history against exactly one caller-supplied snapshot
+sequence, at a single point in time. A later "Historical Claim
+Verification Timeline" projection — how a signer's claims verified against
+their corresponding historical snapshots over a supplied sequence — is
+genuinely separate, later work this milestone deliberately leaves
+unbuilt.
