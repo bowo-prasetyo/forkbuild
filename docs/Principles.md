@@ -18712,3 +18712,72 @@ decisions, because they genuinely are part of this replica's own durable
 state.
 
 See `docs/Roadmap.md`, 0.8.150, for the full milestone entry.
+
+## Exchange Transports Historical Decisions; It Does Not Make New Ones (0.8.151)
+
+0.8.126 already drew this line once, for signed claims:
+`PublisherLeaderboardClaimHistoryExchange.js` moves receipts, never
+conclusions, and never re-verifies anything a claim's own signature
+already settled. 0.8.151 holds the identical line one subject over, for
+reconciliation decisions — a subject with one genuine structural
+difference from a signed claim that makes the boundary worth restating
+rather than merely inheriting: a decision carries no signature at all.
+
+**Unlike every claim-shaped exchange in this codebase, `importXxx()` takes
+no verifier argument.** `PublisherLeaderboardSnapshotClaimExchange.js` and
+`PublisherLeaderboardClaimHistoryExchange.js` both require one and
+structurally check a signature on import, because a claim's own identity
+is bound to cryptographic proof. A 0.8.145 decision record's own identity
+is bound to nothing but its own recorded content — "a caller explicitly
+recorded this disposition against this genuinely-existing candidate," in
+0.8.145's own words, true the moment it was first computed, locally,
+never something a signature could make more or less true. Transport
+therefore has nothing to verify. This is not a gap the milestone left
+unfinished; a verifier parameter here would imply a decision record could
+be forged and structurally caught, when in truth it is simply an ordinary
+plain object a caller could have typed by hand from the start, exactly as
+true or false either way. The only thing exchange owes a decision record
+is exact structural transport — carried through unchanged, exactly as
+`PublisherLeaderboardClaimHistoryExchange.js`'s own header already proved
+for a claim's signature bytes, held here again for a decision's own
+disposition field instead.
+
+**Exchange-level deduplication is a deliberate, narrow departure from
+0.8.146's own append rule — governing a different question, not
+overriding the old answer.** `application/PublisherLeaderboardClaimSnapshotReconciliationDecisionHistory.js`'s
+own header is unambiguous: recording the byte-identical decision twice,
+LOCALLY, is always two independent entries, never collapsed. 0.8.151's own
+`applyXxx()` still never collapses what a replica already, genuinely
+holds — a caller's own pre-existing local duplicate survives every
+exchange untouched, precisely because `applyXxx()` only ever ADDS
+incoming records, it never rewrites or prunes existing ones. What it does
+resolve is a different question 0.8.146 never had to answer: when the
+identical decision arrives THROUGH exchange — whether by re-running the
+same exchange twice, or by receiving it from two different senders who
+happened to record the identical fact — does exchange itself become a
+source of runaway duplication? 0.8.151 answers no, reusing 0.8.149's own
+decision-identity formula (`candidate` + `decision` + `decidedAt`,
+structural equality) to recognize "the same decision, again" without ever
+touching the separate, older question of what a caller is allowed to
+record locally, on purpose. The milestone's own flagship test makes the
+distinction concrete: Alice's own two, independently-recorded local
+copies of the identical decision remain two entries in HER OWN history
+forever; every OTHER replica that receives that decision through
+exchange — even from a payload naming it twice — ends up with exactly
+one.
+
+**Every entry is validated structurally, never semantically, and the
+archive is never consulted — the identical restraint 0.8.130's own claim
+history exchange already held, one layer up.** `importXxx()` checks that
+a `candidate` is genuinely one of 0.8.144's own three, closed outcome
+shapes, that `decision` is `'OBSERVE'` or `'DEFER'`, and that `decidedAt`
+parses as a genuine timestamp — never whether that candidate exists in
+any replica's own current reconciliation plan. It imports nothing from
+`PublisherLeaderboardClaimSnapshotReconciliation.js`,
+`PublisherLeaderboardClaimSnapshotReconciliationDecision.js`,
+`PublisherLeaderboardClaimSnapshotReconciliationPlanView.js`, or
+`PublicationObservationArchive.js` — a decision record arriving through
+this file is checked for genuine SHAPE alone, exactly as true or false
+after that check as it was before transport.
+
+See `docs/Roadmap.md`, 0.8.151, for the full milestone entry.
