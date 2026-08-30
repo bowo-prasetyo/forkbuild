@@ -40394,3 +40394,95 @@ synchronization of any kind beyond the one archive-read seam
 `docs/Roadmap.md` and `docs/Principles.md` updated;
 `PublisherLeaderboardClaimSnapshotReconciliationDecisionCandidateCorrespondenceView.test.js`
 registered in `tests.html`.
+
+## 0.8.154 — Reconciliation Candidate Decision Evolution Projection
+
+0.8.153 drew exactly one relationship — decision-history entry to embedded
+candidate, in `history`'s own existing order — and deliberately stopped
+there, naming "decision evolution by candidate, or narrating decisions
+grouped by the candidate they share over time" in its own "Deliberately
+excluded" list as later work. This milestone is that later work: a new
+`application/PublisherLeaderboardClaimSnapshotReconciliationCandidateDecisionEvolutionView.js`
+with two functions,
+`describePublisherLeaderboardClaimSnapshotReconciliationCandidateDecisionEvolution()`
+and
+`reconstructPublisherLeaderboardClaimSnapshotReconciliationCandidateDecisionEvolution()`,
+answering "how did the recorded decisions concerning each reconciliation
+candidate evolve over time?" — the reconciliation-decision analogue of
+0.8.133's own per-signer claim evolution.
+
+**0.8.154 narrates 0.8.153's correspondence; it does not rediscover
+candidate identity — the one architectural boundary this milestone exists
+to hold.** `describeXxx()` calls 0.8.153's own `describeXxx()` exactly
+once over the whole supplied history, then performs only a
+grouping/ordering pass over that result's own `correspondences` array:
+decision history -> 0.8.153 (called once) -> decision-to-candidate
+correspondences -> grouped and ordered by candidate -> candidate decision
+evolutions. `reconstructXxx()` calls 0.8.153's own `reconstructXxx()`
+directly rather than reaching for the archive itself, so 0.8.153 is
+called exactly once for the entire history regardless of which entry
+point a caller uses. This file's only import is 0.8.153's own module —
+nothing from 0.8.144 (candidate selection), 0.8.145 (decision recording),
+0.8.146 (decision-history storage), or any plan/discovery module.
+
+**The output is a plain, factual shape**: `{ decisionCount,
+distinctCandidateCount, candidateEvolutions: [{ candidate, decisionCount,
+decisions: [{ decision, decidedAt }] }] }`. `decisionCount` counts stored
+history entries, exactly as 0.8.153's own `decisionCount` already does;
+`distinctCandidateCount` counts distinct candidate identities, reusing
+0.8.147's/0.8.153's own structural identity key unchanged. Candidate
+identity and decision identity remain separate: the candidate is stated
+once per group, on `candidateEvolutions[*].candidate`, and never repeated
+on each decision entry, which carries only `decision`/`decidedAt`.
+
+**Within one candidate's own `decisions` list, entries are ordered by
+`decidedAt` ascending, with original history position (0.8.153's own
+`decisionIndex`) as the tie-break** — the identical two-key sort 0.8.148's
+own timeline already uses, held here per candidate instead of across the
+whole history at once. `candidateEvolutions` itself retains
+first-appearance order (scanning 0.8.153's own correspondence in its
+existing, unmodified order) and is never re-sorted by `decidedAt`, by
+candidate type, or by decision count — only the decisions *within* a
+group are chronologically ordered, never the groups themselves.
+
+**`OBSERVE`/`DEFER` are never interpreted.** A candidate's own sequence
+such as OBSERVE -> DEFER -> OBSERVE is reported exactly that way — three
+independently recorded historical dispositions, in chronological order —
+with no `changed`, `reversed`, `superseded`, `resolved`, `pending`,
+`final`, `current`, `latest`, `preferred`, `conflicting`, or `corrected`
+vocabulary anywhere in the result or the file's own source. See `docs/
+Principles.md`, "A Candidate's Decision History Is A Narration, Not A
+State Machine," added for this milestone.
+
+**Flagship test** proves the milestone's own worked example: a history of
+`D1 = C1 + OBSERVE + T1`, `D2 = C1 + DEFER + T2`, `D3 = C2 + OBSERVE + T3`,
+`D4 = C1 + OBSERVE + T1` (an exact duplicate of D1), `D5 = C1 + OBSERVE +
+T4` reports `decisionCount: 5` and `distinctCandidateCount: 2`, with C1's
+own evolution carrying all four of its decisions in chronological order
+(D1 and D4 both at T1, tie-broken by history position, then D2 at T2, then
+D5 at T4) and C2's own evolution carrying its single decision — proving
+decision multiplicity, candidate deduplication, chronological ordering,
+repeated identical decisions, differing dispositions for one candidate,
+and first-appearance candidate ordering, all at once. Further sections
+cover candidate identity precision (the same claim decided against two
+different snapshots is two distinct candidates), all three candidate
+shapes preserved with no manufactured fields, malformed-input tolerance,
+no mutation of any supplied object, determinism, `reconstructXxx()`'s
+archive-reading boundary, and a permanent architectural regression test
+proving the module imports only 0.8.153's own correspondence projection.
+
+**Deliberately excluded — not this milestone.** No interpretation of a
+candidate's own decision sequence as supersession, resolution, correction,
+reversal, improvement, or invalidation. No deduplication of decisions
+within a candidate's own sequence — an identical decision recorded twice
+remains two entries, always. No re-deriving candidate identity from a
+plan, claim history, snapshot list, or archive state. No comparison
+between two candidates' own decision sequences, or between two replicas'
+own candidate-decision evolutions — a later, separately sized question.
+No reconciliation ACTION, applying anything, or execution of any kind. No
+persistence or synchronization of any kind beyond the one 0.8.153 seam
+`reconstructXxx()` already uses.
+
+`docs/Roadmap.md` and `docs/Principles.md` updated;
+`PublisherLeaderboardClaimSnapshotReconciliationCandidateDecisionEvolutionView.test.js`
+registered in `tests.html`.
