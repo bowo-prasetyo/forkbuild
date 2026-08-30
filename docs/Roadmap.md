@@ -40486,3 +40486,104 @@ persistence or synchronization of any kind beyond the one 0.8.153 seam
 `docs/Roadmap.md` and `docs/Principles.md` updated;
 `PublisherLeaderboardClaimSnapshotReconciliationCandidateDecisionEvolutionView.test.js`
 registered in `tests.html`.
+
+## 0.8.155 — Reconciliation Candidate Decision Evolution Difference Projection
+
+0.8.149 answered "which decision records exist on one replica's history but
+not the other's?"; 0.8.154 answered "how did the recorded decisions
+concerning each candidate evolve over time?" This milestone answers the
+question neither one does alone: given two replicas' decision histories,
+which candidate-specific decision events exist on one replica but not the
+other? A new
+`application/PublisherLeaderboardClaimSnapshotReconciliationCandidateDecisionEvolutionDifferenceView.js`
+with two functions,
+`describePublisherLeaderboardClaimSnapshotReconciliationCandidateDecisionEvolutionDifference()`
+and
+`reconstructPublisherLeaderboardClaimSnapshotReconciliationCandidateDecisionEvolutionDifference()`.
+
+**This file does not blindly compose 0.8.149 and 0.8.154 — the one design
+decision this milestone's own request names explicitly.** The unsound
+composition it deliberately avoids would run 0.8.154 independently over
+each replica's WHOLE history and then attempt to diff the two resulting
+candidate-evolution results — either losing decision-level granularity or
+silently reintroducing a candidate-identity comparison through the back
+door. Instead: 0.8.149's own `describeXxx()`/`reconstructXxx()` runs
+exactly once, over the two whole histories, producing `sourceOnly`/
+`targetOnly` — the exact decision-level multiset difference 0.8.149 already
+computes, decision events remaining the atomic difference unit, governed by
+0.8.149's own exact decision identity (`candidate + decision + decidedAt`).
+0.8.154's own `describeXxx()` then runs exactly twice — once over
+`sourceOnly`, once over `targetOnly` — grouping each side's own *already
+known to be exclusive* decisions by the candidate they concern. 0.8.154 is
+never asked to group anything but decisions already established as
+exclusive to one side.
+
+**The output keeps two levels of information, neither one collapsed into
+the other** — the recurring architectural distinction (candidate identity
+!= decision identity) this milestone's own request calls out by name:
+`{ sourceDecisionCount, targetDecisionCount, sourceOnlyDecisionCount,
+targetOnlyDecisionCount, sourceOnly, targetOnly,
+sourceOnlyDistinctCandidateCount, targetOnlyDistinctCandidateCount,
+sourceOnlyCandidateEvolutions, targetOnlyCandidateEvolutions, sameHistory }`.
+`sourceOnly`/`targetOnly` are 0.8.149's own raw exclusive-decision arrays,
+carried through byte-for-byte, unchanged — no information is ever lost by
+grouping. `sourceOnlyCandidateEvolutions`/`targetOnlyCandidateEvolutions`
+are the identical exclusive decisions viewed through 0.8.154's own
+candidate lens. `sameHistory` is 0.8.149's own field, forwarded unchanged.
+
+**Flagship scenario** proves the fact this milestone exists to make
+observable — a candidate can exist on both replicas while each still holds
+a decision about it that is exclusive to itself: Alice records
+`C1/OBSERVE/T1`, `C1/DEFER/T2`, `C2/OBSERVE/T3`; Bob records
+`C1/OBSERVE/T1`, `C1/DEFER/T4`, `C2/OBSERVE/T3`, `C3/DEFER/T5`. The shared
+`C1/OBSERVE/T1` and `C2/OBSERVE/T3` cancel out on both sides. Alice-only is
+exactly `[C1/DEFER/T2]`, grouped into one candidate evolution for C1
+carrying that single decision. Bob-only is exactly `[C1/DEFER/T4,
+C3/DEFER/T5]`, grouped into two candidate evolutions — C1 (carrying only
+his own `DEFER @ T4`, never merged with Alice's own `DEFER @ T2`) and C3.
+C1 therefore appears in BOTH `sourceOnlyCandidateEvolutions` and
+`targetOnlyCandidateEvolutions`, each carrying a different, independently
+attributed decision — never merged, never compared, never one declared to
+supersede the other.
+
+**No comparison, ranking, or reconciliation between `sourceOnly` and
+`targetOnly` of any kind** — the identical restraint 0.8.149's own header
+already holds, held here again over the candidate-grouped view. This file
+never states that a source-only decision supersedes, conflicts with, or
+corrects a target-only decision concerning the same candidate, never picks
+a preferred disposition, and never infers that the replicas disagree —
+only that each side's own history contains decision records the other
+side's history does not.
+
+**Further sections** cover: converged/identical histories (zero exclusive
+decisions and zero exclusive candidate evolutions on either side);
+multiplicity preservation (`[D1, D1, D2]` vs `[D1, D2]` still yields exactly
+one exclusive decision, grouped under one candidate evolution, never
+doubled by grouping); the same candidate decided differently on each
+replica remaining two distinct decision events, each attributed only to its
+own exclusive side; the same candidate/disposition at a different
+`decidedAt` remaining distinct; `CLAIM_WITHOUT_CORRESPONDING_SNAPSHOT`,
+`SNAPSHOT_WITHOUT_CORRESPONDING_CLAIM`, and `DIVERGENT_CORRESPONDENCE`
+never colliding merely by sharing a `claimId`/`snapshotIndex` field shape;
+pre-existing local duplicates within one side's own history never
+normalized away; no mutation of any supplied object; determinism;
+`reconstructXxx()`'s archive-reading boundary (0.8.149's own
+`reconstructXxx()` called exactly once); malformed-input tolerance; and a
+permanent architectural regression test proving the module imports only
+0.8.149's decision-level difference and 0.8.154's candidate grouping.
+
+**Deliberately excluded — not this milestone.** No interpretation of a
+difference as a conflict, inconsistency, or need for resolution. No export,
+import, application, or synchronization of the exclusive decisions found —
+that remains 0.8.151's/0.8.152's own, already-answered, separately sized
+question. No deduplication of any kind. No comparing, merging, or
+cross-referencing `sourceOnlyCandidateEvolutions` against
+`targetOnlyCandidateEvolutions` beyond both being able to name the
+identical candidate. No plan reconstruction, candidate selection,
+correspondence discovery, divergence detection, or signature verification.
+No persistence or synchronization of any kind. No reconciliation ACTION,
+applying anything, or execution of any kind.
+
+`docs/Roadmap.md` updated;
+`PublisherLeaderboardClaimSnapshotReconciliationCandidateDecisionEvolutionDifferenceView.test.js`
+registered in `tests.html`.
