@@ -40969,3 +40969,99 @@ computation of any kind.
 `docs/Roadmap.md` updated;
 `PublisherLeaderboardClaimSnapshotReconciliationDecisionHistoryRevalidationDifferenceView.test.js`
 registered in `tests.html`.
+
+## 0.8.160 — Explicit Reconciliation Plan Identity Projection
+
+0.8.157 through 0.8.159 all pass an explicitly supplied plan (0.8.143's
+own result) through, unchanged, as one argument among several — and
+every one of their own headers repeats the identical caveat: a supplied
+plan may be "a fresh 0.8.143 result, an old one kept on purpose, or
+another replica's own plan." None of them gave that plan a durable,
+comparable identity of its own: a caller could observe
+`candidateMatchesPlan: true` against P1 and `candidateMatchesPlan:
+false` against P2, but had no standardized way to say WHICH exact plan
+artifact produced which observation. This milestone closes exactly that
+gap, and nothing else. A new
+`application/PublisherLeaderboardClaimSnapshotReconciliationPlanIdentity.js`
+with one function,
+`describePublisherLeaderboardClaimSnapshotReconciliationPlanIdentity(plan)`
+— no `reconstructXxx()` entry point, for the identical reason 0.8.157/
+0.8.158/0.8.159 each already give: the archive stores no reconciliation
+plan of any kind, and never has.
+
+**"Which plan" is never "which plan is right."** This file computes a
+structural identity for the plan it is handed — it never compares that
+plan against another, never says whether it is complete, current, or
+correct, and never ranks, prefers, or validates anything about it. Two
+different `planFingerprint` values says only "these are two different
+plan artifacts," never "one is better" or "one supersedes the other."
+That gives the family three genuinely separate identities, none inferred
+from another: a decision's own identity (candidate, disposition,
+decidedAt — 0.8.145), a plan's own identity (`planFingerprint` —
+this milestone), and the revalidation relationship between them
+(`candidateMatchesPlan` — 0.8.157).
+
+**Result shape:** `{ algorithm: 'SHA-256', planFingerprint: <64-char
+lowercase hex>, candidateCount }`, mirroring the exact fingerprint shape
+already established by `application/PublicationObservationArchiveFingerprint.js`
+(0.8.84), `application/AchievementEvidenceFingerprint.js` (0.8.116), and
+`application/PublisherLeaderboardSnapshotFingerprint.js` (0.8.121) —
+SHA-256 implemented from first principles and deliberately duplicated a
+fourth time, for the identical reason each of those three files' own
+headers already give (`crypto.subtle.digest()` is Promise-only and has
+no honest use alongside a synchronous `describeXxx()`).
+
+**Identity is scoped to exactly the three candidate lists 0.8.144 itself
+already reads** — `divergentCorrespondences`, `claimsWithoutCorrespondence`,
+`snapshotsWithoutCorrespondence` — never the plan's own summary
+statistics (`claimCount`, `distinctClaimIdCount`, `snapshotCount`,
+`correspondenceCount`), which play no role in whether a candidate is
+present or absent and therefore play no role here either. `candidateCount`
+is always the sum of the three normalized lists' own lengths, recomputed
+from the identical content `planFingerprint` is computed from, never
+trusted off the supplied plan's own (possibly inconsistent) count
+fields.
+
+**Order is preserved, never canonicalized.** 0.8.143's own ordering is
+already meaningful — a deterministic function of position within the
+caller's own supplied claim history and snapshot sequence — so, unlike
+0.8.116's own deliberately order-independent, sorted evidence
+fingerprint, this file fingerprints each of the three lists in the order
+they arrive. Two plans naming the identical candidates in a different
+order are distinct plan artifacts.
+
+**Duplicate candidates are never collapsed** — a direct consequence of
+fingerprinting the supplied lists as-is, not a separate rule added here:
+`[C1, C1]` and `[C1]` are not the same bytes, so they are not the same
+`planFingerprint`, and `candidateCount` reports 2 and 1 respectively.
+
+**Malformed input degrades exactly like 0.8.144's own tolerance.** A
+non-object plan, or a plan whose relevant list is missing or not a
+genuine array, treats that list as `[]` — never a thrown error, never a
+fabricated entry. A completely malformed plan therefore fingerprints
+identically to a genuine, empty 0.8.143 plan.
+
+**Further sections** cover: a single candidate of each of 0.8.144's own
+three types; changing embedded divergence facts on an otherwise-identical
+candidate; immutability; determinism across independently constructed,
+structurally equivalent plans; a known SHA-256 vector independently
+verified against Node's own `crypto.createHash('sha256')`; and a
+permanent architectural regression test proving zero imports, no
+candidate-selection/verification/archive vocabulary, and no
+`reconstructXxx()` export.
+
+**Deliberately excluded — not this milestone.** No comparing two plan
+identities (a caller already has `===`). No candidate-level selection or
+matching — this file never asks whether one particular candidate exists
+in a plan, only what the whole plan's candidate surface structurally
+contains; that remains 0.8.144's own question alone. No combining this
+identity with a decision or a revalidation fact into one observation —
+that is 0.8.161's own, separately sized, later question. No plan class,
+persistence layer, or `reconstructXxx()` entry point — the plan remains
+exactly what 0.8.143 already made it. No trust/staleness/correctness/
+severity/confidence about the plan. No automatic, periodic, or
+background computation of any kind.
+
+`docs/Roadmap.md` updated;
+`PublisherLeaderboardClaimSnapshotReconciliationPlanIdentity.test.js`
+registered in `tests.html`.
