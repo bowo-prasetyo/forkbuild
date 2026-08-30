@@ -40844,3 +40844,128 @@ computation of any kind.
 `docs/Roadmap.md` updated;
 `PublisherLeaderboardClaimSnapshotReconciliationDecisionHistoryRevalidationView.test.js`
 registered in `tests.html`.
+
+## 0.8.159 — Reconciliation Decision History Revalidation Difference Projection
+
+0.8.149 answered "which decision records exist on one replica's history
+but not the other's?" for two histories alone — no plan enters into it.
+0.8.158 answered "which of THIS ONE history's own recorded decisions
+still name a candidate present in THIS explicitly supplied plan?" for
+exactly one history at a time — no second replica enters into it. This
+milestone asks the question neither one asks alone: given two decision
+histories and one explicitly supplied reconciliation plan, which
+revalidation facts are exclusive to each history, and which are shared?
+A new
+`application/PublisherLeaderboardClaimSnapshotReconciliationDecisionHistoryRevalidationDifferenceView.js`
+with one function,
+`describePublisherLeaderboardClaimSnapshotReconciliationDecisionHistoryRevalidationDifference(sourceHistory, targetHistory, plan)`
+— and, like 0.8.157/0.8.158, no `reconstructXxx()` entry point, for the
+identical reason: the plan remains an explicitly supplied artifact the
+archive never stores.
+
+**`revalidation(A, P)` vs. `revalidation(B, P)` is not `A` vs. `B`.**
+0.8.149's own decision-history difference is entirely indifferent to any
+plan; this milestone's own comparison is not the same comparison merely
+run twice — it is 0.8.158's own per-side revalidation, compared. This
+file therefore never independently re-runs candidate matching of its
+own: every `candidatePresent`/`candidateType`/`candidateMatchesPlan`
+fact comes from 0.8.158, called exactly twice (once per side, the
+identical `plan` unchanged both times); 0.8.149 is called exactly once,
+purely to obtain the decision-level partition, never to compute a second
+comparison of its own.
+
+**Result shape:** `{ sourceDecisionCount, targetDecisionCount,
+sharedDecisionCount, sourceOnlyDecisionCount, targetOnlyDecisionCount,
+sharedRevalidations, sourceOnly, targetOnly,
+sourcePresentCandidateCount, sourceAbsentCandidateCount,
+targetPresentCandidateCount, targetAbsentCandidateCount,
+sameRevalidation }`. `sharedRevalidations`/`sourceOnly`/`targetOnly` each
+hold 0.8.158's own revalidation-entry shape unchanged — `{ decisionIndex,
+decision, candidatePresent, candidateType, candidateMatchesPlan }` —
+never a bare decision record, so a caller sees both the historical
+decision and its own plan-membership fact together in one artifact.
+`sourceOnly`/`targetOnly` are drawn from that side's own 0.8.158 call;
+`sharedRevalidations` reports the source's own copy of each matched
+entry, mirroring 0.8.156's own identical choice. `sourcePresentCandidateCount`/
+`sourceAbsentCandidateCount`/`targetPresentCandidateCount`/
+`targetAbsentCandidateCount` are read straight off each side's own FULL
+0.8.158 tally — over the whole `sourceHistory`/`targetHistory`, never
+over `sourceOnly`/`targetOnly`/`sharedRevalidations` alone.
+`sameRevalidation` is 0.8.149's own `sameHistory`, renamed for this
+milestone's own vocabulary: a shared decision's own `candidatePresent` is
+always identical on both sides (it depends only on that decision's own
+candidate and the one `plan` supplied), so `sourceOnly`/`targetOnly`
+being empty is exactly equivalent to the two histories being
+multiset-identical.
+
+**Decision identity and plan membership are independent dimensions —
+held here across two replicas.** Given `Alice: D1(C1/S1, OBSERVE),
+D2(C2, DEFER)` and `Bob: D1(C1/S1, OBSERVE), D3(C3, OBSERVE)` against a
+plan naming only C1/S1 and C2: D1 (identical on both replicas) is
+SHARED, `candidatePresent: true`; D2 is SOURCE-ONLY and present in the
+plan; D3 is TARGET-ONLY and absent from the plan. Exclusivity
+(0.8.149's own decision identity) and plan membership (0.8.158's own
+candidate presence) are computed completely independently and merely
+reported side by side on the same entry.
+
+**The important test case — a decision remains shared even when both
+sides independently revalidate it as absent.** Given `D1(C1/S1,
+OBSERVE)` on both Alice and Bob, and a plan that no longer contains
+C1/S1: both sides independently produce `candidatePresent: false` for
+their own copy of D1. D1 is still reported in `sharedRevalidations`,
+never demoted to `sourceOnly`/`targetOnly` and never described as a
+"conflict" merely because its own candidate happens to be absent from
+the supplied plan. Absence from `plan` is never reinterpreted as
+disagreement between the two histories.
+
+**Another important case — the identical candidate, different
+decisions, is never collapsed to a candidate-level comparison.** Given
+`C1/S1 + OBSERVE + T1` on Alice and `C1/S1 + DEFER + T2` on Bob, with
+C1/S1 present in the plan on both sides: both revalidate to
+`candidatePresent: true`, yet the two decision records are structurally
+distinct (0.8.149's own decision identity), so Alice's own record lands
+in `sourceOnly` and Bob's own lands in `targetOnly`, each carrying its
+own `candidatePresent: true`. Decision identity, exactly as 0.8.149
+already establishes it, governs `sharedRevalidations`/`sourceOnly`/
+`targetOnly`; `candidatePresent` is a wholly separate fact layered on
+top of whichever partition a decision already falls into.
+
+**Flagship scenario:** the two-replica scenario above, worked through in
+full — Alice's own two candidates (C1/S1, C2) both present;
+Bob's own two candidates (C1/S1 present, C3 absent); one shared decision
+(D1), one source-only decision present in the plan (D2), one
+target-only decision absent from the plan (D3) — demonstrating that
+historical difference and plan membership remain separately observable
+throughout.
+
+**Further sections** cover: empty/malformed histories and plans (never
+throw); one-sided histories (everything exclusive, nothing shared);
+identical histories against the identical plan (everything shared);
+the same shared decision evaluated against two different explicitly
+supplied plans (differing `candidatePresent`, same shared decision);
+multiplicity (`[D1, D1]` vs. `[D1]` yields one shared and one
+source-only, never a set-style collapse); all three of 0.8.144's own
+candidate types retaining structural identity; immutability; determinism;
+and a permanent architectural regression test proving exactly two
+imports (0.8.158's own revalidation projection and 0.8.149's own
+difference projection), no archive/plan-reconstruction/candidate-
+selection/decision-generation import, no interpretive vocabulary, and no
+`reconstructXxx()` export.
+
+**Deliberately excluded — not this milestone.** No rediscovering
+candidates or reconstructing a plan — every candidate fact comes from
+0.8.158, called exactly twice. No re-running 0.8.144 or recomputing any
+decision. No interpreting `OBSERVE`/`DEFER`, comparing `decidedAt`
+timestamps, or determining whether a decision is "stale." No
+`conflict`/`preferred`/`authoritative`/`stale`/`obsolete`/`superseded`/
+`resolved`/`correct`/`incorrect`/any state-machine verdict about a
+decision, a candidate, or a replica. No modifying either decision
+history or the plan. No deduplicating decisions or candidates within any
+result array. No reading the current archive to manufacture a plan. No
+merging, folding, or exporting `sourceOnly`/`targetOnly` into either
+history. No persistence, synchronization, or automatic/background
+computation of any kind.
+
+`docs/Roadmap.md` updated;
+`PublisherLeaderboardClaimSnapshotReconciliationDecisionHistoryRevalidationDifferenceView.test.js`
+registered in `tests.html`.
