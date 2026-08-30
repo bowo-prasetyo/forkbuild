@@ -40587,3 +40587,113 @@ applying anything, or execution of any kind.
 `docs/Roadmap.md` updated;
 `PublisherLeaderboardClaimSnapshotReconciliationCandidateDecisionEvolutionDifferenceView.test.js`
 registered in `tests.html`.
+
+## 0.8.156 — Reconciliation Candidate Decision Agreement Projection
+
+0.8.149 answered "which decision records exist on one replica's history but
+not the other's?"; 0.8.155 grouped those same exclusive records by the
+candidate they concern. Neither one states the complementary fact this
+milestone exists to make observable: given two replicas' decision
+histories, which decision-history facts are SHARED by both replicas, and —
+separately — which candidates are represented on both, or only one, of
+them? A new
+`application/PublisherLeaderboardClaimSnapshotReconciliationCandidateDecisionAgreementView.js`
+with two functions,
+`describePublisherLeaderboardClaimSnapshotReconciliationCandidateDecisionAgreement()`
+and
+`reconstructPublisherLeaderboardClaimSnapshotReconciliationCandidateDecisionAgreement()`.
+
+**0.8.149 cannot by itself produce the shared set** — it deliberately
+exposes only a multiset difference (`sourceOnly`/`targetOnly`), never an
+intersection. Rather than build a second, independent decision-comparison
+engine, this file calls 0.8.149's own `describeXxx()` exactly once to
+obtain `sourceOnly`, then derives `sharedDecisions` by subtracting
+`sourceOnly` from the source's own genuine-filtered history — a multiset
+subtraction using 0.8.149's own exact decision identity (`candidate` +
+`decision` + `decidedAt`). Since `source = shared ⊎ sourceOnly` by
+construction, `source - sourceOnly` recovers exactly the matched multiset
+without ever re-comparing against `targetHistory`. `sharedDecisions`
+carries the source's own copy of each matched record — an arbitrary but
+deterministic, documented choice.
+
+**Candidate presence is computed independently of decision-level
+agreement** — the flagship architectural principle this milestone exists to
+hold. A candidate is represented on a replica if that replica's own FULL
+history (0.8.154's own `describeXxx()`, run once over the whole
+`sourceHistory` and once over the whole `targetHistory`) names it in ANY
+decision, regardless of which decisions about it happen to be shared or
+exclusive. `sharedCandidateCount`/`sourceOnlyCandidateCount`/
+`targetOnlyCandidateCount`/`distinctCandidateCount` are computed purely
+from these two full candidate sets — never from `sharedDecisions`/
+`sourceOnly`/`targetOnly` alone.
+
+**Result shape:** `{ sourceDecisionCount, targetDecisionCount,
+sharedDecisionCount, sourceOnlyDecisionCount, targetOnlyDecisionCount,
+sharedDecisions, sourceOnly, targetOnly, distinctCandidateCount,
+sharedCandidateCount, sourceOnlyCandidateCount, targetOnlyCandidateCount,
+candidateAgreements: [{ candidate, sharedDecisionCount,
+sourceOnlyDecisionCount, targetOnlyDecisionCount }], sameHistory }`.
+`sourceOnly`/`targetOnly` are 0.8.149's own arrays, forwarded unchanged.
+Each `candidateAgreements` entry names one candidate represented on either
+side exactly once, carrying three independent counts — each computed by
+running 0.8.154's own `describeXxx()` over one already-computed decision
+array (`sharedDecisions`, `sourceOnly`, `targetOnly`) and reading its own
+per-candidate `decisionCount`. A candidate absent from one of the three
+arrays reads `0` for that count, never `null`.
+
+**Flagship scenario** proves the fact this milestone exists to make
+observable — a candidate can be a SHARED candidate, present on both
+replicas, while each replica ALSO holds its own exclusive decision about
+it: Alice records `C1/OBSERVE/T1`, `C1/DEFER/T2`, `C2/OBSERVE/T3`; Bob
+records `C1/OBSERVE/T1`, `C1/DEFER/T4`, `C3/DEFER/T5`. The shared
+`C1/OBSERVE/T1` cancels out on both sides, leaving Alice-only
+`[C1/DEFER/T2, C2/OBSERVE/T3]` and Bob-only `[C1/DEFER/T4, C3/DEFER/T5]`.
+At the candidate level: C1 is SHARED (`sharedCandidateCount: 1`) — its own
+`candidateAgreements` entry carries `sharedDecisionCount: 1`,
+`sourceOnlyDecisionCount: 1`, AND `targetOnlyDecisionCount: 1`
+simultaneously, never described as conflicting and never collapsed into
+"source-only" or "target-only" merely because it also carries exclusive
+decisions. C2 is source-only and C3 is target-only, at both the candidate
+level and the decision level.
+
+**No comparison, ranking, or reconciliation of any kind** — the identical
+restraint 0.8.149's and 0.8.155's own headers already hold. A candidate
+carrying both a `sourceOnlyDecisionCount` and a `targetOnlyDecisionCount`
+is never described as "conflicting," and neither exclusive decision is ever
+said to supersede, correct, or invalidate the other, or the shared one.
+
+**Further sections** cover: converged/identical histories (every decision
+and candidate reported as shared, zero exclusive); the same candidate
+decided differently on each replica (or the same disposition at a
+different `decidedAt`) remaining a SHARED CANDIDATE with ZERO shared
+decisions; multiplicity within the shared multiset itself (`[D1,D1]` vs
+`[D1,D1,D1]` reports exactly two shared decisions, never a set-style
+collapse to one, and never a naive membership check reporting three);
+`CLAIM_WITHOUT_CORRESPONDING_SNAPSHOT`, `SNAPSHOT_WITHOUT_CORRESPONDING_CLAIM`,
+and `DIVERGENT_CORRESPONDENCE` never colliding merely by sharing a
+`claimId`/`snapshotIndex` field shape; no mutation of any supplied object;
+determinism; `reconstructXxx()`'s archive-reading boundary (reading each
+side's own raw history directly via 0.8.150's own seam, never calling
+0.8.149's own `reconstructXxx()` a second time); malformed-input tolerance;
+and a permanent architectural regression test proving the module imports
+only 0.8.149's decision-level difference, 0.8.150's archive-reading seam,
+and 0.8.154's candidate grouping — deliberately never 0.8.155 itself, since
+0.8.155 exposes only already-exclusive decisions grouped by candidate,
+never the raw histories this milestone's own candidate-presence
+computation requires.
+
+**Deliberately excluded — not this milestone.** No interpretation of
+agreement or difference as a conflict, inconsistency, correction, or need
+for resolution. No export, import, application, or synchronization of the
+shared or exclusive decisions found — that remains 0.8.151's/0.8.152's own,
+already-answered, separately sized question. No deduplication of any kind.
+No comparing, merging, or cross-referencing a candidate's own
+`sourceOnlyDecisionCount` against its own `targetOnlyDecisionCount` beyond
+reporting both side by side. No plan reconstruction, candidate selection,
+correspondence discovery, divergence detection, or signature verification.
+No persistence or synchronization of any kind. No reconciliation ACTION,
+applying anything, or execution of any kind.
+
+`docs/Roadmap.md` updated;
+`PublisherLeaderboardClaimSnapshotReconciliationCandidateDecisionAgreementView.test.js`
+registered in `tests.html`.
