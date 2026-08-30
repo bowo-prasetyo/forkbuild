@@ -41293,10 +41293,91 @@ automatic, periodic, or background synchronization of any kind.
 Decision side                    Observation side
 ─────────────                    ────────────────
 0.8.149 Difference                0.8.166 Difference
-0.8.151 Exchange           ★      0.8.168 Exchange
+0.8.151 Exchange                  0.8.168 Exchange
 0.8.152 Synchronization           0.8.169 Synchronization (next)
 ```
 
 `docs/Roadmap.md` updated;
 `PublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationHistoryExchange.test.js`
+registered in `tests.html`.
+
+## 0.8.169 — Revalidation Observation History Synchronization
+
+0.8.166 gave two replicas a way to LEARN exactly which observations differ,
+purely as a read. 0.8.168 gave two replicas a way to TRANSPORT an entire
+observation history, but blindly — exporting everything a replica has ever
+recorded regardless of what the other side already holds. This closes the
+gap between them, the observation-history counterpart of 0.8.152, one
+subject over — the identical composition, mirrored almost mechanically:
+difference determines what is missing, exchange transports it,
+synchronization composes the two without creating a third algorithm.
+
+**New module.** `application/
+PublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationHistorySynchronization.js`,
+four functions:
+`describePublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationHistorySynchronization(sourceHistory,
+targetHistory)` — a byte-identical passthrough to 0.8.166's own difference;
+`reconstructPublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationHistorySynchronization(sourceArchive,
+targetArchive)` — the archive-reading counterpart, reading through 0.8.167's
+own seam; `exportPublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationHistorySynchronization(sourceHistory,
+targetHistory)` — computes the difference, then hands ONLY
+`difference.sourceOnly` to 0.8.168's own, unchanged export function;
+`applyPublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationHistorySynchronization(targetHistory,
+payload)` — a direct, unmodified delegation to 0.8.168's own applier. No
+verifier argument anywhere, for the identical reason 0.8.168 itself takes
+none.
+
+**Two distinct multiplicity rules, never conflated.** The one genuinely new
+observation this milestone surfaces on top of 0.8.152's own template:
+0.8.166's own `describeXxx()` performs MULTISET subtraction — `[O1, O1, O2]`
+against `[O1]` reports `sourceOnly = [O1, O2]`, because only one of source's
+two `O1` copies is cancelled. But 0.8.168's own `applyXxx()` deduplicates
+incoming observations by EXACT KEY membership against the target's existing
+set, not by remaining multiset count. So exporting that `sourceOnly` and
+applying it to `target = [O1]` does NOT reproduce two copies of `O1` —
+0.8.168's own exchange dedup recognizes the exported `O1` as already present
+and skips it, leaving `target = [O1, O2]`: one genuinely new observation
+applied (`O2`), one exchange-level duplicate skipped (`O1`). Synchronization
+introduces no third identity rule to reconcile the two — it simply composes
+each layer's own existing, unmodified behavior. Proven directly in the
+test's own SUBTLE section, including the companion case of exporting BOTH
+`O1` copies against a genuinely empty target: exchange still folds in only
+one, because the second copy is its own exchange-level duplicate within the
+same payload.
+
+**Flagship test.** Five distinct observations across four replicas: Alice
+`[O1, O2]`, Bob `[O2, O3]`, Carol `[O3, O4]`, Dave `[O4, O5]`. A forward ring
+(Alice→Bob→Carol→Dave→Alice) leaves the two ring "endpoints" — Dave and
+Alice, each reached twice by cascading information — holding the full
+five-observation union, while Bob and Carol, in the middle, still lag
+(Bob missing `O4`/`O5`, Carol missing `O5`) — the forward ring never moves
+anything backward or sideways on its own, exactly as 0.8.152's own flagship
+already established for its own middle replica. An explicit reverse pass,
+run FROM the two converged ends BACK toward the two lagging replicas
+(Dave→Carol, Carol→Bob, Bob→Alice, Alice→Dave), completes convergence:
+every one of the four replicas ends up agreeing, via `describeXxx()`,
+byte-for-byte with the five-observation union. Repeating an already-
+converged synchronization call exports exactly `{ protocolVersion: 1,
+observations: [] }` and applies as a genuine, instance-identical no-op —
+`secondApply.history === firstApply.history === daveHistory`, never merely
+an equal history.
+
+**Deliberately excluded — not this milestone.** No latest-observation-per-
+candidate view, no observation supersession or conflict detection, no
+majority/consensus computation, no automatic present/absent interpretation,
+no archive writes of any kind (the archive is only ever READ, by
+`reconstructXxx()`), no verification/authorization/approval, no recomputing
+a plan or revalidating a decision, no bidirectional "synchronize both ways
+in one call" convenience function, and no network transport of any kind.
+
+```
+Decision side                    Observation side
+─────────────                    ────────────────
+0.8.149 Difference                0.8.166 Difference
+0.8.151 Exchange                  0.8.168 Exchange
+0.8.152 Synchronization      ★    0.8.169 Synchronization
+```
+
+`docs/Roadmap.md` updated;
+`PublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationHistorySynchronization.test.js`
 registered in `tests.html`.
