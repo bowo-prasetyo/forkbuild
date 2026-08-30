@@ -40108,3 +40108,105 @@ one pre-existing test-suite registration gap
 (`PublisherLeaderboardClaimSnapshotReconciliationDecisionHistoryDifference.test.js`
 was never added to `tests.html` by 0.8.149); `docs/Roadmap.md` and
 `docs/Principles.md` updated.
+
+## 0.8.151 — Portable Reconciliation Decision History Exchange
+
+0.8.150 gave a replica's own reconciliation decisions a durable,
+archive-backed home, but never let one replica hand its history to
+another — the identical gap 0.8.122 once left for a single signed claim,
+closed one layer up by 0.8.126's own `PublisherLeaderboardClaimHistoryExchange.js`.
+This milestone is that same missing step, one subject over: a new
+`application/PublisherLeaderboardClaimSnapshotReconciliationDecisionHistoryExchange.js`
+with three functions —
+`exportPublisherLeaderboardClaimSnapshotReconciliationDecisionHistory()`,
+`importPublisherLeaderboardClaimSnapshotReconciliationDecisionHistory()`,
+`applyPublisherLeaderboardClaimSnapshotReconciliationDecisionHistoryExchange()`
+— governed by one principle: **exchange transports historical decisions;
+it does not make new ones.**
+
+**No signature, no verifier, no verification step — a genuine, deliberate
+absence, not an oversight.** Every claim-shaped exchange in this codebase
+(`PublisherLeaderboardSnapshotClaimExchange.js`, `PublisherLeaderboardClaimHistoryExchange.js`)
+requires a `verifier` argument and structurally checks a signature on
+import, because a claim carries one. A 0.8.145 decision record carries
+none — it is an explicit, unsigned, local historical fact from the moment
+it was first recorded. `importXxx()` therefore takes no verifier
+argument at all, and its result carries no `signatureValid`, `verified`,
+`authorized`, or `approved` field anywhere.
+
+**The wire payload carries exactly three fields per entry —`candidate`,
+`decision`, `decidedAt` — never `decided`.** `{ decided: true, candidate,
+decision, decidedAt }` is a stored 0.8.145 record's own shape; `decided`
+is a trueness marker every stored record already satisfies by
+construction, so it carries nothing worth transporting.
+`importXxx()` reconstructs it on the receiving side instead. The payload
+carries no `currentState`, `resolved`, `superseded`, `effective`, or
+`preferred` field — no interpreted state of any kind.
+
+**Decision identity, reused from 0.8.149, never reinvented.** A decision's
+identity for exchange purposes is the exact structural content of
+`candidate` + `decision` + `decidedAt` — the identical formula
+`PublisherLeaderboardClaimSnapshotReconciliationDecisionHistoryDifference.js`'s
+own `canonicalDecisionKey()` already established. `applyXxx()` folds every
+genuinely new decision onto the target history via
+`appendPublisherLeaderboardClaimSnapshotReconciliationDecisionHistoryEntry()`
+(0.8.146, UNCHANGED) — the existing history machinery alone, no competing
+array-assembly path. A decision that exactly matches one already on file
+contributes no second copy (exchange-level idempotency); a decision
+differing in disposition alone, or in `decidedAt` alone, against the
+identical candidate, is always retained as a genuinely distinct record —
+0.8.149's own distinctness rule, held here again on the receiving side of
+transport. This is a deliberate, narrow departure from 0.8.146's own
+"never deduplicated" rule for LOCAL appends: that rule governs what a
+caller records directly; this milestone governs only what arrives THROUGH
+exchange, so that re-running an exchange, or receiving the identical
+decision from two different senders, never makes exchange itself a source
+of runaway duplication. A replica's own pre-existing local multiplicity
+(the same decision recorded twice, on purpose, before any exchange ever
+happened) is never touched or collapsed by `applyXxx()` — it only ever
+adds genuinely new incoming records.
+
+**Every entry is structurally validated, and the archive is never
+consulted.** `importXxx()` checks that `candidate` is genuinely shaped
+like one of 0.8.144's own three, closed outcome shapes
+(`DIVERGENT_CORRESPONDENCE`/`CLAIM_WITHOUT_CORRESPONDING_SNAPSHOT`/
+`SNAPSHOT_WITHOUT_CORRESPONDING_CLAIM`), that `decision` is exactly
+`'OBSERVE'` or `'DEFER'`, and that `decidedAt` is a genuine, parseable
+timestamp — never whether the candidate genuinely exists in any replica's
+own current plan. It never reconstructs a plan (0.8.143), never calls
+0.8.144 to reselect a candidate, and never calls 0.8.145 to recompute a
+disposition — grep the file and none of those three modules appear. A
+structurally malformed entry is reported by index and reason in
+`rejections`, never fatal to the rest of an otherwise genuine payload; only
+a malformed top-level envelope (`protocolVersion`/`decisions` shape)
+rejects the whole payload atomically.
+
+**New flagship test** (`PublisherLeaderboardClaimSnapshotReconciliationDecisionHistoryExchange.test.js`,
+8 sections) proves the milestone's own three-replica worked example: Alice
+holds `OBSERVE D1, DEFER D2, DEFER D2` (a genuine, independently-recorded
+LOCAL duplicate); Bob holds `DEFER D2, OBSERVE D3`; Carol holds
+`OBSERVE D1`. After a full round of mutual exchange, Carol and Bob each
+converge on exactly the three-decision union `{D1, D2, D3}` — verified
+byte-for-byte against 0.8.149's own difference projection — while Alice
+retains her own extra, genuine local D2 duplicate as a strict superset of
+that union (exchange adds, it never erases what a replica already
+genuinely holds). Repeating the identical exchange a second time is a
+verified no-op: `newCount === 0`, and the resulting history is the exact
+same instance, never merely an equal one. A permanent architectural
+regression test proves the module carries no `verify`/`authorize`/
+`approve`/`re-evaluate` vocabulary anywhere in its own code, and imports
+exactly one module — 0.8.146's own append boundary.
+
+**Deliberately excluded — not this milestone.** No archive integration of
+any kind (neither function reads or writes `PublicationObservationArchive`
+directly — a caller owns reading its own durable history out via 0.8.150
+and writing the merged result back in as its own, separate steps). No
+synchronization orchestration ("which decisions does replica B lack, and
+can they be transported there automatically?") — that composes 0.8.149's
+difference projection with this milestone's own exchange, and is 0.8.152's
+own, separately sized, later question. No verification, authorization, or
+re-evaluation of any transported decision's own disposition.
+
+`docs/Roadmap.md` and `docs/Principles.md` updated;
+`PublisherLeaderboardClaimSnapshotReconciliationDecisionHistoryExchange.test.js`
+registered in `tests.html`.
