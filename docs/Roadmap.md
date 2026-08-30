@@ -39614,3 +39614,103 @@ from whether the claim's signature is valid. A collection-level projection
 report the claim-to-snapshot relationships without selecting or judging
 them — is genuinely separate, later work this milestone deliberately
 leaves unbuilt.
+
+## 0.8.138 — Historical Claim-to-Snapshot Association History Projection
+
+0.8.137 proved a single stored claim could be associated with a single
+explicitly supplied historical snapshot, along three independent
+structural facts, never touching a signature. That primitive answers
+exactly one relationship at a time. The moment a caller holds more than
+one claim-and-snapshot pair worth narrating, a new, purely structural
+question appears: across these EXPLICITLY SUPPLIED claim/snapshot pairs,
+what structural relationships exist?
+
+```text
+[{ claimRecord, snapshot }, { claimRecord, snapshot }, ...]
+                     │
+                     ▼   (one call per element, in order)
+  describePublisherLeaderboardClaimSnapshotAssociation()
+                     │            (0.8.137, UNCHANGED)
+                     ▼
+describePublisherLeaderboardClaimSnapshotAssociationHistory()
+                     │
+                     ▼
+{ associationCount, associations: [{ claimId, signerIdentityId,
+  claimCreatedAt, snapshotFingerprint, evidenceFingerprint, policyVersion,
+  evidenceFingerprintMatches, policyVersionMatches,
+  snapshotFingerprintMatches }, ...] }
+```
+
+**A history of explicitly supplied pairs, never a matching algorithm.**
+The new module, `application/PublisherLeaderboardClaimSnapshotAssociationHistoryView.js`,
+accepts a single argument, `associations` — a caller-supplied list of
+`{ claimRecord, snapshot }` pairs — never two independent
+`claims`/`snapshots` arrays this file would then have to combine.
+Accepting two separate arrays would immediately raise the exact question
+0.8.137's own "Most important design decision" already declined to
+answer: what counts as "the" associated snapshot for a given claim? Exact
+fingerprint? Evidence only? Policy version too? First match? Every match?
+Closest in time? This file asks none of those questions because it never
+receives two arrays to correlate — the caller has already decided, pair by
+pair, which claim goes with which snapshot.
+
+**Each pair is delegated to 0.8.137, unchanged, never re-implemented.**
+This file performs no independent fingerprint comparison of its own —
+every fact on an entry in `associations` is
+`describePublisherLeaderboardClaimSnapshotAssociation()`'s (0.8.137,
+UNCHANGED) own result for that one pair, embedded whole and unmodified.
+This file's only original work is the loop itself.
+
+**Preserve supplied order — never sorted.** The identical restraint
+0.8.136's own "the caller supplies the order" already holds for a sequence
+of snapshots is held here again for a sequence of pairs: `associations[i]`
+in the result is always the association for `associations[i]` in the
+input, in that exact position — never resorted by claim creation time,
+snapshot identity, signer, fingerprint, or match count.
+
+**No deduplication.** Supplying the identical `{ claimRecord, snapshot }`
+pair repeatedly produces repeated, identical entries, each in its own
+position — this is an association PROJECTION, narrating exactly the
+sequence it was handed, never a set-building operation.
+
+**Flagship.** The same `S1 = (E1, P1)`, `S2 = (E1, P2)`, `S3 = (E2, P2)`
+scenario, extended to three claims — Claim A signed over S2, Claim B
+signed over S1, Claim C carrying mixed identifiers (asserting S1-like
+evidence/policy but a snapshot fingerprint actually signed over S3).
+Explicit pairs demonstrate every one of 0.8.137's own per-pair facts
+reproduced exactly, entry for entry, in the supplied position — including
+Claim C against S3, where `evidenceFingerprintMatches`/
+`policyVersionMatches` read `false` while `snapshotFingerprintMatches`
+reads `true`, proof the three facts stay independent even for a claim
+with genuinely mixed identifiers. A second case — the identical claim and
+snapshot, but with the claim's signature tampered — produces a
+byte-identical association history entry, because 0.8.137 deliberately
+ignores signatures.
+
+**Architectural boundary: imports 0.8.137 only.** This file imports
+nothing from `application/PublisherLeaderboardSnapshotClaimVerification.js`,
+`application/PublisherLeaderboardHistoricalClaimVerification.js`, any
+signing or identity module, any archive module, or any ranking module —
+grep it and none of that vocabulary appears. The dependency direction
+stays a single line: 0.8.137 → 0.8.138, never a second, parallel
+association/verification engine.
+
+**Deliberately excluded — not this milestone.** Automatic claim-to-
+snapshot matching or a Cartesian product over independent
+`claims[]`/`snapshots[]` arrays. Deduplication of repeated pairs. Sorting
+by claim creation time, snapshot identity, signer, fingerprint, or match
+count. Claim verification or signature validation — delegated entirely to
+0.8.137. Trust/reputation judgments, a "valid claim" status, or a
+collapsed verdict. Persistence of the history itself. Ranking
+recomputation of any kind.
+
+What's left, and deliberately unbuilt: this milestone lets a caller
+narrate an explicitly supplied sequence of claim-to-snapshot pairs, one
+pair at a time, by composing 0.8.137's own association projection rather
+than inventing a second one — without ever discovering that pairing
+automatically. Automatic correspondence — given a whole claim history and
+an explicitly supplied snapshot timeline, determine which snapshot each
+claim corresponds to without the caller naming the pairs — is genuinely
+separate, later work this milestone deliberately leaves unbuilt; it should
+only be built against a concrete requirement, never manufactured ahead of
+one.
