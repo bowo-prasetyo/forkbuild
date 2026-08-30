@@ -41205,3 +41205,98 @@ interpretation layer:
 `docs/Roadmap.md` updated;
 `PublicationObservationArchiveRevalidationObservationHistoryIntegration.test.js`
 registered in `tests.html`.
+
+## 0.8.168 — Portable Revalidation Observation History Exchange
+
+0.8.167 closed the persistence boundary for the revalidation-observation
+branch, but never let one replica hand its observation history to
+another — the identical gap 0.8.150 once left for reconciliation
+decisions, closed one milestone later by 0.8.151's own decision-history
+exchange. This is that same missing step, one subject over.
+
+**New module.** `application/
+PublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationHistoryExchange.js`,
+mirroring 0.8.151 exactly: `exportPublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationHistory(history)`,
+`importPublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationHistory(payload)`,
+`applyPublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationHistoryExchange(history, payload)`.
+
+**Export format.** `{ protocolVersion: 1, observations: [{ decision,
+planIdentity, candidatePresent, candidateType, candidateMatchesPlan,
+observedAt }, ...] }` — exactly the six durable observation facts, in the
+order `history` already holds them. The redundant `observed: true` marker
+doesn't travel over the wire, exactly as 0.8.151 omitted `decided`; import
+reconstructs it after structural validation. The embedded `decision` field
+travels whole, `decided: true` included — it is a nested fact this
+observation carries, not this entry's own top-level marker, so no second
+reduction rule is invented for it.
+
+**Identity semantics — reused, never reinvented.** Deduplication uses
+EXACTLY 0.8.166's own six-field structural identity (`decision` +
+`planIdentity` + `candidatePresent` + `candidateType` +
+`candidateMatchesPlan` + `observedAt`), duplicated into this file (not
+imported) for the identical reason this whole family already duplicates
+its own identity function. `same decision + same plan + same revalidation
+facts + same observedAt = same observation`; changing any one of the six
+fields makes it a distinct observation — tested explicitly with a
+"particularly valuable" regression: two hand-constructed entries sharing a
+decision and a plan but disagreeing only on `candidateMatchesPlan` (a
+combination `observe()` itself could never produce for one decision/plan
+pair, since it is deterministic) must never be treated as duplicates, and
+neither must two entries differing only in `observedAt`.
+
+**Exchange deduplication — 0.8.151's own philosophy, held here again.**
+Incoming duplicates are skipped; existing local duplicates are preserved
+(exchange never normalizes the local history); distinct observations are
+appended via 0.8.163's own, UNCHANGED `appendXxx()` — never a competing
+array-assembly path. A no-op apply (every incoming observation already on
+file) returns the EXACT SAME history instance, never merely an equal one.
+
+**No verifier.** An observation record carries no signature; import
+performs no verification, authorization, or approval step, and never
+reconstructs a plan, recomputes a plan fingerprint, revalidates a
+decision, or calls 0.8.157 through 0.8.166. Import is structural
+deserialization, nothing more — proven by construction: the file imports
+exactly one module, 0.8.163's own append boundary.
+
+**Archive interaction — deliberately absent.** Neither `importXxx()` nor
+`applyXxx()` reads or writes `application/PublicationObservationArchive.js`
+— a caller who keeps its observation history durably via 0.8.167 owns
+reading it out and writing the merged result back in as its own, separate
+steps, the identical separation 0.8.151 already established one layer
+down.
+
+**Flagship test.** A three-replica scenario: Candidate C1's decision D1
+(OBSERVE) revalidated against Plan P1 (present, `O1`) and Plan P2 (absent,
+`O2`) — the SAME decision, genuinely distinct observations, because the
+plan differs; Candidate C2's decision D2 (DEFER) revalidated symmetrically
+against P2 (`O3`) and P1 (`O4`). Alice starts with `[O1, O2]`, Bob with
+`[O2, O3]`, Carol with `[O3, O4]`. Directional exchange Alice→Bob→Carol→
+Alice verifies at every step: only genuinely new observations are
+appended (`newCount`); already-present observations are skipped
+(`duplicateCount`), never re-duplicated; each replica's own pre-existing
+entries retain their object identity and order; the two distinct plan
+fingerprints and all four distinct `observedAt` values survive the full
+round trip; the portable payload round-trips byte-for-byte across a JSON
+string boundary; repeating an identical exchange is idempotent; and the
+whole three-replica exchange performs zero network access.
+
+**Deliberately excluded — not this milestone.** No synchronization
+orchestration ("which observations does replica B lack, and can they be
+transported there automatically?") — that is 0.8.169's own, separately
+sized, later question, composing 0.8.166's own difference projection with
+this file's own exchange, never duplicated here. No archive integration.
+No verification, authorization, or approval of any kind. No recomputing a
+plan, revalidating a decision, or recomputing a plan fingerprint. No
+automatic, periodic, or background synchronization of any kind.
+
+```
+Decision side                    Observation side
+─────────────                    ────────────────
+0.8.149 Difference                0.8.166 Difference
+0.8.151 Exchange           ★      0.8.168 Exchange
+0.8.152 Synchronization           0.8.169 Synchronization (next)
+```
+
+`docs/Roadmap.md` updated;
+`PublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationHistoryExchange.test.js`
+registered in `tests.html`.
