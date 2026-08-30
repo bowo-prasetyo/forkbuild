@@ -184,9 +184,9 @@ async function run() {
         assert(Array.isArray(empty.reconciliationDecisionRecords) && empty.reconciliationDecisionRecords.length === 0, '1. a fresh archive holds an empty reconciliationDecisionRecords collection');
         assert(Array.isArray(empty.reconciliationDecisionRecordProvenance) && empty.reconciliationDecisionRecordProvenance.length === 0, '2. a fresh archive holds an empty reconciliationDecisionRecordProvenance collection');
         assert(empty.reconciliationDecisionRecordCount === 0, '3. a fresh archive reports reconciliationDecisionRecordCount 0');
-        assert(PublicationObservationArchive.SCHEMA_VERSION === 9, '4. this milestone advances SCHEMA_VERSION to 9');
+        assert(PublicationObservationArchive.SCHEMA_VERSION === 10, '4. SCHEMA_VERSION has since advanced to 10 (0.8.167) — this archive round-trips reconciliationDecisionRecords unchanged regardless');
     }
-    console.log('✓ Section A: a fresh archive holds an empty reconciliationDecisionRecords collection under schemaVersion 9');
+    console.log('✓ Section A: a fresh archive holds an empty reconciliationDecisionRecords collection under the current schema version');
 
     // ---------------------------------------------------------------
     // Section B — append and immutability.

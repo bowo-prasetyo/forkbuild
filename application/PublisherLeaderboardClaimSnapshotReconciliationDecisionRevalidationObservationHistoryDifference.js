@@ -1,3 +1,5 @@
+import { reconstructPublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationHistory } from './PublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationHistoryView.js';
+
 // 0.8.166 — Revalidation Observation History Difference Projection.
 //
 // 0.8.163 gave a replica an append-only, in-memory collection of its own
@@ -133,22 +135,17 @@
 // is the pure computation, over two plain, in-memory observation-history
 // arrays (0.8.163's own shape).
 // `reconstructPublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationHistoryDifference()`
-// below REMAINS A THIN RECONSTRUCTION/COMPOSITION BOUNDARY, DELIBERATELY
-// UNFINISHED — exactly like 0.8.165's own `reconstructXxx()`, and for the
-// identical reason: no durable
-// `reconciliationDecisionRevalidationObservationRecords`-shaped collection
-// exists on `PublicationObservationArchive` yet (see 0.8.163's own header,
-// "Deliberately excluded," bullet five: "Persistence... is 0.8.167's own...
-// question"). So `reconstructXxx()` here ignores whatever `sourceArchive`/
-// `targetArchive` it is handed — genuine, malformed, or absent alike — and
-// always returns `describeXxx([], [])`, the empty-vs-empty difference (which
-// reports `sameHistory: true`, never a throw). This is not a bug or a
-// placeholder oversight; it is the honest, currently-true answer ("neither
-// replica's archive yet durably holds any observation history to diff") and
-// it is written so 0.8.167 has exactly one seam to widen on each side — swap
-// each hardcoded `[]` for a real per-archive reconstruction call, exactly as
-// 0.8.150 did for 0.8.149 — without touching `describeXxx()` or any caller
-// already using it directly.
+// below now READS EACH SIDE'S OWN `history` FROM `PublicationObservationArchive`'S
+// OWN `revalidationObservationRecords` COLLECTION (0.8.167), independently
+// per archive, via `application/
+// PublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationHistoryView.js`'s
+// own `reconstructPublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationHistory()`
+// — the ONE seam that reads the archive, exactly the promise this file's
+// own header already made about a future integration ("it is written so
+// 0.8.167 has exactly one seam to widen on each side"), now kept the
+// identical way 0.8.150 already kept it for 0.8.149's own `reconstructXxx()`.
+// `describeXxx()` itself, and every caller already using it directly, are
+// UNCHANGED by this widening.
 //
 // MALFORMED INPUT DEGRADES TO THE EMPTY-VS-EMPTY DIFFERENCE — NEVER THROWS.
 // `null`, `undefined`, a non-array, or an array containing entries that are
@@ -158,9 +155,10 @@
 // non-genuine entries are silently excluded, and an entirely malformed/
 // absent history is treated as `[]` on that side alone.
 //
-// ARCHITECTURAL BOUNDARY — NO IMPORTS AT ALL, THE IDENTICAL BOUNDARY
-// 0.8.164'S OWN DEDUPLICATION PROJECTION AND 0.8.165'S OWN TIMELINE
-// PROJECTION ALREADY HOLD. This file imports nothing from
+// ARCHITECTURAL BOUNDARY — EXACTLY ONE IMPORT, THE 0.8.167 ARCHIVE
+// RECONSTRUCTION SEAM, THE IDENTICAL BOUNDARY 0.8.164'S OWN DEDUPLICATION
+// PROJECTION AND 0.8.165'S OWN TIMELINE PROJECTION NOW ALSO HOLD. This file
+// imports nothing from
 // `application/PublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservation.js`
 // (0.8.162),
 // `application/PublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationHistory.js`
@@ -168,11 +166,17 @@
 // `application/PublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationDeduplicationView.js`
 // (0.8.164),
 // `application/PublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationHistoryTimelineView.js`
-// (0.8.165), any decision or decision-history module, any revalidation or
-// plan-identity module, or any archive module — it trusts nothing about how
+// (0.8.165), any decision or decision-history module, or
+// `PublicationObservationArchive.js` itself — it trusts nothing about how
 // an observation record was produced beyond its own documented shape, and
 // never calls 0.8.165, 0.8.164, 0.8.163, 0.8.162, or anything earlier to
-// re-derive or double-check anything. DELIBERATELY, THIS FILE DOES NOT
+// re-derive or double-check anything.
+// `describePublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationHistoryDifference()`
+// itself still imports nothing and still trusts nothing about how its own
+// `sourceHistory`/`targetHistory` arguments were produced; the one import
+// above is used ONLY by
+// `reconstructPublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationHistoryDifference()`.
+// DELIBERATELY, THIS FILE DOES NOT
 // DEPEND ON 0.8.164 OR 0.8.165: difference operates on the raw, append-only
 // history exactly as 0.8.163 produces it, never on 0.8.164's own
 // first-appearance-deduplicated view (which would silently destroy the
@@ -207,12 +211,11 @@
 //   kind.** See 0.8.162's/0.8.163's/0.8.164's/0.8.165's own headers — this
 //   file inherits that boundary for free by never introducing action
 //   vocabulary of its own.
-// - **Persistence or synchronization of any kind.** Each history is an
-//   in-memory array handed in and read, exactly like 0.8.163's own
-//   `history` argument; durable archive integration is 0.8.167's own,
-//   separately sized, later question — see "The identical split," above,
-//   for `reconstructXxx()`'s own thin, deliberately unfinished boundary in
-//   the meantime.
+// - **Persisting this projection's own OUTPUT.** `reconstructXxx()` reads
+//   each side's own raw observation history from the archive and
+//   recomputes this difference fresh every call — the difference RESULT
+//   itself is never written back to `PublicationObservationArchive`,
+//   exactly as 0.8.149's own difference result never is.
 // - **Automatic, periodic, or background computation of any kind.** These
 //   functions run only when a caller explicitly calls them.
 export function describePublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationHistoryDifference(sourceHistory = [], targetHistory = []) {
@@ -234,16 +237,15 @@ export function describePublisherLeaderboardClaimSnapshotReconciliationDecisionR
 }
 
 // reconstructPublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationHistoryDifference()
-// — see this file's own header, "The identical split," above. Both
-// `sourceArchive` and `targetArchive` are deliberately ignored: no durable
-// observation-history collection exists on `PublicationObservationArchive`
-// yet, so this always returns the empty-vs-empty difference
-// (`sameHistory: true`), never a throw, regardless of what either argument
-// is handed.
+// — see this file's own header, "The identical split," above. Either
+// invalid/missing archive degrades to `PublicationObservationArchive.empty()`
+// independently on that side, by way of the reconstruction seam it calls —
+// never a throw.
 export function reconstructPublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationHistoryDifference(sourceArchive, targetArchive) {
-    void sourceArchive;
-    void targetArchive;
-    return describePublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationHistoryDifference([], []);
+    return describePublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationHistoryDifference(
+        reconstructPublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationHistory(sourceArchive),
+        reconstructPublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationHistory(targetArchive)
+    );
 }
 
 // The multiset (bag) subtraction `from - against`, preserving

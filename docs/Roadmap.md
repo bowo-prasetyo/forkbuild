@@ -41065,3 +41065,143 @@ background computation of any kind.
 `docs/Roadmap.md` updated;
 `PublisherLeaderboardClaimSnapshotReconciliationPlanIdentity.test.js`
 registered in `tests.html`.
+
+## 0.8.167 — Revalidation Observation History Archive Integration
+
+0.8.163 kept an append-only history of 0.8.162's own explicit revalidation
+observations — "was this historical decision's own candidate checked
+against this exact plan, and what did that check find" — deliberately as a
+plain, caller-held, in-memory array, never durably persisted. 0.8.164
+(deduplication), 0.8.165 (timeline), and 0.8.166 (difference) each built a
+read-only projection over that same in-memory shape, each explicitly
+deferring archive integration to this milestone. This is that milestone,
+and the natural counterpart to 0.8.150 — which gave reconciliation
+DECISION history the identical durable home one relationship earlier.
+
+**Two new parallel archive collections.** `application/
+PublicationObservationArchive.js` gains a THIRTEENTH factual collection,
+`revalidationObservationRecords` — an append-only sequence of 0.8.162's own
+`{ observed: true, decision, planIdentity, candidatePresent, candidateType,
+candidateMatchesPlan, observedAt }` records — and its parallel provenance
+collection, `revalidationObservationRecordProvenance`, positionally aligned
+exactly like every other collection's own provenance array. `appendRevalidationObservationRecord()`
+reuses 0.8.163's own, UNCHANGED `appendPublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationHistoryEntry()`
+— mirroring exactly how 0.8.150's own `appendReconciliationDecisionRecord()`
+reuses its own domain's append function. Only a genuine `{ observed: true,
+... }` record is ever appended; a malformed or no-op call returns the exact
+same archive instance, never a freshly allocated but equal one — the
+identical discipline every `appendXxx()` in this file already holds.
+
+**SCHEMA_VERSION advances from 9 to 10, the same conservative philosophy
+held since 0.8.75, without exception.** A payload persisted under
+schemaVersion 9 (0.8.130-0.8.166) degrades to `PublicationObservationArchive.empty()`
+on load — never a partial reconstruction, never an attempt to infer
+observations that were never durably recorded. No migration path is added.
+
+**Validation is structural, never a second observation engine.** A
+revalidation observation record is, and remains, a plain frozen object —
+there is no class to delegate to. `validateRevalidationObservationRecord()`
+checks exactly the shape 0.8.162 already defines: `observed === true`; a
+genuine `decision` (reusing 0.8.150's own `validateReconciliationDecisionRecord()`
+UNCHANGED — itself a pure shape check, never a re-derivation of whether
+that decision was correct); a genuine `planIdentity` (a new
+`validateRevalidationPlanIdentity()`, checking 0.8.160's own three-field
+shape — algorithm, a 64-character lowercase hex `planFingerprint`, a
+non-negative integer `candidateCount`); `candidatePresent`/`candidateMatchesPlan`
+booleans; `candidateType` one of 0.8.144's own three closed candidate
+types; and a valid `observedAt` timestamp. This validator never revalidates
+the decision, reconstructs the plan, recomputes the plan fingerprint,
+verifies a signature, calls 0.8.157-0.8.161, or compares against current
+state — the archive is storage, not a second observation engine.
+
+**The reconstruction seam.** A new file, `application/
+PublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationHistoryView.js`,
+exports the single function `reconstructPublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationHistory(archive)`
+— reading `archive.revalidationObservationRecords` and handing it back
+unchanged, an invalid/missing archive degrading to an empty history, never
+a throw. This mirrors 0.8.150's own `reconstructPublisherLeaderboardClaimSnapshotReconciliationDecisionHistory()`
+exactly, one subject over, and becomes the ONE archive-reading boundary for
+this family.
+
+**0.8.164/0.8.165/0.8.166 are widened, not rewritten.** 0.8.165's and
+0.8.166's own headers already named this milestone as the seam to widen —
+each shipped a deliberately thin `reconstructXxx(archive)` that ignored
+whatever archive it was handed and always returned the empty result, with
+a comment explaining exactly this. Both now call the new reconstruction
+seam and recompute their own pure `describeXxx()` over the real history.
+0.8.164's own deduplication view had no `reconstructXxx()` at all yet (its
+test explicitly asserted `module.reconstructXxx === undefined`); this
+milestone adds one, following the identical split every other projection
+in this codebase already holds — a pure `describeXxx(history)`, unchanged,
+and a `reconstructXxx(archive)` that composes it with the new seam. Each
+file's own architectural-boundary test is updated to assert exactly one
+import (the new seam) rather than zero.
+
+**The fingerprinting rule, tested explicitly.** The whole-archive
+fingerprint (`application/PublicationObservationArchiveFingerprint.js`,
+UNCHANGED) naturally extends — it hashes every field `toJSON()` produces
+except `archiveImportEvents`, so it picks up the two new collections
+automatically. The narrower achievement-evidence fingerprint (`application/
+AchievementEvidenceFingerprint.js`, UNCHANGED) reads exactly four named
+collections and stays untouched: a historical observation is a record
+about a revalidation event, never achievement evidence.
+
+**The use case.** A new `application/
+RecordPublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationIntoArchiveUseCase.js`
+mirrors 0.8.150's own recording use case exactly: `execute(archive,
+observation, origin)` trusts a caller-supplied, already-computed 0.8.162
+observation record exactly as far as `appendRevalidationObservationRecord()`
+itself trusts it, and no further — no call to 0.8.157 through 0.8.162, no
+plan reconstruction, no decision reconstruction, no revalidation of any
+kind. A non-genuine observation is reported `INVALID_OBSERVATION`, never
+thrown; only an invalid `origin` argument throws.
+
+**Flagship integration test.** `tests/PublicationObservationArchiveRevalidationObservationHistoryIntegration.test.js`
+spans the entire chain the milestone requested: Plan A -> Decision D1 ->
+Observation O1 @ T1; Plan B -> Decision D1 -> Observation O2 @ T2. It
+verifies both observations survive archival persistence; their distinct
+`planFingerprint`s and `observedAt` values survive intact; a genuine
+duplicate observation remains duplicated, never collapsed; reconstruction
+returns the original append order; 0.8.164 reports the expected distinct
+count over the archived history; 0.8.165 produces the expected
+chronological order; 0.8.166 compares two reconstructed archives correctly;
+the whole-archive fingerprint changes when an observation is appended; and
+the achievement-evidence fingerprint does not.
+
+**Deliberately excluded — not this milestone.** No changes to
+`application/PublicationObservationArchiveDifference.js` or `application/
+PublicationObservationArchiveReplacementReview.js` — wiring the new
+collection into the archive-level positional difference and replacement
+review is real, separately sized, later work, should it ever be wanted; the
+milestone's own request scoped this integration narrowly, to the archive
+collection, its validator, the one reconstruction seam, the three
+downstream projections, and the recording use case, and nothing wider. No
+UI wiring — no view in this codebase has ever surfaced any part of the
+0.8.157-0.8.166 revalidation family, and this milestone does not start.
+No recomputing anything 0.8.157-0.8.166 already compute. No new
+observation, decision, or plan vocabulary of any kind. This is the end of
+the persistence branch this diagram names, not the start of a new
+interpretation layer:
+
+```
+                 Revalidation Observation
+                         0.8.162
+                            │
+                            ▼
+                   Observation History
+                         0.8.163
+                            │
+          ┌─────────────────┼─────────────────┐
+          ▼                 ▼                 ▼
+      0.8.164           0.8.165           0.8.166
+    Deduplication       Timeline           Difference
+          │                 │                 │
+          └─────────────────┼─────────────────┘
+                            ▼
+                         0.8.167
+                    Archive Integration
+```
+
+`docs/Roadmap.md` updated;
+`PublicationObservationArchiveRevalidationObservationHistoryIntegration.test.js`
+registered in `tests.html`.

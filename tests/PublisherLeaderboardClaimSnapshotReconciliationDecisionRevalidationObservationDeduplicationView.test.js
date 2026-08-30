@@ -201,13 +201,20 @@ async function run() {
     console.log('✓ Section F: observations are first-appearance ordered, never re-sorted by observedAt or any other field');
 
     // ---------------------------------------------------------------
-    // Section G — architecture: no imports, no forbidden vocabulary, no
-    // mutation, determinism, zero network access.
+    // Section G — architecture: exactly one import (the 0.8.167 archive
+    // reconstruction seam), no forbidden vocabulary, no mutation,
+    // determinism, zero network access.
     // ---------------------------------------------------------------
     {
         const moduleSource = await (await import('node:fs/promises')).readFile(new URL('../application/PublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationDeduplicationView.js', import.meta.url), 'utf8');
         const importLines = moduleSource.split('\n').filter((line) => line.startsWith('import '));
-        assert(importLines.length === 0, '25. this file imports nothing at all');
+        // 0.8.167 — this file now imports exactly ONE module: the archive
+        // reconstruction seam (application/
+        // PublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationHistoryView.js),
+        // used only by reconstructXxx() below. It still imports nothing from
+        // 0.8.162/0.8.163 themselves, or any decision/plan module.
+        assert(importLines.length === 1, '25. this file imports exactly one module');
+        assert(importLines[0].includes('PublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationHistoryView.js'), '25b. the one import is the 0.8.167 archive reconstruction seam, never 0.8.162/0.8.163 themselves');
 
         const codeOnly = moduleSource.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
         // "valid"/"invalid" are deliberately excluded from this list: this
@@ -244,9 +251,54 @@ async function run() {
 
         const module = await import('../application/PublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationDeduplicationView.js');
         assert(typeof module.describePublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationDeduplication === 'function', '32. describeXxx() is exported');
-        assert(module.reconstructPublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationDeduplication === undefined, '33. no reconstructXxx() is exported');
+        // 0.8.167 — reconstructXxx() now exists, reading the archive's own
+        // durable revalidationObservationRecords collection.
+        assert(typeof module.reconstructPublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationDeduplication === 'function', '33. reconstructXxx() is now exported (0.8.167)');
     }
-    console.log('✓ Section G: no imports, no forbidden interpreted-state vocabulary, no mutation of the history or its entries, deterministic, zero network access');
+    console.log('✓ Section G: exactly one import (the 0.8.167 archive reconstruction seam), no forbidden interpreted-state vocabulary, no mutation of the history or its entries, deterministic, zero network access');
+
+    // ---------------------------------------------------------------
+    // Section H — 0.8.167: reconstructXxx() reads the archive's own
+    // durable revalidationObservationRecords collection and agrees exactly
+    // with the pure in-memory computation over the identical history.
+    // ---------------------------------------------------------------
+    {
+        const { reconstructPublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationDeduplication } = await import('../application/PublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationDeduplicationView.js');
+        const { PublicationObservationArchive } = await import('../application/PublicationObservationArchive.js');
+
+        const emptyReconstructed = reconstructPublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationDeduplication(PublicationObservationArchive.empty());
+        assert(emptyReconstructed.observationCount === 0 && emptyReconstructed.distinctObservationCount === 0 && emptyReconstructed.observations.length === 0, '34. reconstruct() over a genuine, empty archive returns the all-zero result');
+
+        const invalidReconstructed = reconstructPublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationDeduplication(null);
+        assert(serialize(invalidReconstructed) === serialize(emptyReconstructed), '35. reconstruct() over an invalid/missing archive also returns the all-zero result, never a throw');
+
+        const hCandidate = { type: 'CLAIM_WITHOUT_CORRESPONDING_SNAPSHOT', claimId: 'H1' };
+        const hDecision = genuineDecisionRecord(hCandidate, 'OBSERVE', T1);
+        const hPlan = planNaming({ claims: ['H1'] });
+        const hO1 = observe(hDecision, hPlan, OBS_T1);
+        const hO2 = observe(hDecision, hPlan, OBS_T1); // byte-identical to hO1 — a genuine duplicate
+        const hO3 = observe(hDecision, hPlan, OBS_T3); // same decision/plan, different observedAt — distinct
+
+        let archive = PublicationObservationArchive.empty();
+        archive = archive.appendRevalidationObservationRecord(hO1);
+        archive = archive.appendRevalidationObservationRecord(hO2);
+        archive = archive.appendRevalidationObservationRecord(hO3);
+
+        const pure = describePublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationDeduplication([hO1, hO2, hO3]);
+        const reconstructed = reconstructPublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationDeduplication(archive);
+        assert(serialize(pure) === serialize(reconstructed), '36. reconstruct(archive) agrees byte-for-byte with describe() over the identical raw history');
+        assert(reconstructed.observationCount === 3 && reconstructed.distinctObservationCount === 2, '37. the reconstructed projection reflects the archive\'s own preserved multiplicity');
+
+        // An archive holding OTHER collections (e.g. reconciliation decision
+        // records) but no revalidation observation records still
+        // reconstructs to the all-zero result — the two collections are
+        // independent.
+        const decision = Object.freeze({ decided: true, candidate: Object.freeze({ selected: true, type: 'CLAIM_WITHOUT_CORRESPONDING_SNAPSHOT', claimId: 'UNRELATED' }), decision: 'OBSERVE', decidedAt: new Date('2026-08-30T00:00:00Z').toISOString() });
+        const unrelatedArchive = PublicationObservationArchive.empty().appendReconciliationDecisionRecord(decision);
+        const unrelatedReconstructed = reconstructPublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationDeduplication(unrelatedArchive);
+        assert(serialize(unrelatedReconstructed) === serialize(emptyReconstructed), '38. an archive holding only unrelated collections still reconstructs to the all-zero result');
+    }
+    console.log('✓ Section H: reconstructXxx() reads the archive\'s own durable revalidationObservationRecords collection and agrees exactly with the pure in-memory computation');
 
     console.log('\nAll PublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationDeduplicationView tests passed.');
 }
