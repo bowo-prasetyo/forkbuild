@@ -203,25 +203,26 @@ function run() {
     // ---------------------------------------------------------------
     {
         // sha256(canonical JSON of PublicationObservationArchive.empty(),
-        // schemaVersion 8 (0.8.130), archiveImportEvents stripped) —
+        // schemaVersion 9 (0.8.150), archiveImportEvents stripped) —
         // independently verified against Node's own
         // `crypto.createHash('sha256')` while authoring this test. This is
         // not merely a self-consistency check: it proves the hand-rolled
         // SHA-256 implementation in application/
         // PublicationObservationArchiveFingerprint.js produces the SAME
         // digest a standard SHA-256 implementation does over the identical
-        // bytes. Recomputed by 0.8.130 for the now-eleven-collection
-        // canonical `toJSON()` shape (`leaderboardClaimRecords`/
-        // `leaderboardClaimRecordProvenance` added).
-        const EXPECTED_EMPTY_ARCHIVE_FINGERPRINT = '8cf93d97499596a1cc0578ea2f660b3b25fa28aa2276b62721b4e22f95e312b4';
+        // bytes. Recomputed by 0.8.150 for the now-twelve-collection
+        // canonical `toJSON()` shape (`reconciliationDecisionRecords`/
+        // `reconciliationDecisionRecordProvenance` added).
+        const EXPECTED_EMPTY_ARCHIVE_FINGERPRINT = 'bfcaca7cff0456075124b80e75ce9b3b18202aa0135ade9db25321646c985750';
         assert(fingerprintPublicationObservationArchive(PublicationObservationArchive.empty()) === EXPECTED_EMPTY_ARCHIVE_FINGERPRINT, '14. sha256 of the empty archive\'s own canonical content matches the independently computed vector');
 
         let single = PublicationObservationArchive.empty();
         single = single.appendBitcoinConfirmationObservation('anchor-1', confirmed({ txid: TXID_A, blockHash: BLOCK_A, blockHeight: 1, confirmationCount: 1, observedAt: new Date('2026-01-01T00:00:00Z') }));
-        // Recomputed by 0.8.130 for the identical reason — schemaVersion 8
-        // and the new `leaderboardClaimRecords`/`leaderboardClaimRecordProvenance`
-        // fields shift every byte after them in the canonical JSON.
-        const EXPECTED_SINGLE_OBSERVATION_FINGERPRINT = '5d61ce8e48efeec91c08fdcbdbe3fee08a1d776e245d849964755386442b2e59';
+        // Recomputed by 0.8.150 for the identical reason — schemaVersion 9
+        // and the new `reconciliationDecisionRecords`/
+        // `reconciliationDecisionRecordProvenance` fields shift every byte
+        // after them in the canonical JSON.
+        const EXPECTED_SINGLE_OBSERVATION_FINGERPRINT = '193446b006774554e9bed6b6fad4d5061a0288c0ded9d4f7594cb988f6c1fae4';
         assert(fingerprintPublicationObservationArchive(single) === EXPECTED_SINGLE_OBSERVATION_FINGERPRINT, '15. sha256 of a one-observation archive matches the independently computed vector');
     }
     console.log('✓ Section D: the hand-rolled SHA-256 implementation matches independently computed vectors, not merely itself');

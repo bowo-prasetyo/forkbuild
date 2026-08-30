@@ -201,6 +201,7 @@ function describeExternalArchiveInspection(archive) {
         publicationReferenceRecordCount: archive.publicationReferenceRecordCount,
         publisherPublicationAssociationRecordCount: archive.publisherPublicationAssociationRecordCount,
         leaderboardClaimRecordCount: archive.leaderboardClaimRecordCount,
+        reconciliationDecisionRecordCount: archive.reconciliationDecisionRecordCount,
 
         localFactCount: provenance.localFactCount,
         importedFactCount: provenance.importedFactCount,

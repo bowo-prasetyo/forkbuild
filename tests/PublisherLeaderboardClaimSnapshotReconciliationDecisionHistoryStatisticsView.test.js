@@ -340,17 +340,23 @@ async function run() {
         const statsTwice = describePublisherLeaderboardClaimSnapshotReconciliationDecisionHistoryStatistics(history);
         assert(serialize(statsOnce) === serialize(statsTwice), '55. repeated calls on an identical history are byte-identical');
 
-        // reconstruct() does not yet read a decision history from any
-        // archive at all — PublicationObservationArchive does not yet hold
-        // one — so it always computes over an empty history, regardless of
-        // what the archive otherwise contains.
-        const archive = PublicationObservationArchive.empty();
+        // 0.8.150 — reconstruct() now reads its history from a real
+        // archive's own reconciliationDecisionRecords collection.
+        let archive = PublicationObservationArchive.empty();
+        archive = archive.appendReconciliationDecisionRecord(D1);
+        archive = archive.appendReconciliationDecisionRecord(D2);
         const reconstructed = reconstructPublisherLeaderboardClaimSnapshotReconciliationDecisionHistoryStatistics(archive);
+        assert(serialize(reconstructed) === serialize(statsOnce), '56. reconstruct() over an archive holding the SAME decisions agrees exactly with describe() over the raw history');
+        assert(reconstructed.decisionCount === 2, '57. reconstruct() reports exactly the decisions the archive genuinely holds, never more, never fewer');
+
+        const emptyReconstructed = reconstructPublisherLeaderboardClaimSnapshotReconciliationDecisionHistoryStatistics(PublicationObservationArchive.empty());
         const emptyStats = describePublisherLeaderboardClaimSnapshotReconciliationDecisionHistoryStatistics([]);
-        assert(serialize(reconstructed) === serialize(emptyStats), '56. reconstruct() presently always returns the empty-history statistics result, a thin boundary pending decision-history/archive integration');
-        assert(reconstructed.decisionCount === 0, '57. reconstruct() never fabricates decisions the archive does not genuinely hold');
+        assert(serialize(emptyReconstructed) === serialize(emptyStats), '58. reconstruct() over an empty archive agrees exactly with describe() over an empty history');
+
+        const invalidArchiveReconstructed = reconstructPublisherLeaderboardClaimSnapshotReconciliationDecisionHistoryStatistics(null);
+        assert(serialize(invalidArchiveReconstructed) === serialize(emptyStats), '59. reconstruct() over an invalid/missing archive degrades to the empty-history result, never a throw');
     }
-    console.log('✓ Section I: repeated computation over the same history is byte-identical, and reconstruct() is a thin, archive-independent boundary pending future integration');
+    console.log('✓ Section I: repeated computation over the same history is byte-identical, and reconstruct() reads its history from the archive\'s own durable collection');
 
     // ---------------------------------------------------------------
     // Section J — vocabulary boundary.
@@ -367,24 +373,30 @@ async function run() {
             'deferCount',
             'dispositionCounts',
             'candidateTypeCounts'
-        ].sort()), '58. the result carries exactly the documented, factual fields');
+        ].sort()), '60. the result carries exactly the documented, factual fields');
 
         const forbidden = ['resolved', 'pending', 'stale', 'approved', 'rejected', 'valid', 'trusted', 'trust', 'confidence', 'score', 'rank', 'reputation', 'authoritative'];
         for (const term of forbidden) {
-            assert(!keys.includes(term), `59. the result never carries interpreted-state/trust/ranking vocabulary ('${term}')`);
+            assert(!keys.includes(term), `61. the result never carries interpreted-state/trust/ranking vocabulary ('${term}')`);
         }
 
         const moduleSource = await (await import('node:fs/promises')).readFile(new URL('../application/PublisherLeaderboardClaimSnapshotReconciliationDecisionHistoryStatisticsView.js', import.meta.url), 'utf8');
         const codeOnly = moduleSource.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n').toLowerCase();
         const forbiddenInCode = ['resolved', 'pending', 'stale', 'approved', 'rejected', 'repair', 'replace', 'accept', 'reject', 'merge', 'delete', 'apply', 'winner', 'execute', 'authoritative', 'trust', 'confidence', 'reputation', 'severity'];
         for (const term of forbiddenInCode) {
-            assert(!codeOnly.includes(term), `60. this file's own code never carries "${term}"`);
+            assert(!codeOnly.includes(term), `62. this file's own code never carries "${term}"`);
         }
 
+        // 0.8.150 — this file now imports exactly ONE module: the archive
+        // reconstruction seam (application/
+        // PublisherLeaderboardClaimSnapshotReconciliationDecisionHistoryView.js),
+        // used only by reconstructXxx() below. It still imports nothing from
+        // the reconciliation FAMILY itself (plan/candidate/decision).
         const importLines = moduleSource.split('\n').filter((line) => line.startsWith('import '));
-        assert(importLines.length === 0, '61. this file imports nothing from the reconciliation family');
+        assert(importLines.length === 1, '63. this file imports exactly one module');
+        assert(importLines[0].includes('PublisherLeaderboardClaimSnapshotReconciliationDecisionHistoryView.js'), '64. the one import is the 0.8.150 archive reconstruction seam, never the reconciliation family itself');
     }
-    console.log('✓ Section J: the result carries no interpreted-state, trust, or ranking vocabulary, and the module imports nothing from the reconciliation family');
+    console.log('✓ Section J: the result carries no interpreted-state, trust, or ranking vocabulary, and the module imports only the 0.8.150 archive reconstruction seam');
 
     console.log('\nAll PublisherLeaderboardClaimSnapshotReconciliationDecisionHistoryStatisticsView tests passed.');
 }

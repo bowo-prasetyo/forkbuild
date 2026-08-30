@@ -3,6 +3,7 @@ import { describePublicationObservationArchive } from './PublicationObservationA
 import { describePublicationObservationArchiveProvenance } from './PublicationObservationArchiveProvenanceView.js';
 import { describePublicationObservationArchiveDifference } from './PublicationObservationArchiveDifference.js';
 import { reconstructPublisherLeaderboardClaimHistoryDifference } from './PublisherLeaderboardClaimHistoryDifference.js';
+import { reconstructPublisherLeaderboardClaimSnapshotReconciliationDecisionHistoryDifference } from './PublisherLeaderboardClaimSnapshotReconciliationDecisionHistoryDifference.js';
 
 // 0.8.88 — Explicit Publication Archive Replacement Review.
 //
@@ -134,6 +135,17 @@ import { reconstructPublisherLeaderboardClaimHistoryDifference } from './Publish
 // other, and neither computes any verification, trust, or "which side is
 // correct" judgment — the identical restraint this file's own header
 // already holds, one collection further.
+//
+// 0.8.150 — `reconciliationDecisionHistoryDifference` joins this file's own
+// result the identical way, one subsystem over. `difference` already
+// reports `reconciliationDecisionRecords` (0.8.150) as a twelfth POSITIONAL
+// collection; this SEPARATE field is the multiset-aware decision-history
+// difference application/
+// PublisherLeaderboardClaimSnapshotReconciliationDecisionHistoryDifference.js's
+// own `reconstructPublisherLeaderboardClaimSnapshotReconciliationDecisionHistoryDifference()`
+// (0.8.149, newly archive-aware) already computes — neither field is more
+// authoritative than the other, and neither computes any interpretation of
+// which decisions are "current" or "correct."
 export function describePublicationObservationArchiveReplacementReview(currentArchive, externalArchive) {
     if (!(currentArchive instanceof PublicationObservationArchive)) {
         throw new Error('describePublicationObservationArchiveReplacementReview() requires a PublicationObservationArchive as currentArchive');
@@ -144,6 +156,7 @@ export function describePublicationObservationArchiveReplacementReview(currentAr
 
     const difference = describePublicationObservationArchiveDifference(currentArchive, externalArchive);
     const leaderboardClaimHistoryDifference = reconstructPublisherLeaderboardClaimHistoryDifference(currentArchive, externalArchive);
+    const reconciliationDecisionHistoryDifference = reconstructPublisherLeaderboardClaimSnapshotReconciliationDecisionHistoryDifference(currentArchive, externalArchive);
 
     return Object.freeze({
         currentFingerprint: difference.currentFingerprint,
@@ -152,6 +165,7 @@ export function describePublicationObservationArchiveReplacementReview(currentAr
 
         difference,
         leaderboardClaimHistoryDifference,
+        reconciliationDecisionHistoryDifference,
 
         current: describeReplacementReviewSide(currentArchive),
         external: describeReplacementReviewSide(externalArchive)
@@ -181,6 +195,7 @@ function describeReplacementReviewSide(archive) {
         publicationReferenceRecordCount: archive.publicationReferenceRecordCount,
         publisherPublicationAssociationRecordCount: archive.publisherPublicationAssociationRecordCount,
         leaderboardClaimRecordCount: archive.leaderboardClaimRecordCount,
+        reconciliationDecisionRecordCount: archive.reconciliationDecisionRecordCount,
 
         localFactCount: provenance.localFactCount,
         importedFactCount: provenance.importedFactCount,

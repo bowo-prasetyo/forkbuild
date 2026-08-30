@@ -18649,3 +18649,66 @@ precisely; this milestone holds them apart, exactly as 0.8.116's own
 header already required.
 
 See `docs/Roadmap.md`, 0.8.130, for the full milestone entry.
+
+## Recording A Decision Does Not Execute, Validate, Or Interpret It (0.8.150)
+
+0.8.145 built the reconciliation decision record on a single restraint:
+"`decided: true` means 'a caller explicitly recorded this disposition
+against this genuinely-existing candidate,' never 'this disposition was
+validated as the right one' and never 'reconciliation happened.'" 0.8.150
+gave that record a durable home inside
+`application/PublicationObservationArchive.js`, and had to hold the
+identical restraint one layer down, at the persistence boundary itself —
+because a durable store is exactly the layer where "just append it" is
+easiest to quietly extend into "and also check it's the right choice."
+
+**The persistence use case is deliberately smaller than its claim-receiving
+counterpart.** `application/ReceivePublisherLeaderboardSnapshotClaimIntoArchiveUseCase.js`
+(0.8.130) delegates to an existing use case
+(`ReceivePublisherLeaderboardSnapshotClaimUseCase`) and adds only the
+archive append. `application/RecordPublisherLeaderboardClaimSnapshotReconciliationDecisionIntoArchiveUseCase.js`
+delegates to nothing, because there is nothing to delegate to — 0.8.145 is
+a pure function a caller calls for itself, not a class-shaped use case this
+file could wrap. Its entire flow is four steps: accept an
+already-computed decision, confirm it is genuinely `{ decided: true, ... }`,
+append it, return the new archive. It never calls 0.8.144 to reselect a
+candidate, never calls 0.8.145 to recompute or double-check a disposition,
+and never introduces a fifth step of its own.
+
+**A decision history is not a reconciliation state machine — proven at the
+archive layer, not just asserted at the in-memory layer.** 0.8.146's own
+header already drew this line for a plain array; 0.8.150's own flagship
+test proves it survives the trip through `PublicationObservationArchive`'s
+own `toJSON()`/`fromJSON()` unchanged: `OBSERVE, DEFER, DEFER` (a genuine,
+independently-computed duplicate) round-trips as three separate durable
+entries, and the archive-backed statistics/timeline/difference projections
+report `decisionCount: 3` — never a collapsed "the candidate is currently
+DEFERRED" fact. No `currentDecision`, `activeDecision`, `superseded`,
+`resolved`, `pending`, or `final` field exists anywhere in the archive
+schema, the persistence use case, or any of the three now-archive-aware
+projections.
+
+**Validation is structural, never a second semantic authority.** A
+`LeaderboardClaimRecord` (0.8.123) is a class with its own constructor
+invariants, so `PublicationObservationArchive.js`'s own `fromJSON()`
+delegates deep validation to `LeaderboardClaimRecord.fromJSON()` rather
+than re-implementing it. A reconciliation decision record has no such
+class — it is, and remains, a plain frozen object, exactly as 0.8.145
+minted it. `validateReconciliationDecisionRecord()` therefore checks the
+SHAPE 0.8.144/0.8.145 already define (a valid disposition, a valid
+timestamp, one of three discriminated candidate shapes) without ever
+calling either milestone to re-derive or re-verify what a genuinely
+existing candidate is — the archive's own strictness protects against
+corrupted storage, never against a disposition it disagrees with.
+
+**A recorded reconciliation decision is never achievement evidence, and
+changes the whole-archive fingerprint without ever touching the narrower
+one.** The identical separation 0.8.130 already held for a claim receipt,
+restated here once more: `application/AchievementEvidenceFingerprint.js`'s
+own four named collections are untouched by this milestone, while
+`application/PublicationObservationArchiveFingerprint.js`'s own
+whole-archive fingerprint naturally, correctly, now includes recorded
+decisions, because they genuinely are part of this replica's own durable
+state.
+
+See `docs/Roadmap.md`, 0.8.150, for the full milestone entry.

@@ -1,3 +1,5 @@
+import { reconstructPublisherLeaderboardClaimSnapshotReconciliationDecisionHistory } from './PublisherLeaderboardClaimSnapshotReconciliationDecisionHistoryView.js';
+
 // 0.8.147 — Reconciliation Decision History Statistics Projection.
 //
 // 0.8.146 answered "what durable decision records exist, and how are they
@@ -155,21 +157,16 @@
 // OWN 0.8.128/0.8.130 PAIR ALREADY HOLDS.
 // `describePublisherLeaderboardClaimSnapshotReconciliationDecisionHistoryStatistics()`
 // is the pure computation, over one plain, in-memory decision-history array
-// (0.8.146's own shape). `reconstructPublisherLeaderboardClaimSnapshotReconciliationDecisionHistoryStatistics()`
-// below is presently a thin boundary that reads no decision history from
-// `archive` at all — `PublicationObservationArchive` does not yet hold a
-// reconciliation decision history collection (0.8.146's decision history
-// has not yet been integrated into the archive, exactly as that file's own
-// header never mentions `PublicationObservationArchive` and imports nothing
-// from it), so this function always computes over an empty history, the
-// identical "degrades to empty, never throws" boundary every reconstruction
-// function in this codebase already holds for a collection an archive does
-// not yet carry. A future milestone that teaches `PublicationObservationArchive`
-// to hold a reconciliation decision history can teach this one function to
-// read it, without disturbing the pure computation above or any caller
-// already using it directly — the identical promise
+// (0.8.146's own shape) — UNCHANGED by 0.8.150.
+// `reconstructPublisherLeaderboardClaimSnapshotReconciliationDecisionHistoryStatistics()`
+// below now reads that array from `PublicationObservationArchive`'s own
+// `reconciliationDecisionRecords` collection (0.8.150), via `application/
+// PublisherLeaderboardClaimSnapshotReconciliationDecisionHistoryView.js`'s
+// own `reconstructPublisherLeaderboardClaimSnapshotReconciliationDecisionHistory()`
+// — the ONE seam that reads the archive, exactly the promise this file's own
+// header already made about a future integration, now kept the same way
 // `PublisherLeaderboardClaimHistoryStatisticsView.js`'s own header already
-// made about 0.8.130, now kept the same way here.
+// held for 0.8.130.
 //
 // SYNCHRONOUS, PURE, NO MUTATION, NO STORAGE, NO NETWORK. Reads no clock.
 // Never mutates the input history or any entry it holds. Returns frozen
@@ -193,7 +190,14 @@
 // `application/PublisherLeaderboardClaimSnapshotReconciliation.js`, or any
 // other module in this family — it trusts nothing about how `history` was
 // produced beyond its own documented shape, and never calls 0.8.146,
-// 0.8.145, or 0.8.144 to re-derive or double-check anything.
+// 0.8.145, or 0.8.144 to re-derive or double-check anything. 0.8.150 adds
+// exactly ONE import — `application/
+// PublisherLeaderboardClaimSnapshotReconciliationDecisionHistoryView.js`'s
+// own `reconstructPublisherLeaderboardClaimSnapshotReconciliationDecisionHistory()`
+// — used ONLY by `reconstructPublisherLeaderboardClaimSnapshotReconciliationDecisionHistoryStatistics()`
+// below to obtain `history` from an archive; `describePublisherLeaderboardClaimSnapshotReconciliationDecisionHistoryStatistics()`
+// itself still imports nothing and still trusts nothing about how its own
+// `history` argument was produced.
 //
 // DELIBERATELY EXCLUDED — NOT THIS MILESTONE.
 // - **Interpretation of `OBSERVE`/`DEFER` as "resolved," "pending,"
@@ -248,13 +252,14 @@ export function describePublisherLeaderboardClaimSnapshotReconciliationDecisionH
 }
 
 // reconstructPublisherLeaderboardClaimSnapshotReconciliationDecisionHistoryStatistics()
-// — see this file's own header, "The identical split," above.
-// `PublicationObservationArchive` does not yet hold a reconciliation
-// decision history collection, so this always computes over an empty
-// history — a valid, all-zero statistics result, never a throw — regardless
-// of what `archive` itself contains.
+// — see this file's own header, "The identical split," above. An
+// invalid/missing `archive` degrades to `PublicationObservationArchive.empty()`
+// by way of the reconstruction seam it calls, which in turn produces the
+// empty history's all-zero statistics result — never a throw.
 export function reconstructPublisherLeaderboardClaimSnapshotReconciliationDecisionHistoryStatistics(archive) {
-    return describePublisherLeaderboardClaimSnapshotReconciliationDecisionHistoryStatistics([]);
+    return describePublisherLeaderboardClaimSnapshotReconciliationDecisionHistoryStatistics(
+        reconstructPublisherLeaderboardClaimSnapshotReconciliationDecisionHistory(archive)
+    );
 }
 
 // A genuine 0.8.145 decision record: `{ decided: true, candidate, decision,

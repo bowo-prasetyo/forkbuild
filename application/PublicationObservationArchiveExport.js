@@ -165,8 +165,9 @@ function parseJSONOrNull(text) {
 // `bitcoinAnchorPublicationRecordCount`/`baseAnchorPublicationRecordCount`
 // (0.8.99)/`publicationReferenceRecordCount` (0.8.104)/
 // `publisherPublicationAssociationRecordCount` (0.8.108)/
-// `leaderboardClaimRecordCount` (0.8.130)), so a caller cannot accidentally
-// pass a stale or fabricated count.
+// `leaderboardClaimRecordCount` (0.8.130)/`reconciliationDecisionRecordCount`
+// (0.8.150)), so a caller cannot accidentally pass a stale or fabricated
+// count.
 //
 // NEVER A VERIFICATION. This function does not check, re-validate, or
 // pass judgment on anything `archive` holds — it only records that an
@@ -185,5 +186,6 @@ export function recordPublicationObservationArchiveImport(archive, { importedAt 
         importedEntryCount: archive.publicationCount + archive.observationCount + archive.bitcoinAnchorPublicationRecordCount
             + archive.baseAnchorPublicationRecordCount + archive.publicationReferenceRecordCount
             + archive.publisherPublicationAssociationRecordCount + archive.leaderboardClaimRecordCount
+            + archive.reconciliationDecisionRecordCount
     });
 }

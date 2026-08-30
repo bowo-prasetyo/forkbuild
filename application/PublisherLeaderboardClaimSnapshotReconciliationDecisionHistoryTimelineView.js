@@ -1,3 +1,5 @@
+import { reconstructPublisherLeaderboardClaimSnapshotReconciliationDecisionHistory } from './PublisherLeaderboardClaimSnapshotReconciliationDecisionHistoryView.js';
+
 // 0.8.148 — Reconciliation Decision History Timeline Projection.
 //
 // 0.8.146 answered "what durable decision records exist, and how are they
@@ -118,15 +120,11 @@
 // is the pure computation, over one plain, in-memory decision-history array
 // (0.8.146's own shape).
 // `reconstructPublisherLeaderboardClaimSnapshotReconciliationDecisionHistoryTimeline()`
-// below is presently a thin placeholder that reads no decision history from
-// `archive` at all — `PublicationObservationArchive` does not yet hold a
-// reconciliation decision history collection (0.8.146's decision history
-// has not yet been integrated into the archive, exactly as 0.8.147's own
-// reconstruction function already holds this identical boundary), so this
-// function always computes over an empty history, regardless of what
-// `archive` itself contains. A future milestone that teaches
-// `PublicationObservationArchive` to hold a reconciliation decision history
-// can teach this one function to read it, without disturbing the pure
+// below now reads that array from `PublicationObservationArchive`'s own
+// `reconciliationDecisionRecords` collection (0.8.150), via `application/
+// PublisherLeaderboardClaimSnapshotReconciliationDecisionHistoryView.js`'s
+// own `reconstructPublisherLeaderboardClaimSnapshotReconciliationDecisionHistory()`
+// — the ONE seam that reads the archive, without disturbing the pure
 // computation above or any caller already using it directly.
 //
 // SYNCHRONOUS, PURE, NO MUTATION, NO STORAGE, NO NETWORK. Reads no clock —
@@ -147,18 +145,25 @@
 // into a valid timestamp is excluded the same way — 0.8.145 never produces
 // such a record, but this file never trusts that invariant blindly.
 //
-// ARCHITECTURAL BOUNDARY — NO IMPORTS AT ALL, THE IDENTICAL BOUNDARY
-// 0.8.147'S OWN STATISTICS PROJECTION ALREADY HOLDS. This file imports
-// nothing from
+// ARCHITECTURAL BOUNDARY — NO IMPORTS FROM THE RECONCILIATION FAMILY, THE
+// IDENTICAL BOUNDARY 0.8.147'S OWN STATISTICS PROJECTION ALREADY HOLDS. This
+// file imports nothing from
 // `application/PublisherLeaderboardClaimSnapshotReconciliationDecisionHistory.js`,
 // `application/PublisherLeaderboardClaimSnapshotReconciliationDecision.js`,
 // `application/PublisherLeaderboardClaimSnapshotReconciliation.js`,
 // `application/PublisherLeaderboardClaimSnapshotReconciliationPlanView.js`,
 // or any other module naming a plan, a candidate-selection boundary, a
-// divergence, a correspondence, a verification, a claim, a snapshot, or
-// archive reconstruction — it trusts nothing about how `history` was
-// produced beyond its own documented shape, and never calls 0.8.144
-// through 0.8.147 to re-derive or double-check anything.
+// divergence, a correspondence, a verification, a claim, or a snapshot — it
+// trusts nothing about how `history` was produced beyond its own documented
+// shape, and never calls 0.8.144 through 0.8.147 to re-derive or
+// double-check anything. 0.8.150 adds exactly ONE import — `application/
+// PublisherLeaderboardClaimSnapshotReconciliationDecisionHistoryView.js`'s
+// own `reconstructPublisherLeaderboardClaimSnapshotReconciliationDecisionHistory()`
+// — used ONLY by `reconstructPublisherLeaderboardClaimSnapshotReconciliationDecisionHistoryTimeline()`
+// below to obtain `history` from an archive;
+// `describePublisherLeaderboardClaimSnapshotReconciliationDecisionHistoryTimeline()`
+// itself still imports nothing and still trusts nothing about how its own
+// `history` argument was produced.
 //
 // DELIBERATELY EXCLUDED — NOT THIS MILESTONE.
 // - **Any interpretation of order as supersession, resolution, or
@@ -208,13 +213,14 @@ export function describePublisherLeaderboardClaimSnapshotReconciliationDecisionH
 }
 
 // reconstructPublisherLeaderboardClaimSnapshotReconciliationDecisionHistoryTimeline()
-// — see this file's own header, "The identical split," above.
-// `PublicationObservationArchive` does not yet hold a reconciliation
-// decision history collection, so this always computes over an empty
-// history — a valid, empty timeline, never a throw — regardless of what
-// `archive` itself contains.
+// — see this file's own header, "The identical split," above. An
+// invalid/missing `archive` degrades to `PublicationObservationArchive.empty()`
+// by way of the reconstruction seam it calls, which in turn produces the
+// empty history's empty timeline — never a throw.
 export function reconstructPublisherLeaderboardClaimSnapshotReconciliationDecisionHistoryTimeline(archive) {
-    return describePublisherLeaderboardClaimSnapshotReconciliationDecisionHistoryTimeline([]);
+    return describePublisherLeaderboardClaimSnapshotReconciliationDecisionHistoryTimeline(
+        reconstructPublisherLeaderboardClaimSnapshotReconciliationDecisionHistory(archive)
+    );
 }
 
 // A genuine 0.8.145 decision record: `{ decided: true, candidate, decision,

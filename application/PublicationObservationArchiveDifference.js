@@ -22,13 +22,15 @@ import { fingerprintPublicationObservationArchive } from './PublicationObservati
 //                      │
 //                      ▼
 //   { currentFingerprint, externalFingerprint, same,
-//     eleven collection differences (0.8.97 adds
+//     twelve collection differences (0.8.97 adds
 //     baseTransactionInclusionObservationsByTransactionHash; 0.8.99 adds
 //     baseAnchorPublicationRecords; 0.8.104 adds publicationReferenceRecords;
 //     0.8.108 adds publisherPublicationAssociationRecords; 0.8.130 adds
 //     leaderboardClaimRecords — a durable claim RECEIPT, never achievement
-//     evidence and never a verification result; see application/
-//     PublicationObservationArchive.js's own 0.8.130 header),
+//     evidence and never a verification result; 0.8.150 adds
+//     reconciliationDecisionRecords — a durable, explicit OBSERVE/DEFER
+//     decision, never an executed action; see application/
+//     PublicationObservationArchive.js's own 0.8.130/0.8.150 headers),
 //     hasFactDifference, hasProvenanceDifference, importEvents }
 //
 // AN ARCHIVE DIFFERENCE DESCRIBES STRUCTURAL DIFFERENCES BETWEEN TWO
@@ -225,6 +227,10 @@ export function describePublicationObservationArchiveDifference(currentArchive, 
         currentJSON.leaderboardClaimRecords, currentJSON.leaderboardClaimRecordProvenance,
         externalJSON.leaderboardClaimRecords, externalJSON.leaderboardClaimRecordProvenance
     );
+    const reconciliationDecisionRecords = diffPositionalCollection(
+        currentJSON.reconciliationDecisionRecords, currentJSON.reconciliationDecisionRecordProvenance,
+        externalJSON.reconciliationDecisionRecords, externalJSON.reconciliationDecisionRecordProvenance
+    );
 
     const collections = {
         ipfsPublicationRecords,
@@ -237,7 +243,8 @@ export function describePublicationObservationArchiveDifference(currentArchive, 
         baseAnchorPublicationRecords,
         publicationReferenceRecords,
         publisherPublicationAssociationRecords,
-        leaderboardClaimRecords
+        leaderboardClaimRecords,
+        reconciliationDecisionRecords
     };
 
     const hasFactDifference = Object.values(collections).some(
@@ -274,7 +281,8 @@ export function describePublicationObservationArchiveDifference(currentArchive, 
 // `bitcoinBroadcastRecords`, `bitcoinAnchorPublicationRecords`,
 // `baseAnchorPublicationRecords`, `publicationReferenceRecords`,
 // `publisherPublicationAssociationRecords`, `leaderboardClaimRecords`
-// (0.8.130)) by array position — this archive's own
+// (0.8.130), `reconciliationDecisionRecords` (0.8.150)) by array position —
+// this archive's own
 // append-only history position, per this
 // file's own header. `currentFacts`/`externalFacts` are already-canonical
 // `toJSON()` output (plain, JSON-serializable objects); `currentProvenance`/

@@ -14,12 +14,13 @@ import { PublisherPublicationAssociationRecord } from './PublisherPublicationAss
 import { appendPublisherPublicationAssociationRecordHistoryEntry } from './PublisherPublicationAssociationRecordHistory.js';
 import { LeaderboardClaimRecord } from './LeaderboardClaimRecord.js';
 import { appendLeaderboardClaimHistoryEntry } from './LeaderboardClaimHistory.js';
+import { appendPublisherLeaderboardClaimSnapshotReconciliationDecisionHistoryEntry } from './PublisherLeaderboardClaimSnapshotReconciliationDecisionHistory.js';
 import {
     PublicationObservationArchiveProvenanceOrigin,
     isValidPublicationObservationArchiveProvenanceOrigin
 } from './PublicationObservationArchiveProvenance.js';
 
-const SCHEMA_VERSION = 8;
+const SCHEMA_VERSION = 9;
 
 // 0.8.75 — Durable Publication Observation Records.
 //
@@ -524,6 +525,98 @@ const SCHEMA_VERSION = 8;
 // folding it into that fingerprint would break the boundary 0.8.116's own
 // header exists to hold. See that file's own header, "Evidence Only —
 // Never A Conclusion, Never Provenance, Never A Clock."
+//
+// 0.8.150 — Durable Reconciliation Decision History Archive Integration.
+// Adds a TWELFTH, independent collection: `reconciliationDecisionRecords`
+// — an append-only sequence of application/
+// PublisherLeaderboardClaimSnapshotReconciliationDecision.js's own 0.8.145
+// decision records (`{ decided: true, candidate, decision, decidedAt }`),
+// i.e. every genuine, explicit OBSERVE/DEFER decision this replica has ever
+// recorded against a genuinely-existing reconciliation candidate — never a
+// verification result, never a state machine, never an executed action.
+// This is application/PublisherLeaderboardClaimSnapshotReconciliationDecisionHistory.js's
+// own plain, in-memory array (0.8.146's own "decision history"), finally
+// given the same durable home every other observed/recorded fact in this
+// archive already has — mirroring 0.8.130's own integration of
+// `leaderboardClaimRecords`, one subsystem over. See application/
+// PublisherLeaderboardClaimSnapshotReconciliationDecisionHistoryView.js's own
+// new `reconstructPublisherLeaderboardClaimSnapshotReconciliationDecisionHistory()`
+// for the ONE place that array is now read back out of an archive.
+//
+//   PublicationObservationArchive
+//   ├── Bitcoin anchor publications
+//   ├── Base anchor publications
+//   ├── publication references
+//   ├── publisher-publication associations
+//   ├── leaderboard claim records                       (0.8.130)
+//   └── reconciliation decision records                 ← NEW (0.8.150)
+//
+// RECORDING A DECISION DOES NOT EXECUTE, VALIDATE, OR INTERPRET IT — HELD
+// HERE ONCE MORE, ONE LAYER UP. This archive computes no `resolved`,
+// `pending`, `current`, `superseded`, or `authoritative` field over
+// `reconciliationDecisionRecords`, exactly as it computes none over
+// `leaderboardClaimRecords` — see application/
+// PublisherLeaderboardClaimSnapshotReconciliationDecision.js's own header,
+// "A Reconciliation Decision Records An Explicit Choice." Four decisions
+// `OBSERVE, DEFER, OBSERVE, DEFER` against the same candidate remain FOUR
+// historical entries here, never collapsed into a "current" one — see
+// application/PublisherLeaderboardClaimSnapshotReconciliationDecisionHistory.js's
+// own header, "Appended To, Never Overwritten."
+//
+// `appendReconciliationDecisionRecord()` REUSES `application/
+// PublisherLeaderboardClaimSnapshotReconciliationDecisionHistory.js`'s OWN,
+// UNCHANGED `appendPublisherLeaderboardClaimSnapshotReconciliationDecisionHistoryEntry()`
+// — mirroring exactly how `appendLeaderboardClaimRecord()` above reuses its
+// own domain's existing append function, and holding the IDENTICAL
+// tolerance that function already has: only a genuine `{ decided: true,
+// ... }` object is ever appended; anything else (including a
+// `{ decided: false, ... }` outcome) is a no-op. This class invents no new
+// decision-construction behavior of its own; multiplicity (the SAME
+// decision recorded twice is TWO independent entries) is preserved exactly
+// as 0.8.146 already established — never deduplicated, never merged, never
+// reordered.
+//
+// THIS MILESTONE BUMPS SCHEMA_VERSION TO 9 — THE SAME CONSERVATIVE
+// MIGRATION PHILOSOPHY HELD SINCE 0.8.75, WITHOUT EXCEPTION. A payload
+// persisted by 0.8.75 through 0.8.149 (schemaVersion 8) degrades to
+// `PublicationObservationArchive.empty()` on load — never a partial
+// reconstruction, never an attempt to infer historical decisions that were
+// never durably recorded in the first place. No migration path is added,
+// because none of this class's own prior principles ever promised one.
+//
+// `publicationCount`/`observationCount`/every other existing count STAYS
+// UNCHANGED — a reconciliation decision record is neither a
+// publication-shaped fact, an observation-shaped fact, a durable IDENTITY,
+// a relationship between two identities, nor a claim receipt; it is a
+// durable record of an explicit choice about a reconciliation candidate.
+// See `reconciliationDecisionRecordCount` below for its own, entirely
+// separate count.
+//
+// PROVENANCE EXTENDS IDENTICALLY — a TWELFTH parallel provenance
+// collection, `reconciliationDecisionRecordProvenance`, holds one `LOCAL`/
+// `IMPORTED` tag per record at the identical array position, exactly like
+// `leaderboardClaimRecordProvenance` already does. `withUniformProvenance()`
+// now also restamps this twelfth collection uniformly; nothing else about
+// that method changes.
+//
+// VALIDATION IS STRUCTURAL, NOT A SECOND SEMANTIC CHECK. Unlike
+// `leaderboardClaimRecords` (which delegates deep validation to
+// `LeaderboardClaimRecord.fromJSON()`, a class with its own constructor
+// invariants), a decision record is, and remains, a PLAIN frozen object —
+// there is no class to delegate to. `validateReconciliationDecisionRecord()`
+// below checks exactly the shape 0.8.144/0.8.145 already define (`decided
+// === true`, `decision` is `'OBSERVE'`/`'DEFER'`, `decidedAt` is a valid
+// timestamp, `candidate` is one of 0.8.144's own three discriminated
+// shapes) — the identical strictness every other plain-object collection in
+// this file already holds (see `validateBitcoinBroadcastRecord()`), never a
+// second, independently-maintained copy of 0.8.144/0.8.145's own semantic
+// rules (this file never calls either).
+//
+// FINGERPRINTING: THE WHOLE-ARCHIVE FINGERPRINT NATURALLY EXTENDS; THE
+// NARROWER ACHIEVEMENT-EVIDENCE FINGERPRINT DELIBERATELY DOES NOT — THE
+// IDENTICAL REASONING 0.8.130 ALREADY HELD FOR `leaderboardClaimRecords`,
+// restated here once more: a recorded reconciliation decision is not
+// achievement evidence.
 export class PublicationObservationArchive {
     constructor({
         ipfsPublicationRecords = [],
@@ -548,6 +641,8 @@ export class PublicationObservationArchive {
         publisherPublicationAssociationRecordProvenance = [],
         leaderboardClaimRecords = [],
         leaderboardClaimRecordProvenance = [],
+        reconciliationDecisionRecords = [],
+        reconciliationDecisionRecordProvenance = [],
         archiveImportEvents = []
     } = {}) {
         this._ipfsPublicationRecords = Object.freeze([...ipfsPublicationRecords]);
@@ -596,6 +691,8 @@ export class PublicationObservationArchive {
         this._publisherPublicationAssociationRecordProvenance = Object.freeze([...publisherPublicationAssociationRecordProvenance]);
         this._leaderboardClaimRecords = Object.freeze([...leaderboardClaimRecords]);
         this._leaderboardClaimRecordProvenance = Object.freeze([...leaderboardClaimRecordProvenance]);
+        this._reconciliationDecisionRecords = Object.freeze([...reconciliationDecisionRecords]);
+        this._reconciliationDecisionRecordProvenance = Object.freeze([...reconciliationDecisionRecordProvenance]);
         this._archiveImportEvents = Object.freeze([...archiveImportEvents]);
         Object.freeze(this);
     }
@@ -622,6 +719,8 @@ export class PublicationObservationArchive {
     get publisherPublicationAssociationRecordProvenance() { return this._publisherPublicationAssociationRecordProvenance; }
     get leaderboardClaimRecords() { return this._leaderboardClaimRecords; }
     get leaderboardClaimRecordProvenance() { return this._leaderboardClaimRecordProvenance; }
+    get reconciliationDecisionRecords() { return this._reconciliationDecisionRecords; }
+    get reconciliationDecisionRecordProvenance() { return this._reconciliationDecisionRecordProvenance; }
     get archiveImportEvents() { return this._archiveImportEvents; }
 
     // The static schema version this class currently serializes to and
@@ -707,6 +806,23 @@ export class PublicationObservationArchive {
         return this._leaderboardClaimRecords.length;
     }
 
+    // The count of durable RECONCILIATION DECISION records this archive
+    // holds — an explicit, caller-recorded OBSERVE/DEFER choice about one
+    // reconciliation candidate, never a fact about a publication, a claim
+    // receipt, or a relationship between two identities. Never combined
+    // with `publicationCount`, `observationCount`,
+    // `bitcoinAnchorPublicationRecordCount`, `baseAnchorPublicationRecordCount`,
+    // `publicationReferenceRecordCount`, `publisherPublicationAssociationRecordCount`,
+    // or `leaderboardClaimRecordCount` — see application/
+    // PublisherLeaderboardClaimSnapshotReconciliationDecision.js's own
+    // header. Counts RECORDED DECISIONS, not distinct candidates: the
+    // identical decision recorded twice counts twice, exactly as
+    // `application/PublisherLeaderboardClaimSnapshotReconciliationDecisionHistory.js`'s
+    // own multiplicity rule already requires.
+    get reconciliationDecisionRecordCount() {
+        return this._reconciliationDecisionRecords.length;
+    }
+
     // The count of OBSERVATION-shaped facts this archive holds — every
     // IPFS content-verification attempt, every Bitcoin confirmation
     // check, every Bitcoin content-proof reconciliation, and (0.8.97)
@@ -757,7 +873,8 @@ export class PublicationObservationArchive {
             + countOriginMatches(this._baseAnchorPublicationRecordProvenance, origin)
             + countOriginMatches(this._publicationReferenceRecordProvenance, origin)
             + countOriginMatches(this._publisherPublicationAssociationRecordProvenance, origin)
-            + countOriginMatches(this._leaderboardClaimRecordProvenance, origin);
+            + countOriginMatches(this._leaderboardClaimRecordProvenance, origin)
+            + countOriginMatches(this._reconciliationDecisionRecordProvenance, origin);
     }
 
     _fields() {
@@ -784,6 +901,8 @@ export class PublicationObservationArchive {
             publisherPublicationAssociationRecordProvenance: this._publisherPublicationAssociationRecordProvenance,
             leaderboardClaimRecords: this._leaderboardClaimRecords,
             leaderboardClaimRecordProvenance: this._leaderboardClaimRecordProvenance,
+            reconciliationDecisionRecords: this._reconciliationDecisionRecords,
+            reconciliationDecisionRecordProvenance: this._reconciliationDecisionRecordProvenance,
             archiveImportEvents: this._archiveImportEvents
         };
     }
@@ -1050,6 +1169,36 @@ export class PublicationObservationArchive {
         });
     }
 
+    // 0.8.150 — Appends `record` (a genuine 0.8.145 decision record —
+    // `{ decided: true, candidate, decision, decidedAt }`) and returns a NEW
+    // archive. This is the ONE durable write path for a recorded
+    // reconciliation decision — see application/
+    // RecordPublisherLeaderboardClaimSnapshotReconciliationDecisionIntoArchiveUseCase.js
+    // for the one place this codebase constructs the archive-persistence
+    // call around it. Reuses `application/
+    // PublisherLeaderboardClaimSnapshotReconciliationDecisionHistory.js`'s
+    // own, UNCHANGED `appendPublisherLeaderboardClaimSnapshotReconciliationDecisionHistoryEntry()`
+    // — mirroring exactly how `appendLeaderboardClaimRecord()` above reuses
+    // its own domain's existing append function. The pre-check below is the
+    // IDENTICAL `!decision || typeof !== 'object' || decided !== true`
+    // tolerance that function already applies internally — repeated here
+    // only so a genuinely no-op call returns `this` (no new instance)
+    // rather than an equal-but-freshly-allocated archive, the identical
+    // discipline every other `appendXxx()` above already holds. Never
+    // deduplicates, never merges two decisions naming the same candidate,
+    // never infers a decision from anything this archive already holds —
+    // the identical multiplicity 0.8.146 already established for
+    // `PublisherLeaderboardClaimSnapshotReconciliationDecisionHistory`
+    // itself.
+    appendReconciliationDecisionRecord(record, origin = PublicationObservationArchiveProvenanceOrigin.LOCAL) {
+        if (!record || typeof record !== 'object' || record.decided !== true || !isValidPublicationObservationArchiveProvenanceOrigin(origin)) return this;
+        return new PublicationObservationArchive({
+            ...this._fields(),
+            reconciliationDecisionRecords: appendPublisherLeaderboardClaimSnapshotReconciliationDecisionHistoryEntry(this._reconciliationDecisionRecords, record),
+            reconciliationDecisionRecordProvenance: Object.freeze([...this._reconciliationDecisionRecordProvenance, origin])
+        });
+    }
+
     // Replaces EVERY provenance entry this archive holds — across all
     // ELEVEN factual collections — with `origin`, uniformly.
     // `archiveImportEvents` and every factual collection are untouched;
@@ -1085,7 +1234,8 @@ export class PublicationObservationArchive {
             baseAnchorPublicationRecordProvenance: Object.freeze(this._baseAnchorPublicationRecordProvenance.map(() => origin)),
             publicationReferenceRecordProvenance: Object.freeze(this._publicationReferenceRecordProvenance.map(() => origin)),
             publisherPublicationAssociationRecordProvenance: Object.freeze(this._publisherPublicationAssociationRecordProvenance.map(() => origin)),
-            leaderboardClaimRecordProvenance: Object.freeze(this._leaderboardClaimRecordProvenance.map(() => origin))
+            leaderboardClaimRecordProvenance: Object.freeze(this._leaderboardClaimRecordProvenance.map(() => origin)),
+            reconciliationDecisionRecordProvenance: Object.freeze(this._reconciliationDecisionRecordProvenance.map(() => origin))
         });
     }
 
@@ -1192,6 +1342,8 @@ export class PublicationObservationArchive {
             publisherPublicationAssociationRecordProvenance: [...this._publisherPublicationAssociationRecordProvenance],
             leaderboardClaimRecords: this._leaderboardClaimRecords.map((record) => record.toJSON()),
             leaderboardClaimRecordProvenance: [...this._leaderboardClaimRecordProvenance],
+            reconciliationDecisionRecords: this._reconciliationDecisionRecords.map(serializeReconciliationDecisionRecord),
+            reconciliationDecisionRecordProvenance: [...this._reconciliationDecisionRecordProvenance],
             archiveImportEvents: this._archiveImportEvents.map(serializeArchiveImportEvent)
         };
     }
@@ -1284,6 +1436,8 @@ export class PublicationObservationArchive {
             publisherPublicationAssociationRecordProvenance: validated.publisherPublicationAssociationRecordProvenance,
             leaderboardClaimRecords: validated.leaderboardClaimRecords.map((record) => LeaderboardClaimRecord.fromJSON(record)),
             leaderboardClaimRecordProvenance: validated.leaderboardClaimRecordProvenance,
+            reconciliationDecisionRecords: validated.reconciliationDecisionRecords.map(deserializeReconciliationDecisionRecord),
+            reconciliationDecisionRecordProvenance: validated.reconciliationDecisionRecordProvenance,
             archiveImportEvents: validated.archiveImportEvents.map(deserializeArchiveImportEvent)
         });
     }
@@ -1317,6 +1471,33 @@ function deserializeObservation(observation) {
         ...observation,
         observedAt: new Date(observation.observedAt)
     };
+}
+
+// 0.8.150 — a `PublisherLeaderboardClaimSnapshotReconciliationDecision.js`
+// (0.8.145) decision record is, and remains, a PLAIN frozen object — there
+// is no class to call `.toJSON()`/`.fromJSON()` on, so this file's own
+// `bitcoinBroadcastRecords` precedent (a plain object, serialized/
+// deserialized inline) is the one to follow here, not `LeaderboardClaimRecord`'s.
+// `decidedAt` is ALREADY an ISO 8601 string on every genuine record (0.8.145
+// never stores a live `Date`), so no timestamp conversion happens on
+// either side of this round trip — see that file's own header, "`decidedAt`
+// is an explicit, caller-supplied fact."
+function serializeReconciliationDecisionRecord(record) {
+    return {
+        decided: true,
+        candidate: { ...record.candidate },
+        decision: record.decision,
+        decidedAt: record.decidedAt
+    };
+}
+
+function deserializeReconciliationDecisionRecord(record) {
+    return Object.freeze({
+        decided: true,
+        candidate: Object.freeze({ ...record.candidate }),
+        decision: record.decision,
+        decidedAt: record.decidedAt
+    });
 }
 
 function serializeArchiveImportEvent(event) {
@@ -1356,6 +1537,12 @@ const PUBLICATION_REFERENCE_RECORD_FIELDS = ['sourcePublicationIdentity', 'refer
 const PUBLISHER_IDENTITY_FIELDS = ['publisherId'];
 const PUBLISHER_PUBLICATION_ASSOCIATION_RECORD_FIELDS = ['publisherIdentity', 'publicationIdentity', 'createdAt'];
 const LEADERBOARD_CLAIM_RECORD_FIELDS = ['claim', 'receivedAt', 'origin'];
+const RECONCILIATION_DECISION_RECORD_FIELDS = ['decided', 'candidate', 'decision', 'decidedAt'];
+const RECONCILIATION_DECISION_CANDIDATE_DIVERGENT_CORRESPONDENCE_FIELDS = [
+    'selected', 'type', 'claimId', 'snapshotIndex', 'evidenceFingerprintDiffers', 'policyVersionDiffers', 'snapshotFingerprintDiffers'
+];
+const RECONCILIATION_DECISION_CANDIDATE_CLAIM_WITHOUT_SNAPSHOT_FIELDS = ['selected', 'type', 'claimId'];
+const RECONCILIATION_DECISION_CANDIDATE_SNAPSHOT_WITHOUT_CLAIM_FIELDS = ['selected', 'type', 'snapshotIndex'];
 
 function isPlainObject(value) {
     return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
@@ -1489,6 +1676,61 @@ function validateLeaderboardClaimRecord(record) {
     return record;
 }
 
+// 0.8.150 — a `PublisherLeaderboardClaimSnapshotReconciliationDecision.js`
+// (0.8.145) candidate JSON shape — one of 0.8.144's own three discriminated
+// shapes, checked to the identical strictness every other nested fact in
+// this file already holds (exactly its own fields, nothing more, nothing
+// missing). There is no class to delegate to (see `serializeReconciliationDecisionRecord()`'s
+// own header, above) so this validator inlines the shape 0.8.144's own
+// `describePublisherLeaderboardClaimSnapshotReconciliationCandidate()`
+// already defines, rather than importing that function to re-derive
+// anything — this file never calls 0.8.144 or 0.8.145.
+function validateReconciliationDecisionCandidate(candidate) {
+    if (!isPlainObject(candidate) || candidate.selected !== true) return null;
+
+    if (candidate.type === 'DIVERGENT_CORRESPONDENCE') {
+        if (!hasOnlyKeys(candidate, RECONCILIATION_DECISION_CANDIDATE_DIVERGENT_CORRESPONDENCE_FIELDS)) return null;
+        if (!RECONCILIATION_DECISION_CANDIDATE_DIVERGENT_CORRESPONDENCE_FIELDS.every((key) => key in candidate)) return null;
+        if (typeof candidate.claimId !== 'string' || !candidate.claimId) return null;
+        if (!Number.isInteger(candidate.snapshotIndex)) return null;
+        if (typeof candidate.evidenceFingerprintDiffers !== 'boolean') return null;
+        if (typeof candidate.policyVersionDiffers !== 'boolean') return null;
+        if (typeof candidate.snapshotFingerprintDiffers !== 'boolean') return null;
+        return candidate;
+    }
+
+    if (candidate.type === 'CLAIM_WITHOUT_CORRESPONDING_SNAPSHOT') {
+        if (!hasOnlyKeys(candidate, RECONCILIATION_DECISION_CANDIDATE_CLAIM_WITHOUT_SNAPSHOT_FIELDS)) return null;
+        if (!RECONCILIATION_DECISION_CANDIDATE_CLAIM_WITHOUT_SNAPSHOT_FIELDS.every((key) => key in candidate)) return null;
+        if (typeof candidate.claimId !== 'string' || !candidate.claimId) return null;
+        return candidate;
+    }
+
+    if (candidate.type === 'SNAPSHOT_WITHOUT_CORRESPONDING_CLAIM') {
+        if (!hasOnlyKeys(candidate, RECONCILIATION_DECISION_CANDIDATE_SNAPSHOT_WITHOUT_CLAIM_FIELDS)) return null;
+        if (!RECONCILIATION_DECISION_CANDIDATE_SNAPSHOT_WITHOUT_CLAIM_FIELDS.every((key) => key in candidate)) return null;
+        if (!Number.isInteger(candidate.snapshotIndex)) return null;
+        return candidate;
+    }
+
+    return null;
+}
+
+// A genuine 0.8.145 decision record JSON shape — exactly `decided`/
+// `candidate`/`decision`/`decidedAt`, `decided` strictly `true`, `decision`
+// one of 0.8.145's own two-value vocabulary, `decidedAt` a valid timestamp,
+// and `candidate` a genuine 0.8.144 candidate shape per
+// `validateReconciliationDecisionCandidate()` above.
+function validateReconciliationDecisionRecord(record) {
+    if (!isPlainObject(record) || !hasOnlyKeys(record, RECONCILIATION_DECISION_RECORD_FIELDS)) return null;
+    if (!RECONCILIATION_DECISION_RECORD_FIELDS.every((key) => key in record)) return null;
+    if (record.decided !== true) return null;
+    if (record.decision !== 'OBSERVE' && record.decision !== 'DEFER') return null;
+    if (!isValidTimestamp(record.decidedAt)) return null;
+    if (!validateReconciliationDecisionCandidate(record.candidate)) return null;
+    return record;
+}
+
 export function validateArray(value, itemValidator) {
     if (!Array.isArray(value)) return null;
     const validated = [];
@@ -1580,6 +1822,8 @@ const TOP_LEVEL_FIELDS = [
     'publisherPublicationAssociationRecordProvenance',
     'leaderboardClaimRecords',
     'leaderboardClaimRecordProvenance',
+    'reconciliationDecisionRecords',
+    'reconciliationDecisionRecordProvenance',
     'archiveImportEvents'
 ];
 
@@ -1659,6 +1903,11 @@ function validateArchiveJSON(json) {
     const leaderboardClaimRecordProvenance = validateProvenanceArray(json.leaderboardClaimRecordProvenance, leaderboardClaimRecords.length);
     if (!leaderboardClaimRecordProvenance) return null;
 
+    const reconciliationDecisionRecords = validateArray(json.reconciliationDecisionRecords, validateReconciliationDecisionRecord);
+    if (!reconciliationDecisionRecords) return null;
+    const reconciliationDecisionRecordProvenance = validateProvenanceArray(json.reconciliationDecisionRecordProvenance, reconciliationDecisionRecords.length);
+    if (!reconciliationDecisionRecordProvenance) return null;
+
     const archiveImportEvents = validateArray(json.archiveImportEvents, validateArchiveImportEvent);
     if (!archiveImportEvents) return null;
 
@@ -1685,6 +1934,8 @@ function validateArchiveJSON(json) {
         publisherPublicationAssociationRecordProvenance,
         leaderboardClaimRecords,
         leaderboardClaimRecordProvenance,
+        reconciliationDecisionRecords,
+        reconciliationDecisionRecordProvenance,
         archiveImportEvents
     };
 }

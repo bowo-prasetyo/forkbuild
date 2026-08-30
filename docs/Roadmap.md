@@ -40024,3 +40024,87 @@ A later "Historical Claim/Snapshot Divergence Analysis" — what exactly
 changed between two of a signer's own successive claims and their
 corresponding snapshots — is genuinely separate, later work this milestone
 deliberately leaves unbuilt.
+
+## 0.8.150 — Durable Reconciliation Decision History Archive Integration
+
+0.8.145-0.8.149 built a complete, standalone reconciliation-decision
+subsystem — an explicit decision record, an append-only in-memory history,
+and three read-only projections (statistics/timeline/difference) — entirely
+over a plain array with nowhere durable to live, mirroring exactly the
+position the signed-claim subsystem was in before 0.8.130. This milestone
+gives that array the same durable home, integrating it into
+`application/PublicationObservationArchive.js` as a TWELFTH, independent
+collection (`reconciliationDecisionRecords` + parallel provenance), while
+preserving the one architectural principle the whole subsystem exists to
+protect: **recording a decision does not execute, validate, or interpret
+that decision.**
+
+**`PublicationObservationArchive`: SCHEMA_VERSION 8 → 9** — the same
+conservative, wrong-schemaVersion-degrades-to-empty philosophy held since
+0.8.75, no migration path. `appendReconciliationDecisionRecord()`/
+`reconciliationDecisionRecordCount`/`toJSON()`/`fromJSON()`/
+`withUniformProvenance()` all extended. Unlike `leaderboardClaimRecords`
+(0.8.130), a decision record is a PLAIN frozen object with no class of its
+own, so `fromJSON()`'s own strict validation is inlined
+(`validateReconciliationDecisionRecord()`/`validateReconciliationDecisionCandidate()`)
+rather than delegated to a constructor — checking exactly the shape
+0.8.144/0.8.145 already define, never re-deriving their semantic rules.
+
+**New `PublisherLeaderboardClaimSnapshotReconciliationDecisionHistoryView.js`**
+gains `reconstructPublisherLeaderboardClaimSnapshotReconciliationDecisionHistory(archive)`
+— the ONE seam that reads the archive's own collection. The three
+previously future-proofed `reconstructXxx()` functions (Statistics/
+Timeline/Difference, 0.8.147-0.8.149, each of which already documented
+itself as "a thin placeholder pending decision-history/archive
+integration") now compose on top of that one seam instead of always
+returning an empty history; their pure `describeXxx()` computations are
+byte-for-byte unchanged.
+
+**New `RecordPublisherLeaderboardClaimSnapshotReconciliationDecisionIntoArchiveUseCase`** —
+a deliberately tiny persistence boundary: a caller supplies an
+already-computed, genuine 0.8.145 decision record; this class validates it
+is genuinely `{ decided: true, ... }`, appends it via
+`archive.appendReconciliationDecisionRecord()`, and returns the new
+archive. Unlike `ReceivePublisherLeaderboardSnapshotClaimIntoArchiveUseCase.js`
+(0.8.130), it delegates to no intermediate use case, because 0.8.145 is a
+pure function, not a class-shaped one — there is nothing upstream to
+delegate to. It performs no verification, no plan reconstruction, no
+candidate rediscovery, no duplicate elimination, no state transition, no
+`OBSERVE`/`DEFER` interpretation, and no automatic reconciliation.
+
+**`PublicationObservationArchiveDifference` gains a twelfth positional
+collection**; `PublicationObservationArchiveReplacementReview` gains a
+separate, multiset-aware `reconciliationDecisionHistoryDifference` field
+plus a `reconciliationDecisionRecordCount`; `PublicationObservationArchiveInspection`
+gains the same count. `AchievementEvidenceFingerprint`/`Difference` stay
+untouched — a recorded reconciliation decision is not achievement
+evidence.
+
+**Not a reconciliation state machine — held here once more, one layer
+down.** Four decisions `OBSERVE, DEFER, OBSERVE, DEFER` against the same
+candidate remain FOUR historical archive entries; no `currentDecision`,
+`activeDecision`, `superseded`, `resolved`, `pending`, or `final` concept
+is introduced anywhere in the archive, the persistence use case, or the
+three now-archive-aware projections.
+
+**New flagship integration test**
+(`PublicationObservationArchiveReconciliationDecisionHistoryIntegration.test.js`,
+13 sections) proves the milestone's own worked example end to end: Alice's
+archive holds `OBSERVE, DEFER, DEFER` (the second `DEFER` a genuine,
+independently-computed duplicate) for `decisionCount: 3`; Bob's archive
+holds `OBSERVE, OBSERVE` for `decisionCount: 2`; serialization/
+deserialization preserves the history exactly — multiplicity, candidate
+shapes, `decidedAt`, disposition, and provenance all intact — and
+statistics/timeline/difference computed FROM each archive agree
+byte-for-byte with the pure in-memory computation over the equivalent raw
+arrays. A permanent architectural regression test proves recording a
+decision changes the whole-archive fingerprint but never the narrower
+achievement-evidence fingerprint.
+
+Updated existing tests for the schema bump, the three changed
+`reconstructXxx()` signatures (now archive-aware, matching 0.8.130's own
+precedent), one independently-recomputed SHA-256 fingerprint vector, and
+one pre-existing test-suite registration gap
+(`PublisherLeaderboardClaimSnapshotReconciliationDecisionHistoryDifference.test.js`
+was never added to `tests.html` by 0.8.149); `docs/Roadmap.md` and
+`docs/Principles.md` updated.
