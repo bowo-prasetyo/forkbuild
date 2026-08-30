@@ -38938,3 +38938,184 @@ judgment about the signer or about whether any later claim in it is
 each other, never diffs two successive claims down to what specifically
 changed, and never runs on its own without an explicit caller — each
 remains genuinely separate, later work.
+
+## 0.8.134 — Historical Snapshot Difference Projection
+
+0.8.133's own "Deliberately excluded" list named the one question it never
+asked: "a difference between two of a signer's own successive claims —
+0.8.134's own, separately sized, later question, over two whole snapshots
+rather than one signer's claim metadata." This milestone is that
+projection — a pure comparison layer over two whole
+`PublisherLeaderboardSnapshot` instances (0.8.119, UNCHANGED):
+
+```text
+PublisherLeaderboardSnapshot A          PublisherLeaderboardSnapshot B
+       │                                        │
+       └──── describePublisherLeaderboardSnapshotDifference() ────┘
+                              │
+                              ▼
+{ evidenceFingerprintChanged, policyVersionChanged, policyChanged,
+  leaderboardChanged,
+  sourceEvidenceFingerprint, targetEvidenceFingerprint,
+  sourcePolicyVersion, targetPolicyVersion,
+  sourceLeaderboardEntryCount, targetLeaderboardEntryCount,
+  sourceLeaderboard, targetLeaderboard,
+  publisherPresentInBothCount, publisherSourceOnlyCount, publisherTargetOnlyCount,
+  publisherPresentInBoth, publisherSourceOnly, publisherTargetOnly }
+```
+
+**This is the historical counterpart to 0.8.120's own current-state
+verification.** 0.8.120 asks "does a candidate match what THIS REPLICA
+computes right now?" — always comparing against a freshly reconstructed
+local snapshot. This file asks a narrower, purely descriptive question
+about two ARTIFACTS, neither one privileged as "this replica's own":
+"which observable parts of these two already-computed snapshots are equal
+or different?" Two historical snapshots — pulled from two stored claims, two
+exports, two points in this replica's own history — are compared exactly
+as supplied, never re-derived from any archive.
+
+**Four independent dimensions, never collapsed into one explanation.** A
+result names four change facts, each computed independently from its own
+slice of the two snapshots — `evidenceFingerprintChanged`,
+`policyVersionChanged`, `policyChanged`, `leaderboardChanged` — mirroring
+0.8.120's own four independent match facts, negated into change facts.
+None is derived from another: `leaderboardChanged` is never inferred from
+`policyChanged` being true, and `policyChanged` is never inferred from
+`policyVersionChanged` alone (a policy could share a version number while
+`criteria`/`tieBreak` genuinely differ beneath it). A result carrying
+`evidenceFingerprintChanged: false` alongside `leaderboardChanged: true`
+is not a contradiction this file resolves — it is the honest observation
+that the leaderboard changed for a reason other than the evidence, with
+`policyVersionChanged`/`policyChanged` sitting beside it to say why (or
+confirm there is nothing left to say why, if all three stay unchanged and
+only entry-level counts moved — see the entry-level dimension, below).
+
+**Semantic identity, never cryptographic identity.** This file never
+reads or computes a `snapshotFingerprint` (0.8.121). 0.8.121's own
+composite digest answers "what exact bytes did a signer attest to" — a
+single opaque value that says nothing about WHICH of a snapshot's parts
+changed. This file answers the opposite question, exclusively over
+0.8.119's own three semantic fields (`evidenceFingerprint`, `policy`,
+`leaderboard`) — never by comparing, or even importing, a composite
+fingerprint.
+
+**A different leaderboard never implies different evidence — the one
+assumption this file must never make, now that policy is part of a
+snapshot's own identity.** Snapshot A: evidence E1, policy P1, leaderboard
+L1. Snapshot B: evidence E1, policy P2, leaderboard L2. Expected:
+`evidenceFingerprintChanged: false`, `policyVersionChanged: true`,
+`policyChanged: true`, `leaderboardChanged: true` — every fact reported
+independently, with `leaderboardChanged` true precisely because a
+leaderboard is a deterministic function of evidence AND policy together
+(0.8.113's own "leaderboard projection purity," one layer up), never of
+evidence alone. A second, standalone test proves the same point from the
+other direction — the identical evidence, only the policy (and therefore
+the leaderboard) genuinely different — establishing that a leaderboard can
+change even when the evidence underneath it does not.
+
+**Entry-level membership and per-field change accounting — entry identity
+is publisher identity, never leaderboard position.**
+`publisherPresentInBoth`/`publisherSourceOnly`/`publisherTargetOnly` match
+leaderboard entries by `publisherIdentity.publisherId` (0.8.108's own
+exact, case-sensitive equality — the identical rule
+`PublisherIdentityRecord.sameAs()` already holds), never by array index
+and never by `rank`. A publisher present on both leaderboards under a
+different `rank` is one matched entry, never a departed publisher plus an
+unrelated new arrival who happen to share a name. Each matched element
+carries `{ publisherIdentity, sourceEntry, targetEntry, rankChanged,
+achievementCountChanged, distinctAchievementKindCountChanged,
+publicationIdentityCountChanged }` — four independent booleans, one per
+field 0.8.113's own leaderboard entry carries beyond `publisherIdentity`
+itself. `sourceEntry`/`targetEntry` are 0.8.113's own ORIGINAL leaderboard
+entry objects, echoed by reference, mirroring 0.8.127's own "each result
+element is the original... instance" restraint one layer up — never a
+reconstructed copy, never a fifth pair of redundant "old value"/"new
+value" fields duplicating what the two entries already carry.
+
+**Never a second ranking engine.** This file compares the supplied
+leaderboards; it never recomputes one. There is no `sort()` call, no
+comparator, and no tie-break logic anywhere in it — `rankChanged` is a
+plain `!==` over two already-assigned `rank` values 0.8.112/0.8.113 already
+computed, and this file never asks whether a rank change was "correct"
+under either snapshot's own policy, never re-derives a merged or
+reconciled leaderboard.
+
+**Flagship.** Snapshot A (evidence E1): Alice rank 1, Bob rank 2. Snapshot
+B (evidence E2, the identical policy): Alice rank 1, Bob rank 3, Carol
+rank 2. `describePublisherLeaderboardSnapshotDifference()` reports:
+`evidenceFingerprintChanged: true`; `policyVersionChanged: false`;
+`policyChanged: false`; `leaderboardChanged: true`; Alice matched with
+`rankChanged: false`; Bob matched with `rankChanged: true`; Carol reported
+on `publisherTargetOnly` as newly present. No conclusion is drawn about
+WHY Bob's rank changed — there is no `reason`/`cause` field anywhere on
+the result, and no field states whether Bob's change was an improvement or
+a regression.
+
+**Architectural boundary: observable facts about two artifacts, never a
+verification, trust, or ranking determination of any kind.** This file
+imports nothing from
+`application/PublisherLeaderboardSnapshotVerification.js`,
+`application/PublisherLeaderboardSnapshotClaimVerification.js`,
+`application/PublisherLeaderboardClaimVerificationView.js`, or
+`application/PublisherLeaderboardClaimVerificationHistoryView.js`
+(0.8.120/0.8.124/0.8.125). It never determines which snapshot is correct,
+never verifies a signature, never compares claims, never determines
+whether a signer was truthful, never says a publisher "improved" or
+"regressed," never assigns a delta as positive or negative, never
+recomputes a rank, and never persists or modifies anything.
+
+**No `reconstructXxx()` archive-reading entry point — deliberately, not an
+oversight.** Every other file in this family pairs a pure `describeXxx()`
+with a thin `reconstructXxx()` that pulls THIS replica's own CURRENT
+state. This file has none, for the identical reason 0.8.121's own
+`PublisherLeaderboardSnapshotFingerprint.js` has none: both inputs are
+already-computed, historical artifacts a caller already holds — never
+something this file should silently replace with whatever this replica's
+archive currently produces. A version that accepted an archive and quietly
+substituted the archive's own current snapshot for one side would blur
+this file into 0.8.120's own, already-built job under a different name,
+discarding the caller's own historical snapshot the moment one was
+supplied. A caller who genuinely wants "compare a candidate against what
+this replica currently computes" already has it, unchanged, at
+`verifyPublisherLeaderboardSnapshot()` (0.8.120).
+
+**Synchronous, pure, no mutation, no storage, no network.** Reads no
+clock. Malformed/absent snapshots on either or both sides degrade to
+0.8.119's own well-defined empty snapshot, via
+`describePublisherLeaderboardSnapshot()` itself — never a throw, never a
+second, parallel tolerance rule. A malformed leaderboard entry (missing or
+non-genuine `publisherIdentity`) is silently excluded from every
+membership bucket, mirroring `PublisherLeaderboardView.js`'s own
+"malformed... entry is silently excluded, never thrown on."
+
+Deliberately excluded:
+- **Any verification, trust, or "which snapshot is currently valid"
+  determination of any kind.** See "Architectural boundary," above.
+- **Any improvement/regression/quality judgment of any kind, and no
+  `improved`/`regressed`/`better`/`worse` field anywhere.** A `rankChanged:
+  true` is reported and nothing is concluded from it.
+- **A `reconstructXxx()` archive-reading entry point.** See "No
+  `reconstructXxx()`," above.
+- **Any merge, reconciliation, or "combined leaderboard" of any kind.**
+  Two snapshots are compared, side by side; neither is ever folded into
+  the other.
+- **A historical claim-to-snapshot relationship projection** — "which
+  signers claimed the same snapshot," "what snapshot sequence did each
+  signer claim," "which historical snapshots are represented in this
+  replica." Composes 0.8.132's/0.8.133's own claim-relationship vocabulary
+  with this file's own snapshot comparison — genuinely separate, later
+  work (0.8.135).
+- **Automatic, periodic, or background computation of any kind.** This
+  function runs only when a caller explicitly calls it.
+
+What's left, and deliberately unbuilt: this milestone lets a caller see
+exactly which of two already-computed snapshots' own three semantic parts
+— evidence, policy, leaderboard — are equal or different, and exactly
+which publishers departed, arrived, or moved rank between them, without
+ever collapsing any of that into a verdict about which snapshot is correct
+or whether a change is an improvement. It never reconstructs either side
+from an archive of its own, never compares cryptographic snapshot
+fingerprints, and never relates a snapshot back to the signers who claimed
+it — that convergence, over 0.8.132's/0.8.133's own claim-relationship
+facts and this file's own snapshot comparison, is 0.8.135's own,
+separately sized, later work.
