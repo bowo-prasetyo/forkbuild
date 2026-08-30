@@ -39714,3 +39714,123 @@ claim corresponds to without the caller naming the pairs — is genuinely
 separate, later work this milestone deliberately leaves unbuilt; it should
 only be built against a concrete requirement, never manufactured ahead of
 one.
+
+## 0.8.139 — Historical Claim-to-Snapshot Correspondence Projection
+
+0.8.137 proved a single stored claim could be associated with a single
+explicitly supplied historical snapshot, along three independent
+structural facts. 0.8.138 proved a caller-supplied SEQUENCE of already-
+paired `{ claimRecord, snapshot }` pairs could be narrated the identical
+way. Both of those milestones deliberately declined the same question:
+given a whole claim history and an explicitly supplied snapshot sequence,
+WHICH snapshots correspond to WHICH claims? This milestone answers it —
+not with a fourth comparison mechanism, but by calling 0.8.137 once per
+(claim, snapshot) combination and keeping only the combinations where the
+two artifacts' complete identities genuinely agree.
+
+```text
+claimHistory (LeaderboardClaimRecord[])   snapshots (PublisherLeaderboardSnapshot[],
+     │  deduplicated by claim.id           EXPLICITLY SUPPLIED, never
+     │  (0.8.132's own restraint)          reconstructed, never searched for)
+     ▼                                            │
+distinct claims                                   │
+     └──────────────────┬────────────────────────┘
+                         ▼
+   one describePublisherLeaderboardClaimSnapshotAssociation() call
+              (0.8.137, UNCHANGED) per (claim, snapshot) pair
+                         │
+                         ▼
+   describePublisherLeaderboardClaimSnapshotCorrespondence()
+                         │
+                         ▼
+{ claimCount, distinctClaimIdCount, snapshotCount, correspondenceCount,
+  correspondences: [{ claimId, signerIdentityId, claimCreatedAt,
+    matchingSnapshotCount, snapshotMatches: [{ snapshotIndex,
+    evidenceFingerprintMatches, policyVersionMatches,
+    snapshotFingerprintMatches }, ...] }, ...] }
+```
+
+**Discovery, never pairing — the one genuine difference from 0.8.138.**
+0.8.138's caller already knows which claim goes with which snapshot before
+calling it; this file's caller does not, and hands over two independently
+supplied collections instead — the exact "two separate arrays this file
+would then have to combine" 0.8.138's own header declined to build. For
+every distinct stored claim, the new module,
+`application/PublisherLeaderboardClaimSnapshotCorrespondenceView.js`, tries
+every supplied snapshot and keeps the ones whose complete identity agrees.
+
+**The complete `snapshotFingerprint` is the correspondence key — never
+`evidenceFingerprint` or `policyVersion` alone.** Two snapshots can share
+identical evidence and an identical policy version while differing in
+their complete leaderboard representation; 0.8.121's own
+`snapshotFingerprint` exists precisely to distinguish that case. A
+snapshot is kept as a correspondence for a claim exactly when 0.8.137's
+own `snapshotFingerprintMatches` reads `true` for that pair — same
+evidence plus same policy version is never treated as "close enough" to be
+the same historical snapshot.
+
+**Every kept match still carries all three facts, never collapsed.** A
+claim can correspond to a snapshot by fingerprint while its own asserted
+`evidenceFingerprint`/`policyVersion` fields disagree with that same
+snapshot — 0.8.137's/0.8.138's own "Claim C" (asserting E1/P1-like
+identifiers yet signed over a snapshot fingerprint that actually names a
+different evidence/policy pair) still corresponds, by this file's own
+discovery key, to the snapshot its fingerprint names, and the kept entry
+honestly reports `evidenceFingerprintMatches: false`,
+`policyVersionMatches: false` right alongside `snapshotFingerprintMatches:
+true` rather than a bare `matched: true`.
+
+**Every discovered correspondence is kept — no arbitrary selection,
+ever.** A claim can correspond to zero, one, or several supplied
+snapshots, and this file reports every one of them, in the order
+`snapshots` was actually supplied — never the first, never the latest,
+never the "closest." A claim with no corresponding snapshot is kept, with
+an empty `snapshotMatches`, never discarded — absence of a supplied
+matching snapshot is itself a fact worth reporting.
+
+**Flagship.** `S1 = E1/P1`, `S2 = E1/P2`, `S3 = E2/P2`; Claim A signed over
+S2, Claim B signed over S1, Claim C signed over a fingerprint naming
+neither. Against `[S1, S2, S3]`: Claim A → `[S2]`, Claim B → `[S1]`, Claim
+C → `[]`. Appending `S4`, an exact duplicate of S2's own complete
+identity, and re-running: Claim A now corresponds to BOTH S2 and S4 —
+`matchingSnapshotCount: 2` — with no arbitrary selection of one over the
+other.
+
+**Claim identity, never receipt identity — reusing, never re-deriving,
+0.8.128's/0.8.132's own distinction.** `claimCount` counts RECEIPTS,
+exactly as 0.8.128's and 0.8.132's own `claimCount` already do.
+`correspondences` is computed over DISTINCT claims, deduplicated by
+`claim.id` — the first receipt of a repeated claim id supplies the record
+this file hands to 0.8.137; every later receipt folds into `claimCount`
+alone and never produces a second correspondence entry.
+
+**Snapshot position, never snapshot identity, is the handle a caller gets
+back.** `snapshotIndex` on a kept match names the supplied `snapshots`
+array position — never a fingerprint, never an object reference — the
+identical restraint 0.8.136's own snapshot-timeline projection already
+holds. Two distinct positions sharing an identical fingerprint are
+reported as two distinct `snapshotIndex` values, never merged into one.
+
+**Architectural boundary: imports 0.8.123's record class and 0.8.137
+only.** This file imports nothing from
+`application/PublisherLeaderboardSnapshotClaimVerification.js`, any
+signing or identity module, any archive module, any ranking module, or
+`application/PublisherLeaderboardSnapshotTimelineView.js` — grep it and
+none of that vocabulary appears.
+
+**Deliberately excluded — not this milestone.** Cryptographic signature
+verification. Trust/reputation judgments, a "valid claim" status, or a
+collapsed verdict. Automatic snapshot reconstruction or archive access —
+`snapshots` is always an explicitly supplied array. "Best snapshot"
+selection or chronological proximity heuristics — ambiguity is reported,
+never resolved. Claim modification, snapshot modification, persistence.
+Ranking recomputation of any kind. Synchronization of any kind.
+
+What's left, and deliberately unbuilt: this milestone discovers exact
+structural correspondence within a caller-supplied world — a set of stored
+claims and a supplied historical snapshot sequence — and reports it
+faithfully, ambiguity included. A later, purely factual "Historical Claim
+Correspondence Statistics" projection — how many claims have zero, one, or
+multiple corresponding historical snapshots, over the identical
+non-evaluative facts this milestone exposes — is genuinely separate, later
+work this milestone deliberately leaves unbuilt.
