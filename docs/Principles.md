@@ -18781,3 +18781,68 @@ this file is checked for genuine SHAPE alone, exactly as true or false
 after that check as it was before transport.
 
 See `docs/Roadmap.md`, 0.8.151, for the full milestone entry.
+
+## A Historical Decision Is Read By Its Own Embedded Fact, Never Recomputed Against Current State (0.8.153)
+
+Every projection over `PublisherLeaderboardClaimSnapshotReconciliationDecisionHistory`
+since 0.8.147 has read a decision record's own already-embedded `candidate`
+field and stopped there — statistics (0.8.147), chronology (0.8.148), and
+difference (0.8.149) all state, in their own headers, that they never call
+0.8.144 to reselect or re-verify a candidate. 0.8.153 is the first
+milestone whose entire reason to exist is to make that restraint
+observable as its own, named relationship, rather than an incidental
+consequence of computing something else: given a decision history, which
+candidate does each decision correspond to? — a question so close to
+"rediscover the candidate" in shape that it is the one this whole family
+was most at risk of quietly answering the wrong way.
+
+**The correct implementation of "which candidate" is a projection, never a
+re-selection.** `application/PublisherLeaderboardClaimSnapshotReconciliationDecisionCandidateCorrespondenceView.js`
+answers its own question by reading `candidate` off each stored 0.8.145
+decision record and handing it back, unchanged — it does not accept a
+plan, a claim history, or a snapshot list as an argument at all, because
+none of those inputs could make its own answer more correct than the
+candidate 0.8.144 already computed and 0.8.145 already embedded, once, at
+the moment a caller recorded the decision. The underlying claims,
+snapshots, or archive may have been retracted, superseded, or rebuilt
+entirely differently since that moment; a freshly computed plan today
+might not even produce this candidate as an outcome any more. None of that
+is this file's concern — a historical decision remains a historical
+record, and this file's only claim is about what that record already
+says, never about what would be true if recomputed now.
+
+**Decision identity and candidate identity are two different relations,
+and this milestone is the first to expose the second one directly.**
+0.8.147 already needed a candidate identity key (`type` plus whichever of
+`claimId`/`snapshotIndex` that type carries) to compute
+`distinctCandidateCount` against `decisionCount`, but that key stayed an
+internal computation, never a first-class relationship a caller could read
+entry-by-entry. This milestone's own `correspondences` array makes it
+directly readable: `decisionIndex` names one decision-history entry,
+`candidate` names the one structural fact that entry refers to, and
+`decision`/`decidedAt` complete that one entry's own recorded content — a
+caller can now ask "what did entry 3 concern?" as directly as 0.8.148's
+timeline already lets a caller ask "when was entry 3 recorded?", without
+either question needing to touch the other's own answer.
+
+**Multiplicity survives a third, independent way.** 0.8.146 established
+that recording the byte-identical decision twice is two history entries,
+never one; 0.8.147 counted that distinction as `decisionCount` vs.
+`distinctCandidateCount`; 0.8.148 timelines both entries in their own
+chronological place. This milestone holds the identical line over
+`correspondences`: two entries naming the identical candidate under the
+identical disposition at the identical `decidedAt` remain two separate
+correspondence entries, distinguished only by their own `decisionIndex` —
+never collapsed into "one candidate, corresponded to once."
+
+**The one import this file needs is the archive reconstruction seam, and
+no other.** `reconstructXxx()` reads stored decisions out of
+`PublicationObservationArchive`'s own `reconciliationDecisionRecords`
+collection via 0.8.150's own reconstruction seam — reading what a replica
+already durably recorded, never reaching for its own current plan,
+candidate-selection boundary, or archive-wide correspondence/divergence
+machinery to check any of it. `describeXxx()` itself, the pure
+computation every `reconstructXxx()` in this family delegates to, imports
+nothing at all.
+
+See `docs/Roadmap.md`, 0.8.153, for the full milestone entry.
