@@ -39119,3 +39119,161 @@ fingerprints, and never relates a snapshot back to the signers who claimed
 it — that convergence, over 0.8.132's/0.8.133's own claim-relationship
 facts and this file's own snapshot comparison, is 0.8.135's own,
 separately sized, later work.
+
+## 0.8.135 — Historical Signed Leaderboard Claim Verification
+
+0.8.124/0.8.125 answered "does this stored claim match what THIS REPLICA
+computes RIGHT NOW?" — always reconstructing a fresh local snapshot from
+this replica's own current archive, so the answer for an identical stored
+claim can genuinely change from one call to the next as new evidence
+arrives. 0.8.134's own "Deliberately excluded" list named the one question
+that answer can never give: "did this stored claim correspond to a
+particular HISTORICAL snapshot?" This milestone is that different
+question, answered against an immutable, caller-supplied artifact instead
+of a moving target:
+
+```text
+LeaderboardClaimRecord (0.8.123)          PublisherLeaderboardSnapshot (0.8.119)
+       │                                    an EXPLICITLY SUPPLIED historical
+       │                                    artifact, NEVER reconstructed
+       └──────────────┬─────────────────────────────┘
+                       ▼
+   describePublisherLeaderboardHistoricalClaimVerification()
+                       │
+                       ▼
+{ signerIdentityId, claimCreatedAt, receivedAt,
+  historicalEvidenceFingerprint, historicalPolicyVersion, historicalSnapshotFingerprint,
+  signatureValid,
+  evidenceFingerprintMatches, policyVersionMatches, snapshotFingerprintMatches,
+  matches }
+```
+
+**Critical architectural rule: do not reconstruct anything.** Every other
+comparison entry point in this family that reads FROM somewhere pulls a
+snapshot out of THIS replica's own current archive
+(`verifyPublisherLeaderboardSnapshot()` 0.8.120,
+`verifyPublisherLeaderboardSnapshotClaim()` 0.8.121,
+`reconstructPublisherLeaderboardClaimVerification()` 0.8.124). This file
+has no such entry point, and never will — it imports no
+`PublicationObservationArchive` and calls no `reconstructXxx()` anywhere.
+The caller supplies BOTH the stored claim AND the historical snapshot to
+check it against:
+
+```text
+stored claim  +  historical snapshot  →  historical verification   (THIS MILESTONE)
+stored claim  +  current archive      →  current verification       (0.8.124, UNCHANGED)
+```
+
+A version that accepted an archive and quietly reconstructed "the snapshot
+from back then" would not be a historical verifier at all — it would be
+0.8.124's own current verification, renamed, silently discarding the very
+artifact this milestone exists to let a caller name explicitly.
+
+**Reuses 0.8.121's own four facts, exactly — never a second verification
+vocabulary.** `signatureValid`, `evidenceFingerprintMatches`,
+`policyVersionMatches`, `snapshotFingerprintMatches`, and `matches` are
+`describePublisherLeaderboardSnapshotClaimVerification()`'s (0.8.121,
+UNCHANGED) own result, carried through byte for byte — the identical
+"carried through unchanged, never re-derived" restraint 0.8.124's own
+header already holds, held here once more against a caller-supplied
+historical snapshot instead of a freshly reconstructed local one. This
+file computes none of those five fields itself; it only chooses WHAT
+snapshot they are computed against.
+
+**Cryptographic validity is intrinsic to the signed claim; semantic
+agreement is relational to the snapshot against which it is evaluated —
+the one architectural principle this milestone exists to make explicit.**
+`signatureValid` answers whether the claim's own signer genuinely signed
+exactly this claim — a fact about the claim ALONE, unaffected by which
+snapshot it is checked against, and therefore identical across every call
+against the same stored record no matter what snapshot is supplied. The
+three semantic facts answer whether the claim's own assertions agree with
+THIS PARTICULAR supplied snapshot — a relationship, expected to flip
+between two different snapshots even though the stored claim itself never
+changes.
+
+**The historical snapshot's own identity fields are echoed, never
+re-derived by the caller.** `historicalEvidenceFingerprint`,
+`historicalPolicyVersion`, and `historicalSnapshotFingerprint` report
+exactly what the SUPPLIED `snapshot` argument's own identity was at the
+moment of this call, read via `describePublisherLeaderboardSnapshot()`
+(0.8.119) and `describePublisherLeaderboardSnapshotFingerprint()`
+(0.8.121) — so a caller never needs to separately re-normalize or
+re-fingerprint the snapshot it just supplied merely to explain WHY a
+comparison fact reads `false`. These three fields describe the supplied
+snapshot; they say nothing about which snapshot is "current," "correct,"
+or "authoritative" — the identical restraint 0.8.134's own
+`sourceEvidenceFingerprint`/`targetEvidenceFingerprint` already holds, one
+supplied snapshot instead of a pair.
+
+**Two functions, deliberately the same shape — not two layers of new
+computation.** Every other pair in this family (`describeXxx()` +
+`reconstructXxx()`/`verifyXxx()`) splits a pure projection from a thin
+archive-reading boundary. This milestone's own "do not reconstruct
+anything" rule leaves no archive for a second function to bridge, so there
+is no reconstruction boundary here to name.
+`describePublisherLeaderboardHistoricalClaimVerification()` is the pure
+projection. `verifyPublisherLeaderboardHistoricalClaim()` is a
+deliberately thin, literal alias of it — identical inputs, identical
+tolerance, identical output — added only so a caller reaches for the verb
+this milestone's own name promises, without needing to know this family's
+internal `describeXxx()` naming convention.
+
+**A record, never a bare claim.** `claimRecord` must be a genuine
+`LeaderboardClaimRecord` (0.8.123); a bare
+`PublisherLeaderboardSnapshotClaim` or plain claim JSON projects to
+`null`, exactly like 0.8.124's own tolerance. A caller wanting the four
+bare-claim comparison facts alone, with no receipt metadata, already has
+0.8.121's own function for exactly that — unchanged, and reused by this
+file rather than duplicated.
+
+**Flagship.** Snapshot A: evidence E1, policy P1, leaderboard L1. Claim C
+is signed over Snapshot A and stored as a durable receipt. The current
+archive later evolves into Snapshot B: evidence E2, the identical policy
+P1, leaderboard L2. Verifying the SAME, UNMODIFIED claim C:
+
+```text
+verify(C, Snapshot A) → signatureValid: true,  evidenceFingerprintMatches: true,
+                         policyVersionMatches: true, snapshotFingerprintMatches: true, matches: true
+
+verify(C, Snapshot B) → signatureValid: true,  evidenceFingerprintMatches: false,
+                         policyVersionMatches: true, snapshotFingerprintMatches: false, matches: false
+```
+
+The signature remains valid because the claim itself was never altered —
+only its relationship to the supplied snapshot changed.
+
+**Normalization reuses 0.8.119's own tolerance.** The supplied `snapshot`
+is routed through `describePublisherLeaderboardSnapshot()` (0.8.119,
+UNCHANGED) before any comparison or fingerprinting — a well-formed
+historical snapshot passes through unchanged; anything missing, `null`, or
+shaped like garbage normalizes to the identical well-defined empty
+snapshot 0.8.119 already defines, never a thrown error.
+
+**Synchronous, pure, deterministic, no mutation, no persistence.** Neither
+function reads a clock, writes to `claimRecord`, writes to `snapshot`, or
+persists a verification result anywhere. Every call recomputes fresh.
+
+Deliberately excluded:
+- **Historical snapshot persistence, automatic snapshot selection, or
+  archive reconstruction of any kind.** See "Critical architectural rule,"
+  above — the caller always names the exact snapshot explicitly.
+- **Trust/reputation judgments, a "valid"/"invalid" collapsed status, or
+  claim ranking.** The identical vocabulary boundary
+  0.8.120/0.8.121/0.8.124/0.8.134 already hold.
+- **Automatic historical matching** — "which stored snapshot did this
+  claim actually match" — genuinely separate, later work composing this
+  file's own comparison with whatever historical snapshots a caller
+  happens to hold.
+- **Signature creation or new cryptographic algorithms.** This file
+  verifies; it never signs.
+
+What's left, and deliberately unbuilt: this milestone lets a caller ask
+whether a specific, already-stored signed claim corresponds to a specific,
+already-computed historical snapshot — without ever reconstructing that
+snapshot from an archive, without a second verification vocabulary, and
+without collapsing the claim's own intrinsic cryptographic validity into
+its relationship with any one snapshot. A historical snapshot
+sequence/timeline projection over this same vocabulary, composing it with
+0.8.132's/0.8.133's own claim-relationship facts, is genuinely separate,
+later work this milestone deliberately leaves unbuilt.
