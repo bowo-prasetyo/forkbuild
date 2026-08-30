@@ -309,10 +309,8 @@ async function run() {
 
         const emptyTimeline = describePublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationHistoryTimeline([]);
 
-        // 0.8.167 has not yet given the observation history a durable home
-        // on PublicationObservationArchive, so reconstruct() always returns
-        // the empty timeline — regardless of what archive it is handed,
-        // genuine, populated-with-unrelated-collections, or invalid alike.
+        // 0.8.167 — reconstruct() now reads the archive's own durable
+        // revalidationObservationRecords collection.
         const genuineArchive = PublicationObservationArchive.empty();
         const reconstructedFromGenuine = reconstructPublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationHistoryTimeline(genuineArchive);
         assert(serialize(reconstructedFromGenuine) === serialize(emptyTimeline), '53. reconstruct() over a genuine, empty archive returns the empty timeline');
@@ -320,12 +318,28 @@ async function run() {
         const invalidArchiveReconstructed = reconstructPublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationHistoryTimeline(null);
         assert(serialize(invalidArchiveReconstructed) === serialize(emptyTimeline), '54. reconstruct() over an invalid/missing archive also returns the empty timeline, never a throw');
 
+        // An archive holding OTHER, unrelated collections (e.g.
+        // reconciliation decision records) but no revalidation observation
+        // records still reconstructs to the empty timeline — the two
+        // collections are independent.
+        let unrelatedArchive = PublicationObservationArchive.empty();
+        unrelatedArchive = unrelatedArchive.appendReconciliationDecisionRecord(genuineDecisionRecord({ selected: true, type: 'CLAIM_WITHOUT_CORRESPONDING_SNAPSHOT', claimId: 'ARCHIVE' }, 'OBSERVE', T1));
+        const reconstructedFromUnrelated = reconstructPublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationHistoryTimeline(unrelatedArchive);
+        assert(serialize(reconstructedFromUnrelated) === serialize(emptyTimeline), '55. reconstruct() over an archive holding only unrelated collections still returns the empty timeline');
+
+        // A genuinely populated archive reconstructs to exactly the same
+        // timeline the pure computation produces over the identical history.
         let populatedArchive = PublicationObservationArchive.empty();
-        populatedArchive = populatedArchive.appendReconciliationDecisionRecord(genuineDecisionRecord({ type: 'CLAIM_WITHOUT_CORRESPONDING_SNAPSHOT', claimId: 'ARCHIVE' }, 'OBSERVE', T1));
+        populatedArchive = populatedArchive.appendRevalidationObservationRecord(flagshipHistory[0]);
+        populatedArchive = populatedArchive.appendRevalidationObservationRecord(flagshipHistory[1]);
+        populatedArchive = populatedArchive.appendRevalidationObservationRecord(flagshipHistory[2]);
+        populatedArchive = populatedArchive.appendRevalidationObservationRecord(flagshipHistory[3]);
+        const pureFlagshipTimeline = describePublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationHistoryTimeline(flagshipHistory);
         const reconstructedFromPopulated = reconstructPublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationHistoryTimeline(populatedArchive);
-        assert(serialize(reconstructedFromPopulated) === serialize(emptyTimeline), '55. reconstruct() over an archive holding unrelated collections still returns the empty timeline — no observation-history collection exists yet');
+        assert(serialize(reconstructedFromPopulated) === serialize(pureFlagshipTimeline), '56. reconstruct() over a genuinely populated archive agrees byte-for-byte with describe() over the identical raw history');
+        assert(reconstructedFromPopulated.observationCount === 4, '57. the reconstructed timeline preserves the archive\'s own full observation count');
     }
-    console.log('✓ Section K: repeated computation over the same history is byte-identical, and reconstruct() remains a thin, deliberately-empty archive boundary until 0.8.167');
+    console.log('✓ Section K: repeated computation over the same history is byte-identical, and reconstruct() (0.8.167) now reads the archive\'s own durable observation history');
 
     // ---------------------------------------------------------------
     // Section L — architectural regression: forbidden vocabulary, zero
@@ -339,15 +353,21 @@ async function run() {
         const timeline = describePublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationHistoryTimeline(appendAll([observation]));
 
         const topKeys = Object.keys(timeline).sort();
-        assert(serialize(topKeys) === serialize(['observationCount', 'timeline'].sort()), '56. the result carries exactly the documented, factual top-level fields');
+        assert(serialize(topKeys) === serialize(['observationCount', 'timeline'].sort()), '58. the result carries exactly the documented, factual top-level fields');
 
         const entryKeys = Object.keys(timeline.timeline[0]).sort();
-        assert(serialize(entryKeys) === serialize(['observationIndex', 'observedAt', 'decision', 'planIdentity', 'candidatePresent', 'candidateType', 'candidateMatchesPlan'].sort()), '57. an entry carries exactly the documented, factual fields — no manufactured "observed" field');
-        assert(!('observed' in timeline.timeline[0]), '58. an entry never carries its own "observed" field — every genuine timeline entry is, by construction, already a genuine observation');
+        assert(serialize(entryKeys) === serialize(['observationIndex', 'observedAt', 'decision', 'planIdentity', 'candidatePresent', 'candidateType', 'candidateMatchesPlan'].sort()), '59. an entry carries exactly the documented, factual fields — no manufactured "observed" field');
+        assert(!('observed' in timeline.timeline[0]), '60. an entry never carries its own "observed" field — every genuine timeline entry is, by construction, already a genuine observation');
 
         const moduleSource = await (await import('node:fs/promises')).readFile(new URL('../application/PublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationHistoryTimelineView.js', import.meta.url), 'utf8');
         const importLines = moduleSource.split('\n').filter((line) => line.startsWith('import '));
-        assert(importLines.length === 0, '59. this file imports nothing at all');
+        // 0.8.167 — this file now imports exactly ONE module: the archive
+        // reconstruction seam (application/
+        // PublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationHistoryView.js),
+        // used only by reconstructXxx() above. It still imports nothing from
+        // 0.8.162/0.8.163/0.8.164 themselves, or any decision/plan module.
+        assert(importLines.length === 1, '61. this file imports exactly one module');
+        assert(importLines[0].includes('PublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationHistoryView.js'), '61b. the one import is the 0.8.167 archive reconstruction seam, never 0.8.162/0.8.163/0.8.164 themselves');
 
         const codeOnly = moduleSource.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n').toLowerCase();
         // "valid"/"invalid" are deliberately excluded from this list: this
@@ -357,16 +377,16 @@ async function run() {
         // tests already exclude it.
         const forbidden = ['current', 'latest', 'stale', 'superseded', 'resolved', 'pending', 'reverted', 'corrected', 'authoritative', 'preferred', 'trust', 'confidence'];
         for (const term of forbidden) {
-            assert(!codeOnly.includes(term), `60. this file's own code never carries "${term}"`);
+            assert(!codeOnly.includes(term), `62. this file's own code never carries "${term}"`);
         }
         // The result's own top-level and entry-level keys carry no
         // state-machine vocabulary either.
         const forbiddenKeys = ['current', 'latest', 'stale', 'superseded', 'resolved', 'pending', 'reverted', 'corrected', 'valid', 'invalid'];
         for (const term of forbiddenKeys) {
-            assert(!topKeys.includes(term) && !entryKeys.includes(term), `61. the result never carries a state-machine field named "${term}"`);
+            assert(!topKeys.includes(term) && !entryKeys.includes(term), `63. the result never carries a state-machine field named "${term}"`);
         }
     }
-    console.log('✓ Section L: zero imports, no state-machine vocabulary anywhere in code or result shape, and no manufactured "observed" field');
+    console.log('✓ Section L: exactly one import (the 0.8.167 archive reconstruction seam), no state-machine vocabulary anywhere in code or result shape, and no manufactured "observed" field');
 
     console.log('\nAll PublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationHistoryTimelineView tests passed.');
 }

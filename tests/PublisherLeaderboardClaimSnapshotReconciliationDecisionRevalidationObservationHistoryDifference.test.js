@@ -412,24 +412,34 @@ async function run() {
         assert(Object.isFrozen(diffOnce.sourceOnly), '64. sourceOnly is frozen');
         assert(Object.isFrozen(diffOnce.targetOnly), '65. targetOnly is frozen');
 
-        // reconstruct() — thin, deliberately-empty archive boundary until
-        // 0.8.167. Every archive shape, genuine or malformed, produces the
-        // identical empty-vs-empty result.
+        // reconstruct() — 0.8.167: now reads each side's own durable
+        // revalidationObservationRecords collection from the archive.
         const emptyDiff = describePublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationHistoryDifference([], []);
         const reconstructedFromEmptyArchives = reconstructPublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationHistoryDifference(PublicationObservationArchive.empty(), PublicationObservationArchive.empty());
         assert(serialize(reconstructedFromEmptyArchives) === serialize(emptyDiff), '66. reconstruct() over two genuine, empty archives returns the empty-vs-empty result');
 
-        const populatedArchive = PublicationObservationArchive.empty().appendReconciliationDecisionRecord(D1);
-        const reconstructedFromPopulated = reconstructPublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationHistoryDifference(populatedArchive, populatedArchive);
-        assert(serialize(reconstructedFromPopulated) === serialize(emptyDiff), '67. reconstruct() over archives holding unrelated collections still returns the empty-vs-empty result — no observation-history collection exists yet');
+        // An archive holding OTHER, unrelated collections (e.g.
+        // reconciliation decision records) but no revalidation observation
+        // records still reconstructs to the empty-vs-empty result — the two
+        // collections are independent.
+        const unrelatedArchive = PublicationObservationArchive.empty().appendReconciliationDecisionRecord(D1);
+        const reconstructedFromUnrelated = reconstructPublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationHistoryDifference(unrelatedArchive, unrelatedArchive);
+        assert(serialize(reconstructedFromUnrelated) === serialize(emptyDiff), '67. reconstruct() over archives holding only unrelated collections still returns the empty-vs-empty result');
 
         const invalidReconstructed = reconstructPublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationHistoryDifference(null, undefined);
         assert(serialize(invalidReconstructed) === serialize(emptyDiff), '68. reconstruct() over invalid/missing archives also returns the empty-vs-empty result, never a throw');
 
-        const reconstructedTwice = reconstructPublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationHistoryDifference(populatedArchive, PublicationObservationArchive.empty());
-        assert(serialize(reconstructedTwice) === serialize(emptyDiff), '69. reconstruct() is deterministic regardless of which archive is genuine or malformed');
+        // A genuinely populated pair of archives reconstructs to exactly
+        // the difference the pure computation produces over the identical
+        // raw histories.
+        let sourceArchive = PublicationObservationArchive.empty().appendRevalidationObservationRecord(O1);
+        let targetArchive = PublicationObservationArchive.empty().appendRevalidationObservationRecord(O2);
+        const purePopulatedDiff = describePublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationHistoryDifference([O1], [O2]);
+        const reconstructedFromPopulated = reconstructPublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationHistoryDifference(sourceArchive, targetArchive);
+        assert(serialize(reconstructedFromPopulated) === serialize(purePopulatedDiff), '69. reconstruct(archiveA, archiveB) agrees byte-for-byte with describe() over the identical raw histories');
+        assert(reconstructedFromPopulated.sourceOnlyCount === 1 && reconstructedFromPopulated.targetOnlyCount === 1, '70. the reconstructed difference reflects each archive\'s own preserved observation history');
     }
-    console.log('✓ Section M: neither input history nor any record it holds is ever mutated, repeated calls are byte-identical, results are frozen, and reconstruct() remains a thin, deliberately-empty archive boundary until 0.8.167');
+    console.log('✓ Section M: neither input history nor any record it holds is ever mutated, repeated calls are byte-identical, results are frozen, and reconstruct() (0.8.167) now reads each archive\'s own durable observation history');
 
     // ---------------------------------------------------------------
     // Section N — architectural/vocabulary regression.
@@ -446,7 +456,14 @@ async function run() {
 
         const moduleSource = await (await import('node:fs/promises')).readFile(new URL('../application/PublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationHistoryDifference.js', import.meta.url), 'utf8');
         const importLines = moduleSource.split('\n').filter((line) => line.startsWith('import '));
-        assert(importLines.length === 0, '72. this file imports nothing at all — no dependency on 0.8.162/0.8.163/0.8.164/0.8.165 or any decision/plan/archive module');
+        // 0.8.167 — this file now imports exactly ONE module: the archive
+        // reconstruction seam (application/
+        // PublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationHistoryView.js),
+        // used only by reconstructXxx() below. It still imports nothing from
+        // 0.8.162/0.8.163/0.8.164/0.8.165 themselves, or any decision/plan
+        // module.
+        assert(importLines.length === 1, '72. this file imports exactly one module');
+        assert(importLines[0].includes('PublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationHistoryView.js'), '72b. the one import is the 0.8.167 archive reconstruction seam, never 0.8.162/0.8.163/0.8.164/0.8.165 themselves');
 
         const codeOnly = moduleSource.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n').toLowerCase();
         // "valid"/"invalid" are deliberately excluded: this file's own name
@@ -473,7 +490,7 @@ async function run() {
         }
         assert(networkCallOccurred === false, '76. this projection performs zero network access');
     }
-    console.log('✓ Section N: zero imports, no interpretive/state-machine vocabulary anywhere in code or result shape, and both entry points are exported correctly');
+    console.log('✓ Section N: exactly one import (the 0.8.167 archive reconstruction seam), no interpretive/state-machine vocabulary anywhere in code or result shape, and both entry points are exported correctly');
 
     console.log('\nAll PublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationHistoryDifference tests passed.');
 }

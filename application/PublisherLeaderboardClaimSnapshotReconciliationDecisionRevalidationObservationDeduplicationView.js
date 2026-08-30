@@ -1,3 +1,5 @@
+import { reconstructPublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationHistory } from './PublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationHistoryView.js';
+
 // 0.8.164 — Revalidation Observation History Deduplication Projection.
 //
 // 0.8.163 keeps an append-only history of 0.8.162's own observation
@@ -88,32 +90,47 @@
 // `observationHistory` or any entry inside it. Calling this function twice
 // with an equivalent `observationHistory` returns a byte-identical result.
 //
-// ARCHITECTURAL BOUNDARY — NO IMPORTS AT ALL. This file imports nothing
-// from `application/PublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservation.js`
+// `describePublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationDeduplication()`/
+// `reconstructPublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationDeduplication()`
+// — THE IDENTICAL SPLIT `application/
+// PublisherLeaderboardClaimSnapshotReconciliationDecisionHistoryStatisticsView.js`'s
+// OWN 0.8.147/0.8.150 PAIR ALREADY HOLDS, one subject over.
+// `describePublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationDeduplication()`
+// remains the pure computation, over one plain, in-memory observation-history
+// array (0.8.163's own shape) — UNCHANGED by 0.8.167.
+// `reconstructPublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationDeduplication()`
+// below reads that array from `PublicationObservationArchive`'s own
+// `revalidationObservationRecords` collection (0.8.167), via `application/
+// PublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationHistoryView.js`'s
+// own `reconstructPublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationHistory()`
+// — the ONE seam that reads the archive.
+//
+// ARCHITECTURAL BOUNDARY — EXACTLY ONE IMPORT, THE 0.8.167 ARCHIVE
+// RECONSTRUCTION SEAM. This file imports nothing from `application/
+// PublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservation.js`
 // (0.8.162), `application/PublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationHistory.js`
 // (0.8.163), any decision or decision-history module, any revalidation or
-// plan-identity module, or any archive module — it trusts nothing about how
-// an observation record was produced beyond its own documented shape
-// (`{ observed: true, decision, planIdentity, candidatePresent,
-// candidateType, candidateMatchesPlan, observedAt }`), performs no
-// candidate matching, plan reconstruction, or decision generation of its
-// own, and never calls 0.8.163, 0.8.162, or anything earlier to re-derive
-// or double-check anything.
+// plan-identity module, or `PublicationObservationArchive.js` itself — it
+// trusts nothing about how an observation record was produced beyond its
+// own documented shape (`{ observed: true, decision, planIdentity,
+// candidatePresent, candidateType, candidateMatchesPlan, observedAt }`),
+// performs no candidate matching, plan reconstruction, or decision
+// generation of its own, and never calls 0.8.163, 0.8.162, or anything
+// earlier to re-derive or double-check anything.
+// `describePublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationDeduplication()`
+// itself still imports nothing and still trusts nothing about how its own
+// `observationHistory` argument was produced; the one import above is used
+// ONLY by `reconstructPublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationDeduplication()`.
 //
 // DELIBERATELY EXCLUDED — NOT THIS MILESTONE.
 // - **Statistics beyond the three counts above** — per-plan counts,
-//   per-candidate-type counts, or any other aggregate/breakdown. That is
-//   0.8.165's own, separately sized, later question.
+//   per-candidate-type counts, or any other aggregate/breakdown. That
+//   remains a separately sized, later question, if one is ever wanted.
 // - **Timeline, chronological ordering, or any re-derivation by
 //   `observedAt`.** `observations` is first-appearance ordered only; that
-//   is 0.8.166's own, separately sized, later question.
+//   is 0.8.165's own, already-built question.
 // - **Difference between two histories, or between two deduplication
-//   projections.** That is 0.8.167's own, separately sized, later
-//   question.
-// - **Persistence, synchronization, or `PublicationObservationArchive`
-//   integration of any kind.** `observationHistory` is an in-memory array
-//   handed in and read only; integrating this projection into the archive
-//   is 0.8.168's own, separately sized, later question.
+//   projections.** That is 0.8.166's own, already-built question.
 // - **Mutating `observationHistory`, deduplicating it in place, or
 //   producing a "deduplicated history" that replaces the original.** The
 //   underlying history retains multiplicity permanently — this file only
@@ -122,8 +139,14 @@
 //   fact that a non-genuine entry is skipped), "correct," "stale,"
 //   "resolved," "superseded," or "preferred."** This file introduces no
 //   vocabulary beyond counting and first-appearance deduplication.
-// - **Automatic, periodic, or background computation of any kind.** This
-//   function runs only when a caller explicitly calls it.
+// - **Persisting this projection's own OUTPUT.** `reconstructXxx()` reads
+//   the archive's own raw observation history and recomputes this
+//   projection fresh every call — the deduplication RESULT itself is never
+//   written back to `PublicationObservationArchive`, exactly as
+//   `reconstructPublisherLeaderboardClaimSnapshotReconciliationDecisionHistoryStatisticsView.js`'s
+//   own statistics result never is.
+// - **Automatic, periodic, or background computation of any kind.** These
+//   functions run only when a caller explicitly calls them.
 export function describePublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationDeduplication(observationHistory) {
     const entries = Array.isArray(observationHistory) ? observationHistory : [];
     const genuine = entries.filter((entry) => entry && typeof entry === 'object' && entry.observed === true);
@@ -147,6 +170,17 @@ export function describePublisherLeaderboardClaimSnapshotReconciliationDecisionR
         duplicateObservationCount,
         observations: Object.freeze(observations)
     });
+}
+
+// reconstructPublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationDeduplication()
+// — see this file's own header, "The identical split," above. An
+// invalid/missing `archive` degrades to `PublicationObservationArchive.empty()`
+// by way of the reconstruction seam it calls, which in turn produces this
+// projection's own all-zero, empty-`observations` result — never a throw.
+export function reconstructPublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationDeduplication(archive) {
+    return describePublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationDeduplication(
+        reconstructPublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationHistory(archive)
+    );
 }
 
 // Complete observation identity — decision + planIdentity + candidatePresent
