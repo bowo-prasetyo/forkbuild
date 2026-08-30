@@ -39929,3 +39929,98 @@ Verification Timeline" projection — how a signer's claims verified against
 their corresponding historical snapshots over a supplied sequence — is
 genuinely separate, later work this milestone deliberately leaves
 unbuilt.
+
+## 0.8.141 — Historical Claim Verification Evolution Projection
+
+0.8.133 answered "how does one signer's own sequence of claims look?" —
+grouped by `signerIdentityId`, ordered by the signer's own declared
+`claimCreatedAt`, deduplicated to distinct claims — with no notion of how
+any one claim in that sequence relates to a historical snapshot. 0.8.140
+answered "given a whole claim history and an explicitly supplied snapshot
+sequence, which snapshots correspond to which claims, and does each
+corresponding pair verify?" — but over every distinct claim in
+`claimHistory`'s own first-appearance order, with no notion of "this
+signer's Nth claim." This milestone is the composition of the two,
+finally built: 0.8.140's own per-claim correspondence/verification result,
+attached onto 0.8.133's own per-signer claim sequence.
+
+New module,
+`application/PublisherLeaderboardClaimSnapshotCorrespondenceVerificationEvolutionView.js`:
+`describePublisherLeaderboardClaimSnapshotCorrespondenceVerificationEvolution(claimHistory, snapshots, verifier)`.
+
+**This is a narrative projection, never an evaluation engine.** Given a
+signer's successive claims — one fully verifies, the next corresponds but
+disagrees on one asserted field, the next corresponds structurally but
+carries a tampered signature — this file states exactly those facts, in
+claim order, and draws no conclusion about whether the sequence is
+improving, declining, trending, or trustworthy. No `improved`,
+`regressed`, `upgraded`, `downgraded`, `progress`, `trajectory`, `trend`,
+`declining`, `trust`, `confidence`, or `reputation` field anywhere.
+
+**No second evolution algorithm, no second correspondence/verification
+algorithm — both inputs are reused whole.** Every claim field other than
+`matchingSnapshotCount`/`snapshotMatches` is 0.8.133's own result, carried
+through byte for byte. 0.8.140 is called exactly ONCE over the whole
+`claimHistory`/`snapshots`/`verifier` — never once per signer, never once
+per claim — and its `association`/`verification` facts are embedded whole
+and unmodified. This file's only original work is a single pass building
+`claimId → 0.8.140's own correspondence entry`, then reading that map once
+per claim while walking 0.8.133's own `signerEvolutions`.
+
+**A claim with zero corresponding snapshots remains `snapshotMatches: []`
+in its own sequence position — never `verificationFailed: true`, never
+dropped from the sequence.** Reusing, never re-deriving, 0.8.139's/
+0.8.140's own restraint that absence of correspondence is not verification
+failure — now held across an entire signer's own sequence, where the
+distinction matters even more: a reader scanning a signer's history could
+otherwise mistake "no snapshot was ever supplied for this claim" for "this
+claim failed to verify."
+
+**Duplicate receipts never inflate a signer's own claim sequence.**
+Top-level `claimCount` counts RECEIPTS, exactly as 0.8.133's/0.8.140's own
+`claimCount` already does. But `signerEvolutions[*].claimCount` and
+`signerEvolutions[*].claims` are 0.8.133's own DISTINCT count and list —
+the same claim id received twice contributes one entry, verified against
+`snapshots` exactly once.
+
+**Flagship.** Alice's own four-claim sequence: Claim A → S1, fully
+consistent asserted fields, genuine signature — everything true. Claim B →
+S2, genuine signature but asserting `policyVersion: 99` instead of S2's
+own P2 — kept by complete `snapshotFingerprint` agreement,
+`policyVersionMatches` false on both `association` and `verification`,
+`verification.matches` false. Claim C → S3, fully consistent asserted
+fields, then its signature bytes are tampered —
+`verification.signatureValid` false, the three semantic verification facts
+still true, `verification.matches` false purely from the invalid
+signature. Claim D → no corresponding snapshot at all — `matchingSnapshotCount:
+0`, empty `snapshotMatches`, never a fabricated failure. Duplicate receipts
+of Claim A and Claim B are also stored, proving Alice's own `claimCount`
+stays 4 (distinct), never 6 (receipts).
+
+**Architectural boundary: imports 0.8.133 and 0.8.140 only.** This file
+imports nothing from `application/LeaderboardClaimRecord.js` (it performs
+no independent record filtering — both 0.8.133 and 0.8.140 already do
+that), `application/PublisherLeaderboardClaimSnapshotCorrespondenceView.js`,
+`application/PublisherLeaderboardHistoricalClaimVerification.js`, any
+signing or identity module, any archive module, or any ranking module.
+
+**No reconstruct variant — matching 0.8.139's/0.8.140's own choice, not
+0.8.133's.** `snapshots` and `verifier` are always explicitly supplied by
+a caller; there is no archive that stores "the corresponding historical
+snapshots" for this file to reconstruct on a caller's behalf.
+
+**Deliberately excluded — not this milestone.** Improvement/regression/
+trend judgments of any kind. Trust/reputation judgments, confidence
+scores, a collapsed verdict beyond 0.8.140's own `matches`. A second
+evolution/correspondence/verification algorithm. Automatic snapshot
+selection or reconstruction. Cross-signer comparison of two signers' own
+verification sequences — genuinely separate, later work composing this
+file's own per-signer results. New cryptographic primitives. Persistence
+of verification results, synchronization of any kind.
+
+What's left, and deliberately unbuilt: this milestone narrates one
+signer's own claim sequence against one caller-supplied snapshot sequence.
+A later "Historical Claim/Snapshot Divergence Analysis" — what exactly
+changed between two of a signer's own successive claims and their
+corresponding snapshots — is genuinely separate, later work this milestone
+deliberately leaves unbuilt.
