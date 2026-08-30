@@ -40210,3 +40210,94 @@ re-evaluation of any transported decision's own disposition.
 `docs/Roadmap.md` and `docs/Principles.md` updated;
 `PublisherLeaderboardClaimSnapshotReconciliationDecisionHistoryExchange.test.js`
 registered in `tests.html`.
+
+## 0.8.152 — Reconciliation Decision History Synchronization
+
+0.8.150 gave a replica's own reconciliation decisions a durable,
+archive-backed home. 0.8.151 gave two replicas a way to TRANSPORT an
+entire decision history between them, but blindly: exporting a whole
+history re-sends every decision a replica has ever recorded, whether or
+not the other side already holds it. 0.8.149 gave two replicas a way to
+LEARN exactly which decisions differ, but purely as a read — it never
+moves anything itself. This milestone is the missing connective layer,
+composing the two, mirroring 0.8.131's own claim-history synchronization
+exactly, one subject over: a new `application/
+PublisherLeaderboardClaimSnapshotReconciliationDecisionHistorySynchronization.js`
+with four thin functions —
+`describePublisherLeaderboardClaimSnapshotReconciliationDecisionHistorySynchronization()`,
+`reconstructPublisherLeaderboardClaimSnapshotReconciliationDecisionHistorySynchronization()`,
+`exportPublisherLeaderboardClaimSnapshotReconciliationDecisionHistorySynchronization()`,
+`applyPublisherLeaderboardClaimSnapshotReconciliationDecisionHistorySynchronization()`
+— governed by one principle: **difference determines what is missing;
+exchange transports it; synchronization composes the two without creating
+a third algorithm.**
+
+**An orchestrator, never a second engine.** Every function is a thin
+composition of 0.8.149's own difference projection and 0.8.151's own
+exchange, unchanged. `describeXxx()`/`reconstructXxx()` are byte-identical
+passthroughs to 0.8.149's own `describeXxx()`/`reconstructXxx()`.
+`exportXxx(sourceHistory, targetHistory)` computes the difference, then
+exports ONLY `difference.sourceOnly` via 0.8.151's own `exportXxx()` — the
+one genuinely new idea this milestone adds. `applyXxx(targetHistory,
+payload)` delegates directly to 0.8.151's own `applyXxx()`, taking no
+verifier argument either, for the identical reason 0.8.151 takes none. No
+new decision-identity algorithm, no new JSON envelope, no new append
+logic — grep the file and none of those three exist here.
+
+**Directional, explicit, never reciprocal on its own.**
+`exportXxx(source, target)` answers exactly one direction and never also
+computes or returns the reverse; a caller wanting two replicas to
+converge makes two (or more) explicit calls, one per direction — the
+identical discipline 0.8.131's own header already holds one subject over.
+
+**Local duplicates are never normalized by synchronization.** If Alice
+holds `[D1, D1, D2]` and Bob holds `[D1, D3]`, this milestone never first
+collapses Alice's own genuine duplicate before computing a difference or
+exporting a payload. The difference operates on the existing
+decision-history semantics 0.8.149 already established; 0.8.151's own
+exchange-level deduplication alone governs what a receiving side folds
+in. Synchronization is never a hidden history-cleanup mechanism.
+
+**New flagship test**
+(`PublisherLeaderboardClaimSnapshotReconciliationDecisionHistorySynchronization.test.js`,
+8 sections) proves a four-replica worked example: Alice holds
+`[D1, D2, D2]` (a genuine local duplicate), Bob holds `[D2, D3]`, Carol
+holds `[D1, D3, D4]`, Dave holds `[D4]`. A directional forward ring
+(Alice→Bob→Carol→Dave→Alice) followed by explicit reverse calls
+(Bob→Alice, Carol→Bob, Dave→Carol, Alice→Dave) converges Bob, Carol, and
+Dave onto the exact four-decision union `{D1, D2, D3, D4}` — verified
+byte-for-byte against 0.8.149's own difference projection — while Alice
+retains her own extra, genuine local D2 duplicate as a strict superset of
+that union, exactly as 0.8.131's own claim-history flagship already
+proves one subject over. Repeating an already-converged synchronization
+pair is a verified no-op, including the particularly valuable assertion
+`secondApply.history === firstApply.history` — the exact same instance,
+never merely an equal one. A dedicated section proves the subtle
+decision-identity issue explicitly at this layer: the same candidate
+decided at two different `decidedAt` values, or decided `OBSERVE` versus
+`DEFER` at the identical `decidedAt`, both remain genuinely distinct
+records straight through synchronization, never merged or restated. A
+permanent architectural regression test proves the module carries no
+interpretive/trust vocabulary of its own, and imports exactly the two
+modules it composes — 0.8.149's difference projection and 0.8.151's
+exchange — never the plan, candidate, decision, or archive modules
+directly.
+
+**Deliberately excluded — not this milestone.** No latest-decision-per-
+candidate view, no decision supersession, no decision conflict detection,
+no majority/consensus computation, no automatic `OBSERVE`/`DEFER`
+interpretation, no decision expiration, no decision authorization, no
+automatic execution, no automatic reconciliation, no conflict resolution
+of any kind, and no network transport. Two replicas holding `OBSERVE` and
+`DEFER` for the identical candidate is transported as two historical
+facts, exactly as 0.8.149 already reports it — this milestone draws no
+conclusion about which disposition should win. No bidirectional
+"synchronize both ways in one call" convenience function — see
+"Directional, explicit, never reciprocal on its own," above.
+
+Deliberately no `docs/Principles.md` entry — like 0.8.131's own claim-
+history synchronization counterpart, this milestone introduces no new
+principle of its own; it composes two already-documented ones. `docs/
+Roadmap.md` updated;
+`PublisherLeaderboardClaimSnapshotReconciliationDecisionHistorySynchronization.test.js`
+registered in `tests.html`.
