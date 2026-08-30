@@ -40697,3 +40697,150 @@ applying anything, or execution of any kind.
 `docs/Roadmap.md` updated;
 `PublisherLeaderboardClaimSnapshotReconciliationCandidateDecisionAgreementView.test.js`
 registered in `tests.html`.
+
+## 0.8.157 — Reconciliation Decision Candidate Revalidation Projection
+
+0.8.153 answered "which candidate does this historical decision refer
+to?" by reading straight off the decision record's own embedded
+`candidate`, never rediscovered — deliberately never asking whether that
+candidate still occurs in any particular plan. This milestone asks
+exactly the question 0.8.153 left open: given that SAME historical
+decision, and a caller-supplied, EXPLICIT reconciliation plan, does the
+decision's own embedded candidate still occur in THAT plan? A new
+`application/PublisherLeaderboardClaimSnapshotReconciliationDecisionCandidateRevalidationView.js`
+with one function,
+`describePublisherLeaderboardClaimSnapshotReconciliationDecisionCandidateRevalidation(decisionRecord, plan)`.
+
+**Two separate artifacts, neither one overwriting the other.**
+`decisionRecord` is echoed in the result completely unchanged;
+`candidatePresent`/`candidateMatchesPlan` are fresh, independent facts
+about `plan` alone, computed by calling 0.8.144's own
+`describePublisherLeaderboardClaimSnapshotReconciliationCandidate()`
+exactly once, passing a selection built directly from the decision's own
+embedded candidate. "Present in the supplied plan" is never "correct,"
+"stale," "resolved," or "superseded" — it states one fact, nothing more.
+Decision disposition (`OBSERVE`/`DEFER`) never affects candidate
+matching. An invalid decision record degrades to
+`{ decision: null, candidatePresent: false, candidateType: null,
+candidateMatchesPlan: false }`, never a throw; a malformed `plan` is
+handed straight to 0.8.144's own tolerant call.
+
+**No `reconstructXxx()` entry point — deliberately.** The archive stores
+decision history (0.8.150's own seam), but it stores no reconciliation
+PLAN of any kind; a plan remains an explicitly supplied, in-memory
+artifact a caller already holds. Manufacturing one from current archive
+state would repeat, one layer up, exactly the automatic-selection
+mistake 0.8.144's own header already forbids.
+
+**Further sections** cover: the three candidate types, each correctly
+revalidated; exact candidate identity (C1+S1 vs. C1+S2 remain distinct;
+a claim-shaped and a snapshot-shaped candidate never collide on a shared
+field value); the flagship historical-decision-vs-later-plan scenario
+(the same decision reads `candidatePresent: true` against the plan it
+was recorded against and `false` against a later plan lacking the
+candidate, while the decision itself never changes); disposition
+independence; plan-side candidate multiplicity (still a single
+present/absent fact); immutability; determinism; and a permanent
+architectural regression test proving exactly one import (0.8.144's own
+candidate-selection boundary) and no `reconstructXxx()` export.
+
+**Deliberately excluded — not this milestone.** No new candidate
+selection or decision recording. No interpretation of `OBSERVE`/`DEFER`,
+or any state-machine verdict about the decision or the candidate. No
+modification of the plan or the decision history. No reading the current
+archive to manufacture a plan. No candidate ranking, timestamp
+comparison, or signature verification. No projection over many
+historical decisions at once — that is separate, later work (0.8.158,
+per this milestone's own request). No persistence, synchronization, or
+automatic/background computation of any kind.
+
+`docs/Roadmap.md` updated;
+`PublisherLeaderboardClaimSnapshotReconciliationDecisionCandidateRevalidationView.test.js`
+registered in `tests.html`.
+
+## 0.8.158 — Reconciliation Decision History Revalidation Projection
+
+0.8.157 lifted "does this candidate still occur in this plan?" from a
+question about the current archive to a question about one, explicitly
+supplied plan — but it answers that question for exactly one historical
+decision at a time. This milestone is the sequence-level scale-up of
+that same primitive, never a new comparison algorithm: given an entire
+decision HISTORY (0.8.146's own plain, ordered array of 0.8.145 decision
+records) and one explicitly supplied plan, which of that history's own
+recorded decisions still name a candidate present in that plan? A new
+`application/PublisherLeaderboardClaimSnapshotReconciliationDecisionHistoryRevalidationView.js`
+with one function,
+`describePublisherLeaderboardClaimSnapshotReconciliationDecisionHistoryRevalidation(decisionHistory, plan)`
+— and, unlike 0.8.157, still no `reconstructXxx()` entry point, for the
+identical reason: the plan remains an explicitly supplied artifact the
+archive never stores.
+
+**A thin sequence wrapper over 0.8.157, never a second matching engine.**
+This file calls 0.8.157's own `describeXxx()` exactly once per genuine
+decision in `decisionHistory`, passing the SAME `plan` argument
+unchanged every time, and collects the results in order. It rediscovers
+no candidates, reconstructs no plan, re-runs no 0.8.144, recomputes no
+decision, and interprets neither `OBSERVE` nor `DEFER`. The distinction
+this milestone exists to hold, over a whole history instead of one
+decision:
+
+    historical fact:          "this decision was recorded"
+    current comparison fact:  "its candidate is/isn't present in this
+                                supplied plan"
+
+**Result shape:** `{ decisionCount, presentCandidateCount,
+absentCandidateCount, revalidations: [{ decisionIndex, decision,
+candidatePresent, candidateType, candidateMatchesPlan }] }`.
+`decisionCount` counts stored HISTORY ENTRIES — `[D1, D1, D2]`, with
+both `D1` entries genuine, produces `decisionCount: 3` and three
+`revalidations` entries, never deduplicated; this is a projection of
+decision history, and a decision recorded twice was recorded twice.
+`presentCandidateCount`/`absentCandidateCount` instead tally DISTINCT
+CANDIDATES named anywhere in `decisionHistory` — 0.8.147's own complete
+structural identity key, each counted once regardless of how many
+decisions were recorded against it. `D1 -> C1`, `D2 -> C1`, `D3 -> C2`,
+with both C1 and C2 present, produces `decisionCount: 3` alongside
+`presentCandidateCount: 2`.
+
+**Flagship scenario:** given `D1(C1/S1)->OBSERVE`, `D2(C2)->DEFER`,
+`D3(C1/S2)->OBSERVE`, `D4(S3)->DEFER`, revalidated against a later plan
+naming only `C1/S1`, `C2`, and `S3` — D1, D2, and D4 read
+`candidatePresent: true`, and D3 reads `candidatePresent: false`, but D3
+itself is echoed in the result completely unchanged, still `OBSERVE`,
+still recorded against `C1/S2`. D3 does not become "wrong,"
+"superseded," or "obsolete" anywhere in this result — that is precisely
+the architectural value this milestone exists to hold.
+
+**Further sections** cover: input validation (malformed/absent history
+and plan never throw; a malformed entry mixed into an otherwise genuine
+history is silently excluded and claims no index of its own); one
+independent 0.8.157 evaluation per decision; decision/candidate
+multiplicity (`[D1, D1, D2]` yields three `revalidations` entries but
+only two distinct candidates tallied); disposition independence
+(`OBSERVE`/`DEFER` never affect matching or candidate-level tallies, and
+two decisions about the identical candidate contribute one distinct
+candidate, not two); candidate identity precision (`C1/S1` != `C1/S2`;
+`CLAIM_WITHOUT_CORRESPONDING_SNAPSHOT(C1)` !=
+`SNAPSHOT_WITHOUT_CORRESPONDING_CLAIM(S1)`); immutability (frozen
+result, frozen `revalidations` array, frozen entries, neither argument
+mutated); determinism; and a permanent architectural regression test
+proving exactly one import (0.8.157's own revalidation boundary), no
+archive/plan-reconstruction/decision-generation/candidate-selection
+import, no state-machine vocabulary, and no `reconstructXxx()` export.
+
+**Deliberately excluded — not this milestone.** No rediscovering
+candidates or reconstructing a plan. No re-running 0.8.144 or
+recomputing any decision. No interpreting `OBSERVE`/`DEFER`, comparing
+`decidedAt` timestamps, or determining whether a decision is "stale." No
+`resolved`/`superseded`/`obsolete`/`invalid` verdict about a decision or
+a candidate. No modifying the decision history or the plan. No
+deduplicating decisions or candidates within `revalidations`. No reading
+the current archive to manufacture a plan. No comparing the revalidation
+results of two different decision histories against the same plan —
+that is separate, later work (0.8.159, per this milestone's own
+request). No persistence, synchronization, or automatic/background
+computation of any kind.
+
+`docs/Roadmap.md` updated;
+`PublisherLeaderboardClaimSnapshotReconciliationDecisionHistoryRevalidationView.test.js`
+registered in `tests.html`.
