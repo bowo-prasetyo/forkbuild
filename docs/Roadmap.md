@@ -46199,17 +46199,125 @@ held.
 
 ---
 
-Deliberately paused here. This milestone completes the ingress-side
-pipeline 0.9.5 and 0.9.6 built toward: a local source and any number of
-peer sources can now become the one set of six arrays
-`deriveWorldEncounters()` already takes as its own arguments, without
-`core/WorldEncounter.js` needing to change at all and without this file
-ever deciding which of two contributions should win. Wiring that
-assembled result into the actual running World View — so a peer's
-present avatar can genuinely appear as a World encounter — is 0.9.8
-(Remote Encounter Integration), separate, later work. Returning to what
-0.9.4's own selection produces (0.9.9 — Encounter Inspection Request,
-0.9.10 — Publication/Avatar Inspection) stays unscheduled too, and — per
-the same reasoning that has paused this codebase before every milestone
-in this series — that choice belongs to an explicit request, not an
-automatic continuation.
+## 0.9.8 — Remote Encounter Integration (Multi-Source World Encounter Integration)
+
+0.9.5 named the seam, 0.9.6 crossed it once per peer message, and 0.9.7
+concatenated any number of already-described sources into
+`deriveWorldEncounters()`'s own six arrays — and each of those three
+files' own header explicitly stopped short of the one step all three kept
+pointing at: wiring the assembled result into the actual running World
+View. This milestone is that wiring, and only that wiring.
+
+```
+local records                    already-received peer message
+     │                                       │
+     ▼                                       ▼
+describeLocalWorldDiscoverySource   describePeerWorldDiscoverySource
+     │        (THIS)                     (0.9.6, peer/PeerWorldDataIngress.js)
+     │                                       │
+     └──────────────────┬────────────────────┘
+                         ▼         [ sources ]
+           application/WorldEncounterIntegration.js   ★ (THIS milestone)
+                 describeWorldFromDiscoverySources()
+                         │
+                         ├─▶ assembleWorldDiscoveryInputs()    (0.9.7)
+                         ├─▶ deriveWorldEncounters()           (0.9.0)
+                         ├─▶ describeWorldEncounterReadModel() (0.9.1)
+                         └─▶ describeWorldEncounterView()      (0.9.2)
+                         │
+                         ▼
+               ui/components/WorldEncounterCanvas.js  (0.9.3/0.9.4, unchanged)
+```
+
+**Orchestration, not another projection algorithm.** Every fact this
+milestone's own result carries is computed entirely by the four existing
+functions it calls, in the fixed order the diagram above shows. This file
+holds no `.map()`/`.filter()` over individual records, no `.find()`, and
+no loop of its own — if a bug ever exists in "which encounters exist" or
+"how a row is shaped," it lives in 0.9.0, 0.9.1, 0.9.2, or 0.9.7, never
+here.
+
+**`describeWorldFromDiscoverySources(sources)` is the one
+application-facing entry point.** It takes exactly what 0.9.7's own
+`assembleWorldDiscoveryInputs()` takes — an array of already-described
+`WorldDiscoverySource` bundles, local and peer alike — and returns
+exactly what 0.9.2's own `describeWorldEncounterView()` returns. A future
+World View container can write
+`describeWorldFromDiscoverySources(currentWorldDiscoverySources)` and
+nothing else, rather than manually chaining all four functions itself and
+becoming a second, parallel World discovery implementation.
+
+**`describeLocalWorldDiscoverySource(records)` gives local data the same
+shape a peer's data already has — nothing more.** 0.9.5's own `origin`
+field was always open-ended, so `describeWorldDiscoverySource({ origin:
+'local', ... })` already fully answers "what does local data look like as
+a source." This helper exists only so every call site shares the one
+fixed origin string (`LOCAL_WORLD_DISCOVERY_ORIGIN`, `'local'`) rather
+than each retyping it. The source it returns is structurally identical to
+any `peer:<identityId>` source — no special status.
+
+**No origin-based judgment, no deduplication — inherited unchanged from
+0.9.5 through 0.9.7.** This file never branches on `source.origin`, never
+treats `'local'` as privileged or a `'peer:...'` origin as suspect, and
+never notices or "fixes" two sources contributing the same record. Both
+kinds of sources reach `assembleWorldDiscoveryInputs()` in exactly the
+order the caller supplied them; a peer's publication becomes an encounter
+under the exact same placement rule a local publication already needs —
+peer data gets to participate in the World, never special World
+semantics.
+
+**No peer connection, no transport, no network, no live source
+lifecycle.** This file never imports `peer/PeerMessageBus.js` or any
+`PeerConnectionProvider`/`PeerDiscoveryProvider`; it is handed `sources` —
+already assembled by a caller from an already-received peer message and
+its own local records — and does nothing to obtain either. It holds no
+state between calls and subscribes to nothing; a source appearing or
+disappearing as a peer connects or disconnects is explicitly separate,
+later, unscheduled work.
+
+**Dependency direction: the UI never imports `core/WorldEncounter.js`
+directly.** `ui/components/WorldEncounterCanvas.js` itself is unchanged
+by this milestone — it already receives a 0.9.2-shaped `view` prop and
+has never known where that view came from.
+
+**Deliberately excluded — not this milestone.**
+- **Establishing, authenticating, or managing a peer connection, or
+  reading anything off `peer/PeerMessageBus.js`, `peer/
+  PeerConnection.js`, or any `PeerConnectionProvider`/
+  `PeerDiscoveryProvider`.** This file is handed already-described
+  sources.
+- **Live peer-source lifecycle** (a source entering when a peer appears,
+  leaving when a peer disappears). No state between calls, no
+  subscription.
+- **Deduplication, reconciliation, source prioritization, trust
+  decisions, signature verification, freshness decisions, conflict
+  resolution, automatic record matching, ranking, scoring, proximity
+  selection, or "nearest" encounter selection.** Every one of these is
+  inherited, unmodified, from 0.9.0 through 0.9.7.
+- **Persisting `sources`, the assembled inputs, the encounters, the read
+  model, or the view to a `StorageProvider`.**
+- **Actual markup, DOM nodes, rendering technology, or the Wanderer
+  itself.** `ui/components/WorldEncounterCanvas.js` (0.9.3/0.9.4,
+  unchanged) already owns that.
+- **Turning a 0.9.4 selection into an inspection request, or loading
+  inspected content.** Separate, later, unscheduled work (0.9.9, 0.9.10).
+
+`application/WorldEncounterIntegration.js` added; `docs/Roadmap.md`
+updated; `WorldEncounterIntegration.test.js` added and registered in
+`tests.html`.
+
+---
+
+Deliberately paused here. This milestone completes the source-side
+architecture's own request: local data and any number of already-received
+peer contributions can now become one World View through the existing,
+unmodified 0.9.0-through-0.9.2 pipeline, with no origin-based judgment and
+no deduplication anywhere along the way. Actually calling
+`describeWorldFromDiscoverySources()` from a live page-level container of
+`ui/views/WorldView.js` — and giving peer sources a lifecycle as peers
+connect and disconnect, rather than a static, already-supplied input — is
+separate, later, unscheduled work, and so is turning 0.9.4's own selection
+into an inspection request (0.9.9 — Encounter Inspection Request, 0.9.10 —
+Publication/Avatar Inspection). Per the same reasoning that has paused
+this codebase before every milestone in this series, those choices belong
+to an explicit request, not an automatic continuation.
