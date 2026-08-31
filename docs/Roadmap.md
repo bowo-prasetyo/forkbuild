@@ -41536,3 +41536,115 @@ Decision side                              Observation side
 `docs/Roadmap.md` updated;
 `PublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationCandidateCorrespondenceView.test.js`
 registered in `tests.html`.
+
+## 0.8.172 — Reconciliation Candidate Observation Evolution Projection
+
+0.8.171 drew exactly one relationship — observation-history entry to
+embedded candidate, in `history`'s own existing order — and deliberately
+stopped there, naming "observation evolution by candidate, or narrating
+observations grouped by the candidate they share over time" in its own
+"Deliberately excluded" list as later work. This milestone is that later
+work: a new `application/
+PublisherLeaderboardClaimSnapshotReconciliationCandidateDecisionRevalidationObservationEvolutionView.js`
+with two functions,
+`describePublisherLeaderboardClaimSnapshotReconciliationCandidateDecisionRevalidationObservationEvolution()`
+and
+`reconstructPublisherLeaderboardClaimSnapshotReconciliationCandidateDecisionRevalidationObservationEvolution()`,
+answering "how did the recorded observations concerning each reconciliation
+candidate evolve over time?" — the observation-history analogue of
+0.8.154's own per-candidate decision evolution, one subject over.
+
+**0.8.172 narrates 0.8.171's correspondence; it does not rediscover
+candidate identity — the one architectural boundary this milestone exists
+to hold.** `describeXxx()` calls 0.8.171's own `describeXxx()` exactly
+once over the whole supplied history, then performs only a
+grouping/ordering pass over that result's own `correspondences` array:
+observation history -> 0.8.171 (called once) -> observation-to-candidate
+correspondences -> grouped and ordered by candidate -> candidate
+observation evolutions. `reconstructXxx()` calls 0.8.171's own
+`reconstructXxx()` directly rather than reaching for the archive itself, so
+0.8.171 is called exactly once for the entire history regardless of which
+entry point a caller uses. This file's only import is 0.8.171's own
+module — nothing from 0.8.144 (candidate selection), 0.8.157 (candidate
+revalidation), 0.8.162 (observation recording), 0.8.163
+(observation-history storage), or any decision/plan/discovery module.
+
+**The output is a plain, factual shape**: `{ observationCount,
+distinctCandidateCount, candidateEvolutions: [{ candidate, observationCount,
+observations: [{ decision, planIdentity, candidatePresent, candidateType,
+candidateMatchesPlan, observedAt }] }] }`. `observationCount` counts stored
+history entries, exactly as 0.8.171's own `observationCount` already does;
+`distinctCandidateCount` counts distinct candidate identities, reusing
+0.8.147's/0.8.153's/0.8.171's own structural identity key unchanged.
+Candidate identity remains separate from every other per-observation fact:
+the candidate is stated once per group, on
+`candidateEvolutions[*].candidate`, and never repeated on each observation
+entry, which carries `decision`/`planIdentity`/`candidatePresent`/
+`candidateType`/`candidateMatchesPlan`/`observedAt` — never
+`observationIndex` itself, which is consumed only as the internal sort
+tie-break.
+
+**Within one candidate's own `observations` list, entries are ordered by
+`observedAt` ascending, with original history position (0.8.171's own
+`observationIndex`) as the tie-break** — the identical two-key sort
+0.8.154's own evolution, and 0.8.165's own timeline, already use, held here
+per candidate instead of across the whole history at once.
+`candidateEvolutions` itself retains first-appearance order (scanning
+0.8.171's own correspondence in its existing, unmodified order) and is
+never re-sorted by `observedAt`, by candidate type, or by observation
+count — only the observations *within* a group are chronologically
+ordered, never the groups themselves.
+
+**`candidatePresent`/`candidateMatchesPlan` are never interpreted.** A
+candidate's own sequence such as present+match -> absent+no-match ->
+present+match is reported exactly that way — three independently recorded
+historical observations, in chronological order — with no `changed`,
+`reversed`, `superseded`, `resolved`, `pending`, `final`, `current`,
+`latest`, `preferred`, `conflicting`, `corrected`, `converged`, or
+`drifted` vocabulary anywhere in the result or the file's own source. See
+`docs/Principles.md`, "A Candidate's Decision History Is A Narration, Not A
+State Machine" (0.8.154), held here again over a per-candidate OBSERVATION
+sequence.
+
+**Flagship test** proves the milestone's own worked example: a history of
+`O1 = C1 + present + match + OBS_T1`, `O2 = C1 + absent + no-match +
+OBS_T2`, `O3 = C2 + present + match + OBS_T3`, `O4 = C1 + present + match +
+OBS_T1` (an exact duplicate of O1), `O5 = C1 + present + match + OBS_T4`
+reports `observationCount: 5` and `distinctCandidateCount: 2`, with C1's
+own evolution carrying all four of its observations in chronological order
+(O1 and O4 both at OBS_T1, tie-broken by history position, then O2 at
+OBS_T2, then O5 at OBS_T4) and C2's own evolution carrying its single
+observation — proving observation multiplicity, candidate deduplication,
+chronological ordering, repeated identical observations, differing
+outcomes for one candidate, and first-appearance candidate ordering, all at
+once. Further sections cover all three candidate shapes preserved with no
+manufactured fields, malformed-input tolerance, no mutation of any
+supplied object, determinism, `reconstructXxx()`'s archive-reading
+boundary, and a permanent architectural regression test proving the module
+imports only 0.8.171's own correspondence projection.
+
+**Deliberately excluded — not this milestone.** No interpretation of a
+candidate's own observation sequence as convergence, drift, resolution,
+correction, confirmation, or invalidation. No deduplication of
+observations within a candidate's own sequence — an identical observation
+recorded twice remains two entries, always. No re-deriving candidate
+identity from a plan, claim history, snapshot list, or archive state. No
+comparison between two candidates' own observation sequences, or between
+two replicas' own candidate-observation evolutions — 0.8.173's own,
+separately sized, later question (candidate observation evolution
+difference). Whether a candidate is currently present, whether an
+observation is correct, or whether it agrees with another replica's
+(0.8.161's/0.8.162's/0.8.170's own, already-answered questions). No
+reconciliation ACTION, applying anything, or execution of any kind. No
+persistence or synchronization of any kind beyond the one 0.8.171 seam
+`reconstructXxx()` already uses.
+
+```
+Decision side                              Observation side
+─────────────                              ────────────────
+0.8.154 Candidate Decision Evolution       0.8.172 Candidate Observation Evolution   ★
+```
+
+`docs/Roadmap.md` updated;
+`PublisherLeaderboardClaimSnapshotReconciliationCandidateDecisionRevalidationObservationEvolutionView.test.js`
+registered in `tests.html`.
