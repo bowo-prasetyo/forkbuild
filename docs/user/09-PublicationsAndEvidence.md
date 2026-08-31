@@ -2024,9 +2024,18 @@ anything.
 Reconciliation Candidate Leaderboard
 
 Decision and observation evidence this replica has recorded for each
-reconciliation candidate, shown separately. Comparing against a peer
-replica's own archive is separate, later work — every count below
-reflects this replica alone.
+reconciliation candidate, compared explicitly against the peer archive
+supplied below. Nothing here merges, replaces, or reconciles either
+archive — this is a comparison, never a reconciliation.
+
+Peer Archive
+
+No peer archive supplied yet — every count below is Source-only until
+you paste one. Paste a peer replica's own exported archive (Export
+Archive, on the Publications page) and click "Use as Peer Archive".
+
+[ Peer archive JSON textarea ]
+[ Use as Peer Archive ]
 
 2 candidate(s)
 
@@ -2056,12 +2065,23 @@ each group, **Shared** counts what both sides being compared agree on;
 **Source-only** and **Target-only** count what only one side has
 recorded.
 
-> **Every count lands in Source-only today — expected, not a bug.**
-> Comparing your replica's own evidence against a specific peer's replica
-> is real, separate work this page doesn't do yet: there's no way here to
-> choose a peer to compare against. Until that exists, the "target" side
-> is always empty, so **Shared** and **Target-only** stay at zero and
-> everything this replica has recorded shows up as **Source-only**.
+**Comparing against a real peer archive.** Paste a peer replica's own
+exported archive (**Export Archive**, on the Publications page above)
+into the **Peer Archive** box and click **Use as Peer Archive**. Nothing
+here fetches a peer automatically or synchronizes anything — a peer
+archive only ever becomes part of this comparison because you explicitly
+supplied it. A paste that isn't a genuine archive export is rejected
+outright, with a message saying so, and never silently treated as an
+empty peer archive.
+
+> **No peer archive supplied yet? Every count lands in Source-only —
+> expected, not a bug.** Until you paste one, the "target" side is an
+> honestly empty archive, so **Shared** and **Target-only** stay at zero
+> and everything this replica has recorded shows up as **Source-only**.
+> The moment you supply a real peer archive, the same counts reflect a
+> genuine, directional comparison between the two: swap which archive is
+> "yours" and which is the peer, and **Source-only**/**Target-only**
+> swap with it — **Shared** never does.
 
 **"Evidence leaderboard," not a ranked one.** The header reads Candidate /
 Decision Evidence / Observation Evidence — never Rank, Score, or Status —
@@ -2076,9 +2096,12 @@ comparison workflow whose own entry point (creating and revalidating
 these records) hasn't been built into the interface yet. An empty result
 here isn't a bug; it means exactly what it says.
 
-The page loads your archive once, the moment you open it, and does not
-refresh automatically — a decision or observation recorded afterward
-isn't reflected until you leave and come back.
+The page loads your own archive once, the moment you open it, and does
+not refresh automatically — a decision or observation recorded
+afterward isn't reflected until you leave and come back. A pasted peer
+archive is never saved anywhere: it lives only on this page, for this
+visit, and reloading the page returns the comparison to its
+no-peer-archive default.
 
 ## What survives a reload
 
@@ -2185,9 +2208,12 @@ export/import, provenance, and fingerprint history (archive import
 events) are durable in exactly the same way.
 
 **The [Reconciliation Candidate Leaderboard](#reconciliation-candidate-leaderboard)
-stores nothing of its own — it only reads this same archive.** There's
-nothing here to survive or lose on that page itself; reloading it simply
-re-reads the archive from scratch, the same way opening it fresh does.
+stores nothing of its own — it only reads this same archive, plus
+whichever peer archive you've pasted in for that one visit.** Your own
+archive re-reads from scratch on reload, the same way opening the page
+fresh does; a pasted peer archive is never written to storage at all, so
+it's gone the moment you leave — on purpose, since it was never this
+device's own fact to keep.
 
 ## What's next?
 
