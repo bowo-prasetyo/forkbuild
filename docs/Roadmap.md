@@ -43401,3 +43401,161 @@ export are each separate, later concerns.
 updated to describe the "Evidence Export" control and the download it
 produces; `ReconciliationCandidateLeaderboardEvidenceExportUI.test.js`
 registered in `tests.html`.
+
+## 0.8.189 — Reconciliation Candidate Leaderboard Evidence Export Comparison
+
+0.8.186 turned an on-screen, already-filtered evidence view into a
+portable JSON document; 0.8.188 gave a reader a way to bring one back and
+inspect it, read-only, without ever re-supplying the two archives that
+produced it. Neither one answers a question that only comes up once TWO
+such documents exist — a report from last week against a report from
+today, or a report a peer emailed against one exported locally:
+
+> "How do these two EXPORTED REPORTS differ?"
+
+That is a genuinely different question from every comparison this
+codebase has built so far. 0.8.181/0.8.183/0.8.176/0.8.149/0.8.166 all
+compare `sourceArchive` against `targetArchive` — two LIVE, append-only
+histories a replica actually holds. This milestone compares two PORTABLE
+DOCUMENTS — two already-frozen snapshots of whatever a filter and a
+comparison state once decided to put on screen. Neither document is an
+archive, and neither is more authoritative than the other.
+
+```text
+0.8.186 Evidence Export ──┐
+                          ├──► 0.8.189 Evidence Export Comparison   ★
+0.8.186 Evidence Export ──┘        (or 0.8.188's own imported document,
+                                     on either side)
+```
+
+**A new, standalone application projection —**
+`application/PublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceExportComparison.js`
+exports one pure function:
+
+```text
+describePublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceExportComparison(sourceExport, targetExport)
+  -> { sourceComparisonState, targetComparisonState, sameComparisonState,
+       sourceFilter, targetFilter, sameFilter,
+       candidates:         { sourceCount, targetCount, sharedCount, sourceOnlyCount, targetOnlyCount, shared, sourceOnly, targetOnly },
+       decisionEvidence:   { ...identical six-field shape... },
+       observationEvidence: { ...identical six-field shape... } }
+```
+
+`sourceExport`/`targetExport` are two documents shaped exactly like
+0.8.186's own export result — or 0.8.188's own imported result, which is
+structurally identical. This file never re-validates either document's
+own shape (that boundary belongs entirely to 0.8.188); a malformed or
+absent document on either side degrades to an empty export with
+`NO_PEER`/`ALL`/`ALL` defaults, never a thrown error.
+
+**A comparison, not a reconciliation — the one rule everything else here
+exists to protect.** `sourceExport` naming something `targetExport`
+doesn't is reported as exactly one fact: that item is exclusive to
+`sourceExport`. It is never labeled wrong, stale, superseded, or
+something that should be synchronized. Two exported reports disagreeing
+says nothing about which replica's underlying archive is more complete or
+more current — it only ever says what each document, as exported, already
+contains.
+
+**Candidate presence is never confused with evidence agreement — the
+flagship distinction this milestone exists to draw.** `candidates`,
+`decisionEvidence`, and `observationEvidence` are three completely
+independent comparisons. A candidate can be `shared` (the identical
+candidate identity appears in both documents) while its own evidence is
+entirely asymmetric between the two — one export narrowed by a filter the
+other wasn't, or produced under a different peer comparison.
+
+**Evidence is compared flat, across every candidate at once — never
+grouped by candidate, and never grouped by the exporting document's own
+`shared`/`sourceOnly`/`targetOnly` label.** That label records a
+relationship each document's own original archive comparison already
+established; it carries no meaning for a comparison between two different
+documents, so this file pools every decision (and, separately, every
+observation) record across every candidate into one flat multiset per
+document, then compares the two pools by content.
+
+**Evidence identity is the existing structural identity the exported
+records already carry — never a new identity system.** Two records are
+the same evidence only when the complete exported record (`candidate` +
+`decision` + `decidedAt` for a decision record; `candidate` + `decision` +
+`planIdentity` + `candidatePresent` + `candidateType` +
+`candidateMatchesPlan` + `observedAt` for an observation record, exactly
+as 0.8.182 already surfaces it) is structurally identical — the identical
+"identity is exact structural equality" rule 0.8.117/0.8.149/0.8.166
+already hold. Multiset (bag) semantics throughout, never a set: two
+occurrences of an identical record on one side against one occurrence on
+the other report exactly one `shared` and one `sourceOnly`, never zero and
+never two.
+
+**Metadata stays independent of evidence.** `sourceComparisonState`/
+`targetComparisonState`/`sameComparisonState` and `sourceFilter`/
+`targetFilter`/`sameFilter` are computed entirely separately from the
+three evidence comparisons — two documents can carry byte-identical
+evidence while differing only in `filter`, or in `comparisonState`
+(`NO_PEER` vs `PEER_EMPTY`, the identical distinction 0.8.183/0.8.186/
+0.8.188 already keep alive through export and import) — and neither ever
+leaks into the other.
+
+**The result never collapses into one boolean.** There is no top-level
+`same`, `identical`, or `matches` field anywhere in the result — a reader
+checks `sameComparisonState`, `sameFilter`, and the three independent
+`sourceOnlyCount`/`targetOnlyCount` pairs separately.
+
+**Flagship scenario**, proving candidate agreement and evidence agreement
+are independent facts:
+
+```text
+Export A: C1 { decisions: shared D1, source-only D2; observations: shared O1, source-only O2 }
+Export B: C1 { decisions: shared D1;                 observations: shared O1, target-only O3 }
+          C2 { decisions: target-only D3 }
+
+candidates:          C1 → shared, C2 → target-only
+decisionEvidence:    D1 → shared, D2 → source-only, D3 → target-only
+observationEvidence: O1 → shared, O2 → source-only, O3 → target-only
+```
+
+C1 is a shared candidate even though its own evidence is asymmetric
+between the two documents.
+
+Also covered: empty export vs. empty export; byte-identical exports (every
+candidate and record lands shared); identical evidence with a different
+`filter` or a different `comparisonState`; source-only/target-only
+candidates with no evidence on either side; duplicate records under
+multiset semantics; two records differing only by `observedAt`, or only by
+`candidateMatchesPlan`, reported as genuinely distinct evidence; identical-
+looking evidence under two different candidates never cross-matched (a
+record's own embedded `candidate` field is part of its structural
+identity); candidate order and record order both preserved from the
+source export's own relative order; malformed/absent documents on either
+side degrading to an empty comparison without damaging a genuine document
+on the other side; determinism, no mutation, and frozen output throughout;
+and a vocabulary/import-boundary check (imports exactly 0.8.183's and
+0.8.184's own enums — never an archive-reading module, never 0.8.176/
+0.8.182/0.8.185, and never 0.8.186's or 0.8.188's own `describeXxx()`/
+`importXxx()`).
+
+**No `reconstructXxx()` in this file.** There is no archive pair to
+reconstruct from — this file's only inputs are two already-produced
+documents, whether freshly exported (0.8.186) or brought back from a
+paste (0.8.188).
+
+**No UI in this milestone, deliberately.** This file returns plain data.
+Comparing two exported reports is a portable, document-to-document
+question — a genuinely different concept from the live `sourceArchive`-
+vs-`targetArchive` comparison the leaderboard UI already renders — and the
+two should stay separate concepts until a UI for the export-to-export
+question is separately warranted.
+
+**Deliberately excluded — not this milestone.** Reading either archive, or
+any live-archive comparison. Reconciliation, synchronization, or merging
+of any kind. A score, rank, winner, `correct`/`incorrect`, `valid`,
+`stale`, `preferred`, `status`, or `confidence` field or vocabulary of any
+kind. Grouping evidence by candidate, or candidates by evidence.
+Deduplication of any kind, in either document, before or after comparison.
+Importing, validating, or parsing raw JSON text — that stays entirely
+0.8.188's own. Any markup, DOM nodes, or control-rendering technology
+choice.
+
+`docs/Roadmap.md` updated;
+`PublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceExportComparison.test.js`
+registered in `tests.html`.
