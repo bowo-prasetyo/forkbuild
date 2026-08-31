@@ -15,20 +15,27 @@ import {
 import {
     describePublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceExportComparisonDetail
 } from '../../application/PublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceExportComparisonDetailView.js';
+import {
+    describePublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceExportComparisonRecordIdentity
+} from '../../application/PublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceExportComparisonRecordIdentityView.js';
 import ReconciliationCandidateLeaderboardEvidenceExportComparisonTable from '../components/ReconciliationCandidateLeaderboardEvidenceExportComparisonTable.js';
 
-// 0.8.192/0.8.194 — Reconciliation Candidate Leaderboard Evidence Export
-// Comparison UI, and its Detail extension.
+// 0.8.192/0.8.194/0.8.196 — Reconciliation Candidate Leaderboard Evidence
+// Export Comparison UI, its Detail extension, and its Identity Inspection
+// extension.
 //
-// 0.8.189/0.8.190/0.8.191/0.8.193 built a complete, pure, application-layer
-// chain that turns two already-exported evidence documents into both a
-// small, page-ready summary AND the exact records behind it — but every one
-// of those four files stops short of pixels on purpose (see each file's own
+// 0.8.189/0.8.190/0.8.191/0.8.193/0.8.195 built a complete, pure,
+// application-layer chain that turns two already-exported evidence
+// documents into a small, page-ready summary, the exact records behind it,
+// AND each record's own identity named field by field — but every one of
+// those five files stops short of pixels on purpose (see each file's own
 // header, "Any markup, DOM nodes, or control-rendering technology
 // choice... separate, later, UI-layer work"). This is that UI-layer work,
-// and nothing more — 0.8.192 first wired the summary half; 0.8.194 wires
-// the second half onto the SAME page, per the milestone's own instruction
-// ("extend the existing page rather than create another workflow"):
+// and nothing more — 0.8.192 first wired the summary half; 0.8.194 wired
+// the record-detail half onto the SAME page; 0.8.196 wires the record-
+// identity half onto the SAME page again, per the milestone's own
+// instruction ("this should not replace 0.8.193's records — it should
+// provide an additional inspection layer"):
 //
 //   Source Evidence Export JSON ──┐
 //                                 ├─► 0.8.188 importXxx() (twice, once per side)
@@ -40,25 +47,31 @@ import ReconciliationCandidateLeaderboardEvidenceExportComparisonTable from '../
 //                              ▼                            ▼
 //                 0.8.190 describeXxx() (read model)   0.8.193 describeXxx() (detail)
 //                              │                            │
-//                              ▼                            │
-//                 0.8.191 describeXxx() (view)               │
-//                              │                            │
-//                              ▼                            ▼
-//                     ReconciliationCandidateLeaderboardEvidenceExportComparisonTable
+//                              ▼                            ├──────────────┐
+//                 0.8.191 describeXxx() (view)               │              ▼
+//                              │                            │   0.8.195 describeXxx() (record identity)
+//                              ▼                            ▼              │
+//                     ReconciliationCandidateLeaderboardEvidenceExportComparisonTable ◄┘
 //                                            │
 //                                            ▼
 //                                         Browser
 //
-// BOTH `comparisonView` AND `comparisonDetail` ARE COMPUTED OFF THE SAME
-// `comparison` — NEVER ONE OFF THE OTHER. 0.8.193's own header is explicit
-// that it "reads 0.8.189's own result directly... never 0.8.190's own read
-// model or 0.8.191's own view," precisely so the counts a reader sees and
-// the records that same reader can expand are never at risk of drifting
-// apart through some intermediate reshaping. This file honors that by
-// calling `describePublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceExportComparisonDetail()`
+// `comparisonView`, `comparisonDetail`, AND `comparisonIdentity` ARE EACH
+// COMPUTED OFF `comparison`/`comparisonDetail` — NEVER OFF ONE ANOTHER'S
+// SIBLING. 0.8.193's own header is explicit that it "reads 0.8.189's own
+// result directly... never 0.8.190's own read model or 0.8.191's own
+// view," precisely so the counts a reader sees and the records that same
+// reader can expand are never at risk of drifting apart through some
+// intermediate reshaping. This file honors that by calling
+// `describePublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceExportComparisonDetail()`
 // over `comparison.value` — the identical 0.8.189 result `readModel`/
 // `comparisonView` are themselves computed from — never over `readModel`
-// or `comparisonView`.
+// or `comparisonView`. 0.8.195's own header is equally explicit that its
+// one argument is always 0.8.193's own already-computed result, so
+// `comparisonIdentity` below is computed over `comparisonDetail.value`
+// directly — never over `comparison.value`, `readModel.value`, or
+// `comparisonView.value` — the identical one-argument contract 0.8.195's
+// own file already documents.
 //
 // TWO EXPLICIT TEXT INPUTS, ONE EXPLICIT "COMPARE" CLICK — NEVER A LIVE
 // RECOMPUTATION ON EVERY KEYSTROKE. `sourceExportText`/`targetExportText`
@@ -109,17 +122,22 @@ import ReconciliationCandidateLeaderboardEvidenceExportComparisonTable from '../
 // COMPARISON and EVIDENCE-EXPORT COMPARISON are two distinct concepts,
 // neither silently feeding the other.
 //
-// SUMMARY AND INSPECTION ON THE SAME PAGE — NEVER A REGROUP BY CANDIDATE.
-// This view hands both `comparisonView.value` (0.8.191's own compact
-// counts) and `comparisonDetail.value` (0.8.193's own record arrays)
-// straight to `ReconciliationCandidateLeaderboardEvidenceExportComparisonTable`,
-// which renders the three independent summary-count tables 0.8.192 already
+// SUMMARY, RECORD DETAIL, AND RECORD IDENTITY ON THE SAME PAGE — NEVER A
+// REGROUP BY CANDIDATE. This view hands `comparisonView.value` (0.8.191's
+// own compact counts), `comparisonDetail.value` (0.8.193's own record
+// arrays), AND `comparisonIdentity.value` (0.8.195's own named-field
+// identity objects) straight to
+// `ReconciliationCandidateLeaderboardEvidenceExportComparisonTable`, which
+// renders the three independent summary-count tables 0.8.192 already
 // established, each now with its own "Inspect records" control that reveals
 // 0.8.193's own flat `shared`/`sourceOnly`/`targetOnly` arrays for that one
-// dimension — never a candidate-centric regrouping of that evidence. If a
-// reader eventually needs candidate-centric inspection, that is a separate,
-// explicit projection, not a silent change to this flat one (0.8.193's own
-// header, "Evidence stays flat," held here again at the UI layer).
+// dimension, and (for decision/observation evidence only) each individual
+// record now with its own "Inspect identity" control that reveals 0.8.195's
+// own named fields for that one record — never a candidate-centric
+// regrouping of that evidence. If a reader eventually needs candidate-
+// centric inspection, that is a separate, explicit projection, not a silent
+// change to this flat one (0.8.193's own header, "Evidence stays flat,"
+// held here again at the UI layer).
 //
 // SYNCHRONOUS, NO NETWORK, NO PERSISTENCE. `compareEvidence()` never
 // contacts a server (no `fetch`/`XMLHttpRequest`/`WebSocket` anywhere in
@@ -137,8 +155,9 @@ import ReconciliationCandidateLeaderboardEvidenceExportComparisonTable from '../
 //   apply.
 // - **Reading either live archive, or any live-archive comparison.** This
 //   view's only inputs are two pasted evidence-export documents.
-// - **Regrouping the inspected evidence by candidate.** See "Summary and
-//   inspection on the same page," above — the flat shape stays flat.
+// - **Regrouping the inspected evidence, or the inspected identity, by
+//   candidate.** See "Summary, record detail, and record identity on the
+//   same page," above — the flat shape stays flat.
 // - **A rank, score, winner, correct/incorrect, valid, stale, preferred,
 //   status, or confidence field or vocabulary of any kind.** Inherited
 //   unchanged from every layer beneath this one.
@@ -203,17 +222,21 @@ export default {
         // file's own header, "The comparison chain is called over
         // sourceDocument/targetDocument." `comparisonDetail` forks off
         // `comparison` directly, exactly as the diagram above draws — it is
-        // never computed from `readModel` or `comparisonView`.
+        // never computed from `readModel` or `comparisonView`. `comparisonIdentity`
+        // is then computed off `comparisonDetail` directly — 0.8.195's own
+        // one-argument contract — never off `comparison`, `readModel`, or
+        // `comparisonView`.
         const comparison = computed(() => describePublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceExportComparison(sourceDocument.value, targetDocument.value));
         const readModel = computed(() => describePublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceExportComparisonReadModel(comparison.value));
         const comparisonView = computed(() => describePublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceExportComparisonView(readModel.value));
         const comparisonDetail = computed(() => describePublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceExportComparisonDetail(comparison.value));
+        const comparisonIdentity = computed(() => describePublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceExportComparisonRecordIdentity(comparisonDetail.value));
 
         return {
             sourceExportText, targetExportText,
             sourceInvalid, targetInvalid, hasCompared,
             compareEvidence, clearComparison,
-            comparisonView, comparisonDetail
+            comparisonView, comparisonDetail, comparisonIdentity
         };
     },
     template: `
@@ -261,7 +284,7 @@ export default {
                 </button>
             </div>
 
-            <ReconciliationCandidateLeaderboardEvidenceExportComparisonTable v-if="hasCompared" :view="comparisonView" :detail="comparisonDetail" />
+            <ReconciliationCandidateLeaderboardEvidenceExportComparisonTable v-if="hasCompared" :view="comparisonView" :detail="comparisonDetail" :identity="comparisonIdentity" />
         </section>
     `
 };

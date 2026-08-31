@@ -17,6 +17,9 @@ import {
 import {
     describePublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceExportComparisonDetail
 } from '../application/PublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceExportComparisonDetailView.js';
+import {
+    describePublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceExportComparisonRecordIdentity
+} from '../application/PublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceExportComparisonRecordIdentityView.js';
 import default_ReconciliationCandidateLeaderboardEvidenceExportComparisonTable from '../ui/components/ReconciliationCandidateLeaderboardEvidenceExportComparisonTable.js';
 
 // 0.8.192/0.8.194 — Reconciliation Candidate Leaderboard Evidence Export
@@ -100,6 +103,30 @@ import default_ReconciliationCandidateLeaderboardEvidenceExportComparisonTable f
 //            already-valid comparison already on screen — the previously
 //            rendered detail records survive an invalid re-compare attempt
 //            on the other side.
+// Section U: 0.8.196 FLAGSHIP — expanding a decision/observation record's
+//            own "Inspect identity" control displays exactly 0.8.195's own
+//            named identity fields for that one record (4 for a decision,
+//            7 for an observation), read directly off 0.8.195's own
+//            identity object at the identical shared/sourceOnly/targetOnly
+//            position — 0.8.193's own records and 0.8.195's own identity
+//            objects are both proven unchanged by this milestone.
+// Section V: no records are regrouped or re-sorted, and no identity
+//            comparison of any kind is performed by the UI — the rendered
+//            identity fields are read directly off one record's own
+//            identity object, never compared against another record's.
+// Section W: identity expand/collapse is purely local UI state, keyed by
+//            this file's own local inspection key (never application/domain
+//            data) — it never mutates view/detail/identity, defaults to
+//            fully collapsed, and toggles independently per record and per
+//            dimension; summary counts stay untouched throughout.
+// Section X: malformed/absent identity data degrades to an empty identity
+//            panel rather than breaking the existing "Inspect records"
+//            detail panel — a genuine detail record still renders its own
+//            label even when its own identity entry is missing or
+//            malformed.
+// Section Y: the table component's own source carries no ranking,
+//            correctness, synchronization, or reconciliation vocabulary
+//            anywhere, including in its new 0.8.196 code.
 
 function assert(condition, message) {
     if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
@@ -179,12 +206,14 @@ function runChain(sourceDocument, targetDocument) {
     const readModel = describePublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceExportComparisonReadModel(comparison);
     const view = describePublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceExportComparisonView(readModel);
     const detail = describePublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceExportComparisonDetail(comparison);
+    const identity = describePublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceExportComparisonRecordIdentity(detail);
     const table = default_ReconciliationCandidateLeaderboardEvidenceExportComparisonTable;
-    const ctx = { view, detail };
+    const ctx = { view, detail, identity };
     return {
         comparison,
         view,
         detail,
+        identity,
         rendered: {
             isEmpty: table.computed.isEmpty.call(ctx),
             comparisonState: table.computed.comparisonState.call(ctx),
@@ -194,7 +223,9 @@ function runChain(sourceDocument, targetDocument) {
             observationEvidence: table.computed.observationEvidence.call(ctx),
             candidateRecords: table.computed.candidateRecords.call(ctx),
             decisionRecords: table.computed.decisionRecords.call(ctx),
-            observationRecords: table.computed.observationRecords.call(ctx)
+            observationRecords: table.computed.observationRecords.call(ctx),
+            decisionIdentity: table.computed.decisionIdentity.call(ctx),
+            observationIdentity: table.computed.observationIdentity.call(ctx)
         }
     };
 }
@@ -459,7 +490,8 @@ async function run() {
             "from '../../application/PublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceExportComparison.js'",
             "from '../../application/PublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceExportComparisonReadModel.js'",
             "from '../../application/PublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceExportComparisonView.js'",
-            "from '../../application/PublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceExportComparisonDetailView.js'"
+            "from '../../application/PublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceExportComparisonDetailView.js'",
+            "from '../../application/PublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceExportComparisonRecordIdentityView.js'"
         ]) {
             assert(viewCodeOnly.includes(modulePath), `38. the view imports ${modulePath}`);
         }
@@ -474,6 +506,8 @@ async function run() {
             '42. the view calls 0.8.191\'s own describeXxx() exactly once');
         assert((viewCodeOnly.match(/describePublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceExportComparisonDetail\(/g) || []).length === 1,
             '42b. the view calls 0.8.193\'s own describeXxx() exactly once');
+        assert((viewCodeOnly.match(/describePublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceExportComparisonRecordIdentity\(/g) || []).length === 1,
+            '42d. the view calls 0.8.195\'s own describeXxx() exactly once');
 
         // 0.8.193's own describeXxx() must be called over `comparison`
         // directly — never over `readModel` or `comparisonView` — the same
@@ -482,15 +516,22 @@ async function run() {
         assert(/describePublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceExportComparisonDetail\(comparison\.value\)/.test(viewCodeOnly),
             '42c. the view calls 0.8.193\'s own describeXxx() over comparison.value, never readModel.value or comparisonView.value');
 
+        // 0.8.195's own describeXxx() must be called over `comparisonDetail`
+        // directly — never over `comparison`, `readModel`, or
+        // `comparisonView` — 0.8.195's own one-argument contract.
+        assert(/describePublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceExportComparisonRecordIdentity\(comparisonDetail\.value\)/.test(viewCodeOnly),
+            '42e. the view calls 0.8.195\'s own describeXxx() over comparisonDetail.value, never comparison.value, readModel.value, or comparisonView.value');
+
         assert(viewModuleSource.includes('Compare Evidence'), '43. the template exposes a "Compare Evidence" control, exactly as the milestone names it');
         assert(viewCodeOnly.includes('function compareEvidence()'), '44. the view declares its own compareEvidence() click handler');
         assert(viewCodeOnly.includes(':detail="comparisonDetail"'), '44b. the template passes comparisonDetail down to the table component as its own detail prop');
+        assert(viewCodeOnly.includes(':identity="comparisonIdentity"'), '44c. the template passes comparisonIdentity down to the table component as its own identity prop');
 
         for (const forbiddenTarget of ['sourceArchive', 'targetArchive', 'publicationObservationArchiveStorage', 'PublicationObservationArchive']) {
             assert(!viewCodeOnly.includes(forbiddenTarget), `45. the view's own code never references "${forbiddenTarget}" — the live archive/leaderboard state stays entirely separate`);
         }
     }
-    console.log('✓ Section M: the view imports the full 0.8.188/0.8.189/0.8.190/0.8.191/0.8.193 chain, calls importXxx() exactly twice and each describeXxx() exactly once from its own compareEvidence() handler (0.8.193\'s own describeXxx() called over comparison.value directly), exposes a "Compare Evidence" control, passes comparisonDetail down as the table\'s detail prop, and never references the live archive/leaderboard state');
+    console.log('✓ Section M: the view imports the full 0.8.188/0.8.189/0.8.190/0.8.191/0.8.193/0.8.195 chain, calls importXxx() exactly twice and each describeXxx() exactly once from its own compareEvidence() handler (0.8.193\'s own describeXxx() called over comparison.value, and 0.8.195\'s own describeXxx() called over comparisonDetail.value, directly), exposes a "Compare Evidence" control, passes comparisonDetail and comparisonIdentity down as the table\'s detail/identity props, and never references the live archive/leaderboard state');
 
     // ---------------------------------------------------------------
     // Section N — the table component's own wiring.
@@ -499,9 +540,10 @@ async function run() {
         const table = default_ReconciliationCandidateLeaderboardEvidenceExportComparisonTable;
         assert(table.props.view.default === null, '46. the view prop defaults to null');
         assert(table.props.detail.default === null, '46b. the detail prop defaults to null');
+        assert(table.props.identity.default === null, '46c. the identity prop defaults to null');
 
         for (const malformed of [null, undefined, 'not-an-object', 42, {}]) {
-            const ctx = { view: malformed, detail: malformed };
+            const ctx = { view: malformed, detail: malformed, identity: malformed };
             assert(table.computed.isEmpty.call(ctx) === true, `47. malformed view (${serialize(malformed)}) degrades isEmpty to true`);
             const candidateSummary = table.computed.candidateSummary.call(ctx);
             assert(candidateSummary.sourceOnlyCount === 0 && candidateSummary.sharedCount === 0 && candidateSummary.targetOnlyCount === 0,
@@ -518,6 +560,15 @@ async function run() {
                     && Array.isArray(records.targetOnly) && records.targetOnly.length === 0,
                     `49b. malformed detail (${serialize(malformed)}) degrades every record section to empty shared/sourceOnly/targetOnly arrays, never throwing`);
             }
+
+            const decisionIdentity = table.computed.decisionIdentity.call(ctx);
+            const observationIdentity = table.computed.observationIdentity.call(ctx);
+            for (const identitySections of [decisionIdentity, observationIdentity]) {
+                assert(Array.isArray(identitySections.shared) && identitySections.shared.length === 0
+                    && Array.isArray(identitySections.sourceOnly) && identitySections.sourceOnly.length === 0
+                    && Array.isArray(identitySections.targetOnly) && identitySections.targetOnly.length === 0,
+                    `49c. malformed identity (${serialize(malformed)}) degrades every identity section to empty shared/sourceOnly/targetOnly arrays, never throwing`);
+            }
         }
 
         assert(!tableModuleSource.includes("from '"), '50. the table component imports NOTHING at all — not from application/, not from any sibling ui/ file');
@@ -533,8 +584,21 @@ async function run() {
         const freshData = table.data();
         assert(freshData.expanded.candidates === false && freshData.expanded.decisionEvidence === false && freshData.expanded.observationEvidence === false,
             '55b. the component\'s own data() starts every dimension fully collapsed');
+        assert(typeof freshData.expandedIdentityRecords === 'object' && freshData.expandedIdentityRecords !== null && Object.keys(freshData.expandedIdentityRecords).length === 0,
+            '55c. the component\'s own data() starts with expandedIdentityRecords as a fresh, empty object — no record identity panel open by default');
+
+        assert((tableCodeOnly.match(/Inspect identity/g) || []).length === 6, '55d. the template exposes exactly six "Inspect identity" controls — one per shared/sourceOnly/targetOnly column, for each of decision and observation evidence');
+
+        // The "Candidate presence" dimension block (everything between its
+        // own heading and the next dimension's heading, "Decision
+        // evidence") never carries an "Inspect identity" control — 0.8.195
+        // carries no candidates section (see 0.8.195's own header, "No
+        // candidate-presence section"), so this component adds none of its
+        // own for that dimension either.
+        const candidatePresenceBlock = tableModuleSource.split('Candidate presence')[1].split('Decision evidence')[0];
+        assert(!candidatePresenceBlock.includes('Inspect identity'), '55e. no "Inspect identity" control appears inside the candidate-presence dimension block');
     }
-    console.log('✓ Section N: the table component\'s own props/computed degrade malformed view AND detail input to an honest empty/NO_PEER state, imports nothing at all, renders the three independent dimension sections each with its own "Inspect records" control, and starts fully collapsed');
+    console.log('✓ Section N: the table component\'s own props/computed degrade malformed view, detail, AND identity input to an honest empty/NO_PEER state, imports nothing at all, renders the three independent dimension sections each with its own "Inspect records" control plus, for decision/observation evidence only, a per-record "Inspect identity" control, and starts fully collapsed');
 
     // ---------------------------------------------------------------
     // Section O — 0.8.194 FLAGSHIP: expanded records exactly match
@@ -725,6 +789,253 @@ async function run() {
         assert(serialize(second.rendered) === serialize(first.rendered), '86. re-running the chain over the same already-valid document is unaffected by an unrelated invalid paste, and remains deterministic');
     }
     console.log('✓ Section T: a genuinely invalid paste never destroys an already-valid document or its already-rendered detail records — importXxx() rejects only the malformed side, and a genuine document keeps rendering identically');
+
+    // ---------------------------------------------------------------
+    // Section U — 0.8.196 FLAGSHIP: identity inspection displays exactly
+    // 0.8.195's own named fields for one record, at the identical position.
+    // ---------------------------------------------------------------
+    {
+        const table = default_ReconciliationCandidateLeaderboardEvidenceExportComparisonTable;
+        const { rendered, detail, identity } = runChain(flagshipSourceDocument, flagshipTargetDocument);
+
+        // 0.8.193's own records are untouched by this milestone — the
+        // rendered decisionRecords/observationRecords are still exactly
+        // 0.8.193's own arrays (already proven byte-identical in Section
+        // O); here the SAME already-computed `detail` is re-confirmed
+        // untouched by additionally computing `identity` off it.
+        const detailAgain = describePublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceExportComparisonDetail(
+            describePublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceExportComparison(flagshipSourceDocument, flagshipTargetDocument)
+        );
+        assert(serialize(detail) === serialize(detailAgain), '87. FLAGSHIP — 0.8.193\'s own detail records are unchanged by this milestone; computing identity alongside them changes nothing about detail itself');
+
+        // 0.8.195's own identity objects are unchanged by this milestone —
+        // calling describeXxx() again over the identical detail produces a
+        // byte-identical identity projection.
+        const identityAgain = describePublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceExportComparisonRecordIdentity(detail);
+        assert(serialize(identity) === serialize(identityAgain), '88. FLAGSHIP — 0.8.195\'s own identity objects are unchanged and deterministic, called again over the same detail');
+
+        // A decision record's identity panel carries exactly its own four
+        // named fields, read directly off 0.8.195's own identity object at
+        // the SAME array position as the record itself in decisionRecords.
+        const decisionIndex = 0;
+        const decisionRecord = rendered.decisionRecords.sourceOnly[decisionIndex];
+        const decisionIdentityRecord = rendered.decisionIdentity.sourceOnly[decisionIndex];
+        const decisionFields = table.methods.decisionIdentityFieldsOf(decisionIdentityRecord);
+        assert(decisionFields.length === 4, '89. FLAGSHIP — a decision record\'s identity panel carries exactly 4 fields');
+        assert(decisionFields.map((f) => f.key).join(',') === 'decided,candidate,decision,decidedAt',
+            '90. FLAGSHIP — the decision identity panel\'s own fields are named decided/candidate/decision/decidedAt, in that order');
+        assert(serialize(decisionFields.find((f) => f.key === 'decided').value) === serialize(decisionRecord.decided), '91. FLAGSHIP — the identity panel\'s own decided value matches the underlying 0.8.193 record\'s own decided field');
+        assert(serialize(decisionFields.find((f) => f.key === 'candidate').value) === serialize(decisionRecord.candidate), '92. FLAGSHIP — the identity panel\'s own candidate value matches the underlying 0.8.193 record\'s own candidate field');
+        assert(serialize(decisionFields.find((f) => f.key === 'decision').value) === serialize(decisionRecord.decision), '93. FLAGSHIP — the identity panel\'s own decision value matches the underlying 0.8.193 record\'s own decision field');
+        assert(serialize(decisionFields.find((f) => f.key === 'decidedAt').value) === serialize(decisionRecord.decidedAt), '94. FLAGSHIP — the identity panel\'s own decidedAt value matches the underlying 0.8.193 record\'s own decidedAt field');
+
+        // An observation record's identity panel carries exactly its own
+        // seven named fields, at the identical position within
+        // observationRecords.shared.
+        const observationIndex = 1;
+        const observationRecord = rendered.observationRecords.shared[observationIndex];
+        const observationIdentityRecord = rendered.observationIdentity.shared[observationIndex];
+        const observationFields = table.methods.observationIdentityFieldsOf(observationIdentityRecord);
+        assert(observationFields.length === 7, '95. FLAGSHIP — an observation record\'s identity panel carries exactly 7 fields');
+        assert(observationFields.map((f) => f.key).join(',') === 'candidate,decision,planIdentity,candidatePresent,candidateType,candidateMatchesPlan,observedAt',
+            '96. FLAGSHIP — the observation identity panel\'s own fields are named candidate/decision/planIdentity/candidatePresent/candidateType/candidateMatchesPlan/observedAt, in that order');
+        for (const key of ['candidate', 'decision', 'planIdentity', 'candidatePresent', 'candidateType', 'candidateMatchesPlan', 'observedAt']) {
+            assert(serialize(observationFields.find((f) => f.key === key).value) === serialize(observationRecord[key]),
+                `97. FLAGSHIP — the observation identity panel's own ${key} value matches the underlying 0.8.193 record's own ${key} field`);
+        }
+
+        // `decision` on the observation identity panel stays the FULL
+        // embedded decision record — never flattened to a disposition
+        // string — 0.8.195's own header, held here again at the UI layer.
+        assert(typeof observationFields.find((f) => f.key === 'decision').value === 'object' && 'decidedAt' in observationFields.find((f) => f.key === 'decision').value,
+            '98. FLAGSHIP — the observation identity panel\'s own decision field stays the full embedded decision record, never flattened to a disposition string');
+
+        // formatIdentityValue() renders an object-valued field as its own
+        // JSON text, and a scalar field as its own plain value — a display
+        // convenience only, proven here to round-trip a genuine object
+        // field back to an equivalent value.
+        const formattedCandidate = table.methods.formatIdentityValue(decisionRecord.candidate);
+        assert(typeof formattedCandidate === 'string' && JSON.parse(formattedCandidate).claimId === decisionRecord.candidate.claimId,
+            '99. FLAGSHIP — formatIdentityValue() renders an object-valued identity field as its own printable JSON text');
+        assert(table.methods.formatIdentityValue(true) === 'true' && table.methods.formatIdentityValue('OBSERVE') === 'OBSERVE',
+            '100. FLAGSHIP — formatIdentityValue() renders a scalar identity field as its own plain value');
+    }
+    console.log('✓ Section U: 0.8.196 FLAGSHIP — expanding a decision/observation record\'s own "Inspect identity" control displays exactly 0.8.195\'s own named identity fields for that one record (4 for a decision, 7 for an observation), matching the underlying 0.8.193 record field for field, with 0.8.193\'s own records and 0.8.195\'s own identity objects both proven unchanged by this milestone');
+
+    // ---------------------------------------------------------------
+    // Section V — no regrouping, no re-sorting, no identity comparison
+    // performed by the UI.
+    // ---------------------------------------------------------------
+    {
+        const { rendered } = runChain(flagshipSourceDocument, flagshipTargetDocument);
+
+        // Every identity array is exactly as long as, and in the same
+        // order as, its own detail array — proving no reordering and no
+        // regrouping happened between 0.8.193's records and 0.8.195's
+        // identity objects as rendered by this component.
+        for (const sectionKey of ['shared', 'sourceOnly', 'targetOnly']) {
+            assert(rendered.decisionIdentity[sectionKey].length === rendered.decisionRecords[sectionKey].length,
+                `101. Section V — decisionIdentity.${sectionKey} is exactly as long as decisionRecords.${sectionKey}`);
+            assert(rendered.observationIdentity[sectionKey].length === rendered.observationRecords[sectionKey].length,
+                `102. Section V — observationIdentity.${sectionKey} is exactly as long as observationRecords.${sectionKey}`);
+            rendered.decisionRecords[sectionKey].forEach((record, index) => {
+                const identityRecord = rendered.decisionIdentity[sectionKey][index];
+                assert(serialize(identityRecord.candidate) === serialize(record.candidate) && serialize(identityRecord.decidedAt) === serialize(record.decidedAt),
+                    `103. Section V — decisionIdentity.${sectionKey}[${index}] names the same record as decisionRecords.${sectionKey}[${index}], at the identical position, never reordered`);
+            });
+        }
+
+        // No comparison vocabulary (a diff, a similarity score, a
+        // "differs"/"matches" verdict between two records) appears in the
+        // table component's own source — this component never computes
+        // whether one record's identity differs from another's.
+        const forbiddenComparisonTerms = ['diff(', 'similarity', 'differs', 'differsfrom', 'matchesrecord', 'compareidentity', 'compareto('];
+        for (const term of forbiddenComparisonTerms) {
+            assert(!tableCodeOnly.toLowerCase().replace(/\s+/g, '').includes(term), `104. Section V — the table component's own code never carries record-to-record comparison vocabulary ("${term}")`);
+        }
+
+        // formatIdentityValue()/decisionIdentityFieldsOf()/observationIdentityFieldsOf()
+        // each take exactly ONE record — there is no two-argument identity
+        // function anywhere in this component.
+        const table = default_ReconciliationCandidateLeaderboardEvidenceExportComparisonTable;
+        assert(table.methods.formatIdentityValue.length === 1, '105. Section V — formatIdentityValue() takes exactly one value, never a pair to compare');
+        assert(table.methods.decisionIdentityFieldsOf.length === 1, '106. Section V — decisionIdentityFieldsOf() takes exactly one record, never a pair to compare');
+        assert(table.methods.observationIdentityFieldsOf.length === 1, '107. Section V — observationIdentityFieldsOf() takes exactly one record, never a pair to compare');
+    }
+    console.log('✓ Section V: no records are regrouped or re-sorted between 0.8.193\'s detail and 0.8.195\'s identity as rendered here, and no identity comparison of any kind (a diff, a similarity score, a differs/matches verdict) is performed by the UI — every identity function takes exactly one record');
+
+    // ---------------------------------------------------------------
+    // Section W — identity expand/collapse is purely local UI state; the
+    // local inspection key is never application/domain data; summary
+    // counts stay untouched.
+    // ---------------------------------------------------------------
+    {
+        const table = default_ReconciliationCandidateLeaderboardEvidenceExportComparisonTable;
+        const { view, detail, identity, rendered } = runChain(flagshipSourceDocument, flagshipTargetDocument);
+        const beforeView = serialize(view);
+        const beforeDetail = serialize(detail);
+        const beforeIdentity = serialize(identity);
+        const beforeCandidateSummary = serialize(rendered.candidateSummary);
+        const beforeDecisionEvidence = serialize(rendered.decisionEvidence);
+        const beforeObservationEvidence = serialize(rendered.observationEvidence);
+
+        const key1 = table.methods.identityKey('decision', 'sourceOnly', 0);
+        const key2 = table.methods.identityKey('observation', 'targetOnly', 1);
+        assert(key1 === 'decision:sourceOnly:0', '108. Section W — identityKey() builds the exact local key shape the milestone itself names, e.g. "decision:sourceOnly:0"');
+        assert(key2 === 'observation:targetOnly:1', '109. Section W — identityKey() builds the exact local key shape the milestone itself names, e.g. "observation:targetOnly:1"');
+
+        const ctx = { view, detail, identity, expandedIdentityRecords: table.data().expandedIdentityRecords };
+        assert(table.methods.isIdentityExpanded.call(ctx, key1) === false, '110. Section W — a record\'s own identity panel starts collapsed');
+        table.methods.toggleIdentity.call(ctx, key1);
+        assert(table.methods.isIdentityExpanded.call(ctx, key1) === true, '111. Section W — toggleIdentity() opens the named record\'s own identity panel');
+        assert(table.methods.isIdentityExpanded.call(ctx, key2) === false, '112. Section W — toggling one record\'s own identity panel never opens a different record\'s own panel');
+
+        table.methods.toggleIdentity.call(ctx, key2);
+        assert(table.methods.isIdentityExpanded.call(ctx, key1) === true && table.methods.isIdentityExpanded.call(ctx, key2) === true,
+            '113. Section W — two different records\' own identity panels can be open at once, independently');
+
+        table.methods.toggleIdentity.call(ctx, key1);
+        assert(table.methods.isIdentityExpanded.call(ctx, key1) === false && table.methods.isIdentityExpanded.call(ctx, key2) === true,
+            '114. Section W — collapsing one record\'s own panel never collapses the other');
+
+        assert(serialize(view) === beforeView, '115. Section W — toggling identity expand state never mutates the view prop');
+        assert(serialize(detail) === beforeDetail, '116. Section W — toggling identity expand state never mutates the detail prop');
+        assert(serialize(identity) === beforeIdentity, '117. Section W — toggling identity expand state never mutates the identity prop');
+
+        // Summary counts are recomputed fresh off the SAME, still-unmutated
+        // props — proving expand/collapse state never touches them.
+        const afterCtx = { view, detail, identity };
+        assert(serialize(table.computed.candidateSummary.call(afterCtx)) === beforeCandidateSummary, '118. Section W — candidateSummary is untouched by any amount of identity expand/collapse toggling');
+        assert(serialize(table.computed.decisionEvidence.call(afterCtx)) === beforeDecisionEvidence, '119. Section W — decisionEvidence summary counts are untouched by any amount of identity expand/collapse toggling');
+        assert(serialize(table.computed.observationEvidence.call(afterCtx)) === beforeObservationEvidence, '120. Section W — observationEvidence summary counts are untouched by any amount of identity expand/collapse toggling');
+
+        // The local inspection key never appears anywhere on the
+        // `view`/`detail`/`identity` props themselves — it is genuinely
+        // this component's own local state only.
+        assert(!beforeView.includes('sourceOnly:0') && !beforeDetail.includes('sourceOnly:0') && !beforeIdentity.includes('sourceOnly:0'),
+            '121. Section W — the local inspection key never leaks onto the view/detail/identity props — it exists only in this component\'s own expandedIdentityRecords');
+    }
+    console.log('✓ Section W: identity expand/collapse is purely local, per-record UI state keyed by this component\'s own local inspection key (never application/domain data or record identity) — it never mutates view/detail/identity, defaults to fully collapsed, toggles independently per record, and summary counts stay untouched throughout');
+
+    // ---------------------------------------------------------------
+    // Section X — malformed/absent identity data degrades gracefully,
+    // never breaking the existing "Inspect records" detail panel.
+    // ---------------------------------------------------------------
+    {
+        const table = default_ReconciliationCandidateLeaderboardEvidenceExportComparisonTable;
+        const { view, detail } = runChain(flagshipSourceDocument, flagshipTargetDocument);
+
+        // identity entirely absent/malformed, while detail stays genuine —
+        // the existing detail panel (decisionRecords/observationRecords)
+        // must still render its own genuine records and labels.
+        for (const malformedIdentity of [null, undefined, {}, 'not-an-object', 42]) {
+            const ctx = { view, detail, identity: malformedIdentity };
+            const decisionRecords = table.computed.decisionRecords.call(ctx);
+            const observationRecords = table.computed.observationRecords.call(ctx);
+            assert(decisionRecords.sourceOnly.length > 0, `122. Section X — with malformed identity (${serialize(malformedIdentity)}), the genuine decisionRecords.sourceOnly still renders its own real records`);
+            assert(observationRecords.shared.length > 0, `123. Section X — with malformed identity (${serialize(malformedIdentity)}), the genuine observationRecords.shared still renders its own real records`);
+
+            const decisionLabel = table.methods.decisionRecordLabel(decisionRecords.sourceOnly[0]);
+            assert(typeof decisionLabel === 'string' && decisionLabel.length > 0 && decisionLabel !== 'Unknown decision record',
+                `124. Section X — a genuine decision record's own label still renders correctly even when identity is malformed`);
+
+            // The identity sections themselves degrade to empty arrays —
+            // never throwing, and never fabricating a record neither
+            // 0.8.193 nor 0.8.195 actually produced.
+            const decisionIdentity = table.computed.decisionIdentity.call(ctx);
+            assert(decisionIdentity.sourceOnly.length === 0, `125. Section X — malformed identity (${serialize(malformedIdentity)}) degrades decisionIdentity.sourceOnly to empty, never throwing and never fabricating a record`);
+
+            // Looking up an identity object at a position identity does
+            // not actually have degrades to undefined, and the field-list
+            // helper degrades that to an empty field list — never throwing.
+            const missingIdentityRecord = decisionIdentity.sourceOnly[0];
+            assert(missingIdentityRecord === undefined, `126. Section X — an out-of-range identity lookup is undefined, never a fabricated object`);
+            assert(Array.isArray(table.methods.decisionIdentityFieldsOf(missingIdentityRecord)) && table.methods.decisionIdentityFieldsOf(missingIdentityRecord).length === 0,
+                `127. Section X — decisionIdentityFieldsOf(undefined) degrades to an empty field list rather than throwing`);
+            assert(Array.isArray(table.methods.observationIdentityFieldsOf(missingIdentityRecord)) && table.methods.observationIdentityFieldsOf(missingIdentityRecord).length === 0,
+                `127b. Section X — observationIdentityFieldsOf(undefined) degrades to an empty field list rather than throwing`);
+        }
+
+        // A malformed individual identity record WITHIN an otherwise
+        // genuine section (mirroring 0.8.195's own "a malformed individual
+        // record within an otherwise genuine array degrades to an identity
+        // object whose fields are all undefined") still renders a field
+        // list — every field present, every value undefined — never
+        // throwing and never dropping the row.
+        const identityWithMalformedEntry = describePublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceExportComparisonRecordIdentity({
+            decisionEvidence: { shared: [], sourceOnly: [null], targetOnly: [] },
+            observationEvidence: { shared: [], sourceOnly: [], targetOnly: [] }
+        });
+        const degradedFields = table.methods.decisionIdentityFieldsOf(identityWithMalformedEntry.decisionEvidence.sourceOnly[0]);
+        assert(degradedFields.length === 4 && degradedFields.every((f) => f.value === undefined),
+            '128. Section X — a malformed individual identity record degrades to a 4-field panel of all-undefined values, never throwing and never dropping the row');
+    }
+    console.log('✓ Section X: malformed or absent identity data degrades to an empty identity panel — the existing "Inspect records" detail panel keeps rendering its own genuine records and labels regardless, and even a malformed individual identity record degrades to an all-undefined field list rather than throwing or vanishing');
+
+    // ---------------------------------------------------------------
+    // Section Y — the table component's new 0.8.196 code carries no
+    // ranking, correctness, synchronization, or reconciliation vocabulary.
+    // ---------------------------------------------------------------
+    {
+        // "reconcil" is deliberately excluded from this sweep — it appears
+        // legitimately in this component's own name/module identifiers
+        // (`ReconciliationCandidateLeaderboard...`), the identical
+        // "vocabulary vs. identifier" distinction Section L above already
+        // draws by never testing for it either.
+        const forbidden = [
+            'rank', 'score', 'winner', 'confidence', 'conflict', 'preferred', 'authoritative', 'better', 'worse',
+            'correct', 'incorrect', 'valid', 'invalid', 'stale', 'synchroniz', 'synchronis', 'apply this'
+        ];
+        for (const term of forbidden) {
+            assert(!tableCodeOnly.toLowerCase().includes(term), `129. Section Y — the table component's own code never carries ranking/correctness/synchronization vocabulary ("${term}")`);
+        }
+        // Explanatory prose about WHY a record differs is exactly what the
+        // milestone's own request forbids ("avoid: this observation differs
+        // because it was recorded later") — the component prints field
+        // names/values only, never a sentence describing a cause.
+        assert(!tableCodeOnly.toLowerCase().includes('because'), '130. Section Y — the table component\'s own code never carries a "because..." explanatory sentence about why a record differs');
+    }
+    console.log('✓ Section Y: the table component\'s own 0.8.196 code carries no ranking, correctness, synchronization, or reconciliation vocabulary, and no prose explanation of why any two records differ');
 
     console.log('\nAll ReconciliationCandidateLeaderboardEvidenceExportComparisonUI tests passed.');
 }
