@@ -45979,16 +45979,112 @@ like `deriveWorldEncounters()`'s own defaults already do.
 
 ---
 
-Deliberately paused here. This milestone named the seam between peer
-transport and World input without crossing it — no peer was connected,
-no source was combined with another, and `core/WorldEncounter.js` was
-not touched. Turning `peer/PeerMessageBus.js` messages into described
-sources (0.9.6 — Peer World Data Ingress), concatenating multiple
-sources into the six arrays `deriveWorldEncounters()` actually wants
-(0.9.7 — World Data Assembly), wiring that into the running World View
-(0.9.8 — Remote Encounter Integration), and only then returning to what
-0.9.4's own selection produces (0.9.9 — Encounter Inspection Request,
-0.9.10 — Publication/Avatar Inspection) are all separate, later work,
-and — per the same reasoning that has paused this codebase before every
-milestone in this series — that choice belongs to an explicit request,
-not an automatic continuation.
+## 0.9.6 — Peer World Data Ingress
+
+0.9.5 named the seam and stopped there — nothing yet crosses it. This
+milestone is the one small step across: turning an already-received
+peer message into exactly the bundle `describeWorldDiscoverySource()`
+already knows how to describe. Not "build decentralized World
+discovery" — that stays unscheduled. Just the adapter.
+
+```
+peer/PeerMessageBus.js
+subscribe(protocol, (payload, meta) => { ... })
+           │
+           ▼
+peer/PeerWorldDataIngress.js   ★ (THIS milestone)
+   describePeerWorldDiscoverySource(payload, connectedPeer)
+           │
+           ▼
+core/WorldDiscoverySource.js
+   describeWorldDiscoverySource()
+           │
+           ▼
+(future, unscheduled: World Data Assembly)
+           │
+           ▼
+core/WorldEncounter.js
+   deriveWorldEncounters()
+```
+
+**The transformation is exactly three steps, no more.** Validate that
+`payload` is a structurally usable envelope (an object, or absent —
+never something that throws on property access); read `payload`'s own
+copies of 0.9.5's six named record arrays, by exactly
+`WorldDiscoveryInputKeys`'s own field names; read the origin from
+`connectedPeer.remoteIdentity.identityId` — a fact `peer/
+PeerAuthenticationSession.js` already proved before this function is
+ever reachable — and hand both, unmodified, to
+`describeWorldDiscoverySource()`. This file adds no field, drops no
+field, and makes no decision `describeWorldDiscoverySource()` doesn't
+already make on its own.
+
+**`origin` is always `"peer:<identityId>"` — never a bare identity,
+never silently "local."** The `"peer:"` prefix is the one piece of
+vocabulary this file owns: it is what lets a future World Data Assembly
+step (0.9.7, unscheduled) tell a peer-sourced batch apart from a
+local-storage batch without either side needing to know the other
+exists. `connectedPeer.remoteIdentity` is read here as a plain,
+already-established fact — this file does not re-verify a signature,
+does not re-run the handshake, and does not import `identity/
+Ed25519.js` or `peer/PeerAuthenticationSession.js` at all.
+
+**This file does not decide whether a message is legitimate — only
+whether it is structurally usable.** A field that is not itself an
+array degrades to an empty array for that field alone; a payload that
+is not itself an object degrades to "no fields supplied," i.e. all six
+empty — exactly `describeWorldDiscoverySource()`'s own degrade rules,
+one layer up. Nothing here inspects a record's own `signature` field or
+decides whether one verifies — a signed record travels through exactly
+as opaque as it arrived. See `core/WorldDiscoverySource.js`'s own "No
+trust vocabulary of any kind," inherited here without exception.
+
+**A missing identity returns `null`, never throws — exactly 0.9.5's own
+missing-`origin` contract, one layer up.** With no identity to name a
+source after, there is no describable source. A missing or malformed
+`payload`, by contrast, is never fatal on its own: with a real identity
+to name it after, this file still produces a valid, frozen, entirely
+empty source — the peer contributed nothing usable this time, not
+nothing at all.
+
+**Deliberately excluded — not this milestone.**
+- **Deciding whether a message is legitimate, or attaching any trust,
+  verification, or authority judgment to it.** No `trusted`, `verified`,
+  `authority`, `score`, or `weight` vocabulary exists here or ever will
+  at this layer.
+- **Signature verification of any record inside the six arrays.** A
+  signed publication travels through as an opaque record.
+- **Combining this source with any other.** One peer message produces
+  one `WorldDiscoverySource` — the same "one source per call" restraint
+  `core/WorldDiscoverySource.js` itself already applies.
+- **Persistence of any kind.** No `StorageProvider` is ever imported or
+  touched.
+- **Rebroadcast, forwarding, or any outbound peer traffic.** This file
+  never imports `peer/PeerMessageBus.js` and has no way to send
+  anything.
+- **Calling `deriveWorldEncounters()`, or touching
+  `core/WorldEncounter.js` in any way.** Wiring a described peer source
+  into the running World View is 0.9.7 (World Data Assembly) and 0.9.8
+  (Remote Encounter Integration) — separate, later, unscheduled work.
+- **Establishing, authenticating, or managing a peer connection.** This
+  file is handed an already-authenticated `connectedPeer` and an
+  already-received `payload`; it never reaches into `peer/
+  PeerConnection.js`, `peer/WebRtcPeerConnection.js`, or any
+  `PeerConnectionProvider` to obtain either.
+
+`peer/PeerWorldDataIngress.js` added; `docs/Roadmap.md` updated;
+`PeerWorldDataIngress.test.js` added and registered in `tests.html`.
+
+---
+
+Deliberately paused here. This milestone crossed the seam 0.9.5 named,
+for exactly one origin at a time — no source was combined with another,
+and `core/WorldEncounter.js` was not touched. Concatenating multiple
+described sources into the six arrays `deriveWorldEncounters()` actually
+wants (0.9.7 — World Data Assembly), wiring that into the running World
+View (0.9.8 — Remote Encounter Integration), and only then returning to
+what 0.9.4's own selection produces (0.9.9 — Encounter Inspection
+Request, 0.9.10 — Publication/Avatar Inspection) are all separate, later
+work, and — per the same reasoning that has paused this codebase before
+every milestone in this series — that choice belongs to an explicit
+request, not an automatic continuation.
