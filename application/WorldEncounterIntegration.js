@@ -155,7 +155,9 @@ import { describeWorldEncounterView } from './WorldEncounterView.js';
 //   `ui/components/WorldEncounterCanvas.js` (0.9.3/0.9.4, unchanged) is
 //   where that data actually renders.
 // - **Turning a 0.9.4 selection into an inspection request, or loading
-//   inspected content.** Separate, later, unscheduled work (0.9.9, 0.9.10).
+//   inspected content.** Separate, later, unscheduled work (0.9.10, 0.9.11).
+//   Live peer-source lifecycle itself is 0.9.9, `application/
+//   WorldDiscoverySourceRegistry.js`.
 
 export const LOCAL_WORLD_DISCOVERY_ORIGIN = 'local';
 
