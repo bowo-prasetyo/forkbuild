@@ -46618,3 +46618,142 @@ Publication/Avatar Inspection, carried forward unchanged from 0.9.9's own
 epilogue under their new numbers. Per the same reasoning that has paused
 this codebase before every milestone in this series, those choices belong
 to an explicit request, not an automatic continuation.
+
+A follow-up request picked up exactly the first of those three seams:
+0.9.11 — Peer Lifecycle → World Source Registry Bridge, below.
+
+---
+
+## 0.9.11 — Peer Lifecycle → World Source Registry Bridge
+
+0.9.9's own header named the gap this milestone closes, in its own words:
+"Deciding WHEN a peer has appeared or disappeared... This file is told; it
+never finds out on its own." 0.9.10 then proved the registry's membership
+can be turned into a World View, but explicitly deferred "Peer lifecycle
+(deciding when a peer has appeared or disappeared, or calling
+`registry.setSource()`/`registry.removeSource()` in response)" to "0.9.11
+— Peer Discovery Lifecycle Bridge." This milestone is that bridge, and
+only that bridge.
+
+```
+Peer connected                          Peer disconnected
+       │                                        │
+       ▼                                        ▼
+peer/PeerWorldDataIngress.js            derivePeerWorldOrigin()
+   describePeerWorldDiscoverySource()          │
+       │                                        │
+       ▼                                        ▼
+peer/PeerWorldDiscoveryLifecycleBridge.js   ★ (THIS)
+   registerPeerWorldSource()               unregisterPeerWorldSource()
+       │                                        │
+       ▼                                        ▼
+application/WorldDiscoverySourceRegistry.js   (0.9.9, unchanged)
+   registry.setSource()                     registry.removeSource()
+```
+
+TWO FUNCTIONS, ONE JOB EACH, BOTH PLAIN TRANSLATION.
+`registerPeerWorldSource(registry, connectedPeer, payload)` hands
+`payload`/`connectedPeer` to 0.9.6's own `describePeerWorldDiscoverySource()`
+and, only when that call produces a real source, hands the result to
+`registry.setSource()`. `unregisterPeerWorldSource(registry, connectedPeer)`
+derives `connectedPeer`'s own origin and hands it to
+`registry.removeSource()`. Neither function makes a decision 0.9.6 or 0.9.9
+doesn't already make on its own.
+
+THE SAME IDENTITY-DERIVED ORIGIN, BOTH DIRECTIONS. 0.9.6's own
+`describePeerWorldDiscoverySource()` already computed
+`"peer:<identityId>"` internally; this milestone extracts that one step as
+`derivePeerWorldOrigin(connectedPeer)`, exported from
+`peer/PeerWorldDataIngress.js` and reused, unchanged, by both this
+bridge's registration path (by way of `describePeerWorldDiscoverySource()`
+itself) and its disconnect path. This is what guarantees a peer's
+disconnect always removes precisely the source its own connect (or
+reconnect) added — no second, independently-invented identity check that
+could ever drift out of step with the first one.
+
+INHERITED, UNCHANGED, FROM 0.9.6 AND 0.9.9 — NO REIMPLEMENTATION OF
+EITHER'S OWN RULES. Replacement rather than accumulation on a second
+registration for the same peer is 0.9.9's `setSource()` doing exactly what
+its own header already promises; this milestone performs no diffing of
+its own. Removal is plain absence, never a tombstone — this milestone
+calls `registry.removeSource()` and nothing else on disconnect, never a
+`setSource()` with an empty replacement. A peer with no established
+identity produces `null` from both 0.9.6 functions, and both
+`registerPeerWorldSource()` and `unregisterPeerWorldSource()` then call
+neither registry method at all — no entry is created, and disconnecting
+such a peer is a harmless no-op.
+
+EVENT/LIFECYCLE-ORIENTED, BUT STILL SYNCHRONOUS. Both functions run to
+completion and return. There is no class here, no constructor, and no
+instance holding a connection, a socket, a WebRTC peer, a timer, a retry
+loop, a subscription, or a cache — a caller's own
+`onPeerConnected`/`onPeerDisconnected`-style handler invokes these two
+pure translations directly; wiring an actual subscription to the existing
+peer lifecycle events that calls them automatically remains separate,
+later, unscheduled work (0.9.12, alongside making the World View react to
+the registry automatically).
+
+NO WORLD ENCOUNTER DERIVATION, NO UI, NO STORAGE, NO CRYPTOGRAPHIC
+VERIFICATION, NO PEER TRANSPORT. This milestone never imports
+`core/WorldEncounter.js`, `core/WorldDiscoverySourceAssembly.js`,
+`application/WorldEncounterIntegration.js`,
+`application/WorldDiscoveryRegistryProjection.js`, a Vue component, a
+`StorageProvider`, any signature-verification module,
+`peer/PeerMessageBus.js`, `peer/PeerConnection.js`,
+`peer/PeerConnectionProvider.js`, or any `PeerDiscoveryProvider`. It is
+handed an already-authenticated `connectedPeer`; it never establishes,
+authenticates, or closes a connection itself.
+
+FLAGSHIP SCENARIO. `tests/PeerWorldDiscoveryLifecycleBridge.test.js`
+drives a complete lifecycle for one peer through
+`registerPeerWorldSource()`/`unregisterPeerWorldSource()` alone, checking
+the World View after each step via 0.9.8's own unmodified
+`describeWorldFromDiscoverySources()`: connect with a publication,
+placement, and avatar (both appear); send updated World data (exactly one
+`peer:A` source afterward, never two); disconnect (the registry empties
+and A's encounters disappear); reconnect (a fresh, single `peer:A`
+source). Further tests cover identity isolation between two peers,
+replacement in isolation, a malformed payload on an established peer
+degrading that peer's source to empty rather than retaining stale data
+(reusing 0.9.6's own malformed-payload degrade rule, not a new one),
+`registerPeerWorldSource()` creating no entry for a peer with no
+established identity (reusing 0.9.6's own identity boundary, not a new
+validation algorithm), disconnect being harmless when the peer is already
+absent, malformed-registry degrade, and the same architectural-regression
+and dependency-direction checks 0.9.9/0.9.10 already established for
+themselves.
+
+DELIBERATELY EXCLUDED — NOT THIS MILESTONE.
+- **Calling `deriveWorldEncounters()`, `assembleWorldDiscoveryInputs()`,
+  `describeWorldFromDiscoverySources()`, or
+  `describeWorldFromDiscoveryRegistry()`.** See "No World encounter
+  derivation," above.
+- **A persistent World discovery service, subscription, or automatic
+  reaction to peer lifecycle events.** Separate, later, unscheduled work
+  (0.9.12 — Reactive World Discovery).
+- **Deduplication, reconciliation, trust, priority, or any judgment about
+  a peer's contribution.** Inherited unchanged from 0.9.6 and 0.9.9.
+- **Persistence, peer transport, or connection establishment of any
+  kind.**
+
+`peer/PeerWorldDataIngress.js` gains one small, additive export —
+`derivePeerWorldOrigin(connectedPeer)`, the identity-derivation step
+`describePeerWorldDiscoverySource()` already performed internally, now
+shared rather than duplicated; `describePeerWorldDiscoverySource()`'s own
+behavior is unchanged. `peer/PeerWorldDiscoveryLifecycleBridge.js` added;
+`docs/Roadmap.md` updated; `PeerWorldDiscoveryLifecycleBridge.test.js`
+added and registered in `tests.html`.
+
+---
+
+Deliberately paused here. The peer lifecycle can now translate directly
+into World discovery source registry membership — a peer's connect (with
+whatever World data it sends), its later updates, and its disconnect each
+map onto exactly one `registry.setSource()`/`removeSource()` call, using
+one identity-derived origin shared by both directions. It deliberately
+does not wire this bridge to the EXISTING peer lifecycle events
+automatically, and it deliberately does not make a running World View
+react when the registry changes underneath it — both remain 0.9.12's own
+concern. Per the same reasoning that has paused this codebase before
+every milestone in this series, those choices belong to an explicit
+request, not an automatic continuation.
