@@ -5199,3 +5199,69 @@ html, body {
 .reconciliation-leaderboard-candidate-col {
     text-align: left !important;
 }
+
+/* 0.8.182 — Reconciliation Candidate Evidence Detail View */
+
+.evidence-inspect-btn {
+    font-size: 0.75rem;
+    padding: 0.35rem 0.6rem;
+    white-space: nowrap;
+}
+
+.evidence-detail-row td {
+    background: #191919;
+    padding: 1rem 1.25rem;
+    text-align: left;
+}
+
+.evidence-detail-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+}
+
+.evidence-detail-group-title {
+    margin: 0 0 0.5rem;
+    font-size: 0.85rem;
+    color: #b0b0b0;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+}
+
+.evidence-detail-columns {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1rem;
+}
+
+.evidence-detail-column h5 {
+    margin: 0 0 0.35rem;
+    font-size: 0.78rem;
+    color: #909090;
+    font-weight: 600;
+}
+
+.evidence-detail-empty {
+    margin: 0;
+    font-size: 0.8rem;
+    color: #666;
+    font-style: italic;
+}
+
+.evidence-detail-list {
+    margin: 0;
+    padding-left: 1.1rem;
+    font-size: 0.82rem;
+    color: #d0d0d0;
+    line-height: 1.5;
+}
+
+.evidence-detail-list li {
+    margin-bottom: 0.25rem;
+}
+
+@media (max-width: 720px) {
+    .evidence-detail-columns {
+        grid-template-columns: 1fr;
+    }
+}

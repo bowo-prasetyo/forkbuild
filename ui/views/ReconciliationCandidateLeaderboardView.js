@@ -7,6 +7,9 @@ import {
 import {
     reconstructPublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardPage
 } from '../../application/PublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardPage.js';
+import {
+    reconstructPublisherLeaderboardClaimSnapshotReconciliationCandidateEvidenceDetail
+} from '../../application/PublisherLeaderboardClaimSnapshotReconciliationCandidateEvidenceDetailView.js';
 import ReconciliationCandidateLeaderboardTable from '../components/ReconciliationCandidateLeaderboardTable.js';
 
 // 0.8.181 — Explicit Peer Archive Leaderboard Comparison.
@@ -94,6 +97,17 @@ import ReconciliationCandidateLeaderboardTable from '../components/Reconciliatio
 //   page loses it, on purpose.
 // - **Filtering, pagination, or visual polish of the leaderboard table
 //   itself.** Unchanged, real, separately sized, later work.
+//
+// 0.8.182 — Reconciliation Candidate Evidence Detail View adds exactly one
+// more computed value on top of the above, `evidenceDetail`, obtained by
+// calling 0.8.182's own `reconstructXxx()` over the IDENTICAL
+// `sourceArchive`/`targetArchive.value` this view already hands to 0.8.179's
+// own `reconstructXxx()` for `page` — never a third archive, never a
+// different pair. Swapping the peer archive (`usePeerArchive()`/
+// `clearPeerArchive()`, unchanged from 0.8.181) recomputes `page` and
+// `evidenceDetail` together, from the same two archives, so a row's own
+// counts and its own expanded detail can never drift out of sync with each
+// other after a peer archive is supplied or cleared.
 export default {
     name: 'ReconciliationCandidateLeaderboardView',
     components: { ReconciliationCandidateLeaderboardTable },
@@ -139,8 +153,9 @@ export default {
         }
 
         const page = computed(() => reconstructPublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardPage(sourceArchive, targetArchive.value));
+        const evidenceDetail = computed(() => reconstructPublisherLeaderboardClaimSnapshotReconciliationCandidateEvidenceDetail(sourceArchive, targetArchive.value));
 
-        return { page, peerArchiveText, hasPeerArchive, peerArchiveInvalid, usePeerArchive, clearPeerArchive };
+        return { page, evidenceDetail, peerArchiveText, hasPeerArchive, peerArchiveInvalid, usePeerArchive, clearPeerArchive };
     },
     template: `
         <section class="reconciliation-leaderboard-view">
@@ -181,7 +196,7 @@ export default {
                 </p>
             </div>
 
-            <ReconciliationCandidateLeaderboardTable :page="page" />
+            <ReconciliationCandidateLeaderboardTable :page="page" :evidence-detail="evidenceDetail" />
         </section>
     `
 };
