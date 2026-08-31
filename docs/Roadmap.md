@@ -41462,3 +41462,77 @@ Decision side                         Observation side
 `docs/Roadmap.md` updated;
 `PublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationAgreementView.test.js`
 registered in `tests.html`.
+
+## 0.8.171 — Revalidation Observation Candidate Correspondence Projection
+
+0.8.146 through 0.8.152 all answered questions ABOUT a decision history
+without ever stating, plainly, which candidate each decision named — until
+0.8.153 closed that gap. 0.8.163 through 0.8.170 do the identical thing one
+subject over, for an OBSERVATION history: counts and lookup (0.8.163/
+0.8.164), chronology (0.8.165), difference (0.8.166), archive integration
+(0.8.167), exchange (0.8.168), synchronization (0.8.169), agreement
+(0.8.170) — but none of them states, plainly and by itself, WHICH CANDIDATE
+DOES EACH HISTORICAL OBSERVATION REFER TO? This milestone is that
+projection, the observation-history analogue of 0.8.153, one subject over.
+
+**New module.** `application/
+PublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationCandidateCorrespondenceView.js`,
+`describePublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationCandidateCorrespondence(history)
+-> { observationCount, candidateCount, correspondences: [{
+observationIndex, candidate, decision, planIdentity, candidatePresent,
+candidateType, candidateMatchesPlan, observedAt }] }`,
+`reconstructPublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationCandidateCorrespondence(archive)`.
+
+**Candidate comes directly from the historical observation — never
+rediscovered.** A 0.8.162 observation record already embeds, by value, the
+exact 0.8.145 decision record a caller supplied, which in turn already
+embeds the exact candidate a caller selected when the decision itself was
+recorded. This file reads that doubly-embedded `candidate` straight off
+`observation.decision.candidate` and never calls 0.8.144 (candidate
+selection) or 0.8.157 (candidate revalidation) to rediscover or re-verify
+anything — the identical boundary 0.8.153 already holds one layer down.
+
+**CRITICAL ARCHITECTURAL TEST — candidate identity ≠ plan identity ≠
+observation identity.** `O1 = C1 + P1 + candidateMatchesPlan: true`,
+`O2 = C1 + P2 + candidateMatchesPlan: false` — the correspondence still
+identifies BOTH as candidate C1, while `planIdentity` and
+`candidateMatchesPlan` remain distinct per entry. Two observations of the
+same candidate against different plans (`D1+C1+P1+present+T1`,
+`D1+C1+P2+absent+T2`), and two observations sharing candidate/plan/decision
+but differing only in `observedAt`, both remain separate correspondence
+entries — never merged.
+
+**`observationCount` versus `candidateCount` — the identical distinction
+0.8.147/0.8.153 already made observable, held here again.** `O1→C1, O2→C1,
+O3→C2, O4→C1` produces `observationCount: 4`, `candidateCount: 2`, with all
+four correspondence entries retained, in `history`'s own order —
+`observationIndex` names each entry's position, never re-sorted by
+`observedAt`.
+
+**Candidate types remain closed** — the identical three-value vocabulary
+0.8.144/0.8.153 established (`DIVERGENT_CORRESPONDENCE`,
+`CLAIM_WITHOUT_CORRESPONDING_SNAPSHOT`,
+`SNAPSHOT_WITHOUT_CORRESPONDING_CLAIM`); no fourth `UNKNOWN` category.
+
+**Architecture.** `describeXxx()` has ZERO imports — the candidate is
+already embedded in each observation, so nothing needs fetching.
+`reconstructXxx()` imports exactly one module: 0.8.167's own
+observation-history archive reconstruction seam — nothing from 0.8.144,
+0.8.157, 0.8.162, or any decision/plan/discovery module.
+
+**Deliberately excluded — not this milestone.** Whether a candidate is
+currently present, whether an observation is correct, or whether it agrees
+with another replica's (0.8.161's/0.8.162's/0.8.170's own, already-answered
+questions); any state-machine vocabulary ("resolved," "current,"
+"superseded"); candidate observation evolution grouped by candidate over
+time (0.8.172's own, separately sized, later question).
+
+```
+Decision side                              Observation side
+─────────────                              ────────────────
+0.8.153 Decision Candidate Correspondence  0.8.171 Observation Candidate Correspondence   ★
+```
+
+`docs/Roadmap.md` updated;
+`PublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationCandidateCorrespondenceView.test.js`
+registered in `tests.html`.
