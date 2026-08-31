@@ -43773,3 +43773,177 @@ work.
 `docs/Roadmap.md` updated;
 `PublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceExportComparisonView.test.js`
 registered in `tests.html`.
+
+## 0.8.192 — Reconciliation Candidate Leaderboard Evidence Export Comparison UI
+
+0.8.189/0.8.190/0.8.191 built a complete, pure, application-layer chain
+that turns two already-exported evidence documents into a small,
+page-ready comparison — but every one of those three files stopped short
+of pixels on purpose. This is the UI integration milestone that closes
+that chain: a new
+`ui/views/ReconciliationCandidateLeaderboardEvidenceExportComparisonView.js`
+and a new
+`ui/components/ReconciliationCandidateLeaderboardEvidenceExportComparisonTable.js`,
+reached at a new `/evidence-export-comparison` route.
+
+```
+Export A JSON ──┐
+                 ▼
+        0.8.189 Comparison
+                 │
+                 ▼
+        0.8.190 Read Model
+                 │
+                 ▼
+        0.8.191 View
+                 │
+                 ▼
+        0.8.192 UI   ★
+                 ▲
+                 │
+Export B JSON ──┘
+```
+
+**Two explicit inputs, one explicit "Compare Evidence" click — never a
+live recomputation on every keystroke.** The view exposes two independent
+textareas, Source Evidence Export and Target Evidence Export. Nothing is
+imported, compared, or rendered until `compareEvidence()` fires, on an
+explicit click — the identical "never on every keystroke, never
+automatically" discipline `usePeerArchive()`/`importEvidenceExport()`
+already hold on `ReconciliationCandidateLeaderboardView.js`.
+
+**Each side is validated through 0.8.188's own `importXxx()`
+independently — never one side blocking the other.** `compareEvidence()`
+calls 0.8.188's own `importXxx()` once per side. A side whose text fails
+validation (malformed JSON, wrong `protocolVersion`, any other structural
+defect 0.8.188 already rejects) leaves that side's own already-imported
+document completely untouched and surfaces its own inline error — a
+malformed Target paste never prevents a genuinely valid Source from being
+used, and vice versa.
+
+**The comparison chain is called over the imported documents — never over
+raw text, and never reimplemented.** Three `computed()` values form the
+exact 0.8.189 → 0.8.190 → 0.8.191 chain, each calling the next layer's own
+`describeXxx()` over the previous layer's own already-computed result,
+unchanged. A `null` document on either side (nothing validated yet)
+degrades through the same "never throw" discipline 0.8.189 already
+guarantees — the table always renders a genuine, honest result.
+
+**Two separate, portable documents — never a third archive, and never
+merged into the live leaderboard.** This view never imports
+`PublicationObservationArchive`, never injects
+`publicationObservationArchiveStorage`, and never reads or writes
+`sourceArchive`/`targetArchive`/`page`/`evidenceDetail` — the entirely
+separate state `ReconciliationCandidateLeaderboardView.js` owns. LIVE
+ARCHIVE COMPARISON and EVIDENCE-EXPORT COMPARISON are two distinct
+concepts; neither silently feeds the other.
+
+**Three independent tables, never one combined status.** The comparison
+table renders Comparison State and Filter as plain metadata facts, then
+three separate three-column tables (Source-only / Shared / Target-only)
+for candidate presence, decision evidence, and observation evidence —
+0.8.189's own flagship distinction, held here again three layers up.
+Nothing sums a row across tables or renders a single verdict spanning all
+three.
+
+**No candidate-level expandable evidence — a deliberate boundary, not an
+oversight.** 0.8.189 deliberately provides detailed record comparison;
+0.8.190/0.8.191 deliberately compress that into summary counts. This UI
+respects that boundary: there is no "Inspect Evidence" button and no
+per-record list anywhere in the new table component. If detailed
+cross-export record inspection ever becomes useful, it deserves its own,
+later projection.
+
+**Flagship scenario:** the identical deliberately asymmetric pair 0.8.191
+proved at the application layer —
+
+```
+                 Source    Shared    Target
+Candidates          1         2        1
+Decision evidence   2         3        1
+Observation evidence
+                    1         4        2
+```
+
+— now carried end-to-end from two pasted JSON documents through
+`importXxx()`, the 0.8.189/0.8.190/0.8.191 chain, and the table
+component's own rendered `computed` properties.
+
+**Further sections** cover: identical exports (zero exclusive counts,
+full metadata agreement); malformed Source input and malformed Target
+input, each rejected independently without crashing the chain or
+disturbing the other, genuinely valid side; an invalid `protocolVersion`,
+rejected identically to any other malformed document; `NO_PEER` vs
+`PEER_EMPTY` surviving the chain as distinct, independent facts;
+`metadata.filter.same` and `metadata.comparisonState.same` varying
+independently of each other and of every evidence count; candidate
+presence, decision evidence, and observation evidence remaining three
+independent dimensions; no mutation of either imported document across
+repeated chain runs, and deterministic output; no network-access
+vocabulary; no persistence vocabulary; no ranking/judgment vocabulary; and
+the view's and table component's own wiring (import counts, the "Compare
+Evidence" control, zero `application/` imports on the table component, and
+no "Inspect Evidence"/expansion control).
+
+**Deliberately excluded — not this milestone.** Candidate-level
+expandable evidence records — see "No candidate-level expandable
+evidence," above. A rank, score, winner, better/worse, correct/incorrect,
+conflict, stale, confidence, or recommendation field or vocabulary of any
+kind. Merging, synchronizing, or reconciling the two exported documents.
+Reading either live archive, or any live-archive comparison. Persistence
+of either pasted document, or of the comparison itself, anywhere. A
+top-nav entry point — reached by URL only, the identical "reached from
+elsewhere, never top-nav" shape 0.8.180's own `/reconciliation-leaderboard`
+route already holds.
+
+```
+Source Evidence Export JSON ──┐
+                               ├─► 0.8.188 importXxx() (twice, once per side)
+Target Evidence Export JSON ──┘         │
+                                         ▼
+                           0.8.189 describeXxx() (comparison)
+                                         │
+                                         ▼
+                           0.8.190 describeXxx() (read model)
+                                         │
+                                         ▼
+                           0.8.191 describeXxx() (view)
+                                         │
+                                         ▼
+                ReconciliationCandidateLeaderboardEvidenceExportComparisonTable
+                                         │
+                                         ▼
+                                      Browser
+```
+
+`docs/Roadmap.md` updated; `ui/router/index.js` gains a new
+`/evidence-export-comparison` route;
+`ReconciliationCandidateLeaderboardEvidenceExportComparisonUI.test.js`
+registered in `tests.html`.
+
+---
+
+This closes the pair of workflows 0.8.191 named:
+
+```
+                    RECONCILIATION EVIDENCE
+                              │
+             ┌────────────────┴────────────────┐
+             │                                 │
+        LIVE ARCHIVES                    PORTABLE EXPORTS
+             │                                 │
+             ▼                                 ▼
+      Candidate Leaderboard             Export Comparison
+             │                                 │
+       ┌─────┴─────┐                     ┌─────┴─────┐
+       │           │                     │           │
+    Filter      Inspect                Import      Compare
+       │           │                     │           │
+       └─────┬─────┘                     └─────┬─────┘
+             │                                 │
+           Export                            Summary
+```
+
+Deliberately paused here rather than automatically continuing to 0.8.193 —
+the next work is UX refinement, richer inspection, persistence, or actual
+peer synchronization, not another projection layered on for its own sake.

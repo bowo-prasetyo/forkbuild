@@ -5259,6 +5259,51 @@ html, body {
     font-style: italic;
 }
 
+/* 0.8.192 — Reconciliation Candidate Leaderboard Evidence Export
+   Comparison UI. `.evidence-export-comparison-table` renders 0.8.191's own
+   view: two metadata blocks (Comparison State / Filter) reusing
+   .evidence-fields verbatim, then up to three independent dimension
+   tables — never one combined status, never restyled to imply one
+   dimension outranks another. */
+.evidence-export-comparison-metadata {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.5rem;
+    margin-bottom: 1rem;
+}
+
+.evidence-export-comparison-metadata-block {
+    flex: 1 1 16rem;
+}
+
+.evidence-export-comparison-dimension {
+    margin-top: 1.25rem;
+}
+
+.evidence-export-comparison-dimension-table {
+    width: 100%;
+    max-width: 28rem;
+    border-collapse: collapse;
+}
+
+.evidence-export-comparison-dimension-table th {
+    text-align: center;
+    padding: 0.5rem 0.75rem;
+    color: #808080;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    border-bottom: 1px solid #2a2a2a;
+}
+
+.evidence-export-comparison-dimension-table td {
+    padding: 0.6rem 0.75rem;
+    border-bottom: 1px solid #232323;
+    text-align: center;
+    font-size: 0.88rem;
+    color: #d0d0d0;
+}
+
 .evidence-detail-list {
     margin: 0;
     padding-left: 1.1rem;
