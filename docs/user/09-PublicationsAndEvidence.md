@@ -2011,6 +2011,75 @@ None of MATCH, DIFFERENT, or a difference/replacement review above ever
 states which archive is newer, better, or more correct — only whether
 the two are, or are not, the identical durable bytes.
 
+## Reconciliation Candidate Leaderboard
+
+A further page reads this same durable archive, without a link anywhere
+else in this app: **Reconciliation Candidate Leaderboard**, at
+`/reconciliation-leaderboard`. Type that URL directly to reach it — there's
+no button, menu entry, or card on this page that takes you there yet. Once
+open, it's entirely read-only: nothing on it creates, edits, or deletes
+anything.
+
+```
+Reconciliation Candidate Leaderboard
+
+Decision and observation evidence this replica has recorded for each
+reconciliation candidate, shown separately. Comparing against a peer
+replica's own archive is separate, later work — every count below
+reflects this replica alone.
+
+2 candidate(s)
+
+Candidate                          Decision Evidence          Observation Evidence
+                                    Shared Source-only Target-only  Shared Source-only Target-only
+Claim claim-7f3a ↔ Snapshot #3        0        2           0          0        1           0
+Snapshot #7 (no corresponding Claim)  0        0           0          0        1           0
+```
+
+**What "candidate" means.** Elsewhere on this page, [External
+Evidence](#external-evidence) claims and [Local Snapshot](#local-snapshot)
+records each describe the same underlying content independently. A
+*reconciliation candidate* is one place those two records were compared —
+always one of three shapes:
+
+| Candidate label | Meaning |
+|---|---|
+| **Claim *X* ↔ Snapshot #*N*** | A claim and a snapshot that were compared and diverged. |
+| **Claim *X* (no corresponding Snapshot)** | A claim with no matching snapshot to compare it against. |
+| **Snapshot #*N* (no corresponding Claim)** | A snapshot with no matching claim to compare it against. |
+
+**Decision Evidence** and **Observation Evidence** are two separate
+column groups, never merged into one number: a *reconciliation decision*
+is an explicit record of which side of a candidate was trusted; a
+*revalidation observation* is a later recheck of that decision. Within
+each group, **Shared** counts what both sides being compared agree on;
+**Source-only** and **Target-only** count what only one side has
+recorded.
+
+> **Every count lands in Source-only today — expected, not a bug.**
+> Comparing your replica's own evidence against a specific peer's replica
+> is real, separate work this page doesn't do yet: there's no way here to
+> choose a peer to compare against. Until that exists, the "target" side
+> is always empty, so **Shared** and **Target-only** stay at zero and
+> everything this replica has recorded shows up as **Source-only**.
+
+**"Evidence leaderboard," not a ranked one.** The header reads Candidate /
+Decision Evidence / Observation Evidence — never Rank, Score, or Status —
+and rows appear in the order this replica discovered them, never
+reordered by how much evidence a candidate has. Nothing here declares one
+candidate more correct, more resolved, or more trustworthy than another.
+
+**In practice, this page shows "No reconciliation candidates to display"
+today.** Nothing else in this app currently records a reconciliation
+decision or a revalidation observation — that's groundwork laid for a
+comparison workflow whose own entry point (creating and revalidating
+these records) hasn't been built into the interface yet. An empty result
+here isn't a bug; it means exactly what it says.
+
+The page loads your archive once, the moment you open it, and does not
+refresh automatically — a decision or observation recorded afterward
+isn't reflected until you leave and come back.
+
 ## What survives a reload
 
 Evidence you've cataloged — your own, a peer's, or something you
@@ -2114,6 +2183,11 @@ until the moment you explicitly click **Clear Archive**: the only action
 on this whole page that ever discards a durably recorded fact. Its own
 export/import, provenance, and fingerprint history (archive import
 events) are durable in exactly the same way.
+
+**The [Reconciliation Candidate Leaderboard](#reconciliation-candidate-leaderboard)
+stores nothing of its own — it only reads this same archive.** There's
+nothing here to survive or lose on that page itself; reloading it simply
+re-reads the archive from scratch, the same way opening it fresh does.
 
 ## What's next?
 

@@ -70,7 +70,11 @@ top-level [docs/](..) folder.
    milestones (and a per-publication **Achievement Profile**), and a
    **Publisher Identity** layer for explicitly associating a
    self-declared publisher label with your publications and inspecting
-   that publisher's own achievement profile, badges, and statistics.
+   that publisher's own achievement profile, badges, and statistics, and
+   a read-only **Reconciliation Candidate Leaderboard** page (reached by
+   typing its URL directly — not yet linked anywhere in the app) that
+   summarizes this replica's own recorded reconciliation-decision and
+   revalidation-observation evidence per candidate.
 
 ## Reference
 
