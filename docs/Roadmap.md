@@ -45723,3 +45723,125 @@ inspect what they selected (0.9.5 — Encounter Inspection) are both
 separate, later work, and — per the same reasoning that has paused this
 codebase before every milestone in this series — that choice belongs to
 an explicit request, not an automatic continuation.
+
+---
+
+## 0.9.4 — World Encounter Selection
+
+0.9.3 paused explicitly on "giving the Wanderer the ability to
+select/click/tap an encounterable object" — naming it as separate, later
+work. This milestone is that explicit request, and it stays exactly as
+narrow as it sounds: the Wanderer can now explicitly select an
+encounterable publication or avatar. Nothing else changes.
+
+```
+       WorldEncounterMarker
+                │
+                │ user clicks a marker
+                ▼
+       WorldEncounterMarker emits "select": { kind, objectId }
+                │
+                ▼
+       WorldEncounterCanvas.selectEncounter()
+                │
+                ▼
+       selectedEncounter = { kind, objectId }   (page-local UI state)
+```
+
+**Two files change; nothing under `application/` or `core/` does — the
+same posture 0.9.3 held.** `WorldEncounterMarker.js` gains one method,
+`emitSelect()`, wired to a click on its own `<g>`; `WorldEncounterCanvas.js`
+gains one piece of state, `selectedEncounter`, one method,
+`selectEncounter()`, and a small selection panel in its template. No
+other file in this chain (`core/WorldEncounter.js`,
+`application/WorldEncounterReadModel.js`,
+`application/WorldEncounterView.js`) is touched.
+
+**The selection payload carries identity only, never the whole domain
+object.** A click emits exactly `{ kind, objectId }` — never the
+publication/avatar record `view` originally supplied, never the marker's
+own projected `x`/`y`, never its `label`. The contract stays:
+
+```
+encounterable object → selection event → identity
+```
+
+never
+
+```
+encounterable object → selection event → entire domain object
+```
+
+**`WorldEncounterMarker.js` reports; it does not decide.** Clicking a
+marker calls `emitSelect()`, which does nothing but
+`this.$emit('select', { kind: this.kind, objectId: this.objectId })`. The
+component still imports nothing — no `application/`, no `core/`, not even
+`vue` — and it still performs no validation, comparison, or
+interpretation of what was clicked. It reports "the user selected this
+marker" and nothing more.
+
+**`WorldEncounterCanvas.js` owns the resulting state, and only as
+page-local UI state.** `selectedEncounter` lives in this component's own
+`data()`, exactly like `wandererPosition` already does — no
+`StorageProvider` write, no network call, no global/Vuex-style store, no
+archive mutation. Selecting a marker never re-fetches, re-derives, or
+mutates the `view` prop itself.
+
+**One selection state, not two.** `selectedEncounter` is a single
+`{ kind, objectId }` pair — never split into `selectedPublication` /
+`selectedAvatar`. The World already established publications and avatars
+as two encounter kinds one layer down; selection answers "which encounter
+did the Wanderer select?", not two separate questions per kind.
+
+**No distance, proximity, or "nearby" semantics.** Every rendered
+encounterable object is selectable, regardless of how far it is from the
+Wanderer's own on-screen position. There is no
+"if within N units, allow selection" anywhere in this milestone — that
+would introduce a new spatial-relevance projection, a different, later,
+unscheduled seam, not this one.
+
+**No fetching, no inspection, no comparison, no interpretation.**
+Selecting an encounter never loads a publication, never loads an avatar's
+profile, never validates a signed claim, and never compares candidates.
+`selectedEncounter` acquires no field beyond `kind`/`objectId` — nothing
+named `selected`, `verified`, `trusted`, `nearby`, or `relevant` enters
+this milestone's own state or code.
+
+**Malformed marker identity degrades gracefully, never throws.** A click
+on a marker with an empty or `undefined` `objectId` still emits `select`
+and still gets stored by `WorldEncounterCanvas.js` — there is no
+validation step to fail; the marker reports exactly what its own props
+already hold.
+
+**Deliberately excluded — not this milestone.**
+- **Distance, nearest-object calculation, proximity, or any "nearby"
+  filtering of what can be selected.** See "No distance, proximity, or
+  'nearby' semantics," above — a separate, later, unscheduled projection.
+- **Fetching, inspecting, or loading anything about the selected
+  encounter** — a publication's own content, an avatar's own profile, a
+  snapshot, or a signed claim. See "No fetching, no inspection," above —
+  0.9.5's own unscheduled "Encounter Inspection Request" seam.
+- **Persisting or synchronizing the selection.** `selectedEncounter` is
+  page-local UI state only, exactly like `wandererPosition` before it.
+- **Candidate matching, comparison, evidence, ranking, trust, or
+  verification of any kind** — see "No fetching, no inspection," above.
+- **Automatic or default selection.** `selectedEncounter` starts `null`
+  and changes only in direct response to a marker's own click.
+
+`ui/components/WorldEncounterMarker.js` and
+`ui/components/WorldEncounterCanvas.js` updated; `css/main.css` extended
+with a click affordance and the selection panel's own styling;
+`docs/Roadmap.md` updated; `WorldEncounterSelectionUI.test.js` added and
+registered in `tests.html`.
+
+---
+
+Deliberately paused here. This milestone drew a clean line between
+*seeing* an encounterable object and *choosing* one, without saying
+anything yet about what that choice means. Turning a selection into an
+inspection request (0.9.5 — Encounter Inspection Request) — and, later
+still, actually loading what was inspected (0.9.6 — Publication/Avatar
+Inspection) — are both separate, later work, and — per the same reasoning
+that has paused this codebase before every milestone in this series —
+that choice belongs to an explicit request, not an automatic
+continuation.
