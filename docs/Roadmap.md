@@ -44392,18 +44392,125 @@ already registered there for 0.8.192/0.8.194.
 
 ---
 
+## 0.8.197 — Evidence Comparison Record Difference Projection
+
+0.8.195 named a decision/observation record's own identity fields
+explicitly, so a reader comparing two records side by side no longer has to
+informally re-derive which fields exist — but still has to manually walk
+every field to find the one that differs. This milestone turns that manual
+walk into a projection. A new
+`application/PublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceExportComparisonRecordDifferenceView.js`
+with one function,
+`describePublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceExportComparisonRecordDifference(pairs)`.
+
+```
+0.8.189 Detailed Export Comparison
+       │
+       ▼
+0.8.193 Comparison Detail Projection
+       │
+       ▼
+0.8.195 Record Identity Projection
+       │
+       ▼ (caller explicitly pairs two records)
+0.8.197 Record Difference Projection   ★
+```
+
+**Result shape:** `{ decisionDifferences: [ { source, target, differences }, ... ],
+observationDifferences: [ { source, target, differences }, ... ] }`, `pairs`
+being a caller-supplied `{ decisionPairs: [ { source, target }, ... ],
+observationPairs: [ { source, target }, ... ] }`. `differences` is the
+subset of the record kind's own named-field list — reused verbatim from
+0.8.195, never reinvented — whose value differs between `source` and
+`target`, in that field list's own fixed order.
+
+**No automatic pairing — the one invariant this milestone exists to
+protect.** This file never reads a `sourceOnly`/`targetOnly` array and
+never guesses which source-only record "must be" the same evidence as
+which target-only record; doing so would create the new semantic claim
+"these two records are versions of the same underlying evidence," directly
+contradicting 0.8.189's own deliberately conservative structural-identity
+stance. Every pair compared is a pair the caller explicitly supplied — the
+function reads no comparison, detail, or identity result directly, only an
+explicit pairing built from records the caller already holds.
+
+**No new identity algorithm, no re-partitioning.** The two field lists
+(four fields for a decision, seven for an observation) are 0.8.195's own,
+duplicated here as plain data for the same architectural reason 0.8.193
+already duplicates 0.8.189's own defaults one layer below. This file never
+re-derives shared/source-only/target-only membership — that fact stays
+0.8.189's alone.
+
+**Field values are compared structurally, never by reference** — a small
+recursive `sameValue()` walks plain objects and arrays, so a `candidate` or
+`decision` field that is structurally identical but not the same object
+reference (e.g. re-parsed from two separate exported documents) is never
+reported as a spurious difference. This is the one place in the whole
+export-comparison family where a cross-record comparison belongs, because
+comparing two records is this file's entire, single purpose.
+
+**Result vocabulary stays deliberately factual.** No `conflict`,
+`mismatchSeverity`, `winner`, `better`, `correct`, `stale`, `invalid`,
+`resolution`, or `recommendation` field or vocabulary anywhere in this file
+or its result — the output answers "what differs," never "what should
+happen."
+
+**Flagship scenario** — three explicitly paired observations, each
+differing from a shared anchor by exactly one field:
+
+```
+anchor vs pair A:  differs only in candidateMatchesPlan
+anchor vs pair B:  differs only in observedAt
+anchor vs pair C:  differs only in candidateType
+```
+
+`describeXxx()` reports `["candidateMatchesPlan"]`, `["observedAt"]`, and
+`["candidateType"]` respectively; pairing the anchor with itself reports an
+empty `differences` array.
+
+**Further sections** cover: a decision pair's differing field named
+exactly, with an identical pair reporting zero differences; an
+object-valued field (`candidate`) that genuinely differs being reported,
+while a structurally-equal-but-not-reference-equal object field is never
+reported as spurious; deterministic entry order (matching supplied pair
+order) and deterministic field order (the record kind's own fixed
+declaration order, never the order fields happen to differ in); a
+permanent regression test proving this file's own code never references
+`sourceOnly`/`targetOnly` at all, and that supplying no explicit pairs
+produces no invented difference; malformed/absent `pairs` input degrading
+every section to an empty array, and a malformed individual pair degrading
+to an all-`undefined`, zero-difference entry rather than being dropped or
+throwing; determinism and deep immutability; and a permanent architectural
+regression test proving the module imports nothing at all, declares no
+`reconstructXxx()` of its own, and carries no verdict/ranking/
+synchronization vocabulary.
+
+**Deliberately excluded — not this milestone.** Automatically pairing a
+source-only record with a target-only record — the flagship architectural
+constraint this milestone exists to hold. Re-deriving shared/source-only/
+target-only membership. A `conflict`, `mismatchSeverity`, `winner`,
+`better`, `correct`, `stale`, `invalid`, `resolution`, or `recommendation`
+field or vocabulary of any kind. A rank, score, confidence, or
+synchronization/transport vocabulary of any kind. Deduplication, merging,
+or collapsing of any two records that "look similar." Any markup, DOM
+nodes, or control-rendering technology choice — this file returns plain,
+frozen, JSON-safe data; an "Inspect differences" UI (0.8.198) is separate,
+later, UI-layer work, deliberately deferred. Reading 0.8.189's, 0.8.193's,
+or 0.8.195's own result directly, either exported document, either
+archive, or 0.8.188's own `importXxx()`. Persistence, or automatic/
+periodic/background computation of any kind.
+
+`docs/Roadmap.md` updated;
+`PublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceExportComparisonRecordDifferenceView.test.js`
+registered in `tests.html`.
+
+---
+
 Deliberately paused here, as recommended, rather than automatically
-proposing 0.8.197. The portable-export workflow
-(0.8.186 → 188 → 189 → {190 → 191 → 192 → 194 → 196, 193 → 195}) is now a
-complete, page-ready evidence-inspection subsystem carrying summary counts,
-record detail, AND per-record identity, alongside the sibling live-archive
-workflow (0.8.176 → … → 187). The chain from Archive through Evidence
-computation, Candidate evidence, Leaderboard, Filtering, Export/Import,
-Export comparison, Summary, Exact records, Record identity, to Human
-inspection is now complete end to end. Rather than mechanically opening a
-0.8.197, the next question is not "what projection can we add," but what
-capability is still genuinely missing for the user — improved usability,
-persistence/sharing of reports, candidate-centric navigation across the two
-workflows, or the explicit synchronization capability this codebase has
-deliberately deferred at every layer so far — and that choice belongs to an
-explicit request, not an automatic continuation.
+proposing 0.8.198. This milestone establishes explicit-pairing semantics,
+exact field-level differences, and the factual result vocabulary as a pure
+application-layer projection; wiring an "Inspect differences" control into
+the existing identity inspection panel (0.8.198) is separate, later,
+UI-layer work, and — per the same reasoning that paused this codebase
+before 0.8.197 — that choice belongs to an explicit request, not an
+automatic continuation.
