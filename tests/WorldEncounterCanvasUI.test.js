@@ -35,11 +35,24 @@ import { deriveWorldEncounters } from '../core/WorldEncounter.js';
 // Section I: this milestone's dumb marker components
 //            (WorldEncounterMarker.js, WandererMarker.js) import NOTHING —
 //            no application/, no core/, not even vue.
-// Section J: WorldEncounterCanvas.js imports no application/ or core/
-//            module — only its own two sibling components.
+// Section J: WorldEncounterCanvas.js imports no core/ module, and (as of
+//            0.9.13) exactly one application/ module —
+//            WorldDiscoveryRegistryProjection.js's own
+//            describeWorldFromDiscoveryRegistry() — alongside its own two
+//            sibling components.
 // Section K: no distance/nearby/radius/score/rank/trust/verified/winner/
 //            correctness vocabulary anywhere in this milestone's own code.
 // Section L: consumes 0.9.2's own view result directly, end to end.
+//
+// 0.9.13 note: WorldEncounterCanvas.js gained an optional `registry` prop
+// and an `effectiveView` computed sitting in front of `publicationRows`/
+// `avatarRows` (registry wins when supplied, otherwise falls back to the
+// `view` prop unchanged). Every ctx below never supplies `registry`, so
+// `effectiveView` always resolves to `view` exactly as before — this
+// file's own sections are otherwise unmodified and still exercise the
+// pre-0.9.13 `view`-prop-only contract end to end. Live registry
+// subscription itself is covered separately, in
+// tests/LiveWorldViewRegistrySubscription.test.js.
 
 function assert(condition, message) {
     if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
@@ -97,8 +110,13 @@ function viewOf({ publications = [], avatars = [] } = {}) {
 function canvasCtx({ view, wandererPosition } = {}) {
     const ctx = {
         view: view !== undefined ? view : WorldEncounterCanvas.props.view.default(),
+        // Never supplied by this file's own tests — see this file's own
+        // header, "0.9.13 note." `effectiveView` below therefore always
+        // falls back to `view`, exactly as every section here expects.
+        registry: null,
         wandererPosition: wandererPosition || { x: 0, y: 0, z: 0 }
     };
+    ctx.effectiveView = WorldEncounterCanvas.computed.effectiveView.call(ctx);
     ctx.publicationRows = WorldEncounterCanvas.computed.publicationRows.call(ctx);
     ctx.avatarRows = WorldEncounterCanvas.computed.avatarRows.call(ctx);
     return ctx;
@@ -285,16 +303,20 @@ async function run() {
     }
 
     // ---------------------------------------------------------------
-    // Section J — WorldEncounterCanvas.js imports no application/ or core/ module.
+    // Section J — WorldEncounterCanvas.js's own import boundary (updated
+    // for 0.9.13: exactly one application/ module now, still no core/).
     // ---------------------------------------------------------------
     {
         const source = await readFile(new URL('../ui/components/WorldEncounterCanvas.js', import.meta.url), 'utf8');
         const importLines = source.split('\n').filter((line) => line.trim().startsWith('import '));
-        assert(importLines.length === 2, '37. WorldEncounterCanvas.js has exactly two imports');
-        assert(importLines.every((line) => line.includes('./WorldEncounterMarker.js') || line.includes('./WandererMarker.js')), '38. WorldEncounterCanvas.js imports only its own two sibling marker components');
-        assert(!importLines.some((line) => line.includes('application/') || line.includes('core/')), '39. WorldEncounterCanvas.js never imports application/WorldEncounter*.js or core/WorldEncounter.js — it receives the 0.9.2 view as a prop instead');
+        assert(importLines.length === 3, '37. WorldEncounterCanvas.js has exactly three imports as of 0.9.13');
+        assert(importLines.some((line) => line.includes('./WorldEncounterMarker.js')) && importLines.some((line) => line.includes('./WandererMarker.js')), '38. WorldEncounterCanvas.js still imports its own two sibling marker components');
+        assert(!importLines.some((line) => line.includes('core/')), '39. WorldEncounterCanvas.js never imports any core/ module directly — it receives the projected view as a prop, or via the one application/ seam below, instead');
+        const applicationImportLines = importLines.filter((line) => line.includes('application/'));
+        assert(applicationImportLines.length === 1 && applicationImportLines[0].includes('WorldDiscoveryRegistryProjection.js') && applicationImportLines[0].includes('describeWorldFromDiscoveryRegistry'), '40. 0.9.13 adds exactly one application/ import — WorldDiscoveryRegistryProjection.js\'s own describeWorldFromDiscoveryRegistry() — and no other');
+        assert(!importLines.some((line) => line.includes('WorldEncounterIntegration.js') || line.includes('WorldEncounterReadModel.js') || line.includes('WorldEncounterView.js') || line.includes('WorldDiscoverySourceRegistry.js')), '41. WorldEncounterCanvas.js never imports deriveWorldEncounters(), assembleWorldDiscoveryInputs(), describeWorldFromDiscoverySources(), or the registry class itself — only the one registry-projection seam it subscribes through');
 
-        console.log('✓ Section J: WorldEncounterCanvas.js never imports core/WorldEncounter.js or any application/ module — it consumes the 0.9.2 view as a prop');
+        console.log('✓ Section J: WorldEncounterCanvas.js never imports core/WorldEncounter.js, and imports exactly one application/ module — describeWorldFromDiscoveryRegistry() — as of 0.9.13');
     }
 
     // ---------------------------------------------------------------
@@ -311,7 +333,7 @@ async function run() {
             const source = await readFile(new URL(path, import.meta.url), 'utf8');
             const codeOnly = source.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n').toLowerCase();
             for (const term of forbiddenInCode) {
-                assert(!codeOnly.includes(term), `40. ${path}'s own code never carries "${term}"`);
+                assert(!codeOnly.includes(term), `42. ${path}'s own code never carries "${term}"`);
             }
         }
 
@@ -339,9 +361,9 @@ async function run() {
         const projectedPublications = WorldEncounterCanvas.computed.projectedPublications.call(ctx);
         const projectedAvatars = WorldEncounterCanvas.computed.projectedAvatars.call(ctx);
 
-        assert(projectedPublications.length === 1 && projectedPublications[0].objectId === 'pub-1' && projectedPublications[0].label === 'Real Publication', '41. a genuine 0.9.0 -> 0.9.1 -> 0.9.2 chain result projects the real publication correctly');
-        assert(projectedAvatars.length === 1 && projectedAvatars[0].objectId === 'avatar-1' && projectedAvatars[0].label === 'Bob', '42. a genuine 0.9.0 -> 0.9.1 -> 0.9.2 chain result projects the real avatar correctly');
-        assert(WorldEncounterCanvas.computed.isWorldEmpty.call(ctx) === false, '43. a genuine non-empty chain result reports isWorldEmpty false');
+        assert(projectedPublications.length === 1 && projectedPublications[0].objectId === 'pub-1' && projectedPublications[0].label === 'Real Publication', '43. a genuine 0.9.0 -> 0.9.1 -> 0.9.2 chain result projects the real publication correctly');
+        assert(projectedAvatars.length === 1 && projectedAvatars[0].objectId === 'avatar-1' && projectedAvatars[0].label === 'Bob', '44. a genuine 0.9.0 -> 0.9.1 -> 0.9.2 chain result projects the real avatar correctly');
+        assert(WorldEncounterCanvas.computed.isWorldEmpty.call(ctx) === false, '45. a genuine non-empty chain result reports isWorldEmpty false');
 
         console.log('✓ Section L: WorldEncounterCanvas consumes 0.9.2\'s own describeWorldEncounterView() result end to end');
     }

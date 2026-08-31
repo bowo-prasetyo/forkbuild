@@ -46910,3 +46910,219 @@ wiring automatically, and no actual World View component subscribes yet.
 Per the same reasoning that has paused this codebase before every
 milestone in this series, connecting this seam to a running World View
 (0.9.13) belongs to an explicit request, not an automatic continuation.
+
+---
+
+## 0.9.13 — Live World View Registry Subscription
+
+0.9.10 proved a World View CAN be derived from a registry's current
+membership (`describeWorldFromDiscoveryRegistry()`); 0.9.12 proved the
+registry CAN notify a subscriber when that membership changes
+(`registry.subscribe()`). Both milestones' own headers named the exact
+gap left over and refused to close it — 0.9.10's: "it does not establish
+that the World View automatically updates whenever the registry
+changes... reactive, automatic recomputation is separate, later,
+unscheduled work"; 0.9.12's, even more specifically: "wiring an actual
+running World View component to call `registry.subscribe()` and
+re-project on notification is 0.9.13, unscheduled here." This milestone
+is that wiring, and only that wiring — no new projection layer, no new
+membership seam, no new notification contract.
+
+```
+local records ────────────────┐
+                                │
+peer connect ──▶ lifecycle ────┤
+                                ▼
+                WorldDiscoverySourceRegistry        (0.9.9/0.9.11/0.9.12)
+                     registry.subscribe(listener)
+                                │
+                                ▼  notification (no arguments)
+                WorldEncounterCanvas.js   ★ (THIS)
+                     registry.subscribe()'d in mounted()
+                     describeWorldFromDiscoveryRegistry(registry)  (0.9.10)
+                     worldView = <fresh result>
+                                │
+                                ▼
+                     (renders exactly as 0.9.3/0.9.4 already do)
+```
+
+`ui/components/WorldEncounterCanvas.js` gains one new, optional prop —
+`registry`, a live `WorldDiscoverySourceRegistry` — alongside its
+existing `view` prop, which is completely unchanged: every test in
+`tests/WorldEncounterCanvasUI.test.js` and
+`tests/WorldEncounterSelectionUI.test.js` still exercises the pre-0.9.13
+`view`-prop-only contract end to end, with `registry` simply absent. A
+new `effectiveView` computed sits in front of the existing
+`publicationRows`/`avatarRows` computeds: it reads the component's own
+registry-derived `worldView` whenever a `registry` was supplied, and
+falls back to `view` otherwise — registry, when supplied, always wins;
+the two are never merged.
+
+`worldView` IS PAGE-LOCAL UI STATE, EXACTLY LIKE `wandererPosition` AND
+`selectedEncounter` ALREADY ARE. It lives in this component's own
+`data()`, starts `null`, and is written to in exactly one place —
+`refreshWorldViewFromRegistry()`, a new method that is also the only
+caller of `describeWorldFromDiscoveryRegistry()` in this file. Every
+write REPLACES `worldView` wholesale with a fresh call's own result;
+nothing here ever mutates a previous snapshot in place or patches
+individual rows into it — a caller still holding a reference to an
+earlier `worldView` keeps seeing exactly what it saw when it captured
+that reference.
+
+SUBSCRIPTION IS A MOUNT-LIFETIME CONCERN, OWNED BY THE COMPONENT, NOT BY
+THE PROJECTION FUNCTION. `application/WorldDiscoveryRegistryProjection.js`
+is completely unchanged — its own header's "synchronous and stateless"
+promise, and its own "snapshot, not subscription" boundary, both hold
+exactly as before. Mounting and unmounting are where a subscription's
+own lifetime belongs, so `WorldEncounterCanvas.js`'s own `mounted()` and
+`beforeUnmount()` are where 0.9.13's entire new behavior lives:
+
+```
+mounted()                                   beforeUnmount()
+  registry supplied?                          unsubscribeWorldRegistry
+    │                                          exists?
+    ├─ no  → do nothing                          │
+    │                                             ├─ no  → do nothing
+    └─ yes → refreshWorldViewFromRegistry()       │
+             (seed the CURRENT snapshot           └─ yes → call it, then
+             immediately, before any                      clear the
+             notification has fired)                      reference
+             registry.subscribe(() =>
+               refreshWorldViewFromRegistry())
+             → keep the returned unsubscribe
+```
+
+The listener itself does nothing but call
+`refreshWorldViewFromRegistry()` again — it reads no argument (0.9.12's
+own `listener()` is called with none), inspects no `source.origin`, and
+makes no decision about what changed. This is 0.9.12's own subscription
+contract applied literally: a notification means "the registry's
+snapshot may have changed, call `listSources()` again if you care" —
+`describeWorldFromDiscoveryRegistry()` is exactly that re-read, already
+built, unmodified, and this component's entire reaction to a
+notification is to call it again and replace `worldView`.
+
+ARCHITECTURAL BOUNDARY — THE UI MAY SUBSCRIBE AND REQUEST A FRESH
+PROJECTION; IT MAY NEVER COMPUTE ONE ITSELF, INSPECT MEMBERSHIP, OR
+MANIPULATE IT.
+
+```
+UI MAY                              UI MUST NOT
+──────────────────────────────      ──────────────────────────────────
+subscribe to the registry           inspect origin
+unsubscribe on destruction          inspect peer identities
+request a fresh projection          manipulate registry membership
+  after notification                  (setSource/removeSource/clear)
+replace its local view state        call deriveWorldEncounters()
+                                     call assembleWorldDiscoveryInputs()
+                                     perform deduplication
+                                     perform sorting
+                                     compare records
+                                     verify signatures
+                                     fetch peer data
+                                     persist anything
+```
+
+`WorldEncounterCanvas.js` imports exactly one `application/` module —
+`WorldDiscoveryRegistryProjection.js`'s own
+`describeWorldFromDiscoveryRegistry()` — and no `core/` module at all;
+it never calls `deriveWorldEncounters()`, `assembleWorldDiscoveryInputs()`,
+or `describeWorldFromDiscoverySources()` directly, never reads
+`registry.listSources()` or a source's own `origin` itself, and never
+calls `registry.setSource()`/`removeSource()`/`clear()`. Every one of
+those stays entirely behind the one seam this component depends on,
+exactly as it already did for every layer from 0.9.0 through 0.9.10.
+
+ONE ARCHITECTURAL DECISION WORTH NAMING: THE SUBSCRIPTION DOES NOT LIVE
+IN `WorldDiscoveryRegistryProjection.js`. That module's own contract —
+"registry snapshot → World View," synchronous and stateless — is exactly
+right at its own layer, and 0.9.13 does not reach into it. A
+lifecycle-owning presentation component is where a subscription's own
+lifetime belongs; a pure projection function has no lifecycle to hang
+one from.
+
+FLAGSHIP SCENARIO. `tests/LiveWorldViewRegistrySubscription.test.js`
+mounts a `WorldEncounterCanvas` instance against a registry already
+holding `local → P1` and `peer:A → A1`, and confirms it renders both
+immediately on mount, with no notification required. `peer:B` then
+connects (`registry.setSource()`); the mounted component automatically
+grows to `P1, P2, A1` — no manual re-projection call anywhere in the
+test. `peer:A` then disconnects (`registry.removeSource()`); the
+component automatically settles to exactly `P1, P2`. Further sections
+cover `beforeUnmount()`'s own unsubscribe taking effect (no update is
+ever delivered again after unmount), the `view`-prop-only path staying
+completely inert when no `registry` is supplied, `mounted()` seeding the
+CURRENT snapshot before any notification fires, replacement-never-
+mutation (an old `worldView` snapshot is provably untouched by a later
+notification), registry winning over a simultaneously-supplied `view`
+prop, a malformed registry (no `subscribe` method) degrading exactly
+like no registry at all, and an architectural-regression sweep of
+`WorldEncounterCanvas.js`'s own source confirming it never calls
+`setSource()`/`removeSource()`/`clear()`/`listSources()`, never reads
+`.origin` or any peer-identity vocabulary, never calls the lower
+pipeline stages directly, and never persists or verifies anything.
+
+DELIBERATELY EXCLUDED — NOT THIS MILESTONE.
+- **A second World-projection algorithm, or any direct call to
+  `deriveWorldEncounters()`, `assembleWorldDiscoveryInputs()`, or
+  `describeWorldFromDiscoverySources()`.** See "Architectural boundary,"
+  above — `describeWorldFromDiscoveryRegistry()` remains the one seam
+  this component depends on.
+- **Reading, filtering, or branching on `source.origin` or any peer
+  identity.** This component never sees an individual source at all.
+- **Mutating registry membership** from this component. Membership
+  stays the registry's own decision.
+- **Deduplication, sorting, record comparison, signature verification,
+  or fetching a peer's own data.** All remain out of scope at this
+  layer, inherited unchanged from 0.9.0 through 0.9.10.
+- **Persisting `worldView` to a `StorageProvider` or across a page
+  reload.** It lives and dies with this component's own mount.
+- **Watching a `registry` prop change after mount and re-subscribing to
+  a different instance.** A mounted `WorldEncounterCanvas` stays bound
+  to whichever `registry` it received when `mounted()` first ran, for
+  its own entire mount lifetime; a caller needing to observe a different
+  registry re-mounts the component instead.
+- **An event payload, coalesced/debounced notification, or any change to
+  0.9.12's own `subscribe()` contract.** This component consumes that
+  contract exactly as 0.9.12 already defined it.
+- **The Wanderer's own position becoming registry-driven, spatial
+  discovery, or avatars walking around.** Unrelated to World discovery,
+  and a much later, unscheduled concern.
+- **Local + peer source bootstrap into the running app** (actually
+  constructing a `WorldDiscoverySourceRegistry`, populating it from
+  local storage and live peer lifecycle, and handing it to a mounted
+  `WorldEncounterCanvas`). This milestone proves the wiring works once a
+  `registry` is supplied; assembling that registry inside the real,
+  running application is separate, later, unscheduled work.
+
+`ui/components/WorldEncounterCanvas.js` gains the `registry` prop, the
+`worldView`/`unsubscribeWorldRegistry` data fields, the `effectiveView`
+computed, the `refreshWorldViewFromRegistry()` method, and `mounted()`/
+`beforeUnmount()` lifecycle hooks; every existing prop, computed,
+method, and template line is unchanged.
+`tests/WorldEncounterCanvasUI.test.js` and
+`tests/WorldEncounterSelectionUI.test.js` both gain a `registry: null`
+field (and, in the former, an `effectiveView` resolution step) in their
+own `canvasCtx()` test harnesses so their existing assertions keep
+exercising the unchanged `view`-prop path; the former's Section J is
+updated to match this file's new (still narrow) import boundary.
+`tests/LiveWorldViewRegistrySubscription.test.js` added and registered
+in `tests.html`; `docs/Roadmap.md` updated.
+
+---
+
+Deliberately paused here. The World is no longer inherently local-only,
+and that fact is now visible live in a running `WorldEncounterCanvas`: a
+peer's currently-contributed World source can enter the registry and
+drive the same World projection as local data, with no manual
+re-projection call anywhere in sight. What remains unbuilt is everything
+downstream of "discovering something exists" — nothing yet constructs a
+real `WorldDiscoverySourceRegistry` inside the running application and
+populates it from local storage and live peer lifecycle (0.9.14);
+nothing turns a selected encounter into read-only inspection detail
+(0.9.15); nothing loads the selected publication/avatar's own signed
+material (0.9.16); nothing verifies a signature (0.9.17); and nothing
+presents a verified encounter as such (0.9.18). Per the same reasoning
+that has paused this codebase before every milestone in this series,
+each of those remains an explicit request, not an automatic
+continuation.
