@@ -106,6 +106,25 @@ import { describeWorldDiscoverySource } from '../core/WorldDiscoverySource.js';
 //   PeerConnection.js`, `peer/WebRtcPeerConnection.js`, or any
 //   `PeerConnectionProvider` to obtain either.
 
+// Pure. Derives the exact `"peer:<identityId>"` origin
+// `describePeerWorldDiscoverySource()` itself names a source after, from
+// `connectedPeer`'s own already-proven `remoteIdentity` alone — no
+// payload involved. Returns `null` under exactly the same condition
+// `describePeerWorldDiscoverySource()` returns `null` for: no established
+// identity to name an origin after. Exported so 0.9.11's own
+// `peer/PeerWorldDiscoveryLifecycleBridge.js` can derive the SAME origin
+// on peer disconnect — to call `registry.removeSource()` — from this one
+// place, rather than reimplementing this identity check a second time.
+export function derivePeerWorldOrigin(connectedPeer) {
+    const identityId = connectedPeer && connectedPeer.remoteIdentity
+        ? connectedPeer.remoteIdentity.identityId
+        : null;
+    if (typeof identityId !== 'string' || identityId.length === 0) {
+        return null;
+    }
+    return `peer:${identityId}`;
+}
+
 // Pure. Turns one already-received peer message into one
 // `WorldDiscoverySource` bundle, attributed to `connectedPeer`'s own
 // already-proven remote identity. Returns `null`, never throws, when
@@ -115,16 +134,14 @@ import { describeWorldDiscoverySource } from '../core/WorldDiscoverySource.js';
 // `describeWorldDiscoverySource()`'s own defaults already do for any one
 // missing field.
 export function describePeerWorldDiscoverySource(payload, connectedPeer) {
-    const identityId = connectedPeer && connectedPeer.remoteIdentity
-        ? connectedPeer.remoteIdentity.identityId
-        : null;
-    if (typeof identityId !== 'string' || identityId.length === 0) {
+    const origin = derivePeerWorldOrigin(connectedPeer);
+    if (origin === null) {
         return null;
     }
 
     const envelope = payload && typeof payload === 'object' ? payload : {};
     return describeWorldDiscoverySource({
-        origin: `peer:${identityId}`,
+        origin,
         publications: envelope.publications,
         placements: envelope.placements,
         anchors: envelope.anchors,
