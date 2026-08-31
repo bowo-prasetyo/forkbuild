@@ -46077,14 +46077,139 @@ nothing at all.
 
 ---
 
-Deliberately paused here. This milestone crossed the seam 0.9.5 named,
-for exactly one origin at a time — no source was combined with another,
-and `core/WorldEncounter.js` was not touched. Concatenating multiple
-described sources into the six arrays `deriveWorldEncounters()` actually
-wants (0.9.7 — World Data Assembly), wiring that into the running World
-View (0.9.8 — Remote Encounter Integration), and only then returning to
-what 0.9.4's own selection produces (0.9.9 — Encounter Inspection
-Request, 0.9.10 — Publication/Avatar Inspection) are all separate, later
-work, and — per the same reasoning that has paused this codebase before
-every milestone in this series — that choice belongs to an explicit
-request, not an automatic continuation.
+## 0.9.7 — World Discovery Source Assembly
+
+0.9.5 named the seam and, in its own header, explicitly refused to cross
+it more than once at a time: "one source per call — this file never
+combines two of them." 0.9.6 crossed that seam exactly once per peer
+message and refused, in its own header, to combine what it produced with
+anything else either. Both files pointed at the same unanswered
+question: once a local source and N peer sources all exist as separate,
+already-described bundles, how do they become the one set of six arrays
+`deriveWorldEncounters()` actually takes as its own arguments? This
+milestone is that answer, and only that answer.
+
+```
+Local data ────────→ WorldDiscoverySource ──┐
+                                             │
+Peer A message ────→ WorldDiscoverySource ──┤
+                                             │
+Peer B message ────→ WorldDiscoverySource ──┤
+                                             ▼
+                                 core/WorldDiscoverySourceAssembly.js
+                                    assembleWorldDiscoveryInputs()   ★ (THIS)
+                                             │
+                                             ▼
+                                   core/WorldEncounter.js
+                                      deriveWorldEncounters()
+```
+
+**Assembly is not reconciliation — the one rule everything else follows
+from.** `assembleWorldDiscoveryInputs()` concatenates; it never
+deduplicates, never groups by identity, and never decides which of two
+records "wins," because it never looks. If peer A and peer B both hand
+over a publication with the same `id`, the assembled `publications`
+array contains that record twice, unchanged — `source A: [X, Y]` and
+`source B: [Y, Z]` assemble to `[X, Y, Y, Z]`, not `[X, Y, Z]`. A future,
+unscheduled step may one day decide two records describe the same object
+and choose between them, but that is a real and separate concern this
+codebase has already built dedicated machinery for elsewhere (e.g.
+`application/PublicationObservationArchiveReplacementReview.js`'s own
+candidate/decision vocabulary) — never this file's job, and never
+half-implemented here.
+
+**Order is explicit, deterministic, and never re-derived.** `sources[0]`'s
+records for a given dimension come first, then `sources[1]`'s, and so on;
+within one source, that source's own record order is preserved exactly.
+No sorting by id, timestamp, or origin name. No grouping. No "local
+first" special case hard-coded here — a caller that wants local data
+first lists the local source first; this file has no opinion of its own
+about which origin it's given.
+
+**Exactly 0.9.5's own six dimensions, never a seventh.** This file
+imports `WorldDiscoveryInputKeys` from `core/WorldDiscoverySource.js`
+rather than retyping `publications`, `placements`, `anchors`,
+`snapshotPlacements`, `avatarProfiles`, `avatarPresences` a third time,
+so the three files — 0.9.5's source shape, 0.9.6's peer adapter, and this
+assembly step — can never drift out of sync with
+`deriveWorldEncounters()`'s own parameter list.
+
+**Provenance stays at the source container — it never leaks into a
+record.** A `WorldDiscoverySource` carries `origin`; the records inside
+its six arrays do not, and this file never adds one. No assembled record
+gains a `sourceOrigin`, `peerIdentity`, `remote`, or any field of this
+file's own invention — every record that comes out is the exact same
+object reference that went in. This is what lets
+`deriveWorldEncounters()`, and everything already built on top of it
+(0.9.1 through 0.9.4), go on knowing nothing about whether a publication
+came from local storage or a remote peer — the payoff of 0.9.5 through
+0.9.7 together, not an oversight of this file alone.
+
+**Malformed sources degrade to no contribution — never throw, and never
+discard the whole assembly.** `sources` missing or not an array degrades
+to "zero sources," i.e. six empty arrays. Within `sources`, an entry that
+is `null`, `undefined`, or not the frozen shape
+`describeWorldDiscoverySource()` produces contributes nothing and is
+simply skipped, without disturbing the valid sources on either side of
+it — `[validSource, null, malformedSource, anotherValidSource]` still
+produces both valid sources' own contributions.
+
+**No network, no storage, no peer transport knowledge, no encounter
+derivation.** This file never imports `peer/PeerMessageBus.js`, `peer/
+PeerWorldDataIngress.js`, a `StorageProvider`, or `core/WorldEncounter.js`
+itself. It consumes already-described sources and has no way to obtain
+one on its own, and it never calls `deriveWorldEncounters()` — that keeps
+the dependency graph one-directional (`PeerWorldDataIngress` depends on
+`WorldDiscoverySource`; this file depends on `WorldDiscoverySource`;
+neither of the first two ever depends on this one), and leaves wiring the
+assembled result into the running World View to 0.9.8, separate work.
+
+**Freezing, not cloning.** The assembled result object and each of its
+six arrays are frozen so a caller cannot mutate the assembly itself, but
+no record inside those arrays is ever cloned or modified — every record
+reference a source contributed is the exact same reference that source
+held.
+
+**Deliberately excluded — not this milestone.**
+- **Deduplication of any kind.** See "Assembly is not reconciliation,"
+  above.
+- **Sorting, grouping, or any reordering by identity, timestamp, origin,
+  or anything else.** See "Order is explicit," above.
+- **Trust, verification, priority, weight, or any judgment about which
+  source's contribution should be believed or preferred.** This file
+  inherits 0.9.5's and 0.9.6's own "no trust vocabulary of any kind"
+  without a single exception.
+- **Attaching provenance to a record.** See "Provenance stays at the
+  source container," above.
+- **Reading anything off `peer/PeerMessageBus.js`, `peer/
+  PeerWorldDataIngress.js`, or any `PeerConnection`/`PeerDiscoveryProvider`.**
+  This file consumes already-described sources; how a source came to
+  exist is 0.9.6's own, separate concern.
+- **Persisting the assembled result, or any source, to a
+  `StorageProvider`.** The assembled result is a transient, in-memory
+  bundle, exactly like the sources it was built from.
+- **Calling `deriveWorldEncounters()`, or touching
+  `core/WorldEncounter.js` in any way.** Wiring the assembled result into
+  the running World View is 0.9.8 (Remote Encounter Integration),
+  separate, later, unscheduled work.
+
+`core/WorldDiscoverySourceAssembly.js` added; `docs/Roadmap.md` updated;
+`WorldDiscoverySourceAssembly.test.js` added and registered in
+`tests.html`.
+
+---
+
+Deliberately paused here. This milestone completes the ingress-side
+pipeline 0.9.5 and 0.9.6 built toward: a local source and any number of
+peer sources can now become the one set of six arrays
+`deriveWorldEncounters()` already takes as its own arguments, without
+`core/WorldEncounter.js` needing to change at all and without this file
+ever deciding which of two contributions should win. Wiring that
+assembled result into the actual running World View — so a peer's
+present avatar can genuinely appear as a World encounter — is 0.9.8
+(Remote Encounter Integration), separate, later work. Returning to what
+0.9.4's own selection produces (0.9.9 — Encounter Inspection Request,
+0.9.10 — Publication/Avatar Inspection) stays unscheduled too, and — per
+the same reasoning that has paused this codebase before every milestone
+in this series — that choice belongs to an explicit request, not an
+automatic continuation.
