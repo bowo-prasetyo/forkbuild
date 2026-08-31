@@ -45183,3 +45183,165 @@ dedicated export/import of paired inspections, a standalone inspection page,
 or any further UI refinement is separate, later work, and — per the same
 reasoning that paused this codebase before every milestone in this series —
 that choice belongs to an explicit request, not an automatic continuation.
+
+## 0.9.0 — World View Discovery Foundation
+
+0.8.189 through 0.8.202 answered a question that always started from two
+ALREADY-SUPPLIED evidence exports: "do these two already-in-hand documents
+agree?" 0.8.21's own "Deliberately excluded" list named a different,
+earlier question — "World View integration" for `PublicationAnchor`/
+`PublicationSnapshotPlacement` — and left it unscheduled. This milestone is
+that explicit request, arriving from an actual design conversation about
+where the evidence-comparison chain's own architecture should go next,
+never an automatic continuation of it: the World View has never had a name
+for "what, in the World, is even findable in the first place," before a
+Wanderer can inspect, compare, or do anything else with it. A new
+`core/WorldEncounter.js`, with `WorldEncounterKind`,
+`describeEncounterablePublication()`, `describeEncounterableAvatar()`, and
+one entry point, `deriveWorldEncounters()`.
+
+**A derived reading, never a new store — the identical posture
+`core/WorldLocation.js` already holds.** Nothing here is ever passed to a
+`StorageProvider`, nothing produced by this file has an id of its own, and
+deleting the `Publication`/`WorldPlacement`/`AvatarProfile`/`AvatarPresence`
+records a call was built from just means the next call no longer produces
+that encounter — never a dangling reference to clean up. Every function is
+a pure, deterministic, `Object.freeze()`'d transform of records the caller
+already has in hand; this file fetches nothing, gossips nothing, and
+reaches into no network, storage, or spatial-index provider on its own —
+exactly as `core/WorldSpatialContext.js#deriveSpatialContext()` already
+never does, one file over.
+
+**An encounter requires a present-tense location, never just existence.**
+A `Publication` with no `WorldPlacement` is exactly as unencounterable as
+any other document never placed in the World — `core/WorldPlacement.js`
+already answers "where is a publication in shared space," and this file
+adds nothing beyond joining it to the publication it names. An
+`AvatarProfile` with no live `AvatarPresence` describes what someone WOULD
+look like, never where they currently are — `core/AvatarPresence.js`'s own
+header already draws that line, and a profile without a presence is simply
+not currently encounterable, never an error.
+
+**Two kinds, deliberately not a third.** `WorldEncounterKind.PUBLICATION`
+and `WorldEncounterKind.AVATAR` are the only two this milestone names.
+`core/PublisherLeaderboardSnapshotClaim.js` is deliberately NOT a third
+kind here: a claim has no `publicationId` and no world position — it names
+an evidence/policy/snapshot fingerprint, not a place — and associating a
+signing identity's claim with a particular placed publication or a
+particular live avatar is a relationship this codebase has never
+established anywhere. Inventing that link here, silently, would repeat
+exactly the mistake that file's own header forbids for a different pair of
+concepts ("DO NOT USE `PublisherIdentityRecord` AS THE SIGNER"). If a
+future milestone wants claims to be encounterable, it can say so
+explicitly; this one does not guess.
+
+**Anchors and snapshot placements are counted, never merged.**
+`core/PublicationAnchor.js` and `core/PublicationSnapshotPlacement.js` each
+devote their own header to the same warning: two orthogonal kinds of
+evidence, deliberately modeled as two entirely separate signed records,
+never merged into one envelope that would blur what each one actually
+claims. `anchorCount`/`placementCount` hold that line one layer up — two
+small, independent, non-evaluative integers, never a combined
+"attestations" list, never a `verified` flag, and never the anchor/
+placement records themselves.
+
+**Result shape:** `{ publications: [{ kind, objectId, title,
+publisherIdentity, isSigned, position, anchorCount, placementCount }],
+avatars: [{ kind, objectId, ownerIdentity, displayName, position }] }`.
+`isSigned` reports only that `publication.signature` is present — the same
+"carries a signature" fact `core/Publication.js`'s own field already holds,
+never whether that signature verifies (`identity/
+LocalAuthorizationVerifier.js`'s separate job) and never anything about
+trust. This file never reads the viewer's own evidence, never compares an
+encountered publication to anything the viewer already has, and never
+reconciles, ranks, or scores what it finds — discovery names what exists;
+it does not decide what to do about it, the same posture docs/user/
+03-WorldView.md's own "Info" ("opens a small panel describing whatever you
+selected without moving anything") and "Documents Here" (a plain list of
+independent occupants of one spot, never a reconciliation) already hold in
+user-facing terms.
+
+**Joins are by `publicationId`/`avatarId` alone, never by position or by
+guessing.** A placement whose `publicationId` matches no supplied
+publication, or a presence whose `avatarId` matches no supplied profile, is
+silently omitted — never a partial or malformed encounter, never repaired
+by guessing which record it must have meant.
+
+**Flagship scenario:** Alice publishes and places a sculpture, anchors it
+once, and places its bytes on IPFS once. Bob publishes and places a garden
+with no evidence at all. Carol publishes a draft but never places it in the
+World. Bob is currently present as an avatar; Alice's own avatar profile
+exists but she is offline right now.
+
+```
+Alice: pub + placement + 1 anchor + 1 snapshot placement   → encountered, anchorCount=1, placementCount=1
+Bob:   pub + placement, no evidence                        → encountered, anchorCount=0, placementCount=0
+Carol: pub, never placed                                   → NOT encountered
+Bob's avatar: profile + live presence                      → encountered
+Alice's avatar: profile, no live presence (offline)         → NOT encountered
+```
+
+Two publishers are independently encounterable at once, each carrying only
+its own facts; Carol's unplaced document and Alice's offline avatar are
+both absent, not represented as empty or hidden entries — they simply never
+existed in either result array.
+
+**Test sections** cover: `describeEncounterablePublication()`/
+`describeEncounterableAvatar()` rendering the documented shape and
+returning `null` (never throwing) for a missing record or an unresolvable
+position; `deriveWorldEncounters()` joining strictly by id and silently
+dropping an orphaned placement or presence; anchor/placement counts staying
+two independent integers with no merged or evaluative field anywhere on the
+result; the flagship two-publisher/one-avatar scenario above; and a
+permanent architectural regression test reading this file's own source and
+asserting it never contains `score`, `rank`, `winner`, `correct`, `trust`,
+`reputation`, `verified`, `reconcile`, `merge`, `compare`, or any network
+call (`fetch(`, `websocket`, `gossip`, `socket`) — the identical vocabulary-
+boundary discipline the achievement/leaderboard family already holds for
+itself, held here from this family's very first file.
+
+**Deliberately excluded — not this milestone.** Fetching, gossiping, or
+querying any provider for the records this file is handed — that stays
+entirely the caller's job, exactly as it already is for
+`deriveSpatialContext()`. Proximity/radius filtering, direction labels, or
+any "nearby" integration — `core/WorldSpatialContext.js` already owns that
+question and is not touched here. Any rendering, marker, or UI-layer file —
+no `ui/` or `renderer/` file is added, edited, or called. Treating a
+`PublisherLeaderboardSnapshotClaim` as a third encounterable kind — see
+"Two kinds, deliberately not a third," above. Any comparison, reconciliation
+of, or linking between an encountered publication and the viewer's own
+evidence or leaderboard — 0.8.189 through 0.8.202's own chain stays
+untouched and unreferenced. A score, rank, winner, `verified`, `trust`, or
+`confidence` field of any kind. Signature verification — `isSigned` reports
+presence only. Persisting anything this file produces — an encounter is
+recomputed fresh from its underlying records every time, never stored.
+
+```
+Publication + WorldPlacement          AvatarProfile + AvatarPresence
+         │                                       │
+         └───────────────────┬───────────────────┘
+                              ▼
+                 core/WorldEncounter.js   ★
+                  deriveWorldEncounters()
+                              │
+                              ▼
+              { publications: [...], avatars: [...] }
+                              │
+                              ▼
+       future, unscheduled: "nearby" integration, rendering, an Info panel
+```
+
+`core/WorldEncounter.js` added; `docs/Roadmap.md` updated;
+`WorldEncounter.test.js` added and registered in `tests.html`.
+
+---
+
+Deliberately paused here. This milestone answers "what is an encounterable
+world object" at the domain level alone — two kinds, joined strictly by id,
+counted evidence, no location without a live one — and stops there. Wiring
+`deriveWorldEncounters()` into an actual discovery provider, a "nearby"
+radius, a rendered marker, or an Info panel a Wanderer can actually open is
+all separate, later work, and — per the same reasoning that has paused this
+codebase before every milestone in both this series and the one it follows
+— that choice belongs to an explicit request, not an automatic
+continuation.
