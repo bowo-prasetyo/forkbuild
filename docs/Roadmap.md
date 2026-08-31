@@ -44179,13 +44179,125 @@ already registered there for 0.8.192.
 
 ---
 
-Deliberately paused here rather than automatically continuing to 0.8.195.
+## 0.8.195 — Evidence Export Comparison Record Identity Projection
+
+0.8.193 answers "which exact decision/observation records are shared,
+source-only, or target-only?" by forwarding 0.8.189's own already-
+partitioned record arrays unchanged — plain, opaque records. A reader who
+sees two records land on opposite sides of a comparison still has no
+explicit answer, anywhere in this codebase, to "why are these two records
+separate records?" without informally re-deriving it themselves. This
+milestone is a narrow, application-layer-only answer to exactly that
+question — and nothing more. A new
+`application/PublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceExportComparisonRecordIdentityView.js`
+with one function,
+`describePublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceExportComparisonRecordIdentity(detail)`.
+
+```
+0.8.189 Detailed Export Comparison
+       │
+       ▼
+0.8.193 Comparison Detail Projection
+       │
+       ▼
+0.8.195 Record Identity Projection   ★
+```
+
+**Result shape:** `{ decisionEvidence: { shared, sourceOnly, targetOnly },
+observationEvidence: { shared, sourceOnly, targetOnly } }`, `detail` being
+0.8.193's own already-computed result, taken directly. Each array is
+0.8.193's own array, mapped one record to one named-field identity object,
+in the exact same position and order.
+
+**No new identity algorithm — the one invariant this milestone exists to
+protect.** 0.8.189 already decided what makes two records the same or
+different (whole-record structural equality); this file never re-derives
+that decision, never re-partitions `shared`/`sourceOnly`/`targetOnly`, and
+never computes a diff, a similarity score, or a "which field differs"
+comparison between two records. There is no `JSON.stringify()` — or any
+other cross-record comparison — anywhere in this file. It performs exactly
+one transform, on exactly one record at a time, in isolation: naming that
+record's own already-existing fields explicitly.
+
+**A decision record's identity is its own four named fields** —
+`decided`/`candidate`/`decision`/`decidedAt`, the exact shape 0.8.145's own
+decision records already carry. **An observation record's identity is its
+own seven named fields** — `candidate`/`decision`/`planIdentity`/
+`candidatePresent`/`candidateType`/`candidateMatchesPlan`/`observedAt`, the
+exact shape 0.8.182's own `withSurfacedCandidate()` already produces.
+`decision` on an observation identity object stays the FULL embedded
+decision record, never flattened to a disposition string.
+
+**No candidate-presence section.** 0.8.193's own `candidates` section is
+not projected here: a candidate object already IS its own complete
+identity with no further internal structure worth naming apart from what a
+reader already sees printing it directly, unlike a decision or observation
+record, whose identity is a bundle of several differently-named fields. A
+caller wanting candidate presence already has 0.8.193's own `candidates`
+section unchanged.
+
+**Flagship scenario** — the milestone's own worked example, three
+observations differing by exactly one field each:
+
+```
+O1 (shared):       candidateMatchesPlan = true,  observedAt = T1
+O2 (source-only):  candidateMatchesPlan = false, observedAt = T1
+O3 (target-only):  candidateMatchesPlan = true,  observedAt = T2
+```
+
+0.8.189 already treats O1/O2/O3 as three distinct records (whole-record
+structural equality); this file's own named fields make the single
+differing field between each pair plainly visible — `candidateMatchesPlan`
+between O1 and O2, `observedAt` between O1 and O3 — without this file ever
+computing that difference itself. `candidateMatchesPlan: false` is
+reported as exactly that field, at exactly that value — never renamed to
+`stale`, `invalid`, `conflicting`, or `needs attention`, inherited
+unchanged from 0.8.162's/0.8.182's own forbidden vocabulary.
+
+**Further sections** cover: a decision identity object carrying exactly
+its own four fields and an observation identity object carrying exactly
+its own seven, nothing more and nothing less; evidence confirmed flat,
+with no per-candidate grouping key and no `candidates` section introduced;
+every identity array checked position-for-position against 0.8.193's own
+array order; malformed/absent `detail` input degrading every section to an
+empty, valid projection, and a malformed individual record within an
+otherwise genuine array degrading in place (to an identity object of
+`undefined` fields) rather than being dropped or throwing; determinism and
+deep immutability; and a permanent architectural regression test proving
+the module imports nothing at all, declares no `reconstructXxx()` of its
+own, never calls `JSON.stringify()`, and carries no ranking/reconciliation/
+judgment/synchronization/comparison vocabulary.
+
+**Deliberately excluded — not this milestone.** A new identity algorithm,
+a diff, a similarity score, or any field-by-field comparison between two
+records — this file names one record's own fields; it never compares two
+records against each other. A `candidates` (candidate-presence) section.
+Regrouping evidence by candidate. A rank, score, winner, correct/
+incorrect, valid, stale, preferred, status, or confidence field or
+vocabulary of any kind. Deduplication, merging, or collapsing of any two
+records that "look similar." Any markup, DOM nodes, or control-rendering
+technology choice — this file returns plain, frozen, JSON-safe data; a UI
+that renders these named fields side by side is separate, later, UI-layer
+work, deliberately deferred. Persistence, or automatic/periodic/background
+computation of any kind.
+
+`docs/Roadmap.md` updated;
+`PublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceExportComparisonRecordIdentityView.test.js`
+registered in `tests.html`.
+
+---
+
+Deliberately paused here rather than automatically continuing to 0.8.196.
 The portable-export workflow (0.8.186 → 188 → 189 → {190 → 191 → 192,
-193 → 194}) is now a complete, page-ready evidence-inspection subsystem,
-alongside the sibling live-archive workflow (0.8.176 → … → 187). Rather
-than mechanically opening a 0.8.195, the next major question is what the
-Leaderboard product actually needs next — candidate-level navigation
-across the two workflows, archive/report persistence, richer evidence
-inspection, or the explicit synchronization capability this codebase has
-deliberately deferred at every layer so far — and that choice belongs to
-an explicit request, not an automatic continuation.
+193 → 194 → 195}) is now a complete, page-ready evidence-inspection
+subsystem with an explicit, application-layer record-identity projection,
+alongside the sibling live-archive workflow (0.8.176 → … → 187). 0.8.195
+was deliberately kept application-layer-only — no UI was wired to it, so
+the existing `/evidence-export-comparison` page is unchanged by this
+milestone. Rather than mechanically opening a 0.8.196, the next major
+question is what the Leaderboard product actually needs next — whether
+record-identity detail actually improves that page, candidate-level
+navigation across the two workflows, archive/report persistence, or the
+explicit synchronization capability this codebase has deliberately
+deferred at every layer so far — and that choice belongs to an explicit
+request, not an automatic continuation.
