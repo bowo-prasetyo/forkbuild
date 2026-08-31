@@ -12,6 +12,7 @@ import PeerConnectionsView from '../views/PeerConnectionsView.js';
 import ChatView from '../views/ChatView.js';
 import ConversationsView from '../views/ConversationsView.js';
 import DecentralizedPublicationsView from '../views/DecentralizedPublicationsView.js';
+import ReconciliationCandidateLeaderboardView from '../views/ReconciliationCandidateLeaderboardView.js';
 
 const routes = [
     { path: '/', name: 'home', component: HomeView },
@@ -45,6 +46,12 @@ const routes = [
     // DecentralizedPublication envelopes (0.7.0) this replica has
     // cataloged (0.7.2), regardless of whether their content resolves.
     { path: '/publications', name: 'publications', component: DecentralizedPublicationsView },
+    // 0.8.180 — Reconciliation Candidate Leaderboard UI Integration. Not
+    // yet a top-nav destination (see ui/views/ReconciliationCandidateLeaderboardView.js's
+    // own header) — reached by URL until a future milestone gives it a
+    // real entry point, the same "reached from elsewhere, never top-nav"
+    // shape /chat/:identityId already holds above.
+    { path: '/reconciliation-leaderboard', name: 'reconciliation-leaderboard', component: ReconciliationCandidateLeaderboardView },
     { path: '/about', name: 'about', component: AboutView }
 ];
 
