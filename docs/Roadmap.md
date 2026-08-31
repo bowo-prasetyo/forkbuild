@@ -43942,8 +43942,139 @@ This closes the pair of workflows 0.8.191 named:
        └─────┬─────┘                     └─────┬─────┘
              │                                 │
            Export                            Summary
+                                                 │
+                                              Detail
 ```
 
-Deliberately paused here rather than automatically continuing to 0.8.193 —
-the next work is UX refinement, richer inspection, persistence, or actual
-peer synchronization, not another projection layered on for its own sake.
+## 0.8.193 — Evidence Export Comparison Detail Projection
+
+0.8.192's own UI answers "how many candidates/decisions/observations are
+source-only, shared, or target-only?" — a summary count, and nothing more,
+by design (0.8.190's own deliberate information-loss boundary). The natural
+next question a reader of that summary asks is one this codebase has had no
+answer for anywhere in the portable-export family: "which exact evidence
+records account for those numbers?" This is the application-layer answer,
+mirroring the identical relationship 0.8.176 already has to 0.8.182 one
+layer up in the sibling (live-archive) leaderboard family. A new
+`application/PublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceExportComparisonDetailView.js`
+with one function,
+`describePublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceExportComparisonDetail(comparison)`.
+
+```
+0.8.189 Detailed Export Comparison
+       │
+       ▼
+0.8.190 Compact Read Model
+       │
+       ├──────────────► 0.8.191 → 0.8.192
+       │                         Summary UI
+       │
+       ▼
+0.8.193 Comparison Detail   ★
+```
+
+**Result shape:** `{ metadata: { comparisonState: { source, target, same },
+filter: { source, target, same } }, candidates: { shared, sourceOnly,
+targetOnly }, decisionEvidence: { shared, sourceOnly, targetOnly },
+observationEvidence: { shared, sourceOnly, targetOnly } }` — the same
+`metadata` shape 0.8.190/0.8.191 already established, with `shared`/
+`sourceOnly`/`targetOnly` record arrays in place of counts.
+
+**Consumes 0.8.189's own detailed result directly — never 0.8.190's own
+read model.** This is the one rule the whole milestone exists to protect:
+0.8.190 deliberately discarded the record arrays down to nine counts, so
+there is nothing to reconstruct a comparison FROM starting at 0.8.190 — a
+caller who wants both this detail view and the 0.8.191/0.8.192 summary
+calls 0.8.189's own `describeXxx()` once and hands its result to both
+0.8.190 and this file independently, exactly the fork the diagram above
+draws. `describeXxx()` here performs no comparison of its own — it forwards
+0.8.189's own `shared`/`sourceOnly`/`targetOnly` arrays for `candidates`/
+`decisionEvidence`/`observationEvidence` by reference, unchanged.
+
+**Evidence stays flat — never regrouped by candidate.** 0.8.189 already
+pools every decision/observation record across every candidate into one
+flat multiset (see 0.8.189's own header, "Evidence is compared flat");
+this file preserves that pooling rather than reversing it. A record's own
+already-embedded `candidate` field still ties it back to a candidate —
+nothing about which candidate an evidence record concerns is lost — this
+file simply never uses that field to group its own output, absent a
+concrete requirement to do so.
+
+**No count field anywhere on this file's own result** — the mirror image
+of 0.8.190's own restraint. A caller wanting `sharedCount`/
+`sourceOnlyCount`/`targetOnlyCount`/`sourceCount`/`targetCount` already has
+0.8.190's own read model; this file answers only "which exact records?",
+never "how many?"
+
+**Flagship scenario**, a two-candidate case built to prove candidate
+presence and evidence partitioning stay genuinely independent:
+
+```
+Candidate C1                          Candidate C2
+  decision:    shared D1                decision:    target-only D3
+  decision:    source-only D2           observation: shared O4
+  observation: shared O1
+  observation: source-only O2
+  observation: target-only O3
+```
+
+Both C1 and C2 land as SHARED candidates — proving a shared candidate can
+carry fully asymmetric evidence (C1: shared/source-only/target-only
+simultaneously, across both dimensions) and proving candidate presence
+implies nothing about which of that candidate's own evidence records
+matches on the other side (C2: a shared candidate whose only decision
+evidence is target-only, while its observation evidence is shared).
+
+**Further sections** cover: duplicate records retaining full multiplicity
+(0.8.189's own multiset partitioning, forwarded rather than collapsed);
+evidence arrays confirmed flat, with no per-candidate grouping key ever
+introduced; every returned record array checked for reference equality
+against 0.8.189's own array (no copying, no re-partitioning, no
+reordering); metadata (`comparisonState`/`filter`) forwarded verbatim and
+proven independent of every evidence section; malformed/absent input
+degrading every section to an empty, `NO_PEER`/`ALL`/`ALL` detail view
+rather than throwing; determinism and deep immutability; and a permanent
+architectural regression test proving the module imports nothing at all,
+declares no `reconstructXxx()` of its own, never references a count field
+name in its own code, and carries no ranking/reconciliation/judgment/
+synchronization vocabulary.
+
+**Deliberately excluded — not this milestone.** Regrouping evidence by
+candidate — no concrete requirement drives it, and 0.8.189 itself already
+chose flat pooling. Any count field on any section — 0.8.190's own read
+model already serves that need. Consuming 0.8.190's own read model or
+0.8.191's own view — the entire point is preserving the information-loss
+boundary 0.8.190 intentionally introduced, never routing around it from
+the far side. A rank, score, winner, correct/incorrect, conflict,
+confidence, or recommendation field or vocabulary of any kind. Any
+synchronization, transport, or "apply this difference" vocabulary — see
+0.8.189's own "a comparison, not a reconciliation," held here again, two
+layers up. A UI counterpart (expandable "Inspect records" panels on
+0.8.192's own tables) — separate, later, UI-layer work.
+
+```
+Two exported documents ──► 0.8.189 describeXxx() (comparison)
+                                    │
+                    ┌───────────────┴───────────────┐
+                    ▼                                ▼
+       0.8.190 describeXxx() (read model)   0.8.193 describeXxx() (detail)
+                    │
+                    ▼
+       0.8.191 describeXxx() (view) ──► 0.8.192 UI
+```
+
+`docs/Roadmap.md` updated;
+`PublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceExportComparisonDetailView.test.js`
+registered in `tests.html`.
+
+---
+
+Deliberately paused here rather than automatically continuing to 0.8.194 —
+a UI counterpart for this detail projection (expandable "Inspect records"
+panels on 0.8.192's own tables) is the natural next step named alongside
+this milestone, but it is UI-layer work best taken up as its own explicit
+request rather than chained on automatically. Also deliberately not
+pursued: synchronization of any kind between the two exported documents —
+exported evidence documents remain reports, never synchronization
+envelopes, and this codebase keeps those two concepts deliberately
+separate.
