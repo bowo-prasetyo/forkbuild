@@ -41877,3 +41877,108 @@ Decision side                              Observation side
 `docs/Roadmap.md` updated;
 `PublisherLeaderboardClaimSnapshotReconciliationCandidateDecisionRevalidationObservationEvolutionAgreementView.test.js`
 registered in `tests.html`.
+
+## 0.8.175 — Reconciliation Candidate Evidence Summary Projection
+
+0.8.153 through 0.8.156 built out the DECISION branch of a candidate's own
+history; 0.8.171 through 0.8.174 built out the parallel OBSERVATION branch.
+Nothing yet answers the one question a reader eventually needs from BOTH
+branches at once: what historical evidence — decisions AND observations — is
+available for one candidate? This is deliberately narrower than deciding
+whether a candidate is good, bad, current, correct, or winning; it only
+assembles already-established facts into a candidate-centric shape. A new
+`application/PublisherLeaderboardClaimSnapshotReconciliationCandidateEvidenceSummaryView.js`
+with two functions,
+`describePublisherLeaderboardClaimSnapshotReconciliationCandidateEvidenceSummary(decisionHistory, observationHistory)`
+and
+`reconstructPublisherLeaderboardClaimSnapshotReconciliationCandidateEvidenceSummary(archive)`.
+
+**Neither branch is derived from the other** — the architectural rule this
+milestone exists to hold structurally, not just by convention. This file
+calls 0.8.153's own decision-candidate correspondence over `decisionHistory`
+and 0.8.171's own observation-candidate correspondence over
+`observationHistory`, INDEPENDENTLY, each exactly once, and only then
+combines the two already-computed results by the one key both branches
+already share: candidate identity. A revalidation observation remains
+evidence *about* a decision, never a replacement for one — a candidate
+absent from one branch's history reports zero/empty for that branch's own
+count and list on its combined entry, never an entry fabricated or inferred
+from the other branch's own evidence.
+
+**Result shape:** `{ candidateCount, decisionCount, observationCount,
+candidates: [{ candidate, decisionCount, decisions: [{ decision, decidedAt }],
+observationCount, observations: [{ decision, planIdentity, candidatePresent,
+candidateType, candidateMatchesPlan, observedAt }] }] }`. `decisionCount`/
+`observationCount` at the top level are 0.8.153's own `decisionCount` and
+0.8.171's own `observationCount`, forwarded unchanged; `candidateCount`
+counts distinct candidates across both branches combined. Each candidate's
+own `decisionCount` plus every other candidate's own `decisionCount` always
+sums to the top-level `decisionCount` (likewise for `observationCount`) — no
+evidence is duplicated or dropped while regrouping.
+
+**Candidate order:** first appearance across `decisionHistory` (0.8.153's own
+correspondence order), then any observation-only candidates in their own
+first-appearance order within `observationHistory` (0.8.171's own
+correspondence order) — never re-sorted by type, evidence count, or either
+timestamp. **Within one candidate's own `decisions`/`observations` lists,
+each branch's own history order is preserved, never re-sorted
+chronologically** — a deliberate departure from 0.8.154's and 0.8.172's own
+per-candidate `decidedAt`/`observedAt` sort. Those two files remain the
+TIMELINE projections; this one is an EVIDENCE-ASSEMBLY projection, and does
+not duplicate or re-derive a second, competing chronological ordering of the
+identical facts.
+
+**Flagship scenario** proves the fact this milestone exists to make
+observable: C1 carries decisions `D1, D2` and observations `O1, O2, O3`; C2
+carries decision `D3` and observation `O4`; C3 carries NO decision at all,
+only observation `O5`. C3 still appears, with `decisionCount: 0` and an
+empty `decisions` list, carrying only its one observation — proving this
+projection is not secretly "decision-driven." A candidate with decisions but
+no observations (neither C1 nor C2 in this scenario, but exercised
+separately) remains visible the identical way, with `observationCount: 0`
+and an empty `observations` list.
+
+**No judgment vocabulary of any kind** — the flagship architectural
+restraint this milestone exists to hold. No `correct`, `incorrect`, `valid`,
+`invalid`, `current`, `latest`, `stale`, `superseded`, `resolved`, `winner`,
+`score`, or `rank` — anywhere in the result or the module's own source. This
+file states only what evidence exists, never what it means.
+
+**Further sections** cover: a candidate carrying evidence from both
+branches merging into exactly one combined entry; malformed-input tolerance,
+independently per history (a malformed `decisionHistory` degrades only the
+decision side to empty, leaving genuine observation evidence intact, and
+vice versa); no mutation of either supplied history; determinism;
+`reconstructXxx()`'s archive-reading boundary (calling 0.8.153's own
+`reconstructXxx()` and 0.8.171's own `reconstructXxx()`, each exactly once,
+never touching the archive directly); and a permanent architectural
+regression test proving the module imports exactly two modules — 0.8.153's
+and 0.8.171's own correspondence projections — deliberately never 0.8.144,
+0.8.157, either history-storage module, or either candidate-evolution
+module (0.8.154, 0.8.172).
+
+**Deliberately excluded — not this milestone.** No score, rank, or any
+comparison between two candidates' own evidence. No judgment of whether a
+candidate is correct, current, valid, or in need of resolution. No
+chronological interleaving of a candidate's own decisions and observations
+by time — that remains 0.8.154's and 0.8.172's own, separately answered
+question. No deduplication of decisions or observations within a
+candidate's own lists. No re-deriving candidate identity from a plan, claim
+history, snapshot list, or archive state. No persistence or synchronization
+of any kind. No reconciliation ACTION, applying anything, or execution of
+any kind. No Leaderboard UI or read model beyond this one candidate-centric
+evidence assembly — this is a bridge, not the destination.
+
+```
+Decision side                    Observation side
+─────────────                    ────────────────
+0.8.153 Decision Correspondence  0.8.171 Observation Correspondence
+0.8.154 Decision Evolution       0.8.172 Observation Evolution
+                    \                   /
+                     \                 /
+                      0.8.175 Candidate Evidence Summary   ★
+```
+
+`docs/Roadmap.md` updated;
+`PublisherLeaderboardClaimSnapshotReconciliationCandidateEvidenceSummaryView.test.js`
+registered in `tests.html`.
