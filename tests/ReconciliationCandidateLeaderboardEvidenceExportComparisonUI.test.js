@@ -14,10 +14,13 @@ import {
 import {
     describePublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceExportComparisonView
 } from '../application/PublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceExportComparisonView.js';
+import {
+    describePublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceExportComparisonDetail
+} from '../application/PublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceExportComparisonDetailView.js';
 import default_ReconciliationCandidateLeaderboardEvidenceExportComparisonTable from '../ui/components/ReconciliationCandidateLeaderboardEvidenceExportComparisonTable.js';
 
-// 0.8.192 — Reconciliation Candidate Leaderboard Evidence Export Comparison
-// UI.
+// 0.8.192/0.8.194 — Reconciliation Candidate Leaderboard Evidence Export
+// Comparison UI, and its Detail extension.
 //
 // This milestone adds two new UI-layer files:
 //   ui/views/ReconciliationCandidateLeaderboardEvidenceExportComparisonView.js
@@ -61,17 +64,42 @@ import default_ReconciliationCandidateLeaderboardEvidenceExportComparisonTable f
 //            vocabulary.
 // Section L: the new view/component source carries no ranking/judgment
 //            vocabulary.
-// Section M: the view's own wiring — imports all four application modules,
+// Section M: the view's own wiring — imports all five application modules,
 //            calls importXxx() exactly twice (once per side) inside its
 //            own compareEvidence() handler, calls the 0.8.189/0.8.190/
-//            0.8.191 chain exactly once each, exposes a "Compare Evidence"
-//            control, and never touches sourceArchive/targetArchive/page/
-//            evidenceDetail (ReconciliationCandidateLeaderboardView.js's
-//            own live-archive state).
-// Section N: the table component's own wiring — props, computed
-//            degradation on malformed/absent input, imports nothing from
-//            application/, template carries the three independent
-//            dimension tables and no "Inspect Evidence" control.
+//            0.8.191/0.8.193 chain exactly once each (0.8.193's own
+//            describeXxx() called over `comparison`, never `readModel` or
+//            `comparisonView`), exposes a "Compare Evidence" control, and
+//            never touches sourceArchive/targetArchive/page/evidenceDetail
+//            (ReconciliationCandidateLeaderboardView.js's own live-archive
+//            state).
+// Section N: the table component's own wiring — props (view AND detail),
+//            computed degradation on malformed/absent input, imports
+//            nothing from application/, template carries the three
+//            independent dimension tables each with its own "Inspect
+//            records" control.
+// Section O: 0.8.194 FLAGSHIP — expanding each dimension's own "Inspect
+//            records" control reveals exactly 0.8.193's own record arrays,
+//            with counts matching 0.8.191's own summary exactly, for a
+//            deliberately asymmetric pair of exports.
+// Section P: duplicate records remain duplicated — the detail view's own
+//            multiset partitioning survives into the rendered columns.
+// Section Q: evidence stays flat — no per-candidate grouping key appears
+//            anywhere in the rendered detail records or the component's
+//            own code; decision and observation evidence stay in separate
+//            sections.
+// Section R: candidate presence isn't inferred from evidence partitions —
+//            a single shared candidate can carry partially source-only
+//            decision evidence while its own observation evidence stays
+//            entirely shared, each rendered in its own, independent
+//            dimension.
+// Section S: collapsing/expanding detail is purely local UI state — it
+//            never mutates `view`/`detail`, defaults to fully collapsed,
+//            and toggles independently per dimension.
+// Section T: a genuinely invalid paste on one side never destroys an
+//            already-valid comparison already on screen — the previously
+//            rendered detail records survive an invalid re-compare attempt
+//            on the other side.
 
 function assert(condition, message) {
     if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
@@ -141,25 +169,32 @@ function buildImportedDocument(entries, filter, comparisonState) {
     return { pastedText, document: importResult.document };
 }
 
-// Runs the complete 0.8.189 -> 0.8.190 -> 0.8.191 chain, then the table
-// component's own computed properties over the result — the full pipeline
-// this milestone wires together, from two documents to what a reader
-// actually sees rendered.
+// Runs the complete 0.8.189 -> 0.8.190 -> 0.8.191 chain (plus 0.8.193's own
+// fork off 0.8.189's own `comparison`, never off `readModel`/`view`), then
+// the table component's own computed properties over both results — the
+// full pipeline this milestone wires together, from two documents to what a
+// reader actually sees rendered, summary AND detail alike.
 function runChain(sourceDocument, targetDocument) {
     const comparison = describePublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceExportComparison(sourceDocument, targetDocument);
     const readModel = describePublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceExportComparisonReadModel(comparison);
     const view = describePublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceExportComparisonView(readModel);
+    const detail = describePublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceExportComparisonDetail(comparison);
     const table = default_ReconciliationCandidateLeaderboardEvidenceExportComparisonTable;
-    const ctx = { view };
+    const ctx = { view, detail };
     return {
+        comparison,
         view,
+        detail,
         rendered: {
             isEmpty: table.computed.isEmpty.call(ctx),
             comparisonState: table.computed.comparisonState.call(ctx),
             filter: table.computed.filter.call(ctx),
             candidateSummary: table.computed.candidateSummary.call(ctx),
             decisionEvidence: table.computed.decisionEvidence.call(ctx),
-            observationEvidence: table.computed.observationEvidence.call(ctx)
+            observationEvidence: table.computed.observationEvidence.call(ctx),
+            candidateRecords: table.computed.candidateRecords.call(ctx),
+            decisionRecords: table.computed.decisionRecords.call(ctx),
+            observationRecords: table.computed.observationRecords.call(ctx)
         }
     };
 }
@@ -170,6 +205,9 @@ async function run() {
     // ---------------------------------------------------------------
     let flagshipSourceDocument;
     let flagshipTargetDocument;
+    // Populated inside the block below, reused by Section O/P/Q/R for
+    // exact-record assertions against the rendered detail columns.
+    let flagshipRecords;
     {
         const C1 = candidateOf('C1-shared');
         const C2 = candidateOf('C2-shared');
@@ -213,6 +251,7 @@ async function run() {
         const target = buildImportedDocument(targetEntries, targetFilter, 'PEER_PRESENT');
         flagshipSourceDocument = source.document;
         flagshipTargetDocument = target.document;
+        flagshipRecords = { C1, C2, C3, C4, D1, D2, D3, D4, D5, D6, O1, O2, O3, O4, O5, O6, O7 };
 
         const { rendered } = runChain(source.document, target.document);
 
@@ -419,7 +458,8 @@ async function run() {
             "from '../../application/PublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceImport.js'",
             "from '../../application/PublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceExportComparison.js'",
             "from '../../application/PublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceExportComparisonReadModel.js'",
-            "from '../../application/PublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceExportComparisonView.js'"
+            "from '../../application/PublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceExportComparisonView.js'",
+            "from '../../application/PublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceExportComparisonDetailView.js'"
         ]) {
             assert(viewCodeOnly.includes(modulePath), `38. the view imports ${modulePath}`);
         }
@@ -432,15 +472,25 @@ async function run() {
             '41. the view calls 0.8.190\'s own describeXxx() exactly once');
         assert((viewCodeOnly.match(/describePublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceExportComparisonView\(/g) || []).length === 1,
             '42. the view calls 0.8.191\'s own describeXxx() exactly once');
+        assert((viewCodeOnly.match(/describePublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceExportComparisonDetail\(/g) || []).length === 1,
+            '42b. the view calls 0.8.193\'s own describeXxx() exactly once');
+
+        // 0.8.193's own describeXxx() must be called over `comparison`
+        // directly — never over `readModel` or `comparisonView` — the same
+        // invariant this file's own header names ("Both comparisonView and
+        // comparisonDetail are computed off the same comparison").
+        assert(/describePublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceExportComparisonDetail\(comparison\.value\)/.test(viewCodeOnly),
+            '42c. the view calls 0.8.193\'s own describeXxx() over comparison.value, never readModel.value or comparisonView.value');
 
         assert(viewModuleSource.includes('Compare Evidence'), '43. the template exposes a "Compare Evidence" control, exactly as the milestone names it');
         assert(viewCodeOnly.includes('function compareEvidence()'), '44. the view declares its own compareEvidence() click handler');
+        assert(viewCodeOnly.includes(':detail="comparisonDetail"'), '44b. the template passes comparisonDetail down to the table component as its own detail prop');
 
         for (const forbiddenTarget of ['sourceArchive', 'targetArchive', 'publicationObservationArchiveStorage', 'PublicationObservationArchive']) {
             assert(!viewCodeOnly.includes(forbiddenTarget), `45. the view's own code never references "${forbiddenTarget}" — the live archive/leaderboard state stays entirely separate`);
         }
     }
-    console.log('✓ Section M: the view imports the full 0.8.188/0.8.189/0.8.190/0.8.191 chain, calls importXxx() exactly twice and each describeXxx() exactly once from its own compareEvidence() handler, exposes a "Compare Evidence" control, and never references the live archive/leaderboard state');
+    console.log('✓ Section M: the view imports the full 0.8.188/0.8.189/0.8.190/0.8.191/0.8.193 chain, calls importXxx() exactly twice and each describeXxx() exactly once from its own compareEvidence() handler (0.8.193\'s own describeXxx() called over comparison.value directly), exposes a "Compare Evidence" control, passes comparisonDetail down as the table\'s detail prop, and never references the live archive/leaderboard state');
 
     // ---------------------------------------------------------------
     // Section N — the table component's own wiring.
@@ -448,25 +498,233 @@ async function run() {
     {
         const table = default_ReconciliationCandidateLeaderboardEvidenceExportComparisonTable;
         assert(table.props.view.default === null, '46. the view prop defaults to null');
+        assert(table.props.detail.default === null, '46b. the detail prop defaults to null');
 
         for (const malformed of [null, undefined, 'not-an-object', 42, {}]) {
-            const ctx = { view: malformed };
+            const ctx = { view: malformed, detail: malformed };
             assert(table.computed.isEmpty.call(ctx) === true, `47. malformed view (${serialize(malformed)}) degrades isEmpty to true`);
             const candidateSummary = table.computed.candidateSummary.call(ctx);
             assert(candidateSummary.sourceOnlyCount === 0 && candidateSummary.sharedCount === 0 && candidateSummary.targetOnlyCount === 0,
                 `48. malformed view (${serialize(malformed)}) degrades candidateSummary to all-zero`);
             const comparisonState = table.computed.comparisonState.call(ctx);
             assert(comparisonState.source === 'NO_PEER' && comparisonState.target === 'NO_PEER', `49. malformed view (${serialize(malformed)}) degrades comparisonState to NO_PEER/NO_PEER`);
+
+            const candidateRecords = table.computed.candidateRecords.call(ctx);
+            const decisionRecords = table.computed.decisionRecords.call(ctx);
+            const observationRecords = table.computed.observationRecords.call(ctx);
+            for (const records of [candidateRecords, decisionRecords, observationRecords]) {
+                assert(Array.isArray(records.shared) && records.shared.length === 0
+                    && Array.isArray(records.sourceOnly) && records.sourceOnly.length === 0
+                    && Array.isArray(records.targetOnly) && records.targetOnly.length === 0,
+                    `49b. malformed detail (${serialize(malformed)}) degrades every record section to empty shared/sourceOnly/targetOnly arrays, never throwing`);
+            }
         }
 
-        assert(!tableModuleSource.includes("from '../../application/"), '50. the table component imports NOTHING from application/');
+        assert(!tableModuleSource.includes("from '"), '50. the table component imports NOTHING at all — not from application/, not from any sibling ui/ file');
         assert(tableModuleSource.includes('Candidate presence'), '51. the template renders the "Candidate presence" section');
         assert(tableModuleSource.includes('Decision evidence'), '52. the template renders the "Decision evidence" section');
         assert(tableModuleSource.includes('Observation evidence'), '53. the template renders the "Observation evidence" section');
-        assert(!tableCodeOnly.includes('Inspect Evidence'), '54. the template carries no "Inspect Evidence" control — 0.8.192 respects 0.8.191\'s own compressed, non-expandable boundary');
-        assert(!tableCodeOnly.includes('expandedKeys'), '55. the component carries no per-row expansion state — there are no candidate-level rows to expand');
+        assert((tableCodeOnly.match(/Inspect records/g) || []).length === 3, '54. the template exposes exactly three "Inspect records" controls, one per dimension');
+        assert(tableCodeOnly.includes('toggleExpanded'), '55. the component declares its own toggleExpanded() method for per-dimension expand state');
+
+        // The table's own default `expanded` data — fully collapsed by
+        // default, exactly the "resets on remount" discipline this file's
+        // own header names.
+        const freshData = table.data();
+        assert(freshData.expanded.candidates === false && freshData.expanded.decisionEvidence === false && freshData.expanded.observationEvidence === false,
+            '55b. the component\'s own data() starts every dimension fully collapsed');
     }
-    console.log('✓ Section N: the table component\'s own props/computed degrade malformed input to an honest empty/NO_PEER state, imports nothing from application/, renders the three independent dimension sections, and carries no candidate-level expansion control');
+    console.log('✓ Section N: the table component\'s own props/computed degrade malformed view AND detail input to an honest empty/NO_PEER state, imports nothing at all, renders the three independent dimension sections each with its own "Inspect records" control, and starts fully collapsed');
+
+    // ---------------------------------------------------------------
+    // Section O — 0.8.194 FLAGSHIP: expanded records exactly match
+    // 0.8.193's own detail, with counts exactly matching 0.8.191's own
+    // summary.
+    // ---------------------------------------------------------------
+    {
+        const { rendered } = runChain(flagshipSourceDocument, flagshipTargetDocument);
+        const { C1, C2, C3, C4, D1, D2, D3, D4, D5, D6, O1, O2, O3, O4, O5, O6, O7 } = flagshipRecords;
+
+        // Candidate presence: Source-only 1 (C3), Shared 2 (C1, C2),
+        // Target-only 1 (C4) — counts already proven in Section A; here the
+        // exact records themselves are checked, and their length must
+        // match those same counts without either side recomputing the
+        // other (see this file's own header, "the UI never calculates a
+        // count from the detail records").
+        assert(rendered.candidateRecords.sourceOnly.length === rendered.candidateSummary.sourceOnlyCount,
+            '56. FLAGSHIP — candidateRecords.sourceOnly.length exactly matches candidateSummary.sourceOnlyCount');
+        assert(rendered.candidateRecords.shared.length === rendered.candidateSummary.sharedCount,
+            '57. FLAGSHIP — candidateRecords.shared.length exactly matches candidateSummary.sharedCount');
+        assert(rendered.candidateRecords.targetOnly.length === rendered.candidateSummary.targetOnlyCount,
+            '58. FLAGSHIP — candidateRecords.targetOnly.length exactly matches candidateSummary.targetOnlyCount');
+        assert(serialize(rendered.candidateRecords.sourceOnly) === serialize([C3]), '59. FLAGSHIP — candidateRecords.sourceOnly is exactly [C3]');
+        assert(serialize(rendered.candidateRecords.targetOnly) === serialize([C4]), '60. FLAGSHIP — candidateRecords.targetOnly is exactly [C4]');
+        assert(rendered.candidateRecords.shared.some((c) => serialize(c) === serialize(C1)) && rendered.candidateRecords.shared.some((c) => serialize(c) === serialize(C2)),
+            '61. FLAGSHIP — candidateRecords.shared contains both C1 and C2');
+
+        // Decision evidence: Source-only 2 (D4, D5), Shared 3 (D1, D2, D3),
+        // Target-only 1 (D6).
+        assert(rendered.decisionRecords.sourceOnly.length === rendered.decisionEvidence.sourceOnlyCount
+            && rendered.decisionRecords.shared.length === rendered.decisionEvidence.sharedCount
+            && rendered.decisionRecords.targetOnly.length === rendered.decisionEvidence.targetOnlyCount,
+            '62. FLAGSHIP — every decisionRecords section length exactly matches decisionEvidence\'s own count');
+        for (const record of [D4, D5]) {
+            assert(rendered.decisionRecords.sourceOnly.some((r) => serialize(r) === serialize(record)), `63. FLAGSHIP — decisionRecords.sourceOnly contains ${serialize(record)}`);
+        }
+        assert(serialize(rendered.decisionRecords.targetOnly) === serialize([D6]), '64. FLAGSHIP — decisionRecords.targetOnly is exactly [D6]');
+
+        // Observation evidence: Source-only 1 (O5), Shared 4 (O1-O4),
+        // Target-only 2 (O6, O7).
+        assert(rendered.observationRecords.sourceOnly.length === rendered.observationEvidence.sourceOnlyCount
+            && rendered.observationRecords.shared.length === rendered.observationEvidence.sharedCount
+            && rendered.observationRecords.targetOnly.length === rendered.observationEvidence.targetOnlyCount,
+            '65. FLAGSHIP — every observationRecords section length exactly matches observationEvidence\'s own count');
+        assert(serialize(rendered.observationRecords.sourceOnly) === serialize([O5]), '66. FLAGSHIP — observationRecords.sourceOnly is exactly [O5]');
+        for (const record of [O6, O7]) {
+            assert(rendered.observationRecords.targetOnly.some((r) => serialize(r) === serialize(record)), `67. FLAGSHIP — observationRecords.targetOnly contains ${serialize(record)}`);
+        }
+
+        // Rendered detail sections are 0.8.193's own arrays, referenced —
+        // not copied — proving the table component performs no
+        // reconstruction of its own.
+        const detail = describePublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceExportComparisonDetail(
+            describePublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceExportComparison(flagshipSourceDocument, flagshipTargetDocument)
+        );
+        assert(serialize(rendered.decisionRecords.shared) === serialize(detail.decisionEvidence.shared),
+            '68. FLAGSHIP — the rendered decisionRecords.shared is byte-identical to 0.8.193\'s own decisionEvidence.shared for the same comparison');
+    }
+    console.log('✓ Section O: 0.8.194 FLAGSHIP — expanding each dimension\'s own "Inspect records" reveals exactly 0.8.193\'s own record arrays, with lengths exactly matching 0.8.191\'s own summary counts, for a deliberately asymmetric pair of exports');
+
+    // ---------------------------------------------------------------
+    // Section P — duplicate records remain duplicated.
+    // ---------------------------------------------------------------
+    {
+        const C1 = candidateOf('DUP-C1');
+        const D1 = decisionRecord(C1, 'OBSERVE', 40);
+        // Two byte-identical decision records in the source export, one in
+        // the target export — 0.8.189's own multiset partitioning reports
+        // exactly one D1 as shared and exactly one as source-only, never
+        // collapsing the duplicate into a single entry.
+        const entries = [entryOf(C1, detailOf([D1, D1]), EMPTY_DETAIL)];
+        const targetEntries = [entryOf(C1, detailOf([D1]), EMPTY_DETAIL)];
+        const filter = { evidenceKind: 'ALL', replicaRelation: 'ALL' };
+
+        const source = buildImportedDocument(entries, filter, 'PEER_PRESENT');
+        const target = buildImportedDocument(targetEntries, filter, 'PEER_PRESENT');
+
+        const { rendered } = runChain(source.document, target.document);
+        assert(rendered.decisionEvidence.sharedCount === 1 && rendered.decisionEvidence.sourceOnlyCount === 1,
+            '69. duplicate decision records — Shared 1 / Source-only 1, never collapsed to Shared 2 / Source-only 0 or merged away');
+        assert(rendered.decisionRecords.shared.length === 1 && rendered.decisionRecords.sourceOnly.length === 1,
+            '70. the rendered decisionRecords preserve the identical Shared 1 / Source-only 1 split as record arrays, not just counts');
+    }
+    console.log('✓ Section P: duplicate records remain duplicated — the rendered detail columns preserve 0.8.189\'s own multiset partitioning rather than collapsing repeated records');
+
+    // ---------------------------------------------------------------
+    // Section Q — evidence stays flat; decision and observation evidence
+    // stay in separate sections.
+    // ---------------------------------------------------------------
+    {
+        assert(!tableCodeOnly.toLowerCase().includes('groupby'), '71. the table component\'s own code never groups evidence by candidate');
+        assert(!tableCodeOnly.includes('candidateKey'), '72. the table component never introduces a per-candidate grouping key of its own');
+
+        const { rendered } = runChain(flagshipSourceDocument, flagshipTargetDocument);
+        // Decision and observation evidence are two entirely separate
+        // record sets — nothing in decisionRecords ever appears in
+        // observationRecords, and the reverse (proven by field shape: a
+        // decision record carries `decidedAt`, an observation record
+        // carries `observedAt`, never both).
+        const decisionShapes = [...rendered.decisionRecords.shared, ...rendered.decisionRecords.sourceOnly, ...rendered.decisionRecords.targetOnly];
+        const observationShapes = [...rendered.observationRecords.shared, ...rendered.observationRecords.sourceOnly, ...rendered.observationRecords.targetOnly];
+        assert(decisionShapes.every((r) => 'decidedAt' in r && !('observedAt' in r)), '73. every rendered decision record carries decidedAt and never observedAt');
+        assert(observationShapes.every((r) => 'observedAt' in r && !('decidedAt' in r)), '74. every rendered observation record carries observedAt and never decidedAt');
+    }
+    console.log('✓ Section Q: evidence stays flat — no per-candidate grouping key appears anywhere in the component\'s own code, and decision/observation evidence remain two entirely separate record sets');
+
+    // ---------------------------------------------------------------
+    // Section R — candidate presence isn't inferred from evidence
+    // partitions, and one candidate's own evidence partitioning can differ
+    // between its two dimensions.
+    // ---------------------------------------------------------------
+    {
+        const { rendered } = runChain(flagshipSourceDocument, flagshipTargetDocument);
+        const { C2, D3, D4, O3, O4 } = flagshipRecords;
+
+        // C2 is a SHARED candidate (candidateRecords.shared) — proven
+        // first, independently of either evidence dimension below.
+        assert(rendered.candidateRecords.shared.some((c) => serialize(c) === serialize(C2)), '75. C2 is a shared candidate');
+
+        // C2's own decision evidence splits across TWO partitions at once
+        // (D3 shared, D4 source-only) — a shared candidate carrying
+        // partially exclusive decision evidence.
+        assert(rendered.decisionRecords.shared.some((r) => serialize(r) === serialize(D3)), '76. C2\'s own D3 decision record is Shared');
+        assert(rendered.decisionRecords.sourceOnly.some((r) => serialize(r) === serialize(D4)), '77. C2\'s own D4 decision record is Source-only, at the same time D3 is Shared');
+
+        // C2's own observation evidence, by contrast, is entirely Shared
+        // (O3, O4) — proving this component never infers one dimension's
+        // partitioning for a candidate from the other dimension's, or from
+        // that candidate's own shared candidate-presence membership.
+        assert(rendered.observationRecords.shared.some((r) => serialize(r) === serialize(O3)) && rendered.observationRecords.shared.some((r) => serialize(r) === serialize(O4)),
+            '78. C2\'s own observation evidence (O3, O4) is entirely Shared, unlike its own partially-exclusive decision evidence');
+        const c2ObservationSourceOrTargetOnly = [...rendered.observationRecords.sourceOnly, ...rendered.observationRecords.targetOnly]
+            .filter((r) => serialize(r.candidate) === serialize(C2));
+        assert(c2ObservationSourceOrTargetOnly.length === 0, '79. C2 carries no source-only or target-only observation evidence at all');
+    }
+    console.log('✓ Section R: candidate presence is never inferred from, or used to infer, evidence-partition membership — a single shared candidate (C2) carries partially source-only decision evidence while its own observation evidence stays entirely shared');
+
+    // ---------------------------------------------------------------
+    // Section S — collapsing/expanding detail is purely local UI state.
+    // ---------------------------------------------------------------
+    {
+        const table = default_ReconciliationCandidateLeaderboardEvidenceExportComparisonTable;
+        const { view, detail } = runChain(flagshipSourceDocument, flagshipTargetDocument);
+        const beforeView = serialize(view);
+        const beforeDetail = serialize(detail);
+
+        const ctx = { view, detail, expanded: table.data().expanded };
+        table.methods.toggleExpanded.call(ctx, 'candidates');
+        table.methods.toggleExpanded.call(ctx, 'decisionEvidence');
+
+        assert(ctx.expanded.candidates === true && ctx.expanded.decisionEvidence === true && ctx.expanded.observationEvidence === false,
+            '80. toggleExpanded() flips only the named dimension, independently of the others');
+        assert(serialize(view) === beforeView, '81. toggling expand state never mutates the view prop');
+        assert(serialize(detail) === beforeDetail, '82. toggling expand state never mutates the detail prop');
+
+        table.methods.toggleExpanded.call(ctx, 'candidates');
+        assert(ctx.expanded.candidates === false, '83. toggleExpanded() is a pure flip — calling it again collapses the same dimension back');
+    }
+    console.log('✓ Section S: collapsing/expanding detail is purely local, per-dimension UI state — it never mutates the view or detail props, and each dimension toggles independently');
+
+    // ---------------------------------------------------------------
+    // Section T — an invalid paste on one side never destroys an
+    // already-valid comparison already on screen.
+    // ---------------------------------------------------------------
+    {
+        const C1 = candidateOf('SURVIVES-C1');
+        const D1 = decisionRecord(C1, 'OBSERVE', 50);
+        const entries = [entryOf(C1, detailOf([D1]), EMPTY_DETAIL)];
+        const filter = { evidenceKind: 'ALL', replicaRelation: 'ALL' };
+        const genuine = buildImportedDocument(entries, filter, 'PEER_PRESENT');
+
+        // A first, genuine comparison renders real detail records.
+        const first = runChain(genuine.document, genuine.document);
+        assert(first.rendered.decisionRecords.shared.length === 1, '84. a genuine comparison renders one shared decision record');
+
+        // A second attempt where one side is malformed never loses the
+        // already-valid document on the OTHER side — importXxx() rejects
+        // only the malformed side, exactly 0.8.192's own Section C/D
+        // discipline, still true after adding detail records.
+        const badImport = importPublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceExport('{ still not valid json');
+        assert(badImport.outcome === ReconciliationCandidateLeaderboardEvidenceImportOutcome.INVALID_DOCUMENT, '85. the malformed paste is rejected by importXxx(), never silently accepted');
+
+        // The already-valid document from the first comparison, run again,
+        // still renders identically — nothing about attempting (and
+        // rejecting) a malformed paste elsewhere corrupts a document
+        // already held.
+        const second = runChain(genuine.document, genuine.document);
+        assert(serialize(second.rendered) === serialize(first.rendered), '86. re-running the chain over the same already-valid document is unaffected by an unrelated invalid paste, and remains deterministic');
+    }
+    console.log('✓ Section T: a genuinely invalid paste never destroys an already-valid document or its already-rendered detail records — importXxx() rejects only the malformed side, and a genuine document keeps rendering identically');
 
     console.log('\nAll ReconciliationCandidateLeaderboardEvidenceExportComparisonUI tests passed.');
 }

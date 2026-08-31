@@ -44069,12 +44069,123 @@ registered in `tests.html`.
 
 ---
 
-Deliberately paused here rather than automatically continuing to 0.8.194 —
-a UI counterpart for this detail projection (expandable "Inspect records"
-panels on 0.8.192's own tables) is the natural next step named alongside
-this milestone, but it is UI-layer work best taken up as its own explicit
-request rather than chained on automatically. Also deliberately not
-pursued: synchronization of any kind between the two exported documents —
-exported evidence documents remain reports, never synchronization
-envelopes, and this codebase keeps those two concepts deliberately
-separate.
+## 0.8.194 — Evidence Export Comparison Detail UI
+
+0.8.192 put 0.8.191's own summary counts on screen; 0.8.193 built the
+record-level answer those counts cannot give on their own, but stopped at
+plain data on purpose. This milestone is the remaining hand-off — the UI
+counterpart 0.8.193's own header named and deliberately deferred: an
+"Inspect records" control on each of 0.8.192's own three dimension tables
+that reveals 0.8.193's own `shared`/`sourceOnly`/`targetOnly` record arrays
+for that one dimension. It extends the existing `/evidence-export-comparison`
+page rather than adding a new route or a new workflow — summary and
+inspection now live on the same page, at the same time.
+
+```
+Source Evidence Export JSON ──┐
+                               ├─► 0.8.188 importXxx() (twice, once per side)
+Target Evidence Export JSON ──┘         │
+                                         ▼
+                            0.8.189 describeXxx() (comparison)
+                                         │
+                            ┌────────────┴────────────┐
+                            ▼                          ▼
+               0.8.190 describeXxx() (read model)   0.8.193 describeXxx() (detail)
+                            │                            │
+                            ▼                            │
+               0.8.191 describeXxx() (view)               │
+                            │                            │
+                            └─────────────┬──────────────┘
+                                           ▼
+                  ReconciliationCandidateLeaderboardEvidenceExportComparisonTable   ★
+                                           │
+                                           ▼
+                                        Browser
+```
+
+**Both the summary view and the detail view are computed off the same
+0.8.189 result, independently.**
+`ui/views/ReconciliationCandidateLeaderboardEvidenceExportComparisonView.js`
+now computes a second `comparisonDetail` value alongside the existing
+`readModel`/`comparisonView` chain, calling 0.8.193's own `describeXxx()`
+over `comparison.value` directly — never over `readModel.value` or
+`comparisonView.value`. This is the identical invariant 0.8.193's own
+header names ("the number displayed in the summary and the records
+displayed in the detail view originate from the same domain result"), now
+held at the UI layer: the table component never recomputes a count from a
+detail array's own `.length`, and never fabricates a detail row from a
+count — each prop renders exactly its own already-computed fact.
+
+**The table component gained a `detail` prop and per-dimension expand
+state, nothing else.**
+`ui/components/ReconciliationCandidateLeaderboardEvidenceExportComparisonTable.js`
+keeps rendering the same three independent summary tables 0.8.192 already
+drew, each now followed by its own "Inspect records" toggle. Expanding one
+reveals three columns (Source-only / Shared / Target-only) of 0.8.193's own
+records for that dimension alone — collapsed by default, so a large export
+still renders its summary immediately without forcing every record onto
+the page. Which dimensions are expanded is this component's own local,
+never-persisted `expanded` data, reset on every mount, exactly the
+"entirely local, presentational state" discipline `expandedKeys` already
+holds on `ReconciliationCandidateLeaderboardTable.js` (0.8.180) — toggling
+it never mutates `view` or `detail`, and never affects any other dimension.
+
+**Evidence stays flat — candidate identity is shown, never regrouped by
+candidate.** Every record list this component renders is 0.8.193's own
+flat, cross-candidate array, in 0.8.193's own order. A record's own
+`candidate` field is decoded into a short label (the identical
+`{ type, claimId?, snapshotIndex? }` decoding
+`ReconciliationCandidateLeaderboardTable.js`'s own `describeCandidateLabel()`
+already performs, duplicated here rather than imported — this component
+still imports nothing at all) and shown alongside that record, so a reader
+can see which candidate an entry concerns without this component ever
+using that field to GROUP its own output. If candidate-centric inspection
+ever becomes useful, that is a separate, explicit projection — never a
+silent change to this flat one.
+
+**Tests** (`tests/ReconciliationCandidateLeaderboardEvidenceExportComparisonUI.test.js`,
+extended with Sections O through T): a deliberately asymmetric flagship
+pair of exports, expanded, whose rendered detail records match 0.8.193's
+own arrays exactly, with lengths matching 0.8.191's own summary counts
+exactly; duplicate records surviving 0.8.189's own multiset partitioning
+into the rendered columns; evidence confirmed flat, with decision and
+observation evidence staying two entirely separate record sets; a single
+shared candidate proven to carry partially source-only decision evidence
+while its own observation evidence stays entirely shared, proving
+candidate presence is never inferred from, or used to infer, evidence
+partitioning; expand/collapse proven to be pure local state that never
+mutates either prop and toggles each dimension independently; and a
+genuinely invalid paste on one side proven never to destroy an
+already-valid, already-rendered comparison. Every prior 0.8.192 assertion
+(malformed input, network/persistence/ranking vocabulary sweeps, the full
+0.8.188→0.8.193 wiring) still passes unchanged, extended to also cover the
+new `detail` prop and the five application modules the view now imports.
+
+**Deliberately excluded — not this milestone.** Regrouping the inspected
+evidence by candidate — see "Evidence stays flat," above. Persisting which
+dimensions are expanded, across a reload or across sessions — expand state
+stays page-local, exactly like every other piece of state on this page. A
+rank, score, winner, correct/incorrect, conflict, confidence, or
+recommendation field or vocabulary of any kind — inherited unchanged from
+every layer beneath this one. Synchronization of any kind between the two
+exported documents — exported evidence documents remain reports, never
+synchronization envelopes, and this codebase keeps those two concepts
+deliberately separate.
+
+`docs/Roadmap.md` updated; no new test file registered in `tests.html` —
+this milestone extends the existing
+`ReconciliationCandidateLeaderboardEvidenceExportComparisonUI.test.js`
+already registered there for 0.8.192.
+
+---
+
+Deliberately paused here rather than automatically continuing to 0.8.195.
+The portable-export workflow (0.8.186 → 188 → 189 → {190 → 191 → 192,
+193 → 194}) is now a complete, page-ready evidence-inspection subsystem,
+alongside the sibling live-archive workflow (0.8.176 → … → 187). Rather
+than mechanically opening a 0.8.195, the next major question is what the
+Leaderboard product actually needs next — candidate-level navigation
+across the two workflows, archive/report persistence, richer evidence
+inspection, or the explicit synchronization capability this codebase has
+deliberately deferred at every layer so far — and that choice belongs to
+an explicit request, not an automatic continuation.
