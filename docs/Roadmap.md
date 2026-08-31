@@ -43032,3 +43032,172 @@ work.
 updated to describe the Evidence Filter controls and the two-dimensional
 vocabulary; `ReconciliationCandidateLeaderboardEvidenceFilter.test.js`
 registered in `tests.html`.
+
+## 0.8.185 — Reconciliation Candidate Filtered Evidence Detail Projection
+
+0.8.182 built the Inspect Evidence detail panel — the actual decision/
+observation records behind a row's own six counts. 0.8.184 built a filter
+that decides which ROWS the leaderboard shows, using the vocabulary
+`evidenceKind` (`ALL`/`DECISIONS`/`OBSERVATIONS`) x `replicaRelation`
+(`ALL`/`SHARED`/`SOURCE_ONLY`/`TARGET_ONLY`). Neither one, on its own,
+answers a reader's next natural question once both exist: filter the
+leaderboard down to Observations + Target-only, then open a surviving
+row's own Inspect Evidence panel — does it show exactly the observation
+records that made that row survive, or everything that candidate has ever
+recorded? Before this milestone, it showed everything — a genuinely
+correct answer from 0.8.182, but a gap once 0.8.184 gave a reader the
+means to ask a narrower question. This milestone closes that gap, and
+nothing more.
+
+```text
+0.8.176 Candidate Evidence Agreement
+          │
+          ├──────────────────────────► 0.8.182 Evidence Detail
+          │                                      │
+          │                                      ▼
+          │                             complete per-candidate detail
+          │
+          └──► 0.8.177 → 0.8.178 → 0.8.179 Page ──► 0.8.184 Row Filter
+
+                     0.8.182 detail  +  0.8.184 filter vocabulary
+                                   │
+                                   ▼
+                  0.8.185 Filtered Evidence Detail   ★
+                                   │
+                                   ▼
+                         UI inspection panel
+```
+
+**A pure projection over 0.8.182's own already-computed result — never a
+new domain algorithm, never a third comparison.** A new, standalone
+`application/PublisherLeaderboardClaimSnapshotReconciliationCandidateFilteredEvidenceDetailView.js`
+exports one pure function:
+
+```text
+describePublisherLeaderboardClaimSnapshotReconciliationCandidateFilteredEvidenceDetail(evidenceDetail, filter)
+  -> { candidateCount,
+       candidates: [{ candidate,
+                       decisionDetail: { sharedCount, sourceOnlyCount, targetOnlyCount,
+                                          shared, sourceOnly, targetOnly },
+                       observationDetail: { sharedCount, sourceOnlyCount, targetOnlyCount,
+                                             shared, sourceOnly, targetOnly } }] }
+```
+
+`evidenceDetail` is 0.8.182's own already-produced `{ candidateCount,
+candidates }` result (or anything shaped like it). `filter` is the
+IDENTICAL vocabulary 0.8.184's own `describeXxx()` accepts — a bare
+replica-relation string, or `{ evidenceKind, replicaRelation }` — reusing
+0.8.184's own frozen `ReconciliationCandidateLeaderboardEvidenceKind`/
+`ReconciliationCandidateLeaderboardReplicaRelation` enums rather than
+declaring a fifth relation or a fourth evidence kind of its own.
+
+**The result shape is 0.8.182's own shape, unchanged — no new deep
+vocabulary.** A filtered candidate entry is still `{ candidate,
+decisionDetail, observationDetail }`, and each detail object still
+carries the identical six fields 0.8.182 already established. This is why
+`ui/components/ReconciliationCandidateEvidenceDetailPanel.js` and
+`ui/components/ReconciliationCandidateLeaderboardTable.js` needed **no
+change of their own at all** to render a filtered result — a filtered
+candidate entry is handed to the existing panel exactly the way an
+unfiltered one already is. A list this file excludes becomes an empty,
+frozen array with its own count at `0` — the identical
+count-always-agrees-with-its-own-list's-length invariant 0.8.182 already
+holds, never a differently-shaped "matched"/"excluded" wrapper.
+
+**The same two-dimensional semantics 0.8.184 already established for row
+visibility, held here again for record-list visibility:**
+
+- `replicaRelation: 'ALL'` means "do not filter at all" — the identical
+  candidate entry (both detail objects, complete, exactly as 0.8.182
+  produced them) survives untouched, regardless of `evidenceKind`. This
+  mirrors 0.8.184's own `rowMatchesFilter()` short-circuit exactly: a
+  reader who chooses only an Evidence type and leaves Replica relation on
+  All sees every record a row already carries, because 0.8.184 itself
+  does not filter that row out of the leaderboard on `evidenceKind`
+  alone either.
+- Otherwise, `evidenceKind` decides WHICH of `decisionDetail`/
+  `observationDetail` may keep any records at all (`DECISIONS` empties
+  `observationDetail` entirely; `OBSERVATIONS` empties `decisionDetail`
+  entirely; `ALL` leaves both eligible), and `replicaRelation` — one of
+  `SHARED`/`SOURCE_ONLY`/`TARGET_ONLY` — decides WHICH SINGLE list
+  survives within each eligible detail object. `evidenceKind: 'ALL'`
+  therefore surfaces BOTH branches — `decisionDetail.targetOnly` AND
+  `observationDetail.targetOnly` — never one chosen arbitrarily, and
+  never merged into one list. 0.8.176's own flagship principle ("decision
+  evidence and observation evidence are not the same thing"), held again
+  at the record-list layer.
+
+**`ALL`/`ALL` is an identity projection, and preserves references.** When
+`replicaRelation` is `'ALL'`, this file returns 0.8.182's own candidate
+entry object, referenced (`===`), never rebuilt — the strongest form of
+"the original 0.8.182 detail remains unchanged" this milestone's own
+request asked for. When a relation filter narrows a detail object down to
+one surviving list, that surviving list is still 0.8.182's own original
+array, referenced unchanged.
+
+**A candidate row never disappears from this result, even when both its
+detail objects end up fully empty under a filter.** Whether a candidate's
+ROW is visible at all remains 0.8.184's own, entirely separate, question,
+answered over `page.rows`; this file only narrows which records an
+already-decided-visible candidate's own detail panel may show.
+`candidateCount`/`candidates` always mirror `evidenceDetail`'s own
+candidate set, one entry in, one entry out, in the same order.
+
+**Flagship regression**, deliberately asymmetric, exactly as this
+milestone's own request framed it:
+
+```text
+C1
+Decisions:    Shared [D1] / Source-only [D2]
+Observations: Shared [O1] / Target-only [O2, O3]
+
+ALL + ALL                    → D1, D2, O1, O2, O3
+DECISIONS + SHARED           → D1 only
+OBSERVATIONS + TARGET_ONLY   → O2, O3 only
+ALL + TARGET_ONLY            → decisions.targetOnly ([]) + observations.targetOnly (O2, O3)
+```
+
+plus malformed/absent-input tolerance, reference-identity and
+zeroed-count checks, no-mutation/no-reorder checks, a candidate-never-
+disappears check, and a vocabulary/import-boundary check (imports exactly
+0.8.182 and 0.8.184's own enums — never 0.8.184's own row-filter
+`describeXxx()`, and never 0.8.176 directly).
+
+**`describeXxx()`/`reconstructXxx()`** — the identical split every
+projection in this family already holds. `reconstructXxx()` calls
+0.8.182's own `reconstructXxx()` exactly once, never touching either
+archive itself and never reaching past 0.8.182 down into 0.8.176, then
+hands that result, unchanged, to `describeXxx()` above.
+
+**UI layer.** `ui/views/ReconciliationCandidateLeaderboardView.js` adds
+exactly one new computed value, `filteredEvidenceDetail`, calling
+0.8.185's own `describeXxx()` over `evidenceDetail` (unchanged, 0.8.182's
+own result) and the SAME two filter refs `filteredPage` already reads —
+`evidenceKindFilter`/`replicaRelationFilter` — never a third, independent
+filter selection. There is only one Evidence Filter box on the page; it
+now drives both which rows are visible and what a visible row's own
+detail panel shows. `filteredEvidenceDetail`, not `evidenceDetail`, is
+what gets handed down to
+`ui/components/ReconciliationCandidateLeaderboardTable.js` as its own
+`evidence-detail` prop — the table and the detail panel beneath it needed
+no code change of their own to render it, since 0.8.185's own result is
+shaped exactly like 0.8.182's.
+
+**Deliberately excluded — not this milestone.** Recomputing agreement,
+candidate matching, or evidence counts — the whole point of this
+milestone is that it recomputes nothing. A score, rank, ordering, or any
+comparison between two candidates' own evidence. A `winner`,
+`correct`/`incorrect`, `valid`, `stale`, `preferred`, `status`, or
+`confidence` field or vocabulary of any kind. Deduplication, merging, or
+collapsing of any two records that "look similar." Reordering candidates,
+or filtering a candidate OUT of this result — that stays 0.8.184's own,
+separate, row-visibility question. Persisting the selected filter
+anywhere beyond the view's own existing, page-local refs. Any markup, DOM
+nodes, or control-rendering technology choice — the existing detail panel
+renders this file's own output unchanged.
+
+`docs/Roadmap.md` updated; `docs/user/09-PublicationsAndEvidence.md`
+updated to describe how the Evidence Filter now also narrows a surviving
+row's own Inspect Evidence panel;
+`PublisherLeaderboardClaimSnapshotReconciliationCandidateFilteredEvidenceDetailView.test.js`
+registered in `tests.html`.

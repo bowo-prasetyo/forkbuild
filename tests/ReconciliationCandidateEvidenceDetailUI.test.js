@@ -311,7 +311,14 @@ async function run() {
         assert(evidenceDetailCallLine.includes('sourceArchive') && evidenceDetailCallLine.includes('targetArchive.value'), '43. 0.8.182\'s own reconstructXxx() is called over sourceArchive/targetArchive.value');
         assert(pageCallLine.includes('sourceArchive') && pageCallLine.includes('targetArchive.value'), '44. 0.8.179\'s own reconstructXxx() is called over the identical sourceArchive/targetArchive.value');
 
-        assert(moduleSource.includes(':evidence-detail="evidenceDetail"'), '45. the view hands evidenceDetail down to the table as a prop');
+        // 0.8.185 interposes its own filtered projection between
+        // evidenceDetail (0.8.182's own result, still computed exactly
+        // once above) and the table — the table now receives
+        // filteredEvidenceDetail, which is evidenceDetail unchanged
+        // whenever the Evidence Filter is at its ALL/ALL default. See
+        // PublisherLeaderboardClaimSnapshotReconciliationCandidateFilteredEvidenceDetailView.test.js
+        // for that projection's own dedicated coverage.
+        assert(moduleSource.includes(':evidence-detail="filteredEvidenceDetail"'), '45. the view hands filteredEvidenceDetail (0.8.185\'s own projection over evidenceDetail) down to the table as a prop');
 
         const importedModules = [...moduleSource.matchAll(/^import\s[\s\S]*?from '([^']+)';/gm)].map((match) => match[1]);
         assert(importedModules.some((m) => m.endsWith('PublisherLeaderboardClaimSnapshotReconciliationCandidateEvidenceDetailView.js')), '46. imports 0.8.182\'s own evidence detail module');

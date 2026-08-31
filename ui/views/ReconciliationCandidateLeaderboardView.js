@@ -18,6 +18,9 @@ import {
     ReconciliationCandidateLeaderboardReplicaRelation,
     describePublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceFilter
 } from '../../application/PublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceFilter.js';
+import {
+    describePublisherLeaderboardClaimSnapshotReconciliationCandidateFilteredEvidenceDetail
+} from '../../application/PublisherLeaderboardClaimSnapshotReconciliationCandidateFilteredEvidenceDetailView.js';
 import ReconciliationCandidateLeaderboardTable from '../components/ReconciliationCandidateLeaderboardTable.js';
 
 // 0.8.181 — Explicit Peer Archive Leaderboard Comparison.
@@ -146,9 +149,28 @@ import ReconciliationCandidateLeaderboardTable from '../components/Reconciliatio
 // table renders whatever page-shaped object it is given without knowing,
 // or needing to know, that a filter was ever applied — exactly the way it
 // already renders 0.8.179's own unfiltered `page` today. `evidenceDetail`
-// is untouched by filtering entirely: a row hidden by the filter simply
-// never renders its own "Inspect Evidence" button; its detail was never
-// computed differently to begin with.
+// itself (0.8.182's own computed value) is untouched by filtering — see
+// 0.8.185, immediately below, for what a reader now sees when they
+// actually open a surviving row's own detail panel.
+//
+// 0.8.185 — Reconciliation Candidate Filtered Evidence Detail Projection
+// adds exactly one more computed value on top of the above,
+// `filteredEvidenceDetail`, obtained by calling 0.8.185's own
+// `describeXxx()` over this view's own `evidenceDetail` (unchanged,
+// 0.8.182's own result) and the SAME two filter refs `filteredPage`
+// already reads — `evidenceKindFilter`/`replicaRelationFilter` — never a
+// third, independent filter selection. `evidenceDetail` ITSELF IS NEVER
+// REASSIGNED — see 0.8.185's own header, "the original 0.8.182 detail
+// remains unchanged." `filteredEvidenceDetail`, not `evidenceDetail`, is
+// what gets handed down to `ReconciliationCandidateLeaderboardTable` as
+// its own `evidence-detail` prop; the table (and the detail panel it
+// renders) needed no change of their own at all to render a filtered
+// result, because 0.8.185's own result is shaped exactly like 0.8.182's —
+// `{ candidateCount, candidates: [{ candidate, decisionDetail,
+// observationDetail }] }` — so a reader who filters the leaderboard down
+// to, say, Observations + Target-only and then opens a surviving row's
+// own "Inspect Evidence" panel sees only the observation records that
+// made that row survive, never the candidate's full, unfiltered detail.
 export const RECONCILIATION_CANDIDATE_LEADERBOARD_EVIDENCE_KIND_OPTIONS = [
     { value: ReconciliationCandidateLeaderboardEvidenceKind.ALL, label: 'All' },
     { value: ReconciliationCandidateLeaderboardEvidenceKind.DECISIONS, label: 'Decisions' },
@@ -228,9 +250,25 @@ export default {
             { evidenceKind: evidenceKindFilter.value, replicaRelation: replicaRelationFilter.value }
         ));
 
+        // 0.8.185 — the SAME two filter refs above, read a second time, to
+        // narrow WHICH RECORDS `evidenceDetail`'s own per-candidate
+        // `decisionDetail`/`observationDetail` lists may show, so an
+        // "Inspect Evidence" panel opened under a row that survived the
+        // current filter shows only the records compatible with that
+        // filter — never the full, unfiltered detail 0.8.182 alone would
+        // show. `evidenceDetail` itself (0.8.182's own result) is never
+        // reassigned or mutated — see 0.8.185's own header, "the original
+        // 0.8.182 detail remains unchanged." There is no third filter
+        // ref: the single Evidence Filter box above the table drives both
+        // `filteredPage` and `filteredEvidenceDetail` at once.
+        const filteredEvidenceDetail = computed(() => describePublisherLeaderboardClaimSnapshotReconciliationCandidateFilteredEvidenceDetail(
+            evidenceDetail.value,
+            { evidenceKind: evidenceKindFilter.value, replicaRelation: replicaRelationFilter.value }
+        ));
+
         return {
             page, evidenceDetail, comparisonState,
-            evidenceKindFilter, replicaRelationFilter, filteredPage,
+            evidenceKindFilter, replicaRelationFilter, filteredPage, filteredEvidenceDetail,
             evidenceKindOptions: RECONCILIATION_CANDIDATE_LEADERBOARD_EVIDENCE_KIND_OPTIONS,
             replicaRelationOptions: RECONCILIATION_CANDIDATE_LEADERBOARD_REPLICA_RELATION_OPTIONS,
             peerArchiveText, hasPeerArchive, peerArchiveInvalid, usePeerArchive, clearPeerArchive
@@ -297,7 +335,7 @@ export default {
                 </label>
             </div>
 
-            <ReconciliationCandidateLeaderboardTable :page="filteredPage" :evidence-detail="evidenceDetail" :comparison-state="comparisonState" />
+            <ReconciliationCandidateLeaderboardTable :page="filteredPage" :evidence-detail="filteredEvidenceDetail" :comparison-state="comparisonState" />
         </section>
     `
 };
