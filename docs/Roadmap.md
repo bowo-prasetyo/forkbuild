@@ -42091,3 +42091,89 @@ Decision side                         Observation side
 `docs/Roadmap.md` updated;
 `PublisherLeaderboardClaimSnapshotReconciliationCandidateEvidenceAgreementView.test.js`
 registered in `tests.html`.
+
+## 0.8.177 — Reconciliation Candidate Leaderboard Read Model
+
+0.8.176 answers, for two replicas at once, what candidate evidence — of
+either kind — is shared, and what evidence exists exclusively on each side.
+Nothing yet hands that answer to the page a reader will eventually look at.
+A new `application/PublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardReadModel.js`
+with two functions,
+`describePublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardReadModel(evidenceAgreement)`
+and
+`reconstructPublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardReadModel(sourceArchive, targetArchive)`.
+
+**Takes 0.8.176's own result directly — never raw histories.** The
+dependency direction is deliberate: raw histories → historical projections
+→ agreement projections → 0.8.176 Candidate Evidence Agreement → 0.8.177
+Leaderboard Read Model. `describeXxx()` performs a pure, structural
+transform of 0.8.176's own already-computed `evidenceAgreement` — the
+identical shape 0.8.112's own `PublisherRanking` result already hands to
+`describePublisherLeaderboard()` (0.8.113, UNCHANGED). It never touches a
+decision history, an observation history, or either archive itself, so
+there is no history argument here for a second, subtly different
+comparison to drift out of sync with 0.8.156's/0.8.174's own already-tested
+ones. `reconstructXxx()` calls 0.8.176's own `reconstructXxx()` exactly
+once, then hands its result, unchanged, to `describeXxx()`.
+
+**Result shape:** `{ candidateCount, candidates: [{ candidate,
+decisionEvidence: { sharedCount, sourceOnlyCount, targetOnlyCount },
+observationEvidence: { sharedCount, sourceOnlyCount, targetOnlyCount } }] }`
+— 0.8.176's own six per-candidate counts, read verbatim and renamed onto a
+leaderboard row's own vocabulary. No count is added, dropped, combined, or
+recomputed; no evidence-record list (`sharedDecisions`/`sourceOnly`/
+`targetOnly` and their observation counterparts) or top-level aggregate
+(`sourceDecisionCount`, `sameDecisionHistory`, etc.) is forwarded onto this
+read model — a caller needing either already has 0.8.176's own result.
+
+**No ranking semantics of any kind.** Rows are 0.8.176's own `candidates`
+array, mapped one entry to one row, in 0.8.176's own order, unchanged — never
+re-sorted by candidate type, evidence count, or agreement outcome. No row
+carries a `score`, `rank`, `winner`, `correct`/`valid`/`preferred` flag,
+`status`, or `confidence` — this milestone's own name notwithstanding.
+Candidate identity stays the closed three-value vocabulary
+(`DIVERGENT_CORRESPONDENCE`, `CLAIM_WITHOUT_CORRESPONDING_SNAPSHOT`,
+`SNAPSHOT_WITHOUT_CORRESPONDING_CLAIM`); no fourth category is introduced
+merely because a page is now the eventual audience. `decisionEvidence`/
+`observationEvidence` stay side by side on every row, never merged.
+
+**Flagship scenario** exercises all four evidence combinations at once: C1 —
+decision shared+exclusive, observation shared+exclusive (the ordinary case);
+C2 — decision shared only, observation source-only; C3 — decision
+target-only, observation shared only; C4 — decision source-only, observation
+target-only. All four are represented faithfully, without interpretation.
+
+**Further sections** cover: every row's six counts agreeing exactly with
+0.8.176's own counts for the same candidate; malformed/absent
+`evidenceAgreement` (this file's one defensive check, since unlike every
+other projection in this family its one argument is not itself produced by
+a guaranteeing seam) degrading to an empty result, never throwing; no
+mutation, frozen results, determinism, and candidate-object reference
+identity; `reconstructXxx()`'s archive-reading boundary (calling 0.8.176's
+own `reconstructXxx()` exactly once, never touching either archive
+directly); and a permanent architectural regression test proving the module
+imports exactly one module — 0.8.176 — deliberately never either agreement
+view it already composes, either correspondence module, either
+candidate-evolution module, 0.8.175, or either archive-reading seam
+directly.
+
+**Deliberately excluded — not this milestone.** No score, rank, ordering by
+evidence weight, or comparison between two candidates' own evidence. No
+`winner`/`correct`/`incorrect`/`valid`/`preferred`/`status`/`confidence`
+field of any kind. No interpretation of agreement or difference as conflict,
+inconsistency, or need for resolution. No fourth candidate category. No
+forwarding of 0.8.176's own evidence-record lists or top-level aggregates.
+No persistence or synchronization of any kind. No Leaderboard view model or
+UI itself — 0.8.178 converts this read model into the exact
+sections/columns/cards a page needs, and 0.8.179 builds the page.
+
+```
+0.8.176 Candidate Evidence Agreement
+                │
+                ▼
+0.8.177 Candidate Leaderboard Read Model   ★
+```
+
+`docs/Roadmap.md` updated;
+`PublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardReadModel.test.js`
+registered in `tests.html`.
