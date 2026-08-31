@@ -5358,3 +5358,69 @@ html, body {
         grid-template-columns: 1fr;
     }
 }
+
+/* 0.8.201 — Explicit Record-Pair Selection UI. `.evidence-export-
+   comparison-pairing` sits below the existing summary/detail/identity
+   table, reusing `.evidence-detail-group-title`/`.reconciliation-
+   leaderboard-note`/`.form-field`/`.form-input`/`.action-btn--secondary`/
+   `.evidence-detail-list`/`.evidence-detail-empty` verbatim so the pairing
+   controls and the paired-difference result read as the same plain,
+   muted, no-verdict surface as every other panel on this page — never a
+   visually distinct "important" or "flagged" treatment. */
+.evidence-export-comparison-pairing {
+    margin-top: 1.5rem;
+    padding-top: 1.25rem;
+    border-top: 1px solid #232323;
+}
+
+.evidence-pair-selector {
+    margin-top: 1rem;
+}
+
+.evidence-pair-selector-controls {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: 1rem;
+}
+
+.evidence-pair-selector-controls .form-field {
+    flex: 1 1 16rem;
+}
+
+.evidence-pair-list {
+    list-style: none;
+    margin: 0.6rem 0 0;
+    padding: 0;
+    font-size: 0.82rem;
+    color: #d0d0d0;
+}
+
+.evidence-pair-list li {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding: 0.35rem 0;
+    border-bottom: 1px solid #202020;
+}
+
+.evidence-pair-remove-btn {
+    font-size: 0.7rem;
+    padding: 0.25rem 0.5rem;
+}
+
+.evidence-pair-differences {
+    margin-top: 1.25rem;
+}
+
+.evidence-pair-difference-group {
+    margin-top: 0.75rem;
+}
+
+.evidence-pair-difference-group h6 {
+    margin: 0 0 0.35rem;
+    font-size: 0.78rem;
+    color: #909090;
+    font-weight: 600;
+}

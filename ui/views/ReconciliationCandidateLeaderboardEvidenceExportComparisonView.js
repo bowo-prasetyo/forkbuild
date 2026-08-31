@@ -18,11 +18,24 @@ import {
 import {
     describePublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceExportComparisonRecordIdentity
 } from '../../application/PublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceExportComparisonRecordIdentityView.js';
+import {
+    describePublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceExportComparisonRecordPairs
+} from '../../application/PublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceExportComparisonRecordPairsView.js';
+import {
+    describePublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceExportComparisonRecordDifference
+} from '../../application/PublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceExportComparisonRecordDifferenceView.js';
+import {
+    describePublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceExportComparisonRecordDifferenceReadModel
+} from '../../application/PublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceExportComparisonRecordDifferenceReadModel.js';
+import {
+    describePublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceExportComparisonPairedRecordDifferenceView
+} from '../../application/PublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceExportComparisonPairedRecordDifferenceView.js';
 import ReconciliationCandidateLeaderboardEvidenceExportComparisonTable from '../components/ReconciliationCandidateLeaderboardEvidenceExportComparisonTable.js';
+import ReconciliationCandidateLeaderboardEvidenceExportComparisonRecordPairSelector from '../components/ReconciliationCandidateLeaderboardEvidenceExportComparisonRecordPairSelector.js';
 
-// 0.8.192/0.8.194/0.8.196 — Reconciliation Candidate Leaderboard Evidence
-// Export Comparison UI, its Detail extension, and its Identity Inspection
-// extension.
+// 0.8.192/0.8.194/0.8.196/0.8.201 — Reconciliation Candidate Leaderboard
+// Evidence Export Comparison UI, its Detail extension, its Identity
+// Inspection extension, and its Explicit Record-Pair Selection extension.
 //
 // 0.8.189/0.8.190/0.8.191/0.8.193/0.8.195 built a complete, pure,
 // application-layer chain that turns two already-exported evidence
@@ -139,6 +152,28 @@ import ReconciliationCandidateLeaderboardEvidenceExportComparisonTable from '../
 // change to this flat one (0.8.193's own header, "Evidence stays flat,"
 // held here again at the UI layer).
 //
+// 0.8.201 — EXPLICIT RECORD-PAIR SELECTION IS A FOURTH, INDEPENDENT CHAIN
+// OFF `comparisonDetail`, NEVER OFF `comparisonIdentity`. `explicitPairs`
+// (this file's own new page-local ref, `{ decisionPairs: [], observationPairs: [] }`)
+// starts empty and only ever changes through `addDecisionPair()`/
+// `removeDecisionPair()`/`addObservationPair()`/`removeObservationPair()`
+// below, each fired by an event
+// `ReconciliationCandidateLeaderboardEvidenceExportComparisonRecordPairSelector`
+// emits — this view never builds a pair itself, only stores the pair the
+// component reports a human already built. `explicitRecordPairs`,
+// `recordDifferences`, `recordDifferenceReadModel`, and
+// `pairedRecordDifferenceView` below are four more `computed()` values,
+// forming the exact 0.8.198 -> 0.8.197 -> 0.8.199 -> 0.8.200 chain, each
+// reading only the previous layer's own already-computed result — the
+// identical "each layer forks off its own stated source, never a sibling"
+// discipline the 0.8.189 -> 0.8.190 -> 0.8.191 chain and the 0.8.193 ->
+// 0.8.195 fork already hold above. This chain starts at `explicitPairs`
+// itself, not at `comparisonDetail` — the record POOL a human picks from
+// is `comparisonDetail`'s own arrays (read directly by the selector
+// component below), but the PAIR a human builds is independent, page-local
+// state with no further dependency on `comparison`/`readModel`/
+// `comparisonView`/`comparisonIdentity`.
+//
 // SYNCHRONOUS, NO NETWORK, NO PERSISTENCE. `compareEvidence()` never
 // contacts a server (no `fetch`/`XMLHttpRequest`/`WebSocket` anywhere in
 // this file) and never writes to `localStorage`/`sessionStorage`/any
@@ -163,13 +198,23 @@ import ReconciliationCandidateLeaderboardEvidenceExportComparisonTable from '../
 //   unchanged from every layer beneath this one.
 // - **Persistence of either pasted document, or of the comparison itself,
 //   anywhere.** See "Synchronous, no network, no persistence," above.
+// - **Automatically pairing, suggesting, or ranking a candidate pair.**
+//   Every entry in `explicitPairs` is a pair a human built by hand through
+//   the selector component's own two dropdowns — see 0.8.201's own header,
+//   above.
+// - **Persistence of `explicitPairs` across a reload or across sessions.**
+//   `clearComparison()` now also resets `explicitPairs` back to empty,
+//   exactly like every other piece of comparison state on this page.
 // - **A top-nav entry point.** Reached by URL only, the identical
 //   "reached from elsewhere, never top-nav" shape 0.8.180's own
 //   `/reconciliation-leaderboard` route already holds — see
 //   `ui/router/index.js`.
 export default {
     name: 'ReconciliationCandidateLeaderboardEvidenceExportComparisonView',
-    components: { ReconciliationCandidateLeaderboardEvidenceExportComparisonTable },
+    components: {
+        ReconciliationCandidateLeaderboardEvidenceExportComparisonTable,
+        ReconciliationCandidateLeaderboardEvidenceExportComparisonRecordPairSelector
+    },
     setup() {
         // Page-local, never-persisted paste state — two entirely
         // independent textareas, never a single combined field.
@@ -207,6 +252,13 @@ export default {
             hasCompared.value = true;
         }
 
+        // 0.8.201 — Page-local, never-persisted explicit-pairing state. See
+        // this file's own header, "Explicit record-pair selection is a
+        // fourth, independent chain." This view never builds a pair itself
+        // — each handler below only ever appends/removes the exact pair the
+        // selector component reports a human already built.
+        const explicitPairs = ref({ decisionPairs: [], observationPairs: [] });
+
         function clearComparison() {
             sourceExportText.value = '';
             targetExportText.value = '';
@@ -215,6 +267,35 @@ export default {
             sourceInvalid.value = false;
             targetInvalid.value = false;
             hasCompared.value = false;
+            explicitPairs.value = { decisionPairs: [], observationPairs: [] };
+        }
+
+        function addDecisionPair(pair) {
+            explicitPairs.value = {
+                ...explicitPairs.value,
+                decisionPairs: [...explicitPairs.value.decisionPairs, pair]
+            };
+        }
+
+        function removeDecisionPair(index) {
+            explicitPairs.value = {
+                ...explicitPairs.value,
+                decisionPairs: explicitPairs.value.decisionPairs.filter((_, entryIndex) => entryIndex !== index)
+            };
+        }
+
+        function addObservationPair(pair) {
+            explicitPairs.value = {
+                ...explicitPairs.value,
+                observationPairs: [...explicitPairs.value.observationPairs, pair]
+            };
+        }
+
+        function removeObservationPair(index) {
+            explicitPairs.value = {
+                ...explicitPairs.value,
+                observationPairs: explicitPairs.value.observationPairs.filter((_, entryIndex) => entryIndex !== index)
+            };
         }
 
         // The 0.8.189 -> 0.8.190 -> 0.8.191 chain, unchanged, each reading
@@ -232,11 +313,24 @@ export default {
         const comparisonDetail = computed(() => describePublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceExportComparisonDetail(comparison.value));
         const comparisonIdentity = computed(() => describePublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceExportComparisonRecordIdentity(comparisonDetail.value));
 
+        // 0.8.201 — The 0.8.198 -> 0.8.197 -> 0.8.199 -> 0.8.200 chain,
+        // each reading only the previous layer's own already-computed
+        // result, starting from `explicitPairs` (this file's own new
+        // page-local state, above) rather than from `comparison`/
+        // `comparisonDetail` — see this file's own header, "Explicit
+        // record-pair selection is a fourth, independent chain."
+        const explicitRecordPairs = computed(() => describePublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceExportComparisonRecordPairs(explicitPairs.value));
+        const recordDifferences = computed(() => describePublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceExportComparisonRecordDifference(explicitRecordPairs.value));
+        const recordDifferenceReadModel = computed(() => describePublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceExportComparisonRecordDifferenceReadModel(recordDifferences.value));
+        const pairedRecordDifferenceView = computed(() => describePublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceExportComparisonPairedRecordDifferenceView(recordDifferenceReadModel.value));
+
         return {
             sourceExportText, targetExportText,
             sourceInvalid, targetInvalid, hasCompared,
             compareEvidence, clearComparison,
-            comparisonView, comparisonDetail, comparisonIdentity
+            comparisonView, comparisonDetail, comparisonIdentity,
+            explicitPairs, addDecisionPair, removeDecisionPair, addObservationPair, removeObservationPair,
+            pairedRecordDifferenceView
         };
     },
     template: `
@@ -285,6 +379,17 @@ export default {
             </div>
 
             <ReconciliationCandidateLeaderboardEvidenceExportComparisonTable v-if="hasCompared" :view="comparisonView" :detail="comparisonDetail" :identity="comparisonIdentity" />
+
+            <ReconciliationCandidateLeaderboardEvidenceExportComparisonRecordPairSelector
+                v-if="hasCompared"
+                :detail="comparisonDetail"
+                :explicit-pairs="explicitPairs"
+                :paired-view="pairedRecordDifferenceView"
+                @add-decision-pair="addDecisionPair"
+                @remove-decision-pair="removeDecisionPair"
+                @add-observation-pair="addObservationPair"
+                @remove-observation-pair="removeObservationPair"
+            />
         </section>
     `
 };
