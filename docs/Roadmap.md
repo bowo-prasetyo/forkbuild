@@ -42776,3 +42776,128 @@ updated to describe the Inspect Evidence panel;
 `PublisherLeaderboardClaimSnapshotReconciliationCandidateEvidenceDetailView.test.js`
 and `ReconciliationCandidateEvidenceDetailUI.test.js` registered in
 `tests.html`.
+
+## 0.8.183 — Reconciliation Candidate Leaderboard Comparison State
+
+0.8.181 gave a person a real way to supply a peer archive, but left one
+ambiguity standing. `targetArchive` starts as `PublicationObservationArchive
+.empty()` and stays exactly that if the peer archive a person goes on to
+supply simply has nothing recorded yet. Read off the leaderboard's own
+counts alone, "no peer supplied" and "an explicitly supplied, genuinely
+empty peer" are IDENTICAL — every row lands entirely in Source-only either
+way. Those are not the same situation for the person reading the page, and
+nothing on screen said so. This milestone is the fix, and nothing more.
+
+```text
+Before                                  After (0.8.183)
+
+targetArchive = empty (default)         targetArchive = empty (default)
+       │                                       │
+       ▼                                       ▼
+"everything is Source-only" ──?──►      comparisonState: NO_PEER
+                                         "everything is Source-only" ──►  clear why
+
+targetArchive = empty (peer supplied,   targetArchive = empty (peer supplied,
+ but that peer has nothing recorded)     but that peer has nothing recorded)
+       │                                       │
+       ▼                                       ▼
+"everything is Source-only" ──?──►      comparisonState: PEER_EMPTY
+  (looks IDENTICAL to the above)         "everything is Source-only" ──►  clear why,
+                                          and genuinely distinct from the above
+```
+
+**The invariant this milestone exists to hold: comparisonState never
+reinterprets the evidence itself.** A new, standalone
+`application/PublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardComparisonState.js`
+computes exactly one of three plain strings —
+`NO_PEER`/`PEER_EMPTY`/`PEER_PRESENT` — from two inputs: `hasPeerArchive`
+(a boolean) and `targetArchive` (read only for its own already-public
+`reconciliationDecisionRecordCount`/`revalidationObservationRecordCount`
+getters — the identical two collections 0.8.176's own seam already reads).
+It computes no shared/source-only/target-only count of any kind. 0.8.176
+through 0.8.179, and `PublicationObservationArchive` itself, are completely
+untouched by this milestone — not one line.
+
+```text
+describePublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardComparisonState(hasPeerArchive, targetArchive)
+  -> "NO_PEER"      — no peer archive has been explicitly supplied
+     "PEER_EMPTY"    — a peer WAS explicitly supplied, and genuinely holds
+                        no decision/observation records of its own
+     "PEER_PRESENT"  — a peer was explicitly supplied, and holds at least
+                        one such record
+```
+
+**`hasPeerArchive` is an explicit, caller-supplied signal — never inferred
+from the archive's own shape.** A freshly-imported peer archive that
+genuinely has zero records is, structurally, indistinguishable from the
+default `PublicationObservationArchive.empty()` `targetArchive` starts as
+— the archive object itself carries no "I was explicitly supplied" flag,
+and this file invents none. `ui/views/ReconciliationCandidateLeaderboardView.js`'s
+own `hasPeerArchive` ref — 0.8.181's own, completely unchanged — is the
+one place that signal already existed; this milestone's only new step is
+naming the distinction it already drew.
+
+**No fourth state, and no state implying correctness.** The three values
+above describe SUPPLY, never agreement, staleness, or a need for
+resolution — there is no `CONFLICT`/`STALE`/`RESOLVED`/`VALID` anywhere in
+this file's own vocabulary, exactly the restraint every layer beneath it
+already holds.
+
+**UI layer.** `ui/views/ReconciliationCandidateLeaderboardView.js` adds one
+computed value, `comparisonState`, calling 0.8.183's own `describeXxx()`
+over the identical `hasPeerArchive`/`targetArchive` it already tracked; the
+Peer Archive box's own hint text now branches on all three states instead
+of two, and the state is handed down to
+`ui/components/ReconciliationCandidateLeaderboardTable.js` as a third,
+independent prop. The table renders it as one plain-text banner ABOVE the
+table itself — the one place the ambiguous counts actually appear — via a
+plain string comparison, never an import of 0.8.183's own enum (the
+identical "imports nothing from `application/`" discipline it already held
+for `candidate.type`). The banner is computed once, never per row, and
+never combined with a row's own six counts.
+
+**Flagship regression:**
+
+```text
+State A — no peer supplied
+State B — peer supplied = an explicitly imported, genuinely empty archive
+State C — peer supplied = an archive carrying real evidence
+
+comparisonState(A) = NO_PEER
+comparisonState(B) = PEER_EMPTY
+comparisonState(C) = PEER_PRESENT
+A ≠ B ≠ C
+
+but:
+
+0.8.179's own page(sourceArchive, A's target) ==  page(sourceArchive, B's target)
+  — byte-identical; an explicitly supplied, genuinely empty peer computes
+    IDENTICAL evidence to no peer at all, exactly as it honestly should
+```
+
+`tests/ReconciliationCandidateLeaderboardComparisonState.test.js` proves
+this directly, plus: a falsy `hasPeerArchive` always yields `NO_PEER`
+regardless of `targetArchive`'s own content; a supplied peer archive
+holding a decision record, an observation record, or both, each
+independently yields `PEER_PRESENT`; a malformed/absent `targetArchive`
+with `hasPeerArchive` true degrades to `PEER_EMPTY` rather than throwing;
+the enum carries exactly three frozen values; no mutation and full
+determinism; the new module imports nothing and carries no ranking
+vocabulary; and both the view's and the table's own wiring — computed
+once, branched on all three states, handed down as a plain-string prop,
+never re-derived inside the table, never touching a row's own counts.
+
+**Deliberately excluded — not this milestone.** Any change to a decision/
+observation/candidate count — inherited unchanged from every layer
+beneath this one. A fourth state, or any state implying correctness —
+see "No fourth state," above. Inferring `hasPeerArchive` from
+`targetArchive`'s own shape — see "`hasPeerArchive` is an explicit,
+caller-supplied signal," above. Persisting the comparison state, or the
+peer archive itself — unchanged, page-local, never saved. Rank, score,
+winner, or any judgment about which archive is correct — inherited
+unchanged from every layer beneath this one.
+
+`docs/Roadmap.md` updated; `docs/user/09-PublicationsAndEvidence.md`
+updated to describe the three comparison states and the leaderboard's own
+new banner; `ReconciliationCandidateLeaderboardComparisonState.test.js`
+registered in `tests.html`.

@@ -10,6 +10,9 @@ import {
 import {
     reconstructPublisherLeaderboardClaimSnapshotReconciliationCandidateEvidenceDetail
 } from '../../application/PublisherLeaderboardClaimSnapshotReconciliationCandidateEvidenceDetailView.js';
+import {
+    describePublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardComparisonState
+} from '../../application/PublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardComparisonState.js';
 import ReconciliationCandidateLeaderboardTable from '../components/ReconciliationCandidateLeaderboardTable.js';
 
 // 0.8.181 — Explicit Peer Archive Leaderboard Comparison.
@@ -108,6 +111,21 @@ import ReconciliationCandidateLeaderboardTable from '../components/Reconciliatio
 // `evidenceDetail` together, from the same two archives, so a row's own
 // counts and its own expanded detail can never drift out of sync with each
 // other after a peer archive is supplied or cleared.
+//
+// 0.8.183 — Reconciliation Candidate Leaderboard Comparison State adds
+// exactly one more computed value on top of the above, `comparisonState`,
+// obtained by calling 0.8.183's own `describeXxx()` over this view's own
+// `hasPeerArchive` ref and `targetArchive.value` — the IDENTICAL two
+// pieces of state 0.8.181 already tracked, never a third. `hasPeerArchive`
+// already distinguished "no peer supplied" from "a peer was explicitly
+// supplied" at the click-handler level (`usePeerArchive()`/
+// `clearPeerArchive()`, both unchanged); this milestone's only new step is
+// naming that distinction explicitly — `NO_PEER` / `PEER_EMPTY` /
+// `PEER_PRESENT` — and handing it to the template and the table so a
+// reader never mistakes "no peer supplied" for "an explicitly supplied
+// peer that happens to have nothing recorded." No evidence count anywhere
+// in `page`/`evidenceDetail` changes because of `comparisonState`; it is a
+// parallel fact, read once, alongside them.
 export default {
     name: 'ReconciliationCandidateLeaderboardView',
     components: { ReconciliationCandidateLeaderboardTable },
@@ -155,7 +173,13 @@ export default {
         const page = computed(() => reconstructPublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardPage(sourceArchive, targetArchive.value));
         const evidenceDetail = computed(() => reconstructPublisherLeaderboardClaimSnapshotReconciliationCandidateEvidenceDetail(sourceArchive, targetArchive.value));
 
-        return { page, evidenceDetail, peerArchiveText, hasPeerArchive, peerArchiveInvalid, usePeerArchive, clearPeerArchive };
+        // 0.8.183 — the explicit NO_PEER / PEER_EMPTY / PEER_PRESENT fact,
+        // read from the identical `hasPeerArchive`/`targetArchive` this view
+        // already tracks. Never a third archive, never a new evidence
+        // computation — see this file's own header, "0.8.183," above.
+        const comparisonState = computed(() => describePublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardComparisonState(hasPeerArchive.value, targetArchive.value));
+
+        return { page, evidenceDetail, comparisonState, peerArchiveText, hasPeerArchive, peerArchiveInvalid, usePeerArchive, clearPeerArchive };
     },
     template: `
         <section class="reconciliation-leaderboard-view">
@@ -169,11 +193,17 @@ export default {
 
             <div class="evidence-inspection-adapter">
                 <span class="evidence-inspection-adapter-title">Peer Archive</span>
-                <p v-if="!hasPeerArchive" class="form-hint form-hint--neutral">
+                <p v-if="comparisonState === 'NO_PEER'" class="form-hint form-hint--neutral">
                     No peer archive supplied yet — every count below is Source-only
                     until you paste one. Paste a peer replica's own exported archive
                     (Export Archive, on the Publications page) and click
                     "Use as Peer Archive".
+                </p>
+                <p v-else-if="comparisonState === 'PEER_EMPTY'" class="form-hint form-hint--neutral">
+                    Comparing against an explicitly supplied peer archive — but that
+                    peer archive has no decision or observation records of its own
+                    recorded yet, so every count below is still Source-only. This is
+                    a real, supplied peer, not the no-peer default.
                 </p>
                 <p v-else class="form-hint form-hint--neutral">
                     Comparing against an explicitly supplied peer archive.
@@ -196,7 +226,7 @@ export default {
                 </p>
             </div>
 
-            <ReconciliationCandidateLeaderboardTable :page="page" :evidence-detail="evidenceDetail" />
+            <ReconciliationCandidateLeaderboardTable :page="page" :evidence-detail="evidenceDetail" :comparison-state="comparisonState" />
         </section>
     `
 };

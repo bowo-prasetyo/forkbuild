@@ -2037,6 +2037,7 @@ Archive, on the Publications page) and click "Use as Peer Archive".
 [ Peer archive JSON textarea ]
 [ Use as Peer Archive ]
 
+No peer archive supplied — every count below reflects this replica alone.
 2 candidate(s)
 
 Candidate                          Decision Evidence          Observation Evidence
@@ -2082,6 +2083,25 @@ empty peer archive.
 > genuine, directional comparison between the two: swap which archive is
 > "yours" and which is the peer, and **Source-only**/**Target-only**
 > swap with it — **Shared** never does.
+
+**Three comparison states, always named on screen, right above the
+table.** "Everything is Source-only" can mean two genuinely different
+things — you haven't supplied a peer at all, or you supplied a real peer
+archive that simply has nothing recorded in it yet — and the counts alone
+can't tell them apart. So a one-line banner sits directly above the
+candidate rows, always one of exactly three:
+
+| Banner | Meaning |
+|---|---|
+| *No peer archive supplied — every count below reflects this replica alone.* | You haven't pasted a peer archive yet. |
+| *A peer archive was supplied, but it has no evidence recorded — every count below still reflects this replica alone.* | You supplied a real peer archive; it just happens to have no decisions or observations of its own recorded. |
+| *Comparing against a supplied peer archive.* | Your supplied peer archive genuinely has evidence recorded, and the counts reflect a real, directional comparison. |
+
+The banner never changes a single count on the table — it names how the
+comparison came to be, not what it found. An explicitly supplied,
+genuinely empty peer archive produces the identical counts a no-peer
+default would (everything Source-only, honestly), and the middle banner
+above is how you tell the two situations apart without guessing.
 
 **"Evidence leaderboard," not a ranked one.** The header reads Candidate /
 Decision Evidence / Observation Evidence — never Rank, Score, or Status —

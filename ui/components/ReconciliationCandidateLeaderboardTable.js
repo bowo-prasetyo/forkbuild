@@ -97,6 +97,20 @@ import ReconciliationCandidateEvidenceDetailPanel from './ReconciliationCandidat
 // header for why the two are two independent readings of the identical
 // 0.8.176 result rather than one built on the other.
 //
+// 0.8.183 — Reconciliation Candidate Leaderboard Comparison State adds a
+// THIRD, independent prop, `comparisonState` — one of the plain strings
+// `'NO_PEER'` / `'PEER_EMPTY'` / `'PEER_PRESENT'` 0.8.183's own
+// `describeXxx()` produces. This component never imports 0.8.183's own
+// enum (exactly the "imports nothing from `application/`" discipline held
+// above for `candidate.type`/`describeCandidateLabel()`); the template
+// below compares the prop against those three plain strings directly. The
+// banner this state drives is rendered ONCE, above the table itself —
+// never per row, and never as a change to any row's own six counts — so a
+// reader sees, in the one place the counts themselves appear, whether
+// "everything is Source-only" means "no peer supplied" or "an explicitly
+// supplied peer that happens to have nothing recorded," without this
+// component reinterpreting a single count to say so.
+//
 // A DISPLAY ROW (0.8.180's OWN `rows`, UNCHANGED) CARRIES NO CANDIDATE
 // IDENTITY OF ITS OWN — so a row is matched to its own `evidenceDetail`
 // entry in two steps, never by assuming `page.rows` and
@@ -208,7 +222,8 @@ export default {
     components: { ReconciliationCandidateEvidenceDetailPanel },
     props: {
         page: { type: Object, default: null },
-        evidenceDetail: { type: Object, default: null }
+        evidenceDetail: { type: Object, default: null },
+        comparisonState: { type: String, default: 'NO_PEER' }
     },
     data() {
         return {
@@ -242,6 +257,21 @@ export default {
         },
         detailByCandidateKey() {
             return detailEntryByKey(this.evidenceDetail);
+        },
+        // The one-line banner text 0.8.183's own `comparisonState` prop
+        // drives — a plain string switch, never an import of 0.8.183's own
+        // enum (see this file's own header, "0.8.183," above). Unknown/
+        // malformed values fall back to the NO_PEER wording, the identical
+        // "degrade rather than throw" discipline `buildLeaderboardRows()`
+        // itself already holds for a malformed `page`.
+        comparisonStateMessage() {
+            if (this.comparisonState === 'PEER_PRESENT') {
+                return 'Comparing against a supplied peer archive.';
+            }
+            if (this.comparisonState === 'PEER_EMPTY') {
+                return 'A peer archive was supplied, but it has no evidence recorded — every count below still reflects this replica alone.';
+            }
+            return 'No peer archive supplied — every count below reflects this replica alone.';
         }
     },
     methods: {
@@ -263,6 +293,7 @@ export default {
         <div class="reconciliation-leaderboard">
             <p v-if="isEmpty" class="empty-state">No reconciliation candidates to display.</p>
             <template v-else>
+                <p class="reconciliation-leaderboard-comparison-state" :data-comparison-state="comparisonState">{{ comparisonStateMessage }}</p>
                 <p class="reconciliation-leaderboard-summary">{{ rowCount }} candidate(s)</p>
                 <div class="reconciliation-leaderboard-table-wrap">
                     <table class="reconciliation-leaderboard-table">
