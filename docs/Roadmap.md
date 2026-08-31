@@ -44867,3 +44867,171 @@ record, build the explicit pair, run it through 0.8.198 -> 0.8.197 ->
 separate, later work, and — per the same reasoning that paused this
 codebase before every milestone in this series — that choice belongs to an
 explicit request, not an automatic continuation.
+
+---
+
+## 0.8.201 — Explicit Record-Pair Selection UI
+
+0.8.198 through 0.8.200 built a complete, pure, application-layer chain
+that turns an explicitly supplied pairing of two records into named
+per-pair differences and a page-ready summary — but every one of those
+three files stopped short of pixels on purpose. This milestone is the
+hand-off 0.8.200's own pause note named exactly: a human picks a source
+record and a target record off the existing Evidence Export Comparison
+page, builds the explicit pair, and watches it run through 0.8.198 ->
+0.8.197 -> 0.8.199 -> 0.8.200, rendered.
+
+```
+0.8.193 Comparison Detail  ──► record pools (a human picks from)
+                                     │
+                           a human picks two records
+                                     │
+                                     ▼
+                       0.8.198 Explicit Record Pairs
+                                     │
+                                     ▼
+                       0.8.197 Record Difference Projection
+                                     │
+                                     ▼
+                       0.8.199 Record Difference Read Model
+                                     │
+                                     ▼
+                       0.8.200 Paired Record Difference View   ★
+                                     │
+                                     ▼
+                                  Browser
+```
+
+**Two new/extended UI-layer files, wiring five already-complete
+application-layer projections together for the first time.** A new
+`ui/components/ReconciliationCandidateLeaderboardEvidenceExportComparisonRecordPairSelector.js`
+(an Options API, zero-`application/`-import presentation/selection
+component, the identical discipline
+`ReconciliationCandidateLeaderboardEvidenceExportComparisonTable.js`
+already holds), and an extension to
+`ui/views/ReconciliationCandidateLeaderboardEvidenceExportComparisonView.js`
+(0.8.192/0.8.194/0.8.196's own Composition API view), which now also owns
+`explicitPairs` — page-local, never-persisted state — and computes the
+full 0.8.198 -> 0.8.197 -> 0.8.199 -> 0.8.200 chain off it.
+
+**A human chooses both sides of every pair — the one invariant this
+milestone exists to protect, inherited unchanged from 0.8.197/0.8.198.**
+The new component renders two independent record pools per dimension
+(decision evidence, observation evidence), each a flat, unfiltered
+concatenation of that dimension's own `sourceOnly`/`shared`/`targetOnly`
+arrays — 0.8.193's own arrays, read directly, never re-partitioned,
+ranked, or pre-selected. Two `<select>` dropdowns (Source record / Target
+record) let a human pick any two records from that pool — including two
+records from the same partition, or the same record twice — and an
+explicit "Add Pair" click is the only thing that ever adds a pair. There
+is no `.find(...)`, no candidate-identity lookup, no timestamp comparison,
+and no other heuristic anywhere in the new component: every pair
+`explicitPairs` ever holds is a pair a human built by hand.
+
+**Record identity is preserved through the selection UI, exactly as
+0.8.198 already requires one layer down.** A pool entry carries 0.8.193's
+own record object unchanged; `add-decision-pair`/`add-observation-pair`
+are emitted with `{ source, target }` built from those same references,
+which the view stores in `explicitPairs` and hands to 0.8.198 unmodified
+— `pair.source === theSelectedRecord` holds all the way through.
+
+**Same-record and duplicate pairs are never blocked — 0.8.198's own
+"multiplicity remains meaningful," held here again at the point where a
+human actually does the choosing.** A human may deliberately pair a record
+with itself (to confirm it is self-identical), or add the identical pair
+more than once; "Add Pair" is enabled exactly when a source AND a target
+have both been picked, nothing more — no deduplication, no "these look the
+same" check.
+
+**The result panel renders 0.8.200's own facts, correlated with
+`explicitPairs` by array position — never a new comparison.** Each entry
+in `pairedView.decisionDifferences`/`observationDifferences` is 0.8.200's
+own `{ differenceCount, differingFields }` summary at that position;
+because 0.8.198 through 0.8.200 each preserve one entry per input pair, in
+the input pair's own order, without ever dropping a position, the source/
+target labels shown alongside that summary are safely read from
+`explicitPairs.decisionPairs[i]`/`observationPairs[i]` — the original
+record references the selector component itself supplied when the pair
+was added, never from `pairedView`, which (0.8.199's own boundary,
+inherited through 0.8.200) never carries them.
+
+**Explicit-pair selection is a fourth, independent chain off `explicitPairs`
+— never off `comparison`/`comparisonDetail`/`comparisonIdentity`.** The
+record POOL a human picks from is `comparisonDetail`'s own arrays (read
+directly by the new component); the PAIR a human builds is independent,
+page-local state with no further dependency on the 0.8.189 -> 0.8.190 ->
+0.8.191 chain or the 0.8.193 -> 0.8.195 fork already on this page — the
+identical "each layer forks off its own stated source, never a sibling"
+discipline those two chains already hold, extended to a fourth, sibling
+chain rather than bolted onto either existing one. `clearComparison()` now
+also resets `explicitPairs` back to empty, exactly like every other piece
+of comparison state on this page.
+
+**Flagship scenario** — a source-only decision record and a shared decision
+record, explicitly picked and paired:
+
+```
+Pool:   sourceOnly[0] = { decision: 'CONFIRMED', ... }
+        shared[1]     = { decision: 'REJECTED',  ... }
+
+Pick "sourceOnly[0]" as Source, "shared[1]" as Target, click "Add Pair".
+```
+
+The pair appears in the "Decision evidence" pair list as `sourceOnly[0] ↔
+shared[1]`; the result panel below immediately shows that pair's own
+0.8.200-forwarded summary — `differs on decision` — without any other pool
+entry, pair, or dimension being affected.
+
+**Further sections** cover: `decisionPool()`/`observationPool()` flattening
+all three partitions in fixed `sourceOnly`/`shared`/`targetOnly` order,
+every entry keyed uniquely and carrying its own original record reference;
+"Add Pair" gated independently per dimension on both a source and a target
+being selected; a self-paired record and a duplicate pair both accepted
+without complaint; `removeDecisionPair(index)`/`removeObservationPair(index)`
+emitting exactly the supplied index; every computed property degrading
+cleanly on a malformed/absent `detail`/`explicitPairs`/`pairedView` prop
+(empty pools, empty pair lists, empty difference lists, `isResultEmpty:
+true`) rather than throwing; the new component's own source proven to
+import nothing at all and to call none of 0.8.198's/0.8.197's/0.8.199's/
+0.8.200's own `describeXxx()` functions directly (that chain stays the
+view's own responsibility); and the view's own new wiring — importing all
+four new application modules, owning `explicitPairs`, computing the chain
+in the documented order, and wiring the new component's four pair events
+to its own add/remove handlers.
+
+**Deliberately excluded — not this milestone.** Any automatic, suggested,
+or ranked pairing — the flagship architectural constraint this milestone
+exists to hold. Filtering, ranking, or reordering either dimension's own
+record pool — every record 0.8.193 partitioned is selectable, in that same
+flat order. Editing an already-added pair in place, or deduplicating two
+pairs that "look the same." Persisting `explicitPairs`, or the pending
+selection, across a reload or across sessions — both stay page-local state,
+reset by `clearComparison()`/on remount respectively. A rank, score,
+winner, correct/incorrect, valid, stale, preferred, status, or confidence
+field or vocabulary of any kind — inherited unchanged from every layer
+beneath this one. Calling 0.8.198's, 0.8.197's, 0.8.199's, or 0.8.200's own
+`describeXxx()` from inside the new component — that chain is the parent
+view's own responsibility. A candidate-presence pairing surface — 0.8.198
+through 0.8.200 only ever operate on decision/observation records, the
+identical scope 0.8.195's own identity projection already holds. A new
+route or top-nav entry — this remains part of the existing
+`/evidence-export-comparison` page.
+
+`ui/components/ReconciliationCandidateLeaderboardEvidenceExportComparisonRecordPairSelector.js`
+added; `ui/views/ReconciliationCandidateLeaderboardEvidenceExportComparisonView.js`
+extended; `css/main.css` updated (`.evidence-export-comparison-pairing`/
+`.evidence-pair-selector`/`.evidence-pair-list`/`.evidence-pair-differences`);
+`docs/Roadmap.md` updated;
+`ReconciliationCandidateLeaderboardEvidenceExportComparisonRecordPairSelectorUI.test.js`
+registered in `tests.html`.
+
+---
+
+Deliberately paused here, rather than automatically proposing 0.8.202. This
+milestone let a human build an explicit pair and see 0.8.200's own view of
+it rendered on the existing comparison page; a dedicated, standalone
+paired-difference inspection surface (its own page, a saved/portable set of
+pairs, or a bulk pairing workflow) is separate, later work, and — per the
+same reasoning that paused this codebase before every milestone in this
+series — that choice belongs to an explicit request, not an automatic
+continuation.
