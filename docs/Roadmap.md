@@ -43656,3 +43656,120 @@ UI-layer work.
 `docs/Roadmap.md` updated;
 `PublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceExportComparisonReadModel.test.js`
 registered in `tests.html`.
+
+## 0.8.191 — Reconciliation Candidate Leaderboard Evidence Export Comparison View
+
+0.8.190 completes the summary boundary cleanly — a compact, nine-count,
+five-fact read model over 0.8.189's own detailed export comparison. Nothing
+yet shapes that read model into what an actual comparison panel would put
+on screen — the identical gap 0.8.177 left for 0.8.178 to close, one layer
+up, in the sibling (single-export) leaderboard family. A new
+`application/PublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceExportComparisonView.js`
+with one function,
+`describePublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceExportComparisonView(readModel)`.
+
+**A presentation projection, not another comparison engine.** Every fact
+this file reports is 0.8.190's own fact, read verbatim off its own
+already-computed result. The only work this file does is rename one field
+(`candidates` -> `candidateSummary`, page vocabulary distinct from domain
+vocabulary — the identical rename discipline 0.8.178 already applies to
+0.8.177's own `candidates` -> `rows`) and derive one structural flag
+(`isEmpty`).
+
+**Result shape:** `{ isEmpty, metadata: { comparisonState: { source,
+target, same }, filter: { source, target, same } }, candidateSummary: {
+sourceOnlyCount, sharedCount, targetOnlyCount }, decisionEvidence: {
+sourceOnlyCount, sharedCount, targetOnlyCount }, observationEvidence: {
+sourceOnlyCount, sharedCount, targetOnlyCount } }`.
+
+**Zero imports — the identical architectural choice 0.8.178 already makes
+one layer below its own source, 0.8.177.** `describeXxx()` performs a pure,
+structural, duck-typed transform of whatever shape it is handed. There is
+deliberately no `reconstructXxx()` in this file: a caller building this
+view from two real exported documents calls 0.8.189's own `describeXxx()`,
+then 0.8.190's own `describeXxx()`, and hands 0.8.190's result here.
+
+**Three independent dimensions, each its own three-way count** — 0.8.189's
+own flagship distinction, held here again two layers up:
+
+```
+                 Source-only    Shared    Target-only
+Candidates            count      count          count
+Decision evidence     count      count          count
+Observation evidence  count      count          count
+```
+
+`metadata.comparisonState` and `metadata.filter` are reported entirely
+separately again, forwarded verbatim rather than turned into prose —
+never "matching reports," never "conflicting reports," always the same
+`source`/`target`/`same` structure 0.8.189 and 0.8.190 already established.
+
+**`isEmpty` is a structural flag, never a message.** `true` exactly when
+every one of the nine counts is zero; it says nothing about `metadata` —
+two documents can carry a differing `comparisonState` or `filter` while
+every count is still zero (see 0.8.190's own `NO_PEER` vs `PEER_EMPTY`).
+
+**Critical architectural rule — this is not a leaderboard.** No rank,
+score, winner, better/worse, correct/incorrect, conflict, stale,
+confidence, or recommendation vocabulary appears anywhere in this file or
+its result. See docs/Principles.md, "The UI Displays Observations; It Does
+Not Turn Them Into A Verdict" (0.8.57) — held here again, one layer above
+0.8.190's own read model.
+
+**Flagship scenario:** a deliberately asymmetric pair —
+
+```
+                 Source      Shared      Target
+Candidates          1           2          1
+Decisions           2           3          1
+Observations        1           4          2
+```
+
+— with `comparisonState` the same on both documents and `filter`
+independently different, proving the view preserves all of those
+independent facts without interpreting them.
+
+**Further sections** cover: an empty comparison (`isEmpty === true`,
+every count and metadata fact preserved); a fully identical comparison
+(zero exclusive counts, full metadata agreement); metadata independence in
+both directions, including under identically empty evidence; exact count
+fidelity traced through all three layers (0.8.189 -> 0.8.190 -> 0.8.191);
+no ranking/reconciliation vocabulary anywhere in the result's own field
+names; input order/reference behavior (the view rebuilds its own frozen
+objects rather than referencing 0.8.190's own sections, and never mutates
+the supplied read model); malformed/absent input degrading to an empty,
+`NO_PEER`, `ALL`/`ALL` view rather than throwing; deep immutability at
+every level of nesting; determinism; and a permanent architectural
+regression test proving the module imports nothing at all, declares no
+`reconstructXxx()` of its own, and carries no ranking/reconciliation
+vocabulary in its own code.
+
+**Deliberately excluded — not this milestone.** A rank, score, winner,
+better/worse, correct/incorrect, conflict, stale, confidence, or
+recommendation field or vocabulary of any kind. The `shared`/`sourceOnly`/
+`targetOnly` record arrays, or `sourceCount`/`targetCount`, on any
+dimension — 0.8.190 already excludes them. Narrative prose over `metadata`.
+Reconciling, merging, or explaining why the three dimensions disagree.
+Reading either exported document, either archive, 0.8.189's own
+`describeXxx()`, or 0.8.190's own `describeXxx()` — this file's one
+argument is always 0.8.190's own already-computed result. Any markup, DOM
+nodes, or control-rendering technology choice — a "Compare Evidence
+Exports" panel/page (0.8.192, if pursued) is separate, later, UI-layer
+work.
+
+```
+0.8.189 Detailed Export Comparison
+              │
+              ▼
+0.8.190 Compact Comparison Read Model
+              │
+              ▼
+0.8.191 Comparison View   ★
+              │
+              ▼
+           Browser
+```
+
+`docs/Roadmap.md` updated;
+`PublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceExportComparisonView.test.js`
+registered in `tests.html`.
