@@ -44655,3 +44655,129 @@ record-pair selection UI into the existing comparison page, are separate,
 later work, and — per the same reasoning that paused this codebase before
 every milestone in this series — that choice belongs to an explicit
 request, not an automatic continuation.
+
+---
+
+## 0.8.199 — Paired Record Difference Read Model
+
+0.8.197 answers, for each explicitly paired decision or observation record,
+"which named fields differ?" — but its own result carries the full
+`source`/`target` identity objects on every entry, which is exactly the
+detail a compact UI summary does not want to re-render. A new
+`application/PublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceExportComparisonRecordDifferenceReadModel.js`
+with one function,
+`describePublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceExportComparisonRecordDifferenceReadModel(differences)`.
+
+```
+0.8.198 Explicit Record Pairs
+          │
+          ▼
+0.8.197 Record Difference Projection
+          │
+          ▼
+0.8.199 Record Difference Read Model   ★
+```
+
+**Result shape:** `{ decisionDifferences: [ { differenceCount,
+differingFields }, ... ], observationDifferences: [ { differenceCount,
+differingFields }, ... ], decisionCount, observationCount,
+differingDecisionCount, differingObservationCount }`, `differences` being
+0.8.197's own already-computed result taken directly:
+`{ decisionDifferences: [ { source, target, differences }, ... ],
+observationDifferences: [ { source, target, differences }, ... ] }`.
+
+**This is a read model, not a second comparison.** Every fact this file
+reports is 0.8.197's own fact, read verbatim off its own already-computed
+result and reshaped into a smaller, UI-facing vocabulary — the identical
+role 0.8.190 already plays for 0.8.189, one layer up. There is no
+`sameValue()` here, no field list, no structural-equality walk, and no
+reading of a pair's own `source`/`target` values — this file never looks
+at `source`/`target` at all, only at the `differences` array 0.8.197
+already computed for each pair.
+
+**A pair with zero differences is still a pair — the flagship invariant
+this milestone exists to hold.** `decisionDifferences`/
+`observationDifferences` hold exactly one summary entry per entry 0.8.197
+supplied, in the exact same order — an entry whose `differences` was `[]`
+summarizes to `{ differenceCount: 0, differingFields: [] }`, never dropped
+and never collapsed away. `decisionCount`/`observationCount` count every
+supplied entry regardless of whether it differs; `differingDecisionCount`/
+`differingObservationCount` separately count only the entries whose
+`differenceCount` is greater than zero — a reader can always recover "how
+many pairs were compared" and "how many of those pairs actually differ" as
+two distinct numbers, never one number standing in for both.
+
+**Decision differences and observation differences stay two independent
+sections**, computed and counted separately, never merged or cross-checked
+— 0.8.197's own distinction, held again one layer up. Two pairs differing
+in different fields (one decision pair by `candidateMatchesPlan`, one
+observation pair by `observedAt`) are reported as two independent summary
+entries, each naming only its own pair's differing fields.
+
+`differingFields` is 0.8.197's own `differences` array, renamed and
+copied, never recomputed — field order is always 0.8.197's own fixed
+declaration order, and `differenceCount` is always exactly
+`differingFields.length`.
+
+**Flagship scenario** — four explicitly paired observations:
+
+```
+P1 → identical
+P2 → candidateMatchesPlan differs
+P3 → observedAt differs
+P4 → candidateType differs
+```
+
+`describeXxx()` reports `observationCount = 4`,
+`differingObservationCount = 3`, and per-pair summaries
+`P1 → []`, `P2 → [candidateMatchesPlan]`, `P3 → [observedAt]`,
+`P4 → [candidateType]` — P1 remains present as its own zero-difference
+entry rather than disappearing. Repeating the same scenario with decisions
+proves the two record kinds remain independent.
+
+**Further sections** cover: pair order preservation and duplicate pairs
+(each duplicate remains its own undeduplicated summary); zero-pair input
+producing an all-zero read model with both sections still present as empty
+arrays, never an omitted section; malformed/absent `differences` input
+degrading every section to an empty array and every count to `0`, and a
+malformed individual entry (not an object, or whose own `differences` is
+not an array) degrading to a zero-difference summary rather than being
+repaired, dropped, or thrown on; determinism and frozen output throughout;
+and a permanent architectural regression test proving the module imports
+nothing at all, declares no `reconstructXxx()` of its own, never reads a
+pair's own `source`/`target` or `sourceOnly`/`targetOnly`, performs no
+comparison or matching of its own, and carries no verdict vocabulary.
+
+**Deliberately excluded — not this milestone.** Another comparison of any
+kind — no `sameValue()`, no structural equality, no candidate matching, no
+timestamp comparison; every fact reported here is already 0.8.197's own
+fact. Reading a pair's own `source`/`target` — a caller who needs the
+compared values already has 0.8.197's own result. Reading
+`sourceOnly`/`targetOnly`, or any automatic pairing of any kind —
+inherited unchanged from 0.8.197/0.8.198. Dropping, collapsing, or
+omitting a pair whose `differenceCount` is zero — the flagship invariant
+this milestone exists to hold. A `conflict`, `mismatchSeverity`, `winner`,
+`better`, `correct`, `stale`, `invalid`, `resolution`, or `recommendation`
+field or vocabulary of any kind. A new identity algorithm, or any field
+list of its own — this file only counts and copies the field names 0.8.197
+already identified as differing. Any markup, DOM nodes, or
+control-rendering technology choice — this file returns plain, frozen,
+JSON-safe data; a presentation projection or view (if ever built) is
+separate, later, UI-layer work. Persistence, or automatic/periodic/
+background computation of any kind.
+
+`docs/Roadmap.md` updated;
+`PublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceExportComparisonRecordDifferenceReadModel.test.js`
+registered in `tests.html`.
+
+---
+
+Deliberately paused here, rather than automatically proposing 0.8.200. This
+milestone turns 0.8.197's detailed difference projection into a compact,
+UI-facing read model without performing any comparison of its own; a
+presentation projection (`isEmpty`/`decisionPairs`/`observationPairs` in
+presentation vocabulary) and wiring an explicit record-pair selection UI
+into the existing comparison page are separate, later work, and — per the
+same reasoning that paused this codebase before every milestone in this
+series — that choice belongs to an explicit request, not an automatic
+continuation.
