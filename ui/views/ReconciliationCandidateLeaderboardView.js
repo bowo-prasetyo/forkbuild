@@ -13,6 +13,11 @@ import {
 import {
     describePublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardComparisonState
 } from '../../application/PublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardComparisonState.js';
+import {
+    ReconciliationCandidateLeaderboardEvidenceKind,
+    ReconciliationCandidateLeaderboardReplicaRelation,
+    describePublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceFilter
+} from '../../application/PublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceFilter.js';
 import ReconciliationCandidateLeaderboardTable from '../components/ReconciliationCandidateLeaderboardTable.js';
 
 // 0.8.181 — Explicit Peer Archive Leaderboard Comparison.
@@ -98,8 +103,9 @@ import ReconciliationCandidateLeaderboardTable from '../components/Reconciliatio
 // - **Persisting the supplied peer archive anywhere.** It lives only in
 //   this component's own page-local `targetArchive` ref; reloading the
 //   page loses it, on purpose.
-// - **Filtering, pagination, or visual polish of the leaderboard table
-//   itself.** Unchanged, real, separately sized, later work.
+// - **Pagination or visual polish of the leaderboard table itself.**
+//   Unchanged, real, separately sized, later work. (Evidence filtering
+//   itself arrived in 0.8.184 — see below.)
 //
 // 0.8.182 — Reconciliation Candidate Evidence Detail View adds exactly one
 // more computed value on top of the above, `evidenceDetail`, obtained by
@@ -126,6 +132,35 @@ import ReconciliationCandidateLeaderboardTable from '../components/Reconciliatio
 // peer that happens to have nothing recorded." No evidence count anywhere
 // in `page`/`evidenceDetail` changes because of `comparisonState`; it is a
 // parallel fact, read once, alongside them.
+//
+// 0.8.184 — Reconciliation Candidate Evidence Filter Projection adds
+// exactly one more computed value on top of the above, `filteredPage`,
+// obtained by calling 0.8.184's own `describeXxx()` over this view's own
+// `page` (unchanged, 0.8.179's own result) and two new, page-local refs —
+// `evidenceKindFilter`/`replicaRelationFilter` — driven by two new
+// dropdowns in the template below. `page` ITSELF IS NEVER REASSIGNED OR
+// FILTERED IN PLACE — see 0.8.184's own header, "`filter` narrows
+// `page.rows` — it never mutates `page` itself." `filteredPage`, not
+// `page`, is what gets handed down to
+// `ReconciliationCandidateLeaderboardTable` as its own `page` prop; the
+// table renders whatever page-shaped object it is given without knowing,
+// or needing to know, that a filter was ever applied — exactly the way it
+// already renders 0.8.179's own unfiltered `page` today. `evidenceDetail`
+// is untouched by filtering entirely: a row hidden by the filter simply
+// never renders its own "Inspect Evidence" button; its detail was never
+// computed differently to begin with.
+export const RECONCILIATION_CANDIDATE_LEADERBOARD_EVIDENCE_KIND_OPTIONS = [
+    { value: ReconciliationCandidateLeaderboardEvidenceKind.ALL, label: 'All' },
+    { value: ReconciliationCandidateLeaderboardEvidenceKind.DECISIONS, label: 'Decisions' },
+    { value: ReconciliationCandidateLeaderboardEvidenceKind.OBSERVATIONS, label: 'Observations' }
+];
+
+export const RECONCILIATION_CANDIDATE_LEADERBOARD_REPLICA_RELATION_OPTIONS = [
+    { value: ReconciliationCandidateLeaderboardReplicaRelation.ALL, label: 'All' },
+    { value: ReconciliationCandidateLeaderboardReplicaRelation.SHARED, label: 'Shared' },
+    { value: ReconciliationCandidateLeaderboardReplicaRelation.SOURCE_ONLY, label: 'Source-only' },
+    { value: ReconciliationCandidateLeaderboardReplicaRelation.TARGET_ONLY, label: 'Target-only' }
+];
 export default {
     name: 'ReconciliationCandidateLeaderboardView',
     components: { ReconciliationCandidateLeaderboardTable },
@@ -179,7 +214,27 @@ export default {
         // computation — see this file's own header, "0.8.183," above.
         const comparisonState = computed(() => describePublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardComparisonState(hasPeerArchive.value, targetArchive.value));
 
-        return { page, evidenceDetail, comparisonState, peerArchiveText, hasPeerArchive, peerArchiveInvalid, usePeerArchive, clearPeerArchive };
+        // 0.8.184 — page-local, never-persisted filter selection. Defaults
+        // to ALL/ALL, the identity projection — see 0.8.184's own
+        // `describeXxx()` header, "`replicaRelation: 'ALL'` means 'do not
+        // filter by relation at all.'" `filteredPage` recomputes whenever
+        // either selection changes, or whenever `page` itself does (a new
+        // peer archive supplied/cleared) — always over `page`'s own current
+        // value, never a stale one.
+        const evidenceKindFilter = ref(ReconciliationCandidateLeaderboardEvidenceKind.ALL);
+        const replicaRelationFilter = ref(ReconciliationCandidateLeaderboardReplicaRelation.ALL);
+        const filteredPage = computed(() => describePublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceFilter(
+            page.value,
+            { evidenceKind: evidenceKindFilter.value, replicaRelation: replicaRelationFilter.value }
+        ));
+
+        return {
+            page, evidenceDetail, comparisonState,
+            evidenceKindFilter, replicaRelationFilter, filteredPage,
+            evidenceKindOptions: RECONCILIATION_CANDIDATE_LEADERBOARD_EVIDENCE_KIND_OPTIONS,
+            replicaRelationOptions: RECONCILIATION_CANDIDATE_LEADERBOARD_REPLICA_RELATION_OPTIONS,
+            peerArchiveText, hasPeerArchive, peerArchiveInvalid, usePeerArchive, clearPeerArchive
+        };
     },
     template: `
         <section class="reconciliation-leaderboard-view">
@@ -226,7 +281,23 @@ export default {
                 </p>
             </div>
 
-            <ReconciliationCandidateLeaderboardTable :page="page" :evidence-detail="evidenceDetail" :comparison-state="comparisonState" />
+            <div class="evidence-inspection-adapter reconciliation-leaderboard-evidence-filter">
+                <span class="evidence-inspection-adapter-title">Evidence Filter</span>
+                <label class="form-field">
+                    <span class="form-label">Evidence type</span>
+                    <select class="form-input" v-model="evidenceKindFilter">
+                        <option v-for="option in evidenceKindOptions" :key="option.value" :value="option.value">{{ option.label }}</option>
+                    </select>
+                </label>
+                <label class="form-field">
+                    <span class="form-label">Replica relation</span>
+                    <select class="form-input" v-model="replicaRelationFilter">
+                        <option v-for="option in replicaRelationOptions" :key="option.value" :value="option.value">{{ option.label }}</option>
+                    </select>
+                </label>
+            </div>
+
+            <ReconciliationCandidateLeaderboardTable :page="filteredPage" :evidence-detail="evidenceDetail" :comparison-state="comparisonState" />
         </section>
     `
 };

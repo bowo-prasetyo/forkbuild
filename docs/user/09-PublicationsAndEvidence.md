@@ -2146,6 +2146,40 @@ Clicking **Inspect Evidence** again (now labeled **Hide Evidence**)
 collapses the panel; which rows are open is remembered only for as long
 as you stay on the page.
 
+**Filtering to a particular kind of evidence.** Above the table, an
+**Evidence Filter** box offers two dropdowns:
+
+```
+Evidence Filter
+
+Evidence type      [ All | Decisions | Observations ]
+Replica relation   [ All | Shared | Source-only | Target-only ]
+```
+
+**Evidence type** narrows which of the two column groups a relation is
+read from; **Replica relation** picks which relation to look for. The two
+combine: **Observations** + **Target-only** shows only candidates
+carrying at least one target-only *observation* — a candidate whose only
+target-only evidence is a *decision* doesn't match. Leaving **Replica
+relation** on **All** shows every candidate regardless of **Evidence
+type**, since "All" means "don't filter by relation" rather than a fourth
+relation of its own. Leaving **Evidence type** on **All** (the default)
+checks both column groups and shows a candidate if EITHER one has
+evidence in the selected relation — so selecting **Shared** alone can
+surface one candidate whose only shared evidence is a decision, right
+alongside another whose only shared evidence is an observation; the two
+counts are never added together to decide who qualifies.
+
+Filtering only ever hides rows — it never changes what a surviving row
+displays. The six counts on a visible row, and what its own **Inspect
+Evidence** panel shows if you open it, are byte-identical to what they'd
+show with no filter applied at all; a candidate that doesn't match the
+current selection simply doesn't appear, rather than appearing with
+different numbers. Nothing here ranks, scores, or flags a candidate as
+"needs attention" — the filter only lets you choose what to look at,
+never decides for you what matters. Your selection lives only on this
+page, for this visit: it resets to **All** / **All** whenever you reload.
+
 **In practice, this page shows "No reconciliation candidates to display"
 today.** Nothing else in this app currently records a reconciliation
 decision or a revalidation observation — that's groundwork laid for a

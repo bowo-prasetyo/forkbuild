@@ -42901,3 +42901,134 @@ unchanged from every layer beneath this one.
 updated to describe the three comparison states and the leaderboard's own
 new banner; `ReconciliationCandidateLeaderboardComparisonState.test.js`
 registered in `tests.html`.
+
+## 0.8.184 — Reconciliation Candidate Evidence Filter Projection
+
+0.8.178/0.8.179 built the Leaderboard's own rows; 0.8.180/0.8.181/0.8.182/
+0.8.183 put every row, a real peer archive, a per-row detail panel, and a
+comparison-state banner on screen. Nothing yet answers a reader's next,
+entirely natural question: "show me only the candidates carrying a
+PARTICULAR KIND of evidence" — the source-only decisions, the target-only
+observations, the ones with anything shared at all. This milestone is
+that answer, and nothing more.
+
+```text
+0.8.179 Page
+      │
+      ▼
+0.8.183 Comparison State        (a parallel, independent fact — untouched
+      │                          by this milestone)
+      ▼
+0.8.184 Evidence Filter   ★
+      │
+      ▼
+Leaderboard UI
+```
+
+**A read-only presentation projection over an already-produced page —
+never a new domain algorithm.** A new, standalone
+`application/PublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceFilter.js`
+exports one pure function:
+
+```text
+describePublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceFilter(page, filter)
+  -> { isEmpty, rowCount, rows }
+```
+
+`page` is 0.8.178's/0.8.179's own already-computed `{ isEmpty, rowCount,
+rows }` (or anything shaped like it — this file imports nothing, the
+identical "zero imports" discipline 0.8.178 itself established). `filter`
+is either a bare replica-relation string — `'ALL'` / `'SHARED'` /
+`'SOURCE_ONLY'` / `'TARGET_ONLY'` — or an object `{ evidenceKind,
+replicaRelation }` narrowing which evidence DIMENSION that relation is
+read from (`evidenceKind`: `'ALL'` / `'DECISIONS'` / `'OBSERVATIONS'`).
+Two independent dimensions, composed freely, never collapsed into one —
+0.8.176's own flagship principle, held here again two layers up:
+
+```text
+Evidence type:                    Replica relation:
+  All                                All
+  Decisions                          Shared
+  Observations                       Source-only
+                                      Target-only
+```
+
+**The invariant this milestone exists to hold: filtering never
+manufactures or modifies an evidence count.** `describeXxx()` never
+copies, recomputes, or reshapes a row — every surviving row is one of
+`page.rows`' own ORIGINAL objects, referenced (`===`), never a new object
+built to look the same. `page` itself is never mutated or reassigned;
+this file always returns a brand-new `{ isEmpty, rowCount, rows }`, so
+`ALL`, `SHARED`, `SOURCE_ONLY`, and `TARGET_ONLY` are four independent
+projections OFF the same unchanged page, never four states of one mutable
+page. Rows that survive keep `page.rows`' own relative order — there is
+no `sort()` anywhere in this file, and no row is annotated with a new
+field of any kind.
+
+**`evidenceKind: 'ALL'` reads either dimension — logical OR, never a
+merge.** A row matches `replicaRelation: 'SHARED'` under the default
+`evidenceKind: 'ALL'` when EITHER its `decisionEvidence.sharedCount` OR
+its `observationEvidence.sharedCount` is greater than zero — never their
+sum, and never a requirement that both be nonzero.
+
+**`replicaRelation: 'ALL'` means "do not filter by relation at all"** —
+every genuine row survives regardless of `evidenceKind`. An absent or
+malformed `filter` argument, or an unrecognized `evidenceKind`/
+`replicaRelation` value on either dimension, degrades to `ALL`/`ALL` —
+never a throw, and never a silent empty result from a value that merely
+failed to parse.
+
+**Flagship regression**, exactly as this milestone's own request framed
+it:
+
+```text
+C1: source-only observation = 1
+C2: target-only observation = 1
+C3: shared observation = 1
+C4: no asymmetric evidence (a shared decision only)
+
+SOURCE_ONLY → C1
+TARGET_ONLY → C2
+SHARED      → C3, C4   (one via observation evidence, one via decision
+                         evidence — never merged into one number)
+ALL         → C1, C2, C3, C4
+```
+
+plus the milestone's own two-dimensional worked example (`{ evidenceKind:
+'OBSERVATIONS', replicaRelation: 'TARGET_ONLY' }` selecting a candidate a
+plain `TARGET_ONLY` query alone would over-select), reference-identity
+checks proving a surviving row is the exact original object rather than a
+byte-identical copy, no-mutation/no-reorder checks, and a vocabulary/
+import-boundary check (zero imports, no ranking/judgment vocabulary in
+this file's own code).
+
+**UI layer.** `ui/views/ReconciliationCandidateLeaderboardView.js` adds
+two new, page-local refs — `evidenceKindFilter`/`replicaRelationFilter`,
+each defaulting to `ALL` — and one new computed value, `filteredPage`,
+calling 0.8.184's own `describeXxx()` over `page` (unchanged, 0.8.179's
+own result) and those two refs. `filteredPage`, not `page`, is what gets
+handed down to `ui/components/ReconciliationCandidateLeaderboardTable.js`
+as its own `page` prop; the table renders whatever page-shaped object it
+receives exactly as it already does, with no filtering logic of its own —
+"the application layer describes the filtered page, the Vue component
+merely renders it," the identical boundary every layer beneath it already
+holds. Two new dropdowns — Evidence type, Replica relation — sit above the
+table, next to the existing Peer Archive box. `evidenceDetail` is
+untouched by filtering: a row hidden by the filter simply never renders
+its own "Inspect Evidence" button.
+
+**Deliberately excluded — not this milestone.** Ranking, sorting by
+evidence, scores, or severity. A "needs attention"/conflict
+classification of any kind — filtering exists precisely so a reader
+chooses what to inspect, never so the application decides for them.
+Automatic synchronization. A fifth relation or a fourth evidence kind.
+Mutating `page`, or persisting the selected filter anywhere beyond this
+component's own page-local refs. Combining `decisionEvidence` and
+`observationEvidence` into one number for matching. Pagination or visual
+polish of the leaderboard table itself — real, separately sized, later
+work.
+
+`docs/Roadmap.md` updated; `docs/user/09-PublicationsAndEvidence.md`
+updated to describe the Evidence Filter controls and the two-dimensional
+vocabulary; `ReconciliationCandidateLeaderboardEvidenceFilter.test.js`
+registered in `tests.html`.
