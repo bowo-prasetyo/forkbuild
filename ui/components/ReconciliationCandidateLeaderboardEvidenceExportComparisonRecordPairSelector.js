@@ -1,4 +1,5 @@
-// 0.8.201 — Explicit Record-Pair Selection UI.
+// 0.8.201/0.8.202 — Explicit Record-Pair Selection UI, and its Paired
+// Difference Inspection extension.
 //
 // 0.8.198 through 0.8.200 built a complete, pure, application-layer chain
 // that turns an EXPLICITLY SUPPLIED pairing of two records into named
@@ -119,6 +120,55 @@
 // labeled, never bucketed under a candidate's own heading — the pool stays
 // the flat, cross-candidate list 0.8.193 already produces.
 //
+// 0.8.202 — EACH PAIR'S RESULT IS NOW INDIVIDUALLY INSPECTABLE, BEHIND ITS
+// OWN "Inspect differences" TOGGLE — THE SAME EXPAND/COLLAPSE DISCIPLINE
+// `ReconciliationCandidateLeaderboardEvidenceExportComparisonTable.js`
+// ALREADY HOLDS FOR "Inspect records"/"Inspect identity." Every entry under
+// "Paired Record Differences" now renders as its own row — a 1-based
+// "Decision Pair N"/"Observation Pair N" label (purely a display index,
+// never a stored field) and a difference-count summary, ALWAYS visible —
+// plus an "Inspect differences ▼"/"Hide differences ▲" control that reveals
+// that one pair's own source/target labels and its own `differingFields`
+// list, copied from `pairedView` unchanged, in 0.8.199's own fixed
+// declaration order. `expandedPairDifferences` (this component's own
+// `data()`) is purely local, presentational, never-persisted expand/
+// collapse state, keyed by `pairDifferenceKey('decision'|'observation',
+// index)` — an entirely local, UI-only string (e.g. `decision:0`), never
+// read from, written onto, or compared against any `explicitPairs`/
+// `pairedView` record, and never used as record identity itself, exactly
+// the same role `identityKey()` already plays one file over. It resets to
+// fully collapsed on every remount, and this component performs no
+// computation of any kind in response to a toggle — only a re-render of
+// data it already had.
+//
+// A ZERO-DIFFERENCE PAIR IS STILL SHOWN, NEVER HIDDEN OR SKIPPED — 0.8.199'S
+// OWN "A pair with zero differences is still a pair," held here again at
+// the point a human actually inspects one. Its summary line reads "No
+// differences" rather than being omitted from the list, and expanding it
+// shows its own source/target labels with an explicit "Identical on every
+// named field" line, never an empty or missing panel.
+//
+// THE POSITIONAL CORRESPONDENCE INVARIANT IS THE ONE FACT THIS EXTENSION
+// LEANS ON HARDEST, SO IT IS STATED HERE AGAIN, EXPLICITLY: for every index
+// `i`, `decisionPairs[i]`/`observationPairs[i]` (this component's own
+// `explicitPairs`-derived computed arrays) and
+// `decisionDifferences[i]`/`observationDifferences[i]` (this component's
+// own `pairedView`-derived computed arrays) describe the SAME pair — never
+// matched by comparing record identity, a candidate field, or any other
+// value, only by shared array index. This holds even when two or more
+// pairs reference identical or duplicate records, and even when every
+// pair's own `differingFields` happens to be identical — 0.8.198 through
+// 0.8.200 each preserve one entry per input pair, in the input pair's own
+// order, without ever dropping a position, so array position alone is
+// always sufficient. `pairDifferenceKey()`'s own `index` argument is always
+// this same shared array index — never a separately-tracked counter, and
+// never derived from a record's own field. Adding a pair appends one
+// position to both arrays; removing pair `k` removes position `k` from
+// both arrays and shifts every later position down by one, in lockstep —
+// this component never reconciles the two arrays itself, it only ever
+// renders whatever `explicitPairs`/`pairedView` the parent view currently
+// supplies, which are always already in agreement.
+//
 // MALFORMED/ABSENT `detail`/`explicitPairs`/`pairedView` DEGRADES TO AN
 // EMPTY, DISABLED STATE — NEVER THROWS. An absent or malformed `detail`
 // degrades both pools to `[]` (both dropdowns render only their own
@@ -145,6 +195,19 @@
 // - **Calling any of 0.8.198's, 0.8.197's, 0.8.199's, or 0.8.200's own
 //   `describeXxx()` directly.** See "A projection renderer and a selection
 //   control," above — that chain is the parent view's own responsibility.
+// - **Persisting `expandedPairDifferences` across a reload, across
+//   sessions, or inside `explicitPairs`/`pairedView` themselves.** Stays
+//   page-local, component-local state, discarded on remount — see 0.8.202's
+//   own section above.
+// - **Any identity information beyond the source/target labels already
+//   shown.** The stakeholder note that motivated 0.8.202 explicitly says to
+//   start with field names (and the labels this component already computes)
+//   only; a fuller per-record identity panel inside this same expansion (if
+//   ever wanted) is separate, later work — see 0.8.196's own, already-built,
+//   per-record "Inspect identity" panel one file over for that shape.
+// - **Re-deriving `differenceCount` from `differingFields.length`, or vice
+//   versa, when inspecting a pair.** Both are read verbatim off `pairedView`
+//   exactly as 0.8.200's own header already requires of every caller.
 
 function isGenuineSection(value) {
     return Boolean(value) && typeof value === 'object';
@@ -242,6 +305,17 @@ export function observationRecordLabel(record) {
     return `${candidateLabel(record.candidate)} — ${disposition} — observed ${formatWhen(record.observedAt)}`;
 }
 
+// pairDifferenceKey() — this component's own local, UI-only "Inspect
+// differences" expand/collapse key (e.g. `decision:0`), identical in spirit
+// to the Table component's own `identityKey()` — never read from, written
+// onto, or compared against any `explicitPairs`/`pairedView` record, and
+// never used as record identity itself. `index` is always the shared array
+// position 0.8.198 through 0.8.200 preserve — see this file's own header,
+// "The positional correspondence invariant."
+export function pairDifferenceKey(dimension, index) {
+    return `${dimension}:${index}`;
+}
+
 export default {
     name: 'ReconciliationCandidateLeaderboardEvidenceExportComparisonRecordPairSelector',
     props: {
@@ -258,7 +332,12 @@ export default {
             pendingDecisionSourceKey: '',
             pendingDecisionTargetKey: '',
             pendingObservationSourceKey: '',
-            pendingObservationTargetKey: ''
+            pendingObservationTargetKey: '',
+            // 0.8.202 — entirely local, presentational, never-persisted
+            // "Inspect differences" expand/collapse state, keyed by
+            // pairDifferenceKey() — see this file's own 0.8.202 header
+            // section, above.
+            expandedPairDifferences: {}
         };
     },
     computed: {
@@ -314,9 +393,20 @@ export default {
         removeObservationPair(index) {
             this.$emit('remove-observation-pair', index);
         },
+        // 0.8.202 — toggles/reads one pair's own "Inspect differences"
+        // expand/collapse state. See this file's own 0.8.202 header
+        // section, above; never reads or writes `explicitPairs`/
+        // `pairedView` themselves.
+        togglePairDifference(key) {
+            this.expandedPairDifferences[key] = !this.expandedPairDifferences[key];
+        },
+        isPairDifferenceExpanded(key) {
+            return Boolean(this.expandedPairDifferences[key]);
+        },
         candidateLabel,
         decisionRecordLabel,
-        observationRecordLabel
+        observationRecordLabel,
+        pairDifferenceKey
     },
     template: `
         <div class="evidence-export-comparison-pairing">
@@ -401,21 +491,51 @@ export default {
                 <template v-else>
                     <div v-if="decisionDifferences.length > 0" class="evidence-pair-difference-group">
                         <h6>Decision pairs</h6>
-                        <ul class="evidence-detail-list">
-                            <li v-for="(summary, index) in decisionDifferences" :key="'ddd-' + index">
-                                {{ decisionRecordLabel(decisionPairs[index] && decisionPairs[index].source) }} ↔ {{ decisionRecordLabel(decisionPairs[index] && decisionPairs[index].target) }}:
-                                <span v-if="summary.differenceCount === 0">identical on every named field</span>
-                                <span v-else>differs on {{ summary.differingFields.join(', ') }}</span>
+                        <ul class="evidence-pair-difference-list">
+                            <li v-for="(summary, index) in decisionDifferences" :key="'ddd-' + index" class="evidence-pair-difference-item">
+                                <div class="evidence-pair-difference-summary">
+                                    <span class="evidence-pair-difference-index">Decision Pair {{ index + 1 }}</span>
+                                    <span class="evidence-pair-difference-count">
+                                        {{ summary.differenceCount === 0 ? 'No differences' : (summary.differenceCount + (summary.differenceCount === 1 ? ' difference' : ' differences')) }}
+                                    </span>
+                                    <button type="button" class="action-btn action-btn--secondary evidence-pair-inspect-btn"
+                                            @click="togglePairDifference(pairDifferenceKey('decision', index))">
+                                        {{ isPairDifferenceExpanded(pairDifferenceKey('decision', index)) ? 'Hide differences ▲' : 'Inspect differences ▼' }}
+                                    </button>
+                                </div>
+                                <div v-if="isPairDifferenceExpanded(pairDifferenceKey('decision', index))" class="evidence-pair-difference-detail">
+                                    <p><strong>Source:</strong> {{ decisionRecordLabel(decisionPairs[index] && decisionPairs[index].source) }}</p>
+                                    <p><strong>Target:</strong> {{ decisionRecordLabel(decisionPairs[index] && decisionPairs[index].target) }}</p>
+                                    <p v-if="summary.differenceCount === 0" class="evidence-detail-empty">Identical on every named field.</p>
+                                    <ul v-else class="evidence-detail-list">
+                                        <li v-for="field in summary.differingFields" :key="field">{{ field }}</li>
+                                    </ul>
+                                </div>
                             </li>
                         </ul>
                     </div>
                     <div v-if="observationDifferences.length > 0" class="evidence-pair-difference-group">
                         <h6>Observation pairs</h6>
-                        <ul class="evidence-detail-list">
-                            <li v-for="(summary, index) in observationDifferences" :key="'odd-' + index">
-                                {{ observationRecordLabel(observationPairs[index] && observationPairs[index].source) }} ↔ {{ observationRecordLabel(observationPairs[index] && observationPairs[index].target) }}:
-                                <span v-if="summary.differenceCount === 0">identical on every named field</span>
-                                <span v-else>differs on {{ summary.differingFields.join(', ') }}</span>
+                        <ul class="evidence-pair-difference-list">
+                            <li v-for="(summary, index) in observationDifferences" :key="'odd-' + index" class="evidence-pair-difference-item">
+                                <div class="evidence-pair-difference-summary">
+                                    <span class="evidence-pair-difference-index">Observation Pair {{ index + 1 }}</span>
+                                    <span class="evidence-pair-difference-count">
+                                        {{ summary.differenceCount === 0 ? 'No differences' : (summary.differenceCount + (summary.differenceCount === 1 ? ' difference' : ' differences')) }}
+                                    </span>
+                                    <button type="button" class="action-btn action-btn--secondary evidence-pair-inspect-btn"
+                                            @click="togglePairDifference(pairDifferenceKey('observation', index))">
+                                        {{ isPairDifferenceExpanded(pairDifferenceKey('observation', index)) ? 'Hide differences ▲' : 'Inspect differences ▼' }}
+                                    </button>
+                                </div>
+                                <div v-if="isPairDifferenceExpanded(pairDifferenceKey('observation', index))" class="evidence-pair-difference-detail">
+                                    <p><strong>Source:</strong> {{ observationRecordLabel(observationPairs[index] && observationPairs[index].source) }}</p>
+                                    <p><strong>Target:</strong> {{ observationRecordLabel(observationPairs[index] && observationPairs[index].target) }}</p>
+                                    <p v-if="summary.differenceCount === 0" class="evidence-detail-empty">Identical on every named field.</p>
+                                    <ul v-else class="evidence-detail-list">
+                                        <li v-for="field in summary.differingFields" :key="field">{{ field }}</li>
+                                    </ul>
+                                </div>
                             </li>
                         </ul>
                     </div>

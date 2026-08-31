@@ -5424,3 +5424,57 @@ html, body {
     color: #909090;
     font-weight: 600;
 }
+
+/* 0.8.202 — Paired Record Difference Inspection UI. Each pair now renders
+   as its own row, with an "Inspect differences" toggle over that one pair's
+   own detail panel — reusing `.evidence-detail-list`/`.evidence-detail-empty`/
+   `.action-btn--secondary` verbatim, exactly like every other panel on this
+   page. */
+.evidence-pair-difference-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.evidence-pair-difference-item {
+    padding: 0.5rem 0;
+    border-bottom: 1px solid #202020;
+}
+
+.evidence-pair-difference-item:last-child {
+    border-bottom: none;
+}
+
+.evidence-pair-difference-summary {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.75rem;
+    font-size: 0.82rem;
+}
+
+.evidence-pair-difference-index {
+    font-weight: 600;
+    color: #d0d0d0;
+}
+
+.evidence-pair-difference-count {
+    color: #909090;
+}
+
+.evidence-pair-inspect-btn {
+    font-size: 0.7rem;
+    padding: 0.25rem 0.5rem;
+    margin-left: auto;
+}
+
+.evidence-pair-difference-detail {
+    margin-top: 0.5rem;
+    padding-left: 0.25rem;
+    font-size: 0.8rem;
+    color: #c0c0c0;
+}
+
+.evidence-pair-difference-detail p {
+    margin: 0.2rem 0;
+}

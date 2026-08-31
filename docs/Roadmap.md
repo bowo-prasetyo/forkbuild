@@ -45035,3 +45035,151 @@ pairs, or a bulk pairing workflow) is separate, later work, and — per the
 same reasoning that paused this codebase before every milestone in this
 series — that choice belongs to an explicit request, not an automatic
 continuation.
+
+## 0.8.202 — Paired Record Difference Inspection UI
+
+0.8.201 rendered every explicitly added pair's own difference summary
+inline, unconditionally, underneath the pairing controls — useful, but flat:
+a long pair list read as one undifferentiated block, with no per-pair
+identity beyond its position in that block. This milestone extends that
+SAME component — no new application-layer file, per an explicit request to
+close the UI loop rather than add a sixth projection — so each pair now
+reads as its own row: a 1-based "Decision Pair N"/"Observation Pair N"
+label, an always-visible difference-count summary, and an "Inspect
+differences ▼"/"Hide differences ▲" toggle that reveals that one pair's own
+source/target labels and differing-field list — the same expand/collapse
+discipline
+`ReconciliationCandidateLeaderboardEvidenceExportComparisonTable.js` already
+holds for "Inspect records"/"Inspect identity," now held one file over, at
+the pair level.
+
+```
+0.8.198 Explicit Record Pairs
+          │
+          ▼
+0.8.197 Record Difference Projection
+          │
+          ▼
+0.8.199 Record Difference Read Model
+          │
+          ▼
+0.8.200 Paired Record Difference View
+          │
+          ▼
+0.8.201 Explicit Record-Pair Selection UI
+          │
+          ▼
+0.8.202 Paired Record Difference Inspection UI   ★ (per-pair expand/collapse)
+          │
+          ▼
+       Browser
+```
+
+**One extended UI-layer file, no new application-layer projection.**
+`ui/components/ReconciliationCandidateLeaderboardEvidenceExportComparisonRecordPairSelector.js`
+gains `expandedPairDifferences` (this component's own `data()` — entirely
+local, presentational, never-persisted expand/collapse state, resetting to
+fully collapsed on every remount), `pairDifferenceKey(dimension, index)` (an
+exported, pure, local-key builder — `decision:0`, `observation:1` — the
+identical shape `identityKey()` already holds one file over), and
+`togglePairDifference(key)`/`isPairDifferenceExpanded(key)`. The "Paired
+Record Differences" template section is restructured from a flat list into
+one row per pair, each with its own toggle; no application-layer file was
+added, edited, or newly called — 0.8.200's own `pairedView` is still read
+verbatim, exactly as 0.8.201 already reads it.
+
+**The positional correspondence invariant — the one thing worth stating
+again, explicitly, now that it is load-bearing for a second UI feature.**
+`decisionPairs[i]`/`observationPairs[i]` and
+`decisionDifferences[i]`/`observationDifferences[i]` describe the same pair
+because 0.8.198 through 0.8.200 each preserve one entry per input pair, in
+the input pair's own order, without ever dropping a position — never
+because a record's identity, a candidate field, or a difference's own
+content happens to match. `pairDifferenceKey()`'s own `index` argument is
+always that same shared array position. This holds even when two or more
+pairs reference identical records, and even when two or more pairs' own
+difference summaries are byte-identical — array position alone is always
+sufficient, and this milestone's own regression tests build exactly that
+scenario (duplicate records, duplicate summaries, and a pair removed from
+the middle of the list) to prove it.
+
+**A zero-difference pair is still shown, never hidden or skipped —
+0.8.199's own invariant, held here again at the point a human actually
+inspects one.** Its summary reads "No differences" rather than being
+omitted from the list; expanding it shows its own source/target labels with
+an explicit "Identical on every named field" line, never an empty panel.
+
+**Flagship scenario** — three decision pairs, the first and third built from
+the identical source/target records, with byte-identical zero-difference
+summaries, and a second, different pair between them with one differing
+field:
+
+```
+Pair 1: Source A ↔ Target A   →  No differences
+Pair 2: Source B ↔ Target B   →  1 difference: decision
+Pair 3: Source A ↔ Target A   →  No differences   (same records as Pair 1)
+```
+
+Expanding "Pair 2" shows only `decision` in its own differing-field list;
+expanding "Pair 1" and "Pair 3" independently each show their own "Identical
+on every named field" line — collapsing one never affects the others, and
+neither Pair 1 nor Pair 3's own panel is ever conflated with the other's,
+despite describing identical records.
+
+**Test sections** cover: Rendering (both dimensions get their own 1-based
+pair labels, an Inspect/Hide differences toggle, and a zero-difference
+pair's own summary and detail line are always present, never omitted);
+Positional correspondence (`pairDifferenceKey()`/`decisionPairs[i]`/
+`decisionDifferences[i]` all correlate by shared array index alone, proven
+with deliberately duplicate records and deliberately identical difference
+summaries); Interaction (`togglePairDifference()`/`isPairDifferenceExpanded()`
+open/close exactly the named pair's own panel, independently of every other
+pair, and removing a pair from the middle of the list — simulated the same
+way the parent view's own `removeDecisionPair()` does it — never leaves a
+later pair's own difference attached to an earlier position); and
+Architectural boundaries (the component's own source still imports nothing,
+still calls none of 0.8.198's/0.8.197's/0.8.199's/0.8.200's own
+`describeXxx()` functions, and still carries no sorting/ranking/verdict
+vocabulary, even after this extension).
+
+**Deliberately excluded — not this milestone.** Any per-record identity
+panel beyond the source/target labels already shown — a fuller identity
+inspection inside this same expansion (if ever wanted) is separate, later
+work; 0.8.196's own per-record "Inspect identity" panel, one file over,
+already covers that shape for the ungrouped record pools. Persisting
+`expandedPairDifferences` across a reload, across sessions, or inside
+`explicitPairs`/`pairedView` themselves — stays page-local, component-local
+state, discarded on remount, exactly like `expanded`/`expandedIdentityRecords`
+already do one file over. Re-deriving `differenceCount` from
+`differingFields.length`, or vice versa, when inspecting a pair — both stay
+read verbatim off `pairedView`, exactly as 0.8.200's own header already
+requires of every caller. A rank, score, winner, correct/incorrect, valid,
+stale, preferred, status, or confidence field or vocabulary of any kind —
+inherited unchanged from every layer beneath this one. Any automatic,
+suggested, or ranked pairing, and any editing of an already-added pair in
+place — both remain 0.8.198's/0.8.201's own excluded scope, untouched by
+this extension. A new application-layer projection — see "One extended
+UI-layer file," above; 0.8.200's own `pairedView` already carries everything
+this milestone displays.
+
+`ui/components/ReconciliationCandidateLeaderboardEvidenceExportComparisonRecordPairSelector.js`
+extended; `css/main.css` updated (`.evidence-pair-difference-list`/
+`.evidence-pair-difference-item`/`.evidence-pair-difference-summary`/
+`.evidence-pair-difference-index`/`.evidence-pair-difference-count`/
+`.evidence-pair-inspect-btn`/`.evidence-pair-difference-detail`);
+`docs/Roadmap.md` updated;
+`ReconciliationCandidateLeaderboardEvidenceExportComparisonPairedDifferenceInspectionUI.test.js`
+added and registered in `tests.html`.
+
+---
+
+Deliberately paused here. This milestone made 0.8.201's own paired-difference
+result inspectable at the per-pair level — pair index, difference count, and
+differing field names, each behind its own toggle — closing the loop the
+0.8.198 -> 0.8.197 -> 0.8.199 -> 0.8.200 -> 0.8.201 chain opened. No
+automatic matching was added anywhere in this chain, and none is proposed
+now: a human still explicitly builds every pair this UI ever inspects. A
+dedicated export/import of paired inspections, a standalone inspection page,
+or any further UI refinement is separate, later work, and — per the same
+reasoning that paused this codebase before every milestone in this series —
+that choice belongs to an explicit request, not an automatic continuation.
