@@ -45345,3 +45345,127 @@ all separate, later work, and — per the same reasoning that has paused this
 codebase before every milestone in both this series and the one it follows
 — that choice belongs to an explicit request, not an automatic
 continuation.
+
+## 0.9.1 — World Encounter Read Model
+
+0.9.0 answered "what, in the World, is even findable in the first place?"
+with two arrays of per-object encounter records — a `position` object on
+every entry, a `kind` tag repeated on every entry even though it is already
+implied by which array an entry lives in, and no counts a list-rendering
+caller would otherwise have to compute itself. This milestone is that
+explicit hand-off, arriving from the same design conversation that opened
+0.9.0: a new `application/WorldEncounterReadModel.js`, with one entry
+point, `describeWorldEncounterReadModel()`.
+
+**A read model, never a new domain algorithm.** Every fact this file
+reports is 0.9.0's own fact, read verbatim off its own already-computed
+`publications`/`avatars` arrays. No encounter is added, dropped, or
+recomputed, and no join happens here — 0.9.0's own `deriveWorldEncounters()`
+already did every join by `publicationId`/`avatarId`, and this file never
+touches a `Publication`, `WorldPlacement`, `AvatarProfile`, or
+`AvatarPresence` record directly, and never calls `deriveWorldEncounters()`
+itself. `describeWorldEncounterReadModel()` takes 0.9.0's own already-
+computed `{ publications, avatars }` result directly, the identical
+"accepts the prior seam's own result, never raw records" posture 0.8.177's
+own read model already holds one layer down in the evidence-comparison
+chain.
+
+**`position` is flattened to `x`/`y`/`z`; `kind` is dropped — both are
+structural compactions, neither loses information.** A row's own
+membership in this read model's `publications` array or its `avatars`
+array already says exactly what 0.9.0's own repeated `kind` tag said, so
+carrying it forward would be redundant, not informative.
+`position.x`/`position.y`/`position.z` become top-level `x`/`y`/`z` on the
+same row — the same flat, renderable shape a marker-drawing caller already
+wants, with no change to the values themselves. Every other field 0.9.0
+already produces — `title`, `publisherIdentity`, `isSigned`, `anchorCount`,
+`placementCount` on a publication row, `ownerIdentity`/`displayName` on an
+avatar row — is carried forward verbatim, under 0.9.0's own name. This file
+does not collapse `publisherIdentity` (an object) into a single scalar id,
+and does not rename `objectId` to `id`: 0.9.0 never named either that way,
+and picking a single property to stand in for a whole object — or renaming
+a fact for no structural reason — would be an interpretive step, not a
+compaction.
+
+**Result shape:** `{ publicationCount, avatarCount, totalCount,
+publications: [{ objectId, title, publisherIdentity, isSigned, x, y, z,
+anchorCount, placementCount }], avatars: [{ objectId, ownerIdentity,
+displayName, x, y, z }] }`. `totalCount = publicationCount + avatarCount`
+is a plain structural sum — how many encounterable objects exist of either
+kind, nothing more, and never a measure of World activity, importance,
+reputation, or anything else a reader might be tempted to read into a
+growing number.
+
+**No score, rank, trust, verified, nearest, distance, or comparison
+vocabulary of any kind — inherited unchanged from 0.9.0's own boundary,
+held here again one layer up.** This file does not know the Wanderer's own
+position, does not sort by distance, does not decide which encounter is
+"interesting," and does not compare one encounter to another. "These are
+the objects that exist as encounterable objects" is the entire question
+this milestone answers — never "which of them matters," "which is
+nearest," or "which should be shown first." Camera position, visibility,
+interaction radius, avatar movement, ranking, and relevance are all
+deliberately absent, exactly as they were named as out of scope for this
+milestone from the outset.
+
+**Row order preserves 0.9.0's own order, unchanged** — `publications` and
+`avatars` below are 0.9.0's own arrays, mapped one entry to one row, IN
+0.9.0'S OWN ORDER, never re-sorted by title, evidence count, position, or
+any other key.
+
+**Malformed input degrades to an empty result — never throws.** An
+`encounters` argument that is `null`, `undefined`, or missing a genuine
+`publications`/`avatars` array degrades to every count at `0` and both
+arrays empty and frozen — the same defensive posture 0.8.177's own read
+model already holds at this exact seam, because, unlike 0.9.0's own
+`deriveWorldEncounters()`, this function's one argument is not itself
+produced by a seam that already guarantees a well-formed shape.
+
+**This file imports nothing.** It performs no join, so it never needs
+0.9.0's own `deriveWorldEncounters()`, `describeEncounterablePublication()`,
+or `describeEncounterableAvatar()` — a caller already holding 0.9.0's own
+result hands it here directly.
+
+```
+Publication + WorldPlacement          AvatarProfile + AvatarPresence
+         │                                       │
+         └───────────────────┬───────────────────┘
+                              ▼
+                 core/WorldEncounter.js   (0.9.0)
+                  deriveWorldEncounters()
+                              │
+                              ▼
+       application/WorldEncounterReadModel.js   (THIS milestone) ★
+             describeWorldEncounterReadModel()
+                              │
+                              ▼
+       future, unscheduled: World View Presentation Projection
+```
+
+**Deliberately excluded — not this milestone.** Camera position, distance,
+nearest object, visibility, sorting by distance, interaction radius,
+avatar movement, "interesting" objects, ranking, relevance, trust, or
+verification — see "No score, rank, trust..." above; those require
+relating the World to a Wanderer's own position, a different projection
+than "what is encounterable." `isEmpty`, display labels, shortened
+identifiers, or any other UI-specific presentation concern — that is the
+next, separate, unscheduled milestone (a World View Presentation
+Projection). Calling `deriveWorldEncounters()` itself, or accepting raw
+publication/placement/avatar records — see "A read model, never a new
+domain algorithm," above. Persistence or synchronization of any kind.
+Automatic, periodic, or background computation of any kind.
+
+`application/WorldEncounterReadModel.js` added; `docs/Roadmap.md` updated;
+`WorldEncounterReadModel.test.js` added and registered in `tests.html`.
+
+---
+
+Deliberately paused here. This milestone took 0.9.0's own discovery result
+and reshaped it into the small, flat, count-bearing structure an actual
+World View list would read from — nothing about which encounters exist, or
+what each one means, changed in the process. Turning this read model into
+an actual presentation projection (`isEmpty`, display labels, UI-safe
+coordinate formatting) or an actual World View UI is separate, later work,
+and — per the same reasoning that has paused this codebase before every
+milestone in this series — that choice belongs to an explicit request, not
+an automatic continuation.
