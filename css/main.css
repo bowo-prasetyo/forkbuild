@@ -3751,6 +3751,87 @@ html, body {
     flex-wrap: wrap;
 }
 
+/* Progressive-disclosure wrapper for a publication card's advanced
+   (snapshot/anchoring/IPFS/evidence) sections — see
+   ui/views/DecentralizedPublicationsView.js. */
+.identity-mgmt-card-details {
+    margin-top: 0.85rem;
+    padding-top: 0.85rem;
+    border-top: 1px solid #2a2a2a;
+}
+
+.identity-mgmt-card-details[open] {
+    padding-bottom: 0.1rem;
+}
+
+.identity-mgmt-card-details-summary {
+    cursor: pointer;
+    list-style: none;
+    color: #909090;
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+.identity-mgmt-card-details-summary::-webkit-details-marker {
+    display: none;
+}
+
+.identity-mgmt-card-details-summary::before {
+    content: '▸';
+    display: inline-block;
+    margin-right: 0.4rem;
+    transition: transform 0.15s ease;
+}
+
+.identity-mgmt-card-details[open] > .identity-mgmt-card-details-summary::before {
+    transform: rotate(90deg);
+}
+
+.identity-mgmt-card-details-summary:hover {
+    color: #c9c9c9;
+}
+
+/* Page-level wallet/archive/publisher tools panel on the Publications
+   page — same disclosure pattern, one level up. */
+.publications-tools-panel {
+    margin: 1.25rem 0;
+    background: #1a1a1a;
+    border: 1px solid #2a2a2a;
+    border-radius: 8px;
+    padding: 0.9rem 1.1rem;
+}
+
+.publications-tools-panel[open] {
+    padding-bottom: 1rem;
+}
+
+.publications-tools-panel-summary {
+    cursor: pointer;
+    list-style: none;
+    color: #e0e0e0;
+    font-weight: 600;
+    font-size: 0.95rem;
+}
+
+.publications-tools-panel-summary::-webkit-details-marker {
+    display: none;
+}
+
+.publications-tools-panel-summary::before {
+    content: '▸';
+    display: inline-block;
+    margin-right: 0.5rem;
+    transition: transform 0.15s ease;
+}
+
+.publications-tools-panel[open] > .publications-tools-panel-summary::before {
+    transform: rotate(90deg);
+}
+
+.publications-tools-panel-summary:hover {
+    color: #ffffff;
+}
+
 .identity-mgmt-form {
     margin-top: 1.75rem;
     padding-top: 1.25rem;
