@@ -45439,7 +45439,8 @@ Publication + WorldPlacement          AvatarProfile + AvatarPresence
              describeWorldEncounterReadModel()
                               │
                               ▼
-       future, unscheduled: World View Presentation Projection
+       application/WorldEncounterView.js   (0.9.2)
+             describeWorldEncounterView()
 ```
 
 **Deliberately excluded — not this milestone.** Camera position, distance,
@@ -45460,12 +45461,123 @@ Automatic, periodic, or background computation of any kind.
 
 ---
 
-Deliberately paused here. This milestone took 0.9.0's own discovery result
-and reshaped it into the small, flat, count-bearing structure an actual
-World View list would read from — nothing about which encounters exist, or
-what each one means, changed in the process. Turning this read model into
-an actual presentation projection (`isEmpty`, display labels, UI-safe
-coordinate formatting) or an actual World View UI is separate, later work,
-and — per the same reasoning that has paused this codebase before every
-milestone in this series — that choice belongs to an explicit request, not
-an automatic continuation.
+## 0.9.2 — World View Presentation Projection
+
+0.9.1 named its own gap explicitly: "`isEmpty`, display labels, shortened
+identifiers, or any other UI-specific presentation concern... is the next,
+separate, unscheduled milestone (a World View Presentation Projection)."
+This milestone is that explicit request: a new
+`application/WorldEncounterView.js`, with one entry point,
+`describeWorldEncounterView()`.
+
+**Named `WorldEncounterView.js`, not `WorldView.js`.** `ui/views/WorldView.js`
+already exists — the large, existing Vue component for the entire World
+screen (camera, input routing, panels, dialogs, presence indicators). This
+file is nothing like that: a small, pure, presentation-shaping function with
+no rendering technology of its own. `WorldEncounterView.js` keeps this file
+in its own chain — the same `WorldEncounter` → `WorldEncounterReadModel` →
+`WorldEncounterView` progression 0.8.176 → 0.8.177 → 0.8.178 already
+established for the evidence-comparison chain (`...ReadModel.js` →
+`...View.js`).
+
+**Deliberately dumb — presentable, never intelligent.** Every fact this file
+reports is 0.9.1's own fact, read verbatim off its own already-computed
+`publications`/`avatars` arrays. No encounter is added, dropped, combined,
+or recomputed, and no row is reinterpreted, relabeled, or reordered. The
+only new fact this milestone introduces is `isEmpty`.
+
+**`isEmpty = totalCount === 0` — nothing else.** Not "no signed
+publications," not "no avatars nearby," not "nothing worth showing." One
+publication and zero avatars is NOT empty. Zero publications and one avatar
+is NOT empty. `isEmpty` never depends on anything besides `totalCount`.
+
+**`publicationCount`/`avatarCount`/`totalCount` are recomputed from the
+arrays themselves, never trusted blindly off a supplied count field** — the
+same defensive posture `PublisherLeaderboardClaimSnapshotReconciliation-
+CandidateLeaderboardView.js`'s own `rowCount = rows.length` already holds at
+the equivalent seam one chain over. These numbers agree with 0.9.1's own
+count fields exactly whenever `readModel` is a genuine 0.9.1 result.
+
+**Publications and avatars stay separate arrays, never flattened into one
+generic `objects` list.** 0.9.0 named two encounter kinds; 0.9.1 preserved
+that distinction through `publications`/`avatars`; this file holds the same
+line one layer up, so a UI can render "Publications" and "Avatars" as their
+own sections without rediscovering type semantics from a merged collection.
+
+**Rows are forwarded by reference, never rebuilt.** A publication or avatar
+row surviving into this file's own result is the SAME object 0.9.1 already
+froze — not a copy, not a re-mapped object with the same-looking fields.
+Only the two containing arrays are newly wrapped, so this file never freezes
+an array it did not itself create.
+
+**Row order preserves 0.9.1's own order, unchanged** — never re-sorted by
+title, count, position, or any other key. There is no `sort()` anywhere in
+this file.
+
+**Result shape:** `{ isEmpty, publicationCount, avatarCount, totalCount,
+publications: [...], avatars: [...] }`, each row exactly 0.9.1's own row,
+unchanged.
+
+**No score, rank, trust, verified, distance, nearest, visibility, viewport,
+camera, interaction radius, movement, clustering, "nearby," relevance, or
+prioritization vocabulary of any kind** — inherited unchanged from 0.9.0's
+and 0.9.1's own boundary, held here again one layer up. This file does not
+know the Wanderer's own position and does not filter, sort, or rank by it.
+
+**Malformed input degrades to an empty result — never throws.** A
+`readModel` that is `null`, `undefined`, or missing a genuine
+`publications`/`avatars` array degrades to `{ isEmpty: true,
+publicationCount: 0, avatarCount: 0, totalCount: 0, publications: [],
+avatars: [] }` — the same defensive posture 0.9.1's own read model already
+holds at its own boundary.
+
+**This file imports nothing.** Exactly like 0.9.1's own module, it performs
+no join and no reconstruction — a caller already holding 0.9.1's own result
+hands it here directly. No dependency on `WorldEncounter`,
+`WorldEncounterReadModel`, `Publication`, `WorldPlacement`, `AvatarProfile`,
+`AvatarPresence`, archive/storage, or network.
+
+```
+Publication + WorldPlacement          AvatarProfile + AvatarPresence
+         │                                       │
+         └───────────────────┬───────────────────┘
+                              ▼
+                 core/WorldEncounter.js   (0.9.0)
+                  deriveWorldEncounters()
+                              ▼
+       application/WorldEncounterReadModel.js   (0.9.1)
+             describeWorldEncounterReadModel()
+                              ▼
+       application/WorldEncounterView.js   (THIS milestone) ★
+             describeWorldEncounterView()
+                              ▼
+                    future, unscheduled: World UI
+```
+
+**Deliberately excluded — not this milestone.** Distance, nearest-object
+calculation, camera positioning, sorting, viewport filtering, visibility,
+interaction radius, movement, clustering, "nearby," relevance, ranking, or
+prioritization — see "No score, rank, trust..." above; those require
+relating the World to a Wanderer's own position, a different, later,
+unscheduled milestone. Flattening `publications`/`avatars` into one generic
+`objects` array — see "Publications and avatars stay separate," above.
+Display labels, shortened identifiers, icons, or any other row-level
+presentational transform beyond forwarding 0.9.1's own fields. Actual
+markup, DOM nodes, styling, or any rendering technology choice, and the
+Wanderer itself — a World UI, and the Wanderer's own position within it, is
+separate, later, unscheduled work. Persistence or synchronization of any
+kind. Automatic, periodic, or background computation of any kind.
+
+`application/WorldEncounterView.js` added; `docs/Roadmap.md` updated;
+`WorldEncounterView.test.js` added and registered in `tests.html`.
+
+---
+
+Deliberately paused here. This milestone took 0.9.1's own read model and
+made it presentable — `isEmpty`, and nothing else new — without making it
+intelligent. Turning this view into an actual World UI (a 2D spatial
+canvas/grid, a Wanderer's own on-screen position, and eventually a "which
+encounterable objects are around the Wanderer?" projection) is separate,
+later work, and — per the same reasoning that has paused this codebase
+before every milestone in this series — that choice belongs to an explicit
+request, not an automatic continuation.
