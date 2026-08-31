@@ -5559,3 +5559,57 @@ html, body {
 .evidence-pair-difference-detail p {
     margin: 0.2rem 0;
 }
+
+/* ===================================================================
+   0.9.3 — World View UI / Wanderer Presence
+   ===================================================================
+   ui/components/WorldEncounterCanvas.js, ui/components/
+   WorldEncounterMarker.js, ui/components/WandererMarker.js — the first
+   actual World View surface: a fixed-size 2D SVG grid (no pan, no zoom;
+   see WorldEncounterCanvas.js's own header for why 0.5.1's own richer
+   .world-map-* projection isn't needed yet). Styled deliberately close
+   to .world-map-marker* immediately above, since both draw the same
+   kind of thing — a labeled glyph at a translated <g> — but these two
+   component families stay visually and structurally distinct: this one
+   has no click affordance yet (0.9.4's own unscheduled seam), so no
+   `cursor: pointer` here. */
+.world-encounter-canvas {
+    width: 100%;
+    max-width: 600px;
+    aspect-ratio: 1 / 1;
+    background: #161616;
+    border: 1px solid #2a2a2a;
+    border-radius: 6px;
+}
+
+.world-encounter-canvas-background {
+    fill: #161616;
+}
+
+.world-encounter-canvas-empty-hint {
+    font-size: 12px;
+    fill: #808080;
+}
+
+.world-encounter-marker-glyph {
+    font-size: 16px;
+    pointer-events: none;
+}
+
+.world-encounter-marker-label {
+    font-size: 9px;
+    fill: #a0a0a0;
+    pointer-events: none;
+}
+
+.wanderer-marker-glyph {
+    font-size: 18px;
+    pointer-events: none;
+}
+
+.wanderer-marker-label {
+    font-size: 9px;
+    fill: #4caf7d;
+    font-weight: 600;
+    pointer-events: none;
+}

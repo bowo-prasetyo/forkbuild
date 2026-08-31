@@ -45581,3 +45581,145 @@ encounterable objects are around the Wanderer?" projection) is separate,
 later work, and — per the same reasoning that has paused this codebase
 before every milestone in this series — that choice belongs to an explicit
 request, not an automatic continuation.
+
+---
+
+## 0.9.3 — World View UI / Wanderer Presence
+
+0.9.2 paused explicitly on "turning this view into an actual World UI" —
+naming a 2D spatial canvas/grid and the Wanderer's own on-screen position
+as separate, later work. This milestone is that explicit request, and,
+for the first time in this chain, it leaves the application layer alone
+entirely: three new UI-layer files, and nothing under `application/` or
+`core/` changes.
+
+```
+Publication + WorldPlacement          AvatarProfile + AvatarPresence
+         │                                       │
+         └───────────────────┬───────────────────┘
+                              ▼
+                 core/WorldEncounter.js   (0.9.0)
+                              ▼
+       application/WorldEncounterReadModel.js   (0.9.1)
+                              ▼
+       application/WorldEncounterView.js   (0.9.2)
+                              ▼
+       ui/components/WorldEncounterCanvas.js   (THIS milestone) ★
+              ├── ui/components/WorldEncounterMarker.js × publications
+              ├── ui/components/WorldEncounterMarker.js × avatars
+              └── ui/components/WandererMarker.js
+```
+
+**Three new files, following the naming convention already established.**
+`WorldEncounterMarker.js` draws one encounterable object (a publication or
+an avatar, distinguished only by its `kind` prop — 📄 or 👤).
+`WandererMarker.js` draws the Wanderer's own position (🧭), independently
+of any encounter data. `WorldEncounterCanvas.js` is the top-level surface
+that owns both: it receives the 0.9.2 view as a prop, projects every row
+onto a fixed 2D grid, and renders one `WorldEncounterMarker` per
+publication, one per avatar, and exactly one `WandererMarker`.
+
+**This is a spatial REPRESENTATION, never spatial intelligence.** Every
+encounterable object `view` supplies renders, unconditionally, regardless
+of distance from the Wanderer. There is no "if within 20 units, show as
+nearby" anywhere in this milestone — that would introduce a new
+projection (world objects + Wanderer position → distance → nearby
+objects), a different semantic operation left for a later, unscheduled
+0.9.4-or-later "Wanderer Spatial Encounter Projection."
+
+**The top-level component receives the 0.9.2 view directly — never raw
+domain data.** `WorldEncounterCanvas.js` imports NOTHING from
+`application/` or `core/` — not `WorldEncounter.js`, not
+`WorldEncounterReadModel.js`, not `WorldEncounterView.js` itself. A caller
+(a future, unscheduled page-level container) computes
+`describeWorldEncounterView()`'s own result however it likes and hands it
+here already-built, exactly the "host resolves, component renders"
+convention `ui/components/PublicationCard.js` already established.
+
+**The dumb marker components import nothing at all.** Neither
+`WorldEncounterMarker.js` nor `WandererMarker.js` has a single `import`
+line — no `application/`, no `core/`, not even `vue`. Both consume props
+alone and decide nothing.
+
+**The Wanderer's position is page-local UI state — never persisted, never
+synchronized.** `wandererPosition` lives entirely in
+`WorldEncounterCanvas.js`'s own `data()`, defaulting to the World's origin
+(`{ x: 0, y: 0, z: 0 }`). Nothing writes it to a `StorageProvider`, nothing
+opens a network connection, and no player/world-state domain object was
+created to hold it — a plain reactive field is enough for this milestone.
+
+**Screen X ← world x; screen Y ← world z.** The mapping
+(`projectToCanvas()`) is a simple, fixed, pure linear transform — a fixed
+half-span mapped onto a fixed square viewBox, no auto-fit, no pan, no
+zoom. World `y` (elevation) is carried through 0.9.1's own row shape as
+metadata only and never enters this mapping. Unlike
+`ui/components/WorldMapPanel.js`'s own richer projection (pan, zoom,
+auto-fit extent, `core/WorldMapProjection.js`), 0.9.3 doesn't need one:
+there is no camera to move yet, and every object always renders.
+
+**Publications and avatars stay separate, never flattened.** Exactly like
+0.9.0/0.9.1/0.9.2 before it, `projectedPublications`/`projectedAvatars`
+are two separate computed arrays, rendered as two separate `v-for` blocks
+— never merged into one generic "markers" list.
+
+**An empty World is not an empty screen.** `publicationCount = 0` and
+`avatarCount = 0` still produces a World View containing the Wanderer —
+`WandererMarker` renders unconditionally, whether or not any encounter
+exists. Only an "Nothing encounterable here yet" hint is conditioned on
+`isWorldEmpty`.
+
+**No sorting.** `projectedPublications`/`projectedAvatars` preserve
+`view`'s own row order, unchanged — there is no `.sort()` anywhere in
+`WorldEncounterCanvas.js`.
+
+**No score, rank, trust, verified, winner, distance, nearest, nearby, or
+radius vocabulary of any kind, anywhere in this milestone's own code** —
+inherited unchanged from 0.9.0/0.9.1/0.9.2's own boundary, held here again
+one layer up, now for the first time in actual UI code rather than only in
+a pure data transform.
+
+**No click, select, or inspect handling of any kind.** Every marker this
+milestone draws is inert. Turning "I can see this" into "I chose this" is
+0.9.4's own unscheduled "Spatial Encounter Interaction" milestone, not
+this one.
+
+**Malformed `view` degrades to an empty render — never throws.** A `view`
+that is `null`, `undefined`, or missing a genuine `publications`/`avatars`
+array degrades to zero markers of either kind (the Wanderer still
+renders) — the same defensive posture 0.9.1's and 0.9.2's own application
+layer already holds at their own boundaries.
+
+**Deliberately excluded — not this milestone.**
+- **Proximity, "nearby," discovery relevance, or any distance calculation
+  between the Wanderer and an encounterable object.** See "This is a
+  spatial representation," above — a separate, later, unscheduled
+  projection.
+- **Persisting or synchronizing the Wanderer's own position.** See "The
+  Wanderer's position is page-local UI state," above.
+- **Click/select/inspect handling of any kind.** See "No click, select, or
+  inspect handling," above — 0.9.4's own unscheduled seam.
+- **Wiring this surface into `ui/views/WorldView.js`, real discovery
+  providers, or a router — fetching real publications/avatars data.**
+  0.9.3 makes the World visible when it is handed a 0.9.2 view; connecting
+  it to the running app's own live data is separate, later, unscheduled
+  work, exactly like every prior milestone in this chain stopped one layer
+  short of its own next integration.
+- **3D rendering, camera movement, pan, or zoom.** This is a fixed, simple
+  2D grid — see "Screen X ← world x," above.
+
+`ui/components/WorldEncounterMarker.js`, `ui/components/WandererMarker.js`,
+and `ui/components/WorldEncounterCanvas.js` added; `css/main.css` extended
+with their styling; `docs/Roadmap.md` updated; `WorldEncounterCanvasUI.test.js`
+added and registered in `tests.html`.
+
+---
+
+Deliberately paused here. This milestone made the World visible — a
+Wanderer, encounterable publications, and encounterable avatars, all drawn
+in their actual spatial relationship — without making it interactive or
+intelligent. Giving the Wanderer the ability to select/click/tap an
+encounterable object (0.9.4 — Spatial Encounter Interaction) and then
+inspect what they selected (0.9.5 — Encounter Inspection) are both
+separate, later work, and — per the same reasoning that has paused this
+codebase before every milestone in this series — that choice belongs to
+an explicit request, not an automatic continuation.
