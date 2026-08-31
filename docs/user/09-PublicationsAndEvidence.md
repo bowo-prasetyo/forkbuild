@@ -2170,15 +2170,32 @@ surface one candidate whose only shared evidence is a decision, right
 alongside another whose only shared evidence is an observation; the two
 counts are never added together to decide who qualifies.
 
-Filtering only ever hides rows — it never changes what a surviving row
-displays. The six counts on a visible row, and what its own **Inspect
-Evidence** panel shows if you open it, are byte-identical to what they'd
-show with no filter applied at all; a candidate that doesn't match the
-current selection simply doesn't appear, rather than appearing with
-different numbers. Nothing here ranks, scores, or flags a candidate as
-"needs attention" — the filter only lets you choose what to look at,
-never decides for you what matters. Your selection lives only on this
-page, for this visit: it resets to **All** / **All** whenever you reload.
+Filtering only ever hides rows or hides records — it never changes the
+six counts on a surviving row, and it never invents, recomputes, or
+reorders a single record. A candidate that doesn't match the current
+selection simply doesn't appear, rather than appearing with different
+numbers. Nothing here ranks, scores, or flags a candidate as "needs
+attention" — the filter only lets you choose what to look at, never
+decides for you what matters. Your selection lives only on this page,
+for this visit: it resets to **All** / **All** whenever you reload.
+
+**The same filter reaches into the Inspect Evidence panel, too.** With
+**All** / **All** selected (the default), a surviving row's own **Inspect
+Evidence** panel shows every record, exactly as it always has. Narrow the
+filter, though, and a surviving row's own panel narrows right along with
+it — select **Observations** + **Target-only** and every visible row's
+panel shows only its own target-only observation records; its Decision
+Evidence section, and its Shared/Source-only observation columns, all
+show **None**, even though those records still exist underneath. Leaving
+**Replica relation** on **All** while choosing an **Evidence type** alone
+does not narrow the panel either — exactly as it does not narrow which
+rows are visible — since "All" always means "don't filter by relation,"
+regardless of evidence type. Selecting **All** for **Evidence type** with
+a specific relation shows BOTH branches that carry it — a target-only
+*decision* record and a target-only *observation* record both appear,
+never one chosen over the other. This never changes a count anywhere: a
+hidden record's own six-count row still reflects everything the candidate
+has recorded, only the panel's own, separate, record listing narrows.
 
 **In practice, this page shows "No reconciliation candidates to display"
 today.** Nothing else in this app currently records a reconciliation
