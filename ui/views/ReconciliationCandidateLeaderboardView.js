@@ -1,4 +1,4 @@
-import { ref, computed, inject } from 'vue';
+import { ref, reactive, computed, inject } from 'vue';
 import { PublicationObservationArchive } from '../../application/PublicationObservationArchive.js';
 import {
     importPublicationObservationArchive,
@@ -21,6 +21,9 @@ import {
 import {
     describePublisherLeaderboardClaimSnapshotReconciliationCandidateFilteredEvidenceDetail
 } from '../../application/PublisherLeaderboardClaimSnapshotReconciliationCandidateFilteredEvidenceDetailView.js';
+import {
+    describePublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceExport
+} from '../../application/PublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceExport.js';
 import ReconciliationCandidateLeaderboardTable from '../components/ReconciliationCandidateLeaderboardTable.js';
 
 // 0.8.181 — Explicit Peer Archive Leaderboard Comparison.
@@ -171,6 +174,63 @@ import ReconciliationCandidateLeaderboardTable from '../components/Reconciliatio
 // to, say, Observations + Target-only and then opens a surviving row's
 // own "Inspect Evidence" panel sees only the observation records that
 // made that row survive, never the candidate's full, unfiltered detail.
+//
+// 0.8.187 — Reconciliation Candidate Leaderboard Evidence Export UI
+// Integration adds exactly one more computed value, `evidenceExport`, and
+// one click handler, `exportEvidence()`, on top of everything above. This
+// is the "download/export button" 0.8.186's own header deliberately left
+// for later — a UI action, never a fourth comparison algorithm.
+//
+//   filteredEvidenceDetail (0.8.185) ──┐
+//   filter selection (0.8.184's own vocabulary, read a THIRD time) ──┤
+//   comparisonState (0.8.183) ─────────┴──► 0.8.186's own describeXxx()
+//                                                       │
+//                                                       ▼
+//                                          evidenceExport (this milestone)
+//                                                       │
+//                                                       ▼
+//                                              a `data:` URI a person
+//                                              clicks to download
+//
+// `evidenceExport` CALLS 0.8.186'S OWN `describeXxx()` — NOT ITS OWN
+// `reconstructXxx()`. This view already holds the exact three facts
+// `reconstructXxx()` would otherwise have to recompute from the two
+// archives (`filteredEvidenceDetail`, the SAME `evidenceKindFilter`/
+// `replicaRelationFilter` pair `filteredPage`/`filteredEvidenceDetail`
+// themselves already read, and `comparisonState`) — calling `describeXxx()`
+// directly hands 0.8.186 those already-computed facts unchanged rather
+// than reading either archive a further time. This is precisely the
+// milestone's own request: the export is downstream of filtering and
+// detail projection, never a second, independent evidence-selection
+// algorithm.
+//
+// EXPORTING NEVER RECOMPUTES, RE-FILTERS, OR RE-DERIVES ANYTHING. Clicking
+// "Export Evidence" does not calculate an evidence count, filter a
+// candidate, inspect either archive, compare an observation, deduplicate a
+// record, sort a candidate, or construct an export record — every one of
+// those questions was already answered by 0.8.184/0.8.185/0.8.183 before
+// this milestone's own code runs at all. `exportEvidence()` only ever:
+// (1) calls 0.8.186's own `describeXxx()` over the three already-computed
+// facts above, (2) serializes the result with `JSON.stringify()`, and
+// (3) builds a `data:` URI from that JSON — reused verbatim from
+// `DecentralizedPublicationsView.js`'s own "Export Archive" shape (a
+// person clicks a real link to save the file; nothing here triggers a
+// download programmatically, contacts a server, or persists the peer
+// archive).
+//
+// 0.8.183'S NO_PEER/PEER_EMPTY DISTINCTION SURVIVES INTO THE EXPORT
+// UNCHANGED. `comparisonState.value` — the same computed value the
+// template already branches its Peer Archive hint text on — is forwarded
+// to `describeXxx()` exactly as it stands; an export produced under
+// `NO_PEER` and one produced under `PEER_EMPTY` can hold byte-identical
+// (empty) `candidates` while the document itself still says which one it
+// was, never collapsing the two into one indistinguishable empty export.
+//
+// DELIBERATELY EXCLUDED — NOT THIS MILESTONE. Automatic export on every
+// filter change, clipboard synchronization, server upload, and scheduled
+// export are each a separate, later concern — see 0.8.186's own header,
+// "no UI in this milestone," now resolved by exactly this much UI and no
+// more.
 export const RECONCILIATION_CANDIDATE_LEADERBOARD_EVIDENCE_KIND_OPTIONS = [
     { value: ReconciliationCandidateLeaderboardEvidenceKind.ALL, label: 'All' },
     { value: ReconciliationCandidateLeaderboardEvidenceKind.DECISIONS, label: 'Decisions' },
@@ -266,12 +326,38 @@ export default {
             { evidenceKind: evidenceKindFilter.value, replicaRelation: replicaRelationFilter.value }
         ));
 
+        // 0.8.187 — the export document a click on "Export Evidence"
+        // below hands to the browser. Calls 0.8.186's own describeXxx()
+        // over the THREE already-computed facts above — filteredEvidenceDetail,
+        // the same evidenceKindFilter/replicaRelationFilter pair, and
+        // comparisonState — never a fourth, independently recomputed
+        // evidence selection. See this file's own header, "0.8.187."
+        const evidenceExport = computed(() => describePublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceExport(
+            filteredEvidenceDetail.value,
+            { evidenceKind: evidenceKindFilter.value, replicaRelation: replicaRelationFilter.value },
+            comparisonState.value
+        ));
+
+        // Page-local, never-persisted download state — mirrors
+        // ui/views/DecentralizedPublicationsView.js's own "Export
+        // Archive" shape exactly: a `data:` URI a person clicks to
+        // download, never a programmatically triggered download.
+        const evidenceExportPackage = reactive({ json: '', fileName: '', downloadHref: '' });
+
+        function exportEvidence() {
+            const json = JSON.stringify(evidenceExport.value, null, 2);
+            evidenceExportPackage.json = json;
+            evidenceExportPackage.fileName = 'reconciliation-candidate-leaderboard-evidence-export.json';
+            evidenceExportPackage.downloadHref = 'data:application/json;charset=utf-8,' + encodeURIComponent(json);
+        }
+
         return {
             page, evidenceDetail, comparisonState,
             evidenceKindFilter, replicaRelationFilter, filteredPage, filteredEvidenceDetail,
             evidenceKindOptions: RECONCILIATION_CANDIDATE_LEADERBOARD_EVIDENCE_KIND_OPTIONS,
             replicaRelationOptions: RECONCILIATION_CANDIDATE_LEADERBOARD_REPLICA_RELATION_OPTIONS,
-            peerArchiveText, hasPeerArchive, peerArchiveInvalid, usePeerArchive, clearPeerArchive
+            peerArchiveText, hasPeerArchive, peerArchiveInvalid, usePeerArchive, clearPeerArchive,
+            evidenceExportPackage, exportEvidence
         };
     },
     template: `
@@ -333,6 +419,28 @@ export default {
                         <option v-for="option in replicaRelationOptions" :key="option.value" :value="option.value">{{ option.label }}</option>
                     </select>
                 </label>
+            </div>
+
+            <div class="evidence-inspection-adapter reconciliation-leaderboard-evidence-export">
+                <span class="evidence-inspection-adapter-title">Evidence Export</span>
+                <p class="form-hint form-hint--neutral">
+                    Exports exactly the evidence currently shown above — the same Evidence
+                    Filter selection and the same peer comparison state — as a portable
+                    JSON document. Nothing here recomputes evidence, filters a candidate,
+                    or contacts a server.
+                </p>
+                <div class="identity-mgmt-actions">
+                    <button type="button" class="action-btn action-btn--secondary" @click="exportEvidence">
+                        Export Evidence
+                    </button>
+                </div>
+                <div v-if="evidenceExportPackage.json" class="evidence-inspection-adapter">
+                    <span class="evidence-inspection-adapter-title">Exported Evidence</span>
+                    <textarea class="form-input identity-export-json" rows="6" readonly :value="evidenceExportPackage.json"></textarea>
+                    <div class="identity-mgmt-actions">
+                        <a class="modal-btn modal-btn--primary" :href="evidenceExportPackage.downloadHref" :download="evidenceExportPackage.fileName">Download Evidence Export</a>
+                    </div>
+                </div>
             </div>
 
             <ReconciliationCandidateLeaderboardTable :page="filteredPage" :evidence-detail="filteredEvidenceDetail" :comparison-state="comparisonState" />

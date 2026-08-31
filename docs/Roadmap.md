@@ -43318,3 +43318,86 @@ a caller does with it is entirely outside this file's own reach.
 updated to describe the exportable evidence document;
 `PublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceExport.test.js`
 registered in `tests.html`.
+
+## 0.8.187 — Reconciliation Candidate Leaderboard Evidence Export UI Integration
+
+0.8.186 produced a pure, exportable JSON document but deliberately stopped
+there — "a download/export button around it is separate, deliberately
+tiny, later work," its own header said. This milestone is that button,
+and nothing more: turning 0.8.186's already-produced document into a
+user action.
+
+```text
+ReconciliationCandidateLeaderboardView
+             │
+             ▼
+   0.8.186 describeXxx()
+             │
+             ▼
+      browser download
+```
+
+**One new control, "Export Evidence," on the existing leaderboard view —
+no new application projection.** `ui/views/ReconciliationCandidateLeaderboardView.js`
+adds one computed value, `evidenceExport`, and one click handler,
+`exportEvidence()`. `evidenceExport` calls 0.8.186's own `describeXxx()` —
+never its `reconstructXxx()` — over three facts the view already computes:
+`filteredEvidenceDetail` (0.8.185), the SAME `evidenceKindFilter`/
+`replicaRelationFilter` pair `filteredPage`/`filteredEvidenceDetail`
+themselves already read, and `comparisonState` (0.8.183). Calling
+`describeXxx()` directly, instead of `reconstructXxx()`, means exporting
+never re-reads either archive a further time — the export is strictly
+downstream of filtering and detail projection, never a second,
+independent evidence-selection algorithm.
+
+**The download mechanism is reused verbatim, not invented.** Clicking
+"Export Evidence" serializes `evidenceExport`'s own current value with
+`JSON.stringify()` and builds a `data:application/json` URI from it,
+exactly mirroring `ui/views/DecentralizedPublicationsView.js`'s own
+"Export Archive" shape: a person clicks a real `download`-attributed link
+to save the file, never a programmatically triggered download.
+
+**Exporting never recomputes, re-filters, or re-derives anything.**
+Clicking "Export Evidence" does not calculate an evidence count, filter a
+candidate, inspect either archive, compare an observation, deduplicate a
+record, sort a candidate, or construct an export record by hand — every
+one of those questions was already answered by 0.8.183/0.8.184/0.8.185
+before this milestone's own code runs.
+
+**Flagship regression**, the milestone's own worked example, proven as the
+full chain a click on "Export Evidence" performs: user selects
+`evidenceKind = OBSERVATIONS`, `replicaRelation = TARGET_ONLY` ->
+0.8.184's own `filteredPage` -> 0.8.185's own `filteredEvidenceDetail` ->
+0.8.186's own `describeXxx()` -> the document a download would carry.
+
+```text
+C1
+Decision:    Shared [D1] / Source-only [D2]
+Observation: Shared [O1] / Target-only [O2, O3]
+
+OBSERVATIONS + TARGET_ONLY  → downloaded JSON contains O2, O3 only
+                               D1, D2, O1 absent
+```
+
+Also covered: 0.8.183's `NO_PEER`/`PEER_EMPTY` distinction survives into
+the exported document even when the underlying evidence is byte-identical
+(empty) between the two — an empty export from `NO_PEER` never becomes
+indistinguishable from an empty export from `PEER_EMPTY`; and a
+vocabulary/wiring boundary check (the view calls 0.8.186's own
+`describeXxx()` exactly once, never `reconstructXxx()`, and every prior
+`reconstructXxx()`/`describeXxx()` call from 0.8.179 through 0.8.185 still
+fires exactly once, unchanged).
+
+**Deliberately excluded — not this milestone**, per the milestone's own
+request: calculating evidence counts, performing filtering, inspecting
+archives, comparing observations, deduplicating records, sorting
+candidates, constructing export records by hand, communicating with a
+server, persisting the peer archive, and any ranking terminology — every
+one of those stays exactly where 0.8.176 through 0.8.186 already put it.
+Automatic export, clipboard synchronization, server upload, and scheduled
+export are each separate, later concerns.
+
+`docs/Roadmap.md` updated; `docs/user/09-PublicationsAndEvidence.md`
+updated to describe the "Evidence Export" control and the download it
+produces; `ReconciliationCandidateLeaderboardEvidenceExportUI.test.js`
+registered in `tests.html`.
