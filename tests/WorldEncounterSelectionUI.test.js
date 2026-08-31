@@ -53,12 +53,18 @@ function markerCtx(overrides = {}) {
 }
 
 function canvasCtx(overrides = {}) {
-    return {
+    const ctx = {
         view: WorldEncounterCanvas.props.view.default(),
+        // Never supplied by this file's own tests — 0.9.13 added this
+        // prop, but selection (0.9.4) predates and is independent of it;
+        // `effectiveView` below therefore always falls back to `view`.
+        registry: null,
         wandererPosition: { x: 0, y: 0, z: 0 },
         selectedEncounter: null,
         ...overrides
     };
+    ctx.effectiveView = WorldEncounterCanvas.computed.effectiveView.call(ctx);
+    return ctx;
 }
 
 async function run() {
