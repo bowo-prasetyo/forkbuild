@@ -41648,3 +41648,104 @@ Decision side                              Observation side
 `docs/Roadmap.md` updated;
 `PublisherLeaderboardClaimSnapshotReconciliationCandidateDecisionRevalidationObservationEvolutionView.test.js`
 registered in `tests.html`.
+
+## 0.8.173 — Reconciliation Candidate Observation Evolution Difference Projection
+
+0.8.166 answered "which observation records exist on one replica's history
+but not the other's?" by a pure multiset difference over OBSERVATION
+identity. 0.8.172 answered "how did the recorded observations concerning
+each candidate evolve over time?" by grouping a single history's own
+observations by CANDIDATE identity. This milestone answers the question
+neither one does — the observation-history analogue of
+`application/PublisherLeaderboardClaimSnapshotReconciliationCandidateDecisionEvolutionDifferenceView.js`
+(0.8.155), one subject over: a new `application/
+PublisherLeaderboardClaimSnapshotReconciliationCandidateDecisionRevalidationObservationEvolutionDifferenceView.js`
+with two functions,
+`describePublisherLeaderboardClaimSnapshotReconciliationCandidateDecisionRevalidationObservationEvolutionDifference()`
+and
+`reconstructPublisherLeaderboardClaimSnapshotReconciliationCandidateDecisionRevalidationObservationEvolutionDifference()`,
+answering "given two replicas' observation histories, what candidate-specific
+observation events are exclusive to each replica?" This is deliberately
+*not* a comparison of candidates themselves — it is a comparison of the
+observations belonging to those candidates.
+
+**Architecture — 0.8.166 runs first, exactly once, over the two whole
+histories; 0.8.172 then runs exactly twice, each time over one
+already-computed exclusive-observation array**, never the reverse:
+`sourceHistory`/`targetHistory` → 0.8.166 (called once) → `sourceOnly`/
+`targetOnly` → 0.8.172, applied independently to `sourceOnly` and to
+`targetOnly` → `sourceOnlyCandidateEvolutions`/`targetOnlyCandidateEvolutions`.
+The unsound composition this file deliberately avoids would run 0.8.172
+independently over the whole source history and the whole target history,
+producing two complete candidate-observation-evolution results, and then
+attempt to diff those — either losing observation-level granularity or
+silently reintroducing a candidate-identity comparison through the back
+door. 0.8.166 remains responsible for observation identity and multiset
+difference; 0.8.172 remains responsible for candidate grouping and
+chronological ordering; this file merely preserves the composition between
+them, preventing a third observation-comparison algorithm from emerging.
+Its only imports are 0.8.166's own difference module and 0.8.172's own
+evolution module — nothing from 0.8.144, 0.8.157, 0.8.162 through 0.8.165,
+or 0.8.171.
+
+**The output preserves both levels of information, neither one collapsed
+into the other**: `{ sourceObservationCount, targetObservationCount,
+sharedObservationCount, sourceOnlyObservationCount,
+targetOnlyObservationCount, sourceOnly, targetOnly,
+sourceOnlyCandidateEvolutions, targetOnlyCandidateEvolutions }`.
+`sourceOnly`/`targetOnly` are 0.8.166's own raw exclusive-observation
+arrays, carried through byte-for-byte, unchanged. `sourceOnlyCandidateEvolutions`/
+`targetOnlyCandidateEvolutions` are the SAME exclusive observations, viewed
+through 0.8.172's own candidate lens. `sharedObservationCount` is derived
+arithmetic, never a third comparison: because 0.8.166's own difference is a
+multiset subtraction, `sourceObservationCount - sourceOnlyObservationCount`
+and `targetObservationCount - targetOnlyObservationCount` are always equal,
+and that single shared value is reported once.
+
+**Flagship test** proves the milestone's own worked example: source
+`C1→O1, C1→O2, C2→O3`; target `C1→O1, C1→O4, C2→O5`. The shared `O1`
+cancels out of both exclusive lists; `sourceOnly = [O2, O3]` groups into
+`sourceOnlyCandidateEvolutions` as `C1→[O2]`, `C2→[O3]`; `targetOnly =
+[O4, O5]` groups into `targetOnlyCandidateEvolutions` as `C1→[O4]`,
+`C2→[O5]`. The particularly important fact this scenario makes observable:
+**C1 exists on both sides and has a shared observation, while
+simultaneously having exclusive observations on both sides** — reported
+plainly as the distribution of historical observations, never labeled
+conflict, disagreement, or resolution. Further sections cover multiset
+multiplicity preserved through both stages (`[O1, O1, O2]` vs `[O1, O2]`
+yields exactly one exclusive observation, never doubled by grouping), all
+three candidate shapes (`DIVERGENT_CORRESPONDENCE`,
+`CLAIM_WITHOUT_CORRESPONDING_SNAPSHOT`, `SNAPSHOT_WITHOUT_CORRESPONDING_CLAIM`)
+remaining closed groups even when they share a numeric/index-like value,
+local pre-existing duplicates never normalized away, malformed-input
+tolerance, no mutation of any supplied object, determinism,
+`reconstructXxx()`'s archive-reading boundary (0.8.166 called exactly
+once), and a permanent architectural regression test proving the module
+imports only 0.8.166's difference and 0.8.172's evolution, nothing else
+from the reconciliation family.
+
+**Deliberately excluded — not this milestone.** No interpretation of a
+source-only/target-only observation as a conflict, inconsistency,
+correction, or need for resolution. No export, import, application, or
+synchronization of the exclusive observations found. No deduplication of
+any kind — 0.8.166's own multiset discipline is inherited unchanged. No
+comparing, merging, or cross-referencing `sourceOnlyCandidateEvolutions`
+against `targetOnlyCandidateEvolutions`. No per-candidate breakdown of
+shared/source-only/target-only observation counts — that is 0.8.174's own,
+separately sized, later question (Reconciliation Candidate Observation
+Agreement Projection); this milestone reports only the whole-history
+`sharedObservationCount`, never a per-candidate one. No plan
+reconstruction, candidate selection, correspondence discovery, divergence
+detection, or signature verification. No persistence or synchronization of
+any kind beyond the one 0.8.166 seam `reconstructXxx()` already uses. No
+automatic, periodic, or background computation of any kind.
+
+```
+Decision side                                    Observation side
+─────────────                                    ────────────────
+0.8.155 Candidate Decision Evolution Difference   0.8.173 Candidate Observation Evolution Difference   ★
+```
+
+`docs/Roadmap.md` updated;
+`PublisherLeaderboardClaimSnapshotReconciliationCandidateDecisionRevalidationObservationEvolutionDifferenceView.test.js`
+registered in `tests.html`.
