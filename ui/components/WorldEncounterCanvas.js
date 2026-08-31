@@ -68,16 +68,44 @@ import WandererMarker from './WandererMarker.js';
 // own row order, unchanged — there is no `.sort()` anywhere in this file.
 //
 // NO DISTANCE, NEAREST, NEARBY, RADIUS, SCORE, RANK, TRUST, VERIFIED,
-// WINNER, OR CORRECTNESS VOCABULARY OF ANY KIND, and NO CLICK/SELECT/
-// INSPECT HANDLING. Every marker below is inert — see
-// ui/components/WorldEncounterMarker.js's own header for why that stays
-// 0.9.4's own unscheduled seam.
+// WINNER, OR CORRECTNESS VOCABULARY OF ANY KIND.
 //
 // MALFORMED `view` DEGRADES TO AN EMPTY RENDER — NEVER THROWS. A `view`
 // that is `null`, `undefined`, or missing a genuine `publications`/
 // `avatars` array degrades to zero markers of either kind (the Wanderer
 // still renders) — the same posture 0.9.1's and 0.9.2's own application
 // layer already holds at their own boundaries.
+//
+// 0.9.4 — World Encounter Selection.
+//
+// This is the one behavior 0.9.3 explicitly left out: this component now
+// OWNS the Wanderer's current selection, as page-local UI state only —
+//
+//   marker click (WorldEncounterMarker's own `select` emit)
+//           ↓
+//   selectEncounter()
+//           ↓
+//   selectedEncounter = { kind, objectId }
+//
+// `selectedEncounter` lives entirely in this component's own `data()`,
+// exactly like `wandererPosition` above it — no StorageProvider write, no
+// network call, no global/Vuex-style store, no archive mutation. Selecting
+// a marker never re-fetches, re-derives, or mutates `view` itself; the
+// prop this component received stays exactly what its caller handed it
+// (see ui/components/WorldEncounterMarker.js's own header, "0.9.4 adds
+// exactly one thing").
+//
+// ONE SELECTION STATE, NOT TWO. `selectedEncounter` is a single
+// `{ kind, objectId }` pair, never split into `selectedPublication` /
+// `selectedAvatar`. The World already established publications and
+// avatars as two encounter kinds; selection answers "which encounter did
+// the Wanderer select?", not two separate questions.
+//
+// SELECTING NEVER INSPECTS. `selectedEncounter` carries only the identity
+// a marker emitted — `kind` and `objectId` — and nothing is fetched,
+// compared, verified, or ranked as a result of selecting it. Turning a
+// selection into an inspection request is separate, later, unscheduled
+// work (0.9.5).
 const WORLD_HALF_SPAN = 50;
 const CANVAS_SIZE = 600;
 
@@ -107,7 +135,11 @@ export default {
         return {
             // Page-local only — see this file's own header, "the
             // Wanderer's position is page-local UI state."
-            wandererPosition: { x: 0, y: 0, z: 0 }
+            wandererPosition: { x: 0, y: 0, z: 0 },
+            // Page-local only — see this file's own header, "0.9.4 —
+            // World Encounter Selection." `null` until the Wanderer
+            // selects a marker; thereafter exactly `{ kind, objectId }`.
+            selectedEncounter: null
         };
     },
     computed: {
@@ -141,42 +173,74 @@ export default {
         },
         isWorldEmpty() {
             return this.publicationRows.length === 0 && this.avatarRows.length === 0;
+        },
+        // 'Publication' | 'Avatar' — a display label only, derived from
+        // `selectedEncounter.kind`. Never stored on `selectedEncounter`
+        // itself, and never anything richer than this one word: no
+        // "selected"/"verified"/"trusted"/"nearby" vocabulary enters the
+        // selection state anywhere in this file.
+        selectedEncounterKindLabel() {
+            if (!this.selectedEncounter) return '';
+            return this.selectedEncounter.kind === 'AVATAR' ? 'Avatar' : 'Publication';
+        }
+    },
+    methods: {
+        // The only writer of `selectedEncounter`. Takes exactly what a
+        // WorldEncounterMarker's own `select` emit carries — `{ kind,
+        // objectId }` — and stores it verbatim; no lookup, no join back
+        // into `view`, no re-derivation of any kind.
+        selectEncounter(encounter) {
+            this.selectedEncounter = encounter;
         }
     },
     template: `
-        <svg
-            class="world-encounter-canvas"
-            viewBox="0 0 600 600"
-            role="img"
-            aria-label="World View"
-        >
-            <rect class="world-encounter-canvas-background" x="0" y="0" width="600" height="600" />
+        <div class="world-encounter-view">
+            <svg
+                class="world-encounter-canvas"
+                viewBox="0 0 600 600"
+                role="img"
+                aria-label="World View"
+            >
+                <rect class="world-encounter-canvas-background" x="0" y="0" width="600" height="600" />
 
-            <text v-if="isWorldEmpty" class="world-encounter-canvas-empty-hint" x="300" y="24" text-anchor="middle">
-                Nothing encounterable here yet.
-            </text>
+                <text v-if="isWorldEmpty" class="world-encounter-canvas-empty-hint" x="300" y="24" text-anchor="middle">
+                    Nothing encounterable here yet.
+                </text>
 
-            <WorldEncounterMarker
-                v-for="marker in projectedPublications"
-                :key="'publication:' + marker.objectId"
-                kind="PUBLICATION"
-                :object-id="marker.objectId"
-                :label="marker.label"
-                :x="marker.x"
-                :y="marker.y"
-            />
+                <WorldEncounterMarker
+                    v-for="marker in projectedPublications"
+                    :key="'publication:' + marker.objectId"
+                    kind="PUBLICATION"
+                    :object-id="marker.objectId"
+                    :label="marker.label"
+                    :x="marker.x"
+                    :y="marker.y"
+                    @select="selectEncounter"
+                />
 
-            <WorldEncounterMarker
-                v-for="marker in projectedAvatars"
-                :key="'avatar:' + marker.objectId"
-                kind="AVATAR"
-                :object-id="marker.objectId"
-                :label="marker.label"
-                :x="marker.x"
-                :y="marker.y"
-            />
+                <WorldEncounterMarker
+                    v-for="marker in projectedAvatars"
+                    :key="'avatar:' + marker.objectId"
+                    kind="AVATAR"
+                    :object-id="marker.objectId"
+                    :label="marker.label"
+                    :x="marker.x"
+                    :y="marker.y"
+                    @select="selectEncounter"
+                />
 
-            <WandererMarker :x="projectedWanderer.x" :y="projectedWanderer.y" />
-        </svg>
+                <WandererMarker :x="projectedWanderer.x" :y="projectedWanderer.y" />
+            </svg>
+
+            <div v-if="selectedEncounter" class="world-encounter-selection-panel">
+                <h4 class="world-encounter-selection-title">Selected encounter</h4>
+                <dl class="world-encounter-selection-detail">
+                    <dt>Kind</dt>
+                    <dd>{{ selectedEncounterKindLabel }}</dd>
+                    <dt>Object</dt>
+                    <dd>{{ selectedEncounter.objectId }}</dd>
+                </dl>
+            </div>
+        </div>
     `
 };
