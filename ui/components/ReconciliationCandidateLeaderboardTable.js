@@ -1,3 +1,5 @@
+import ReconciliationCandidateEvidenceDetailPanel from './ReconciliationCandidateEvidenceDetailPanel.js';
+
 // 0.8.180 — Reconciliation Candidate Leaderboard UI Integration.
 //
 // 0.8.179 wired two archives all the way through to a page-ready result —
@@ -76,11 +78,65 @@
 //   above.
 // - **A `winner`, `correct`/`incorrect`, `valid`, `preferred`, `status`,
 //   or `confidence` column of any kind.**
-// - **Filtering, a candidate detail/inspection panel, pagination, refresh
-//   behavior, or a formal ranking/scoring model.** Real, separately sized,
-//   later work — only worth naming after this page has actually been seen.
+// - **Filtering, pagination, refresh behavior, or a formal ranking/scoring
+//   model.** Real, separately sized, later work — only worth naming after
+//   this page has actually been seen.
 // - **Persistence, synchronization, or archive access of any kind.** This
-//   component only ever reads the `page` prop it is handed.
+//   component only ever reads the `page`/`evidenceDetail` props it is
+//   handed.
+//
+// 0.8.182 — Reconciliation Candidate Evidence Detail View adds exactly one
+// interaction on top of the above, and nothing else: an "Inspect Evidence"
+// button per row that expands a panel showing the actual records behind
+// that row's own six counts, rendered by
+// `ReconciliationCandidateEvidenceDetailPanel.js`. The detail data itself
+// comes from a SECOND, independent prop — `evidenceDetail`, shaped like
+// `application/PublisherLeaderboardClaimSnapshotReconciliationCandidateEvidenceDetailView.js`'s
+// (0.8.182) own `{ candidateCount, candidates }` result — never derived from
+// `page` or from this component's own displayed counts; see that file's own
+// header for why the two are two independent readings of the identical
+// 0.8.176 result rather than one built on the other.
+//
+// A DISPLAY ROW (0.8.180's OWN `rows`, UNCHANGED) CARRIES NO CANDIDATE
+// IDENTITY OF ITS OWN — so a row is matched to its own `evidenceDetail`
+// entry in two steps, never by assuming `page.rows` and
+// `evidenceDetail.candidates` are the same length or the same order:
+// `candidateKeyForIndex()` first reads the display row's own ORIGINAL
+// candidate off `genuinePageRows[index]` — `page.rows`, filtered by the
+// IDENTICAL predicate `buildLeaderboardRows()` itself already applies, so
+// it stays index-aligned with `rows` even if a malformed page row is ever
+// filtered out — then `detailFor()` looks that candidate up inside
+// `evidenceDetail.candidates` by CANDIDATE IDENTITY
+// (`candidateIdentityKey()`, 0.8.147's/0.8.156's/0.8.176's own structural
+// key, duplicated here for the identical reason `describeCandidateLabel()`
+// already duplicates 0.8.144's own candidate-shape decoding rather than
+// importing application/ to get it), via `detailByCandidateKey`. `page` and
+// `evidenceDetail` are built by two separate `reconstructXxx()` calls and
+// are under no obligation to hold reference-equal `candidate` objects —
+// identity, not object identity or array position, is what ties them
+// together. Which rows are expanded is this component's own, entirely
+// local, presentational state (`expandedKeys`) — it is never persisted,
+// never affects `rows`/`page`/`evidenceDetail` themselves, and resets
+// whenever this component remounts.
+
+// The complete structural candidate identity key — 0.8.147's/0.8.153's/
+// 0.8.156's/0.8.171's/0.8.174's/0.8.176's own key, duplicated here for the
+// identical reason `describeCandidateLabel()` already duplicates 0.8.144's
+// own candidate-shape decoding: this component imports nothing from
+// `application/`.
+function candidateIdentityKey(candidate) {
+    if (!candidate || typeof candidate !== 'object') return 'UNKNOWN:none';
+    if (candidate.type === 'DIVERGENT_CORRESPONDENCE') {
+        return `DIVERGENT_CORRESPONDENCE:${candidate.claimId}:${candidate.snapshotIndex}`;
+    }
+    if (candidate.type === 'CLAIM_WITHOUT_CORRESPONDING_SNAPSHOT') {
+        return `CLAIM_WITHOUT_CORRESPONDING_SNAPSHOT:${candidate.claimId}`;
+    }
+    if (candidate.type === 'SNAPSHOT_WITHOUT_CORRESPONDING_CLAIM') {
+        return `SNAPSHOT_WITHOUT_CORRESPONDING_CLAIM:${candidate.snapshotIndex}`;
+    }
+    return `UNKNOWN:${JSON.stringify(candidate)}`;
+}
 
 export function describeCandidateLabel(candidate) {
     if (!candidate || typeof candidate !== 'object') return 'Unknown candidate';
@@ -101,6 +157,17 @@ function safeCount(value) {
     return typeof value === 'number' && Number.isFinite(value) ? value : 0;
 }
 
+// The one shape check buildLeaderboardRows() applies to a page row before
+// mapping it — extracted so `genuinePageRows()` below can apply the
+// IDENTICAL filter to `page.rows` and stay index-aligned with the display
+// rows `rows` produces, without buildLeaderboardRows() itself needing to
+// carry a candidate-identity key onto its own returned shape (unchanged
+// from 0.8.180 — see `ReconciliationCandidateLeaderboardUI.test.js`'s own
+// exact-field-shape assertion on a display row).
+function isGenuinePageRow(row) {
+    return Boolean(row) && typeof row === 'object';
+}
+
 // buildLeaderboardRows() — the pure transform this component's own
 // template renders verbatim. Takes 0.8.179/0.8.178's own `page` result (or
 // anything shaped like it) and returns one flat display row per entry in
@@ -109,7 +176,7 @@ export function buildLeaderboardRows(page) {
     const sourceRows = page && Array.isArray(page.rows) ? page.rows : [];
 
     return sourceRows
-        .filter((row) => Boolean(row) && typeof row === 'object')
+        .filter(isGenuinePageRow)
         .map((row) => Object.freeze({
             candidateLabel: describeCandidateLabel(row.candidate),
             decisionShared: safeCount(row.decisionEvidence && row.decisionEvidence.sharedCount),
@@ -121,10 +188,36 @@ export function buildLeaderboardRows(page) {
         }));
 }
 
+// detailEntryByKey() — 0.8.182's own `evidenceDetail.candidates` array,
+// indexed by candidate identity so a row can look up its own detail entry
+// in constant time. Tolerates a malformed/absent `evidenceDetail` the same
+// way `buildLeaderboardRows()` tolerates a malformed `page` — degrades to
+// an empty map, never throws.
+function detailEntryByKey(evidenceDetail) {
+    const sourceCandidates = evidenceDetail && Array.isArray(evidenceDetail.candidates) ? evidenceDetail.candidates : [];
+    const map = new Map();
+    for (const entry of sourceCandidates) {
+        if (!entry || typeof entry !== 'object') continue;
+        map.set(candidateIdentityKey(entry.candidate), entry);
+    }
+    return map;
+}
+
 export default {
     name: 'ReconciliationCandidateLeaderboardTable',
+    components: { ReconciliationCandidateEvidenceDetailPanel },
     props: {
-        page: { type: Object, default: null }
+        page: { type: Object, default: null },
+        evidenceDetail: { type: Object, default: null }
+    },
+    data() {
+        return {
+            // Which rows' detail panels are open — purely local,
+            // presentational state, keyed by candidateIdentityKey(). Never
+            // persisted, never read by any computed property above this
+            // component.
+            expandedKeys: {}
+        };
     },
     computed: {
         rows() {
@@ -135,6 +228,35 @@ export default {
         },
         rowCount() {
             return this.page && typeof this.page.rowCount === 'number' ? this.page.rowCount : 0;
+        },
+        // The SAME filter buildLeaderboardRows() itself applies to
+        // `page.rows`, kept index-aligned with `rows` above — this is how a
+        // display row (which carries no candidate identity of its own,
+        // unchanged from 0.8.180) is matched back to its own candidate for
+        // evidence-detail lookup, without relying on `page.rows[index]`
+        // directly (which is NOT guaranteed index-aligned with `rows` once
+        // a malformed entry is filtered out).
+        genuinePageRows() {
+            const sourceRows = this.page && Array.isArray(this.page.rows) ? this.page.rows : [];
+            return sourceRows.filter(isGenuinePageRow);
+        },
+        detailByCandidateKey() {
+            return detailEntryByKey(this.evidenceDetail);
+        }
+    },
+    methods: {
+        candidateKeyForIndex(index) {
+            const pageRow = this.genuinePageRows[index];
+            return candidateIdentityKey(pageRow ? pageRow.candidate : null);
+        },
+        isExpanded(candidateKey) {
+            return Boolean(this.expandedKeys[candidateKey]);
+        },
+        toggleExpanded(candidateKey) {
+            this.expandedKeys[candidateKey] = !this.expandedKeys[candidateKey];
+        },
+        detailFor(candidateKey) {
+            return this.detailByCandidateKey.get(candidateKey) || null;
         }
     },
     template: `
@@ -149,6 +271,7 @@ export default {
                                 <th rowspan="2" class="reconciliation-leaderboard-candidate-col">Candidate</th>
                                 <th colspan="3">Decision Evidence</th>
                                 <th colspan="3">Observation Evidence</th>
+                                <th rowspan="2"></th>
                             </tr>
                             <tr>
                                 <th>Shared</th>
@@ -160,15 +283,28 @@ export default {
                             </tr>
                         </thead>
                         <tbody>
-                            <tr v-for="(row, index) in rows" :key="index">
-                                <td class="reconciliation-leaderboard-candidate-col">{{ row.candidateLabel }}</td>
-                                <td>{{ row.decisionShared }}</td>
-                                <td>{{ row.decisionSourceOnly }}</td>
-                                <td>{{ row.decisionTargetOnly }}</td>
-                                <td>{{ row.observationShared }}</td>
-                                <td>{{ row.observationSourceOnly }}</td>
-                                <td>{{ row.observationTargetOnly }}</td>
-                            </tr>
+                            <template v-for="(row, index) in rows" :key="index">
+                                <tr>
+                                    <td class="reconciliation-leaderboard-candidate-col">{{ row.candidateLabel }}</td>
+                                    <td>{{ row.decisionShared }}</td>
+                                    <td>{{ row.decisionSourceOnly }}</td>
+                                    <td>{{ row.decisionTargetOnly }}</td>
+                                    <td>{{ row.observationShared }}</td>
+                                    <td>{{ row.observationSourceOnly }}</td>
+                                    <td>{{ row.observationTargetOnly }}</td>
+                                    <td>
+                                        <button type="button" class="action-btn action-btn--secondary evidence-inspect-btn"
+                                                @click="toggleExpanded(candidateKeyForIndex(index))">
+                                            {{ isExpanded(candidateKeyForIndex(index)) ? 'Hide Evidence' : 'Inspect Evidence' }}
+                                        </button>
+                                    </td>
+                                </tr>
+                                <tr v-if="isExpanded(candidateKeyForIndex(index))" class="evidence-detail-row">
+                                    <td colspan="8">
+                                        <ReconciliationCandidateEvidenceDetailPanel :detail="detailFor(candidateKeyForIndex(index))" />
+                                    </td>
+                                </tr>
+                            </template>
                         </tbody>
                     </table>
                 </div>

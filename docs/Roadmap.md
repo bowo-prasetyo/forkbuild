@@ -42627,3 +42627,152 @@ targetArchive (real once        ┘
 updated to describe the Peer Archive box and the now-genuine directional
 comparison; `ReconciliationCandidateLeaderboardPeerArchiveComparison.test.js`
 registered in `tests.html`.
+
+## 0.8.182 — Reconciliation Candidate Evidence Detail View
+
+0.8.177/0.8.178/0.8.179/0.8.180 built the Leaderboard's own COUNTS path —
+a reader sees "C1 — Observation: Shared 2 / Source-only 1 / Target-only
+3" — and stopped there on purpose: "this file carries no evidence lists —
+only counts," 0.8.177's own header said. The natural next question a
+reader asks — "which observations are those?" — had no answer anywhere in
+this codebase. This milestone is that answer.
+
+```text
+0.8.176 Candidate Evidence Agreement
+          │
+          ├── counts ──────► 0.8.177 ─► 0.8.178 ─► 0.8.179 ─► table
+          │
+          └── evidence records ─────────────────────────────► 0.8.182 ─► detail panel   ★
+```
+
+**The invariant this milestone exists to hold:** the number displayed in
+the table and the records displayed underneath it, once expanded,
+originate from the identical domain result — 0.8.176's own already-grouped
+`decisionAgreement`/`observationAgreement`. No arithmetic is ever needed
+to relate them, because neither path is built on top of the other; both
+read 0.8.176 directly.
+
+**No second (or third) comparison algorithm.** 0.8.176's own `candidates`
+entries already carry, per candidate, both the counts AND the underlying
+decision/observation records, already grouped by candidate and already
+split Shared / Source-only / Target-only — 0.8.176's own header called
+this out explicitly: "per-candidate evidence lists are a grouping of
+0.8.156's/0.8.174's own global arrays, never a new comparison." A new
+`application/PublisherLeaderboardClaimSnapshotReconciliationCandidateEvidenceDetailView.js`
+reads those lists directly and performs a pure rename/reshape pass —
+`decisionAgreement.sharedDecisions` becomes `decisionDetail.shared`, and
+so on — never re-grouping, re-deriving, or re-sorting anything.
+
+**Candidate is surfaced, never invented.** A 0.8.145 decision record
+already carries `candidate` on its own top level, so every decision
+detail record is 0.8.176's own record, completely unchanged. A 0.8.162
+observation record does NOT carry `candidate` on its own top level (it
+lives one level down, on `decision.candidate`); this milestone's one
+genuine reshape adds exactly that one field, read off the record's own
+already-embedded value — the identical value 0.8.176 already used to
+group that exact record under that exact candidate in the first place.
+
+```text
+describePublisherLeaderboardClaimSnapshotReconciliationCandidateEvidenceDetail(evidenceAgreement)
+  -> { candidateCount,
+       candidates: [{ candidate,
+                       decisionDetail: { sharedCount, sourceOnlyCount, targetOnlyCount,
+                                          shared, sourceOnly, targetOnly },
+                       observationDetail: { sharedCount, sourceOnlyCount, targetOnlyCount,
+                                             shared, sourceOnly, targetOnly } }] }
+
+reconstructPublisherLeaderboardClaimSnapshotReconciliationCandidateEvidenceDetail(sourceArchive, targetArchive)
+  -> calls 0.8.176's own reconstructXxx() exactly once — the SAME seam
+     0.8.177's own reconstructXxx() already calls — then describeXxx() above
+```
+
+**Imports exactly one module — 0.8.176 — and nothing else.** Never
+0.8.177/0.8.178/0.8.179 (the counts path — a sibling reading of 0.8.176,
+never this file's own dependency); the counts path and the detail path
+are two independent readings of the identical 0.8.176 result.
+
+**UI layer — an "Inspect Evidence" button per row, and nothing else.**
+`ui/components/ReconciliationCandidateEvidenceDetailPanel.js` is a pure
+projection renderer (imports nothing from `application/`, exactly
+0.8.180's own discipline) that renders one candidate's own
+`decisionDetail`/`observationDetail` as two sections, each split Shared /
+Source-only / Target-only. `ui/components/ReconciliationCandidateLeaderboardTable.js`
+gains a second, independent prop — `evidenceDetail` — and matches a
+display row to its own detail entry by CANDIDATE IDENTITY
+(`candidateIdentityKey()`, duplicated here for the identical reason
+`describeCandidateLabel()` already duplicates 0.8.144's own candidate-shape
+decoding), never by assuming `page.rows` and `evidenceDetail.candidates`
+share length or order. Which rows are expanded is the table's own,
+entirely local, presentational state — never persisted, never affecting
+`page`/`evidenceDetail` themselves.
+`ui/views/ReconciliationCandidateLeaderboardView.js` calls 0.8.182's own
+`reconstructXxx()` exactly once, over the IDENTICAL `sourceArchive`/
+`targetArchive.value` it already hands to 0.8.179's own `reconstructXxx()`
+for `page` — never a third archive, never a different pair — so a row's
+own counts and its own expanded detail can never drift out of sync with
+each other, including after a peer archive (0.8.181) is supplied or
+cleared.
+
+**`planFingerprint` finally becomes useful.** Because observation detail
+carries `planIdentity` unchanged, a reader can see WHICH explicit plan an
+observation was checked against, without the UI ever claiming one plan is
+authoritative over another.
+
+**`candidateMatchesPlan` is displayed as a fact, never interpreted.** The
+panel prints "yes"/"no" for `candidatePresent`/`candidateMatchesPlan` — it
+never renders "stale," "invalid," or "needs attention" for
+`candidateMatchesPlan: false`.
+
+**Flagship scenario:**
+
+```text
+C1
+  shared decision D1, source-only decision D2
+  shared observation O1 (Plan P1)
+  source-only observation O2 (Plan P2)
+  target-only observation O3 (Plan P3)
+```
+
+`tests/PublisherLeaderboardClaimSnapshotReconciliationCandidateEvidenceDetailView.test.js`
+proves: the table counts are unchanged; opening C1 reveals exactly those
+records; shared/source-only/target-only classification is preserved;
+decision and observation evidence remain separate; `planFingerprint`
+survives into observation detail (three genuinely distinct fingerprints
+for three genuinely distinct plans); `candidateMatchesPlan` is a plain
+boolean; record order always matches 0.8.176's own order, record for
+record; no record is ever fabricated from a forged count; and neither
+archive is ever mutated. A dedicated regression proves same
+candidate/decision/different-plan, and same candidate/plan/different-
+`observedAt`, each remain two distinct observation detail records, never
+collapsed because they "look similar."
+`tests/ReconciliationCandidateEvidenceDetailUI.test.js` carries the
+identical flagship one layer further — through the real archive-backed
+pipeline into the table's own candidate->detail lookup and the panel's
+own rendered entries — and proves the view's own new wiring: 0.8.182's
+`reconstructXxx()` called exactly once, over the same archive pair
+0.8.179's own call already reads, `evidenceDetail` handed to the table as
+a prop, and the table still importing nothing from `application/`.
+
+**Deliberately excluded — not this milestone.** Ranking, scoring, a
+"winner," conflict resolution, automatic synchronization, automatic plan
+selection, a "best" candidate, correctness judgments, replacing the peer
+archive, or persisting the pasted peer archive — all inherited unchanged
+from every layer beneath this one. Editing, deleting, or acting on a
+record from the detail panel — this remains a read-only inspection
+surface.
+
+```text
+0.8.176 Candidate Evidence Agreement
+          │
+          ├── counts ──────► 0.8.177 ─► 0.8.178 ─► 0.8.179 ─► table
+          │                                                      │
+          │                                          Inspect Evidence
+          │                                                      ▼
+          └── evidence records ─────────────────────────────► 0.8.182 detail panel   ★
+```
+
+`docs/Roadmap.md` updated; `docs/user/09-PublicationsAndEvidence.md`
+updated to describe the Inspect Evidence panel;
+`PublisherLeaderboardClaimSnapshotReconciliationCandidateEvidenceDetailView.test.js`
+and `ReconciliationCandidateEvidenceDetailUI.test.js` registered in
+`tests.html`.

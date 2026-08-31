@@ -2089,6 +2089,43 @@ and rows appear in the order this replica discovered them, never
 reordered by how much evidence a candidate has. Nothing here declares one
 candidate more correct, more resolved, or more trustworthy than another.
 
+**Inspecting the actual records behind a row's own counts.** Every row
+carries an **Inspect Evidence** button. Click it and the row opens into a
+panel showing the actual decision and observation records those six
+numbers count — the same records, split the same way (Shared /
+Source-only / Target-only), never a second, independently-computed
+comparison:
+
+```
+Candidate                          Decision Evidence          Observation Evidence
+                                    Shared Source-only Target-only  Shared Source-only Target-only
+Claim claim-7f3a ↔ Snapshot #3        1        1           0          1        1           1     [Hide Evidence]
+
+  Decision Evidence
+    Shared (1)                          Source-only (1)                Target-only (0)
+    OBSERVE — decided 2026-08-31T06:00:00.000Z   DEFER — decided 2026-08-31T06:03:00.000Z   None
+
+  Observation Evidence
+    Shared (1)                          Source-only (1)                Target-only (1)
+    OBSERVE — observed 12:00 —          OBSERVE — observed 12:05 —      OBSERVE — observed 12:10 —
+    plan abcdef012345… —                plan 112233445566… —            plan 998877665544… —
+    present: yes — matches plan: yes    present: yes — matches plan: no  present: no — matches plan: no
+```
+
+The count on the row and the records under it always agree — no
+arithmetic connects the two; both are read off the identical, already-
+computed comparison. **Plan fingerprint** is shown for each observation so
+you can see which explicit plan it was checked against, without this page
+ever claiming one plan is the "right" one. **Present** and **matches
+plan** are shown exactly as recorded — plain facts, never a verdict like
+"stale" or "needs attention." Two observations that look similar (same
+candidate, same decision, checked against two different plans; or the
+same plan, checked at two different times) always appear as two separate
+entries — never merged into one because they resemble each other.
+Clicking **Inspect Evidence** again (now labeled **Hide Evidence**)
+collapses the panel; which rows are open is remembered only for as long
+as you stay on the page.
+
 **In practice, this page shows "No reconciliation candidates to display"
 today.** Nothing else in this app currently records a reconciliation
 decision or a revalidation observation — that's groundwork laid for a
