@@ -43559,3 +43559,100 @@ choice.
 `docs/Roadmap.md` updated;
 `PublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceExportComparison.test.js`
 registered in `tests.html`.
+
+## 0.8.190 — Reconciliation Candidate Leaderboard Evidence Export Comparison Read Model
+
+0.8.189 answers, for two already-exported reports, exactly which
+candidates, decisions, and observations are shared and which are exclusive
+to each document — in full structural detail, complete with the record
+arrays themselves. Nothing yet turns that detailed answer into the compact
+shape a summary UI would actually put on screen — the identical gap 0.8.176
+left for 0.8.177 to close, one layer up. A new
+`application/PublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceExportComparisonReadModel.js`
+with one function,
+`describePublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceExportComparisonReadModel(comparison)`.
+
+**Takes 0.8.189's own result directly — never two exported documents.**
+`describeXxx()` performs a pure, structural transform of 0.8.189's own
+already-computed `comparison` result. It never touches `sourceExport`/
+`targetExport` themselves, never re-derives `sameComparisonState`/
+`sameFilter`, and never re-partitions any evidence — that boundary stays
+entirely 0.8.189's own. A caller starting from two raw exported documents
+calls 0.8.189's own `describeXxx()` first, then hands its result here.
+
+**Result shape:** `{ metadata: { comparisonState: { source, target, same },
+filter: { source, target, same } }, candidates: { sourceOnlyCount,
+sharedCount, targetOnlyCount }, decisionEvidence: { sourceOnlyCount,
+sharedCount, targetOnlyCount }, observationEvidence: { sourceOnlyCount,
+sharedCount, targetOnlyCount } }` — nine counts and five metadata facts,
+every one of them 0.8.189's own fact, copied field-by-field. Deliberately
+smaller than 0.8.189's own result: no `sourceCount`/`targetCount`, and none
+of the `shared`/`sourceOnly`/`targetOnly` record arrays survive onto this
+read model — a caller needing the underlying records already has 0.8.189's
+own result for that. `metadata.filter.source`/`target` forward 0.8.189's
+own `sourceFilter`/`targetFilter` objects verbatim, grouped under
+`metadata` purely for a summary panel's own convenience.
+
+**Candidate presence, decision evidence, and observation evidence stay
+three independent dimensions, never reconciled against one another** —
+0.8.189's own flagship distinction, held here again one layer up. A shared
+candidate can carry source-only decision evidence and target-only
+observation evidence at once; this file reports each of the three count
+triples exactly as 0.8.189 already computed it, with no cross-checking
+between them.
+
+**One deliberate omission:** no `sameCandidates`, `sameDecisionEvidence`,
+or `sameObservationEvidence` boolean. 0.8.189 itself resisted collapsing
+evidence agreement into a boolean; a reader here can already tell whether a
+dimension agrees by checking whether its own `sourceOnlyCount`/
+`targetOnlyCount` are both zero. `metadata.comparisonState.same`/
+`metadata.filter.same` are forwarded, not invented — 0.8.189 already
+computed those two as named facts about the export documents themselves,
+not about their evidence.
+
+**Flagship scenario:** same candidate set on both documents, different
+decision evidence, different observation evidence, different filters, same
+comparison state — all five facts preserved independently, with no record
+array exposed anywhere in the result.
+
+**Further sections** cover: byte-identical comparison → byte-identical
+read model; a shared candidate carrying no shared evidence at all;
+evidence differences under identical candidate presence, and candidate
+differences under identical (empty) evidence; `NO_PEER` vs `PEER_EMPTY`
+distinguished even when every count is zero; multiset multiplicity counts
+forwarded exactly, never re-derived; row/record order intentionally
+discarded (reordering the underlying exports never changes the read
+model); every count traced back to 0.8.189's own count, with no derived
+total and no raw `sourceCount`/`targetCount` forwarded; malformed/absent
+input degrading to an empty, `NO_PEER`, `ALL`/`ALL` read model rather than
+throwing; determinism, no mutation, frozen output throughout; and a
+permanent architectural regression test proving the module imports nothing
+at all, declares no `reconstructXxx()` of its own, assembles no
+`shared`/`sourceOnly`/`targetOnly` array, and carries no reconciliation/
+ranking/judgment vocabulary.
+
+**Deliberately excluded — not this milestone.** The `shared`/`sourceOnly`/
+`targetOnly` record arrays, or `sourceCount`/`targetCount`, on any of the
+three dimensions. Any `same*Evidence` verdict boolean — see "One
+deliberate omission," above. A score, rank, winner, `correct`/`incorrect`,
+`valid`, `stale`, `preferred`, `status`, or `confidence` field of any kind.
+Reconciling, merging, or explaining why the three dimensions disagree.
+Reading either exported document, either archive, or performing any
+comparison of its own. Any markup, DOM nodes, or control-rendering
+technology choice — a summary UI (if ever built) is separate, later,
+UI-layer work.
+
+```
+0.8.189 Evidence Export Comparison
+                │
+                ▼
+0.8.190 Evidence Export Comparison Read Model   ★
+                │
+                ├── future summary UI
+                ├── future comparison report
+                └── future export
+```
+
+`docs/Roadmap.md` updated;
+`PublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceExportComparisonReadModel.test.js`
+registered in `tests.html`.
