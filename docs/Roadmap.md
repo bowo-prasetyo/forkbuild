@@ -44510,7 +44510,148 @@ Deliberately paused here, as recommended, rather than automatically
 proposing 0.8.198. This milestone establishes explicit-pairing semantics,
 exact field-level differences, and the factual result vocabulary as a pure
 application-layer projection; wiring an "Inspect differences" control into
-the existing identity inspection panel (0.8.198) is separate, later,
-UI-layer work, and — per the same reasoning that paused this codebase
-before 0.8.197 — that choice belongs to an explicit request, not an
-automatic continuation.
+the existing identity inspection panel is separate, later, UI-layer work,
+and — per the same reasoning that paused this codebase before 0.8.197 —
+that choice belongs to an explicit request, not an automatic continuation.
+
+---
+
+## 0.8.198 — Explicit Record Pairing Projection
+
+0.8.197 answers "which named fields differ between two paired records?" —
+but it takes the pairing itself as a given, caller-supplied argument, and
+has never had a file of its own that states what an explicit pair even IS.
+This milestone is that seam. A new
+`application/PublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceExportComparisonRecordPairsView.js`
+with one function,
+`describePublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceExportComparisonRecordPairs(pairs)`.
+
+```
+0.8.189 Detailed Export Comparison
+    │
+    ├── 0.8.193 Comparison Detail Projection
+    │       │
+    │       └── 0.8.195 Record Identity Projection
+    │
+    └── 0.8.197 Record Difference Projection
+             ▲
+             │
+    0.8.198 Explicit Record Pairing Projection   ★
+```
+
+**Result shape:** `{ decisionPairs: [ { source, target }, ... ],
+observationPairs: [ { source, target }, ... ] }`, `pairs` being a
+caller-supplied `{ decisionPairs: [ { source, target }, ... ],
+observationPairs: [ { source, target }, ... ] }`. That is deliberately the
+same shape 0.8.197 already accepts as its own `pairs` argument — this
+milestone's result is meant to be handed to 0.8.197 directly, unmodified.
+
+**No automatic pairing — the one invariant this milestone exists to
+protect, inherited unchanged from 0.8.197.** This file never searches for a
+"matching" record and never manufactures a pair. It has no `sourceOnly` or
+`targetOnly` array to read in the first place — its own one argument
+already IS the pairing. There is no `.find(...)`, no candidate-identity
+lookup, no timestamp comparison, and no other heuristic anywhere in this
+file. Every pair it holds is a pair the caller explicitly supplied, at the
+exact array position the caller supplied it.
+
+**No difference computation — this file does strictly less than 0.8.197,
+on purpose.** `describeXxx()` reads two fields off each supplied pair and
+nothing else: no `sameValue()`, no field list, no `differences` array. This
+file establishes only "these two records were explicitly supplied as a
+pair"; 0.8.197, given this file's own result as its `pairs` argument, is
+what answers "which fields differ between that pair":
+
+```
+Explicit pairing (0.8.198)
+      │
+      ▼
+Field difference (0.8.197)
+```
+
+rather than records flowing through an automatic/guessed pairing into a
+difference into an implicit verdict.
+
+**Record identity is preserved — the supplied `source`/`target` are the
+original references, never cloned, normalized, or rewritten.** Unlike
+0.8.195's own `decisionIdentityOf()`/`observationIdentityOf()` (which
+project a record onto a new object of exactly its own named fields), this
+file never reads into `source`/`target` at all — it carries the two values
+straight through, so `pair.source === suppliedSource` and `pair.target ===
+suppliedTarget` hold for every pair returned. `Object.freeze()` freezes
+only the small `{ source, target }` wrapper this file itself allocates; it
+never freezes, and never even touches, whatever `source`/`target`
+themselves point at.
+
+**Decision pairs and observation pairs stay two separate sections,
+multiplicity remains meaningful.** `decisionPairs`/`observationPairs` are
+read and returned independently, inherited unchanged from every layer
+beneath this one. If the caller explicitly supplies the same pair twice
+(even the identical two references, at the identical array positions),
+both pairs remain present, in the exact order supplied — this file never
+compares one pair against another, so it has no way to notice, and no
+business trying to notice, that two supplied pairs "look the same."
+
+**Flagship scenario** — two observation records identical except for
+`candidateMatchesPlan`, explicitly paired:
+
+```
+source: candidateMatchesPlan = true
+target: candidateMatchesPlan = false
+```
+
+`describeXxx()` returns a pair whose `source`/`target` are the exact
+supplied references; handing that result straight to 0.8.197 identifies
+exactly `["candidateMatchesPlan"]`. Reversing which record is `source` and
+which is `target` reverses the pair but invents no additional difference.
+Supplying the same pair twice keeps both pairs, undeduplicated.
+
+**Further sections** cover: decision pairs and observation pairs staying
+independently ordered and never mixed; malformed/absent `pairs` input
+degrading every section to an empty array, and a malformed individual entry
+(not an object, or missing `source`/`target`) degrading to a structurally
+valid pair whose `source`/`target` are both `undefined` — never repaired by
+substituting some other record, and never dropped; determinism and a frozen
+result wrapper, while the supplied `source`/`target` objects themselves are
+never frozen, cloned, or otherwise touched — proven by mutating a supplied
+record after the call and observing the mutation visible through the
+returned pair; and a permanent architectural regression test proving the
+module imports nothing at all, declares no `reconstructXxx()` of its own,
+never reads `sourceOnly`/`targetOnly`, never calls `.find(...)`, and
+carries no difference/verdict vocabulary.
+
+**Deliberately excluded — not this milestone.** Automatically pairing a
+source-only record with a target-only record, or any candidate-identity/
+timestamp/plan-identity heuristic for manufacturing a pair — the flagship
+architectural constraint this milestone exists to hold. Computing any
+difference, similarity, or comparison between a pair's `source` and
+`target` — that stays 0.8.197's own, separate job. Cloning, normalizing, or
+rewriting a supplied `source`/`target`. Deduplicating, merging, or
+collapsing two supplied pairs that "look the same." Repairing a malformed
+pair by substituting or searching for another record. A `conflict`,
+`mismatchSeverity`, `winner`, `better`, `correct`, `stale`, `invalid`,
+`resolution`, or `recommendation` field or vocabulary of any kind. Any
+markup, DOM nodes, or control-rendering technology choice — this file
+returns plain, frozen, JSON-safe data; a UI where a human explicitly
+selects two records to pair (if ever built) is separate, later, UI-layer
+work, deliberately deferred. A dependency on 0.8.189, 0.8.195, or 0.8.197 —
+none is necessary, because this file's one argument is already whatever
+pairing the caller decided to build, from whatever records the caller
+already holds. Persistence, or automatic/periodic/background computation
+of any kind.
+
+`docs/Roadmap.md` updated;
+`PublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceExportComparisonRecordPairsView.test.js`
+registered in `tests.html`.
+
+---
+
+Deliberately paused here, rather than automatically proposing 0.8.199. This
+milestone establishes the seam between "these are two records" and "these
+are two records the caller deliberately chose to compare," as a pure,
+zero-import, leaf projection whose result feeds 0.8.197 unmodified; a
+paired-record difference read model or view, and wiring an explicit
+record-pair selection UI into the existing comparison page, are separate,
+later work, and — per the same reasoning that paused this codebase before
+every milestone in this series — that choice belongs to an explicit
+request, not an automatic continuation.
