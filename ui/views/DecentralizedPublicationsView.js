@@ -6702,6 +6702,17 @@ export default {
                 until one is. Connect to a peer first from <router-link to="/peers">Peers</router-link>.
             </p>
 
+            <!-- Reorganized so the page opens on the publication list itself
+                 rather than a wall of setup/inspection panels: everything
+                 below (wallet funding & connections, transaction review/
+                 signing/broadcast, archive export/import/comparison,
+                 anchor lifecycle records, reference graph, publisher
+                 achievements) is real, unchanged functionality — just
+                 collapsed behind one disclosure so it no longer pushes the
+                 catalog itself off-screen. -->
+            <details class="publications-tools-panel">
+                <summary class="publications-tools-panel-summary">Wallet, Archive &amp; Publisher Tools</summary>
+
             <!-- 0.8.60 — Explicit Bitcoin Anchor Funding & Address
                  Preparation. A page-level panel, deliberately unrelated to
                  any one publication's own evidence card below — this
@@ -8644,6 +8655,8 @@ export default {
                 </div>
             </div>
 
+            </details>
+
             <p v-if="loading" class="locations-panel-empty">Checking cataloged publications…</p>
             <p v-else-if="entries.length === 0" class="locations-panel-empty">
                 Nothing cataloged yet. Publish a signed attribution or naming claim, or connect to a peer who
@@ -8682,6 +8695,18 @@ export default {
                             {{ entry.checking ? 'Checking…' : 'Re-check' }}
                         </button>
                     </div>
+
+                    <!-- Everything below is unchanged functionality (local
+                         snapshot state, peer possession/transfer,
+                         decentralization & sync, external anchoring on
+                         Bitcoin/Base with wallet review/signing/broadcast/
+                         confirmation, snapshot placement, IPFS publishing,
+                         and the cross-domain observation timeline) —
+                         collapsed by default so each card in the list stays
+                         short, and opened per-publication only when that
+                         publication's own evidence is actually needed. -->
+                    <details class="identity-mgmt-card-details">
+                        <summary class="identity-mgmt-card-details-summary">Snapshot, Anchoring, IPFS &amp; Evidence Details</summary>
 
                     <!-- 0.8.33 — Local Snapshot Content Availability & Integrity UX. A
                          replica-local OBSERVATION of whether THIS device's own
@@ -10930,6 +10955,8 @@ export default {
                             </ul>
                         </div>
                     </div>
+
+                    </details>
                 </div>
             </div>
         </section>
