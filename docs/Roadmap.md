@@ -42177,3 +42177,99 @@ sections/columns/cards a page needs, and 0.8.179 builds the page.
 `docs/Roadmap.md` updated;
 `PublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardReadModel.test.js`
 registered in `tests.html`.
+
+## 0.8.178 — Reconciliation Candidate Leaderboard Page View
+
+0.8.177 handed the domain boundary a stable read model — one row per
+candidate, carrying only `decisionEvidence`/`observationEvidence` counts.
+Nothing yet shapes that into what an actual page renders. A new
+`application/PublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardView.js`
+with one function,
+`describePublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardView(readModel)`.
+
+**Zero imports — the architectural point of this milestone.** Every other
+projection in this family imports at least the one prior module it
+composes; this one imports nothing at all. `describeXxx()` performs a pure,
+duck-typed transform of whatever shape it is handed — exactly the way
+0.8.177's own `describeXxx()` duck-typed `evidenceAgreement.candidates`
+without importing 0.8.176's module to do it. There is therefore nothing
+here for a caller to accidentally import that would open a path back into
+reconciliation logic: no candidate selection, no candidate revalidation, no
+decision/observation history, no difference/agreement projection, no
+archive module, no synchronization, no plan reconstruction. A caller
+wanting this view built from real archives calls 0.8.177's own
+`reconstructXxx()` first and hands its result to `describeXxx()` — this
+file has no `reconstructXxx()` of its own, on purpose; wiring a real,
+archive-backed page together is explicitly 0.8.179's job.
+
+**Result shape:** `{ isEmpty, rowCount, rows: [{ candidate,
+decisionEvidence: { sharedCount, sourceOnlyCount, targetOnlyCount },
+observationEvidence: { sharedCount, sourceOnlyCount, targetOnlyCount } }] }`
+— page vocabulary (`rows`/`rowCount`/`isEmpty`) at the top level, deliberately
+distinct from 0.8.177's own domain vocabulary (`candidates`/`candidateCount`),
+while every row's own three fields keep 0.8.177's exact names and values,
+unchanged. `isEmpty` is exactly `rowCount === 0` — a structural flag, never
+empty-state copy of this file's own invention.
+
+**No ranking semantics of any kind — the deliberately dumb boundary.** Rows
+are 0.8.177's own `candidates` array, filtered for shape only and mapped one
+entry to one row, IN 0.8.177'S OWN ORDER, UNCHANGED — no `sort()` anywhere in
+this file, no re-ordering by candidate type, evidence count, or agreement
+outcome. No row carries a `score`, `rank`, `winner`,
+`correct`/`incorrect`/`valid`/`stale`/`conflict`/`preferred` flag, `status`,
+or `confidence` — this milestone's own name (and its own flagship's very
+uneven evidence counts) notwithstanding. Candidate identity is referenced,
+never copied or decoded into a human-readable label — presentation of the
+three-value candidate type is real, separately sized, later work.
+
+**Malformed input tolerance.** A `readModel` that is `null`, `undefined`, or
+missing a genuine `candidates` array degrades to `{ isEmpty: true,
+rowCount: 0, rows: [] }`, never a throw. Within an otherwise-genuine
+`candidates` array, an entry missing `candidate`, `decisionEvidence`, or
+`observationEvidence` is silently dropped rather than surfaced
+half-populated; survivors keep their original relative order. Within a
+genuine row, a missing or non-finite individual count degrades to `0`,
+mirroring `PublisherLeaderboardView.js`'s own `safeCount()` (0.8.113,
+UNCHANGED) — defensive coercion of a field 0.8.177 already names, never a
+new count of this file's own invention.
+
+**Flagship scenario** is the three-candidate design this milestone itself
+was proposed with: C1 — decisions Shared=2/Source=1/Target=0, observations
+Shared=1/Source=0/Target=2; C2 — decisions Shared=1/Source=0/Target=0,
+observations Shared=0/Source=2/Target=0; C3 — decisions
+Shared=0/Source=0/Target=1, observations Shared=1/Source=0/Target=0. C1
+carries the most total evidence and C3 the least, yet the page displays all
+three in their original C1/C2/C3 order — never re-ranked by evidence
+weight, never turned into a score.
+
+**Further sections** cover: malformed individual rows dropped without
+throwing or reordering survivors; row order preserved verbatim; no
+mutation, frozen results, determinism; exact minimal field shape at both
+the page level and the row level; a permanent architectural regression test
+proving the module imports nothing at all; and a real, end-to-end 0.8.177
+read model (built through 0.8.156/0.8.174/0.8.176/0.8.177's own real
+pipeline) flowing through `describeXxx()` unchanged.
+
+**Deliberately excluded — not this milestone.** No score, rank, ordering by
+evidence weight, or comparison between two candidates' own evidence. No
+`winner`/`correct`/`incorrect`/`valid`/`stale`/`conflict`/`preferred`/
+`status`/`confidence` field or vocabulary of any kind. No fourth candidate
+category, and no decoding of the existing three into a human-readable
+label. No actual markup, DOM node, styling, or rendering-technology choice
+— this remains plain, frozen, page-SHAPED data. No `reconstructXxx()` entry
+point or archive access of any kind. No persistence or synchronization. No
+automatic, periodic, or background computation.
+
+```
+0.8.177 Candidate Leaderboard Read Model
+                │
+                ▼
+0.8.178 Candidate Leaderboard Page View   ★
+                │
+                ▼
+             Browser
+```
+
+`docs/Roadmap.md` updated;
+`PublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardView.test.js`
+registered in `tests.html`.
