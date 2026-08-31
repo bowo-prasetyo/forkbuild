@@ -43201,3 +43201,120 @@ updated to describe how the Evidence Filter now also narrows a surviving
 row's own Inspect Evidence panel;
 `PublisherLeaderboardClaimSnapshotReconciliationCandidateFilteredEvidenceDetailView.test.js`
 registered in `tests.html`.
+
+## 0.8.186 — Reconciliation Candidate Leaderboard Evidence Export Projection
+
+0.8.184 decided which ROWS the leaderboard shows; 0.8.185 decided which
+RECORDS a surviving row's own Inspect Evidence panel shows. Both answer
+"what am I looking at" — neither one answers a reader's next, entirely
+natural question once they've found something worth keeping: "I found
+these candidates/evidence records — can I export exactly what I'm looking
+at?" This milestone closes that gap, and nothing more.
+
+```text
+0.8.182 Evidence Detail ──► 0.8.185 Filtered Evidence Detail ──┐
+                                                                 │
+0.8.181 Peer Archive ──► 0.8.183 Comparison State ──────────────┼──► 0.8.186 Evidence Export   ★
+                                                                 │
+0.8.184's own filter selection ─────────────────────────────────┘
+                                                                 │
+                                                                 ▼
+                                                     a portable JSON document
+```
+
+**A pure projection over three already-computed facts — never a new
+domain algorithm, never a fourth comparison.** A new, standalone
+`application/PublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceExport.js`
+exports one pure function:
+
+```text
+describePublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceExport(filteredEvidenceDetail, filter, comparisonState)
+  -> { protocolVersion, comparisonState, filter: { evidenceKind, replicaRelation },
+       candidateCount, candidates }
+```
+
+`filteredEvidenceDetail` is 0.8.185's own already-produced, already-
+filtered `{ candidateCount, candidates }` result — the exact records
+currently on screen. `filter` is the identical vocabulary 0.8.184's/
+0.8.185's own `describeXxx()` accept, recorded here purely as the export's
+own metadata. `comparisonState` is 0.8.183's own already-computed
+`NO_PEER`/`PEER_EMPTY`/`PEER_PRESENT` fact.
+
+**Export exactly the evidence currently represented by the filtered
+view — nothing newly computed.** `candidates` in the result is
+`filteredEvidenceDetail`'s own `candidates` array, referenced (`===`),
+never copied, reshaped, deduplicated, sorted, or ranked. `filter` is
+normalized into 0.8.184's/0.8.185's own `{ evidenceKind, replicaRelation }`
+shape and recorded as metadata — never re-applied to narrow `candidates` a
+second time. `comparisonState` is forwarded verbatim, never re-derived
+from whether `candidates` happens to be empty — an export produced under
+`NO_PEER` and one produced under `PEER_EMPTY` can hold byte-identical
+(empty) `candidates` while still disagreeing, honestly, about how the
+comparison came to be, exactly the distinction 0.8.183 exists to draw.
+
+**`protocolVersion` is a fixed constant** (`1`), never derived from
+anything this file reads, so a future reader of an exported document —
+person or code — can tell which export shape they are holding.
+
+**Explicitly prohibited, per this milestone's own request.** This file
+never reads the archive (no `PublicationObservationArchive` import
+anywhere in it), never recomputes evidence agreement, never revalidates a
+decision, never reconstructs a plan, never deduplicates or sorts a
+record, never ranks a candidate, never adds a timestamp for the act of
+exporting itself (mirroring `PublicationObservationArchiveExport.js`'s own
+"no `exportedAt`" restraint), never adds a signature, and never
+automatically transmits, uploads, or saves anything — `describeXxx()`
+returns a plain, frozen, JSON-safe object and nothing more.
+
+**Flagship regression**, the milestone's own asymmetric scenario, filtered
+through 0.8.185 to `OBSERVATIONS` + `TARGET_ONLY` before being handed to
+this file:
+
+```text
+C1
+Decision:    Shared [D1] / Source-only [D2]
+Observation: Shared [O1] / Target-only [O2, O3]
+
+OBSERVATIONS + TARGET_ONLY  → exported document contains O2, O3 only
+                               O1 absent, D1 absent, D2 absent
+```
+
+Also covered: calling `describeXxx()` twice with byte-identical arguments
+returns byte-identical output; changing only one observation's own
+`observedAt` changes the export, because `observedAt` is part of that
+observation's own already-established structural identity; NO_PEER and
+PEER_EMPTY exports stay distinct even when their own `candidates` are
+byte-identical; malformed/absent input on any of the three arguments
+degrades to an empty, valid, `NO_PEER`, `ALL`/`ALL` document rather than
+throwing; reference-identity and no-mutation checks; and a vocabulary/
+import-boundary check (imports exactly 0.8.183, 0.8.184, and 0.8.185 —
+never an archive-reading module, never 0.8.176/0.8.182 directly, and
+never 0.8.185's own `describeXxx()`, only its `reconstructXxx()`, to
+compose).
+
+**`describeXxx()`/`reconstructXxx()`** — the identical split every
+projection in this family already holds. `reconstructXxx()` calls
+0.8.185's own `reconstructXxx()` exactly once (obtaining the identical
+already-filtered detail the UI itself renders) and 0.8.183's own
+`describeXxx()` exactly once (obtaining the identical comparison-state
+fact the UI itself already computes), then hands both results, alongside
+`filter`, to `describeXxx()` above — never touching either archive
+itself.
+
+**No UI in this milestone, deliberately.** This file returns plain data;
+a download/export button around it (0.8.187) is separate, deliberately
+tiny, later work — the identical split 0.8.178/0.8.179/0.8.180 already
+held for the counts path, and 0.8.182 held for the detail panel.
+
+**Deliberately excluded — not this milestone.** See "Explicitly
+prohibited," above, plus: a score, rank, winner, `correct`/`incorrect`,
+`valid`, `stale`, `preferred`, `status`, or `confidence` field or
+vocabulary of any kind — inherited unchanged from every layer beneath
+this one. Any markup, DOM nodes, or control-rendering technology choice.
+Persisting an exported document anywhere — this file returns a value; what
+a caller does with it is entirely outside this file's own reach.
+
+`docs/Roadmap.md` updated; `docs/user/09-PublicationsAndEvidence.md`
+updated to describe the exportable evidence document;
+`PublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceExport.test.js`
+registered in `tests.html`.

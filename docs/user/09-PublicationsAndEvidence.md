@@ -2197,6 +2197,33 @@ never one chosen over the other. This never changes a count anywhere: a
 hidden record's own six-count row still reflects everything the candidate
 has recorded, only the panel's own, separate, record listing narrows.
 
+**Exporting exactly what's currently filtered.** The evidence this
+milestone's projection produces is a plain, portable JSON document — not
+yet wired to an on-screen button (that's separate, smaller, later work) —
+shaped like this:
+
+```json
+{
+  "protocolVersion": 1,
+  "comparisonState": "PEER_PRESENT",
+  "filter": { "evidenceKind": "OBSERVATIONS", "replicaRelation": "TARGET_ONLY" },
+  "candidateCount": 1,
+  "candidates": [ /* exactly the candidates the current filter shows, in the same order */ ]
+}
+```
+
+It records exactly the candidates and records the current **Evidence
+Filter** selection already narrowed the Inspect Evidence panels down to
+— nothing recomputed, nothing re-sorted, nothing deduplicated, and no
+record any filter already hid reappears. `comparisonState` and `filter`
+are recorded alongside the evidence so a document opened later still says
+whether it came from **No peer archive supplied**, **a peer archive that
+was supplied but empty**, or **a real comparison against a supplied
+peer** — three facts that can otherwise look identical once the evidence
+itself is empty — and which Evidence Filter selection produced it.
+Nothing here transmits, uploads, or saves the document anywhere; producing
+it is a pure, read-only step.
+
 **In practice, this page shows "No reconciliation candidates to display"
 today.** Nothing else in this app currently records a reconciliation
 decision or a revalidation observation — that's groundwork laid for a
