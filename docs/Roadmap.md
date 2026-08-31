@@ -42506,3 +42506,124 @@ Reconciliation Candidate Leaderboard (on screen)
 
 `docs/Roadmap.md` updated; `ReconciliationCandidateLeaderboardUI.test.js`
 registered in `tests.html`.
+
+## 0.8.181 — Explicit Peer Archive Leaderboard Comparison
+
+0.8.180 put the leaderboard on screen, but `targetArchive` was
+`PublicationObservationArchive.empty()`, full stop — no seam anywhere in
+the running app could supply a genuinely different second archive, so
+every row's evidence necessarily landed entirely in `sourceOnlyCount`.
+This milestone adds exactly one thing: a way for a person to supply a
+REAL peer archive explicitly, so the comparison the leaderboard already
+knew how to render can, for the first time, actually be one.
+
+```text
+0.8.179/0.8.180 (before)          0.8.181 (this milestone)
+
+sourceArchive (real) ──┐          sourceArchive (real) ──┐
+                        ├─► page                          ├─► page
+targetArchive = empty ─┘          targetArchive = empty,  ─┘
+                                   until a person pastes a
+                                   peer's own exported archive
+                                   and clicks "Use as Peer Archive"
+```
+
+**Nothing beneath the view changed — and nothing needed to.** 0.8.176's
+`reconstructXxx()`, 0.8.177's, 0.8.178's, and 0.8.179's `reconstructXxx()`
+already took `sourceArchive`/`targetArchive` as two independent, genuine
+archives; only `ui/views/ReconciliationCandidateLeaderboardView.js`'s own
+`targetArchive` was ever hardcoded. This milestone therefore touches
+exactly one file's own wiring, never the evidence agreement, the read
+model, or the page view — "an explicit peer/archive boundary rather than
+modifying the evidence algorithms," per the milestone's own proposal.
+
+**The supply mechanism is 0.8.82's own `importPublicationObservationArchive()`,
+reused verbatim, not a new comparison algorithm.** A person exports a
+peer replica's archive elsewhere (0.8.82's own "Export Archive"), pastes
+the resulting JSON into a new "Peer Archive" box, and clicks "Use as Peer
+Archive" — `usePeerArchive()` calls 0.8.82's own import function exactly
+once, and a genuine payload becomes `targetArchive`. This is the same
+kind of explicit-paste seam this codebase already has for comparing
+fingerprints (0.8.85), importing an archive outright (0.8.82), and
+inspecting one without importing it (0.8.86) — never a network fetch,
+never automatic discovery.
+
+**Never becomes "the current archive" — inspection's own discipline
+(0.8.86), held here for a second, independent reason.** 0.8.86 drew the
+IMPORT/INSPECT line because those are two different actions on the SAME
+replica's own archive. This milestone needs a third action barred from
+ever becoming the active archive for a different reason: the pasted JSON
+becomes `targetArchive` — a second, independent, real archive read
+ALONGSIDE `sourceArchive`, never merged into it. Nothing in this file
+ever calls `publicationObservationArchiveStorage.save()`; the peer
+archive lives only in a page-local `ref`, and reloading the page returns
+it to `PublicationObservationArchive.empty()` every time.
+
+**No synchronization.** Supplying a peer archive never merges it into
+`sourceArchive`, never writes to `sourceArchive`'s own storage, and never
+produces a "combined" or "reconciled" archive — 0.8.169's own boundary,
+held one layer up: this milestone answers "what does this replica's
+evidence look like compared with that replica's?", never "how should
+these replicas be reconciled?" `sourceArchive` and `targetArchive` are
+each read, never written, by every function this file calls.
+
+**Malformed peer input is rejected, never silently treated as empty.**
+`usePeerArchive()` re-checks 0.8.82's own `outcome` and, for
+`INVALID_ARCHIVE`, leaves `targetArchive` completely untouched — a bad
+paste never quietly resets an already-supplied genuine peer archive back
+to empty, and is never treated as "the peer replica has nothing
+recorded." A separate `clearPeerArchive()` is the only way back to the
+honest-empty default.
+
+**Flagship regression — swapping the two archives swaps source-only and
+target-only evidence, and shared evidence never moves:**
+
+```text
+A → B
+
+C1: shared=1, sourceOnly=1, targetOnly=0
+
+B → A
+
+C1: shared=1, sourceOnly=0, targetOnly=1
+```
+
+`tests/ReconciliationCandidateLeaderboardPeerArchiveComparison.test.js`
+proves this over the task's own C1/C2/C3 asymmetric scenario in both
+directions — shared evidence unchanged, source-only/target-only swapped
+exactly, row count and candidate visibility (including C3, a
+target-only-at-the-decision-level candidate as A→B) unchanged by
+direction; proves the paste-based supply mechanism itself, by exporting a
+real archive to JSON text and reimporting it, producing a leaderboard
+result identical to supplying the same archive object directly; proves
+malformed peer input is rejected outright and never overwrites an
+already-supplied genuine one; and inspects the view's own source to
+confirm it imports 0.8.82's own seam, defines `usePeerArchive()`/
+`clearPeerArchive()`, never calls `.save()`, never references any
+networking/peer-discovery module, still calls 0.8.179's own
+`reconstructXxx()` exactly once, and carries no ranking/synchronization
+vocabulary anywhere in its own code.
+
+**Deliberately excluded — not this milestone.** Rank, score, winner,
+conflict status, or any judgment about which archive is correct —
+inherited unchanged from every layer beneath this one. Automatic
+synchronization, merging, or a "Fix"/"Sync" action of any kind — see "No
+synchronization," above. Discovering or fetching a peer's archive over
+the network — a real peer-discovery/exchange feature is separate, later
+work; this milestone's own mechanism is a person's own explicit paste.
+Persisting the supplied peer archive anywhere — it lives only in the
+view's own page-local state. Filtering, pagination, or visual polish of
+the leaderboard table itself — unchanged, real, separately sized, later
+work.
+
+```text
+sourceArchive (real, durable) ──┐
+                                 ├─► 0.8.179 reconstructXxx() ─► page ─► on screen
+targetArchive (real once        ┘
+  explicitly pasted — 0.8.181 ★)
+```
+
+`docs/Roadmap.md` updated; `docs/user/09-PublicationsAndEvidence.md`
+updated to describe the Peer Archive box and the now-genuine directional
+comparison; `ReconciliationCandidateLeaderboardPeerArchiveComparison.test.js`
+registered in `tests.html`.

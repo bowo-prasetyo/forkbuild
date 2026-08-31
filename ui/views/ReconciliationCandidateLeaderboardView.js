@@ -1,59 +1,99 @@
-import { computed, inject } from 'vue';
+import { ref, computed, inject } from 'vue';
 import { PublicationObservationArchive } from '../../application/PublicationObservationArchive.js';
+import {
+    importPublicationObservationArchive,
+    PublicationObservationArchiveImportOutcome
+} from '../../application/PublicationObservationArchiveExport.js';
 import {
     reconstructPublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardPage
 } from '../../application/PublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardPage.js';
 import ReconciliationCandidateLeaderboardTable from '../components/ReconciliationCandidateLeaderboardTable.js';
 
-// 0.8.180 — Reconciliation Candidate Leaderboard UI Integration.
+// 0.8.181 — Explicit Peer Archive Leaderboard Comparison.
 //
-// The archive-backed COUNTERPART of
-// ui/components/ReconciliationCandidateLeaderboardTable.js's own pure
-// rendering: this file is the one place in the running app that actually
-// calls 0.8.179's own `reconstructXxx()`, and hands its result straight to
-// the table component as a `page` prop, unchanged — the identical
-// "reconstructXxx() obtains the fact, describeXxx()/the renderer only ever
-// displays it" split every projection in this family already holds.
+// 0.8.180 wired this replica's own real archive all the way through to a
+// rendered leaderboard, but `targetArchive` was `PublicationObservationArchive
+// .empty()`, full stop — no seam existed anywhere in the running app to
+// supply a genuinely different second archive, so every row's counts
+// necessarily landed entirely in `sourceOnlyCount`. This milestone adds
+// exactly one thing: a way for a person to supply a REAL peer archive
+// explicitly, so `targetArchive` can, for the first time, be something
+// other than an honest absence.
 //
-//   sourceArchive ──┐
-//                   ├─► 0.8.179 reconstructXxx() ─► page ─► <ReconciliationCandidateLeaderboardTable>
-//   targetArchive ──┘
+//   sourceArchive (this replica's own, durable, unchanged) ──┐
+//                                                             ├─► 0.8.179 reconstructXxx() ─► page
+//   targetArchive (PublicationObservationArchive.empty() ────┘
+//                  until a person explicitly supplies a peer's own
+//                  exported archive below — never fetched, never
+//                  synchronized, never fabricated)
 //
-// `sourceArchive` IS THIS REPLICA'S OWN REAL, ALREADY-DURABLE ARCHIVE —
-// THE SAME `publicationObservationArchiveStorage` EVERY OTHER READ OF THIS
-// REPLICA'S OWN RECONCILIATION HISTORY ALREADY GOES THROUGH (see
-// ui/views/DecentralizedPublicationsView.js's own 0.8.75 wiring). Loaded
-// once, read-only — this view never calls `.save()`, so it can never
-// mutate the archive it displays.
+// THE SUPPLY MECHANISM IS 0.8.82'S OWN `importPublicationObservationArchive()`,
+// REUSED VERBATIM — NOT A NEW COMPARISON ALGORITHM, NOT A NEW ARCHIVE
+// ADAPTER. That function already does exactly what a peer archive needs
+// here: validate an externally-supplied JSON payload and, for a genuine
+// one, reconstruct a real `PublicationObservationArchive` instance via
+// `fromJSON()`. This file calls it exactly once, from `usePeerArchive()`,
+// on an explicit click — never on every keystroke, and never
+// automatically.
 //
-// `targetArchive` IS HONESTLY EMPTY, NEVER FABRICATED. Comparing this
-// replica's own archive against a genuinely DIFFERENT replica's archive
-// requires knowing which peer to compare against and fetching their
-// evidence — a real "source/target replica selection" feature 0.8.179's
-// own Roadmap entry named as separate, later work, not yet built anywhere
-// in this app. Until it exists, `targetArchive` is
-// `PublicationObservationArchive.empty()` rather than a second copy of
-// `sourceArchive` or any other invented stand-in — every count a reader
-// sees below is therefore an honest `sourceOnlyCount` (a fact this
-// replica alone has recorded), never a fabricated agreement/divergence
-// with a peer that was never actually consulted.
+// THIS IS INSPECTION'S OWN "NEVER BECOMES THE ACTIVE ARCHIVE" DISCIPLINE
+// (0.8.86), HELD HERE FOR A SECOND, INDEPENDENT REASON. 0.8.86 drew the
+// line between IMPORT (replaces `sourceArchive`, persisted) and INSPECT
+// (a read-only look at an external archive, never persisted, never
+// assigned over the current one) because those are genuinely different
+// actions on the SAME replica's own archive. This milestone needs a third
+// action again barred from ever becoming "the current archive": the
+// pasted JSON becomes `targetArchive` — a second, independent, real
+// archive this comparison reads ALONGSIDE `sourceArchive` — and nothing
+// here ever calls `publicationObservationArchiveStorage.save()` on it, or
+// on `sourceArchive` either. Closing this tab and reopening the page
+// returns `targetArchive` to `PublicationObservationArchive.empty()`
+// every time; only a person's own peer archive, from wherever they keep
+// it, ever makes it real again.
 //
-// PURE WIRING — NO NEW COMPUTATION. This file performs no evidence
-// comparison of its own; `page` is exactly 0.8.179's own result,
-// unchanged, passed straight through as a prop.
+// NO SYNCHRONIZATION. Supplying a peer archive here never merges it into
+// `sourceArchive`, never writes anything to `sourceArchive`'s own
+// storage, and never produces a "combined" or "reconciled" archive of any
+// kind — see 0.8.169's own boundary, held here one layer up: this
+// milestone answers "what does this replica's evidence look like compared
+// with that replica's?", never "how should these replicas be
+// reconciled?". `sourceArchive` and `targetArchive` are each read, never
+// written, by every function this file calls.
+//
+// NO NEW EVIDENCE COMPUTATION, NO NEW WRAPPER VOCABULARY. `page` is still
+// exactly 0.8.179's own `reconstructXxx()` result, called exactly once,
+// handed straight to the table component unchanged — the identical
+// "reconstructXxx() obtains the fact, the renderer only ever displays it"
+// split every projection in this family already holds. Neither the
+// evidence agreement (0.8.176), the read model (0.8.177), nor the page
+// view (0.8.178) changed to make this possible — both were already
+// capable of taking two genuine archives; only this view's own
+// `targetArchive` was ever hardcoded.
+//
+// MALFORMED PEER INPUT IS REJECTED, NEVER SILENTLY TREATED AS EMPTY.
+// `usePeerArchive()` re-checks `importPublicationObservationArchive()`'s
+// own `outcome` and, for `INVALID_ARCHIVE`, leaves `targetArchive`
+// completely untouched — a bad paste never quietly resets a
+// already-supplied genuine peer archive back to empty, and never gets
+// treated as "the peer replica has nothing recorded." `peerArchiveInvalid`
+// exists only to surface that rejection on screen.
 //
 // DELIBERATELY EXCLUDED — NOT THIS MILESTONE.
-// - **Selecting a peer/target replica to compare against.** See
-//   "`targetArchive` is honestly empty," above — real, separately sized,
-//   later work.
-// - **Refresh/reload behavior.** `sourceArchive` is loaded once, on
-//   mount; a reconciliation decision or observation recorded afterward
-//   is not reflected without navigating back to this page again.
-// - **A top-level navigation entry.** This route is reachable by URL —
-//   like `ui/views/ChatView.js`'s own `/chat/:identityId` — but is not
-//   yet linked from `ui/App.js`'s own nav bar; that is a product
-//   decision for whichever future milestone gives this page a real
-//   entry point (e.g. from the Publication Center).
+// - **Rank, score, winner, conflict status, or any judgment about which
+//   archive is correct.** Inherited unchanged from every layer beneath
+//   this one — see 0.8.176's own flagship restraint.
+// - **Automatic synchronization, merging, or a "Fix"/"Sync" action of any
+//   kind.** See "No synchronization," above.
+// - **Discovering or fetching a peer's archive over the network.** A real
+//   peer-discovery/exchange feature is separate, later work; this
+//   milestone's own supply mechanism is a person's own explicit paste,
+//   exactly like every other external-archive seam this codebase already
+//   has (Compare Fingerprint, Import Archive, Inspect Archive).
+// - **Persisting the supplied peer archive anywhere.** It lives only in
+//   this component's own page-local `targetArchive` ref; reloading the
+//   page loses it, on purpose.
+// - **Filtering, pagination, or visual polish of the leaderboard table
+//   itself.** Unchanged, real, separately sized, later work.
 export default {
     name: 'ReconciliationCandidateLeaderboardView',
     components: { ReconciliationCandidateLeaderboardTable },
@@ -62,21 +102,85 @@ export default {
         const sourceArchive = publicationObservationArchiveStorage
             ? publicationObservationArchiveStorage.load()
             : PublicationObservationArchive.empty();
-        const targetArchive = PublicationObservationArchive.empty();
 
-        const page = computed(() => reconstructPublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardPage(sourceArchive, targetArchive));
+        // Page-local, never-persisted peer archive state. `targetArchive`
+        // starts exactly as 0.8.180 left it — an honest
+        // `PublicationObservationArchive.empty()` — and only ever becomes
+        // something else through `usePeerArchive()` below, on an explicit
+        // click.
+        const peerArchiveText = ref('');
+        const targetArchive = ref(PublicationObservationArchive.empty());
+        const hasPeerArchive = ref(false);
+        const peerArchiveInvalid = ref(false);
 
-        return { page };
+        // The one place this file calls 0.8.82's own
+        // `importPublicationObservationArchive()` — exactly once per
+        // click, never on every keystroke. A genuine payload becomes the
+        // new `targetArchive`; an invalid one is rejected and leaves
+        // whatever `targetArchive` already held untouched.
+        function usePeerArchive() {
+            const outcome = importPublicationObservationArchive(peerArchiveText.value);
+            if (outcome.outcome === PublicationObservationArchiveImportOutcome.IMPORTED) {
+                targetArchive.value = outcome.archive;
+                hasPeerArchive.value = true;
+                peerArchiveInvalid.value = false;
+            } else {
+                peerArchiveInvalid.value = true;
+            }
+        }
+
+        // Returns to the honest-empty default — never a mode of
+        // `usePeerArchive()` itself, always its own explicit click.
+        function clearPeerArchive() {
+            targetArchive.value = PublicationObservationArchive.empty();
+            peerArchiveText.value = '';
+            hasPeerArchive.value = false;
+            peerArchiveInvalid.value = false;
+        }
+
+        const page = computed(() => reconstructPublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardPage(sourceArchive, targetArchive.value));
+
+        return { page, peerArchiveText, hasPeerArchive, peerArchiveInvalid, usePeerArchive, clearPeerArchive };
     },
     template: `
         <section class="reconciliation-leaderboard-view">
             <h1>Reconciliation Candidate Leaderboard</h1>
             <p class="reconciliation-leaderboard-note">
                 Decision and observation evidence this replica has recorded for each
-                reconciliation candidate, shown separately. Comparing against a peer
-                replica's own archive is separate, later work — every count below
-                reflects this replica alone.
+                reconciliation candidate, compared explicitly against the peer archive
+                supplied below. Nothing here merges, replaces, or reconciles either
+                archive — this is a comparison, never a reconciliation.
             </p>
+
+            <div class="evidence-inspection-adapter">
+                <span class="evidence-inspection-adapter-title">Peer Archive</span>
+                <p v-if="!hasPeerArchive" class="form-hint form-hint--neutral">
+                    No peer archive supplied yet — every count below is Source-only
+                    until you paste one. Paste a peer replica's own exported archive
+                    (Export Archive, on the Publications page) and click
+                    "Use as Peer Archive".
+                </p>
+                <p v-else class="form-hint form-hint--neutral">
+                    Comparing against an explicitly supplied peer archive.
+                </p>
+                <label class="form-field">
+                    <span class="form-label">Peer archive JSON</span>
+                    <textarea class="form-input identity-export-json" rows="6" v-model="peerArchiveText"
+                              placeholder="Paste a peer replica's exported archive JSON"></textarea>
+                </label>
+                <div class="identity-mgmt-actions">
+                    <button type="button" class="action-btn action-btn--secondary" @click="usePeerArchive">
+                        Use as Peer Archive
+                    </button>
+                    <button type="button" class="action-btn action-btn--secondary" v-if="hasPeerArchive" @click="clearPeerArchive">
+                        Clear Peer Archive
+                    </button>
+                </div>
+                <p v-if="peerArchiveInvalid" class="identity-unlock-error">
+                    This is not a valid archive export — nothing was compared.
+                </p>
+            </div>
+
             <ReconciliationCandidateLeaderboardTable :page="page" />
         </section>
     `
