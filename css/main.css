@@ -5329,6 +5329,30 @@ html, body {
     margin-top: 0.75rem;
 }
 
+/* 0.8.196 — Evidence Comparison Identity Inspection UI. Each individual
+   decision/observation record listed under an "Inspect records" column
+   gets its own, smaller "Inspect identity" toggle directly beneath it;
+   opening it reveals 0.8.195's own named fields for that one record,
+   reusing .evidence-fields' dl/dt/dd shape verbatim (the same shape the
+   Comparison State/Filter metadata blocks already use) so an identity
+   panel never reads as a visually distinct kind of information. Neither
+   element is styled to imply a verdict — it is the same plain, muted
+   secondary-button/field treatment used everywhere else on this page. */
+.evidence-identity-inspect-btn {
+    display: block;
+    margin-top: 0.3rem;
+    font-size: 0.7rem;
+    padding: 0.25rem 0.5rem;
+}
+
+.evidence-identity-fields {
+    margin: 0.4rem 0 0.2rem;
+    padding: 0.5rem 0.6rem;
+    background: #101010;
+    border: 1px solid #2a2a2a;
+    border-radius: 4px;
+}
+
 @media (max-width: 720px) {
     .evidence-detail-columns {
         grid-template-columns: 1fr;

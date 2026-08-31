@@ -44287,17 +44287,123 @@ registered in `tests.html`.
 
 ---
 
-Deliberately paused here rather than automatically continuing to 0.8.196.
-The portable-export workflow (0.8.186 → 188 → 189 → {190 → 191 → 192,
-193 → 194 → 195}) is now a complete, page-ready evidence-inspection
-subsystem with an explicit, application-layer record-identity projection,
-alongside the sibling live-archive workflow (0.8.176 → … → 187). 0.8.195
-was deliberately kept application-layer-only — no UI was wired to it, so
-the existing `/evidence-export-comparison` page is unchanged by this
-milestone. Rather than mechanically opening a 0.8.196, the next major
-question is what the Leaderboard product actually needs next — whether
-record-identity detail actually improves that page, candidate-level
-navigation across the two workflows, archive/report persistence, or the
-explicit synchronization capability this codebase has deliberately
-deferred at every layer so far — and that choice belongs to an explicit
-request, not an automatic continuation.
+## 0.8.196 — Evidence Comparison Identity Inspection UI
+
+0.8.195 named a decision/observation record's own identity fields explicitly,
+but stopped short of pixels on purpose — the existing
+`/evidence-export-comparison` page was left unchanged. This milestone is
+that remaining hand-off, and nothing more: an additional inspection layer
+on top of 0.8.194's own per-dimension "Inspect records" columns, never a
+replacement for them.
+
+```
+0.8.191 Comparison View ──────┐
+                               ├─► ReconciliationCandidateLeaderboardEvidenceExportComparisonTable
+0.8.193 Comparison Detail ────┤
+             │                 │
+             ▼                 │
+0.8.195 Record Identity ───────┘
+```
+
+**Wiring, extending 0.8.192/0.8.194's own page.**
+`ui/views/ReconciliationCandidateLeaderboardEvidenceExportComparisonView.js`
+now also computes `comparisonIdentity` — 0.8.195's own
+`describePublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceExportComparisonRecordIdentity()`,
+called over `comparisonDetail.value` directly (0.8.195's own one-argument
+contract — never over `comparison.value`, `readModel.value`, or
+`comparisonView.value`) — and passes it down as a new `identity` prop,
+alongside the existing `view`/`detail` props, to
+`ReconciliationCandidateLeaderboardEvidenceExportComparisonTable`. No new
+route, no new page — the identical "extend the existing page rather than
+create another workflow" instruction 0.8.194 already followed.
+
+**Per-record "Inspect identity," nested under 0.8.194's own "Inspect
+records."** Every decision/observation record listed inside an expanded
+`shared`/`sourceOnly`/`targetOnly` column now carries its own "Inspect
+identity" control. Expanding it prints exactly 0.8.195's own named fields
+for that one record — `decided`/`candidate`/`decision`/`decidedAt` (4
+fields) for a decision record, `candidate`/`decision`/`planIdentity`/
+`candidatePresent`/`candidateType`/`candidateMatchesPlan`/`observedAt` (7
+fields) for an observation record — reusing `.evidence-fields`' own
+dl/dt/dd shape verbatim. An object-valued field (`candidate`, `decision`,
+`planIdentity`) is rendered as its own printable JSON text, a display
+convenience only; no field is ever computed, derived, or compared here.
+Candidate-presence records get no "Inspect identity" control — 0.8.195
+carries no `candidates` section, so this layer adds none either.
+
+**No prose explanation of why two records differ, and no identity
+comparison performed by the UI.** The panel prints one record's own named
+fields, never a sentence like "this observation differs because it was
+recorded later," and never a value read off, or compared against, any
+OTHER record — the milestone's own critical rule, held here as the literal
+absence of any diffing, similarity-scoring, or two-argument identity
+function anywhere in this file.
+
+**A stable, local-only inspection key, never application/domain data.**
+`identityKey(kind, section, index)` builds strings like
+`decision:sourceOnly:0` / `observation:targetOnly:1` purely so this
+component's own new `expandedIdentityRecords` data can track which
+records' identity panels are open — never read from, written onto, or
+compared against any `view`/`detail`/`identity` record, and never used as
+record identity itself. Toggling it, like 0.8.194's own `expanded`, never
+mutates any prop, resets to fully collapsed on every mount, and never
+touches `view`'s own summary counts.
+
+**No records are regrouped, no records are re-sorted.** Every identity
+array this layer reads is 0.8.195's own array, at 0.8.193's own record's
+own position — this file never reorders, re-partitions, or reduces either
+array; a record's own identity panel is looked up by the identical
+position its own label is rendered at.
+
+**Test flagship** (`tests/ReconciliationCandidateLeaderboardEvidenceExportComparisonUI.test.js`,
+extended with Sections U through Y), reusing 0.8.194's own three-observation
+asymmetric export pair: a decision/observation record's own identity panel
+displays exactly its own 4/7 named fields, field for field identical to the
+underlying 0.8.193 record, with 0.8.193's own records and 0.8.195's own
+identity objects both proven byte-identical before and after; no
+regrouping/re-sorting and no record-to-record comparison vocabulary
+anywhere in the component's own code; identity expand/collapse proven
+purely local (never mutating `view`/`detail`/`identity`, independent per
+record, summary counts untouched); malformed/absent identity data proven
+to degrade to an empty panel without breaking the existing detail
+records/labels, including a malformed individual identity record
+degrading to an all-`undefined` field list rather than throwing or
+vanishing; and a permanent sweep proving no ranking, correctness,
+synchronization, or reconciliation vocabulary, and no "because..."
+explanatory prose, anywhere in the component's own new code.
+
+**Deliberately excluded — not this milestone.** Any field-by-field
+comparison between two records, or any prose explaining why two records
+differ — this layer only ever names one record's own fields. Using the
+local inspection key as application or domain data. Candidate-presence
+identity inspection — 0.8.195 carries no `candidates` section. Regrouping
+the inspected evidence or identity by candidate. Persisting which records'
+identity panels are open, across a reload or across sessions — this state
+stays page-local, like every other piece of state on this page. A rank,
+score, winner, correct/incorrect, valid, stale, preferred, status, or
+confidence field or vocabulary of any kind — inherited unchanged from
+every layer beneath this one.
+
+`docs/Roadmap.md` updated; `css/main.css` updated
+(`.evidence-identity-inspect-btn`/`.evidence-identity-fields`); no new test
+file registered in `tests.html` — this milestone extends the existing
+`ReconciliationCandidateLeaderboardEvidenceExportComparisonUI.test.js`
+already registered there for 0.8.192/0.8.194.
+
+---
+
+Deliberately paused here, as recommended, rather than automatically
+proposing 0.8.197. The portable-export workflow
+(0.8.186 → 188 → 189 → {190 → 191 → 192 → 194 → 196, 193 → 195}) is now a
+complete, page-ready evidence-inspection subsystem carrying summary counts,
+record detail, AND per-record identity, alongside the sibling live-archive
+workflow (0.8.176 → … → 187). The chain from Archive through Evidence
+computation, Candidate evidence, Leaderboard, Filtering, Export/Import,
+Export comparison, Summary, Exact records, Record identity, to Human
+inspection is now complete end to end. Rather than mechanically opening a
+0.8.197, the next question is not "what projection can we add," but what
+capability is still genuinely missing for the user — improved usability,
+persistence/sharing of reports, candidate-centric navigation across the two
+workflows, or the explicit synchronization capability this codebase has
+deliberately deferred at every layer so far — and that choice belongs to an
+explicit request, not an automatic continuation.
