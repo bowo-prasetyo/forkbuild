@@ -5316,6 +5316,19 @@ html, body {
     margin-bottom: 0.25rem;
 }
 
+/* 0.8.194 — Evidence Export Comparison Detail UI. Each dimension's own
+   summary table stays the primary surface; ".evidence-export-comparison-
+   inspect-btn" is the per-dimension toggle that reveals 0.8.193's own
+   record columns (reusing .evidence-detail-columns/.evidence-detail-column
+   verbatim) underneath that one dimension only. */
+.evidence-export-comparison-inspect-btn {
+    margin-top: 0.75rem;
+}
+
+.evidence-export-comparison-dimension .evidence-detail-columns {
+    margin-top: 0.75rem;
+}
+
 @media (max-width: 720px) {
     .evidence-detail-columns {
         grid-template-columns: 1fr;
