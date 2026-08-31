@@ -41982,3 +41982,112 @@ Decision side                    Observation side
 `docs/Roadmap.md` updated;
 `PublisherLeaderboardClaimSnapshotReconciliationCandidateEvidenceSummaryView.test.js`
 registered in `tests.html`.
+
+## 0.8.176 — Reconciliation Candidate Evidence Agreement Projection
+
+0.8.175 combined a candidate's own decision evidence and observation
+evidence — over ONE replica — into a single candidate-centric summary.
+0.8.156 and 0.8.174 each already answer, independently, "given two
+replicas, which decisions (0.8.156) — or, separately, which observations
+(0.8.174) — are shared versus exclusive, and which candidates carry them?"
+Nothing yet states the question a reader eventually needs from BOTH
+already-answered agreement views at once: given two replicas, what
+candidate evidence — of either kind — is shared, and what evidence exists
+exclusively on each side? A new
+`application/PublisherLeaderboardClaimSnapshotReconciliationCandidateEvidenceAgreementView.js`
+with two functions,
+`describePublisherLeaderboardClaimSnapshotReconciliationCandidateEvidenceAgreement(sourceDecisionHistory, targetDecisionHistory, sourceObservationHistory, targetObservationHistory)`
+and
+`reconstructPublisherLeaderboardClaimSnapshotReconciliationCandidateEvidenceAgreement(sourceArchive, targetArchive)`.
+
+**No second comparison algorithm.** Rather than re-derive either
+multiset-subtraction or candidate-presence computation from raw history,
+this file composes two already-proven agreement views, each called exactly
+once: 0.8.156's own `describeXxx()`/`reconstructXxx()` for the decision
+branch, 0.8.174's own `describeXxx()`/`reconstructXxx()` for the observation
+branch. It then assembles the two already-computed results by the one key
+both already share — candidate identity — reading each already-computed
+per-candidate count verbatim off 0.8.156's/0.8.174's own `candidateAgreements`,
+and grouping each already-computed global `sharedDecisions`/`sourceOnly`/
+`targetOnly` (and their observation counterparts) by the candidate already
+embedded on each record (`record.candidate` for a decision, `record.decision.candidate`
+for an observation) — never recomputed.
+
+**Result shape:** `{ candidateCount, sourceDecisionCount, targetDecisionCount,
+sourceObservationCount, targetObservationCount, sharedDecisionCount,
+sourceOnlyDecisionCount, targetOnlyDecisionCount, sharedObservationCount,
+sourceOnlyObservationCount, targetOnlyObservationCount, candidates: [{
+candidate, decisionAgreement: { sharedDecisionCount, sourceOnlyDecisionCount,
+targetOnlyDecisionCount, sharedDecisions, sourceOnly, targetOnly },
+observationAgreement: { sharedObservationCount, sourceOnlyObservationCount,
+targetOnlyObservationCount, sharedObservations, sourceOnly, targetOnly } }],
+sameDecisionHistory, sameObservationHistory }`.
+
+**Decision agreement and observation agreement are not the same thing** —
+the flagship architectural principle this milestone exists to hold, and the
+reason `decisionAgreement`/`observationAgreement` are always reported side
+by side on one candidate entry, never merged into a single verdict.
+**Flagship scenario:** Alice (source) decides `D1, D2` about C1 and observes
+`O1, O2`; Bob (target) decides `D1, D3` about C1 and observes `O1, O3` — the
+ordinary case, C1 shared at both grains with exclusive evidence on each
+side. C2: both replicas decide `D4` identically (a SHARED candidate at the
+decision level), but only Alice ever observes it (`O4`) — Bob records no
+observation of C2 at all, so C2's own `observationAgreement` is entirely
+`sourceOnly`, despite sharing its decision. C3: only Bob ever decides about
+it (`D5`, a TARGET-ONLY candidate at the decision level), yet both replicas
+hold an observation naming C3 (`O5` on Alice, `O6` on Bob, same candidate,
+different `observedAt`) — a SHARED candidate at the observation level with
+ZERO shared observations. Shared decision evidence therefore never implies
+shared (or even mutual) observation evidence, and the reverse. No candidate
+in any of this is ever called conflicting, stale, resolved, correct, or
+incorrect — three plain, independent counts are reported per candidate, on
+each of the two dimensions, nothing more.
+
+**`sameDecisionHistory`/`sameObservationHistory` stay independent**,
+forwarded unchanged from 0.8.156's and 0.8.174's own `sameHistory` — two
+replicas can hold identical decision histories while their observation
+histories genuinely differ, or the reverse, each exercised directly by this
+milestone's own test.
+
+**Candidate order:** 0.8.156's own `candidateAgreements` order first, then
+any candidate named only by 0.8.174's own `candidateAgreements`, in that
+view's own first-appearance order — 0.8.175's own "decision branch first,
+then observation-only" discipline, held here again one layer up over two
+already-ordered agreement results.
+
+**Further sections** cover: a candidate present in one agreement view only
+reporting zero/empty, never null or fabricated, on the other view's own
+fields; every per-candidate list agreeing with its own count, and every
+per-candidate count summing back to the global total; no mutation of either
+supplied history; determinism; `reconstructXxx()`'s archive-reading boundary
+(calling 0.8.156's own `reconstructXxx()` and 0.8.174's own `reconstructXxx()`,
+each exactly once, never touching either archive directly); and a permanent
+architectural regression test proving the module imports exactly two
+modules — 0.8.156 and 0.8.174 — deliberately never any raw history/difference
+module, either archive-reading seam directly, either correspondence module,
+either candidate-evolution module, either exclusive-only difference module,
+or 0.8.175 itself.
+
+**Deliberately excluded — not this milestone.** No merging, averaging, or
+reconciling of `decisionAgreement`/`observationAgreement` into one combined
+per-candidate verdict. No score, rank, or comparison between two candidates'
+own agreement. No re-deriving the shared/exclusive multiset or the
+candidate-presence sets from raw history — that remains 0.8.156's and
+0.8.174's own, already-answered question. No deduplication of any kind. No
+persistence or synchronization of any kind. No reconciliation ACTION,
+applying anything, or execution of any kind. No Leaderboard UI or read model
+beyond this one candidate-centric agreement assembly — this remains a
+bridge, not the destination.
+
+```
+Decision side                         Observation side
+─────────────                         ────────────────
+0.8.156 Candidate Decision Agreement  0.8.174 Candidate Observation Evolution Agreement
+                    \                        /
+                     \                      /
+                      0.8.176 Candidate Evidence Agreement   ★
+```
+
+`docs/Roadmap.md` updated;
+`PublisherLeaderboardClaimSnapshotReconciliationCandidateEvidenceAgreementView.test.js`
+registered in `tests.html`.
