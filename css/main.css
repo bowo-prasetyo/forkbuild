@@ -5148,3 +5148,54 @@ html, body {
     border: 1px solid #2a2a2a;
     border-radius: 4px;
 }
+
+/* 0.8.180 — Reconciliation Candidate Leaderboard UI Integration */
+
+.reconciliation-leaderboard-view {
+    padding: 1.5rem;
+    max-width: 960px;
+    margin: 0 auto;
+}
+
+.reconciliation-leaderboard-note {
+    color: #909090;
+    font-size: 0.9rem;
+    max-width: 720px;
+}
+
+.reconciliation-leaderboard-summary {
+    color: #808080;
+    font-size: 0.85rem;
+    margin: 0 0 0.5rem;
+}
+
+.reconciliation-leaderboard-table-wrap {
+    overflow-x: auto;
+}
+
+.reconciliation-leaderboard-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.reconciliation-leaderboard-table th {
+    text-align: center;
+    padding: 0.5rem 0.75rem;
+    color: #808080;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    border-bottom: 1px solid #2a2a2a;
+}
+
+.reconciliation-leaderboard-table td {
+    padding: 0.6rem 0.75rem;
+    border-bottom: 1px solid #232323;
+    text-align: center;
+    font-size: 0.88rem;
+    color: #d0d0d0;
+}
+
+.reconciliation-leaderboard-candidate-col {
+    text-align: left !important;
+}

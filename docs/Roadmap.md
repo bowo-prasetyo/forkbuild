@@ -42402,3 +42402,107 @@ introduced — each real, separately sized future work.
 `docs/Roadmap.md` updated;
 `PublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardPage.test.js`
 registered in `tests.html`.
+
+## 0.8.180 — Reconciliation Candidate Leaderboard UI Integration
+
+0.8.179 produced a complete, archive-backed `{ isEmpty, rowCount, rows }`
+result — the entire projection tree from 0.8.144 through 0.8.179 stops
+there on purpose. This milestone is the first to actually put that result
+on screen, rather than adding another `describeXxx()` layer beneath it:
+
+```
+ui/components/ReconciliationCandidateLeaderboardTable.js
+  describeCandidateLabel(candidate) -> a short, readable label for
+    each of 0.8.144's three candidate shapes
+  buildLeaderboardRows(page) -> one display row per page.rows entry,
+    in the SAME order, every count copied straight across
+  default export -> a Vue component rendering the table (or the empty
+    state) from a `page` prop — imports NOTHING from application/
+
+ui/views/ReconciliationCandidateLeaderboardView.js
+  loads this replica's own real archive as sourceArchive (the SAME
+  `publicationObservationArchiveStorage` every other read of this
+  replica's own reconciliation history already goes through), builds
+  targetArchive as PublicationObservationArchive.empty() (comparing
+  against a peer replica is real, separate, later work — never
+  fabricated here), calls 0.8.179's own reconstructXxx() exactly once,
+  and hands the result to the table component unchanged
+```
+
+**A projection renderer, not a second authority.** `buildLeaderboardRows()`
+performs no computation of its own — it reads `page.rows` exactly as
+0.8.178/0.8.179 already produced it and copies each count straight across
+(`decisionEvidence.sharedCount` -> `decisionShared`, and so on). No count
+is added, dropped, combined, recomputed, or turned into a score; no
+`sort()` anywhere in either file. "0.8.179 says what to display, 0.8.180
+decides how to display it."
+
+**"Evidence leaderboard," not a ranked leaderboard.** The table header
+reads Candidate / Decision Evidence / Observation Evidence — never Rank /
+Score / Status — and rows render in `page.rows`' own order, unchanged.
+Despite the product name, this distinction has held from 0.8.144 through
+this milestone; introducing an actual ranking/scoring model, if ever
+warranted, is a separate future decision, not something this milestone
+sneaks in.
+
+**`describeCandidateLabel()` is the one genuinely new decision this
+milestone makes.** Every projection beneath this file left a row's
+`candidate` field as 0.8.144's own plain record, undecoded. A real page
+cannot print `[object Object]`, so this file decodes the three existing
+candidate shapes into a short, neutral label — naming which claim/snapshot
+a row is about, never judging it.
+
+**Decision evidence and observation evidence stay in separate column
+groups, never merged** — 0.8.176's own flagship principle, held again at
+the top of the chain.
+
+**Malformed/absent `page` degrades to the empty state, never throws** —
+the identical tolerance every projection beneath this one already holds.
+
+**Flagship test** (`tests/ReconciliationCandidateLeaderboardUI.test.js`)
+reuses 0.8.179's own asymmetric two-archive, three-candidate scenario and
+carries it one layer further: real archive -> 0.8.176 -> 0.8.177 ->
+0.8.178 -> 0.8.179 -> `buildLeaderboardRows()` -> the exact numbers a
+reader would see on screen, proven to equal the domain fact at every step,
+row order preserved end to end, no evidence lost on either exclusive
+branch, no ranking vocabulary anywhere in the rendered rows, and neither
+archive mutated. Further sections cover `describeCandidateLabel()` over
+all three candidate shapes and malformed input; `buildLeaderboardRows()`
+over malformed/absent pages, frozen rows, and non-finite count coercion;
+the table component's own computed properties and a template-source
+introspection proving every interpolation is one of `buildLeaderboardRows()`'s
+own fields with no arithmetic or sort; the view's own import/wiring
+boundary (0.8.179 called exactly once, `targetArchive` provably built from
+`PublicationObservationArchive.empty()`, no direct import of 0.8.176/
+0.8.177/0.8.178); the route's registration in `ui/router/index.js`; and
+determinism/no-mutation across the whole pipeline.
+
+**Deliberately excluded — not this milestone.** Selecting a peer/target
+replica to compare against (real, separately sized, later work — see
+`ui/views/ReconciliationCandidateLeaderboardView.js`'s own header). A top-
+nav entry — this route is reachable by URL, like `/chat/:identityId`,
+until a future milestone gives it a real entry point. Refresh/reload
+behavior — `sourceArchive` is loaded once, on mount. Candidate detail/
+inspection, evidence filtering, pagination, accessibility passes,
+responsive-layout work, or a formal ranking/scoring model — real,
+separately sized future work, each only worth naming after this page has
+actually been used.
+
+```
+PublicationObservationArchive
+        │
+        ▼
+0.8.179 Archive-Backed Page
+        │
+        ▼
+{ isEmpty, rowCount, rows }
+        │
+        ▼
+0.8.180 UI Integration   ★
+        │
+        ▼
+Reconciliation Candidate Leaderboard (on screen)
+```
+
+`docs/Roadmap.md` updated; `ReconciliationCandidateLeaderboardUI.test.js`
+registered in `tests.html`.
