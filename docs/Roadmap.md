@@ -44772,12 +44772,98 @@ registered in `tests.html`.
 
 ---
 
-Deliberately paused here, rather than automatically proposing 0.8.200. This
-milestone turns 0.8.197's detailed difference projection into a compact,
-UI-facing read model without performing any comparison of its own; a
-presentation projection (`isEmpty`/`decisionPairs`/`observationPairs` in
-presentation vocabulary) and wiring an explicit record-pair selection UI
-into the existing comparison page are separate, later work, and — per the
-same reasoning that paused this codebase before every milestone in this
-series — that choice belongs to an explicit request, not an automatic
-continuation.
+## 0.8.200 — Paired Record Difference View
+
+0.8.199 compacted 0.8.197's own detailed difference projection into a read
+model — one `{ differenceCount, differingFields }` summary per explicitly
+paired record, plus four counts. Nothing yet shapes that read model into
+what an actual "Inspect differences" panel would put on screen. This
+milestone is that hand-off, and nothing more — the identical role 0.8.191
+already plays for 0.8.190, one layer up in the sibling (single-export)
+chain:
+
+```
+0.8.198 Explicit Record Pairs
+          │
+          ▼
+0.8.197 Record Difference Projection
+          │
+          ▼
+0.8.199 Record Difference Read Model
+          │
+          ▼
+0.8.200 Paired Record Difference View   ★
+          │
+          ▼
+       Browser
+```
+
+**A presentation projection, not another read model.** Every fact this
+milestone reports is 0.8.199's own fact, read verbatim off its own
+already-computed result:
+`describePublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceExportComparisonPairedRecordDifferenceView(readModel)`
+returns `{ isEmpty, decisionDifferences, observationDifferences,
+decisionCount, observationCount, differingDecisionCount,
+differingObservationCount }`. No count is added, dropped, combined, or
+recomputed; no entry's `differenceCount`/`differingFields` is re-derived
+from the other; no top-level count is re-derived from an array's own
+length. The one genuine derivation is `isEmpty`.
+
+**`isEmpty` is a structural flag over pair existence, never over whether a
+pair differs.** `isEmpty` is `true` exactly when `decisionCount === 0 AND
+observationCount === 0` — no pair was ever explicitly supplied, on either
+side. It is deliberately NOT `differingDecisionCount === 0 AND
+differingObservationCount === 0`: one explicitly paired, completely
+identical record is a real pair a human chose to compare, and must still
+render as a real (non-empty) comparison, distinct from "no pair was ever
+selected." This is the same "a pair with zero differences is still a pair"
+invariant 0.8.199 already holds, held again one layer up.
+
+**No new summary vocabulary.** This milestone adds exactly one field,
+`isEmpty`, to 0.8.199's own six fields — never `same`, `hasDifferences`,
+`status`, `matchingPairCount`, or `mismatchingPairCount`. Each would
+quietly introduce interpretation on top of the plain structural facts
+0.8.197/0.8.199 already established. See `docs/Principles.md`, "The UI
+Displays Observations; It Does Not Turn Them Into A Verdict" (0.8.57).
+
+**Zero imports — the identical choice 0.8.191 already makes one layer
+below its own source, 0.8.190.** `describeXxx()` performs a pure,
+structural, duck-typed transform of whatever shape it is handed; it never
+imports 0.8.199's own module to validate that shape, and declares no
+`reconstructXxx()` of its own. A malformed/absent `readModel` degrades to
+an empty, `isEmpty: true` view, never throws; a malformed individual entry
+degrades to `{ differenceCount: 0, differingFields: [] }` rather than
+being repaired, dropped, or thrown on.
+
+**Deliberately excluded.** A `same`, `hasDifferences`, `status`,
+`matchingPairCount`, `mismatchingPairCount`, or other interpretive summary
+field. A `conflict`, `mismatchSeverity`, `winner`, `better`, `correct`,
+`stale`, `invalid`, `resolution`, or `recommendation` field or vocabulary
+of any kind. Reading a pair's own `source`/`target` — 0.8.199's own result
+never carries them. Recomputing `differenceCount` from
+`differingFields.length`, or any top-level count from an array's own
+length. Reading 0.8.189's, 0.8.193's, 0.8.195's, 0.8.197's, or 0.8.198's
+own result, either exported document, either archive, or any explicit
+pairing directly — this milestone's one argument is always 0.8.199's own
+already-computed result. Any markup, DOM nodes, or control-rendering
+technology choice — this milestone returns plain, frozen, JSON-safe data;
+an "Inspect differences" panel/page (if ever built) is separate, later,
+UI-layer work. Persistence, or automatic/periodic/background computation of
+any kind.
+
+`application/PublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceExportComparisonPairedRecordDifferenceView.js`
+added;
+`docs/Roadmap.md` updated;
+`PublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceExportComparisonPairedRecordDifferenceView.test.js`
+registered in `tests.html`.
+
+---
+
+Deliberately paused here, rather than automatically proposing 0.8.201. This
+milestone finally shapes 0.8.199's own read model for the screen; wiring an
+explicit record-pair selection UI (choose a source record, choose a target
+record, build the explicit pair, run it through 0.8.198 -> 0.8.197 ->
+0.8.199 -> 0.8.200, render the result) into the existing comparison page is
+separate, later work, and — per the same reasoning that paused this
+codebase before every milestone in this series — that choice belongs to an
+explicit request, not an automatic continuation.
