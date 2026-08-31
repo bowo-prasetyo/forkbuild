@@ -13,6 +13,7 @@ import ChatView from '../views/ChatView.js';
 import ConversationsView from '../views/ConversationsView.js';
 import DecentralizedPublicationsView from '../views/DecentralizedPublicationsView.js';
 import ReconciliationCandidateLeaderboardView from '../views/ReconciliationCandidateLeaderboardView.js';
+import ReconciliationCandidateLeaderboardEvidenceExportComparisonView from '../views/ReconciliationCandidateLeaderboardEvidenceExportComparisonView.js';
 
 const routes = [
     { path: '/', name: 'home', component: HomeView },
@@ -52,6 +53,16 @@ const routes = [
     // real entry point, the same "reached from elsewhere, never top-nav"
     // shape /chat/:identityId already holds above.
     { path: '/reconciliation-leaderboard', name: 'reconciliation-leaderboard', component: ReconciliationCandidateLeaderboardView },
+    // 0.8.192 — Reconciliation Candidate Leaderboard Evidence Export
+    // Comparison UI. A second, independent workflow from
+    // /reconciliation-leaderboard directly above: that page compares two
+    // LIVE archives; this page compares two previously EXPORTED, portable
+    // evidence documents, and never reads either live archive at all — see
+    // ui/views/ReconciliationCandidateLeaderboardEvidenceExportComparisonView.js's
+    // own header. Not yet a top-nav destination, the identical "reached by
+    // URL until a future milestone gives it a real entry point" shape held
+    // above.
+    { path: '/evidence-export-comparison', name: 'evidence-export-comparison', component: ReconciliationCandidateLeaderboardEvidenceExportComparisonView },
     { path: '/about', name: 'about', component: AboutView }
 ];
 
