@@ -41749,3 +41749,131 @@ Decision side                                    Observation side
 `docs/Roadmap.md` updated;
 `PublisherLeaderboardClaimSnapshotReconciliationCandidateDecisionRevalidationObservationEvolutionDifferenceView.test.js`
 registered in `tests.html`.
+
+## 0.8.174 — Reconciliation Candidate Observation Evolution Agreement Projection
+
+0.8.166 answered "which observation records exist on one replica's history
+but not the other's?" 0.8.173 grouped those SAME exclusive records by the
+candidate they concern. Neither one states the complementary fact this
+milestone exists to make observable: given two replicas' observation
+histories, which observation-history facts are SHARED by both replicas, and —
+separately — which candidates are represented on both, or only one, of them?
+This is the observation-level counterpart of 0.8.156's own candidate-decision
+agreement projection, one subject over, and the agreement-side complement of
+0.8.173's own exclusive-side difference projection — the per-candidate
+breakdown of shared/source-only/target-only observation counts that
+0.8.173's own header named as this milestone's, separately sized, later
+question. A new `application/
+PublisherLeaderboardClaimSnapshotReconciliationCandidateDecisionRevalidationObservationEvolutionAgreementView.js`
+with two functions,
+`describePublisherLeaderboardClaimSnapshotReconciliationCandidateDecisionRevalidationObservationEvolutionAgreement()`
+and
+`reconstructPublisherLeaderboardClaimSnapshotReconciliationCandidateDecisionRevalidationObservationEvolutionAgreement()`.
+
+**0.8.166 cannot by itself produce the shared set** — it deliberately exposes
+only a multiset difference (`sourceOnly`/`targetOnly`), never an
+intersection. Rather than build a second, independent observation-comparison
+engine, this file calls 0.8.166's own `describeXxx()` exactly once to obtain
+`sourceOnly`, then derives `sharedObservations` by subtracting `sourceOnly`
+from the source's own genuine-filtered history — a multiset subtraction
+using 0.8.166's own exact six-field observation identity (`decision` +
+`planIdentity` + `candidatePresent` + `candidateType` + `candidateMatchesPlan`
++ `observedAt`). Since `source = shared ⊎ sourceOnly` by construction,
+`source - sourceOnly` recovers exactly the matched multiset without ever
+re-comparing against `targetHistory`. `sharedObservations` carries the
+source's own copy of each matched record — an arbitrary but deterministic,
+documented choice.
+
+**Candidate presence is computed independently of observation-level
+agreement** — the flagship architectural principle this milestone exists to
+hold, held again exactly as 0.8.156's own header holds it one subject over. A
+candidate is represented on a replica if that replica's own FULL history
+(0.8.172's own `describeXxx()`, run once over the whole `sourceHistory` and
+once over the whole `targetHistory`) names it in ANY observation, regardless
+of which observations about it happen to be shared or exclusive.
+`sharedCandidateCount`/`sourceOnlyCandidateCount`/`targetOnlyCandidateCount`/
+`distinctCandidateCount` are computed purely from these two full candidate
+sets — never from `sharedObservations`/`sourceOnly`/`targetOnly` alone.
+Candidate agreement is derived from shared observation facts, never
+independently recomputed.
+
+**Result shape:** `{ sourceObservationCount, targetObservationCount,
+sharedObservationCount, sourceOnlyObservationCount, targetOnlyObservationCount,
+sharedObservations, sourceOnly, targetOnly, distinctCandidateCount,
+sharedCandidateCount, sourceOnlyCandidateCount, targetOnlyCandidateCount,
+candidateAgreements: [{ candidate, sharedObservationCount,
+sourceOnlyObservationCount, targetOnlyObservationCount }], sameHistory }`.
+`sourceOnly`/`targetOnly` are 0.8.166's own arrays, forwarded unchanged. Each
+`candidateAgreements` entry names one candidate represented on either side
+exactly once, carrying three independent counts — each computed by running
+0.8.172's own `describeXxx()` over one already-computed observation array
+(`sharedObservations`, `sourceOnly`, `targetOnly`) and reading its own
+per-candidate `observationCount`. A candidate absent from one of the three
+arrays reads `0` for that count, never `null`.
+
+**Flagship scenario** proves the fact this milestone exists to make
+observable — a candidate can be a SHARED candidate, present on both
+replicas, while each replica ALSO holds its own exclusive observation about
+it, and a second candidate can be SHARED with zero exclusive observations at
+all: Alice records `C1→O1, C1→O2, C2→O3`; Bob records `C1→O1, C1→O4, C2→O3,
+C3→O5` (O1 and O3 are the identical structural observation on both sides).
+The shared `O1` and `O3` cancel out on both sides, leaving Alice-only `[O2]`
+and Bob-only `[O4, O5]`. At the candidate level: C1 is SHARED
+(`sharedCandidateCount` contribution 1) — its own `candidateAgreements` entry
+carries `sharedObservationCount: 1`, `sourceOnlyObservationCount: 1`, AND
+`targetOnlyObservationCount: 1` simultaneously, never described as
+conflicting and never collapsed into "source-only" or "target-only" merely
+because it also carries exclusive observations. C2 is ALSO a SHARED
+candidate, but its own agreement entry carries `sharedObservationCount: 1`
+and ZERO exclusive observations on either side — every recorded observation
+of C2 is shared. C3 is target-only, at both the candidate level and the
+observation level.
+
+**No comparison, ranking, or reconciliation of any kind** — the identical
+restraint 0.8.149's, 0.8.156's, 0.8.166's, 0.8.170's, and 0.8.173's own
+headers already hold. A candidate carrying both a
+`sourceOnlyObservationCount` and a `targetOnlyObservationCount` is never
+described as "conflicting," and neither exclusive observation is ever said
+to supersede, correct, or invalidate the other, or the shared one.
+
+**Further sections** cover: converged/identical histories (every observation
+and candidate reported as shared, zero exclusive); the same candidate
+observed present on one replica and absent on the other (or the same outcome
+at a different `observedAt`) remaining a SHARED CANDIDATE with ZERO shared
+observations; multiplicity within the shared multiset itself (`[O1,O1]` vs
+`[O1,O1,O1]` reports exactly two shared observations, never a set-style
+collapse to one, and never a naive membership check reporting three);
+`CLAIM_WITHOUT_CORRESPONDING_SNAPSHOT`, `SNAPSHOT_WITHOUT_CORRESPONDING_CLAIM`,
+and `DIVERGENT_CORRESPONDENCE` never colliding merely by sharing a
+`claimId`/`snapshotIndex` field shape; no mutation of any supplied object;
+determinism; `reconstructXxx()`'s archive-reading boundary (reading each
+side's own raw history directly via 0.8.167's own seam, never calling
+0.8.166's own `reconstructXxx()` a second time); malformed-input tolerance;
+and a permanent architectural regression test proving the module imports
+only 0.8.166's observation-level difference, 0.8.167's archive-reading seam,
+and 0.8.172's candidate grouping — deliberately never 0.8.173 itself, since
+0.8.173 exposes only already-exclusive observations grouped by candidate,
+never the raw histories this milestone's own candidate-presence computation
+requires.
+
+**Deliberately excluded — not this milestone.** No interpretation of
+agreement or difference as a conflict, inconsistency, correction, or need
+for resolution. No export, import, application, or synchronization of the
+shared or exclusive observations found — that remains 0.8.168's/0.8.169's
+own, already-answered, separately sized question. No deduplication of any
+kind. No comparing, merging, or cross-referencing a candidate's own
+`sourceOnlyObservationCount` against its own `targetOnlyObservationCount`
+beyond reporting both side by side. No plan reconstruction, candidate
+selection, correspondence discovery, divergence detection, or signature
+verification. No persistence or synchronization of any kind. No
+reconciliation ACTION, applying anything, or execution of any kind.
+
+```
+Decision side                              Observation side
+─────────────                              ────────────────
+0.8.156 Candidate Decision Agreement       0.8.174 Candidate Observation Evolution Agreement   ★
+```
+
+`docs/Roadmap.md` updated;
+`PublisherLeaderboardClaimSnapshotReconciliationCandidateDecisionRevalidationObservationEvolutionAgreementView.test.js`
+registered in `tests.html`.
