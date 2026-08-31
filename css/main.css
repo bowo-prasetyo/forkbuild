@@ -5169,6 +5169,17 @@ html, body {
     margin: 0 0 0.5rem;
 }
 
+/* 0.8.183 — Reconciliation Candidate Leaderboard Comparison State. A
+   neutral, restrained fact ("no peer" / "peer, but empty" / "peer,
+   present"), never a verdict — so it gets the identical muted treatment
+   as .reconciliation-leaderboard-summary directly above, not a
+   warning/success color implying one state is better than another. */
+.reconciliation-leaderboard-comparison-state {
+    color: #909090;
+    font-size: 0.8rem;
+    margin: 0 0 0.6rem;
+}
+
 .reconciliation-leaderboard-table-wrap {
     overflow-x: auto;
 }
