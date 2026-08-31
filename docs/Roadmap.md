@@ -46757,3 +46757,156 @@ react when the registry changes underneath it — both remain 0.9.12's own
 concern. Per the same reasoning that has paused this codebase before
 every milestone in this series, those choices belong to an explicit
 request, not an automatic continuation.
+
+## 0.9.12 — World Discovery Registry Change Notification
+
+0.9.10's own header put the remaining gap in so many words: "nothing here
+watches, subscribes to, or is notified of a registry change on its own...
+Reactive, automatic recomputation is separate, later, unscheduled work."
+0.9.11 then gave the registry a live source of mutations — a connecting,
+updating, or disconnecting peer — but its own epilogue named the same gap
+again: "it deliberately does not make a running World View react when
+the registry changes underneath it." This milestone is the seam a future
+World View subscribes through, and only that seam: it does not touch the
+World View itself.
+
+```
+                    ┌──────────────────────────┐
+peer lifecycle ───▶ │ WorldDiscoverySourceRegistry │  (0.9.9, extended)
+  (0.9.11)          │   setSource()/removeSource()/clear()
+                    └──────────────┬────────────┘
+                                   │ mutation actually
+                                   │ took effect
+                                   ▼
+                          registry._notify()
+                                   │
+                    ┌──────────────┴──────────────┐
+                    ▼                              ▼
+             listener A()                    listener B()
+        (registered via                 (registered via
+         registry.subscribe(A))          registry.subscribe(B))
+```
+
+`WorldDiscoverySourceRegistry` (0.9.9) gains exactly one new method,
+`subscribe(listener)`, returning an `unsubscribe` function:
+
+```javascript
+const unsubscribe = registry.subscribe(listener);
+// ... later ...
+unsubscribe();
+```
+
+Nothing else about the registry's existing surface changes.
+`listSources()` still returns exactly what it always has;
+`describeWorldFromDiscoveryRegistry()` (0.9.10) and
+`registerPeerWorldSource()`/`unregisterPeerWorldSource()` (0.9.11) are
+untouched, unmodified, and still pass every one of their own existing
+tests.
+
+A SUCCESSFUL MUTATION IS THE NOTIFICATION — NO STRUCTURAL EQUALITY.
+Rather than compare a new source against whatever it replaces to decide
+whether anything "really" changed (which would make the registry a
+second comparison engine — exactly what its own "No source comparison"
+rule already forbids), the rule is purely procedural:
+
+```
+setSource(source)        → notify whenever `source` is actually stored
+                            (even replacing an origin with a field-for-
+                            field identical source still notifies)
+removeSource(origin)      → notify only when that origin actually held
+                            a source immediately beforehand
+clear()                   → notify only when the registry held at least
+                            one source immediately beforehand
+```
+
+A malformed `setSource()`/`removeSource()` call — the same "silently
+ignored, never thrown" input every method already degrades on — never
+notifies, because nothing was actually stored or removed for it to
+notify about.
+
+`listener()` TAKES NO ARGUMENTS. A notification means exactly one thing:
+"the registry's snapshot may have changed — call `listSources()` again
+if you care what it now looks like." It carries no `{ origin, action,
+source }` detail object of its own; `listSources()` remains the one
+authoritative source of truth, and a subscriber reads it directly rather
+than reconstructing state from a stream of past events. This keeps
+0.9.10's own `describeWorldFromDiscoveryRegistry(registry)` the correct,
+unmodified way to turn a notification into a fresh World View — a future
+caller's own reaction is simply `registry.subscribe(() =>
+{ view = describeWorldFromDiscoveryRegistry(registry); })`, not built
+here.
+
+SUBSCRIBER ISOLATION. Each subscriber runs inside its own `try`/`catch`
+during notification; one listener throwing never prevents another
+listener from running, and never prevents `setSource()`/`removeSource()`/
+`clear()` themselves from returning normally — a broken UI-layer
+subscriber is never allowed to corrupt or block the registry's own
+membership state.
+
+EACH `subscribe()` CALL IS INDEPENDENT. Subscribing the same function
+reference twice registers two separate subscriptions, each notified
+separately and each with its own `unsubscribe()` — there is no identity-
+based deduplication collapsing repeat subscriptions into one.
+`unsubscribe()` is idempotent (calling it more than once is a harmless
+no-op) and permanent (once called, that listener is never invoked by
+this registry again).
+
+FLAGSHIP SCENARIO. `tests/WorldDiscoveryRegistryChangeNotification.test.js`
+subscribes a listener that re-projects the World on every notification —
+`describeWorldFromDiscoveryRegistry(registry)`, 0.9.10's own function,
+completely unmodified — and drives the full dynamic lifecycle the
+milestone exists for: the World starts with only `local`; a peer connects
+and, on the resulting notification, the re-projected World gains that
+peer's encounters; the peer's source is replaced with updated data and,
+on that notification, the World reflects only the new data, never the
+old; the peer disconnects and, on that final notification, the World no
+longer contains that peer's encounters at all. Further tests cover the
+notification rule in isolation (malformed input never notifies, a no-op
+`removeSource()`/`clear()` never notifies, replacing an origin with an
+identical source still notifies), subscriber isolation (a throwing
+listener never stops another subscriber or the triggering mutation),
+unsubscribe correctness (idempotent, permanent, takes effect even when
+called from inside another listener mid-notification), independent
+subscriptions for a repeated function reference, malformed `subscribe()`
+input degrading silently, `listener()` receiving no arguments, per-
+instance listener isolation between two registries, and the same
+architectural-regression checks 0.9.9 through 0.9.11 already established
+for themselves (no `WorldEncounter`, no peer transport, no trust/
+reconciliation vocabulary, and now also no event-payload or async-
+delivery vocabulary of this milestone's own invention).
+
+DELIBERATELY EXCLUDED — NOT THIS MILESTONE.
+- **The World View itself subscribing and re-rendering.** This milestone
+  only proves the registry CAN notify a subscriber, using a plain
+  function in a test file — wiring an actual running World View
+  component to call `registry.subscribe()` and re-project on
+  notification is 0.9.13, unscheduled here.
+- **An event payload, async/batched delivery, "once" subscriptions, or
+  origin-filtered/wildcard subscriptions.** `listener()` stays exactly
+  this narrow — see "`listener()` takes no arguments," above.
+- **Structural-equality comparison to suppress a "no-op" `setSource()`
+  notification.** See "A successful mutation is the notification," above
+  — the registry stays a membership store, never a second comparison
+  engine.
+- **Wiring `registerPeerWorldSource()`/`unregisterPeerWorldSource()`
+  (0.9.11) to any EXISTING peer lifecycle event source automatically.**
+  Unchanged from 0.9.11's own exclusion — still separate, later,
+  unscheduled work.
+
+`application/WorldDiscoverySourceRegistry.js` gains `subscribe(listener)`
+and an internal `_notify()`, and `setSource()`/`removeSource()`/`clear()`
+each call `_notify()` under the rule above; every other method, and every
+existing test in `tests/WorldDiscoverySourceRegistry.test.js`, is
+unchanged. `tests/WorldDiscoveryRegistryChangeNotification.test.js` added
+and registered in `tests.html`; `docs/Roadmap.md` updated.
+
+---
+
+Deliberately paused here. The registry can now tell a subscriber that its
+membership may have changed, and a subscriber can turn that notification
+into a fresh World View by calling 0.9.10's own
+`describeWorldFromDiscoveryRegistry()` again — but nothing here does that
+wiring automatically, and no actual World View component subscribes yet.
+Per the same reasoning that has paused this codebase before every
+milestone in this series, connecting this seam to a running World View
+(0.9.13) belongs to an explicit request, not an automatic continuation.
