@@ -74,7 +74,14 @@ top-level [docs/](..) folder.
    a read-only **Reconciliation Candidate Leaderboard** page (reached by
    typing its URL directly — not yet linked anywhere in the app) that
    summarizes this replica's own recorded reconciliation-decision and
-   revalidation-observation evidence per candidate.
+   revalidation-observation evidence per candidate, including a way to
+   import and inspect a previously exported evidence document on its own,
+   and a second, separate **Evidence Export Comparison** page (also
+   reached only by URL) that compares two previously exported evidence
+   documents against each other across three independent Source-only/
+   Shared/Target-only tables with per-record and per-field identity
+   inspection, plus an **Explicit Record Pairing** tool for hand-picking
+   two records and seeing exactly which named fields differ between them.
 
 ## Reference
 

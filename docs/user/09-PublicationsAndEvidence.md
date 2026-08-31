@@ -2235,6 +2235,26 @@ Filter or the peer archive and click **Export Evidence** again to
 download a document matching the new selection; nothing exports
 automatically.
 
+**Importing a previously exported evidence document, to inspect it.** A
+separate **Import Evidence Export** box, below Evidence Export, offers its
+own paste area and an **Import Evidence** button. Paste any evidence
+export document — one you produced yourself above, or one a peer sent
+you — and click it to see a short read-only summary: the document's
+`comparisonState`, and its candidate/decision/observation counts. A paste
+that isn't a genuine evidence export document is rejected outright, with
+a message saying so, and the previous summary (if any) is left exactly as
+it was. A **Clear Imported Evidence** button appears once something is
+imported, to dismiss the summary.
+
+Nothing about this import ever merges into, replaces, or recomputes the
+live leaderboard above it, and it never touches the peer archive either
+— it is a second, independent, read-only look at a separate, portable
+document, not a second way to supply a peer. This is where you'd confirm
+what an exported file actually says before comparing it against another
+one (see [Evidence Export Comparison](#evidence-export-comparison),
+below) — the fastest way to sanity-check a single document on its own,
+without needing a second one to compare it to.
+
 **In practice, this page shows "No reconciliation candidates to display"
 today.** Nothing else in this app currently records a reconciliation
 decision or a revalidation observation — that's groundwork laid for a
@@ -2245,9 +2265,143 @@ here isn't a bug; it means exactly what it says.
 The page loads your own archive once, the moment you open it, and does
 not refresh automatically — a decision or observation recorded
 afterward isn't reflected until you leave and come back. A pasted peer
-archive is never saved anywhere: it lives only on this page, for this
-visit, and reloading the page returns the comparison to its
-no-peer-archive default.
+archive, and anything pasted into Import Evidence Export, are never
+saved anywhere: both live only on this page, for this visit, and
+reloading the page returns the comparison to its no-peer-archive default
+and clears the imported-evidence summary.
+
+## Evidence Export Comparison
+
+A second page, also reached only by typing its URL directly (there's no
+button, menu entry, or card that links to it, on this page or anywhere
+else) — `/evidence-export-comparison` — compares two previously exported
+evidence documents against each other, rather than a live archive against
+a peer archive. Use it, for example, to compare a report you exported
+last week against one you exported today, or a report you exported
+against one a peer sent you.
+
+```
+Evidence Export Comparison
+
+Compare two previously exported evidence reports — a report from last
+week against one from today, or a report you exported against one a peer
+sent you. This never reads either replica's own live archive and never
+merges into, replaces, or recomputes the Reconciliation Candidate
+Leaderboard — it is a comparison between two separate, portable
+documents, nothing more.
+
+Source Evidence Export                    Target Evidence Export
+[ Source evidence export JSON textarea ]  [ Target evidence export JSON textarea ]
+
+[ Compare Evidence ]  [ Clear Comparison ]
+```
+
+This is an entirely separate workflow from the [Reconciliation Candidate
+Leaderboard](#reconciliation-candidate-leaderboard) above: it never reads
+either replica's own live archive, never reads a peer archive, and never
+merges into, replaces, or recomputes that page's own comparison — the two
+pages' own state is completely independent, even when you have both open.
+Nothing here is compared until you click **Compare Evidence**; typing or
+pasting alone compares nothing. A side that isn't a genuine evidence
+export document is rejected, with a message saying so, and that side's
+own previous result (if any) is left untouched — a bad paste on one side
+never blocks a genuinely valid paste on the other.
+
+**Comparison State and Filter, shown as plain facts.** Once compared, two
+small blocks report the two documents' own recorded metadata side by
+side — each document's own `comparisonState` (Source / Target), whether
+the two are the `same`; and each document's own Evidence Filter selection
+(Source / Target evidence type and replica relation), whether those are
+the `same` too. Neither block is folded into the evidence counts below —
+two documents can carry an identical `comparisonState` while their actual
+evidence still differs completely, and the reverse.
+
+**Three independent tables — candidate presence, decision evidence, and
+observation evidence — never one combined verdict.** Exactly like the
+live leaderboard's own Shared/Source-only/Target-only columns, each of
+the three dimensions here gets its own Source-only / Shared / Target-only
+count, comparing the Source document against the Target document.
+Candidate presence, decision evidence, and observation evidence are kept
+fully separate: a candidate present in both documents but whose decision
+evidence differs still counts as "shared" for candidate presence while
+its decision evidence counts land in Source-only/Target-only — the three
+numbers are never combined into one status.
+
+**Inspecting the exact records behind a count.** Each of the three
+tables carries its own **Inspect records** button. Click it to reveal the
+actual Source-only / Shared / Target-only records behind that dimension's
+counts, in a flat list — never regrouped or sorted by candidate, though
+each record still shows which candidate it concerns alongside it. The
+count and the records underneath always agree, since both are read off
+the same already-computed comparison. Click **Hide records** to collapse
+it again; which dimensions are expanded is remembered only for as long as
+you stay on the page.
+
+**Inspecting one record's own identity fields.** Within an expanded
+decision or observation record list (never for candidate presence — a
+candidate is already its own complete identity), every individual record
+carries its own **Inspect identity** button. Click it to reveal exactly
+the named fields that make that one record what it is:
+
+| Record kind | Identity fields shown |
+|---|---|
+| Decision | `decided`, `candidate`, `decision`, `decidedAt` |
+| Observation | `candidate`, `decision`, `planIdentity`, `candidatePresent`, `candidateType`, `candidateMatchesPlan`, `observedAt` |
+
+This never compares that record against any other — it only names one
+record's own fields. To see *why* two records are separate records, open
+both of their own **Inspect identity** panels and read the fields
+yourself.
+
+**Explicit Record Pairing — you choose both sides, nothing is ever
+suggested or matched automatically.** Below the three tables, an
+**Explicit Record Pairing** section offers two source/target dropdowns
+each for decision evidence and for observation evidence, listing every
+record from that dimension's Source-only, Shared, and Target-only
+partitions together, flat and unfiltered — a record's own partition never
+hides it from being picked. Choose a source record and a target record
+from the dropdowns (they can even be the exact same record, or you can
+add the same pair more than once — nothing here deduplicates), then click
+**Add Pair**. The pair appears in a list underneath, each with its own
+**Remove** button; nothing is ever paired for you, and an added pair
+stays exactly as added until you remove it.
+
+**Paired Record Differences — which named fields differ, nothing more.**
+Every pair you've added — decision or observation — appears in its own
+row under **Paired Record Differences**, labeled **Decision Pair *N***
+or **Observation Pair *N*** (a plain 1-based position, not a stored
+value), always showing a difference count (or **No differences**). Click
+**Inspect differences** to reveal that pair's own Source and Target
+record labels and the exact list of identity fields (from the table
+above) that differ between them — or **Identical on every named field**
+when there are none. This never says which side is right, more recent,
+or preferred — only which fields differ:
+
+```
+Explicit Record Pairing
+
+Decision evidence
+Source record [ dropdown ]   Target record [ dropdown ]   [ Add Pair ]
+  Claim claim-7f3a ↔ Snapshot #3 — OBSERVE — decided … ↔ Claim claim-7f3a ↔ Snapshot #3 — DEFER — decided …  [Remove]
+
+Paired Record Differences
+
+Decision pairs
+  Decision Pair 1    2 differences    [ Inspect differences ▼ ]
+    Source: Claim claim-7f3a ↔ Snapshot #3 — OBSERVE — decided 2026-08-24T06:00:00.000Z
+    Target: Claim claim-7f3a ↔ Snapshot #3 — DEFER — decided 2026-08-31T06:03:00.000Z
+    decision
+    decidedAt
+```
+
+**Nothing here is saved.** Both paste boxes, the two validated documents, the
+comparison, every dimension's expand/collapse state, every explicit pair,
+and every "Inspect differences" panel are page-local, never-persisted
+state — reload the page, or click **Clear Comparison**, and everything on
+it, pairs included, goes back to empty. This page never contacts a
+server, never writes to any storage, and never feeds back into the
+Reconciliation Candidate Leaderboard, the live archive, or a peer
+archive — it only ever reads the two documents you paste into it.
 
 ## What survives a reload
 
@@ -2357,9 +2511,17 @@ events) are durable in exactly the same way.
 stores nothing of its own — it only reads this same archive, plus
 whichever peer archive you've pasted in for that one visit.** Your own
 archive re-reads from scratch on reload, the same way opening the page
-fresh does; a pasted peer archive is never written to storage at all, so
-it's gone the moment you leave — on purpose, since it was never this
+fresh does; a pasted peer archive, and anything pasted into its own
+Import Evidence Export box, are never written to storage at all, so both
+are gone the moment you leave — on purpose, since neither was ever this
 device's own fact to keep.
+
+**[Evidence Export Comparison](#evidence-export-comparison) stores
+nothing at all, ever.** Unlike every other page in this guide, it reads
+no archive of its own — both paste boxes, the comparison result, every
+explicit record pair, and every expand/collapse state are page-local for
+that one visit only. Reload it, and it goes back to two empty paste
+boxes with nothing compared, exactly like opening it fresh.
 
 ## What's next?
 
