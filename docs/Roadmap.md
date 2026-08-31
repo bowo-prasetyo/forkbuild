@@ -42273,3 +42273,132 @@ automatic, periodic, or background computation.
 `docs/Roadmap.md` updated;
 `PublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardView.test.js`
 registered in `tests.html`.
+
+## 0.8.179 — Archive-Backed Reconciliation Candidate Leaderboard Page
+
+0.8.178 shaped an already-computed 0.8.177 read model into exactly what a
+page renders, but deliberately kept no seam of its own onto an archive —
+its own header said wiring a real, archive-backed page together was
+explicitly 0.8.179's job. A new `application/
+PublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardPage.js`
+with two entry points:
+
+```
+describePublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardPage(readModel)
+  -> { isEmpty, rowCount, rows }
+
+reconstructPublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardPage(sourceArchive, targetArchive)
+  -> { isEmpty, rowCount, rows }
+```
+
+**This file computes nothing — it wires two already-proven seams
+together, each called exactly once.** `reconstructXxx()` calls 0.8.177's
+own `reconstructXxx()` exactly once — the one seam that reads both
+archives' own `reconciliationDecisionRecords` and
+`revalidationObservationRecords` collections, by way of 0.8.156's and
+0.8.174's own seams, composed by 0.8.176, composed by 0.8.177 — obtaining
+the already-computed read model directly, then hands it, unchanged, to
+`describeXxx()`. `describeXxx()` calls 0.8.178's own `describeXxx()`
+exactly once and returns its result verbatim. No third comparison
+algorithm, no second page-shaping pass.
+
+**No new wrapper vocabulary.** The page object this file returns is
+exactly 0.8.178's own `{ isEmpty, rowCount, rows }` — the identical field
+names, the identical row shape (`candidate`, `decisionEvidence`,
+`observationEvidence`), unchanged. This milestone introduces no fifth
+vocabulary on top of 0.8.176's, 0.8.177's, and 0.8.178's own.
+
+**Architectural boundary — imports exactly two modules, 0.8.177 and
+0.8.178, and nothing beneath them.** It never imports 0.8.176 directly
+(0.8.177's own `reconstructXxx()` already composes it), and never imports
+0.8.144 (candidate selection), 0.8.157 (candidate revalidation), 0.8.162
+(observation creation), 0.8.163 (observation history), 0.8.166
+(observation difference), 0.8.167 (archive internals), 0.8.168 (exchange),
+0.8.169 (synchronization), 0.8.171 (correspondence), 0.8.172 (evolution),
+0.8.173 (evolution difference), 0.8.174 (evolution agreement), 0.8.175
+(evidence summary), or `PublicationObservationArchive.js` itself. This
+file knows how to assemble existing products, not how any of them is
+calculated.
+
+**Malformed input tolerance.** `describeXxx()` inherits 0.8.178's own
+tolerance entirely — a malformed `readModel` degrades to `{ isEmpty: true,
+rowCount: 0, rows: [] }`, never a throw. `reconstructXxx()` inherits
+0.8.177's own archive tolerance entirely — an invalid/missing archive on
+either side degrades to `PublicationObservationArchive.empty()`'s own
+empty evidence on that side, by way of 0.8.177's own seam, never a throw.
+
+**Flagship scenario** uses two real `PublicationObservationArchive`
+instances holding deliberately asymmetric evidence across three
+candidates: C1 — decisions shared + source-only, observations shared +
+target-only; C2 — decisions shared only, observations source-only only;
+C3 — decisions target-only only, observations shared only. The test proves
+the full nine-point checklist this milestone was designed against: both
+archives are read; 0.8.176 produces the evidence agreement; 0.8.177
+preserves the candidate evidence counts; 0.8.178 produces the page rows;
+candidate ordering survives the entire chain; every displayed count equals
+the corresponding domain fact (checked exhaustively, not just for the
+three named candidates); no ranking vocabulary appears anywhere in the
+result; no evidence is lost for existing only on one branch (C1's
+source-only decision and target-only observation, C2's source-only
+observation, C3's target-only decision are all still visible); and neither
+archive is mutated.
+
+**Further sections** cover: `describeXxx()` over malformed input degrading
+to the empty page; `describeXxx()` proven to be a byte-identical
+delegation to 0.8.178's own `describeXxx()`; `reconstructXxx()` over two
+empty archives and over invalid/missing archives both degrading to the
+empty page; no mutation of either supplied archive across repeated
+reconstructions; no mutation of a supplied read model, frozen results,
+candidate reference identity, and determinism; and a permanent
+architectural regression test proving the module imports exactly two
+modules — 0.8.177 and 0.8.178 — and nothing beneath them.
+
+**Deliberately excluded — not this milestone.** No new domain computation
+of any kind — composition only. No score, rank, ordering by evidence
+weight, or comparison between two candidates' own evidence. No
+`winner`/`correct`/`incorrect`/`valid`/`preferred`/`status`/`confidence`
+field of any kind. No interpretation of agreement or difference as
+conflict, inconsistency, or need for resolution. No new wrapper vocabulary
+or new row field. No filtering, candidate detail panels, pagination,
+refresh behavior, sorting, or a formal ranking/scoring model — real,
+separately sized, later work, only worth naming after the actual page this
+milestone produces has been seen. No actual markup, DOM nodes, styling, or
+rendering-technology choice. No persistence or synchronization. No
+automatic, periodic, or background computation.
+
+```
+sourceArchive ──┐
+                ├─► 0.8.176 (via 0.8.177's own seam) ─► 0.8.177 ─► 0.8.178 ─► page
+targetArchive ──┘
+```
+
+```
+0.8.144 Candidate identity
+   ↓
+0.8.146 Decision history
+   ↓
+0.8.150 Decision archive
+   ↓
+0.8.153-156 Decision evidence
+   ↓
+0.8.157-174 Revalidation observation evidence
+   ↓
+0.8.175-176 Candidate evidence
+   ↓
+0.8.177 Leaderboard read model
+   ↓
+0.8.178 Page view
+   ↓
+0.8.179 Archive-backed page   ★
+   ↓
+Visible product
+```
+
+This is a natural stopping point in the milestone chain. Only after seeing
+the real page should filtering, candidate detail panels, pagination,
+refresh behavior, sorting, or a formal ranking/scoring model be
+introduced — each real, separately sized future work.
+
+`docs/Roadmap.md` updated;
+`PublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardPage.test.js`
+registered in `tests.html`.
