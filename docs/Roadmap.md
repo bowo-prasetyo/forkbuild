@@ -46474,16 +46474,147 @@ updated; `WorldDiscoverySourceRegistry.test.js` added and registered in
 
 ---
 
-Deliberately paused here. This milestone gives the source-side
-architecture the one thing it was still missing: a live notion of which
-sources currently exist, so a peer appearing or disappearing is reflected
-in the next World projection without accumulating stale contributions or
-inventing tombstones for absent ones. Actually wiring `WorldDiscoverySourceRegistry`
-into a live page-level container of `ui/views/WorldView.js` — deciding
-when the peer transport layer should call `setSource()`/`removeSource()`
-in response to real connection/disconnection events — and turning 0.9.4's
-own selection into an inspection request (0.9.10 — Encounter Inspection
-Request, 0.9.11 — Publication/Avatar Inspection), are both separate,
-later, unscheduled work. Per the same reasoning that has paused this
-codebase before every milestone in this series, those choices belong to
-an explicit request, not an automatic continuation.
+Deliberately paused here — but not for long. This milestone gives the
+source-side architecture the one thing it was still missing: a live
+notion of which sources currently exist, so a peer appearing or
+disappearing is reflected in the next World projection without
+accumulating stale contributions or inventing tombstones for absent ones.
+It left one small architectural gap of its own, named in its own header:
+"a caller reads `listSources()` and hands the result to 0.9.8's own
+`describeWorldFromDiscoverySources()` itself" — nothing yet is that
+caller. Deciding when the peer transport layer should call
+`setSource()`/`removeSource()` in response to real connection/
+disconnection events, and turning 0.9.4's own selection into an
+inspection request, remain separate, later, unscheduled work (renumbered
+below to 0.9.11 and 0.9.13). Giving the registry an actual consumer does
+not, and belongs immediately next.
+
+---
+
+## 0.9.10 — Registry-Backed World Encounter Projection
+
+0.9.9 named the one piece of mutable state the 0.9.5-through-0.9.8 family
+was missing — which sources currently exist — but its own header drew the
+line at `sources[]`: "a caller reads `listSources()` and hands the result
+to 0.9.8's own `describeWorldFromDiscoverySources()` itself." Nothing yet
+was that caller. This milestone is that caller, and only that caller.
+
+```
+local source ───────┐
+                     │
+peer source ─────────┼──▶ WorldDiscoverySourceRegistry   (0.9.9)
+                     │        registry.listSources()
+another peer ────────┘                  │
+                                         ▼
+     application/WorldDiscoveryRegistryProjection.js   ★ (THIS)
+            describeWorldFromDiscoveryRegistry()
+                                         │
+                                         ▼
+     application/WorldEncounterIntegration.js   (0.9.8, unchanged)
+            describeWorldFromDiscoverySources()
+                                         │
+                                         ▼
+                                    World View
+```
+
+**One function, one job.** `describeWorldFromDiscoveryRegistry(registry)`
+reads `registry.listSources()` and hands the result, unmodified, to
+0.9.8's own `describeWorldFromDiscoverySources()`. It returns exactly
+that call's own result — nothing added, nothing renamed, nothing
+re-sorted. If a bug ever exists in "which encounters exist" or "how a row
+is shaped," it lives in 0.9.8 (or the chain 0.9.8 already wires through)
+— never here.
+
+**No second discovery algorithm.** This milestone holds no `.filter()`,
+`.map()`, `.find()`, or per-source logic of its own, and never calls
+`deriveWorldEncounters()`, `assembleWorldDiscoveryInputs()`,
+`describeWorldEncounterReadModel()`, or `describeWorldEncounterView()`
+directly — those remain behind 0.9.8's own
+`describeWorldFromDiscoverySources()`, called here exactly once.
+
+**The result carries no registry-shaped fields.** The return value is
+exactly 0.9.8's own view shape — `isEmpty`, `publicationCount`,
+`avatarCount`, `totalCount`, `publications`, `avatars` — and nothing
+else. No `sourceCount`, `peerCount`, `onlinePeerCount`, or `localCount`
+field exists here or ever will at this layer: the registry stays
+responsible for membership, 0.9.8 stays responsible for projection, and
+this milestone never lets the former leak into the latter's own shape.
+
+**Snapshot, not subscription.** `describeWorldFromDiscoveryRegistry()`
+reads the registry's CURRENT contents once, at the moment it is called,
+and returns. It establishes that the World View CAN BE DERIVED from the
+registry's live membership — it does not establish that the World View
+automatically updates whenever the registry changes. Calling this
+function again after `registry.setSource()` or `registry.removeSource()`
+reflects the new membership; nothing here watches, subscribes to, or is
+notified of a registry change on its own. Reactive, automatic
+recomputation is separate, later, unscheduled work (0.9.12, below).
+
+**No peer knowledge, no source interpretation** — inherited unchanged
+from 0.9.8 and 0.9.9. This milestone never imports
+`peer/PeerMessageBus.js`, `peer/PeerConnection.js`, any
+`PeerDiscoveryProvider`, WebRTC, or a WebSocket/rendezvous mechanism, and
+never reads `source.origin` to decide what to include, exclude, or trust.
+`registry.listSources()` already returns exactly the sources that count;
+this milestone passes all of them through, in the order the registry
+already provides.
+
+**No storage, no cryptographic verification, no UI.** This milestone
+never imports a `StorageProvider`, never reads or writes `localStorage`,
+never verifies a signature, and renders nothing itself —
+`ui/components/WorldEncounterCanvas.js` remains where a returned view
+actually renders, unchanged by this milestone.
+
+**Synchronous, pure, no mutation.** Calling
+`describeWorldFromDiscoveryRegistry()` twice against a registry whose
+membership has not changed between calls returns a byte-identical
+result, because `registry.listSources()` and
+`describeWorldFromDiscoverySources()` already each make that same
+promise on their own.
+
+**Malformed input degrades exactly as `describeWorldFromDiscoverySources()`
+already degrades — never throws.** A `registry` missing a `listSources`
+method is treated as contributing no sources at all; whatever
+`listSources()` itself returns flows straight into 0.9.8's own function,
+which already degrades malformed or empty input to an empty, well-formed
+view without throwing.
+
+**Deliberately excluded — not this milestone.**
+- **A second discovery, assembly, or projection algorithm.** See "No
+  second discovery algorithm," above.
+- **Any registry-shaped field on the returned view** (`sourceCount`,
+  `peerCount`, `onlinePeerCount`, `localCount`, or similar).
+- **A subscription, event bus, or automatic recomputation whenever the
+  registry changes.** See "Snapshot, not subscription," above.
+- **Peer lifecycle** (deciding when a peer has appeared or disappeared,
+  or calling `registry.setSource()`/`registry.removeSource()` in
+  response). This milestone only ever reads a registry that some other
+  caller already populated. Separate, later, unscheduled work (0.9.11 —
+  Peer Discovery Lifecycle Bridge).
+- **Peer transport, network, persistence, or cryptographic verification
+  of any kind.**
+- **Turning a 0.9.4 selection into an inspection request, or loading
+  inspected content.** Separate, later, unscheduled work (0.9.13, 0.9.14).
+
+`application/WorldDiscoveryRegistryProjection.js` added; `docs/Roadmap.md`
+updated; `WorldDiscoveryRegistryProjection.test.js` added and registered
+in `tests.html`.
+
+---
+
+Deliberately paused here. This milestone gives 0.9.9's registry an actual
+consumer: the World View can now be derived from the registry's current
+membership snapshot, with no accumulation on update, no trace left on
+removal, and no new field of any kind leaking registry concerns into the
+World View's own shape. It deliberately does not establish that the World
+View automatically updates whenever a peer connects — that is a later
+lifecycle/UI concern. The next smallest seams, in order, are: 0.9.11 —
+Peer Discovery Lifecycle Bridge (connecting the existing peer transport to
+`registry.setSource()`/`removeSource()`, without teaching the registry
+anything about peers); 0.9.12 — Reactive World Membership (making a live
+`ui/views/WorldView.js` react automatically to registry changes); and only
+then 0.9.13 — Encounter Inspection Request and 0.9.14 —
+Publication/Avatar Inspection, carried forward unchanged from 0.9.9's own
+epilogue under their new numbers. Per the same reasoning that has paused
+this codebase before every milestone in this series, those choices belong
+to an explicit request, not an automatic continuation.
