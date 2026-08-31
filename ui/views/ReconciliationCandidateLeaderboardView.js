@@ -24,6 +24,11 @@ import {
 import {
     describePublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceExport
 } from '../../application/PublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceExport.js';
+import {
+    ReconciliationCandidateLeaderboardEvidenceImportOutcome,
+    importPublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceExport,
+    describePublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceImport
+} from '../../application/PublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceImport.js';
 import ReconciliationCandidateLeaderboardTable from '../components/ReconciliationCandidateLeaderboardTable.js';
 
 // 0.8.181 — Explicit Peer Archive Leaderboard Comparison.
@@ -231,6 +236,54 @@ import ReconciliationCandidateLeaderboardTable from '../components/Reconciliatio
 // export are each a separate, later concern — see 0.8.186's own header,
 // "no UI in this milestone," now resolved by exactly this much UI and no
 // more.
+//
+// 0.8.188 — Reconciliation Candidate Leaderboard Evidence Export Import
+// adds exactly one more page-local, never-persisted piece of state,
+// `importedEvidenceSummary`, and one click handler, `importEvidenceExport()`
+// — the read side of the export this view has offered since 0.8.187.
+//
+//   importedEvidenceText (a person's own paste) ──► 0.8.188's own importXxx()
+//                                                              │
+//                                                    { outcome, document }
+//                                                              │
+//                                                    0.8.188's own describeXxx()
+//                                                              │
+//                                                              ▼
+//                                              importedEvidenceSummary
+//                                        (comparisonState, candidateCount,
+//                                         decisionRecordCount,
+//                                         observationRecordCount)
+//
+// IMPORTING NEVER TOUCHES `sourceArchive`/`targetArchive`, `page`, OR
+// `evidenceDetail`. An imported document is READ-ONLY INSPECTION OF A
+// SEPARATE, PORTABLE FACT — never a third archive, never merged into the
+// live comparison, and never assigned over `filteredPage`/
+// `filteredEvidenceDetail`. This is the identical "never becomes the
+// active archive" boundary 0.8.181's own `usePeerArchive()` already holds
+// for a peer archive, held here again for an imported evidence document:
+// the live leaderboard remains `sourceArchive + targetArchive -> live
+// comparison`; an imported document remains its own, entirely separate,
+// `portable evidence document -> read-only inspection`. Nothing in this
+// milestone reads `PublicationObservationArchive`, recomputes evidence
+// agreement, or calls 0.8.176/0.8.177/0.8.182/0.8.184/0.8.185 a further
+// time.
+//
+// `importEvidenceExport()` CALLS 0.8.188'S OWN `importXxx()` EXACTLY ONCE,
+// ON AN EXPLICIT CLICK — NEVER ON EVERY KEYSTROKE, AND NEVER
+// AUTOMATICALLY. A genuine document produces a summary via 0.8.188's own
+// `describeXxx()`, called exactly once over `importXxx()`'s own already-
+// validated `document`; an `INVALID_DOCUMENT` outcome leaves
+// `importedEvidenceSummary` completely untouched and only sets
+// `importedEvidenceInvalid` — the identical "a bad paste never quietly
+// resets an already-imported genuine document" discipline `usePeerArchive()`
+// already holds for a peer archive.
+//
+// DELIBERATELY EXCLUDED — NOT THIS MILESTONE. Merging an imported document
+// into the live leaderboard, re-validating any decision or observation it
+// carries, comparing it against `sourceArchive`/`targetArchive`, and
+// persisting it anywhere are each explicitly out of scope — see this
+// file's own header, "Importing never touches," above, and 0.8.188's own
+// module header for the full architectural boundary.
 export const RECONCILIATION_CANDIDATE_LEADERBOARD_EVIDENCE_KIND_OPTIONS = [
     { value: ReconciliationCandidateLeaderboardEvidenceKind.ALL, label: 'All' },
     { value: ReconciliationCandidateLeaderboardEvidenceKind.DECISIONS, label: 'Decisions' },
@@ -351,13 +404,40 @@ export default {
             evidenceExportPackage.downloadHref = 'data:application/json;charset=utf-8,' + encodeURIComponent(json);
         }
 
+        // 0.8.188 — page-local, never-persisted imported-evidence state.
+        // `importedEvidenceSummary` starts `null` (nothing imported yet)
+        // and only ever changes through `importEvidenceExport()` below, on
+        // an explicit click. Never merged into `sourceArchive`/
+        // `targetArchive`, `page`, or `evidenceDetail` — see this file's
+        // own header, "0.8.188."
+        const importedEvidenceText = ref('');
+        const importedEvidenceSummary = ref(null);
+        const importedEvidenceInvalid = ref(false);
+
+        function importEvidenceExport() {
+            const result = importPublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceExport(importedEvidenceText.value);
+            if (result.outcome === ReconciliationCandidateLeaderboardEvidenceImportOutcome.IMPORTED) {
+                importedEvidenceSummary.value = describePublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceImport(result.document);
+                importedEvidenceInvalid.value = false;
+            } else {
+                importedEvidenceInvalid.value = true;
+            }
+        }
+
+        function clearImportedEvidence() {
+            importedEvidenceText.value = '';
+            importedEvidenceSummary.value = null;
+            importedEvidenceInvalid.value = false;
+        }
+
         return {
             page, evidenceDetail, comparisonState,
             evidenceKindFilter, replicaRelationFilter, filteredPage, filteredEvidenceDetail,
             evidenceKindOptions: RECONCILIATION_CANDIDATE_LEADERBOARD_EVIDENCE_KIND_OPTIONS,
             replicaRelationOptions: RECONCILIATION_CANDIDATE_LEADERBOARD_REPLICA_RELATION_OPTIONS,
             peerArchiveText, hasPeerArchive, peerArchiveInvalid, usePeerArchive, clearPeerArchive,
-            evidenceExportPackage, exportEvidence
+            evidenceExportPackage, exportEvidence,
+            importedEvidenceText, importedEvidenceSummary, importedEvidenceInvalid, importEvidenceExport, clearImportedEvidence
         };
     },
     template: `
@@ -440,6 +520,39 @@ export default {
                     <div class="identity-mgmt-actions">
                         <a class="modal-btn modal-btn--primary" :href="evidenceExportPackage.downloadHref" :download="evidenceExportPackage.fileName">Download Evidence Export</a>
                     </div>
+                </div>
+            </div>
+
+            <div class="evidence-inspection-adapter reconciliation-leaderboard-evidence-import">
+                <span class="evidence-inspection-adapter-title">Import Evidence Export</span>
+                <p class="form-hint form-hint--neutral">
+                    Paste a previously exported evidence document (from the Evidence
+                    Export panel above, this replica's own or a peer's) to inspect it.
+                    This never merges into, replaces, or recomputes the live leaderboard
+                    above — it is a read-only look at a separate, portable document.
+                </p>
+                <label class="form-field">
+                    <span class="form-label">Evidence export JSON</span>
+                    <textarea class="form-input identity-export-json" rows="6" v-model="importedEvidenceText"
+                              placeholder="Paste an exported evidence document JSON"></textarea>
+                </label>
+                <div class="identity-mgmt-actions">
+                    <button type="button" class="action-btn action-btn--secondary" @click="importEvidenceExport">
+                        Import Evidence
+                    </button>
+                    <button type="button" class="action-btn action-btn--secondary" v-if="importedEvidenceSummary" @click="clearImportedEvidence">
+                        Clear Imported Evidence
+                    </button>
+                </div>
+                <p v-if="importedEvidenceInvalid" class="identity-unlock-error">
+                    This is not a valid evidence export document — nothing was imported.
+                </p>
+                <div v-if="importedEvidenceSummary" class="evidence-inspection-adapter">
+                    <span class="evidence-inspection-adapter-title">Imported Evidence</span>
+                    <p>Comparison: {{ importedEvidenceSummary.comparisonState }}</p>
+                    <p>Candidates: {{ importedEvidenceSummary.candidateCount }}</p>
+                    <p>Decisions: {{ importedEvidenceSummary.decisionRecordCount }}</p>
+                    <p>Observations: {{ importedEvidenceSummary.observationRecordCount }}</p>
                 </div>
             </div>
 
