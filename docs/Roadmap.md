@@ -46317,7 +46317,173 @@ no deduplication anywhere along the way. Actually calling
 `ui/views/WorldView.js` — and giving peer sources a lifecycle as peers
 connect and disconnect, rather than a static, already-supplied input — is
 separate, later, unscheduled work, and so is turning 0.9.4's own selection
-into an inspection request (0.9.9 — Encounter Inspection Request, 0.9.10 —
-Publication/Avatar Inspection). Per the same reasoning that has paused
-this codebase before every milestone in this series, those choices belong
-to an explicit request, not an automatic continuation.
+into an inspection request. Per the same reasoning that has paused this
+codebase before every milestone in this series, those choices belong to an
+explicit request, not an automatic continuation.
+
+A follow-up request named the lifecycle gap explicitly, ahead of
+inspection: 0.9.8 proves static multi-source integration, but a live
+World needs sources to appear and disappear as peers do, not just to be
+handed in once as an already-assembled list. Renumbered accordingly: this
+becomes 0.9.9 — World Discovery Source Lifecycle, and inspection moves to
+0.9.10 (Encounter Inspection Request) and 0.9.11 (Publication/Avatar
+Inspection), below.
+
+---
+
+## 0.9.9 — World Discovery Source Lifecycle
+
+0.9.5 named the seam, 0.9.6 crossed it once per peer message, 0.9.7
+concatenated any number of already-described sources, and 0.9.8 wired the
+result into a running World View — but every one of those four
+milestones' own headers named, and explicitly refused to take, the same
+next step. 0.9.8 put it exactly: "Live peer-source lifecycle (a source
+entering when a peer appears, leaving when a peer disappears). This file
+holds no state between calls and subscribes to nothing; a caller decides,
+on every call, exactly which sources currently apply." This milestone is
+that caller — the one piece of mutable state the whole 0.9.5-through-0.9.8
+family was always missing: which sources currently exist, right now.
+
+```
+peer becomes available                 peer becomes unavailable
+       │                                        │
+       ▼                                        ▼
+WorldDiscoverySource                    registry.removeSource(origin)
+       │                                        │
+       ▼                                        │
+registry.setSource(source)  ★ (THIS)            │
+       │                                        │
+       └───────────────────┬────────────────────┘
+                            ▼
+                  registry.listSources()
+                            │
+                            ▼
+     application/WorldEncounterIntegration.js   (0.9.8, unchanged)
+            describeWorldFromDiscoverySources()
+                            │
+                            ▼
+                       World View
+```
+
+**Membership, not computation.** `application/WorldDiscoverySourceRegistry.js`
+answers exactly one question: "which `WorldDiscoverySource` bundles
+currently exist?" It never answers "what does the World look like" — it
+imports none of `core/WorldEncounter.js`,
+`core/WorldDiscoverySourceAssembly.js`, or
+`application/WorldEncounterIntegration.js`, and calls none of
+`deriveWorldEncounters()`, `assembleWorldDiscoveryInputs()`, or
+`describeWorldFromDiscoverySources()`. A caller reads `listSources()` and
+hands the result to 0.9.8's own entry point itself — this milestone's own
+job stops at `sources[]`.
+
+**Keyed by `origin`, never by a separate caller-chosen id.** 0.9.5's own
+`origin` field is already the one stable identity a `WorldDiscoverySource`
+carries. `setSource(source)` takes the whole, already-described source and
+reads `source.origin` itself to decide which slot it occupies — there is
+no `setSource(id, source)` two-argument form, and no way to register a
+source under an origin other than its own.
+
+**Replacement, not accumulation.** Setting an origin that already exists
+replaces its previous contribution; it never appends a second one. If peer
+A's presence updates and a caller calls `setSource()` again with a
+freshly-described `peer:<identityId>` source, the registry holds exactly
+one current `peer:<identityId>` entry afterward. This is deliberately the
+opposite of 0.9.7's own "assembly is not reconciliation" rule: 0.9.7
+concatenates the same source list every time and preserves every
+duplicate a caller hands it; this milestone is what decides, between
+calls, what that source list even IS. Assembly preserves duplicates across
+sources; lifecycle decides which source instances currently exist. Both
+rules are correct at their own layer.
+
+**Removal is plain absence, never a tombstone.** `removeSource(origin)`
+deletes that origin's entry outright — no `revoked`, `invalidated`,
+`untrusted`, `stale`, or `offline` flag, and no record of any kind left
+behind. `listSources()` afterward looks exactly as if that origin had
+never been set at all, mirroring 0.9.0's own rule that an avatar needs a
+LIVE presence to be encounterable, one layer up. A removed origin that
+later returns is a fresh slot, not a revived one — the registry keeps no
+memory of what it used to contribute.
+
+**`listSources()` order is `Map` iteration order, used as-is.** Each
+origin's first-ever `setSource()` call fixes its position; replacing an
+existing origin's contribution never moves it; removing and later
+re-adding an origin places it last, as a new entry. No sorting, grouping,
+or "local first" rule of this milestone's own invention — the same
+restraint 0.9.7 already applied to source *content* extended here to
+source *order*.
+
+**No origin-based judgment, no trust vocabulary — inherited unchanged from
+0.9.5 through 0.9.8.** `'local'` occupies a slot exactly like
+`'peer:<identityId>'` does: nothing here treats it as privileged,
+permanent, or exempt from removal. No `trusted`, `verified`, `authority`,
+`priority`, or `weight` field or method exists here or ever will at this
+layer.
+
+**No deduplication, no record-level logic of any kind.** This milestone
+never looks inside a source's own six record arrays — it treats a
+`WorldDiscoverySource` as one opaque unit, identified solely by `origin`.
+
+**No peer transport, no network, no persistence.** `WorldDiscoverySourceRegistry`
+never imports `peer/PeerMessageBus.js`, `peer/PeerConnection.js`, any
+`PeerDiscoveryProvider`, or a `StorageProvider`. It does not know when a
+peer connects or disconnects — it only knows that some caller told it, via
+`setSource()`/`removeSource()`, that a source now exists or no longer
+does. Deciding WHEN to make those calls remains the peer transport layer's
+own job, exactly as 0.9.6 already drew that line for describing a single
+message.
+
+**Live, in-memory, per-instance state — not a singleton.** Each
+`new WorldDiscoverySourceRegistry()` holds its own independent set of
+sources. This file lives in `application/`, not `core/`, precisely
+because it IS mutable state, unlike every pure `core/` file the
+0.9.5-through-0.9.7 family already established.
+
+**The lifecycle API stays tiny.** `setSource()`, `removeSource()`,
+`listSources()`, and `clear()` are the entire surface — no event bus, no
+persistence, no synchronization, no retry system, no peer connection
+management, no automatic reconnection, no network fetching, no trust
+state, no verification state.
+
+**Deliberately excluded — not this milestone.**
+- **Calling `deriveWorldEncounters()`, `assembleWorldDiscoveryInputs()`,
+  or `describeWorldFromDiscoverySources()`.** See "Membership, not
+  computation," above — a caller does that itself, with this milestone's
+  own `listSources()` result.
+- **Deduplication, reconciliation, source prioritization, trust
+  decisions, signature verification, or any record-level judgment.**
+  Inherited, unmodified, from 0.9.0 through 0.9.8.
+- **Tombstones, "offline" markers, revocation, invalidation, or any
+  record of a source that used to exist.** See "Removal is plain
+  absence," above.
+- **Deciding WHEN a peer has appeared or disappeared, or reading anything
+  off `peer/PeerMessageBus.js`, `peer/PeerConnection.js`, or any
+  `PeerDiscoveryProvider`/`PeerConnectionProvider`.** This milestone is
+  told; it never finds out on its own.
+- **Persisting the current source set to a `StorageProvider`, or across a
+  page reload.** The registry's contents are exactly as durable as the
+  running World View session that owns it.
+- **An event bus, subscription/notification mechanism, retry system, or
+  any generalized state-management framework.** See "The lifecycle API
+  stays tiny," above.
+- **Turning a 0.9.4 selection into an inspection request, or loading
+  inspected content.** Separate, later, unscheduled work (0.9.10, 0.9.11).
+
+`application/WorldDiscoverySourceRegistry.js` added; `docs/Roadmap.md`
+updated; `WorldDiscoverySourceRegistry.test.js` added and registered in
+`tests.html`.
+
+---
+
+Deliberately paused here. This milestone gives the source-side
+architecture the one thing it was still missing: a live notion of which
+sources currently exist, so a peer appearing or disappearing is reflected
+in the next World projection without accumulating stale contributions or
+inventing tombstones for absent ones. Actually wiring `WorldDiscoverySourceRegistry`
+into a live page-level container of `ui/views/WorldView.js` — deciding
+when the peer transport layer should call `setSource()`/`removeSource()`
+in response to real connection/disconnection events — and turning 0.9.4's
+own selection into an inspection request (0.9.10 — Encounter Inspection
+Request, 0.9.11 — Publication/Avatar Inspection), are both separate,
+later, unscheduled work. Per the same reasoning that has paused this
+codebase before every milestone in this series, those choices belong to
+an explicit request, not an automatic continuation.
