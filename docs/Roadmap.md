@@ -41381,3 +41381,84 @@ Decision side                    Observation side
 `docs/Roadmap.md` updated;
 `PublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationHistorySynchronization.test.js`
 registered in `tests.html`.
+
+## 0.8.170 — Revalidation Observation Agreement Projection
+
+0.8.166 gave two replicas a way to LEARN exactly which observation records
+differ. Neither it, nor 0.8.167/0.8.168/0.8.169 built on top of it, ever
+states the complementary fact this milestone exists to make observable:
+given two replicas' observation histories, which COMPLETE observation
+records are SHARED by both, and — separately, at a coarser grain — which
+plan identities are represented on both, or only one, of them? This is the
+observation-level counterpart of 0.8.156, one subject over, with the
+identical composition: reuse 0.8.166's own difference, never a second
+comparison engine.
+
+**New module.** `application/
+PublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationAgreementView.js`,
+exactly two functions — no export/import/apply wrappers, since agreement is
+a read-only projection, never an exchange operation:
+`describePublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationAgreement(sourceHistory,
+targetHistory)` calls 0.8.166's own `describeXxx()` once to obtain
+`sourceOnly`, then derives `sharedObservations` by subtracting `sourceOnly`
+from the source's own genuine-filtered history (multiset subtraction over
+0.8.166's exact six-field observation identity — never a second identity
+algorithm); `reconstructPublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationAgreement(sourceArchive,
+targetArchive)` reads each side's own raw history via 0.8.167's own
+reconstruction seam, then calls `describeXxx()`.
+
+**Plan presence computed independently of observation-level agreement — the
+flagship point.** A plan identity is represented on a replica if that
+replica's own FULL history names it in any observation's own `planIdentity`
+field, regardless of which observations about it are shared or exclusive:
+`source plans = distinct planIdentity values in source history`, `target
+plans = distinct planIdentity values in target history`. Flagship: Alice
+`O1=D1+P1+present+T1`, `O2=D2+P1+absent+T2`; Bob `O1=D1+P1+present+T1`,
+`O3=D2+P1+present+T3`, `O4=D3+P2+absent+T4`. `sharedObservations = [O1]`;
+`sourceOnly = [O2]`; `targetOnly = [O3, O4]`; yet `sharedPlanCount === 1`
+(P1 — represented on both replicas even though the observations concerning
+it genuinely differ) and `targetOnlyPlanCount === 1` (P2). A shared plan
+therefore does NOT imply shared observations. The converse direction is
+forced by construction instead: since `planIdentity` is itself one of the
+six observation-identity fields, any observation appearing in
+`sharedObservations` necessarily names a plan present on both sides.
+
+**The six-field identity boundary, protected directly.** Two observations
+identical in `decision`/`planIdentity`/`candidateType`/`candidatePresent`/
+`observedAt` but differing only in `candidateMatchesPlan` remain genuinely
+distinct — zero shared observations, even though the plan they both concern
+is still counted as a shared plan. The identical test holds for a
+difference in `observedAt` alone.
+
+**Result shape.** `{ sourceObservationCount, targetObservationCount,
+sharedObservationCount, sourceOnlyObservationCount,
+targetOnlyObservationCount, sharedObservations, sourceOnly, targetOnly,
+distinctPlanCount, sharedPlanCount, sourceOnlyPlanCount,
+targetOnlyPlanCount, planAgreements: [{ planIdentity, sharedObservationCount,
+sourceOnlyObservationCount, targetOnlyObservationCount }], sameHistory }`.
+No `conflict`, `correct`, `stale`, `authoritative`, `resolved`, or
+`preferred` terminology anywhere.
+
+**Deliberately excluded — not this milestone.** No interpretation of
+agreement/difference as conflict or need for resolution, no export/import/
+application/synchronization of the shared or exclusive observations found,
+no deduplication (multiset multiplicity is preserved throughout), no
+combining a plan's own source-only/target-only counts into a derived
+"disagreement score," no grouping by candidate or decision (0.8.171's own,
+separately sized, later question), and no archive writes of any kind — the
+archive is only ever READ, by `reconstructXxx()`.
+
+**Architecture.** Exactly two imports: 0.8.166's own difference projection,
+and 0.8.167's own archive reconstruction seam — nothing from 0.8.162
+through 0.8.165, 0.8.168, or 0.8.169.
+
+```
+Decision side                         Observation side
+─────────────                         ────────────────
+0.8.149 Difference                    0.8.166 Difference
+0.8.156 Candidate Decision Agreement  0.8.170 Observation Agreement   ★
+```
+
+`docs/Roadmap.md` updated;
+`PublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationAgreementView.test.js`
+registered in `tests.html`.
