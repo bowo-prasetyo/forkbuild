@@ -2197,10 +2197,9 @@ never one chosen over the other. This never changes a count anywhere: a
 hidden record's own six-count row still reflects everything the candidate
 has recorded, only the panel's own, separate, record listing narrows.
 
-**Exporting exactly what's currently filtered.** The evidence this
-milestone's projection produces is a plain, portable JSON document — not
-yet wired to an on-screen button (that's separate, smaller, later work) —
-shaped like this:
+**Exporting exactly what's currently filtered.** An **Evidence Export**
+box below the Evidence Filter offers an **Export Evidence** button.
+Clicking it produces a plain, portable JSON document shaped like this:
 
 ```json
 {
@@ -2221,8 +2220,20 @@ whether it came from **No peer archive supplied**, **a peer archive that
 was supplied but empty**, or **a real comparison against a supplied
 peer** — three facts that can otherwise look identical once the evidence
 itself is empty — and which Evidence Filter selection produced it.
-Nothing here transmits, uploads, or saves the document anywhere; producing
-it is a pure, read-only step.
+
+The button reveals the document's own JSON in a read-only box, alongside
+a **Download Evidence Export** link — clicking it saves the file
+(`reconciliation-candidate-leaderboard-evidence-export.json`) to your
+device, the same way **Export Archive** on the Publications page already
+does. Nothing here transmits or uploads the document anywhere, contacts a
+server, or persists the peer archive; producing and downloading it are
+both read-only steps over what is already on screen. Exporting never
+recomputes an evidence count, filters a candidate, inspects an archive, or
+re-sorts a record — every one of those questions was already answered by
+the Evidence Filter and the peer comparison above. Change the Evidence
+Filter or the peer archive and click **Export Evidence** again to
+download a document matching the new selection; nothing exports
+automatically.
 
 **In practice, this page shows "No reconciliation candidates to display"
 today.** Nothing else in this app currently records a reconciliation
