@@ -45820,7 +45820,9 @@ already hold.
 - **Fetching, inspecting, or loading anything about the selected
   encounter** — a publication's own content, an avatar's own profile, a
   snapshot, or a signed claim. See "No fetching, no inspection," above —
-  0.9.5's own unscheduled "Encounter Inspection Request" seam.
+  the still-unscheduled "Encounter Inspection Request" seam, renumbered
+  by 0.9.5 to 0.9.9 once a World Discovery Source Boundary was named as
+  the more fundamental gap.
 - **Persisting or synchronizing the selection.** `selectedEncounter` is
   page-local UI state only, exactly like `wandererPosition` before it.
 - **Candidate matching, comparison, evidence, ranking, trust, or
@@ -45839,9 +45841,154 @@ registered in `tests.html`.
 Deliberately paused here. This milestone drew a clean line between
 *seeing* an encounterable object and *choosing* one, without saying
 anything yet about what that choice means. Turning a selection into an
-inspection request (0.9.5 — Encounter Inspection Request) — and, later
-still, actually loading what was inspected (0.9.6 — Publication/Avatar
-Inspection) — are both separate, later work, and — per the same reasoning
-that has paused this codebase before every milestone in this series —
+inspection request, and, later still, actually loading what was
+inspected, are both separate, later work — and, per the same reasoning
+that has paused this codebase before every milestone in this series,
 that choice belongs to an explicit request, not an automatic
 continuation.
+
+A different, more fundamental gap was named first, by an explicit
+request of its own: everything from 0.9.0 onward has been built as
+though `deriveWorldEncounters()`'s own inputs simply already exist, with
+no seam anywhere for a second replica — a peer — to ever contribute to
+them. Renumbered accordingly: inspection becomes 0.9.9/0.9.10, and
+0.9.5 becomes the missing seam between peer transport and World input,
+below.
+
+---
+
+## 0.9.5 — World Discovery Source Boundary
+
+Every milestone from 0.9.0 onward derives, reads, presents, renders, and
+now selects encounterable World objects — but every one of them was
+built on data a caller already had in hand, always meaning, so far, "read
+out of this replica's own local storage." Nothing yet names what changes
+once a SECOND replica — a peer, over `peer/PeerMessageBus.js` — can also
+contribute to those same inputs. This milestone is that explicit request,
+and it is deliberately narrow: it names the seam, and stops there.
+
+```
+                    LOCAL WORLD DATA
+                          │
+REMOTE PEER               │
+    │                     │
+    ▼                     │
+peer/PeerMessageBus.js    │
+    │                     │
+    ▼                     │
+(future, unscheduled:     │
+ Peer World Data Ingress) │
+    │                     │
+    └──────────┬──────────┘
+               ▼
+   core/WorldDiscoverySource.js   ★ (THIS milestone)
+      describeWorldDiscoverySource()
+               │
+               ▼
+   (future, unscheduled: World Data Assembly —
+    concatenates N described sources into one
+    set of six arrays)
+               │
+               ▼
+      core/WorldEncounter.js
+         deriveWorldEncounters()
+```
+
+**Four different things this codebase has called "discovery," kept
+separate.** `peer/PeerDiscoveryProvider.js` already answers "I know
+another peer exists." `core/WorldEncounter.js` already answers "given
+the data I currently possess, this object has a present World
+placement/presence." A future, unnamed verification pipeline will answer
+"I cryptographically verified this signed statement." This file is the
+missing fourth: "this data came from here." Collapsing any two of those
+four into one step — peer found straight to trusted, or data received
+straight to shown in the World with no seam in between — is exactly the
+shortcut this milestone exists to refuse.
+
+**A source is exactly 0.9.0's own six arrays, tagged with where they
+came from, and nothing more.** `core/WorldDiscoverySource.js` exports
+`WorldDiscoveryInputKeys` — `publications`, `placements`, `anchors`,
+`snapshotPlacements`, `avatarProfiles`, `avatarPresences`, named once so
+a future assembly step never has to retype `deriveWorldEncounters()`'s
+own parameter list and risk it drifting — and
+`describeWorldDiscoverySource({ origin, ...six arrays })`, which returns
+a frozen `{ origin, publications, placements, anchors,
+snapshotPlacements, avatarProfiles, avatarPresences }` bundle. No field
+is added beyond `origin`: no `receivedAt`, no `connectionId`, no
+`signature`. A caller that wants to remember any of that keeps it at its
+own, later layer.
+
+**`origin` is an open, free-form label — deliberately not a closed
+enum.** `WorldEncounterKind` (0.9.0) is closed because there are, and
+only ever will be, two kinds of encounterable object. The set of places
+World data can come from has no such ceiling — local storage, a
+same-browser `BroadcastChannel` tab, a WebRTC peer, a future
+rendezvous-brokered exchange, a future HTTP source, a future imported
+evidence file — and this milestone commits to none of that list and
+closes off none of it. The one requirement is structural: a non-empty
+string naming some single place a batch came from.
+
+**One source per call — this file never combines two of them.**
+`describeWorldDiscoverySource()` describes exactly one origin's own
+contribution. There is no `combineWorldDiscoverySources()` here, no
+`mergeWorldDiscoverySources()`, nothing that concatenates, deduplicates,
+or reconciles two bundles against each other. Bringing a local source
+and a peer source together into the six arrays `deriveWorldEncounters()`
+actually wants is the unscheduled World Data Assembly step named in this
+milestone's own diagram — never this one.
+
+**No network, no storage, no verification, no trust.** This file never
+imports `peer/PeerMessageBus.js`, never imports a `StorageProvider`,
+never imports anything that checks a signature, and never imports
+`core/WorldEncounter.js` itself — `deriveWorldEncounters()`,
+`describeEncounterablePublication()`, and `describeEncounterableAvatar()`
+are every one of them unchanged by this milestone. No `trusted`,
+`verified`, `authority`, `priority`, or `weight` field exists here or
+ever will at this layer — `origin` names WHERE a batch came from, never
+whether it should be believed.
+
+**Malformed record arrays degrade to empty; a missing origin returns
+`null` — neither ever throws.** This mirrors 0.9.0's own
+`describeEncounterablePublication()`/`describeEncounterableAvatar()`
+contract: `origin` is this bundle's own required identity, so a bundle
+with no origin to name is simply not a describable source, never a
+thrown error; any of the six record-array fields that is not itself an
+array degrades to an empty, frozen array for that field alone, exactly
+like `deriveWorldEncounters()`'s own defaults already do.
+
+**Deliberately excluded — not this milestone.**
+- **Connecting to a peer, or reading anything off `peer/
+  PeerMessageBus.js`, `peer/PeerConnection.js`, or any
+  `PeerDiscoveryProvider`.** That is Peer World Data Ingress — separate,
+  later, unscheduled work. This file does not know a peer exists.
+- **Fetching, subscribing to, or polling anything.** This file is handed
+  data; it never goes and gets any.
+- **Signature verification, or any trust/authority judgment about a
+  source's own data.**
+- **Persisting a source, or any record inside one, to a
+  `StorageProvider`.** A source is a transient, in-memory bundle.
+- **Combining, concatenating, deduplicating, or reconciling two or more
+  sources.** See "One source per call," above — World Data Assembly's
+  own, separate, unscheduled job.
+- **Touching `core/WorldEncounter.js` in any way.**
+- **A closed list of valid `origin` values.** See "`origin` is an open,
+  free-form label," above.
+
+`core/WorldDiscoverySource.js` added; `docs/Roadmap.md` updated;
+`WorldDiscoverySource.test.js` added and registered in `tests.html`.
+
+---
+
+Deliberately paused here. This milestone named the seam between peer
+transport and World input without crossing it — no peer was connected,
+no source was combined with another, and `core/WorldEncounter.js` was
+not touched. Turning `peer/PeerMessageBus.js` messages into described
+sources (0.9.6 — Peer World Data Ingress), concatenating multiple
+sources into the six arrays `deriveWorldEncounters()` actually wants
+(0.9.7 — World Data Assembly), wiring that into the running World View
+(0.9.8 — Remote Encounter Integration), and only then returning to what
+0.9.4's own selection produces (0.9.9 — Encounter Inspection Request,
+0.9.10 — Publication/Avatar Inspection) are all separate, later work,
+and — per the same reasoning that has paused this codebase before every
+milestone in this series — that choice belongs to an explicit request,
+not an automatic continuation.
