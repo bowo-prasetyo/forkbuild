@@ -49773,3 +49773,164 @@ multi-substrate aggregation; third, any other substrate's own adapter (AT
 Protocol, Hive, or otherwise) — each is its own milestone, earned one
 adapter at a time, exactly how 0.9.25 earned Arweave's own. Each remains
 an explicit request, not an automatic continuation.
+
+## 0.9.32 — Decentralized Discovery Envelope Association Evidence
+
+0.9.30's own header left a piece of itself explicitly for later: wiring a
+described envelope into association evidence "would blur exactly the line
+this whole family has drawn carefully at every layer so far," so it built
+only the envelope's own shape and stopped. 0.9.29's own header named the
+same gap from the other side: "a second producer, if one is ever needed,
+is unscheduled, later work with its own milestone." This milestone is
+that second producer — the missing seam between a decentralized discovery
+lead (a rumor about a location) and a self-declared envelope (a rumor
+about what lives there), turned, only by an explicit call, into the same
+association evidence shape 0.9.28's own resolution already knows how to
+consume.
+
+```text
+application/NostrDiscoveryQueryService.js  (0.9.31)
+/ any future substrate adapter's own search()
+     — reports { uri, storage } candidates AND, when it
+       chooses to keep one, the already-described envelope
+       that produced each candidate (this milestone adds no
+       adapter that does this yet — see "Deliberately
+       excluded," below)
+                 │                              │
+                 ▼                              │
+application/DecentralizedWorldDiscoveryQuery.js │
+     queryDecentralizedWorldDiscovery()          │
+                 │                              │
+                 ▼                              ▼
+     DecentralizedWorldDiscoveryLead[]    DecentralizedDiscoveryEnvelope[]
+     (origin, discoveryTag, uri, storage)  (protocol, version, kind,
+                 │                          objectId, uri)
+                 └───────────────┬──────────────┘
+                                 ▼
+application/DecentralizedDiscoveryEnvelopeAssociationEvidenceIngress.js  ★ (THIS)
+     deriveDecentralizedWorldEncounterLeadAssociationEvidenceFromEnvelopes()
+     deriveDecentralizedWorldEncounterLeadAssociationEvidenceFromEnvelopesFromRegistry()
+                                 │
+                                 ▼
+                         associations[]
+                                 │
+                                 ▼
+application/DecentralizedWorldEncounterLeadResolution.js   (0.9.28,
+     resolveDecentralizedWorldEncounterLead()                unmodified)
+```
+
+`application/DecentralizedDiscoveryEnvelopeAssociationEvidenceIngress.js`
+added — `deriveDecentralizedWorldEncounterLeadAssociationEvidenceFromEnvelopes({ envelopes, leads })`,
+`deriveDecentralizedWorldEncounterLeadAssociationEvidenceFromEnvelopesFromRegistry({ envelopes, registry })`.
+
+A DECLARATION, NEVER, BY ITSELF, EVIDENCE. An envelope that
+`describeDecentralizedDiscoveryEnvelope()`/`parseDecentralizedDiscoveryEnvelope()`
+(0.9.30) successfully describes has proven only that it is well-formed —
+"someone declared that object `kind`/`objectId` lives at `uri`." Merely
+parsing successfully is NOT what turns a declaration into association
+evidence here — a caller must separately, explicitly hand this
+milestone's own functions an `envelopes` array alongside a `leads` array
+for anything to be produced at all. Nothing in this codebase calls these
+functions automatically; no existing adapter is wired into them this
+milestone. The distinction the task that requested this milestone drew
+stands exactly as drawn: a discovery tag is never evidence, a uri is
+never evidence, and an envelope is never verified material — only an
+explicit, accepted conversion produces evidence at all.
+
+A DECLARATION BECOMES AN ASSOCIATION ONLY BY MATCHING A CURRENTLY-KNOWN
+LEAD'S OWN `uri` — EXACT STRING EQUALITY, THE SAME MATCHING RULE 0.9.29's
+OWN INGRESS ALREADY HOLDS FOR A PUBLICATION'S OWN LOCATION CLAIM, REUSED
+RATHER THAN REINVENTED. An envelope names a `kind`, an `objectId`, and a
+`uri`, but says nothing about `origin` or `discoveryTag` — the other two
+fields a lead's own identity triple requires. This milestone supplies
+those two fields FROM THE MATCHING LEAD, never invents them. Every
+matching lead produces its own association, never just one — two
+independent leads sharing a declared `uri` stay independent, resolving
+`AMBIGUOUS`, never a preferred pick, exactly 0.9.24's and 0.9.29's own
+refusal to treat a shared `uri` as corroboration.
+
+THE LEAD ITSELF IS NEVER MODIFIED, AND NEVER GAINS `kind`/`objectId` OF
+ITS OWN. A lead and the envelope(s) that might describe what lives at its
+`uri` stay two separate objects for as long as they exist — a lead
+answers "where," an envelope answers "what, self-declared." This
+milestone never imports `core/DecentralizedWorldDiscoveryLead.js`, never
+constructs one, and never mutates one.
+
+BOTH `PUBLICATION` AND `AVATAR` FLOW THROUGH UNCHANGED — UNLIKE 0.9.29's
+OWN INGRESS, WHICH CAN ONLY EVER PRODUCE `PUBLICATION` BECAUSE
+`publisher/Publication.js` STRUCTURALLY CANNOT REPRESENT ANYTHING ELSE.
+0.9.30's own header already validated an envelope's `kind` against the
+FULL `WorldEncounterKind` enum precisely because an envelope is
+self-declared rather than derived from an existing class's own shape.
+This milestone adds no narrower restriction on top of that one — whatever
+`kind` an already-described envelope carries is exactly the `kind` its
+resulting association carries, producing the first `AVATAR` association
+evidence this codebase has ever been able to construct, still exactly as
+unsigned and self-declared as every other field an envelope carries.
+
+A SECOND PRODUCER, NEVER A MERGE INTO THE FIRST. This milestone adds no
+`envelopes` parameter to 0.9.29's own ingress file, and never imports
+`core/DecentralizedPublicationLocationClaim.js` or `publisher/
+Publication.js`; that file is left completely unmodified. Both files
+produce the identical `associations[]` shape 0.9.28's own resolution
+already consumes, and a caller is free to concatenate the results of
+both — `resolveDecentralizedWorldEncounterLead()` never asks which
+producer supplied which entry, because an association names only a
+relationship, never a source's own credibility. Keeping the two files
+separate keeps each producer's own header honest about exactly what kind
+of evidence it produces: one already-signed, one still entirely unsigned.
+
+STILL NO SIGNATURE, NO AUTHENTICITY, NO TRUST JUDGMENT OF ANY KIND. An
+envelope carries no signature field for this milestone to check, and it
+never imports `identity/LocalAuthorizationVerifier.js` or anything that
+would. "This item declares object X lives at this uri" and "object X
+actually lives at this uri, declared by someone entitled to say so"
+remain two different questions; this milestone only ever answers the
+first. Whether a Nostr event's own signature, or any other substrate's
+own authenticity mechanism, should ever gate this pipeline's output is
+exactly the question 0.9.30's and 0.9.31's own headers already left for a
+future, unscheduled milestone — this one does not answer it early.
+
+MALFORMED INPUT DEGRADES TO AN EMPTY RESULT, NEVER THROWS — a missing or
+non-array `envelopes`/`leads`, and a malformed entry within either
+(re-validated through 0.9.30's own `describeDecentralizedDiscoveryEnvelope()`
+and 0.9.28's own `describeDecentralizedWorldEncounterLeadAssociation()` —
+no second validation algorithm for either shape), are silently skipped,
+never blocking the well-formed evidence around them. Synchronous, pure,
+no mutation, no storage, no network, no clock — every returned value is
+`Object.freeze()`'d. No score, rank, trust, verified, "preferred," or
+comparison vocabulary of any kind.
+
+`tests/DecentralizedDiscoveryEnvelopeAssociationEvidenceIngress.test.js`
+added and registered in `tests.html`, covering: a flagship envelope
+matched against a known lead producing one association that resolves
+`RESOLVED` end to end, including via an already-described envelope, not
+just a raw candidate; an envelope matching no currently-known lead
+producing nothing; two independent leads sharing a declared uri each
+producing their own association, resolving `AMBIGUOUS`; both
+`PUBLICATION` and `AVATAR` envelope kinds flowing through unchanged and
+resolving end to end; malformed input (non-array arguments, malformed
+envelope or lead entries) degrading to an empty array, never throwing;
+`...FromEnvelopesFromRegistry()` mirroring the plain-array function over
+`registry.listLeads()`; and an architectural regression pass confirming
+no signature verification, no `ContentReference`, no reference to
+`Publication` or 0.9.29's own ingress file, no polling, and no trust
+vocabulary. No existing file is modified.
+
+Deliberately paused here. This milestone builds exactly the conversion
+function the task that requested it asked for, and nothing past it.
+Explicitly unscheduled: first, any substrate-specific adapter that keeps
+an already-described envelope alongside the `{ uri, storage }` candidate
+it already reports today — `application/NostrDiscoveryQueryService.js`
+(0.9.31) still discards its own parsed envelope once it has read
+`uri`/`storage` off it, and teaching an adapter to also report the
+envelopes it parsed is unscheduled, later work, one adapter at a time;
+second, verifying a Nostr event's own `sig`, or any other substrate's own
+authenticity mechanism, and using it to gate or weight this pipeline's
+output — investigating whether/how that could ever provide meaningful
+provenance is its own future milestone; third, wiring the produced
+`associations` automatically into `application/
+DecentralizedWorldEncounterLeadResolution.js` or into any UI — a caller
+reads this milestone's own result and decides what, if anything, to
+resolve next. Each remains an explicit request, not an automatic
+continuation.
