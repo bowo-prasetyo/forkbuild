@@ -52175,3 +52175,122 @@ the next seam, when requested, is publication distribution state/lifecycle
 semantics (pending, distributed, partially distributed, failed, withdrawn,
 and whatever retry/persistence/confirmation policy those states imply),
 never another sequencing layer on top of this one.
+
+## 0.9.50 — Publication Distribution Lifecycle State Boundary
+
+0.9.48 named what a distribution produced and deliberately refused to
+answer one further question, naming the refusal explicitly in its own
+header: "This file forms no opinion on whether a result with one section
+present and the other `null` counts as 'done'; that policy question
+belongs entirely to a later, unscheduled execution/state milestone." 0.9.49
+sequenced the collaborators that PRODUCE a `PublicationDistributionResult`
+and held the identical restraint one layer later: "This file forms no
+opinion on whether the result it returns 'counts as done'." This milestone
+is that later question, answered as a pure semantic boundary — nothing
+more.
+
+```text
+application/PublicationDistributionResult.js   (0.9.48, unmodified)
+     { publication, material: { uri, storage } | null,
+                    discovery: { relayUrl, discoveryTag, id } | null }
+                 │
+                 ▼
+application/PublicationDistributionLifecycle.js   (new)
+     describePublicationDistributionLifecycle(result)
+                 │
+                 ▼
+     { material:  { state: 'PRESENT' | 'ABSENT', uri?, storage? },
+       discovery: { state: 'PRESENT' | 'ABSENT', origin?, discoveryTag?, id? } }
+```
+
+`application/PublicationDistributionLifecycle.js` (new) exports one pure
+function, `describePublicationDistributionLifecycle()`, plus the
+`PublicationDistributionState` enum it draws from (`ABSENT`/`PRESENT`
+only — see below). Given a `PublicationDistributionResult` a caller
+already has in hand, it converts the facts already present in it into an
+explicit lifecycle description. It never calls
+`describePublicationDistributionResult()` (0.9.48) or
+`executePublicationDistribution()` (0.9.49), never imports either file,
+and never re-derives a fact from anything other than the `result` it is
+handed — no I/O, no persistence, no retry, no clock read, no mutation.
+
+The milestone's central design rule is the one explicitly requested:
+**independent material and discovery states, never collapsed into one
+global lifecycle value.** There is no single
+`"DISTRIBUTED"`/`"PARTIALLY_DISTRIBUTED"`/`"NOT_DISTRIBUTED"` field
+anywhere in this file's output — `material.state` and `discovery.state`
+are each computed independently, from that section's own presence in
+`result` alone. All four combinations are valid, equally well-formed
+output: absent/absent (nothing distributed), present/absent (material
+without discovery — 0.9.49's own "ordinary Nostr decline after a
+successful Arweave upload" scenario), absent/present (a discovery fact
+without a material fact — deliberately tested rather than forbidden, since
+this file imposes no rule that discovery cannot exist without material),
+and present/present (both facts available).
+
+The vocabulary is deliberately tiny: `ABSENT` and `PRESENT`, nothing else.
+No `PENDING`, `FAILED`, `RETRYING`, `CONFIRMED`, or `WITHDRAWN` value is
+introduced, because each would answer a question a
+`PublicationDistributionResult` never records an answer to in the first
+place — 0.9.48's own header already draws this line: "a caller who never
+attempted the step, and a caller whose attempt returned `null`, are
+indistinguishable... and deliberately so." An `ABSENT` discovery state
+here means exactly and only "this result carries no discovery fact"; this
+file forms no opinion on whether that reflects a permanent failure, a
+temporary unavailability, a step never attempted, an intentional decision
+not to publish, or a relay rejection — because it cannot know, and does
+not pretend to.
+
+Provenance is preserved, never reconstructed. When a section's state is
+`PRESENT`, this file copies that section's own already-validated facts
+through unchanged: `material.uri`/`material.storage` and
+`discovery.origin`/`discovery.id` come straight from
+`result.material`/`result.discovery`. `origin` is `result.discovery.relayUrl`
+renamed for readability at this layer only — the value itself is never
+altered — and `discoveryTag` is forwarded under its own already-established
+name, exactly as requested ("the discovery tag can remain part of the
+discovery facts if it is already present in the result, but do not
+reconstruct it from anything else"). Material uri, discovery tag, and
+relay origin remain three independently supplied facts this file never
+derives from one another, carrying forward the identical restraint
+`PublicationDistributionRuntimeComposition.js` (0.9.47) and
+`PublicationDistributionResult.js` (0.9.48) already hold.
+
+Invalid input degrades to `null`, never throws: a `result` that is
+missing or not an object, or whose `material`/`discovery` section is
+present-but-malformed (missing/empty `uri`, or a `discovery` missing
+`relayUrl`/`discoveryTag`/`id`), is not a lifecycle this file can honestly
+describe — the whole call returns `null`, the same discipline this entire
+family already holds.
+
+`tests/PublicationDistributionLifecycle.test.js` covers: a flagship
+section running the exact 0.9.49 scenario end to end (a real Arweave
+upload succeeding, the descriptor succeeding, a real Nostr publish
+declining) and confirming it describes to material `PRESENT` / discovery
+`ABSENT`; a section covering all four material x discovery combinations,
+including the deliberately-tested discovery-present-without-material case;
+a provenance section confirming uri/discoveryTag/origin stay three
+distinct, unreconstructed identities; a section confirming malformed or
+missing input degrades to `null` rather than throwing; a determinism and
+freezing section; and an architectural regression pass confirming the file
+imports none of 0.9.44 through 0.9.49, performs no I/O, reads no clock,
+contains no async function, and uses no
+pending/failed/retrying/confirmed/withdrawn/rollback/transaction
+vocabulary anywhere in its own code. No existing file is modified by this
+milestone.
+
+Deliberately paused here, exactly where this milestone's own request drew
+the line. Explicitly unscheduled: `PENDING`/`FAILED`/`RETRYING`/`CONFIRMED`/
+`WITHDRAWN` or any other operational-interpretation vocabulary; a single
+overall `status`/`success`/`distributed` field collapsing `material`/
+`discovery` into one value; automatic transitions of any kind; persistence
+of a described lifecycle anywhere; timestamps, retry scheduling, recovery,
+rollback, or compensation; multi-relay aggregation, Arweave confirmation
+checks, or Nostr relay health; a consistency rule requiring discovery to
+imply material (or vice versa); and a `transition()` function or any
+mutable state machine. Each remains an explicit request, not an automatic
+continuation — the next seam, when requested, is 0.9.51's own proposed
+lifecycle transitions (`transition(...)` splitting into independent
+material and discovery transitions), where `PENDING`/`CONFIRMED`/
+`WITHDRAWN`/retry/recovery become candidates for deliberate introduction,
+never assumed by this milestone.
