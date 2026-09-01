@@ -70,6 +70,17 @@ function canvasCtx(overrides = {}) {
         selectionOutcome: null,
         resolvedSelectionChoice: null,
         refreshSelectionOutcome: WorldEncounterCanvas.methods.refreshSelectionOutcome,
+        // 0.9.39 — `refreshSelectionOutcome()` now also calls
+        // `this.refreshMaterialInspection()`. `materialSources` stays
+        // undefined throughout this file's own tests, so that call always
+        // leaves `materialInspection` at `null` without ever touching
+        // `inspectWorldEncounterMaterial()` — see
+        // tests/WorldEncounterMaterialInspectionUI.test.js for
+        // material-inspection wiring itself. This file's own sections stay
+        // focused on 0.9.4's own selectedEncounter contract, unaffected by
+        // that addition.
+        refreshMaterialInspection: WorldEncounterCanvas.methods.refreshMaterialInspection,
+        materialInspectionRequestId: 0,
         ...overrides
     };
     ctx.effectiveView = WorldEncounterCanvas.computed.effectiveView.call(ctx);
