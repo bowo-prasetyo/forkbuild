@@ -50661,13 +50661,111 @@ seam the task that requested it asked for — an input/output contract that
 lets identity correspondence be judged, once a real verifier exists, for
 material from any of the three current or future material sources alike —
 and ships no concrete judgment of its own. Explicitly unscheduled: first,
-any concrete `verifyIdentity` implementation — Publication signature
-verification using this codebase's existing `core/Signature.js` / `core/
-SigningIdentity.js` / `identity/LocalAuthorizationVerifier.js` machinery
-(0.9.38); second, wiring this boundary into `application/
-DecentralizedWorldEncounterLeadAwareMaterialLoading.js`, `application/
-WorldEncounterMaterialLoading.js`, `application/WorldEncounterInspection.js`,
-or any UI (0.9.39); third, trust, ranking, reputation, or preference
-between multiple candidate materials for the same encounter — a separate,
-later, unscheduled boundary sitting after this one. Each remains an
-explicit request, not an automatic continuation.
+a concrete `verifyIdentity` implementation (0.9.38); second, wiring this
+boundary into `application/DecentralizedWorldEncounterLeadAwareMaterialLoading.js`,
+`application/WorldEncounterMaterialLoading.js`, `application/
+WorldEncounterInspection.js`, or any UI (0.9.39); third, trust, ranking,
+reputation, or preference between multiple candidate materials for the
+same encounter — a separate, later, unscheduled boundary sitting after
+this one. Each remains an explicit request, not an automatic continuation.
+
+## 0.9.38 — World Encounter Material Identity Verifier
+
+0.9.37 named `WorldEncounterMaterialVerifier` — a contract with exactly one
+method, `verifyIdentity(resolvedSelection, material, resolvedLead)` — and
+shipped with nothing concrete plugged into it. This milestone is the first
+concrete thing plugged in, and deliberately the most boring answer possible
+to a narrow question: does this retrieved material actually correspond to
+the selected `{ kind, objectId }`? Not whether its signature verifies, not
+whether the signature identifies the claimed publisher, not whether the
+content matches its claimed `uri`, not whether it should be trusted — one
+structural identity check, and nothing past it.
+
+```text
+resolvedSelection = { kind, objectId, origin }         (0.9.19)
+       │
+       │        material = { id / avatarId, ... }
+       │        (0.9.22 / 0.9.23 / 0.9.33 / 0.9.35 / 0.9.36)
+       ▼               │
+application/WorldEncounterMaterialIdentityVerifier.js   ★ (THIS)
+     WorldEncounterMaterialIdentityVerifier#verifyIdentity()
+       │
+       ▼
+application/WorldEncounterMaterialVerification.js   (0.9.37, unmodified)
+     verifyWorldEncounterMaterial()
+       │
+ ┌─────┼──────────────┐
+ ▼     ▼               ▼
+UNVERIFIABLE  REJECTED  VERIFIED
+```
+
+`application/WorldEncounterMaterialIdentityVerifier.js` added —
+`WorldEncounterMaterialIdentityVerifier`, a concrete class extending 0.9.37's
+own `WorldEncounterMaterialVerifier` base class and implementing exactly its
+one method.
+
+KIND-SPECIFIC, NEVER A GENERIC `objectId` PROPERTY INVENTED ON MATERIAL.
+0.9.16's own `describeEncounterablePublication()`/`describeEncounterableAvatar()`
+already established that a `Publication` names itself by `id` and an
+`AvatarProfile` names itself by `avatarId` — two different fields on two
+different domain objects, never one shared convention. This file honors
+that distinction rather than blurring it for its own convenience:
+
+```text
+PUBLICATION → material.id
+AVATAR      → material.avatarId
+```
+
+`resolvedSelection.kind` selects which field is compared; the comparison
+itself is strict `===` on two non-empty strings — never coerced, never
+case-insensitive.
+
+TWO KINDS, NEVER A THIRD — inherited unchanged from 0.9.0/0.9.16/0.9.19. A
+`kind` outside `WorldEncounterKind.PUBLICATION`/`WorldEncounterKind.AVATAR`
+is one this verifier does not yet know how to judge; `verifyIdentity()`
+resolves to `undefined` for it — an abstention, which 0.9.37's own boundary
+already turns into `UNVERIFIABLE` — never a guessed-at rejection.
+
+MALFORMED MATERIAL RESOLVES TO A STRICT `false`, NEVER A THROW AND NEVER AN
+ABSTENTION. Once the `kind` IS recognized, a `material` that is not an
+object, or whose identity field is missing, mistyped, or empty, simply does
+not correspond to anything nameable — a real, active determination, exactly
+the same posture as a wrong-but-present identity value, extended here to a
+missing one. `resolvedLead` is accepted, to satisfy the contract's own
+shape, and never read.
+
+`tests/WorldEncounterMaterialIdentityVerifier.test.js` added and registered
+in `tests.html`, covering: a flagship matching/mismatched `Publication.id`
+pair resolving `true`/`false`; the same for `AvatarProfile.avatarId`,
+including a decoy `material.id` that must never be consulted for an AVATAR
+selection; an unrecognized `kind` abstaining (`undefined`, never `false`)
+across several malformed/unknown kind values; malformed material (missing
+field, wrong type, non-object, an array, a bare string) resolving to
+`false` rather than throwing or abstaining; strict, non-coercive,
+case-sensitive string comparison; a malformed `resolvedSelection` resolving
+to `false` when its `kind` is still recognizable and abstaining when it is
+not; `resolvedLead` accepted in several shapes with no effect on the
+outcome; no throw for zero arguments; determinism across repeated calls;
+full end-to-end integration through 0.9.37's own unmodified
+`verifyWorldEncounterMaterial()`, producing `VERIFIED` and `REJECTED` for
+both kinds; an `instanceof` check confirming this class extends 0.9.37's
+own base class rather than merely duck-typing it; and an architectural
+regression pass confirming no signature/authorization imports, no reads of
+`material.signature` or any field on `resolvedLead`, no network or storage
+access, no trust/ranking vocabulary, no invented generic `objectId`
+property on material, and that 0.9.37's own boundary file is never modified
+to know about this concrete verifier. No existing file is modified.
+
+Deliberately paused here. This milestone answers exactly the one question
+the task that requested it named — "is this the object I selected" — and
+stops there. Explicitly unscheduled: first, any cryptographic verification
+(signature verification, hash verification, or content-authentication of
+any kind, using this codebase's existing `core/Signature.js` / `core/
+SigningIdentity.js` / `identity/LocalAuthorizationVerifier.js` machinery) —
+a separate, later, unscheduled verifier answering a different question
+entirely; second, wiring this verifier into `application/
+WorldEncounterMaterialVerification.js` as a default, into either loading
+boundary, or into `application/WorldEncounterInspection.js`/any UI (0.9.39);
+third, trust, ranking, reputation, or preference between multiple candidate
+materials for the same encounter. Each remains an explicit request, not an
+automatic continuation.
