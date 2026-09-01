@@ -51210,3 +51210,152 @@ explicitly, exactly like 0.9.38 before it; fourth, a cryptographic
 verifier for `AVATAR` material, since `core/AvatarProfile.js` carries no
 signature layer today. Each remains an explicit request, not an automatic
 continuation.
+
+## 0.9.42 — World Encounter Material Verification Composition
+
+0.9.38 (`WorldEncounterMaterialIdentityVerifier`) and 0.9.41
+(`WorldEncounterMaterialSignatureVerifier`) each answer a different,
+independent question about the same material, and each already plugs into
+0.9.37's own `verifyWorldEncounterMaterial()` exactly the way that file's
+own header always intended: "a caller wanting a second opinion calls this
+function twice, explicitly, with a second verifier." That works, but it
+leaves every caller to re-derive, by hand, the same judgment call every
+time two or more verifiers are involved — if one confirms and another
+abstains, is the material verified, unverifiable, or something else? Left
+unanswered, that call would otherwise be made ad hoc wherever
+`WorldEncounterCanvas.js` (or any future caller) happens to invoke more
+than one verifier — exactly the kind of security-relevant decision this
+codebase's own verification boundary exists to keep out of the UI layer.
+This milestone is that one answer, in one place:
+
+```text
+material
+   │
+   ├──────────────────────┬───────────────────────┐
+   ▼                      ▼                        ▼
+verifier 1             verifier 2             verifier N
+true/false/            true/false/            true/false/
+undefined              undefined              undefined
+   │                      │                        │
+   └──────────────────────┴───────────────────────┘
+                           ▼
+application/WorldEncounterMaterialVerificationComposition.js   ★ (THIS)
+     WorldEncounterMaterialVerificationComposition#verifyIdentity()
+                           │
+                           ▼
+                  true / false / undefined
+                           │
+                           ▼
+application/WorldEncounterMaterialVerification.js   (0.9.37, unmodified)
+     verifyWorldEncounterMaterial()
+                           │
+             ┌─────────────┼──────────────┐
+             ▼              ▼               ▼
+       UNVERIFIABLE     REJECTED        VERIFIED
+```
+
+`application/WorldEncounterMaterialVerificationComposition.js` added —
+`WorldEncounterMaterialVerificationComposition`, a concrete class
+extending 0.9.37's own `WorldEncounterMaterialVerifier` base class and
+implementing exactly its one method. It is not a fourth orchestration
+boundary; it is itself just another verifier, indistinguishable from
+0.9.38's or 0.9.41's own from the outside, so a caller hands it to
+`verifyWorldEncounterMaterial()` or `inspectWorldEncounterMaterial()`
+exactly where a single verifier already goes — no new entry point, no
+second status vocabulary, and neither file is modified. Because it
+satisfies the same contract it consumes, a composition can even wrap
+another composition, unplanned and untested beyond what that contract
+already guarantees.
+
+THE SEMANTIC RULE: REJECTED BEATS UNVERIFIABLE BEATS VERIFIED. Given the
+outcomes of every supplied sub-verifier: any sub-verifier resolving
+exactly `false` makes the whole composition `false`, and the remaining
+sub-verifiers are never asked — one active contradiction is enough, and
+asking the rest could not change the answer. Otherwise, if every
+sub-verifier resolved exactly `true`, and at least one was supplied, the
+composition resolves `true`. Otherwise — no rejection anywhere, but at
+least one sub-verifier abstained or was malformed, or none were supplied
+at all — the composition abstains, `undefined`, exactly 0.9.37's own
+"only a strict boolean decides," continued one layer up.
+
+THE DELIBERATE, CENTRAL DESIGN CALL: THIS FILE DOES NOT TRY TO TELL
+"GENUINELY DOES NOT APPLY" APART FROM "ABSTAINED FOR SOME OTHER REASON."
+Two materials can produce the identical sub-verifier outcome pair —
+`[true, undefined]`, an identity verifier confirming correspondence and a
+signature verifier abstaining — for two different underlying reasons:
+today's `WorldEncounterMaterialSignatureVerifier` (0.9.41) abstains both
+when `resolvedSelection.kind` is `AVATAR` (a kind it was never asked to
+judge at all) and when a `PUBLICATION` is legitimately, legacy-unsigned. A
+caller might reasonably want those two cases to resolve differently — a
+confirmed avatar identity with nothing else to check could stand as fully
+verified, while an unsigned publication arguably should not. This
+milestone was scoped with exactly that tension named up front, and
+deliberately does not resolve it here: every sub-verifier in this
+codebase reports its abstention through the identical `undefined` 0.9.37's
+own contract already defines, with no separate "this does not apply to
+this kind at all" signal distinguishable from "this applies but I have
+nothing to decide." Building that distinction into this file would mean
+either teaching a generic composition the internal applicability rules of
+specific, named verifier classes — precisely what this file's own header
+promises never to do, and a registry of special cases that breaks the
+moment a new verifier ships — or guessing a general kind-based
+applicability policy no verifier here has ever declared, which is exactly
+the kind of unrequested security policy a generic reducer must not
+accidentally encode. So every abstention is treated identically here,
+regardless of why it happened, and the composition fails closed:
+`UNVERIFIABLE`, never guessed into `VERIFIED`. A per-verifier
+`appliesTo(resolvedSelection)` signal, or a richer applicability-aware
+return shape, is a separate, later, unscheduled change to the
+`WorldEncounterMaterialVerifier` contract itself and to every verifier
+implementing it — never smuggled into this file alone.
+
+Every supplied sub-verifier is duck-typed exactly like 0.9.37's own
+injected `verifier` — a missing, `null`, or non-conforming entry is never
+a `TypeError` and never a guessed-at contradiction, only its own
+abstention. A thrown rejection from a sub-verifier's own `verifyIdentity()`
+propagates unmodified and uncaught, inherited unchanged from 0.9.37's own
+"a thrown rejection is never swallowed." `resolvedSelection`, `material`,
+and `resolvedLead` are forwarded verbatim to every sub-verifier and never
+read by this file itself. An empty or absent `verifiers` list abstains
+rather than passing vacuously.
+
+`tests/WorldEncounterMaterialVerificationComposition.test.js` added and
+registered in `tests.html`, covering: a flagship composing a real
+`WorldEncounterMaterialIdentityVerifier` and a real
+`WorldEncounterMaterialSignatureVerifier` (a genuinely, cryptographically
+signed Publication, via `identity/LocalIdentityProvider.js`'s real Ed25519
+machinery) to `true`, then end to end through 0.9.37's own unmodified
+`verifyWorldEncounterMaterial()` to `VERIFIED`; any contradicting
+sub-verifier rejecting the whole composition regardless of the others;
+`true` plus an abstention, with no contradiction, abstaining rather than
+passing; the real, current AVATAR case named above — a confirmed identity
+composed with the always-abstaining signature verifier resolving
+`UNVERIFIABLE`, not `VERIFIED` — pinning the conservative default in place
+of the unimplemented per-kind applicability policy; zero sub-verifiers
+(empty, `undefined`, `null`) abstaining rather than passing vacuously;
+malformed sub-verifier entries abstaining rather than throwing or
+contradicting; short-circuiting confirmed directly (sub-verifiers after
+the first `false` are never asked; sub-verifiers before it, and
+abstentions, are always asked, in supplied order); a thrown rejection from
+a sub-verifier propagating rather than being swallowed;
+`resolvedSelection`/`material`/`resolvedLead` forwarded verbatim to every
+sub-verifier; a composition nesting inside another composition, confirming
+it satisfies the same `WorldEncounterMaterialVerifier` contract it
+consumes; no throw for zero arguments; determinism with no caching across
+repeated calls; and an architectural regression pass confirming no
+knowledge of either concrete verifier class by name, no reads of any field
+on `resolvedSelection`/`material`/`resolvedLead`, no trust/ranking
+vocabulary, and that 0.9.37's own boundary and both existing concrete
+verifiers are never modified to know about this file. No existing file is
+modified.
+
+Deliberately paused here. Explicitly unscheduled: first, the per-verifier
+applicability signal named above as this milestone's own central,
+deliberate omission; second, wiring a composed verifier into
+`application/WorldEncounterMaterialInspection.js` or into
+`ui/components/WorldEncounterCanvas.js` — this file is a standalone
+verifier a caller injects explicitly, exactly like 0.9.38 and 0.9.41
+before it; third, any default set of sub-verifiers, or knowledge of
+`WorldEncounterMaterialIdentityVerifier`/`WorldEncounterMaterialSignatureVerifier`
+by name — `verifiers` is supplied entirely by the caller. Each remains an
+explicit request, not an automatic continuation.
