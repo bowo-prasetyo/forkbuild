@@ -51481,3 +51481,90 @@ kind" from "applies but abstained for another reason"); third, a
 Publication distribution/discovery-envelope publishing boundary — the
 "production side" of this same pipeline, entirely unscheduled here. Each
 remains an explicit request, not an automatic continuation.
+
+## 0.9.44 — Publication Discovery Distribution Model
+
+0.9.24 through 0.9.43 built the entire consumption side of decentralized
+discovery — a lead, an envelope, association evidence, resolution,
+retrieval, verification — and every one of those files answers a question
+that only makes sense once something has already been published somewhere.
+Nothing in this codebase had ever asked the question from the other side:
+what does ForkBuild publish, where does the material go, and how does it
+announce that material so another ForkBuild instance can discover it? This
+milestone answers that — deliberately as a small architectural model, not
+as Arweave uploading or Nostr publishing:
+
+```
+Publication (signed)
+      │
+      ▼
+materialUri   (supplied by a caller — a real substrate uploader is
+      │        unscheduled, later work; see below)
+      ▼
+application/PublicationDistributionDescriptor.js
+   describePublicationDistribution()
+      │
+      ▼
+{ kind, objectId, material: { uri, storage },
+  discoveryEnvelope: { protocol, version, kind, objectId, uri } }
+```
+
+`application/PublicationDistributionDescriptor.js` (new) is the one file
+this milestone adds. `describePublicationDistribution({ publication,
+materialUri, materialStorage })` reads exactly two duck-typed fields off a
+`publication` — `id` and `signature` — the same "confirm SOME signature is
+attached, never verify it" restraint `core/
+DecentralizedPublicationLocationClaim.js` (0.9.29) already holds one layer
+over, and requires them both before describing anything: an unsigned
+Publication is never distributed. `materialUri` is supplied by the caller,
+deliberately never read off `publication.contentReference` — the existing
+IPFS/Bitcoin/Base distribution model `contentReference` already names is
+left completely alone, untouched and unjudged, while this file's own
+`materialUri` stands for wherever a future material-substrate uploader
+(0.9.45, unscheduled) actually puts a publication's serialized material.
+The `discoveryEnvelope` half of the result is never a second, invented
+shape — it is produced by calling `core/DecentralizedDiscoveryEnvelope.js`'s
+own `describeDecentralizedDiscoveryEnvelope()` (0.9.30), unmodified, so the
+exact envelope a future Nostr publisher (0.9.46, unscheduled) would attach
+to an event's own `content` is byte-identical to what
+`parseDecentralizedDiscoveryEnvelope()` (0.9.31's own Nostr adapter,
+unmodified) already knows how to read on the consuming side. `material.storage`
+is inferred off `materialUri`'s own `scheme://` prefix, the same open,
+substrate-neutral inference `core/ContentReference.js` and `application/
+NostrDiscoveryQueryService.js` already draw — this file names no storage
+backend in code.
+
+`tests/PublicationDistributionDescriptor.test.js` covers the flagship path
+(a signed Publication plus a supplied `ar://` materialUri describes a
+distribution whose own envelope independently round-trips through both
+`describeDecentralizedDiscoveryEnvelope()` and
+`parseDecentralizedDiscoveryEnvelope()` exactly as a real consumer would
+receive it); that `materialUri` is read independently of a Publication's
+existing, unrelated `contentReference`; that an unsigned Publication always
+degrades to `null`; storage inference and override behavior, including a
+uri with no recognizable scheme; the full malformed-input-degrades-to-null
+matrix; duck-typing (a plain object shaped like a signed Publication, no
+class import required); determinism across repeated calls; and an
+architectural regression pass confirming the file reuses the real 0.9.30
+envelope validator rather than a second format of its own, imports no
+`Publication` class, performs no network/storage access, constructs no
+`Signature` and imports no signature verifier, names no concrete substrate
+(`Arweave`, `Nostr`) in code, and uses no trust/ranking vocabulary. No
+existing file is modified by this milestone.
+
+Deliberately paused here, exactly where this milestone's own request drew
+the line. Explicitly unscheduled: first, actually uploading a Publication's
+serialized material to Arweave (or any other substrate) and producing a
+real `materialUri` — 0.9.45, the publishing counterpart of `application/
+ArweaveWorldEncounterMaterialResolver.js`; second, publishing a described
+`discoveryEnvelope` to Nostr as an event's own `content`, tagged with
+0.9.24's own discovery tag — 0.9.46, the publishing counterpart of
+`application/NostrDiscoveryQueryService.js`; third, a runtime composition
+wiring an Arweave uploader and a Nostr publisher together into one usable
+pipeline — 0.9.47; fourth, private/public key management or any new
+signing of any kind — this file only ever reads whether a signature is
+already present; fifth, replacing, deprecating, or migrating the existing
+IPFS/Bitcoin/Base `contentReference` distribution model — left untouched,
+and not described as wrong, only architecturally separate from the
+canonical discoverable path this milestone begins to define. Each remains
+an explicit request, not an automatic continuation.
