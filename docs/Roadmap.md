@@ -48927,3 +48927,135 @@ candidate locations back — still only leads, still nothing retrieved,
 still nothing verified. Per the same reasoning that has paused
 this codebase before every milestone in this series, each next step
 remains an explicit request, not an automatic continuation.
+
+## 0.9.26 — Decentralized World Discovery Lead Registry
+
+0.9.25's own header put the gap plainly: `queryDecentralizedWorldDiscovery()`
+is "pure per call... nothing accumulates, nothing is cached." Nothing in
+this codebase yet remembers a decentralized discovery lead between calls
+the way 0.9.9's own `WorldDiscoverySourceRegistry` already remembers a
+`WorldDiscoverySource`. Before deciding this milestone's own shape, this
+codebase's own 0.9.24 header was re-read against the natural, tempting
+shortcut — folding a lead straight into `WorldDiscoverySourceRegistry` —
+and it already refuses that shortcut in so many words: a lead "is
+deliberately not yet a `ContentReference`... a search or index service
+reporting a lead has done no such thing." Putting a lead where a
+`WorldDiscoverySource` belongs would collapse "I discovered this content"
+into "I have this World data" — exactly the boundary 0.9.24 drew this
+whole family around. So this milestone is a second, independent registry,
+never an extension of the first one.
+
+```text
+queryDecentralizedWorldDiscovery()      lead no longer wanted
+resolves to DecentralizedWorldDiscoveryLead[]     │
+       │                                          │
+       ▼                                          ▼
+registry.setLead(lead)  ★ (THIS)      registry.removeLead(origin,
+       │                                 discoveryTag, uri)
+       └───────────────────┬────────────────────┘
+                            ▼
+                  registry.listLeads()
+                            │
+                            ▼
+           (future, unscheduled: whether/how an accepted lead is
+            actually retrieved, hash-verified into a real
+            core/ContentReference.js, and turned into a
+            core/WorldDiscoverySource.js contribution)
+```
+
+`application/DecentralizedWorldDiscoveryLeadRegistry.js` added —
+`DecentralizedWorldDiscoveryLeadRegistry`, holding `setLead(lead)`,
+`removeLead(origin, discoveryTag, uri)`, `listLeads()`, `clear()`, and
+`subscribe(listener)`.
+
+A LEAD REGISTRY, DELIBERATELY NOT A SECOND `WorldDiscoverySourceRegistry`.
+This file never imports `application/WorldDiscoverySourceRegistry.js` or
+anything it produces, and never constructs a `core/ContentReference.js`,
+`core/DecentralizedPublication.js`, or `core/WorldDiscoverySource.js`.
+Membership, not computation, held one layer earlier than 0.9.9's own rule:
+this file answers exactly "which leads are currently known?" — never
+"what does the World look like," and never "is this lead worth acting on."
+
+IDENTITY IS THE TRIPLE `origin` + `discoveryTag` + `uri` — DELIBERATELY NOT
+`uri` ALONE. 0.9.9's own `WorldDiscoverySourceRegistry` keys a source by
+`origin` alone because a source's `origin` already is its one natural
+identity. A lead has no such single key: 0.9.24's own header already
+warned that the same `uri` reported by two different services is two
+independent leads, corroborating nothing. Keying this registry on `uri`
+alone would silently let one service's lead overwrite an unrelated
+service's report of the identical location — exactly the false
+corroboration 0.9.24 refused to assume. So `setLead()`/`removeLead()`
+identify a slot by all three fields together; changing any one of them
+addresses an entirely different slot.
+
+REPLACEMENT WITHIN A TRIPLE, PLAIN-ABSENCE REMOVAL, AND STABLE ORDERING —
+ALL INHERITED FROM 0.9.9 UNCHANGED, HELD OVER THE COMPOSITE KEY. Setting an
+already-occupied triple replaces it in place without moving its position;
+removing a triple leaves no tombstone; removing and re-adding the same
+triple places it last, as a fresh entry — `Map`'s own iteration order,
+used as-is, exactly as 0.9.9 already established one layer up.
+
+CHANGE NOTIFICATION FROM THE START, NOT A LATER MILESTONE. 0.9.9 shipped
+without `subscribe()` and 0.9.12 added it three milestones later; this
+file ships with the identical `subscribe()`/`unsubscribe()` contract
+already in place — synchronous, payload-free, one-mutation-one-notification
+(never on a no-op call), each subscriber isolated from another's and its
+own failure — since 0.9.12's own contract is now this codebase's settled
+shape for a registry of this kind, not a gap left for later.
+
+NO QUERY SERVICE KNOWLEDGE, NO RETRIEVAL, NO TRUST JUDGMENT. This file
+never imports `application/DecentralizedWorldDiscoveryQuery.js` or
+`application/ArweaveGraphqlDiscoveryQueryService.js` — it is handed
+already-described leads by a caller, and never asks a service itself. It
+never fetches a lead's own `uri`, and carries no `trusted`, `priority`,
+`confidence`, `stale`, or `expired` vocabulary — two leads sharing a `uri`
+sit side by side in `listLeads()` forever, exactly as independent as the
+two `setLead()` calls that produced them.
+
+DELIBERATELY EXCLUDED — NOT THIS MILESTONE.
+- **A bridge that calls `queryDecentralizedWorldDiscovery()` and feeds its
+  result into `setLead()` automatically.** This registry is told; it never
+  asks a query service on its own. Unscheduled follow-up work — see
+  0.9.24's own "0.9.26 — wire decentralized discovery into the source
+  registry" note, now split: this milestone is the registry itself; the
+  bridge that populates it automatically remains separate, unscheduled
+  work.
+- **Deciding whether/how an accepted lead becomes a real
+  `core/WorldDiscoverySource.js` contribution.** See "A lead registry,
+  deliberately not a second WorldDiscoverySourceRegistry," above —
+  unscheduled, later work, approached only once something downstream has
+  actually retrieved and hash-verified a lead's own bytes.
+- **Retrieving content from a lead's own `uri`, or constructing a real,
+  hash-verified `core/ContentReference.js`/
+  `core/DecentralizedPublication.js`.** Unscheduled.
+- **Deduplication, ranking, expiry, staleness, or any trust/authority
+  judgment about a lead.** See "No query service knowledge, no retrieval,
+  no trust judgment," above.
+- **Persisting the current lead set to a `StorageProvider`, or across a
+  page reload.** Exactly as durable as the running session that owns it.
+
+`tests/DecentralizedWorldDiscoveryLeadRegistry.test.js` added and
+registered in `tests.html`, covering basic membership, composite-identity
+replacement and removal (including single-field mismatches missing an
+entry entirely), ordering, malformed input on both `setLead()` and
+`removeLead()`, freezing/reference identity, `clear()`, per-instance
+isolation, `subscribe()`/`unsubscribe()` semantics including listener
+isolation, and an architectural regression pass over forbidden imports and
+vocabulary. No existing file is modified.
+
+---
+
+Deliberately paused here. This milestone answers exactly one question —
+"can this codebase remember the decentralized discovery leads a caller has
+collected so far, without pretending any of them is real World data?" —
+and refuses the two questions immediately adjacent to it: how a lead gets
+INTO this registry automatically (a bridge from 0.9.25's own query
+function, unscheduled), and how a lead already IN this registry ever
+becomes a `WorldDiscoverySource` contribution (retrieval and
+hash-verification, unscheduled, 0.9.27+). The most interesting question
+left open now is exactly the one this milestone's own request named: how
+a decentralized lead becomes associated with a World encounter without
+prematurely treating the lead as verified material — a seam deliberately
+left undesigned here rather than guessed at. Per the same reasoning that
+has paused this codebase before every milestone in this series, each next
+step remains an explicit request, not an automatic continuation.
