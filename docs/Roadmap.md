@@ -52023,3 +52023,155 @@ request, not an automatic continuation — the next seam, when requested, is
 publication distribution execution/state semantics (the policy this
 milestone deliberately declined to write), not another descriptive layer
 on top of this one.
+
+## 0.9.49 — Publication Distribution Execution Boundary
+
+0.9.44 through 0.9.48 built every piece of the publication-side
+distribution story except one: something that actually runs the sequence.
+`PublicationDistributionRuntimeComposition.js` (0.9.47) built the three
+collaborators together but explicitly refused to sequence them — its own
+header named exactly why: "what happens when the upload succeeds but the
+publish fails... every one of those is a distribution-EXECUTION... question,
+not a composition question." `PublicationDistributionResult.js` (0.9.48)
+named what a completed (or partially completed) sequence produced, but
+never ran one — "a pure result boundary, never an execution service." This
+milestone is the piece both of those headers pointed at and declined to be:
+the thinnest possible sequencing of already-existing collaborators, with no
+new policy of its own.
+
+```text
+Signed Publication + serialized material
+              │
+              ▼
+application/PublicationDistributionExecutor.js
+   executePublicationDistribution({
+       publication, serializedMaterial, materialStorage,
+       materialUploader, distributionDescriptor, discoveryPublisher
+   })
+              │
+              ├──► materialUploader.upload(serializedMaterial)        (0.9.45, unmodified)
+              │        materialUri | null
+              │
+              ├──► distributionDescriptor({ publication, materialUri, materialStorage })   (0.9.44, unmodified)
+              │        { material, discoveryEnvelope } | null
+              │
+              ├──► discoveryPublisher.publish(discoveryEnvelope)      (0.9.46, unmodified)
+              │        { published: true, relayUrl, id } | null
+              │
+              └──► describePublicationDistributionResult({ publication, material, discovery })   (0.9.48, unmodified)
+                        │
+                        ▼
+              PublicationDistributionResult
+```
+
+`application/PublicationDistributionExecutor.js` (new) exports one
+function, `executePublicationDistribution()`. Its collaborators —
+`materialUploader`, `distributionDescriptor`, `discoveryPublisher` — are
+injected, duck-typed exactly like every other collaborator in this family,
+never imported as concrete classes. This is the one deliberate departure
+from 0.9.47's own approach: that file imports `ArweavePublicationMaterialUploader`
+and `NostrPublicationDiscoveryPublisher` directly because building them
+together is its entire job; this file's job is sequencing calls, not
+choosing implementations, so a caller supplies whatever it already
+assembled — most naturally the object 0.9.47's own
+`composePublicationDistributionRuntime()` already returns
+(`runtime.uploader`, `runtime.describeDistribution`, `runtime.publisher`),
+though this file never imports 0.9.47 either and never checks an
+`instanceof` against any concrete class. `describePublicationDistributionResult()`
+(0.9.48) is the sole direct import, because — like `distributionDescriptor`
+itself — it is a plain, pure, dependency-free function with no constructor
+to inject around, the identical reasoning 0.9.47's own header already gives
+for forwarding `describePublicationDistribution` unwrapped.
+
+The milestone's central design rule is the one explicitly requested:
+**sequencing, never a transaction.** If material upload succeeds and
+discovery publish fails, this file does not delete the uploaded material,
+does not retry the publish, and issues no compensating call of any kind —
+there is no `try`/`catch` around either collaborator call for that purpose.
+Partial completion is a fact to report, never a status to compute: this
+file introduces no `PENDING`/`PARTIAL_SUCCESS`/`FAILED`/`DISTRIBUTED`
+vocabulary, and forms no opinion on whether a result with one section
+present and the other absent "counts as done" — the exact restraint 0.9.48
+already held one layer earlier, extended here to the act of actually
+running the sequence.
+
+The stop-on-failure ordering follows the shape of the pipeline itself, each
+step only running if the one before it produced something to build on. An
+upload that resolves `null` (0.9.45's own "not currently uploadable")
+means `distributionDescriptor` is never called — there is no `materialUri`
+to build a descriptor from — and the result carries `material: null,
+discovery: null`. A `distributionDescriptor` call that returns `null`
+(0.9.44's own "malformed input degrades to null," normally an unsigned or
+malformed `publication`, since `materialUri` is already known-good by this
+point) means `discoveryPublisher.publish()` is never called — there is no
+`discoveryEnvelope` to publish — but the material fact already obtained
+from the successful upload IS still reported, never discarded just because
+a later step could not proceed. A `discoveryPublisher.publish()` call that
+resolves `null` (0.9.46's own "the relay declined") leaves the material
+fact reported and `discovery: null`. In every case, the descriptor's own
+`discoveryEnvelope` is forwarded to the publisher unmodified — one
+authoritative construction point, never a second one inside this file —
+and `material.uri`/`material.storage` are read straight off the
+descriptor's own already-computed result whenever the descriptor ran at
+all, falling back to the uploader's own self-identifying `storage` (or a
+caller-supplied `materialStorage` override) only in the one case 0.9.44
+never got to run.
+
+Genuine failure propagates, ordinary decline composes — the same line
+every collaborator in this family already draws for itself, held here
+without flattening it. Neither `materialUploader.upload()` nor
+`discoveryPublisher.publish()` is wrapped in a `try`/`catch`; a rejection
+from either (no wallet, no connectivity, a relay/gateway timeout, or a
+collaborator throwing because it received input violating its own
+contract) propagates to this file's own caller unchanged, never caught,
+never retried, never converted into a `null` section. Collaborator
+contract violations — a `materialUploader` with no `upload()`, a
+non-function `distributionDescriptor`, a `discoveryPublisher` with no
+`publish()` or no non-empty `discoveryTag` — are checked before any
+collaborator is called and any I/O occurs; `executePublicationDistribution()`
+itself is a synchronous function that validates and then delegates to an
+inner `async` runner, so a wiring mistake throws synchronously on the
+caller's own call stack rather than surfacing later as a rejected promise.
+
+`tests/PublicationDistributionExecutor.test.js` covers: a flagship section
+sequencing a real 0.9.47-composed runtime end to end, with material uri,
+discovery tag, and relay origin staying three distinct identities and the
+actually-published Nostr event content naming the real uploaded
+`materialUri`; a material-upload-failure section proving the descriptor and
+publisher are never consulted; a dedicated DECLINE section — the
+specifically requested "Nostr decline after a successful Arweave upload"
+test — proving the uploader was genuinely invoked, the publisher was
+subsequently invoked exactly once with no retry, the material fact is
+preserved, discovery is `null` rather than a fabricated partial-success
+value, and the executor never even gives the uploader collaborator a
+delete/rollback surface to call; a descriptor-failure-after-successful-
+upload section; a section proving genuine collaborator rejections
+propagate rather than degrading to a null section; a section proving
+collaborator contract violations throw synchronously before any I/O; and
+an architectural regression pass confirming no concrete Arweave/Nostr/
+composition/envelope imports, no `fetch`/`WebSocket`/`StorageProvider`
+reference of its own, no `try`/`catch` anywhere in the file, and no
+transaction/rollback/status/retry/cache/queue/schedule vocabulary anywhere
+in its own code. No existing file — including 0.9.44 through 0.9.48
+themselves — is modified by this milestone.
+
+This closes the publication-side distribution pipeline exactly where the
+milestone's own request drew the line: a caller can now hand a signed
+Publication and its serialized material to one function and get back a
+`PublicationDistributionResult` describing whatever actually happened,
+without this file ever deciding what "happened" ought to mean beyond the
+facts it directly observed. Deliberately excluded — not this milestone:
+retries of any kind for either step; rollback or compensation between the
+two substrates; persistence of the result anywhere; a distribution state
+machine or any `PENDING`/`DISTRIBUTED`/`FAILED`/`WITHDRAWN` vocabulary; a
+job queue or scheduling of when this function runs; multi-relay fan-out or
+relay-selection policy; Arweave/Nostr confirmation tracking; deduplication
+or caching; automatically serializing or signing a Publication; wallet or
+key management; trust/ranking/success-policy calculation; and a runtime
+composition assembling a caller's own collaborators for it (0.9.47 already
+fills that role for the concrete collaborators most callers will actually
+use). Each remains an explicit request, not an automatic continuation —
+the next seam, when requested, is publication distribution state/lifecycle
+semantics (pending, distributed, partially distributed, failed, withdrawn,
+and whatever retry/persistence/confirmation policy those states imply),
+never another sequencing layer on top of this one.
