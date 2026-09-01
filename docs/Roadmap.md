@@ -47842,3 +47842,140 @@ Cryptographic Verification Boundary). `isSigned` still means only "carries
 signature material." Per the same reasoning that has paused this codebase
 before every milestone in this series, each of those remains an explicit
 request, not an automatic continuation.
+
+---
+
+## 0.9.19 — World Encounter Provenance-Aware Selection
+
+Every milestone from 0.9.0 through 0.9.18 built on one unstated
+assumption: that a `kind` + `objectId` pair names exactly one encounter.
+That was true right up until 0.9.7's own `assembleWorldDiscoveryInputs()`
+made it deliberately false — "if peer A and peer B both hand over a
+publication with the same `id`, the assembled `publications` array
+contains that record twice." Since then, a World with `local`,
+`peer:A`, and `peer:B` all placing the same publication has held THREE
+encounter rows sharing one `kind`/`objectId`, and nothing in this
+codebase has ever been able to say which one a Wanderer actually meant.
+This milestone names that missing fact — provenance — as a real part of
+selection, without loading, verifying, or interpreting anything it names.
+
+```
+WorldDiscoverySource (0.9.5)
+        │
+        ├── local
+        ├── peer:A
+        └── peer:B
+             │
+             ▼
+      World Encounter          (0.9.0, deriveWorldEncounters(),
+             │                  called once per source — unmodified)
+             ▼
+core/WorldEncounterSelectionIdentity.js   ★ (THIS milestone)
+  deriveWorldEncounterSelectionIdentities()
+             │
+             ▼
+   [{ kind, objectId, origin }, ...]
+             │
+             ▼
+application/WorldEncounterSelectionResolution.js   ★ (THIS milestone)
+  describeWorldEncounterSelectionCandidates()
+  describeWorldEncounterSelectionCandidatesFromRegistry()
+             │
+             ▼
+future, unscheduled: Encounter Material Loading Boundary (0.9.20+)
+```
+
+A SELECTION IDENTITY IS `{ kind, objectId, origin }` — DECIDED AGAINST
+THE EXISTING CODE, NOT INVENTED. All three fields already existed
+separately: `kind`/`objectId` from 0.9.0/0.9.4, `origin` from 0.9.5. This
+milestone adds no fourth field and no composite string key — three
+already-named facts, carried as three separate fields.
+
+ORIGIN IS ATTACHED TO THE ENCOUNTER, NEVER TO A RECORD.
+`core/WorldDiscoverySourceAssembly.js`'s own 0.9.7 header was explicit:
+"Provenance stays at the source container — it never leaks into a
+record." This milestone does not contradict that. It never modifies
+`core/WorldEncounter.js`, never adds a field to a `Publication`/
+`WorldPlacement`/`AvatarProfile`/`AvatarPresence`, and never calls
+`assembleWorldDiscoveryInputs()` — mixing sources together before
+deriving encounters is exactly what would make origin unrecoverable.
+Instead, `deriveWorldEncounterSelectionIdentities()` calls 0.9.0's own
+`deriveWorldEncounters()` ONCE PER SOURCE, on that source's own six
+arrays alone, and attaches `origin` to the resulting ENCOUNTER — a new
+fact about a new (0.9.0-invented) kind of value, never a mutation of an
+old one. The existing, origin-blind combined view
+(`application/WorldEncounterIntegration.js`, 0.9.8) is untouched and
+stays exactly what it was; this milestone is a parallel, additive answer
+to a different question ("which source?"), never a replacement.
+
+EVERY MATCHING CANDIDATE, NEVER ONE PICKED FOR THE CALLER. This is the
+rule the whole milestone exists to hold. Given a plain `{ kind, objectId }`
+selection — 0.9.4's own shape, unmodified — that currently matches
+encounters from two different origins,
+`describeWorldEncounterSelectionCandidates()` returns BOTH. It never
+calls `.find()`, never returns "the first one," never prefers `'local'`,
+and never treats array position as an implicit default. The task's own
+framing named this explicitly: "I don't think we should quietly solve
+this with `.find()`, source guessing, array position, or 'prefer local.'"
+Zero candidates means the selection is stale — the same posture 0.9.16
+already established one layer over, for the same reason.
+
+`ui/components/WorldEncounterCanvas.js` AND
+`ui/components/WorldEncounterMarker.js` ARE BYTE-FOR-BYTE UNTOUCHED.
+0.9.13's own architectural boundary already forbids `WorldEncounterCanvas.js`
+from reading a source's own `origin` field at all — its own regression
+test asserts the literal string `.origin` never appears in that file's
+code. This milestone does not lift that boundary. `selectedEncounter`
+stays exactly `{ kind, objectId }`; nothing about how a marker is drawn,
+keyed, or clicked changes. Provenance-aware selection is answered
+entirely below the existing UI, as a fact a future, separate caller can
+ask for once it actually needs to act on it — loading one specific
+source's own material.
+
+TWO KINDS, NEVER A THIRD; NO SCORE, RANK, TRUST, VERIFIED, "PREFERRED,"
+OR COMPARISON VOCABULARY OF ANY KIND — inherited unchanged from every
+file in this chain. `describeWorldEncounterSelectionIdentity()` validates
+`kind` against 0.9.0's own `WorldEncounterKind` enum, imported rather
+than retyped.
+
+**Deliberately excluded — not this milestone.**
+- **Fetching, WebRTC requests, peer messaging, or `localStorage` access
+  of any kind.** Both new files are handed already-described sources.
+- **Signature verification, trust decisions, or ranking.**
+- **Picking one candidate among several** (by order, origin name, "local
+  first," or any other rule), or any other automatic source selection.
+  See "Every matching candidate, never one picked for the caller," above.
+- **Loading or interpreting the material a selection identity names.** A
+  `WorldEncounterSelectionIdentity` is a name, never the thing named.
+- **Any change to `ui/components/WorldEncounterCanvas.js` or
+  `ui/components/WorldEncounterMarker.js`, or to the shape of
+  `selectedEncounter` itself.** See "byte-for-byte untouched," above.
+- **Deduplication of encounters across sources.** Inherited unchanged
+  from 0.9.7 — duplicates are exactly what this milestone makes
+  nameable, never what it removes.
+
+`core/WorldEncounterSelectionIdentity.js` added —
+`describeWorldEncounterSelectionIdentity()`,
+`worldEncounterSelectionIdentitiesMatch()`,
+`deriveWorldEncounterSelectionIdentities()`.
+`application/WorldEncounterSelectionResolution.js` added —
+`describeWorldEncounterSelectionCandidates()`,
+`describeWorldEncounterSelectionCandidatesFromRegistry()`.
+`tests/WorldEncounterSelectionIdentity.test.js` added and registered in
+`tests.html`. `docs/Roadmap.md` updated. No existing file is modified.
+
+---
+
+Deliberately paused here. Duplicate encounters across origins can now be
+named unambiguously — every source offering a matching `{ kind, objectId }`
+surfaces as its own `{ kind, objectId, origin }` candidate, with the
+existing World rendering and inspection behavior (0.9.2 through 0.9.18)
+completely unaffected. What remains unbuilt is exactly what this
+milestone's own header named and declined to take: nothing yet picks a
+candidate to load, nothing fetches or requests a specific source's own
+material (local disk or peer), and nothing verifies or interprets it —
+the full `select → identify source → load → verify → interpret`
+progression stays open, one deliberate step further than 0.9.18 left it.
+Per the same reasoning that has paused this codebase before every
+milestone in this series, each of those remains an explicit request, not
+an automatic continuation.
