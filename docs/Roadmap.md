@@ -47515,3 +47515,192 @@ only "carries signature material," exactly as it has since 0.9.0. Per the
 same reasoning that has paused this codebase before every milestone in
 this series, each of those remains an explicit request, not an automatic
 continuation.
+
+---
+
+## 0.9.17 — Integrate World Encounters into the Existing World View
+
+0.9.15's own epilogue named the next three unrendered steps by their shape,
+not a fixed slot: Encounter Inspection UI, Encounter Material Resolution,
+a Cryptographic Verification Boundary. This milestone is a deliberate
+detour ahead of all three, requested directly rather than continuing that
+list: `/live-world` (0.9.15) proved the whole 0.9.0-through-0.9.14 World
+discovery pipeline is reachable from a running application, but it did so
+as its OWN separate, top-nav, user-facing World destination — a second
+"World" concept sitting alongside the long-standing, document-scoped
+`/world/:documentId` (`ui/views/WorldView.js`), each with its own route,
+its own nav entry, and nothing telling a person why one differs from the
+other. Before Encounter Inspection UI gives that surface anything more to
+look at, this milestone puts it where a person already expects to find it.
+
+```
+Before (0.9.15)                          After (0.9.17)
+────────────────                          ─────────────
+/world/:documentId                        /world/:documentId
+  → WorldView.js                            → WorldView.js
+    (session, editing, presence,               (session, editing, presence,
+     avatars, landmarks, places...)             avatars, landmarks, places...
+                                                 + "World Encounters" section) ★
+/live-world                                /live-world
+  → LiveWorldView.js                         → LiveWorldView.js  (UNCHANGED —
+    → WorldEncounterCanvas                     → WorldEncounterCanvas   kept,
+                                                                    not deleted)
+```
+
+THE PRESENTATION MOUNT POINT MOVES; THE DISCOVERY ARCHITECTURE DOES NOT.
+Every layer from `PeerWorldDataIngress` down through
+`WorldDiscoverySourceRegistry`, `WorldDiscoveryRegistryProjection`, and
+`WorldEncounterCanvas` itself (0.9.5 through 0.9.13) is untouched by this
+milestone — not one line of any of those files changes. `ui/main.js` still
+constructs exactly one running `WorldDiscoverySourceRegistry` and provides
+it app-wide as `worldDiscoverySourceRegistry` (0.9.14), unchanged. This
+milestone adds exactly one new consumer of that same provided value:
+
+```
+ui/main.js
+    │
+    ├── owns WorldDiscoveryRuntime                          (0.9.14)
+    │
+    └── app.provide('worldDiscoverySourceRegistry', registry)
+                  │
+                  ├─────────────────────────────┐
+                  ▼                              ▼
+        LiveWorldView.js                WorldView.js   ★ (THIS milestone)
+         (0.9.15, unchanged)             inject('worldDiscoverySourceRegistry', null)
+             │                                   │
+             ▼                                   ▼
+    WorldEncounterCanvas :registry="…"  "World Encounters" CollapsibleSection
+    (0.9.13, unmodified)                  WorldEncounterCanvas :registry="…"
+                                             (0.9.13, unmodified — same component,
+                                              same props, mounted a second place)
+```
+
+`ui/views/WorldView.js` OWNS NO DISCOVERY LOGIC OF ANY KIND — THE EXACT
+SAME BOUNDARY 0.9.15's `LiveWorldView.js` ALREADY HELD. It injects
+`worldDiscoverySourceRegistry` (defaulting to `null`, never throwing with
+no provider above it — the same defensive convention every other optional
+collaborator in this file, e.g. `peerRelationshipUseCase`, already uses)
+and hands it straight through as `WorldEncounterCanvas`'s own `registry`
+prop, unchanged. It does not call `registry.setSource()`/`removeSource()`/
+`clear()`, does not read `registry.listSources()` or a source's own
+`origin` field, and does not call `deriveWorldEncounters()`,
+`describeWorldFromDiscoveryRegistry()`, `describeWorldFromDiscoverySources()`,
+or `assembleWorldDiscoveryInputs()` itself. Every one of those stays
+entirely inside `WorldEncounterCanvas`'s own job — subscribing to the
+registry, re-projecting on notification, owning `selectedEncounter` — the
+same seam 0.9.13 already drew, now depended on from a second call site
+without being reopened.
+
+TWO SEPARATE MOUNTS OF THE SAME COMPONENT, NEVER A SECOND IMPLEMENTATION.
+`WorldEncounterCanvas` is mounted both here and in `LiveWorldView.js`,
+each independently subscribing to and unsubscribing from the SAME
+registry instance for its own mount's own lifetime (0.9.13's own
+mount-lifetime subscription contract already supports more than one
+subscriber — `registry.subscribe()` returns its own `unsubscribe`
+function per call, never a singleton). Nothing here changes
+`WorldEncounterCanvas.js`, `WorldEncounterMarker.js`, `WandererMarker.js`,
+`WorldDiscoveryRegistryProjection.js`, or any file beneath them.
+
+A NEW "WORLD ENCOUNTERS" SECTION, PLACED WITH EXPLORE MODE'S EXISTING
+"NEARBY ___" SECTIONS — NOT A NEW PRIMARY MODE. 0.5.7 already gave World
+View exactly three mutually-exclusive primary modes (Explore / Map /
+Places — `application/WorldViewNavigationState.js`) and a generic,
+reusable `CollapsibleSection` component for exactly this shape: a titled,
+collapsible group of content living inside Explore mode, alongside
+"Nearby Places," "Nearby Landmarks," and "Nearby People." World Encounters
+joins that same family as a fourth section — `worldViewNav`'s own
+per-section collapsed/expanded bookkeeping (`isSectionCollapsed()`/
+`setSectionCollapsed()`, already used by the three Nearby sections) is
+reused verbatim for it, under its own `'explore:world-encounters'` section
+id, defaulting expanded (`false`) since surfacing World Encounters inside
+`/world` — rather than requiring a separate destination — is this
+milestone's own point. This is deliberately NOT a fourth `WorldViewPrimaryMode`:
+World Encounters isn't a distinct navigation surface the way Map or
+Places are, it's one more thing to see while exploring, exactly like the
+compass's contextual markers (0.3.6) or the nearby-collaborator rows
+(0.2.99) already are.
+
+THE SECTION CARRIES NO COUNT OF ITS OWN. `CollapsibleSection`'s `count`
+prop is left at its own default (`null` — "no natural count," per that
+component's own header) rather than this file computing one:
+`WorldView.js` would have to read the registry's own current membership
+to produce a number, which is exactly the discovery-logic boundary this
+milestone (and 0.9.15 before it) declines to cross. `WorldEncounterCanvas`
+itself already renders an empty-World hint when there is nothing to show
+— see `ui/components/WorldEncounterCanvas.js`'s own `isWorldEmpty`.
+
+`/live-world` IS KEPT, NOT DELETED — AND UNCHANGED. `ui/router/index.js`
+still registers `/live-world` → `LiveWorldView.js`, and `LiveWorldView.js`
+itself is not modified by this milestone at all: it remains a useful,
+minimal, isolated proving ground for the discovery registry on its own —
+no session, no document, no brick registry, nothing but the registry and
+the canvas — the same role it has played since 0.9.15. What changes is
+that it is no longer reachable from `ui/App.js`'s own top nav: `/world` is
+the one canonical, user-facing World destination a person is expected to
+navigate to from this milestone forward, and `/live-world` becomes
+reachable only by a direct URL, the same "reached elsewhere, never
+top-nav" shape `/chat/:identityId` and `/reconciliation-leaderboard`
+already hold in that same router file. Removing `/live-world` entirely,
+or making it redirect to `/world`, remain explicitly out of scope — see
+"Deliberately excluded," below.
+
+**Deliberately excluded — not this milestone.**
+- **Any change to `WorldEncounterCanvas.js`, `WorldEncounterMarker.js`,
+  `WandererMarker.js`, `WorldDiscoveryRegistryProjection.js`,
+  `WorldDiscoverySourceRegistry.js`, `WorldDiscoveryRuntimeBootstrap.js`,
+  `PeerWorldDataIngress.js`, or any file the World discovery pipeline
+  already established (0.9.0 through 0.9.14).** This milestone is
+  presentation-layer consolidation only — see "the presentation mount
+  point moves; the discovery architecture does not," above.
+- **Deleting `/live-world`, or redirecting it to `/world`.** It stays
+  registered, reachable by direct URL, and functionally unchanged — see
+  "`/live-world` is kept, not deleted," above. A future, separate,
+  unscheduled cleanup milestone may revisit this once the route has no
+  remaining purpose.
+- **Turning `WorldView.js`'s own existing spatial selection/inspection
+  (`spatialSelection`, `spatialInspection`, `documentInfo`) and
+  `WorldEncounterCanvas`'s own `selectedEncounter` into one shared concept.**
+  They stay two entirely independent selection states, exactly as they
+  were before this milestone — a marker click inside the new "World
+  Encounters" section only ever writes `WorldEncounterCanvas`'s own
+  page-local `selectedEncounter`, never anything `WorldView.js` itself
+  reads or reacts to.
+- **Rendering 0.9.16's own `describeWorldEncounterInspection()` result
+  anywhere.** Separate, later, unscheduled work (Encounter Inspection UI)
+  — unaffected by where the canvas itself is mounted.
+- **Loading a selected publication's or avatar's own underlying signed
+  material, or verifying a signature.** Separate, later, unscheduled work
+  (Encounter Material Resolution, a Cryptographic Verification Boundary),
+  exactly as 0.9.16 already deferred them.
+- **A fourth `WorldViewPrimaryMode`, or any change to
+  `WorldViewNavigationState.js`'s own primary-mode vocabulary.** See "not
+  a new primary mode," above — World Encounters reuses that module's
+  existing per-section collapsed/expanded bookkeeping only.
+- **Any proximity, interaction range, or movement-triggered encounter
+  update.** Unaffected by this milestone — still 0.9.19-or-later, exactly
+  as 0.9.15's own epilogue already named it.
+
+`ui/views/WorldView.js` gains a `WorldEncounterCanvas` import/registration,
+a `worldDiscoverySourceRegistry` injection, and a "World Encounters"
+`CollapsibleSection` in its own template; `ui/App.js` drops its separate
+"Live World" top-nav link; `ui/router/index.js`'s own `/live-world`
+comment is updated to describe its superseded, kept-not-deleted status
+(the route registration itself is unchanged); `docs/Roadmap.md` updated;
+`tests/WorldViewEncounterIntegration.test.js` added and registered in
+`tests.html`.
+
+---
+
+Deliberately paused here. `/world` is now the one canonical, user-facing
+surface where a Wanderer both navigates a specific World/document AND
+sees whatever the live `WorldDiscoverySourceRegistry` currently holds —
+but selecting a marker inside the new "World Encounters" section still
+only ever produces `WorldEncounterCanvas`'s own bare `{ kind, objectId }`
+selection, exactly as it has since 0.9.4. Rendering 0.9.16's own inspection
+read model against that selection (Encounter Inspection UI), loading the
+selected publication's or avatar's own underlying signed material
+(Encounter Material Resolution), and verifying a signature (a
+Cryptographic Verification Boundary) all remain exactly as unbuilt as they
+were before this milestone. Per the same reasoning that has paused this
+codebase before every milestone in this series, each of those remains an
+explicit request, not an automatic continuation.

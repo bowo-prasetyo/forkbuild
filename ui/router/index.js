@@ -26,16 +26,22 @@ const routes = [
     // Worlds THIS replica has actually visited).
     { path: '/worlds/recent', name: 'recent-worlds', component: RecentWorldsView },
     { path: '/author/:username', name: 'author', component: AuthorView },
+    // 0.9.17 — Integrate World Encounters into the Existing World View.
+    // `WorldView` now mounts `ui/components/WorldEncounterCanvas.js`
+    // itself, inside a "World Encounters" section, driven by the exact
+    // same `worldDiscoverySourceRegistry` `/live-world` below already
+    // uses — see WorldView.js's own 0.9.17 comments. `/world/:documentId`
+    // is the one canonical, user-facing World surface from this
+    // milestone forward.
     { path: '/world/:documentId', name: 'world', component: WorldView },
-    // 0.9.15 — Mount Live World View. A SEPARATE surface from
-    // `/world/:documentId` above: that route renders the long-standing,
-    // document-scoped `ui/views/WorldView.js` (session-based editing,
-    // presence, avatars — an entirely different subsystem); this route
-    // renders `ui/views/LiveWorldView.js`, whose only job is to mount
-    // `ui/components/WorldEncounterCanvas.js` against the live,
-    // multi-source `worldDiscoverySourceRegistry` `ui/main.js` already
-    // provides app-wide (0.9.14) — no `:documentId`, because a World
-    // discovery view has no single document to scope to.
+    // 0.9.15 — Mount Live World View. Superseded as a top-nav, user-
+    // facing destination by 0.9.17 above (`WorldEncounterCanvas` now
+    // lives inside `/world/:documentId` itself) — kept registered,
+    // reachable by direct URL, and deliberately UNCHANGED: it remains
+    // useful as an isolated proving ground (no session, no document, no
+    // brick registry — just the raw discovery registry rendered on its
+    // own), the same role it has always played. Nothing about this
+    // route, or `ui/views/LiveWorldView.js` itself, changed for 0.9.17.
     { path: '/live-world', name: 'live-world', component: LiveWorldView },
     { path: '/avatar', name: 'avatar', component: AvatarSettingsView },
     { path: '/identity', name: 'identity', component: IdentityManagementView },
