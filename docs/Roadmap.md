@@ -50909,3 +50909,153 @@ questions than the identity check 0.9.38 already answers; third, a default
 injected; fourth, retrying a failed or unavailable load, or caching a
 previous result, beyond the last-request-wins guard described above. Each
 remains an explicit request, not an automatic continuation.
+
+## 0.9.40 — Decentralized Lead Resolution Integration
+
+0.9.39 wired resolved selection and verification into
+`WorldEncounterCanvas.js` and stopped there on purpose — its own header
+named the gap explicitly: "no `resolvedLead` is ever supplied from this
+component... decentralized lead resolution (0.9.28) is not wired into this
+file, in either direction." This milestone is that wiring: a Wanderer whose
+selected encounter has an explicitly-evidenced decentralized lead now sees
+that lead's own material considered alongside — or instead of — its
+local/peer copy, with the same "explicit choice, never a guess" restraint
+0.9.20 already established for local/peer origin ambiguity.
+
+```text
+selectedEncounter = { kind, objectId }                    (0.9.4, unchanged)
+       │
+       ▼
+application/DecentralizedWorldEncounterLeadSelection.js   (THIS) ★
+     describeDecentralizedWorldEncounterLeadSelectionOutcomeFromRegistry()
+       │
+       ▼
+decentralizedLeadOutcome = { status, candidates, resolvedLead }
+       │
+   ┌───┼────────────────┐
+   ▼    ▼                ▼
+UNAVAILABLE  RESOLVED   AMBIGUOUS
+            (automatic)  ("Choose Location" panel —
+                          resolvedLead stays null until
+                          the Wanderer picks one)
+       │
+       ▼
+resolvedLead, forwarded alongside resolvedEncounterSelection to
+inspectWorldEncounterMaterial()  (0.9.39, unmodified)
+```
+
+`application/DecentralizedWorldEncounterLeadSelection.js` added — a thin
+renaming seam, never a second resolution algorithm. Its two functions,
+`describeDecentralizedWorldEncounterLeadSelectionOutcome()` and
+`describeDecentralizedWorldEncounterLeadSelectionOutcomeFromRegistry()`,
+adapt `selectedEncounter` (0.9.4's own `{ kind, objectId }` shape) into
+0.9.28's own `requestedMaterial` argument and return
+`resolveDecentralizedWorldEncounterLead()`/
+`resolveDecentralizedWorldEncounterLeadFromRegistry()`'s own result
+byte-for-byte — the exact "one seam, no second algorithm" shape 0.9.20's
+own `WorldEncounterSelectionOutcome.js` already established one layer over,
+for `WorldDiscoverySource`s. `DecentralizedWorldEncounterLeadSelectionOutcomeStatus`
+is not a new enum — it is the exact same frozen object 0.9.28's own
+`DecentralizedWorldEncounterLeadResolutionStatus` already is, re-exported
+under this file's own name. This file performs no matching of its own: no
+discovery-tag/URI inference, no evidence production, no choosing among an
+`AMBIGUOUS` result's own candidates — 0.9.28's own resolution stays fully
+authoritative.
+
+`ui/components/WorldEncounterCanvas.js` modified — two new optional props,
+`worldDiscoveryLeadRegistry` (a live `DecentralizedWorldDiscoveryLeadRegistry`,
+0.9.26) and `decentralizedLeadAssociations` (explicit association evidence,
+forwarded verbatim, never derived by this component — an empty array by
+default); new page-local state `decentralizedLeadOutcome`,
+`resolvedLeadChoice`, and `unsubscribeWorldDiscoveryLeadRegistry`; a new
+`resolvedLead` computed mirroring `resolvedEncounterSelection` (0.9.20)
+exactly, one layer over, for leads instead of sources; and new
+`refreshDecentralizedLeadOutcome()`/`chooseDecentralizedLead()` methods. A
+second, independent registry subscription is added to `mounted()`/
+`beforeUnmount()`, alongside the existing `registry` one, for
+`worldDiscoveryLeadRegistry`. A new "Choose Location" panel renders exactly
+like 0.9.20's own "Choose Source" panel — every current lead candidate as
+its own button, `resolvedLead` set automatically for a `RESOLVED` outcome
+and only by explicit click for an `AMBIGUOUS` one.
+
+`decentralizedLeadOutcome` IS COMPUTED FROM `selectedEncounter` ALONE —
+NEVER FROM `resolvedEncounterSelection`. Per 0.9.28's own header,
+`requestedMaterial` is deliberately `{ kind, objectId }`, never a full
+`{ kind, objectId, origin }` selection identity — a decentralized lead's own
+provenance has never been part of the local/peer origin vocabulary.
+`resolvedEncounterSelection` still gates whether material EVER loads at all
+(0.9.39's own "do not load material while the selection is ambiguous" still
+holds — `inspectWorldEncounterMaterial()` still requires a well-formed
+`resolvedSelection` regardless of path), but it never gates whether a lead
+resolves.
+
+A RESOLVED LEAD IS THE ROUTING DECISION, NOT AN OVERRIDE THIS COMPONENT
+ITSELF DEBATES. Per 0.9.34's own header, "calling this function at all is
+the routing decision" — `inspectWorldEncounterMaterial()` already routes
+purely by whether a `resolvedLead` was supplied, never by reading
+`resolvedSelection.origin`. This milestone holds that same restraint rather
+than re-deciding it: once `resolvedLead` is non-null (automatically for a
+`RESOLVED` outcome, or by the Wanderer's own explicit pick for an
+`AMBIGUOUS` one), it is forwarded unconditionally — there is no third,
+separate "use decentralized instead of local/peer" toggle in this
+milestone, because 0.9.28's own resolution already IS that explicit
+decision.
+
+`refreshMaterialInspection()` RUNS EXACTLY ONCE PER SELECTION, NOT ONCE PER
+OUTCOME REFRESHED. `refreshDecentralizedLeadOutcome()`, unlike
+`refreshSelectionOutcome()`, never tail-calls `refreshMaterialInspection()`
+itself. `selectEncounter()` calls `refreshDecentralizedLeadOutcome()` FIRST
+(compute only) and `refreshSelectionOutcome()` SECOND — whose own existing
+tail call is then the one place material inspection actually runs, reading
+an already-current `resolvedLead` rather than a stale one, and never
+calling an injected source's own `load()` twice for a single selection. The
+new `worldDiscoveryLeadRegistry.subscribe()` listener, which has no
+accompanying `refreshSelectionOutcome()` call of its own, triggers
+`refreshMaterialInspection()` explicitly instead.
+
+`tests/DecentralizedWorldEncounterLeadSelection.test.js` added, covering:
+byte-identical output to calling 0.9.28's own resolution functions
+directly, across UNAVAILABLE/RESOLVED/AMBIGUOUS; `selectedEncounter`
+needing no `origin` field; the status object being reused rather than
+re-typed; graceful degradation for malformed/empty input; the registry
+wrapper mirroring 0.9.28's own registry wrapper exactly; and an
+architectural regression pass confirming exactly one import, no `core/`
+import, and no rank/trust/preferred vocabulary.
+`tests/DecentralizedWorldEncounterLeadSelectionUI.test.js` added, covering:
+a RESOLVED lead forwarding automatically alongside a resolved local
+selection; an AMBIGUOUS lead outcome never forwarding a resolvedLead until
+an explicit choice; no `worldDiscoveryLeadRegistry` supplied leaving
+existing (pre-0.9.40) behavior completely unaffected; a fresh selection
+resetting any prior explicit lead choice; an injected decentralized
+source's own `load()` being called exactly once per selection despite two
+outcomes refreshing together; a chosen lead that has since disappeared from
+the registry falling back to `null` rather than being trusted; and an
+architectural regression pass confirming both new props are declared, no
+association/registry core module is imported directly, and no
+trusted/ranking/preferred vocabulary appears in this file's own code.
+`tests/WorldEncounterMaterialInspectionUI.test.js`,
+`tests/WorldEncounterSelectionUI.test.js`,
+`tests/WorldEncounterSelectionResolutionUI.test.js`, and
+`tests/WorldEncounterCanvasUI.test.js` updated only to account for the new
+import count and the new `refreshDecentralizedLeadOutcome`/
+`resolvedLeadChoice` call graph `selectEncounter()` now participates in,
+and — in `WorldEncounterMaterialInspectionUI.test.js`'s own case — to
+reflect that this component now DOES forward a `resolvedLead` to
+`inspectWorldEncounterMaterial()` when one resolves. No existing
+assertion's own meaning changed beyond that one, now-superseded restraint.
+Both new test files registered in `tests.html`.
+
+Deliberately paused here. Explicitly unscheduled: first, deriving
+association evidence from anything this component can see (a lead's own
+`discoveryTag`/`uri`, a signed publication, a Nostr envelope) — a caller
+assembles that array elsewhere, via already-existing 0.9.29/0.9.32
+machinery; second, querying a discovery service, subscribing to a relay, or
+fetching a lead's own `uri` from within this component — it only ever
+reads an already-populated registry's current snapshot; third, a default
+`worldDiscoveryLeadRegistry`, or constructing
+`DecentralizedWorldDiscoveryLeadRegistry`/`DecentralizedWorldEncounterMaterialSource`
+of its own; fourth, cryptographic signature verification or
+content-reference/hash correspondence (0.9.41, a likely next branch);
+fifth, a third "material path" chooser distinguishing local/peer from
+decentralized when both happen to be available — see "a resolved lead is
+the routing decision," above.

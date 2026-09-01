@@ -81,6 +81,20 @@ function canvasCtx(overrides = {}) {
         // that addition.
         refreshMaterialInspection: WorldEncounterCanvas.methods.refreshMaterialInspection,
         materialInspectionRequestId: 0,
+        // 0.9.40 — `selectEncounter()` now also calls
+        // `this.refreshDecentralizedLeadOutcome()`. `worldDiscoveryLeadRegistry`
+        // stays `null` throughout this file's own tests, so that call
+        // always leaves `decentralizedLeadOutcome` at `null` without ever
+        // touching `describeDecentralizedWorldEncounterLeadSelectionOutcomeFromRegistry()`
+        // — see tests/DecentralizedWorldEncounterLeadSelectionUI.test.js
+        // for that wiring itself. This file's own sections stay focused on
+        // 0.9.4's own selectedEncounter contract, unaffected by that
+        // addition.
+        worldDiscoveryLeadRegistry: null,
+        decentralizedLeadAssociations: [],
+        decentralizedLeadOutcome: null,
+        resolvedLeadChoice: null,
+        refreshDecentralizedLeadOutcome: WorldEncounterCanvas.methods.refreshDecentralizedLeadOutcome,
         ...overrides
     };
     ctx.effectiveView = WorldEncounterCanvas.computed.effectiveView.call(ctx);
