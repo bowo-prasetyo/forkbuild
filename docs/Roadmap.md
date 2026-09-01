@@ -52408,3 +52408,117 @@ legitimate. Each remains an explicit request, not an automatic
 continuation — the next seam, when requested, is persistent lifecycle
 state or execution/recovery policy built on top of this pure transition
 boundary, never assumed by this milestone.
+
+## 0.9.52 — Publication Distribution Lifecycle Store Boundary
+
+Every file in this family through 0.9.51 is a pure function: 0.9.49's own
+executor deliberately has no memory, 0.9.50 describes a
+`PublicationDistributionResult` into a lifecycle once, and 0.9.51 applies
+one explicit fact to a lifecycle a caller already holds, once. None of them
+remembers anything between calls. This milestone answers the one question
+that restraint leaves open: once a caller HAS a
+`PublicationDistributionLifecycle` description, where does it live between
+one call and the next?
+
+```text
+execute (0.9.49) -> result (0.9.48 shape)
+     │
+     ▼
+describe (0.9.50) -> lifecycle
+     │
+     ▼
+transition (0.9.51) -> next lifecycle
+     │
+     ▼
+application/PublicationDistributionLifecycleStore.js   (new)
+     store.set(publicationId, lifecycle)
+     store.get(publicationId)     -> lifecycle | null
+     store.remove(publicationId)  -> true | false
+     store.clear()
+```
+
+`application/PublicationDistributionLifecycleStore.js` (new) exports
+`PublicationDistributionLifecycleMemoryStore`, a minimal in-memory,
+synchronous, per-instance store with four operations: `get(publicationId)`,
+`set(publicationId, lifecycle)`, `remove(publicationId)`, and `clear()`.
+The store is keyed by `publication.id` — deliberately never by material
+uri, discovery uri, relay origin, discovery tag, or Nostr event id, each of
+which names one distribution dimension's own facts rather than the
+publication's own identity.
+
+The store is deliberately dumb. `set()` means exactly "remember this
+lifecycle description under this publication identity" — it never calls
+`describePublicationDistributionLifecycle()` (0.9.50) or
+`transitionPublicationDistributionLifecycle()` (0.9.51), never imports
+either of them (nor `PublicationDistributionResult.js`,
+`PublicationDistributionExecutor.js`, any uploader, or any publisher),
+and never validates, derives, or judges a lifecycle's own shape or
+legitimacy as a successor to whatever it replaces. `get()` returns the
+exact reference `set()` was given — never a copy, clone, or
+re-normalized equivalent, since 0.9.50 and 0.9.51 already freeze every
+lifecycle value they produce, at every level, and this file trusts that
+rather than reconstructing it:
+
+```text
+store.set('pub-1', lifecycle);
+store.get('pub-1') === lifecycle;   // true — the SAME object
+```
+
+`set()` called again for a `publicationId` that already holds a value
+replaces it outright — no merge, no automatic transition, no history of
+the replaced value, and no check that the new value is a legitimate
+successor of the old one; that judgment belongs entirely to 0.9.51's own
+transition boundary, applied by a caller before calling `set()`, never by
+this file after the fact. `get()` returns `null`, never `undefined`, for a
+`publicationId` that is malformed or was never `set()` (or was
+`remove()`d/`clear()`ed since) — matching this codebase's own degradation
+style at several existing application boundaries. `remove()` is
+idempotent: `true` when an entry was actually removed, `false` otherwise
+(including a malformed `publicationId`), safe to call without checking
+`get()` first, and leaves plain absence behind, never a tombstone.
+`clear()` empties the store entirely; afterward it behaves exactly as a
+freshly constructed instance.
+
+Every operation is synchronous, with no `Promise`, I/O, network call,
+timer, or clock read of any kind. Each `new
+PublicationDistributionLifecycleMemoryStore()` holds its own independent
+state — not a singleton, not shared module-level state, and not written to
+a `StorageProvider`, `localStorage`, `IndexedDB`, or any other persistence
+technology; nothing here survives a page reload or process restart, on
+purpose — see this milestone's own request: "do not call this a
+persistent store yet."
+
+`tests/PublicationDistributionLifecycleStore.test.js` covers: a flagship
+section running the real 0.9.49 decline scenario through 0.9.50, a 0.9.51
+retry transition, and finally this store's own `set()`/`get()`, confirming
+object identity is preserved at every hand-off and that replacing a stored
+lifecycle makes the earlier one unretrievable; a section confirming
+`get()` returns the exact reference `set()` was given, including nested
+sections; a replacement-semantics section confirming `set()` replaces
+rather than merges; a section confirming missing entries degrade to `null`,
+never `undefined`; a `remove()` idempotency section; a `clear()` section; a
+section confirming malformed input on every one of the four operations
+degrades silently, never throws; a section confirming the store never
+mutates a value it holds; a section confirming independent store instances
+share no state; and an architectural regression pass confirming the file
+imports none of 0.9.48 through 0.9.51 or any uploader/publisher, performs
+no I/O, reads no clock, references no persistence technology
+(`StorageProvider`, `localStorage`, `IndexedDB`), never freezes, clones, or
+serializes a stored value, and uses no
+pending/failed/retrying/confirmed/withdrawn/rollback/transaction/history/
+version/lock/merge/rank vocabulary anywhere in its own code. No existing
+file is modified by this milestone.
+
+Deliberately paused here, exactly where this milestone's own request drew
+the line. Explicitly unscheduled: persistence across process restarts, or
+any storage technology at all (filesystem, `localStorage`, `IndexedDB`,
+SQL/NoSQL database); synchronization across tabs, processes, or machines;
+history, an audit trail, version numbers, or timestamps; concurrency
+control, optimistic locking, or transactions of any kind; retry
+scheduling, background workers, or polling; withdrawal, confirmation, or
+any global success/failure judgment about a stored lifecycle; validating
+or deriving a lifecycle's own shape; and change notification/subscription.
+Each remains an explicit request, not an automatic continuation — the next
+seam, when requested, is a persistence-backed implementation of this same
+minimal contract, or an observation/policy layer built on top of it, never
+assumed by this milestone.
