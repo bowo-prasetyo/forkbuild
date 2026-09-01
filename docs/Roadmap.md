@@ -48734,3 +48734,196 @@ lets those leads eventually become real, verified `ContentReference`s
 without a translation layer in between. Per the same reasoning that has
 paused this codebase before every milestone in this series, each next
 step remains an explicit request, not an automatic continuation.
+
+## 0.9.25 — Decentralized Discovery Query Adapter
+
+0.9.24 named the shape of a lead a decentralized discovery mechanism
+reports, but was deliberately handed one already-reported — it never went
+and asked a real service for one. This milestone is that next, adjacent
+question 0.9.24's own header explicitly refused to answer: given a
+ForkBuild discovery tag, can this codebase actually query one real,
+free, public discovery service and turn what it reports into leads?
+
+```text
+discoveryTag
+      │
+      ▼
+application/DecentralizedWorldDiscoveryQuery.js   ★ (THIS milestone)
+     queryDecentralizedWorldDiscovery()
+      │
+      ▼
+DecentralizedDiscoveryQueryService   (injected contract — "throw if
+     .origin / .search(discoveryTag)      unimplemented," mirroring
+                                           application/
+                                           WorldEncounterMaterialLoading.js's
+                                           own WorldEncounterMaterialSource)
+      │
+      ▼
+application/ArweaveGraphqlDiscoveryQueryService.js   ★ (THIS milestone,
+     the first concrete adapter)             the concrete case)
+      │
+      ▼
+POST https://arweave.net/graphql
+      │
+      ▼
+[ { uri: "ar://<id>", storage: "ar" }, ... ]   (raw candidates)
+      │
+      ▼
+core/DecentralizedWorldDiscoveryLead.js   (0.9.24, unmodified)
+     describeDecentralizedWorldDiscoveryLead()
+      │
+      ▼
+DecentralizedWorldDiscoveryLead[]
+      │
+      ▼
+(future, unscheduled: 0.9.26 — Wire Decentralized Discovery Into The
+ Source Registry)
+```
+
+ONE SERVICE CHOSEN, NOT A GENERIC "SEARCH ALL DECENTRALIZED STORAGE"
+ABSTRACTION. IPFS, Arweave, and blockchain data are not naturally
+searchable through one universal protocol — a search/index service is
+itself an external dependency with its own API, indexing model, and
+availability. Building a generic multi-backend discovery abstraction
+before a single real backend exists behind it would be exactly the
+premature abstraction this codebase's own conventions refuse elsewhere.
+So this milestone splits the work into two files instead of one:
+`application/DecentralizedWorldDiscoveryQuery.js`, a service-agnostic
+orchestration layer that knows nothing about Arweave, IPFS, or any
+specific backend; and `application/
+ArweaveGraphqlDiscoveryQueryService.js`, the first concrete adapter
+plugged into it. A second adapter for a different service, later, is
+another file implementing the same `DecentralizedDiscoveryQueryService`
+contract — never a change to the orchestration layer itself.
+
+WHY ARWEAVE'S OWN GRAPHQL GATEWAY, SPECIFICALLY. Before choosing, this
+milestone checked the current (as of September 2026) free/public
+decentralized-search landscape against the task's own criteria: no
+payment, no API key, a stable and widely-documented API, and a way to
+match an arbitrary application-chosen marker. Arweave's `arweave.net/
+graphql` gateway — and the several other independently-run gateways
+speaking the identical, standardized schema — already indexes every
+transaction's own arbitrary key/value Tags, is queried directly from
+browser-side dapp code industry-wide (ArConnect, ArDrive, and the wider
+permaweb ecosystem all issue this exact request client-side), requires no
+account or key, and has been stable and unchanged for years. A ForkBuild
+publisher tags their own Arweave transaction with a `ForkBuild-Discovery-
+Tag` Tag naming this ecosystem's own discovery tag at upload time; this
+adapter queries for transactions carrying that tag and turns each
+resulting transaction id into an `ar://<id>` candidate — the exact
+`ar://transaction-id` example `core/DecentralizedWorldDiscoveryLead.js`'s
+own 0.9.24 header already used, now a real, working case rather than a
+placeholder. A general-purpose IPFS-wide full-text search service with
+the same free/no-key/stable properties was not available to choose
+instead; nothing prevents a future, separate milestone from adding an
+IPFS- or another Arweave-gateway-backed adapter alongside this one later.
+
+`DecentralizedDiscoveryQueryService` IS THE CONTRACT, MIRRORING THIS
+CODEBASE'S OWN "THROW IF UNIMPLEMENTED" SHAPE ONE LAYER OVER.
+`application/WorldEncounterMaterialLoading.js`'s own `WorldEncounterMaterialSource`
+already holds this exact shape for a different subsystem: a base class
+whose `.origin` getter and `.search(discoveryTag)` method both throw on
+purpose, so a caller that forgets to inject a real adapter fails loudly
+during development instead of silently reporting zero leads for the
+wrong reason. `queryDecentralizedWorldDiscovery()` never subclasses this
+base class itself and ships with no concrete service of its own baked in
+— a caller always injects exactly one.
+
+EXACTLY ONE SERVICE PER CALL — NO FAN-OUT, NO RACE, NO FALLBACK. Per
+`application/PeerWorldEncounterMaterialSource.js`'s own "exactly one peer
+is ever asked" restraint, held here one layer over: `queryDecentralizedWorldDiscovery()`
+asks the one injected service and nothing else. Querying several services
+and combining what they report is deliberately not this milestone — the
+same "one lead per call... no plural counterpart" restraint 0.9.24's own
+header already holds for a single lead holds here, one layer up, for a
+single query.
+
+`origin` IS ASSIGNED BY THE ORCHESTRATION LAYER, NEVER BY A CANDIDATE'S
+OWN URI. A concrete service's `search()` returns bare `{ uri, storage }`
+candidates with no `origin` of their own; `queryDecentralizedWorldDiscovery()`
+is the one place that stamps every lead from a single call with that
+service's own `.origin` — so a service adapter can never mislabel where a
+lead actually came from, and two adapters pointed at two different
+gateways (Arweave has several independently-run ones speaking the same
+schema) report two different origins even for the identical
+`discoveryTag`.
+
+MALFORMED INPUT, A MALFORMED SERVICE, A FAILED NETWORK CALL, AND ONE BAD
+CANDIDATE ALL DEGRADE SAFELY, NEVER THROW, AND NEVER CORRUPT AN UNRELATED
+RESULT. A missing/empty `discoveryTag`, a service missing `.search()`, an
+`.origin` getter that throws or returns a non-string, a rejecting
+`search()` call, and a `search()` result that is not an array all resolve
+to `[]` — 0.9.24's own "malformed input degrades to null, never throws"
+contract, held here for a call that can now fail over a real network.
+Each raw candidate is independently validated by
+`describeDecentralizedWorldDiscoveryLead()`; one malformed candidate is
+silently dropped rather than invalidating an entire batch, and a failing
+call against one service never reaches into or mutates a result an
+earlier, unrelated call already produced — every call is pure and
+independent. `application/ArweaveGraphqlDiscoveryQueryService.js` holds
+the identical discipline one layer down, over the actual HTTP request:
+`fetchImpl` is an injection point exactly like `content/
+IpfsContentStore.js` and `anchoring/BitcoinEsploraTransactionBroadcaster.js`
+already establish, so `tests/ArweaveGraphqlDiscoveryQueryService.test.js`
+covers this class's own wire behavior deterministically, never against
+the real, live `arweave.net` — this codebase's own test suite never
+depends on a free public service's uptime, and never issues a real
+network request as a side effect of running its tests.
+
+NO REGISTRY, NO WORLD ENCOUNTER, NO UI, NO CACHING, NO RANKING, NO TRUST
+JUDGMENT. Neither new file imports `application/
+WorldDiscoverySourceRegistry.js`, `core/WorldEncounter.js`, or any UI
+component; neither retries, caches, deduplicates, or ranks anything;
+neither carries a `trusted`/`priority`/`confidence` field or any trust
+vocabulary of any kind — the same restraint 0.9.24 already holds,
+extended over an actual network call rather than a plain object.
+
+DELIBERATELY EXCLUDED — NOT THIS MILESTONE.
+- **Wiring an accepted lead into `application/
+  WorldDiscoverySourceRegistry.js` or `core/WorldEncounter.js`.** 0.9.26,
+  unscheduled, per 0.9.24's own header.
+- **Retrieving content from a lead's own `uri`, or hash-verifying
+  anything, from Arweave or anywhere else.** 0.9.27+, unscheduled — a
+  lead is a rumor, not a retrieval.
+- **Querying more than one service in a single call, or combining,
+  deduplicating, or ranking leads from two services (or two calls).** See
+  "Exactly one service per call," above.
+- **Publishing or tagging an Arweave transaction.** `ArweaveGraphqlDiscoveryQueryService`
+  only ever reads an already-tagged transaction; it never writes one.
+- **A second concrete adapter for IPFS, a blockchain index, or a second
+  Arweave gateway.** Left for later, separate, unscheduled milestones —
+  see "One service chosen," above.
+- **Any trust, priority, or confidence judgment about a service or a
+  lead it reports.** See "No registry, no World Encounter, no UI, no
+  caching, no ranking, no trust judgment," above.
+- **Pagination beyond one page of Arweave GraphQL results.**
+
+`application/DecentralizedWorldDiscoveryQuery.js` added —
+`DecentralizedDiscoveryQueryService` (the injected contract) and
+`queryDecentralizedWorldDiscovery()` (the pure-per-call orchestration
+function). `application/ArweaveGraphqlDiscoveryQueryService.js` added —
+the first concrete adapter, querying Arweave's own public GraphQL gateway
+for transactions carrying a ForkBuild discovery tag. `tests/
+DecentralizedWorldDiscoveryQuery.test.js` and `tests/
+ArweaveGraphqlDiscoveryQueryService.test.js` added and registered in
+`tests.html`, both running entirely against mocked service/`fetchImpl`
+boundaries, never a live network call. No existing file is modified.
+
+---
+
+Deliberately paused here. This milestone answers exactly one question —
+"can ForkBuild ask one real, free discovery service for records carrying
+a predefined tag, and turn what it reports into leads?" — and refuses
+every question adjacent to it: whether/how an accepted lead becomes a
+real `WorldDiscoverySource` contribution (0.9.26), and how content behind
+a `uri` would actually be retrieved and verified (0.9.27+). It also
+deliberately does not build a second adapter, a multi-service search, or
+any ranking between services — see "One service chosen," above. The
+0.7.x thread's own "decentralized discovery index" gap — named as future
+work six separate times between 0.7.2 and 0.7.6, and still unfilled as of
+0.9.24's own closing note, above — is now, for the first time, partially
+filled: a caller can ask a real question of a real service and get real
+candidate locations back — still only leads, still nothing retrieved,
+still nothing verified. Per the same reasoning that has paused
+this codebase before every milestone in this series, each next step
+remains an explicit request, not an automatic continuation.
