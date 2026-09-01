@@ -49472,3 +49472,147 @@ can exist honestly. So does a second evidence producer, an avatar-side
 equivalent, and signature verification itself. Per the same reasoning
 that has paused this codebase before every milestone in this series, each
 next step remains an explicit request, not an automatic continuation.
+
+## 0.9.30 — Decentralized Discovery Envelope
+
+0.9.24 through 0.9.29 built one full, working chain, but every adapter it
+can talk to is Arweave, and every real producer of association evidence
+is one already-signed, already-local `publisher/Publication.js`. Neither
+half tells a caller what a bare `uri` a search service reports actually
+IS — Arweave's own tags carry no `kind`/`objectId`, and a publisher
+relying on some OTHER discovery service, on a substrate this codebase has
+never talked to, has had no way to say "the thing at this uri is
+publication P123" unless a caller already happens to hold that
+Publication locally. This milestone names the format that closes that
+gap without adding a second adapter yet: a small, JSON, substrate-neutral
+envelope a publisher can attach to whatever payload field their own
+substrate already offers — an Arweave transaction's own data, a Nostr
+event's own `content`, an AT Protocol record's own fields, a Hive
+`custom_json`'s own body — so a caller holding only a discovery tag and a
+uri can still learn what that uri claims to be.
+
+```text
+Publisher, at publish time, on ANY substrate:
+attaches this envelope's own JSON shape to whatever
+payload field that substrate already offers
+                 │
+                 │   { protocol: "forkbuild", version: 1,
+                 │     kind: "PUBLICATION", objectId: "...",
+                 │     uri: "..." }
+                 ▼
+(future, unscheduled — a substrate-specific adapter's own
+ search() reporting that raw payload alongside the
+ { uri, storage } candidate it already reports today)
+                 │
+                 ▼
+core/DecentralizedDiscoveryEnvelope.js   ★ (THIS)
+     describeDecentralizedDiscoveryEnvelope()
+     parseDecentralizedDiscoveryEnvelope()
+                 │
+                 ▼
+(future, unscheduled — feeding a described envelope into
+ association evidence; see "Deliberately paused," below)
+```
+
+`core/DecentralizedDiscoveryEnvelope.js` added —
+`describeDecentralizedDiscoveryEnvelope(candidate)`,
+`parseDecentralizedDiscoveryEnvelope(rawPayload)`,
+`DECENTRALIZED_DISCOVERY_ENVELOPE_PROTOCOL` (`"forkbuild"`),
+`DECENTRALIZED_DISCOVERY_ENVELOPE_VERSION` (`1`).
+
+THE DISCOVERY TAG AND THE ENVELOPE ANSWER TWO DIFFERENT QUESTIONS.
+`discoveryTag` (0.9.24, untouched by this milestone) answers "can I find
+ForkBuild-related material on this substrate at all" — a free-form search
+accelerator, never proof of anything, exactly as open as 0.9.24's own
+header already insists. Finding something tagged with it means only
+"worth asking whether it carries a ForkBuild envelope," never "this IS a
+ForkBuild publication." The envelope this milestone describes answers
+that second question, once asked — a self-declared claim about WHICH
+object a tagged item's own uri is for. This file never imports or reads
+`discoveryTag` at all; that stays exactly where 0.9.24 through 0.9.27
+left it, one layer below.
+
+A SELF-DECLARED CLAIM, DELIBERATELY NOT WIRED INTO EVIDENCE THIS
+MILESTONE. `core/DecentralizedPublicationLocationClaim.js` (0.9.29) reads
+its claim off an already-signed `Publication` — "SOME signature is
+attached" is what makes it worth calling evidence at all. An envelope
+found via a search or index service carries no such thing: anyone able to
+publish anything discoverable on a substrate can attach any envelope they
+like, naming any `objectId` they like, truthfully or not. This file
+validates an envelope's own SHAPE only — a well-formed JSON object
+claiming a recognized protocol, version, kind, object, and location — and
+nothing about whether that claim is true. It is deliberately never handed
+to `core/DecentralizedWorldEncounterLeadAssociation.js` or `application/
+DecentralizedWorldEncounterLeadAssociationEvidenceIngress.js` in this
+milestone; see "Deliberately paused," below.
+
+`protocol`/`version` ARE AN EXACT-MATCH NAMESPACE GATE, NEVER A
+VERIFICATION. A candidate whose `protocol` is not exactly `"forkbuild"`,
+or whose `version` is not exactly `1`, describes to `null` — the same
+"two kinds, never a third" closed-check discipline 0.9.28's own `kind`
+validation already holds, applied here to a namespace and a schema
+version instead. A future protocol version, if one is ever needed, is
+unscheduled, later work; seeing an unrecognized version today means "not
+describable," never "describable, but ignore what I don't understand."
+
+`kind`/`objectId`/`uri` REUSE ALREADY-ESTABLISHED VOCABULARY. `kind` is
+validated against the same `WorldEncounterKind` enum 0.9.28/0.9.29
+already import — both `PUBLICATION` and `AVATAR` are accepted here, wider
+than 0.9.29's own claim reader, since an envelope is self-declared rather
+than derived from `Publication`'s own AVATAR-less shape (though nothing
+downstream can consume `AVATAR` evidence yet either way). `objectId` and
+`uri` are the same two field names `core/
+DecentralizedPublicationLocationClaim.js` and `core/
+DecentralizedWorldDiscoveryLead.js` already use, reused rather than
+renamed, so a future evidence-producing milestone needs no
+field-renaming step first.
+
+TWO ENTRY POINTS, ONE VALIDATION ALGORITHM.
+`describeDecentralizedDiscoveryEnvelope()` validates an already-parsed
+plain object, the same shape every other `describe*()` function in this
+family accepts. `parseDecentralizedDiscoveryEnvelope()` additionally
+accepts a raw JSON string — what a Nostr event's own `content`, or a
+Hive `custom_json`'s own body, typically hands back — parses it, and
+calls the same describe function; there is no second, independent
+validation algorithm.
+
+MALFORMED INPUT DEGRADES TO `null`, NEVER THROWS — inherited from every
+file in this family. A missing/non-object candidate, an unrecognized
+`protocol` or `version`, a `kind` outside `WorldEncounterKind`, a
+missing/empty `objectId` or `uri`, a raw payload that is neither a
+string nor a plain object, and a string that fails to parse as JSON all
+degrade to `null`. Synchronous, pure, no mutation, no storage, no
+network, no clock, no signature — every returned value is
+`Object.freeze()`'d.
+
+`tests/DecentralizedDiscoveryEnvelope.test.js` added and registered in
+`tests.html`, covering: a well-formed envelope describing directly and
+parsing identically from a JSON string or an already-parsed object;
+`protocol`/`version` as an exact-match gate (wrong namespace, wrong
+version, wrong type, case-sensitivity); `kind`/`objectId`/`uri`
+validation and malformed input degrading to `null`, never throwing;
+`parseDecentralizedDiscoveryEnvelope()` never throwing on any malformed
+raw payload (non-JSON strings, arrays, numbers, well-formed-but-wrong-
+shaped JSON); the two entry points sharing exactly one validation
+algorithm; and an architectural regression pass confirming the file never
+reads `discoveryTag`/`origin`, never imports `core/
+DecentralizedWorldEncounterLeadAssociation.js` or `core/
+DecentralizedWorldDiscoveryLead.js`, and carries no trust or signature
+vocabulary. No existing file is modified.
+
+Deliberately paused here. This milestone defines the envelope's own
+shape and nothing else — on purpose, narrower than it could have been.
+Three things stay explicitly unscheduled: first, wiring a described
+envelope into association evidence, alongside or instead of 0.9.29's own
+signed-Publication claim — an unsigned, self-declared envelope is
+meaningfully weaker evidence, and collapsing that distinction in the same
+milestone that first defines the unsigned shape would blur exactly the
+line this whole family has drawn carefully at every layer so far; second,
+any substrate-specific adapter that actually extracts a raw payload from
+a real Nostr event, AT Protocol record, or Hive `custom_json` and hands
+it to `parseDecentralizedDiscoveryEnvelope()` — this milestone builds the
+shape a future adapter will produce payloads for, not the adapter itself;
+third, a signed or otherwise authenticated envelope format, should this
+codebase ever need one. Each remains an explicit request, not an
+automatic continuation — the same restraint every milestone in this
+series has held before it.
