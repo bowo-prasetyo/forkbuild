@@ -24,6 +24,7 @@ export default {
 	                    <router-link to="/editor" class="app-nav-link">Editor</router-link>
 	                    <router-link to="/repository" class="app-nav-link">Repository</router-link>
 	                    <router-link to="/worlds/recent" class="app-nav-link">My Worlds</router-link>
+	                    <router-link to="/live-world" class="app-nav-link">Live World</router-link>
 	                    <router-link to="/avatar" class="app-nav-link">My Avatar</router-link>
 	                    <router-link to="/identity" class="app-nav-link">My Identities</router-link>
 	                    <router-link to="/peers" class="app-nav-link">Peers</router-link>
