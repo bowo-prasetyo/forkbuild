@@ -48246,17 +48246,129 @@ added and registered in `tests.html`. No existing file is modified.
 
 ---
 
-Deliberately paused here. A resolved World encounter selection can now be
-handed to a well-defined loading boundary that answers "is material
-available, and what is it" — without this milestone ever fetching
-anything itself, reading local storage, or speaking to a peer. What
-remains unbuilt is exactly what this milestone's own task described and
-declined to take: no concrete local or peer `WorldEncounterMaterialSource`
+## 0.9.22 — Local World Encounter Material Loader
+
+0.9.21 named the seam and refused to cross it — `materialSources.local`
+was an injection point with nothing real ever plugged into it. This
+milestone is the first real thing plugged into it: a concrete
+`WorldEncounterMaterialSource` that answers, for a resolved local-origin
+selection, what ForkBuild's own existing local storage actually holds for
+it — without touching the 0.9.21 boundary itself, without verifying
+anything, and without inventing a new repository, storage key, or
+material representation along the way.
+
+```
+{ kind, objectId, origin: 'local' }
+               │
+               ▼
+application/WorldEncounterMaterialLoading.js   (0.9.21, unmodified)
+     loadWorldEncounterMaterial()
+               │
+               ▼
+application/LocalWorldEncounterMaterialSource.js   ★ (THIS milestone)
+     LocalWorldEncounterMaterialSource#load()
+               │
+      kind === PUBLICATION        kind === AVATAR
+               │                          │
+               ▼                          ▼
+  discovery/LocalDiscoveryProvider   a scan over StorageProvider#list()
+       .findById(objectId)           for 'avatar-profile:*' entries
+       (already-existing repository)  (the storage key convention
+               │                       application/AvatarProfileUseCase.js
+               │                       already established)
+               ▼                          ▼
+          Publication                 AvatarProfile
+       (or null — not found)       (or null — not found)
+```
+
+NO NEW REPOSITORY, NO NEW STORAGE KEY, NO NEW REPRESENTATION. Per the
+task's own framing — "we should reuse an existing persistence/data
+mechanism rather than inventing another parallel representation" — this
+milestone locates material entirely through what already exists:
+
+- **Publications** are retrieved through `discovery/
+  LocalDiscoveryProvider.js`'s own `findById()`, the same repository
+  every other publication-discovery call site in this codebase already
+  depends on. `LocalWorldEncounterMaterialSource` constructs its own
+  `LocalDiscoveryProvider` from the `storageProvider` it is given —
+  exactly how `LocalPublisherProvider` already constructs its own
+  `LocalContentStore` — rather than re-deriving that provider's own
+  `forkbuild-publications` scan a second time here.
+- **Avatars** are retrieved by scanning `storageProvider.list()` (a
+  method every `StorageProvider` already implements) for names starting
+  with `'avatar-profile:'` — the exact key prefix `AvatarProfileUseCase`
+  already uses, one profile per owning username — and matching each
+  stored record's own `avatarId` against the resolved selection's
+  `objectId`. `AvatarProfileUseCase` itself has no "find by avatarId"
+  method (it only ever resolves the CURRENT user's own profile, by
+  owner username), so this is the minimal, generic use of an already-
+  existing `StorageProvider` primitive needed to answer a question that
+  repository was never asked before — exactly the conditional the task's
+  own framing anticipated ("if the existing local model supports it"):
+  it supports exactly this much. An avatarId never persisted locally (a
+  remote Wanderer encountered only through presence, never logged in on
+  this device) resolves to `null`/`UNAVAILABLE`, never a thrown error.
+
+THE ACTUAL MATERIAL, NEVER THE DISCOVERY SUMMARY. `core/WorldEncounter.js`'s
+own `describeEncounterablePublication()`/`describeEncounterableAvatar()`
+deliberately expose only enough to discover and display an encounter —
+title/isSigned/position for a publication, displayName/position for an
+avatar. This milestone never re-derives or re-shapes that summary; it
+returns the full underlying `Publication`/`AvatarProfile` domain object —
+the exact same object `LocalDiscoveryProvider#findById()` and
+`AvatarProfileUseCase#getProfile()` already hand out elsewhere in this
+codebase, never a newly-invented shape assembled just for this file.
+
+`objectId` IS THE ONLY MATCH KEY. A publication is found by
+`Publication.id`, an avatar by `AvatarProfile.avatarId` — never by title,
+displayName, position, or any other field a discovery record also
+happens to carry. A publication and an avatar that happen to share an id
+are never confused with one another: `kind` decides which repository is
+even consulted, before `objectId` is compared against anything.
+
+STILL NO SIGNATURE VERIFICATION, NO TRUST DECISION — inherited unchanged
+from 0.9.21. A retrieved `Publication` may carry a `signature` field
+exactly as persisted; this milestone never reads it, never verifies it,
+and never decides whether it is trustworthy. Retrieval is the entire job;
+verification stays separate, later, unscheduled work.
+
+STILL NO CACHING, RETRY, FALLBACK, DEDUPLICATION, OR RANKING — inherited
+unchanged from 0.9.21. Every `load()` call re-reads `storageProvider`
+fresh; a publication miss never falls back to scanning avatar profiles or
+vice versa; a `kind` outside `WorldEncounterKind` resolves to `null`
+without guessing which repository might have been meant.
+
+**Deliberately excluded — not this milestone.**
+- **`origin === 'peer:...'` routing, any peer transport, WebRTC, or
+  WebSocket of any kind.** 0.9.23.
+- **Signature verification or any trust decision.** 0.9.24+.
+- **Caching, retrying, deduplication, or ranking.**
+- **Any change to `application/WorldEncounterMaterialLoading.js` (0.9.21)
+  or to `ui/components/WorldEncounterCanvas.js`.** This source is only
+  ever plugged in as `materialSources.local` by a future, unscheduled
+  composition-root wiring milestone.
+- **A new storage key, a new repository class, or a new persisted
+  representation of a publication or an avatar.**
+
+`application/LocalWorldEncounterMaterialSource.js` added —
+`LocalWorldEncounterMaterialSource`, a concrete `WorldEncounterMaterialSource`
+(0.9.21). `tests/LocalWorldEncounterMaterialSource.test.js` added and
+registered in `tests.html`. No existing file is modified.
+
+---
+
+Deliberately paused here. A resolved local-origin World encounter
+selection can now retrieve its actual underlying material — a
+`Publication` or an `AvatarProfile`, exactly as ForkBuild's own existing
+repositories already shape them — without this milestone ever verifying
+that material, caching it, or touching the peer half of 0.9.21's own
+seam. What remains unbuilt is exactly what this milestone's own task
+described and declined to take: no peer-origin `WorldEncounterMaterialSource`
 exists yet, nothing verifies what a loaded material actually is, and
 `ui/components/WorldEncounterCanvas.js` still has no way to trigger a
 load at all — the full
 `select → identify source → resolve → load → verify → interpret`
-progression stays open, one deliberate step further than 0.9.20 left it.
+progression stays open, one deliberate step further than 0.9.21 left it.
 Per the same reasoning that has paused this codebase before every
 milestone in this series, each of those remains an explicit request, not
 an automatic continuation.
