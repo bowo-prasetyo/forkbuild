@@ -50234,3 +50234,135 @@ two loading paths into one; fourth, choosing among multiple decentralized
 backends by `resolvedLead.storage` — that field stays open, free-form,
 unread metadata at this layer, exactly as 0.9.24 already established.
 Each remains an explicit request, not an automatic continuation.
+
+## 0.9.35 — Arweave World Encounter Material Resolver
+
+0.9.33 built `DecentralizedWorldEncounterMaterialSource`, constructed
+around one injected, substrate-agnostic `retrieveByUri(uri)` function, and
+shipped with no concrete implementation of its own — "probably Arweave
+first, since Nostr/Arweave discovery already exists." This milestone is
+that first concrete implementation: given an `ar://<transaction-id>` uri,
+retrieve the referenced JSON material from an Arweave gateway, without
+performing any verification.
+
+```text
+resolvedLead.uri = "ar://<transaction-id>"
+           │
+           ▼
+application/ArweaveWorldEncounterMaterialResolver.js   ★ (THIS)
+     ArweaveWorldEncounterMaterialResolver#retrieveByUri(uri)
+           │
+           ▼
+GET https://arweave.net/<transaction-id>
+           │
+           ▼
+application/DecentralizedWorldEncounterMaterialSource.js   (0.9.33,
+     unmodified — the injected retrieveByUri contract this class
+     satisfies)
+           │
+           ▼
+material, or null — not currently available
+```
+
+`application/ArweaveWorldEncounterMaterialResolver.js` added —
+`ArweaveWorldEncounterMaterialResolver`, a concrete class whose own
+`retrieveByUri(uri)` method (bound in its own constructor, so it survives
+being passed around as a bare function reference) satisfies 0.9.33's own
+injected-function contract exactly: `new
+DecentralizedWorldEncounterMaterialSource(resolver.retrieveByUri)`.
+
+A RETRIEVER, NEVER A SECOND RESOLVER. This file never imports
+`application/DecentralizedWorldEncounterLeadResolution.js`, `application/
+DecentralizedWorldDiscoveryLeadRegistry.js`, `core/
+DecentralizedWorldEncounterLeadAssociation.js`, or `application/
+DecentralizedWorldDiscoveryQuery.js`. It never even imports `application/
+DecentralizedWorldEncounterMaterialSource.js` itself — this class knows
+nothing about a `resolvedLead` or a `resolvedSelection`; its own
+`retrieveByUri(uri)` takes exactly one plain string argument and never
+reads a lead's own `origin`, `discoveryTag`, or `storage` — it never even
+sees a lead at all, only the one `uri` string a caller already extracted
+from one.
+
+`fetchImpl` IS AN INJECTION POINT, NOT A CONVENIENCE — the same
+`application/ArweaveGraphqlDiscoveryQueryService.js` / `content/
+IpfsGatewayContentStore.js` pattern this codebase already runs its other
+real-network adapters through, defaulting to the global `fetch` and
+falling back to a required, explicit injection when none exists.
+
+ONLY `ar://` URIS ARE ACCEPTED — ANYTHING ELSE RESOLVES TO `null`, NEVER
+THROWS. A missing/non-string `uri`, a uri with no `ar://` prefix, and a
+uri whose transaction id contains anything outside `[A-Za-z0-9_-]` (empty,
+a path separator, whitespace, a query string) are all "not something this
+resolver can retrieve" — exactly the same "not currently available"
+outcome 0.9.33's own `retrieveByUri` contract already expects for a miss.
+The charset restriction doubles as injection safety, since a validated
+transaction id is concatenated directly into the gateway request URL.
+
+A NON-2xx GATEWAY RESPONSE, AN UNPARSEABLE BODY, AND AN OVERSIZED RESPONSE
+ALL RESOLVE TO `null` — "MISSING/MALFORMED CONTENT," NEVER A DISTINGUISHED
+STATUS. This file carries no `TOO_LARGE`/`MALFORMED` status of its own —
+see 0.9.33's own header, "two statuses, never a third," held here one
+layer earlier for retrieval itself. An explicit, named retrieval safety
+ceiling — `DEFAULT_MAX_RESPONSE_BYTES = 48 * 1024`, deliberately mirroring
+the MAGNITUDE of `application/PeerWorldEncounterMaterialProtocol.js`'s own
+0.9.23 `MAX_WORLD_ENCOUNTER_MATERIAL_BYTES`, but its own independent
+constant rather than an import from that file — is enforced twice: first
+cheaply, against a `Content-Length` response header when the gateway
+sends one, and always, against the actual decoded byte length of whatever
+body was read, so a missing or dishonest `Content-Length` never lets an
+oversized body through.
+
+A GENUINE NETWORK FAILURE PROPAGATES — NEVER SWALLOWED INTO `null`. The
+`fetch` call itself rejecting (no connectivity, this resolver's own
+`timeoutMs` elapsing and aborting the request) is never wrapped in a
+`try`/`catch` that would turn a real failure into a misleading `null` —
+exactly 0.9.33's own "a rejection from `retrieveByUri()`... is never
+caught here; it propagates to this class's own caller unchanged," honored
+here one layer earlier.
+
+`material` IS RETURNED EXACTLY AS PARSED — NEVER INTERPRETED, NEVER
+VERIFIED, NEVER ASSIGNED A KIND. This class has no idea whether the JSON
+object it just parsed is a Publication, an AvatarProfile, or something
+else — that distinction stays with the resolved selection a caller
+already holds, one layer up, never here. No `Publication.fromJSON()`, no
+`AvatarProfile.fromJSON()`, no signature read, no hash check, no trust
+decision of any kind, no caching, no retry, no fallback between gateways.
+
+NEVER QUERIES A DISCOVERY SERVICE. This file never imports `application/
+ArweaveGraphqlDiscoveryQueryService.js` or anything under `application/
+DecentralizedWorldDiscovery*` — discovery answers "where might material
+be"; this class answers "give me the bytes at this uri I already have."
+
+`tests/ArweaveWorldEncounterMaterialResolver.test.js` added and
+registered in `tests.html`, covering: a flagship `ar://` uri retrieving
+and parsing a Publication-shaped JSON object from a mocked gateway; the
+transaction id being extracted correctly and named in the outgoing
+request; a non-Arweave uri and a malformed `ar://` uri each rejected
+without ever calling the gateway; a genuine fetch failure propagating
+rather than being swallowed, alongside a non-2xx "not found" response
+degrading cleanly to `null`; malformed JSON and non-object JSON both
+becoming `null`; an oversized response rejected both by declared
+`Content-Length` and by actual decoded body size, with a within-ceiling
+response still resolving normally; the injected `fetchImpl` — never the
+real global `fetch` — being what actually retrieves material; no caching
+(repeated calls for the same uri each issue a fresh request); a signature
+returned exactly as parsed, never verified; this resolver composing
+directly as the bare `retrieveByUri` argument a real 0.9.33
+`DecentralizedWorldEncounterMaterialSource` requires, with `resolvedLead`'s
+own `origin`/`discoveryTag`/`storage` never read anywhere along that path;
+and an architectural regression pass confirming no lead registry, no lead
+resolution, no discovery adapter, no import of 0.9.33's own source file,
+and no trust vocabulary anywhere in this file. No existing file is
+modified.
+
+Deliberately paused here. This milestone builds exactly the narrow
+retrieval boundary the task that requested it asked for — an `ar://` uri,
+retrieved and parsed into JSON material, unverified — and stops there.
+Explicitly unscheduled: first, wiring this resolver into
+`application/DecentralizedWorldEncounterLeadAwareMaterialLoading.js`'s own
+`materialSources.decentralized` slot as real runtime composition (0.9.36);
+second, any signature verification, hash verification, or content
+authentication of retrieved material — a future "Retrieved Material
+Integrity Boundary"; third, any second decentralized substrate (IPFS,
+Hive/Steem, AT Protocol, ...) — each remains its own, later, unscheduled
+milestone, not an automatic continuation.
