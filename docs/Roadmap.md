@@ -47294,3 +47294,131 @@ verifies a signature (0.9.17); and nothing presents a verified encounter
 as such (0.9.18). Per the same reasoning that has paused this codebase
 before every milestone in this series, each of those remains an explicit
 request, not an automatic continuation.
+
+---
+
+## 0.9.15 — Mount Live World View
+
+0.9.14's own epilogue named the next gap by name: "nothing yet mounts
+`WorldEncounterCanvas` into an actual route." Every architectural piece
+already existed — a registry (0.9.9), a peer lifecycle bridge (0.9.11),
+change notification (0.9.12), a canvas that subscribes to a registry and
+re-renders on its own (0.9.13), and one real, running runtime
+`ui/main.js` itself constructs and provides app-wide as
+`worldDiscoverySourceRegistry` (0.9.14) — but no page anywhere in the
+running application had ever actually rendered `WorldEncounterCanvas`
+against it. This milestone is that mount, and only that mount: one new,
+deliberately tiny page, `ui/views/LiveWorldView.js`, and one new route in
+`ui/router/index.js` that renders it.
+
+```
+ui/main.js
+   │
+   ├── owns WorldDiscoveryRuntime                          (0.9.14)
+   │
+   └── provides worldDiscoverySourceRegistry
+             ↓
+      /live-world  →  LiveWorldView.js                       ★ (this milestone)
+             ↓
+      WorldEncounterCanvas :registry="…"              (0.9.13, unmodified)
+             ↓
+      live World encounters
+```
+
+**`LiveWorldView.js` injects one collaborator and renders one component —
+nothing else.** `setup()` calls
+`inject('worldDiscoverySourceRegistry', null)` — the exact key
+`ui/main.js` already provides (0.9.14) — and the template hands it
+straight through as `WorldEncounterCanvas`'s own `registry` prop
+(0.9.13, unmodified). There is no other state, no other method, and no
+other child component in this file.
+
+**The World page is deliberately forbidden from owning any discovery
+logic of its own.** It does not construct a peer source, does not listen
+to `peerMessageBus`, does not call `registry.setSource()`/
+`registry.removeSource()`, does not inspect a peer's identity, does not
+call `deriveWorldEncounters()` or any other projection function, performs
+no sorting or deduplication, verifies no signature, and fetches no
+remote content. Every one of those already lives behind
+`WorldEncounterCanvas`'s own `registry` prop or
+`bootstrapWorldDiscoveryRuntime()` — this milestone adds a mount point,
+never a second implementation of anything 0.9.0 through 0.9.14 already
+built. The composition root (`ui/main.js`) stays in charge of runtime
+wiring; the canvas stays in charge of presentation; this page is in
+charge of neither.
+
+**A new, separate route from `/world/:documentId` — never a change to
+`ui/views/WorldView.js`.** That existing route renders the long-standing,
+document-scoped `WorldView.js` (session-based editing, presence, avatars
+— a large, entirely different subsystem this milestone does not touch).
+`/live-world` renders `LiveWorldView.js` instead: a live, multi-source
+discovery surface with no single document to scope to, so it takes no
+route param. `App.js` gains one new top-nav link, "Live World," so the
+surface 0.9.0 through 0.9.14 built is actually reachable by a person
+using the running app for the first time.
+
+Flagship scenario (`tests/LiveWorldView.test.js`): a runtime is
+bootstrapped exactly as `ui/main.js` bootstraps it, with a local placed
+publication already in hand — mounting `WorldEncounterCanvas` against its
+registry shows that publication immediately, the World page opening onto
+local data with nothing further to wait for. A peer connects and, over a
+simulated `WORLD_DISCOVERY_PEER_PROTOCOL` message, contributes an avatar:
+it appears automatically, alongside the still-present local publication.
+The same peer sends an updated message: its prior contribution is
+replaced, never accumulated. The peer disconnects: its contribution
+disappears entirely, automatically, through `connectedPeerRegistry`'s own
+membership notification — the local publication remains, unaffected,
+throughout. A second section reads `ui/views/LiveWorldView.js`'s own
+source as plain text (there is no `vue` package to resolve under plain
+Node — the same reason no test in this suite has ever imported
+`ui/views/WorldView.js` or `ui/router/index.js` directly) and confirms it
+injects the correct key, hands it straight through as `registry`, and
+contains none of the discovery-logic vocabulary the boundary above
+forbids. A third section confirms the `/live-world` route is registered
+and points at `LiveWorldView`.
+
+**Deliberately excluded — not this milestone.**
+- **Any discovery logic in the World page itself.** See "the World page
+  is deliberately forbidden," above — every behavior stays exactly where
+  0.9.0 through 0.9.14 already put it.
+- **A page-local Wanderer position, selection detail panel, or any other
+  UI beyond mounting the canvas.** `WorldEncounterCanvas` already owns all
+  of that (0.9.3/0.9.4); this milestone adds no template beyond rendering
+  it.
+- **Any change to `ui/views/WorldView.js` or the `/world/:documentId`
+  route.** See "a new, separate route," above.
+- **Reading real local publications/placements/anchors/snapshotPlacements/
+  avatarProfiles/avatarPresences out of this app's several storage
+  layers, or broadcasting this replica's own local World data to a
+  connected peer.** Both remain exactly as 0.9.14 left them, unchanged.
+- **Turning a selected encounter into read-only inspection detail,
+  loading its signed material, or verifying a signature.** Separate,
+  later, unscheduled milestones — 0.9.16 (Encounter Inspection Read
+  Model), 0.9.17 (Encounter Material Resolution), and 0.9.18 (Signature
+  Verification Boundary), in that order, none of them implying the next.
+
+`ui/views/LiveWorldView.js` added; `ui/router/index.js` gains the
+`/live-world` route; `ui/App.js` gains a "Live World" nav link;
+`docs/Roadmap.md` updated; `LiveWorldView.test.js` added and registered
+in `tests.html`.
+
+---
+
+Deliberately paused here. The World discovery architecture built from
+0.9.0 through 0.9.14 now has a real, reachable, user-visible surface: a
+running application, opened in a browser, can navigate to `/live-world`
+and see whatever the live `WorldDiscoverySourceRegistry` currently holds
+— local data, and any connected peer's own contribution — update itself
+automatically as sources come, change, and go. What remains unbuilt is
+everything this chain has named and deferred at every step, now
+renumbered to reflect this milestone taking the slot it did: nothing yet
+reads real local World records into the local source; nothing yet
+broadcasts this replica's own contribution to a connected peer; nothing
+turns a selected encounter into read-only inspection detail (0.9.16);
+nothing loads the selected publication/avatar's own signed material
+(0.9.17); and nothing verifies a signature (0.9.18). Only after that
+would spatial discovery behavior — proximity, interaction range,
+movement-triggered encounter updates — become 0.9.19 and beyond. Per the
+same reasoning that has paused this codebase before every milestone in
+this series, each of those remains an explicit request, not an automatic
+continuation.

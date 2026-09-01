@@ -6,6 +6,7 @@ import RecentWorldsView from '../views/RecentWorldsView.js';
 import AboutView from '../views/AboutView.js';
 import AuthorView from '../views/AuthorView.js';
 import WorldView from '../views/WorldView.js';
+import LiveWorldView from '../views/LiveWorldView.js';
 import AvatarSettingsView from '../views/AvatarSettingsView.js';
 import IdentityManagementView from '../views/IdentityManagementView.js';
 import PeerConnectionsView from '../views/PeerConnectionsView.js';
@@ -26,6 +27,16 @@ const routes = [
     { path: '/worlds/recent', name: 'recent-worlds', component: RecentWorldsView },
     { path: '/author/:username', name: 'author', component: AuthorView },
     { path: '/world/:documentId', name: 'world', component: WorldView },
+    // 0.9.15 — Mount Live World View. A SEPARATE surface from
+    // `/world/:documentId` above: that route renders the long-standing,
+    // document-scoped `ui/views/WorldView.js` (session-based editing,
+    // presence, avatars — an entirely different subsystem); this route
+    // renders `ui/views/LiveWorldView.js`, whose only job is to mount
+    // `ui/components/WorldEncounterCanvas.js` against the live,
+    // multi-source `worldDiscoverySourceRegistry` `ui/main.js` already
+    // provides app-wide (0.9.14) — no `:documentId`, because a World
+    // discovery view has no single document to scope to.
+    { path: '/live-world', name: 'live-world', component: LiveWorldView },
     { path: '/avatar', name: 'avatar', component: AvatarSettingsView },
     { path: '/identity', name: 'identity', component: IdentityManagementView },
     { path: '/peers', name: 'peers', component: PeerConnectionsView },
