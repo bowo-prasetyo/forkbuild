@@ -49059,3 +49059,146 @@ prematurely treating the lead as verified material — a seam deliberately
 left undesigned here rather than guessed at. Per the same reasoning that
 has paused this codebase before every milestone in this series, each next
 step remains an explicit request, not an automatic continuation.
+
+---
+
+## 0.9.27 — Decentralized World Discovery Query → Lead Registry Bridge
+
+0.9.25's own header named the gap from one side: "Wiring an accepted lead
+into `application/WorldDiscoverySourceRegistry.js`... 0.9.26, unscheduled."
+0.9.26 then built somewhere for a lead to live, and its own header named
+the identical gap from the other side: "a bridge that calls
+`queryDecentralizedWorldDiscovery()` and feeds its result into `setLead()`
+automatically... unscheduled follow-up work." Both halves already existed;
+nothing yet connected them. This milestone is that one connection, and
+only that connection — the deliberately boring bridge both prior
+milestones' own headers already promised, never a redesign of either side.
+
+```text
+discoveryTag
+      │
+      ▼
+application/DecentralizedWorldDiscoveryQuery.js   (0.9.25, unmodified)
+     queryDecentralizedWorldDiscovery(discoveryQueryService, discoveryTag)
+      │
+      ▼
+DecentralizedWorldDiscoveryLead[]
+      │
+      ▼
+application/DecentralizedWorldDiscoveryQueryRegistryBridge.js   ★ (THIS)
+     queryDecentralizedWorldDiscoveryIntoRegistry()
+      │
+      ▼
+registry.setLead(lead)   — once per returned lead
+      │
+      ▼
+application/DecentralizedWorldDiscoveryLeadRegistry.js   (0.9.26, unmodified)
+```
+
+`application/DecentralizedWorldDiscoveryQueryRegistryBridge.js` added —
+one function, `queryDecentralizedWorldDiscoveryIntoRegistry(registry,
+discoveryQueryService, discoveryTag)`.
+
+ONE FUNCTION, ONE JOB, BOTH ALREADY-BUILT HALVES UNMODIFIED. This function
+calls 0.9.25's own `queryDecentralizedWorldDiscovery()` exactly as already
+written, then calls `registry.setLead()` — 0.9.26's own, already-written
+method — once per lead the query returned. It renames no field, adds no
+field, and makes no decision either file doesn't already make on its own.
+It never imports the `DecentralizedWorldDiscoveryLeadRegistry` class
+itself — like `peer/PeerWorldDiscoveryLifecycleBridge.js`'s own
+`registry.setSource` check, it only ever requires that whatever `registry`
+it is handed exposes a `setLead` function, so a caller can hand it a real
+registry or any differently-shaped test double.
+
+EVERY VALID RETURNED LEAD, NO FILTERING, NO JUDGMENT OF ITS OWN. This
+bridge never decides one lead is more worth keeping than another —
+`queryDecentralizedWorldDiscovery()` already dropped anything malformed
+before this file ever sees a result, and every lead that survives gets
+exactly one `registry.setLead()` call, unconditionally. No `trusted`,
+`verified`, `priority`, `confidence`, `rank`, or `dedup` vocabulary exists
+here or ever will at this layer — the same restraint 0.9.24, 0.9.25, and
+0.9.26 already hold, one layer earlier each.
+
+REPLACEMENT ACROSS CALLS COMES FOR FREE, FROM THE REGISTRY'S OWN CONTRACT
+— THIS BRIDGE PERFORMS NO DIFFING OF ITS OWN. A later call reporting the
+same `(origin, discoveryTag, uri)` triple again is already replaced in
+place by `registry.setLead()` itself — 0.9.26's own "replacement, not
+accumulation" rule, inherited unchanged. This bridge never calls
+`registry.removeLead()`: a lead a later query simply stops reporting is
+left exactly where it was. Two different services reporting the identical
+`uri` remain two independent stored leads, exactly as 0.9.24's own header
+already refused to treat a shared `uri` as corroboration.
+
+NEVER THROWS, DEGRADES TO AN EMPTY RESULT. A missing `registry`, or one
+whose `setLead` is not itself a function, is a no-op exactly like `peer/
+PeerWorldDiscoveryLifecycleBridge.js`'s own missing-method check: nothing
+is queried, nothing is stored, and the function resolves to a frozen empty
+array without ever calling `discoveryQueryService`. Every other failure
+mode — a malformed `discoveryTag`, a malformed `discoveryQueryService`, a
+rejected `search()` call, a malformed candidate — is already handled by
+`queryDecentralizedWorldDiscovery()`'s own "degrades to `[]`, never
+throws" contract; this bridge adds no `try`/`catch` of its own around a
+call it already trusts not to reject.
+
+RETURNS THE LEADS IT STORED — VISIBILITY, NOT A NEW CONTRACT. The function
+resolves to the same frozen `DecentralizedWorldDiscoveryLead[]` the query
+itself produced, so a caller can see what one call just did without
+re-deriving it from `registry.listLeads()`; the registry's own
+`listLeads()` remains the only source of truth for current membership.
+
+NO RETRIEVAL, NO VERIFICATION, NO SCHEDULING. This file never imports
+`core/ContentReference.js`, `core/DecentralizedPublication.js`,
+`core/WorldDiscoverySource.js`, `core/WorldEncounter.js`, or
+`application/WorldDiscoverySourceRegistry.js`, and never fetches anything
+from a lead's own `uri`. There is no class here, no timer, no
+subscription, no retry loop — the function runs to completion once and
+returns; a caller wanting to re-query periodically calls it again itself.
+
+DELIBERATELY EXCLUDED — NOT THIS MILESTONE.
+- **Querying more than one service, or combining what several calls (or
+  services) report.** `queryDecentralizedWorldDiscovery()`'s own "exactly
+  one service per call" already forbids fan-out one layer down; a caller
+  wanting several services calls this function once per service.
+- **Removing a lead a later query no longer reports.** See "Replacement
+  across calls comes for free," above — this bridge never calls
+  `registry.removeLead()`. Whether a lead's absence from a later query
+  means anything is a trust judgment this whole family has refused at
+  every layer so far; still refused here.
+- **Scheduling, polling, debouncing, or retrying a query automatically.**
+  See "No retrieval, no verification, no scheduling," above.
+- **Deciding whether an accepted lead becomes a real
+  `core/WorldDiscoverySource.js` contribution, resolving it against a
+  selected World encounter, retrieving its bytes, or hash-verifying
+  anything.** Unscheduled, later work — 0.9.24's own "a lead is
+  deliberately not yet a `ContentReference`," still true here.
+- **Any trust, priority, ranking, or confidence judgment about a lead or a
+  service.** No such vocabulary exists here or ever will at this layer.
+
+`tests/DecentralizedWorldDiscoveryQueryRegistryBridge.test.js` added and
+registered in `tests.html`, covering: every returned lead stored;
+replacement (not accumulation) across repeated calls for the same triple;
+two services sharing a `uri` staying independent; an empty or rejected
+query storing nothing and never throwing; a missing/malformed registry
+short-circuiting before the service is ever queried; a malformed candidate
+dropped without blocking the well-formed leads around it;
+`registry.subscribe()` firing exactly once per newly-stored lead, driven
+through the bridge; and an architectural regression pass confirming the
+bridge never imports the registry class itself, never calls
+`removeLead()`, never schedules or polls, and carries no trust/dedup
+vocabulary. No existing file is modified.
+
+---
+
+Deliberately paused here. The lifecycle 0.9.24 through 0.9.26 assembled —
+lead shape, query adapter, registry — is now, for the first time, actually
+connected end to end: a real Arweave GraphQL query can populate a real,
+subscribable registry with one function call. This milestone answers
+exactly what it set out to answer and no more: leads now flow from query
+to registry automatically. It does not touch the far more interesting
+question already named and deliberately deferred at 0.9.26's own close —
+how a decentralized lead becomes associated with a selected World
+encounter without prematurely treating it as verified material — nor does
+it retrieve, verify, or interpret a single byte a lead's own `uri` points
+at. Per the same reasoning that has paused this codebase before every
+milestone in this series, each next step remains an explicit request, not
+an automatic continuation.
