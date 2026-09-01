@@ -51675,3 +51675,112 @@ for Bitcoin. Fifth, replacing, deprecating, or migrating the existing
 IPFS/Bitcoin/Base `contentReference` distribution model — left untouched,
 exactly as 0.9.44 already left it. Each remains an explicit request, not
 an automatic continuation.
+
+## 0.9.46 — Nostr Publication Discovery Publisher
+
+0.9.44's own `discoveryEnvelope` and 0.9.45's own `ar://` `materialUri` are
+both finished facts a caller can already hold; neither is announced
+anywhere. This milestone is where an envelope actually reaches a relay —
+the publishing counterpart of `application/NostrDiscoveryQueryService.js`
+(0.9.31), the read side of the identical substrate.
+
+```
+Discovery Envelope   (application/PublicationDistributionDescriptor.js,
+  { protocol, version,     0.9.44, unmodified)
+    kind, objectId, uri }
+      │
+      ▼
+application/NostrPublicationDiscoveryPublisher.js
+   NostrPublicationDiscoveryPublisher#publish(envelope)
+      │
+      │   { kind, tags: [[tagName, discoveryTag]],
+      │     content: JSON.stringify(envelope) }
+      │
+      ├──► injected publishImpl(relayUrl, eventTemplate) -> { published, id }
+      │
+      ▼
+{ published: true, relayUrl, id }, or null — not currently publishable
+```
+
+`application/NostrPublicationDiscoveryPublisher.js` (new) is the one file
+this milestone adds. `publish(envelope)` re-validates its own `envelope`
+argument through `core/DecentralizedDiscoveryEnvelope.js`'s own
+`describeDecentralizedDiscoveryEnvelope()` (0.9.30, unmodified) and
+serializes exactly that canonical result via `JSON.stringify()` into a
+Nostr event's own `content` — never a second, invented envelope shape, and
+never the caller's raw, unvalidated argument. The bytes this file writes
+are therefore byte-identical, field for field, to what `application/
+NostrDiscoveryQueryService.js`'s own `parseDecentralizedDiscoveryEnvelope()`
+(0.9.31, unmodified) already reads back on the consuming side — one
+protocol envelope, proven by `tests/NostrPublicationDiscoveryPublisher.test.js`'s
+own round-trip section, which feeds a real `describePublicationDistribution()`
+result straight through `publish()` and back through
+`parseDecentralizedDiscoveryEnvelope()` unmodified.
+
+The discovery tag that lets a query find a published event is kept
+strictly separate from the envelope itself, exactly as 0.9.31's own header
+already drew that line for reading: `kind`/`objectId`/`uri` are never
+folded into individual Nostr tags — only one tag, `[tagName, discoveryTag]`
+(`tagName` defaulting to `t`), is ever attached, and it carries only the
+free-form discovery tag a caller configured this instance with. Signing
+and broadcast are a single injected `publishImpl(relayUrl, eventTemplate)
+-> Promise<{ published: true, id } | { published: false, reason }>` — one
+injection point, not the two-part `signer`/`fetchImpl` split `application/
+ArweavePublicationMaterialUploader.js` (0.9.45) uses for Arweave, because
+signing and sending a Nostr event is one indivisible exchange from this
+file's own vantage point, the same single collaborator 0.9.31's own
+`queryImpl` already models for the read side. This class never generates a
+keypair, never computes an event id, never signs anything, and never opens
+a WebSocket of its own.
+
+A malformed envelope and a relay's own definite decline
+(`publishImpl` resolving `published: false`) both resolve to `null` —
+collapsed together, the identical "two causes, one outcome" restraint
+0.9.45's own uploader already holds for a non-2xx gateway response and
+oversized material alike. A genuine `publishImpl` failure — including this
+class's own `timeoutMs` elapsing — propagates as a rejection, never
+swallowed into `null`, the one place this file's own architecture keeps a
+network/relay failure distinguishable from ordinary malformed input. A
+`publishImpl` that resolves `published: true` but with a missing or
+malformed (non-64-hex-character) `id` throws rather than degrading to
+`null` — a broken injected dependency is a wiring bug, never an ordinary
+fact about Nostr, the identical distinction 0.9.45's own uploader already
+draws for a signer violating its own contract. A successful `publish()`
+resolves to exactly `{ published: true, relayUrl, id }` — no `verified`,
+`trusted`, or `status` field of any kind; whether an announced envelope's
+own claim is ever believed remains entirely the consuming side's concern.
+
+`tests/NostrPublicationDiscoveryPublisher.test.js` covers the flagship
+path; the exact shape of the event template handed to `publishImpl`
+(canonical envelope JSON in `content`, exactly one tag); the full
+malformed-envelope-degrades-to-null matrix, `publishImpl` never consulted;
+a relay decline resolving to `null`; a genuine `publishImpl` failure and a
+timeout both propagating as rejections; a `publishImpl` contract violation
+throwing rather than degrading to `null`; the round-trip compatibility
+property against a real `describePublicationDistribution()` result and
+`parseDecentralizedDiscoveryEnvelope()`; constructor validation of
+`relayUrl`, `discoveryTag`, and `publishImpl`; no caching across repeated
+calls; and an architectural regression pass confirming the file never
+imports `Publication`, `ArweavePublicationMaterialUploader`,
+`NostrDiscoveryQueryService`, or any discovery/association/verification
+machinery, never references key/wallet material or `WebSocket` directly,
+and uses no trust/status vocabulary. No existing file is modified by this
+milestone.
+
+Deliberately paused here, exactly where this milestone's own request drew
+the line. Explicitly unscheduled: first, a concrete `publishImpl`
+implementation — real NIP-01 event serialization/id computation, Schnorr
+signing, key management, or an actual relay connection of any kind; this
+milestone ships only the `publishImpl(relayUrl, eventTemplate) ->
+Promise<{ published, id? }>` contract. Second, publishing to more than one
+relay, or any relay-selection, preference, or fallback policy — one relay,
+one discovery tag, per instance. Third, a runtime composition wiring this
+publisher together with `application/ArweavePublicationMaterialUploader.js`
+and `application/PublicationDistributionDescriptor.js` into one usable
+pipeline — 0.9.47. Fourth, verifying that a published event later confirms
+on, or is retained by, a relay — a successful `publish()` means only "the
+relay accepted this event," the identical "broadcast acceptance is not
+anchor validity" distinction 0.9.45's own uploader and `anchoring/
+BitcoinAnchorPublisher.js` already draw for their own substrates. Fifth,
+any signature, trust, or reputation semantics for an envelope, an event, or
+a relay. Each remains an explicit request, not an automatic continuation.
