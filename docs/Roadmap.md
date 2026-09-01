@@ -51359,3 +51359,125 @@ before it; third, any default set of sub-verifiers, or knowledge of
 `WorldEncounterMaterialIdentityVerifier`/`WorldEncounterMaterialSignatureVerifier`
 by name — `verifiers` is supplied entirely by the caller. Each remains an
 explicit request, not an automatic continuation.
+
+## 0.9.43 — World Encounter Material Inspection Completion
+
+0.9.39 already wired resolved selection, resolved decentralized leads, and
+verification into `application/WorldEncounterMaterialInspection.js` and
+`ui/components/WorldEncounterCanvas.js`; 0.9.40 and 0.9.41 each added a
+further real fact to that pipeline (a resolved lead, a cryptographic
+signature check); 0.9.42 built the one thing still missing — a way to
+combine more than one verifier's own opinion into a single answer — and
+refused, three separate times in its own header, to actually plug that
+composition into the running pipeline: "wiring a composed verifier into
+`application/WorldEncounterMaterialInspection.js`, or into any UI... is
+separate, later, unscheduled work (0.9.43)." This milestone is that wiring,
+and the whole-chain proof that it actually works:
+
+```
+selectedEncounter
+      │
+      ▼
+selection resolution
+      │
+      ├── local/peer selection
+      │
+      └── decentralized lead resolution
+                    │
+                    ▼
+              resolvedLead
+                    │
+                    ▼
+             material loading
+                    │
+                    ▼
+               material
+                    │
+                    ▼
+       VerificationComposition
+          ┌─────────┴─────────┐
+          ▼                   ▼
+      Identity             Signature
+      verifier              verifier
+          │                   │
+          └─────────┬─────────┘
+                    ▼
+          VERIFIED / REJECTED /
+             UNVERIFIABLE
+```
+
+`application/WorldEncounterMaterialVerifierRuntimeComposition.js` (new) is
+the one place this codebase actually names both concrete verifiers
+together — `composeWorldEncounterMaterialVerifier()` constructs a real
+`WorldEncounterMaterialIdentityVerifier` (0.9.38) and a real
+`WorldEncounterMaterialSignatureVerifier` (0.9.41), hands both to 0.9.42's
+own unmodified `WorldEncounterMaterialVerificationComposition`, and returns
+the composed verifier alongside its two sub-verifiers. It plays the
+identical composition-root role, one layer over, that
+`application/DecentralizedWorldEncounterMaterialRuntimeComposition.js`
+(0.9.36) already plays for decentralized retrieval — composition only, no
+new verification algorithm, no default sub-verifier set a caller did not
+ask for, and no per-kind applicability policy 0.9.42 deliberately left
+unbuilt. Neither `application/WorldEncounterMaterialInspection.js` nor
+`ui/components/WorldEncounterCanvas.js` is modified: both already accept
+any object exposing a callable `verifyIdentity`, so the composed verifier
+plugs into `inspectWorldEncounterMaterial()`'s own `verifier` argument, or
+`WorldEncounterCanvas`'s own `materialVerifier` prop, exactly where a
+single verifier already went — proof, not a new capability, that "the UI
+receives one verifier; it does not know which verification algorithms are
+inside it."
+
+`tests/WorldEncounterMaterialInspectionCompletion.test.js` is the flagship
+integration test the whole 0.9.39-through-0.9.43 series was building
+toward — the complete decentralized encounter path, reproduced end to end
+through this codebase's own real, unmodified application-layer machinery,
+with only the two genuine network edges (the Nostr relay, the Arweave
+gateway) ever mocked: a Nostr relay event carrying a ForkBuild discovery
+envelope (`core/DecentralizedDiscoveryEnvelope.js`) is registered as a
+`DecentralizedWorldDiscoveryLeadRegistry` (0.9.26) lead, turned into
+explicit association evidence
+(`application/DecentralizedDiscoveryEnvelopeAssociationEvidenceIngress.js`,
+0.9.32), resolved to exactly one lead
+(`application/DecentralizedWorldEncounterLeadResolution.js`, 0.9.28),
+retrieved from a mocked Arweave gateway through the composed decentralized
+material source (0.9.36), and verified by the newly composed identity +
+Ed25519 signature verifier — all through `inspectWorldEncounterMaterial()`
+(0.9.39) unmodified — to a final `VERIFIED`. Alongside that flagship path,
+the same file exercises every important negative case named for this
+milestone: a wrong `objectId` against a genuinely valid signature
+(`REJECTED` — a structural mismatch is never rescued by cryptography); a
+signature tampered with after signing against a correct `objectId`
+(`REJECTED` — a correct identity never rescues a broken signature); a
+legacy, never-signed publication (`UNVERIFIABLE` — neither confirmed nor
+rejected); a missing Arweave transaction, a 404 from the gateway
+(`UNVERIFIABLE`, with both composed sub-verifiers never even consulted —
+proven by an instrumented spy on each); an ambiguous lead — two
+independently-corroborated discovery services naming two different leads
+for the same material — which never produces a `resolvedLead` a caller
+could route material loading through at all (proven by a spy
+`materialSources.decentralized` that is never called); and a lead that
+later disappears from its registry, which invalidates a previously
+resolved/chosen reference on re-validation, so a caller checking before
+loading (the same restraint `ui/components/WorldEncounterCanvas.js`'s own
+`resolvedLead` computed property already holds) never reaches material
+loading for the stale choice either. An architectural regression pass
+confirms the new composition file still only builds 0.9.38's, 0.9.41's,
+and 0.9.42's own unmodified classes, defines no `verifyIdentity()` of its
+own, performs no network/storage access, uses no trust/ranking vocabulary,
+and that neither 0.9.42's own composition class nor 0.9.39's own
+inspection orchestrator is modified to know about it. No existing
+application-layer file is modified by this milestone.
+
+Deliberately paused here, exactly where the task that requested this
+milestone drew the line. Explicitly unscheduled: first, actually invoking
+`composeWorldEncounterMaterialVerifier()` from `ui/main.js` or any other
+running composition root and providing its result app-wide — this
+milestone proves the composed verifier works end-to-end through the
+application layer, the same way 0.9.36 through 0.9.42 each proved their
+own piece, without any of them wiring `ui/main.js`'s own dependency graph
+either; second, the richer per-verifier applicability signal 0.9.42 named
+and refused to build (distinguishing "genuinely does not apply to this
+kind" from "applies but abstained for another reason"); third, a
+Publication distribution/discovery-envelope publishing boundary — the
+"production side" of this same pipeline, entirely unscheduled here. Each
+remains an explicit request, not an automatic continuation.
