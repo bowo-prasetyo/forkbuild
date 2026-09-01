@@ -5626,21 +5626,21 @@ html, body {
     pointer-events: none;
 }
 
-.world-encounter-selection-panel {
+.world-encounter-inspection-panel {
     padding: 0.6rem 0.75rem;
     background: #1c1c1c;
     border: 1px solid #2a2a2a;
     border-radius: 6px;
 }
 
-.world-encounter-selection-title {
+.world-encounter-inspection-title {
     margin: 0 0 0.4rem;
     font-size: 12px;
     font-weight: 600;
     color: #e0e0e0;
 }
 
-.world-encounter-selection-detail {
+.world-encounter-inspection-detail {
     display: grid;
     grid-template-columns: auto 1fr;
     gap: 0.15rem 0.5rem;
@@ -5648,11 +5648,18 @@ html, body {
     font-size: 12px;
 }
 
-.world-encounter-selection-detail dt {
+.world-encounter-inspection-detail dt {
     color: #808080;
 }
 
-.world-encounter-selection-detail dd {
+.world-encounter-inspection-detail dd {
     margin: 0;
     color: #e0e0e0;
+}
+
+.world-encounter-inspection-unavailable {
+    margin: 0;
+    font-size: 12px;
+    color: #808080;
+    font-style: italic;
 }

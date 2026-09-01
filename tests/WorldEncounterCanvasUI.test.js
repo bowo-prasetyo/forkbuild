@@ -36,9 +36,11 @@ import { deriveWorldEncounters } from '../core/WorldEncounter.js';
 //            (WorldEncounterMarker.js, WandererMarker.js) import NOTHING —
 //            no application/, no core/, not even vue.
 // Section J: WorldEncounterCanvas.js imports no core/ module, and (as of
-//            0.9.13) exactly one application/ module —
+//            0.9.18) exactly two application/ modules —
 //            WorldDiscoveryRegistryProjection.js's own
-//            describeWorldFromDiscoveryRegistry() — alongside its own two
+//            describeWorldFromDiscoveryRegistry() and
+//            WorldEncounterInspection.js's own
+//            describeWorldEncounterInspection() — alongside its own two
 //            sibling components.
 // Section K: no distance/nearby/radius/score/rank/trust/verified/winner/
 //            correctness vocabulary anywhere in this milestone's own code.
@@ -53,6 +55,13 @@ import { deriveWorldEncounters } from '../core/WorldEncounter.js';
 // pre-0.9.13 `view`-prop-only contract end to end. Live registry
 // subscription itself is covered separately, in
 // tests/LiveWorldViewRegistrySubscription.test.js.
+//
+// 0.9.18 note: WorldEncounterCanvas.js gained a `selectedEncounterInspection`
+// computed and a second application/ import — see Section J, updated
+// above. Rendering the selected encounter's own inspection is covered
+// separately, in tests/WorldEncounterInspectionUI.test.js; this file's own
+// sections stay focused on 0.9.3/0.9.4's own projection/selection
+// contract, unaffected by that addition.
 
 function assert(condition, message) {
     if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
@@ -304,19 +313,21 @@ async function run() {
 
     // ---------------------------------------------------------------
     // Section J — WorldEncounterCanvas.js's own import boundary (updated
-    // for 0.9.13: exactly one application/ module now, still no core/).
+    // for 0.9.18: exactly two application/ modules now, still no core/).
     // ---------------------------------------------------------------
     {
         const source = await readFile(new URL('../ui/components/WorldEncounterCanvas.js', import.meta.url), 'utf8');
         const importLines = source.split('\n').filter((line) => line.trim().startsWith('import '));
-        assert(importLines.length === 3, '37. WorldEncounterCanvas.js has exactly three imports as of 0.9.13');
+        assert(importLines.length === 4, '37. WorldEncounterCanvas.js has exactly four imports as of 0.9.18');
         assert(importLines.some((line) => line.includes('./WorldEncounterMarker.js')) && importLines.some((line) => line.includes('./WandererMarker.js')), '38. WorldEncounterCanvas.js still imports its own two sibling marker components');
-        assert(!importLines.some((line) => line.includes('core/')), '39. WorldEncounterCanvas.js never imports any core/ module directly — it receives the projected view as a prop, or via the one application/ seam below, instead');
+        assert(!importLines.some((line) => line.includes('core/')), '39. WorldEncounterCanvas.js never imports any core/ module directly — it receives the projected view as a prop, or via the application/ seams below, instead');
         const applicationImportLines = importLines.filter((line) => line.includes('application/'));
-        assert(applicationImportLines.length === 1 && applicationImportLines[0].includes('WorldDiscoveryRegistryProjection.js') && applicationImportLines[0].includes('describeWorldFromDiscoveryRegistry'), '40. 0.9.13 adds exactly one application/ import — WorldDiscoveryRegistryProjection.js\'s own describeWorldFromDiscoveryRegistry() — and no other');
-        assert(!importLines.some((line) => line.includes('WorldEncounterIntegration.js') || line.includes('WorldEncounterReadModel.js') || line.includes('WorldEncounterView.js') || line.includes('WorldDiscoverySourceRegistry.js')), '41. WorldEncounterCanvas.js never imports deriveWorldEncounters(), assembleWorldDiscoveryInputs(), describeWorldFromDiscoverySources(), or the registry class itself — only the one registry-projection seam it subscribes through');
+        assert(applicationImportLines.length === 2, '40. WorldEncounterCanvas.js imports exactly two application/ modules as of 0.9.18');
+        assert(applicationImportLines.some((line) => line.includes('WorldDiscoveryRegistryProjection.js') && line.includes('describeWorldFromDiscoveryRegistry')), '41. the 0.9.13 registry-projection import — WorldDiscoveryRegistryProjection.js\'s own describeWorldFromDiscoveryRegistry() — is unchanged');
+        assert(applicationImportLines.some((line) => line.includes('WorldEncounterInspection.js') && line.includes('describeWorldEncounterInspection')), '42. 0.9.18 adds exactly one new application/ import — WorldEncounterInspection.js\'s own describeWorldEncounterInspection()');
+        assert(!importLines.some((line) => line.includes('WorldEncounterIntegration.js') || line.includes('WorldEncounterReadModel.js') || line.includes('WorldEncounterView.js') || line.includes('WorldDiscoverySourceRegistry.js')), '43. WorldEncounterCanvas.js never imports deriveWorldEncounters(), assembleWorldDiscoveryInputs(), describeWorldFromDiscoverySources(), or the registry class itself — only the two application/ seams it depends on');
 
-        console.log('✓ Section J: WorldEncounterCanvas.js never imports core/WorldEncounter.js, and imports exactly one application/ module — describeWorldFromDiscoveryRegistry() — as of 0.9.13');
+        console.log('✓ Section J: WorldEncounterCanvas.js never imports core/WorldEncounter.js, and imports exactly two application/ modules — describeWorldFromDiscoveryRegistry() and describeWorldEncounterInspection() — as of 0.9.18');
     }
 
     // ---------------------------------------------------------------
