@@ -3,6 +3,7 @@ import WandererMarker from './WandererMarker.js';
 import { describeWorldFromDiscoveryRegistry } from '../../application/WorldDiscoveryRegistryProjection.js';
 import { describeWorldEncounterInspection } from '../../application/WorldEncounterInspection.js';
 import { describeWorldEncounterSelectionOutcomeFromRegistry, WorldEncounterSelectionOutcomeStatus } from '../../application/WorldEncounterSelectionOutcome.js';
+import { inspectWorldEncounterMaterial } from '../../application/WorldEncounterMaterialInspection.js';
 
 // 0.9.3 — World View UI / Wanderer Presence.
 //
@@ -476,6 +477,130 @@ import { describeWorldEncounterSelectionOutcomeFromRegistry, WorldEncounterSelec
 //   anything else this milestone adds, beyond this component's own
 //   mount.** Both live and die with this component instance, exactly
 //   like `selectedEncounter`/`worldView` already do.
+//
+// 0.9.39 — World Encounter Material Inspection Orchestration & UI
+// Integration.
+//
+// 0.9.20 already computes `resolvedEncounterSelection` — the one
+// `{ kind, objectId, origin }` a future material-loading step would
+// actually consume, per that milestone's own header. Nothing until now
+// consumed it. This milestone is that consumption, entirely through
+// `application/WorldEncounterMaterialInspection.js`'s own unmodified
+// `inspectWorldEncounterMaterial()` — the one orchestration boundary that
+// already knows how to route a resolved selection to a loading boundary
+// (0.9.21/0.9.34) and hand the result to verification (0.9.37/0.9.38):
+//
+//   resolvedEncounterSelection (0.9.20, unchanged)
+//                  │
+//                  ▼
+//   application/WorldEncounterMaterialInspection.js   (0.9.39, unmodified)
+//        inspectWorldEncounterMaterial()
+//                  │
+//                  ▼
+//        materialInspection = { selection, lead, loading, verification }
+//                  │
+//                  ▼
+//        world-encounter-material-panel (below, in the template)
+//
+// THIS COMPONENT REMAINS A CONSUMER, NEVER A SECOND ORCHESTRATOR. It never
+// reads `material.id`/`material.avatarId`, never calls
+// `loadWorldEncounterMaterial()`/`loadWorldEncounterMaterialFromResolvedLead()`/
+// `verifyWorldEncounterMaterial()` directly, and never constructs a
+// `WorldEncounterMaterialSource` or `WorldEncounterMaterialVerifier` of its
+// own — `materialSources`/`materialVerifier` are new, optional props a
+// caller injects, exactly the way `registry` already is.
+//
+// `materialInspection` IS DATA, WRITTEN BY `refreshMaterialInspection()` —
+// NEVER A COMPUTED. It cannot be a plain `computed` because loading
+// material is asynchronous (0.9.21's own "synchronous validation,
+// asynchronous result"); a computed cannot await a Promise.
+// `refreshMaterialInspection()` is the one place `materialInspection` is
+// ever written, called from every place `resolvedEncounterSelection` could
+// change: the tail of `refreshSelectionOutcome()` (itself already called
+// from `selectEncounter()`, `mounted()`, and the registry's own change
+// listener — see this file's own 0.9.20 header) and the tail of
+// `chooseSelectionOrigin()`. This mirrors `refreshWorldViewFromRegistry()`'s
+// and `refreshSelectionOutcome()`'s own "one writer, several call sites"
+// shape exactly.
+//
+// NO MATERIAL SOURCE, NO MATERIAL INSPECTION — MIRRORING 0.9.20's OWN "NO
+// REGISTRY, NO RESOLUTION." When no `materialSources` prop was supplied,
+// `refreshMaterialInspection()` leaves `materialInspection` at `null`
+// without ever calling `inspectWorldEncounterMaterial()` — this component
+// behaves exactly as every earlier milestone already left it for every
+// caller that has not opted into material inspection, including every
+// existing test in this chain.
+//
+// DO NOT LOAD MATERIAL WHILE THE SELECTION IS AMBIGUOUS — THE EXPLICIT
+// DESIGN CHOICE THIS MILESTONE WAS BUILT AROUND. `refreshMaterialInspection()`
+// reads `this.resolvedEncounterSelection` — 0.9.20's own computed, already
+// `null` for any `'AMBIGUOUS'` selection nobody has explicitly resolved via
+// `chooseSelectionOrigin()` yet — and does nothing at all when it is
+// `null`. This component invents no automatic choice between multiple
+// offered sources; the Wanderer's own explicit `origin` pick (0.9.20)
+// remains the only gate that ever lets material loading proceed.
+//
+// A STALE OR CHANGED SELECTION REFRESHES MATERIAL INSPECTION, EXACTLY LIKE
+// 0.9.20 ALREADY REFRESHES `selectionOutcome`. Because `refreshMaterialInspection()`
+// runs at the tail of `refreshSelectionOutcome()`, every one of that
+// method's own triggers — a fresh selection, the registry's own
+// notification when a source appears or disappears — also refreshes
+// `materialInspection`. A selection that goes stale (`selectionOutcome`
+// becomes `'UNAVAILABLE'`, or `resolvedEncounterSelection` otherwise
+// becomes `null`) clears `materialInspection` back to `null` the same way.
+//
+// A REQUEST COUNTER GUARDS AGAINST A STALE ASYNC RESPONSE OVERWRITING A
+// NEWER ONE — NOT A CACHE, NOT A RETRY. Because loading is asynchronous, a
+// Wanderer could select encounter A, then B, before A's own
+// `inspectWorldEncounterMaterial()` call resolves. `materialInspectionRequestId`
+// is incremented on every call to `refreshMaterialInspection()`; a
+// resolved Promise is only written to `materialInspection` if that same
+// request is still the most recent one made. This is purely a
+// last-request-wins correctness guard — it never memoizes a result for
+// reuse and never retries a failed or stale one.
+//
+// `beforeUnmount()` ALSO INVALIDATES ANY IN-FLIGHT REQUEST. Bumping
+// `materialInspectionRequestId` one more time on unmount ensures a
+// still-pending `inspectWorldEncounterMaterial()` Promise, if one resolves
+// after this component is gone, is never written to `materialInspection`
+// — mirroring the same "no writes after teardown" discipline
+// `unsubscribeWorldRegistry` already holds for the registry subscription.
+//
+// NO `resolvedLead` IS EVER SUPPLIED FROM THIS COMPONENT. `inspectWorldEncounterMaterial()`
+// accepts an optional decentralized lead; this component never has one to
+// offer — decentralized lead resolution (0.9.28) is not wired into this
+// file, in either direction, by this milestone. Every call this component
+// makes therefore always routes through 0.9.21's own origin-routed loading
+// boundary (`materialSources.local`/`.peer`), never through 0.9.34's own
+// lead-aware one. Wiring a resolved lead into this component is separate,
+// later, unscheduled work.
+//
+// STATUS IS RENDERED LITERALLY, NEVER AS "TRUSTED"/"AUTHENTIC"/"SAFE." The
+// new panel below renders exactly `materialInspection.loading.status`
+// (`UNAVAILABLE`/`AVAILABLE`, 0.9.21) and
+// `materialInspection.verification.status` (`UNVERIFIABLE`/`VERIFIED`/
+// `REJECTED`, 0.9.37) — the same restraint this file's own 0.9.18 section
+// already holds for `isSigned` ("no isVerified/isTrusted/isAuthentic
+// vocabulary... anywhere").
+//
+// DELIBERATELY EXCLUDED — NOT THIS MILESTONE.
+// - **Resolving a decentralized lead, or any decentralized-discovery UI of
+//   any kind.** See "no resolvedLead is ever supplied," above.
+// - **A default `materialSources`/`materialVerifier`.** Both stay `null`
+//   until a caller explicitly injects them — this component never
+//   constructs a `WorldEncounterMaterialSource`/`WorldEncounterMaterialVerifier`
+//   itself.
+// - **Retrying a failed or unavailable load, or caching a previous
+//   result.** See "a request counter guards against a stale async
+//   response," above — that counter exists purely to discard a superseded
+//   response, never to reuse or retry one.
+// - **Cryptographic signature verification, content-reference/URI
+//   correspondence, or any interpretation of `material` beyond the two
+//   status strings this milestone renders.**
+// - **Persisting `materialInspection`, or anything else this milestone
+//   adds, beyond this component's own mount.** Lives and dies with this
+//   component instance, exactly like `selectionOutcome`/`worldView`
+//   already do.
 const WORLD_HALF_SPAN = 50;
 const CANVAS_SIZE = 600;
 
@@ -509,6 +634,25 @@ export default {
         // component an already-computed `view` instead keeps working
         // exactly as before this milestone.
         registry: {
+            type: Object,
+            default: null
+        },
+        // 0.9.39 — optional. A `{ local, peer, decentralized }`-shaped
+        // object of `WorldEncounterMaterialSource`-shaped sources, forwarded
+        // verbatim to `inspectWorldEncounterMaterial()`. `null` by default
+        // — see this file's own header, "no material source, no material
+        // inspection." Never constructed by this component itself.
+        materialSources: {
+            type: Object,
+            default: null
+        },
+        // 0.9.39 — optional. A `WorldEncounterMaterialVerifier`-shaped
+        // object, forwarded verbatim to `inspectWorldEncounterMaterial()`
+        // as its own `verifier`. `null` by default — a resolved selection
+        // whose material loads with no `materialVerifier` supplied still
+        // verifies as `UNVERIFIABLE` (0.9.37's own established default),
+        // never a thrown error. Never constructed by this component itself.
+        materialVerifier: {
             type: Object,
             default: null
         }
@@ -545,7 +689,21 @@ export default {
             // reset to `null` by `selectEncounter()` on every new
             // selection — see this file's own header, "resolvedSelectionChoice
             // is the Wanderer's own explicit pick."
-            resolvedSelectionChoice: null
+            resolvedSelectionChoice: null,
+            // 0.9.39 — page-local, orchestration-derived material/verification
+            // snapshot for the CURRENT `resolvedEncounterSelection`. `null`
+            // until `refreshMaterialInspection()` writes it; stays `null`
+            // whenever there is no resolved selection or no `materialSources`
+            // — see this file's own header, "no material source, no material
+            // inspection."
+            materialInspection: null,
+            // 0.9.39 — a monotonically increasing counter, bumped on every
+            // call to `refreshMaterialInspection()` (including on unmount).
+            // A resolved `inspectWorldEncounterMaterial()` Promise is only
+            // ever written to `materialInspection` when it is still the
+            // most recent request — see this file's own header, "a request
+            // counter guards against a stale async response."
+            materialInspectionRequestId: 0
         };
     },
     computed: {
@@ -665,12 +823,17 @@ export default {
         refreshSelectionOutcome() {
             if (!this.selectedEncounter || !this.registry) {
                 this.selectionOutcome = null;
-                return;
+            } else {
+                this.selectionOutcome = describeWorldEncounterSelectionOutcomeFromRegistry({
+                    selectedEncounter: this.selectedEncounter,
+                    registry: this.registry
+                });
             }
-            this.selectionOutcome = describeWorldEncounterSelectionOutcomeFromRegistry({
-                selectedEncounter: this.selectedEncounter,
-                registry: this.registry
-            });
+            // 0.9.39 — every trigger that can change `selectionOutcome`
+            // can also change `resolvedEncounterSelection`, so it also
+            // refreshes material inspection — see this file's own header,
+            // "a stale or changed selection refreshes material inspection."
+            this.refreshMaterialInspection();
         },
         // 0.9.20 — the only writer of `resolvedSelectionChoice`. Takes
         // exactly one entry of `selectionOutcome.candidates` — a
@@ -681,6 +844,45 @@ export default {
         // own explicit pick."
         chooseSelectionOrigin(candidate) {
             this.resolvedSelectionChoice = candidate;
+            // 0.9.39 — an explicit choice can turn a null
+            // `resolvedEncounterSelection` into a real one (or replace one
+            // real choice with another); see this file's own header, "a
+            // stale or changed selection refreshes material inspection."
+            this.refreshMaterialInspection();
+        },
+        // 0.9.39 — the only writer of `materialInspection`, and the only
+        // caller of `inspectWorldEncounterMaterial()` in this file. See
+        // this file's own header, "materialInspection is data, written by
+        // refreshMaterialInspection() — never a computed." A no-op
+        // (`materialInspection` cleared to `null`) whenever there is no
+        // current `resolvedEncounterSelection` or no `materialSources` —
+        // see "no material source, no material inspection," above. Never
+        // supplies a `resolvedLead` — see "no resolvedLead is ever
+        // supplied," above.
+        refreshMaterialInspection() {
+            this.materialInspectionRequestId += 1;
+            const requestId = this.materialInspectionRequestId;
+            const resolvedSelection = this.resolvedEncounterSelection;
+
+            if (!resolvedSelection || !this.materialSources) {
+                this.materialInspection = null;
+                return;
+            }
+
+            inspectWorldEncounterMaterial({
+                resolvedSelection,
+                materialSources: this.materialSources,
+                verifier: this.materialVerifier
+            }).then((result) => {
+                // 0.9.39 — see this file's own header, "a request counter
+                // guards against a stale async response overwriting a
+                // newer one." A superseded response (a newer selection, or
+                // this component having since unmounted) is discarded,
+                // never written.
+                if (requestId === this.materialInspectionRequestId) {
+                    this.materialInspection = result;
+                }
+            });
         }
     },
     // 0.9.13 — seed, then subscribe; see this file's own header,
@@ -714,6 +916,10 @@ export default {
             this.unsubscribeWorldRegistry();
         }
         this.unsubscribeWorldRegistry = null;
+        // 0.9.39 — invalidates any still-pending `inspectWorldEncounterMaterial()`
+        // request; see this file's own header, "beforeUnmount() also
+        // invalidates any in-flight request."
+        this.materialInspectionRequestId += 1;
     },
     template: `
         <div class="world-encounter-view">
@@ -811,6 +1017,20 @@ export default {
                 <p v-else-if="selectionOutcome.status === 'RESOLVED'" class="world-encounter-selection-origin-resolved">
                     Source: {{ selectionOutcome.resolvedSelection.origin }}
                 </p>
+            </div>
+
+            <div v-if="selectedEncounter && materialInspection" class="world-encounter-material-panel">
+                <h4 class="world-encounter-material-title">Material</h4>
+                <dl class="world-encounter-material-detail">
+                    <dt>Status</dt>
+                    <dd>{{ materialInspection.loading.status }}</dd>
+                </dl>
+
+                <h4 class="world-encounter-verification-title">Verification</h4>
+                <dl class="world-encounter-verification-detail">
+                    <dt>Status</dt>
+                    <dd>{{ materialInspection.verification.status }}</dd>
+                </dl>
             </div>
         </div>
     `

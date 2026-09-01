@@ -50769,3 +50769,143 @@ boundary, or into `application/WorldEncounterInspection.js`/any UI (0.9.39);
 third, trust, ranking, reputation, or preference between multiple candidate
 materials for the same encounter. Each remains an explicit request, not an
 automatic continuation.
+
+## 0.9.39 — World Encounter Material Inspection Orchestration & UI Integration
+
+0.9.16 through 0.9.38 built selection, its resolution, two loading
+boundaries, a verification boundary, and a concrete identity verifier — and
+every one of those files' own header drew the same line at its own layer:
+wiring itself into encounter inspection is separate, later, unscheduled
+work. This milestone is that wiring: a Wanderer who selects an encounter
+now sees whether its material can be loaded, and whether that material
+corresponds to what was selected, alongside the inspection details 0.9.18
+already renders.
+
+```text
+Selection Resolution (0.9.20)
+       │
+       ▼
+Resolved Selection + Resolved Lead
+       │
+       ▼
+application/WorldEncounterMaterialInspection.js   (THIS) ★
+     inspectWorldEncounterMaterial()
+       │
+       ├── application/WorldEncounterMaterialLoading.js (0.9.21)
+       │   or DecentralizedWorldEncounterLeadAwareMaterialLoading.js (0.9.34)
+       │
+       └── application/WorldEncounterMaterialVerification.js (0.9.37/0.9.38)
+       │
+       ▼
+{ selection, lead, loading, verification }
+       │
+       ▼
+ui/components/WorldEncounterCanvas.js — Material / Verification panel
+```
+
+`application/WorldEncounterMaterialInspection.js` added —
+`inspectWorldEncounterMaterial({ resolvedSelection, resolvedLead,
+materialSources, verifier })`, a small orchestration function that never
+loads or verifies anything itself. Routing between the two existing loading
+boundaries is decided purely by whether `resolvedLead` was supplied (never
+by reading `origin`, mirroring 0.9.34's own "calling this function at all
+is the routing decision"); the loaded material is then handed to 0.9.37's
+own unmodified `verifyWorldEncounterMaterial()` alongside the same
+`resolvedSelection`/`resolvedLead`. Neither `resolvedSelection` nor
+`resolvedLead` is re-validated here — both underlying boundaries already do
+that, so a missing/malformed selection degrades gracefully through them
+exactly as it always has (`UNAVAILABLE` loading, `UNVERIFIABLE`
+verification), never a second copy of that logic. `material` is never
+inspected, `selection`/`lead` are the caller's own inputs forwarded
+verbatim, and there is no caching, retry, or fallback between the two
+loading boundaries.
+
+`ui/components/WorldEncounterCanvas.js` modified — two new optional props,
+`materialSources` (a `{ local, peer, decentralized }`-shaped object of
+`WorldEncounterMaterialSource`s) and `materialVerifier` (a
+`WorldEncounterMaterialVerifier`), both `null` by default and never
+constructed by this component itself; new page-local state
+`materialInspection` and `materialInspectionRequestId`; a new
+`refreshMaterialInspection()` method, the only writer of
+`materialInspection` and the only caller of `inspectWorldEncounterMaterial()`
+in this file, called from the tail of `refreshSelectionOutcome()` (so every
+one of its own triggers — a fresh selection, a registry notification —
+also refreshes material inspection) and from the tail of
+`chooseSelectionOrigin()`. A new "Material"/"Verification" panel renders
+`materialInspection.loading.status` and `materialInspection.verification.status`
+literally — `UNAVAILABLE`/`AVAILABLE` and
+`UNVERIFIABLE`/`VERIFIED`/`REJECTED` — never as "trusted," "authentic," or
+"safe," continuing this file's own 0.9.18 restraint around `isSigned`.
+
+DO NOT LOAD MATERIAL WHILE THE SELECTION IS AMBIGUOUS.
+`refreshMaterialInspection()` reads `resolvedEncounterSelection` — 0.9.20's
+own computed, already `null` for any `'AMBIGUOUS'` selection nobody has
+explicitly resolved via `chooseSelectionOrigin()` — and does nothing while
+it is `null`. This component invents no automatic choice among multiple
+offered sources; the Wanderer's own explicit origin pick remains the only
+gate that lets material loading proceed. NO MATERIAL SOURCE, NO MATERIAL
+INSPECTION, mirroring 0.9.20's own "no registry, no resolution": when no
+`materialSources` prop is supplied, `materialInspection` stays `null`
+without ever calling `inspectWorldEncounterMaterial()` — every existing
+caller of this component, including every pre-0.9.39 test, is unaffected.
+
+A REQUEST COUNTER GUARDS AGAINST A STALE ASYNC RESPONSE — NOT A CACHE, NOT
+A RETRY. Because loading is asynchronous, a Wanderer could select encounter
+A, then B, before A's own `inspectWorldEncounterMaterial()` call resolves.
+`materialInspectionRequestId` is incremented on every call to
+`refreshMaterialInspection()` (including once more in `beforeUnmount()`,
+invalidating any still-pending request on teardown); a resolved Promise is
+only written to `materialInspection` when it is still the most recent
+request. This never memoizes a result for reuse and never retries a failed
+or stale one — purely a last-request-wins correctness guard.
+
+NO `resolvedLead` IS EVER SUPPLIED FROM THIS COMPONENT. Decentralized lead
+resolution (0.9.28) is not wired into this file, in either direction, by
+this milestone — every call this component makes routes through 0.9.21's
+own origin-routed loading boundary alone (`materialSources.local`/`.peer`),
+never through 0.9.34's own lead-aware one.
+
+`tests/WorldEncounterMaterialInspection.test.js` added, covering: a
+flagship local-origin selection loading and verifying material end to end;
+routing by presence of `resolvedLead` alone (a decentralized source is
+never touched with no lead supplied, and local/peer sources are never
+touched with one); unavailable material verifying as `UNVERIFIABLE`
+without ever consulting the injected verifier; a verifier's own `REJECTED`
+outcome; graceful degradation for a missing/malformed `resolvedSelection`
+and for zero arguments; genuine rejections from either the loading source
+or the verifier propagating unchanged, with verification never attempted
+once loading has thrown; no caching across repeated calls; determinism;
+and an architectural regression pass confirming exactly the three intended
+imports, no `core/` import, no selection-resolution import, and no
+rank/trust/score/preferred vocabulary or signature reads in this file's own
+code. `tests/WorldEncounterMaterialInspectionUI.test.js` added, covering:
+an automatically-resolved selection loading and verifying material through
+the mounted canvas's own wiring; an `AMBIGUOUS` selection never loading
+material until an explicit choice is made, and then loading only through
+the chosen origin's own source; no material inspection at all with no
+`materialSources` supplied; a stale selection clearing `materialInspection`
+synchronously; the request-counter guard discarding a superseded, late-
+arriving response in favor of the current selection's own; unmounting
+invalidating a still-pending request; the result shape carrying exactly
+`{ selection, lead, loading, verification }` with no invented trust field;
+and an architectural regression pass confirming `resolvedLead` is never
+supplied from this component, both new props are declared, and no
+trusted/authentic vocabulary appears in this file's own code.
+`tests/WorldEncounterCanvasUI.test.js`, `tests/WorldEncounterSelectionUI.test.js`,
+and `tests/WorldEncounterSelectionResolutionUI.test.js` updated only to
+account for the new import count and the new
+`refreshMaterialInspection`/`materialInspectionRequestId` call graph
+`selectEncounter()`/`refreshSelectionOutcome()`/`chooseSelectionOrigin()`
+now each participate in — no existing assertion's own meaning changed. Both
+new test files registered in `tests.html`.
+
+Deliberately paused here. Explicitly unscheduled: first, resolving a
+decentralized lead from within this component, or any decentralized-
+discovery UI of any kind — this milestone never supplies `resolvedLead`;
+second, cryptographic signature verification (0.9.40, a likely next
+branch) or content-reference/URI correspondence — different verification
+questions than the identity check 0.9.38 already answers; third, a default
+`materialSources`/`materialVerifier` of any kind — both stay caller-
+injected; fourth, retrying a failed or unavailable load, or caching a
+previous result, beyond the last-request-wins guard described above. Each
+remains an explicit request, not an automatic continuation.
