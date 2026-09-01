@@ -3078,17 +3078,17 @@ export default {
                     </div>
                 </CollapsibleSection>
                 <!-- 0.9.17 — Integrate World Encounters into the Existing
-                     World View. `WorldEncounterCanvas` (0.9.3 through
+                     World View. WorldEncounterCanvas (0.9.3 through
                      0.9.13, unmodified) mounted here exactly the way
-                     `ui/views/LiveWorldView.js` (0.9.15) already mounts
-                     it — handed `worldDiscoverySourceRegistry` straight
-                     through as its own `registry` prop, no `view` prop,
+                     ui/views/LiveWorldView.js (0.9.15) already mounts
+                     it — handed worldDiscoverySourceRegistry straight
+                     through as its own registry prop, no view prop,
                      no count computed by THIS file (the count prop is
-                     left at its default `null` on purpose — see
-                     CollapsibleSection.js's own header for why `null`
+                     left at its own default of null on purpose — see
+                     CollapsibleSection.js's own header for why null
                      means "no natural count"). Every behavior behind
-                     `registry` — subscribing, re-projecting, rendering
-                     markers, owning `selectedEncounter` — stays entirely
+                     registry — subscribing, re-projecting, rendering
+                     markers, owning selectedEncounter — stays entirely
                      WorldEncounterCanvas's own job, exactly as it always
                      has been; this section changes WHERE it is mounted,
                      never what it does. -->
