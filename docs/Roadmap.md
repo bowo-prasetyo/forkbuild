@@ -51907,3 +51907,119 @@ mechanisms. Each remains an explicit request, not an automatic
 continuation — the next seam, when requested, is either publication
 distribution execution/state semantics or the concrete Nostr/Arweave
 production adapters, not another abstraction layered on top of this one.
+
+## 0.9.48 — Publication Distribution Result Boundary
+
+0.9.44 through 0.9.47 built the entire publication-side distribution story
+as three independently callable collaborators — describe, upload,
+publish — deliberately left uncomposed into any automatic sequence.
+0.9.47's own header named exactly why: "a caller still sequences upload →
+describe → publish itself." That leaves a caller who actually performs
+that sequence with three separate return values in hand — a `materialUri`
+string, a `discoveryEnvelope` object, a `publish()` result — and nothing
+in this codebase that names what recording all three together even looks
+like. This milestone is that name: a pure boundary for describing WHAT
+HAPPENED during one publication's distribution, built entirely from facts
+a caller already has, never facts this file goes and gets itself:
+
+```text
+ArweavePublicationMaterialUploader (0.9.45)          NostrPublicationDiscoveryPublisher (0.9.46)
+   upload(material) -> materialUri | null                publish(envelope) -> { published, relayUrl, id } | null
+              │                                                       │
+              ▼   { uri: materialUri, storage }         ▼   { relayUrl, discoveryTag, id }
+              │                                                       │
+              └────────────────────────┬──────────────────────────────┘
+                                        ▼
+                application/PublicationDistributionResult.js
+                   describePublicationDistributionResult({ publication, material, discovery })
+                                        │
+                                        ▼
+                { publication: { kind, objectId },
+                  material: { uri, storage } | null,
+                  discovery: { relayUrl, discoveryTag, id } | null }
+```
+
+`application/PublicationDistributionResult.js` (new) is a single pure
+function, `describePublicationDistributionResult()`, in the same family as
+`core/DecentralizedDiscoveryEnvelope.js` (0.9.30) and `application/
+PublicationDistributionDescriptor.js` (0.9.44): it accepts already-produced
+facts, validates their structural shape, normalizes nothing, performs no
+I/O, performs no retries, performs no persistence, performs no
+verification, and returns a frozen result. It never imports or calls
+`ArweavePublicationMaterialUploader`, `NostrPublicationDiscoveryPublisher`,
+`describePublicationDistribution`, or `composePublicationDistributionRuntime`
+— it has no idea any of them exist, and none of those four files is
+modified to know about this one either.
+
+The milestone's central design decision is that material distribution and
+discovery publication stay two independent, independently-absent facts,
+never collapsed into one `SUCCESS`/`FAILED` boolean. The result carries no
+`status`, `success`, `distributed`, or similar field of any kind. `material`
+and `discovery` are each independently `null` (no fact to report yet — a
+caller who never attempted that half, or whose attempt itself returned
+`null`, are indistinguishable here, deliberately) or a validated, frozen
+fact object; both being `null` is itself a valid, honestly-described
+result. Whether a result counts as "done" because one or both sections are
+present is an explicit, deliberate non-answer — that policy question
+belongs to a later, unscheduled execution/state milestone, never to this
+boundary.
+
+The result also deliberately does not duplicate `PublicationDistributionDescriptor.js`'s
+own `discoveryEnvelope` (`protocol`/`version`/`kind`/`uri`) — that shape
+remains entirely 0.9.44's concern, already published, already gone once
+0.9.46's own `publish()` accepted it. Instead, `discovery` references only
+the PUBLISH outcome: `relayUrl` and `id`, exactly `NostrPublicationDiscoveryPublisher#publish()`'s
+own return shape, plus `discoveryTag`, the one fact that publisher instance
+carries but its own `publish()` result never repeats. This keeps material
+uri, discovery tag, and relay origin three independently supplied
+identities — the same restraint `PublicationDistributionRuntimeComposition.js`'s
+own header (0.9.47) already held one layer earlier — never conflated, and
+never gives this codebase two competing descriptions of the same
+announcement.
+
+`publication` is duck-typed on `id` alone, exactly as `PublicationDistributionDescriptor.js`
+already requires — but unlike that file, this one never re-checks
+`signature`: by the time a distribution result exists to describe, 0.9.44
+already required and checked one to produce the `materialUri`/`discoveryEnvelope`
+this result's own facts trace back to, and re-checking it here would be
+this file re-verifying a decision an earlier boundary already made. A
+material or discovery section that is present but malformed (missing/empty
+`uri`, `relayUrl`, `discoveryTag`, or `id`) invalidates the WHOLE result —
+`describePublicationDistributionResult()` returns `null`, never a partial
+result with the bad section quietly dropped — the identical "malformed
+input degrades to null" discipline this entire family already holds.
+
+`tests/PublicationDistributionResult.test.js` covers: a flagship section
+composing a real `ArweavePublicationMaterialUploader` upload result, a real
+`describePublicationDistribution()` call, and a real `NostrPublicationDiscoveryPublisher`
+publish result into one described result, proving `material.uri`,
+`discovery.discoveryTag`, and `discovery.relayUrl` stay three distinct
+identities and that the result never re-carries the discovery envelope's
+own protocol/version shape; `material` and `discovery` each independently
+optional, including both omitted, material-only, discovery-only, and
+explicit `null` for either; a supplied-but-malformed material or discovery
+section invalidating the whole result even when the other section is
+valid; publication validation — duck-typed, `id` required, no signature
+re-check; determinism across repeated calls with identical input; and an
+architectural regression pass confirming the file imports none of the
+0.9.44/0.9.45/0.9.46/0.9.47 files, performs no I/O, contains no async
+function, and uses no status/success/distributed/trust/retry/cache
+vocabulary anywhere in its own code. No existing file is modified by this
+milestone.
+
+Deliberately paused here, exactly where this milestone's own request drew
+the line. Explicitly unscheduled: any `status`/`success`/`distributed`
+field or policy for computing one from `material`/`discovery`'s own
+presence; actually calling `upload()`, `describePublicationDistribution()`,
+or `publish()` from within this file; persisting a described result
+anywhere; retrying a failed upload or publish, or deciding whether to;
+reconciling or comparing two results for the same publication; verifying
+that a `material.uri` or `discovery.id` genuinely resolves or confirms
+anywhere; deduplication or multi-relay/multi-substrate rollup of more than
+one material or discovery fact; and a runtime composition wiring this file
+into 0.9.47's own `composePublicationDistributionRuntime()` — this file has
+no constructor and nothing stateful to compose. Each remains an explicit
+request, not an automatic continuation — the next seam, when requested, is
+publication distribution execution/state semantics (the policy this
+milestone deliberately declined to write), not another descriptive layer
+on top of this one.
