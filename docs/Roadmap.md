@@ -49934,3 +49934,151 @@ DecentralizedWorldEncounterLeadResolution.js` or into any UI — a caller
 reads this milestone's own result and decides what, if anything, to
 resolve next. Each remains an explicit request, not an automatic
 continuation.
+
+## 0.9.33 — Decentralized World Encounter Material Source
+
+0.9.21 named `materialSources.local` and `materialSources.peer` as two of
+three eventual slots and left the third, `materialSources.decentralized`,
+explicitly unplugged. 0.9.22 and 0.9.23 filled the first two. Everything
+between 0.9.24 and 0.9.32 built the discovery half of the decentralized
+path — query, lead, registry, envelope, and two independent association-
+evidence producers, ending at 0.9.28's own resolution boundary. Nothing
+yet answers the question that boundary's own `RESOLVED` output makes
+askable for the first time: given a resolved lead, how does its `uri`
+actually turn into material? This milestone is that boundary's own next
+step — never a fourth discovery producer, and never a second resolver.
+
+```text
+resolvedSelection = { kind, objectId, origin }              (0.9.19/20)
+        │
+        │      application/DecentralizedWorldEncounterLeadResolution.js
+        │           resolveDecentralizedWorldEncounterLead()   (0.9.28,
+        │           unmodified) — already resolved, elsewhere
+        │                     │
+        ▼                     ▼
+   resolvedSelection     resolvedLead = { origin, discoveryTag, uri, storage? }
+        └──────────┬──────────┘
+                    ▼
+application/DecentralizedWorldEncounterMaterialSource.js   ★ (THIS)
+     DecentralizedWorldEncounterMaterialSource#load(resolvedSelection, resolvedLead)
+                    │
+                    ▼
+        injected retrieveByUri(resolvedLead.uri)
+                    │
+        ┌───────────┼───────────┐
+        ▼           ▼           ▼
+     ar://       ipfs://     https://
+  (no concrete resolver ships this milestone)
+                    │
+                    ▼
+        material, or null — not currently available
+```
+
+`application/DecentralizedWorldEncounterMaterialSource.js` added —
+`DecentralizedWorldEncounterMaterialSource`, a concrete
+`WorldEncounterMaterialSource` (0.9.21, unmodified) constructed around one
+injected, substrate-agnostic `retrieveByUri(uri)` function.
+
+A RETRIEVER, NEVER A SECOND RESOLVER. This file never imports
+`application/DecentralizedWorldEncounterLeadResolution.js`, `application/
+DecentralizedWorldDiscoveryLeadRegistry.js`, or `core/
+DecentralizedWorldEncounterLeadAssociation.js`. It is handed a
+`resolvedLead` a caller already resolved — exactly the restraint 0.9.22
+already holds for an injected `storageProvider` and 0.9.23 already holds
+for an already-connected peer — never reaching into a lead registry to
+"find the matching lead" itself, which would build a second, hidden
+resolution mechanism beside 0.9.28's own. This is the architectural rule
+the task that requested this milestone named explicitly: material loading
+must not rediscover what selection resolution has already resolved.
+
+THE `WorldEncounterMaterialSource` CONTRACT IS EXTENDED, NOT REPLACED. A
+decentralized source cannot answer "what material?" from
+`resolvedSelection` alone the way `LocalWorldEncounterMaterialSource` and
+`PeerWorldEncounterMaterialSource` already can — the retrieval `uri` lives
+on the resolved lead, not on the selection. So `load()` here accepts a
+second, additional argument, `resolvedLead`, that neither existing
+sibling source needs or reads. 0.9.21's own base class and its own
+one-argument `load(resolvedSelection)` contract are untouched.
+
+`resolvedLead` IS OPAQUE BEYOND ITS OWN `uri`. This file never reads
+`resolvedLead.origin`, `.discoveryTag`, or `.storage` — a lead's own
+identity triple was already spent by `resolveDecentralizedWorldEncounterLead()`
+to decide THAT this is the right lead; this file only needs WHERE it
+points, and never re-validates a lead's own shape via `core/
+DecentralizedWorldDiscoveryLead.js`.
+
+RETRIEVAL ITSELF IS SUBSTRATE-AGNOSTIC. The injected `retrieveByUri` is
+the only thing this file ever calls to turn a `uri` into material — it
+never imports `fetch`, `WebSocket`, or anything naming a specific
+decentralized backend. This mirrors the distinction the task that
+requested this milestone drew: discovery adapters answer "where might
+material be," material resolvers answer "give me the bytes at this uri" —
+this file calls the second kind, never the first, and ships with no
+concrete resolver of either kind.
+
+`material` IS NEVER INTERPRETED, VERIFIED, OR EVEN DESERIALIZED — unlike
+`PeerWorldEncounterMaterialSource#load()`, this file does not even attempt
+a `Publication.fromJSON()`/`AvatarProfile.fromJSON()` step; whatever
+`retrieveByUri()` resolves to is returned exactly as supplied. `null`/
+`undefined` on a miss (a malformed `resolvedSelection`, a `resolvedLead`
+with no usable `uri`, or the resolver itself reporting nothing) all
+collapse to the same "not currently available" outcome; a genuine
+rejection from `retrieveByUri()` is never caught here and propagates to
+this class's own caller unchanged.
+
+NOT WIRED INTO `application/WorldEncounterMaterialLoading.js`'s OWN
+`materialSources.decentralized` SLOT — AND THAT FILE IS NOT MODIFIED.
+0.9.21's own `loadWorldEncounterMaterial()` routes purely by a resolved
+selection's own `origin` family (`'local'` vs. `'peer:...'`) and has
+neither a third family nor a `resolvedLead` parameter of its own for a
+decentralized origin. Inventing one now would mean inventing the very
+origin-naming convention 0.9.24's, 0.9.26's, and 0.9.28's own headers
+already, deliberately, left unscheduled — "a lead is deliberately not yet
+a `ContentReference`"; "deciding whether an accepted lead becomes a real
+`WorldDiscoverySource` contribution... unscheduled, later work." Until a
+future milestone decides how a decentralized lead ever becomes a
+selectable World encounter with its own `origin` in the first place, this
+class is called directly by a caller already holding both a
+`resolvedSelection` and a `resolvedLead` — exactly this milestone's own
+two-argument contract, proven directly rather than through the 0.9.21
+boundary.
+
+NO CACHING, NO RETRY, NO FALLBACK BETWEEN URIS, NO RANKING, NO SIGNATURE
+VERIFICATION, NO HASH CHECK, NO TRUST DECISION, NO `PENDING`/`ERROR`/
+`UNVERIFIED` STATUS — every one of these inherited unchanged from every
+file in this whole family, per the task's own explicit request to keep
+this milestone "deliberately boring."
+
+`tests/DecentralizedWorldEncounterMaterialSource.test.js` added and
+registered in `tests.html`, covering: a flagship resolvedSelection +
+resolvedLead pair retrieving material through an injected resolver called
+with exactly the lead's own `uri`; a resolver reporting `null`/`undefined`
+degrading to `null`; a malformed `resolvedSelection` or `resolvedLead`
+degrading to `null` with the resolver never even called; a `resolvedLead`
+carrying only `uri` (no `origin`/`discoveryTag`/`storage`) still
+resolving; a signed-material object forwarded exactly as returned,
+unverified; a resolver rejection propagating rather than being swallowed;
+the constructor requiring a real function; the
+`WorldEncounterMaterialSource` contract; a demonstration that the
+unmodified 0.9.21 boundary never routes here on its own (no decentralized
+origin family exists yet) alongside direct two-argument use working; and
+an architectural regression pass confirming no lead registry, no lead
+resolution, no `ContentReference`, no `fetch`/`WebSocket`, no peer
+transport, and no trust vocabulary anywhere in this file, and that
+`application/WorldEncounterMaterialLoading.js` itself is never modified.
+No existing file is modified.
+
+Deliberately paused here. This milestone builds exactly the retrieval
+boundary the task that requested it asked for — a resolved lead's own
+`uri`, handed to an injected resolver, becoming material — and stops
+there. Explicitly unscheduled: first, any concrete `retrieveByUri`
+implementation for Arweave, IPFS, Nostr, or an HTTP mirror of any kind —
+probably Arweave first, since Nostr and Arweave discovery already exist;
+second, deciding how a decentralized lead ever becomes a selectable World
+encounter with its own `origin`, and wiring this class into `application/
+WorldEncounterMaterialLoading.js`'s own `materialSources.decentralized`
+slot once that origin convention exists; third, any distinction between
+retrieved-but-unverified material and verified material — hash
+verification, publication signature verification, and identity
+correspondence each remain their own, later, unscheduled milestones. Each
+remains an explicit request, not an automatic continuation.
