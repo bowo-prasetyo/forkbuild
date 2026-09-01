@@ -47422,3 +47422,96 @@ movement-triggered encounter updates — become 0.9.19 and beyond. Per the
 same reasoning that has paused this codebase before every milestone in
 this series, each of those remains an explicit request, not an automatic
 continuation.
+
+---
+
+## 0.9.16 — World Encounter Inspection Read Model
+
+0.9.15's own epilogue named the next gap by name: "nothing turns a
+selected encounter into read-only inspection detail." Since 0.9.4, a
+marker click has produced nothing but `selectedEncounter = { kind,
+objectId }` — an identity, and only an identity. This milestone is the
+one, narrow next step: joining that identity back against 0.9.2's own
+`view` to produce a deterministic, structural inspection row, still
+entirely read-only.
+
+```
+selectedEncounter = { kind, objectId }        (0.9.4, unmodified)
+view = { publications: [...], avatars: [...] } (0.9.2/0.9.13, unmodified)
+                     │
+                     ▼
+   application/WorldEncounterInspection.js   ★ (THIS milestone)
+        describeWorldEncounterInspection({ selectedEncounter, view })
+                     │
+                     ▼
+   { kind: 'PUBLICATION', objectId, title, publisherIdentity, isSigned,
+     x, y, z, anchorCount, placementCount }
+                    or
+   { kind: 'AVATAR', objectId, ownerIdentity, displayName, x, y, z }
+                    or
+   null   (nothing found to inspect — malformed input, or the encounter
+           has since left the World)
+```
+
+A JOIN BY IDENTITY, NEVER A NEW PROJECTION. `describeWorldEncounterInspection()`
+performs exactly one lookup — find the row in `view.publications` or
+`view.avatars` (whichever `selectedEncounter.kind` names) whose
+`objectId` matches — and forwards that row's own fields, unchanged, under
+a `kind` tag. It never calls `deriveWorldEncounters()`,
+`describeWorldEncounterReadModel()`, or `describeWorldEncounterView()`
+itself, and never recomputes anything those three already decided. The
+avatar branch stays entirely separate from the publication branch — there
+is no generic "inspection" shape carrying every possible field with some
+left `null` depending on kind.
+
+`isSigned` STAYS EXACTLY WHAT IT ALREADY WAS. `isSigned === true` still
+means only that the underlying publication carries signature material —
+never `isVerified`, never `isTrusted`, never `isAuthentic`. This milestone
+holds open the explicit progression the task that requested it named:
+
+```
+World encounter → select { kind, objectId } → inspect → load material
+                                                        → verify signature
+                                                        → interpret claim
+```
+
+Each of those remains its own, later, separately-earned milestone.
+
+NOT FOUND DEGRADES TO `null`, NEVER A STALE ROW. A `selectedEncounter`
+naming an `objectId` no longer present in `view` — the live-registry churn
+0.9.13 already made possible — returns `null` rather than a previous or
+fabricated inspection. Malformed input of any other kind (a missing
+`selectedEncounter`, a missing `view`, an unrecognized `kind`) degrades
+the same way, never throws.
+
+**Deliberately excluded — not this milestone.**
+- **Loading the selected publication's or avatar's own underlying signed
+  material.** Separate, later, unscheduled work (Encounter Material
+  Resolution).
+- **Verifying a signature, or `isVerified`/`isTrusted`/`isAuthentic`
+  vocabulary of any kind.** See "`isSigned` stays exactly what it already
+  was," above. Separate, later, unscheduled work (a Cryptographic
+  Verification Boundary).
+- **Any UI, panel, or rendering technology choice.** This milestone
+  returns a plain, frozen, inspection-shaped object; wiring it into
+  `WorldEncounterCanvas`'s own selection panel is separate, later,
+  unscheduled work (Encounter Inspection UI).
+- **Distance, nearest-object calculation, proximity, or any spatial
+  relationship between the Wanderer and the selected encounter.**
+- **Persistence or synchronization of any kind.**
+
+`application/WorldEncounterInspection.js` added;
+`tests/WorldEncounterInspection.test.js` added and registered in
+`tests.html`; `docs/Roadmap.md` updated.
+
+---
+
+Deliberately paused here. A selected encounter can now be described as a
+clean, read-only, structural inspection row — but nothing renders it
+(Encounter Inspection UI), nothing loads the underlying signed material
+behind it (Encounter Material Resolution), and nothing verifies a
+signature (a Cryptographic Verification Boundary). `isSigned` still means
+only "carries signature material," exactly as it has since 0.9.0. Per the
+same reasoning that has paused this codebase before every milestone in
+this series, each of those remains an explicit request, not an automatic
+continuation.
