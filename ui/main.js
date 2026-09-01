@@ -106,6 +106,7 @@ import { CreatePublicationSnapshotPossessionPeerExchangeUseCase } from '../appli
 import { ObservePeerSnapshotPossessionUseCase } from '../application/ObservePeerSnapshotPossessionUseCase.js';
 import { SnapshotPeerPossessionCoordinator } from '../application/SnapshotPeerPossessionCoordinator.js';
 import { SnapshotMaterializationSelectionCoordinator } from '../application/SnapshotMaterializationSelectionCoordinator.js';
+import { bootstrapWorldDiscoveryRuntime } from '../application/WorldDiscoveryRuntimeBootstrap.js';
 
 const identityProvider = new CreateIdentityProviderUseCase().execute();
 const identityUseCase = new IdentityUseCase(identityProvider);
@@ -1283,5 +1284,27 @@ app.provide('snapshotPeerMaterializationCoordinator', snapshotPeerMaterializatio
 app.provide('snapshotPeerPossessionCoordinator', snapshotPeerPossessionCoordinator);
 // 0.8.42 — Explicit Snapshot Source Selection & Materialization UX.
 app.provide('snapshotMaterializationSelectionCoordinator', snapshotMaterializationSelectionCoordinator);
+
+// 0.9.14 — World Discovery Runtime Bootstrap. Constructs the ONE
+// WorldDiscoverySourceRegistry this replica uses for World discovery
+// (0.9.9), registers this replica's own local source (currently empty —
+// see application/WorldDiscoveryRuntimeBootstrap.js's own header on why
+// reading real local publications/placements/anchors/snapshotPlacements/
+// avatarProfiles/avatarPresences into that shape is separate, unscheduled
+// work), and rides the SAME `peerMessageBus`/`peerSessionManager.registry`
+// every other peer/PeerMessageBus.js protocol in this file already does
+// so a peer's own World contribution registers when it sends under
+// WORLD_DISCOVERY_PEER_PROTOCOL and unregisters automatically when that
+// peer disconnects. Provided here as `worldDiscoverySourceRegistry` for a
+// future World View page to `inject()` and hand straight to
+// ui/components/WorldEncounterCanvas.js's own `registry` prop — mounting
+// that surface into a route is separate, later, unscheduled work, the
+// same restraint 0.9.3 already held before any UI consumed it.
+const worldDiscoveryRuntime = bootstrapWorldDiscoveryRuntime({
+    connectedPeerRegistry: peerSessionManager.registry,
+    peerMessageBus
+});
+app.provide('worldDiscoverySourceRegistry', worldDiscoveryRuntime.registry);
+
 app.use(router);
 app.mount('#app');

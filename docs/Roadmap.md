@@ -47126,3 +47126,171 @@ presents a verified encounter as such (0.9.18). Per the same reasoning
 that has paused this codebase before every milestone in this series,
 each of those remains an explicit request, not an automatic
 continuation.
+
+---
+
+## 0.9.14 — World Discovery Runtime Bootstrap
+
+0.9.13's own epilogue named the gap in exactly these words: "nothing yet
+constructs a real `WorldDiscoverySourceRegistry` inside the running
+application and populates it from local storage and live peer
+lifecycle." Every piece already existed and had already been proven in
+isolation — 0.9.9's registry, 0.9.11's peer lifecycle bridge, 0.9.12's
+change notification, 0.9.13's own subscribing UI component — but nothing
+had ever actually constructed one `WorldDiscoverySourceRegistry` inside
+`ui/main.js` and wired it to this replica's own real
+`peerMessageBus`/`peerSessionManager.registry`. This milestone is that
+composition, and only that composition: one new file,
+`application/WorldDiscoveryRuntimeBootstrap.js`, and one new block in
+`ui/main.js` that calls it.
+
+```
+Application startup (ui/main.js)
+       │
+       ├── new WorldDiscoverySourceRegistry()                    (0.9.9)
+       │
+       ├── describeLocalWorldDiscoverySource(records)             (0.9.8)
+       │        registry.setSource(...)
+       │
+       └── peerSessionManager.registry / peerMessageBus
+                    │
+                    ├── peerMessageBus.subscribe(WORLD_DISCOVERY_PEER_PROTOCOL, …)
+                    │        └──▶ registerPeerWorldSource()                (0.9.11)
+                    └── connectedPeerRegistry.onChange(…)
+                             └──▶ unregisterPeerWorldSource()              (0.9.11)
+                                          │
+                                          ▼
+                             registry.setSource()/removeSource()          (0.9.9)
+                                          │
+                                          ▼  notification                  (0.9.12)
+                             a mounted WorldEncounterCanvas reacts
+                             automatically (0.9.13, unmodified)
+```
+
+**`bootstrapWorldDiscoveryRuntime(dependencies)` is the one entry point,
+and it is wiring, never a new algorithm.** It takes plain, already-
+existing collaborators (a local records object, and, optionally, this
+app's own `ConnectedPeerRegistry`/`PeerMessageBus` instances) and returns
+`{ registry, dispose }`. It calls exactly four already-existing,
+already-tested functions — `describeLocalWorldDiscoverySource()` (0.9.8),
+`registerPeerWorldSource()`/`unregisterPeerWorldSource()` (0.9.11), and
+`registry.setSource()`/`removeSource()` (0.9.9, called by those two) —
+and adds no sixth field, no new World-projection step, and no direct
+call to `deriveWorldEncounters()`, `assembleWorldDiscoveryInputs()`, or
+`describeWorldFromDiscoverySources()` anywhere in its own source.
+
+**Local registration is a one-time startup call, never a live
+subscription.** `describeLocalWorldDiscoverySource()` is called exactly
+once, with whatever `localWorldDiscoveryRecords` the caller supplies.
+`ui/main.js` currently supplies none — this replica has no single,
+already-existing accessor that assembles real local publications/
+placements/anchors/snapshotPlacements/avatarProfiles/avatarPresences
+into 0.9.5's own six-array shape, and building one is a real, interpretive
+data-access task across several independent stores, not wiring — so the
+local source registered today is genuine but currently empty, exactly
+0.9.8's own `describeLocalWorldDiscoverySource({})` contract. A future,
+unscheduled milestone that reads real local records simply calls
+`registry.setSource()` again; 0.9.9's own replacement rule does the rest.
+
+**Peer registration rides the existing `PeerMessageBus` multiplexer — one
+new topic name, no new wire format.** `WORLD_DISCOVERY_PEER_PROTOCOL`
+(`'forkbuild:world-discovery'`) is a plain namespaced string, registered
+the same way every other protocol in `ui/main.js` already rides the SAME
+`peerMessageBus`/`peerSessionManager.registry`. This file only ever calls
+`peerMessageBus.subscribe()` — it never calls `send()`, and adds no code
+anywhere that broadcasts this replica's own local World data to a
+connected peer. That keeps this milestone's own "no peer protocol
+changes" boundary literal: no new envelope shape, no new handshake data,
+nothing a peer's remote application needs to change. Until a later,
+unscheduled milestone adds a sender, this subscription is a real but
+currently inert receiver.
+
+**Registration fires on message receipt, never on a bare lifecycle
+event.** A peer merely reaching `AUTHENTICATED` registers nothing; only
+an actual message arriving under `WORLD_DISCOVERY_PEER_PROTOCOL` calls
+`registerPeerWorldSource()`. Registering an empty placeholder source on
+every unrelated `connectedPeerRegistry.onChange()` firing would exploit
+0.9.9's own "replacement, not accumulation" rule backwards — silently
+erasing a peer's real contribution with nothing whenever some OTHER
+peer's connection state changed. Tying registration to the message that
+actually carries the data avoids that hazard entirely.
+
+**Unregistration reads an identity snapshot, never the live
+`connectedPeer`.** `application/ConnectedPeer.js`'s own header already
+names the hazard: "closing discards remoteIdentity." By the time
+`connectedPeerRegistry.onChange()` reports a connection gone,
+`ConnectedPeerRegistry` has already disposed that peer and its
+authentication session has already discarded `remoteIdentity` — reading
+it at that point would make `unregisterPeerWorldSource()` a silent no-op,
+leaving a stale `peer:<id>` source behind forever. This file instead
+remembers a plain, frozen `{ remoteIdentity: { identityId } }` snapshot
+the moment a message first proves that connection's identity, and hands
+THAT snapshot, never the live object, to `unregisterPeerWorldSource()`.
+
+**A connection this file never saw a message from is never
+unregistered, because it was never registered** — the identical
+"no-op removal of an absent origin" contract 0.9.9's own `removeSource()`
+already holds, applied here to this file's own identity bookkeeping.
+
+**No deduplication, trust decisions, ranking, persistence, signature
+verification, or spatial/proximity logic of any kind** — inherited
+unchanged from every file this one composes.
+
+Flagship scenario (`tests/WorldDiscoveryRuntimeBootstrap.test.js`): a
+runtime is bootstrapped with a local publication already in hand: the
+World immediately shows it. Peer A connects and, over a simulated
+`WORLD_DISCOVERY_PEER_PROTOCOL` message, contributes a placed publication
+and an avatar presence: both appear automatically, alongside the local
+publication. Peer A sends an updated message: its old contribution is
+replaced, never accumulated. Peer A disconnects: its contribution
+disappears entirely, automatically, through `connectedPeerRegistry`'s own
+membership notification — with the local source present, unaffected,
+throughout. Further sections cover the `remoteIdentity`-discarded-before-
+`onChange` race surviving correctly, a peer that disconnects having never
+sent a message being harmless, malformed/absent local records and
+malformed/absent peer collaborators all degrading silently rather than
+throwing, `dispose()` stopping both subscriptions, a caller-supplied
+registry being reused rather than replaced, and an architectural-
+regression sweep confirming this file never calls the lower World-
+projection functions directly, never calls `peerMessageBus.send()`, and
+introduces no persistence, verification, ranking, or spatial vocabulary.
+
+**Deliberately excluded — not this milestone.**
+- **Broadcasting this replica's own local World data to a connected
+  peer.** This file only ever subscribes; sending is separate, later,
+  unscheduled work.
+- **Reading real local publications/placements/anchors/snapshotPlacements/
+  avatarProfiles/avatarPresences out of this app's several storage
+  layers.** `ui/main.js` supplies no `localWorldDiscoveryRecords` today —
+  see "Local registration," above.
+- **Mounting `ui/components/WorldEncounterCanvas.js` into a route or any
+  other UI surface.** `worldDiscoverySourceRegistry` is provided via
+  `app.provide()` for a future page to `inject()`; 0.9.3's own header
+  already drew this exact line and this milestone does not cross it.
+- **Deduplication, reconciliation, trust decisions, ranking, persistence,
+  signature verification, or proximity/spatial discovery of any kind.**
+  Inherited unchanged from every file this one composes.
+
+`application/WorldDiscoveryRuntimeBootstrap.js` added; `ui/main.js`
+constructs it and provides `worldDiscoverySourceRegistry` app-wide;
+`docs/Roadmap.md` updated; `WorldDiscoveryRuntimeBootstrap.test.js` added
+and registered in `tests.html`.
+
+---
+
+Deliberately paused here. A real `WorldDiscoverySourceRegistry` now lives
+inside the running application, seeded with an honest (if currently
+empty) local source and kept live by this replica's own real peer
+message bus and connected-peer registry — the registry `0.9.9` through
+`0.9.13` built now actually runs, for the first time, inside `ui/main.js`
+rather than only inside a test file. What remains unbuilt is everything
+this chain has named and deferred at every step: nothing yet reads real
+local World records into that local source; nothing yet broadcasts this
+replica's own contribution to a connected peer; nothing yet mounts
+`WorldEncounterCanvas` into an actual route; nothing turns a selected
+encounter into read-only inspection detail (0.9.15); nothing loads the
+selected publication/avatar's own signed material (0.9.16); nothing
+verifies a signature (0.9.17); and nothing presents a verified encounter
+as such (0.9.18). Per the same reasoning that has paused this codebase
+before every milestone in this series, each of those remains an explicit
+request, not an automatic continuation.
