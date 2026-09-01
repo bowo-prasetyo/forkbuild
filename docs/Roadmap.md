@@ -47704,3 +47704,141 @@ Cryptographic Verification Boundary) all remain exactly as unbuilt as they
 were before this milestone. Per the same reasoning that has paused this
 codebase before every milestone in this series, each of those remains an
 explicit request, not an automatic continuation.
+
+---
+
+## 0.9.18 — Render Selected Encounter Inspection
+
+0.9.17's own epilogue named the next gap by name: "rendering 0.9.16's own
+inspection read model against that selection (Encounter Inspection UI)...
+remain[s] exactly as unbuilt as [it was] before this milestone." Every
+piece already exists — `selectedEncounter` (0.9.4), `effectiveView`
+(0.9.2/0.9.13), and `describeWorldEncounterInspection()` itself (0.9.16) —
+but nothing yet calls the third against the first two and shows a Wanderer
+what comes back. This milestone is that call, and the panel that renders
+it.
+
+```
+World
+  │
+  ▼
+encounter marker
+  │
+  ▼
+click
+  │
+  ▼
+selectedEncounter = { kind, objectId }        (0.9.4, unmodified)
+  │
+  ▼         effectiveView = { publications, avatars }  (0.9.2/0.9.13, unmodified)
+  │                    │
+  └────────────────────┤
+                        ▼
+   application/WorldEncounterInspection.js   (0.9.16, unmodified)
+        describeWorldEncounterInspection()
+                        │
+                        ▼
+   selectedEncounterInspection      ★ (THIS milestone — new computed)
+                        │
+                        ▼
+   world-encounter-inspection-panel (THIS milestone — new template block)
+```
+
+`WorldEncounterCanvas.js` GAINS THE INSPECTION, NEVER A NEW COMPONENT.
+0.9.17's own header already named why: this component "owns encounter
+rendering, Wanderer position, selection state, [and] the currently
+effective World View," so it is the natural presentation owner for the
+one interaction 0.9.4 left inert. `selectedEncounterInspection` is a
+plain `computed` — local, derived state, never a new page-local `data()`
+field and never a new `application/` projection — that calls 0.9.16's own
+`describeWorldEncounterInspection()` with this component's own
+already-existing `selectedEncounter` and `effectiveView`, unchanged.
+
+TWO SEPARATE PANELS, NEVER ONE GENERIC RECORD. Exactly like every file in
+this chain before it, a publication inspection and an avatar inspection
+render as two distinct template blocks, branching on
+`selectedEncounterInspection.kind`:
+
+```
+┌──────────────────────────────┐        ┌──────────────────────────────┐
+│ World Encounter               │        │ World Encounter               │
+│                                │        │                                │
+│ Publication                    │        │ Avatar                        │
+│ Title: Example publication    │        │ Name: Bob                     │
+│ Publisher: {"username":"..."} │        │ Owner: bob                    │
+│ Signed: Yes                   │        │ Position: 5, 0, 6              │
+│ Position: 1, 0, 2              │        └──────────────────────────────┘
+│ Anchors: 2                    │
+│ Placements: 1                 │
+└──────────────────────────────┘
+```
+
+A STALE SELECTION RENDERS UNAVAILABLE, NEVER STALE INFORMATION. Because the
+World is live (0.9.13), a selected object can leave it — a peer
+disconnects, a peer replaces its source — between selection and render.
+0.9.16's own join already returns `null` for exactly that case; this
+milestone's only job is to respect that boundary: when
+`selectedEncounter` is set but `selectedEncounterInspection` comes back
+`null`, the panel shows a plain "no longer part of the World" notice,
+never the previous inspection's own fields. `selectedEncounter` itself is
+never cleared — an object that reappears under the same `objectId` resumes
+showing its own inspection automatically, on the next reactive recompute.
+
+`isSigned` STAYS EXACTLY WHAT 0.9.16 ALREADY MADE IT. Rendered as "Signed:
+Yes"/"Signed: No" — literally what the fact already means, nothing more.
+This milestone introduces no `isVerified`/`isTrusted`/`isAuthentic`
+vocabulary of any kind, holding open the same explicit progression 0.9.16
+already named:
+
+```
+select { kind, objectId } → inspect → load material → verify → interpret
+```
+
+`publisherIdentity` RENDERS AS ITS OWN VERBATIM STRUCTURE. Exactly like
+`application/WorldEncounterReadModel.js`'s own header already held,
+picking a single field of that object (a `.username`, an `.id`) to stand
+in for the whole thing would be an interpretive step this milestone
+declines to take — the panel renders its own structure (`JSON.stringify`)
+instead.
+
+**Deliberately excluded — not this milestone.**
+- **A network request, peer request, storage lookup, signature
+  verification, or trust decision of any kind.** This milestone renders
+  exactly the structural fact 0.9.16 already computed.
+- **Loading the selected publication's or avatar's own underlying signed
+  material.** Separate, later, unscheduled work (Encounter Material
+  Resolution).
+- **`isVerified`/`isTrusted`/`isAuthentic` vocabulary, or any styling that
+  implies one.** See "isSigned stays exactly what 0.9.16 already made it,"
+  above.
+- **Navigation, proximity calculation, sorting, or deduplication of any
+  kind.**
+- **Clearing `selectedEncounter` when its own inspection goes stale, or
+  any other change to how `selectedEncounter` is written.** See "a stale
+  selection renders unavailable," above.
+
+`ui/components/WorldEncounterCanvas.js` gains a `describeWorldEncounterInspection()`
+import, a `selectedEncounterInspection` computed, a
+`selectedEncounterInspectionPublisherIdentityLabel` computed, and a
+publication/avatar-branching inspection panel replacing its own 0.9.4
+bare `{ kind, objectId }` panel; `css/main.css`'s own
+`.world-encounter-selection-*` classes are renamed to
+`.world-encounter-inspection-*` and gain a `.world-encounter-inspection-unavailable`
+style; `docs/Roadmap.md` updated; `tests/WorldEncounterInspectionUI.test.js`
+added and registered in `tests.html`; `tests/WorldEncounterCanvasUI.test.js`'s
+own import-count assertions updated for the new `application/` import.
+
+---
+
+Deliberately paused here. A Wanderer can now select an encounter and
+actually see its own structural inspection — title, publisher, signed
+status, position, anchor/placement counts for a publication; name, owner,
+position for an avatar — with a stale selection gracefully showing
+nothing rather than something wrong. What remains unbuilt is exactly what
+0.9.16 already named and this milestone did not touch: nothing yet loads
+the selected publication's or avatar's own underlying signed material
+(Encounter Material Resolution), and nothing verifies a signature (a
+Cryptographic Verification Boundary). `isSigned` still means only "carries
+signature material." Per the same reasoning that has paused this codebase
+before every milestone in this series, each of those remains an explicit
+request, not an automatic continuation.

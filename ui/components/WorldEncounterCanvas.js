@@ -1,6 +1,7 @@
 import WorldEncounterMarker from './WorldEncounterMarker.js';
 import WandererMarker from './WandererMarker.js';
 import { describeWorldFromDiscoveryRegistry } from '../../application/WorldDiscoveryRegistryProjection.js';
+import { describeWorldEncounterInspection } from '../../application/WorldEncounterInspection.js';
 
 // 0.9.3 — World View UI / Wanderer Presence.
 //
@@ -264,6 +265,95 @@ import { describeWorldFromDiscoveryRegistry } from '../../application/WorldDisco
 //   spatial/proximity computation.** Unchanged from every earlier
 //   milestone in this file — the Wanderer stays page-local UI state,
 //   entirely unrelated to World discovery.
+//
+// 0.9.18 — Render Selected Encounter Inspection.
+//
+// 0.9.16 built the join — `describeWorldEncounterInspection({
+// selectedEncounter, view })` — and stopped, its own header naming the
+// gap explicitly: "any UI, panel, or rendering technology choice... is
+// separate, later, unscheduled work (Encounter Inspection UI)." This
+// component already owns both halves that join needs — `selectedEncounter`
+// (0.9.4) and `effectiveView` (0.9.2/0.9.13) — so this milestone is simply
+// calling it and rendering what comes back:
+//
+//   effectiveView  +  selectedEncounter
+//                  │
+//                  ▼
+//   application/WorldEncounterInspection.js   (0.9.16, unmodified)
+//        describeWorldEncounterInspection()
+//                  │
+//                  ▼
+//        selectedEncounterInspection      ★ (THIS milestone)
+//                  │
+//                  ▼
+//        world-encounter-inspection-panel (below, in the template)
+//
+// `selectedEncounterInspection` IS LOCAL, DERIVED, COMPUTED STATE — NEVER A
+// NEW APPLICATION PROJECTION OF ITS OWN. It is a plain `computed` that
+// calls 0.9.16's own function with this component's own already-existing
+// `selectedEncounter` and `effectiveView` and returns whatever comes back,
+// unchanged. No new page-local data field is introduced to hold it, and no
+// new `application/` module is added — the read model this milestone
+// renders already existed; only the rendering did not.
+//
+// THE PUBLICATION PANEL AND THE AVATAR PANEL STAY TWO SEPARATE TEMPLATE
+// BLOCKS, NEVER ONE GENERIC RECORD. Exactly like `projectedPublications`/
+// `projectedAvatars` above, and exactly like 0.9.16's own inspection
+// result itself, there is no shared "inspection card" shape rendering
+// every possible field with some left blank depending on `kind` — the
+// template below branches on `selectedEncounterInspection.kind` into two
+// distinct `<dl>` blocks, one per shape 0.9.16 already defined.
+//
+// A STALE SELECTION RENDERS NOTHING STALE — IT RENDERS UNAVAILABLE. The
+// World is live (0.9.13): the object a Wanderer selected can leave the
+// World — a peer disconnects, a peer replaces its source — between
+// selection and render. When that happens, 0.9.16's own join already
+// returns `null` rather than a stale or fabricated row; this component's
+// only job is to respect that boundary, never to paper over it. When
+// `selectedEncounter` is set but `selectedEncounterInspection` comes back
+// `null`, the panel shows a plain "no longer part of the World" notice —
+// never the previous inspection's own fields, never a fabricated
+// placeholder. `selectedEncounter` itself is left exactly as it was: this
+// milestone does not clear it, so a re-appearing object under the same
+// `objectId` resumes showing its own inspection automatically, on the
+// very next reactive recompute — no explicit "retry" or "refresh" action
+// of any kind.
+//
+// `isSigned` IS RENDERED AS "SIGNED: YES/NO" — LITERALLY WHAT IT ALREADY
+// MEANS, NOTHING MORE. See `application/WorldEncounterInspection.js`'s own
+// header: `isSigned` reports only that the underlying publication carries
+// signature material, never whether that signature verifies. This
+// component introduces no `isVerified`/`isTrusted`/`isAuthentic` label,
+// icon, color, or wording of any kind — "Signed: Yes" is read the same way
+// "Signed: No" is, with no implication drawn from either.
+//
+// `publisherIdentity` RENDERS AS ITS OWN STRUCTURE, VERBATIM — NEVER ONE
+// CHERRY-PICKED FIELD. `application/WorldEncounterReadModel.js`'s own
+// header already drew this line: "this file does not collapse
+// publisherIdentity (an object) into a single scalar... picking a single
+// property of that object to stand in for the whole thing would be an
+// interpretive step." This component holds that same line: it renders
+// `publisherIdentity`'s own structure (`JSON.stringify`), never a
+// `.username`/`.id`/`.publisherId` guess at which of its fields matters.
+//
+// DELIBERATELY EXCLUDED — NOT THIS MILESTONE.
+// - **A network request, peer request, storage lookup, signature
+//   verification, or trust decision of any kind.** This milestone renders
+//   exactly the structural fact 0.9.16 already computed — nothing here
+//   fetches, verifies, or judges anything.
+// - **Loading the selected publication's or avatar's own underlying signed
+//   material.** Separate, later, unscheduled work (Encounter Material
+//   Resolution).
+// - **`isVerified`/`isTrusted`/`isAuthentic` vocabulary, or any styling
+//   that implies one.** See "isSigned is rendered... nothing more," above.
+// - **Navigation, proximity, sorting, or deduplication of any kind.**
+//   Unaffected by this milestone — inherited, unchanged, from every
+//   earlier one in this file.
+// - **Clearing `selectedEncounter` when its own inspection goes stale, or
+//   any other change to how `selectedEncounter` is written.** See "a stale
+//   selection renders unavailable," above — `selectEncounter()` stays this
+//   component's only writer of `selectedEncounter`, exactly as 0.9.4 left
+//   it.
 const WORLD_HALF_SPAN = 50;
 const CANVAS_SIZE = 600;
 
@@ -359,14 +449,27 @@ export default {
         isWorldEmpty() {
             return this.publicationRows.length === 0 && this.avatarRows.length === 0;
         },
-        // 'Publication' | 'Avatar' — a display label only, derived from
-        // `selectedEncounter.kind`. Never stored on `selectedEncounter`
-        // itself, and never anything richer than this one word: no
-        // "selected"/"verified"/"trusted"/"nearby" vocabulary enters the
-        // selection state anywhere in this file.
-        selectedEncounterKindLabel() {
-            if (!this.selectedEncounter) return '';
-            return this.selectedEncounter.kind === 'AVATAR' ? 'Avatar' : 'Publication';
+        // 0.9.18 — 0.9.16's own read model, joined against this
+        // component's own already-existing `selectedEncounter`/
+        // `effectiveView`. `null` whenever there is no selection, and
+        // also `null` whenever the selected object has left the World
+        // since it was selected — see this file's own header, "a stale
+        // selection renders unavailable." Local, derived, computed state
+        // only; never a new page-local data field, never a new
+        // `application/` module.
+        selectedEncounterInspection() {
+            return describeWorldEncounterInspection({ selectedEncounter: this.selectedEncounter, view: this.effectiveView });
+        },
+        // 0.9.18 — `selectedEncounterInspection.publisherIdentity`
+        // rendered as its own verbatim structure, never one cherry-picked
+        // field. See this file's own header, "publisherIdentity renders
+        // as its own structure."
+        selectedEncounterInspectionPublisherIdentityLabel() {
+            if (!this.selectedEncounterInspection || this.selectedEncounterInspection.kind !== 'PUBLICATION') {
+                return '';
+            }
+            const publisherIdentity = this.selectedEncounterInspection.publisherIdentity;
+            return publisherIdentity ? JSON.stringify(publisherIdentity) : '';
         }
     },
     methods: {
@@ -449,14 +552,40 @@ export default {
                 <WandererMarker :x="projectedWanderer.x" :y="projectedWanderer.y" />
             </svg>
 
-            <div v-if="selectedEncounter" class="world-encounter-selection-panel">
-                <h4 class="world-encounter-selection-title">Selected encounter</h4>
-                <dl class="world-encounter-selection-detail">
+            <div v-if="selectedEncounter" class="world-encounter-inspection-panel">
+                <h4 class="world-encounter-inspection-title">World Encounter</h4>
+
+                <dl v-if="selectedEncounterInspection && selectedEncounterInspection.kind === 'PUBLICATION'" class="world-encounter-inspection-detail">
                     <dt>Kind</dt>
-                    <dd>{{ selectedEncounterKindLabel }}</dd>
-                    <dt>Object</dt>
-                    <dd>{{ selectedEncounter.objectId }}</dd>
+                    <dd>Publication</dd>
+                    <dt>Title</dt>
+                    <dd>{{ selectedEncounterInspection.title }}</dd>
+                    <dt>Publisher</dt>
+                    <dd>{{ selectedEncounterInspectionPublisherIdentityLabel }}</dd>
+                    <dt>Signed</dt>
+                    <dd>{{ selectedEncounterInspection.isSigned ? 'Yes' : 'No' }}</dd>
+                    <dt>Position</dt>
+                    <dd>{{ selectedEncounterInspection.x }}, {{ selectedEncounterInspection.y }}, {{ selectedEncounterInspection.z }}</dd>
+                    <dt>Anchors</dt>
+                    <dd>{{ selectedEncounterInspection.anchorCount }}</dd>
+                    <dt>Placements</dt>
+                    <dd>{{ selectedEncounterInspection.placementCount }}</dd>
                 </dl>
+
+                <dl v-else-if="selectedEncounterInspection && selectedEncounterInspection.kind === 'AVATAR'" class="world-encounter-inspection-detail">
+                    <dt>Kind</dt>
+                    <dd>Avatar</dd>
+                    <dt>Name</dt>
+                    <dd>{{ selectedEncounterInspection.displayName }}</dd>
+                    <dt>Owner</dt>
+                    <dd>{{ selectedEncounterInspection.ownerIdentity }}</dd>
+                    <dt>Position</dt>
+                    <dd>{{ selectedEncounterInspection.x }}, {{ selectedEncounterInspection.y }}, {{ selectedEncounterInspection.z }}</dd>
+                </dl>
+
+                <p v-else class="world-encounter-inspection-unavailable">
+                    This encounter is no longer part of the World.
+                </p>
             </div>
         </div>
     `
