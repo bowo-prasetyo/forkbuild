@@ -48138,3 +48138,125 @@ progression stays open, one deliberate step further than 0.9.19 left it.
 Per the same reasoning that has paused this codebase before every
 milestone in this series, each of those remains an explicit request, not
 an automatic continuation.
+
+---
+
+## 0.9.21 — World Encounter Material Loading Boundary
+
+0.9.20 finished the selection problem: a Wanderer's click now resolves,
+automatically or through an explicit "Choose Source" pick, all the way
+down to one specific `{ kind, objectId, origin }`. Nothing in this
+codebase has ever asked the next question that resolved identity makes
+askable for the first time: given it, WHAT MATERIAL is the system asking
+to load, and from where? This milestone is that question's contract only
+— deliberately not an implementation that fetches anything.
+
+```
+resolvedEncounterSelection = { kind, objectId, origin }        (0.9.20)
+                       │
+                       ▼
+application/WorldEncounterMaterialLoading.js   ★ (THIS milestone)
+     loadWorldEncounterMaterial()
+                       │
+        origin === 'local'         origin starts with 'peer:'
+                       │                          │
+                       ▼                          ▼
+          materialSources.local          materialSources.peer
+        (a WorldEncounterMaterialSource, injected by the caller —
+         neither implementation exists yet)
+                       │
+                       ▼
+        { status, resolvedSelection, material }
+              ┌────────┴────────┐
+              ▼                 ▼
+        UNAVAILABLE         AVAILABLE
+                       │
+                       ▼
+   future, unscheduled: 0.9.22 (local loading), 0.9.23 (peer loading),
+   0.9.24 (material verification)
+```
+
+ESTABLISHES THE SEAM; PERFORMS NO LOADING OF ITS OWN. The file ships with
+no concrete `WorldEncounterMaterialSource` of any kind, never reads
+`localStorage`, never opens a WebRTC data channel, and never imports
+`StorageProvider` or `PeerMessageBus`. `WorldEncounterMaterialSource` is
+the contract a future local (0.9.22) and peer (0.9.23) loader each
+implement — mirroring `content/ContentStore.js`'s and
+`discovery/ContentResolver.js`'s own "throw if unimplemented" shape one
+layer over for a different subsystem. `load()` on the base class always
+throws, on purpose, so a caller that forgets to inject a real source
+fails loudly rather than silently reporting `UNAVAILABLE` for the wrong
+reason.
+
+ORIGIN DECIDES WHICH SOURCE SLOT, NEVER WHICH SPECIFIC PEER. Per the
+task's own suggested architecture, `materialSources` has exactly two
+slots — `local` and `peer` — decided by 0.9.5's own origin family
+(`origin === 'local'`, reusing `application/
+WorldEncounterIntegration.js`'s own `LOCAL_WORLD_DISCOVERY_ORIGIN` rather
+than retyping it, vs. `origin` starting with `'peer:'`). This file never
+parses a specific peer identity out of `origin` and never keeps a map of
+one source per peer — figuring out which live connection an origin
+actually names is that source's own job, entirely below this boundary.
+
+`resolvedSelection` IS FORWARDED VERBATIM, NEVER MUTATED. The exact
+object reference a caller passes in comes back unchanged on both
+`UNAVAILABLE` and `AVAILABLE` results (`null` only when no well-formed
+selection was supplied at all). This is a deliberate difference from
+0.9.20's own `UNAVAILABLE` (which always carries `resolvedSelection:
+null`, because zero candidates means there is genuinely nothing to name):
+here, a well-formed selection can be perfectly real and still have no
+material currently available for it — collapsing that down to `null`
+would erase the one fact ("origin") the task explicitly asked this file
+to keep meaningful even when nothing loads.
+
+TWO STATUSES, NEVER A THIRD; NO CACHING, RETRY, OR AUTOMATIC FALLBACK
+BETWEEN SLOTS. `UNAVAILABLE`/`AVAILABLE` cover a missing selection, a
+missing source, and a source that itself resolves to nothing — the same
+"nothing means unavailable, never a distinguished special case" posture
+this chain already holds throughout. Every call invokes the matching
+source's own `load()` exactly once, fresh; a peer-origin selection with
+only `materialSources.local` registered never falls back to it. A thrown
+rejection is never swallowed — that policy (retry UI, an error banner,
+a distinct status) is explicitly not decided here, with no real source
+ever throwing for a real reason yet.
+
+`material` IS NEVER INTERPRETED, VERIFIED, OR EVEN INSPECTED — forwarded
+exactly as a source returns it. `ui/components/WorldEncounterCanvas.js`
+is untouched, exactly as 0.9.19 left it alone while naming provenance one
+layer below it.
+
+**Deliberately excluded — not this milestone.**
+- **A `StorageProvider`-backed local material source.** 0.9.22.
+- **A peer-transport-backed material source — `PeerMessageBus`,
+  `PeerConnection`, WebRTC, or WebSocket of any kind.** 0.9.23.
+- **`localStorage` access, or any network request, of any kind.**
+- **Signature verification or any trust decision.**
+- **Caching, retrying, or automatically falling back between
+  `materialSources.local` and `materialSources.peer`.**
+- **Interpreting, parsing, or rendering the `material` a successful
+  result carries.**
+- **Any change to `ui/components/WorldEncounterCanvas.js`, or to the
+  shape of `resolvedEncounterSelection`.**
+- **Mutating `resolvedSelection` in any way.**
+
+`application/WorldEncounterMaterialLoading.js` added —
+`loadWorldEncounterMaterial()`, `WorldEncounterMaterialLoadStatus`,
+`WorldEncounterMaterialSource`. `tests/WorldEncounterMaterialLoading.test.js`
+added and registered in `tests.html`. No existing file is modified.
+
+---
+
+Deliberately paused here. A resolved World encounter selection can now be
+handed to a well-defined loading boundary that answers "is material
+available, and what is it" — without this milestone ever fetching
+anything itself, reading local storage, or speaking to a peer. What
+remains unbuilt is exactly what this milestone's own task described and
+declined to take: no concrete local or peer `WorldEncounterMaterialSource`
+exists yet, nothing verifies what a loaded material actually is, and
+`ui/components/WorldEncounterCanvas.js` still has no way to trigger a
+load at all — the full
+`select → identify source → resolve → load → verify → interpret`
+progression stays open, one deliberate step further than 0.9.20 left it.
+Per the same reasoning that has paused this codebase before every
+milestone in this series, each of those remains an explicit request, not
+an automatic continuation.
