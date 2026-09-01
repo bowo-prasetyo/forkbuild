@@ -49616,3 +49616,160 @@ third, a signed or otherwise authenticated envelope format, should this
 codebase ever need one. Each remains an explicit request, not an
 automatic continuation — the same restraint every milestone in this
 series has held before it.
+
+## 0.9.31 — Nostr Decentralized Discovery Adapter
+
+0.9.30's own header left one of its three unscheduled items explicitly
+open: "any substrate-specific adapter that actually extracts a raw
+payload from a real Nostr event... and hands it to
+`parseDecentralizedDiscoveryEnvelope()`." This milestone is that adapter
+— the first concrete `DecentralizedDiscoveryQueryService` since 0.9.25's
+own Arweave one, and the first real test of whether 0.9.24 through
+0.9.30's own abstractions are genuinely substrate-neutral, since Nostr's
+own tag/filter mechanism is architecturally different from Arweave's
+while still being a natural fit for the same seam.
+
+```text
+Nostr relay
+      │
+      │   REQ { kinds: [...], "#t": [discoveryTag], limit }
+      ▼
+application/NostrDiscoveryQueryService.js   ★ (THIS)
+     .search(discoveryTag)
+      │
+      │   events, each carrying its own `.content`
+      ▼
+core/DecentralizedDiscoveryEnvelope.js   (0.9.30, unmodified)
+     parseDecentralizedDiscoveryEnvelope(event.content)
+      │
+      ▼
+[ { uri: envelope.uri, storage: <scheme of envelope.uri> }, ... ]
+      │
+      ▼
+application/DecentralizedWorldDiscoveryQuery.js   (0.9.25, unmodified)
+     queryDecentralizedWorldDiscovery()
+      │
+      ▼
+DecentralizedWorldDiscoveryLead[]
+```
+
+`application/NostrDiscoveryQueryService.js` added —
+`NostrDiscoveryQueryService`, a `DecentralizedDiscoveryQueryService`
+constructed with `{ relayUrl, tagName, kinds, queryImpl, timeoutMs,
+maxResults }`, exposing `.origin` and `async .search(discoveryTag)`.
+
+THE ENVELOPE LIVES IN `content`, NEVER FOLDED INTO INDIVIDUAL NOSTR TAGS.
+Two shapes were on the table: fold the envelope's own `kind`/`objectId`/
+`uri` into individual Nostr tags matched by the filter, or keep 0.9.30's
+envelope whole, as JSON, in the event's own `content`, with only the
+free-form discovery tag living in a Nostr `t` tag for relays to index.
+This milestone takes the second shape. The `t` tag answers "can I find
+ForkBuild-related material on this relay at all" — a search accelerator,
+proving nothing, exactly 0.9.24's own `discoveryTag` unmodified.
+`content`, once fetched, answers the different question 0.9.30's envelope
+exists to answer: what does the tagged event actually claim? Folding
+envelope fields into individual Nostr tags instead would leak ForkBuild's
+own internal envelope shape into a Nostr-specific indexing mechanism, and
+make a Nostr declaration structurally different from an Arweave one for
+no reason — the whole point of the envelope is that the same JSON shape
+rides unmodified in an Arweave transaction's data, a Nostr event's
+`content`, an AT Protocol record's fields, or a Hive `custom_json`'s body.
+
+`queryImpl` IS REQUIRED, WITH NO AMBIENT DEFAULT — UNLIKE THE ARWEAVE
+ADAPTER'S OWN `fetchImpl`. `ArweaveGraphqlDiscoveryQueryService` falls
+back to `fetch.bind(globalThis)` because HTTP already has a universal
+primitive this runtime provides. Querying a Nostr relay is a stateful
+`REQ`/`EVENT`/`EOSE` exchange over a WebSocket, with no such ambient
+primitive — building one here would mean this file taking on relay-
+client plumbing that belongs to a library, not to this adapter. So
+`queryImpl` — a `(relayUrl, filter) => Promise<events>` collaborator that
+already knows how to run one relay subscription to completion — is a
+required constructor argument; the constructor throws immediately if it
+is missing or not a function, exactly mirroring the Arweave adapter's own
+constructor-time throw when no `fetchImpl` is available.
+
+`storage` IS READ OFF THE ENVELOPE'S OWN `uri` SCHEME, NEVER HARD-CODED —
+THE ONE REAL DIFFERENCE FROM THE ARWEAVE ADAPTER'S CANDIDATES. Arweave's
+adapter can hard-code `storage: 'ar'` because every candidate it reports
+is, by construction, an Arweave transaction. A Nostr event's envelope
+carries no such guarantee — its own `uri` is exactly as substrate-neutral
+as the envelope itself, and 0.9.30's own header already drew the line
+between "where ForkBuild discovered the declaration" (this relay) and
+"where the declared material claims to reside" (whatever `uri` says) —
+those can differ. This adapter reads that difference off the `uri`
+string's own `scheme://` prefix (`ar://…` implies `"ar"`, `ipfs://…`
+implies `"ipfs"`), the same open, free-form inference `core/
+ContentReference.js`'s own header already draws between a uri and the
+backend it names, never a closed list of recognized schemes. A `uri`
+with no recognizable scheme reports `storage: null`, exactly as
+`describeDecentralizedWorldDiscoveryLead()` already treats a missing
+`storage` as optional, never a reason to reject the candidate.
+
+`origin` NAMES THE RELAY, NEVER AN EVENT'S OWN `id`/`pubkey`/`sig`. Two
+instances pointed at two different relays report two different origins
+for the identical `discoveryTag` — the same rule the Arweave adapter's
+own header already holds for a gateway url. This adapter never checks a
+Nostr event's own `sig`, never reads `event.pubkey`, and never imports
+anything that would — `core/DecentralizedDiscoveryEnvelope.js`'s own
+header already drew this line for the envelope itself ("an envelope
+carries no signature field for this file to even look for"); whether a
+Nostr event's own signature should ever gate anything is exactly the
+question 0.9.30 left for a future, unscheduled milestone, not answered
+early here.
+
+NEVER THROWS FROM `search()` — EVERY FAILURE DEGRADES TO `[]`, THE
+IDENTICAL CONTRACT THE ARWEAVE ADAPTER ALREADY HOLDS. A rejecting
+`queryImpl`, a `queryImpl` that never settles (guarded by this class's
+own `timeoutMs`, raced rather than awaited forever), a resolved value
+that is not an array, and an event whose `content` fails
+`parseDecentralizedDiscoveryEnvelope()` all degrade the same way — a
+malformed event is silently skipped, never a reason to fail the whole
+batch.
+
+EXACTLY ONE RELAY PER INSTANCE — NO FAN-OUT, NO RACE, NO AGGREGATION,
+THE SAME RESTRAINT `application/DecentralizedWorldDiscoveryQuery.js`'s
+OWN "exactly one service per call" ALREADY HOLDS ONE LAYER UP. A second
+relay is a second instance of this class; querying several relays (Nostr,
+Arweave, or a mix) and combining what they report is a future,
+unscheduled composition layer, not this milestone.
+
+A LEAD, NEVER ASSOCIATION EVIDENCE. This adapter's own `search()`
+reports only `{ uri, storage }` — never the envelope's own `kind` or
+`objectId`, both read only long enough to confirm the envelope itself
+describes. Once `queryDecentralizedWorldDiscovery()` (0.9.25, unmodified)
+stamps a candidate with this service's own `origin` and the
+`discoveryTag` searched for, the result is exactly a
+`DecentralizedWorldDiscoveryLead` — a rumor about a location, never proof
+that a specific object lives there. Wiring an accepted Nostr envelope
+into `application/DecentralizedWorldEncounterLeadAssociationEvidenceIngress.js`
+as a second evidence producer remains exactly what 0.9.30 already left
+unscheduled.
+
+`tests/NostrDiscoveryQueryService.test.js` added and registered in
+`tests.html`, covering: well-formed events becoming `{ uri, storage }`
+candidates in order; an empty result set; an event whose `content` is not
+a describable envelope being silently skipped alongside well-formed ones;
+a rejecting `queryImpl` never propagating; a non-array `queryImpl`
+result; a `queryImpl` that never settles degrading to `[]` once
+`timeoutMs` elapses rather than hanging forever; the outgoing filter
+naming the configured tag name, the discovery tag, and the configured
+kinds; this class being a real `DecentralizedDiscoveryQueryService` that
+names itself by relay url, never by an event's own id, and two relays
+reporting two different origins; `storage` being read off several
+different `uri` schemes and degrading to `null` for an unrecognized one;
+and a constructor with no `queryImpl` throwing immediately. No existing
+file is modified — this class plugs into `application/
+DecentralizedWorldDiscoveryQuery.js`'s own `queryDecentralizedWorldDiscovery()`
+exactly as already written, the identical seam `ArweaveGraphqlDiscoveryQueryService`
+already plugs into.
+
+Deliberately paused here. This milestone is one substrate adapter, and
+nothing past it. Explicitly unscheduled: first, wiring an accepted Nostr
+envelope into association evidence — 0.9.30's own header already named
+this as needing "an appropriate authenticity/provenance mechanism" first,
+and this milestone does nothing to establish one; second, querying more
+than one relay, or combining Nostr leads with Arweave leads, or any other
+multi-substrate aggregation; third, any other substrate's own adapter (AT
+Protocol, Hive, or otherwise) — each is its own milestone, earned one
+adapter at a time, exactly how 0.9.25 earned Arweave's own. Each remains
+an explicit request, not an automatic continuation.
