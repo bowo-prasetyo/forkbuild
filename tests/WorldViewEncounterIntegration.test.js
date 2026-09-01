@@ -137,6 +137,54 @@ async function run() {
         console.log('✓ Section D: App.js no longer exposes a separate "Live World" top-nav destination');
     }
 
+    // ---------------------------------------------------------------
+    // Section E — regression guard: ui/views/WorldView.js actually
+    // PARSES as valid JavaScript.
+    //
+    // This milestone's first version broke exactly this way: the new
+    // "World Encounters" HTML comment used Markdown-style backticks
+    // around identifiers (e.g. a backtick-quoted `WorldEncounterCanvas`)
+    // INSIDE the template literal that IS the entire Vue template — a
+    // bare backtick there closes that outer template literal early,
+    // leaving the rest of the comment text as bare, invalid JavaScript
+    // right in the middle of the file (`Unexpected identifier
+    // 'WorldEncounterCanvas'`, thrown at runtime in the browser, since
+    // this file is never bundled/transpiled ahead of time). A simple
+    // "count the backticks" heuristic does NOT reliably catch this: a
+    // stray backtick pair inserted mid-template can leave the total
+    // count even while still closing the real template literal early
+    // and reopening a bogus one further down — parity proves nothing.
+    // The only reliable check is asking a real JS parser. `node --check`
+    // itself is NOT reliable here either — it did not catch this file's
+    // actual shipped breakage even once reproduced verbatim, apparently
+    // for the same reason node/main.js has no package.json to declare
+    // "type": "module" from. Actually attempting `import()` (as the
+    // browser itself does) is what surfaces the true SyntaxError, so
+    // that's what this section does — a genuine parse failure is
+    // reported as `SyntaxError`; the ONLY acceptable failure past that
+    // is Node being unable to resolve the `vue`/`vue-router` packages
+    // themselves, which are never installed in this plain-Node test
+    // environment (only the browser test runner's own import map
+    // supplies them) — the same distinction
+    // `tests/LiveWorldView.test.js`'s own header already draws for why
+    // it never imports `ui/views/LiveWorldView.js` directly.
+    // ---------------------------------------------------------------
+    {
+        let importError = null;
+        try {
+            await import(new URL('../ui/views/WorldView.js', import.meta.url).href);
+        } catch (error) {
+            importError = error;
+        }
+        const isExpectedModuleResolutionFailure = importError
+            && importError.name !== 'SyntaxError'
+            && (importError.code === 'ERR_MODULE_NOT_FOUND' || /Cannot find package|Cannot find module/.test(importError.message));
+        assert(importError === null || isExpectedModuleResolutionFailure,
+            `16. ui/views/WorldView.js must parse as valid JavaScript — importing it either succeeds or fails only because 'vue'/'vue-router' aren't installed in this plain-Node environment, never with a SyntaxError; got: ${importError ? `${importError.name}: ${importError.message}` : 'no error'}`);
+
+        console.log('✓ Section E: ui/views/WorldView.js parses as valid JavaScript — no stray backtick (or other syntax break) inside its own template literal');
+    }
+
     console.log('\nAll World View Encounter Integration tests passed.');
 }
 
