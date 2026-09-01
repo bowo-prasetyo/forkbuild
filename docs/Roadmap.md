@@ -49342,3 +49342,133 @@ still with no retrieval, no hash verification, and no trust judgment of
 any kind). Per the same reasoning that has paused this codebase before
 every milestone in this series, each next step remains an explicit
 request, not an automatic continuation.
+
+---
+
+## 0.9.29 — Decentralized Association Evidence Ingress
+
+0.9.28 closed on the first of the two questions it left untouched: "where
+real association evidence would ever come from — a signed publication's
+own material reference, unscheduled." This milestone answers it, and the
+answer turned out to be sitting in this codebase already. `publisher/
+Publication.js` has carried a signed `id` and a `contentReference.uri`
+together since 0.2.14/0.2.16 — exactly "a signed publication envelope
+naming its own material's location," 0.9.28's own header's own phrase for
+the thing that did not exist yet. It just had never been connected to the
+decentralized discovery family 0.9.24 through 0.9.28 built. No new signed
+structure was invented for this milestone; one was found and wired in.
+
+```text
+publisher/Publication.js   (0.2.14/0.2.16, unmodified — read
+     .id                    duck-typed, never imported as a class)
+     .contentReference.uri
+     .signature
+                    │
+                    │   "this signed identity claims THIS object's
+                    │    content can be found at THIS uri"
+                    ▼
+core/DecentralizedPublicationLocationClaim.js   ★ (THIS)
+     describeDecentralizedPublicationLocationClaim()
+                    │                     DecentralizedWorldDiscoveryLeadRegistry
+                    │                          (0.9.26) / already-described
+                    │                          `leads` array
+                    ▼                                     │
+application/DecentralizedWorldEncounterLeadAssociationEvidenceIngress.js   ★ (THIS)
+     deriveDecentralizedWorldEncounterLeadAssociationEvidence()
+     deriveDecentralizedWorldEncounterLeadAssociationEvidenceFromRegistry()
+                    │
+                    ▼
+              associations[]
+                    │
+                    ▼
+application/DecentralizedWorldEncounterLeadResolution.js   (0.9.28, unmodified)
+     resolveDecentralizedWorldEncounterLead()
+```
+
+`core/DecentralizedPublicationLocationClaim.js` added —
+`describeDecentralizedPublicationLocationClaim({ publication })`.
+`application/DecentralizedWorldEncounterLeadAssociationEvidenceIngress.js`
+added —
+`deriveDecentralizedWorldEncounterLeadAssociationEvidence({ publications, leads })`,
+`deriveDecentralizedWorldEncounterLeadAssociationEvidenceFromRegistry({ publications, registry })`.
+
+A CLAIM, NEVER A VERIFICATION — THE SAME RESTRAINT THE TASK THAT REQUESTED
+THIS MILESTONE NAMED EXPLICITLY: "I would not make 0.9.29 verify the
+evidence." `describeDecentralizedPublicationLocationClaim()` reads
+`publication.signature` only to confirm SOME signature is attached — never
+calls `identity/LocalAuthorizationVerifier.js`, never checks a signature's
+bytes, never asks whether the signing identity is who it claims to be.
+"This identity SAID this object lives at this uri" and "this object
+ACTUALLY lives at this uri" stay two different questions; this milestone
+only ever answers the first, exactly as 0.9.28's own association layer
+already refuses to judge how credible an association is.
+
+DUCK-TYPED, NEVER A CLASS IMPORT — `core/` NEVER IMPORTS FROM
+`publisher/`, ANYWHERE, AND THIS MILESTONE DOES NOT BECOME THE FIRST TO.
+`core/DecentralizedPublicationLocationClaim.js` never imports `Publication`
+from `publisher/Publication.js`, continuing the exact boundary
+`core/WorldEncounter.js`'s own `describeEncounterablePublication()`
+already holds for the identical reason. A caller hands it anything shaped
+like a Publication — a hydrated instance, a plain JSON record, a test
+double — and it reads exactly three fields.
+
+ONLY `WorldEncounterKind.PUBLICATION` — AVATAR STAYS UNPRODUCIBLE, ON
+PURPOSE. `core/AvatarProfile.js` carries no `contentReference` and never
+has; nothing in this codebase lets an avatar's own material claim a
+decentralized location the way a `Publication` already can. This
+milestone invents no such structure. Association evidence for an avatar's
+material remains exactly what 0.9.28 already left it: unproducible.
+
+A CLAIM BECOMES EVIDENCE ONLY BY MATCHING A CURRENTLY-KNOWN LEAD'S OWN
+`uri` — EXACT STRING EQUALITY, NOTHING ELSE.
+`application/DecentralizedWorldEncounterLeadAssociationEvidenceIngress.js`
+supplies a matched association's `origin`/`discoveryTag` FROM THE
+MATCHING LEAD, never invents them, and hands every candidate to 0.9.28's
+own `describeDecentralizedWorldEncounterLeadAssociation()` for validation
+— no second validation algorithm. A claim matching no currently-known
+lead contributes nothing; two independent leads sharing a claimed `uri`
+each produce their own association, neither preferred, exactly as 0.9.24's
+own header already refused to treat a shared `uri` as corroboration —
+feeding both into 0.9.28's own resolution now genuinely resolves
+`AMBIGUOUS` for the first time on real (if still narrow) evidence, rather
+than only ever on hand-constructed test data.
+
+NEITHER NEW FILE FETCHES A PUBLICATION, RETRIEVES A `uri`, OR
+CONSTRUCTS A `core/ContentReference.js`. Both are handed already-fetched
+Publications and an already-known lead set; both are synchronous, pure,
+and return `Object.freeze()`'d results. `application/
+DecentralizedWorldEncounterLeadResolution.js` and `application/
+DecentralizedWorldDiscoveryLeadRegistry.js` are unmodified.
+
+`tests/DecentralizedPublicationLocationClaim.test.js` and
+`tests/DecentralizedWorldEncounterLeadAssociationEvidenceIngress.test.js`
+added and registered in `tests.html`, covering: a signed publication's
+own fields describing a well-formed claim; duck-typed plain JSON records
+working identically to hydrated instances; an unsigned publication, or
+one missing a `contentReference`, never producing a claim or evidence;
+a claim matched against a known lead producing real evidence that
+resolves `RESOLVED` end to end through 0.9.28's own unmodified resolution;
+a claim matching no known lead producing nothing; two independent leads
+sharing a claimed `uri` each producing their own association and
+resolving `AMBIGUOUS`; the registry wrapper mirroring the plain-array
+function; malformed input degrading to `null`/an empty array, never
+throwing; and an architectural regression pass confirming neither file
+imports the `Publication` class, `ContentReference`, or `identity/
+LocalAuthorizationVerifier.js`, never produces `AVATAR` evidence, and
+carries no trust/ranking vocabulary. No existing file is modified.
+
+Deliberately paused here. Real association evidence now exists for the
+first time — a signed `Publication`'s own claim, matched against a known
+lead, genuinely resolves through 0.9.28's own unmodified machinery. This
+milestone deliberately narrows rather than broadens: exactly one producer
+(a `Publication`'s own `contentReference.uri`), exactly one consumable
+kind (`PUBLICATION`), no signature verification, and no wiring into
+anything that retrieves or displays material. 0.9.28's own second
+deliberately-untouched question — what a `RESOLVED` result would feed
+into, a `materialSources.decentralized` slot for `application/
+WorldEncounterMaterialLoading.js` — remains exactly that: unscheduled,
+still requiring its own retrieval and hash-verification story before it
+can exist honestly. So does a second evidence producer, an avatar-side
+equivalent, and signature verification itself. Per the same reasoning
+that has paused this codebase before every milestone in this series, each
+next step remains an explicit request, not an automatic continuation.
