@@ -52294,3 +52294,117 @@ lifecycle transitions (`transition(...)` splitting into independent
 material and discovery transitions), where `PENDING`/`CONFIRMED`/
 `WITHDRAWN`/retry/recovery become candidates for deliberate introduction,
 never assumed by this milestone.
+
+## 0.9.51 — Publication Distribution Lifecycle Transition Boundary
+
+0.9.50's own header drew the line this milestone crosses: "A `transition()`
+function, or any mutable state machine. 0.9.50 describes lifecycle facts; a
+later, unscheduled milestone may introduce how lifecycle state changes —
+this file only names what independently exists right now, from one
+`result`, once." This milestone is that later question, kept exactly as
+narrow as 0.9.50's own restraint requires: not "what should the system do
+next?" (execution policy, unscheduled), but "given an existing lifecycle
+description and one explicitly supplied new fact, what is the next
+lifecycle description?"
+
+```text
+application/PublicationDistributionLifecycle.js   (0.9.50, unmodified)
+     { material:  { state: 'PRESENT' | 'ABSENT', uri?, storage? },
+       discovery: { state: 'PRESENT' | 'ABSENT', origin?, discoveryTag?, id? } }
+                 │
+                 ▼
+application/PublicationDistributionLifecycleTransition.js   (new)
+     transitionPublicationDistributionLifecycle(current, transition)
+     transition = { material: { uri, storage? } }
+                 | { discovery: { origin, discoveryTag, id } }
+                 │
+                 ▼
+     { material, discovery }   (same shape as 0.9.50's own output)
+```
+
+`application/PublicationDistributionLifecycleTransition.js` (new) exports
+one pure function, `transitionPublicationDistributionLifecycle(current,
+transition)`. `current` is a lifecycle description in 0.9.50's own shape;
+`transition` names exactly one explicit new fact for exactly one
+dimension — `{ material: { uri, storage? } }` or `{ discovery: { origin,
+discoveryTag, id } }`, never both in the same call and never neither. The
+transitioned dimension becomes a fresh `PRESENT` section built from the
+supplied fact; the other dimension is copied through from `current` exactly
+unchanged — the same frozen object, not a recomputed equivalent. This is
+the one design decision the milestone's own request asked to protect:
+**a transition of one distribution dimension cannot silently mutate the
+other dimension.**
+
+The function reads only the fact a caller already obtained and applies it —
+it never calls `describePublicationDistributionLifecycle()` (0.9.50),
+`describePublicationDistributionResult()` (0.9.48), or
+`executePublicationDistribution()` (0.9.49), and never imports any
+uploader, publisher, or the executor/descriptor/result/runtime-composition
+files at all. Its one deliberate dependency is
+`PublicationDistributionState` (the `ABSENT`/`PRESENT` enum), imported
+directly from the 0.9.50 lifecycle file it operates on — the same "a caller
+depends on this file, this file depends on the previous pure boundary's own
+output shape" dependency direction 0.9.49 already holds toward 0.9.48.
+
+Provenance is preserved, never reconstructed: a material transition never
+infers `storage` from a discovery fact, and a discovery transition never
+infers `origin` from a material fact — material uri, discovery tag, and
+discovery origin remain three independently supplied facts this file never
+derives from one another. Replacement is accepted, never judged: a
+`PRESENT` section can transition to a new `PRESENT` section with different
+facts (a caller re-publishing to a different relay, for instance), and this
+file forms no opinion on whether that replacement is operationally
+legitimate — exactly the "the pure boundary describes the supplied
+operation; policy decides whether the operation should happen" line this
+codebase's registry semantics already draw.
+
+Only `ABSENT` and `PRESENT` remain, and there is deliberately no way to
+transition a `PRESENT` section back to `ABSENT`. `ABSENT` has only ever
+meant "no fact is present in this result" since 0.9.50; a `PRESENT` ->
+`ABSENT` transition would quietly redefine it to mean "withdrawn," the
+exact semantic ambiguity 0.9.50's own restraint was built to avoid. A
+future, unscheduled withdrawal/removal milestone may establish that
+vocabulary properly; this milestone does not anticipate it, exactly as its
+own request specified.
+
+Invalid input degrades to `null`, never throws: a `current` that is not a
+well-formed lifecycle description (structurally re-checked, the same
+minimal-shape discipline every file in this family already holds), a
+`transition` that is not an object, a `transition` naming both dimensions
+or neither, or a named fact failing the minimal shape this file itself
+reads (missing/empty `uri`; a non-string `storage`; missing/empty `origin`,
+`discoveryTag`, or `id`) all degrade the whole call to `null`.
+
+`tests/PublicationDistributionLifecycleTransition.test.js` covers: a
+flagship section running the real 0.9.49 decline scenario through 0.9.50
+and then transitioning its `ABSENT` discovery on an explicitly supplied
+retry fact, confirming material stays the same object reference throughout;
+a material transition and a discovery transition, each confirming the
+untouched dimension is copied through byte-for-byte and by reference; a
+replacement section covering `PRESENT` -> `PRESENT` for each dimension; a
+section transitioning all four 0.9.50 combinations independently in both
+directions; a section confirming malformed, ambiguous (both dimensions or
+neither), or missing transition input degrades to `null`; an immutability
+section confirming neither `current` nor the supplied fact is ever
+mutated; a determinism and freezing section; and an architectural
+regression pass confirming the file imports only the 0.9.50 enum, performs
+no I/O, reads no clock, contains no async function, never writes a literal
+`ABSENT` string of its own, and uses no
+pending/failed/retrying/confirmed/withdrawn/rollback/transaction/history
+vocabulary anywhere in its own code. No existing file is modified by this
+milestone.
+
+Deliberately paused here, exactly where this milestone's own request drew
+the line. Explicitly unscheduled: removal or withdrawal (`PRESENT`
+transitioning back to `ABSENT`); `PENDING`/`FAILED`/`RETRYING`/`CONFIRMED`
+or any other operational-interpretation vocabulary; a single overall
+`status`/`success`/`distributed` field; automatic transitions, or a
+transition sequenced from executing anything itself; persistence of a
+lifecycle anywhere, before or after a transition; timestamps, retry
+scheduling, recovery, or compensation; a transition history, undo, or diff
+against a previous lifecycle; a consistency rule requiring `material` and
+`discovery` to agree; and judging whether a given replacement is
+legitimate. Each remains an explicit request, not an automatic
+continuation — the next seam, when requested, is persistent lifecycle
+state or execution/recovery policy built on top of this pure transition
+boundary, never assumed by this milestone.
