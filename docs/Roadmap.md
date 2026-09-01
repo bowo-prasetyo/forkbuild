@@ -51568,3 +51568,110 @@ IPFS/Bitcoin/Base `contentReference` distribution model — left untouched,
 and not described as wrong, only architecturally separate from the
 canonical discoverable path this milestone begins to define. Each remains
 an explicit request, not an automatic continuation.
+
+## 0.9.45 — Arweave Publication Material Uploader
+
+0.9.44's own `materialUri` parameter was deliberately left as something a
+caller already has — this milestone is where one actually gets produced.
+It is the publishing counterpart of `application/
+ArweaveWorldEncounterMaterialResolver.js` (0.9.35): that file answers
+"give me the bytes at this uri I already have"; this one answers "put
+these bytes somewhere and give me back a uri."
+
+```
+signed Publication's serialized material   (a caller already produced this)
+      │
+      ▼
+application/ArweavePublicationMaterialUploader.js
+   ArweavePublicationMaterialUploader#upload(material)
+      │
+      ├──► injected signer.sign(material) -> { id, transaction }
+      │
+      ▼
+POST https://arweave.net/tx   { body: JSON.stringify(transaction) }
+      │
+      ▼
+ar://<id>, or null — not currently uploadable
+      │
+      ▼
+application/PublicationDistributionDescriptor.js's own materialUri (0.9.44,
+   unmodified)
+```
+
+`application/ArweavePublicationMaterialUploader.js` (new) is the one file
+this milestone adds. `upload(material)` takes exactly one already-
+serialized string — never a `Publication` instance, never something this
+file calls `.toJSON()` on itself; producing that string stays a caller's
+own, prior step, the identical restraint 0.9.44's own descriptor already
+holds one layer over for the `Publication` object itself. Real Arweave
+upload requires two genuinely distinct capabilities — signing a
+transaction and posting it over the wire — so this file takes two separate
+injection points rather than one, each independently fakeable in tests:
+
+- `signer` — `{ sign(material) -> Promise<{ id, transaction }> }`. This
+  class never generates keys, never signs anything, and never knows an
+  Arweave transaction's own wire shape; it treats `transaction` as
+  completely opaque, POSTing it unread, and builds its own returned uri
+  entirely from the `id` the signer already computed — the identical "no
+  wallet management, delegate construct/sign entirely to an injected
+  dependency" restraint `anchoring/BitcoinAnchorPublisher.js` (0.8.9)
+  already holds for Bitcoin, held here for Arweave.
+- `fetchImpl` — the same injection point `application/
+  ArweaveWorldEncounterMaterialResolver.js` and `content/
+  HttpPinningProvider.js` already run their own real-network adapters
+  through.
+
+Two size ceilings are enforced, never conflated: `maxMaterialBytes` bounds
+the outgoing material, rejecting to `null` before the signer or gateway
+are ever consulted; `maxResponseBytes` bounds the gateway's own POST
+response, enforced the identical two-layer way (declared `Content-Length`,
+then actual decoded byte length) 0.9.35's own resolver already enforces it
+for a GET. A genuine `signer.sign()` or `fetch` failure propagates as a
+rejection, never swallowed into `null` — the identical "could not find
+out is not the same fact as not currently available" distinction 0.9.35's
+own resolver already draws for retrieval, held here for upload. A signer
+that resolves but violates its own `{ id, transaction }` contract (a
+missing/malformed `id`, no `transaction` at all) throws rather than
+degrading to `null` — a broken injected dependency is a wiring bug, never
+an ordinary fact about Arweave, the identical distinction
+`BitcoinAnchorPublisher` and `content/IpfsRemotePinningContentStore.js`
+already draw for their own injected dependencies.
+
+`tests/ArweavePublicationMaterialUploader.test.js` covers the flagship
+path (material uploads and resolves to `ar://<id>`, using the signer's own
+deterministically-computed id, never anything read back out of the
+gateway's response body); that the signed `transaction`, never the raw
+material, is what gets POSTed to `<gatewayUrl>/tx`; malformed and
+oversized material degrading to `null` before the signer or gateway are
+ever consulted; a genuine signer failure and a genuine fetch failure both
+propagating as rejections, while a non-2xx gateway response degrades
+cleanly to `null`; a signer violating its own contract throwing rather
+than degrading to `null`; an oversized gateway response rejected by both
+declared and actual size; the injected `fetchImpl` actually being what is
+used, never a real network call; no caching across repeated calls; the
+resulting uri composing directly as `application/
+PublicationDistributionDescriptor.js`'s own `materialUri`, end to end; and
+an architectural regression pass confirming the file never imports
+`Publication`, never serializes one itself, never references key/wallet
+material of any kind, and is never itself imported back into 0.9.35's own
+resolver. No existing file is modified by this milestone.
+
+Deliberately paused here, exactly where this milestone's own request drew
+the line. Explicitly unscheduled: first, a concrete `signer`
+implementation — real Arweave transaction construction, RSA-PSS signing,
+or wallet/JWK handling of any kind; this milestone ships only the
+`signer.sign(material) -> Promise<{ id, transaction }>` contract, the
+identical line `content/HttpPinningProvider.js` already draws one layer
+over for `content/PinningProvider.js`'s own abstract `put()`. Second,
+publishing the described `discoveryEnvelope` to Nostr as an event's own
+`content` — 0.9.46, the publishing counterpart of `application/
+NostrDiscoveryQueryService.js`. Third, a runtime composition wiring this
+uploader and a Nostr publisher together into one usable pipeline — 0.9.47.
+Fourth, verifying that an uploaded transaction later confirms on Arweave —
+a successful `upload()` means only "the gateway accepted this transaction
+for broadcast," the identical "broadcast acceptance is not anchor
+validity" distinction `BitcoinAnchorPublisher`'s own header already draws
+for Bitcoin. Fifth, replacing, deprecating, or migrating the existing
+IPFS/Bitcoin/Base `contentReference` distribution model — left untouched,
+exactly as 0.9.44 already left it. Each remains an explicit request, not
+an automatic continuation.
