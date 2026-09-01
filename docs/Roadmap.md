@@ -49202,3 +49202,143 @@ it retrieve, verify, or interpret a single byte a lead's own `uri` points
 at. Per the same reasoning that has paused this codebase before every
 milestone in this series, each next step remains an explicit request, not
 an automatic continuation.
+
+---
+
+## 0.9.28 — Decentralized Lead → Encounter Resolution Boundary
+
+0.9.27 closed on the exact gap this milestone fills: "the far more
+interesting question already named and deliberately deferred at 0.9.26's
+own close — how a decentralized lead becomes associated with a selected
+World encounter without prematurely treating it as verified material."
+Two identities have existed independently since 0.9.19 and 0.9.24 — a
+World encounter's own `{ kind, objectId, origin }` and a decentralized
+lead's own `{ origin, discoveryTag, uri, storage? }` — with deliberately
+no guaranteed relationship between them. A lead saying `ar://ABC123`
+never proves it contains a particular publication; a discovery tag
+answers "might this be ForkBuild-related," never "which object." This
+milestone builds the explicit seam that relates the two, and refuses to
+build anything that would let a discovery tag or a uri stand in for real
+evidence.
+
+```text
+selected World encounter
+     requestedMaterial = { kind, objectId }
+                    │
+                    │        DecentralizedWorldDiscoveryLeadRegistry
+                    │             (0.9.26) / already-described
+                    │             `leads` array
+                    │                       │
+                    │        caller-supplied `associations` array —
+                    │             explicit evidence connecting one
+                    │             lead's own identity triple to one
+                    │             material's own kind/objectId
+                    ▼                       ▼
+core/DecentralizedWorldEncounterLeadAssociation.js   ★ (THIS)
+     describeDecentralizedWorldEncounterLeadAssociation()
+     decentralizedWorldEncounterLeadAssociationMatchesLead()
+                    │
+                    ▼
+application/DecentralizedWorldEncounterLeadResolution.js   ★ (THIS)
+     resolveDecentralizedWorldEncounterLead()
+     resolveDecentralizedWorldEncounterLeadFromRegistry()
+                    │
+                    ▼
+     { status, candidates, resolvedLead }
+                    │
+           ┌────────┼────────┐
+           ▼        ▼        ▼
+     UNAVAILABLE  RESOLVED  AMBIGUOUS
+```
+
+`core/DecentralizedWorldEncounterLeadAssociation.js` added —
+`describeDecentralizedWorldEncounterLeadAssociation({ origin, discoveryTag,
+uri, kind, objectId })` and `decentralizedWorldEncounterLeadAssociationMatchesLead(association, lead)`.
+`application/DecentralizedWorldEncounterLeadResolution.js` added —
+`DecentralizedWorldEncounterLeadResolutionStatus`,
+`resolveDecentralizedWorldEncounterLead({ requestedMaterial, leads, associations })`,
+`resolveDecentralizedWorldEncounterLeadFromRegistry({ requestedMaterial, registry, associations })`.
+
+AN ASSOCIATION IS THE ONLY THING THAT CONNECTS A LEAD TO A MATERIAL — NEVER
+A LEAD'S OWN `discoveryTag` OR `uri`. This is the one rule the whole
+milestone exists to hold, and the task that requested it said so
+explicitly: "do not invent an association rule merely because we have a
+discovery tag and a URI." Neither new file ever reads a lead's own
+`discoveryTag` or `uri` to guess whether it names `requestedMaterial` — a
+candidate association is validated on its own five fields
+(`origin`/`discoveryTag`/`uri` naming a lead's own identity triple,
+`kind`/`objectId` naming a material's own identity), then checked
+structurally against `leads` via
+`decentralizedWorldEncounterLeadAssociationMatchesLead()`. No producer of
+real association evidence exists yet anywhere in this codebase — that
+requires either a future, unscheduled extension to a signed publication's
+own envelope (naming its own material's location) or some other real
+evidence source that has actually inspected a lead's own bytes. Until one
+exists, every real call to this milestone's own functions, over a real
+lead set and an empty `associations` array, honestly resolves
+`UNAVAILABLE` — the deliberately conservative starting point the task
+asked for, not a gap silently papered over.
+
+THREE STATUSES, NEVER A RANKING BETWEEN THEM. `UNAVAILABLE` means no
+currently-known lead has sufficient evidence connecting it to
+`requestedMaterial` — whether no evidence was ever supplied, or the
+evidence supplied names a lead the registry no longer holds. `RESOLVED`
+means evidence connects exactly one currently-known lead. `AMBIGUOUS`
+means evidence connects more than one — and `resolveDecentralizedWorldEncounterLead()`
+never picks a "best" one among an `AMBIGUOUS` result's own `candidates`:
+no preference for Arweave over IPFS, no "first one," no array-position
+default. Two associations naming the very same lead still resolve as one
+candidate, never two — this milestone counts distinct leads, never
+distinct pieces of evidence, toward `RESOLVED`/`AMBIGUOUS`.
+
+`requestedMaterial` IS `{ kind, objectId }`, DELIBERATELY NOT A FULL
+SELECTION IDENTITY WITH `origin`. 0.9.19's own `origin` names which
+`WorldDiscoverySource` — local, or a specific peer — already contributed
+an encounter; 0.9.21's own `materialSourceFor()` still recognizes only
+those two origin families today. A decentralized lead's own `origin`
+names a discovery SERVICE instead — an entirely different vocabulary this
+milestone does not conflate with the first. A caller resolving a lead for
+an already-selected encounter supplies exactly that encounter's own
+`{ kind, objectId }`, the same shape `ui/components/WorldEncounterCanvas.js`'s
+own `selectedEncounter` has held since 0.9.4.
+
+NEITHER `application/WorldEncounterMaterialLoading.js` NOR
+`application/DecentralizedWorldDiscoveryLeadRegistry.js` IS MODIFIED. The
+loader's own `materialSources` gains no third `decentralized` slot in
+this milestone — this file never imports it, and never imports
+`core/ContentReference.js` or `core/DecentralizedPublication.js` either.
+The registry stays exactly what 0.9.26 already made it: a membership set
+of leads, read here via its own unmodified `listLeads()`.
+
+`tests/DecentralizedWorldEncounterLeadAssociation.test.js` and
+`tests/DecentralizedWorldEncounterLeadResolution.test.js` added and
+registered in `tests.html`, covering: a well-formed association
+describing and matching a lead by its own identity triple; every field
+required, malformed input degrading to `null`/`UNAVAILABLE`, never
+throwing; a shared `discoveryTag` or `uri` alone never counting as a
+match or as resolution evidence; evidence naming a lead the registry no
+longer holds resolving `UNAVAILABLE` rather than a stale candidate; two
+independently-evidenced leads resolving `AMBIGUOUS` with neither
+preferred; duplicate evidence for one lead counting once; the registry
+wrapper mirroring the plain-array function over a live
+`DecentralizedWorldDiscoveryLeadRegistry`; and an architectural regression
+pass confirming neither file references `ContentReference`,
+`DecentralizedPublication`, or `WorldEncounterMaterialLoading`, never
+schedules or polls, never compares a lead's own `discoveryTag`/`uri`
+directly against `requestedMaterial`, and carries no trust/ranking
+vocabulary. No existing file is modified.
+
+Deliberately paused here. The seam this milestone names — which lead, if
+any, the currently-available evidence connects to a selected encounter —
+is now real and testable, but it resolves `UNAVAILABLE` for every real
+lead in this codebase today, on purpose: nothing yet produces the
+association evidence this file requires, and this milestone does not
+invent a shortcut around that absence. Two questions it deliberately
+leaves untouched: where real association evidence would ever come from
+(a signed publication's own material reference, unscheduled), and what a
+`RESOLVED` result would feed into (a `materialSources.decentralized` slot
+for `application/WorldEncounterMaterialLoading.js`, also unscheduled —
+still with no retrieval, no hash verification, and no trust judgment of
+any kind). Per the same reasoning that has paused this codebase before
+every milestone in this series, each next step remains an explicit
+request, not an automatic continuation.
