@@ -48372,3 +48372,140 @@ progression stays open, one deliberate step further than 0.9.21 left it.
 Per the same reasoning that has paused this codebase before every
 milestone in this series, each of those remains an explicit request, not
 an automatic continuation.
+
+---
+
+## 0.9.23 — Peer World Encounter Material Source
+
+0.9.22 plugged a concrete `WorldEncounterMaterialSource` into
+`materialSources.local`; `materialSources.peer` stayed exactly what 0.9.21
+left it — an injection point with nothing real behind it. This milestone
+is that peer half: given a resolved, `peer:<identityId>`-origin selection,
+ask the ALREADY-SELECTED peer for the material `{ kind, objectId }` names,
+over ForkBuild's own already-existing multiplexed peer transport, and
+return whatever comes back — never a rediscovery of that peer's World,
+never a second, competing peer transport, and never a trust decision
+about what arrives.
+
+```
+{ kind, objectId, origin: 'peer:did:key:z...' }
+               │
+               ▼
+application/WorldEncounterMaterialLoading.js   (0.9.21, unmodified)
+     loadWorldEncounterMaterial()
+               │
+               ▼
+application/PeerWorldEncounterMaterialSource.js   ★ (THIS milestone)
+     PeerWorldEncounterMaterialSource#load()
+               │
+               ▼
+peer/PeerMessageBus.js   (0.2.52, unmodified — already-existing
+     .send() / .subscribe() / .attach()   multiplexed, namespaced,
+               │                           AUTHENTICATED-only transport)
+               ▼
+   the ALREADY-CONNECTED peer this origin names
+               │
+               ▼
+   Publication / AvatarProfile   (or null — no answer before timeout)
+```
+
+A RESOLVED SELECTION NAMES A PEER; THIS MILESTONE NEVER RE-DISCOVERS ONE.
+"I explicitly selected object X from peer Y — give me the material for
+X," never "tell me everything you know about your World." `origin`
+already identifies exactly which peer's own World data a Wanderer's click
+resolved to (0.9.19/0.9.20); `PeerWorldEncounterMaterialSource` only ever
+parses that origin down to an `identityId`, looks up the matching,
+already-`ConnectedPeerRegistry`-tracked peer, and asks that ONE peer for
+that ONE object. It never enumerates a peer's own catalog and never
+accepts an answer from anyone but the peer the selection already named —
+a different, even fully authenticated, connected peer answering with a
+matching `objectId` is never accepted as a substitute. That guarantee is
+enforced structurally: a pending request only resolves for a RESPONSE
+whose `connectedPeer.connectionId` matches the peer actually asked.
+
+REUSES `peer/PeerMessageBus.js` — THE EXISTING MULTIPLEXED TRANSPORT —
+RATHER THAN INVENTING A SECOND ONE. The same restraint every
+`*PeerExchange.js` class in this codebase already holds (application/
+PeerContentExchange.js, 0.7.4; application/
+PublicationSnapshotContentPeerExchange.js, 0.8.37): `PeerMessageBus`
+already solved namespaced, AUTHENTICATED-only, malformed/oversized/
+duplicate-safe delivery over an already-established connection. This
+milestone attaches to a caller-supplied bus/registry pair under its own
+`'forkbuild:world-encounter-material'` namespace and never imports
+`peer/PeerConnection.js`, `peer/WebRtcPeerConnection.js`, or any
+`PeerConnectionProvider` — establishing, authenticating, or closing a
+connection stays entirely someone else's job.
+
+THE WIRE PROTOCOL IS ITS OWN SMALL, SELF-CONTAINED MODULE — NEVER INLINE
+IN THE SOURCE ITSELF. `application/PeerWorldEncounterMaterialProtocol.js`
+holds exactly two message kinds, mirroring every sibling `*PeerProtocol.js`
+module's own restraint:
+
+- `REQUEST` — `{ encounterKind, objectId }`, "send me the material for
+  this already-selected object."
+- `RESPONSE` — `{ encounterKind, objectId, material }`, "here is the
+  material I hold for it."
+
+There is no `NOT_FOUND` kind, for the same reason every sibling protocol
+module already gives one: a peer that does not currently hold the
+requested material simply never answers — "the peer doesn't have it" and
+"the peer never answered" are honestly the same observable outcome from
+the requester's side. `material` travels opaque, checked only for being a
+plain, JSON-serializable object under a size ceiling — turning it back
+into a real `Publication`/`AvatarProfile` is the Source's own job, one
+layer up, using exactly the domain objects 0.9.22 already returns.
+
+REQUESTER ONLY — THIS MILESTONE NEVER ANSWERS AN INCOMING REQUEST, ON
+PURPOSE. An incoming `REQUEST` is structurally recognized and silently
+ignored: no local material lookup, no RESPONSE ever sent from here.
+Deciding what a peer is willing to hand another peer — who may ask, what
+may be served, how a peer-facing lookup even happens — is a genuinely
+separate authorization question the task's own framing explicitly held
+back for a later, separate milestone:
+
+- **0.9.23 (this milestone)** — the requester: `PeerWorldEncounterMaterialSource`.
+- **0.9.24 (unscheduled)** — the responder: answers an incoming REQUEST
+  from a local material lookup.
+
+NEVER VERIFIES, NEVER TRUSTS, NEVER CACHES — inherited unchanged from
+0.9.21/0.9.22. A `Publication`'s own `signature` field, if the received
+material carries one, is deserialized and returned exactly as supplied;
+this milestone never reads it, never verifies it, and never decides
+whether the peer that sent it is trustworthy. Every `load()` call sends a
+fresh REQUEST and waits fresh — nothing is memoized, and there is no
+fallback from a peer source back to `materialSources.local` of any kind.
+
+**Deliberately excluded — not this milestone.**
+- **Answering an incoming REQUEST from another peer.** 0.9.24.
+- **Signature verification or any trust decision.** 0.9.24+.
+- **Caching, retrying beyond the one in-flight wait, or falling back to a
+  second peer, or to `materialSources.local`.**
+- **Re-discovering a peer's own World, or asking for anything beyond the
+  one already-selected `{ encounterKind, objectId }` pair.**
+- **Any change to `application/WorldEncounterMaterialLoading.js` (0.9.21)
+  or to `ui/components/WorldEncounterCanvas.js`.** This source is only
+  ever plugged in as `materialSources.peer` by a future, unscheduled
+  composition-root wiring milestone (0.9.25).
+
+`application/PeerWorldEncounterMaterialProtocol.js` added — the REQUEST/
+RESPONSE wire shapes. `application/PeerWorldEncounterMaterialSource.js`
+added — `PeerWorldEncounterMaterialSource`, a concrete
+`WorldEncounterMaterialSource` (0.9.21), requester-only.
+`tests/PeerWorldEncounterMaterialSource.test.js` added and registered in
+`tests.html`, including a flagship test over a real, live, authenticated
+peer connection. No existing file is modified.
+
+---
+
+Deliberately paused here. Both halves of 0.9.21's own seam — local
+(0.9.22) and peer (0.9.23) — now retrieve real material for a resolved
+selection, symmetrically: a caller of `loadWorldEncounterMaterial()`
+remains blissfully unaware of whether material came from local storage or
+another machine. What remains unbuilt is exactly what this milestone's
+own task named and declined to take: no peer ever answers another peer's
+REQUEST yet (0.9.24), nothing verifies what a loaded material actually
+is, neither source is wired into the application's own composition root
+(0.9.25), and `ui/components/WorldEncounterCanvas.js` still has no way to
+trigger a load at all. Per the same reasoning that has paused this
+codebase before every milestone in this series, each of those remains an
+explicit request, not an automatic continuation.
