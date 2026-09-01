@@ -266,8 +266,25 @@ async function run() {
 
     // ---------------------------------------------------------------
     // Section H — architectural boundary: WorldEncounterCanvas.js never
-    // manipulates registry membership, never inspects origin/listSources()
-    // itself, and never calls the lower pipeline stages directly.
+    // manipulates registry membership, never reads a raw source's own
+    // origin or calls listSources() itself, and never calls the lower
+    // pipeline stages directly.
+    //
+    // 0.9.20 note: assertion 23 below no longer bans every `.origin`
+    // occurrence outright. 0.9.19 deliberately built
+    // `application/WorldEncounterSelectionOutcome.js` (and 0.9.19's own
+    // `WorldEncounterSelectionResolution.js` underneath it) as the one
+    // sanctioned seam through which THIS component may learn provenance
+    // — see that file's own header, "the choice belongs at the
+    // presentation/application boundary." 0.9.20 reads `.origin` off the
+    // already-computed `{ kind, objectId, origin }` candidates that seam
+    // returns (`candidate.origin`/`resolvedSelection.origin`/`choice.origin`
+    // below) — never off a raw `WorldDiscoverySource`'s own `origin`
+    // field, which this component still never touches directly. The
+    // narrowed assertion below keeps the original protection (no
+    // `source.origin`, no reading `origin` straight off a
+    // `listSources()` row) while allowing exactly this one, already-
+    // reviewed exception.
     // ---------------------------------------------------------------
     {
         const sourceUrl = new URL('../ui/components/WorldEncounterCanvas.js', import.meta.url);
@@ -277,8 +294,14 @@ async function run() {
         assert(!codeOnly.includes('.setSource('), '19. WorldEncounterCanvas.js never calls registry.setSource() — it never manipulates registry membership');
         assert(!codeOnly.includes('.removeSource('), '20. WorldEncounterCanvas.js never calls registry.removeSource()');
         assert(!codeOnly.includes('.clear('), '21. WorldEncounterCanvas.js never calls registry.clear()');
-        assert(!codeOnly.includes('.listSources('), '22. WorldEncounterCanvas.js never calls registry.listSources() itself — that stays entirely inside describeWorldFromDiscoveryRegistry()');
-        assert(!codeOnly.includes('.origin'), '23. WorldEncounterCanvas.js never reads a source\'s own .origin field — it never inspects peer identity');
+        assert(!codeOnly.includes('.listSources('), '22. WorldEncounterCanvas.js never calls registry.listSources() itself — that stays entirely inside describeWorldFromDiscoveryRegistry()/describeWorldEncounterSelectionOutcomeFromRegistry()');
+        {
+            const originAccessors = Array.from(codeOnly.matchAll(/([A-Za-z_$][\w$]*)\.origin\b/g)).map((match) => match[1]);
+            const allowedOriginAccessors = new Set(['candidate', 'resolvedSelection', 'choice', 'resolvedEncounterSelection']);
+            assert(originAccessors.length > 0, '23a. WorldEncounterCanvas.js reads .origin only via 0.9.20\'s own resolved-selection candidates, not never at all');
+            assert(originAccessors.every((accessor) => allowedOriginAccessors.has(accessor)), `23b. WorldEncounterCanvas.js never reads a raw source's own .origin field — every .origin access is scoped to a 0.9.19/0.9.20 selection candidate (candidate/resolvedSelection/choice), found: ${JSON.stringify(originAccessors)}`);
+            assert(!/\bsource\.origin\b/.test(codeOnly) && !/\brow\.origin\b/.test(codeOnly), '23c. WorldEncounterCanvas.js never reads .origin off a raw source or view row');
+        }
         assert(!codeOnly.includes('deriveWorldEncounters'), '24. WorldEncounterCanvas.js never calls deriveWorldEncounters() directly');
         assert(!codeOnly.includes('assembleWorldDiscoveryInputs'), '25. WorldEncounterCanvas.js never calls assembleWorldDiscoveryInputs() directly');
         assert(!codeOnly.includes('describeWorldFromDiscoverySources'), '26. WorldEncounterCanvas.js never calls describeWorldFromDiscoverySources() directly — only describeWorldFromDiscoveryRegistry()');

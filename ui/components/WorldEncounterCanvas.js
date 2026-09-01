@@ -2,6 +2,7 @@ import WorldEncounterMarker from './WorldEncounterMarker.js';
 import WandererMarker from './WandererMarker.js';
 import { describeWorldFromDiscoveryRegistry } from '../../application/WorldDiscoveryRegistryProjection.js';
 import { describeWorldEncounterInspection } from '../../application/WorldEncounterInspection.js';
+import { describeWorldEncounterSelectionOutcomeFromRegistry, WorldEncounterSelectionOutcomeStatus } from '../../application/WorldEncounterSelectionOutcome.js';
 
 // 0.9.3 — World View UI / Wanderer Presence.
 //
@@ -354,6 +355,127 @@ import { describeWorldEncounterInspection } from '../../application/WorldEncount
 //   selection renders unavailable," above — `selectEncounter()` stays this
 //   component's only writer of `selectedEncounter`, exactly as 0.9.4 left
 //   it.
+//
+// 0.9.20 — World Encounter Selection Resolution.
+//
+// 0.9.19 could already say WHICH sources currently offer a matching
+// encounter; nothing yet turned that list into a specific, resolved
+// `{ kind, objectId, origin }` a future material-loading step could act
+// on. This milestone crosses exactly that boundary, entirely below
+// `selectedEncounter` itself:
+//
+//   selectedEncounter = { kind, objectId }                (0.9.4, unchanged)
+//                  │
+//                  ▼
+//   application/WorldEncounterSelectionOutcome.js   (THIS milestone) ★
+//        describeWorldEncounterSelectionOutcomeFromRegistry()
+//                  │
+//                  ▼
+//        selectionOutcome = { status, candidates, resolvedSelection }
+//                  │
+//        ┌─────────┼──────────────────┐
+//        ▼          ▼                  ▼
+//   UNAVAILABLE  RESOLVED           AMBIGUOUS
+//  (existing    (resolvedEncounter  ("Choose Source" panel, below —
+//   inspection   Selection is set    resolvedEncounterSelection stays
+//   panel's own  automatically,      null until the Wanderer clicks
+//   "no longer   no interaction      one of selectionOutcome's own
+//   part of the  required)           candidates)
+//   World"
+//   notice
+//   already
+//   covers this)
+//
+// `selectedEncounter` STAYS EXACTLY `{ kind, objectId }` — THE ONE THING
+// THIS MILESTONE DOES NOT TOUCH. Per the task's own framing, resolving
+// provenance is an entirely separate, additional fact layered UNDER the
+// existing selection, never a reshaping of it: `selectEncounter()` still
+// stores exactly what a marker's own `select` emit carries, and every
+// 0.9.4/0.9.18 behavior (repeated selection, malformed identity,
+// inspection rendering) is unaffected. `resolvedEncounterSelection` is a
+// new, separate, DERIVED concept — `{ kind, objectId, origin }` — that
+// exists ALONGSIDE `selectedEncounter`, never in place of it.
+//
+// `selectionOutcome` IS DATA, WRITTEN BY `refreshSelectionOutcome()` —
+// NEVER A COMPUTED. Exactly like `worldView` (0.9.13), this cannot be a
+// plain Vue `computed`: it depends on `this.registry`'s own current
+// `listSources()` snapshot, and a bare class instance handed in as a prop
+// gives Vue's reactivity system nothing to track when that snapshot
+// changes later. `refreshSelectionOutcome()` is the one place
+// `selectionOutcome` is ever written, called from the exact two places a
+// resolvable answer can change: `selectEncounter()` (a new selection) and
+// the registry's own change listener (sources coming and going while a
+// selection stays open) — mirroring `refreshWorldViewFromRegistry()`'s own
+// two call sites exactly.
+//
+// NO `registry`, NO RESOLUTION — NEVER A FABRICATED ORIGIN. Resolving
+// provenance requires the very thing that makes provenance nameable at
+// all: per-source data, which this component only ever has access to via
+// a `registry` (see 0.9.19's own header, "attached to the encounter,
+// never to a record" — a bare `view` prop is already the origin-blind,
+// assembled reading and carries no source boundary to resolve against).
+// When no `registry` was supplied, `selectionOutcome` stays `null` and
+// `resolvedEncounterSelection` stays `null` — this component behaves
+// exactly as every earlier milestone already left it, driven purely by
+// `view`.
+//
+// `resolvedSelectionChoice` IS THE WANDERER'S OWN EXPLICIT PICK, WRITTEN
+// ONLY BY `chooseSelectionOrigin()` — NEVER GUESSED, NEVER DEFAULTED.
+// When `selectionOutcome.status` is `'AMBIGUOUS'`, this component does
+// not call `.find()`, does not read `candidates[0]`, and does not prefer
+// `'local'` — see 0.9.19's own header, "every matching candidate, never
+// one picked for the caller," and
+// `application/WorldEncounterSelectionOutcome.js`'s own header, "the
+// choice belongs at the presentation/application boundary." The "Choose
+// Source" panel below renders every one of `selectionOutcome.candidates`
+// as its own button; clicking one calls `chooseSelectionOrigin(candidate)`,
+// which stores that EXACT candidate object, verbatim, as
+// `resolvedSelectionChoice`. `selectEncounter()` resets
+// `resolvedSelectionChoice` to `null` on every new selection, so a choice
+// made for one ambiguous encounter never silently carries over to the
+// next one.
+//
+// `resolvedEncounterSelection` IS THE ONE COMPUTED VALUE A FUTURE,
+// UNSCHEDULED MATERIAL-LOADING STEP WOULD ACTUALLY CONSUME. It is
+// `selectionOutcome.resolvedSelection` when `status` is `'RESOLVED'`
+// (automatic — no interaction required for an already-unambiguous
+// selection), `resolvedSelectionChoice` when `status` is `'AMBIGUOUS'`
+// AND that choice still names one of `selectionOutcome`'s own current
+// candidates (re-checked on every read, never trusted blindly — a chosen
+// origin can itself disappear from a live World between the click and
+// now), and `null` in every other case — no selection, no registry,
+// `'UNAVAILABLE'`, or an `'AMBIGUOUS'` selection nobody has resolved yet.
+// This milestone renders it nowhere beyond the "Source: …" line described
+// below; nothing here loads, fetches, or interprets what it names.
+//
+// UNAVAILABLE RENDERS NOTHING NEW — 0.9.18's OWN NOTICE ALREADY COVERS IT.
+// A `selectionOutcome.status` of `'UNAVAILABLE'` means zero sources
+// currently offer this selection, which is exactly the same condition
+// 0.9.16's own join already reports as a `null`
+// `selectedEncounterInspection` — the existing "This encounter is no
+// longer part of the World" notice already says everything this
+// milestone would otherwise duplicate. The new panel below renders
+// nothing at all in this case.
+//
+// DELIBERATELY EXCLUDED — NOT THIS MILESTONE.
+// - **Loading publication material, requesting anything from a peer,
+//   reading `localStorage`, sending a peer message, verifying a
+//   signature, or determining trust.** This milestone establishes
+//   unambiguous selection only — see
+//   `application/WorldEncounterSelectionOutcome.js`'s own header for the
+//   identical boundary held one layer down.
+// - **Deduplicating encounters, or preferring one source/peer over
+//   another by any rule.** See "resolvedSelectionChoice is the
+//   Wanderer's own explicit pick," above.
+// - **Interpreting the publication a resolved selection names.** A
+//   resolved `{ kind, objectId, origin }` is still just a name.
+// - **Any change to `core/WorldEncounter.js` or the peer transport
+//   layer.** Neither is imported, referenced, or affected by this
+//   milestone.
+// - **Persisting `resolvedSelectionChoice`, `selectionOutcome`, or
+//   anything else this milestone adds, beyond this component's own
+//   mount.** Both live and die with this component instance, exactly
+//   like `selectedEncounter`/`worldView` already do.
 const WORLD_HALF_SPAN = 50;
 const CANVAS_SIZE = 600;
 
@@ -409,7 +531,21 @@ export default {
             // 0.9.13 — the `unsubscribe` function `registry.subscribe()`
             // itself returned, held only so `beforeUnmount()` can call
             // it. `null` whenever this mount never subscribed.
-            unsubscribeWorldRegistry: null
+            unsubscribeWorldRegistry: null,
+            // 0.9.20 — page-local, registry-derived classification of the
+            // CURRENT `selectedEncounter`. `null` until `refreshSelectionOutcome()`
+            // writes it (see this file's own header, "selectionOutcome is
+            // data, written by refreshSelectionOutcome() — never a
+            // computed"); stays `null` for the lifetime of a mount with no
+            // `selectedEncounter` or no `registry`.
+            selectionOutcome: null,
+            // 0.9.20 — the Wanderer's own explicit pick among an
+            // `'AMBIGUOUS'` `selectionOutcome`'s own candidates, written
+            // only by `chooseSelectionOrigin()`. `null` until chosen, and
+            // reset to `null` by `selectEncounter()` on every new
+            // selection — see this file's own header, "resolvedSelectionChoice
+            // is the Wanderer's own explicit pick."
+            resolvedSelectionChoice: null
         };
     },
     computed: {
@@ -470,6 +606,29 @@ export default {
             }
             const publisherIdentity = this.selectedEncounterInspection.publisherIdentity;
             return publisherIdentity ? JSON.stringify(publisherIdentity) : '';
+        },
+        // 0.9.20 — the one resolved `{ kind, objectId, origin }` a future,
+        // unscheduled material-loading step would actually consume. See
+        // this file's own header, "resolvedEncounterSelection is the one
+        // computed value..." A candidate the Wanderer already chose is
+        // re-checked against `selectionOutcome`'s own CURRENT candidates
+        // on every read, never trusted blindly — a chosen origin can
+        // itself disappear from a live World between the click and now.
+        resolvedEncounterSelection() {
+            if (!this.selectionOutcome) {
+                return null;
+            }
+            if (this.selectionOutcome.status === WorldEncounterSelectionOutcomeStatus.RESOLVED) {
+                return this.selectionOutcome.resolvedSelection;
+            }
+            if (this.selectionOutcome.status === WorldEncounterSelectionOutcomeStatus.AMBIGUOUS && this.resolvedSelectionChoice) {
+                const choice = this.resolvedSelectionChoice;
+                const stillOffered = this.selectionOutcome.candidates.some((candidate) => (
+                    candidate.kind === choice.kind && candidate.objectId === choice.objectId && candidate.origin === choice.origin
+                ));
+                return stillOffered ? choice : null;
+            }
+            return null;
         }
     },
     methods: {
@@ -479,6 +638,12 @@ export default {
         // into `view`, no re-derivation of any kind.
         selectEncounter(encounter) {
             this.selectedEncounter = encounter;
+            // 0.9.20 — a fresh selection never carries a stale explicit
+            // choice from whatever was previously selected; see this
+            // file's own header, "resolvedSelectionChoice is the
+            // Wanderer's own explicit pick."
+            this.resolvedSelectionChoice = null;
+            this.refreshSelectionOutcome();
         },
         // 0.9.13 — the only writer of `worldView`, and the only caller
         // of `describeWorldFromDiscoveryRegistry()` in this file. See
@@ -490,6 +655,32 @@ export default {
                 return;
             }
             this.worldView = describeWorldFromDiscoveryRegistry(this.registry);
+        },
+        // 0.9.20 — the only writer of `selectionOutcome`, and the only
+        // caller of `describeWorldEncounterSelectionOutcomeFromRegistry()`
+        // in this file. See this file's own header, "selectionOutcome is
+        // data, written by refreshSelectionOutcome() — never a computed."
+        // `null` whenever there is no current selection or no `registry`
+        // — see "no registry, no resolution," above.
+        refreshSelectionOutcome() {
+            if (!this.selectedEncounter || !this.registry) {
+                this.selectionOutcome = null;
+                return;
+            }
+            this.selectionOutcome = describeWorldEncounterSelectionOutcomeFromRegistry({
+                selectedEncounter: this.selectedEncounter,
+                registry: this.registry
+            });
+        },
+        // 0.9.20 — the only writer of `resolvedSelectionChoice`. Takes
+        // exactly one entry of `selectionOutcome.candidates` — a
+        // `{ kind, objectId, origin }` this component never invented
+        // itself — and stores it verbatim; no lookup, no re-derivation,
+        // no ranking of the choice against any other candidate. See this
+        // file's own header, "resolvedSelectionChoice is the Wanderer's
+        // own explicit pick."
+        chooseSelectionOrigin(candidate) {
+            this.resolvedSelectionChoice = candidate;
         }
     },
     // 0.9.13 — seed, then subscribe; see this file's own header,
@@ -501,8 +692,19 @@ export default {
             return;
         }
         this.refreshWorldViewFromRegistry();
+        this.refreshSelectionOutcome();
         this.unsubscribeWorldRegistry = this.registry.subscribe(() => {
             this.refreshWorldViewFromRegistry();
+            // 0.9.20 — a source appearing or disappearing while a
+            // selection stays open can change its own candidate list
+            // (an ambiguous selection resolving down to one, a resolved
+            // one disappearing entirely, or a new peer joining an
+            // already-ambiguous one) — see this file's own header,
+            // "selectionOutcome is data, written by
+            // refreshSelectionOutcome() — never a computed," for why
+            // this must be an explicit call here, mirroring
+            // refreshWorldViewFromRegistry() immediately above.
+            this.refreshSelectionOutcome();
         });
     },
     // 0.9.13 — unsubscribes, unconditionally and idempotently; see this
@@ -585,6 +787,29 @@ export default {
 
                 <p v-else class="world-encounter-inspection-unavailable">
                     This encounter is no longer part of the World.
+                </p>
+            </div>
+
+            <div v-if="selectedEncounter && selectionOutcome && selectionOutcome.status !== 'UNAVAILABLE'" class="world-encounter-selection-origin-panel">
+                <template v-if="selectionOutcome.status === 'AMBIGUOUS'">
+                    <h4 class="world-encounter-selection-origin-title">Choose Source</h4>
+                    <p v-if="!resolvedEncounterSelection" class="world-encounter-selection-origin-hint">
+                        This encounter is offered by more than one source.
+                    </p>
+                    <ul class="world-encounter-selection-origin-list">
+                        <li v-for="candidate in selectionOutcome.candidates" :key="candidate.origin">
+                            <button
+                                type="button"
+                                class="world-encounter-selection-origin-choice"
+                                :class="{ 'world-encounter-selection-origin-choice-active': resolvedEncounterSelection && resolvedEncounterSelection.origin === candidate.origin }"
+                                @click="chooseSelectionOrigin(candidate)"
+                            >{{ candidate.origin }}</button>
+                        </li>
+                    </ul>
+                </template>
+
+                <p v-else-if="selectionOutcome.status === 'RESOLVED'" class="world-encounter-selection-origin-resolved">
+                    Source: {{ selectionOutcome.resolvedSelection.origin }}
                 </p>
             </div>
         </div>
