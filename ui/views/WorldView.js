@@ -30,6 +30,7 @@ import GeographicPlaceDirectoryPanel from '../components/GeographicPlaceDirector
 import GeographicPlacePanel from '../components/GeographicPlacePanel.js';
 import CollapsibleSection from '../components/CollapsibleSection.js';
 import WorldFocusPanel from '../components/WorldFocusPanel.js';
+import WorldEncounterCanvas from '../components/WorldEncounterCanvas.js';
 import { CameraPerspective } from '../../core/CameraPerspective.js';
 import { geographicPlaceLocationId } from '../../core/GeographicPlaceNavigation.js';
 import { WorldFocusKind } from '../../core/WorldFocusContext.js';
@@ -70,7 +71,7 @@ export default {
         WorldMembersPanel, WorldPresenceIndicator, WorldCollaboratorIndicator,
         WorldWelcomePanel, WorldMapPanel, PlaceNamingPanel,
         GeographicPlaceDirectoryPanel, GeographicPlacePanel, CollapsibleSection,
-        WorldFocusPanel
+        WorldFocusPanel, WorldEncounterCanvas
     },
     setup() {
         const route = useRoute();
@@ -424,6 +425,21 @@ export default {
         // already uses. Never consulted for authorization; see
         // resolveIdentityDisplayName() below.
         const peerRelationshipUseCase = inject('peerRelationshipUseCase');
+        // 0.9.17 — Integrate World Encounters into the Existing World
+        // View. The SAME app-wide `worldDiscoverySourceRegistry`
+        // `ui/main.js` already provides (0.9.14) and
+        // `ui/views/LiveWorldView.js` (0.9.15) already injects, handed
+        // straight through as `WorldEncounterCanvas`'s own `registry`
+        // prop below — never a second registry, never anything this
+        // view derives from it itself. See the "World Encounters"
+        // CollapsibleSection in this file's own template, and its own
+        // header comment there, for why this view still owns no
+        // discovery logic of any kind. Named `worldDiscoverySourceRegistry`
+        // to avoid colliding with the `registry` (BrickRegistry) constant
+        // immediately below — two entirely unrelated concepts that would
+        // otherwise share a name only because of where in this file they
+        // happen to appear.
+        const worldDiscoverySourceRegistry = inject('worldDiscoverySourceRegistry', null);
         const registry = new CreateBrickRegistryUseCase().execute();
         const worldViewFactory = new CreateWorldViewUseCase().execute(identityUseCase.provider, {
             peerMessageBus,
@@ -1696,10 +1712,19 @@ export default {
         const NEARBY_PLACES_SECTION = 'explore:nearby-places';
         const NEARBY_LANDMARKS_SECTION = 'explore:nearby-landmarks';
         const NEARBY_PEOPLE_SECTION = 'explore:nearby-people';
+        // 0.9.17 — a fourth Explore-mode CollapsibleSection, the SAME
+        // "pure module, mirrored into a ref" pattern the three Nearby
+        // sections above already use. Defaults expanded (false), the
+        // same default "Nearby Places" already gets, since surfacing
+        // World Encounters inside `/world` — rather than requiring a
+        // separate `/live-world` destination — is this milestone's own
+        // point.
+        const WORLD_ENCOUNTERS_SECTION = 'explore:world-encounters';
         const nearbySectionsCollapsed = ref({
             places: worldViewNav.isSectionCollapsed(NEARBY_PLACES_SECTION, false),
             landmarks: worldViewNav.isSectionCollapsed(NEARBY_LANDMARKS_SECTION, true),
-            people: worldViewNav.isSectionCollapsed(NEARBY_PEOPLE_SECTION, true)
+            people: worldViewNav.isSectionCollapsed(NEARBY_PEOPLE_SECTION, true),
+            worldEncounters: worldViewNav.isSectionCollapsed(WORLD_ENCOUNTERS_SECTION, false)
         });
 
         // CollapsibleSection already computes the intended NEXT
@@ -2864,6 +2889,8 @@ export default {
             NEARBY_PLACES_SECTION,
             NEARBY_LANDMARKS_SECTION,
             NEARBY_PEOPLE_SECTION,
+            WORLD_ENCOUNTERS_SECTION,
+            worldDiscoverySourceRegistry,
             nearbyLandmarkRows,
             nearbyPeopleRows,
             goToNearbyCollaborator,
@@ -3049,6 +3076,28 @@ export default {
                             @click="goToNearbyCollaborator(person.deviceId)"
                         >Go</button>
                     </div>
+                </CollapsibleSection>
+                <!-- 0.9.17 — Integrate World Encounters into the Existing
+                     World View. `WorldEncounterCanvas` (0.9.3 through
+                     0.9.13, unmodified) mounted here exactly the way
+                     `ui/views/LiveWorldView.js` (0.9.15) already mounts
+                     it — handed `worldDiscoverySourceRegistry` straight
+                     through as its own `registry` prop, no `view` prop,
+                     no count computed by THIS file (the count prop is
+                     left at its default `null` on purpose — see
+                     CollapsibleSection.js's own header for why `null`
+                     means "no natural count"). Every behavior behind
+                     `registry` — subscribing, re-projecting, rendering
+                     markers, owning `selectedEncounter` — stays entirely
+                     WorldEncounterCanvas's own job, exactly as it always
+                     has been; this section changes WHERE it is mounted,
+                     never what it does. -->
+                <CollapsibleSection
+                    title="World Encounters"
+                    :collapsed="nearbySectionsCollapsed.worldEncounters"
+                    @toggle="setNearbySectionCollapsed('worldEncounters', WORLD_ENCOUNTERS_SECTION, $event)"
+                >
+                    <WorldEncounterCanvas :registry="worldDiscoverySourceRegistry" />
                 </CollapsibleSection>
             </div>
                 <!-- 0.2.99 — World Collaboration UX. Deliberately
