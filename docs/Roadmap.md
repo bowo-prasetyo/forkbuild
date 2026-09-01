@@ -51784,3 +51784,126 @@ anchor validity" distinction 0.9.45's own uploader and `anchoring/
 BitcoinAnchorPublisher.js` already draw for their own substrates. Fifth,
 any signature, trust, or reputation semantics for an envelope, an event, or
 a relay. Each remains an explicit request, not an automatic continuation.
+
+## 0.9.47 — Publication Distribution Runtime Composition
+
+0.9.44 through 0.9.46 built the entire publication-side distribution story
+one seam at a time, each file deliberately refusing to import either of
+the other two — every one of their own headers named this file explicitly
+as the still-missing piece: "a runtime composition wiring this class
+together with the other two — 0.9.47, unscheduled." This milestone is that
+composition, and nothing more:
+
+```text
+Signed Publication
+      │
+      ▼
+application/PublicationDistributionRuntimeComposition.js
+   composePublicationDistributionRuntime({
+       arweaveUploaderOptions,
+       nostrPublisherOptions
+   })
+      │
+      ├──► new ArweavePublicationMaterialUploader(arweaveUploaderOptions)   (0.9.45, unmodified)
+      ├──► describePublicationDistribution                                  (0.9.44, unmodified — forwarded, not wrapped)
+      └──► new NostrPublicationDiscoveryPublisher(nostrPublisherOptions)    (0.9.46, unmodified)
+      │
+      ▼
+{ uploader, describeDistribution, publisher }
+```
+
+`application/PublicationDistributionRuntimeComposition.js` (new) is the one
+file this milestone adds, and the one file in this codebase that names all
+three publication-side distribution collaborators together — the seam
+0.9.44's, 0.9.45's, and 0.9.46's own headers each explicitly refused to
+close themselves, exactly as `DecentralizedWorldEncounterMaterialRuntimeComposition.js`
+(0.9.36) already closed the identical seam for the consumption side's own
+resolver/source pair, and `WorldEncounterMaterialVerifierRuntimeComposition.js`
+(0.9.43) already closed it for verification. It performs no upload, no
+envelope construction, and no publish of its own — it has no `upload()`,
+no `describePublicationDistribution()`, and no `publish()` method or
+function defined anywhere in it. Its only job is object construction: build
+a fresh `ArweavePublicationMaterialUploader` and a fresh
+`NostrPublicationDiscoveryPublisher`, and expose
+`PublicationDistributionDescriptor.js`'s own `describePublicationDistribution`
+alongside them, unwrapped — that function is pure and dependency-free, so
+there is nothing for this file to construct around it; every
+`runtime.describeDistribution` obtained from any composition call is the
+exact same function reference, which is not a violation of "every call
+builds independent instances" below, since a pure function with no
+injected state has no instance to keep independent in the first place.
+
+This milestone deliberately does **not** add a `publishPublication()` (or
+similarly named) orchestration entry point that performs serialize → upload
+→ describe → publish automatically. Doing so would immediately raise
+questions this milestone has no answer for: what happens when the upload
+succeeds but the publish fails; whether either step should retry; whether a
+publication is "distributed" after only one substrate accepted it; whether
+an existing `materialUri` should be reused; whether duplicate Nostr events
+should be suppressed; whether publication state should persist. Every one
+of those is a distribution-EXECUTION or distribution-STATE question, not a
+composition question, and every one stays unscheduled here.
+`composePublicationDistributionRuntime()` returns three independently
+callable collaborators; a caller sequences them itself, exactly as
+`tests/PublicationDistributionRuntimeComposition.test.js`'s own flagship
+section does — `upload()`, then `describeDistribution()`, then
+`publish()`, none of which this composition file ever calls on the
+caller's behalf.
+
+`arweaveUploaderOptions` and `nostrPublisherOptions` are forwarded verbatim
+to their own collaborator's constructor, never reinterpreted, never
+partially reconstructed, and never inspected by this file — the identical
+restraint 0.9.36's own `resolverOptions` forwarding already holds. In
+particular, the Nostr discovery tag is never inferred from the Arweave
+material uri, the Publication id, or anything else this file could compute
+— `nostrPublisherOptions.discoveryTag` is forwarded exactly as supplied,
+required, with no default, preserving the distinction this whole family has
+held since 0.9.24: material uri, discovery tag, and relay origin remain
+three independently supplied facts, never collapsed into one inferred from
+another. Composing the runtime performs no I/O of any kind — no Arweave
+gateway is contacted, no Nostr relay connection is opened, nothing is
+signed or generated — because neither composed constructor performs I/O on
+its own and this file adds none on top; a construction failure in either
+collaborator (a missing signer, a missing `discoveryTag`, a missing
+`publishImpl`) propagates immediately, at composition time, never swallowed.
+
+`tests/PublicationDistributionRuntimeComposition.test.js` covers: all three
+collaborators being real, working instances, `describeDistribution` being
+the unmodified 0.9.44 export; two composition calls never sharing an
+uploader or publisher instance; constructor options forwarded verbatim and
+actually taking effect (a custom gateway url, relay url, tag name, event
+kind, and discovery tag each independently proven to reach its own
+collaborator); zero I/O during composition itself, proven against gateway/
+relay/signer stand-ins that throw if ever contacted; construction failures
+for either collaborator propagating rather than being swallowed; a
+flagship section where a caller sequences the three composed collaborators
+by hand into one working distribution — upload, describe, publish — with
+the resulting Nostr event's own `content` round-tripping through 0.9.31's
+own reader to the exact material uri the composed uploader produced; and an
+architectural regression pass confirming the file exports no
+`publishPublication()`-style entry point, never imports the discovery
+envelope module or `WorldEncounterKind` directly, never calls `fetch(...)`
+or references `WebSocket`, never serializes an envelope itself, contains no
+async function of its own, and uses no retry/cache/dedup/compensate/trust
+vocabulary. No existing file — including 0.9.44, 0.9.45, and 0.9.46
+themselves — is modified by this milestone.
+
+This gives the publication side of ForkBuild's decentralized distribution
+story the same architectural symmetry the discovery side already reached
+across 0.9.24 through 0.9.43: a material substrate (Arweave) and a
+discovery substrate (Nostr), each already fully independent, now available
+together through one composition root, without either substrate's own
+semantics bleeding into the other or into this file. Deliberately paused
+here, exactly where this milestone's own request drew the line. Explicitly
+unscheduled: an automatic orchestration workflow of any kind (see "no
+`publishPublication()`," above); retry policy for either collaborator;
+compensating actions when one substrate succeeds and the other fails;
+multi-relay publishing or any relay-selection policy; publication
+distribution state tracking or persistence; deduplication of repeated
+uploads or publishes; publication withdrawal or Nostr event replacement; a
+concrete `signer` or `publishImpl` implementation; and migrating,
+deprecating, or removing the existing IPFS/Bitcoin/Base distribution
+mechanisms. Each remains an explicit request, not an automatic
+continuation — the next seam, when requested, is either publication
+distribution execution/state semantics or the concrete Nostr/Arweave
+production adapters, not another abstraction layered on top of this one.
