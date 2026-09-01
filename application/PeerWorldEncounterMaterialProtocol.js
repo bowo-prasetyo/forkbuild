@@ -38,7 +38,8 @@ import { WorldEncounterKind } from '../core/WorldEncounter.js';
 // request can tell them apart. It is never an authorization input on
 // either side of this protocol — whether a REQUEST is even worth
 // answering is entirely the responding side's own, later, unscheduled
-// job (0.9.24).
+// job (the peer responder, unnumbered — 0.9.24 itself now names
+// Decentralized World Discovery Source Boundary instead).
 //
 // `material` IS CARRIED OPAQUE — NEVER PARSED, VALIDATED AGAINST A DOMAIN
 // SHAPE, OR HASHED HERE. A RESPONSE's own `material` is expected to be

@@ -38,7 +38,9 @@ import { AvatarProfile } from '../core/AvatarProfile.js';
 //              connection already proved) and receives her material over
 //              a real round trip; Alice's own reply is hand-assembled with
 //              this file's own protocol module, standing in for the
-//              still-unscheduled 0.9.24 responder.
+//              still-unscheduled, unnumbered peer responder (0.9.24
+//              itself now names Decentralized World Discovery Source
+//              Boundary instead).
 //
 // See docs/Roadmap.md, "0.9.23 — Peer World Encounter Material Source."
 
@@ -284,7 +286,7 @@ async function run() {
                 toWorldEncounterMaterialRequestMessage(WorldEncounterKind.PUBLICATION, 'pub-1'),
                 { connectedPeer: requester });
             await wait(5);
-            assert(responderBus.sent.length === 0, '19. an incoming REQUEST is never answered — answering is deliberately not this milestone\'s job (0.9.24)');
+            assert(responderBus.sent.length === 0, '19. an incoming REQUEST is never answered — answering is deliberately not this milestone\'s job (the unnumbered peer responder)');
             responderSource.dispose();
         }
 
@@ -346,7 +348,7 @@ async function run() {
     // explicitly selects Alice (the identity his own connection already
     // proved) and receives her material over a genuine round trip; Alice's
     // reply is hand-assembled with this file's own protocol module,
-    // standing in for the still-unscheduled 0.9.24 responder.
+    // standing in for the still-unscheduled, unnumbered peer responder.
     // ---------------------------------------------------------------
     {
         const network = new LocalPeerNetwork();
@@ -368,7 +370,7 @@ async function run() {
 
         // Alice hand-answers REQUESTs using this file's own protocol module
         // directly against her own raw PeerMessageBus — standing in for
-        // the still-unscheduled 0.9.24 responder, never for
+        // the still-unscheduled, unnumbered responder, never for
         // PeerWorldEncounterMaterialSource itself (which never answers a
         // REQUEST — see Section B, "requester-only").
         const alicePublication = new Publication({ id: 'pub-alice-1', documentId: 'doc-alice-1', title: 'From Alice, For Real', author: 'alice' });

@@ -113,7 +113,9 @@ import { AvatarProfile } from '../core/AvatarProfile.js';
 // - **`origin === 'peer:...'` routing, any peer transport, WebRTC, or
 //   WebSocket of any kind.** Separate, later, unscheduled work (0.9.23).
 // - **Signature verification or any trust decision.** See "No signature
-//   verification," above — separate, later, unscheduled work (0.9.24+).
+//   verification," above — separate, later, unscheduled work (unnumbered
+//   material verification milestone; 0.9.24 itself now names
+//   Decentralized World Discovery Source Boundary instead).
 // - **Caching, retrying, deduplication, or ranking.** See "No caching,"
 //   above.
 // - **Any change to `application/WorldEncounterMaterialLoading.js`
