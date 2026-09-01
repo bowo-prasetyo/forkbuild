@@ -41,6 +41,15 @@ import { WorldDiscoverySourceRegistry } from '../application/WorldDiscoverySourc
 // Section H: architectural regression — no resolvedLead ever supplied from
 //            this component, default props, import boundary, no
 //            trusted/authentic/safe vocabulary.
+//
+// 0.9.40 note: `WorldEncounterCanvas.js` gained `worldDiscoveryLeadRegistry`/
+// `decentralizedLeadAssociations` props and now DOES forward a `resolvedLead`
+// to `inspectWorldEncounterMaterial()` when one resolves — Section H's own
+// assertion 26 is updated accordingly. Every `ctx` in this file leaves
+// `worldDiscoveryLeadRegistry` `null`, so `resolvedLead` stays `null`
+// throughout this file's own sections, exactly as before 0.9.40; that
+// wiring is covered separately, in
+// tests/DecentralizedWorldEncounterLeadSelectionUI.test.js.
 
 function assert(condition, message) {
     if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
@@ -128,6 +137,22 @@ function canvasCtx(overrides = {}) {
         refreshSelectionOutcome: WorldEncounterCanvas.methods.refreshSelectionOutcome,
         chooseSelectionOrigin: WorldEncounterCanvas.methods.chooseSelectionOrigin,
         refreshMaterialInspection: WorldEncounterCanvas.methods.refreshMaterialInspection,
+        // 0.9.40 — `selectEncounter()` now also calls
+        // `this.refreshDecentralizedLeadOutcome()`. `worldDiscoveryLeadRegistry`
+        // stays `null` throughout this file's own tests, so that call always
+        // leaves `decentralizedLeadOutcome` (and therefore `resolvedLead`)
+        // at `null` without ever touching
+        // `describeDecentralizedWorldEncounterLeadSelectionOutcomeFromRegistry()`
+        // — see tests/DecentralizedWorldEncounterLeadSelectionUI.test.js for
+        // that wiring itself. This file's own sections stay focused on
+        // 0.9.39's own material-inspection contract, unaffected by that
+        // addition.
+        worldDiscoveryLeadRegistry: null,
+        decentralizedLeadAssociations: [],
+        decentralizedLeadOutcome: null,
+        resolvedLeadChoice: null,
+        refreshDecentralizedLeadOutcome: WorldEncounterCanvas.methods.refreshDecentralizedLeadOutcome,
+        chooseDecentralizedLead: WorldEncounterCanvas.methods.chooseDecentralizedLead,
         ...overrides
     };
     ctx.effectiveView = WorldEncounterCanvas.computed.effectiveView.call(ctx);
@@ -137,6 +162,12 @@ function canvasCtx(overrides = {}) {
     Object.defineProperty(ctx, 'resolvedEncounterSelection', {
         get() {
             return WorldEncounterCanvas.computed.resolvedEncounterSelection.call(ctx);
+        }
+    });
+    // 0.9.40 — same lazy-getter treatment for `resolvedLead`.
+    Object.defineProperty(ctx, 'resolvedLead', {
+        get() {
+            return WorldEncounterCanvas.computed.resolvedLead.call(ctx);
         }
     });
     return ctx;
@@ -352,7 +383,15 @@ async function run() {
         const codeOnly = source.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
 
         assert(codeOnly.includes('inspectWorldEncounterMaterial({'), '25. WorldEncounterCanvas.js calls inspectWorldEncounterMaterial() directly');
-        assert(!/inspectWorldEncounterMaterial\(\{[^}]*resolvedLead/s.test(codeOnly), '26. this component never supplies a resolvedLead to inspectWorldEncounterMaterial() — see this file\'s own header, "no resolvedLead is ever supplied"');
+        // 26. As of 0.9.40, this component DOES supply a `resolvedLead` to
+        // `inspectWorldEncounterMaterial()` — see
+        // tests/DecentralizedWorldEncounterLeadSelectionUI.test.js for full
+        // coverage of that wiring. This file's own assertion now checks
+        // only that the call still forwards `this.resolvedLead` verbatim
+        // (never a re-derived or hardcoded value), preserving this
+        // section's original intent of pinning down exactly what this
+        // component passes through.
+        assert(/inspectWorldEncounterMaterial\(\{[^}]*resolvedLead:\s*this\.resolvedLead/s.test(codeOnly), '26. this component forwards exactly this.resolvedLead to inspectWorldEncounterMaterial(), never a re-derived value');
         assert(codeOnly.includes('materialSources: {') && codeOnly.includes('type: Object') , '27. materialSources is declared as an Object-typed prop');
         assert(codeOnly.includes('materialVerifier: {'), '28. materialVerifier is declared as its own separate prop');
 

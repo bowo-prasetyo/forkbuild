@@ -4,6 +4,7 @@ import { describeWorldFromDiscoveryRegistry } from '../../application/WorldDisco
 import { describeWorldEncounterInspection } from '../../application/WorldEncounterInspection.js';
 import { describeWorldEncounterSelectionOutcomeFromRegistry, WorldEncounterSelectionOutcomeStatus } from '../../application/WorldEncounterSelectionOutcome.js';
 import { inspectWorldEncounterMaterial } from '../../application/WorldEncounterMaterialInspection.js';
+import { describeDecentralizedWorldEncounterLeadSelectionOutcomeFromRegistry, DecentralizedWorldEncounterLeadSelectionOutcomeStatus } from '../../application/DecentralizedWorldEncounterLeadSelection.js';
 
 // 0.9.3 — World View UI / Wanderer Presence.
 //
@@ -601,6 +602,157 @@ import { inspectWorldEncounterMaterial } from '../../application/WorldEncounterM
 //   adds, beyond this component's own mount.** Lives and dies with this
 //   component instance, exactly like `selectionOutcome`/`worldView`
 //   already do.
+//
+// 0.9.40 — Decentralized Lead Resolution Integration.
+//
+// 0.9.39 already wired resolved selection and verification into this
+// component and stopped there on purpose — its own header named the gap
+// explicitly: "no resolvedLead is ever supplied from this component...
+// decentralized lead resolution (0.9.28) is not wired into this file, in
+// either direction." This milestone is that wiring, entirely through a new,
+// thin application-layer seam — `application/
+// DecentralizedWorldEncounterLeadSelection.js`'s own
+// `describeDecentralizedWorldEncounterLeadSelectionOutcomeFromRegistry()` —
+// which exposes 0.9.28's own already-authoritative resolution machinery
+// (`application/DecentralizedWorldEncounterLeadResolution.js`, unmodified)
+// in the exact `{ status, candidates, resolvedLead }` shape 0.9.20's own
+// `selectionOutcome` already established one layer over, for World
+// Discovery sources.
+//
+//   selectedEncounter = { kind, objectId }                (0.9.4, unchanged)
+//                  │
+//                  ▼
+//   application/DecentralizedWorldEncounterLeadSelection.js   (THIS milestone) ★
+//        describeDecentralizedWorldEncounterLeadSelectionOutcomeFromRegistry()
+//                  │
+//                  ▼
+//        decentralizedLeadOutcome = { status, candidates, resolvedLead }
+//                  │
+//        ┌─────────┼──────────────────┐
+//        ▼          ▼                  ▼
+//   UNAVAILABLE  RESOLVED           AMBIGUOUS
+//  (no panel    (resolvedLead set   ("Choose Location" panel, below —
+//   rendered)    automatically,      resolvedLead stays null until the
+//                no interaction      Wanderer clicks one of
+//                required)           decentralizedLeadOutcome's own
+//                                    candidates)
+//                  │
+//                  ▼
+//        resolvedLead, forwarded alongside resolvedEncounterSelection to
+//        inspectWorldEncounterMaterial()  (0.9.39, unmodified)
+//
+// `decentralizedLeadOutcome` IS COMPUTED FROM `selectedEncounter` ALONE —
+// NEVER FROM `resolvedEncounterSelection`. Per 0.9.28's own header,
+// "requestedMaterial is { kind, objectId } — deliberately not a full
+// { kind, objectId, origin } selection identity" — a decentralized lead's
+// own provenance has never been part of the local/peer origin vocabulary
+// `resolvedEncounterSelection` names. This component's own lead resolution
+// therefore runs off exactly the same `{ kind, objectId }` pair a marker
+// click already produces, entirely independent of whether the World-
+// discovery-source selection itself is resolved, ambiguous, or stale.
+// `resolvedEncounterSelection` still gates whether material EVER loads at
+// all (0.9.39's own "do not load material while the selection is
+// ambiguous" — a resolved lead alone never bypasses that gate, because
+// `inspectWorldEncounterMaterial()` still requires a well-formed
+// `resolvedSelection` regardless of path), but it never gates whether a
+// lead RESOLVES.
+//
+// NO `worldDiscoveryLeadRegistry`, NO LEAD RESOLUTION — MIRRORING 0.9.20's
+// OWN "NO REGISTRY, NO RESOLUTION." When no `worldDiscoveryLeadRegistry`
+// prop was supplied, `decentralizedLeadOutcome` stays `null` and
+// `resolvedLead` stays `null` — every existing caller of this component,
+// including every pre-0.9.40 test, is unaffected;
+// `inspectWorldEncounterMaterial()` is still called (via
+// `resolvedEncounterSelection` alone, exactly as 0.9.39 left it), just
+// never with a `resolvedLead`.
+//
+// `decentralizedLeadAssociations` IS THE CALLER'S OWN EVIDENCE, FORWARDED
+// VERBATIM — NEVER DERIVED BY THIS COMPONENT. See `core/
+// DecentralizedWorldEncounterLeadAssociation.js`'s own header, "the one
+// rule this file exists to hold": a discovery tag or URI is never, by
+// itself, evidence of association. This component computes no evidence of
+// its own — it never reads a lead's own `discoveryTag`/`uri` to guess a
+// match, and never imports `application/
+// DecentralizedWorldEncounterLeadAssociationEvidenceIngress.js` or `core/
+// DecentralizedPublicationLocationClaim.js`. A caller already holding real
+// evidence supplies it via this prop; an empty array (the default) means
+// every lead resolution honestly reports `UNAVAILABLE`, exactly the
+// conservative starting point 0.9.28 itself already documents.
+//
+// `resolvedLead` MIRRORS `resolvedEncounterSelection` EXACTLY, ONE LAYER
+// OVER, FOR LEADS INSTEAD OF SOURCES. Automatic when
+// `decentralizedLeadOutcome.status` is already `'RESOLVED'`; the Wanderer's
+// own explicit `chooseDecentralizedLead()` pick when `'AMBIGUOUS'` AND that
+// choice still names one of `decentralizedLeadOutcome`'s own CURRENT
+// candidates (re-checked on every read, never trusted blindly — a chosen
+// lead can itself disappear from the registry between the click and now);
+// `null` in every other case. This component never calls `.find()`, never
+// reads `candidates[0]` as an implicit default, and never invents a rule
+// preferring one storage backend, one discovery service, or one URI over
+// another — see 0.9.28's own header, "three statuses, never a ranking
+// between them," held here unchanged.
+//
+// A RESOLVED LEAD IS THE ROUTING DECISION, NOT AN OVERRIDE THIS COMPONENT
+// ITSELF DEBATES. Per `application/
+// DecentralizedWorldEncounterLeadAwareMaterialLoading.js`'s own header,
+// "calling this function at all is the routing decision" —
+// `inspectWorldEncounterMaterial()` already routes purely by whether a
+// `resolvedLead` was supplied, never by reading `resolvedSelection.origin`.
+// This component holds that same restraint rather than re-deciding it: once
+// `resolvedLead` is non-null (automatically for a `RESOLVED` outcome, or by
+// the Wanderer's own explicit pick for an `AMBIGUOUS` one), it is forwarded
+// to `refreshMaterialInspection()` unconditionally — there is no third,
+// separate "use decentralized instead of local/peer" toggle in this
+// milestone, because 0.9.28's own resolution already IS that explicit
+// decision, made either automatically (an unambiguous lead) or by the
+// Wanderer (an ambiguous one), exactly the same two-tier restraint 0.9.20
+// already established for local/peer origin selection.
+//
+// `refreshDecentralizedLeadOutcome()` IS THE ONE PLACE
+// `decentralizedLeadOutcome` IS EVER WRITTEN — NEVER A COMPUTED. Exactly
+// like `selectionOutcome` (0.9.20), this cannot be a plain Vue `computed`:
+// it depends on `this.worldDiscoveryLeadRegistry`'s own current
+// `listLeads()` snapshot, a bare class instance Vue's reactivity system
+// cannot track. Called from the tail of `selectEncounter()` (a fresh
+// selection) and from the lead registry's own change listener (a lead
+// coming or going while a selection stays open) — a second, independent
+// subscription in `mounted()`/`beforeUnmount()`, alongside the existing
+// `registry` one, mirroring its exact shape.
+//
+// `resolvedLeadChoice` IS RESET ON EVERY NEW SELECTION, EXACTLY LIKE
+// `resolvedSelectionChoice` ALREADY IS. `selectEncounter()` clears it to
+// `null` alongside `resolvedSelectionChoice` — a lead chosen for one
+// encounter never silently carries over to the next one selected.
+//
+// DELIBERATELY EXCLUDED — NOT THIS MILESTONE.
+// - **Deriving association evidence from anything this component can see**
+//   (a lead's own `discoveryTag`/`uri`, a signed publication, a Nostr
+//   envelope). See "decentralizedLeadAssociations is the caller's own
+//   evidence," above — a caller assembles that array elsewhere, via
+//   already-existing 0.9.29/0.9.32 machinery, and hands it here unchanged.
+// - **Querying a discovery service, subscribing to a relay, or fetching a
+//   lead's own `uri` from within this component.** This component only
+//   ever reads an already-populated `worldDiscoveryLeadRegistry`'s current
+//   snapshot — it never calls `queryDecentralizedWorldDiscovery()`,
+//   `application/DecentralizedWorldDiscoveryQueryRegistryBridge.js`, or any
+//   relay/gateway client, directly or indirectly.
+// - **A default `worldDiscoveryLeadRegistry`, or constructing
+//   `DecentralizedWorldDiscoveryLeadRegistry`/`DecentralizedWorldEncounterMaterialSource`
+//   of its own.** Both stay caller-injected, exactly like `registry`/
+//   `materialSources` already are.
+// - **Cryptographic signature verification, content-reference/hash
+//   correspondence, or any change to `application/
+//   WorldEncounterMaterialVerification.js`.** Unaffected by this milestone —
+//   separate, later, unscheduled work (0.9.41).
+// - **A third "material path" chooser distinguishing local/peer from
+//   decentralized when both happen to be available.** See "a resolved lead
+//   is the routing decision," above — this milestone holds
+//   `inspectWorldEncounterMaterial()`'s own existing routing restraint
+//   rather than adding a second one in front of it.
+// - **Persisting `decentralizedLeadOutcome`, `resolvedLeadChoice`, or
+//   anything else this milestone adds, beyond this component's own mount.**
+//   Both live and die with this component instance, exactly like
+//   `selectionOutcome`/`materialInspection` already do.
 const WORLD_HALF_SPAN = 50;
 const CANVAS_SIZE = 600;
 
@@ -655,6 +807,27 @@ export default {
         materialVerifier: {
             type: Object,
             default: null
+        },
+        // 0.9.40 — optional. A live `DecentralizedWorldDiscoveryLeadRegistry`
+        // (application/DecentralizedWorldDiscoveryLeadRegistry.js, 0.9.26).
+        // When supplied, this component subscribes to it in `mounted()` and
+        // keeps its own `decentralizedLeadOutcome` in sync for as long as it
+        // stays mounted — see this file's own header, "0.9.40 —
+        // Decentralized Lead Resolution Integration." `null` by default —
+        // see that header's own "no worldDiscoveryLeadRegistry, no lead
+        // resolution."
+        worldDiscoveryLeadRegistry: {
+            type: Object,
+            default: null
+        },
+        // 0.9.40 — optional. Explicit association evidence, forwarded
+        // verbatim to `describeDecentralizedWorldEncounterLeadSelectionOutcomeFromRegistry()`.
+        // This component never derives this array itself — see this file's
+        // own header, "decentralizedLeadAssociations is the caller's own
+        // evidence." An empty array by default.
+        decentralizedLeadAssociations: {
+            type: Array,
+            default: () => []
         }
     },
     data() {
@@ -703,7 +876,27 @@ export default {
             // ever written to `materialInspection` when it is still the
             // most recent request — see this file's own header, "a request
             // counter guards against a stale async response."
-            materialInspectionRequestId: 0
+            materialInspectionRequestId: 0,
+            // 0.9.40 — page-local, lead-registry-derived classification of
+            // the CURRENT `selectedEncounter` — independent of
+            // `selectionOutcome`/`resolvedEncounterSelection`; see this
+            // file's own header, "0.9.40 — Decentralized Lead Resolution
+            // Integration." `null` until `refreshDecentralizedLeadOutcome()`
+            // writes it; stays `null` for the lifetime of a mount with no
+            // `selectedEncounter` or no `worldDiscoveryLeadRegistry`.
+            decentralizedLeadOutcome: null,
+            // 0.9.40 — the Wanderer's own explicit pick among an
+            // `'AMBIGUOUS'` `decentralizedLeadOutcome`'s own candidates,
+            // written only by `chooseDecentralizedLead()`. `null` until
+            // chosen, and reset to `null` by `selectEncounter()` on every
+            // new selection — mirrors `resolvedSelectionChoice` (0.9.20)
+            // exactly, one layer over, for leads instead of sources.
+            resolvedLeadChoice: null,
+            // 0.9.40 — the `unsubscribe` function
+            // `worldDiscoveryLeadRegistry.subscribe()` itself returned, held
+            // only so `beforeUnmount()` can call it. `null` whenever this
+            // mount never subscribed to a lead registry.
+            unsubscribeWorldDiscoveryLeadRegistry: null
         };
     },
     computed: {
@@ -787,6 +980,27 @@ export default {
                 return stillOffered ? choice : null;
             }
             return null;
+        },
+        // 0.9.40 — the one resolved decentralized lead, if any, this
+        // component ever forwards to `inspectWorldEncounterMaterial()`.
+        // Mirrors `resolvedEncounterSelection` immediately above, exactly,
+        // one layer over — see this file's own header, "resolvedLead
+        // mirrors resolvedEncounterSelection exactly."
+        resolvedLead() {
+            if (!this.decentralizedLeadOutcome) {
+                return null;
+            }
+            if (this.decentralizedLeadOutcome.status === DecentralizedWorldEncounterLeadSelectionOutcomeStatus.RESOLVED) {
+                return this.decentralizedLeadOutcome.resolvedLead;
+            }
+            if (this.decentralizedLeadOutcome.status === DecentralizedWorldEncounterLeadSelectionOutcomeStatus.AMBIGUOUS && this.resolvedLeadChoice) {
+                const choice = this.resolvedLeadChoice;
+                const stillOffered = this.decentralizedLeadOutcome.candidates.some((candidate) => (
+                    candidate.origin === choice.origin && candidate.discoveryTag === choice.discoveryTag && candidate.uri === choice.uri
+                ));
+                return stillOffered ? choice : null;
+            }
+            return null;
         }
     },
     methods: {
@@ -801,6 +1015,21 @@ export default {
             // file's own header, "resolvedSelectionChoice is the
             // Wanderer's own explicit pick."
             this.resolvedSelectionChoice = null;
+            // 0.9.40 — a fresh selection never carries a stale explicit
+            // lead choice either; see this file's own header,
+            // "resolvedLeadChoice is reset on every new selection."
+            this.resolvedLeadChoice = null;
+            // 0.9.40 — `refreshDecentralizedLeadOutcome()` runs FIRST,
+            // deliberately: it never tail-calls `refreshMaterialInspection()`
+            // itself (unlike `refreshSelectionOutcome()`, immediately
+            // below), so that `refreshSelectionOutcome()`'s own single tail
+            // call is the one place material inspection actually runs for
+            // a fresh selection — reading an already-current
+            // `resolvedLead`, never a stale one, and never calling any
+            // injected source twice for the one selection. See this file's
+            // own header, "refreshDecentralizedLeadOutcome() is the one
+            // place decentralizedLeadOutcome is ever written."
+            this.refreshDecentralizedLeadOutcome();
             this.refreshSelectionOutcome();
         },
         // 0.9.13 — the only writer of `worldView`, and the only caller
@@ -850,6 +1079,43 @@ export default {
             // stale or changed selection refreshes material inspection."
             this.refreshMaterialInspection();
         },
+        // 0.9.40 — the only writer of `decentralizedLeadOutcome`, and the
+        // only caller of
+        // `describeDecentralizedWorldEncounterLeadSelectionOutcomeFromRegistry()`
+        // in this file. `null` whenever there is no current
+        // `selectedEncounter` or no `worldDiscoveryLeadRegistry` — see this
+        // file's own header, "no worldDiscoveryLeadRegistry, no lead
+        // resolution." UNLIKE `refreshSelectionOutcome()`, this method
+        // never tail-calls `refreshMaterialInspection()` itself — see this
+        // file's own header, "refreshDecentralizedLeadOutcome() is the one
+        // place decentralizedLeadOutcome is ever written," for why: every
+        // call site of this method is itself responsible for triggering
+        // exactly one material-inspection refresh once BOTH
+        // `selectionOutcome` and `decentralizedLeadOutcome` are current,
+        // rather than this method (and `refreshSelectionOutcome()`) each
+        // independently triggering their own, which would call an injected
+        // source's own `load()` twice for a single selection.
+        refreshDecentralizedLeadOutcome() {
+            if (!this.selectedEncounter || !this.worldDiscoveryLeadRegistry) {
+                this.decentralizedLeadOutcome = null;
+            } else {
+                this.decentralizedLeadOutcome = describeDecentralizedWorldEncounterLeadSelectionOutcomeFromRegistry({
+                    selectedEncounter: this.selectedEncounter,
+                    registry: this.worldDiscoveryLeadRegistry,
+                    associations: this.decentralizedLeadAssociations
+                });
+            }
+        },
+        // 0.9.40 — the only writer of `resolvedLeadChoice`. Takes exactly
+        // one entry of `decentralizedLeadOutcome.candidates` — a lead this
+        // component never invented itself — and stores it verbatim; no
+        // lookup, no re-derivation, no ranking against any other candidate.
+        // Mirrors `chooseSelectionOrigin()` (0.9.20) exactly, one layer
+        // over.
+        chooseDecentralizedLead(candidate) {
+            this.resolvedLeadChoice = candidate;
+            this.refreshMaterialInspection();
+        },
         // 0.9.39 — the only writer of `materialInspection`, and the only
         // caller of `inspectWorldEncounterMaterial()` in this file. See
         // this file's own header, "materialInspection is data, written by
@@ -858,7 +1124,9 @@ export default {
         // current `resolvedEncounterSelection` or no `materialSources` —
         // see "no material source, no material inspection," above. Never
         // supplies a `resolvedLead` — see "no resolvedLead is ever
-        // supplied," above.
+        // supplied," above. As of 0.9.40 this restraint no longer holds —
+        // see this file's own "0.9.40" header — this method now forwards
+        // `this.resolvedLead` whenever it resolves.
         refreshMaterialInspection() {
             this.materialInspectionRequestId += 1;
             const requestId = this.materialInspectionRequestId;
@@ -871,6 +1139,7 @@ export default {
 
             inspectWorldEncounterMaterial({
                 resolvedSelection,
+                resolvedLead: this.resolvedLead,
                 materialSources: this.materialSources,
                 verifier: this.materialVerifier
             }).then((result) => {
@@ -890,24 +1159,42 @@ export default {
     // was supplied — this component then behaves exactly as it did
     // before 0.9.13.
     mounted() {
-        if (!this.registry || typeof this.registry.subscribe !== 'function') {
-            return;
-        }
-        this.refreshWorldViewFromRegistry();
-        this.refreshSelectionOutcome();
-        this.unsubscribeWorldRegistry = this.registry.subscribe(() => {
+        if (this.registry && typeof this.registry.subscribe === 'function') {
             this.refreshWorldViewFromRegistry();
-            // 0.9.20 — a source appearing or disappearing while a
-            // selection stays open can change its own candidate list
-            // (an ambiguous selection resolving down to one, a resolved
-            // one disappearing entirely, or a new peer joining an
-            // already-ambiguous one) — see this file's own header,
-            // "selectionOutcome is data, written by
-            // refreshSelectionOutcome() — never a computed," for why
-            // this must be an explicit call here, mirroring
-            // refreshWorldViewFromRegistry() immediately above.
             this.refreshSelectionOutcome();
-        });
+            this.unsubscribeWorldRegistry = this.registry.subscribe(() => {
+                this.refreshWorldViewFromRegistry();
+                // 0.9.20 — a source appearing or disappearing while a
+                // selection stays open can change its own candidate list
+                // (an ambiguous selection resolving down to one, a resolved
+                // one disappearing entirely, or a new peer joining an
+                // already-ambiguous one) — see this file's own header,
+                // "selectionOutcome is data, written by
+                // refreshSelectionOutcome() — never a computed," for why
+                // this must be an explicit call here, mirroring
+                // refreshWorldViewFromRegistry() immediately above.
+                this.refreshSelectionOutcome();
+            });
+        }
+        // 0.9.40 — a second, independent optional registry subscription,
+        // mirroring the block immediately above exactly, one layer over:
+        // for decentralized leads instead of World discovery sources. See
+        // this file's own header, "0.9.40 — Decentralized Lead Resolution
+        // Integration."
+        if (this.worldDiscoveryLeadRegistry && typeof this.worldDiscoveryLeadRegistry.subscribe === 'function') {
+            this.refreshDecentralizedLeadOutcome();
+            this.refreshMaterialInspection();
+            this.unsubscribeWorldDiscoveryLeadRegistry = this.worldDiscoveryLeadRegistry.subscribe(() => {
+                // 0.9.40 — `refreshDecentralizedLeadOutcome()` never
+                // tail-calls `refreshMaterialInspection()` itself (see that
+                // method's own header); this listener triggers it
+                // explicitly, exactly once per notification, mirroring
+                // `this.registry.subscribe()`'s own listener immediately
+                // above.
+                this.refreshDecentralizedLeadOutcome();
+                this.refreshMaterialInspection();
+            });
+        }
     },
     // 0.9.13 — unsubscribes, unconditionally and idempotently; see this
     // file's own header, "`beforeUnmount()` unsubscribes."
@@ -916,6 +1203,12 @@ export default {
             this.unsubscribeWorldRegistry();
         }
         this.unsubscribeWorldRegistry = null;
+        // 0.9.40 — unsubscribes the lead registry too, unconditionally and
+        // idempotently, mirroring the block immediately above.
+        if (typeof this.unsubscribeWorldDiscoveryLeadRegistry === 'function') {
+            this.unsubscribeWorldDiscoveryLeadRegistry();
+        }
+        this.unsubscribeWorldDiscoveryLeadRegistry = null;
         // 0.9.39 — invalidates any still-pending `inspectWorldEncounterMaterial()`
         // request; see this file's own header, "beforeUnmount() also
         // invalidates any in-flight request."
@@ -1016,6 +1309,29 @@ export default {
 
                 <p v-else-if="selectionOutcome.status === 'RESOLVED'" class="world-encounter-selection-origin-resolved">
                     Source: {{ selectionOutcome.resolvedSelection.origin }}
+                </p>
+            </div>
+
+            <div v-if="selectedEncounter && decentralizedLeadOutcome && decentralizedLeadOutcome.status !== 'UNAVAILABLE'" class="world-encounter-lead-panel">
+                <template v-if="decentralizedLeadOutcome.status === 'AMBIGUOUS'">
+                    <h4 class="world-encounter-lead-title">Choose Location</h4>
+                    <p v-if="!resolvedLead" class="world-encounter-lead-hint">
+                        More than one decentralized lead is currently associated with this encounter.
+                    </p>
+                    <ul class="world-encounter-lead-list">
+                        <li v-for="candidate in decentralizedLeadOutcome.candidates" :key="candidate.origin + '|' + candidate.discoveryTag + '|' + candidate.uri">
+                            <button
+                                type="button"
+                                class="world-encounter-lead-choice"
+                                :class="{ 'world-encounter-lead-choice-active': resolvedLead && resolvedLead.origin === candidate.origin && resolvedLead.discoveryTag === candidate.discoveryTag && resolvedLead.uri === candidate.uri }"
+                                @click="chooseDecentralizedLead(candidate)"
+                            >{{ candidate.uri }}</button>
+                        </li>
+                    </ul>
+                </template>
+
+                <p v-else-if="decentralizedLeadOutcome.status === 'RESOLVED'" class="world-encounter-lead-resolved">
+                    Location: {{ decentralizedLeadOutcome.resolvedLead.uri }}
                 </p>
             </div>
 
