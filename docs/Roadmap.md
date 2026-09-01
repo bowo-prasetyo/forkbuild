@@ -50366,3 +50366,173 @@ authentication of retrieved material — a future "Retrieved Material
 Integrity Boundary"; third, any second decentralized substrate (IPFS,
 Hive/Steem, AT Protocol, ...) — each remains its own, later, unscheduled
 milestone, not an automatic continuation.
+
+## 0.9.36 — Decentralized World Encounter Material Runtime Composition
+
+0.9.33 built `DecentralizedWorldEncounterMaterialSource`, constructed
+around one injected `retrieveByUri`. 0.9.35 built a real `retrieveByUri` —
+`ArweaveWorldEncounterMaterialResolver`, an `ar://` gateway retriever.
+Neither file imports the other: 0.9.33's own header called that
+"explicitly unscheduled... real runtime composition wired into
+`materialSources.decentralized` (0.9.36)," and 0.9.35's own header
+repeated it verbatim. This milestone is that composition — wiring only,
+no new algorithm, no new discovery, no new retrieval, no verification, no
+caching — proving that everything built from 0.9.24 through 0.9.35
+actually composes at the one seam left open for it.
+
+```text
+Nostr discovery (0.9.31)
+      │
+      ▼
+Discovery Lead Registry (0.9.26)
+      │
+      ▼
+Lead association evidence (0.9.29 / 0.9.32)
+      │
+      ▼
+Resolved lead (0.9.28) = { origin, discoveryTag, uri, storage }
+      │
+      ▼
+0.9.34 Lead-aware loading
+      │
+      ▼
+0.9.33 Decentralized Material Source
+      │
+      ▼
+0.9.36 Runtime Composition   ★ (THIS)
+      │
+      ▼
+0.9.35 Arweave Resolver
+      │
+      ▼
+ar://...
+      │
+      ▼
+Arweave
+```
+
+`application/DecentralizedWorldEncounterMaterialRuntimeComposition.js`
+added — two exported functions, both pure construction, neither
+performing any I/O of their own:
+
+- `composeArweaveDecentralizedWorldEncounterMaterialSource(resolverOptions)`
+  constructs one `ArweaveWorldEncounterMaterialResolver` (0.9.35,
+  unmodified) and one `DecentralizedWorldEncounterMaterialSource` (0.9.33,
+  unmodified) wired around its own `retrieveByUri`, returning both.
+- `composeWorldEncounterMaterialSources({ local, peer, arweaveResolverOptions })`
+  returns `{ local, peer, decentralized }` — exactly the shape
+  `application/WorldEncounterMaterialLoading.js`'s own
+  `loadWorldEncounterMaterial()` (0.9.21) and `application/
+  DecentralizedWorldEncounterLeadAwareMaterialLoading.js`'s own
+  `loadWorldEncounterMaterialFromResolvedLead()` (0.9.34) each already
+  accept as their own `materialSources` argument, so the very same result
+  can be handed to both, unmodified.
+
+COMPOSITION, NEVER A FOURTH ALGORITHM. This file has no `load()`, no
+`retrieveByUri()`, and no `async` function anywhere in it — its only job
+is object construction. Every retrieval behavior a caller ever observes
+(the `ar://` prefix check, the size ceiling, the timeout, the
+`null`-on-miss/reject-on-failure contract) is 0.9.33's and 0.9.35's own,
+entirely unmodified.
+
+THIS FILE NEVER IMPORTS DISCOVERY, LEADS, OR RESOLUTION — WIRING THE
+RETRIEVAL SLOT IS NOT THE SAME AS WIRING DISCOVERY INTO IT. It never
+imports `application/DecentralizedWorldEncounterLeadResolution.js`,
+`application/DecentralizedWorldDiscoveryLeadRegistry.js`, either
+association-evidence ingress file, `application/
+DecentralizedWorldDiscoveryQuery.js`, `application/
+NostrDiscoveryQueryService.js`, or any UI. This is the one thing the task
+that requested this milestone was explicit about NOT wiring: a discovery
+lead does not automatically become a World encounter merely because
+material at its `uri` can now be retrieved. The object this file returns
+answers only "how does a decentralized `uri`, once a caller already holds
+one, become material" — a caller still supplies its own already-resolved
+`resolvedLead` (0.9.28's own `RESOLVED` output) to
+`loadWorldEncounterMaterialFromResolvedLead()`; this milestone changes
+nothing about how that lead was resolved, or whether it should have been.
+
+`local` AND `peer` ARE FORWARDED VERBATIM, NEVER CONSTRUCTED HERE. This
+file never imports `application/LocalWorldEncounterMaterialSource.js` or
+`application/PeerWorldEncounterMaterialSource.js` — a caller who already
+has each hands both through unchanged; this milestone only ever fills in
+the one slot 0.9.33 and 0.9.35 left open, `decentralized`.
+
+`application/WorldEncounterMaterialLoading.js` (0.9.21) IS STILL NEVER
+MODIFIED, AND STILL NEVER ROUTES TO `.decentralized` ON ITS OWN. That
+file's own `materialSourceFor()` still recognizes only `origin === 'local'`
+and `origin.startsWith('peer:')` — it has no decentralized origin family
+to route through, exactly as 0.9.21's, 0.9.33's, and 0.9.34's own headers
+each already established, and this milestone invents no such convention
+either. Reaching the decentralized slot still requires a caller to hold an
+already-resolved `resolvedLead` and call 0.9.34's own
+`loadWorldEncounterMaterialFromResolvedLead()` directly.
+
+RESOLVER CONSTRUCTOR OPTIONS ARE FORWARDED VERBATIM, NEVER REINTERPRETED,
+AND A CONSTRUCTION FAILURE PROPAGATES, NEVER SWALLOWED. `resolverOptions`
+(`{ gatewayUrl, fetchImpl, timeoutMs, maxResponseBytes }`) is handed
+straight to `new ArweaveWorldEncounterMaterialResolver(resolverOptions)` —
+no second default, no reinterpretation. A misconfigured caller (an empty
+`gatewayUrl`, no `fetchImpl` and no global `fetch`) fails loudly at
+composition time, exactly as that constructor already throws on its own.
+
+EVERY CALL BUILDS A FRESH, INDEPENDENT PAIR — NO MODULE-LEVEL STATE, NO
+SINGLETON, NO CACHING OF A PREVIOUSLY-CONSTRUCTED SOURCE. Calling either
+exported function twice constructs two entirely independent resolvers and
+sources; a caller wanting exactly one long-lived decentralized material
+source calls this file once, at its own composition root, and keeps the
+result.
+
+`material` IS STILL NEVER INTERPRETED, VERIFIED, OR EVEN INSPECTED —
+inherited unchanged from every file in this family. This milestone adds
+no verification step between the resolver and the source, or after either.
+
+`tests/DecentralizedWorldEncounterMaterialRuntimeComposition.test.js`
+added and registered in `tests.html`, covering: the composition functions
+building a working, real `{ resolver, decentralized }` pair; resolver
+constructor options (a custom `gatewayUrl`, a custom `maxResponseBytes`)
+forwarded verbatim and actually enforced; a construction failure (no
+`fetchImpl`/no global `fetch`, an empty `gatewayUrl`) propagating at
+composition time; `composeWorldEncounterMaterialSources()` forwarding
+`local`/`peer` by reference while filling in a fresh `decentralized` slot,
+verified end to end through the unmodified 0.9.21 loader for all three
+slots; two composition calls building two fully independent pairs with no
+cross-talk; the unmodified 0.9.21 loader still never reaching
+`.decentralized` on its own even once composed; a FLAGSHIP end-to-end
+scenario — a Nostr relay event carrying a self-declared discovery
+envelope in its own `content`, parsed via `core/
+DecentralizedDiscoveryEnvelope.js` (0.9.30), matched against a lead
+registered in a real `DecentralizedWorldDiscoveryLeadRegistry` (0.9.26)
+via `application/DecentralizedDiscoveryEnvelopeAssociationEvidenceIngress.js`
+(0.9.32) to produce association evidence, resolved via `application/
+DecentralizedWorldEncounterLeadResolution.js` (0.9.28) to exactly one
+`RESOLVED` lead, then loaded via `application/
+DecentralizedWorldEncounterLeadAwareMaterialLoading.js` (0.9.34) against
+this milestone's own composed `materialSources.decentralized`, which
+retrieves the material from a mocked Arweave gateway — with the resolved
+lead's own discovery-service `origin` (`nostr:wss://relay.example`) and
+its own retrieval `uri` (`ar://...`) surviving as two distinct fields all
+the way to the final `AVAILABLE` result, never collapsed into one; and an
+architectural regression pass confirming no discovery/lead/resolution
+imports, no `fetch`/`WebSocket` of the composition file's own, no `async`
+function of its own, no trust vocabulary, and that neither the 0.9.21 nor
+the 0.9.34 boundary is ever modified. No existing file is modified.
+
+Deliberately paused here. This milestone builds exactly the composition
+the task that requested it asked for — a real Arweave resolver wired into
+a real decentralized material source, exposed as
+`materialSources.decentralized` alongside caller-supplied `local`/`peer`
+slots — and stops there. It deliberately does NOT turn every discovery
+lead into an encounter: the flagship test's own chain still requires an
+explicit `resolveDecentralizedWorldEncounterLead()` step between a Nostr
+event and a retrieval, exactly as every milestone since 0.9.24 already
+insisted on. Explicitly unscheduled: first, any caller that actually
+invokes this composition against a selected World encounter or a running
+UI — `ui/components/WorldEncounterCanvas.js` remains untouched; second,
+retrieved material → verification boundary (signature verification, hash
+verification, content authentication) — a future "Retrieved Material
+Integrity Boundary" (0.9.37); third, a second concrete decentralized
+backend (IPFS, Hive/Steem, AT Protocol, ...) and any policy for choosing
+among several once more than one exists; fourth, a decentralized `origin`
+naming convention that would let 0.9.21's own `loadWorldEncounterMaterial()`
+route to `.decentralized` automatically, converging the two loading paths
+into one. Each remains an explicit request, not an automatic continuation.
