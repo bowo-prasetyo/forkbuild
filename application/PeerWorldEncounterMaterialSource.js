@@ -78,9 +78,11 @@ const PEER_ORIGIN_PREFIX = 'peer:';
 // material — deciding what THIS device is willing to hand out, and from
 // where — is a genuinely separate concern (who may ask, what may be
 // served, how a local lookup even happens for a peer-facing request) and
-// is explicitly separate, later, unscheduled work (0.9.24, the responder).
-// Building both directions into one class now would make this milestone
-// responsible for peer-facing authorization it was never asked to design.
+// is explicitly separate, later, unscheduled work (the responder;
+// unnumbered — 0.9.24 itself now names Decentralized World Discovery
+// Source Boundary instead). Building both directions into one class now
+// would make this milestone responsible for peer-facing authorization it
+// was never asked to design.
 //
 // EXACTLY ONE PEER IS EVER ASKED — NO FALLBACK, NO BROADCAST, NO RANKING.
 // `load()` sends a REQUEST to the one `ConnectedPeer` `origin` names and
@@ -96,8 +98,8 @@ const PEER_ORIGIN_PREFIX = 'peer:';
 // `signature` field, if present in the received material, is deserialized
 // and returned exactly as supplied — this class never reads it, never
 // verifies it, and never decides whether the peer that sent it is
-// trustworthy; that stays separate, later, unscheduled work (0.9.24+ / a
-// future verification boundary). Every `load()` call re-sends a fresh
+// trustworthy; that stays separate, later, unscheduled work (a future
+// verification boundary, unnumbered). Every `load()` call re-sends a fresh
 // REQUEST and re-waits fresh — nothing here is memoized, and a second call
 // for the identical selection is indistinguishable, on the wire, from the
 // first.
@@ -115,9 +117,11 @@ const PEER_ORIGIN_PREFIX = 'peer:';
 //
 // DELIBERATELY EXCLUDED — NOT THIS MILESTONE.
 // - **Answering an incoming REQUEST from another peer.** See "Requester
-//   only," above — 0.9.24.
+//   only," above — the responder, unnumbered (0.9.24 itself now names
+//   Decentralized World Discovery Source Boundary instead).
 // - **Signature verification or any trust decision.** See "Never
-//   verifies, never trusts, never caches," above — 0.9.24+.
+//   verifies, never trusts, never caches," above — a future,
+//   unnumbered verification boundary.
 // - **Caching, retrying beyond the one in-flight wait, or falling back to
 //   a second peer.** See "Exactly one peer is ever asked," above.
 // - **Re-discovering a peer's own World, or asking for anything beyond
@@ -126,7 +130,9 @@ const PEER_ORIGIN_PREFIX = 'peer:';
 // - **Any change to `application/WorldEncounterMaterialLoading.js`
 //   (0.9.21) or to `ui/components/WorldEncounterCanvas.js`.** This source
 //   is only ever plugged in as `materialSources.peer` by a future,
-//   unscheduled composition-root wiring milestone (0.9.25).
+//   unscheduled, unnumbered composition-root wiring milestone (0.9.25
+//   itself now names Concrete Decentralized Search/Index Discovery
+//   Adapter instead).
 export class PeerWorldEncounterMaterialSource extends WorldEncounterMaterialSource {
     // peerMessageBus: a peer/PeerMessageBus.js instance — shared, app-wide,
     //   never owned or disposed by this class.

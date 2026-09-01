@@ -40,7 +40,7 @@ import { LOCAL_WORLD_DISCOVERY_ORIGIN } from './WorldEncounterIntegration.js';
 //                       │
 //                       ▼
 //   future, unscheduled: 0.9.22 (local loading), 0.9.23 (peer loading),
-//   0.9.24 (material verification)
+//   material verification (unscheduled)
 //
 // ESTABLISHES THE SEAM; PERFORMS NO LOADING OF ITS OWN. This file never
 // reads localStorage, never opens a WebRTC data channel, never imports
@@ -103,8 +103,10 @@ import { LOCAL_WORLD_DISCOVERY_ORIGIN } from './WorldEncounterIntegration.js';
 // avatar's — `kind` is forwarded as part of `resolvedSelection`, and
 // whatever a source resolves to is handed back byte-for-byte. No parsing,
 // no schema check, no signature read. That is explicitly later,
-// unscheduled work (0.9.24, Material Verification) — see "Deliberately
-// excluded," below.
+// unscheduled work (Material Verification, unnumbered — see 0.9.24's own
+// header for why the number this comment once reserved now names a
+// different milestone, Decentralized World Discovery Source Boundary)
+// — see "Deliberately excluded," below.
 //
 // TWO STATUSES, NEVER A THIRD. `WorldEncounterMaterialLoadStatus` holds
 // exactly `UNAVAILABLE` and `AVAILABLE` — no `PENDING`, `LOADING`,
