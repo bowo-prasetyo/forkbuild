@@ -51059,3 +51059,154 @@ content-reference/hash correspondence (0.9.41, a likely next branch);
 fifth, a third "material path" chooser distinguishing local/peer from
 decentralized when both happen to be available — see "a resolved lead is
 the routing decision," above.
+
+## 0.9.41 — World Encounter Material Signature Verifier
+
+0.9.38 shipped the first concrete `WorldEncounterMaterialVerifier`
+(`WorldEncounterMaterialIdentityVerifier`) and drew its own line: does this
+material correspond to the selected `{ kind, objectId }`, answered purely
+structurally, with signature verification named as separate, later,
+unscheduled work in three places now — 0.9.37's own "Deliberately
+excluded" ("a later cryptographic verifier answering 'does the signature
+verify' and 'does it identify the claimed publisher'"), 0.9.38's own
+("This file never reads `material.signature`... separate, later,
+unscheduled work"), and 0.9.40's own ("cryptographic signature
+verification, content-reference/hash correspondence... unaffected by this
+milestone"). This milestone is that work — a SECOND, independent concrete
+verifier answering a narrower, different question than 0.9.38's own:
+
+```text
+resolvedSelection = { kind, objectId, origin }              (0.9.19/20)
+       │
+       │        material = { id, signature, publisherIdentity, ... }
+       │        (0.9.22/0.9.33/0.9.35/0.9.36 — a Publication instance, or
+       │         a plain JSON object shaped like one)
+       ▼               │
+application/WorldEncounterMaterialSignatureVerifier.js   ★ (THIS)
+     WorldEncounterMaterialSignatureVerifier#verifyIdentity()
+       │
+       ▼
+identity/LocalAuthorizationVerifier.js   (unmodified)
+     verifyPublication()
+       │
+       ▼
+application/WorldEncounterMaterialVerification.js   (0.9.37, unmodified)
+     verifyWorldEncounterMaterial()
+       │
+ ┌─────┼──────────────┐
+ ▼     ▼               ▼
+UNVERIFIABLE  REJECTED  VERIFIED
+```
+
+`application/WorldEncounterMaterialSignatureVerifier.js` added —
+`WorldEncounterMaterialSignatureVerifier`, a concrete class extending
+0.9.37's own `WorldEncounterMaterialVerifier` base class, delegating the
+actual Ed25519 check to this codebase's existing, unmodified
+`identity/LocalAuthorizationVerifier.js#verifyPublication()`.
+
+A SECOND, INDEPENDENT VERIFIER — NEVER A REPLACEMENT FOR, OR CHANGE TO,
+`WorldEncounterMaterialIdentityVerifier`. That file is untouched, and this
+one never imports it. 0.9.37's own boundary accepts exactly one `verifier`
+per call; a caller wanting both the structural "is this the right object"
+answer and this file's own "does the signature verify" answer calls
+`verifyWorldEncounterMaterial()`/`inspectWorldEncounterMaterial()` twice,
+once per verifier — exactly the composition 0.9.37's own header already
+names ("a caller wanting a second opinion calls this function twice,
+explicitly, with a second verifier"). No meta-verifier, no AND/OR
+composition, is introduced.
+
+ONLY `PUBLICATION` IS JUDGED — `AVATAR` ALWAYS ABSTAINS. `core/
+AvatarProfile.js` carries no `signature`/`publisherIdentity` fields at all
+today, unlike `core/Publication.js`'s own 0.2.16 trust layer — there is
+nothing cryptographic yet to check for an avatar's own material. An
+`AVATAR` selection (or any unrecognized `kind`) resolves to `undefined`,
+never a guessed-at `false`.
+
+"NOTHING TO CRYPTOGRAPHICALLY CHECK" IS AN ABSTENTION, NEVER A PASS OR A
+FAIL. `identity/LocalAuthorizationVerifier.js#verifyPublication()` already
+reports a pre-0.2.16, never-signed Publication as `{ valid: true, signed:
+false }` — "structurally fine, just unsigned." This file reads `signed`
+before `valid`: `signed === false` abstains regardless of what `valid`
+says, so an entirely unsigned publication is never mistaken for
+cryptographically VERIFIED. Only when `signed === true` does this file's
+own outcome become a strict `result.valid === true`/`false`.
+
+MATERIAL IS ACCEPTED AS EITHER A REAL `Publication` INSTANCE OR A PLAIN
+JSON OBJECT SHAPED LIKE ONE. A local-origin load already hands back a real
+`Publication`; a decentralized-origin load (0.9.35's Arweave resolver)
+hands back plain parsed JSON with no `Publication.fromJSON()` call of its
+own — that file's own header is explicit it "has no idea whether the JSON
+object it just parsed is a Publication." This file closes that gap for the
+signature question alone: `material instanceof Publication` is used
+directly; anything else is passed through `Publication.fromJSON()` before
+being handed to `verifyPublication()`.
+
+A MALFORMED OR ADVERSARIAL `material` NEVER THROWS. Decentralized material
+is attacker-influenced, unschema'd parsed JSON — a garbage `publicKey` or
+`signature` hex string genuinely throws inside `identity/
+Ed25519.js#hexToBytes()`, confirmed directly against this codebase's own
+real signing/verification machinery while building this milestone. Every
+call into `verifyPublication()` is wrapped: a thrown error from malformed
+cryptographic material is caught and reported as a strict `false` — a
+broken signature is an active verification failure, the identical outcome
+a well-formed-but-wrong signature already produces, never an abstention
+and never an unhandled rejection reaching a caller's UI.
+
+NEVER RE-CHECKS STRUCTURAL IDENTITY. This file never reads
+`resolvedSelection.objectId` against `material.id`/`.avatarId` — that
+remains `WorldEncounterMaterialIdentityVerifier`'s (0.9.38) own, separate,
+unmodified job. `resolvedLead` is accepted and never read, mirroring
+0.9.37's and 0.9.38's own identical restraint one layer up.
+
+`identity/LocalAuthorizationVerifier.js` IS INJECTED, DEFAULTED, NEVER
+REQUIRED FROM A CALLER. This file constructs its own default
+`LocalAuthorizationVerifier` when none is supplied — that class needs no
+world/storage/network context to construct — exactly the way 0.9.22's own
+`LocalWorldEncounterMaterialSource` constructs its own
+`LocalDiscoveryProvider`. An explicit `authorizationVerifier` constructor
+option remains a pure test/substitution seam, never a second competing
+cryptographic scheme.
+
+`tests/WorldEncounterMaterialSignatureVerifier.test.js` added and
+registered in `tests.html`, covering: a flagship genuinely,
+cryptographically signed Publication (real Ed25519 signing via `identity/
+LocalIdentityProvider.js`, the exact sequence `publisher/
+LocalPublisherProvider.js` already uses in production) verifying `true` as
+both a `Publication` instance and plain parsed JSON; tampering with signed
+content after signing resolving to `false`; a signature produced by one
+identity then attributed to another resolving to `false`; an unsigned
+legacy Publication abstaining; `AVATAR` material always abstaining
+regardless of shape; an unrecognized `kind` abstaining even with a
+genuinely valid signature present; malformed material (including an array)
+abstaining rather than throwing; adversarial garbage `publicKey`/
+`signature` hex strings resolving to strict `false` without ever throwing;
+`resolvedLead` accepted in several shapes with no effect on the outcome;
+no throw for zero arguments; determinism across repeated calls; an
+injected `authorizationVerifier` being honored and always receiving a real
+`Publication` instance even when handed plain JSON, with its three-state
+`{valid, signed}` result mapped correctly; full end-to-end integration
+through 0.9.37's own unmodified `verifyWorldEncounterMaterial()`, producing
+`VERIFIED`, `REJECTED`, and `UNVERIFIABLE`; an `instanceof` check
+confirming this class extends 0.9.37's own base class; and an
+architectural regression pass confirming no import of 0.9.38's own
+verifier, no re-reading of `resolvedSelection.objectId`/`material.id`/
+`.avatarId`, no reads of any field on `resolvedLead`, no
+`LocalIdentityProvider`/network/`StorageProvider` access, no trust/ranking
+vocabulary, and that neither 0.9.37's own boundary nor 0.9.38's own
+structural verifier is ever modified to know about this file. No existing
+file is modified.
+
+Deliberately paused here. Explicitly unscheduled: first, content-hash or
+URI correspondence ("does the retrieved content match what a lead's own
+`uri` claimed") — this file never reads `resolvedLead` at all; second,
+composing this file's own outcome with 0.9.38's structural one into a
+single meta-verifier — a caller already achieves that by calling
+`verifyWorldEncounterMaterial()` twice, per 0.9.37's own established
+pattern; third, wiring this verifier into `application/
+WorldEncounterMaterialVerification.js` as a default, into any
+material-loading file, into `application/WorldEncounterMaterialInspection.js`,
+or into any UI — this file is a standalone verifier a caller injects
+explicitly, exactly like 0.9.38 before it; fourth, a cryptographic
+verifier for `AVATAR` material, since `core/AvatarProfile.js` carries no
+signature layer today. Each remains an explicit request, not an automatic
+continuation.
