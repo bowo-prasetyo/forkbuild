@@ -50536,3 +50536,138 @@ among several once more than one exists; fourth, a decentralized `origin`
 naming convention that would let 0.9.21's own `loadWorldEncounterMaterial()`
 route to `.decentralized` automatically, converging the two loading paths
 into one. Each remains an explicit request, not an automatic continuation.
+
+## 0.9.37 — World Encounter Material Verification Boundary
+
+0.9.33 through 0.9.36 answered "how does retrieved material reach a
+caller" for three separate provenances — local disk, a connected peer, and
+a decentralized `uri` — and every one of those files' own header repeated
+the same refusal: "`material` is never interpreted, verified, or even
+inspected." A resolved selection names WHAT was asked for; a resolved lead
+names WHERE it was retrieved from; neither says whether the bytes that
+actually came back are the thing that was asked for. This milestone is the
+next seam — never a fourth material source, never a concrete verifier —
+the boundary a caller crosses after loading to ask exactly one question:
+does this retrieved material correspond to the selected encounter? Never
+"do I trust this publisher," and never "should this be preferred over
+another candidate" — those stay separate, unscheduled questions.
+
+```text
+Nostr discovery (0.9.31)
+      │
+      ▼
+resolvedLead = { origin, discoveryTag, uri, storage }   (0.9.28)
+      │
+      ├─────────────────────────────┐
+      ▼                             │
+resolvedSelection = { kind,         │
+  objectId, origin }      (0.9.19)  │
+      │                             │
+      ▼                             ▼
+0.9.34 lead-aware loading ──► materialSources.decentralized
+      │                       (0.9.33 / 0.9.35 / 0.9.36)
+      ▼
+material = { id: 'P123', signature: {...}, ... }
+      │
+      ▼
+0.9.37 Verification Boundary   ★ (THIS)
+      │
+   ┌──┼────────────┐
+   ▼  ▼             ▼
+UNVERIFIABLE  REJECTED  VERIFIED
+```
+
+`application/WorldEncounterMaterialVerification.js` added:
+
+- `WorldEncounterMaterialVerificationStatus` — exactly three values,
+  `UNVERIFIABLE`, `VERIFIED`, `REJECTED`. A deliberate departure from this
+  chain's own "two statuses, never a third": loading collapses absence and
+  failure into one `UNAVAILABLE` because, for retrieval, they are the same
+  fact. Verification is not that shape — "this was never checked" and
+  "this was checked and found not to correspond" are opposite facts with
+  opposite consequences, and collapsing them would let a caller mistake
+  silence for either a pass or a fail. `UNVERIFIABLE` covers a missing/
+  malformed `resolvedSelection`, missing `material`, no injected `verifier`,
+  or a verifier that itself abstains (see below) — never a distinguished
+  "error" status of its own.
+- `WorldEncounterMaterialVerifier` — the contract a future verifier
+  implements, one method: `verifyIdentity(resolvedSelection, material,
+  resolvedLead)`. Mirrors `WorldEncounterMaterialSource`'s own "throw if
+  unimplemented" shape; never subclassed by this file itself.
+- `verifyWorldEncounterMaterial({ resolvedSelection, resolvedLead, material,
+  verifier })` — the one entry point. Validates `resolvedSelection` (via
+  0.9.19's own `describeWorldEncounterSelectionIdentity()`) and that
+  `material` is usable, then forwards all three, verbatim, to the injected
+  verifier's own `verifyIdentity()`.
+
+AN ORCHESTRATION BOUNDARY, NEVER A VERIFIER OF ITS OWN. This file never
+reads `material.signature`, never imports `core/Signature.js`, `core/
+SigningIdentity.js`, or `identity/LocalAuthorizationVerifier.js`, and never
+compares any material field against `resolvedSelection.objectId` itself.
+Deciding what "corresponds to the selected encounter" means for a
+Publication, an AvatarProfile, or any future kind is entirely the injected
+verifier's job — exactly the way 0.9.21 names a `WorldEncounterMaterialSource`
+contract and ships with no concrete local/peer implementation of it.
+
+ONLY A STRICT BOOLEAN DECIDES. `verifyIdentity()` may resolve to anything;
+only a resolved value of exactly `true` produces `VERIFIED` and only
+exactly `false` produces `REJECTED`. Anything else — `null`, `undefined`,
+a truthy/falsy non-boolean — is treated as an abstention, collapsing to
+`UNVERIFIABLE`, the same "nothing was judged" outcome as no verifier at
+all. This file never coerces a truthy/falsy value into a decision; doing
+so would silently turn "I don't know" into a pass or a fail depending on
+what shape of "I don't know" a future verifier happened to return.
+
+`resolvedLead` IS OPTIONAL AND OPAQUE. Forwarded verbatim when supplied
+(reported as `null`, never `undefined`, when absent) and never read by
+this file for any purpose — it is context a verifier MAY use, never
+something this boundary routes or validates on its own. Local and peer
+material, which carry no lead at all, verify exactly the same way.
+
+A THROWN REJECTION IS NEVER SWALLOWED, inherited unchanged from every
+loading-boundary file in this chain — a rejected `verifyIdentity()`
+promise propagates to the caller unchanged; `UNVERIFIABLE` means "nothing
+was judged," never "judging it failed." No caching, no retry, no ranking
+between verifiers — every call asks the injected verifier exactly once,
+fresh, for exactly the one supplied triple.
+
+`tests/WorldEncounterMaterialVerification.test.js` added and registered in
+`tests.html`, covering: a FLAGSHIP scenario — a Nostr-discovered lead, an
+Arweave-shaped retrieved Publication carrying a `signature` field, and an
+injected verifier confirming correspondence — resolving to `VERIFIED` with
+every input forwarded by reference; a verifier actively contradicting
+correspondence resolving to `REJECTED`; every non-boolean verifier outcome
+(`null`, `undefined`, a string, `0`, `1`, an object) collapsing to
+`UNVERIFIABLE` rather than being coerced; a missing/malformed verifier
+degrading to `UNVERIFIABLE` while preserving the real inputs; a malformed
+`resolvedSelection` degrading to a fully-null `UNVERIFIABLE` result with
+the verifier never even called; missing/null `material` degrading to
+`UNVERIFIABLE` without consulting the verifier; an absent `resolvedLead`
+(the local/peer case) still verifying, reported as `null`; a thrown
+verifier rejection propagating rather than being swallowed; the base
+`WorldEncounterMaterialVerifier` class throwing when un-subclassed, and
+that throw surviving through `verifyWorldEncounterMaterial()` too; result
+freezing across all three statuses; no caching across repeated calls;
+graceful handling of no arguments at all; and an architectural regression
+pass confirming no signature/authorization imports, no discovery/lead/
+loading-boundary imports, no identity-matching logic of this file's own
+(no `material.id`/`material.signature`/`resolvedLead.*` reads), no trust/
+ranking vocabulary, and that neither the 0.9.21 nor the 0.9.34 loading
+boundary is ever modified to know about this file. No existing file is
+modified.
+
+Deliberately paused here. This milestone establishes exactly the semantic
+seam the task that requested it asked for — an input/output contract that
+lets identity correspondence be judged, once a real verifier exists, for
+material from any of the three current or future material sources alike —
+and ships no concrete judgment of its own. Explicitly unscheduled: first,
+any concrete `verifyIdentity` implementation — Publication signature
+verification using this codebase's existing `core/Signature.js` / `core/
+SigningIdentity.js` / `identity/LocalAuthorizationVerifier.js` machinery
+(0.9.38); second, wiring this boundary into `application/
+DecentralizedWorldEncounterLeadAwareMaterialLoading.js`, `application/
+WorldEncounterMaterialLoading.js`, `application/WorldEncounterInspection.js`,
+or any UI (0.9.39); third, trust, ranking, reputation, or preference
+between multiple candidate materials for the same encounter — a separate,
+later, unscheduled boundary sitting after this one. Each remains an
+explicit request, not an automatic continuation.
