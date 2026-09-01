@@ -61,6 +61,15 @@ function canvasCtx(overrides = {}) {
         registry: null,
         wandererPosition: { x: 0, y: 0, z: 0 },
         selectedEncounter: null,
+        // 0.9.20 — page-local state `selectEncounter()` now also writes
+        // (via `refreshSelectionOutcome()`, attached below). `registry`
+        // stays `null` throughout this file's own tests, so
+        // `refreshSelectionOutcome()` always leaves `selectionOutcome`
+        // `null` — this file's own sections stay focused on 0.9.4's own
+        // selectedEncounter contract, unaffected by 0.9.20's addition.
+        selectionOutcome: null,
+        resolvedSelectionChoice: null,
+        refreshSelectionOutcome: WorldEncounterCanvas.methods.refreshSelectionOutcome,
         ...overrides
     };
     ctx.effectiveView = WorldEncounterCanvas.computed.effectiveView.call(ctx);

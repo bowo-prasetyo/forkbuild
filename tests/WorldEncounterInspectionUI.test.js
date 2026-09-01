@@ -204,19 +204,20 @@ async function run() {
     }
 
     // ---------------------------------------------------------------
-    // Section G — import boundary: exactly two application/ modules, still
-    // no core/ module.
+    // Section G — import boundary: exactly two application/ modules as of
+    // 0.9.18 (0.9.20 adds a third, unrelated one — see
+    // tests/WorldEncounterCanvasUI.test.js's own Section J for that
+    // count), still no core/ module.
     // ---------------------------------------------------------------
     {
         const source = await readFile(new URL('../ui/components/WorldEncounterCanvas.js', import.meta.url), 'utf8');
         const importLines = source.split('\n').filter((line) => line.trim().startsWith('import '));
         assert(!importLines.some((line) => line.includes('core/')), '15. WorldEncounterCanvas.js still never imports any core/ module directly');
         const applicationImportLines = importLines.filter((line) => line.includes('application/'));
-        assert(applicationImportLines.length === 2, '16. WorldEncounterCanvas.js imports exactly two application/ modules as of 0.9.18');
         assert(applicationImportLines.some((line) => line.includes('WorldDiscoveryRegistryProjection.js') && line.includes('describeWorldFromDiscoveryRegistry')), '17. the pre-existing 0.9.13 registry-projection import is unchanged');
-        assert(applicationImportLines.some((line) => line.includes('WorldEncounterInspection.js') && line.includes('describeWorldEncounterInspection')), '18. this milestone adds exactly one new import — WorldEncounterInspection.js\'s own describeWorldEncounterInspection()');
+        assert(applicationImportLines.some((line) => line.includes('WorldEncounterInspection.js') && line.includes('describeWorldEncounterInspection')), '18. this milestone\'s own import — WorldEncounterInspection.js\'s own describeWorldEncounterInspection() — is unchanged');
 
-        console.log('✓ Section G: WorldEncounterCanvas.js imports exactly two application/ modules, still no core/ module, as of 0.9.18');
+        console.log('✓ Section G: WorldEncounterCanvas.js still imports WorldDiscoveryRegistryProjection.js and WorldEncounterInspection.js, still no core/ module, as of 0.9.18');
     }
 
     // ---------------------------------------------------------------

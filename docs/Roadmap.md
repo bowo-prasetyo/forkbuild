@@ -47979,3 +47979,162 @@ progression stays open, one deliberate step further than 0.9.18 left it.
 Per the same reasoning that has paused this codebase before every
 milestone in this series, each of those remains an explicit request, not
 an automatic continuation.
+
+---
+
+## 0.9.20 — World Encounter Selection Resolution
+
+0.9.19 named every source currently offering a matching encounter, and
+stopped exactly there — its own header made the boundary explicit:
+"EVERY MATCHING CANDIDATE, NEVER ONE PICKED FOR THE CALLER." Nothing yet
+turned that candidate list into an actual, specific, resolved selection.
+A Wanderer who clicked an unambiguous marker had no structural way to
+learn that fact; a Wanderer who clicked an ambiguous one had no way to
+choose among the sources offering it. This milestone crosses that next
+boundary, and only that boundary:
+
+```
+clicked marker
+    │
+    ▼
+{ kind, objectId }                                          (0.9.4, unchanged)
+    │
+    ▼
+application/WorldEncounterSelectionResolution.js   (0.9.19, unmodified)
+    describeWorldEncounterSelectionCandidates()
+    │
+    ▼
+0 / 1 / N provenance candidates
+    │
+    ▼
+application/WorldEncounterSelectionOutcome.js   ★ (THIS milestone)
+    describeWorldEncounterSelectionOutcomeFromRegistry()
+    │
+    ▼
+{ status, candidates, resolvedSelection }
+    │
+    ├── UNAVAILABLE (0) ─── 0.9.18's own "no longer part of the World"
+    │                       notice already covers this — no new UI
+    │
+    ├── RESOLVED (1) ────── resolvedEncounterSelection is set
+    │                       automatically, no interaction required
+    │
+    └── AMBIGUOUS (N) ───── "Choose Source" panel (THIS milestone) ★
+                             ui/components/WorldEncounterCanvas.js
+                             resolvedEncounterSelection stays null until
+                             the Wanderer clicks one of the candidates
+                             │
+                             ▼
+                     { kind, objectId, origin }
+                             │
+                             ▼
+        future, unscheduled: Material Loading Boundary (0.9.21+)
+```
+
+`WorldEncounterSelectionResolution.js` STILL NEVER CHOOSES — THIS
+MILESTONE DOESN'T EITHER. Per the task's own framing, the choice among
+several candidates belongs at the presentation/application boundary, not
+inside 0.9.19's own resolution function, and not by inventing a second,
+hidden algorithm that picks one automatically. `application/
+WorldEncounterSelectionOutcome.js` adds exactly one new fact — is the
+already-computed candidate list long enough to need a choice at all? —
+and answers `resolvedSelection` only for the one case where the answer
+is already unambiguous (`status: 'RESOLVED'`, one candidate). For
+`'AMBIGUOUS'`, `resolvedSelection` is `null`, full stop; picking one is
+left entirely to a Wanderer's own explicit click, recorded as
+`ui/components/WorldEncounterCanvas.js`'s own new
+`resolvedSelectionChoice` — never a `.find()`, never `candidates[0]`,
+never a "prefer local" rule, anywhere in either file.
+
+`selectedEncounter` STAYS EXACTLY `{ kind, objectId }` — THE ONE THING
+THIS MILESTONE DOES NOT TOUCH. Per the task's own "one subtle point,"
+`WorldEncounterCanvas`'s existing `selectedEncounter` contract is left
+completely alone: `selectEncounter()` still stores exactly what a
+marker's own `select` emit carries, and every 0.9.4/0.9.18 behavior is
+unaffected. `resolvedEncounterSelection` — `{ kind, objectId, origin }`
+— is a new, separate, DERIVED concept that exists ALONGSIDE
+`selectedEncounter`, distinguishing "the object a Wanderer clicked" from
+"the specific occurrence, from a specific source, that selection has
+been resolved to."
+
+`selectionOutcome` IS PAGE-LOCAL DATA, WRITTEN BY
+`refreshSelectionOutcome()` — NEVER A COMPUTED. Exactly like `worldView`
+(0.9.13), it cannot be a plain Vue `computed`: it depends on
+`registry.listSources()`'s own current snapshot, and a bare class
+instance handed in as a prop gives Vue's reactivity nothing to track
+when that snapshot changes later. `refreshSelectionOutcome()` is called
+from the same two places `selectedEncounter`'s own resolution can
+change: `selectEncounter()` (a new selection) and the registry's own
+change listener (a source appearing or disappearing while a selection
+stays open) — mirroring `refreshWorldViewFromRegistry()`'s own two call
+sites exactly.
+
+NO `registry`, NO RESOLUTION — NEVER A FABRICATED ORIGIN. Resolving
+provenance requires exactly the per-source data that makes provenance
+nameable at all, which this component only ever has access to via a
+`registry` (0.9.19's own header: "origin is attached to the encounter,
+never to a record" — a bare `view` prop is already the origin-blind,
+assembled reading). When no `registry` was supplied, `selectionOutcome`
+and `resolvedEncounterSelection` both stay `null` — this component
+behaves exactly as every earlier milestone already left it.
+
+A CHOSEN ORIGIN IS RE-CHECKED ON EVERY READ, NEVER TRUSTED BLINDLY.
+`resolvedEncounterSelection` re-verifies that `resolvedSelectionChoice`
+still names one of `selectionOutcome`'s own CURRENT candidates before
+trusting it — a chosen peer's own source can itself disappear from a
+live World between the click and now, and this milestone holds 0.9.18's
+own "a stale selection renders unavailable, never stale information"
+posture for exactly that case: the outcome recomputes, the stale choice
+is never cleared, but it simply stops being trusted the moment its own
+origin is no longer offered.
+
+**Deliberately excluded — not this milestone**, per the task's own list:
+- **Loading publication material, requesting anything from a peer,
+  reading `localStorage`, sending a peer message, verifying a signature,
+  or determining trust.** This milestone establishes unambiguous
+  selection only.
+- **Deduplicating encounters, or preferring one source/peer over another
+  by any rule.** See "WorldEncounterSelectionResolution.js still never
+  chooses," above.
+- **Interpreting the publication a resolved selection names.** A
+  resolved `{ kind, objectId, origin }` is still just a name.
+- **Any change to `core/WorldEncounter.js` or the peer transport
+  layer.** Neither is imported, referenced, or affected.
+- **Any change to `selectedEncounter`'s own shape.** See "selectedEncounter
+  stays exactly `{ kind, objectId }`," above.
+
+`application/WorldEncounterSelectionOutcome.js` added —
+`describeWorldEncounterSelectionOutcome()`,
+`describeWorldEncounterSelectionOutcomeFromRegistry()`,
+`WorldEncounterSelectionOutcomeStatus`.
+`ui/components/WorldEncounterCanvas.js` gains a third `application/`
+import, `selectionOutcome`/`resolvedSelectionChoice` page-local state, a
+`resolvedEncounterSelection` computed, `refreshSelectionOutcome()`/
+`chooseSelectionOrigin()` methods, and a "Choose Source" template block
+rendered alongside (never inside) the existing inspection panel.
+`css/main.css` gains `.world-encounter-selection-origin-*`.
+`tests/WorldEncounterSelectionOutcome.test.js` and
+`tests/WorldEncounterSelectionResolutionUI.test.js` added and registered
+in `tests.html`; `tests/WorldEncounterCanvasUI.test.js`'s own
+import-count assertions updated for the new `application/` import, and
+`tests/LiveWorldViewRegistrySubscription.test.js`'s own architectural
+boundary narrowed to allow `.origin` reads scoped to a 0.9.19/0.9.20
+selection candidate, while still forbidding one read off a raw source.
+
+---
+
+Deliberately paused here. A Wanderer's selection can now resolve all the
+way down to a specific, provenance-qualified occurrence — automatically
+when only one source offers it, through an explicit "Choose Source" pick
+when several do, and never at all when none currently do — with every
+existing rendering and inspection behavior (0.9.2 through 0.9.19)
+completely unaffected. What remains unbuilt is exactly what this
+milestone's own task described and declined to take: nothing yet loads
+the resolved selection's own underlying signed material (local disk or
+peer), nothing verifies a signature, and nothing interprets what a
+resolved `{ kind, objectId, origin }` actually names — the full
+`select → identify source → resolve → load → verify → interpret`
+progression stays open, one deliberate step further than 0.9.19 left it.
+Per the same reasoning that has paused this codebase before every
+milestone in this series, each of those remains an explicit request, not
+an automatic continuation.
