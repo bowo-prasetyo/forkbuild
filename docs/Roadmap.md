@@ -56328,3 +56328,135 @@ dismount transition — combining `currentMount`, the dismount intent
 into the real `mounted -> unmounted` state change, only ever performed
 once every fact it depends on already exists as an independently
 tested seam.
+
+## 0.9.82 — Avatar-Vehicle Dismount Transition
+
+Four independent facts now exist, none of them a TRANSITION: mount
+state (0.9.77), dismount intent (0.9.79), a resolved dismount position
+(0.9.80), and a clearance verdict on that position (0.9.81). Nothing
+yet DECIDES whether all four together should actually move the avatar
+off the vehicle. This is that decision — the exact mirror of 0.9.78's
+own mount transition, for the opposite direction:
+
+```
+deriveAvatarVehicleDismountTransition({
+    currentMount, currentPosition, dismountIntent,
+    dismountPosition, destinationClearance
+}) -> { mount, position }
+```
+
+`core/AvatarVehicleDismountTransition.js` (new) exports this one pure
+function.
+
+**The one rule this milestone adds:**
+
+```
+currentMount != null
+AND dismountIntent == DISMOUNT
+AND dismountPosition is a valid Position
+AND destinationClearance.clear == true
+    -> mount: null, position: dismountPosition
+```
+
+Every other combination — not mounted, no DISMOUNT intent, no/invalid
+destination, an unsafe or missing clearance verdict — leaves both
+`mount` and `position` exactly as they were.
+
+**Do not recalculate clearance, and do not recalculate the
+destination.** `destinationClearance` and `dismountPosition` are both
+trusted exactly as given — ordinarily
+`isAvatarVehicleDismountPositionClear()`'s and
+`resolveAvatarVehicleDismountPosition()`'s own outputs, respectively.
+This file never imports `core/AvatarVehicleDismountClearance.js`,
+`core/AvatarVehicleDismountPosition.js`, `core/AvatarTreeCollision.js`,
+`VehiclePresence`, or `VehicleType` — the identical discipline 0.9.78's
+own header already established for proximity and target resolution,
+applied here to the destination/clearance layer instead. In
+particular, this function never asks "is this actually the bicycle I'm
+mounted on?" — `currentMount.vehicleId` is never compared against
+anything; that question belongs to whichever call site chose which
+vehicle's destination and clearance to hand this function in the first
+place.
+
+**A `{ mount, position }` pair, never a new status vocabulary.** No
+`Dismounted` status, no `FAILED_DISMOUNT` state. `mount: null` already
+means "not mounted" (0.9.77's own "absence is null, never a
+sentinel"); a blocked destination is simply the transition not
+occurring, spelled out as the unchanged pair.
+
+**`currentPosition` is an addition beyond a literal mirror of 0.9.78's
+own four-argument shape**, and deliberately so: mounting never changes
+position, so 0.9.78 never needed a "current" position to hand back
+unchanged. Dismounting changes both fields together, so on failure
+this function needs a real current value to return — mirroring
+`AvatarPresence#next()`'s own "hand back everything, changed or not"
+shape rather than leaving the caller to re-derive "did anything
+change" from whether `mount` came back `null`.
+
+**One-shot safety falls out of the rule for free.** Calling this
+function twice in a row with the second call's `currentMount`/
+`currentPosition` set to the first call's own result cannot produce a
+second dismount: the rule's own first condition, `currentMount !=
+null`, is already false once a dismount has happened, so the second
+call falls straight into "unchanged" regardless of what
+`dismountIntent` still says — the identical protection 0.9.78's own
+"already mounted is a no-op" already established, just for the
+opposite direction.
+
+`tests/AvatarVehicleDismountTransition.test.js` proves: a mounted
+avatar with a DISMOUNT intent, a valid destination, and a clear
+verdict transitions — `mount` becomes `null`, `position` becomes the
+exact supplied destination (same reference), Y preserved exactly, the
+destination object never mutated (Section A); every way the rule's
+four conditions can independently fail — no mount, `NONE` intent, a
+missing/invalid destination, `{ clear: false }`, or a missing
+clearance verdict entirely — leaves the avatar mounted with its
+position untouched (Section B); an unchanged `mount` or `position` is
+the exact same reference, never a newly constructed look-alike, and a
+successful transition never mutates the supplied `currentMount` or
+destination (Section C); applying the same transition twice, the
+second time starting from the first call's own result, never produces
+a second dismount (Section D); a full sweep of malformed input — a
+bare string or plain-object-shaped `currentMount`, a plain `{x,y,z}`
+object in place of a real `Position` for either `currentPosition` or
+`dismountPosition`, an unrecognized or missing `dismountIntent`, and a
+`destinationClearance` that is present but not a genuine
+`{ clear: boolean }` shape — is rejected outright rather than silently
+coerced (Section E); and an architectural regression sweep confirming
+this file's own code never references
+`AvatarVehicleDismountClearance`/`AvatarVehicleDismountPosition`/
+`AvatarTreeCollision`/`VehiclePresence`/`VehicleType`/vehicle
+placement or identity/proximity/target resolution/avatar or vehicle
+movement/collision/physics/terrain/keyboard/rendering/animation/camera/
+persistence/networking, while confirming it DOES consume
+`isValidAvatarVehicleMount()` and the existing
+`AvatarVehicleDismountIntent` vocabulary rather than reimplementing
+either, that a destination/clearance pair is trusted at face value
+with no independent recomputation, that `currentMount.vehicleId` is
+never compared against anything, and that it exports exactly
+`deriveAvatarVehicleDismountTransition` (Section F).
+
+## What this milestone deliberately does NOT do
+
+Recalculating clearance or the dismount destination itself (0.9.80's
+and 0.9.81's own jobs, never reproduced or re-imported here); comparing
+`currentMount.vehicleId` against a vehicle id of any kind; vehicle
+switching or any vehicle awareness at all (`VehiclePresence`,
+`VehicleType`, vehicle placement, vehicle identity generation,
+proximity, target resolution); a new `Dismounted`/`FAILED_DISMOUNT`
+status vocabulary; avatar movement or `AvatarMovementController`
+changes of any kind; tree geometry or any other collision/physics;
+terrain; keyboard/controller input; rendering; animation; camera;
+persistence; networking; randomness; the clock.
+
+With this milestone, the complete mount/dismount semantic lifecycle
+that began at 0.9.73 (proximity) is closed: proximity, identity,
+intent, target resolution, a mount descriptor, a mount transition,
+dismount intent, dismount destination resolution, destination
+clearance, and now the dismount transition itself. The next step is
+deliberately NOT another small core abstraction — it is integrating
+this now-complete chain into the actual World View/navigation runtime,
+and letting that integration reveal whether the movement
+controller/session needs a genuinely new seam. If it does, that
+becomes the next milestone; if it doesn't, none should be invented
+merely to keep the sequence going.
