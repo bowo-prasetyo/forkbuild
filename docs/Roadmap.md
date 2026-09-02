@@ -53609,3 +53609,128 @@ function of the same placement the renderer already trusts, the next step
 is 0.9.60: a pure detection function combining this milestone's own
 circles with `core/AvatarCollision.js`'s own avatar radius into a single
 boolean fact, still touching no movement code at all.
+
+## 0.9.60 — Avatar-Tree Collision Detection
+
+The seam 0.9.59 opened up front and center: trees now have a well-defined
+physical footprint, but nothing yet asks whether the avatar's own footprint
+overlaps one. This milestone answers exactly that question, and only that
+question — it DETECTS an overlap; it does not decide what the avatar
+should do about it. That decision is 0.9.61's own job (see "Deliberately
+postponed" below).
+
+```text
+core/AvatarCollision.js                 core/TreeCollisionGeometry.js
+   AVATAR_COLLISION_RADIUS                 treeCollisionCircleFor(feature)
+            │                                        │
+            ▼                                        ▼
+core/AvatarTreeCollision.js                { center: { x, z }, radius }
+   avatarCollisionCircleAt(position)                 │
+            │                                        │
+            ▼                                        │
+   { center: { x, z }, radius }                       │
+            │                                        │
+            └───────────────┬───────────────────────┘
+                             ▼
+                circlesIntersect(a, b)
+                             │
+                             ▼
+              avatarTreeCollision(avatar, tree)
+                             │
+                             ▼
+                      { collides: boolean }
+```
+
+`core/AvatarTreeCollision.js` (new) exports three pure functions:
+
+- `circlesIntersect(a, b)` — the generic circle-circle primitive, tested
+  via squared distance against squared combined radius (`dx*dx + dz*dz <=
+  combinedRadius*combinedRadius`), which avoids an unnecessary
+  `Math.sqrt()` on every call. Deliberately generic over any two `{
+  center: { x, z }, radius }` shapes, not avatar/tree-specific, so 0.9.62
+  ("World Object Collision Composition") has a single reusable primitive
+  to build on for a rock, a building, or any other circular footprint,
+  rather than a near-identical function per object kind.
+- `avatarTreeCollision(avatar, tree)` — the named entry point for this
+  milestone's own question, returning exactly `{ collides: boolean }` and
+  nothing else. No `penetrationDepth`, `normal`, `pushVector`,
+  `resolvedPosition`, or `blockedMovement` — those describe a movement
+  OUTCOME, and belong entirely to 0.9.61.
+- `avatarCollisionCircleAt(position)` — the avatar-side counterpart to
+  `treeCollisionCircleFor()`: turns an already-known avatar position into
+  the identical `{ center: { x, z }, radius }` shape a tree circle already
+  has, sized by `core/AvatarCollision.js`'s own `AVATAR_COLLISION_RADIUS`
+  — the SAME hitbox radius that module already uses for brick collision,
+  never a second, tree-specific avatar radius that could drift out of
+  agreement with it. `y` is dropped entirely, matching
+  `core/TreeCollisionGeometry.js`'s own circles: both sides of this
+  detector are a purely horizontal, top-down shape.
+
+Exactly touching (`distance === avatarRadius + treeRadius`) counts as a
+collision — `<=`, not `<` — the same reasoning `core/AvatarCollision.js`'s
+own `aabbsOverlap()`/`resolveHorizontalMovement()` already apply to brick
+faces: a hairline gap at exact contact would let floating-point noise
+carry the avatar a fraction of a unit past the boundary on the very next
+tick. Identical centers always collide, including the degenerate
+zero-radius case. The detector is order-independent — swapping which
+circle is passed as "avatar" and which as "tree" never changes the result
+— because it never inspects anything beyond the shared `center`/`radius`
+shape both sides already agree on.
+
+`core/AvatarTreeCollision.js` imports nothing from
+`core/NaturalFeatureField.js`, `core/TreeCollisionGeometry.js`, any
+renderer module, Three.js, or any avatar movement/simulation module — its
+only import is the single `AVATAR_COLLISION_RADIUS` constant from
+`core/AvatarCollision.js`, an already-defined geometric fact, never a
+movement function. It knows only about circles; it has never heard of a
+seed, a feature record, a rendering object, or a requested movement step.
+
+`tests/AvatarTreeCollision.test.js` (new, registered in `tests.html`)
+covers: `circlesIntersect()`'s own geometry — outside, exactly touching,
+overlapping, identical centers, differing radii, and argument-order
+symmetry (Section A); `avatarCollisionCircleAt()` — center matches the
+position's own x/z, `y` is dropped, radius is exactly
+`AVATAR_COLLISION_RADIUS`, and the returned shape is frozen (Section B);
+`avatarTreeCollision()`'s own narrow output — exactly one key,
+`collides`, nothing else (Section C); a flagship integration pipeline
+running real 0.9.59 tree geometry (`treeCollisionGeometryInRegion()`) and
+a real avatar circle through the detector — an avatar standing exactly on
+a real tree's own placement collides, one 1000 units away does not, the
+exact `AVATAR_COLLISION_RADIUS + tree.radius` boundary collides while just
+past it does not, a larger tree's proportionally larger radius reaches an
+avatar a smaller tree at the same center would not, and the same seed +
+region + avatar position always reproduces the same collision fact
+(Section D); and an architectural regression pass reading this file's own
+source text, confirming it never references tree placement, avatar
+movement, rendering, `THREE`, randomness, the wall clock, or storage,
+while explicitly confirming it DOES consume `AVATAR_COLLISION_RADIUS`,
+plus a check that its exported surface is exactly these three functions
+(Section E).
+
+Deliberately postponed, matching 0.9.59's own list exactly: avatar
+movement **collision resolution** — deciding what a detected collision
+does to a requested step, most likely sliding along the boundary rather
+than a hard stop (0.9.61); a region-level "which trees does this avatar
+need to be tested against" query — a separate spatial-query concern this
+milestone deliberately keeps out, so world generation, spatial selection,
+collision geometry, and collision detection never collapse into one
+function (left to a later milestone, ahead of or alongside 0.9.62); and a
+general **world object collision composition** query unifying terrain,
+trees, and future object kinds behind one call (0.9.62). Also deliberately
+excluded: moving the avatar, blocking movement, collision response of any
+kind (sliding, pushing, bouncing), a physics engine, velocity,
+acceleration, mass, gravity, a second `COLLISION_OBJECT_KIND` or
+`COLLISION_SHAPE` of its own (this file reads, never extends, the
+vocabularies `core/TreeCollisionGeometry.js` already established), tree
+destruction, harvesting, interaction, damage, animation changes, sound,
+networking, persistence, and any Publication integration. No existing file
+— `core/NaturalFeatureField.js`, `core/TreeCollisionGeometry.js`,
+`core/AvatarCollision.js`, `application/AvatarMovementConstraint.js`, and
+`application/AvatarTerrainConstraint.js` included — is modified by this
+milestone; none of them import or reference `core/AvatarTreeCollision.js`.
+
+With a pure, deterministic, order-independent detection fact now
+available for any avatar position against any real tree, the next step is
+0.9.61: deciding what a `{ collides: true }` fact does to a requested
+movement step — most likely sliding along the tree's own boundary, the
+same "slide, don't dead-stop" feel building collision already gives.
