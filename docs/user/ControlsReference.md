@@ -66,6 +66,19 @@ As you move through the world, the interface shows derived context like:
 These descriptions are computed from your position, terrain ecology,
 hydrology, and structure placements — nothing is stored in the world.
 
+## Avatar Movement (World View)
+
+Walking your avatar directly, instead of flying the camera — see
+[Avatars & Presence](06-AvatarsAndPresence.md#walking-your-avatar).
+
+| Input | Action | Notes |
+|---|---|---|
+| `W` / `A` / `S` / `D` | Move / turn | Blocked by nearby buildings and trees, same as a wall |
+| `Shift` (held) | Run | |
+| `Space` | Jump | |
+| `Caps Lock` + `W` / `S` | Start continuous walk forward/backward | Keeps moving after keys are released; an ordinary `W`/`S` tap without Caps Lock cancels it |
+| `Caps Lock` + `Shift` + `W` / `S` | Start continuous run forward/backward | Same cancellation rule as above |
+
 ## Selection (click/marquee work in both views; only the Editor mutates)
 
 | Input | Action | Notes |

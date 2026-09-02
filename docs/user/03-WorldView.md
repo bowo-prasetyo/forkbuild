@@ -71,11 +71,14 @@ same time.
 
 - **Explore** is the default. It shows the arrival/welcome panel (who's
   here, and a few suggested destinations) plus a **Nearby** section with
-  three collapsible groups — **Nearby Places**, **Nearby Landmarks**, and
-  **Nearby People** — each just a name, a distance, and a compact **Go**
-  button. Click a group's title to expand it — World View remembers which
-  groups you left open even after you switch to Map or Places and come
-  back.
+  four collapsible groups — **Nearby Places**, **Nearby Landmarks**,
+  **Nearby People**, and **World Encounters** (see
+  [World Encounters](#world-encounters--publications-and-avatars-your-peers-are-sharing)
+  below) — each just a name, a distance, and a compact **Go** button
+  (World Encounters instead shows its own small map and inspection panel,
+  described below). Click a group's title to expand it — World View
+  remembers which groups you left open even after you switch to Map or
+  Places and come back.
 - **Map** opens the same flat, top-down World Map described below.
 - **Places** opens the geographic place directory described in
   [Geographic places](#geographic-places) below.
@@ -84,6 +87,34 @@ Switching between Explore, Map, and Places never loads a document, edits
 anything, or moves your avatar — it only changes what this panel is
 currently showing you, the same "Navigate ≠ Modify" boundary every other
 navigation control in World View already holds to.
+
+### World Encounters — publications and avatars your peers are sharing
+
+The **World Encounters** group, inside Explore's Nearby section, is a
+small flat map of its own — separate from the World Map described
+below — that plots two kinds of thing your connected peers have told you
+about: other **publications** (see
+[Publications & External Evidence](09-PublicationsAndEvidence.md)) placed
+nearby, and other people's **avatars**, each as its own marker alongside
+a marker for you.
+
+Click a marker to open an inspection panel:
+
+- A **publication** marker shows its title, publisher, whether it's
+  signed, its position, and how many external-evidence anchors and
+  snapshot placements it has.
+- An **avatar** marker shows its display name, owner, and position.
+
+If more than one connected peer offers the same encounter, a
+**Choose Source** list appears so you can pick which peer's copy to
+inspect. Like everything else in World View, this is purely for
+looking — nothing here moves your camera or edits anything.
+
+World Encounters only ever shows what a currently or recently connected
+peer has actually told you about; it reads **Nothing encounterable here
+yet** until at least one has. See
+[Peer Connections & Friends](07-PeerConnectionsAndFriends.md) for
+connecting to someone.
 
 ### Info — what am I looking at?
 

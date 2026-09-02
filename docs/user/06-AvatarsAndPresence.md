@@ -82,15 +82,29 @@ can also walk your avatar directly with **Avatar Control Mode**:
 | **W / A / S / D** | Move / turn |
 | **Shift** | Run (faster movement) |
 | **Space** | Jump |
+| **Caps Lock + W / S** | Hands-free continuous walk forward/backward — keeps moving after you let go of the keys |
+| **Caps Lock + Shift + W / S** | Same, but running instead of walking |
 
-Walking respects collision against nearby loaded buildings — you can't walk
-through structures streamed in around you. Your avatar can walk across placed
+Walking respects collision against nearby loaded buildings and trees — you
+can't walk through structures streamed in around you, or through the trees
+generated as part of the terrain. Your avatar can walk across placed
 structures, climb vertical surfaces, and navigate uneven terrain. The camera
 follows your avatar naturally as you move.
 
 **Follow Avatar** keeps the camera locked to your avatar as it moves, instead
 of orbiting freely. You can also follow other players' avatars to see where
 they're going.
+
+### Hands-free continuous movement
+
+Holding **Caps Lock** while you tap **W** or **S** starts your avatar
+walking (or, with **Shift** also held, running) in that direction
+continuously — it keeps going even after you release every key, exactly
+like a cruise control. Tapping **W** or **S** again *without* Caps Lock
+held cancels it and returns to ordinary key-held movement; tapping the
+opposite direction the same way also cancels it, rather than reversing
+it. There's no on-screen indicator that it's active — the only sign is
+that your avatar keeps walking on its own.
 
 ### Spatial awareness and activity
 

@@ -19,7 +19,9 @@ top-level [docs/](..) folder.
    published creation lives in: flying around, orienting yourself and
    finding places, searching and exploring to find things, inspecting
    bricks and placed structures, taking something into the Editor with
-   **Edit a Copy**, and the operation timeline.
+   **Edit a Copy**, the operation timeline, and a **World Encounters**
+   map of publications and avatars your connected peers are sharing
+   nearby.
 4. **[Publishing & Forking](04-PublishingAndForking.md)** — sharing
    your work, licenses, how forking works (including the automatic
    fork that happens the moment you edit a published creation), and
@@ -28,9 +30,10 @@ top-level [docs/](..) folder.
    identity, the vault (locking/unlocking), and backing it up with
    export/import.
 6. **[Avatars & Presence](06-AvatarsAndPresence.md)** — customizing how
-   you look, controlling who can see you, seeing (and walking
-   among) everyone else in World View, and understanding what they're
-   doing through spatial awareness.
+   you look, controlling who can see you, seeing (and walking among,
+   including a hands-free continuous-movement mode, and around trees the
+   same as buildings) everyone else in World View, and understanding
+   what they're doing through spatial awareness.
 7. **[Peer Connections & Friends](07-PeerConnectionsAndFriends.md)** —
    connecting directly to other people, remembering, friending, and
    blocking.
