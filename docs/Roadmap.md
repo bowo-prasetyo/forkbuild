@@ -52655,3 +52655,195 @@ retry/recovery policy, lifecycle history, and cross-process
 synchronization now stand as genuinely independent, unscheduled choices —
 each remains an explicit request, never smuggled in on top of describe
 (0.9.50), transition (0.9.51), store (0.9.52), or observe (0.9.53).
+
+## 0.9.54 — Publication Distribution Lifecycle Snapshot Persistence Boundary
+
+Every file in this family through 0.9.53 lives entirely within one
+process's own memory. 0.9.52's own store remembers a lifecycle between one
+call and the next, and 0.9.53 lets a caller hear about it changing live —
+but both are explicit about the boundary they refuse to cross: 0.9.52's
+own header names it directly, "Live, in-memory, per-instance state — not a
+singleton, not persisted... nothing here is written to a StorageProvider,
+localStorage, IndexedDB, a filesystem, or a database, and nothing here
+survives a page reload or a process restart." This milestone is that
+later, unscheduled continuation, answering only the question 0.9.52
+declined to: once a caller HAS a lifecycle snapshot, how does it survive
+the one boundary the memory store never crosses — a process restart?
+
+```text
+execute (0.9.49) -> result (0.9.48 shape)
+     │
+     ▼
+describe (0.9.50) -> lifecycle
+     │
+     ▼
+transition (0.9.51) -> next lifecycle
+     │
+     ▼
+store.set(publicationId, lifecycle)          (0.9.52, unmodified)
+     │
+     ▼
+persistence.save(publicationId, lifecycle)   (0.9.54, THIS)
+     │
+     ▼
+... process restart, or a fresh consumer entirely ...
+     │
+     ▼
+persistence.load(publicationId)  ->  the same lifecycle FACTS, later
+```
+
+`application/PublicationDistributionLifecyclePersistence.js` (new) is a
+persistence boundary, never a second memory store. It does not extend,
+wrap, or replace `PublicationDistributionLifecycleMemoryStore` (0.9.52/
+0.9.53) — it never imports that file, never imports
+`PublicationDistributionLifecycleTransition.js` (0.9.51), never imports
+`PublicationDistributionResult.js` (0.9.48) or
+`PublicationDistributionExecutor.js` (0.9.49), and never calls
+`describePublicationDistributionLifecycle()` (0.9.50) itself. It is a
+wholly separate, composable seam: the existing memory store keeps staying
+exactly what it already is, with no `set()`-triggered side effect added on
+top of it — the single most important decision of this milestone, settled
+explicitly by its own request: "I would not make the existing
+`PublicationDistributionLifecycleMemoryStore` secretly persistent." A
+caller who wants both remembers a lifecycle in the memory store AND
+separately calls `save()` here.
+
+The persistence boundary stores lifecycle facts; it does not execute
+lifecycle transitions. `save(publicationId, lifecycle)` persists the
+already-valid lifecycle description a caller already holds — it never
+derives lifecycle state, never validates a publication's distribution,
+never executes an upload or a publish, never transitions state, never
+generates a timestamp, never assigns a version, never compares the new
+value against whatever was previously on file, and never deduplicates a
+repeated write. `publicationId` remains the storage key, exactly as
+0.9.52 already keyed the memory store — never material uri, discovery
+uri, relay origin, discovery tag, or event id — namespaced under this
+file's own key prefix so its records never collide with an unrelated key
+some other part of the engine stores through the same injected
+persistence implementation.
+
+```javascript
+class PublicationDistributionLifecyclePersistence {
+    constructor(persistence) { /* save/load/remove/list, duck-typed */ }
+    save(publicationId, lifecycle) { /* ... */ }
+    load(publicationId) { /* -> lifecycle | null */ }
+    remove(publicationId) { /* -> boolean */ }
+    clear() { /* ... */ }
+}
+```
+
+The constructor takes an injected persistence implementation, duck-typed
+to `storage/StorageProvider.js`'s own `save`/`load`/`remove`/`list` shape
+— this file has no idea whether it is backed by `localStorage`, a
+filesystem, an in-memory `Map`, or anything else, and never checks
+`instanceof StorageProvider`. It only verifies, once, at construction,
+that the four methods it needs actually exist as functions, throwing
+immediately on a missing or incompatible implementation — a programmer
+error, surfaced the same way `LocalPublicationAnchorStore`'s own
+constructor (0.8.15) already throws on a missing `storageProvider`, rather
+than degrading silently into a persistence boundary that quietly does
+nothing.
+
+A persisted record is an untrusted byte source, not a second trust root —
+the same principle `LocalPublicationAnchorStore`'s own header already
+names (0.8.15, docs/Principles.md). `save()` writes a deterministic,
+JSON-safe plain record built from exactly the fields a well-formed
+lifecycle section carries, never the caller's own object reference and
+never an extra property that reference might additionally happen to
+carry. `load()` re-validates that record's minimal shape before trusting
+it — the identical `ABSENT`/`PRESENT` shape `PublicationDistributionLifecycle.js`
+(0.9.50) itself already requires — and returns `null`, never throws, for
+a record that has drifted: hand-edited, corrupted, written by an
+unrelated schema version, or simply garbage. A missing persisted record
+remains simply absence of a lifecycle snapshot, exactly what `null`
+already means for the memory store's own `get()` — never `PENDING`,
+`FAILED`, `RECOVERING`, or any other vocabulary this whole family has
+kept out since 0.9.50.
+
+Identity is not preserved across persistence — semantics are, and that
+distinction is the one this milestone exists to draw:
+
+```javascript
+persistence.save('pub-1', lifecycle);
+const loaded = persistence.load('pub-1');
+loaded === lifecycle;                                // false — a NEW object
+loaded.material.uri === lifecycle.material.uri;       // true — same facts
+```
+
+Unlike 0.9.52's and 0.9.53's own in-memory boundary, where
+`store.get(publicationId) === lifecycle` holds exactly because nothing is
+ever serialized, crossing a real persistence boundary never preserves a
+JavaScript object reference — only the facts the reference carried.
+`save()`/`load()`/`remove()`/`clear()` are deliberately the same four
+verbs 0.9.52 established for the memory store, renamed only where the
+operation itself is genuinely different (`get` -> `load`, `set` -> `save`,
+naming that this boundary crosses real I/O the memory store never does).
+`remove()` keeps 0.9.52's own idempotency contract — `true` when a record
+was actually removed, `false` otherwise, including for a malformed
+`publicationId`. `clear()` removes every record this file's own key
+prefix has ever written, found via the injected implementation's own
+`list()` rather than private bookkeeping, so it never touches an
+unrelated key sharing the same injected persistence — and so two
+instances layered over the same injected implementation stay consistent
+with each other automatically.
+
+Synchronous only, matching `storage/StorageProvider.js`'s own contract —
+no `Promise` this family has never needed before. `save()` never mutates
+the lifecycle a caller supplies. Malformed input degrades silently, never
+throws, on every method, for the identical reason 0.9.52 already
+established: `save()` does nothing for a malformed `publicationId` or a
+lifecycle failing the minimal shape `load()` itself re-validates on the
+way back in; `load()` returns `null` and `remove()` returns `false` for a
+malformed `publicationId`. Only a genuinely broken injected persistence
+implementation, discovered once at construction, is treated as the
+programmer error it is.
+
+`tests/PublicationDistributionLifecyclePersistence.test.js` (new) covers:
+a flagship section running the real 0.9.49 decline scenario through
+0.9.50, persisting it, loading it back through a second, independent
+instance sharing the same injected persistence (proving a real process
+boundary rather than per-instance memory), applying a 0.9.51 retry
+transition, and persisting and reloading the recovered lifecycle too; a
+section proving identity is recreated while semantics are preserved,
+including that the reconstructed lifecycle is frozen at every level; a
+section confirming a never-saved or removed publicationId loads as null;
+a section confirming a malformed persisted record (written directly
+through the injected implementation, bypassing this file's own save())
+loads as null at every point of shape drift; a remove() idempotency
+section; a section confirming clear() removes only this file's own
+key-prefixed records and never an unrelated key sharing the same injected
+persistence; a malformed-input section; a section confirming save() never
+mutates the supplied lifecycle; a deterministic-representation section
+proving two lifecycles carrying identical facts, as different object
+references, persist to byte-identical records; a composability section
+confirming instances sharing an injected persistence see each other's
+writes while instances over separate implementations share no state; a
+constructor-validation section; and an architectural regression pass
+confirming this file imports none of the lifecycle/transition/result/
+execution/collaborator modules, references no concrete storage technology
+of its own, performs no I/O beyond the injected persistence
+implementation, reads no clock, adds no observation seam, and uses no
+pending/failed/retrying/recovering/confirmed/withdrawn/rollback/
+transaction/history/version/lock/merge/rank/encrypt/compress/migration
+vocabulary anywhere in its own code. No existing file besides `tests.html`
+(registering the new test) is modified by this milestone —
+`PublicationDistributionLifecycleMemoryStore` and every one of its
+existing tests are untouched, exactly as promised.
+
+Deliberately paused again, exactly where this milestone's own request
+drew the line. Explicitly unscheduled: automatic persistence triggered
+from the memory store's own `set()`; automatic loading during this
+class's own construction; retry, recovery, or reconciliation of a
+persistence-implementation failure; history, an audit trail, version
+numbers, or timestamps; optimistic locking or conflict resolution against
+whatever is currently on file; cross-process synchronization with a live
+`subscribe()`r of the memory store; encryption, compression, or migration
+of a persisted record's shape; garbage collection or expiry of a
+persisted record on its own initiative; event sourcing, or persisting
+more than the single most recently `save()`d lifecycle per publication
+identity; and persistence-failure status or persistence notifications of
+any kind. Recovery/retry policy, lifecycle history, and cross-process
+synchronization remain genuinely independent, unscheduled choices — each
+still an explicit request, never smuggled in on top of describe (0.9.50),
+transition (0.9.51), store (0.9.52), observe (0.9.53), or persist
+(0.9.54).
