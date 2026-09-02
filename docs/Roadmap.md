@@ -56620,3 +56620,134 @@ milestone: how should mounted movement modify the avatar's existing
 movement capability without creating a second movement system — not
 predetermined here, but left for the actual runtime, now that it
 exists, to answer.
+
+## 0.9.84 — Avatar-Vehicle Movement Capability Resolution
+
+0.9.83's own closing paragraph named the question it deliberately left
+open: "how should mounted movement modify the avatar's existing
+movement capability without creating a second movement system." This
+milestone answers exactly that question, and stops there — it does not
+yet touch `application/AvatarMovementController.js`, and no vehicle
+moves as a result of anything in this milestone.
+
+```
+                 AvatarVehicleMount (0.9.77)
+                            │
+                            ▼
+                       VehicleType
+                            │
+                            ▼
+       resolveAvatarVehicleMovementCapability()   (this milestone)
+                            │
+                            ▼
+             AvatarVehicleMovementCapability
+                            │
+                            ▼
+        application/AvatarMovementController.js   (0.9.85, not yet)
+```
+
+**`core/AvatarVehicleMovementCapability.js` (new)** exports one pure
+resolution function:
+
+```
+resolveAvatarVehicleMovementCapability(vehicleType) -> AvatarVehicleMovementCapability
+```
+
+**Takes a `VehicleType`, never an `AvatarVehicleMount` or a
+`VehiclePresence`.** Exactly like `core/AvatarVehicleMount.js`'s own
+header already established for why a mount stores a vehicle id and
+never a `VehicleType` — "a vehicle's type is already available from
+its own `VehiclePresence`; duplicating it here would let a mount
+relationship and its vehicle's own presence disagree about what the
+vehicle IS" — this resolver has no opinion on how a caller gets from a
+mount to a `VehicleType`. `VehicleType.NONE` is passed for "not
+currently mounted," reusing the exact value `core/VehicleType.js`
+already reserved for it, rather than inventing a second not-mounted
+spelling next to `AvatarVehicleMount`'s own `null`.
+
+**A grouping vocabulary, not a duplicate one.** The temptation this
+milestone explicitly refuses is re-listing
+`BICYCLE`/`MOTORCYCLE`/`CAR`/`DRONE` side by side as a second,
+independent five-value enum standing in for `VehicleType`. Instead,
+`AvatarMovementCapabilityKind` has three values, and groups by shared
+movement semantics rather than vehicle identity:
+
+```
+AvatarMovementCapabilityKind.WALK           — VehicleType.NONE
+AvatarMovementCapabilityKind.GROUND_VEHICLE — BICYCLE, MOTORCYCLE, CAR alike
+AvatarMovementCapabilityKind.AERIAL_VEHICLE — DRONE
+```
+
+Bicycle, motorcycle, and car all resolve to the same `GROUND_VEHICLE`
+kind — all three are, per `core/VehicleType.js`'s own header, ground
+vehicles — which is exactly the fact a future 0.9.85 needs in order to
+reuse the SAME existing ground movement pipeline for all three,
+without a second `VehicleType` lookup of its own. Drone is deliberately
+its own kind, never folded into `GROUND_VEHICLE` merely because both
+are "vehicles" — this codebase has no aerial movement concept of any
+kind yet (no altitude, no lift, nothing beyond `AvatarVerticalState`'s
+own jump/fall), so silently routing a drone through ground-vehicle
+movement would be actively wrong, not merely premature.
+
+**`supported` names whether a movement pipeline concept exists yet,
+not whether this milestone implemented any physics.** Nothing in
+0.9.84 makes anything move — that is explicitly 0.9.85's job, for
+every kind including `WALK`'s own already-real pipeline. `supported`
+instead distinguishes "an existing or planned pipeline this capability
+is meant to eventually drive" (`WALK` — already real; `GROUND_VEHICLE`
+— the express plan for 0.9.85 is reusing that same existing pipeline)
+from "no such pipeline exists in this codebase in any form"
+(`AERIAL_VEHICLE` — there is no flight/altitude system to eventually
+drive at all). A resolved `DRONE` capability is still a fully-formed,
+valid descriptor — never `null`, never an exception — it simply
+reports `supported: false` rather than silently pretending a car's
+ground movement also serves a drone.
+
+**No speed values, no physics, yet — deliberately.** An earlier framing
+of this milestone proposed a `maxSpeed` field, or per-vehicle
+multipliers, as the first concrete capability. This file ships neither:
+settling that a bicycle moves faster than walking is a game-balance
+decision for whichever future milestone actually wires a numeric value
+into the existing movement pipeline, not a decision this vocabulary
+should prejudge with a guessed or "reserved but zero" placeholder.
+`movementKind` and `supported` are deliberately the entire descriptor —
+extensible later without redesigning the vocabulary now.
+
+**Immutable, getter-only, frozen, deterministic** — the same discipline
+`core/AvatarVehicleMount.js` and `core/VehiclePresence.js` already
+enforce. `resolveAvatarVehicleMovementCapability()` performs no
+randomness and no clock read; the module precomputes and freezes one
+capability instance per `VehicleType` at load time, so the same input
+returns the literal same (`===`) instance every time, not merely a
+field-identical copy.
+
+Tests: `tests/AvatarVehicleMovementCapability.test.js` (Sections A-K)
+covers all five `VehicleType` values including the explicit
+unsupported-but-defined drone case, bicycle/motorcycle/car sharing one
+`GROUND_VEHICLE` kind, determinism and immutability, invalid-input
+rejection, `toJSON()`/`fromJSON()` round-tripping, and an architectural
+regression sweep confirming this file's own code never references
+`AvatarMovementController`, `WorldNavigationSession`,
+`AvatarVehicleInteractionController`, `AvatarVehicleMount`,
+`VehiclePlacement`, `VehiclePresence`, `AvatarTreeCollision`, terrain,
+rendering, input, physics, persistence, or networking of any kind.
+
+## What this milestone deliberately does NOT do
+
+Any change to `application/AvatarMovementController.js`; W/S input;
+continuous movement; numeric speed, acceleration, or braking of any
+kind; turning; vehicle orientation; vehicle collision; vehicle-specific
+terrain handling; vehicle animation; camera behavior;
+mounting/dismounting (0.9.77-0.9.83's own job, untouched); persistence;
+networking; and actual vehicle or drone movement of any kind. This
+file answers only "what movement capability kind does the avatar's
+current vehicle relationship imply," nothing about how, or whether
+yet, that capability actually moves anything.
+
+Next: with a resolved capability descriptor now in hand, 0.9.85 can
+feed it into the ONE existing avatar movement pipeline — reusing
+`application/AvatarMovementController.js`'s own walk/run/turn/terrain
+machinery for `GROUND_VEHICLE`, rather than building a parallel
+`BicycleMovementController`/`CarMovementController` per vehicle type —
+the exact architecture this milestone's own vocabulary was shaped to
+support without prejudging.
