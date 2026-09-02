@@ -28,6 +28,7 @@ import { AvatarMovementController } from './AvatarMovementController.js';
 import { AvatarMovementConstraint } from './AvatarMovementConstraint.js';
 import { AvatarTerrainConstraint } from './AvatarTerrainConstraint.js';
 import { AvatarStepConstraint } from './AvatarStepConstraint.js';
+import { AvatarTreeConstraint } from './AvatarTreeConstraint.js';
 import { DEFAULT_MAX_STEP_HEIGHT } from '../core/BrickWalkability.js';
 import { PresenceSyncService } from './PresenceSyncService.js';
 import { LocalPresenceStore } from './LocalPresenceStore.js';
@@ -922,7 +923,8 @@ export class WorldNavigationSession {
             this._avatarPresenceSession,
             this._buildAvatarMovementConstraint(),
             this._buildAvatarTerrainConstraint(),
-            this._buildAvatarStepConstraint()
+            this._buildAvatarStepConstraint(),
+            this._buildAvatarTreeConstraint()
         );
         this._lastAvatarFollowPosition = this._avatarPresenceSession.current.position;
         if (typeof this._session.onAnimationFrame === 'function') {
@@ -1042,6 +1044,21 @@ export class WorldNavigationSession {
             getWorldPosition: (documentId) => this._getWorldPosition(documentId),
             brickRegistry: this._registry
         });
+    }
+
+    // 0.9.63 — builds the LOCAL avatar's tree-collision constraint.
+    // Like _buildAvatarTerrainConstraint() above, this needs no state
+    // from this session at all: tree placement is a pure function of
+    // (seed, x, z), always computable for any coordinate regardless of
+    // which documents happen to be streamed in nearby — see
+    // application/AvatarTreeConstraint.js's own header.
+    // AvatarTreeConstraint's own constructor default (the same shared
+    // DEFAULT_WORLD_SEED every other seed-driven query point in this
+    // codebase reads) is exactly what a real session wants, so nothing
+    // is passed here — always built, unconditionally, the same posture
+    // _buildAvatarTerrainConstraint() already established.
+    _buildAvatarTreeConstraint() {
+        return new AvatarTreeConstraint();
     }
 
     // -----------------------------------------------------------------

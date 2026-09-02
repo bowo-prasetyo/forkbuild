@@ -74,14 +74,29 @@ import { deriveAvatarVerticalState } from '../core/AvatarVerticalState.js';
 // core/AvatarMovementSimulation.js), so the very next tick's gravity
 // integration starts cleanly from rest, exactly like the top of any
 // other fall.
+//
+// 0.9.63 — `treeConstraint` (optional, same "enforce/offer only when
+// wired" posture as every other constraint here) is APPENDED last,
+// both in this constructor's own parameter list and in tick()'s own
+// pipeline below — the same append-only convention `stepConstraint`
+// itself already followed relative to `terrainConstraint`, so no
+// existing positional caller (test or otherwise) is disturbed by its
+// addition. It runs on whatever position building collision, terrain
+// slope, and step height have already produced, and only ever adjusts
+// X/Z — see application/AvatarTreeConstraint.js's own header for why
+// running it last is safe: tree collision never reads or writes Y, so
+// it cannot undo any ground/brick snap `stepConstraint` already
+// resolved. A controller built without a treeConstraint computes none
+// of this and behaves exactly as it did before this milestone.
 const EPSILON = 1e-6;
 
 export class AvatarMovementController {
-    constructor(avatarPresenceSession, movementConstraint = null, terrainConstraint = null, stepConstraint = null) {
+    constructor(avatarPresenceSession, movementConstraint = null, terrainConstraint = null, stepConstraint = null, treeConstraint = null) {
         this._avatarPresenceSession = avatarPresenceSession;
         this._movementConstraint = movementConstraint;
         this._terrainConstraint = terrainConstraint;
         this._stepConstraint = stepConstraint;
+        this._treeConstraint = treeConstraint;
         this._keys = { forward: false, backward: false, left: false, right: false, running: false, jumpHeld: false };
         this._verticalVelocity = 0;
         this._grounded = true;
@@ -96,6 +111,9 @@ export class AvatarMovementController {
         this._blockedBySlope = false;
         // 0.3.2 — same posture again, for the step-height equivalent.
         this._blockedByStepHeight = false;
+        // 0.9.63 — same posture again, for the tree-collision
+        // equivalent.
+        this._collidedWithTree = false;
     }
 
     // Returns true when `key` is one this controller understands (so
@@ -213,6 +231,19 @@ export class AvatarMovementController {
             }
         }
 
+        // 0.9.63 — applied LAST, after building collision, terrain
+        // slope, and step height have all already resolved `finalPosition`
+        // (Y included): tree occupancy is a purely horizontal (X/Z)
+        // constraint, orthogonal to every one of those, and never reads
+        // or rewrites the Y they already settled — see
+        // application/AvatarTreeConstraint.js's own header.
+        this._collidedWithTree = false;
+        if (this._treeConstraint) {
+            const treeResult = this._treeConstraint.apply(currentPosition, finalPosition);
+            finalPosition = treeResult.position;
+            this._collidedWithTree = treeResult.collided;
+        }
+
         const positionChanged = !samePosition(finalPosition, current.position);
         const rotationChanged = Math.abs(result.rotationY - currentRotationY) > EPSILON;
         const animationChanged = result.animation !== current.animation;
@@ -254,6 +285,17 @@ export class AvatarMovementController {
     // surface, not something any other internal logic reads.
     isBlockedByStepHeight() {
         return this._blockedByStepHeight;
+    }
+
+    // 0.9.63 — whether the MOST RECENT tick's desired movement was
+    // altered because it would have carried the avatar into a tree's
+    // own collision circle. Same posture as isCollided()/
+    // isBlockedBySlope()/isBlockedByStepHeight() above: transient,
+    // recomputed fresh every tick, never persisted, never part of
+    // AvatarPresence. A debug/UI surface, not something any other
+    // internal logic reads.
+    isCollidedWithTree() {
+        return this._collidedWithTree;
     }
 
     // 0.3.4 — the avatar's CURRENT vertical motion state (SUPPORTED /
