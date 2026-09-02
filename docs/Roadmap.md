@@ -52847,3 +52847,158 @@ synchronization remain genuinely independent, unscheduled choices — each
 still an explicit request, never smuggled in on top of describe (0.9.50),
 transition (0.9.51), store (0.9.52), observe (0.9.53), or persist
 (0.9.54).
+
+## 0.9.55 — Publication Distribution Lifecycle Persistence Bridge
+
+0.9.53 added an observation seam to the memory store; 0.9.54 added a
+persistence boundary wholly independent of it. Nothing yet connects the
+two — a caller who wants every stored lifecycle to become durable has to
+call both `store.set(publicationId, lifecycle)` and
+`persistence.save(publicationId, lifecycle)` by hand, at every call site,
+and never forget the second call. This milestone is that missing
+connection, and nothing more: a small adapter that projects 0.9.53's own
+observation seam into 0.9.54's own persistence boundary, without turning
+persistence into part of the store itself.
+
+```text
+store.set(publicationId, lifecycle)        (0.9.52, unmodified)
+     │
+     ├── store value
+     │
+     └── notify subscribers of publicationId   (0.9.53, unmodified)
+                │
+                ▼
+     bridge's own listener(publicationId, lifecycle)
+                │
+                ▼
+     persistence.save(publicationId, lifecycle)   (0.9.54, unmodified)
+
+store.remove(publicationId)                (0.9.52, unmodified)
+     │
+     └── notify subscribers of publicationId, only when removed
+                │
+                ▼
+     bridge's own listener(publicationId, null)
+                │
+                ▼
+     persistence.remove(publicationId)   (0.9.54, unmodified)
+```
+
+`PublicationDistributionLifecyclePersistenceBridge` (new) holds no
+lifecycle state of its own — no `Map`, no cache, nothing a caller could
+`get()` from it. It receives an already-constructed lifecycle memory store
+and an already-constructed lifecycle persistence instance through its own
+constructor, and its entire public surface is one method,
+`observe(publicationId)`, which subscribes to that one publication
+identity's own changes and returns an `unsubscribe` function — the exact
+shape `store.subscribe()` itself already returns, since this method does
+nothing more than call it and route its notifications onward:
+
+```javascript
+const bridge = new PublicationDistributionLifecyclePersistenceBridge(store, persistence);
+const disconnect = bridge.observe('pub-1');
+store.set('pub-1', lifecycle);      // -> persistence.save('pub-1', lifecycle)
+store.remove('pub-1');              // -> persistence.remove('pub-1')
+disconnect();
+store.set('pub-1', lifecycle);      // -> nothing; the bridge is no longer listening
+```
+
+Neither `PublicationDistributionLifecycleMemoryStore` (0.9.52/0.9.53) nor
+`PublicationDistributionLifecyclePersistence` (0.9.54) is modified, or
+even imported, by this milestone — both are duck-typed through the
+constructor (`store.subscribe`; `persistence.save`/`persistence.remove`),
+exactly as 0.9.54's own constructor already duck-types its own injected
+persistence implementation. Every existing test for both files keeps
+passing unmodified. The bridge's own listener forwards the exact
+`lifecycle` reference the store notifies it with straight into
+`persistence.save()` — no cloning, no rebuilding — and reacts to a `null`
+notification (0.9.53's own "plain absence, never withdrawal") the one
+honest way available, by calling `persistence.remove()`.
+
+The central rule this milestone exists to establish: **no rollback**.
+`store.set()` has already taken effect, synchronously, before the
+bridge's own listener ever runs. Should `persistence.save()` or
+`persistence.remove()` itself fail, the bridge makes no attempt to undo
+the memory-store change that already happened — no `store.remove()`, no
+`store.set()`, nothing back on the store at all, which would invent
+transactional semantics that exist nowhere else in this family. In-memory
+lifecycle state and durable lifecycle state are separate representations
+and may temporarily diverge; this milestone documents that divergence
+without naming it `FAILED`, `PENDING`, `DIRTY`, or `OUT_OF_SYNC` — any of
+those would be new lifecycle vocabulary this milestone deliberately
+declines to add. The bridge's own listener is, from the store's point of
+view, an ordinary subscriber, and 0.9.53's own `_notify()` already
+isolates every subscriber inside its own `try`/`catch` so one throwing
+listener can never block another or the triggering `set()`/`remove()`
+call itself — a persistence failure therefore surfaces exactly as far as
+that existing contract already lets it, and the bridge adds no
+`try`/`catch`, no retry, and no persistence-failure status of its own on
+top of it.
+
+No hydration: `observe(publicationId)` never calls
+`persistence.load(publicationId)`, and never calls `store.set()` on its
+own initiative — connecting a bridge is purely forward-looking, "notify
+me about subsequent changes," the identical restraint `store.subscribe()`
+itself already holds for `get()`. Restoring persisted state into the
+memory store remains later, unscheduled work — this milestone connects
+memory to persistence in one direction only, never both. No `clear()`
+interpretation either: 0.9.53's own store deliberately never notifies on
+`clear()`, and this bridge invents no way to detect it — it has no
+`clear()` method of its own and calls no `persistence.clear()`. A caller
+who wants both cleared calls `store.clear()` and `persistence.clear()`
+explicitly, itself.
+
+`tests/PublicationDistributionLifecyclePersistenceBridge.test.js` (new)
+covers: a flagship section running the real 0.9.49 decline scenario
+through 0.9.50, storing it, letting the bridge automatically project it
+into a real 0.9.54 persistence instance, loading it back through a fresh
+persistence instance sharing the same injected storage, applying a 0.9.51
+retry transition, storing the replacement, and confirming the bridge
+persists that too — all without the test ever calling
+`persistence.save()` itself, and confirming disconnecting stops further
+projection; a section confirming `set()` persistence carries the exact
+lifecycle facts; a section confirming `remove()` persistence fires only
+on an actual removal; a section confirming `observe()` itself never
+persists anything, even when a lifecycle is already stored; an
+exact-identity section confirming no cloning or reconstruction inside the
+bridge; a replacement section confirming two successive `set()` calls
+cause two persistence operations with no deduplication; a
+publication-isolation section; a disconnect section; an unsubscribe
+idempotency section; a persistence-failure section confirming a throwing
+`save()`/`remove()` never mutates or rolls back the memory-store
+lifecycle and never propagates out of `store.set()`/`store.remove()`; a
+section confirming `store.clear()` is never projected into persistence
+and that the bridge exposes no `clear()` method of its own; a
+constructor-validation section; a section confirming malformed
+`observe()` input degrades silently; and an architectural regression pass
+confirming the bridge imports neither the store nor the persistence
+module directly, never calls `load()`/`list()`, contains no `try`/`catch`
+of its own, performs no I/O, reads no clock, freezes/clones/serializes
+nothing, and uses no pending/failed/retrying/recovering/confirmed/
+withdrawn/rollback/compensation/transaction/queue/schedule/history/undo/
+version/lock/merge/rank/dirty/stale/hydrat/batch/dedup vocabulary
+anywhere in its own code. No existing file besides `tests.html`
+(registering the new test) is modified by this milestone —
+`PublicationDistributionLifecycleMemoryStore`,
+`PublicationDistributionLifecyclePersistence`, and every one of their
+existing tests are untouched, exactly as promised.
+
+Deliberately paused again, exactly where this milestone's own request
+drew the line. Explicitly unscheduled: automatic hydration or loading
+persisted state into the store on `observe()`, construction, or any other
+occasion; bidirectional synchronization of any kind — this bridge
+connects memory to persistence, never the other way; conflict resolution
+or optimistic locking against whatever persistence already has on file;
+persistence retry, retry scheduling, or a persistence-failure queue;
+rollback, compensation, or transactions of any kind; a durability status,
+dirty flag, or any other representation of memory/persistence divergence;
+timestamps, version numbers, or an event history; distributed or
+cross-process synchronization beyond the exact `store`/`persistence`
+instances a bridge was constructed with; an audit log, batching, or write
+deduplication; and `FAILED`/`PENDING`/`CONFIRMED`/`RECOVERING` or any
+other operational vocabulary. The hydration/restoration boundary — reading
+FROM persistence and writing TO the store — and whatever recovery policy
+governs it remain genuinely independent, unscheduled choices — each still
+an explicit request, never smuggled in on top of describe (0.9.50),
+transition (0.9.51), store (0.9.52), observe (0.9.53), persist (0.9.54),
+or bridge (0.9.55).
