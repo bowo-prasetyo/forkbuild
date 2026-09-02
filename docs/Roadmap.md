@@ -54507,3 +54507,130 @@ next milestone is prescribed here on purpose: the design brief that
 requested this one was explicit that whatever comes next should emerge
 from how continuous movement actually feels once it's genuinely running
 in World View, not from architectural momentum alone.
+
+## 0.9.67 — Continuous Movement Mode Vocabulary
+
+Having felt continuous walking run in World View, the next question
+answered itself: 0.9.64–0.9.66 gave the avatar a persistent DIRECTION
+(FORWARD/BACKWARD), but `application/AvatarMovementController.js`
+already had its own, completely separate concept of running —
+`AvatarMovementState.running`, driven by an ordinary held Shift (see
+`core/AvatarMovementState.js`). Nothing in the Continuous Avatar
+Movement line touched that concept at all, so a player who Caps-Lock-
+activated continuous forward movement got continuous WALKING,
+specifically — there was no way to ask for continuous RUNNING. This
+opens a new, second line, Continuous Movement Mode, that answers
+exactly that gap, starting — deliberately — with the same kind of
+seam-first milestone 0.9.64 opened its own line with.
+
+Before deciding what a keyboard chord should mean, this milestone asks
+the architectural question the design brief raised first: is
+"continuous run" a fourth movement-key vocabulary alongside
+FORWARD/BACKWARD, or a second, independent dimension? The existing
+`AvatarMovementState` already answers this by example — `forwardAxis`
+and `running` are two separate fields, not a combined
+`FORWARD_WALK`/`FORWARD_RUN`/`BACKWARD_WALK`/`BACKWARD_RUN` enum —
+precisely so a consumer that only cares about one dimension never has
+to pattern-match the other. Continuous movement's own persistent state
+follows the identical shape: direction
+(`core/AvatarContinuousMovementIntent.js`, unchanged by this milestone)
+and mode are kept as two separate, independently-transitioning
+vocabularies, combined only by a later milestone, never merged into
+one.
+
+`core/AvatarContinuousMovementMode.js` (new) is the direct structural
+twin of `core/AvatarContinuousMovementIntent.js`: a small, closed
+vocabulary — `AvatarContinuousMovementMode.NONE` / `WALK` / `RUN` —
+plus one pure transition function,
+`deriveAvatarContinuousMovementMode({ activationRequested,
+runRequested })`, answering exactly one question: given the ONE new
+signal that just happened, what persistent mode should exist now?
+`activationRequested` is the exact same already-resolved boolean
+`deriveAvatarContinuousMovementIntent()` already reads under that name
+— expected to be the identical value passed to both functions for the
+same key event once 0.9.68 wires them together. `runRequested` is
+likewise already semantic — whether THIS activating press asks for RUN
+rather than WALK (e.g. the future input layer's own Caps Lock + Shift +
+W/S chord) — never a raw Shift-key read; this file has no idea a
+keyboard exists, exactly like its 0.9.64 sibling.
+
+The transition rule mirrors 0.9.64's own "only an activating press can
+SET, any ordinary press can only CLEAR" rule, with one simplification
+0.9.64 could not make: direction has to distinguish "same" from
+"opposite" because FORWARD and BACKWARD are both directions a press can
+NAME, so switching between them is a special case worth calling out.
+Mode has no such case — `runRequested` is not "a mode the press names,"
+it is simply "whether this activation wants running" — so every
+activating press, whatever mode was active before, resolves directly
+from `runRequested` alone:
+
+```text
+activationRequested, runRequested: false, from NONE/WALK/RUN -> WALK   (CapsLock+W (re-)activates persistent WALK)
+activationRequested, runRequested: true,  from NONE/WALK/RUN -> RUN    (CapsLock+Shift+W (re-)activates persistent RUN, including a direct WALK -> RUN upgrade)
+ordinary press (any runRequested), from any mode              -> NONE  (an ordinary W/S tap cancels persistent mode, exactly as it cancels persistent direction)
+```
+
+One consequence worth naming explicitly: because the outcome above
+never depends on what mode was previously active, `currentMode` is not
+even read by `deriveAvatarContinuousMovementMode()` — it exists in the
+options shape only so a caller who keeps one shared options object
+across both this function and `deriveAvatarContinuousMovementIntent()`'s
+own `currentIntent` can pass it without either function complaining.
+This is a deliberate divergence from 0.9.64's own defensive
+`safeCurrentIntent`/`isValidAvatarContinuousMovementIntent(currentIntent)`
+sanitizing, not an oversight: a malformed `currentMode` can never reach
+this function's own return value in the first place, so there is
+nothing here for sanitizing to protect.
+
+Key-UP — of W, S, Shift, or Caps Lock itself — is never an input this
+function reads, for the identical reason 0.9.64's own transition
+function never reads one: only a subsequent key-DOWN can ever change
+the mode, which is the entire mechanism by which "release every key and
+the avatar keeps running" will work once 0.9.68/0.9.69 wire this
+vocabulary in.
+
+Deliberately excluded, matching the explicit brief for this milestone:
+any keyboard/Caps-Lock/Shift event handling (deferred to 0.9.68, the
+mode-vocabulary counterpart to 0.9.65), any change to
+`core/AvatarContinuousMovementIntent.js`,
+`application/AvatarMovementController.js`, or
+`core/AvatarMovementState.js` (wiring this mode into the movement
+pipeline is 0.9.69's job, the counterpart to 0.9.66), actual avatar
+movement, numeric speed values of any kind, timers, collision, camera,
+UI, persistence. This file answers only "what persistent MODE should
+exist," never how fast that mode actually moves the avatar — that
+number already lives entirely inside
+`core/AvatarMovementSimulation.js`/`AvatarMovementState.speedMode` and
+is left untouched; 0.9.69's own job is to make an existing continuous
+RUN mode resolve to that same existing `running: true` speed, never a
+second, parallel speed concept.
+
+The flagship test (`tests/AvatarContinuousMovementMode.test.js`)
+replays a scripted Caps Lock (+ Shift) + W/S scenario as a sequence of
+`deriveAvatarContinuousMovementMode()` calls — CapsLock+W activating
+persistent WALK, re-activating with Shift now held upgrading WALK
+straight to RUN with no NONE in between, a later plain W tap cancelling
+RUN entirely, and CapsLock+Shift+S activating RUN directly from
+NONE — plus every activation/idempotence/switch/cancellation
+combination individually, defensive handling of malformed input
+(a garbage `currentMode`, no arguments at all, non-boolean
+`activationRequested`/`runRequested`), and purity/determinism. A
+closing architectural-regression section proves
+`core/AvatarContinuousMovementMode.js` itself never references
+`AvatarMovementController`, `AvatarMovementState`,
+`AvatarContinuousMovementIntent`, any movement constraint, a timer or
+animation-frame API, a keyboard event, Caps Lock or Shift specifically,
+Three.js, or a speed/velocity/position/rotation value of any kind — a
+pure vocabulary and transition rule only, mirroring
+`tests/AvatarContinuousMovementIntent.test.js`'s own closing section —
+and confirms it exports exactly the vocabulary, its validator, and the
+one transition function.
+
+Next: 0.9.68, Continuous Run Input Adapter — the mode-vocabulary
+counterpart to 0.9.65, translating an actual Caps Lock + Shift + W/S
+keyboard chord into the `activationRequested`/`runRequested` shape this
+milestone's own transition function expects, still without touching
+`AvatarMovementController` or moving the avatar at all. Controller
+integration (connecting the resulting mode to the existing
+`running`/`speedMode` concept `AvatarMovementController` already has)
+follows after that, as 0.9.69.
