@@ -52522,3 +52522,136 @@ Each remains an explicit request, not an automatic continuation — the next
 seam, when requested, is a persistence-backed implementation of this same
 minimal contract, or an observation/policy layer built on top of it, never
 assumed by this milestone.
+
+## 0.9.53 — Publication Distribution Lifecycle Observation Boundary
+
+0.9.52's own epilogue named exactly this milestone as one of its two
+unscheduled continuations: "an observation/policy layer built on top of
+it." Every file through 0.9.52 answers "what is the current lifecycle"
+only when asked — `store.get(publicationId)` is a pull. Nothing yet
+answers the question a UI or higher-level application service actually
+has: "the stored lifecycle for this publication just changed." Without an
+observation seam, a caller is left polling `get()` in a loop, coupling
+itself to storage far more tightly than it needs to. This milestone closes
+that gap the same way 0.9.12 once closed it for
+`WorldDiscoverySourceRegistry` (0.9.9) and 0.9.26 built it in from the
+start for `DecentralizedWorldDiscoveryLeadRegistry`: a `subscribe()`
+method added directly to the existing store, never a second store, event
+log, or synchronization mechanism.
+
+```text
+store.set(publicationId, lifecycle)    (0.9.52, unchanged)
+       │
+       ├── store value
+       │
+       └── notify every subscriber of publicationId
+                  │
+                  ▼
+       listener(publicationId, lifecycle)
+
+store.remove(publicationId)            (0.9.52, unchanged)
+       │
+       ├── remove value, when present
+       │
+       └── notify every subscriber of publicationId, only when removed
+                  │
+                  ▼
+       listener(publicationId, null)
+```
+
+`PublicationDistributionLifecycleMemoryStore` (0.9.52, extended) gains
+exactly one new method, `subscribe(publicationId, listener)`, returning an
+`unsubscribe` function. Nothing about `get`/`set`/`remove`/`clear`
+changes — `tests/PublicationDistributionLifecycleStore.test.js` still
+passes entirely unmodified.
+
+Subscription is per `publicationId`, never store-wide: a listener
+registered for one publication is never notified by a `set()`/`remove()`
+for a different one. The notification itself is deliberately narrow —
+`listener(publicationId, lifecycle)` — and describes only what changed,
+never what a subscriber should do about it. It never carries an
+operational verb like `RETRY`/`FAILED`/`CONFIRMED`/`PENDING`; those stay
+outside this whole family's own vocabulary, exactly as 0.9.50 and 0.9.51
+already keep them out. An observer observes; it does not decide what
+happens next.
+
+Identity is preserved through notification exactly as it already is
+through storage:
+
+```javascript
+store.set('pub-1', lifecycle);
+// inside a subscriber notified by that same set():
+receivedLifecycle === lifecycle;   // true — the SAME object
+```
+
+A successful `set()` is the notification, with no equality comparison —
+0.9.12's own rule for `WorldDiscoverySourceRegistry`, held here over a
+single keyed value instead of a membership set. Calling `set()` twice with
+the exact same reference notifies twice; suppressing the second
+notification would silently teach this store a deduplication semantic
+0.9.52's own `set()` never defined. `remove()` notifies
+`listener(publicationId, null)`, but only when an entry actually existed
+to remove — unchanged from 0.9.52's own idempotency rule — and that `null`
+means exactly what `get()` already means for an absent entry, "nothing is
+currently stored," never "this publication was withdrawn." `clear()`
+still never notifies: emitting one notification per affected key, or one
+lump signal, would require inventing vocabulary this milestone deliberately
+declines to invent; existing subscriptions simply remain registered,
+ready for whatever `set()`/`remove()` comes next.
+
+`subscribe()` itself never delivers an initial callback — subscribing
+means "notify me about subsequent changes," never "immediately tell me
+the current value." A caller that wants the current value calls `get()`
+explicitly, before or after subscribing. Subscriber isolation, independent
+per-call subscriptions, and idempotent/permanent `unsubscribe()` are all
+inherited unchanged from 0.9.12's and 0.9.26's own rules: each subscriber
+runs inside its own `try`/`catch`, a throwing listener never blocks
+another subscriber or the triggering mutation, subscribing the same
+function reference more than once (even to the same `publicationId`)
+registers that many independent subscriptions, and calling the returned
+`unsubscribe` more than once is a harmless no-op. A malformed
+`publicationId` or a non-function `listener` registers no subscription and
+never throws; the returned `unsubscribe` is still always safely callable.
+Notification delivery stays synchronous and unbatched, exactly like
+`set()`/`remove()` themselves — no queue, timer, `Promise`, async
+delivery, "once" subscription, wildcard/store-wide subscription, or
+cross-instance/cross-process visibility of any kind.
+
+`tests/PublicationDistributionLifecycleObservation.test.js` (new) covers:
+a flagship section running the real 0.9.49 decline scenario through
+0.9.50, subscribing before the first `store.set()`, observing the decline
+lifecycle live, applying a 0.9.51 retry transition, and observing the
+recovered lifecycle live too — confirming object identity at every
+hand-off and that unsubscribing stops further notification even for a
+real removal; an identity-preservation section; a section confirming
+every subscriber of the same `publicationId` receives the same reference;
+a subscriber-isolation section; a section confirming `subscribe()` never
+delivers an initial callback; a section confirming `set()` always
+notifies, including a repeated identical reference, with malformed input
+never notifying; a section confirming `remove()` notifies
+`listener(publicationId, null)` only on an actual removal; a section
+confirming `clear()` never notifies and leaves existing subscriptions
+intact; an unsubscribe idempotency section; a section confirming
+subscription is per-`publicationId`, never store-wide; a section
+confirming independent subscriptions for a repeated function reference; a
+section confirming malformed `subscribe()` input degrades silently; and
+an architectural regression pass confirming the store still imports none
+of 0.9.48 through 0.9.51, performs no I/O, reads no clock, references no
+persistence technology, never freezes/clones/serializes a value, and uses
+no pending/failed/retrying/confirmed/withdrawn/rollback/transaction/
+history/version/lock/merge/rank vocabulary anywhere in its own code. No
+existing file besides the store itself and `tests.html` (registering the
+new test, and 0.9.52's own test file, which had been left unregistered)
+is modified by this milestone.
+
+Deliberately paused again, exactly where this milestone's own request drew
+the line. Explicitly unscheduled: an event log or notification history of
+any kind; `clear()` emitting a per-key or lump notification; any
+operational payload beyond `(publicationId, lifecycle)` — a change-kind
+tag, a version/change counter, or a timestamp; cross-instance or
+cross-process synchronization; and retry triggers, automatic transitions,
+or automatic execution in reaction to a notification. Persistence,
+retry/recovery policy, lifecycle history, and cross-process
+synchronization now stand as genuinely independent, unscheduled choices —
+each remains an explicit request, never smuggled in on top of describe
+(0.9.50), transition (0.9.51), store (0.9.52), or observe (0.9.53).
