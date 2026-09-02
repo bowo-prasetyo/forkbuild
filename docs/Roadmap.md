@@ -55647,3 +55647,124 @@ about where the persistent avatar-vehicle relationship itself belongs
 (on `AvatarPresence`? a new joint record? something else entirely) —
 a genuine architectural choice this milestone deliberately leaves open,
 exactly as its own brief asked.
+
+## 0.9.77 — Avatar-Vehicle Mount Relationship
+
+0.9.76 answered which vehicle, if any, an in-flight `MOUNT` request
+currently targets — but only as an EVALUATION RESULT, recomputed fresh
+on demand, never stored. Nothing before this milestone persists
+anything at all about an avatar and a vehicle. This is the first point
+where persistent state is actually justified — the smallest useful
+fact this whole progression has been building toward:
+
+```
+Avatar X is mounted on vehicle Y.
+```
+
+`core/AvatarVehicleMount.js` (new) exports a small immutable
+relationship descriptor:
+
+```
+createAvatarVehicleMount(vehicleId)  -> AvatarVehicleMount { vehicleId }
+isValidAvatarVehicleMount(value)     -> boolean
+clearAvatarVehicleMount()            -> null
+```
+
+**The smallest useful state.** The descriptor carries exactly one
+field, `vehicleId` — deliberately not `vehicleType` as well. A
+vehicle's type is already available from its own `VehiclePresence`
+(0.9.71); duplicating it here would let a mount relationship and its
+vehicle's own presence disagree about what the vehicle IS, for a value
+this file never needs to answer any question of its own.
+
+**A vehicle identity, never a vehicle object.** `createAvatarVehicleMount`
+takes the plain 0.9.74 vehicle id string — the same one
+`resolveAvatarVehicleInteractionTarget()` already returns as
+`targetVehicleId` — never a `VehiclePresence` instance. A
+`vehiclePresenceInRegion()` call reconstructs its `VehiclePresence`
+instances from nothing on every invocation (`core/VehicleIdentity.js`'s
+own header), so the SAME conceptual vehicle is a different object on
+every query. Holding the id instead of the object means the
+relationship stays meaningful across that reconstruction:
+`mount.vehicleId === vehicle.id` remains true even when `old
+VehiclePresence` and `new VehiclePresence` are different JavaScript
+objects describing the same vehicle slot.
+
+**Absence is `null`, never a sentinel** — the same precedent
+`core/VehiclePresence.js`'s own header already established for "no
+vehicle here" (never a `VehicleType.NONE` placeholder), applied here to
+"not currently mounted." `clearAvatarVehicleMount()` exists only to
+give that absence an explicit, named spelling; it is otherwise exactly
+the constant `null`.
+
+**A separate value, deliberately not attached to either side yet.**
+Not `VehiclePresence { ..., mountedByAvatarId }` — that would make a
+world-content descriptor, reconstructed fresh from a deterministic
+formula on every query, responsible for a runtime relationship with no
+obvious home to survive reconstruction in. Not `AvatarPresence { ...,
+mountedVehicleId }` either — that would grow `core/AvatarPresence.js`'s
+own existing "avatar/world presence" responsibility to also carry a
+capability/relationship layered on top of it, before any transition
+milestone has decided how the two should compose. A dedicated value
+keeps both descriptors exactly as small as they already are.
+
+**Immutable, getter-only, frozen** — the same discipline
+`core/VehiclePresence.js`'s own header explains and enforces with
+`Object.freeze(this)`: a new relationship means constructing a new
+`AvatarVehicleMount` (or calling `clearAvatarVehicleMount()`), never
+mutating one a caller may already be holding.
+
+**This milestone establishes state, it does not perform mounting.**
+This file never decides WHEN a mount relationship comes to exist,
+changes, or clears — no `MOUNT` intent, no resolved interaction target,
+no proximity, nothing that might trigger a call to
+`createAvatarVehicleMount()`. It also takes no position on whether
+`mount.vehicleId` still names a vehicle that currently exists in the
+world — a lifecycle/validity question deliberately left to whatever
+future mount transition reads this value, not solved here.
+
+`tests/AvatarVehicleMount.test.js` proves: a non-empty string vehicleId
+produces a valid relationship (Section A); immutability — getter-only,
+frozen, no mutation, including of a `toJSON()` snapshot (Section B);
+the exact vehicle id is preserved, and two relationships sharing a
+vehicleId remain distinct instances (Section C); `toJSON()`/`fromJSON()`
+round-trip exactly, always producing a new instance (Section D); `null`,
+`undefined`, an empty string, and non-string values are all rejected,
+by both the factory and the class constructor (Section E); a
+`VehiclePresence`-shaped object is rejected — only a plain string id is
+accepted, proving no dependency on a vehicle object (Section F); the
+descriptor carries no position field at all, so a vehicle's position can
+never alter it (Section G); the descriptor carries no vehicleType field
+either (Section H); `null` and `clearAvatarVehicleMount()` represent
+absence (Section I); `isValidAvatarVehicleMount()` accepts `null` and a
+real instance, rejects a bare string, a shape-alike plain object, and
+other invalid values (Section J); and an architectural regression sweep
+confirms this file's own code never references `VehiclePresence`,
+`VehicleType`, `AvatarPresence`, proximity, interaction intent or
+target resolution, keyboard/controller input, rendering, camera,
+movement, collision, physics, persistence, networking, randomness, or
+the clock, and that it exports exactly the descriptor class, its
+factory, its validator, and `clearAvatarVehicleMount` (Section K).
+
+## What this milestone deliberately does NOT do
+
+Position changes, avatar movement, vehicle movement, animation, camera
+changes, collision changes; keyboard or controller input handling;
+proximity checking or interaction target resolution (0.9.73/0.9.76
+already answer those); vehicle occupancy limits; physics; persistence;
+networking; and — most importantly — deciding WHEN a mount relationship
+is created, changed, or cleared, or whether `mount.vehicleId` still
+names a vehicle that currently exists. This milestone answers only
+"what relationship, if any, currently holds between an avatar and a
+vehicle by id," nothing about how that relationship comes to be,
+changes, or ends.
+
+Next: a mount TRANSITION (0.9.78) can now combine a `MOUNT` intent
+(0.9.75), a resolved `targetVehicleId` (0.9.76), and this file's
+`createAvatarVehicleMount()`/`clearAvatarVehicleMount()` to decide,
+under what conditions, an in-flight mount request actually produces (or
+clears) a stored `AvatarVehicleMount` — including whether the target
+must still exist and still be within proximity at the moment of
+transition, and where the resulting value is actually held on a running
+avatar. Only once mounting is a real transition should a future
+milestone let a vehicle affect movement speed or movement mechanics.
