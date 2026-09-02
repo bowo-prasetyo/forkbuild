@@ -55062,3 +55062,104 @@ an actual `VehiclePresence` rather than an avatar mounting a vehicle no
 world-level fact says is there. Whether placement, rendering,
 interaction-detection, or that mounting relationship is the more urgent
 seam after this one is deliberately left open rather than decided here.
+
+## 0.9.72 — Deterministic Vehicle Placement
+
+0.9.71 named what it means for a vehicle to exist somewhere
+(`core/VehiclePresence.js`) but deliberately left open how the World
+View would ever obtain one — procedural placement, explicit placement,
+player creation, and network discovery were all left as live
+candidates. Building mounting next, without answering that question
+first, would mean an avatar mounting a vehicle that no world-level
+process ever actually produced: where is it, is there one or many, is
+it deterministic, does every world contain one. Those are all
+placement/existence questions, not mounting questions, so this
+milestone answers them for exactly one candidate origin — procedural,
+seeded placement — the same origin `core/NaturalFeatureField.js` already
+established for trees.
+
+`core/VehiclePlacement.js` (new) exports
+`vehiclePresenceInRegion(seed, minX, minZ, maxX, maxZ)`: a PURE function
+that derives deterministic candidate positions from the world seed and
+returns every `VehiclePresence` whose position falls within the
+queried half-open region, in a fixed deterministic order. It reuses
+`core/NaturalFeatureField.js`'s own placement PATTERN — a fixed
+candidate lattice, per-cell jitter, a gate against a noise field, a
+bounds filter, a deterministic sort — without reusing any of that
+file's actual code or wiring: this file has its own module-private hash
+lattice, its own seed offsets, and its own threshold, because vehicles
+and trees are unrelated concerns that merely happen to share a
+placement shape.
+
+Two gates decide whether a jittered candidate becomes a `VehiclePresence`:
+
+- **Ground gate.** `core/TerrainEcology.js#ecologyZoneAt()` must report
+  anything other than `WATER`, and `core/Hydrology.js#isRiverAt()` must
+  be false. Unlike `core/NaturalFeatureField.js`'s own zone restriction
+  (only FOREST/GRASSLAND host a tree, for an ecological reason), this
+  milestone does not yet model roads, paths, or parking areas — "on
+  dry, non-river ground" is deliberately the entire rule, boring on
+  purpose, because the milestone's only job is proving placement is
+  reproducible, not proving it is realistic.
+- **Density gate.** A broad, continuous, decorrelated noise field
+  (`bicycleDensityAt()`, exported like `NaturalFeatureField`'s own
+  `forestDensityAt()`) thresholded far more restrictively than either of
+  `core/NaturalFeatureField.js`'s own density thresholds, applied
+  uniformly across every qualifying zone — a bicycle has no established
+  ecological reason yet to prefer one zone over another the way a tree
+  prefers FOREST, so no per-zone threshold table is invented.
+
+The candidate lattice spacing
+(`BICYCLE_LATTICE_SPACING`) is deliberately set to exactly
+`TERRAIN_TILE_SIZE` (`core/TerrainTiling.js`) rather than a finer grid
+like `TREE_LATTICE_SPACING`: a bicycle is a rare, individually-noticed
+object, not ground cover, so it never needs sub-tile candidate density.
+Keeping it an exact multiple of `TERRAIN_TILE_SIZE` preserves the same
+"no lattice cell straddles a tile boundary" property
+`core/NaturalFeatureField.js`'s own header explains the reasoning for,
+so a future tile-based query can never double-count or drop a bicycle
+at a shared tile edge — even though no such consumer exists yet. A
+bicycle's Y is `terrainHeightAt(seed, x, z)` exactly, the identical
+"never a separately-sampled or stale elevation" discipline
+`core/NaturalFeatureField.js` already established for trees.
+
+Per this milestone's own scope restriction — placement, not movement or
+riding, and one vehicle type, not all four — `VehicleType.BICYCLE` is
+the only type this file can ever produce.
+`VehicleType.MOTORCYCLE`/`CAR`/`DRONE` placement is explicitly future
+work: bicycle is the least disruptive extension of the current movement
+model (`Avatar WALK/RUN` → `+ BICYCLE`), so it is the type most likely
+to reveal what a real vehicle milestone needs without also having to
+absorb whatever ground-vehicle-specific or aerial-specific concepts
+motorcycle/car or drone will eventually turn out to need.
+
+`tests/VehiclePlacement.test.js` proves: same seed + region always
+returns byte-identical results, independent of what other regions were
+queried first, including across a simulated long journey away and back
+(Section A); every returned bicycle falls strictly inside its own
+queried region, never inside a disjoint region, respects the half-open
+boundary at a shared edge, and — the flagship claim — summing
+tile-by-tile queries over a covered area exactly equals one whole-region
+query with no duplicate and no gap, independent of tile streaming order
+(Section B); every generated presence is `VehicleType.BICYCLE`, never
+motorcycle/car/drone (Section C); every returned item is an actual
+frozen `VehiclePresence` instance with a finite position whose Y matches
+`terrainHeightAt()` exactly, and round-trips through
+`toJSON()`/`fromJSON()` (Section D); an architectural-regression sweep
+confirms `core/VehiclePlacement.js`'s own code never references
+rendering, Three.js, the DOM, `WorldView`, an avatar, or a controller
+(Section E); a second sweep confirms it never references speed,
+velocity, direction, acceleration, mounting, or riding, and that a
+returned presence's own JSON shape is exactly `{type, position}`
+(Section F); and a wide scan confirms no bicycle ever stands in `WATER`
+or a river channel (Section G).
+
+Next: the vehicle line's next milestone should be avatar-vehicle
+proximity/interaction — can an avatar detect it is near a
+`VehiclePresence` this file now reliably produces — rather than jumping
+straight to mounting. Only after "the avatar is near a real,
+deterministically-placed bicycle" is itself a fact something can query
+does "mount it" become answerable without begging its own question.
+Whether a movement-capability vocabulary, a road/path placement
+constraint, or additional vehicle types are needed next should come from
+that seam, not be guessed here.
