@@ -3,6 +3,7 @@ import { simulateAvatarMovement } from '../core/AvatarMovementSimulation.js';
 import { deriveAvatarVerticalState } from '../core/AvatarVerticalState.js';
 import { AvatarContinuousMovementIntent, isValidAvatarContinuousMovementIntent } from '../core/AvatarContinuousMovementIntent.js';
 import { AvatarContinuousMovementMode, isValidAvatarContinuousMovementMode } from '../core/AvatarContinuousMovementMode.js';
+import { AvatarMovementCapabilityKind, isValidAvatarVehicleMovementCapability } from '../core/AvatarVehicleMovementCapability.js';
 
 // 0.2.36 — the ONE place raw input becomes an AvatarPresence update.
 // See docs/Principles.md, "Input Changes Presence; Presence Changes
@@ -183,6 +184,69 @@ import { AvatarContinuousMovementMode, isValidAvatarContinuousMovementMode } fro
 // press rule (0.9.67), applied one layer up in
 // `application/WorldNavigationSession.js`, exactly as direction
 // cancellation already is.
+//
+// 0.9.85 — Vehicle Movement Capability Integration. 0.9.84
+// (core/AvatarVehicleMovementCapability.js) answered "what movement
+// capability kind does the avatar's current vehicle relationship
+// imply," and deliberately stopped there — its own header is explicit
+// that feeding a resolved capability into this class is "0.9.85's own
+// job." This is that integration, and it adds exactly ONE new piece of
+// caller-owned state, `_movementCapability`, plus ONE new guard clause
+// in tick() below — no second movement pipeline, no per-vehicle
+// controller, matching the exact discipline core/AvatarVehicleMovementCapability.js's
+// own header already commits to.
+//
+// `setMovementCapability(capability)`/`movementCapability()` are the
+// direct structural twins of `setContinuousMovementIntent()`/
+// `continuousMovementIntent()` above: the ONLY way the value ever
+// changes, a getter that degrades a never-set/invalid value to the
+// documented default, and no other internal logic consults the setter
+// input's own identity — only `_movementCapability.movementKind`/
+// `.supported`, read in exactly two places (movementCapability() and
+// tick()'s own new guard). `null` (never set, or set with anything that
+// fails core/AvatarVehicleMovementCapability.js#isValidAvatarVehicleMovementCapability())
+// means AvatarMovementCapabilityKind.WALK, fully supported — an avatar
+// nobody has ever mounted on anything behaves EXACTLY as it did before
+// this milestone existed, the default this milestone's own brief
+// requires.
+//
+// THIS CLASS NEVER IMPORTS core/VehicleType.js, core/AvatarVehicleMount.js,
+// OR core/VehiclePlacement.js/VehiclePresence.js — and never will, by
+// design. It reads only `.movementKind`/`.supported` off whatever
+// capability it is handed; it has no reason to know, and after this
+// milestone still does not know, whether a GROUND_VEHICLE capability
+// came from a bicycle, a motorcycle, a car, some future ground vehicle,
+// or any other movement-affecting mechanism entirely. Resolving a
+// vehicle relationship down to a capability, and deciding WHEN during a
+// frame to hand it to this class, is entirely
+// `application/WorldNavigationSession.js`'s own job (see that file's
+// own 0.9.85 header) — this class only ever CONSUMES the result.
+//
+// UNSUPPORTED BLOCKS MOVEMENT; IT NEVER FALLS BACK TO WALK. Per
+// core/AvatarVehicleMovementCapability.js's own header, `supported:
+// false` currently means exactly one thing — AERIAL_VEHICLE/DRONE, "no
+// flight/altitude system exists in this codebase yet to eventually
+// drive." Silently running an unsupported capability through the
+// existing on-foot pipeline would read as "a mounted drone walks,"
+// destroying the exact semantic distinction 0.9.84 was written to make.
+// tick() below instead returns `null` outright — no simulation, no
+// constraint pipeline, no presence update — for as long as an
+// unsupported capability is active, regardless of what keys are held.
+// This also means `_verticalVelocity`/`_grounded` simply stop advancing
+// for that same span, rather than letting gravity integrate against a
+// vehicle relationship this codebase has no physics model for at all;
+// once the capability changes back to something supported (a dismount,
+// resolved one layer up), simulation resumes exactly where its own
+// bookkeeping left off.
+//
+// NOT YET: any numeric difference between WALK and GROUND_VEHICLE.
+// GROUND_VEHICLE runs through the IDENTICAL simulation/constraint
+// pipeline WALK already does — same speed, same turning, same terrain/
+// building/tree constraints — because this milestone answers only
+// "can the existing movement system consume a vehicle-derived
+// capability," never "what should a bicycle's own numbers be." See
+// docs/Roadmap.md, 0.9.85, for the full scope boundary and why that
+// second question is deliberately deferred to whatever comes next.
 const EPSILON = 1e-6;
 
 export class AvatarMovementController {
@@ -208,6 +272,12 @@ export class AvatarMovementController {
         // and read only by `_resolvedRunning()`. See this file's own
         // 0.9.69 header for why this class never derives it itself.
         this._continuousMovementMode = AvatarContinuousMovementMode.NONE;
+        // 0.9.85 — the CURRENT movement capability (an
+        // AvatarVehicleMovementCapability instance, or `null` for
+        // "never set" — see this file's own 0.9.85 header above), set
+        // only via setMovementCapability() below and read only by
+        // movementCapability() and tick()'s own new guard clause.
+        this._movementCapability = null;
         // Transient, per-tick bookkeeping only — exactly like
         // _verticalVelocity/_grounded above, never part of
         // AvatarPresence itself (see docs/Principles.md, "Collided Is
@@ -310,6 +380,36 @@ export class AvatarMovementController {
         return this._continuousMovementMode;
     }
 
+    // 0.9.85 — the ONLY way `_movementCapability` ever changes. Callers
+    // are expected to hand in a resolved
+    // core/AvatarVehicleMovementCapability.js#AvatarVehicleMovementCapability
+    // instance — see application/WorldNavigationSession.js for the one
+    // real caller. Invalid input (anything failing
+    // isValidAvatarVehicleMovementCapability(), `null` included)
+    // degrades to `null`, the same "degrade gracefully, never throw"
+    // posture setContinuousMovementIntent()/setContinuousMovementMode()
+    // already establish above — never a malformed value sitting in
+    // `_movementCapability`.
+    setMovementCapability(capability) {
+        this._movementCapability = isValidAvatarVehicleMovementCapability(capability)
+            ? capability
+            : null;
+    }
+
+    // 0.9.85 — the CURRENT movement capability KIND, same "debug/UI
+    // surface, not something any other internal logic reads" posture
+    // as continuousMovementIntent()/continuousMovementMode() above.
+    // AvatarMovementCapabilityKind.WALK both before setMovementCapability()
+    // is ever called and whenever it was last given `null` or an
+    // invalid value — the documented default this milestone's own
+    // brief requires, so an avatar nobody has ever mounted on anything
+    // reports exactly what it always has.
+    movementCapability() {
+        return this._movementCapability
+            ? this._movementCapability.movementKind
+            : AvatarMovementCapabilityKind.WALK;
+    }
+
     // Runs one simulation step and, if the result is actually
     // different from the current presence, publishes it. Returns the
     // new AvatarPresence when it published one, or null when nothing
@@ -321,6 +421,17 @@ export class AvatarMovementController {
     // motion.
     tick(deltaSeconds) {
         if (!this._avatarPresenceSession) {
+            return null;
+        }
+        // 0.9.85 — an unsupported movement capability (currently only
+        // ever AERIAL_VEHICLE/DRONE — see
+        // core/AvatarVehicleMovementCapability.js) blocks this tick's
+        // movement entirely: no simulation, no constraint pipeline, no
+        // presence update, regardless of which keys are held. See this
+        // file's own 0.9.85 header for why silently falling through to
+        // the on-foot pipeline below ("unsupported means WALK") would
+        // destroy the exact semantic distinction 0.9.84 exists to make.
+        if (this._movementCapability && this._movementCapability.supported === false) {
             return null;
         }
         const movementState = this._currentMovementState();

@@ -56751,3 +56751,219 @@ machinery for `GROUND_VEHICLE`, rather than building a parallel
 `BicycleMovementController`/`CarMovementController` per vehicle type —
 the exact architecture this milestone's own vocabulary was shaped to
 support without prejudging.
+
+## 0.9.85 — Vehicle Movement Capability Integration
+
+0.9.84 answered "what movement capability kind does the avatar's
+current vehicle relationship imply," and deliberately stopped before
+touching `application/AvatarMovementController.js` at all. This
+milestone answers the question that one left open — can the ONE
+existing avatar movement pipeline actually CONSUME a resolved
+capability, without becoming a second movement system, and without
+gaining a numeric difference it was never asked to have yet:
+
+```
+keyboard / continuous intent
+          │
+          ▼
+AvatarMovementController
+          │
+          ├── movement intent
+          │
+          ├── movement capability ◄──── AvatarVehicleMovementCapability
+          │                             (core/AvatarVehicleMovementCapability.js, 0.9.84)
+          │
+          ├── movement calculation
+          │
+          ├── building constraint
+          ├── terrain constraint
+          └── tree constraint
+```
+
+**`AvatarMovementController` gains one new piece of caller-owned
+state**, `_movementCapability`, and exactly the API shape every other
+caller-owned value on this class already uses
+(`setContinuousMovementIntent()`/`continuousMovementIntent()`,
+`setContinuousMovementMode()`/`continuousMovementMode()`):
+
+```
+setMovementCapability(capability)
+movementCapability() -> AvatarMovementCapabilityKind
+```
+
+`setMovementCapability()` is the ONLY way the value ever changes.
+Anything that fails
+`core/AvatarVehicleMovementCapability.js#isValidAvatarVehicleMovementCapability()`
+— `null`, `undefined`, a plain object merely shaped like a capability —
+degrades to `null` ("never set"), the identical "degrade gracefully,
+never throw" posture the two existing setters above already establish.
+`movementCapability()` reports `AvatarMovementCapabilityKind.WALK`
+whenever `_movementCapability` is `null` — both before
+`setMovementCapability()` is ever called, and after it was last given
+an invalid value — which is the documented default this milestone's
+own brief requires: an avatar nobody has ever mounted on anything
+behaves EXACTLY as it did before this milestone existed.
+
+**`AvatarMovementController` never imports `VehicleType`,
+`AvatarVehicleMount`, `VehiclePresence`, or `VehiclePlacement` — and
+never will.** It reads only `.movementKind`/`.supported` off whatever
+capability it is handed, in exactly two places (`movementCapability()`
+and `tick()`'s own new guard, below). It has no reason to know, and
+after this milestone still does not know, whether a `GROUND_VEHICLE`
+capability came from a bicycle, a motorcycle, a car, some future
+ground vehicle, or any other movement-affecting mechanism entirely —
+that is precisely the layering `core/AvatarVehicleMovementCapability.js`
+(0.9.84) was written to make possible:
+
+```
+Vehicle domain  ──▶  Capability resolution  ──▶  Movement domain
+(VehicleType,        (core/AvatarVehicleMovementCapability.js,   (AvatarMovementController,
+ AvatarVehicleMount,  resolveAvatarVehicleMovementCapability())   this milestone)
+ VehiclePresence)
+```
+
+**`GROUND_VEHICLE` reuses the existing pipeline verbatim — no numeric
+difference from `WALK` yet.** `tick()`'s own simulation/constraint
+pipeline (walk/run speed, turning, building/terrain/tree constraints)
+is completely unmodified for `WALK` and `GROUND_VEHICLE` alike; the
+only new code in `tick()` is a single guard clause (below) for the
+unsupported case. A test in this milestone's own suite proves this
+directly: two otherwise-identical controllers, one left at `WALK`, one
+set to `GROUND_VEHICLE`, given identical input, produce byte-identical
+positions and animation. Deciding what a bicycle's/motorcycle's/car's
+own numbers should actually be is explicitly deferred to 0.9.86 — see
+"Next," below.
+
+**`AERIAL_VEHICLE`/`DRONE` blocks movement outright; it never silently
+becomes `WALK` or `GROUND_VEHICLE`.** Per 0.9.84's own header,
+`supported: false` currently means exactly one thing: no flight/
+altitude system exists in this codebase yet for a drone's own movement
+to eventually drive. Silently routing an unsupported capability
+through the existing on-foot pipeline would read as "a mounted drone
+walks" — destroying the exact semantic distinction 0.9.84 was written
+to make. `tick()` instead adds one guard, first:
+
+```js
+if (this._movementCapability && this._movementCapability.supported === false) {
+    return null;
+}
+```
+
+No simulation, no constraint pipeline, no presence update, regardless
+of which keys are held — a genuine no-op, indistinguishable from an
+idle avatar with nothing held. `_verticalVelocity`/`_grounded` simply
+stop advancing for that same span (no gravity integrating against a
+vehicle relationship this codebase has no physics model for at all);
+once the capability changes back to something supported, simulation
+resumes exactly where its own bookkeeping left off. The capability
+itself never reverts on its own — blocking is a MOVEMENT outcome, not
+a capability change, and a resolved DRONE capability reports
+`AERIAL_VEHICLE` for as long as it is applied, tick after tick.
+
+**`application/AvatarVehicleInteractionController.js` gains ONE new
+read**, `mountedVehicleType()`, the VehicleType of the vehicle this
+controller's own `mount` currently names, or `VehicleType.NONE` when
+not mounted:
+
+```
+mountedVehicleType() -> VehicleType
+```
+
+It reuses the exact `_findMountedVehicle()` lookup `_tickDismount()`
+already performs — see that file's own "Vehicle lookup: a requery,
+never a registry" — rather than a second copy of the same seed-scoped
+query, and inherits the identical known boundary: if the avatar has
+walked far enough that the mounted vehicle no longer falls inside
+`_nearbyVehicles()`'s own query rectangle, this reports
+`VehicleType.NONE` even though `mount()` is still non-null — the same
+honest "no destination is known from here" the dismount path already
+settles for. This controller still never imports or references
+`AvatarMovementController` — the coupling between mount state and
+movement capability is composed entirely one layer up.
+
+**`application/WorldNavigationSession.js` is where the two halves
+meet**, exactly where 0.9.83's own `avatarVehicleMount()` already
+lives:
+
+```
+AvatarVehicleMount
+       │
+       ▼
+AvatarVehicleInteractionController#mountedVehicleType()
+       │
+       ▼
+     VehicleType
+       │
+       ▼
+resolveAvatarVehicleMovementCapability()
+       │
+       ▼
+AvatarMovementController#setMovementCapability()
+```
+
+Neither controller gains a new dependency on the other — this session
+is the only place that reads from one and writes to the other, exactly
+like every other composition in this class.
+
+**Ordering, within the existing frame loop — no new scheduler.**
+0.9.83 originally ticked `_avatarMovementController` first, then
+`_avatarVehicleInteractionController` "right after." This milestone
+reorders that one frame callback: vehicle interaction ticks FIRST
+(resolving any mount/dismount transition for this frame), the
+capability composition above runs SECOND, and
+`_avatarMovementController.tick()` runs LAST. This closes exactly the
+one-frame mismatch window the milestone brief called out —
+`mount = bicycle, movement capability = WALK` or `mount = null,
+movement capability = GROUND_VEHICLE` — by construction: the SAME
+frame a mount/dismount transition resolves is also the first frame the
+movement controller sees the corresponding capability. A test in this
+milestone's own suite drives a real `WorldNavigationSession` through
+one real animation-frame callback and asserts both `avatarVehicleMount()`
+and `_avatarMovementController.movementCapability()` are already
+mutually consistent by the time that single call returns.
+
+## What this milestone deliberately does NOT do
+
+Any `VehicleMovementController`/`BicycleMovementController`/
+`MotorcycleMovementController`/`CarMovementController`/
+`DroneMovementController` of any kind — there remains exactly ONE
+movement controller. Any numeric `vehicleSpeed`, `vehicleAcceleration`,
+`vehicleBraking`, `vehicleTurning`, `vehicleMass`, or `vehicleDrag` —
+`GROUND_VEHICLE` and `WALK` remain numerically identical this
+milestone. Any change to the tree constraint (collision radius, shape,
+swept vehicle geometry, vehicle-vs-tree collision) — 0.9.63's own tree
+constraint runs completely unmodified, for `GROUND_VEHICLE` exactly as
+for `WALK`. Also untouched: vehicle placement, mounting/dismounting
+semantics (0.9.77-0.9.83's own job), proximity, target resolution,
+building/terrain/step constraints, vehicle collision, camera,
+rendering, networking, and persistence.
+
+Tests: `tests/AvatarVehicleMovementCapabilityIntegration.test.js`
+(Sections A-I) covers the documented WALK default (never-set and
+explicitly-reset alike, plus graceful degradation on invalid input);
+BICYCLE/MOTORCYCLE/CAR all resolving to GROUND_VEHICLE at the
+controller level, with BICYCLE additionally proven through a real
+`WorldNavigationSession` mounting a real, placed bicycle; WALK/
+GROUND_VEHICLE pipeline byte-equivalence for identical input; a real
+mount-then-dismount round trip proving same-frame capability
+synchronization; DRONE resolving to a blocked, never-silently-
+downgraded AERIAL_VEHICLE capability, and movement resuming immediately
+once the capability changes back; ordinary W/S, running, continuous
+walking/running, and real tree collision all unchanged under
+GROUND_VEHICLE; 0.9.84's cached/frozen/shared instances flowing
+through unchanged across repeated ticks and animation frames; and an
+architectural regression sweep confirming `AvatarMovementController.js`
+never references `VehicleType`/`AvatarVehicleMount`/`VehiclePresence`/
+`VehiclePlacement`/any per-vehicle controller,
+`WorldNavigationSession.js` never references any numeric vehicle
+physics quantity or per-vehicle controller, and
+`AvatarVehicleInteractionController.js` never references
+`AvatarMovementController` at all.
+
+Next: with `GROUND_VEHICLE` now recognized and consumed by the
+existing movement pipeline — but still numerically identical to
+`WALK` — 0.9.86 can finally decide what a bicycle's, a motorcycle's,
+and a car's own ground-movement numbers actually are, introducing them
+incrementally into the existing `simulateAvatarMovement()` rather than
+building a parallel vehicle physics system this milestone's own
+architecture was shaped to avoid.

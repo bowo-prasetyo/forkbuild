@@ -30,6 +30,7 @@ import { AvatarTerrainConstraint } from './AvatarTerrainConstraint.js';
 import { AvatarStepConstraint } from './AvatarStepConstraint.js';
 import { AvatarTreeConstraint } from './AvatarTreeConstraint.js';
 import { AvatarVehicleInteractionController } from './AvatarVehicleInteractionController.js';
+import { resolveAvatarVehicleMovementCapability } from '../core/AvatarVehicleMovementCapability.js';
 import { deriveAvatarContinuousMovementInputEvent } from '../core/AvatarContinuousMovementInputAdapter.js';
 import { deriveAvatarContinuousMovementIntent } from '../core/AvatarContinuousMovementIntent.js';
 import { deriveAvatarContinuousMovementMode } from '../core/AvatarContinuousMovementMode.js';
@@ -412,6 +413,21 @@ export class WorldNavigationSession {
 	    // application/AvatarVehicleInteractionController.js's own header
 	    // for why this is a separate controller rather than folded into
 	    // AvatarMovementController itself.
+	    //
+	    // 0.9.85 — Vehicle Movement Capability Integration. This session is
+	    // the one place 0.9.84's own closing paragraph named as the future
+	    // integration point: once per animation frame, AFTER this
+	    // controller's own mount/dismount tick has resolved and BEFORE
+	    // `_avatarMovementController.tick()` runs, this session reads
+	    // `_avatarVehicleInteractionController.mountedVehicleType()`,
+	    // resolves it through
+	    // core/AvatarVehicleMovementCapability.js#resolveAvatarVehicleMovementCapability(),
+	    // and hands the result to
+	    // `_avatarMovementController.setMovementCapability()` — see the
+	    // frame loop below for the exact ordering, and why it matters.
+	    // Neither controller gains a new dependency on the other: this
+	    // session is the only place that reads from one and writes to the
+	    // other, exactly like every other composition in this class.
 	    this._avatarVehicleInteractionController = null;
 	    this._avatarFrameSubscription = null;
 	    this._avatarControlModeActive = false;
@@ -973,15 +989,42 @@ export class WorldNavigationSession {
         this._lastAvatarFollowPosition = this._avatarPresenceSession.current.position;
         if (typeof this._session.onAnimationFrame === 'function') {
             this._avatarFrameSubscription = this._session.onAnimationFrame((deltaSeconds) => {
-                this._avatarMovementController.tick(deltaSeconds);
-                // 0.9.83 — ticked right after movement, on the exact
-                // same frame: mount/dismount are re-evaluated from
+                // 0.9.83 — mount/dismount are re-evaluated first, from
                 // whatever interaction-key state is currently held,
                 // exactly like AvatarMovementController's own W/A/S/D
-                // re-evaluation above. See that controller's own
+                // re-evaluation below. See that controller's own
                 // header for why this is safe to call every frame even
                 // while the key is held.
+                //
+                // 0.9.85 — deliberately ticked BEFORE movement below
+                // (reordered from 0.9.83's own original "right after
+                // movement" placement): a mount/dismount transition
+                // resolved right here must be reflected in the movement
+                // capability AvatarMovementController consumes on this
+                // SAME frame, never one frame late — see this session's
+                // own 0.9.85 constructor comment above for why a
+                // one-frame mismatch ("mount = bicycle, movement
+                // capability = WALK") would otherwise be observable.
                 this._avatarVehicleInteractionController.tick();
+                // 0.9.85 — resolved AFTER mount/dismount above and
+                // BEFORE movement below: the local avatar's current
+                // AvatarVehicleMount, looked up down to a VehicleType by
+                // AvatarVehicleInteractionController#mountedVehicleType()
+                // itself (never re-queried here — see that method's own
+                // header, "Vehicle lookup: a requery, never a
+                // registry"), resolved through
+                // core/AvatarVehicleMovementCapability.js's own pure
+                // resolveAvatarVehicleMovementCapability(), and handed
+                // straight to AvatarMovementController#setMovementCapability().
+                // AvatarMovementController itself never learns a
+                // VehicleType or an AvatarVehicleMount exists — see that
+                // class's own 0.9.85 header for why.
+                this._avatarMovementController.setMovementCapability(
+                    resolveAvatarVehicleMovementCapability(
+                        this._avatarVehicleInteractionController.mountedVehicleType()
+                    )
+                );
+                this._avatarMovementController.tick(deltaSeconds);
                 const now = Date.now();
                 // 0.2.44 — expires a finished gesture and refreshes the
                 // local avatar's facing override, both purely local,
