@@ -1,4 +1,13 @@
 // 0.9.72 — Deterministic Vehicle Placement.
+// Extended by 0.9.74 — Deterministic Vehicle Identity: presenceForCell()
+// now also mints each VehiclePresence's own `id` via
+// core/VehicleIdentity.js's own vehicleIdFor(seed, cellX, cellZ), using
+// the SAME (cellX, cellZ) this file already computes to decide the cell's
+// jittered position — never a separately-tracked counter or the jittered
+// position itself (see core/VehicleIdentity.js's own header for why the
+// pre-jitter cell, not the post-jitter point, is the identity-bearing
+// fact). This file still only PLACES; deriving what an id looks like
+// remains core/VehicleIdentity.js's own job alone.
 //
 // 0.9.70 named what a vehicle IS (core/VehicleType.js). 0.9.71 named what
 // it means for one to exist somewhere (core/VehiclePresence.js) — but left
@@ -67,6 +76,7 @@
 import { Position } from './Position.js';
 import { VehicleType } from './VehicleType.js';
 import { VehiclePresence } from './VehiclePresence.js';
+import { vehicleIdFor } from './VehicleIdentity.js';
 import { terrainHeightAt } from './TerrainHeightField.js';
 import { ecologyZoneAt, ECOLOGY_ZONE } from './TerrainEcology.js';
 import { isRiverAt } from './Hydrology.js';
@@ -180,7 +190,11 @@ function presenceForCell(seed, cellX, cellZ) {
     if (bicycleDensityAt(seed, x, z) < DENSITY_THRESHOLD) return null;
 
     const y = terrainHeightAt(seed, x, z);
-    return new VehiclePresence({ type: VehicleType.BICYCLE, position: new Position(x, y, z) });
+    return new VehiclePresence({
+        id: vehicleIdFor(seed, cellX, cellZ),
+        type: VehicleType.BICYCLE,
+        position: new Position(x, y, z)
+    });
 }
 
 // The one public entry point: every VehiclePresence whose position falls

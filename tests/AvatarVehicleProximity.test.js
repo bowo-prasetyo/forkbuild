@@ -38,7 +38,7 @@ function assertThrows(fn, message) {
 }
 
 function bicycleAt(x, y, z) {
-    return new VehiclePresence({ type: VehicleType.BICYCLE, position: { x, y, z } });
+    return new VehiclePresence({ id: `test-bicycle:${x},${y},${z}`, type: VehicleType.BICYCLE, position: { x, y, z } });
 }
 
 async function runTests() {

@@ -55275,3 +55275,141 @@ deliberately left undecided here whether that state belongs on
 `AvatarPresence`, `AvatarMovementController`, `WorldNavigationSession`,
 or a new seam of its own; that decision should wait until mounting
 itself is being designed, not be guessed from this milestone.
+
+## 0.9.74 — Deterministic Vehicle Identity
+
+0.9.73 gave an avatar a way to know it is close enough to a vehicle to
+do something with it. But "do something with it" cannot itself be
+designed yet, because nothing in this codebase can currently answer a
+question mounting cannot avoid: WHICH vehicle? `type` does not answer
+it — two vehicles can share a type. `position` does not answer it
+either — 0.9.71's own header already reserves "move this vehicle" as
+future work, so a fact that identifies a vehicle by where it currently
+stands would break the moment that work lands. JavaScript object
+identity does not answer it — `vehiclePresenceInRegion()` (0.9.72)
+reconstructs its `VehiclePresence` instances from nothing on every call
+(the same "recomputed, never stored" discipline
+`core/NaturalFeatureField.js` already established for trees), so the
+same conceptual bicycle is a different object on every query. Before
+`avatar.currentVehicle` (or its eventual equivalent) can point at
+anything, there has to be something stable for it to point AT.
+
+`core/VehicleIdentity.js` (new) exports one function,
+`vehicleIdFor(seed, cellX, cellZ)`, and nothing else. It is a PURE
+function of exactly its own three arguments — no `Math.random`, no
+`Date.now`, no persisted state — so the same lattice cell under the
+same seed always produces the same id, forever, including across a
+full world regeneration: the identical "content-addressed by geography"
+discipline `core/VehiclePlacement.js`'s own header already established
+for a bicycle's POSITION, applied here to a bicycle's IDENTITY instead.
+
+**Deliberately the lattice cell, not the jittered position.**
+`core/VehiclePlacement.js` places at most one bicycle per lattice cell,
+so `(seed, cellX, cellZ)` already uniquely names a candidate slot — and
+those integer cell coordinates are decided BEFORE jitter, the density
+gate, or the ground gate ever run. Deriving the id from the jittered
+`(x, y, z)` instead would tie identity to the one value this codebase
+has already promised is free to change later, exactly the coupling this
+milestone exists to avoid. The id names the SLOT a vehicle was placed
+into, never the point in space it currently occupies.
+
+**Deliberately not a UUID.** `core/createId.js`'s own `createId()` is
+the right tool for an entity with no other way to be told apart — a
+World, a Building, a Brick a person just placed by hand — because
+nothing about those is reconstructible from a formula. A
+procedurally-placed bicycle is the opposite case: its entire existence
+already IS a formula, the same one `core/VehiclePlacement.js` already
+evaluates to decide whether a bicycle exists there at all. A random id
+would make two independently-computed views of the same world (two
+peers, or the same client before and after a reload) disagree about a
+bicycle's own name even though both agree it is the same bicycle — the
+one property a deterministic id exists to prevent.
+
+**Format:** `vehicle:<seed>:<cellX>,<cellZ>` — a fixed, three-part,
+colon-separated string, the same "plain, readable, delimiter-joined
+key" convention `core/TerrainTiling.js`'s own `tileKey()` already
+established for an identical shape of fact (a pair of integer lattice
+coordinates, named as one string). The leading `vehicle:` segment
+exists only so a vehicle id can never collide with, or be mistaken for,
+any other id-shaped string already circulating in this codebase — it
+carries no further meaning, and `core/VehicleIdentity.js` never parses
+it back apart.
+
+**Placement generates the identity; `VehiclePresence` merely carries
+it.** `core/VehiclePresence.js` gains one new field, `id` — required,
+validated only as a non-empty string, with no opinion on and no
+knowledge of its format. `VehiclePresence` does not import
+`core/VehicleIdentity.js`, does not call `vehicleIdFor()`, and does not
+know a seed or a lattice cell exists; a small architectural-regression
+sweep (`tests/VehiclePresence.test.js`) enforces that directly, the
+same way it already enforces that this file has never known about
+mounting, movement, or rendering. `core/VehiclePlacement.js`'s own
+`presenceForCell()` is the one place that both computes `(cellX, cellZ)`
+and mints a `VehiclePresence` from it, so it is the one place that
+calls `vehicleIdFor(seed, cellX, cellZ)` — using the SAME cell it
+already uses to compute the cell's jittered position, never a
+separately-tracked counter.
+
+**Deliberately no type parameter.** `vehicleIdFor()` takes exactly
+`(seed, cellX, cellZ)` — never a vehicle type. An id names a placement
+SLOT, not what currently occupies it; two `VehiclePresence` instances
+built from the same id but different `VehicleType`s remain that same
+id, and `tests/VehicleIdentity.test.js` checks this directly by arity
+as well as by construction.
+
+**No equality helper.** Two ids are plain strings; `===` already
+answers "is this the same vehicle" exactly as well as a dedicated
+`vehicleIdsMatch()` would, so this milestone does not add one — the
+same restraint `core/WorldEncounterSelectionIdentity.js`'s own
+`worldEncounterSelectionIdentitiesMatch()` shows is sometimes the right
+tool, but only where a value has more than one field to compare; an id
+alone does not.
+
+`tests/VehicleIdentity.test.js` proves: determinism — the same seed and
+cell always produce the same id, however many times or in whatever
+order it is asked (Section A); spatial distinction — different cells
+produce different ids, with a broad 51×51 sweep confirmed collision-free
+(Section B); seed distinction — the same cell under two different seeds
+produces two different ids (Section C); type independence —
+`vehicleIdFor()`'s own arity is exactly three, and two descriptors
+sharing an id remain distinguishable-by-type while sharing that id
+(Section D); position independence — the same id survives an arbitrary
+position change (Section E); `VehiclePresence` integration — every
+bicycle a wide `vehiclePresenceInRegion()` scan produces carries a
+valid, non-empty, uniquely-held id, and re-querying the same region
+reproduces byte-identical ids in byte-identical order (Section F);
+serialization — `toJSON()`/`fromJSON()` preserves an id exactly
+(Section G); and an architectural-regression sweep confirming
+`core/VehicleIdentity.js`'s own code never references an avatar,
+proximity, mounting, keyboard/controller input, movement, rendering,
+physics, randomness (`Math.random`, `crypto.randomUUID`), the clock, or
+persistence, and that it exports exactly `vehicleIdFor`, nothing else
+(Section H). `tests/VehiclePresence.test.js` and
+`tests/VehiclePlacement.test.js` are both extended alongside it: every
+existing assertion now exercises the required `id` field, and each
+gains its own regression coverage — `VehiclePresence` for id validation,
+immutability, and JSON round-tripping; `VehiclePlacement` for the fact
+that every generated bicycle now carries one.
+
+## What this milestone deliberately does NOT do
+
+Mounting, dismounting, or any avatar-vehicle relationship field;
+nearest-vehicle selection; interaction keys; proximity changes; vehicle
+movement, speed, or physics; vehicle collision; vehicle rendering;
+networking; persistence of a vehicle id anywhere (every id here is
+recomputed from a formula, never stored, exactly like the position it
+sits alongside); ownership; vehicle destruction or spawning/despawning;
+an `occupied`/`mounted` field anywhere. In particular, `VehiclePresence`
+still answers nothing about relationship or state — adding `id` gives it
+a stable NAME, not a new kind of fact about what is happening to it.
+
+Next: mounting is a clean seam to design now that a vehicle can be named
+independently of its type, its position, and the object instance
+carrying it. A future `avatar.currentVehicle` (or its eventual
+equivalent) can hold a vehicle's own `id` rather than a `VehiclePresence`
+object that a later region query would silently replace with a
+different instance describing the identical vehicle. Where that
+relationship state itself belongs — `AvatarPresence`,
+`AvatarMovementController`, `WorldNavigationSession`, or a new seam of
+its own — remains exactly as undecided as 0.9.73 left it; this milestone
+answers only what a vehicle is called, never who currently has one.

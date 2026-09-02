@@ -168,14 +168,15 @@ async function runTests() {
                 '20. Every returned VehiclePresence has a finite position');
             assert(p.position.y === terrainHeightAt(DEFAULT_WORLD_SEED, p.position.x, p.position.z),
                 '21. A bicycle\'s own Y sits at exactly terrainHeightAt(seed, x, z) — never a separately-sampled or stale elevation');
+            assert(typeof p.id === 'string' && p.id.length > 0, '21b. Every returned VehiclePresence carries a non-empty string id (core/VehicleIdentity.js, 0.9.74)');
         }
 
         // fromJSON(toJSON()) still round-trips, proving the returned
         // objects are genuine, fully-formed VehiclePresence instances.
         const sample = presences[0];
         const roundTripped = VehiclePresence.fromJSON(sample.toJSON());
-        assert(roundTripped.type === sample.type && roundTripped.position.equals(sample.position),
-            '22. A returned VehiclePresence round-trips through toJSON()/fromJSON() unchanged');
+        assert(roundTripped.id === sample.id && roundTripped.type === sample.type && roundTripped.position.equals(sample.position),
+            '22. A returned VehiclePresence round-trips through toJSON()/fromJSON() unchanged, id included');
     }
 
     // -------------------------------------------------------------
@@ -226,8 +227,8 @@ async function runTests() {
         // milestone's own tests don't silently rely on that guarantee
         // without stating it.
         const presence = vehiclePresenceInRegion(DEFAULT_WORLD_SEED, -600, -600, 600, 600)[0];
-        assert(JSON.stringify(Object.keys(presence.toJSON()).sort()) === JSON.stringify(['position', 'type']),
-            '25. A returned VehiclePresence\'s own JSON shape is exactly {type, position} — no speed/velocity/rider/mounted field anywhere');
+        assert(JSON.stringify(Object.keys(presence.toJSON()).sort()) === JSON.stringify(['id', 'position', 'type']),
+            '25. A returned VehiclePresence\'s own JSON shape is exactly {id, type, position} — no speed/velocity/rider/mounted field anywhere');
     }
 
     // -------------------------------------------------------------
