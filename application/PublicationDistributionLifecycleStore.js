@@ -164,7 +164,144 @@
 // - **Change notification/subscription.** 0.9.26's own registry establishes
 //   that seam for a different kind of collection; this milestone's own
 //   request describes only `get`/`set`/`remove`/`clear` — a `subscribe()`
-//   seam remains later, unscheduled work, added only if requested.
+//   seam remains later, unscheduled work, added only if requested. See
+//   0.9.53, below, which is that later, requested work.
+//
+// 0.9.53 — PUBLICATION DISTRIBUTION LIFECYCLE OBSERVATION BOUNDARY, ADDED
+// HERE RATHER THAN AS A SEPARATE ADAPTER. This store gains exactly one new
+// method, `subscribe(publicationId, listener)`, returning an `unsubscribe`
+// function — the same shape 0.9.26's own
+// `DecentralizedWorldDiscoveryLeadRegistry` already established for a
+// different kind of collection. Nothing about the existing `get`/`set`/
+// `remove`/`clear` surface changes; every 0.9.52 test still passes
+// unmodified.
+//
+//     const unsubscribe = store.subscribe('pub-1', listener);
+//     // ... later ...
+//     unsubscribe();
+//
+// SUBSCRIPTION IS PER `publicationId`, NEVER STORE-WIDE. Unlike 0.9.26's
+// own store-wide `subscribe(listener)`, a listener registered here is told
+// about exactly one publication identity's own changes, never another
+// publication's. `store.subscribe('pub-1', listener)` is never notified by
+// `store.set('pub-2', lifecycle)`.
+//
+// `listener(publicationId, lifecycle)` — THE NOTIFICATION DESCRIBES WHAT
+// CHANGED, NEVER WHAT TO DO ABOUT IT. A subscriber is told "this
+// publication now has this lifecycle description" and nothing more. It
+// never receives an operational verb like `RETRY`/`FAILED`/`CONFIRMED`/
+// `PENDING` — those remain outside this whole family's own vocabulary, per
+// 0.9.50's and 0.9.51's own header. `publicationId` is passed back so one
+// listener can be shared across several `subscribe()` calls and still tell
+// which publication a given notification is about.
+//
+// IDENTITY IS PRESERVED THROUGH NOTIFICATION TOO — INHERITED FROM THIS
+// FILE'S OWN "Storage, never transformation," ABOVE. A listener receives
+// the exact same `lifecycle` reference `set()` was given, never a copy:
+//
+//     store.set('pub-1', lifecycle);
+//     store.get('pub-1') === lifecycle;               // true
+//     // and, inside a subscriber notified by that same set():
+//     receivedLifecycle === lifecycle;                 // true
+//
+// A SUCCESSFUL `set()` IS THE NOTIFICATION — NO EQUALITY COMPARISON, EXACTLY
+// 0.9.12's OWN RULE FOR `WorldDiscoverySourceRegistry`, HELD HERE OVER A
+// SINGLE KEYED VALUE INSTEAD OF A MEMBERSHIP SET. `set(publicationId,
+// lifecycle)` notifies every subscriber of `publicationId` whenever
+// `lifecycle` is actually stored — even calling `set()` twice with the
+// exact same reference notifies twice:
+//
+//     store.set('pub-1', lifecycleX);
+//     store.set('pub-1', lifecycleX);   // notifies again — no dedup
+//
+// Suppressing the second notification would silently teach this store an
+// equality/deduplication semantic 0.9.52's own `set()` never defined — see
+// this file's own header, "Deliberately dumb." A malformed `set()` call (a
+// malformed `publicationId`, or a falsy `lifecycle`) stores nothing and
+// notifies nobody, exactly as it always has.
+//
+// `remove()` NOTIFIES `listener(publicationId, null)` — NEVER A WITHDRAWAL
+// EVENT. `remove(publicationId)` notifies every subscriber of
+// `publicationId`, but only when an entry actually existed to remove — a
+// `remove()` on an already-empty or malformed `publicationId` notifies
+// nobody, unchanged from 0.9.52's own idempotency rule. The `null` passed
+// to `listener` means exactly what `get()` already means for an absent
+// entry: "there is no lifecycle currently stored for this publication." It
+// does not mean, and must never be read as meaning, "this publication has
+// been withdrawn" — withdrawal remains outside this file's own vocabulary,
+// exactly as it is outside 0.9.50's and 0.9.51's.
+//
+// `clear()` NEVER NOTIFIES. Emitting one notification per previously-held
+// key would require deciding whether every affected `publicationId`
+// deserves its own `listener(publicationId, null)` call, or one lump
+// signal with no established vocabulary of its own — this milestone
+// deliberately declines to invent either. `clear()` keeps 0.9.52's own
+// behavior exactly as it was: it empties the store, silently, and existing
+// subscriptions remain registered, ready to be notified by whatever
+// `set()`/`remove()` call comes next.
+//
+// NO INITIAL NOTIFICATION ON `subscribe()` ITSELF. Subscribing means
+// "notify me about subsequent changes," never "immediately tell me the
+// current value." A caller that wants the current value reads it with
+// `get()`, explicitly, before or after subscribing:
+//
+//     const current = store.get('pub-1');
+//     const unsubscribe = store.subscribe('pub-1', listener);
+//
+// This keeps subscription free of a hidden read and makes its own
+// behavior fully deterministic — no ordering question between "the
+// current value" and "the first live notification."
+//
+// SUBSCRIBER ISOLATION — INHERITED FROM 0.9.12's AND 0.9.26's OWN RULE,
+// UNCHANGED. Each subscriber runs inside its own `try`/`catch` during
+// notification; one listener throwing never prevents another listener for
+// the same `publicationId` from running, and never prevents `set()`/
+// `remove()` themselves from returning normally.
+//
+// EACH `subscribe()` CALL IS INDEPENDENT, AND `unsubscribe()` IS
+// IDEMPOTENT — INHERITED FROM 0.9.12's AND 0.9.26's OWN RULE, UNCHANGED.
+// Subscribing the same function reference to the same `publicationId` more
+// than once registers that many independent subscriptions, each notified
+// separately and each with its own `unsubscribe()`. Calling the returned
+// `unsubscribe()` more than once is a harmless no-op.
+//
+// MALFORMED `subscribe()` INPUT DEGRADES SILENTLY, NEVER THROWS —
+// UNCHANGED FROM THIS FILE'S OWN RULE FOR EVERY OTHER METHOD. A malformed
+// `publicationId` (missing, not a string, or empty) or a non-function
+// `listener` registers no subscription and never throws; the returned
+// `unsubscribe` is still always a safely callable no-op function.
+//
+// STILL SYNCHRONOUS ONLY, STILL NO EVENT PAYLOAD BEYOND
+// `(publicationId, lifecycle)`, STILL NO HISTORY. Notification delivery is
+// synchronous and unbatched, exactly like `set()`/`remove()` themselves;
+// no queue, timer, `Promise`, async delivery, "once" subscription, or
+// wildcard/global subscription is introduced. A subscriber that missed a
+// notification (because it subscribed too late, or unsubscribed too
+// early) has no way to recover it from this store — `get()` only ever
+// answers "what is true right now."
+//
+// DELIBERATELY EXCLUDED — NOT THIS MILESTONE, EITHER.
+// - **An event log or notification history of any kind.** A subscriber
+//   that was not listening when a change happened has no way to retrieve
+//   it afterward.
+// - **`clear()` emitting a per-key or lump notification.** See "`clear()`
+//   never notifies," above — deferred rather than inventing vocabulary
+//   prematurely.
+// - **Deduplication/equality-based suppression of a repeated `set()`.**
+//   See "A successful `set()` is the notification," above.
+// - **Any operational payload — `RETRY`/`FAILED`/`CONFIRMED`/`PENDING`, a
+//   change-kind tag, a version/change counter, or a timestamp.** See
+//   `listener(publicationId, lifecycle)`, above — the notification
+//   describes state, never intent, sequence, or time.
+// - **Cross-instance or cross-process synchronization of any kind.** A
+//   subscription only ever sees changes made through the exact store
+//   instance it subscribed to — unchanged from this file's own "Live,
+//   in-memory, per-instance state," above.
+// - **Retry triggers, automatic transitions, or automatic execution in
+//   reaction to a notification.** An observer observes; it does not decide
+//   what happens next. Reacting to a notification — retrying, re-deriving
+//   a lifecycle, re-executing a distribution — remains entirely a
+//   subscriber's own, separate, unscheduled job.
 
 function isNonEmptyString(value) {
     return typeof value === 'string' && value.length > 0;
@@ -173,6 +310,8 @@ function isNonEmptyString(value) {
 export class PublicationDistributionLifecycleMemoryStore {
     constructor() {
         this._entries = new Map();
+        this._listeners = new Map();
+        this._nextListenerId = 0;
     }
 
     // The lifecycle value most recently `set()` for `publicationId`, or
@@ -194,28 +333,96 @@ export class PublicationDistributionLifecycleMemoryStore {
     // previously stored there, if anything — see this file's own header,
     // "Replacement, never merge." Silently does nothing when
     // `publicationId` is malformed or `lifecycle` is `undefined`, `null`,
-    // or otherwise falsy.
+    // or otherwise falsy. Notifies every current subscriber of
+    // `publicationId` with `(publicationId, lifecycle)` whenever `lifecycle`
+    // IS stored — see this file's own header, "A successful set() is the
+    // notification" — never when it's ignored as malformed.
     set(publicationId, lifecycle) {
         if (!isNonEmptyString(publicationId) || !lifecycle) {
             return;
         }
         this._entries.set(publicationId, lifecycle);
+        this._notify(publicationId, lifecycle);
     }
 
     // Removes whatever lifecycle currently occupies `publicationId`'s slot,
     // if any. Returns `true` when an entry was removed, `false` when there
     // was nothing to remove (including when `publicationId` is itself
     // malformed) — see this file's own header, "`remove()` is idempotent."
+    // Notifies every current subscriber of `publicationId` with
+    // `(publicationId, null)` only when an entry actually existed to
+    // remove — see this file's own header, "remove() notifies
+    // listener(publicationId, null)."
     remove(publicationId) {
         if (!isNonEmptyString(publicationId)) {
             return false;
         }
-        return this._entries.delete(publicationId);
+        const removed = this._entries.delete(publicationId);
+        if (removed) {
+            this._notify(publicationId, null);
+        }
+        return removed;
     }
 
     // Removes every currently-stored lifecycle. The store afterward behaves
-    // exactly as it did immediately after construction.
+    // exactly as it did immediately after construction. Never notifies any
+    // subscriber — see this file's own header, "clear() never notifies" —
+    // and never removes an existing subscription.
     clear() {
         this._entries.clear();
+    }
+
+    // Registers `listener` to be called with `(publicationId, lifecycle)`
+    // on every future change notification for `publicationId` — see this
+    // file's own header, "0.9.53 — Publication Distribution Lifecycle
+    // Observation Boundary." Returns an `unsubscribe` function that removes
+    // exactly this one subscription; calling it more than once is a
+    // harmless no-op. A malformed `publicationId` (missing, not a string,
+    // or empty) or a non-function `listener` registers no subscription and
+    // never throws; the returned `unsubscribe` is still always safely
+    // callable. Subscribing the same function reference more than once,
+    // even to the same `publicationId`, registers that many independent
+    // subscriptions.
+    subscribe(publicationId, listener) {
+        if (!isNonEmptyString(publicationId) || typeof listener !== 'function') {
+            return () => {};
+        }
+        if (!this._listeners.has(publicationId)) {
+            this._listeners.set(publicationId, new Map());
+        }
+        const listenersForId = this._listeners.get(publicationId);
+        const id = this._nextListenerId++;
+        listenersForId.set(id, listener);
+        let active = true;
+        return () => {
+            if (!active) {
+                return;
+            }
+            active = false;
+            listenersForId.delete(id);
+            if (listenersForId.size === 0) {
+                this._listeners.delete(publicationId);
+            }
+        };
+    }
+
+    // Invokes every current subscriber of `publicationId` with
+    // `(publicationId, lifecycle)`, isolating each from the others' and
+    // from its own failure. Never called directly by anything outside this
+    // class; `set()`/`remove()` call it themselves, only after a mutation
+    // has actually taken effect.
+    _notify(publicationId, lifecycle) {
+        const listenersForId = this._listeners.get(publicationId);
+        if (!listenersForId) {
+            return;
+        }
+        for (const listener of Array.from(listenersForId.values())) {
+            try {
+                listener(publicationId, lifecycle);
+            } catch (error) {
+                // A subscriber's own failure is that subscriber's
+                // problem, never the store's.
+            }
+        }
     }
 }
