@@ -54162,3 +54162,112 @@ pause and observe real runtime behavior before deciding whether the
 architecture reveals a genuine missing seam — terrain/tree interaction,
 movement-step limitations, performance under many trees — or whether this
 subsystem is already sufficient as it stands.
+
+## 0.9.64 — Avatar Continuous Movement Intent
+
+With avatar/tree collision now complete and deliberately left alone
+(0.9.59–0.9.63), this opens a new, unrelated line: Continuous Avatar
+Movement, a "keep moving" mode a player can activate with Caps Lock +
+W/S so the avatar keeps walking forward or backward after the physical
+key is released.
+
+Before touching any input handling or the movement pipeline, this
+milestone draws one architectural line first: Caps Lock + W/S must never
+mean "simulate a key being held down." It must mean "change the avatar's
+own movement INTENT." Faking a held key would mean threading a synthetic,
+perpetual keyDown through `application/AvatarMovementController.js`'s
+existing `_keys` bookkeeping — indistinguishable, from that class's own
+point of view, from a player's finger genuinely never leaving the W key,
+and carrying every one of that representation's accidents (window blur's
+`releaseAll()` would silently end it; nothing would ever name IT
+specifically as the reason movement continues). A new, explicit
+persistent-intent concept, orthogonal to `_keys`, avoids all of that by
+construction — so this milestone introduces exactly that concept, and
+nothing else. This mirrors the exact same restraint 0.3.4 already applied
+when it introduced `core/AvatarVerticalState.js` as a NAMED derived
+state rather than a new mutable physics bookkeeping.
+
+`core/AvatarContinuousMovementIntent.js` (new) is a small, closed
+vocabulary — `AvatarContinuousMovementIntent.NONE` / `FORWARD` /
+`BACKWARD` — plus one pure transition function,
+`deriveAvatarContinuousMovementIntent({ currentIntent, direction,
+activationRequested })`, which answers exactly one question: given the
+continuous intent that already existed and the ONE new movement key-down
+that just happened, what continuous intent should exist now? `direction`
+('forward'/'backward') is already semantic, never a raw key name —
+mapping an actual W/S keystroke (and a real Caps Lock signal) to this
+shape is explicitly deferred to 0.9.66, the input-facing milestone.
+`activationRequested` is likewise an already-resolved boolean — whether
+THIS key-down asked to activate continuous movement — never a raw
+`event.getModifierState('CapsLock')` read; this file has no idea a
+keyboard exists at all.
+
+The transition rule collapses every case the design brief asked for into
+one sentence: only an ACTIVATING press can ever SET this intent; any
+ORDINARY press can only ever CLEAR it, whichever direction it names.
+Concretely:
+
+```text
+activationRequested, NONE      -> that direction        (CapsLock+W activates FORWARD)
+activationRequested, FORWARD   -> FORWARD (no-op)        (re-activating the same direction never toggles off)
+activationRequested, opposite  -> switches directly       (FORWARD, then CapsLock+S -> BACKWARD, no NONE in between)
+ordinary press, matching       -> NONE                    (continuous FORWARD + a plain W tap cancels it)
+ordinary press, opposite       -> NONE                    (continuous FORWARD + a plain S tap cancels it too — the escape hatch)
+ordinary press, NONE           -> NONE                    (ordinary WASD walking is never touched by this file at all)
+```
+
+Key-UP — of W, of S, or of Caps Lock itself — is never an input this
+function reads at all; only a subsequent key-DOWN can ever change the
+intent. That is deliberately the entire mechanism by which "release the
+key and the avatar keeps moving" works: nothing has to happen on release
+for the intent to persist, because nothing here was ever watching for
+one.
+
+`NONE` is kept as an explicit third value, matching
+`core/AvatarVerticalState.js`'s own `SUPPORTED`/`RISING`/`FALLING` and
+`core/AvatarAnimationState.js`'s own `IDLE` — not represented as
+`null`/`undefined`. `core/AvatarMovementState.js` already has its own
+natural "no intent" shape for ordinary, momentary WASD input
+(`AvatarMovementState.idle()`); continuous intent is a separate,
+longer-lived concept, so it gets its own explicit at-rest value rather
+than reusing that one or inventing a new absence convention none of its
+siblings use.
+
+Deliberately excluded, matching the explicit brief for this milestone:
+actual avatar movement, any change to
+`application/AvatarMovementController.js` or
+`core/AvatarMovementState.js`, timers, acceleration, cruise-control
+speed changes, collision, camera, UI, persistence, and any raw
+keyboard/Caps-Lock event handling — `core/AvatarContinuousMovementIntent.js`
+does not know a keyboard exists. Those are exactly the concerns 0.9.65
+(wiring this intent into `AvatarMovementController`'s existing pipeline,
+still respecting every constraint already in it) and 0.9.66 (the actual
+Caps Lock + W/S input handling, deliberately treating the physical Caps
+Lock key as a momentary activation signal rather than reading its
+toggle state) take on next.
+
+The flagship test (`tests/AvatarContinuousMovementIntent.test.js`)
+replays the design doc's own scripted scenario as a sequence of
+`deriveAvatarContinuousMovementIntent()` calls — CapsLock+W activating
+FORWARD, a later plain W tap cancelling it, CapsLock+S activating
+BACKWARD, a plain W tap cancelling THAT (proving the opposite-direction
+escape hatch), and a direct CapsLock+W-then-CapsLock+S switch with no
+NONE in between — plus every activation/cancellation combination
+individually, defensive handling of malformed input (an unrecognized
+direction, a missing `currentIntent`, no arguments at all, a non-boolean
+`activationRequested`), and purity/determinism (identical input always
+produces identical output; the options object passed in is never
+mutated). A closing architectural-regression section proves
+`core/AvatarContinuousMovementIntent.js` itself never references
+`AvatarMovementController`, `AvatarMovementState`, any of the existing
+movement constraints, a timer or animation-frame API, a keyboard event,
+Caps Lock specifically, Three.js, or a position/velocity/speed of any
+kind — a pure vocabulary and transition rule only, and confirms it
+exports exactly the vocabulary, its validator, and the one transition
+function.
+
+Next: 0.9.65, Continuous Movement Controller Integration — connecting
+this intent to `AvatarMovementController`'s existing movement pipeline,
+so continuous FORWARD/BACKWARD produces the exact same walk step ordinary
+W/S already does, still passing through building collision, terrain
+slope, step height, and tree collision exactly as before.
