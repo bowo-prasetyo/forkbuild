@@ -53182,3 +53182,166 @@ reconciliation policy governs it afterward remain genuinely independent,
 unscheduled choices — each still an explicit request, never smuggled in
 on top of describe (0.9.50), transition (0.9.51), store (0.9.52), observe
 (0.9.53), persist (0.9.54), bridge (0.9.55), or restore (0.9.56).
+
+## 0.9.57 — Publication Distribution Lifecycle Hydration Composition
+
+0.9.56 answered how ONE publication's lifecycle gets back into the memory
+store, on explicit request — `PublicationDistributionLifecycleRestorer`'s
+own `restore(publicationId)`, called once, for one id, by a caller who
+already decided that id needed restoring. That file's own header named
+exactly the question it left open: "Startup hydration composition —
+restoring a whole set of publication ids on application startup... a
+later, unscheduled milestone may compose this file's own `restore()` over
+a selected list of publication ids." This milestone is that later
+milestone, and nothing more:
+
+```text
+Application / Runtime
+     │
+     │  an explicit array of publication ids it already knows about
+     ▼
+hydratePublicationDistributionLifecycles(restorer, publicationIds)
+     │
+     ├── restorer.restore(publicationIds[0])   (0.9.56, unmodified)
+     ├── restorer.restore(publicationIds[1])   (0.9.56, unmodified)
+     └── restorer.restore(publicationIds[2])   (0.9.56, unmodified)
+     │
+     ▼
+[ { publicationId, lifecycle }, ... ]   (one pair per input id, same order)
+```
+
+`application/PublicationDistributionLifecycleHydration.js` (new) exports
+one plain function, `hydratePublicationDistributionLifecycles(restorer,
+publicationIds)` — never a class, since there is no per-call state for a
+constructor to hold onto between one invocation and the next, exactly the
+same reasoning that keeps `transitionPublicationDistributionLifecycle()`
+(0.9.51) a plain function rather than a class. It holds no lifecycle state
+of its own and performs no restoration logic of its own — it calls an
+already-constructed `restorer`'s own `restore(publicationId)`, once per id
+in an explicit, caller-supplied array, in order, and hands back what each
+call returned. It never imports `PublicationDistributionLifecycleRestorer`
+(0.9.56), `PublicationDistributionLifecycleMemoryStore` (0.9.52/0.9.53),
+`PublicationDistributionLifecyclePersistence` (0.9.54),
+`PublicationDistributionLifecyclePersistenceBridge` (0.9.55),
+`PublicationDistributionLifecycle.js` (0.9.50), or
+`PublicationDistributionLifecycleTransition.js` (0.9.51) — `restorer` is
+received already-constructed and duck-typed through this function's own
+first argument, exactly as 0.9.55's bridge and 0.9.56's restorer already
+receive their own collaborators.
+
+```javascript
+function hydratePublicationDistributionLifecycles(restorer, publicationIds) {
+    /* restorer.restore(id), once per id, in order -> [{ publicationId, lifecycle }] */
+}
+```
+
+The caller supplies the list — this file never discovers one. This was
+the single governing decision of this milestone's own request:
+"hydration determines what the application explicitly asks to restore; it
+does not determine what should be restored." `publicationIds` is read as
+an opaque, caller-supplied array; this file calls no `persistence.list()`,
+no `listPublicationIds()`, and no equivalent of either — `restorer` is
+duck-typed to exactly the one method this file itself calls, `restore`,
+so no persistence-enumeration surface is even reachable through it. An
+empty `publicationIds` array is a completely valid, explicit request —
+"restore nothing" — producing an empty result with zero `restore()`
+calls, never an error.
+
+`restore()` is called sequentially, in input order, once per list entry —
+no deduplication. A repeated id in `publicationIds` calls `restorer.restore()`
+that many times, exactly as 0.9.52's own `store.set()` never deduplicates
+a repeated call. Each returned pair, `{ publicationId, lifecycle }`,
+carries the exact `lifecycle` reference `restorer.restore()` produced for
+that id — `null` when nothing was persisted, or the exact object 0.9.56's
+own `restore()` already produced when something was — never a copy, and
+never wrapped in any additional status. There is no `{ ..., status }`,
+`{ ..., hydrated }`, or `{ ..., success }` field anywhere in a returned
+pair: a caller who wants to know whether a given id actually restored
+something already has everything needed — `lifecycle !== null`.
+
+A throwing `restorer.restore()` propagates immediately, unchanged, with no
+rollback, no partial-results object, and no continuing to the remaining
+ids. This file adds no `try`/`catch` of its own around any individual
+`restore()` call; ids after the failing one are never attempted, and
+whatever `restore()` calls already completed for earlier ids already took
+their own effect on the injected store, exactly as 0.9.56's own `restore()`
+already left them — there is nothing here to roll back, since this file
+holds no state of its own that a throw could leave half-applied. There is
+no retry, no concurrency (`Promise.all` or otherwise), and no batching of
+a large `publicationIds` list — every call is a plain, synchronous loop,
+one `restore()` at a time.
+
+`restorer` is validated exactly like every other duck-typed collaborator
+in this family — a missing `restorer`, or one without a `restore`
+function, throws immediately, before any `restore()` call is attempted,
+exactly as 0.9.54's, 0.9.55's, and 0.9.56's own constructors already throw
+on a missing or incomplete collaborator. `publicationIds`, by contrast, is
+a data argument, not a collaborator: a `publicationIds` that is not an
+array (missing, `null`, a string, a plain object) degrades silently to an
+empty result, never throwing. A malformed individual id within an
+otherwise well-formed array (not a string, empty, `null`) is forwarded
+straight into `restorer.restore()`, which 0.9.56's own header already
+documents as degrading that exact input silently — this file performs no
+second validation pass of its own over each id, avoiding duplicating a
+rule 0.9.56 already owns.
+
+`tests/PublicationDistributionLifecycleHydration.test.js` (new) covers: a
+flagship section hydrating three explicit publication ids through a real
+restorer/store/persistence trio in one call, where two ids have persisted
+snapshots and one does not — the store ends up holding exactly the two
+that did, and the returned array reports all three, in order, including
+`null` for the one that was never persisted; a section confirming result
+ordering and identity against a spy restorer; an empty-`publicationIds`
+section confirming zero `restore()` calls; a non-array-`publicationIds`
+section confirming silent degradation to `[]`; a duplicate-ids section
+confirming `restore()` is called once per occurrence with no dedup; a
+throwing-`restore()` section confirming the error propagates immediately,
+unchanged, with ids after the failing one never attempted; a section
+confirming malformed individual ids are forwarded to `restore()` rather
+than separately validated here; a constructor-style-validation section for
+the `restorer` argument; a no-discovery section proving this file never
+calls `list()`/`listPublicationIds()` on the restorer even when such a
+method happens to be present on it; and an architectural regression pass
+confirming this file imports none of the lifecycle/store/persistence/
+bridge/transition/restorer modules, defines no class, calls exactly
+`restorer.restore()` and nothing else, contains no `try`/`catch` of its
+own, performs no async/I/O/clock reads, holds no `Map`/`Set` of its own,
+and uses no pending/failed/retrying/recovering/confirmed/withdrawn/
+rollback/compensation/transaction/queue/schedule/polling/history/undo/
+version/lock/merge/rank/dirty/stale/batch/dedup/authoritative/authority/
+progress/discover vocabulary anywhere in its own code. No existing file
+besides `tests.html` (registering the new test) is modified by this
+milestone — `PublicationDistributionLifecycleRestorer`,
+`PublicationDistributionLifecycleMemoryStore`,
+`PublicationDistributionLifecyclePersistence`,
+`PublicationDistributionLifecyclePersistenceBridge`, and every one of
+their existing tests are untouched, exactly as promised.
+
+This closes out the lifecycle-infrastructure line of milestones running
+from 0.9.50 through 0.9.57 — state (0.9.50), transition (0.9.51), store
+(0.9.52), observation (0.9.53), persistence (0.9.54), persistence bridge
+(0.9.55), restoration (0.9.56), and now hydration composition (0.9.57).
+Deliberately excluded from this milestone, and not smuggled in on top of
+it: discovering, listing, or enumerating which publication ids exist (no
+`persistence.list()`, no `listPublicationIds()`); retry, concurrency, or
+batching of any kind; a hydration status, startup lifecycle state, or
+progress event of any kind; conflict resolution, version comparison, or
+authority judgment between what different `restore()` calls return;
+deduplicating a repeated id, or reordering `publicationIds`; a class,
+singleton, or construction step of any kind; and selecting `publicationIds`
+from application state, a route, or storage — deciding WHICH ids to
+hydrate remains entirely a caller's own, separate concern.
+
+Deliberately paused here, not just at this milestone's own boundary but at
+the boundary of the whole lifecycle-infrastructure line it completes. The
+next step is not 0.9.58's own new lifecycle abstraction — it is an
+architecture review of the complete publication path this family now
+supports end to end (distribution descriptor, Arweave material upload,
+Nostr discovery publication, execution/result, lifecycle state/transition,
+memory/observation, persistence/bridge, restoration/hydration), asking
+what the smallest missing capability is that would make this a genuinely
+usable, discoverable, decentralized publication distribution system —
+almost certainly Publication-facing integration (wiring the existing
+Arweave/Nostr distribution path into the real Publication workflow, while
+retaining the existing IPFS/Bitcoin/Base distribution mechanisms
+untouched) rather than further lifecycle machinery.
