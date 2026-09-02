@@ -55906,3 +55906,111 @@ introduce a vehicle movement capability — and only once bicycle,
 motorcycle, car, and drone speed each have a real consumer should that
 milestone decide whether the right abstraction is speed, movement mode,
 locomotion capability, or something richer.
+
+## 0.9.79 — Avatar-Vehicle Dismount Intent
+
+0.9.78 closed the mounting path: an intent plus a resolved target can
+now become a real, persistent `AvatarVehicleMount`. But that whole
+chain only ever moves an avatar one way — unmounted -> mounted. Nothing
+yet answers the mirror-image question a mounted avatar eventually
+needs answered:
+
+```
+The mounted avatar wants to leave the vehicle.
+```
+
+Mounting and dismounting look like opposites, but their downstream
+needs differ. A mount transition needs just two ingredients — an
+intent and a resolved target vehicle. A dismount transition will
+eventually need a destination-space decision this codebase has no
+machinery for yet: avatar orientation, vehicle geometry, terrain,
+collision clearance. Folding dismount intent into
+`AvatarVehicleInteractionIntent`, or building a combined
+`AvatarVehicleActionIntent`, would only save a few lines today while
+obscuring that architecture before either intent's downstream shape is
+settled. So dismount gets its own file and its own tiny vocabulary:
+
+`core/AvatarVehicleDismountIntent.js` (new) exports:
+
+```
+AvatarVehicleDismountIntent.NONE
+AvatarVehicleDismountIntent.DISMOUNT
+```
+
+and one pure transition function:
+
+```
+deriveAvatarVehicleDismountIntent({ dismountRequested }) -> NONE | DISMOUNT
+```
+
+**One-shot, mirroring 0.9.75's own discipline exactly.**
+`dismountRequested: false` produces `NONE`; `dismountRequested: true`
+produces `DISMOUNT`. Repeated input while already `DISMOUNT` is
+idempotent — holding the dismount key down (key-repeat) never
+compounds into a second request. Releasing the request returns to
+`NONE` the very next call, exactly like 0.9.75's own `MOUNT` is
+consumed the instant it stops being asserted.
+
+**Deliberately not vehicle-aware**, the same refusal 0.9.75 already
+made: no `vehicleId`, no candidate list, no `VehiclePresence`.
+
+**Deliberately not mount-state-aware — the property this milestone
+insists on above all others.** `deriveAvatarVehicleDismountIntent()`
+never imports `core/AvatarVehicleMount.js`, never reads an
+`AvatarVehicleMount` value, and has no `currentMount` parameter. A
+`DISMOUNT` request fired while nothing is mounted is not this file's
+problem to prevent — a higher layer, a future dismount transition
+mirroring 0.9.78's own `deriveAvatarVehicleMount()`, decides whether a
+dismount request is meaningful given the avatar's actual mount state.
+
+**No dismount transition here.** This milestone does not decide where
+the avatar ends up, does not touch `AvatarVehicleMount` or
+`AvatarVehicleMountTransition`, and computes no position, terrain, or
+collision check. 0.9.78's own transition remains responsible only for
+its established mounting rule; nothing about it changes here.
+
+**Why not implement the dismount transition immediately?** Because
+where the avatar goes when it dismounts is a genuinely open
+architectural question — for a bicycle, "next to the vehicle" cannot
+simply be guessed; the future transition may need the avatar's
+orientation, the vehicle's geometry, the terrain, and collision
+clearance together to produce a valid dismount position. That
+machinery should not be invented before the dismount intent driving it
+even exists.
+
+`tests/AvatarVehicleDismountIntent.test.js` proves: the exact
+two-value frozen vocabulary and its validator (Section A);
+`dismountRequested: false -> NONE` and `true -> DISMOUNT`, including
+with no arguments at all (Section B); one-shot consumption back to
+`NONE` the instant the request is no longer asserted, and idempotence
+under a repeated/key-repeat request, with `currentIntent` proven
+irrelevant to the outcome (Section C); malformed/coerced
+`dismountRequested` values (truthy/falsy non-booleans, strings, `null`,
+an empty options object) all degrade the way the rest of this codebase
+coerces boolean flags (Section D); a full FLAGSHIP request/consume/
+request cycle plus determinism and non-mutation of the options object
+(Section E); and an architectural regression sweep confirming this
+file's own code never references a vehicle, `AvatarVehicleMount` or
+any mount-state vocabulary, `AvatarVehicleInteractionIntent`,
+position/terrain/collision/geometry, keyboard/controller input,
+rendering, or movement — including, as the strongest regression, that
+the file contains no `import` statement at all — and that it exports
+exactly the vocabulary, its validator, and the one transition function
+(Section F).
+
+## What this milestone deliberately does NOT do
+
+The dismount transition itself; position calculation; terrain
+validation; collision checking; vehicle collision; keyboard binding;
+movement changes; vehicle movement; mounting cancellation; automatic
+dismounting; vehicle deletion; camera changes; animation; persistence;
+networking. In particular, `deriveAvatarVehicleMount()` (0.9.78) does
+not gain any dismounting responsibility here — it remains exactly the
+mounting-only transition 0.9.78 established. This milestone answers
+only "did the avatar just ask to leave," nothing about whether that
+request is meaningful or where it leads.
+
+Next: 0.9.80 can now combine this intent with the avatar's actual
+mount state (0.9.77) to decide WHEN a dismount should happen — the
+same shape 0.9.78 already used for mounting — before any later
+milestone has to invent where the avatar actually reappears.
