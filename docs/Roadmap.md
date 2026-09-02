@@ -54022,3 +54022,143 @@ next and final step in this line is 0.9.63: the first milestone allowed to
 wire this entire pipeline into the actual avatar movement system, so a
 player actually walking their avatar through the world finally has trees
 in their way.
+
+## 0.9.63 — Avatar Movement Collision Integration
+
+The integration milestone, and deliberately the thinnest one in this
+entire line: every geometric question — what space a tree occupies
+(0.9.59), whether the avatar overlaps one (0.9.60), where a requested step
+may resolve to (0.9.61), and which trees are worth asking at all (0.9.62)
+— was already answered, independently tested, and composable before this
+milestone began. `application/AvatarTreeConstraint.js` (new) adds no
+collision mathematics of its own; it is the same thin, application-layer
+adapter shape `application/AvatarMovementConstraint.js` (0.2.42, building
+collision) and `application/AvatarTerrainConstraint.js` (0.2.77, terrain
+slope) already established, now built for trees:
+
+```text
+application/AvatarTreeConstraint.js                          (new)
+   apply(position, desiredPosition)
+            │
+            ▼
+core/AvatarTreeCollisionQuery.js
+   treeCollisionCandidatesForMovement({ seed, currentPosition, requestedPosition })
+            │
+            ▼
+core/AvatarTreeMovement.js
+   resolveAvatarTreeMovement({ currentPosition, requestedPosition, trees })
+            │
+            ▼
+   { position, collided }
+```
+
+`AvatarTreeConstraint#apply(position, desiredPosition)` calls exactly
+those two already-complete functions, in exactly the order their own
+headers already describe as composing, and returns `{ position, collided
+}` — a shape deliberately identical to
+`AvatarMovementConstraint#apply()`'s own return shape.  `collided` is
+DERIVED by comparing the resolved X/Z against the requested X/Z, never a
+new status vocabulary; the pure functions underneath deliberately return
+only a position (see `core/AvatarTreeMovement.js`'s own header for why).
+Like `AvatarTerrainConstraint`, it needs no "currently loaded" streaming
+concept at all — tree placement is a pure function of `(seed, x, z)`,
+computable for any coordinate regardless of what documents happen to be
+streamed in nearby — so its constructor takes only an optional `seed`
+(defaulting to the same shared `DEFAULT_WORLD_SEED` every other
+seed-driven query point in this codebase already reads).
+
+`application/AvatarMovementController.js` gains a fifth, optional
+constructor argument, `treeConstraint`, APPENDED after
+`stepConstraint` — never inserted earlier in the parameter list — so no
+existing positional caller (test or otherwise) is disturbed by its
+addition. It is applied LAST in `tick()`'s own pipeline, after building
+collision, terrain slope, and step height have all already resolved
+`finalPosition` (Y included):
+
+```text
+simulateAvatarMovement()                    (pure kinematics)
+        │
+        ▼
+movementConstraint.apply()                  (0.2.42 — buildings)
+        │
+        ▼
+terrainConstraint.apply()                   (0.2.77 — slope)
+        │
+        ▼
+stepConstraint.apply()                      (0.3.2 — step height / Y snap)
+        │
+        ▼
+treeConstraint.apply()                      (0.9.63 — trees)              (new)
+        │
+        ▼
+AvatarPresence.position
+```
+
+Running tree collision last is safe, not merely convenient: tree
+occupancy is a purely horizontal (X/Z) concern, and
+`resolveAvatarTreeMovement()` already copies `requestedPosition.y`
+straight through untouched, so it can never undo the ground/brick Y a
+`stepConstraint` already resolved. This also keeps the exact same
+"transient, debug-only, never part of `AvatarPresence`" posture every
+prior constraint's own outcome flag already established —
+`AvatarMovementController#isCollidedWithTree()` joins `isCollided()`
+(buildings), `isBlockedBySlope()` (terrain), and `isBlockedByStepHeight()`
+(step) as a fourth, symmetric, recomputed-fresh-every-tick reporting
+surface.
+
+`application/WorldNavigationSession.js` gains one new
+`_buildAvatarTreeConstraint()`, mirroring `_buildAvatarTerrainConstraint()`
+exactly: no state from the session is needed, so it is always built,
+unconditionally, with `AvatarTreeConstraint`'s own default seed — the same
+"graceful absence" posture every other optional collaborator in that file
+already follows applies in reverse here, since this constraint is never
+actually absent for a real session.
+
+Deliberately excluded, matching the explicit brief for this milestone:
+tree destruction, pushing trees, avatar damage, tree interaction, sound
+effects, collision animations, network synchronization, multiplayer
+collision authority, physics/velocity/mass, acceleration, jumping,
+sliding friction, continuous collision detection beyond the swept segment
+`core/AvatarTreeCollisionQuery.js` already covers, spatial indexing,
+collision caching, persistence, and collision events — no generic
+`CollisionEvent` abstraction is introduced merely because the runtime now
+consumes a geometric result that already existed. Terrain and tree
+collision are deliberately kept orthogonal: `AvatarTreeConstraint` never
+reads terrain height, never adjusts Y, and is never folded into
+`AvatarTerrainConstraint` — the two stay fully separate, independently
+testable application-layer classes, exactly like building collision and
+terrain slope already are.
+
+The flagship test (`tests/AvatarTreeCollisionIntegration.test.js`) drives
+a real avatar, through a real `WorldNavigationSession`, straight at a
+real, deterministically-placed tree found the same way
+`tests/AvatarTreeCollisionQuery.test.js` already finds one — exercising
+the entire chain from `core/NaturalFeatureField.js` through
+`core/TreeCollisionGeometry.js`, `core/AvatarTreeCollisionQuery.js`,
+`core/AvatarTreeCollision.js`, and `core/AvatarTreeMovement.js` up to
+`AvatarPresence.position`, never mocking away the intermediate
+architecture. It also covers: free movement in open space (unaffected),
+a direct approach that genuinely stops at the tree's own boundary, a
+diagonal approach that genuinely slides rather than freezing, walking
+away from a tree the avatar starts touching (never a permanent
+attachment), a single fast tick that cannot jump clean through a tree
+(the full swept segment is tested, not merely a tick's starting point), Y
+preservation through a real collision, multiple real trees in one region
+each genuinely blocking a direct approach, ordinary movement regression
+(a controller built without a `treeConstraint` behaves exactly as
+before), non-leakage into `AvatarPresence`'s own wire shape, and full
+determinism — the identical seed, starting position, and input script,
+replayed on a second, completely independent session, arriving at the
+identical final position. A closing architectural-regression section
+proves `application/AvatarTreeConstraint.js` itself contains no
+reimplemented collision math, no terrain coupling, and no new
+`CollisionEvent`-style vocabulary — it only ever calls
+`treeCollisionCandidatesForMovement()` and `resolveAvatarTreeMovement()`.
+
+This closes the line 0.9.59 opened: a tree, once merely rendered, is now
+something an avatar's own movement genuinely respects, through a chain of
+five small, independently-tested files rather than one large one. Next:
+pause and observe real runtime behavior before deciding whether the
+architecture reveals a genuine missing seam — terrain/tree interaction,
+movement-step limitations, performance under many trees — or whether this
+subsystem is already sufficient as it stands.
