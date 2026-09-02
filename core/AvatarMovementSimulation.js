@@ -28,6 +28,12 @@ import { deriveAvatarVerticalState } from './AvatarVerticalState.js';
 // in on the next call; this file never remembers anything itself.
 const WALK_SPEED = 3; // world units / second
 const RUN_SPEED = 6;
+// 0.9.86 — running has always meant "the same base speed, doubled";
+// expressed as a ratio (rather than re-deriving RUN_SPEED from
+// WALK_SPEED, or vice versa) so the exact same doubling applies
+// whatever base speed a caller supplies via `movementSpeed` below —
+// see this file's own 0.9.86 header.
+const RUN_SPEED_MULTIPLIER = RUN_SPEED / WALK_SPEED;
 const TURN_RATE_DEGREES_PER_SECOND = 150;
 const JUMP_IMPULSE = 5; // world units / second, initial vertical speed
 const GRAVITY = 14; // world units / second^2
@@ -71,6 +77,24 @@ const MAX_Y = 8; // world units — "reasonable vertical bounds" ABOVE whatever 
 // SUPPORTED while grounded, RISING while airborne and still ascending,
 // FALLING once gravity is winning. No new physics, no new mutable
 // state.
+//
+// 0.9.86 — Ground Vehicle Movement Speed Capability. `movementSpeed`
+// (world units/second, optional) is the ONE new parameter this
+// milestone adds: the BASE horizontal speed to walk at — the same
+// role WALK_SPEED alone used to play unconditionally. Omitted (or
+// non-finite, or <= 0) degrades to WALK_SPEED, so every existing
+// caller that has never heard of a movement capability (every test
+// in this codebase predating 0.9.86, and every production call site
+// until application/AvatarMovementController.js starts passing one)
+// computes the exact same speed it always has — byte-for-byte, not
+// merely "close." Running still means exactly what it always has:
+// whatever base speed is active, doubled — see RUN_SPEED_MULTIPLIER
+// above — so a mounted ground vehicle's own "running" is faster
+// ground-vehicle movement, never a second, independent "vehicle
+// running" concept. See core/AvatarVehicleMovementCapability.js for
+// where a non-default `movementSpeed` actually comes from — this
+// file still has no idea a vehicle, or a capability, exists; it only
+// ever receives a plain number.
 export function simulateAvatarMovement({
     position,
     rotationY = 0,
@@ -78,7 +102,8 @@ export function simulateAvatarMovement({
     grounded = true,
     movementState,
     deltaSeconds,
-    groundHeight = GROUND_Y
+    groundHeight = GROUND_Y,
+    movementSpeed
 }) {
     const floorY = Number.isFinite(groundHeight) ? groundHeight : GROUND_Y;
     const dt = sanitizeDeltaSeconds(deltaSeconds);
@@ -89,7 +114,8 @@ export function simulateAvatarMovement({
         sanitizeNumber(rotationY, 0) + movementState.turnAxis * TURN_RATE_DEGREES_PER_SECOND * dt
     );
 
-    const speed = movementState.running ? RUN_SPEED : WALK_SPEED;
+    const baseSpeed = Number.isFinite(movementSpeed) && movementSpeed > 0 ? movementSpeed : WALK_SPEED;
+    const speed = movementState.running ? baseSpeed * RUN_SPEED_MULTIPLIER : baseSpeed;
     const stepDistance = clamp(movementState.forwardAxis * speed * dt, -MAX_STEP_PER_TICK, MAX_STEP_PER_TICK);
     const radians = nextRotationY * (Math.PI / 180);
     const dx = Math.sin(radians) * stepDistance;

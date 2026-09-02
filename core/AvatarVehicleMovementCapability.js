@@ -93,19 +93,61 @@ import { VehicleType, isValidVehicleType } from './VehicleType.js';
 // exception — it simply reports `supported: false` rather than silently
 // pretending a car's ground movement also serves a drone.
 //
-// NO SPEED VALUES, NO PHYSICS, YET — DELIBERATELY. An earlier draft of
-// this milestone's own brief proposed a `maxSpeed` field (or even bare
-// per-vehicle multipliers) as the first concrete capability. This file
-// deliberately does neither: BICYCLE/MOTORCYCLE/CAR's actual numeric
-// ground-movement characteristics — and DRONE's eventual flight numbers —
-// are a currently-unmade decision this vocabulary must NOT prejudge by
-// shipping a "reserved but zero" or guessed placeholder number. Settling
-// that a bicycle is "faster" than walking is a game-balance decision for
-// whichever future milestone actually wires a numeric value into the
-// existing movement pipeline (0.9.85 or later); baking a guessed number
-// in here now would make this file a disguised balance config rather than
-// the semantic vocabulary it is meant to be. `movementKind` and
-// `supported` are deliberately the entire descriptor.
+// NO SPEED VALUES, NO PHYSICS, AS OF 0.9.84 — DELIBERATELY, AT THE TIME.
+// An earlier draft of this milestone's own brief proposed a `maxSpeed`
+// field (or even bare per-vehicle multipliers) as the first concrete
+// capability. This file deliberately did neither: BICYCLE/MOTORCYCLE/
+// CAR's actual numeric ground-movement characteristics — and DRONE's
+// eventual flight numbers — were a then-unmade decision this vocabulary
+// must NOT prejudge by shipping a "reserved but zero" or guessed
+// placeholder number. Settling that a bicycle is "faster" than walking
+// was left to whichever future milestone actually wired a numeric value
+// into the existing movement pipeline. `movementKind` and `supported`
+// were deliberately the entire descriptor — until 0.9.86 below.
+//
+// 0.9.86 — Ground Vehicle Movement Speed Capability. The decision 0.9.84
+// deliberately deferred is made here, minimally: `movementSpeed` (world
+// units/second — the SAME unit `core/AvatarMovementSimulation.js`'s own
+// WALK_SPEED/RUN_SPEED already use, and the requested HORIZONTAL
+// movement magnitude, never an acceleration or a physics quantity) joins
+// `movementKind`/`supported` as the descriptor's third, and still only
+// other, field. WALK's own `movementSpeed` is the avatar's existing
+// on-foot speed — an avatar nobody has ever mounted on anything gets the
+// numerically IDENTICAL speed it always has, never a "close enough"
+// approximation (see "GROUND_VEHICLE_MOVEMENT_SPEED IS A DELIBERATE,
+// DOCUMENTED DUPLICATE..." below for why that number is a deliberately
+// duplicated constant, not an import).
+// GROUND_VEHICLE's own `movementSpeed` is ONE shared, conservative
+// constant, strictly greater than WALK's — BICYCLE, MOTORCYCLE, and CAR
+// all resolve to the exact same number. Differentiating them numerically
+// is explicitly future scope (see this milestone's own closing
+// paragraph in docs/Roadmap.md) — this milestone's success criterion is
+// "a mounted ground vehicle is faster than walking through the existing
+// capability pipeline," never "a car is faster than a bicycle."
+// AERIAL_VEHICLE's own `movementSpeed` is `0` — inert, never actually
+// read by anything: `supported: false` already blocks movement outright
+// at `application/AvatarMovementController.js#tick()` before any speed
+// value is ever consulted (see that file's own 0.9.85 header) — `0`
+// merely keeps this a fully-formed, always-numeric field rather than a
+// conditionally-absent one, so no caller ever needs an
+// `if ('movementSpeed' in capability)` check.
+//
+// GROUND_VEHICLE_MOVEMENT_SPEED IS A DELIBERATE, DOCUMENTED DUPLICATE OF
+// NO EXISTING NUMBER — AND WALK'S OWN movementSpeed IS A DELIBERATE,
+// DOCUMENTED DUPLICATE OF core/AvatarMovementSimulation.js's OWN
+// WALK_SPEED. This file's own architectural regression test
+// (tests/AvatarVehicleMovementCapability.test.js, Section K) forbids
+// importing `AvatarMovementSimulation.js` from here — this stays a pure
+// capability vocabulary with zero coupling to the simulation module's
+// own internals, exactly as 0.9.84 established. That means WALK's own
+// `movementSpeed` cannot be *imported* from the one true WALK_SPEED
+// constant; it is instead an independently-declared local constant
+// documented, right where it is declared below, as required to always
+// equal it. `application/WorldNavigationSession.js` resolves and applies
+// a capability EVERY animation frame, WALK included (see that file's own
+// 0.9.85 header) — so this is not a cosmetic parity, it is the one
+// number standing between "ordinary walking" and "ordinary walking, at
+// a slightly different speed nobody asked for."
 //
 // IMMUTABLE, GETTER-ONLY, FROZEN, DETERMINISTIC — the same discipline
 // core/AvatarVehicleMount.js and core/VehiclePresence.js already enforce.
@@ -113,14 +155,18 @@ import { VehicleType, isValidVehicleType } from './VehicleType.js';
 // clock read, and no I/O; the same `vehicleType` input always resolves to
 // the identical (frozen, shared) capability instance.
 //
-// Deliberately excluded, matching this milestone's own brief: any change
-// to `application/AvatarMovementController.js`, W/S input, continuous
-// movement, acceleration, braking, turning, vehicle orientation, vehicle
-// collision, vehicle-specific terrain handling, vehicle animation, camera
-// behavior, mounting/dismounting, persistence, networking, and actual
-// vehicle (or drone) movement of any kind. This file answers only "what
-// movement capability kind does this vehicle relationship imply," nothing
-// about how, or whether yet, that capability actually moves anything.
+// Deliberately excluded, matching 0.9.84's own original brief (0.9.85
+// later made the one exception this list itself anticipated — feeding a
+// resolved capability into `application/AvatarMovementController.js` —
+// and 0.9.86 made the further exception described above — a base
+// `movementSpeed`): W/S input, continuous movement, acceleration,
+// braking, turning, vehicle orientation, vehicle collision, vehicle-
+// specific terrain handling, vehicle animation, camera behavior,
+// mounting/dismounting, persistence, networking, and any per-vehicle
+// (BICYCLE vs. MOTORCYCLE vs. CAR) numeric differentiation. This file
+// still answers only "what movement capability — kind, support, and now
+// base speed — does this vehicle relationship imply," never how a
+// caller actually applies it to move anything.
 export const AvatarMovementCapabilityKind = Object.freeze({
     WALK: 'walk',
     GROUND_VEHICLE: 'ground_vehicle',
@@ -132,7 +178,7 @@ export function isValidAvatarMovementCapabilityKind(value) {
 }
 
 export class AvatarVehicleMovementCapability {
-    constructor(movementKind, vehicleType, supported) {
+    constructor(movementKind, vehicleType, supported, movementSpeed) {
         if (!isValidAvatarMovementCapabilityKind(movementKind)) {
             throw new Error(`AvatarVehicleMovementCapability requires a valid AvatarMovementCapabilityKind, got ${JSON.stringify(movementKind)}`);
         }
@@ -142,22 +188,32 @@ export class AvatarVehicleMovementCapability {
         if (typeof supported !== 'boolean') {
             throw new Error(`AvatarVehicleMovementCapability requires a boolean supported, got ${JSON.stringify(supported)}`);
         }
+        if (typeof movementSpeed !== 'number' || !Number.isFinite(movementSpeed) || movementSpeed < 0) {
+            throw new Error(`AvatarVehicleMovementCapability requires a finite, non-negative movementSpeed, got ${JSON.stringify(movementSpeed)}`);
+        }
         this._movementKind = movementKind;
         this._vehicleType = vehicleType;
         this._supported = supported;
+        this._movementSpeed = movementSpeed;
         Object.freeze(this);
     }
 
     get movementKind() { return this._movementKind; }
     get vehicleType() { return this._vehicleType; }
     get supported() { return this._supported; }
+    // 0.9.86 — the BASE horizontal movement speed (world units/second)
+    // this capability implies, before the existing running modifier is
+    // ever applied — see this file's own 0.9.86 header. Always a finite
+    // number >= 0, never undefined/NaN: AERIAL_VEHICLE's own `0` is
+    // inert (see that header) rather than a conditionally-missing field.
+    get movementSpeed() { return this._movementSpeed; }
 
     toJSON() {
-        return { movementKind: this._movementKind, vehicleType: this._vehicleType, supported: this._supported };
+        return { movementKind: this._movementKind, vehicleType: this._vehicleType, supported: this._supported, movementSpeed: this._movementSpeed };
     }
 
     static fromJSON(json) {
-        return new AvatarVehicleMovementCapability(json.movementKind, json.vehicleType, json.supported);
+        return new AvatarVehicleMovementCapability(json.movementKind, json.vehicleType, json.supported, json.movementSpeed);
     }
 }
 
@@ -165,19 +221,41 @@ export function isValidAvatarVehicleMovementCapability(value) {
     return value instanceof AvatarVehicleMovementCapability
         && isValidAvatarMovementCapabilityKind(value.movementKind)
         && isValidVehicleType(value.vehicleType)
-        && typeof value.supported === 'boolean';
+        && typeof value.supported === 'boolean'
+        && typeof value.movementSpeed === 'number'
+        && Number.isFinite(value.movementSpeed)
+        && value.movementSpeed >= 0;
 }
+
+// 0.9.86 — WALK's own base movement speed. MUST always equal
+// core/AvatarMovementSimulation.js's own WALK_SPEED — see this file's
+// own 0.9.86 header ("GROUND_VEHICLE_MOVEMENT_SPEED IS A DELIBERATE,
+// DOCUMENTED DUPLICATE...") for why that is an independently-declared
+// constant here rather than an import.
+const WALK_MOVEMENT_SPEED = 3; // world units / second
+
+// 0.9.86 — the ONE shared GROUND_VEHICLE base movement speed —
+// BICYCLE, MOTORCYCLE, and CAR all resolve to this exact same number
+// (see this file's own 0.9.86 header for why differentiating them is
+// explicit future scope, not this milestone). Chosen conservatively: it
+// equals core/AvatarMovementSimulation.js's own existing RUN_SPEED, so
+// "walking" a mounted ground vehicle already covers ground exactly as
+// fast as an ordinary avatar running on foot — a clean, easy-to-reason-
+// about relationship, not a guessed game-balance number. Strictly
+// greater than WALK_MOVEMENT_SPEED above, the one semantic requirement
+// this milestone's own brief actually asks for.
+const GROUND_VEHICLE_MOVEMENT_SPEED = 6; // world units / second
 
 // One frozen instance per VehicleType, built once at module load — never
 // reconstructed per call — so `resolveAvatarVehicleMovementCapability()`
 // returns the literal same object for the same input, matching
 // core/VehicleType.js's own `Object.freeze` closed-vocabulary discipline.
 const CAPABILITY_BY_VEHICLE_TYPE = Object.freeze({
-    [VehicleType.NONE]: new AvatarVehicleMovementCapability(AvatarMovementCapabilityKind.WALK, VehicleType.NONE, true),
-    [VehicleType.BICYCLE]: new AvatarVehicleMovementCapability(AvatarMovementCapabilityKind.GROUND_VEHICLE, VehicleType.BICYCLE, true),
-    [VehicleType.MOTORCYCLE]: new AvatarVehicleMovementCapability(AvatarMovementCapabilityKind.GROUND_VEHICLE, VehicleType.MOTORCYCLE, true),
-    [VehicleType.CAR]: new AvatarVehicleMovementCapability(AvatarMovementCapabilityKind.GROUND_VEHICLE, VehicleType.CAR, true),
-    [VehicleType.DRONE]: new AvatarVehicleMovementCapability(AvatarMovementCapabilityKind.AERIAL_VEHICLE, VehicleType.DRONE, false)
+    [VehicleType.NONE]: new AvatarVehicleMovementCapability(AvatarMovementCapabilityKind.WALK, VehicleType.NONE, true, WALK_MOVEMENT_SPEED),
+    [VehicleType.BICYCLE]: new AvatarVehicleMovementCapability(AvatarMovementCapabilityKind.GROUND_VEHICLE, VehicleType.BICYCLE, true, GROUND_VEHICLE_MOVEMENT_SPEED),
+    [VehicleType.MOTORCYCLE]: new AvatarVehicleMovementCapability(AvatarMovementCapabilityKind.GROUND_VEHICLE, VehicleType.MOTORCYCLE, true, GROUND_VEHICLE_MOVEMENT_SPEED),
+    [VehicleType.CAR]: new AvatarVehicleMovementCapability(AvatarMovementCapabilityKind.GROUND_VEHICLE, VehicleType.CAR, true, GROUND_VEHICLE_MOVEMENT_SPEED),
+    [VehicleType.DRONE]: new AvatarVehicleMovementCapability(AvatarMovementCapabilityKind.AERIAL_VEHICLE, VehicleType.DRONE, false, 0)
 });
 
 // The one resolution entry point. See this file's own header for exactly
@@ -190,12 +268,12 @@ export function resolveAvatarVehicleMovementCapability(vehicleType) {
     return CAPABILITY_BY_VEHICLE_TYPE[vehicleType];
 }
 
-// Deliberately not yet: feeding a resolved capability into
-// `application/AvatarMovementController.js` or any other part of the
-// actual movement pipeline (0.9.85's own job); numeric speed,
-// acceleration, or any other physical quantity; reading an
-// `AvatarVehicleMount` or looking up a `VehicleType` from a vehicle id or
-// `VehiclePresence` (the caller's job, not this file's); vehicle
-// orientation, collision, terrain response, or animation; camera
+// Deliberately not yet (0.9.86, still): acceleration, braking, momentum,
+// or any other physical quantity beyond the one base `movementSpeed`;
+// per-vehicle (BICYCLE vs. MOTORCYCLE vs. CAR) speed differentiation;
+// reading an `AvatarVehicleMount` or looking up a `VehicleType` from a
+// vehicle id or `VehiclePresence` (the caller's job, not this file's);
+// vehicle orientation, collision, terrain response, or animation; camera
 // behavior; mounting/dismounting; persistence; networking. See
-// docs/Roadmap.md, 0.9.84, for the full list.
+// docs/Roadmap.md, 0.9.84 for the original list and 0.9.86 for what
+// changed.

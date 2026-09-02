@@ -41,10 +41,14 @@ import { Position } from '../core/Position.js';
 //              a real WorldNavigationSession mounting a real, placed
 //              bicycle
 //   Section C: MOTORCYCLE -> GROUND_VEHICLE, at the controller
-//   Section D: CAR -> GROUND_VEHICLE, at the controller, plus
-//              WALK/GROUND_VEHICLE pipeline equivalence — identical
-//              input produces identical output, because this milestone
-//              adds no numeric difference between them yet
+//   Section D: CAR -> GROUND_VEHICLE, at the controller. Its own
+//              WALK/GROUND_VEHICLE pipeline-equivalence check (identical
+//              input produces identical output, because THIS milestone
+//              added no numeric difference between them) was
+//              superseded by 0.9.86 — see tests/
+//              AvatarVehicleMovementSpeedIntegration.test.js instead,
+//              which now asserts the opposite: GROUND_VEHICLE strictly
+//              outpaces WALK for identical input
 //   Section E: dismount — a real mount then dismount through
 //              WorldNavigationSession, proving the capability update
 //              lands on the SAME frame as the mount/dismount
@@ -287,9 +291,19 @@ async function runTests() {
     }
     {
         // Two otherwise-identical controllers, one left at the default
-        // WALK, one set to GROUND_VEHICLE (via CAR) — identical input
-        // must produce identical output, because this milestone adds
-        // no numeric difference between them yet.
+        // WALK, one set to GROUND_VEHICLE (via CAR).
+        //
+        // 0.9.86 note: this used to assert BYTE-IDENTICAL output — the
+        // exact claim 0.9.85 existed to make ("no numeric difference
+        // between them yet"). 0.9.86 (Ground Vehicle Movement Speed
+        // Capability) deliberately supersedes that claim: GROUND_VEHICLE
+        // now runs faster. What this section still proves, and what
+        // remains true, is the part 0.9.85 actually cared about — BOTH
+        // controllers go through the exact same simulation/constraint
+        // PIPELINE (same turning, same animation-state resolution), just
+        // parameterized by a different base speed now. See
+        // tests/AvatarVehicleMovementSpeedIntegration.test.js for the
+        // full 0.9.86 suite this milestone adds.
         const { avatarPresenceSession: walkSession } = buildAvatarStack(registry, 'cap-d2-walk');
         const { avatarPresenceSession: vehicleSession } = buildAvatarStack(registry, 'cap-d2-vehicle');
         const walkController = new AvatarMovementController(walkSession);
@@ -304,13 +318,11 @@ async function runTests() {
             walkController.tick(0.05);
             vehicleController.tick(0.05);
         }
-        assert(
-            Math.abs(walkSession.current.position.z - vehicleSession.current.position.z) < 1e-9
-            && Math.abs(walkSession.current.position.x - vehicleSession.current.position.x) < 1e-9,
-            '18. WALK and GROUND_VEHICLE produce byte-identical positions for identical input — GROUND_VEHICLE reuses the exact same simulation, not a numerically different one yet'
-        );
+        assert(vehicleSession.current.position.z > walkSession.current.position.z,
+            '18. as of 0.9.86, GROUND_VEHICLE (via CAR) covers strictly more ground than WALK for identical input and identical elapsed time — the numeric difference this milestone exists to add');
         assert(walkSession.current.animation === vehicleSession.current.animation,
-            '19. ...and identical animation state, too');
+            '19. ...while still producing identical animation state — the same RUNNING resolution, just faster underneath'
+        );
     }
 
     // -------------------------------------------------------------

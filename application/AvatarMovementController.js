@@ -239,14 +239,55 @@ import { AvatarMovementCapabilityKind, isValidAvatarVehicleMovementCapability } 
 // resolved one layer up), simulation resumes exactly where its own
 // bookkeeping left off.
 //
-// NOT YET: any numeric difference between WALK and GROUND_VEHICLE.
-// GROUND_VEHICLE runs through the IDENTICAL simulation/constraint
-// pipeline WALK already does — same speed, same turning, same terrain/
-// building/tree constraints — because this milestone answers only
-// "can the existing movement system consume a vehicle-derived
-// capability," never "what should a bicycle's own numbers be." See
-// docs/Roadmap.md, 0.9.85, for the full scope boundary and why that
-// second question is deliberately deferred to whatever comes next.
+// NOT YET, AS OF 0.9.85: any numeric difference between WALK and
+// GROUND_VEHICLE. 0.9.85 ran GROUND_VEHICLE through the IDENTICAL
+// simulation/constraint pipeline WALK already used — same speed, same
+// turning, same terrain/building/tree constraints — because that
+// milestone answered only "can the existing movement system consume a
+// vehicle-derived capability," never "what should a bicycle's own
+// numbers be." See docs/Roadmap.md, 0.9.85, for that milestone's own
+// scope boundary.
+//
+// 0.9.86 — Ground Vehicle Movement Speed Capability. The numeric
+// difference 0.9.85 deliberately deferred now exists, and this class
+// adds exactly ONE new thing to consume it: `_resolvedMovementSpeed()`
+// below, the direct structural twin of `_resolvedRunning()` — read in
+// exactly one place, tick()'s own call into
+// `core/AvatarMovementSimulation.js#simulateAvatarMovement()`, as its
+// new `movementSpeed` argument.
+//
+// THE SPEED-RESOLUTION SEAM STAYS OUTSIDE THE MOVEMENT CALCULATION
+// ITSELF. This class still never brands a speed as "GROUND_VEHICLE" or
+// multiplies anything by a vehicle-derived factor — it merely reads
+// `this._movementCapability.movementSpeed` (a plain number,
+// `core/AvatarVehicleMovementCapability.js`'s own job to have already
+// decided) and hands it to the ONE existing simulation function, which
+// decides how running interacts with it. `if (capability.movementKind
+// === GROUND_VEHICLE) { speed *= 2; }` conceptually never appears in
+// this file, and it couldn't — this class still has no `GROUND_VEHICLE`
+// literal anywhere in its own code, exactly as before this milestone.
+//
+// RUNNING IS NOT REDEFINED; IT KEEPS DOING EXACTLY WHAT IT ALREADY DID.
+// `_resolvedRunning()` (0.9.69) is completely untouched by this
+// milestone — still the same ordinary-W/S-vs-continuous-mode priority
+// rule, still feeding the same `AvatarMovementState.running` boolean.
+// What changed is one layer down, inside `simulateAvatarMovement()`
+// itself: running now doubles WHATEVER base speed is active (WALK's or
+// a vehicle's), rather than jumping to a hardcoded RUN_SPEED constant
+// — see that file's own 0.9.86 header. There is no second "vehicle
+// running" concept anywhere in this codebase; a mounted, running ground
+// vehicle is simply the existing running modifier applied to the
+// existing capability-resolved base speed.
+//
+// DEFAULT (never set, or an invalid capability) STILL MEANS WALK, AT
+// WALK'S OWN EXISTING SPEED. `_resolvedMovementSpeed()` returns
+// `undefined` whenever `_movementCapability` is `null` — the documented
+// "never set" state — and `simulateAvatarMovement()`'s own default
+// (`undefined` degrades to its internal WALK_SPEED — see that file)
+// takes over, exactly as it always has. This class still contains
+// neither a `WALK_SPEED` nor a `RUN_SPEED` literal of its own; the only
+// numbers it ever touches are whatever `movementSpeed` a resolved
+// capability already carries.
 const EPSILON = 1e-6;
 
 export class AvatarMovementController {
@@ -457,7 +498,8 @@ export class AvatarMovementController {
             grounded: this._grounded,
             movementState,
             deltaSeconds,
-            groundHeight: currentSupportHeight
+            groundHeight: currentSupportHeight,
+            movementSpeed: this._resolvedMovementSpeed()
         });
         this._verticalVelocity = result.verticalVelocity;
         this._grounded = result.grounded;
@@ -649,6 +691,20 @@ export class AvatarMovementController {
             return this._continuousMovementMode === AvatarContinuousMovementMode.RUN;
         }
         return this._keys.running;
+    }
+
+    // 0.9.86 — the ONE speed-resolution seam this milestone adds: the
+    // CURRENT movement capability's own base `movementSpeed` (a plain
+    // number — core/AvatarVehicleMovementCapability.js's own job to have
+    // already decided what it is), or `undefined` when
+    // `_movementCapability` is `null` (never set, or degraded there by
+    // setMovementCapability() — see that method above). `undefined` lets
+    // `simulateAvatarMovement()`'s own default take over, exactly as
+    // every call site did before this milestone existed — this method
+    // never substitutes a literal number of its own. Read in exactly one
+    // place, tick()'s own call into simulateAvatarMovement() above.
+    _resolvedMovementSpeed() {
+        return this._movementCapability ? this._movementCapability.movementSpeed : undefined;
     }
 
     _setKey(key, isDown) {
