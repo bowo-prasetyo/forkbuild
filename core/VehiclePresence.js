@@ -2,6 +2,7 @@ import { Position } from './Position.js';
 import { VehicleType, isValidVehicleType } from './VehicleType.js';
 
 // 0.9.71 — Vehicle Presence Descriptor.
+// Extended by 0.9.74 — Deterministic Vehicle Identity.
 //
 // 0.9.70 named what a vehicle IS (core/VehicleType.js). This milestone
 // answers the next-smallest question — "there is a particular vehicle at
@@ -14,30 +15,37 @@ import { VehicleType, isValidVehicleType } from './VehicleType.js';
 // borrows neither's answer to "how does this come to exist" — that is
 // still undecided (procedural? explicitly placed? player-created?
 // discovered over the network?) — and answers only what both of those
-// already agree on regardless of origin: a TYPE and a POSITION.
+// already agree on regardless of origin: an ID, a TYPE, and a POSITION.
 //
-// Two deliberate departures from the closest sibling shapes:
+// `id` was deliberately absent at 0.9.71: inventing one then would have
+// meant guessing at a lifecycle (can two VehiclePresence instances
+// describe the same vehicle? does an id survive a position change?) that
+// no seam had asked for yet. 0.9.73's proximity check gave an avatar a
+// way to know a vehicle is close enough to interact with; the next
+// question — mounting — cannot be answered without first being able to
+// say WHICH vehicle, and neither `type` nor `position` answers that
+// reliably (two vehicles can share a type, and this file has never
+// guaranteed a position stays fixed). 0.9.74 answers that one question —
+// see core/VehicleIdentity.js for how the id itself is derived — and this
+// file's own job stays exactly what it was: CARRY the id a caller hands
+// it, never derive one. `id` is validated only as a non-empty string;
+// this file has no opinion on, and never inspects, its format —
+// core/VehicleIdentity.js's own deterministic `vehicle:<seed>:<cellX>,
+// <cellZ>` shape is that module's business alone, not a contract
+// VehiclePresence enforces or depends on. `vehicleId`/`ownerId`/
+// `createdAt` remain unadded: none is added until an actual caller needs
+// to know who placed a vehicle, or when.
 //
-//   - No `id`. core/StructurePlacement.js and core/WorldPlacement.js both
-//     mint one immediately, because both exist to be looked up, moved,
-//     and removed by identity. VehiclePresence has no such consumer yet
-//     — inventing an id now would be guessing at a lifecycle (can two
-//     VehiclePresence instances describe the same vehicle? does an id
-//     survive a position change?) that no seam has asked for. Same
-//     reasoning for `vehicleId`/`ownerId`/`createdAt`: none is added
-//     until an actual caller needs to tell one vehicle apart from
-//     another, or needs to know who placed it, or when.
-//
-//   - VehicleType.NONE is rejected, not merely another valid member.
-//     core/VehicleType.js's own header explains NONE exists for a
-//     FUTURE avatar-vehicle relationship field ("what vehicle does this
-//     avatar currently have" — none yet). That is a STATE a value can
-//     hold. A VehiclePresence is not a state field; it is asserted only
-//     when a vehicle actually exists in the world. "No vehicle here" is
-//     represented by there being no VehiclePresence at all — the same
-//     way core/NaturalFeatureField.js represents "no tree in this cell"
-//     by returning nothing for that cell, never a TREE_TYPE.NONE
-//     placeholder object.
+// VehicleType.NONE is rejected, not merely another valid member.
+// core/VehicleType.js's own header explains NONE exists for a FUTURE
+// avatar-vehicle relationship field ("what vehicle does this avatar
+// currently have" — none yet). That is a STATE a value can hold. A
+// VehiclePresence is not a state field; it is asserted only when a
+// vehicle actually exists in the world. "No vehicle here" is represented
+// by there being no VehiclePresence at all — the same way
+// core/NaturalFeatureField.js represents "no tree in this cell" by
+// returning nothing for that cell, never a TREE_TYPE.NONE placeholder
+// object.
 //
 // Immutable and getter-only, like core/AvatarPresence.js and unlike
 // core/StructurePlacement.js's settable position/rotation — a
@@ -75,8 +83,11 @@ import { VehicleType, isValidVehicleType } from './VehicleType.js';
 // StorageProvider; networking, advertisement, or discovery; rendering;
 // input; collision; terrain interaction; deterministic/procedural
 // placement (naming how vehicles come to exist in the world at all is
-// explicitly future work — see docs/Roadmap.md, 0.9.71). This file
-// answers only "what vehicle is present, and where," nothing else.
+// explicitly future work — see docs/Roadmap.md, 0.9.71); deriving,
+// parsing, or validating the FORMAT of an id — that is
+// core/VehicleIdentity.js's own job (see docs/Roadmap.md, 0.9.74). This
+// file answers only "what vehicle is present, and where — and by what
+// name," nothing else.
 function isFiniteCoordinate(value) {
     return typeof value === 'number' && Number.isFinite(value);
 }
@@ -99,23 +110,29 @@ function toPosition(position) {
 }
 
 export class VehiclePresence {
-    constructor({ type, position } = {}) {
+    constructor({ id, type, position } = {}) {
+        if (typeof id !== 'string' || id.length === 0) {
+            throw new Error(`VehiclePresence requires a non-empty string id, got ${JSON.stringify(id)}`);
+        }
         if (!isValidVehicleType(type)) {
             throw new Error(`VehiclePresence requires a valid VehicleType, got ${JSON.stringify(type)}`);
         }
         if (type === VehicleType.NONE) {
             throw new Error('VehiclePresence cannot represent VehicleType.NONE — "no vehicle" is the absence of a VehiclePresence, not a presence of type NONE');
         }
+        this._id = id;
         this._type = type;
         this._position = toPosition(position);
         Object.freeze(this);
     }
 
+    get id() { return this._id; }
     get type() { return this._type; }
     get position() { return this._position; }
 
     toJSON() {
         return {
+            id: this._id,
             type: this._type,
             position: this._position.toJSON()
         };
@@ -123,6 +140,7 @@ export class VehiclePresence {
 
     static fromJSON(json) {
         return new VehiclePresence({
+            id: json.id,
             type: json.type,
             position: Position.fromJSON(json.position)
         });
