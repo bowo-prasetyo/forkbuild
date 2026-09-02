@@ -53882,3 +53882,143 @@ deterministic spatial query that narrows "every tree in the world" down to
 the small set of candidate trees actually worth testing an avatar's
 movement against, so the eventual runtime never pays the cost of resolving
 against trees nowhere near the avatar at all.
+
+## 0.9.62 — Deterministic Tree Collision Spatial Query
+
+The fourth and final geometric seam in this line, and the one that finally
+answers WHERE `core/AvatarTreeMovement.js`'s own `trees` argument comes
+from: 0.9.59 gives a tree a physical footprint, 0.9.60 tells whether the
+avatar overlaps one, 0.9.61 resolves a requested step against a supplied
+list of them — and every one of those three deliberately never discovers
+that list itself. This milestone is the one, narrow layer that does.
+
+```text
+core/TreeCollisionGeometry.js
+   treeCollisionGeometryInRegion(seed, minX, minZ, maxX, maxZ)
+            │
+            ▼
+core/AvatarTreeCollisionQuery.js                            (new)
+   treeCollisionCandidatesForMovement({ seed, currentPosition, requestedPosition })
+            │
+            ▼
+   candidate tree collision circles         (a plain array, nothing else)
+```
+
+`core/AvatarTreeCollisionQuery.js` (new) exports one pure function,
+`treeCollisionCandidatesForMovement({ seed, currentPosition,
+requestedPosition })`. It answers exactly one question — which tree
+collision circles could possibly matter to this avatar's requested step —
+and answers it by computing an axis-aligned query rectangle and handing
+that rectangle straight to `core/TreeCollisionGeometry.js`'s own
+`treeCollisionGeometryInRegion(seed, minX, minZ, maxX, maxZ)`, the exact
+region-level entry point that file already established. There is
+deliberately no second, differently-named "give me tree circles in a
+region" function anywhere in this file: that question already has exactly
+one owner, and this milestone only ever decides WHICH region to ask it
+about, the same "consult, never re-derive" discipline
+`core/TreeCollisionGeometry.js`'s own header already established relative
+to `core/NaturalFeatureField.js`.
+
+The query region is the AABB spanning `currentPosition` and
+`requestedPosition` — the avatar's full swept path, not merely its
+starting point, so a tree standing just past the start but squarely along
+the direction of travel is never missed — expanded on every side by
+`CANDIDATE_QUERY_MARGIN`, a new exported constant equal to
+`AVATAR_COLLISION_RADIUS + MAX_TREE_COLLISION_RADIUS`. `MAX_TREE_COLLISION_RADIUS`
+(also exported) is `TREE_TRUNK_COLLISION_RADIUS` scaled by 1.3, the top of
+`core/NaturalFeatureField.js`'s own fixed `feature.scale` range — re-stated
+here as a literal, deliberately never imported, matching
+`tests/TreeCollisionGeometry.test.js`'s own identical
+`VISUAL_CANOPY_RADIUS_AT_SCALE_1` precedent of naming a sibling module's
+own internal constant locally rather than reaching into its private
+computation. That margin is exactly the combined-radius quantity
+`core/AvatarTreeCollision.js#circlesIntersect()` already tests distance
+against — large enough that a tree whose CENTER sits just outside the raw
+swept rectangle, but whose own collision circle combined with the
+avatar's own `AVATAR_COLLISION_RADIUS` still reaches into the avatar's
+path, is never wrongly excluded.
+
+Deliberately NOT a spatial index — no `QuadTree`, no `R-Tree`, no hash
+grid, no persisted structure of any kind. The likely progression this
+milestone follows is simply: movement bounds → expanded query region →
+`treeCollisionGeometryInRegion()` → tree collision circles. A real spatial
+index may eventually earn its place once profiling shows this
+straightforward expanded-rectangle approach is actually too slow for real
+gameplay — introducing one now would be optimizing a cost nobody has
+measured yet, and this milestone's own semantic requirement is fully
+satisfied without it: given a spatial region, deterministically enumerate
+the relevant tree collision geometry.
+
+`core/AvatarTreeCollisionQuery.js` performs no collision detection and no
+movement resolution — it returns a plain array of candidate circles,
+exactly `treeCollisionGeometryInRegion()`'s own frozen output, in that
+function's own deterministic (lattice cell x, then z) order, never
+re-sorted, re-wrapped, or reconstructed. Its return value composes
+directly with `core/AvatarTreeMovement.js#resolveAvatarTreeMovement()`'s
+own `trees` argument, with nothing standing between them:
+
+```js
+const trees = treeCollisionCandidatesForMovement({ seed, currentPosition, requestedPosition });
+const resolved = resolveAvatarTreeMovement({ currentPosition, requestedPosition, trees });
+```
+
+`tests/AvatarTreeCollisionQuery.test.js` (new, registered in `tests.html`)
+covers: an empty region returning `[]` (Section A); deterministic
+agreement with `treeCollisionGeometryInRegion()` called directly against
+the identical computed bounds (Section B); real trees well outside the
+query excluded, the identical tree queried at its own position included
+(Section C); half-open boundary behavior — a tree landing exactly on the
+computed max boundary excluded, exactly on the computed min boundary
+included, matching `naturalFeaturesInRegion()`'s own convention (Section
+D); avatar movement coverage — a tree 20 units from a stationary query's
+own starting point missed, the identical starting point finding it once
+the requested movement sweeps toward it (Section E); collision radius
+expansion — `CANDIDATE_QUERY_MARGIN`'s own exact composition, and a real
+tree included just inside that margin but excluded just outside it
+(Section F); output identity — every returned circle frozen, carrying the
+full `kind`/`shape`/`center`/`radius` shape, and counted exactly against
+real tree placements over the identical computed region (Section G);
+determinism, including a different seed producing a genuinely different
+candidate list (Section H); ordering exactly matching
+`treeCollisionGeometryInRegion()`'s own order (Section I); non-mutation of
+frozen `currentPosition`/`requestedPosition` inputs (Section J); and an
+architectural regression pass reading this file's own source text,
+confirming it never references collision detection, movement resolution,
+a spatial index, rendering, `THREE`, randomness, the wall clock, storage,
+or a position-mutating assignment, while explicitly confirming it DOES
+consume `treeCollisionGeometryInRegion()` and `AVATAR_COLLISION_RADIUS`,
+plus a check that its exported surface is exactly
+`treeCollisionCandidatesForMovement`, `MAX_TREE_COLLISION_RADIUS`, and
+`CANDIDATE_QUERY_MARGIN` (Section K).
+
+Deliberately postponed, matching 0.9.59's, 0.9.60's, and 0.9.61's own
+lists: collision detection and movement resolution of any kind — both
+already exist, in `core/AvatarTreeCollision.js` and
+`core/AvatarTreeMovement.js` respectively, and this milestone never
+duplicates either; a real spatial index (`QuadTree`, `R-Tree`, hash grid,
+or any persisted structure — see this milestone's own "why not yet"
+above); wiring this file into `application/AvatarMovementConstraint.js`,
+`application/AvatarTerrainConstraint.js`, or the World View avatar update
+loop in any way — that integration is its own later seam, deliberately
+left out so the geometric machinery across all four of these files stays
+testable without the entire UI/runtime (0.9.63); mutating
+`currentPosition`, `requestedPosition`, or any returned circle; a richer
+result than a plain array of circles; vertical (Y) movement, standing,
+falling, jumping, or gravity of any kind; a physics engine, velocity,
+acceleration, or mass; tree destruction, harvesting, or any other
+interaction; damage, animation changes, sound, networking, persistence,
+and any Publication integration. No existing file —
+`core/NaturalFeatureField.js`, `core/TreeCollisionGeometry.js`,
+`core/AvatarTreeCollision.js`, `core/AvatarTreeMovement.js`,
+`core/AvatarCollision.js`, `application/AvatarMovementConstraint.js`, and
+`application/AvatarTerrainConstraint.js` included — is modified by this
+milestone; none of them import or reference
+`core/AvatarTreeCollisionQuery.js`.
+
+With tree physical geometry (0.9.59), the candidate spatial query
+(0.9.62), collision detection (0.9.60), and movement resolution (0.9.61)
+now all in place as pure, composable, independently-tested functions, the
+next and final step in this line is 0.9.63: the first milestone allowed to
+wire this entire pipeline into the actual avatar movement system, so a
+player actually walking their avatar through the world finally has trees
+in their way.
