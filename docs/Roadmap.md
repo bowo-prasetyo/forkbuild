@@ -53345,3 +53345,147 @@ almost certainly Publication-facing integration (wiring the existing
 Arweave/Nostr distribution path into the real Publication workflow, while
 retaining the existing IPFS/Bitcoin/Base distribution mechanisms
 untouched) rather than further lifecycle machinery.
+
+## 0.9.58 — Publication Decentralized Distribution Orchestrator
+
+The architecture review 0.9.57 deliberately deferred to landed on exactly
+the seam its own header predicted: nothing in this codebase turns "a
+signed Publication plus a set of distribution inputs" into a running
+distribution in one call. A caller who wanted to distribute a Publication
+had to already know to import BOTH `PublicationDistributionRuntimeComposition.js`
+(0.9.47) AND `PublicationDistributionExecutor.js` (0.9.49), call the first
+to build a runtime, then call the second with that runtime's three
+collaborators renamed onto the executor's own parameter names. This
+milestone is that missing call — nothing more:
+
+```text
+Signed Publication
+     │
+     ├── serializedMaterial
+     ├── materialStorage                (optional)
+     ├── arweaveUploaderOptions         (signer, gatewayUrl, ...)
+     └── nostrPublisherOptions          (relayUrl, discoveryTag, ...)
+     ▼
+application/PublicationDistributionOrchestrator.js
+   orchestratePublicationDistribution({ ... })
+     │
+     ├──► composePublicationDistributionRuntime(...)   (0.9.47, unmodified)
+     │        { uploader, describeDistribution, publisher }
+     │
+     └──► executePublicationDistribution({ ...,        (0.9.49, unmodified)
+              materialUploader: uploader,
+              distributionDescriptor: describeDistribution,
+              discoveryPublisher: publisher
+          })
+     ▼
+PublicationDistributionResult   (0.9.48, produced by 0.9.49, unmodified)
+```
+
+`application/PublicationDistributionOrchestrator.js` (new) exports one
+plain function, `orchestratePublicationDistribution()` — never a class,
+since every call is independent and there is no per-call state for a
+constructor to hold. It is an assembly boundary, never a second execution
+engine: it contains no upload logic, no envelope construction, no publish
+logic, and no stop-on-failure sequencing of its own. Every one of those
+questions already has exactly one owner — `executePublicationDistribution()`
+(0.9.49) — and this file's only job is translating Publication-domain call
+inputs into the two collaborator-construction calls 0.9.47 already owns
+and the one collaborator-sequencing call 0.9.49 already owns, then
+returning exactly what that call returns, unmodified, unwrapped,
+un-re-described. `composePublicationDistributionRuntime()` is called
+exactly once per call, with `arweaveUploaderOptions`/`nostrPublisherOptions`
+forwarded verbatim; `executePublicationDistribution()` is called exactly
+once per call, with `publication`/`serializedMaterial`/`materialStorage`
+forwarded verbatim and the composed runtime's own three collaborators
+renamed onto the executor's own parameter names (`uploader` ->
+`materialUploader`, `describeDistribution` -> `distributionDescriptor`,
+`publisher` -> `discoveryPublisher`) — that renaming is this file's entire
+distribution-specific contribution.
+
+The result is 0.9.49's own result, passed through, never re-described:
+`orchestratePublicationDistribution()` returns exactly the `Promise`
+`executePublicationDistribution()` itself returns, same resolution value
+(a `PublicationDistributionResult` or `null`, per 0.9.48's own contract),
+same rejection behavior. Every call composes a fresh, independent runtime
+— no cached runtime, no singleton, no module-level state — the same
+restraint 0.9.47's own header already holds for its own composed pair,
+inherited here unchanged; two orchestrator calls in sequence build two
+entirely independent uploader/publisher pairs. A construction or contract
+failure propagates rather than being swallowed: this file wraps neither
+`composePublicationDistributionRuntime()` nor
+`executePublicationDistribution()` in a `try`/`catch`, so a missing
+`signer`, an empty `gatewayUrl`, a missing `discoveryTag`, or any other
+malformed option throws exactly where 0.9.47's own composed constructors
+already throw, synchronously, before this file's own second call is ever
+reached; a genuine `materialUploader.upload()` or
+`discoveryPublisher.publish()` rejection propagates exactly where 0.9.49's
+own header already documents it propagating. Three identities stay never
+conflated: `publication.id`, the eventual `material.uri`,
+`nostrPublisherOptions.discoveryTag`, and `nostrPublisherOptions.relayUrl`
+all remain exactly what a caller supplied or 0.9.45/0.9.46 independently
+produced, with no new identifier of this file's own derived from any of
+them.
+
+`tests/PublicationDistributionOrchestrator.test.js` (new) covers: a
+flagship section — one orchestrator call, real 0.9.47 construction and
+real 0.9.49 sequencing, producing one complete result with material uri,
+discovery tag, and relay origin kept three distinct identities and the
+actually-published Nostr event content naming the real uploaded
+`materialUri`; a section confirming two calls compose two independent
+runtimes with no shared state; a section confirming `arweaveUploaderOptions`/
+`nostrPublisherOptions` are forwarded verbatim to 0.9.47's own composition
+(custom gateway/relay/tag/kind all actually reach the composed
+collaborators); a section confirming a malformed option throws
+synchronously at orchestration time, before any collaborator is
+constructed or called; a section confirming genuine collaborator
+rejections propagate unchanged; a DECLINE section confirming an upload
+decline is forwarded through to 0.9.49's own stop-on-failure sequencing
+exactly as that file already handles it, with no re-implemented decline
+logic in this file and the relay never contacted; and an architectural
+regression pass confirming this file never imports the concrete Arweave
+uploader, the concrete Nostr publisher, the descriptor module, the
+discovery envelope module, the result boundary, or any of the eight
+lifecycle/persistence/store/restorer/hydration modules from 0.9.50 through
+0.9.57, never constructs either concrete collaborator itself, contains no
+`try`/`catch` of its own, exports exactly one function, and uses no
+transaction/status/execution-state/scheduling vocabulary anywhere in its
+own code. No existing file — including 0.9.44 through 0.9.57 themselves —
+is modified by this milestone.
+
+This connects the publication-side distribution pipeline (0.9.44 through
+0.9.49) to a real Publication-facing call boundary, exactly as 0.9.57's
+own closing note predicted, without duplicating 0.9.49's own executor and
+without reaching into the lifecycle-infrastructure line 0.9.50 through
+0.9.57 already built — a caller who wants to record this milestone's own
+`PublicationDistributionResult` into a lifecycle, persist it, or restore
+it later still does so with those eight files directly, one call site
+over, exactly as it already could before this milestone existed. The
+existing IPFS/Bitcoin/Base distribution mechanisms remain untouched and
+unreferenced; Arweave + Nostr distribution, reachable here in one call, is
+additional distribution capability alongside them, never a replacement.
+Deliberately excluded — not this milestone: reimplementing any part of
+0.9.47's construction or 0.9.49's sequencing; a distribution state
+machine, a lifecycle record, or any persistence of a distribution result;
+multi-relay publishing, relay selection, quorum, or fallback policy;
+retries of any kind; verification of a distributed result; discovery lead
+resolution, retrieval, or signature re-verification on the consuming side;
+replacing, deprecating, or migrating the existing IPFS/Bitcoin/Base
+mechanisms; wallet or key management; and a caller that actually invokes
+this orchestrator against a real signed Publication inside a running
+application (UI, CLI, or service composition root) — that wiring remains a
+separate, later, unscheduled step, the same restraint 0.9.36's, 0.9.43's,
+and 0.9.47's own headers already hold for their own composed results.
+
+With this milestone in place, the question 0.9.57 posed can finally be
+asked for real: can a Publication now be distributed to Arweave,
+advertised through Nostr, rediscovered through Nostr, retrieved from
+Arweave, and verified as the intended Publication — all while the legacy
+IPFS/Bitcoin/Base paths remain untouched? The publish half of that loop
+(distribute, advertise) now exists behind one call; the discover half
+(rediscover, retrieve, verify) already existed from 0.9.24 through 0.9.43,
+unmodified and unreferenced by this milestone. Wiring the two halves
+together into one demonstrable round trip, and whatever concrete
+integration point (UI, CLI, or service) actually calls either side in a
+running application, remains the next unscheduled step — determined by
+that concrete missing seam when it is next requested, not by an arbitrary
+milestone number.
