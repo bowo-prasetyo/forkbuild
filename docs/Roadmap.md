@@ -56010,7 +56010,164 @@ mounting-only transition 0.9.78 established. This milestone answers
 only "did the avatar just ask to leave," nothing about whether that
 request is meaningful or where it leads.
 
-Next: 0.9.80 can now combine this intent with the avatar's actual
-mount state (0.9.77) to decide WHEN a dismount should happen — the
-same shape 0.9.78 already used for mounting — before any later
-milestone has to invent where the avatar actually reappears.
+Next: 0.9.80 resolves WHERE the avatar would land if it dismounted a
+given vehicle, deliberately BEFORE any future milestone combines this
+intent with the avatar's actual mount state (0.9.77) to decide WHEN a
+dismount should happen. Clearing the mount first and solving position
+second would let `unmounted avatar + no valid position` exist as an
+observable intermediate state, even briefly — so the destination is
+established first, and the actual `mounted -> unmounted` transition
+(the same shape 0.9.78 already used for mounting) is left for the
+milestone after that, once both a resolved intent and a resolved
+destination already exist for it to combine.
+
+## 0.9.80 — Vehicle Dismount Position Resolution
+
+0.9.79 answered "did the avatar just ask to leave," and stopped there.
+Nothing yet answers the question a mounted avatar's dismount eventually
+needs answered before the mount relationship can be cleared:
+
+```
+Given a vehicle the avatar is mounted on, where can the avatar
+safely stand after dismounting?
+```
+
+`core/AvatarVehicleDismountPosition.js` (new) exports one pure
+function:
+
+```
+resolveAvatarVehicleDismountPosition(vehicle) -> Position | null
+```
+
+**Before the transition, not after.** Dismounting is not simply
+`mounted -> unmounted` — the avatar also needs a meaningful world
+position the instant it is unmounted. Clearing `AvatarVehicleMount`
+first and resolving a position second would let `unmounted avatar +
+invalid/occupied position` exist as an intermediate, observable state.
+This file lets a future dismount transition compute the destination
+FIRST, and perform the mount-clearing and position-change together
+only once a destination is actually in hand.
+
+**Takes the actual `VehiclePresence`, never a vehicle id.** Exactly
+the discipline this codebase already insists on everywhere a vehicle
+is consumed rather than merely named: an `AvatarVehicleMount` carries
+only `vehicleId`, and `vehiclePresenceInRegion()` reconstructs a fresh
+`VehiclePresence` object on every query (0.9.74's own header — "the
+same conceptual bicycle is a different object on every query").
+Resolving a position from a bare id would mean this file growing a
+vehicle lookup/registry of its own, purely to turn that id back into a
+position. Instead, the application/integration layer — already
+responsible for associating a mount's `vehicleId` with the currently
+available `VehiclePresence` — hands this file the `VehiclePresence` it
+already has.
+
+**Deliberately not mount-state-aware, the same refusal 0.9.79 already
+made for intent.** No `currentMount` parameter, no dependency on
+`core/AvatarVehicleMount.js` or `core/AvatarVehicleMountTransition.js`.
+Whether the avatar is actually mounted on the given vehicle right now
+is a question for whatever future transition calls this file.
+
+**Kept bicycle-specific, on purpose.** `core/VehiclePlacement.js` has
+only ever produced `VehicleType.BICYCLE`, and `VehiclePresence`
+deliberately carries no dimensions, heading, wheelbase, or seat
+position. Rather than invent a generic vehicle geometry with no real
+second vehicle type to generalize from, this milestone answers the
+question for bicycles only, and returns `null` — a genuine, honest "no
+dismount destination is known for this vehicle type," never an error —
+for `MOTORCYCLE`/`CAR`/`DRONE`.
+
+**A fixed world-space offset, because bicycles have no heading yet.**
+A dismount position is inherently relative to the vehicle, which
+eventually means a heading — but no bicycle placed by
+`core/VehiclePlacement.js` has ever had an orientation, and
+manufacturing one solely so this file could have a "dismount side"
+would mean inventing vehicle-orientation machinery nobody has asked
+for, just to answer a smaller question. So the offset is a fixed,
+always-the-same-direction displacement in world space (+X only),
+`BICYCLE_DISMOUNT_OFFSET_X`, sized larger than twice the avatar's own
+collision radius (`AVATAR_COLLISION_RADIUS === 0.35`,
+`core/AvatarCollision.js`) so a dismounted avatar cannot land centered
+back on the vehicle's own point, and comfortably inside
+`VEHICLE_INTERACTION_RADIUS` (1.5, `core/AvatarVehicleProximity.js`) so
+the avatar stays within interaction range of the vehicle it just left.
+When vehicles eventually acquire a real orientation, that seam should
+replace this fixed offset with a heading-relative one.
+
+**Y is never copied from the vehicle.** `VehiclePresence.position.y` is
+a raw `terrainHeightAt()` sample — real elevation baked directly into a
+vehicle's own domain position. An avatar's position has never meant
+that: `AvatarPresence`'s own position defaults to `y = 0`, and
+docs/Principles.md's own "Terrain Elevation Is A Rendering-Time Offset,
+Never A Presence Or Placement Fact" (0.2.76) is explicit that ground
+level for an avatar is `y = 0` plus whatever the domain layer itself
+adds — terrain elevation is added only at render time, never written
+back into a domain position. The resolved Y is always `0`, never
+`vehicle.position.y`.
+
+**No occupancy or terrain validation yet.** A resolved candidate could,
+in principle, land in water or overlap something else — but this
+codebase's only existing collision detector, `core/AvatarTreeCollision.js`,
+answers exactly one narrow question (avatar-circle vs. one tree-circle),
+not the generic "is this position free" query real destination
+validation would need. Building that generic query now, merely to give
+this milestone something to call, would invent collision infrastructure
+this codebase does not otherwise need yet. This milestone establishes
+only deterministic candidate-position calculation; occupancy/terrain
+validity is a later seam — at which point this function may start
+returning `null` for a candidate it once would have returned a real
+`Position` for, a change entirely internal to this file, since
+`Position | null` is already its contract.
+
+**No dismount transition here.** This file never imports
+`core/AvatarVehicleMount.js` or `core/AvatarVehicleMountTransition.js`,
+never clears a mount, and never decides WHETHER a dismount should
+happen — only WHERE one would land if it did.
+
+`tests/AvatarVehicleDismountPosition.test.js` proves: the same vehicle
+always resolves to an equal position (Section A); the exact candidate a
+bicycle produces, including that Y is `0` rather than the vehicle's own
+Y (Section B); X/Z offset semantics at the origin and with negative
+coordinates (Section C); Y is `0` regardless of how large or negative
+the vehicle's own terrain-sampled Y is (Section D); malformed inputs
+(`null`, a bare id string, a plain object shaped like a
+`VehiclePresence`) throw, while a `MOTORCYCLE`/`CAR`/`DRONE` vehicle
+resolves to `null` rather than erroring or guessing at a geometry it
+has none for (Section E); two separately constructed but
+value-identical `VehiclePresence` instances resolve identically, and a
+syntactically well-formed but nonsensical vehicle id has no bearing on
+the result (Section F); the vehicle is never mutated and the result is
+a newly constructed `Position`, never the vehicle's own position object
+(Section G); repeated resolution across distinct instances is
+deterministic (Section H); and an architectural regression sweep
+confirming this file's own code never references
+`AvatarVehicleMount`/`AvatarVehicleMountTransition`/
+`AvatarVehicleDismountIntent`/`AvatarVehicleInteractionIntent`/
+`AvatarVehicleInteractionTarget`/`AvatarVehicleProximity`,
+`VehiclePlacement`/`VehicleIdentity`, `TerrainHeightField`/
+`TerrainEcology`/`Hydrology`, avatar/vehicle movement, collision,
+keyboard/controller input, rendering, animation, camera, persistence,
+or networking — and that it exports exactly `BICYCLE_DISMOUNT_OFFSET_X`
+and `resolveAvatarVehicleDismountPosition` (Section I).
+
+## What this milestone deliberately does NOT do
+
+The actual dismount transition (clearing `AvatarVehicleMount`, changing
+an avatar's stored position); mount-state awareness of any kind;
+resolving a vehicle from an id or any vehicle registry/lookup; vehicle
+orientation or heading; generic or per-type vehicle geometry
+(dimensions, wheelbase, seat position); occupancy or terrain validity
+checking, or any expansion of `core/AvatarTreeCollision.js`'s existing
+avatar-vs-tree-only collision machinery; nearest-vehicle selection;
+remounting; keyboard/controller input; avatar or vehicle movement;
+vehicle collision; animation; camera changes; rendering; persistence;
+networking. This milestone answers only "where would the avatar land if
+it dismounted this vehicle," nothing about whether it should, or
+whether that landing spot is actually clear.
+
+Next: only once a resolved dismount destination exists here can a
+future milestone combine `currentMount`, the dismount intent (0.9.79),
+and this file's own resolved position into the actual
+`mounted -> unmounted` transition — the first milestone in this whole
+line where two pieces of avatar state (mount relationship and position)
+change together, which is exactly why it deserves its own transition
+boundary rather than being folded into this one.
