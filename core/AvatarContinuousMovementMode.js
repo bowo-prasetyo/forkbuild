@@ -1,7 +1,7 @@
 // 0.9.67 — Continuous Movement Mode Vocabulary.
 //
 // 0.9.64–0.9.66 established persistent DIRECTION — does the avatar keep
-// walking FORWARD or BACKWARD after Caps Lock + W/S is released. That
+// walking FORWARD or BACKWARD after Alt + W/S is released. That
 // answers only one of the two questions continuous running needs
 // answered: `application/AvatarMovementController.js` already has an
 // existing, ordinary concept of running (`AvatarMovementState.running`,
@@ -58,7 +58,7 @@
 //                          ordinary, momentary key-down.
 //   runRequested         — true when this particular activating press
 //                          asks for RUN rather than WALK (e.g. the
-//                          future input layer's own Caps Lock + Shift +
+//                          future input layer's own Alt + Shift +
 //                          W/S chord). Meaningless, and ignored, when
 //                          `activationRequested` is false — an ordinary
 //                          press cancels mode regardless of whether
@@ -74,15 +74,15 @@
 // activation wants running," so re-activating with a different
 // `runRequested` value is a plain, direct switch, not a special case:
 //
-//   activationRequested,  runRequested: false, NONE -> WALK   (CapsLock+W activates persistent WALK)
-//   activationRequested,  runRequested: true,  NONE -> RUN    (CapsLock+Shift+W activates persistent RUN)
+//   activationRequested,  runRequested: false, NONE -> WALK   (Alt+W activates persistent WALK)
+//   activationRequested,  runRequested: true,  NONE -> RUN    (Alt+Shift+W activates persistent RUN)
 //   activationRequested,  runRequested: false, WALK -> WALK   (re-activating WALK is idempotent, not a toggle-off)
 //   activationRequested,  runRequested: true,  RUN  -> RUN    (same idempotence for RUN)
 //   activationRequested,  runRequested: true,  WALK -> RUN    (re-activating with Shift now held switches WALK -> RUN directly)
 //   activationRequested,  runRequested: false, RUN  -> WALK   (and back, RUN -> WALK, releasing Shift and re-activating)
 //   ordinary press (any runRequested), any mode      -> NONE  (an ordinary W/S tap cancels persistent mode exactly as it cancels persistent direction)
 //
-// Key-UP — of W, S, Shift, or Caps Lock itself — is never an input this
+// Key-UP — of W, S, Shift, or Alt itself — is never an input this
 // function reads, for the identical reason
 // deriveAvatarContinuousMovementIntent() never reads one (see that
 // file's own header): only a subsequent key-DOWN can ever change the
@@ -90,7 +90,7 @@
 // the avatar keeps running" works.
 //
 // Deliberately excluded, matching the explicit brief for this milestone:
-// any keyboard/Caps-Lock/Shift event handling (that translation is
+// any keyboard/Alt/Shift event handling (that translation is
 // 0.9.68's own job, the direct mode-vocabulary counterpart to 0.9.65),
 // any change to core/AvatarContinuousMovementIntent.js,
 // application/AvatarMovementController.js, or core/AvatarMovementState.js

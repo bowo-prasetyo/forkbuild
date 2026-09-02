@@ -12,7 +12,7 @@ import {
 //               (WALK vs RUN driven purely by runRequested)
 //   Section C: cancellation — an ordinary press always clears it
 //   Section D: defensive/malformed input — degrades gracefully
-//   Section E: FLAGSHIP — a scripted Caps Lock (+ Shift) + W/S scenario,
+//   Section E: FLAGSHIP — a scripted Alt (+ Shift) + W/S scenario,
 //              replayed as a sequence of derive() calls, plus
 //              purity/determinism
 //   Section F: architectural regression — no movement, no controller, no
@@ -58,11 +58,11 @@ async function runTests() {
     // -------------------------------------------------------------
     {
         const next = deriveAvatarContinuousMovementMode({ currentMode: NONE, activationRequested: true, runRequested: false });
-        assert(next === WALK, '10. CapsLock+W from no mode activates persistent WALK');
+        assert(next === WALK, '10. Alt+W from no mode activates persistent WALK');
     }
     {
         const next = deriveAvatarContinuousMovementMode({ currentMode: NONE, activationRequested: true, runRequested: true });
-        assert(next === RUN, '11. CapsLock+Shift+W from no mode activates persistent RUN');
+        assert(next === RUN, '11. Alt+Shift+W from no mode activates persistent RUN');
     }
     {
         const next = deriveAvatarContinuousMovementMode({ currentMode: WALK, activationRequested: true, runRequested: false });
@@ -138,19 +138,19 @@ async function runTests() {
     // Section E — FLAGSHIP: a scripted scenario, plus purity/determinism
     // -------------------------------------------------------------
     {
-        // "CapsLock + W activates persistent WALK; W up; CapsLock up;
+        // "Alt + W activates persistent WALK; W up; Alt up;
         // avatar keeps walking" — key-UP is never modeled here at all,
         // so between derive() calls below, mode simply persists on its
         // own with no call needed to keep it alive.
         let mode = NONE;
         mode = deriveAvatarContinuousMovementMode({ currentMode: mode, activationRequested: true, runRequested: false });
-        assert(mode === WALK, '27. FLAGSHIP step 1: CapsLock+W activates continuous WALK');
+        assert(mode === WALK, '27. FLAGSHIP step 1: Alt+W activates continuous WALK');
 
-        // Releasing W and Caps Lock is not a call into this function at
+        // Releasing W and Alt is not a call into this function at
         // all (see this file's own header) — `mode` above already IS
         // "what should exist after release": WALK, unchanged.
 
-        // Now the player adds Shift and re-activates: CapsLock+Shift+W.
+        // Now the player adds Shift and re-activates: Alt+Shift+W.
         mode = deriveAvatarContinuousMovementMode({ currentMode: mode, activationRequested: true, runRequested: true });
         assert(mode === RUN, '28. FLAGSHIP step 2: re-activating with Shift held upgrades continuous WALK to continuous RUN, in one call');
 
@@ -161,7 +161,7 @@ async function runTests() {
 
         // From scratch again, straight to RUN.
         mode = deriveAvatarContinuousMovementMode({ currentMode: mode, activationRequested: true, runRequested: true });
-        assert(mode === RUN, '30. FLAGSHIP step 4: CapsLock+Shift+S activates continuous RUN directly, no WALK stop-over needed');
+        assert(mode === RUN, '30. FLAGSHIP step 4: Alt+Shift+S activates continuous RUN directly, no WALK stop-over needed');
 
         // And downgrading directly from RUN to WALK, no NONE in between.
         mode = deriveAvatarContinuousMovementMode({ currentMode: mode, activationRequested: true, runRequested: false });
@@ -193,7 +193,7 @@ async function runTests() {
             'AvatarMovementConstraint', 'AvatarTerrainConstraint', 'AvatarStepConstraint', 'AvatarTreeConstraint',
             'AvatarContinuousMovementIntent', 'AvatarContinuousMovementInputAdapter',
             'setTimeout', 'setInterval', 'requestAnimationFrame', 'performance.now', 'Date.now',
-            'addEventListener', 'keydown', 'keyup', 'KeyboardEvent', 'getModifierState', 'CapsLock', 'capslock',
+            'addEventListener', 'keydown', 'keyup', 'KeyboardEvent', 'getModifierState', 'Alt', 'alt',
             'THREE', 'from \'three\'', 'Renderer', 'WorldNavigationSession',
             'Math.random', 'localStorage', 'StorageProvider', 'fetch(', 'WebSocket',
             'velocity', 'acceleration', 'speed', 'position', 'rotation'

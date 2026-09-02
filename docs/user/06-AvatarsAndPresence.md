@@ -82,8 +82,8 @@ can also walk your avatar directly with **Avatar Control Mode**:
 | **W / A / S / D** | Move / turn |
 | **Shift** | Run (faster movement) |
 | **Space** | Jump |
-| **Caps Lock + W / S** | Hands-free continuous walk forward/backward — keeps moving after you let go of the keys |
-| **Caps Lock + Shift + W / S** | Same, but running instead of walking |
+| **Alt + W / S** | Hands-free continuous walk forward/backward — keeps moving after you let go of the keys |
+| **Alt + Shift + W / S** | Same, but running instead of walking |
 
 Walking respects collision against nearby loaded buildings and trees — you
 can't walk through structures streamed in around you, or through the trees
@@ -97,10 +97,10 @@ they're going.
 
 ### Hands-free continuous movement
 
-Holding **Caps Lock** while you tap **W** or **S** starts your avatar
+Holding **Alt** while you tap **W** or **S** starts your avatar
 walking (or, with **Shift** also held, running) in that direction
 continuously — it keeps going even after you release every key, exactly
-like a cruise control. Tapping **W** or **S** again *without* Caps Lock
+like a cruise control. Tapping **W** or **S** again *without* Alt
 held cancels it and returns to ordinary key-held movement; tapping the
 opposite direction the same way also cancels it, rather than reversing
 it. There's no on-screen indicator that it's active — the only sign is
