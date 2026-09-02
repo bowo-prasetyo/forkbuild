@@ -54266,8 +54266,110 @@ kind — a pure vocabulary and transition rule only, and confirms it
 exports exactly the vocabulary, its validator, and the one transition
 function.
 
-Next: 0.9.65, Continuous Movement Controller Integration — connecting
-this intent to `AvatarMovementController`'s existing movement pipeline,
+Next: 0.9.65, Continuous Movement Input Adapter — translating an actual
+keyboard event into the `direction`/`activationRequested` shape this
+milestone's own transition function expects, still without touching
+`AvatarMovementController` or moving the avatar at all. Controller
+integration (connecting the resulting intent to an actual walk step)
+follows after that, as 0.9.66.
+
+## 0.9.65 — Avatar Continuous Movement Input Adapter
+
+0.9.64 defined the MEANING of a continuous-movement transition —
+`direction` plus an already-resolved `activationRequested` boolean — but
+deliberately had no idea a keyboard exists; mapping an actual keystroke
+to that shape was explicitly left as future scope. This milestone is
+exactly that seam, and nothing more: an INPUT INTERPRETATION step, not
+controller integration. `AvatarMovementController` is not touched, and
+no key event here moves the avatar — that remains 0.9.66.
+
+`core/AvatarContinuousMovementInputAdapter.js` (new) exports one pure
+function, `deriveAvatarContinuousMovementInputEvent({ capsLockDown, key,
+type })`, which reads a raw keyboard fact — which key, and whether it
+went down or up — plus one piece of CALLER-owned state carried between
+calls: whether the physical Caps Lock key is currently held down. It
+returns that same piece of state, updated, alongside either `null` (this
+event has no continuous-movement meaning at all) or a `transition`
+object shaped exactly like 0.9.64's own parameters, ready to pass
+straight through to `deriveAvatarContinuousMovementIntent()`. This file
+never calls that function itself — it has no idea a "continuous movement
+intent" is even being tracked, let alone what its current value is. Same
+"caller owns the only mutable state, this file never remembers anything
+itself" discipline 0.9.64 already applies to `currentIntent`, applied
+here to `capsLockDown` instead:
+
+```text
+Caps Lock key down      -> capsLockDown becomes true;  no transition
+Caps Lock key up        -> capsLockDown becomes false; no transition
+W or S key down         -> transition { direction, activationRequested: capsLockDown }
+W or S key up           -> no transition (key-up is never a signal)
+anything else, any type -> capsLockDown unchanged;     no transition
+```
+
+That single rule already produces everything the design brief asked
+for: an ordinary W (Caps Lock not held) becomes an ORDINARY press
+(`activationRequested: false`), which 0.9.64 already turns into a
+cancellation; a Caps-Lock-held W becomes an ACTIVATING press
+(`activationRequested: true`), which 0.9.64 already turns into
+activation or a direct switch. Nothing here decides what either press
+MEANS for the current intent — that authority stays entirely inside
+`deriveAvatarContinuousMovementIntent()`, matching the design brief's own
+three-way split: Input = what happened, Intent = what it means, Movement
+= what the avatar does.
+
+The one deliberate design decision this milestone settles is Caps Lock
+semantics: continuous movement activates from the physical Caps Lock KEY
+being held down at the moment W/S is pressed — tracked here as
+`capsLockDown`, a tiny piece of input-state bookkeeping kept entirely
+inside this one file — never from `event.getModifierState('CapsLock')`,
+which reflects whether Caps Lock is currently toggled ON. Reading the
+toggle would mean anyone who already has Caps Lock on for unrelated
+reasons (typing in all caps, an accidental tap earlier) would activate
+continuous movement the instant they pressed an ordinary W. Tracking the
+physical key's own down/up state instead makes activation depend only on
+a genuine, deliberate chord, indistinguishable in kind from holding
+Shift to run.
+
+Key-repeat (holding a key long enough for the browser to fire repeated
+keydown events) needs no special handling here: repeated identical input
+produces the identical `transition` shape each time, and 0.9.64's own
+transition rule is already idempotent for both a repeated activation and
+a repeated ordinary press.
+
+Deliberately excluded, matching the explicit brief for this milestone:
+actual avatar movement, any change to `AvatarMovementController` or
+`AvatarMovementState`, calling `deriveAvatarContinuousMovementIntent()`
+itself, timers, animation frames, real DOM/`window` event listener
+wiring, camera, UI, persistence. Those belong to 0.9.66, which wires this
+adapter's output — through the 0.9.64 transition function — into the
+actual movement pipeline.
+
+The flagship test (`tests/AvatarContinuousMovementInputAdapter.test.js`)
+replays the design doc's own scripted Caps-Lock-chord scenario through
+BOTH this adapter and 0.9.64's own transition function together, exactly
+as a real caller will eventually wire them: Caps Lock down then W down
+activates continuous FORWARD; releasing W and then Caps Lock leaves it
+untouched; a later plain W cancels it; Caps Lock+S from rest activates
+BACKWARD; a plain W (the opposite ordinary key, Caps Lock no longer held)
+cancels that too. Individual sections cover ordinary W/S, Caps-Lock-held
+W/S, key-up producing no transition (including immediately after
+activation, and for Caps Lock's own release), unrelated keys (arrow
+keys, Shift, Control, Alt, Space, Enter, Escape, A/D) never producing a
+transition, key-repeat idempotence through the full pipeline, defensive
+handling of malformed input, and purity/determinism. A closing
+architectural-regression section proves
+`core/AvatarContinuousMovementInputAdapter.js` itself never references
+`AvatarMovementController`, `AvatarMovementState`,
+`deriveAvatarContinuousMovementIntent` itself, any movement constraint,
+`AvatarPresence`, a timer or animation-frame API, real DOM event-listener
+APIs, `getModifierState`, Three.js, or a position/velocity/speed/camera
+of any kind — pure keyboard-event translation only — and confirms it
+exports exactly the one translation function.
+
+Next: 0.9.66, Continuous Movement Controller Integration — wiring actual
+`window` keydown/keyup events through this adapter and 0.9.64's
+transition function into a real, tracked continuous-movement intent, and
+feeding that intent into `AvatarMovementController`'s existing pipeline
 so continuous FORWARD/BACKWARD produces the exact same walk step ordinary
 W/S already does, still passing through building collision, terrain
 slope, step height, and tree collision exactly as before.
