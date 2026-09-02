@@ -56164,10 +56164,167 @@ networking. This milestone answers only "where would the avatar land if
 it dismounted this vehicle," nothing about whether it should, or
 whether that landing spot is actually clear.
 
-Next: only once a resolved dismount destination exists here can a
-future milestone combine `currentMount`, the dismount intent (0.9.79),
-and this file's own resolved position into the actual
-`mounted -> unmounted` transition — the first milestone in this whole
-line where two pieces of avatar state (mount relationship and position)
-change together, which is exactly why it deserves its own transition
-boundary rather than being folded into this one.
+Next: this milestone's own "nothing about whether it should, or
+whether that landing spot is actually clear" is deliberate — 0.9.81
+answers exactly the clearance half of that sentence, judging a
+resolved candidate against this codebase's existing avatar-tree
+collision machinery. Only once a resolved dismount destination AND a
+clearance verdict on it both exist can a future milestone combine
+`currentMount`, the dismount intent (0.9.79), and both of those facts
+into the actual `mounted -> unmounted` transition — the first milestone
+in this whole line where two pieces of avatar state (mount
+relationship and position) change together, which is exactly why it
+deserves its own transition boundary rather than being folded into
+either of the milestones that feed it.
+
+## 0.9.81 — Vehicle Dismount Destination Clearance
+
+0.9.80 resolved WHERE the avatar would land if it dismounted a given
+vehicle, and stopped there — that file's own header is explicit that a
+resolved candidate "could, in principle, land in water or overlap
+something else," and defers occupancy validation to "a later seam,
+once a real consumer needs it." Nothing yet answers that seam's own
+question:
+
+```
+Is the resolved dismount position safe for the avatar to occupy?
+```
+
+`core/AvatarVehicleDismountClearance.js` (new) exports one pure
+function:
+
+```
+isAvatarVehicleDismountPositionClear({ position, treeCollisions }) -> { clear: boolean }
+```
+
+**A distinct question from position resolution.** 0.9.80 computes a
+candidate; this file judges it. Neither knows about the other: this
+file never imports `core/AvatarVehicleDismountPosition.js`, never
+reads a `VehiclePresence`, and has no opinion on how a candidate
+position was produced — it only ever answers whether a GIVEN position
+is one the avatar could actually stand on.
+
+**No new collision system.** The avatar is the object whose occupancy
+matters here, and this codebase already has exactly one detector
+capable of answering "does the avatar's own space overlap something" —
+`core/AvatarTreeCollision.js`. This file is an adapter/composition
+boundary over that existing machinery, never a second one:
+`avatarCollisionCircleAt()` turns `position` into the same avatar
+circle `core/AvatarTreeCollision.js` already builds for movement, and
+`avatarTreeCollision()` is the same collides/doesn't-collide test
+`core/AvatarTreeMovement.js` and `application/AvatarTreeConstraint.js`
+already trust. No new geometric convention, no new circle math, no
+second `AVATAR_COLLISION_RADIUS`, is introduced here.
+
+**Tree clearance only, on purpose.** This codebase's only obstacle
+system a dismounting avatar could actually be tested against today is
+trees (`core/TreeCollisionGeometry.js`). There is no building
+clearance, vehicle clearance, dynamic-entity collision, or generic
+walkability query anywhere in this codebase for this file to consult —
+inventing a generic "obstacle registry" now, merely so this milestone
+could claim to validate "everything," would be building speculative
+infrastructure nothing has asked for. If the world eventually gains
+another obstacle kind, that obstacle's own clearance contribution is a
+later seam to add here (or compose alongside this file at a call
+site), never something to guess at now.
+
+**Already-resolved candidates, not a seed.** `treeCollisions` is an
+array of already-selected tree collision circles — exactly the same
+shape `core/AvatarTreeMovement.js#resolveAvatarTreeMovement()`'s own
+`trees` argument already takes (`core/TreeCollisionGeometry.js`'s own
+circles, or
+`core/AvatarTreeCollisionQuery.js#treeCollisionCandidatesForMovement()`'s
+identical output). This file never accepts a `seed` and never calls
+`treeCollisionCandidatesForMovement()` or
+`treeCollisionGeometryInRegion()` itself — the same "core resolves
+geometry/math from data it is handed, a separate layer supplies that
+data" split `core/AvatarTreeMovement.js`'s own header already
+establishes. Query (`core/AvatarTreeCollisionQuery.js`) and detection
+(`core/AvatarTreeCollision.js`) stay two separately testable concerns;
+only an application-layer caller, mirroring
+`application/AvatarTreeConstraint.js`'s own existing composition of
+exactly those two pieces, ever combines them with a real seed.
+
+**Horizontal (X/Z) only — Y is never consulted.** `position.y` is read
+nowhere in this file. `core/AvatarVehicleDismountPosition.js`'s own
+resolved Y is always `0` (that file's own header, "Y is never copied
+from the vehicle"), and `core/AvatarTreeCollision.js`'s own circles are
+already a purely horizontal shape. A dismount candidate and a tree
+collision circle at different, unrelated Y values must never make a
+genuine horizontal overlap read as clear merely because this file went
+looking at Y at all.
+
+**Contact counts as blocked**, the same boundary convention every
+sibling already uses — `avatarTreeCollision()` itself already treats
+`distance <= avatarRadius + treeRadius` as a collision
+(`core/AvatarTreeCollision.js#circlesIntersect()`'s own `<=`, not `<`).
+This file introduces no separate, looser or stricter boundary rule of
+its own.
+
+**Minimal result**, mirroring 0.9.73's own proximity seam
+(`core/AvatarVehicleProximity.js`'s own `{ withinRange }`) — just
+`{ clear: true }` or `{ clear: false }`. No collision object, no
+blocking tree, no penetration depth, no distance. The caller only ever
+needs the semantic fact: can the avatar occupy this position?
+
+**No dismount transition here.** This file never imports
+`core/AvatarVehicleMount.js`, `core/AvatarVehicleMountTransition.js`,
+or `core/AvatarVehicleDismountIntent.js`, never clears a mount, and
+never changes an avatar's stored position — only whether a given
+candidate position is safe to move an avatar to, if some future
+transition ever decides to.
+
+`tests/AvatarVehicleDismountClearance.test.js` proves: a position with
+no nearby tree candidates, or only far-away ones, is clear (Section
+A); an overlapping tree — centered on the position, genuinely
+overlapping off-center, or blocking from anywhere in a multi-tree
+array — is detected (Section B); exact contact at the combined
+avatar/tree radius blocks, while just past it is clear (Section C); a
+tree outside the combined radius never blocks (Section D); large
+positive or negative Y on the position, or a position with no Y field
+at all, never changes a genuine horizontal verdict either way (Section
+E); the same position and tree circles resolve identically on repeat,
+including against a real, seeded tree field via
+`treeCollisionCandidatesForMovement()` (Section F); the position and
+`treeCollisions` array are never mutated even when a collision is
+detected (Section G); a `MOTORCYCLE`/`CAR`/`DRONE` vehicle's own
+0.9.80 `null` is never handed in as if it were a real candidate — this
+file throws rather than inventing a destination to judge — alongside a
+full sweep of malformed input (`null`/`undefined` position, a
+non-finite coordinate, a non-array `treeCollisions`, missing arguments
+entirely), and a genuine end-to-end composition of a real bicycle's
+0.9.80 destination judged against real, seeded trees around it (Section
+H); and an architectural regression sweep confirming this file's own
+code never references `AvatarVehicleMount`/`AvatarVehicleMountTransition`/
+`AvatarVehicleDismountIntent`, `core/AvatarVehicleDismountPosition.js`
+or any vehicle vocabulary (`VehiclePresence`/`VehicleType`), a seed
+parameter or a second tree query/spatial-index of its own, any obstacle
+kind beyond trees, keyboard/controller input, rendering, animation,
+camera, persistence, or networking — while confirming it DOES consume
+`avatarCollisionCircleAt()`/`avatarTreeCollision()` from the existing
+detector rather than reimplementing either — and that it exports
+exactly `isAvatarVehicleDismountPositionClear` (Section I).
+
+## What this milestone deliberately does NOT do
+
+The actual dismount transition (clearing `AvatarVehicleMount`, changing
+an avatar's stored position); mount-state or dismount-intent awareness
+of any kind; resolving a dismount position itself (0.9.80's own job,
+never reproduced or re-imported here); vehicle awareness of any kind
+(`VehiclePresence`, `VehicleType`, a vehicle id or registry lookup);
+vehicle orientation or heading; any obstacle kind beyond trees
+(building clearance, vehicle clearance, dynamic-entity collision, a
+generic obstacle registry, a spatial index, a generic walkability
+system); a seed parameter or a spatial query of its own (that stays
+`core/AvatarTreeCollisionQuery.js`'s own job); a richer result than
+`{ clear }` (no blocking tree, no distance, no penetration depth);
+keyboard/controller input; avatar or vehicle movement; animation;
+camera changes; rendering; persistence; networking.
+
+Next: with a resolved destination (0.9.80) and a clearance verdict on
+it (this milestone) both in hand, 0.9.82 can finally perform the actual
+dismount transition — combining `currentMount`, the dismount intent
+(0.9.79), the resolved position, and this file's own `clear` verdict
+into the real `mounted -> unmounted` state change, only ever performed
+once every fact it depends on already exists as an independently
+tested seam.
