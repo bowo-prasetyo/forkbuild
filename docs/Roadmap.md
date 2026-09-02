@@ -55413,3 +55413,117 @@ relationship state itself belongs — `AvatarPresence`,
 `AvatarMovementController`, `WorldNavigationSession`, or a new seam of
 its own — remains exactly as undecided as 0.9.73 left it; this milestone
 answers only what a vehicle is called, never who currently has one.
+
+## 0.9.75 — Avatar-Vehicle Interaction Intent
+
+0.9.73 gave an avatar a derived, geometric fact — is it close enough to
+a vehicle to interact with one. 0.9.74 gave that vehicle a stable name.
+Neither says anything about whether the avatar has actually asked to DO
+anything. This milestone introduces the first genuinely interactive
+layer in the vehicle seam, and draws a three-way distinction the brief
+is explicit about keeping separate:
+
+```
+Proximity = "Can I interact with this vehicle?"       (0.9.73)
+Intent    = "I am asking to interact with a vehicle."  (this milestone)
+Mounting  = "The world has established that I am mounted." (future)
+```
+
+`core/AvatarVehicleInteractionIntent.js` (new) exports a small, closed
+vocabulary — `AvatarVehicleInteractionIntent.NONE` / `.MOUNT` — plus one
+pure transition function, `deriveAvatarVehicleInteractionIntent({
+mountRequested })`, that decides which of the two should hold right now.
+It is built the same way every other closed vocabulary in this codebase
+is: a frozen name for a state, plus one pure function that decides it,
+never a class, never mutable bookkeeping of its own.
+
+**Deliberately one-shot, not persistent.**
+`core/AvatarContinuousMovementIntent.js`'s own FORWARD/BACKWARD are
+PERSISTENT — once activated, they keep being asked for long after the
+key that started them is released, because continuous movement is a
+mode. Mounting is not a mode; it is a single action request. The
+transition rule reflects that directly: the outcome depends on exactly
+one signal, `mountRequested`, for the CURRENT call only —
+
+```
+mountRequested: false -> NONE
+mountRequested: true  -> MOUNT
+```
+
+— which already produces every row the milestone's own brief asks for:
+`NONE` + no request stays `NONE`; `NONE` + a request produces `MOUNT`;
+`MOUNT` + no request clears straight back to `NONE` the instant the
+request stops being asserted (the one-shot "consumption"); and `MOUNT` +
+a repeated request (holding the interaction key down, or ordinary
+key-repeat) stays `MOUNT` — idempotent, never a second distinct action.
+A caller may still pass `currentIntent` alongside `mountRequested`, for
+shape consistency with `core/AvatarContinuousMovementIntent.js`'s own
+options — it is simply ignored, the identical precedent
+`core/AvatarContinuousMovementMode.js` already set for its own
+`currentMode`: the outcome here has nothing for a remembered past value
+to influence.
+
+**Deliberately NOT vehicle-aware.** This file's vocabulary carries no
+`vehicleId`, no candidate vehicle, and its transition function never
+receives a `VehiclePresence`, a position, or a proximity result — the
+same restraint `core/AvatarVehicleProximity.js` already applied when it
+declined to build a `nearestVehicleToAvatar()` (0.9.73's own header).
+Combining "what action did the avatar request" with "which vehicle, if
+any, should receive it" is explicitly left for a future
+selection/mounting milestone; this file answers only the first question,
+and does not even know its own answer is eventually acted on against a
+vehicle at all — `MOUNT` is simply the name of the one interaction this
+codebase currently has a use for.
+
+**Deliberately not deciding the keyboard key yet.** Exactly like
+`core/AvatarContinuousMovementIntent.js` reads a semantic
+`direction`/`activationRequested` rather than a raw key name, this file
+reads an already-semantic `mountRequested` boolean, never a key, a
+`KeyboardEvent`, or a modifier. Translating an actual interaction key
+into that boolean is future input-layer work — the same later step
+`core/AvatarContinuousMovementInputAdapter.js` was for continuous
+movement — deliberately deferred so this milestone stays exactly as
+boring as the brief asks: the smallest possible "I want to
+interact/mount" semantic fact, nothing wired to a key yet.
+
+`tests/AvatarVehicleInteractionIntent.test.js` proves: the vocabulary
+itself — exactly `NONE`/`MOUNT`, frozen (Section A); activation — a
+mount request produces `MOUNT` regardless of what `currentIntent` claims
+(Section B); one-shot consumption and key-repeat idempotence — `MOUNT`
+clears back to `NONE` the moment the request is no longer asserted, and
+a repeated request stays `MOUNT` rather than compounding, with
+`currentIntent` itself proven irrelevant to the outcome (Section C);
+defensive/malformed input — degrades gracefully via the same
+`Boolean()` coercion convention used throughout this codebase (Section
+D); a FLAGSHIP full request/consume/request cycle plus purity and
+non-mutation of the options object (Section E); and an architectural
+regression sweep confirming `core/AvatarVehicleInteractionIntent.js`'s
+own code never references a `VehiclePresence`, a vehicle id or type,
+proximity, `withinRange`, dismounting, an avatar-vehicle relationship
+field, keyboard/controller input, rendering, movement, collision,
+physics, persistence, randomness, or the clock, and that it exports
+exactly the vocabulary, its validator, and the one transition function
+(Section F).
+
+## What this milestone deliberately does NOT do
+
+Any vehicle awareness of any kind (a `VehiclePresence`, a vehicle id or
+type, a candidate list); proximity or `withinRange`; vehicle selection
+or `nearestVehicleToAvatar()`; mounting or dismounting as an actual
+world effect; an avatar-vehicle relationship field
+(`avatar.currentVehicle` or its equivalent); avatar position; keyboard,
+controller, or any other raw input handling; an input adapter of any
+kind; rendering; vehicle movement, speed, or physics; persistence;
+networking; randomness; the clock. This milestone answers only "what
+interaction, if any, was just requested," never which vehicle (if any)
+should receive it, and never whether that request actually succeeds.
+
+Next: a vehicle-selection/interaction-target milestone can now combine
+this file's `MOUNT` intent with `core/AvatarVehicleProximity.js`'s own
+`withinRange` fact and a candidate `VehiclePresence` (addressed by its
+0.9.74 `id`, never by object reference) to decide WHICH vehicle, if any,
+an in-flight mount request actually targets. Only once that selection
+exists does an actual mount transition — the moment the world
+establishes that the avatar IS mounted — become answerable; this
+milestone deliberately stops one full seam short of that, exactly as its
+own brief asked.
