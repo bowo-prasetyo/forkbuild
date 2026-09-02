@@ -54744,3 +54744,123 @@ existing tree collision constraint resolves the run exactly as it
 already resolves an ordinary walk — proving continuous running is not a
 second movement system, only another persistent input state flowing
 through the movement pipeline that already works.
+
+## 0.9.69 — Continuous Movement Direction + Mode Integration
+
+0.9.64–0.9.68 built two complete, independent, already-tested
+vocabularies — persistent DIRECTION (`core/AvatarContinuousMovementIntent.js`)
+and persistent MODE (`core/AvatarContinuousMovementMode.js`) — plus the
+one keyboard seam (`core/AvatarContinuousMovementInputAdapter.js`) that
+turns a real Caps Lock/Shift/W/S chord into the input shape both need.
+0.9.66 already wired direction into `AvatarMovementController` and
+`WorldNavigationSession`. This milestone is the direct mode-vocabulary
+counterpart: it wires MODE into the exact same two places, so
+`AvatarMovementController` actually honors the persistent
+direction+mode pair together, and crosses the seam from the pure core
+layer into the application layer for the second and final time this
+feature needs.
+
+`AvatarMovementController` now tracks a second piece of caller-owned
+state between ticks, `_continuousMovementMode`
+(`core/AvatarContinuousMovementMode.js`'s own NONE/WALK/RUN
+vocabulary), set only via the new `setContinuousMovementMode()` and read
+only by the new `_resolvedRunning()` — the direct structural twin of
+0.9.66's own `_resolvedForwardAxis()`, applying the identical priority
+rule to `AvatarMovementState.running` that 0.9.66 already applies to
+`forwardAxis`:
+
+```text
+ordinary W/S input (either physically held)
+        -> running = the physically-held Shift key, exactly as always
+        v
+neither W nor S held
+        -> running = (continuousMode === RUN)
+        v
+no continuous direction either
+        -> running = the physically-held Shift key (idle either way)
+```
+
+`_currentMovementState()` changes exactly one line — `running:
+this._keys.running` becomes `running: this._resolvedRunning()` — the
+same "one line changes" shape 0.9.66 itself used for `forwardAxis`.
+Direction and running both now resolve from the identical `_keys.forward
+|| _keys.backward` gate, so ordinary Shift+W and continuous
+CapsLock+Shift+W converge to the exact same `AvatarMovementState` shape
+before `simulateAvatarMovement()` ever runs — there is no second,
+continuous-specific running speed, animation, or physics path anywhere
+in this class. A controller that never calls `setContinuousMovementMode()`
+behaves exactly as it did before this milestone.
+
+`WorldNavigationSession` now tracks `_shiftDown`, the direct structural
+twin of its own `_capsLockDown`, reset the identical places
+(`setAvatarControlMode(false)`, `releaseAvatarMovementKeys()`, session
+teardown) for the identical reason. `_processContinuousMovementInput()`
+— the one seam 0.9.66 already built — now feeds the adapter's single
+`transition` object to BOTH transition functions from the same key
+event: `deriveAvatarContinuousMovementIntent()` as before, and now also
+`deriveAvatarContinuousMovementMode()`, publishing the result through
+`setContinuousMovementMode()`. One input event updates both dimensions
+together, so neither can ever go stale relative to the other. Unlike
+direction, mode needs no `currentMode` fed back in — 0.9.67's own header
+already establishes that its outcome is fully determined by
+`activationRequested`/`runRequested` alone.
+
+The five cancellation/independence cases the design brief called out by
+name are all direct consequences of the two already-tested transition
+rules being fed the same `transition` object, never anything this
+milestone had to special-case:
+
+```text
+CapsLock+W -> CapsLock+Shift+W        : FORWARD+WALK -> FORWARD+RUN, no stop required
+CapsLock+Shift+W -> CapsLock+W        : FORWARD+RUN -> FORWARD+WALK (mode is independent of direction)
+CapsLock+Shift+W -> CapsLock+Shift+S  : FORWARD+RUN -> BACKWARD+RUN
+CapsLock+Shift+W -> ordinary W        : FORWARD+RUN -> NONE+NONE (one ordinary press clears both dimensions at once)
+Shift+W (no CapsLock)                 : ordinary RUN, no persistent state is ever created
+```
+
+Caps Lock and Shift releasing, on their own, still never cancel either
+dimension — the exact same "activation mechanism, not a hold-to-run
+modifier" rule 0.9.64's own header already established for direction
+applies identically to mode; only a subsequent ordinary key-down can
+ever clear it (0.9.67's own transition rule).
+
+`tests/AvatarContinuousMovementDirectionModeIntegration.test.js` proves,
+in order: the new running-priority rule in isolation on
+`AvatarMovementController` (Section A); the real Caps Lock+Shift+W/S
+keyboard path through `WorldNavigationSession`, including that
+continuous mode can never be armed while Avatar Control Mode is off and
+survives Avatar Control Mode being switched off once active (Section
+B); all five flagship cancellation/independence cases verbatim (Section
+C); and — the most important regression — CapsLock+Shift+W, release
+every key, the avatar keeps running, reaches the real deterministic
+tree from `core/TreeCollisionGeometry.js`, and the existing, completely
+untouched 0.9.63 tree collision constraint stops it exactly as it
+already stops an ordinary running avatar (Section D). Section E proves
+determinism and that a controller which never touches continuous mode
+behaves exactly as it did before this milestone. Section F is an
+architectural-regression sweep: `AvatarMovementController`'s own code
+never references Caps Lock, Shift-hold tracking, `getModifierState`, the
+input adapter, `deriveAvatarContinuousMovementMode()` itself, or a new
+`RUN_SPEED`/`WALK_SPEED` constant of its own; `WorldNavigationSession`'s
+own code does consume `deriveAvatarContinuousMovementMode()`, does call
+`setContinuousMovementMode()` through the public setter, and does track
+its own `_shiftDown`.
+
+Deliberately excluded, matching the milestone brief: sprinting,
+acceleration/deceleration, stamina, animation changes, run-specific
+collision geometry, new movement constraints, UI indicators,
+persistence, timers, auto-stop behavior, double-tap detection, new
+keyboard listeners, and a combined direction+mode vocabulary. The tree
+collision system itself (0.9.63) is not modified in any way — this
+milestone only proves the existing constraint already handles a
+continuously-running avatar correctly, because continuous movement was
+never a second movement system in the first place.
+
+This completes the Continuous Avatar Movement Direction + Mode feature
+line (0.9.64–0.9.69): continuous walking and continuous running are now
+both a full, integrated, end-to-end feature — real keyboard chords,
+through two independent persistent vocabularies, into the exact same
+movement and collision pipeline ordinary WASD input already runs
+through. The next architectural work on avatar movement should come
+from an actual observed limitation or a new user-facing requirement,
+not from splitting this feature into further milestones.
