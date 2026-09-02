@@ -53489,3 +53489,123 @@ integration point (UI, CLI, or service) actually calls either side in a
 running application, remains the next unscheduled step — determined by
 that concrete missing seam when it is next requested, not by an arbitrary
 milestone number.
+
+## 0.9.59 — Deterministic World Tree Collision Geometry
+
+A deliberate branch away from the Publication distribution line 0.9.44
+through 0.9.58 completed, back to World View. `core/NaturalFeatureField.js`
+(0.2.88) has always been honest about what it does NOT do — its own
+"Deliberately not yet" footer names "tree collision... or any interaction
+whatsoever" outright. Trees are visually present (`renderer/
+NaturalFeatureTileMesh.js`) and physically absent: an avatar walks straight
+through a forest exactly as if it were open grassland. This milestone does
+not close that gap yet — it establishes the one fact closing it will
+require: a tree occupies a deterministic, well-defined shape in world
+space. Movement, detection, and response are all explicitly out of scope,
+scheduled as separate, later milestones (see "Deliberately postponed"
+below).
+
+```text
+core/NaturalFeatureField.js
+   naturalFeaturesInRegion(seed, minX, minZ, maxX, maxZ)
+     { type, x, z, y, rotationY, scale, variant, zone }
+              │
+              ▼
+core/TreeCollisionGeometry.js                              (new)
+   treeCollisionCircleFor(feature)
+   treeCollisionGeometryInRegion(seed, minX, minZ, maxX, maxZ)
+              │
+              ▼
+   { kind: 'TREE', shape: 'CIRCLE', center: { x, z }, radius }
+```
+
+`core/TreeCollisionGeometry.js` (new) is Three.js-free, pure, and — like
+every "Nth pure function layered on the same (seed, x, z) triple" module
+in this codebase (`core/TerrainSurface.js`, `core/TerrainEcology.js`,
+`core/Hydrology.js`) — never a second, independently-seeded ground truth.
+It does not decide where a tree stands, whether one exists, or what it
+looks like; it only CONSULTS `naturalFeaturesInRegion()`'s own output and
+derives a physical footprint from it. Two exports:
+
+- `treeCollisionCircleFor(feature)` — takes one natural-feature record
+  exactly as `naturalFeaturesInRegion()` already returns it, and derives
+  an immutable `{ kind, shape, center: { x, z }, radius }` description.
+  `center` is `{ feature.x, feature.z }` verbatim — a collision circle can
+  never disagree with where the tree it describes was actually placed.
+- `treeCollisionGeometryInRegion(seed, minX, minZ, maxX, maxZ)` — mirrors
+  `naturalFeaturesInRegion()`'s own half-open-interval region-query
+  contract exactly, filters to `FEATURE_TYPE.TREE` (matching `renderer/
+  NaturalFeatureTileMesh.js`'s own identical filter), and maps each
+  feature through `treeCollisionCircleFor()`.
+
+The shape is a **circle around the trunk**, not the visual canopy.
+`renderer/NaturalFeatureTileMesh.js`'s own `CANOPY_RADIUS` (0.85) describes
+how wide a tree looks; a hitbox that size would read as the avatar
+colliding with empty air well outside the trunk. The new
+`TREE_TRUNK_COLLISION_RADIUS` (0.3) instead roughly matches that same
+file's `TRUNK_RADIUS_BOTTOM` (0.14) scaled up to a hitbox actually worth
+feeling, without importing that renderer constant — the same "roughly
+match, never import, deliberately allowed to diverge" precedent
+`core/AvatarCollision.js`'s own `AVATAR_COLLISION_RADIUS` header already
+set for the avatar's own hitbox versus its renderer's visual proportions.
+Every circle's radius scales by the tree's own `feature.scale` ([0.7,
+1.3)), the identical uniform factor the renderer already applies to its
+instance transform, so a visually larger tree occupies a proportionally
+larger footprint and the collision world never disagrees with the
+rendered one.
+
+Two small, frozen, single-member vocabularies — `COLLISION_OBJECT_KIND`
+(`TREE`) and `COLLISION_SHAPE` (`CIRCLE`) — are exported rather than bare
+string literals, the same "one member today, on purpose, room to grow
+later" posture `core/NaturalFeatureField.js`'s own `FEATURE_TYPE` already
+established for exactly this reason: 0.9.62 (see below) is expected to add
+a second object kind (a rock, a building) and possibly a second shape,
+without renaming what this milestone already shipped.
+
+`tests/TreeCollisionGeometry.test.js` (new, registered in `tests.html`)
+covers: per-tree derivation and immutability of the returned shape
+(Section A); determinism and exact agreement with
+`naturalFeaturesInRegion()`'s own placement — same seed/region always
+yields the same array, every circle's center matches its own tree's
+placement one-for-one, a different seed yields genuinely different
+geometry, and every returned circle still respects the half-open region
+contract (Section B); proportionality — radius scales linearly with
+`feature.scale`, and every real generated circle's radius stays well under
+the renderer's own largest possible visual canopy radius, confirming the
+"trunk hitbox, never canopy hitbox" design claim empirically rather than
+just by constant choice (Section C); and an architectural regression pass
+reading this file's own source text and asserting it never references any
+avatar movement/collision module, Three.js, randomness, wall-clock time,
+storage, or networking, plus confirming both exported vocabularies stay
+exactly one member each (Section D).
+
+Deliberately postponed, in the order the design conversation that opened
+this milestone laid out: avatar-tree collision **detection** — a pure
+`distance(avatar, tree) < avatarRadius + treeRadius` test producing a fact,
+never a movement outcome (0.9.60); avatar movement **collision
+resolution** — deciding what a detected collision does to a requested
+step, most likely sliding along the boundary rather than a hard stop, the
+same "slide, don't dead-stop" feel `core/AvatarCollision.js`'s own
+`resolveHorizontalMovement()` already gives building collision (0.9.61);
+and a general **world object collision composition** query unifying
+terrain, trees, and future object kinds (rocks, buildings) behind one
+call, so avatar movement code never special-cases trees the way it never
+special-cases bricks today (0.9.62). Also deliberately excluded from this
+milestone specifically, matching the design conversation's own explicit
+list: moving the avatar, blocking movement, collision response of any
+kind (sliding, pushing, bouncing), a physics engine, velocity,
+acceleration, mass, gravity, tree destruction, harvesting, interaction,
+damage, animation changes, sound, networking, persistence, and any
+Publication integration. No existing file — `core/NaturalFeatureField.js`,
+`renderer/NaturalFeatureTileMesh.js`, `core/AvatarCollision.js`,
+`application/AvatarMovementConstraint.js`, and
+`application/AvatarTerrainConstraint.js` included — is modified by this
+milestone; none of them import or reference `core/TreeCollisionGeometry.js`,
+and it imports nothing from any of them beyond `core/NaturalFeatureField.js`
+itself.
+
+With physical tree geometry now established as a pure, deterministic
+function of the same placement the renderer already trusts, the next step
+is 0.9.60: a pure detection function combining this milestone's own
+circles with `core/AvatarCollision.js`'s own avatar radius into a single
+boolean fact, still touching no movement code at all.
