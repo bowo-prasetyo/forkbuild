@@ -332,6 +332,61 @@ import { AvatarMovementCapabilityKind, isValidAvatarVehicleMovementCapability } 
 // — see those files) take over, exactly as they always have. An avatar
 // nobody has ever mounted on anything is collision-tested at EXACTLY
 // the radius it always was, byte for byte.
+//
+// 0.9.89 — Vehicle Movement Direction Semantics.
+// core/AvatarVehicleMovementCapability.js now carries a fifth field,
+// `movementDirections` (an AvatarMovementDirectionCapability —
+// forward/backward booleans), and this class adds exactly ONE new
+// consumer of it: `_resolvedMovementDirections()` below, the direct
+// structural twin of `_resolvedMovementSpeed()` (0.9.86) and
+// `_resolvedCollisionRadius()` (0.9.88) — except that this seam is
+// consulted one layer INSIDE this class's own existing input
+// resolution, not passed outward to a sibling constraint: it is read
+// in exactly one place, `_resolvedForwardAxis()`'s own new guard, the
+// SAME method 0.9.66 already built to combine ordinary W/S input with
+// persistent continuous-movement intent into one `forwardAxis`.
+//
+// A DISALLOWED DIRECTION READS AS "THAT KEY WAS NEVER PRESSED," NEVER AS
+// A COLLISION, A BLOCK FLAG, OR A SEPARATE MOVEMENT OUTCOME. Holding W
+// while the active capability's own `movementDirections.forward` is
+// `false` contributes exactly `0` to that source, the same as if the
+// key were up — not `-1` (never a direction turns into its opposite),
+// and not a stall requiring some other system to notice and clear.
+// `isCollided()`/`isBlockedBySlope()`/`isBlockedByStepHeight()`/
+// `isCollidedWithTree()` gain no sibling `isDirectionBlocked()`: unlike
+// those four (each an outcome of comparing a DESIRED step against
+// WORLD geometry the avatar didn't choose), a disallowed direction is
+// resolved before `AvatarMovementState` is even built — from this
+// class's own point of view, indistinguishable from the player simply
+// not asking for that direction at all.
+//
+// BOTH ORDINARY INPUT AND CONTINUOUS INTENT ARE GATED, THE SAME WAY.
+// `_resolvedForwardAxis()`'s own existing priority rule (0.9.66) is
+// completely unchanged — ordinary W/S still wins outright whenever
+// either is held, continuous intent only gets a say once neither is —
+// this milestone only filters what each side is ALLOWED to contribute,
+// never which side wins.
+//
+// EVERY EXISTING CALLER OF THIS CLASS SEES NO BEHAVIOR CHANGE, AS OF
+// 0.9.89. `core/AvatarVehicleMovementCapability.js`'s own 0.9.89 header
+// establishes that every currently-defined, supported capability (WALK,
+// and GROUND_VEHICLE via BICYCLE/MOTORCYCLE/CAR) permits both
+// directions — so `_resolvedMovementDirections()` below resolves to
+// `{ forward: true, backward: true }` for all of them, and
+// `_resolvedForwardAxis()` produces byte-identical output to before
+// this milestone existed. AERIAL_VEHICLE/DRONE's own `forward: false,
+// backward: false` is never actually reached: `tick()`'s own 0.9.85
+// `supported: false` guard, above, already returns before
+// `_currentMovementState()` — and therefore `_resolvedForwardAxis()` —
+// is ever called for it.
+//
+// THIS CLASS STILL HAS NO IDEA A BICYCLE, A MOTORCYCLE, A CAR, OR A
+// DRONE EXISTS. `_resolvedMovementDirections()` reads only
+// `this._movementCapability.movementDirections`, a plain
+// `{ forward, backward }` shape — exactly the same "read a generic
+// capability field, never brand a decision by vehicle identity"
+// discipline `_resolvedMovementSpeed()`/`_resolvedCollisionRadius()`
+// already established.
 const EPSILON = 1e-6;
 
 export class AvatarMovementController {
@@ -708,12 +763,32 @@ export class AvatarMovementController {
     // to a net zero axis) always wins; only once NEITHER is held does
     // `_continuousMovementIntent` get a say; with neither, the result
     // is plain 0 — idle, exactly as before this milestone existed.
+    //
+    // 0.9.89 — the priority rule itself is completely unchanged; what
+    // changed is that each raw source (a held key, a continuous intent)
+    // is now filtered through `_resolvedMovementDirections()` BEFORE it
+    // is allowed to contribute to the axis, exactly like a physically
+    // disconnected key: holding W while the active capability's own
+    // `movementDirections.forward` is `false` produces the same `0` it
+    // would if W were never pressed at all — never an error, never a
+    // stall, never the OTHER direction. See
+    // core/AvatarVehicleMovementCapability.js's own 0.9.89 header — as
+    // of this milestone every defined capability still permits both
+    // directions, so this filter is currently always a no-op; it exists
+    // so a future capability CAN say no, without this method changing
+    // again.
     _resolvedForwardAxis() {
+        const directions = this._resolvedMovementDirections();
+        const forwardAllowed = directions.forward;
+        const backwardAllowed = directions.backward;
+
         if (this._keys.forward || this._keys.backward) {
-            return (this._keys.forward ? 1 : 0) - (this._keys.backward ? 1 : 0);
+            const forward = this._keys.forward && forwardAllowed;
+            const backward = this._keys.backward && backwardAllowed;
+            return (forward ? 1 : 0) - (backward ? 1 : 0);
         }
-        if (this._continuousMovementIntent === AvatarContinuousMovementIntent.FORWARD) return 1;
-        if (this._continuousMovementIntent === AvatarContinuousMovementIntent.BACKWARD) return -1;
+        if (this._continuousMovementIntent === AvatarContinuousMovementIntent.FORWARD) return forwardAllowed ? 1 : 0;
+        if (this._continuousMovementIntent === AvatarContinuousMovementIntent.BACKWARD) return backwardAllowed ? -1 : 0;
         return 0;
     }
 
@@ -767,6 +842,26 @@ export class AvatarMovementController {
     // twin of `_resolvedMovementSpeed()` above.
     _resolvedCollisionRadius() {
         return this._movementCapability ? this._movementCapability.collisionRadius : undefined;
+    }
+
+    // 0.9.89 — the direction-resolution seam this milestone adds: the
+    // CURRENT movement capability's own `movementDirections` (an
+    // AvatarMovementDirectionCapability —
+    // core/AvatarVehicleMovementCapability.js's own job to have already
+    // decided what it is), or a permissive `{ forward: true, backward:
+    // true }` default when `_movementCapability` is `null` (never set,
+    // or degraded there by setMovementCapability() — see that method
+    // above). Unlike `_resolvedMovementSpeed()`/`_resolvedCollisionRadius()`
+    // above, this method never returns `undefined` — `_resolvedForwardAxis()`
+    // needs real booleans to gate on, not a value for some downstream
+    // default to interpret — but the RESULT is the same "default means
+    // exactly what every caller already got before this milestone
+    // existed" guarantee: both directions permitted. Read in exactly
+    // one place, `_resolvedForwardAxis()` above.
+    _resolvedMovementDirections() {
+        return this._movementCapability
+            ? this._movementCapability.movementDirections
+            : { forward: true, backward: true };
     }
 
     _setKey(key, isDown) {

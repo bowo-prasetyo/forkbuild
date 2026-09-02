@@ -1,4 +1,5 @@
 import { VehicleType, isValidVehicleType } from './VehicleType.js';
+import { AvatarMovementDirectionCapability, isValidAvatarMovementDirectionCapability } from './AvatarMovementDirectionCapability.js';
 
 // 0.9.84 — Avatar-Vehicle Movement Capability Resolution.
 //
@@ -240,22 +241,63 @@ import { VehicleType, isValidVehicleType } from './VehicleType.js';
 // instead an independently-declared local constant, documented, right
 // where it is declared below, as required to always equal it.
 //
+// 0.9.89 — Vehicle Movement Direction Semantics. 0.9.86/0.9.87 decided
+// HOW FAST a capability moves; 0.9.88 decided HOW MUCH SPACE it
+// occupies. Neither ever asked WHICH DIRECTIONS the avatar's existing
+// forward/backward input is currently allowed to produce — every
+// capability, WALK included, has silently permitted both the entire
+// time, because nothing has ever said otherwise. `movementDirections`
+// (an `AvatarMovementDirectionCapability` — see that file's own header
+// for why it is a small, closed, two-boolean value and not a mode or a
+// state machine) joins `movementKind`/`supported`/`movementSpeed`/
+// `collisionRadius` as this descriptor's fifth, and still only other,
+// field.
+//
+// EVERY DEFINED CAPABILITY, AS OF 0.9.89, PERMITS BOTH DIRECTIONS. WALK
+// always has (S has always walked the avatar backward); BICYCLE/
+// MOTORCYCLE/CAR are given the identical `forward: true, backward: true`
+// value this milestone's own brief asks for — real-world reversing
+// differs wildly across those three, and this milestone takes no
+// position on that difference, exactly as 0.9.84 took no position on
+// their relative speed before 0.9.87 existed. This milestone's entire
+// job is the SEAM — a capability can now say no to a direction — not
+// yet using it to say no to any REAL vehicle's own direction.
+// AERIAL_VEHICLE/DRONE's own `movementDirections` is `forward: false,
+// backward: false` — inert, for the identical reason its own
+// `movementSpeed`/`collisionRadius` already are `0`: `supported: false`
+// already blocks movement, direction included, before this field is
+// ever consulted (see `application/AvatarMovementController.js`'s own
+// 0.9.85 `tick()` guard).
+//
+// THIS FILE STILL RESOLVES A CAPABILITY DESCRIPTOR; IT NEVER DECIDES
+// WHAT HAPPENS WHEN A DIRECTION ISN'T PERMITTED. Precisely how a
+// disallowed direction is withheld from `AvatarMovementState.forwardAxis`
+// — for both ordinary W/S input and the persistent continuous-movement
+// intent (core/AvatarContinuousMovementIntent.js) that can drive the
+// exact same axis — is entirely
+// `application/AvatarMovementController.js`'s own 0.9.89 concern (see
+// that file's own header). This file's only job, exactly as for
+// `movementSpeed` and `collisionRadius` before it, is to decide WHICH
+// TWO BOOLEANS a given vehicle relationship implies.
+//
 // Deliberately excluded, matching 0.9.84's own original brief (0.9.85
 // later made the one exception this list itself anticipated — feeding a
 // resolved capability into `application/AvatarMovementController.js` —
 // 0.9.86 made the further exception described above — a base
 // `movementSpeed` — 0.9.87 made the per-vehicle numeric differentiation
-// of that field, and 0.9.88 made the further exception described above
-// — a per-vehicle `collisionRadius`): W/S input, continuous movement,
-// acceleration, braking, turning, vehicle orientation, a rectangular or
-// oriented (non-circular) vehicle footprint, vehicle-vs-vehicle
-// collision, vehicle-specific terrain handling, vehicle animation,
-// camera behavior, mounting/dismounting, persistence, networking, and a
-// second, per-vehicle `AvatarMovementCapabilityKind` vocabulary. This
-// file still answers only "what movement capability — kind, support,
-// base speed, and (as of 0.9.88) collision radius — does this vehicle
-// relationship imply," never how a caller actually applies it to move
-// or collide anything.
+// of that field, 0.9.88 made the further exception described above — a
+// per-vehicle `collisionRadius` — and 0.9.89 made the further exception
+// described above — `movementDirections`): W/S input, continuous
+// movement, acceleration, braking, turning, left/right movement
+// direction, vehicle orientation, a rectangular or oriented
+// (non-circular) vehicle footprint, vehicle-vs-vehicle collision,
+// vehicle-specific terrain handling, vehicle animation, camera behavior,
+// mounting/dismounting, persistence, networking, and a second,
+// per-vehicle `AvatarMovementCapabilityKind` vocabulary. This file still
+// answers only "what movement capability — kind, support, base speed,
+// (as of 0.9.88) collision radius, and (as of 0.9.89) permitted
+// directions — does this vehicle relationship imply," never how a
+// caller actually applies it to move or collide anything.
 export const AvatarMovementCapabilityKind = Object.freeze({
     WALK: 'walk',
     GROUND_VEHICLE: 'ground_vehicle',
@@ -267,7 +309,7 @@ export function isValidAvatarMovementCapabilityKind(value) {
 }
 
 export class AvatarVehicleMovementCapability {
-    constructor(movementKind, vehicleType, supported, movementSpeed, collisionRadius) {
+    constructor(movementKind, vehicleType, supported, movementSpeed, collisionRadius, movementDirections) {
         if (!isValidAvatarMovementCapabilityKind(movementKind)) {
             throw new Error(`AvatarVehicleMovementCapability requires a valid AvatarMovementCapabilityKind, got ${JSON.stringify(movementKind)}`);
         }
@@ -283,11 +325,15 @@ export class AvatarVehicleMovementCapability {
         if (typeof collisionRadius !== 'number' || !Number.isFinite(collisionRadius) || collisionRadius < 0) {
             throw new Error(`AvatarVehicleMovementCapability requires a finite, non-negative collisionRadius, got ${JSON.stringify(collisionRadius)}`);
         }
+        if (!isValidAvatarMovementDirectionCapability(movementDirections)) {
+            throw new Error(`AvatarVehicleMovementCapability requires a valid AvatarMovementDirectionCapability, got ${JSON.stringify(movementDirections)}`);
+        }
         this._movementKind = movementKind;
         this._vehicleType = vehicleType;
         this._supported = supported;
         this._movementSpeed = movementSpeed;
         this._collisionRadius = collisionRadius;
+        this._movementDirections = movementDirections;
         Object.freeze(this);
     }
 
@@ -306,13 +352,36 @@ export class AvatarVehicleMovementCapability {
     // AERIAL_VEHICLE's own `0` is inert for the identical reason
     // `movementSpeed`'s own `0` already is.
     get collisionRadius() { return this._collisionRadius; }
+    // 0.9.89 — which of forward/backward this capability currently
+    // permits the avatar's existing movement input to produce — see
+    // this file's own 0.9.89 header and
+    // core/AvatarMovementDirectionCapability.js. Always a fully-formed
+    // `AvatarMovementDirectionCapability` instance, never undefined/null:
+    // AERIAL_VEHICLE's own `forward: false, backward: false` is inert
+    // for the identical reason `movementSpeed`'s/`collisionRadius`'s own
+    // `0` already is.
+    get movementDirections() { return this._movementDirections; }
 
     toJSON() {
-        return { movementKind: this._movementKind, vehicleType: this._vehicleType, supported: this._supported, movementSpeed: this._movementSpeed, collisionRadius: this._collisionRadius };
+        return {
+            movementKind: this._movementKind,
+            vehicleType: this._vehicleType,
+            supported: this._supported,
+            movementSpeed: this._movementSpeed,
+            collisionRadius: this._collisionRadius,
+            movementDirections: this._movementDirections.toJSON()
+        };
     }
 
     static fromJSON(json) {
-        return new AvatarVehicleMovementCapability(json.movementKind, json.vehicleType, json.supported, json.movementSpeed, json.collisionRadius);
+        return new AvatarVehicleMovementCapability(
+            json.movementKind,
+            json.vehicleType,
+            json.supported,
+            json.movementSpeed,
+            json.collisionRadius,
+            AvatarMovementDirectionCapability.fromJSON(json.movementDirections)
+        );
     }
 }
 
@@ -326,7 +395,8 @@ export function isValidAvatarVehicleMovementCapability(value) {
         && value.movementSpeed >= 0
         && typeof value.collisionRadius === 'number'
         && Number.isFinite(value.collisionRadius)
-        && value.collisionRadius >= 0;
+        && value.collisionRadius >= 0
+        && isValidAvatarMovementDirectionCapability(value.movementDirections);
 }
 
 // 0.9.86 — WALK's own base movement speed. MUST always equal
@@ -373,16 +443,28 @@ const BICYCLE_COLLISION_RADIUS = 0.45; // world units
 const MOTORCYCLE_COLLISION_RADIUS = 0.55; // world units
 const CAR_COLLISION_RADIUS = 0.80; // world units
 
+// 0.9.89 — the two `AvatarMovementDirectionCapability` values every
+// resolved capability currently draws from. `PERMITS_BOTH_DIRECTIONS` is
+// shared by WALK, BICYCLE, MOTORCYCLE, and CAR alike — see this file's
+// own 0.9.89 header for why none of them is yet differentiated, matching
+// how ONE shared `GROUND_VEHICLE_MOVEMENT_SPEED` constant briefly served
+// BICYCLE/MOTORCYCLE/CAR alike before 0.9.87 split it apart.
+// `NO_DIRECTIONS_PERMITTED` is AERIAL_VEHICLE/DRONE's own inert value,
+// the direct structural twin of `movementSpeed`'s/`collisionRadius`'s
+// own `0` for that same capability.
+const PERMITS_BOTH_DIRECTIONS = new AvatarMovementDirectionCapability(true, true);
+const NO_DIRECTIONS_PERMITTED = new AvatarMovementDirectionCapability(false, false);
+
 // One frozen instance per VehicleType, built once at module load — never
 // reconstructed per call — so `resolveAvatarVehicleMovementCapability()`
 // returns the literal same object for the same input, matching
 // core/VehicleType.js's own `Object.freeze` closed-vocabulary discipline.
 const CAPABILITY_BY_VEHICLE_TYPE = Object.freeze({
-    [VehicleType.NONE]: new AvatarVehicleMovementCapability(AvatarMovementCapabilityKind.WALK, VehicleType.NONE, true, WALK_MOVEMENT_SPEED, WALK_COLLISION_RADIUS),
-    [VehicleType.BICYCLE]: new AvatarVehicleMovementCapability(AvatarMovementCapabilityKind.GROUND_VEHICLE, VehicleType.BICYCLE, true, BICYCLE_MOVEMENT_SPEED, BICYCLE_COLLISION_RADIUS),
-    [VehicleType.MOTORCYCLE]: new AvatarVehicleMovementCapability(AvatarMovementCapabilityKind.GROUND_VEHICLE, VehicleType.MOTORCYCLE, true, MOTORCYCLE_MOVEMENT_SPEED, MOTORCYCLE_COLLISION_RADIUS),
-    [VehicleType.CAR]: new AvatarVehicleMovementCapability(AvatarMovementCapabilityKind.GROUND_VEHICLE, VehicleType.CAR, true, CAR_MOVEMENT_SPEED, CAR_COLLISION_RADIUS),
-    [VehicleType.DRONE]: new AvatarVehicleMovementCapability(AvatarMovementCapabilityKind.AERIAL_VEHICLE, VehicleType.DRONE, false, 0, 0)
+    [VehicleType.NONE]: new AvatarVehicleMovementCapability(AvatarMovementCapabilityKind.WALK, VehicleType.NONE, true, WALK_MOVEMENT_SPEED, WALK_COLLISION_RADIUS, PERMITS_BOTH_DIRECTIONS),
+    [VehicleType.BICYCLE]: new AvatarVehicleMovementCapability(AvatarMovementCapabilityKind.GROUND_VEHICLE, VehicleType.BICYCLE, true, BICYCLE_MOVEMENT_SPEED, BICYCLE_COLLISION_RADIUS, PERMITS_BOTH_DIRECTIONS),
+    [VehicleType.MOTORCYCLE]: new AvatarVehicleMovementCapability(AvatarMovementCapabilityKind.GROUND_VEHICLE, VehicleType.MOTORCYCLE, true, MOTORCYCLE_MOVEMENT_SPEED, MOTORCYCLE_COLLISION_RADIUS, PERMITS_BOTH_DIRECTIONS),
+    [VehicleType.CAR]: new AvatarVehicleMovementCapability(AvatarMovementCapabilityKind.GROUND_VEHICLE, VehicleType.CAR, true, CAR_MOVEMENT_SPEED, CAR_COLLISION_RADIUS, PERMITS_BOTH_DIRECTIONS),
+    [VehicleType.DRONE]: new AvatarVehicleMovementCapability(AvatarMovementCapabilityKind.AERIAL_VEHICLE, VehicleType.DRONE, false, 0, 0, NO_DIRECTIONS_PERMITTED)
 });
 
 // The one resolution entry point. See this file's own header for exactly
@@ -395,17 +477,20 @@ export function resolveAvatarVehicleMovementCapability(vehicleType) {
     return CAPABILITY_BY_VEHICLE_TYPE[vehicleType];
 }
 
-// Deliberately not yet (0.9.88, still): acceleration, braking, momentum,
+// Deliberately not yet (0.9.89, still): acceleration, braking, momentum,
 // or any other physical quantity beyond the base `movementSpeed`/
-// `collisionRadius` pair; a second, per-vehicle
+// `collisionRadius`/`movementDirections` triple; a second, per-vehicle
 // `AvatarMovementCapabilityKind` vocabulary (see this file's own 0.9.87
 // header for why BICYCLE/MOTORCYCLE/CAR still share the one
-// GROUND_VEHICLE kind); reading an `AvatarVehicleMount` or looking up a
-// `VehicleType` from a vehicle id or `VehiclePresence` (the caller's
-// job, not this file's); vehicle orientation, a rectangular or oriented
-// (non-circular) collision footprint, vehicle-vs-vehicle collision,
-// terrain response, or animation; camera behavior; mounting/
-// dismounting; persistence; networking. See docs/Roadmap.md, 0.9.84 for
-// the original list, 0.9.86 for the base speed field, 0.9.87 for the
-// per-vehicle speed differentiation, and 0.9.88 for the collision
-// radius field.
+// GROUND_VEHICLE kind); per-vehicle direction differentiation (every
+// defined capability currently permits both — see this file's own
+// 0.9.89 header); left/right movement direction; reading an
+// `AvatarVehicleMount` or looking up a `VehicleType` from a vehicle id
+// or `VehiclePresence` (the caller's job, not this file's); vehicle
+// orientation, a rectangular or oriented (non-circular) collision
+// footprint, vehicle-vs-vehicle collision, terrain response, steering,
+// or animation; camera behavior; mounting/dismounting; persistence;
+// networking. See docs/Roadmap.md, 0.9.84 for the original list, 0.9.86
+// for the base speed field, 0.9.87 for the per-vehicle speed
+// differentiation, 0.9.88 for the collision radius field, and 0.9.89
+// for the movement direction field.

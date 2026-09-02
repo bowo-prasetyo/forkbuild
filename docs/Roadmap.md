@@ -57461,3 +57461,177 @@ feeding the one existing movement and collision pipeline,
 acceleration/braking becomes the natural next step, followed by
 steering/handling and, eventually, aerial movement for the drone — but
 only once actual runtime behavior tells us which is needed first.
+
+## 0.9.89 — Vehicle Movement Direction Semantics
+
+0.9.86-0.9.88 gave a movement capability an opinion about HOW FAST it
+moves and HOW MUCH SPACE it occupies. Neither ever asked WHICH
+DIRECTIONS the avatar's own existing forward/backward input (W/S, and
+their continuous-movement equivalent) is currently allowed to produce —
+every capability, WALK included, has silently permitted both the entire
+time, purely because nothing has ever said otherwise. This milestone is
+not acceleration, braking, or steering; it is the smallest seam that
+has to exist before a real vehicle could ever plausibly say no to a
+direction — capability-driven, exactly like `movementSpeed` and
+`collisionRadius` before it, never a second movement system or a
+vehicle-specific controller.
+
+```
+VehicleType
+    │
+    ▼
+AvatarVehicleMovementCapability
+    │
+    ├── movementKind
+    ├── supported
+    ├── movementSpeed        (0.9.86/0.9.87)
+    ├── collisionRadius      (0.9.88)
+    └── movementDirections   (0.9.89)
+              │
+              ▼
+      AvatarMovementController
+              │
+              ▼
+    _resolvedForwardAxis()
+   (ordinary W/S + continuous intent,
+    now gated by the active capability)
+              │
+              ▼
+      existing movement pipeline
+```
+
+**A small, closed, two-boolean value — never a mode, never a state
+machine.** `core/AvatarMovementDirectionCapability.js` is a new sibling
+file, not a new field type invented inline: `AvatarMovementDirectionCapability`
+carries exactly `forward`/`backward` booleans, immutable and
+getter-only, the same "small, closed vocabulary" discipline
+`core/VehicleType.js` and `core/AvatarContinuousMovementIntent.js`
+already established. It is deliberately NOT shaped like
+`core/AvatarContinuousMovementMode.js` (a vocabulary with a transition
+function) — there is nothing here for anything to transition between;
+each field is decided once, at resolution time, by
+`core/AvatarVehicleMovementCapability.js`, never something that changes
+tick-to-tick. The key distinction this milestone draws, in its own
+words: **movement MODE describes how the user requests movement;
+movement CAPABILITY describes what the current physical capability
+permits.** This file is the capability half.
+
+**Left/right are deliberately not here — narrower than the original
+`MovementDirectionCapability` sketch, on purpose.** The existing
+movement system already resolves turning (A/D, `AvatarMovementState.
+turnAxis`) completely independently of forward/backward. Nothing about
+a vehicle relationship has ever needed to constrain turning, and this
+milestone introduces no reason to start; inventing a `left`/`right`
+pair nothing yet reads would be exactly the kind of speculative shape
+this codebase's own roadmap repeatedly avoids.
+
+**`AvatarVehicleMovementCapability` gains a fifth field,
+`movementDirections`, fed by two shared constants:**
+
+```
+PERMITS_BOTH_DIRECTIONS   forward: true,  backward: true
+NO_DIRECTIONS_PERMITTED   forward: false, backward: false
+```
+
+WALK, BICYCLE, MOTORCYCLE, and CAR all resolve to the exact same
+`PERMITS_BOTH_DIRECTIONS` value — real-world reversing differs wildly
+across those three, and this milestone takes no position on that
+difference, exactly as 0.9.84 took no position on their relative speed
+before 0.9.87 existed. This milestone's entire job is the SEAM — a
+capability can now say no to a direction — not yet using it to say no
+to any real vehicle's own direction. AERIAL_VEHICLE/DRONE's own value
+is `NO_DIRECTIONS_PERMITTED` — inert, for the identical reason its own
+`movementSpeed`/`collisionRadius` are already `0`: `supported: false`
+already blocks movement, direction included, before this field is ever
+consulted.
+
+**`application/AvatarMovementController.js` gains exactly one new
+consumer, `_resolvedMovementDirections()`** — the direct structural
+twin of `_resolvedMovementSpeed()` (0.9.86) and `_resolvedCollisionRadius()`
+(0.9.88) — but consulted one layer INSIDE this class's own existing
+input resolution rather than passed to a sibling constraint: it is read
+in exactly one place, `_resolvedForwardAxis()`'s own new guard, the
+SAME method 0.9.66 already built to combine ordinary W/S input with
+persistent continuous-movement intent into one `forwardAxis`. Each raw
+source — a held key, a continuous intent — is filtered through the
+active capability's own `forward`/`backward` booleans BEFORE it is
+allowed to contribute to the axis, exactly like a physically
+disconnected key. `_resolvedForwardAxis()`'s own existing priority rule
+(0.9.66 — ordinary W/S always wins outright whenever either is held;
+continuous intent only gets a say once neither is) is completely
+unchanged; this milestone only filters what each side is ALLOWED to
+contribute, never which side wins.
+
+**A disallowed direction reads as "that key was never pressed" — never
+a collision, a block flag, or a separate movement outcome.** Holding W
+while the active capability's own `movementDirections.forward` is
+`false` contributes exactly `0` to that source, the same as if the key
+were up — not `-1` (a direction never turns into its opposite), and not
+a stall requiring some other system to notice and clear. `isCollided()`/
+`isBlockedBySlope()`/`isBlockedByStepHeight()`/`isCollidedWithTree()`
+gain no sibling `isDirectionBlocked()`: unlike those four (each an
+outcome of comparing a desired step against WORLD geometry the avatar
+didn't choose), a disallowed direction is resolved before
+`AvatarMovementState` is even built — indistinguishable, from this
+class's own point of view, from the player simply not asking for that
+direction at all.
+
+**Every existing caller of this class sees no behavior change, as of
+0.9.89.** Every currently-defined, supported capability (WALK, and
+GROUND_VEHICLE via BICYCLE/MOTORCYCLE/CAR) permits both directions, so
+`_resolvedForwardAxis()` produces byte-identical output to before this
+milestone existed. AERIAL_VEHICLE/DRONE's own `forward: false,
+backward: false` is never actually reached: `tick()`'s own 0.9.85
+`supported: false` guard already returns before `_resolvedForwardAxis()`
+is ever called for it.
+
+## What this milestone deliberately does NOT do
+
+Acceleration, braking, momentum, per-vehicle direction differentiation
+(every defined capability currently permits both directions — real
+per-vehicle differences are real future scope, once an actual design
+reason exists, mirroring 0.9.87's own relationship to 0.9.86), left/right
+movement direction, turning radius, vehicle orientation, a rectangular
+or oriented collision footprint, vehicle-vs-vehicle collision, terrain-
+specific vehicle behavior, camera changes, animation, or drone flight —
+none of these exist anywhere in this codebase, this milestone included.
+`AvatarMovementState.turnAxis` and the A/D keys that drive it are
+completely untouched — this milestone's scope is forward/backward only,
+matching its own brief.
+
+Tests: `tests/AvatarVehicleMovementCapability.test.js` (0.9.84's own
+suite) is updated in place — every section now asserts `movementDirections`
+alongside `movementSpeed`/`collisionRadius`, Section H gains invalid-input
+coverage for the new field (including `core/AvatarMovementDirectionCapability.js`'s
+own constructor validation), Section I gains
+`isValidAvatarMovementDirectionCapability()` coverage, Section J's
+`toJSON()`/`fromJSON()` round-trip now includes the nested value, and
+Section K's architectural sweep gains a parallel pass over the new
+sibling file. `tests/AvatarVehicleCollisionFootprintIntegration.test.js`'s
+own "exactly these fields, no fifth field has crept in" assertion is
+updated in place to include `movementDirections`, superseding its own
+original four-field list. A new dedicated suite,
+`tests/AvatarVehicleMovementDirectionIntegration.test.js`, covers this
+milestone directly: WALK regression for both forward and backward,
+held keys and continuous intent alike; BICYCLE/MOTORCYCLE/CAR each
+accepting both directions, including a real, genuinely-mounted bicycle
+flagship; DRONE remaining fully blocked before its own inert
+`movementDirections` is ever consulted; WALK → BICYCLE → MOTORCYCLE →
+CAR → WALK switching producing deterministic forward/backward behavior
+at every step; a synthetic forward-only capability proving a disallowed
+direction is blocked exactly like an unpressed key — including W+S held
+together, continuous BACKWARD intent, turning, running, and animation
+all behaving correctly around the restriction; existing speed and
+collision-radius differentiation (0.9.86-0.9.88) unaffected; determinism
+across repeated resolution/ticking; and an architectural-regression
+sweep proving no vehicle-specific branching and no left/right
+capability vocabulary anywhere this milestone touches.
+
+Next: acceleration/braking remains the natural next capability
+dimension, followed by steering/handling and, eventually, aerial
+movement for the drone — but only once actual runtime behavior tells us
+which is needed first. Per-vehicle direction differentiation (a real
+vehicle someday disallowing reverse, say) is real future scope this
+milestone deliberately leaves open, exactly as 0.9.84 left per-vehicle
+speed differentiation open until 0.9.87 gave it an actual reason to
+exist.
