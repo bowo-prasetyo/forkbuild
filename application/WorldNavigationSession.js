@@ -29,6 +29,7 @@ import { AvatarMovementConstraint } from './AvatarMovementConstraint.js';
 import { AvatarTerrainConstraint } from './AvatarTerrainConstraint.js';
 import { AvatarStepConstraint } from './AvatarStepConstraint.js';
 import { AvatarTreeConstraint } from './AvatarTreeConstraint.js';
+import { AvatarVehicleInteractionController } from './AvatarVehicleInteractionController.js';
 import { deriveAvatarContinuousMovementInputEvent } from '../core/AvatarContinuousMovementInputAdapter.js';
 import { deriveAvatarContinuousMovementIntent } from '../core/AvatarContinuousMovementIntent.js';
 import { deriveAvatarContinuousMovementMode } from '../core/AvatarContinuousMovementMode.js';
@@ -403,6 +404,15 @@ export class WorldNavigationSession {
 	    // avatar actually exists (same optional-collaborator posture as
 	    // everything else avatar-related in this constructor).
 	    this._avatarMovementController = null;
+	    // 0.9.83 — Avatar-Vehicle Mount/Dismount Runtime Integration. The
+	    // direct structural twin of `_avatarMovementController` above:
+	    // built once an avatar actually exists (see _setupLocalAvatar()
+	    // below), ticked on the same animation frame, and fed keyboard
+	    // facts through the same avatarKeyDown/avatarKeyUp seam — see
+	    // application/AvatarVehicleInteractionController.js's own header
+	    // for why this is a separate controller rather than folded into
+	    // AvatarMovementController itself.
+	    this._avatarVehicleInteractionController = null;
 	    this._avatarFrameSubscription = null;
 	    this._avatarControlModeActive = false;
 	    // 0.9.66 — Continuous Movement Controller Integration. This
@@ -952,10 +962,26 @@ export class WorldNavigationSession {
             this._buildAvatarStepConstraint(),
             this._buildAvatarTreeConstraint()
         );
+        // 0.9.83 — built alongside the movement controller, from the
+        // same avatarPresenceSession. See
+        // application/AvatarVehicleInteractionController.js's own
+        // header for why `mount` lives here rather than on either the
+        // movement controller or AvatarPresenceSession itself.
+        this._avatarVehicleInteractionController = new AvatarVehicleInteractionController(
+            this._avatarPresenceSession
+        );
         this._lastAvatarFollowPosition = this._avatarPresenceSession.current.position;
         if (typeof this._session.onAnimationFrame === 'function') {
             this._avatarFrameSubscription = this._session.onAnimationFrame((deltaSeconds) => {
                 this._avatarMovementController.tick(deltaSeconds);
+                // 0.9.83 — ticked right after movement, on the exact
+                // same frame: mount/dismount are re-evaluated from
+                // whatever interaction-key state is currently held,
+                // exactly like AvatarMovementController's own W/A/S/D
+                // re-evaluation above. See that controller's own
+                // header for why this is safe to call every frame even
+                // while the key is held.
+                this._avatarVehicleInteractionController.tick();
                 const now = Date.now();
                 // 0.2.44 — expires a finished gesture and refreshes the
                 // local avatar's facing override, both purely local,
@@ -1574,6 +1600,20 @@ export class WorldNavigationSession {
         return this._avatarControlModeActive;
     }
 
+    // 0.9.83 — the local avatar's current AvatarVehicleMount (or `null`
+    // when not mounted), read straight off
+    // application/AvatarVehicleInteractionController.js#mount() — a
+    // debug/UI surface, the session-level counterpart to
+    // isAvatarControlModeActive() above and isCollidedWithTree()/
+    // verticalState() on the movement controller. Returns `null` when
+    // no avatar exists at all, the same graceful-absence posture every
+    // other avatar-related getter in this file already follows.
+    avatarVehicleMount() {
+        return this._avatarVehicleInteractionController
+            ? this._avatarVehicleInteractionController.mount()
+            : null;
+    }
+
     // Turning the mode OFF immediately releases every held key —
     // exiting must return keyboard control to the rest of World View
     // at once, never leave a key "stuck" because its keyup never
@@ -1603,6 +1643,15 @@ export class WorldNavigationSession {
         if (!this._avatarControlModeActive && this._avatarMovementController) {
             this._avatarMovementController.releaseAll();
         }
+        // 0.9.83 — the direct structural twin of the movement release
+        // above: turning Avatar Control Mode off must never leave the
+        // interaction key ('E') reading as permanently held. `mount`
+        // itself is untouched — see
+        // application/AvatarVehicleInteractionController.js#releaseAll's
+        // own header for why.
+        if (!this._avatarControlModeActive && this._avatarVehicleInteractionController) {
+            this._avatarVehicleInteractionController.releaseAll();
+        }
     }
 
     // 0.3.2 — Avatar Control Mode is persistent LOCAL INTERACTION STATE,
@@ -1622,6 +1671,11 @@ export class WorldNavigationSession {
         this._shiftDown = false;
         if (this._avatarMovementController) {
             this._avatarMovementController.releaseAll();
+        }
+        // 0.9.83 — same "release keys without touching the mode" seam,
+        // extended to the interaction key.
+        if (this._avatarVehicleInteractionController) {
+            this._avatarVehicleInteractionController.releaseAll();
         }
     }
 
@@ -1647,7 +1701,16 @@ export class WorldNavigationSession {
             return false;
         }
         this._processContinuousMovementInput(key, 'keydown');
-        return this._avatarMovementController.keyDown(key);
+        const movementConsumed = this._avatarMovementController.keyDown(key);
+        // 0.9.83 — tried independently of movement's own result: 'E' is
+        // not a movement key, so AvatarMovementController#keyDown never
+        // recognizes it, and this class never asks it to. Either
+        // controller recognizing the key is enough to consume the
+        // event — see application/AvatarVehicleInteractionController.js#keyDown.
+        const vehicleInteractionConsumed = this._avatarVehicleInteractionController
+            ? this._avatarVehicleInteractionController.keyDown(key)
+            : false;
+        return movementConsumed || vehicleInteractionConsumed;
     }
 
     avatarKeyUp(key) {
@@ -1670,7 +1733,13 @@ export class WorldNavigationSession {
         // leaving stale state inside the controller (releaseAll()
         // already covers the same case on the toggle itself; this
         // covers the ordinary "released after mode already off" case).
-        return this._avatarMovementController.keyUp(key);
+        const movementConsumed = this._avatarMovementController.keyUp(key);
+        // 0.9.83 — same "always forwarded" posture as movement's own
+        // keyUp above, for the identical reason.
+        const vehicleInteractionConsumed = this._avatarVehicleInteractionController
+            ? this._avatarVehicleInteractionController.keyUp(key)
+            : false;
+        return movementConsumed || vehicleInteractionConsumed;
     }
 
     // 0.9.66 — Continuous Movement Controller Integration. The ONE
@@ -5631,6 +5700,7 @@ export class WorldNavigationSession {
             this._avatarFrameSubscription = null;
         }
         this._avatarMovementController = null;
+        this._avatarVehicleInteractionController = null;
         this._avatarControlModeActive = false;
         this._capsLockDown = false;
         this._shiftDown = false;
