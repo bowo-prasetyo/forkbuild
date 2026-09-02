@@ -53002,3 +53002,183 @@ governs it remain genuinely independent, unscheduled choices — each still
 an explicit request, never smuggled in on top of describe (0.9.50),
 transition (0.9.51), store (0.9.52), observe (0.9.53), persist (0.9.54),
 or bridge (0.9.55).
+
+## 0.9.56 — Publication Distribution Lifecycle Restoration Boundary
+
+0.9.54 answered how a lifecycle survives a process restart
+(`persistence.save()`/`persistence.load()`). 0.9.55 answered how a stored
+lifecycle becomes durable without a caller remembering to call `save()`
+by hand (the store -> persistence bridge). Neither file answers the
+reverse question: once a process restarts, or a fresh consumer entirely
+comes up with an empty memory store, how does a lifecycle already on file
+get back INTO the memory store, so it can be `get()`, `subscribe()`d to,
+and transitioned like any other lifecycle the store holds? This milestone
+is that missing reverse seam, and nothing more:
+
+```text
+persistence.load(publicationId)   (0.9.54, unmodified)
+     │
+     ├── null?
+     │      │
+     │     yes ──────────────────────────────► return null
+     │                                          (store untouched)
+     │
+     no
+     │
+     ▼
+store.set(publicationId, lifecycle)   (0.9.56, THIS, calls into 0.9.52,
+     │                                  unmodified)
+     ▼
+return lifecycle
+```
+
+`application/PublicationDistributionLifecycleRestorer.js` (new) is an
+orchestration boundary, never a third store or a second persistence
+implementation. It holds no lifecycle state of its own — no `Map`, no
+cache — and wraps exactly two calls it is given, already-constructed,
+through its own constructor: `persistence.load(publicationId)` and
+`store.set(publicationId, lifecycle)`. It never imports
+`PublicationDistributionLifecycleMemoryStore` (0.9.52/0.9.53),
+`PublicationDistributionLifecyclePersistence` (0.9.54),
+`PublicationDistributionLifecyclePersistenceBridge` (0.9.55),
+`PublicationDistributionLifecycle.js` (0.9.50), or
+`PublicationDistributionLifecycleTransition.js` (0.9.51) — both
+collaborators are received duck-typed, exactly as 0.9.55's own bridge
+already receives its two collaborators.
+
+```javascript
+class PublicationDistributionLifecycleRestorer {
+    constructor(persistence, store) { /* load()/set(), duck-typed */ }
+    restore(publicationId) { /* -> lifecycle | null */ }
+}
+```
+
+Restoration is caller-triggered, never automatic — the single most
+important decision of this milestone, settled explicitly by its own
+request. There is no constructor loading, no startup hook, no automatic
+hydration, no background process, no polling, and no retry or scheduling
+of any kind. Constructing a restorer calls neither collaborator — it only
+verifies, once, that the two methods it needs actually exist. A lifecycle
+is restored only when, and exactly when, a caller explicitly calls
+`restore(publicationId)`.
+
+`restore()` is non-destructive when persistence has no record — the
+crucial semantic rule this milestone exists to establish. When
+`persistence.load(publicationId)` returns `null`, `restore()` returns
+`null` too, and `store.set()` is never called — an absent persistence
+record is never interpreted as an instruction to erase an existing memory
+state:
+
+```javascript
+store.set('pub-1', existingLifecycle);
+// persistence has no record for 'pub-1'
+restorer.restore('pub-1');
+store.get('pub-1') === existingLifecycle;   // true — untouched
+```
+
+Exact identity, never reconstruction, on the way through this file.
+`restore()` passes the exact reference `persistence.load()` returns
+straight into `store.set()` — no cloning, no rebuilding. Three different
+identities are genuinely at play across the boundary this file sits on:
+the object originally persisted before a restart is gone the moment
+0.9.54's own `save()` serializes it, and this file does nothing to bring
+it back; `persistence.load()` reconstructs a NEW object carrying the
+identical underlying facts (0.9.54's own "Identity is not preserved
+across persistence"); and once that loaded object reaches the store via
+`store.set()`, `store.get(publicationId) === loaded` and any existing
+0.9.53 observer receives that exact object too, exactly as 0.9.52's/
+0.9.53's own "Storage, never transformation" already guarantees.
+
+If a 0.9.55 bridge is `observe()`ing the same `publicationId` on the same
+store instance, `store.set()` here notifies it exactly like any other
+`set()` would, and the bridge may turn straight back around and call
+`persistence.save()` with the value this file just loaded — a redundant
+write from an I/O-efficiency standpoint, but this file introduces no
+`hydrating` flag, no bridge bypass, and no suppression of any kind to
+prevent it. 0.9.55's own contract is that "every actual set() is an
+observable lifecycle change" — restoration is simply another explicit
+source of a lifecycle fact. Semantic deduplication of a redundant
+persistence write remains a separate, unscheduled optimization milestone.
+
+No comparison between persisted state and current memory state, of any
+kind — explicitly prohibited by this milestone's own request. This file
+never reads `store.get(publicationId)` before calling `store.set()`, and
+never asks whether the persisted value is newer, different, or otherwise
+more authoritative than whatever the store already holds — this family
+has no version, timestamp, or authority semantics yet, and this file
+invents none. No transition semantics either: `restore()` never calls
+`transitionPublicationDistributionLifecycle()` (0.9.51) — a restored
+lifecycle is an existing fact, not a newly generated one.
+
+A persistence or store failure propagates, unchanged, with no rollback
+and no new vocabulary. This file adds no `try`/`catch` of its own around
+either collaborator call; a genuinely throwing `persistence.load()` or
+`store.set()` propagates straight out of `restore()`, with no
+`RESTORE_FAILED` or other invented status. Publication isolation is
+inherited directly from 0.9.52's own keying — `restore(publicationId)`
+only ever reads and writes the single `publicationId` it is given. The
+constructor duck-types both collaborators to exactly the methods this
+file itself calls (`persistence.load`, `store.set`), throwing immediately
+on a missing or incomplete one, exactly as 0.9.54's and 0.9.55's own
+constructors already do. Synchronous only, matching both collaborators'
+own contracts. Malformed `restore()` input (a missing, non-string, or
+empty `publicationId`) degrades silently, never throws, and calls neither
+collaborator.
+
+`tests/PublicationDistributionLifecycleRestorer.test.js` (new) covers: a
+flagship section simulating a true process restart — Process A executes
+(0.9.49) a real distribution, describes (0.9.50) and stores (0.9.52) its
+lifecycle, persists it (0.9.54), then Process A's own store is discarded
+entirely; Process B constructs wholly fresh instances sharing only the
+same injected storage, restores explicitly, and then subjects the
+restored lifecycle to an ordinary 0.9.51 transition and 0.9.53
+subscription, proving it participates normally in the existing pipeline
+afterward; a section confirming an existing persisted lifecycle restores
+via save() -> fresh restorer -> restore() -> store.get(); a section
+confirming a missing persisted record calls store.set() zero times; a
+section confirming an existing memory-store lifecycle survives a
+restore() call against an empty persistence record untouched; a loaded-
+identity section confirming store.get(id) === loadedLifecycle while
+loadedLifecycle !== the originally persisted reference; a section
+confirming an existing 0.9.53 subscriber receives the exact object
+restore() inserted; a persistence-failure section confirming a genuinely
+throwing load() propagates unchanged, with no invented RESTORE_FAILED
+vocabulary; a store-failure section confirming a genuinely throwing
+set() propagates unchanged, with no rollback; a publication-isolation
+section; a no-automatic-loading section confirming construction alone
+produces zero collaborator calls; a no-transition-semantics section; a
+constructor-validation section; a malformed-input section; and an
+architectural regression pass confirming this file imports none of the
+lifecycle/store/persistence/bridge/transition/result/execution modules,
+calls exactly `persistence.load()` and `store.set()` and nothing else
+(never `store.get()`, ruling out any persisted-vs-memory comparison),
+contains no `try`/`catch` of its own, performs no I/O or clock reads, and
+uses no pending/failed/retrying/recovering/confirmed/withdrawn/rollback/
+compensation/transaction/queue/schedule/polling/history/undo/version/
+lock/merge/rank/dirty/stale/hydrat/batch/dedup/authoritative/authority
+vocabulary anywhere in its own code. No existing file besides
+`tests.html` (registering the new test) is modified by this milestone —
+`PublicationDistributionLifecycleMemoryStore`,
+`PublicationDistributionLifecyclePersistence`,
+`PublicationDistributionLifecyclePersistenceBridge`, and every one of
+their existing tests are untouched, exactly as promised.
+
+Deliberately paused again, exactly where this milestone's own request
+drew the line. Explicitly unscheduled: startup hydration composition —
+restoring a whole set of publication ids on application startup, or any
+`restoreAll()`/`restoreMany()` convenience; selecting which publication
+ids to restore, or calling `persistence.list()` on this file's own
+initiative; comparison, conflict resolution, or authority judgment
+between persisted state and current memory state, of any kind; a
+`hydrating` flag, a bridge bypass, or any suppression of a redundant
+`persistence.save()` a 0.9.55 bridge may perform in reaction to this
+file's own `store.set()`; lifecycle transition semantics of any kind;
+rollback, compensation, or transactions of any kind; and
+`RESTORE_FAILED`/`PENDING`/`RECOVERING` or any other operational
+vocabulary. Startup Hydration Composition — the first milestone that
+could deliberately compose "application startup -> restore selected
+publication IDs -> memory store -> observation" — and whatever recovery/
+reconciliation policy governs it afterward remain genuinely independent,
+unscheduled choices — each still an explicit request, never smuggled in
+on top of describe (0.9.50), transition (0.9.51), store (0.9.52), observe
+(0.9.53), persist (0.9.54), bridge (0.9.55), or restore (0.9.56).
