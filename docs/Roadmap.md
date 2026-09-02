@@ -54864,3 +54864,93 @@ movement and collision pipeline ordinary WASD input already runs
 through. The next architectural work on avatar movement should come
 from an actual observed limitation or a new user-facing requirement,
 not from splitting this feature into further milestones.
+
+## 0.9.70 — Vehicle Type Vocabulary
+
+Having completed the Continuous Avatar Movement feature line
+(0.9.64–0.9.69), the next capability worth opening for World View is
+vehicles — bicycle, motorcycle, car, drone. But the first question a
+vehicle raises is architectural, not visual: what does a vehicle MEAN
+to an avatar that already has its own position, orientation, and
+movement state (core/AvatarMovementState.js)? The wrong answer is a
+second avatar system — a `CarAvatar`/`DroneAvatar` that duplicates
+position/orientation/collision instead of reusing the one the avatar
+already has. The right model, established here as the frame for every
+vehicle milestone that follows, is that a vehicle is a movement
+capability an avatar temporarily takes on, while remaining the same
+world participant — not a replacement for it.
+
+This milestone does not build that relationship yet. It builds the one
+thing every later vehicle milestone needs to already exist: a name for
+what a vehicle IS, as a closed set of choices. `core/VehicleType.js`
+(new) is deliberately the SAME shape as `core/WorldLocationKind.js` and
+`core/AvatarInteractionKind.js` — a small, closed, frozen vocabulary
+plus one `isValidVehicleType()` validator — not the shape of
+`core/AvatarContinuousMovementIntent.js`/`AvatarContinuousMovementMode.js`,
+both of which also ship a transition function. There is deliberately no
+transition function here: a transition function answers "given what
+existed and one new signal, what should exist now," and there is no
+"what vehicle does this avatar currently have" state anywhere yet for
+anything to transition. That field, and the mount/dismount relationship
+that would set it, is future work, not this milestone's.
+
+```text
+VehicleType.NONE       — the avatar is not currently riding any vehicle
+VehicleType.BICYCLE    — a ground vehicle
+VehicleType.MOTORCYCLE — a ground vehicle
+VehicleType.CAR        — a ground vehicle
+VehicleType.DRONE      — an aerial vehicle
+```
+
+`NONE` is kept explicit for the same reason
+`AvatarContinuousMovementIntent.NONE` and `AvatarVerticalState.SUPPORTED`
+are explicit rather than representing "nothing" as `null`/`undefined` —
+see those files' own headers.
+
+One deliberate scope decision worth calling out by name: this
+vocabulary says nothing about GROUND vs. AERIAL, speed, acceleration,
+or any other movement-capability property, even though the four
+vehicles above obviously differ along exactly those lines. A movement-
+capability vocabulary is a real, foreseeable future need — a drone's
+aerial movement is genuinely different in kind from a car's ground
+movement, not just faster — but building it now would mean guessing at
+its shape from first principles before any consumer exists to reveal
+what it actually needs to distinguish. That is the identical mistake
+0.9.67's own header already named and avoided when it kept continuous
+movement's DIRECTION and MODE as two independent vocabularies rather
+than a single guessed-at combination (`FORWARD_WALK`/`FORWARD_RUN`/...):
+the shape of the next vocabulary should come from the seam that
+actually needs it — most likely when a bicycle or drone milestone first
+has to decide how its movement request reaches
+`core/AvatarMovementSimulation.js` — not from this one.
+
+Deliberately excluded, matching this milestone's own brief: vehicle
+movement, speed, acceleration, or any physics; vehicle objects,
+spawning, or placement in the World; vehicle rendering; the
+mount/dismount relationship between an avatar and a vehicle, or any
+"does this avatar have a vehicle" field anywhere in
+`core/AvatarPresence.js` or elsewhere; keyboard input; collision;
+terrain interaction; persistence; ownership; fuel/battery/inventory;
+damage. `core/VehicleType.js` answers only "what is a legal vehicle
+type," nothing else — the same narrow, single-question scope 0.9.64
+and 0.9.67 each opened their own feature lines with.
+
+`tests/VehicleType.test.js` proves the vocabulary has exactly the five
+named values and is frozen; that `isValidVehicleType()` accepts every
+member and rejects an unrelated string, a wrong-case string, `null`,
+`undefined`, a number, and a plain object; and closes with an
+architectural-regression section confirming `core/VehicleType.js`'s own
+code never references `AvatarMovementController`, `AvatarMovementState`,
+either continuous-movement vocabulary, mounting/riding, a `GROUND`/
+`AERIAL` capability concept, any timer or keyboard API, Three.js, or a
+speed/velocity/position/rotation/collision value of any kind — and that
+the module exports exactly `VehicleType` and `isValidVehicleType`,
+nothing else.
+
+Next: the vehicle line's second milestone should establish the
+avatar-vehicle relationship itself — is an avatar riding a vehicle, and
+which one — the direct vehicle-identity counterpart to what
+`core/AvatarContinuousMovementIntent.js` did for persistent direction
+in 0.9.64. That milestone, in turn, is what will reveal whether a
+movement-capability vocabulary is actually needed next, and what shape
+it should take — not a guess made here.
