@@ -53734,3 +53734,151 @@ available for any avatar position against any real tree, the next step is
 0.9.61: deciding what a `{ collides: true }` fact does to a requested
 movement step — most likely sliding along the tree's own boundary, the
 same "slide, don't dead-stop" feel building collision already gives.
+
+## 0.9.61 — Avatar-Tree Collision Resolution
+
+The last of the three geometric seams this line opened with 0.9.59: trees
+have a physical footprint (0.9.59), the avatar can tell whether it overlaps
+one (0.9.60), and now — for the first time — a requested movement step is
+actually CONSTRAINED by that overlap. This is the first milestone in the
+line where a tree can change where the avatar ends up.
+
+```text
+core/AvatarCollision.js
+   AVATAR_COLLISION_RADIUS
+            │
+            ▼
+core/AvatarTreeMovement.js                                  (new)
+   resolveAvatarTreeMovement({ currentPosition, requestedPosition, trees })
+            │
+            ▼
+      { x, y, z }                    (a resolved position, nothing else)
+```
+
+`core/AvatarTreeMovement.js` (new) exports one pure function,
+`resolveAvatarTreeMovement({ currentPosition, requestedPosition, trees })`.
+`trees` is an array of already-selected blocking circles — exactly
+`core/TreeCollisionGeometry.js#treeCollisionCircleFor()`'s own output
+shape — that this file never discovers for itself; it only resolves a
+requested step against whatever geometry it is handed, the same
+"core resolves geometry/math, a separate layer supplies the data" split
+`core/AvatarCollision.js`'s own header already establishes for
+`resolveHorizontalMovement()`'s own `obstacles` argument. No region query,
+no `naturalFeaturesInRegion()`, no `treeCollisionGeometryInRegion()` call
+lives inside this file at all — see this file's own "Deliberately not yet"
+footer.
+
+The response is a **slide**, not a dead stop — approaching a tree
+diagonally does not freeze the avatar the instant contact happens. For
+each blocking circle, the function:
+
+1. If the avatar is not already touching the tree at `currentPosition`,
+   sweeps the full `[currentPosition, requestedPosition]` segment via the
+   standard ray-circle intersection to find the first point (if any) where
+   the avatar's own combined radius (`AVATAR_COLLISION_RADIUS +
+   tree.radius`) would touch the tree's boundary — a sweep, not merely an
+   endpoint check, the same tunneling-safe discipline
+   `core/AvatarCollision.js#resolveHorizontalMovement()`'s own per-axis
+   sweep already applies to bricks.
+2. If the avatar is already touching or overlapping the tree at
+   `currentPosition` (0.9.60's own `<=`, not `<`, touching-counts-as-
+   colliding rule), that starting position IS the contact point — there is
+   no earlier crossing to find.
+3. From that contact point, decomposes the REMAINING requested movement
+   into a radial component (toward/away from the tree's center) and a
+   tangential component (perpendicular to it). A radial component pointing
+   further INTO the tree is stripped entirely; the tangential component,
+   and any radial component pointing AWAY from the tree, passes through
+   completely untouched.
+
+That single radial/tangential rule is what makes both halves of the
+"slide, never freeze, never stick" behavior fall out of one code path: a
+diagonal approach keeps sliding along the boundary (Section C) exactly
+because the tangential half of its movement was never touched, and a tree
+the avatar starts touching never blocks it from walking away (Section E)
+exactly because "away" is a non-negative radial component the same rule
+already lets straight through. Collision geometry never becomes a
+permanent attachment.
+
+Multiple trees are resolved in **supplied order**, one at a time — each
+tree's own resolved candidate position becomes the next tree's own
+`requested` position, while `currentPosition` stays fixed as the sweep
+origin throughout. This is a deliberately simple, deterministic rule, not
+a general multi-obstacle physics solver: the same `trees` array, in the
+same order, always resolves to the same final position. If order-dependent
+artifacts turn out to matter once this is exercised by real gameplay, that
+is its own later milestone's problem to solve — not this one's.
+
+The result is a plain resolved position, `{ x, y, z }` — never a status
+vocabulary (`BLOCKED`/`COLLIDING`/`SLIDING`/`PUSHED`). Those describe
+behavior; a position is the one geometric fact that behavior produces, and
+the only thing every caller actually needs. `y` is passed through from
+`requestedPosition` completely untouched — tree collision, like both
+milestones under it, is a purely horizontal (X/Z) concern; standing,
+falling, and jumping remain entirely `core/AvatarMovementSimulation.js`'s
+own. The function is PURE: `currentPosition`, `requestedPosition`, and
+every entry of `trees` are read, never written — no `avatar.position =
+...` anywhere in this file, only a return value.
+
+`tests/AvatarTreeMovement.test.js` (new, registered in `tests.html`)
+covers: free-space movement passing through untouched, including a tree
+far outside the requested step's own path (Section A); direct movement
+into a tree resolving exactly to the `AVATAR_COLLISION_RADIUS +
+tree.radius` boundary, with real forward progress up to that point rather
+than a stall at the starting position (Section B); diagonal movement
+producing genuine tangential sliding rather than a freeze, resolving onto
+the tree's own boundary having moved sideways too (Section C); an avatar
+already touching a tree having further inward movement held at the
+boundary, and an already-overlapping avatar never resolving to an even
+deeper penetration (Section D); an avatar touching a tree remaining fully
+free to move directly away or purely tangentially (Section E); byte-for-
+byte non-mutation of `currentPosition`, `requestedPosition`, and tree
+geometry, verified with frozen inputs (Section F); determinism — identical
+inputs always resolving to the identical output (Section G); multiple
+trees resolving in supplied order, with a repeat call reproducing the
+identical result and a tree the step never reaches leaving the outcome
+unchanged regardless of its position in the list (Section H); `y` passed
+through untouched on both a collided and an uncollided path (Section I); a
+flagship integration pipeline running real 0.9.59 tree geometry
+(`treeCollisionGeometryInRegion()`) through real resolution — walking
+straight through a real tree's own trunk position stops exactly at its
+real collision boundary, and a real, far-away tree never interferes
+(Section J); and an architectural regression pass reading this file's own
+source text, confirming it never references tree placement, spatial
+query, rendering, `THREE`, randomness, the wall clock, storage, or a
+mutating assignment, while explicitly confirming it DOES consume
+`AVATAR_COLLISION_RADIUS`, plus a check that its exported surface is
+exactly the one function (Section K).
+
+Deliberately postponed, matching 0.9.59's and 0.9.60's own lists: a
+region-level "which trees does this avatar need to be tested against"
+spatial query — this milestone resolves against whatever `trees` it is
+handed, and never discovers that list itself (0.9.62, "Deterministic Tree
+Collision Spatial Query"); wiring this file into
+`application/AvatarMovementConstraint.js`, `application/
+AvatarTerrainConstraint.js`, or the World View avatar update loop in any
+way — that integration is its own later seam, deliberately left out so the
+geometric machinery here stays testable without the entire UI/runtime
+(0.9.63); a general world-object collision resolution spanning terrain,
+trees, and future object kinds behind one call (0.9.62 and beyond); and a
+true multi-obstacle physics solver that reconciles resolution order across
+many simultaneous obstacles (explicitly deferred — see this file's own
+header). Also deliberately excluded: mutating an avatar object or any
+other side effect; a richer result vocabulary
+(`BLOCKED`/`COLLIDING`/`SLIDING`/`PUSHED` or similar); vertical (Y)
+movement, standing, falling, jumping, or gravity of any kind; a physics
+engine, velocity, acceleration, or mass; tree destruction, harvesting, or
+any other interaction; damage, animation changes, sound, networking,
+persistence, and any Publication integration. No existing file —
+`core/NaturalFeatureField.js`, `core/TreeCollisionGeometry.js`,
+`core/AvatarTreeCollision.js`, `core/AvatarCollision.js`,
+`application/AvatarMovementConstraint.js`, and
+`application/AvatarTerrainConstraint.js` included — is modified by this
+milestone; none of them import or reference `core/AvatarTreeMovement.js`.
+
+With detection (0.9.60) and resolution (0.9.61) both now in place as pure,
+composable, independently-tested functions, the next step is 0.9.62: a
+deterministic spatial query that narrows "every tree in the world" down to
+the small set of candidate trees actually worth testing an avatar's
+movement against, so the eventual runtime never pays the cost of resolving
+against trees nowhere near the avatar at all.
