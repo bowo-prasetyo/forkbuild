@@ -55163,3 +55163,115 @@ does "mount it" become answerable without begging its own question.
 Whether a movement-capability vocabulary, a road/path placement
 constraint, or additional vehicle types are needed next should come from
 that seam, not be guessed here.
+
+## 0.9.73 — Avatar-Vehicle Proximity Detection
+
+0.9.72's own "Next" note pointed here directly: the world can now
+reliably produce a real, deterministically-placed `VehiclePresence`
+(`core/VehiclePlacement.js`), but nothing yet answers whether an avatar
+standing somewhere near one is close enough to do anything with it.
+Building mounting before this would mean guessing at a spatial fact
+mounting itself needs, rather than consuming one that already exists.
+This milestone answers exactly that fact, and only that fact: given an
+avatar position and a `VehiclePresence`, is the avatar within
+interaction range?
+
+`core/AvatarVehicleProximity.js` (new) exports
+`avatarVehicleProximity(avatarPosition, vehiclePresence)`, returning
+`{ withinRange }` — deliberately the boolean alone, no distance, no
+direction, matching this milestone's own preference for the narrowest
+useful fact until a real consumer needs more. It is built on a small,
+generic, reusable primitive, `withinRadiusXZ(a, b, radius)` — "is point
+A within `radius` of point B, on the horizontal X/Z plane" — the same
+"generic geometric primitive, specific entry point on top" shape
+`core/AvatarTreeCollision.js`'s own `circlesIntersect()` /
+`avatarTreeCollision()` pair already established. Both functions
+compare squared distance against squared radius, matching that same
+file's allocation-free, `Math.sqrt`-free convention, and both use an
+inclusive `<=` boundary: a position exactly at the interaction radius
+counts as within range, the identical "touching counts" convention
+`circlesIntersect()` already uses for touching circles.
+
+**Proximity is deliberately not collision.** `core/AvatarTreeCollision.js`
+answers "do these two physical footprints overlap" — a question this
+codebase already resolves against a requested movement step so an
+avatar is physically blocked from walking through a tree trunk.
+Proximity answers a different question — "is this object within
+interaction reach" — and is deliberately allowed to be TRUE well before
+either object's own collision footprint is anywhere close to touching:
+a bicycle can be mountable a meter or more before an avatar's own
+collision circle would ever reach it. This file therefore does not
+import `core/AvatarTreeCollision.js`, does not call it, and does not
+reach into any future bicycle collision geometry — reusing either would
+quietly conflate two questions this milestone's own brief is explicit
+about keeping separate.
+
+The one policy constant this seam introduces, `VEHICLE_INTERACTION_RADIUS`
+(1.5 meters), is established HERE — at the seam that performs the
+proximity check — rather than as a field on `core/VehiclePresence.js`.
+0.9.71's own header is explicit that `VehiclePresence` answers only
+"what vehicle, and where," never a policy question like "how close is
+close enough"; adding a radius field there would have made it into
+something it was deliberately built not to be. A single global radius
+is used regardless of vehicle type: every vehicle this codebase can
+currently place is a `BICYCLE` (0.9.72), and nothing yet distinguishes
+how close a future `MOTORCYCLE`/`CAR`/`DRONE` interaction ought to
+require, so no per-type radius table is invented ahead of a consumer
+that needs one. `avatarVehicleProximity()` still takes the whole
+`VehiclePresence`, not merely its position, so such a table could be
+added at this one seam later without changing the signature every
+caller already depends on.
+
+Horizontal (X/Z) only, exactly like `core/AvatarTreeCollision.js`'s own
+circles: a bicycle's Y is a terrain elevation sample
+(`core/VehiclePlacement.js`'s own `terrainHeightAt()`), not a
+meaningful interaction boundary, so two positions differing only in Y
+must never change the result.
+
+**Deliberately not directional.** This file never asks whether the
+avatar is facing the vehicle or approaching from a particular side —
+those are interaction-policy questions left for whatever mounting
+milestone comes next, matching this milestone's own brief that the
+first seam should establish only "spatially close enough."
+**Deliberately not selection.** `avatarVehicleProximity()` is asked
+about exactly one `VehiclePresence` at a time and never chooses between
+several in-range candidates — no `nearestVehicleToAvatar()` is built
+here. Which vehicle to prefer when more than one is in range is a
+policy question this milestone does not yet have an answer to; a
+caller with several candidate vehicles calls this function once per
+candidate.
+
+`tests/AvatarVehicleProximity.test.js` proves: basic proximity — far
+away is out of range, within `VEHICLE_INTERACTION_RADIUS` is in range,
+and exactly at the boundary is in range (inclusive), matching
+`circlesIntersect()`'s own convention (Section A); X/Z-only behavior —
+identical X/Z with wildly different Y produces the identical result,
+including a vehicle placed far above or below the avatar (Section B);
+determinism — the same avatar position and vehicle always produce the
+same fact, whether checked twice or reconstructed fresh, and a plain
+`{x,y,z}` object behaves identically to an equivalent `Position`
+instance (Section C); multiple vehicles are each evaluated
+independently, with no selection ever occurring even when several are
+simultaneously in range, and no `nearestVehicleToAvatar` export exists
+on the module's surface (Section D); malformed avatar positions (null,
+undefined, `NaN`/`Infinity` coordinates, missing fields) and a missing
+or non-`VehiclePresence` vehicle argument are all rejected defensively
+by throwing (Section E); and an architectural-regression sweep confirms
+`core/AvatarVehicleProximity.js`'s own code never references
+`AvatarTreeCollision`/`TreeCollisionGeometry`, mounting/riding/rider,
+keyboard/controller input, rendering/animation, movement physics, or
+randomness/the clock/storage, that it exports exactly its three
+intended names, and that calling it never mutates either argument
+(Section F).
+
+Next: mounting is now a clean seam to design. `VehiclePresence` answers
+what and where (0.9.71), placement answers how a vehicle comes to exist
+(0.9.72), and this milestone answers how close is close enough
+(0.9.73) — mounting can consume `withinRange` as a given fact rather
+than rediscovering spatial relationships itself. Mounting is also the
+first point where an avatar-vehicle RELATIONSHIP becomes persistent
+state (`avatar.currentVehicle = bicycle`, or its eventual equivalent) —
+deliberately left undecided here whether that state belongs on
+`AvatarPresence`, `AvatarMovementController`, `WorldNavigationSession`,
+or a new seam of its own; that decision should wait until mounting
+itself is being designed, not be guessed from this milestone.
