@@ -54954,3 +54954,111 @@ which one — the direct vehicle-identity counterpart to what
 in 0.9.64. That milestone, in turn, is what will reveal whether a
 movement-capability vocabulary is actually needed next, and what shape
 it should take — not a guess made here.
+
+## 0.9.71 — Vehicle Presence Descriptor
+
+0.9.70's own "Next" note pointed straight at mounting: is an avatar
+riding a vehicle, and which one. On review, that skips a question
+mounting itself depends on — an avatar can only mount a vehicle that
+already exists somewhere in the World. Nothing in this codebase yet
+represents "there is one particular bicycle at one particular place."
+Building the avatar-vehicle relationship before that exists would mean
+an avatar mounting a vehicle no world-level fact says is there — the
+same ordering mistake this codebase's own history has repeatedly
+flagged and avoided (most recently 0.9.67's DIRECTION/MODE split, and
+0.9.70's own deferral of a movement-capability vocabulary). So this
+milestone answers the seam 0.9.70 actually left open first: what does
+it mean for a vehicle to exist in the World at all, before anything
+decides who — if anyone — is riding it.
+
+`core/VehiclePresence.js` (new) is a small immutable descriptor
+answering exactly one question: what vehicle is present, and where.
+Nothing else. Its closest siblings are `core/NaturalFeatureField.js`
+(a TYPE plus a position, for trees) and `core/StructurePlacement.js` (a
+TYPE-like `documentId` reference plus a position, for placed
+structures) — VehiclePresence deliberately borrows neither's answer to
+"how does this come to exist" (sampled deterministically, for trees;
+explicitly placed and owned, for structures), because that question is
+still open for vehicles: procedural placement, explicit placement,
+player creation, and network discovery are all plausible and nothing
+yet distinguishes between them. VehiclePresence answers only what all
+of those candidate origins would agree a vehicle needs regardless of
+how it got there — a `type` (`core/VehicleType.js`, 0.9.70) and a
+`position` (`core/Position.js`).
+
+Two deliberate shape decisions, each a departure from the nearest
+sibling for a stated reason:
+
+- **No identity field.** `core/StructurePlacement.js` and
+  `core/WorldPlacement.js` both mint an `id` immediately, because both
+  exist to be looked up, moved, and removed by identity. VehiclePresence
+  has no such consumer yet, so it has no `id`, `vehicleId`, `ownerId`,
+  or `createdAt` — inventing any of them now would be guessing at a
+  lifecycle (can two descriptors describe the same vehicle? does an id
+  survive a position change?) no seam has asked for yet.
+- **`VehicleType.NONE` is rejected, not merely another valid member.**
+  0.9.70's own header explains `NONE` exists for a future avatar-vehicle
+  relationship FIELD ("what vehicle does this avatar currently have" —
+  none yet), a STATE a value can hold. A VehiclePresence is not a state
+  field; it is only ever constructed when a vehicle actually exists in
+  the World. "No vehicle here" is the absence of a VehiclePresence, the
+  same way `core/NaturalFeatureField.js` represents "no tree in this
+  cell" by returning nothing for that cell rather than a placeholder
+  `FEATURE_TYPE.NONE` object.
+
+Immutability is enforced, not merely conventional: the constructor
+calls `Object.freeze(this)`, so a caller cannot reach in and reassign
+`type` or `position` after construction, and there are no setters. This
+is stricter than `core/AvatarPresence.js`'s own "no setter, but the
+instance isn't literally frozen" convention, matched to a different
+purpose — an AvatarPresence is a live, ephemeral per-frame snapshot
+produced by a controller that already governs its own lifecycle;
+VehiclePresence has no such controller yet, so the class enforces the
+guarantee itself rather than relying on callers to respect it.
+
+Validation is deliberately stricter than `core/WorldPlacement.js` or
+`core/StructurePlacement.js`, both of which silently coerce a malformed
+position (`position.x || 0`) because each already has a real caller
+relying on that leniency for a document field known to be roughly
+well-formed already. VehiclePresence has no such caller yet — this
+milestone is establishing the contract, not patching an existing one —
+so a missing, non-numeric, `NaN`, or non-finite coordinate throws
+immediately rather than being silently laundered into `(0, 0, 0)`.
+
+Deliberately excluded, matching this milestone's own brief: an
+avatar-vehicle relationship, mounting/dismounting, riding, a rider or
+occupant field; vehicle movement, speed, acceleration, heading, or any
+physics; battery/fuel, health, or inventory; persistence to a
+StorageProvider; networking, advertisement, or discovery; rendering;
+input; collision; terrain interaction; and — most importantly —
+deterministic or procedural vehicle PLACEMENT (`vehiclesFromWorldSeed(...)`
+or similar). Naming how vehicles come to exist in the World at all is
+explicitly future work: it depends on a decision (procedural / explicit
+/ player-created / discovered) this milestone does not make, the same
+way 0.9.70 declined to guess a movement-capability vocabulary before a
+consumer existed to reveal its real shape. `core/VehiclePresence.js`
+answers only "what vehicle is present, and where," nothing else.
+
+`tests/VehiclePresence.test.js` proves: every non-`NONE` `VehicleType`
+constructs a valid descriptor with its position preserved (Section A);
+the instance is frozen, has no public setters, and `fromJSON(toJSON())`
+round-trips into a new, independent instance (Section B); construction
+rejects a missing type, `VehicleType.NONE`, an unknown type, a missing
+position, a non-numeric/`NaN`/non-finite/incomplete position, `null`
+options, an array or string in place of a position, and an empty
+options object (Section C); all four vehicle types stay distinct
+through construction with no coercion between them (Section D); and an
+architectural-regression sweep confirms `core/VehiclePresence.js`'s own
+code never references mounting/riding, any movement or physics
+quantity, rendering, input, timers, persistence, or networking — and
+that the module exports exactly `VehiclePresence`, nothing else
+(Section E).
+
+Next: with a world-level fact that a vehicle exists somewhere now
+available, the vehicle line's next milestone can pick up 0.9.70's
+original "Next" note on its own terms — the avatar-vehicle relationship
+(is an avatar riding a vehicle, and which one) — now able to reference
+an actual `VehiclePresence` rather than an avatar mounting a vehicle no
+world-level fact says is there. Whether placement, rendering,
+interaction-detection, or that mounting relationship is the more urgent
+seam after this one is deliberately left open rather than decided here.
