@@ -31,6 +31,7 @@ import { AvatarStepConstraint } from './AvatarStepConstraint.js';
 import { AvatarTreeConstraint } from './AvatarTreeConstraint.js';
 import { deriveAvatarContinuousMovementInputEvent } from '../core/AvatarContinuousMovementInputAdapter.js';
 import { deriveAvatarContinuousMovementIntent } from '../core/AvatarContinuousMovementIntent.js';
+import { deriveAvatarContinuousMovementMode } from '../core/AvatarContinuousMovementMode.js';
 import { DEFAULT_MAX_STEP_HEIGHT } from '../core/BrickWalkability.js';
 import { PresenceSyncService } from './PresenceSyncService.js';
 import { LocalPresenceStore } from './LocalPresenceStore.js';
@@ -416,6 +417,17 @@ export class WorldNavigationSession {
 	    // this field is ONLY ever `capsLockDown`, never a second copy of
 	    // that intent.
 	    this._capsLockDown = false;
+	    // 0.9.69 — Continuous Movement Direction + Mode Integration. The
+	    // direct structural twin of `_capsLockDown` above, tracking the
+	    // physical Shift key's hold state the identical way, for the
+	    // identical reason (see core/AvatarContinuousMovementInputAdapter.js's
+	    // own 0.9.68 header): a caller-owned physical-hold boolean, never a
+	    // browser modifier-toggle read. `_avatarMovementController` remains
+	    // the one place the resulting NONE/WALK/RUN mode value lives (see
+	    // application/AvatarMovementController.js#continuousMovementMode) —
+	    // this field is ONLY ever `shiftDown`, never a second copy of that
+	    // mode.
+	    this._shiftDown = false;
 	    this._followAvatarEnabled = false;
 	    this._lastAvatarFollowPosition = null;
 	    // 0.3.2 — Camera Perspective. `null` means "off" — the free/orbit
@@ -1576,9 +1588,18 @@ export class WorldNavigationSession {
     // is deliberately left untouched — see that class's own 0.9.66
     // header for why turning off Avatar Control Mode must never
     // silently cancel a deliberately activated continuous walk.
+    //
+    // 0.9.69 — also resets `_shiftDown`, the direct structural twin of
+    // `_capsLockDown` above, for the identical reason. `_continuousMovementMode`
+    // itself (owned by `_avatarMovementController`) is likewise
+    // deliberately left untouched — see that class's own 0.9.69 header
+    // for why turning off Avatar Control Mode must never silently
+    // cancel a deliberately activated persistent RUN/WALK any more than
+    // it already leaves persistent FORWARD/BACKWARD untouched.
     setAvatarControlMode(active) {
         this._avatarControlModeActive = Boolean(active);
         this._capsLockDown = false;
+        this._shiftDown = false;
         if (!this._avatarControlModeActive && this._avatarMovementController) {
             this._avatarMovementController.releaseAll();
         }
@@ -1598,6 +1619,7 @@ export class WorldNavigationSession {
     // one that only ever does the first.
     releaseAvatarMovementKeys() {
         this._capsLockDown = false;
+        this._shiftDown = false;
         if (this._avatarMovementController) {
             this._avatarMovementController.releaseAll();
         }
@@ -1668,19 +1690,47 @@ export class WorldNavigationSession {
     // activate, switch, or cancel?) is made entirely inside the two
     // already-complete, already-tested pure functions this method
     // calls — nothing here re-implements or second-guesses either one.
+    //
+    // 0.9.69 — this method now ALSO owns `_shiftDown` (the direct
+    // structural twin of `_capsLockDown`, same call, same
+    // core/AvatarContinuousMovementInputAdapter.js seam) and, on every
+    // transition, independently derives the persistent MODE alongside
+    // the persistent DIRECTION already derived above — via
+    // `deriveAvatarContinuousMovementMode()` (0.9.67), fed
+    // `transition.activationRequested`/`transition.runRequested`
+    // exactly as that function's own header declares it expects, then
+    // published through `setContinuousMovementMode()`. Direction and
+    // mode are derived from the SAME `transition` object, produced by
+    // the SAME adapter call, so a single key event updates both
+    // dimensions together and can never leave one stale relative to the
+    // other — the same "one input event, two independent transition
+    // functions" seam core/AvatarContinuousMovementInputAdapter.js's
+    // own 0.9.68 header already establishes. Unlike direction, mode
+    // needs no `currentMode` fed back in — see
+    // core/AvatarContinuousMovementMode.js's own header for why its
+    // outcome is already fully determined by `activationRequested`/
+    // `runRequested` alone.
     _processContinuousMovementInput(key, type) {
-        const { capsLockDown, transition } = deriveAvatarContinuousMovementInputEvent({
+        const { capsLockDown, shiftDown, transition } = deriveAvatarContinuousMovementInputEvent({
             capsLockDown: this._capsLockDown,
+            shiftDown: this._shiftDown,
             key,
             type
         });
         this._capsLockDown = capsLockDown;
+        this._shiftDown = shiftDown;
         if (transition && this._avatarMovementController) {
             this._avatarMovementController.setContinuousMovementIntent(
                 deriveAvatarContinuousMovementIntent({
                     currentIntent: this._avatarMovementController.continuousMovementIntent(),
                     direction: transition.direction,
                     activationRequested: transition.activationRequested
+                })
+            );
+            this._avatarMovementController.setContinuousMovementMode(
+                deriveAvatarContinuousMovementMode({
+                    activationRequested: transition.activationRequested,
+                    runRequested: transition.runRequested
                 })
             );
         }
@@ -5583,6 +5633,7 @@ export class WorldNavigationSession {
         this._avatarMovementController = null;
         this._avatarControlModeActive = false;
         this._capsLockDown = false;
+        this._shiftDown = false;
         this._followAvatarEnabled = false;
         this._lastAvatarFollowPosition = null;
         this._cameraPerspective = null;

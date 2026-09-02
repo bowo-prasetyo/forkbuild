@@ -2,6 +2,7 @@ import { AvatarMovementState } from '../core/AvatarMovementState.js';
 import { simulateAvatarMovement } from '../core/AvatarMovementSimulation.js';
 import { deriveAvatarVerticalState } from '../core/AvatarVerticalState.js';
 import { AvatarContinuousMovementIntent, isValidAvatarContinuousMovementIntent } from '../core/AvatarContinuousMovementIntent.js';
+import { AvatarContinuousMovementMode, isValidAvatarContinuousMovementMode } from '../core/AvatarContinuousMovementMode.js';
 
 // 0.2.36 — the ONE place raw input becomes an AvatarPresence update.
 // See docs/Principles.md, "Input Changes Presence; Presence Changes
@@ -145,6 +146,43 @@ import { AvatarContinuousMovementIntent, isValidAvatarContinuousMovementIntent }
 // progress" and "the avatar still wants to keep going" are deliberately
 // allowed to both be true at once — automatic obstacle avoidance/
 // turning is explicitly out of scope for this milestone.
+//
+// 0.9.69 — Continuous Movement Direction + Mode Integration. This class
+// now tracks a SECOND piece of caller-owned state between ticks,
+// `_continuousMovementMode` (core/AvatarContinuousMovementMode.js's own
+// NONE/WALK/RUN vocabulary), set only via `setContinuousMovementMode()`
+// and read only by the new `_resolvedRunning()` — the direct structural
+// twin of `_resolvedForwardAxis()` above, applying the identical
+// priority rule to `AvatarMovementState.running` that 0.9.66 already
+// applies to `forwardAxis`: ordinary W/S (when either is held) always
+// drives `running` from the physically-held Shift key
+// (`_keys.running`), exactly as it always has; only once neither is
+// held does `_continuousMovementMode` get a say, resolving to `true`
+// for RUN and `false` for WALK/NONE. `_currentMovementState()` calls
+// `_resolvedRunning()` in place of the old direct `this._keys.running`
+// read — the ONE line this milestone changes in that method, mirroring
+// the ONE line 0.9.66 itself changed for forwardAxis.
+//
+// Deliberately NOT a new continuous-running speed, animation, or
+// physics path: `_resolvedRunning()` still only ever feeds the existing
+// `AvatarMovementState.running` boolean, which flows into the exact
+// same `simulateAvatarMovement()` RUN_SPEED branch and
+// `AvatarAnimationState.RUNNING` animation ordinary Shift+W already
+// produces (see core/AvatarMovementSimulation.js). Continuous RUN and
+// ordinary RUN converge to the identical AvatarMovementState shape
+// BEFORE reaching simulation — there is no separate "continuous run"
+// concept anywhere below this method.
+//
+// `_continuousMovementMode`, like `_continuousMovementIntent` before
+// it, is deliberately untouched by `releaseAll()` and by every step of
+// `tick()` after `_currentMovementState()` has already read it — the
+// physical Shift/Caps Lock keys releasing must never silently cancel a
+// deliberately activated persistent RUN any more than releasing W/S
+// cancels persistent FORWARD/BACKWARD. Cancellation remains governed
+// entirely by `deriveAvatarContinuousMovementMode()`'s own ordinary-
+// press rule (0.9.67), applied one layer up in
+// `application/WorldNavigationSession.js`, exactly as direction
+// cancellation already is.
 const EPSILON = 1e-6;
 
 export class AvatarMovementController {
@@ -164,6 +202,12 @@ export class AvatarMovementController {
         // forwardAxis. See this file's own 0.9.66 header for why this
         // class never derives it itself.
         this._continuousMovementIntent = AvatarContinuousMovementIntent.NONE;
+        // 0.9.69 — the CURRENT persistent continuous-movement mode
+        // (core/AvatarContinuousMovementMode.js's own NONE/WALK/RUN
+        // vocabulary), set only via setContinuousMovementMode() below
+        // and read only by `_resolvedRunning()`. See this file's own
+        // 0.9.69 header for why this class never derives it itself.
+        this._continuousMovementMode = AvatarContinuousMovementMode.NONE;
         // Transient, per-tick bookkeeping only — exactly like
         // _verticalVelocity/_grounded above, never part of
         // AvatarPresence itself (see docs/Principles.md, "Collided Is
@@ -237,6 +281,33 @@ export class AvatarMovementController {
     // second copy of it.
     continuousMovementIntent() {
         return this._continuousMovementIntent;
+    }
+
+    // 0.9.69 — the ONLY way `_continuousMovementMode` ever changes, the
+    // direct structural twin of setContinuousMovementIntent() above.
+    // Callers are expected to have already resolved a raw signal down
+    // to one of core/AvatarContinuousMovementMode.js's own NONE/WALK/RUN
+    // values — see application/WorldNavigationSession.js's own
+    // _processContinuousMovementInput. Invalid input degrades to NONE,
+    // same "degrade gracefully" posture as every other pure vocabulary
+    // setter in this codebase.
+    setContinuousMovementMode(mode) {
+        this._continuousMovementMode = isValidAvatarContinuousMovementMode(mode)
+            ? mode
+            : AvatarContinuousMovementMode.NONE;
+    }
+
+    // 0.9.69 — the CURRENT persistent continuous-movement mode, same
+    // "debug/UI surface, not something any other internal logic reads"
+    // posture as continuousMovementIntent() above. Unlike direction,
+    // deriveAvatarContinuousMovementMode() needs no `currentMode` input
+    // of its own (see core/AvatarContinuousMovementMode.js's own
+    // header: its outcome is fully determined by `activationRequested`/
+    // `runRequested` alone) — this getter exists purely so this class
+    // stays the one place the value lives, for any reader (tests, a
+    // future UI indicator) that wants to observe it.
+    continuousMovementMode() {
+        return this._continuousMovementMode;
     }
 
     // Runs one simulation step and, if the result is actually
@@ -426,7 +497,7 @@ export class AvatarMovementController {
         return new AvatarMovementState({
             forwardAxis: this._resolvedForwardAxis(),
             turnAxis: (this._keys.right ? 1 : 0) - (this._keys.left ? 1 : 0),
-            running: this._keys.running,
+            running: this._resolvedRunning(),
             jumpRequested: this._keys.jumpHeld
         });
     }
@@ -445,6 +516,28 @@ export class AvatarMovementController {
         if (this._continuousMovementIntent === AvatarContinuousMovementIntent.FORWARD) return 1;
         if (this._continuousMovementIntent === AvatarContinuousMovementIntent.BACKWARD) return -1;
         return 0;
+    }
+
+    // 0.9.69 — the direct structural twin of `_resolvedForwardAxis()`
+    // above, applying the IDENTICAL priority rule to `running`: ordinary
+    // W/S (either physically held) always wins, driving `running` from
+    // the physically-held Shift key exactly as it always has; only once
+    // NEITHER W nor S is held does `_continuousMovementMode` get a say,
+    // resolving to `true` for RUN and `false` for WALK/NONE. Gated on
+    // the identical `_keys.forward || _keys.backward` condition
+    // `_resolvedForwardAxis()` already uses — direction and mode
+    // resolve from the same "which source is currently driving
+    // movement" decision, never two independently-timed ones — so
+    // ordinary Shift+W and continuous CapsLock+Shift+W converge to the
+    // exact same AvatarMovementState shape before simulation ever runs.
+    _resolvedRunning() {
+        if (this._keys.forward || this._keys.backward) {
+            return this._keys.running;
+        }
+        if (this._continuousMovementIntent !== AvatarContinuousMovementIntent.NONE) {
+            return this._continuousMovementMode === AvatarContinuousMovementMode.RUN;
+        }
+        return this._keys.running;
     }
 
     _setKey(key, isDown) {
