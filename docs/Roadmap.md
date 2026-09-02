@@ -55768,3 +55768,141 @@ must still exist and still be within proximity at the moment of
 transition, and where the resulting value is actually held on a running
 avatar. Only once mounting is a real transition should a future
 milestone let a vehicle affect movement speed or movement mechanics.
+
+## 0.9.78 — Avatar-Vehicle Mount Transition
+
+0.9.77 gave "avatar X is mounted on vehicle Y" a small immutable home —
+but, by its own header, that milestone "establishes state, it does not
+perform mounting." Nothing before this milestone ever decides WHEN that
+state should change. All the prerequisite facts already exist to answer
+that question, and only that question:
+
+```
+Given a mount request and a resolved vehicle target, should the
+avatar's mount relationship transition from absent to that vehicle?
+```
+
+`core/AvatarVehicleMountTransition.js` (new) exports one pure function:
+
+```
+deriveAvatarVehicleMount({
+    currentMount, interactionIntent, targetVehicleId
+}) -> AvatarVehicleMount | null
+```
+
+**The one rule this milestone adds.** Not currently mounted, a `MOUNT`
+intent (0.9.75), and a resolved target (0.9.76) produce a new
+`AvatarVehicleMount(targetVehicleId)` (0.9.77). Every other combination
+leaves `currentMount` exactly as it was: no `MOUNT` intent; `MOUNT`
+intent with no target; or already mounted, regardless of what
+`targetVehicleId` currently resolves to.
+
+**Do not re-check proximity.** Proximity was already established by
+0.9.73 and already consumed by 0.9.76 to produce `targetVehicleId` in
+the first place. This function trusts a non-null `targetVehicleId`
+exactly as handed to it — recomputing an avatar position, a vehicle
+list, or a radius here would duplicate 0.9.76's own targeting layer
+inside what is supposed to be a small state transition reading its
+OUTPUT, not its inputs.
+
+**Already mounted is a no-op, for both a matching and a differing
+target.** Already mounted on A, still targeting A, remains mounted on
+A — holding the interaction key down / key-repeat while already mounted
+must stay harmless. Already mounted on A, now targeting a different
+nearby B, ALSO remains mounted on A — this function deliberately never
+transfers the avatar onto B. Vehicle switching is a separate
+interaction policy this milestone declines to invent; inventing it now
+would answer a design question nobody has asked yet.
+
+**Mounting only, no dismounting.** Mounting needs exactly two
+ingredients — an intent and a target. Dismounting needs a different set
+of questions entirely: where does the avatar reappear, is there room,
+is the destination terrain valid, is it occupied, does the vehicle stay
+put, what happens to vehicle control. None of that vocabulary exists in
+this file. This milestone establishes only `unmounted -> mounted`.
+
+**No movement changes.** This file has no dependency on, and no opinion
+about, `AvatarMovementController` or any other movement code. A mounted
+avatar moves exactly as it did before this milestone:
+
+```
+AvatarVehicleMount
+       │
+       │ exists
+       ▼
+AvatarMovementController
+       │
+       │ deliberately ignores it
+       ▼
+normal walking/running
+```
+
+`AvatarVehicleMount` existing is not yet synonymous with "avatar
+movement changes" — that composition (vehicle movement capability,
+then bicycle/motorcycle/car/drone-specific speed or locomotion) is left
+for a future milestone, deliberately still open on what the right
+abstraction even is.
+
+**`currentMount` may be omitted, but never silently coerced if
+invalid.** A missing `currentMount` is treated as `null` — convenient
+at avatar initialization, before any mount has ever been established —
+via `isValidAvatarVehicleMount()`, the same strictness
+`core/AvatarVehicleMount.js`'s own validator already enforces. An
+explicitly-passed value that is neither `null` nor a real
+`AvatarVehicleMount` instance is rejected outright, never quietly
+treated as "unmounted."
+
+**Returns the same reference when nothing changes.** Every "unchanged"
+branch returns the exact `currentMount` value it was given — never a
+newly constructed, merely equal-looking `AvatarVehicleMount`. This
+keeps purity externally verifiable (same object in, same object out)
+and matches 0.9.77's own discipline that a new relationship means
+constructing a genuinely new value, never a look-alike copy of one that
+did not change.
+
+`tests/AvatarVehicleMountTransition.test.js` proves: `null` + `MOUNT` +
+a target produces a valid mount, including with `currentMount` omitted
+entirely (Section A); `NONE` intent leaves both an unmounted and an
+already-mounted avatar's state unchanged, regardless of any target
+present (Section B); `MOUNT` intent with no target never mounts or
+clears an existing mount (Section C); already mounted on A targeting A
+again is idempotent (Section D); already mounted on A targeting a
+different B never silently switches vehicles (Section E); the supplied
+target id is preserved exactly (Section F); a `VehiclePresence`-shaped
+object as `targetVehicleId` is rejected — only a plain string id is
+accepted (Section G); the same inputs always produce the same result,
+and two separate initial-mount calls agree on `vehicleId` without
+sharing hidden state (Section H); an existing `AvatarVehicleMount`
+instance is never mutated by any call, and an unchanged result is the
+exact same reference rather than a new instance (Section I); the
+produced mount round-trips through `AvatarVehicleMount`'s own
+`toJSON()`/`fromJSON()` (Section J); malformed `currentMount`,
+`interactionIntent`, and `targetVehicleId` values are all rejected
+rather than silently coerced (Section K); and an architectural
+regression sweep confirms this file's own code never references
+`VehiclePresence`, proximity or target-resolution internals, vehicle
+placement, vehicle or avatar movement, dismounting, keyboard/controller
+input, rendering, camera, terrain, physics, persistence, networking,
+randomness, or the clock, that it exports exactly
+`deriveAvatarVehicleMount`, and that a syntactically well-formed
+`targetVehicleId` is trusted at face value with no independent
+proximity recomputation (Section L).
+
+## What this milestone deliberately does NOT do
+
+Dismounting, or any vocabulary for it; vehicle switching while already
+mounted; re-checking proximity or recomputing a target (0.9.73/0.9.76
+already answer those); avatar movement or `AvatarMovementController`
+changes of any kind; vehicle occupancy limits; vehicle movement or
+speed; animation; camera changes; collision or physics; keyboard or
+controller input; rendering; where the resulting `AvatarVehicleMount`
+is actually held on a running avatar; persistence; networking. This
+milestone answers only "should the avatar's mount relationship
+transition from absent to a resolved target," nothing about
+dismounting, switching, or what mounting eventually does to movement.
+
+Next: only once mounting is a real transition can a future milestone
+introduce a vehicle movement capability — and only once bicycle,
+motorcycle, car, and drone speed each have a real consumer should that
+milestone decide whether the right abstraction is speed, movement mode,
+locomotion capability, or something richer.
