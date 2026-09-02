@@ -55527,3 +55527,123 @@ exists does an actual mount transition — the moment the world
 establishes that the avatar IS mounted — become answerable; this
 milestone deliberately stops one full seam short of that, exactly as its
 own brief asked.
+
+## 0.9.76 — Avatar-Vehicle Interaction Target Resolution
+
+Three independent facts now exist, deliberately never combined:
+proximity — is the avatar close enough to a given vehicle (0.9.73);
+identity — a stable name for a given vehicle (0.9.74); and intent — did
+the avatar just ask to interact at all (0.9.75). None of them says which
+vehicle, if any, an in-flight `MOUNT` request actually targets when
+several vehicles happen to be nearby at once. This is the first
+milestone to read all three at the same time:
+
+```
+Proximity (0.9.73) ─┐
+Identity  (0.9.74) ─┼──► Interaction Target (this milestone)
+Intent    (0.9.75) ─┘
+```
+
+`core/AvatarVehicleInteractionTarget.js` (new) exports one pure function,
+`resolveAvatarVehicleInteractionTarget({ avatarPosition, vehicles,
+interactionIntent })`, returning `{ targetVehicleId }` — a vehicle's own
+0.9.74 id, or `null` when nothing is targeted.
+
+**The policy, in order:**
+
+1. `interactionIntent !== MOUNT` → no target, regardless of what is
+   nearby. An interaction target is meaningless without a live request
+   to target something for.
+2. No vehicles at all → no target.
+3. Vehicles outside `core/AvatarVehicleProximity.js`'s own
+   `VEHICLE_INTERACTION_RADIUS` are excluded from consideration
+   entirely — reusing that file's own `withinRadiusXZ()` primitive
+   rather than duplicating its distance math, exactly as its own header
+   asks of any future proximity-adjacent consumer.
+4. Among the remaining, eligible candidates, the NEAREST one (by
+   squared X/Z distance, Y ignored — the same horizontal-only discipline
+   0.9.73 already established) wins.
+5. An exact distance tie is broken by ascending lexical order of the
+   candidates' 0.9.74 vehicle ids — a real tie is already vanishingly
+   rare (`core/VehiclePlacement.js` places at most one vehicle per
+   lattice cell), but "vanishingly rare" is not "impossible," and an
+   unspecified tie-break would make the result silently depend on
+   candidate array order.
+
+**Deliberately nearest-by-distance, not the first justified selection
+policy that came to mind.** The milestone brief explicitly considered
+and rejected building a standalone `nearestVehicleToAvatar(...)` as its
+own primitive — that would have turned selection into a distance-ranking
+policy exported on its own, independent of any interaction request.
+Instead, nearest-eligible-first is folded into this file's own resolver,
+gated behind a live `MOUNT` intent, so the policy only ever fires when
+there is an actual request for it to decide.
+
+**Returns an id, never the `VehiclePresence` itself.** This is exactly
+what 0.9.74 exists for: a stable name a caller can hold (to pass to a
+future mount transition, to look up again later) without pinning a
+reference to a disposable `VehiclePresence` instance that a fresh
+`vehiclePresenceInRegion()` call reconstructs as a different object on
+its very next invocation (`core/VehicleIdentity.js`'s own header).
+
+**Deliberately no persistent target state.** No
+`avatar.targetVehicleId`, no `vehicle.targetedByAvatar`. A resolved
+target is an EVALUATION RESULT, recomputed fresh on demand — never
+stored world state. That distinction is deliberately preserved for
+whatever future mounting milestone decides whether and how a resolved
+target ever becomes a stored fact.
+
+**Deliberately NOT directional**, matching 0.9.73's own restraint of the
+identical name: this file never asks whether the avatar is FACING a
+candidate vehicle. An avatar standing between two bicycles, looking at
+neither, can still target the nearer one. Facing-aware disambiguation is
+left for a future refinement with an actual consumer, not invented here
+on spec.
+
+`tests/AvatarVehicleInteractionTarget.test.js` proves: no interaction —
+`NONE` (or an unspecified/unrecognized intent) always produces no
+target, regardless of what is nearby (Section A, L); no vehicles — an
+empty candidate list under `MOUNT` produces no target (Section B); a
+single nearby vehicle is targeted by its own id (Section C); nearby +
+distant — only the nearby vehicle ever participates (Section D);
+multiple nearby vehicles — the nearest one wins, independent of id order
+(Section E); the exact `VEHICLE_INTERACTION_RADIUS` boundary is
+inclusive, matching 0.9.73 (Section F); Y is ignored entirely, including
+when it changes which candidate is nearest by X/Z alone (Section G); an
+exact distance tie is broken by ascending lexical vehicle id, regardless
+of which tied candidate appears first (Section H); candidate array order
+never changes the result — `[a,b,c]`, `[c,a,b]`, and `[b,c,a]` all
+resolve identically (Section I); the real vehicle id is returned
+verbatim, never synthesized (Section J); neither the vehicles array nor
+any `VehiclePresence` inside it is mutated by resolution (Section K);
+malformed input is rejected defensively (Section L); and an
+architectural regression sweep confirms this file's own code never
+references mounting/dismounting as an effect, an avatar-vehicle
+relationship field, facing/direction, keyboard/controller input,
+rendering, movement, physics, persistence, randomness, or the clock, and
+that it exports exactly `resolveAvatarVehicleInteractionTarget` —
+nothing else — and never adds any new field onto `VehiclePresence`
+itself (Section M).
+
+## What this milestone deliberately does NOT do
+
+Mounting or dismounting as an actual world effect; an avatar-vehicle
+relationship field (`avatar.currentVehicle` or its equivalent) on either
+side; persistent target state of any kind (`avatar.targetVehicleId`,
+`vehicle.targetedByAvatar`); facing/directional disambiguation; a
+per-vehicle-type interaction radius (this file simply reuses
+`core/AvatarVehicleProximity.js`'s own single
+`VEHICLE_INTERACTION_RADIUS`); keyboard, controller, or any other raw
+input handling; rendering or animation; vehicle or avatar movement;
+collision or physics; persistence; networking; randomness; the clock.
+This milestone answers only "which vehicle, if any, does the current
+interaction request target," never whether a mount actually succeeds.
+
+Next: an actual mounting transition — the moment the world establishes
+that the avatar IS mounted on a specific vehicle — can now be built on
+top of this file's resolved `targetVehicleId`, `core/
+AvatarVehicleInteractionIntent.js`'s own `MOUNT` intent, and a decision
+about where the persistent avatar-vehicle relationship itself belongs
+(on `AvatarPresence`? a new joint record? something else entirely) —
+a genuine architectural choice this milestone deliberately leaves open,
+exactly as its own brief asked.
