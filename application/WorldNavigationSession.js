@@ -29,6 +29,8 @@ import { AvatarMovementConstraint } from './AvatarMovementConstraint.js';
 import { AvatarTerrainConstraint } from './AvatarTerrainConstraint.js';
 import { AvatarStepConstraint } from './AvatarStepConstraint.js';
 import { AvatarTreeConstraint } from './AvatarTreeConstraint.js';
+import { deriveAvatarContinuousMovementInputEvent } from '../core/AvatarContinuousMovementInputAdapter.js';
+import { deriveAvatarContinuousMovementIntent } from '../core/AvatarContinuousMovementIntent.js';
 import { DEFAULT_MAX_STEP_HEIGHT } from '../core/BrickWalkability.js';
 import { PresenceSyncService } from './PresenceSyncService.js';
 import { LocalPresenceStore } from './LocalPresenceStore.js';
@@ -402,6 +404,18 @@ export class WorldNavigationSession {
 	    this._avatarMovementController = null;
 	    this._avatarFrameSubscription = null;
 	    this._avatarControlModeActive = false;
+	    // 0.9.66 — Continuous Movement Controller Integration. This
+	    // session's own small bit of caller-owned bookkeeping for
+	    // core/AvatarContinuousMovementInputAdapter.js — see
+	    // avatarKeyDown/avatarKeyUp below, and that file's own header
+	    // for why the physical Caps Lock KEY's hold state is tracked
+	    // here rather than read from an event's own toggle state.
+	    // `_avatarMovementController` itself remains the one place the
+	    // resulting NONE/FORWARD/BACKWARD intent value lives (see
+	    // application/AvatarMovementController.js#continuousMovementIntent) —
+	    // this field is ONLY ever `capsLockDown`, never a second copy of
+	    // that intent.
+	    this._capsLockDown = false;
 	    this._followAvatarEnabled = false;
 	    this._lastAvatarFollowPosition = null;
 	    // 0.3.2 — Camera Perspective. `null` means "off" — the free/orbit
@@ -1552,8 +1566,19 @@ export class WorldNavigationSession {
     // exiting must return keyboard control to the rest of World View
     // at once, never leave a key "stuck" because its keyup never
     // arrived (e.g. focus moved to a dialog mid-press).
+    //
+    // 0.9.66 — also resets `_capsLockDown`: the exact same "never leave
+    // physical input state stuck" reasoning `releaseAll()` already
+    // applies to `_keys` applies here too, one layer up, to the Caps
+    // Lock hold-state this session tracks for continuous-movement
+    // chording — see avatarKeyDown/avatarKeyUp below.
+    // `_continuousMovementIntent` itself (owned by `_avatarMovementController`)
+    // is deliberately left untouched — see that class's own 0.9.66
+    // header for why turning off Avatar Control Mode must never
+    // silently cancel a deliberately activated continuous walk.
     setAvatarControlMode(active) {
         this._avatarControlModeActive = Boolean(active);
+        this._capsLockDown = false;
         if (!this._avatarControlModeActive && this._avatarMovementController) {
             this._avatarMovementController.releaseAll();
         }
@@ -1572,6 +1597,7 @@ export class WorldNavigationSession {
     // and disabling the mode are two different things — this is the
     // one that only ever does the first.
     releaseAvatarMovementKeys() {
+        this._capsLockDown = false;
         if (this._avatarMovementController) {
             this._avatarMovementController.releaseAll();
         }
@@ -1582,10 +1608,23 @@ export class WorldNavigationSession {
     // the event) — false when control mode is off, no avatar exists,
     // or the key is unrelated to movement, in every case leaving the
     // key free for whatever else would normally handle it.
+    //
+    // 0.9.66 — Continuous Movement Controller Integration. Before
+    // forwarding to the controller's own ordinary keyDown(), this raw
+    // key is ALSO run through `_processContinuousMovementInput()` —
+    // the seam that translates a real Caps Lock + W/S chord into
+    // `_avatarMovementController.setContinuousMovementIntent()` calls,
+    // via core/AvatarContinuousMovementInputAdapter.js (0.9.65) and
+    // core/AvatarContinuousMovementIntent.js's own transition function
+    // (0.9.64). Gated behind the exact same early return as ordinary
+    // movement — continuous movement can no more be armed while Avatar
+    // Control Mode is off than an ordinary W can move the avatar while
+    // it's off.
     avatarKeyDown(key) {
         if (!this._avatarControlModeActive || !this._avatarMovementController) {
             return false;
         }
+        this._processContinuousMovementInput(key, 'keydown');
         return this._avatarMovementController.keyDown(key);
     }
 
@@ -1593,6 +1632,16 @@ export class WorldNavigationSession {
         if (!this._avatarMovementController) {
             return false;
         }
+        // 0.9.66 — same translation as avatarKeyDown above, but NOT
+        // gated on `_avatarControlModeActive` — matching this method's
+        // own pre-existing "always forwarded" posture for ordinary
+        // keys, so a Caps Lock release that arrives after control mode
+        // was already switched off still cleanly updates `_capsLockDown`
+        // rather than leaving it stale (see `deriveAvatarContinuousMovementInputEvent`'s
+        // own header: key-up never produces a `transition`, so this
+        // can only ever update the caps-lock hold bit, never the
+        // continuous-movement intent itself).
+        this._processContinuousMovementInput(key, 'keyup');
         // Always forwarded, even if control mode was switched off
         // between this key's down and up — so a key held before the
         // mode was toggled off still cleanly releases instead of
@@ -1600,6 +1649,41 @@ export class WorldNavigationSession {
         // already covers the same case on the toggle itself; this
         // covers the ordinary "released after mode already off" case).
         return this._avatarMovementController.keyUp(key);
+    }
+
+    // 0.9.66 — Continuous Movement Controller Integration. The ONE
+    // seam that turns a raw keyboard fact into a call to
+    // `_avatarMovementController.setContinuousMovementIntent()`. This
+    // session owns `_capsLockDown` (the only piece of mutable state
+    // core/AvatarContinuousMovementInputAdapter.js needs a caller to
+    // carry between calls — see that file's own header) and reads
+    // `_avatarMovementController.continuousMovementIntent()` as the
+    // `currentIntent` core/AvatarContinuousMovementIntent.js's own
+    // transition function needs, rather than keeping a second copy of
+    // it here — the controller stays the one place that value lives.
+    //
+    // Deliberately the same "thin adapter, no new mathematics" posture
+    // application/AvatarTreeConstraint.js already follows for its own
+    // collaborators: every actual decision (is this a chord? does it
+    // activate, switch, or cancel?) is made entirely inside the two
+    // already-complete, already-tested pure functions this method
+    // calls — nothing here re-implements or second-guesses either one.
+    _processContinuousMovementInput(key, type) {
+        const { capsLockDown, transition } = deriveAvatarContinuousMovementInputEvent({
+            capsLockDown: this._capsLockDown,
+            key,
+            type
+        });
+        this._capsLockDown = capsLockDown;
+        if (transition && this._avatarMovementController) {
+            this._avatarMovementController.setContinuousMovementIntent(
+                deriveAvatarContinuousMovementIntent({
+                    currentIntent: this._avatarMovementController.continuousMovementIntent(),
+                    direction: transition.direction,
+                    activationRequested: transition.activationRequested
+                })
+            );
+        }
     }
 
     // Whether the camera currently follows the local avatar's
@@ -5498,6 +5582,7 @@ export class WorldNavigationSession {
         }
         this._avatarMovementController = null;
         this._avatarControlModeActive = false;
+        this._capsLockDown = false;
         this._followAvatarEnabled = false;
         this._lastAvatarFollowPosition = null;
         this._cameraPerspective = null;

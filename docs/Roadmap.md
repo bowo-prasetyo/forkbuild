@@ -54373,3 +54373,137 @@ feeding that intent into `AvatarMovementController`'s existing pipeline
 so continuous FORWARD/BACKWARD produces the exact same walk step ordinary
 W/S already does, still passing through building collision, terrain
 slope, step height, and tree collision exactly as before.
+
+## 0.9.66 — Continuous Movement Controller Integration
+
+The final milestone in the Continuous Avatar Movement line, and the one
+that finally makes the feature actually move the avatar: 0.9.64 defined
+what a persistent FORWARD/BACKWARD intent MEANS, 0.9.65 translated a raw
+keyboard event into that meaning, and this milestone connects the result
+to `application/AvatarMovementController.js`'s existing pipeline — the
+same pipeline building collision (0.2.42), terrain slope (0.2.77), step
+height (0.3.2), and tree collision (0.9.63) already run through.
+
+The one architectural rule this milestone holds to throughout: continuous
+movement is an ADDITIONAL SOURCE of movement intent, never a second
+movement system. Concretely, that means `AvatarMovementController#tick()`
+gained NO new pipeline stage at all — `_currentMovementState()`'s own
+forwardAxis is the ONLY thing that changed, and every constraint after it
+(building, terrain, step, tree) runs completely unmodified, exactly as it
+already did for ordinary W/S. A continuously-moving avatar produces the
+identical `AvatarMovementState` shape an ordinarily-walking one always
+has.
+
+The priority rule this milestone establishes, in
+`AvatarMovementController#_resolvedForwardAxis()`:
+
+```text
+1. Ordinary W/S input, if either is physically held (even if both are,
+   cancelling to a net zero axis — that still counts as "the player is
+   actively working the keys," and continuous intent stays silent)
+2. The persistent continuous intent, only once NEITHER W nor S is held
+3. Idle, if neither applies
+```
+
+Three lines, exactly matching the design brief: `continuous = FORWARD,
+S held -> BACKWARD` (ordinary wins outright); `continuous = FORWARD, W
+released -> FORWARD` (the continuous intent survives the release exactly
+as 0.9.64 intended, giving the escape/reversal mechanism its whole
+point).
+
+`AvatarMovementController` itself gained exactly two new public methods,
+`setContinuousMovementIntent(intent)` and `continuousMovementIntent()`,
+plus one new field (`_continuousMovementIntent`, defaulting to `NONE`,
+touched by nothing except that setter). Deliberately NOT wired into this
+class: `core/AvatarContinuousMovementInputAdapter.js`, Caps Lock
+detection, or `core/AvatarContinuousMovementIntent.js`'s own transition
+function. The class never asks where an intent value came from — exactly
+like `_keys` never asks whether a `keyDown('w')` call came from a real
+keyboard, a UI button, a gamepad, or a test — so `if (capsLock && w)`
+conceptually never appears here, and could not, because this file has no
+idea a "Caps Lock" exists. This is also what makes the feature pluggable
+beyond a keyboard for free: a future UI button, gamepad, or accessibility
+control activates continuous movement by calling
+`setContinuousMovementIntent()` directly, without this class changing at
+all.
+
+That seam instead lives one layer up, in
+`application/WorldNavigationSession.js#avatarKeyDown`/`avatarKeyUp` — the
+exact same place a raw key already reaches
+`AvatarMovementController#keyDown`/`keyUp`. A new private method,
+`_processContinuousMovementInput(key, type)`, runs every key those two
+methods already receive through `deriveAvatarContinuousMovementInputEvent()`
+(0.9.65, tracking a new `_capsLockDown` field this session owns — the one
+piece of mutable state that function needs a caller to carry between
+calls) and, when that produces a transition, straight through
+`deriveAvatarContinuousMovementIntent()` (0.9.64), reading
+`_avatarMovementController.continuousMovementIntent()` as its own
+`currentIntent` rather than keeping a second copy of that value, and
+calling `setContinuousMovementIntent()` with the result. `avatarKeyDown`
+gates this behind the exact same `_avatarControlModeActive` check
+ordinary movement already requires — continuous movement can no more be
+armed while Avatar Control Mode is off than an ordinary W can move the
+avatar while it's off; `avatarKeyUp` runs it unconditionally, matching
+that method's own pre-existing "always forwarded" posture (a key-up can
+only ever update `_capsLockDown`, never the intent itself — see 0.9.64's
+own header on why key-up is never a signal). `_capsLockDown` is reset
+alongside `_keys` everywhere `releaseAll()` already is (window blur,
+Avatar Control Mode turning off) — the same "never leave physical input
+state stuck" reasoning already applied to ordinary keys — while
+`_continuousMovementIntent` itself is deliberately left untouched by any
+of that: releasing keys, even every key at once or turning the whole mode
+off, is never a signal 0.9.64's own transition rule reads, and must not
+silently cancel a deliberately activated continuous walk.
+
+Result: `ui/views/WorldView.js` needed NO changes at all. The existing
+`window` `keydown`/`keyup` listeners already call `session.avatarKeyDown`/
+`avatarKeyUp` for every relevant key; a real Caps Lock + W/S chord now
+works end to end through that same wiring.
+
+A collision, a slope, or a step that halts a continuous stride never
+clears the intent — nothing after `_currentMovementState()` has already
+read `_continuousMovementIntent` for a given tick ever looks at it again;
+every constraint only ever sees the resulting forwardAxis. "The world
+currently prevents further progress" and "the avatar still wants to keep
+going" are deliberately allowed to both be true at once. Automatic
+obstacle avoidance, automatic turning, acceleration/deceleration,
+cruise-control speed, pathfinding, a dedicated continuous-movement timer,
+physics, networking, persistence, UI indicators, sounds/animations, and a
+generic avatar state machine are all deliberately excluded, matching the
+explicit brief for this milestone — the existing movement tick/loop
+already provides the repeated movement; no new timer was needed to keep
+moving.
+
+The flagship test
+(`tests/AvatarContinuousMovementControllerIntegration.test.js`) exercises
+the REAL `AvatarMovementController`, not merely another pure function: a
+real Caps Lock + W chord run through `WorldNavigationSession`, W released,
+dozens of ticks advanced, with the avatar genuinely continuing to move
+forward with no key physically held; the ordinary-input-overrides-
+continuous priority rule (S held cancels and reverses a continuous
+FORWARD; both W and S held cancel to zero without continuous intent
+sneaking in); the escape hatch (a plain, opposite ordinary key cancels
+continuous movement, exactly as 0.9.64 already proved in isolation); key
+release alone never cancelling persistent intent; a full run through
+building collision, terrain slope, step height, and REAL deterministic
+tree collision (the same tree-finding recipe
+`tests/AvatarTreeCollisionIntegration.test.js` already established),
+proving continuous movement is genuinely stopped by a real tree and never
+edits its own intent when that happens; vertical positioning (a jump)
+completely unaffected by a concurrent continuous horizontal intent;
+determinism across two independent controllers given the identical
+intent/tick script; and backward compatibility — a controller that never
+once touches continuous movement behaves byte-for-byte as it did before
+this milestone. A closing architectural-regression section reads
+`application/AvatarMovementController.js`'s own source and proves it
+never references Caps Lock in any form, never reads a raw modifier state,
+never imports the 0.9.65 input adapter, and never calls the 0.9.64
+transition function itself — only ever consuming an already-resolved
+intent value — while confirming `application/WorldNavigationSession.js`
+is the one that actually does wire both of those in.
+
+This completes the Continuous Avatar Movement line (0.9.64–0.9.66). No
+next milestone is prescribed here on purpose: the design brief that
+requested this one was explicit that whatever comes next should emerge
+from how continuous movement actually feels once it's genuinely running
+in World View, not from architectural momentum alone.

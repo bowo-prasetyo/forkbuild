@@ -1,6 +1,7 @@
 import { AvatarMovementState } from '../core/AvatarMovementState.js';
 import { simulateAvatarMovement } from '../core/AvatarMovementSimulation.js';
 import { deriveAvatarVerticalState } from '../core/AvatarVerticalState.js';
+import { AvatarContinuousMovementIntent, isValidAvatarContinuousMovementIntent } from '../core/AvatarContinuousMovementIntent.js';
 
 // 0.2.36 — the ONE place raw input becomes an AvatarPresence update.
 // See docs/Principles.md, "Input Changes Presence; Presence Changes
@@ -88,6 +89,62 @@ import { deriveAvatarVerticalState } from '../core/AvatarVerticalState.js';
 // it cannot undo any ground/brick snap `stepConstraint` already
 // resolved. A controller built without a treeConstraint computes none
 // of this and behaves exactly as it did before this milestone.
+//
+// 0.9.66 — Continuous Movement Controller Integration. This class now
+// tracks ONE more piece of caller-owned state between ticks —
+// `_continuousMovementIntent` (core/AvatarContinuousMovementIntent.js's
+// own NONE/FORWARD/BACKWARD vocabulary) — and consults it in exactly
+// ONE place, `_currentMovementState()`'s own forwardAxis: whenever
+// neither W nor S is physically held, a persistent FORWARD/BACKWARD
+// intent drives forwardAxis instead of leaving it at 0. That is the
+// ENTIRE integration. No new pipeline stage was added to tick(): a
+// continuously-moving avatar produces exactly the same
+// AvatarMovementState shape an ordinarily-walking one already did, so
+// it runs through simulateAvatarMovement() and every constraint below
+// (building, terrain, step, tree) completely unmodified — "continuous
+// movement is an additional SOURCE of movement intent, never a second
+// movement system."
+//
+// The priority this milestone establishes, in `_currentMovementState()`:
+// ordinary W/S input (when either is held) always wins outright — even
+// when both cancel to a net zero axis, that is still "the player is
+// actively working the ordinary keys" and continuous intent stays
+// silent; only once NEITHER is held does continuous intent get a say;
+// with neither held and no continuous intent, the result is plain
+// idle. Exactly the three-line priority rule the design brief asked
+// for, and no more.
+//
+// `setContinuousMovementIntent(intent)` is the ONLY way this value
+// ever changes, and this class never asks where it came from —
+// exactly like `_keys` never asks whether a `keyDown('w')` call came
+// from a real keyboard, a UI button, a gamepad, or a test. Deliberately
+// NOT wired here: no Caps Lock detection, no
+// core/AvatarContinuousMovementInputAdapter.js import, no raw-key
+// translation of any kind — `if (capsLock && w)` conceptually never
+// appears in this file, and it couldn't, because this file has no idea
+// a "Caps Lock" exists. That seam belongs one layer up, in
+// `application/WorldNavigationSession.js#avatarKeyDown`/`avatarKeyUp`
+// — the same place raw keys already reach this class through
+// `keyDown()`/`keyUp()` — which owns the keyboard-specific translation
+// (core/AvatarContinuousMovementInputAdapter.js +
+// core/AvatarContinuousMovementIntent.js's own transition function) and
+// calls `setContinuousMovementIntent()` with the result. This class
+// merely CONSUMES the current intent value; the intent layer (0.9.64)
+// and the input layer (0.9.65) together own its entire memory.
+//
+// `_continuousMovementIntent` is deliberately untouched by
+// `releaseAll()` — releasing every physically-held key (a window blur,
+// Avatar Control Mode turning off) is never a signal
+// core/AvatarContinuousMovementIntent.js's own transition rule reads,
+// and must not silently cancel a deliberately activated continuous
+// walk any more than an ordinary keyup does. It is likewise untouched
+// anywhere in tick() below: nothing after `_currentMovementState()` has
+// already read it for this tick ever looks at it again — the
+// constraints only ever see the resulting forwardAxis, exactly as they
+// already do for ordinary W/S. "The world currently prevents further
+// progress" and "the avatar still wants to keep going" are deliberately
+// allowed to both be true at once — automatic obstacle avoidance/
+// turning is explicitly out of scope for this milestone.
 const EPSILON = 1e-6;
 
 export class AvatarMovementController {
@@ -100,6 +157,13 @@ export class AvatarMovementController {
         this._keys = { forward: false, backward: false, left: false, right: false, running: false, jumpHeld: false };
         this._verticalVelocity = 0;
         this._grounded = true;
+        // 0.9.66 — the CURRENT persistent continuous-movement intent
+        // (core/AvatarContinuousMovementIntent.js's own NONE/FORWARD/
+        // BACKWARD vocabulary), set only via setContinuousMovementIntent()
+        // below and read only by `_currentMovementState()`'s own
+        // forwardAxis. See this file's own 0.9.66 header for why this
+        // class never derives it itself.
+        this._continuousMovementIntent = AvatarContinuousMovementIntent.NONE;
         // Transient, per-tick bookkeeping only — exactly like
         // _verticalVelocity/_grounded above, never part of
         // AvatarPresence itself (see docs/Principles.md, "Collided Is
@@ -139,8 +203,40 @@ export class AvatarMovementController {
     // "stuck" walking forever. See the design doc's own concern:
     // typing/searching must never accidentally make the avatar walk
     // away.
+    //
+    // 0.9.66 — deliberately leaves `_continuousMovementIntent`
+    // untouched — see this file's own 0.9.66 header for why releasing
+    // keys must never cancel it.
     releaseAll() {
         this._keys = { forward: false, backward: false, left: false, right: false, running: false, jumpHeld: false };
+    }
+
+    // 0.9.66 — the ONLY way `_continuousMovementIntent` ever changes.
+    // Callers are expected to have already resolved a raw signal (a
+    // keyboard chord, a UI button, a gamepad) down to one of
+    // core/AvatarContinuousMovementIntent.js's own NONE/FORWARD/
+    // BACKWARD values — see application/WorldNavigationSession.js's
+    // own avatarKeyDown/avatarKeyUp for the keyboard case. Invalid
+    // input degrades to NONE, matching every other pure vocabulary
+    // setter in this codebase's own "degrade gracefully" posture —
+    // never throws, never leaves a malformed value sitting in
+    // `_continuousMovementIntent`.
+    setContinuousMovementIntent(intent) {
+        this._continuousMovementIntent = isValidAvatarContinuousMovementIntent(intent)
+            ? intent
+            : AvatarContinuousMovementIntent.NONE;
+    }
+
+    // 0.9.66 — the CURRENT persistent continuous-movement intent, same
+    // "debug/UI surface, not something any other internal logic reads"
+    // posture as isCollided()/verticalState() above. Also read by
+    // application/WorldNavigationSession.js as the `currentIntent` it
+    // feeds back into core/AvatarContinuousMovementIntent.js's own
+    // transition function on the next relevant key event — this class
+    // is the one place that value lives, so nothing else needs a
+    // second copy of it.
+    continuousMovementIntent() {
+        return this._continuousMovementIntent;
     }
 
     // Runs one simulation step and, if the result is actually
@@ -328,11 +424,27 @@ export class AvatarMovementController {
 
     _currentMovementState() {
         return new AvatarMovementState({
-            forwardAxis: (this._keys.forward ? 1 : 0) - (this._keys.backward ? 1 : 0),
+            forwardAxis: this._resolvedForwardAxis(),
             turnAxis: (this._keys.right ? 1 : 0) - (this._keys.left ? 1 : 0),
             running: this._keys.running,
             jumpRequested: this._keys.jumpHeld
         });
+    }
+
+    // 0.9.66 — the ONE place ordinary W/S input and persistent
+    // continuous-movement intent are combined into a single
+    // forwardAxis, per the priority this file's own header establishes:
+    // ordinary input (either key physically held, even if they cancel
+    // to a net zero axis) always wins; only once NEITHER is held does
+    // `_continuousMovementIntent` get a say; with neither, the result
+    // is plain 0 — idle, exactly as before this milestone existed.
+    _resolvedForwardAxis() {
+        if (this._keys.forward || this._keys.backward) {
+            return (this._keys.forward ? 1 : 0) - (this._keys.backward ? 1 : 0);
+        }
+        if (this._continuousMovementIntent === AvatarContinuousMovementIntent.FORWARD) return 1;
+        if (this._continuousMovementIntent === AvatarContinuousMovementIntent.BACKWARD) return -1;
+        return 0;
     }
 
     _setKey(key, isDown) {
