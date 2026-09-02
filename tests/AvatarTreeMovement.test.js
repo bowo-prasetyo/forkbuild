@@ -27,6 +27,10 @@ import { DEFAULT_WORLD_SEED } from '../core/TerrainHeightField.js';
 //   Section K: architectural regression — this file stays resolution-only,
 //              never reaching into spatial query, rendering, or the
 //              avatar/world runtime
+//   Section L: 0.9.88 — variable avatarRadius. Omitting it reproduces the
+//              exact pre-0.9.88 resolution; a larger radius (a mounted
+//              vehicle's own collisionRadius) stops strictly further
+//              from a tree than the avatar's own default radius does
 //
 // Central architectural claim under test throughout: this file answers
 // "where may the avatar move," never "should the avatar move" (0.9.60's
@@ -227,6 +231,38 @@ async function runTests() {
         const farTree = treeCollisionCircleFor(farFeature);
         const unaffected = resolveAvatarTreeMovement({ currentPosition: approachFrom, requestedPosition: { x: approachFrom.x + 0.5, y: 0, z: approachFrom.z }, trees: [farTree] });
         assert(unaffected.x === approachFrom.x + 0.5 && unaffected.z === approachFrom.z, '23. flagship: a real, far-away tree never obstructs an unrelated nearby step');
+    }
+
+    // -------------------------------------------------------------
+    // Section L: 0.9.88 — variable avatarRadius
+    // -------------------------------------------------------------
+    {
+        // Omitting avatarRadius entirely reproduces the exact pre-0.9.88
+        // resolution, byte for byte.
+        const currentPosition = { x: -5, y: 1, z: 0 };
+        const requestedPosition = { x: 5, y: 1, z: 0 };
+        const withoutRadius = resolveAvatarTreeMovement({ currentPosition, requestedPosition, trees: [tree] });
+        const withDefaultRadius = resolveAvatarTreeMovement({ currentPosition, requestedPosition, trees: [tree], avatarRadius: AVATAR_COLLISION_RADIUS });
+        assert(JSON.stringify(withoutRadius) === JSON.stringify(withDefaultRadius),
+            '23a. omitting avatarRadius entirely resolves to the exact same position as explicitly passing AVATAR_COLLISION_RADIUS — the documented default');
+    }
+    {
+        // A larger avatarRadius (a mounted vehicle's own, larger
+        // collisionRadius) stops strictly further from the tree's own
+        // center than the avatar's own default radius does — proving
+        // the radius genuinely reaches the resolution math, not merely
+        // stored inertly.
+        const currentPosition = { x: -5, y: 0, z: 0 };
+        const requestedPosition = { x: 5, y: 0, z: 0 };
+        const carRadius = 0.80; // matches CAR_COLLISION_RADIUS, core/AvatarVehicleMovementCapability.js
+        const walkResult = resolveAvatarTreeMovement({ currentPosition, requestedPosition, trees: [tree] });
+        const carResult = resolveAvatarTreeMovement({ currentPosition, requestedPosition, trees: [tree], avatarRadius: carRadius });
+        const walkStopDistance = distance(walkResult, currentPosition);
+        const carStopDistance = distance(carResult, currentPosition);
+        assert(carStopDistance < walkStopDistance,
+            '23b. a larger avatarRadius stops the resolved position strictly SHORTER of the tree than the default (smaller) radius does');
+        assert(Math.abs(distance(carResult, tree.center) - (carRadius + tree.radius)) < 1e-9,
+            '23c. the car-sized resolution stops exactly at carRadius + tree.radius from the tree\'s own center — the passed-in radius, not the default, drives the boundary');
     }
 
     // -------------------------------------------------------------

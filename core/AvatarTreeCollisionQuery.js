@@ -77,12 +77,18 @@ export const MAX_TREE_COLLISION_RADIUS = TREE_TRUNK_COLLISION_RADIUS * MAX_TREE_
 // How far, on every side, the raw swept-movement rectangle must be
 // expanded before it is safe to hand to treeCollisionGeometryInRegion() —
 // large enough that a tree whose CENTER lands just outside the raw
-// rectangle, but whose own collision circle combined with the avatar's
-// own AVATAR_COLLISION_RADIUS still reaches into the avatar's swept path,
-// is never excluded. Deliberately the SUM of both radii, the same
-// "combined radius" quantity core/AvatarTreeCollision.js#circlesIntersect()
+// rectangle, but whose own collision circle combined with the moving
+// body's own radius still reaches into its swept path, is never
+// excluded. Deliberately the SUM of both radii, the same "combined
+// radius" quantity core/AvatarTreeCollision.js#circlesIntersect()
 // already tests distance against — a query margin any smaller could
 // exclude a tree circlesIntersect() would otherwise report as touching.
+// This is the WALK-default margin — AVATAR_COLLISION_RADIUS's own
+// value — still exported and still exactly what a call with no
+// `avatarRadius` argument uses (see treeCollisionCandidatesForMovement()
+// below, 0.9.88): a mounted vehicle's own, larger `avatarRadius`
+// produces a proportionally larger margin, computed fresh per call,
+// never this fixed constant.
 export const CANDIDATE_QUERY_MARGIN = AVATAR_COLLISION_RADIUS + MAX_TREE_COLLISION_RADIUS;
 
 // The one entry point. `currentPosition` and `requestedPosition` are
@@ -93,8 +99,8 @@ export const CANDIDATE_QUERY_MARGIN = AVATAR_COLLISION_RADIUS + MAX_TREE_COLLISI
 // function's own return value supplying that function's own `trees`
 // argument and nothing standing between them:
 //
-//   const trees = treeCollisionCandidatesForMovement({ seed, currentPosition, requestedPosition });
-//   const resolved = resolveAvatarTreeMovement({ currentPosition, requestedPosition, trees });
+//   const trees = treeCollisionCandidatesForMovement({ seed, currentPosition, requestedPosition, avatarRadius });
+//   const resolved = resolveAvatarTreeMovement({ currentPosition, requestedPosition, trees, avatarRadius });
 //
 // Returns exactly what treeCollisionGeometryInRegion() itself returns for
 // the computed region — the same frozen circles, in the same
@@ -102,11 +108,29 @@ export const CANDIDATE_QUERY_MARGIN = AVATAR_COLLISION_RADIUS + MAX_TREE_COLLISI
 // naturalFeaturesInRegion() dependency already guarantees. This function
 // never re-sorts, re-wraps, or otherwise touches a single circle it is
 // handed back.
-export function treeCollisionCandidatesForMovement({ seed, currentPosition, requestedPosition }) {
-    const minX = Math.min(currentPosition.x, requestedPosition.x) - CANDIDATE_QUERY_MARGIN;
-    const maxX = Math.max(currentPosition.x, requestedPosition.x) + CANDIDATE_QUERY_MARGIN;
-    const minZ = Math.min(currentPosition.z, requestedPosition.z) - CANDIDATE_QUERY_MARGIN;
-    const maxZ = Math.max(currentPosition.z, requestedPosition.z) + CANDIDATE_QUERY_MARGIN;
+//
+// `avatarRadius` (0.9.88, optional, defaults to AVATAR_COLLISION_RADIUS)
+// — the horizontal radius of whatever body is actually sweeping this
+// path: the walking avatar's own existing radius by default, or a
+// mounted ground vehicle's own, larger
+// `AvatarVehicleMovementCapability#collisionRadius` when a caller
+// supplies one (see application/AvatarTreeConstraint.js's own 0.9.88
+// header for where that value comes from). THIS IS THE SAME SEAM 0.9.62
+// ALREADY ESTABLISHED, ONLY MADE VARIABLE: the margin is still exactly
+// `avatarRadius + MAX_TREE_COLLISION_RADIUS`, computed fresh from
+// whatever `avatarRadius` this call was given, rather than always
+// reading the fixed CANDIDATE_QUERY_MARGIN constant above — the one
+// change that keeps this file's own candidate set honest once the
+// moving body's own radius stops being a single fixed number. Omitting
+// `avatarRadius` reproduces the exact pre-0.9.88 margin and candidate
+// set, byte for byte — see tests/AvatarTreeCollisionQuery.test.js's own
+// regression section.
+export function treeCollisionCandidatesForMovement({ seed, currentPosition, requestedPosition, avatarRadius = AVATAR_COLLISION_RADIUS }) {
+    const margin = avatarRadius + MAX_TREE_COLLISION_RADIUS;
+    const minX = Math.min(currentPosition.x, requestedPosition.x) - margin;
+    const maxX = Math.max(currentPosition.x, requestedPosition.x) + margin;
+    const minZ = Math.min(currentPosition.z, requestedPosition.z) - margin;
+    const maxZ = Math.max(currentPosition.z, requestedPosition.z) + margin;
 
     return treeCollisionGeometryInRegion(seed, minX, minZ, maxX, maxZ);
 }

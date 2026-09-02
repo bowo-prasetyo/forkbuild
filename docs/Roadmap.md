@@ -57259,3 +57259,205 @@ ground-vehicle movement behavior beyond speed — most likely steering/
 turning or vehicle collision — becomes the next genuinely interesting
 seam, but only once actual runtime behavior tells us which one is
 needed first.
+
+## 0.9.88 — Ground Vehicle Collision Footprint Capability
+
+0.9.87 finished the basic ground-vehicle speed progression cleanly —
+`WALK(3) < BICYCLE(6) < MOTORCYCLE(9) < CAR(12)` — while leaving a more
+fundamental physical inconsistency untouched: a car moving at 12
+units/second was still being collision-tested against a tree as though
+it were the avatar's own 0.35-radius body. This milestone is not
+acceleration or steering; it is the seam that has to exist before either
+of those is worth building — a vehicle's PHYSICAL OCCUPANCY, not merely
+its speed.
+
+```
+VehicleType
+    │
+    ▼
+AvatarVehicleMovementCapability
+    │
+    ├── movementKind
+    ├── supported
+    ├── movementSpeed        (0.9.86/0.9.87)
+    └── collisionRadius      (0.9.88)
+              │
+              ▼
+      AvatarMovementController
+              │
+              ▼
+      existing movement pipeline
+              │
+        ┌─────┴─────┐
+        ▼           ▼
+    terrain       tree
+    constraints   constraints
+```
+
+**Collision size becomes another movement capability parameter, exactly
+like speed before it.** `core/AvatarVehicleMovementCapability.js`'s own
+`AvatarVehicleMovementCapability` class gains a fourth field,
+`collisionRadius` (world units), fed by four new per-vehicle constants:
+
+```
+WALK        0.35   (== AVATAR_COLLISION_RADIUS, deliberately duplicated
+                     — see below)
+BICYCLE     0.45
+MOTORCYCLE  0.55
+CAR         0.80
+```
+
+The one semantic requirement, matching `movementSpeed`'s own 0.9.87
+ordering exactly, is `WALK < BICYCLE < MOTORCYCLE < CAR` — deliberately
+simple values, never tuned game-balance numbers. AERIAL_VEHICLE/DRONE's
+own `collisionRadius` is `0` — inert, for the identical reason its own
+`movementSpeed` already is: `supported: false` already blocks movement,
+collision included, before either field is ever consulted.
+
+**`WALK_COLLISION_RADIUS` is a deliberate, documented duplicate of
+`core/AvatarCollision.js`'s own `AVATAR_COLLISION_RADIUS`** — the
+identical "pure capability vocabulary, zero coupling to a sibling
+module's own internals" discipline `WALK_MOVEMENT_SPEED` already
+established relative to `core/AvatarMovementSimulation.js#WALK_SPEED`
+(0.9.86). `core/AvatarVehicleMovementCapability.js` still imports
+nothing from the collision system it now describes a parameter for.
+
+**The existing tree-collision pipeline is extended, never duplicated.**
+This codebase's tree collision system is already exactly the
+"moving circle + tree circle → circle-circle collision" abstraction this
+milestone needs:
+
+```
+core/TreeCollisionGeometry.js    = what physical space a tree occupies
+core/AvatarTreeCollision.js      = does the moving body's space overlap it
+core/AvatarTreeMovement.js       = given that, where may it move
+core/AvatarTreeCollisionQuery.js = which trees are worth asking about
+application/AvatarTreeConstraint.js = the application-layer glue
+```
+
+Only the MOVING body's own radius changes — `TreeCollisionGeometry.js`
+is completely untouched, and a tree's own geometry is still exactly
+`tree center + tree radius`. Three files gain one new, optional
+`avatarRadius` parameter (defaulting to `AVATAR_COLLISION_RADIUS`, so
+omitting it reproduces every pre-0.9.88 result byte for byte):
+
+- `core/AvatarTreeCollisionQuery.js#treeCollisionCandidatesForMovement()`
+  — the swept candidate-query margin is now `avatarRadius +
+  MAX_TREE_COLLISION_RADIUS`, computed fresh per call, rather than
+  always reading the fixed `CANDIDATE_QUERY_MARGIN` constant (which
+  stays exported, unchanged, as the WALK-sized default).
+- `core/AvatarTreeMovement.js#resolveAvatarTreeMovement()` — the
+  resolution radius fed to `resolveAgainstTree()` is now the caller's
+  own `avatarRadius`, not a hardcoded `AVATAR_COLLISION_RADIUS`.
+- `application/AvatarTreeConstraint.js#apply(position, desiredPosition,
+  { avatarRadius })` — a third, optional options argument (the same
+  shape `movementConstraint.apply()`'s own `{ supportHeight }` already
+  uses) that passes the SAME `avatarRadius` value to both functions
+  above, unmodified.
+
+**The candidate query and the resolver must never disagree about which
+radius is active — this is the single most important technical detail
+of this milestone.** Before this change, extending only
+`resolveAvatarTreeMovement()`'s own radius while leaving
+`treeCollisionCandidatesForMovement()`'s own margin fixed at
+`AVATAR_COLLISION_RADIUS` would have let a car's own larger circle reach
+a tree whose CENTER never even entered the (too-small) candidate
+rectangle in the first place — an incomplete candidate set the resolver
+could never recover from, however correct its own math was. Both
+functions are extended together, fed the identical `avatarRadius`,
+through the identical seam.
+
+**`application/AvatarMovementController.js` gains exactly one new
+method, `_resolvedCollisionRadius()`** — the direct structural twin of
+0.9.86's own `_resolvedMovementSpeed()` — read in exactly one place,
+`tick()`'s own call into `this._treeConstraint.apply()`, as its new
+`avatarRadius` option. Building collision, terrain slope, and step
+height are completely untouched: this milestone changes how a vehicle
+collides with a TREE, nothing else, matching its own deliberately
+narrow scope.
+
+**Default (never set, or an invalid capability) still means the
+avatar's own existing radius, at its own existing value.**
+`_resolvedCollisionRadius()` returns `undefined` whenever
+`_movementCapability` is `null` — the identical "never set" state
+`_resolvedMovementSpeed()` already handles — and both
+`treeCollisionCandidatesForMovement()`'s and
+`resolveAvatarTreeMovement()`'s own defaults take over. An avatar nobody
+has ever mounted on anything is collision-tested at exactly the radius
+it always was, byte for byte.
+
+**Dismount clearance (0.9.81) is untouched.**
+`core/AvatarVehicleDismountClearance.js` still checks the UNMOUNTED
+avatar's own collision circle against nearby trees — correct, since the
+destination it evaluates is always for the avatar after dismounting.
+The distinction this milestone establishes falls out naturally: mounted
+movement now uses the active capability's own `collisionRadius`;
+dismount clearance continues using the avatar's own fixed radius,
+because it always answers a different question ("where can the AVATAR
+stand") than mounted movement does ("where can the VEHICLE go").
+
+**Still one movement controller, one tree collision system, one
+collision resolver.** No `BicycleCollisionController`,
+`CarCollisionController`, or `VehicleTreeCollision` — every ground
+vehicle still moves through the exact same
+`AvatarMovementController#tick()` pipeline and the exact same
+`core/AvatarTreeMovement.js#resolveAvatarTreeMovement()` math, now fed a
+per-capability radius instead of a hardcoded one.
+
+## What this milestone deliberately does NOT do
+
+Acceleration, braking, momentum, vehicle-specific turning radius,
+vehicle orientation, a rectangular or oriented (non-circular) collision
+footprint, vehicle-vs-vehicle collision, road/path constraints,
+terrain-specific vehicle behavior, suspension/physics, camera changes,
+animation, or drone flight — none of these exist anywhere in this
+codebase, this milestone included. The collision shape stays
+deliberately circular throughout; a car eventually needing a rectangular
+or oriented footprint is real future scope, but introducing orientation
+into the collision architecture is a substantially larger seam than
+this milestone's own one-radius-per-capability extension. Building/brick
+collision (`core/AvatarCollision.js`'s own AABB-based
+`resolveHorizontalMovement()`) is untouched — this milestone's scope is
+the tree-collision pipeline specifically, matching its own brief.
+
+Tests: `tests/AvatarVehicleMovementCapability.test.js` (0.9.84's own
+suite) is updated in place — every section now asserts `collisionRadius`
+alongside `movementSpeed`, and Section K's architectural-regression
+sweep no longer forbids the bare word "collision" (this file's own point,
+as of 0.9.88, is to carry a collision-radius field), forbidding instead
+any reference to the collision MODULES or MATHEMATICS that field feeds.
+`tests/AvatarTreeCollisionQuery.test.js` and
+`tests/AvatarTreeMovement.test.js` each gain a new section proving
+`avatarRadius` is optional (omitting it reproduces the exact pre-0.9.88
+result) and that a larger radius genuinely reaches the query margin and
+the resolution math respectively — including the exact "tree just
+outside the old margin, inside the new one" scenario the candidate-query
+seam exists to cover.
+`tests/AvatarTreeCollisionIntegration.test.js` gains an `avatarRadius`
+passthrough section at the `AvatarTreeConstraint` level and a
+`AvatarMovementController` wiring section proving the ACTIVE capability's
+own `collisionRadius` reaches the tree constraint every tick, tracking
+capability switches immediately. A new dedicated suite,
+`tests/AvatarVehicleCollisionFootprintIntegration.test.js`, covers this
+milestone directly, end to end, against a real, deterministically-placed,
+genuinely isolated tree: exact per-vehicle `collisionRadius` values and
+ordering; a WALK-vs-no-capability-ever-set regression proving byte-
+identical behavior; BICYCLE colliding where the avatar's own smaller
+body would have cleared; a BICYCLE-clears/MOTORCYCLE-blocked approach
+distance and a MOTORCYCLE-clears/CAR-blocked one, each proving the
+radius reaches the collision pipeline itself, not merely storage; the
+candidate-query correctness scenario end to end through
+`AvatarTreeConstraint`; WALK → BICYCLE → MOTORCYCLE → CAR → WALK
+switching on one controller instance, each stopping at exactly its own
+combined radius with no drift; 0.9.87's own speed values proven
+unaffected; DRONE remaining fully blocked before its own inert
+`collisionRadius` is ever consulted; and an architectural-regression
+sweep across every file this milestone touches for a second collision
+system, a rectangular/oriented footprint, or a spatial index of any
+kind.
+
+Next: with both speed and physical occupancy now capability parameters
+feeding the one existing movement and collision pipeline,
+acceleration/braking becomes the natural next step, followed by
+steering/handling and, eventually, aerial movement for the drone — but
+only once actual runtime behavior tells us which is needed first.

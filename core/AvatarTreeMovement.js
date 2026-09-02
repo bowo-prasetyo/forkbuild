@@ -68,6 +68,9 @@ import { AVATAR_COLLISION_RADIUS } from './AvatarCollision.js';
 // the avatar slide around a tree it is walking into (case 1) and still
 // walk AWAY from a tree it started touching (case 2, `radial >= 0`) —
 // collision geometry never becomes a permanent attachment.
+// `avatarRadius` — the horizontal radius of whatever body is actually
+// moving. Passed straight through from resolveAvatarTreeMovement()'s own
+// `avatarRadius` argument (0.9.88) — see that function's own header.
 function resolveAgainstTree(current, requested, tree, avatarRadius) {
     const combinedRadius = tree.radius + avatarRadius;
     const combinedRadiusSq = combinedRadius * combinedRadius;
@@ -162,12 +165,25 @@ function resolveAgainstTree(current, requested, tree, avatarRadius) {
 // the same order, always resolves to the same final position, and a
 // caller that wants a different resolution order gets it by supplying
 // `trees` in that order.
-export function resolveAvatarTreeMovement({ currentPosition, requestedPosition, trees }) {
+//
+// `avatarRadius` (0.9.88, optional, defaults to AVATAR_COLLISION_RADIUS)
+// — the horizontal radius of whatever body is actually moving: the
+// walking avatar's own existing radius by default, or a mounted ground
+// vehicle's own, larger `AvatarVehicleMovementCapability#collisionRadius`
+// when a caller supplies one — the SAME value a caller must also pass as
+// core/AvatarTreeCollisionQuery.js#treeCollisionCandidatesForMovement()'s
+// own `avatarRadius`, so the candidate set this function's own `trees`
+// argument was built from, and the radius it resolves against here,
+// never disagree (see that function's own 0.9.88 header for why a
+// mismatch there would silently drop real collisions). Omitting
+// `avatarRadius` reproduces the exact pre-0.9.88 resolution, byte for
+// byte — see tests/AvatarTreeMovement.test.js's own regression section.
+export function resolveAvatarTreeMovement({ currentPosition, requestedPosition, trees, avatarRadius = AVATAR_COLLISION_RADIUS }) {
     let x = requestedPosition.x;
     let z = requestedPosition.z;
 
     for (const tree of trees) {
-        const resolved = resolveAgainstTree(currentPosition, { x, z }, tree, AVATAR_COLLISION_RADIUS);
+        const resolved = resolveAgainstTree(currentPosition, { x, z }, tree, avatarRadius);
         x = resolved.x;
         z = resolved.z;
     }

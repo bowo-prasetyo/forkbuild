@@ -288,6 +288,50 @@ import { AvatarMovementCapabilityKind, isValidAvatarVehicleMovementCapability } 
 // neither a `WALK_SPEED` nor a `RUN_SPEED` literal of its own; the only
 // numbers it ever touches are whatever `movementSpeed` a resolved
 // capability already carries.
+//
+// 0.9.88 — Ground Vehicle Collision Footprint Capability. A car moving
+// at CAR_MOVEMENT_SPEED's own 12 units/second was, until this
+// milestone, still being collision-tested against a tree as though it
+// were the avatar's own 0.35-radius body — see
+// core/AvatarVehicleMovementCapability.js's own 0.9.88 header for the
+// full physical-inconsistency argument. This class adds exactly ONE new
+// thing to close that gap: `_resolvedCollisionRadius()` below, the
+// direct structural twin of `_resolvedMovementSpeed()` (0.9.86) —
+// read in exactly one place, tick()'s own call into
+// `this._treeConstraint.apply()`, as its new `avatarRadius` option.
+//
+// THE COLLISION-RADIUS SEAM STAYS OUTSIDE THE COLLISION MATHEMATICS
+// ITSELF, EXACTLY LIKE THE SPEED SEAM ABOVE. This class still never
+// brands a radius as "CAR" or computes any circle/AABB of its own — it
+// merely reads `this._movementCapability.collisionRadius` (a plain
+// number, core/AvatarVehicleMovementCapability.js's own job to have
+// already decided) and hands it to the ONE existing tree constraint,
+// which decides how it changes the candidate query and the resolved
+// position (see application/AvatarTreeConstraint.js's own 0.9.88
+// header). `if (capability.movementKind === GROUND_VEHICLE) { radius =
+// CAR_RADIUS; }` conceptually never appears in this file, and it
+// couldn't — this class still has no `GROUND_VEHICLE`, `BICYCLE`,
+// `MOTORCYCLE`, or `CAR` literal anywhere in its own code.
+//
+// ONLY THE TREE CONSTRAINT CONSUMES THIS RADIUS. Building collision
+// (`_movementConstraint`), terrain slope (`_terrainConstraint`), and
+// step height (`_stepConstraint`) are all completely untouched by this
+// milestone — their own `apply()` calls below are unmodified, exactly
+// matching this milestone's own deliberately narrow scope (see
+// core/AvatarVehicleMovementCapability.js's own 0.9.88 header): a
+// vehicle's physical footprint changes how it collides with a TREE,
+// nothing else, yet.
+//
+// DEFAULT (never set, or an invalid capability) STILL MEANS THE
+// AVATAR'S OWN EXISTING RADIUS. `_resolvedCollisionRadius()` returns
+// `undefined` whenever `_movementCapability` is `null` — the identical
+// "never set" state `_resolvedMovementSpeed()` already handles — and
+// both `core/AvatarTreeCollisionQuery.js#treeCollisionCandidatesForMovement()`'s
+// and `core/AvatarTreeMovement.js#resolveAvatarTreeMovement()`'s own
+// defaults (`undefined` degrades to their internal AVATAR_COLLISION_RADIUS
+// — see those files) take over, exactly as they always have. An avatar
+// nobody has ever mounted on anything is collision-tested at EXACTLY
+// the radius it always was, byte for byte.
 const EPSILON = 1e-6;
 
 export class AvatarMovementController {
@@ -559,7 +603,9 @@ export class AvatarMovementController {
         // application/AvatarTreeConstraint.js's own header.
         this._collidedWithTree = false;
         if (this._treeConstraint) {
-            const treeResult = this._treeConstraint.apply(currentPosition, finalPosition);
+            const treeResult = this._treeConstraint.apply(currentPosition, finalPosition, {
+                avatarRadius: this._resolvedCollisionRadius()
+            });
             finalPosition = treeResult.position;
             this._collidedWithTree = treeResult.collided;
         }
@@ -705,6 +751,22 @@ export class AvatarMovementController {
     // place, tick()'s own call into simulateAvatarMovement() above.
     _resolvedMovementSpeed() {
         return this._movementCapability ? this._movementCapability.movementSpeed : undefined;
+    }
+
+    // 0.9.88 — the ONE collision-radius-resolution seam this milestone
+    // adds: the CURRENT movement capability's own `collisionRadius` (a
+    // plain number — core/AvatarVehicleMovementCapability.js's own job
+    // to have already decided what it is), or `undefined` when
+    // `_movementCapability` is `null` (never set, or degraded there by
+    // setMovementCapability() — see that method above). `undefined` lets
+    // application/AvatarTreeConstraint.js#apply()'s own downstream
+    // defaults take over, exactly as every call site did before this
+    // milestone existed — this method never substitutes a literal
+    // number of its own. Read in exactly one place, tick()'s own call
+    // into `this._treeConstraint.apply()` above. The direct structural
+    // twin of `_resolvedMovementSpeed()` above.
+    _resolvedCollisionRadius() {
+        return this._movementCapability ? this._movementCapability.collisionRadius : undefined;
     }
 
     _setKey(key, isDown) {

@@ -58,17 +58,36 @@ export class AvatarTreeConstraint {
     // constraint is applied LAST, exactly like every other constraint
     // appended to that pipeline since 0.2.42.
     //
+    // `avatarRadius` (0.9.88, optional — the third argument's own
+    // property, matching the exact `{ supportHeight }` options-object
+    // shape application/AvatarMovementConstraint.js#apply() already
+    // uses) — the horizontal collision radius of whatever body is
+    // actually moving this tick: `undefined` (the walking avatar's own
+    // existing radius, via both core functions' own default) when the
+    // caller omits it entirely, or a mounted ground vehicle's own,
+    // larger `AvatarVehicleMovementCapability#collisionRadius` when
+    // application/AvatarMovementController.js supplies one — see that
+    // class's own 0.9.88 header. Passed straight through, unmodified, to
+    // BOTH treeCollisionCandidatesForMovement()'s own `avatarRadius` and
+    // resolveAvatarTreeMovement()'s own `avatarRadius` below — the exact
+    // SAME value reaches the candidate query and the resolution step,
+    // never two independently-computed radii that could silently
+    // disagree (see core/AvatarTreeCollisionQuery.js's own 0.9.88
+    // header for why that particular mismatch would be dangerous: an
+    // incomplete candidate set the resolver could never recover from).
+    //
     // Y passes through completely untouched, whether or not a tree was
     // in the way — core/AvatarTreeMovement.js#resolveAvatarTreeMovement()
     // already guarantees this (it copies `requestedPosition.y` straight
     // through); this class adds no Y logic of its own on top, matching
     // its own "tree collision never acquires responsibility for vertical
     // positioning" rule (docs/Roadmap.md, 0.9.63).
-    apply(position, desiredPosition) {
+    apply(position, desiredPosition, { avatarRadius } = {}) {
         const trees = treeCollisionCandidatesForMovement({
             seed: this._seed,
             currentPosition: position,
-            requestedPosition: desiredPosition
+            requestedPosition: desiredPosition,
+            avatarRadius
         });
         if (trees.length === 0) {
             return { position: desiredPosition, collided: false };
@@ -76,7 +95,8 @@ export class AvatarTreeConstraint {
         const resolved = resolveAvatarTreeMovement({
             currentPosition: position,
             requestedPosition: desiredPosition,
-            trees
+            trees,
+            avatarRadius
         });
         const collided = resolved.x !== desiredPosition.x || resolved.z !== desiredPosition.z;
         return { position: resolved, collided };

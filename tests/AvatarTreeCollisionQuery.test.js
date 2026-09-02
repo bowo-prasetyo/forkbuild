@@ -35,6 +35,13 @@ import { DEFAULT_WORLD_SEED } from '../core/TerrainHeightField.js';
 //              only, never detection, resolution, mutation, rendering,
 //              a spatial index, randomness, the clock, persistence, or
 //              avatar-runtime integration
+//   Section L: 0.9.88 — variable avatarRadius. Omitting it reproduces the
+//              exact pre-0.9.88 margin/candidate set; a larger radius
+//              (a mounted vehicle's own collisionRadius) produces a
+//              proportionally larger margin and finds trees the default
+//              WALK-sized margin would miss — the candidate-query/
+//              resolution mismatch the milestone's own brief calls out
+//              as its single most important technical detail
 //
 // Central architectural claim under test throughout: this file only ever
 // decides WHICH REGION to ask core/TreeCollisionGeometry.js's own
@@ -281,6 +288,58 @@ async function runTests() {
         treeCollisionCandidatesForMovement({ seed: DEFAULT_WORLD_SEED, currentPosition, requestedPosition });
         const after = JSON.stringify({ currentPosition, requestedPosition });
         assert(before === after, '24. currentPosition and requestedPosition are never mutated — frozen inputs survive a real call unchanged');
+    }
+
+    // -------------------------------------------------------------
+    // Section L: 0.9.88 — variable avatarRadius
+    // -------------------------------------------------------------
+    {
+        // Omitting avatarRadius entirely reproduces the exact pre-0.9.88
+        // margin and candidate set, byte for byte.
+        const currentPosition = { x: -89, y: 0, z: -99 };
+        const requestedPosition = { x: -87, y: 0, z: -99 };
+        const withoutRadius = treeCollisionCandidatesForMovement({ seed: DEFAULT_WORLD_SEED, currentPosition, requestedPosition });
+        const withDefaultRadius = treeCollisionCandidatesForMovement({ seed: DEFAULT_WORLD_SEED, currentPosition, requestedPosition, avatarRadius: AVATAR_COLLISION_RADIUS });
+        assert(JSON.stringify(withoutRadius) === JSON.stringify(withDefaultRadius),
+            '24a. omitting avatarRadius entirely produces the exact same candidate set as explicitly passing AVATAR_COLLISION_RADIUS — the documented default');
+    }
+    {
+        // THE CANDIDATE-QUERY CORRECTNESS CASE: a tree just outside the
+        // OLD (WALK-sized) margin, but inside a larger vehicle-sized
+        // margin, must be found once a caller passes that larger radius
+        // — this is the exact mismatch the milestone's own brief warns
+        // a resolver-only fix (without extending this query) would miss.
+        const wide = treeCollisionGeometryInRegion(DEFAULT_WORLD_SEED, -200, -200, 200, 200);
+        const tree = wide[0];
+        const tx = tree.center.x, tz = tree.center.z;
+        const carRadius = 0.80; // matches CAR_COLLISION_RADIUS, core/AvatarVehicleMovementCapability.js
+        const carMargin = carRadius + MAX_TREE_COLLISION_RADIUS;
+
+        // Positioned strictly between the old (AVATAR_COLLISION_RADIUS-
+        // sized) margin and the new, larger car-sized margin.
+        const gapDistance = (CANDIDATE_QUERY_MARGIN + carMargin) / 2;
+        const between = { x: tx - gapDistance, y: 0, z: tz };
+        assert(gapDistance > CANDIDATE_QUERY_MARGIN && gapDistance < carMargin,
+            '24b. setup: the chosen query point sits strictly outside the WALK-sized margin and strictly inside the car-sized margin');
+
+        const defaultResult = treeCollisionCandidatesForMovement({ seed: DEFAULT_WORLD_SEED, currentPosition: between, requestedPosition: between });
+        assert(!defaultResult.some((c) => c.center.x === tx && c.center.z === tz),
+            '24c. with the default (WALK-sized) avatarRadius, this tree is correctly excluded — it is genuinely outside the smaller margin');
+
+        const carResult = treeCollisionCandidatesForMovement({ seed: DEFAULT_WORLD_SEED, currentPosition: between, requestedPosition: between, avatarRadius: carRadius });
+        assert(carResult.some((c) => c.center.x === tx && c.center.z === tz),
+            '24d. with a car-sized avatarRadius, the SAME tree — invisible to the default margin — is now found: the candidate query genuinely grows with the moving body\'s own radius, never a fixed WALK-sized window regardless of what is actually moving');
+    }
+    {
+        // A larger avatarRadius never SHRINKS the candidate set relative
+        // to a smaller one over the identical query.
+        const wide = treeCollisionGeometryInRegion(DEFAULT_WORLD_SEED, -200, -200, 200, 200);
+        const tree = wide[0];
+        const near = { x: tree.center.x, y: 0, z: tree.center.z };
+        const smallResult = treeCollisionCandidatesForMovement({ seed: DEFAULT_WORLD_SEED, currentPosition: near, requestedPosition: near, avatarRadius: 0.1 });
+        const largeResult = treeCollisionCandidatesForMovement({ seed: DEFAULT_WORLD_SEED, currentPosition: near, requestedPosition: near, avatarRadius: 5 });
+        assert(largeResult.length >= smallResult.length,
+            '24e. a strictly larger avatarRadius never returns FEWER candidate trees than a smaller one over the identical query point');
     }
 
     // -------------------------------------------------------------
