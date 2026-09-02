@@ -4,25 +4,42 @@ import {
     AvatarContinuousMovementIntent,
     deriveAvatarContinuousMovementIntent
 } from '../core/AvatarContinuousMovementIntent.js';
+import {
+    AvatarContinuousMovementMode,
+    deriveAvatarContinuousMovementMode
+} from '../core/AvatarContinuousMovementMode.js';
 
-// 0.9.65 — Avatar Continuous Movement Input Adapter, core/AvatarContinuousMovementInputAdapter.js.
+// 0.9.65 / 0.9.68 — Avatar Continuous Movement Input Adapter,
+// core/AvatarContinuousMovementInputAdapter.js.
 //
-//   Section A: ordinary W/S keydown — non-activating transitions
-//   Section B/C: Caps-Lock-held W/S keydown — activating transitions
-//   Section D: key-up never produces a transition
-//   Section E: releasing Caps Lock produces no transition either
-//   Section F: full-pipeline cancellation (adapter + 0.9.64 together)
-//   Section G/H: full-pipeline opposite/same re-activation
+//   Section A: modifier state — Caps Lock and Shift down/up tracking
+//   Section B: CapsLock + W/S (Shift NOT held) — walking activation
+//   Section C: CapsLock + Shift + W/S — running activation
+//   Section D: ordinary W/S keydown, with and without Shift — never an
+//              activation request, regardless of Shift
+//   Section E: key-up never produces a transition; releasing Caps Lock
+//              or Shift alone produces no transition either
+//   Section F: modifier-order independence — Shift-then-CapsLock and
+//              CapsLock-then-Shift produce identical transitions
+//   Section G: full-pipeline cancellation, including the "running, then
+//              an ordinary opposite key" cancellation the design brief
+//              calls out explicitly
+//   Section H: full-pipeline direction switch and mode upgrade/downgrade
 //   Section I: unrelated keys never produce a transition
-//   Section J: key-repeat is idempotent
-//   Section K/L: architectural regression — no avatar mutation, no
-//                controller/timer/animation-loop/physics/persistence
+//   Section J: key-repeat is idempotent, for both dimensions at once
+//   Section K: defensive / malformed input
+//   Section L: FLAGSHIP — a scripted CapsLock(+Shift)+W/S scenario run
+//              through the adapter and BOTH 0.9.64/0.9.67 transition
+//              functions together
+//   Section M/N: architectural regression — no avatar mutation, no
+//                controller/timer/animation-loop/physics/persistence,
+//                no combined direction+mode vocabulary
 //
 // Central architectural claim under test throughout: this milestone only
-// TRANSLATES a keyboard event into the shape 0.9.64 already knows how to
-// interpret — it never calls deriveAvatarContinuousMovementIntent()
+// TRANSLATES a keyboard event into the shapes 0.9.64 and 0.9.67 already
+// know how to interpret — it never calls either transition function
 // itself, never decides what a transition MEANS, and never moves
-// anything. See docs/Roadmap.md, 0.9.65.
+// anything. See docs/Roadmap.md, 0.9.65 and 0.9.68.
 
 function assert(condition, message) {
     if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
@@ -30,219 +47,298 @@ function assert(condition, message) {
 
 async function runTests() {
     const { NONE, FORWARD, BACKWARD } = AvatarContinuousMovementIntent;
+    const { NONE: NONE_MODE, WALK, RUN } = AvatarContinuousMovementMode;
 
     // -------------------------------------------------------------
-    // Section A — ordinary W/S keydown
+    // Section A — modifier state
     // -------------------------------------------------------------
     {
-        const result = deriveAvatarContinuousMovementInputEvent({ capsLockDown: false, key: 'w', type: 'keydown' });
-        assert(result.transition && result.transition.direction === 'forward' && result.transition.activationRequested === false,
-            '1. ordinary W keydown produces a non-activating forward transition');
-        assert(result.capsLockDown === false, '2. ordinary W keydown never changes capsLockDown');
+        const result = deriveAvatarContinuousMovementInputEvent({ capsLockDown: false, shiftDown: false, key: 'CapsLock', type: 'keydown' });
+        assert(result.capsLockDown === true, '1. Caps Lock keydown sets capsLockDown true');
+        assert(result.shiftDown === false, '2. Caps Lock keydown never touches shiftDown');
+        assert(result.transition === null, '3. Caps Lock keydown alone produces no transition');
     }
     {
-        const result = deriveAvatarContinuousMovementInputEvent({ capsLockDown: false, key: 's', type: 'keydown' });
-        assert(result.transition && result.transition.direction === 'backward' && result.transition.activationRequested === false,
-            '3. ordinary S keydown produces a non-activating backward transition');
+        const result = deriveAvatarContinuousMovementInputEvent({ capsLockDown: true, shiftDown: false, key: 'CapsLock', type: 'keyup' });
+        assert(result.capsLockDown === false, '4. Caps Lock keyup clears capsLockDown');
+        assert(result.transition === null, '5. Caps Lock keyup produces no transition');
     }
     {
-        const result = deriveAvatarContinuousMovementInputEvent({ capsLockDown: false, key: 'W', type: 'keydown' });
-        assert(result.transition && result.transition.direction === 'forward',
-            '4. key comparison is case-insensitive, matching every other raw-key comparison in this codebase');
-    }
-
-    // -------------------------------------------------------------
-    // Section B — CapsLock + W activates FORWARD
-    // -------------------------------------------------------------
-    {
-        const capsDown = deriveAvatarContinuousMovementInputEvent({ capsLockDown: false, key: 'CapsLock', type: 'keydown' });
-        assert(capsDown.capsLockDown === true, '5. Caps Lock keydown sets capsLockDown true');
-        assert(capsDown.transition === null, '6. Caps Lock keydown alone produces no transition — pressing it is not itself a movement key');
-
-        const wDown = deriveAvatarContinuousMovementInputEvent({ capsLockDown: capsDown.capsLockDown, key: 'w', type: 'keydown' });
-        assert(wDown.transition && wDown.transition.direction === 'forward' && wDown.transition.activationRequested === true,
-            '7. W keydown while Caps Lock is held produces an ACTIVATING forward transition');
-    }
-
-    // -------------------------------------------------------------
-    // Section C — CapsLock + S activates BACKWARD
-    // -------------------------------------------------------------
-    {
-        const sDown = deriveAvatarContinuousMovementInputEvent({ capsLockDown: true, key: 's', type: 'keydown' });
-        assert(sDown.transition && sDown.transition.direction === 'backward' && sDown.transition.activationRequested === true,
-            '8. S keydown while Caps Lock is held produces an ACTIVATING backward transition');
-    }
-
-    // -------------------------------------------------------------
-    // Section D — key-up never produces a transition
-    // -------------------------------------------------------------
-    {
-        const wUp = deriveAvatarContinuousMovementInputEvent({ capsLockDown: false, key: 'w', type: 'keyup' });
-        assert(wUp.transition === null, '9. ordinary W key-up produces no transition at all');
+        const result = deriveAvatarContinuousMovementInputEvent({ capsLockDown: false, shiftDown: false, key: 'Shift', type: 'keydown' });
+        assert(result.shiftDown === true, '6. Shift keydown sets shiftDown true');
+        assert(result.capsLockDown === false, '7. Shift keydown never touches capsLockDown');
+        assert(result.transition === null, '8. Shift keydown alone produces no transition');
     }
     {
-        const wUp = deriveAvatarContinuousMovementInputEvent({ capsLockDown: true, key: 'w', type: 'keyup' });
-        assert(wUp.transition === null, '10. W key-up produces no transition even while Caps Lock is held — release is never a signal');
-        assert(wUp.capsLockDown === true, '11. releasing W does not itself release the tracked Caps Lock hold');
+        const result = deriveAvatarContinuousMovementInputEvent({ capsLockDown: false, shiftDown: true, key: 'Shift', type: 'keyup' });
+        assert(result.shiftDown === false, '9. Shift keyup clears shiftDown');
+        assert(result.transition === null, '10. Shift keyup produces no transition');
     }
     {
-        const sUp = deriveAvatarContinuousMovementInputEvent({ capsLockDown: false, key: 's', type: 'keyup' });
-        assert(sUp.transition === null, '12. ordinary S key-up produces no transition');
+        const capsDown = deriveAvatarContinuousMovementInputEvent({ capsLockDown: false, shiftDown: false, key: 'CapsLock', type: 'keydown' });
+        const bothDown = deriveAvatarContinuousMovementInputEvent({ capsLockDown: capsDown.capsLockDown, shiftDown: false, key: 'Shift', type: 'keydown' });
+        assert(bothDown.capsLockDown === true && bothDown.shiftDown === true, '11. Caps Lock and Shift can both be tracked held at once');
+    }
+    {
+        const result = deriveAvatarContinuousMovementInputEvent({ capsLockDown: true, shiftDown: true, key: 'ArrowUp', type: 'keydown' });
+        assert(result.capsLockDown === true && result.shiftDown === true, '12. an unrelated key never mutates either tracked modifier state');
+    }
+    {
+        const result = deriveAvatarContinuousMovementInputEvent({ capsLockDown: false, shiftDown: false, key: 'shift', type: 'keydown' });
+        assert(result.shiftDown === true, '13. Shift key comparison is case-insensitive, matching Caps Lock\'s own');
     }
 
     // -------------------------------------------------------------
-    // Section E — releasing Caps Lock itself produces no transition
+    // Section B — CapsLock + W/S, Shift NOT held: walking activation
     // -------------------------------------------------------------
     {
-        const capsUp = deriveAvatarContinuousMovementInputEvent({ capsLockDown: true, key: 'CapsLock', type: 'keyup' });
-        assert(capsUp.capsLockDown === false, '13. Caps Lock keyup clears the tracked physical hold');
-        assert(capsUp.transition === null, '14. Caps Lock keyup produces no transition — a persistent intent this adapter never even sees is untouched');
+        const result = deriveAvatarContinuousMovementInputEvent({ capsLockDown: true, shiftDown: false, key: 'w', type: 'keydown' });
+        assert(result.transition.direction === 'forward' && result.transition.activationRequested === true && result.transition.runRequested === false,
+            '14. CapsLock+W (no Shift) produces an activating FORWARD transition with runRequested false');
     }
     {
-        const capsUp = deriveAvatarContinuousMovementInputEvent({ capsLockDown: true, key: 'capslock', type: 'keyup' });
-        assert(capsUp.capsLockDown === false, '15. Caps Lock key comparison is also case-insensitive');
+        const result = deriveAvatarContinuousMovementInputEvent({ capsLockDown: true, shiftDown: false, key: 's', type: 'keydown' });
+        assert(result.transition.direction === 'backward' && result.transition.activationRequested === true && result.transition.runRequested === false,
+            '15. CapsLock+S (no Shift) produces an activating BACKWARD transition with runRequested false');
     }
 
     // -------------------------------------------------------------
-    // Section F — full pipeline: ordinary press cancels an active
-    // continuous intent (adapter output fed straight into 0.9.64)
+    // Section C — CapsLock + Shift + W/S: running activation
     // -------------------------------------------------------------
     {
-        const { transition } = deriveAvatarContinuousMovementInputEvent({ capsLockDown: false, key: 'w', type: 'keydown' });
+        const result = deriveAvatarContinuousMovementInputEvent({ capsLockDown: true, shiftDown: true, key: 'w', type: 'keydown' });
+        assert(result.transition.direction === 'forward' && result.transition.activationRequested === true && result.transition.runRequested === true,
+            '16. CapsLock+Shift+W produces an activating FORWARD transition with runRequested true');
+    }
+    {
+        const result = deriveAvatarContinuousMovementInputEvent({ capsLockDown: true, shiftDown: true, key: 's', type: 'keydown' });
+        assert(result.transition.direction === 'backward' && result.transition.activationRequested === true && result.transition.runRequested === true,
+            '17. CapsLock+Shift+S produces an activating BACKWARD transition with runRequested true');
+    }
+
+    // -------------------------------------------------------------
+    // Section D — ordinary W/S keydown never activates, with or
+    // without Shift: "Shift determines requested mode only when Caps
+    // Lock is physically held"
+    // -------------------------------------------------------------
+    {
+        const result = deriveAvatarContinuousMovementInputEvent({ capsLockDown: false, shiftDown: false, key: 'w', type: 'keydown' });
+        assert(result.transition.direction === 'forward' && result.transition.activationRequested === false,
+            '18. ordinary W (no Caps Lock, no Shift) is a non-activating forward press');
+    }
+    {
+        const result = deriveAvatarContinuousMovementInputEvent({ capsLockDown: false, shiftDown: true, key: 'w', type: 'keydown' });
+        assert(result.transition.direction === 'forward' && result.transition.activationRequested === false,
+            '19. Shift+W WITHOUT Caps Lock remains a non-activating forward press — Shift alone never activates persistent running');
+    }
+    {
+        const result = deriveAvatarContinuousMovementInputEvent({ capsLockDown: false, shiftDown: false, key: 's', type: 'keydown' });
+        assert(result.transition.direction === 'backward' && result.transition.activationRequested === false,
+            '20. ordinary S (no Caps Lock, no Shift) is a non-activating backward press');
+    }
+    {
+        const result = deriveAvatarContinuousMovementInputEvent({ capsLockDown: false, shiftDown: true, key: 's', type: 'keydown' });
+        assert(result.transition.direction === 'backward' && result.transition.activationRequested === false,
+            '21. Shift+S WITHOUT Caps Lock remains a non-activating backward press');
+    }
+
+    // -------------------------------------------------------------
+    // Section E — key-up never produces a transition
+    // -------------------------------------------------------------
+    {
+        const wUp = deriveAvatarContinuousMovementInputEvent({ capsLockDown: true, shiftDown: true, key: 'w', type: 'keyup' });
+        assert(wUp.transition === null, '22. W key-up produces no transition even while Caps Lock and Shift are held');
+        assert(wUp.capsLockDown === true && wUp.shiftDown === true, '23. releasing W does not itself release either tracked modifier hold');
+    }
+    {
+        const sUp = deriveAvatarContinuousMovementInputEvent({ capsLockDown: false, shiftDown: false, key: 's', type: 'keyup' });
+        assert(sUp.transition === null, '24. ordinary S key-up produces no transition');
+    }
+
+    // -------------------------------------------------------------
+    // Section F — modifier-order independence
+    // -------------------------------------------------------------
+    {
+        // Shift down, then Caps Lock down, then W.
+        let state = { capsLockDown: false, shiftDown: false };
+        state = deriveAvatarContinuousMovementInputEvent({ ...state, key: 'Shift', type: 'keydown' });
+        state = deriveAvatarContinuousMovementInputEvent({ ...state, key: 'CapsLock', type: 'keydown' });
+        const shiftFirst = deriveAvatarContinuousMovementInputEvent({ ...state, key: 'w', type: 'keydown' });
+
+        // Caps Lock down, then Shift down, then W.
+        let other = { capsLockDown: false, shiftDown: false };
+        other = deriveAvatarContinuousMovementInputEvent({ ...other, key: 'CapsLock', type: 'keydown' });
+        other = deriveAvatarContinuousMovementInputEvent({ ...other, key: 'Shift', type: 'keydown' });
+        const capsFirst = deriveAvatarContinuousMovementInputEvent({ ...other, key: 'w', type: 'keydown' });
+
+        assert(JSON.stringify(shiftFirst.transition) === JSON.stringify(capsFirst.transition),
+            '25. Shift-then-CapsLock and CapsLock-then-Shift produce byte-identical transitions — this adapter reads current facts, never press order');
+    }
+
+    // -------------------------------------------------------------
+    // Section G — full pipeline: cancellation, including the design
+    // brief's own "running, then an ordinary opposite key" scenario
+    // -------------------------------------------------------------
+    {
+        const { transition } = deriveAvatarContinuousMovementInputEvent({ capsLockDown: false, shiftDown: false, key: 'w', type: 'keydown' });
         const nextIntent = deriveAvatarContinuousMovementIntent({ currentIntent: FORWARD, ...transition });
-        assert(nextIntent === NONE, '16. an ordinary W keydown, translated then interpreted, cancels an active continuous FORWARD');
+        const nextMode = deriveAvatarContinuousMovementMode({ currentMode: RUN, ...transition });
+        assert(nextIntent === NONE, '26. an ordinary W keydown cancels an active continuous FORWARD');
+        assert(nextMode === NONE_MODE, '27. the SAME ordinary W keydown also cancels an active continuous RUN — both dimensions clear together');
+    }
+    {
+        // CapsLock + Shift + W -> FORWARD + RUN, then an ordinary S
+        // (no Caps Lock) must clear BOTH dimensions to NONE/NONE,
+        // never silently produce BACKWARD + RUN.
+        const { transition } = deriveAvatarContinuousMovementInputEvent({ capsLockDown: false, shiftDown: false, key: 's', type: 'keydown' });
+        const nextIntent = deriveAvatarContinuousMovementIntent({ currentIntent: FORWARD, ...transition });
+        const nextMode = deriveAvatarContinuousMovementMode({ currentMode: RUN, ...transition });
+        assert(nextIntent === NONE, '28. an ordinary opposite-direction S cancels continuous FORWARD rather than creating BACKWARD');
+        assert(nextMode === NONE_MODE, '29. the same ordinary S also cancels continuous RUN — no BACKWARD+RUN ever silently appears');
     }
 
     // -------------------------------------------------------------
-    // Section G — full pipeline: CapsLock+S while continuously moving
-    // forward directly produces BACKWARD
+    // Section H — full pipeline: direction switch and mode
+    // upgrade/downgrade from a single chorded keydown
     // -------------------------------------------------------------
     {
-        const { transition } = deriveAvatarContinuousMovementInputEvent({ capsLockDown: true, key: 's', type: 'keydown' });
+        const { transition } = deriveAvatarContinuousMovementInputEvent({ capsLockDown: true, shiftDown: true, key: 's', type: 'keydown' });
         const nextIntent = deriveAvatarContinuousMovementIntent({ currentIntent: FORWARD, ...transition });
-        assert(nextIntent === BACKWARD, '17. CapsLock+S, translated then interpreted, switches directly from continuous FORWARD to BACKWARD');
+        const nextMode = deriveAvatarContinuousMovementMode({ currentMode: WALK, ...transition });
+        assert(nextIntent === BACKWARD, '30. CapsLock+Shift+S switches continuous FORWARD directly to BACKWARD');
+        assert(nextMode === RUN, '31. the same chord upgrades continuous WALK directly to RUN, in the same keydown');
     }
-
-    // -------------------------------------------------------------
-    // Section H — full pipeline: CapsLock+W while already FORWARD
-    // remains FORWARD (no accidental toggle-off)
-    // -------------------------------------------------------------
     {
-        const { transition } = deriveAvatarContinuousMovementInputEvent({ capsLockDown: true, key: 'w', type: 'keydown' });
+        // Releasing Shift, then re-pressing CapsLock+W: downgrades
+        // RUN back to WALK while direction (already FORWARD) is
+        // idempotent.
+        const { transition } = deriveAvatarContinuousMovementInputEvent({ capsLockDown: true, shiftDown: false, key: 'w', type: 'keydown' });
         const nextIntent = deriveAvatarContinuousMovementIntent({ currentIntent: FORWARD, ...transition });
-        assert(nextIntent === FORWARD, '18. CapsLock+W while already continuously FORWARD is idempotent, never a toggle-off');
+        const nextMode = deriveAvatarContinuousMovementMode({ currentMode: RUN, ...transition });
+        assert(nextIntent === FORWARD, '32. re-activating CapsLock+W while already continuously FORWARD is idempotent for direction');
+        assert(nextMode === WALK, '33. and downgrades RUN to WALK now that Shift is no longer held');
     }
 
     // -------------------------------------------------------------
     // Section I — unrelated keys never produce a transition
     // -------------------------------------------------------------
     {
-        const unrelatedKeys = ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Shift', 'Control', 'Alt', ' ', 'Spacebar', 'a', 'd', 'Enter', 'Escape'];
+        const unrelatedKeys = ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Control', 'Alt', ' ', 'Spacebar', 'a', 'd', 'Enter', 'Escape'];
         for (const key of unrelatedKeys) {
-            const down = deriveAvatarContinuousMovementInputEvent({ capsLockDown: false, key, type: 'keydown' });
-            assert(down.transition === null, `19. "${key}" keydown never produces a continuous-movement transition`);
-            const downWhileCapsHeld = deriveAvatarContinuousMovementInputEvent({ capsLockDown: true, key, type: 'keydown' });
-            assert(downWhileCapsHeld.transition === null, `20. "${key}" keydown never produces a transition even while Caps Lock is held`);
+            const down = deriveAvatarContinuousMovementInputEvent({ capsLockDown: false, shiftDown: false, key, type: 'keydown' });
+            assert(down.transition === null, `34. "${key}" keydown never produces a continuous-movement transition`);
+            const downWhileHeld = deriveAvatarContinuousMovementInputEvent({ capsLockDown: true, shiftDown: true, key, type: 'keydown' });
+            assert(downWhileHeld.transition === null, `35. "${key}" keydown never produces a transition even while Caps Lock and Shift are both held`);
         }
-    }
-    {
-        // Caps Lock being physically down is carried through untouched
-        // by an unrelated key — it never accidentally clears or sets it.
-        const result = deriveAvatarContinuousMovementInputEvent({ capsLockDown: true, key: 'Shift', type: 'keydown' });
-        assert(result.capsLockDown === true, '21. an unrelated key never changes the tracked Caps Lock hold state');
     }
 
     // -------------------------------------------------------------
-    // Section J — key-repeat is idempotent
+    // Section J — key-repeat is idempotent for both dimensions
     // -------------------------------------------------------------
     {
-        // Holding W (no Caps Lock) fires repeated ordinary keydowns.
-        // Feeding each one through the full pipeline must never toggle
-        // intent back on.
         let intent = FORWARD;
+        let mode = RUN;
         for (let i = 0; i < 5; i += 1) {
-            const { transition } = deriveAvatarContinuousMovementInputEvent({ capsLockDown: false, key: 'w', type: 'keydown' });
+            const { transition } = deriveAvatarContinuousMovementInputEvent({ capsLockDown: false, shiftDown: false, key: 'w', type: 'keydown' });
             intent = deriveAvatarContinuousMovementIntent({ currentIntent: intent, ...transition });
+            mode = deriveAvatarContinuousMovementMode({ currentMode: mode, ...transition });
         }
-        assert(intent === NONE, '22. repeated ordinary W keydowns (key-repeat) stay cancelled, never toggle back on');
+        assert(intent === NONE && mode === NONE_MODE, '36. repeated ordinary W keydowns (key-repeat) stay cancelled for both direction and mode');
     }
     {
-        // Holding CapsLock+W fires repeated activating keydowns (browser
-        // key-repeat on the W key while Caps Lock stays physically down).
         let intent = NONE;
+        let mode = NONE_MODE;
         for (let i = 0; i < 5; i += 1) {
-            const { transition } = deriveAvatarContinuousMovementInputEvent({ capsLockDown: true, key: 'w', type: 'keydown' });
+            const { transition } = deriveAvatarContinuousMovementInputEvent({ capsLockDown: true, shiftDown: true, key: 'w', type: 'keydown' });
             intent = deriveAvatarContinuousMovementIntent({ currentIntent: intent, ...transition });
+            mode = deriveAvatarContinuousMovementMode({ currentMode: mode, ...transition });
         }
-        assert(intent === FORWARD, '23. repeated activating W keydowns (key-repeat) stay FORWARD, never toggle off');
+        assert(intent === FORWARD && mode === RUN, '37. repeated CapsLock+Shift+W keydowns (key-repeat) stay FORWARD+RUN, never toggle off');
     }
 
     // -------------------------------------------------------------
-    // Defensive / malformed input
+    // Section K — defensive / malformed input
     // -------------------------------------------------------------
     {
         const result = deriveAvatarContinuousMovementInputEvent();
-        assert(result.transition === null && result.capsLockDown === false, '24. calling with no arguments at all is safe and inert');
+        assert(result.transition === null && result.capsLockDown === false && result.shiftDown === false,
+            '38. calling with no arguments at all is safe and inert');
     }
     {
-        const result = deriveAvatarContinuousMovementInputEvent({ capsLockDown: true, key: undefined, type: 'keydown' });
-        assert(result.transition === null && result.capsLockDown === true, '25. a missing key is inert and never disturbs the tracked Caps Lock hold');
+        const result = deriveAvatarContinuousMovementInputEvent({ capsLockDown: true, shiftDown: true, key: undefined, type: 'keydown' });
+        assert(result.transition === null && result.capsLockDown === true && result.shiftDown === true,
+            '39. a missing key is inert and never disturbs either tracked modifier hold');
     }
     {
-        const result = deriveAvatarContinuousMovementInputEvent({ capsLockDown: false, key: 'w' });
+        const result = deriveAvatarContinuousMovementInputEvent({ capsLockDown: false, shiftDown: false, key: 'w' });
         assert(result.transition && result.transition.direction === 'forward',
-            '26. an omitted type defaults to keydown behavior, matching this codebase\'s "degrade gracefully" posture');
+            '40. an omitted type defaults to keydown behavior, matching this codebase\'s "degrade gracefully" posture');
     }
     {
-        const options = { capsLockDown: false, key: 'w', type: 'keydown' };
+        const result = deriveAvatarContinuousMovementInputEvent({ capsLockDown: 'yes', shiftDown: 1, key: 'w', type: 'keydown' });
+        assert(result.transition.activationRequested === true && result.transition.runRequested === true,
+            '41. truthy non-boolean capsLockDown/shiftDown are coerced like every other boolean flag in this codebase');
+    }
+    {
+        const options = { capsLockDown: true, shiftDown: true, key: 'w', type: 'keydown' };
         const snapshot = JSON.stringify(options);
         const first = deriveAvatarContinuousMovementInputEvent(options);
         const second = deriveAvatarContinuousMovementInputEvent(options);
-        assert(JSON.stringify(first) === JSON.stringify(second), '27. deriveAvatarContinuousMovementInputEvent is deterministic');
-        assert(JSON.stringify(options) === snapshot, '28. deriveAvatarContinuousMovementInputEvent never mutates the options object it was given');
+        assert(JSON.stringify(first) === JSON.stringify(second), '42. deriveAvatarContinuousMovementInputEvent is deterministic');
+        assert(JSON.stringify(options) === snapshot, '43. deriveAvatarContinuousMovementInputEvent never mutates the options object it was given');
     }
 
     // -------------------------------------------------------------
     // FLAGSHIP — the design doc's own scripted scenario, run through
-    // BOTH the adapter and 0.9.64 together, exactly as a real caller
-    // (0.9.66) will eventually wire them
+    // the adapter and BOTH 0.9.64/0.9.67 together, exactly as a real
+    // caller (0.9.69) will eventually wire them
     // -------------------------------------------------------------
     {
         let capsLockDown = false;
+        let shiftDown = false;
         let intent = NONE;
+        let mode = NONE_MODE;
 
         function feed(key, type) {
-            const result = deriveAvatarContinuousMovementInputEvent({ capsLockDown, key, type });
+            const result = deriveAvatarContinuousMovementInputEvent({ capsLockDown, shiftDown, key, type });
             capsLockDown = result.capsLockDown;
+            shiftDown = result.shiftDown;
             if (result.transition) {
                 intent = deriveAvatarContinuousMovementIntent({ currentIntent: intent, ...result.transition });
+                mode = deriveAvatarContinuousMovementMode({ currentMode: mode, ...result.transition });
             }
         }
 
         feed('CapsLock', 'keydown');
+        feed('Shift', 'keydown');
         feed('w', 'keydown');
-        assert(intent === FORWARD, '29. FLAGSHIP: CapsLock down then W down activates continuous FORWARD');
+        assert(intent === FORWARD && mode === RUN, '44. FLAGSHIP: CapsLock+Shift+W activates continuous FORWARD running');
 
         feed('w', 'keyup');
+        feed('Shift', 'keyup');
         feed('CapsLock', 'keyup');
-        assert(intent === FORWARD, '30. FLAGSHIP: releasing W and then Caps Lock leaves continuous FORWARD untouched');
+        assert(intent === FORWARD && mode === RUN, '45. FLAGSHIP: releasing every key leaves continuous FORWARD+RUN untouched');
 
         feed('w', 'keydown');
-        assert(intent === NONE, '31. FLAGSHIP: a later plain W keydown (Caps Lock no longer held) cancels continuous FORWARD');
+        assert(intent === NONE && mode === NONE_MODE, '46. FLAGSHIP: a later plain W keydown (no modifiers held) cancels both continuous FORWARD and RUN');
 
         feed('CapsLock', 'keydown');
         feed('s', 'keydown');
-        assert(intent === BACKWARD, '32. FLAGSHIP: CapsLock+S from rest activates continuous BACKWARD');
+        assert(intent === BACKWARD && mode === WALK, '47. FLAGSHIP: CapsLock+S from rest activates continuous BACKWARD walking (no Shift held)');
+
+        feed('Shift', 'keydown');
+        feed('s', 'keydown');
+        assert(intent === BACKWARD && mode === RUN, '48. FLAGSHIP: adding Shift and re-pressing S upgrades continuous BACKWARD to running, direction unchanged');
 
         feed('CapsLock', 'keyup');
         feed('w', 'keydown');
-        assert(intent === NONE, '33. FLAGSHIP: the opposite ordinary key (plain W) cancels continuous BACKWARD, the escape hatch');
+        assert(intent === NONE && mode === NONE_MODE, '49. FLAGSHIP: the opposite ordinary key (plain W, Shift still physically down) cancels continuous BACKWARD+RUN entirely — the escape hatch works for both dimensions at once');
     }
 
     // -------------------------------------------------------------
-    // Section K/L — architectural regression: no avatar mutation, no
-    // movement controller, timer, animation loop, physics engine, or
-    // persistence
+    // Section M/N — architectural regression: no avatar mutation, no
+    // movement controller, timer, animation loop, physics engine,
+    // persistence, or combined direction+mode vocabulary
     // -------------------------------------------------------------
     {
         const sourceUrl = new URL('../core/AvatarContinuousMovementInputAdapter.js', import.meta.url);
@@ -253,9 +349,10 @@ async function runTests() {
             .join('\n');
 
         const forbidden = [
-            'AvatarMovementController', 'AvatarMovementState', 'simulateAvatarMovement', 'deriveAvatarContinuousMovementIntent',
+            'AvatarMovementController', 'AvatarMovementState', 'simulateAvatarMovement', 'deriveAvatarContinuousMovementIntent', 'deriveAvatarContinuousMovementMode',
             'AvatarMovementConstraint', 'AvatarTerrainConstraint', 'AvatarStepConstraint', 'AvatarTreeConstraint',
             'AvatarPresence', 'WorldNavigationSession',
+            'FORWARD_WALK', 'FORWARD_RUN', 'BACKWARD_WALK', 'BACKWARD_RUN',
             'setTimeout', 'setInterval', 'requestAnimationFrame', 'performance.now', 'Date.now',
             'addEventListener', 'removeEventListener', 'getModifierState',
             'THREE', 'from \'three\'', 'Renderer',
@@ -263,14 +360,14 @@ async function runTests() {
             'velocity', 'acceleration', 'speed', 'position', 'rotation', 'camera'
         ];
         for (const term of forbidden) {
-            assert(!codeOnly.includes(term), `34. core/AvatarContinuousMovementInputAdapter.js's own code never references "${term}" — pure keyboard-event translation only, never movement, never DOM wiring, never the 0.9.64 intent function itself`);
+            assert(!codeOnly.includes(term), `50. core/AvatarContinuousMovementInputAdapter.js's own code never references "${term}" — pure keyboard-event translation only, never movement, never DOM wiring, never either 0.9.64/0.9.67 transition function itself, never a combined direction+mode vocabulary`);
         }
     }
     {
         const exportsModule = await import('../core/AvatarContinuousMovementInputAdapter.js');
         const exportedNames = Object.keys(exportsModule).sort();
         assert(JSON.stringify(exportedNames) === JSON.stringify(['deriveAvatarContinuousMovementInputEvent']),
-            '35. core/AvatarContinuousMovementInputAdapter.js exports exactly the one translation function — nothing else');
+            '51. core/AvatarContinuousMovementInputAdapter.js exports exactly the one translation function — nothing else');
     }
 
     console.log('✅ All Avatar Continuous Movement Input Adapter tests passed.');

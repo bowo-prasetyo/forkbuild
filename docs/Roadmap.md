@@ -54634,3 +54634,113 @@ milestone's own transition function expects, still without touching
 integration (connecting the resulting mode to the existing
 `running`/`speedMode` concept `AvatarMovementController` already has)
 follows after that, as 0.9.69.
+
+## 0.9.68 — Continuous Movement Input Adapter: Direction + Mode
+
+0.9.65 built the one seam that translates a raw Caps Lock + W/S keyboard
+chord into the shape `core/AvatarContinuousMovementIntent.js` (0.9.64)
+already knows how to interpret. 0.9.67 gave continuous movement a
+second, independent vocabulary — WALK/RUN — but deliberately stopped at
+the vocabulary itself, leaving "translate an actual keyboard chord into
+that vocabulary's own input shape" as future work. This milestone is
+that translation: `core/AvatarContinuousMovementInputAdapter.js`
+(0.9.65, extended in place rather than duplicated — it is still exactly
+one seam, now producing facts for two transition functions instead of
+one) now also tracks the physical Shift key's hold state alongside Caps
+Lock's, and reports `runRequested` on every W/S key-down alongside the
+`direction`/`activationRequested` it already reported.
+
+The chord table the design brief asked for:
+
+```text
+CapsLock + W             -> FORWARD  + WALK  (activating, runRequested: false)
+CapsLock + Shift + W     -> FORWARD  + RUN   (activating, runRequested: true)
+CapsLock + S             -> BACKWARD + WALK  (activating, runRequested: false)
+CapsLock + Shift + S     -> BACKWARD + RUN   (activating, runRequested: true)
+W / Shift+W, no CapsLock -> FORWARD, ordinary press (activationRequested: false)
+S / Shift+S, no CapsLock -> BACKWARD, ordinary press (activationRequested: false)
+```
+
+The load-bearing rule is exactly the one the brief named: **Shift
+determines the requested continuous movement mode only when Caps Lock is
+physically held.** This adapter does not encode that rule anywhere
+itself — it reports `runRequested` as the raw physical Shift-hold fact
+on every W/S key-down, activating or not, and the rule falls out
+entirely from `deriveAvatarContinuousMovementMode()`'s own
+`activationRequested` gate (0.9.67: "`runRequested` ... meaningless, and
+ignored, when `activationRequested` is false"). An ordinary Shift+W tap
+therefore still reports `runRequested: true`, and that is fine: nothing
+downstream ever looks at it, because `activationRequested` is `false`
+for that same press. This is a deliberate, documented departure from the
+milestone brief's own literal proposed output shape (`{ direction, mode,
+activationRequested }`) — see this file's own header for why reporting
+a computed `mode` here, rather than the raw `runRequested` fact
+`deriveAvatarContinuousMovementMode()` itself already declares as its
+expected input, would mean re-implementing that function's own
+WALK-vs-RUN decision a second time, in a second place, which is exactly
+the kind of combined transition vocabulary both this milestone's own
+brief and 0.9.67's own header rule out.
+
+Caps Lock and Shift are tracked the identical way, for the identical
+reason: two caller-owned physical-hold booleans (`capsLockDown`,
+`shiftDown`), carried between calls exactly as 0.9.65 already carried
+`capsLockDown` alone, never a browser modifier-toggle read
+(`event.getModifierState(...)`). Because both are plain current-state
+facts rather than a record of press order, "Shift down, then Caps Lock
+down, then W" and "Caps Lock down, then Shift down, then W" produce
+byte-identical transitions — the adapter answers "what is physically
+held right now," never "in what order did it become held."
+
+This milestone still does not call either transition function itself,
+and still does not invent a fourth vocabulary
+(`FORWARD_WALK`/`FORWARD_RUN`/`BACKWARD_WALK`/`BACKWARD_RUN`) — the
+`transition` object it returns simply carries every fact both
+`deriveAvatarContinuousMovementIntent()` and
+`deriveAvatarContinuousMovementMode()` need, `{ direction,
+activationRequested, runRequested }`, ready for a caller to feed to
+both, independently, as 0.9.69 will. Because both existing 0.9.64/0.9.67
+transition rules already treat an ordinary press as an unconditional
+clear, feeding the SAME ordinary key-down's transition into both
+produces exactly the cancellation semantics the design brief called
+out: continuous FORWARD+RUN, then a later ordinary S (Caps Lock no
+longer held), clears BOTH dimensions to NONE/NONE — never silently
+produces BACKWARD+RUN. `tests/AvatarContinuousMovementInputAdapter.test.js`
+(extended in place, same file 0.9.65 wrote) asserts this explicitly,
+alongside every activation/idempotence/switch/cancellation combination
+for both dimensions together, modifier-order independence, key-repeat
+idempotence for both dimensions at once, defensive handling of
+malformed input, and a FLAGSHIP scenario that chords CapsLock+Shift+W
+to FORWARD+RUN, releases every key, later cancels with a plain W, then
+activates CapsLock+S and upgrades it to running mid-stream with Shift —
+run through the adapter and both transition functions together, exactly
+as 0.9.69's real caller will. A closing architectural-regression section
+proves the adapter's own code never references either transition
+function by name, any of the four forbidden combined-vocabulary names,
+`AvatarMovementController`, a timer or animation-frame API, DOM wiring,
+or a speed/velocity/position value — and that it still exports exactly
+the one translation function.
+
+`application/WorldNavigationSession.js` (the 0.9.66 caller) is
+deliberately untouched: it already calls
+`deriveAvatarContinuousMovementInputEvent({ capsLockDown, key, type })`
+without a `shiftDown`, which this milestone's new parameter defaults to
+`false` for — the exact same "a controller built without the new
+capability behaves exactly as it did before this milestone" posture
+this codebase already applies to every other optional/additive
+extension (see e.g. `application/AvatarMovementController.js`'s own
+0.2.42 header). Wiring `_shiftDown` tracking and the resulting
+`runRequested` fact into an actual `setContinuousMovementMode()` call is
+explicitly deferred to 0.9.69, the mode-vocabulary counterpart to
+0.9.66.
+
+Next: 0.9.69, Continuous Movement Mode Controller Integration — wiring
+this adapter's `runRequested` fact, together with 0.9.67's own
+`deriveAvatarContinuousMovementMode()`, into
+`AvatarMovementController`'s existing `running`/`speedMode` concept,
+the direct mode-vocabulary counterpart to 0.9.66. The flagship scenario
+that milestone should demonstrate: CapsLock+Shift+W, release every key,
+the avatar keeps running, reaches a deterministic tree, and the
+existing tree collision constraint resolves the run exactly as it
+already resolves an ordinary walk — proving continuous running is not a
+second movement system, only another persistent input state flowing
+through the movement pipeline that already works.
