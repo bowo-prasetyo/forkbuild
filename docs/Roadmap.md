@@ -56460,3 +56460,163 @@ and letting that integration reveal whether the movement
 controller/session needs a genuinely new seam. If it does, that
 becomes the next milestone; if it doesn't, none should be invented
 merely to keep the sequence going.
+
+## 0.9.83 — Avatar-Vehicle Mount/Dismount Runtime Integration
+
+0.9.73 through 0.9.82 built a complete mount/dismount semantic
+chain — proximity, identity, intent, target resolution, a mount
+descriptor, a mount transition, dismount intent, dismount destination
+resolution, destination clearance, and a dismount transition — entirely
+inside `core/`, and, until this milestone, entirely uncalled by
+anything else in this codebase. This milestone is deliberately narrow,
+exactly as 0.9.82's own closing paragraph anticipated:
+
+> Connect the already-complete mount/dismount semantic pipeline to
+> `WorldNavigationSession`, without introducing vehicle movement yet.
+
+`application/AvatarVehicleInteractionController.js` (new) is the one
+piece of new code. It is an orchestration-only application-layer
+controller, the direct structural sibling of
+`application/AvatarMovementController.js` and
+`application/AvatarTreeConstraint.js`, wired into
+`application/WorldNavigationSession.js` alongside the existing movement
+controller:
+
+```
+keyboard 'E' (held/released)
+        |
+        v
+AvatarVehicleInteractionController#tick()  (once per animation frame)
+        |
+        +-- not mounted -> MOUNT path:
+        |     AvatarVehicleInteractionIntent (0.9.75)
+        |       -> AvatarVehicleInteractionTarget (0.9.76)
+        |       -> AvatarVehicleMountTransition (0.9.78)
+        |
+        +-- mounted -> DISMOUNT path:
+              AvatarVehicleDismountIntent (0.9.79)
+                -> AvatarVehicleDismountPosition (0.9.80)
+                -> AvatarVehicleDismountClearance (0.9.81)
+                -> AvatarVehicleDismountTransition (0.9.82)
+```
+
+**No new mount/dismount policy anywhere in this milestone.** Every
+actual decision — is a target in range, is a destination clear, does
+an intent plus current state actually transition — is made entirely
+inside the nine already-complete, already independently tested pure
+functions the controller calls. The controller supplies exactly three
+things none of those functions is allowed to supply for itself: WHERE
+the avatar currently is (`AvatarPresenceSession`), WHICH vehicles
+currently exist nearby, and WHEN to ask (once per animation frame).
+
+**Where does `mount` live?** This was the one open architectural
+question this milestone existed to answer. Neither
+`AvatarPresenceSession` (which owns WHERE the avatar is — signed and
+broadcast — and was explicitly never meant to grow a
+`mountedVehicleId`, per `core/AvatarVehicleMount.js`'s own header) nor
+`AvatarMovementController` (which owns raw movement key state and the
+kinematics tick, and this milestone deliberately never touches) is the
+right home. The answer: `mount` lives directly on
+`AvatarVehicleInteractionController` itself — its own small piece of
+session-local runtime state, exactly as small as
+`core/AvatarVehicleMount.js`'s own descriptor. `WorldNavigationSession`
+exposes it read-only via the new `avatarVehicleMount()` method, the
+session-level counterpart to `isAvatarControlModeActive()`.
+
+**Vehicle lookup is a requery, never a registry.** Both the mount path
+(0.9.76's own `vehicles` candidate list) and the dismount path (0.9.80's
+own "takes the actual `VehiclePresence`, never a vehicle id") need real
+`VehiclePresence` instances, and nothing in this codebase holds a
+"currently known vehicles" collection anywhere. Rather than building
+one, the controller's own `_nearbyVehicles()` extends the exact pattern
+`application/AvatarTreeConstraint.js` already established for trees:
+vehicles, like trees, are a pure function of `(seed, x, z)` —
+`core/VehiclePlacement.js`'s own "recomputed, never stored" — so a
+small, seed-scoped, stateless region requery around the avatar's own
+current position (via `vehiclePresenceInRegion()`) is already the
+correct "currently available" answer. The identical requery serves
+both the mount path's candidate list and the dismount path's own
+"find the vehicle I'm mounted on by id" lookup — no persistent vehicle
+registry was introduced, because none was needed.
+
+**One shared interaction key ('E'), one action per physical press —
+and the one real bug this design had to guard against.** Which intent
+is even asked for is decided by the controller's own current `mount`
+state: not mounted asks MOUNT, mounted asks DISMOUNT. Held-key state
+alone is not sufficient to drive this safely: `mount` can flip from
+non-null to `null` in the middle of a single held press (the exact
+tick a dismount succeeds), and a just-dismounted avatar stands well
+within its own former vehicle's interaction radius
+(`BICYCLE_DISMOUNT_OFFSET_X` is 1, `VEHICLE_INTERACTION_RADIUS` is
+1.5) — so naively polling "is E held" on the very next tick would
+route into the MOUNT path and immediately remount the vehicle the
+avatar just left, a real mount<->dismount ping-pong for as long as the
+key stayed physically down. A second piece of state,
+`_interactKeyConsumed`, closes this: once a held press causes ONE
+transition (either direction), the request is held false for the rest
+of that same press, regardless of how many further ticks the key
+stays down; only a genuine release re-arms it. This also happens to be
+exactly the "single action request" semantics
+`core/AvatarVehicleInteractionIntent.js`'s and
+`core/AvatarVehicleDismountIntent.js`'s own headers already describe —
+this milestone is what makes that description true across the
+mount/dismount boundary the two intents don't individually know about.
+
+**A known, deliberately open boundary — no movement coupling.**
+Mounting causes "no movement changes" (0.9.78's own header), and this
+milestone's own brief is equally explicit that vehicle movement, and
+any coupling between mount state and `AvatarMovementController`, is
+out of scope. The controller never disables, slows, or otherwise
+touches ordinary W/A/S/D movement while mounted — an avatar can walk
+away from a vehicle it is nominally "mounted" on. If it walks far
+enough that the vehicle falls outside the controller's own query
+rectangle, the dismount path's own honest `dismountPosition: null`
+case (0.9.80's own "no destination known") leaves the avatar mounted
+with its position unchanged — never a crash, never a wrong teleport.
+Deciding what a mounted avatar's movement should even mean is exactly
+the seam this milestone's own brief anticipated as the next
+architectural decision point, not something to guess at here.
+
+**Wiring inside `WorldNavigationSession`:** a new
+`AvatarVehicleInteractionController` is constructed alongside
+`AvatarMovementController` in `_setupLocalAvatar()`, ticked on the
+same `onAnimationFrame` callback right after the movement controller's
+own tick; `avatarKeyDown()`/`avatarKeyUp()` forward the raw key to
+both controllers independently (either recognizing it is enough to
+consume the event); `setAvatarControlMode(false)` and
+`releaseAvatarMovementKeys()` release the interaction key exactly
+where they already release movement keys; the new
+`avatarVehicleMount()` getter and the `dispose()` reset are the only
+other session-level surface. No other public method's shape changed.
+
+Tests: `tests/AvatarVehicleInteractionController.test.js` (Sections
+A-F) exercises the controller directly against real, deterministically
+placed bicycles and real, deterministically placed trees — a real
+mount, a real successful dismount to an exact resolved destination, a
+real dismount blocked by a real tree, and (the flagship of this file)
+proof that holding the interaction key across a successful dismount
+never immediately remounts. `tests/AvatarVehicleRuntimeIntegration.test.js`
+(Sections A-D) proves the same chain end to end through a real
+`WorldNavigationSession`, plus a regression sweep confirming ordinary
+W/A/S/D movement, and `AvatarPresence`'s own wire shape, are completely
+unaffected.
+
+## What this milestone deliberately does NOT do
+
+Bicycle/motorcycle/car/drone movement, speed, acceleration, physics,
+orientation; any coupling between mount state and
+`AvatarMovementController`; vehicle collision; camera changes; vehicle
+animation; vehicle persistence; networking or multiplayer ownership of
+`mount`; vehicle spawning changes; a persistent vehicle registry of any
+kind (a requery was sufficient — see above); a second interaction key
+for a future non-bicycle vehicle type; drone-specific behavior; vehicle
+switching while mounted (0.9.78's own no-op rule already prevents it).
+
+The existing World View can now mount and dismount a deterministic
+bicycle using the complete semantic pipeline, while vehicle movement
+remains completely untouched. The next question this integration
+surfaces, and the most likely direction for whatever comes after this
+milestone: how should mounted movement modify the avatar's existing
+movement capability without creating a second movement system — not
+predetermined here, but left for the actual runtime, now that it
+exists, to answer.
