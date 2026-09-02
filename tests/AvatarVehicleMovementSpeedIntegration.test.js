@@ -39,7 +39,9 @@ import { Position } from '../core/Position.js';
 //              is byte-for-byte unaffected by this milestone
 //   Section B: GROUND_VEHICLE speed > WALK speed, for identical input
 //   Section C: BICYCLE/MOTORCYCLE/CAR all resolve to the exact same
-//              GROUND_VEHICLE speed
+//              GROUND_VEHICLE movement kind, but (0.9.87) now cover
+//              strictly increasing ground for identical input —
+//              BICYCLE < MOTORCYCLE < CAR
 //   Section D: capability switching (WALK -> GROUND_VEHICLE -> WALK)
 //              immediately restores the original speed, with no
 //              controller reconstruction
@@ -62,6 +64,16 @@ import { Position } from '../core/Position.js';
 // off a resolved capability (`movementSpeed`) and hands it to the ONE
 // existing simulation function; it still has no idea a bicycle, a
 // motorcycle, a car, or a drone exists. See docs/Roadmap.md, 0.9.86.
+//
+// 0.9.87 note: Section C below now asserts BICYCLE < MOTORCYCLE < CAR
+// (core/AvatarVehicleMovementCapability.js now hands each its own
+// `movementSpeed`), superseding this file's own original "all three
+// produce byte-identical positions" assertion. Section H's own
+// architectural regression sweep is otherwise unchanged and still
+// passes unmodified — 0.9.87 changed zero lines in
+// application/AvatarMovementController.js or
+// core/AvatarMovementSimulation.js, exactly as this milestone's own
+// brief requires. See docs/Roadmap.md, 0.9.87.
 
 class InMemoryStorageProvider extends StorageProvider {
     constructor() { super(); this._data = new Map(); }
@@ -316,7 +328,7 @@ async function runTests() {
     }
 
     // -------------------------------------------------------------
-    // Section C — BICYCLE/MOTORCYCLE/CAR share the same speed
+    // Section C — BICYCLE < MOTORCYCLE < CAR (0.9.87)
     // -------------------------------------------------------------
     {
         const { avatarPresenceSession: bicycleSession } = buildAvatarStack(registry, 'speed-c1-bicycle');
@@ -329,6 +341,13 @@ async function runTests() {
         motorcycleController.setMovementCapability(resolveAvatarVehicleMovementCapability(VehicleType.MOTORCYCLE));
         carController.setMovementCapability(resolveAvatarVehicleMovementCapability(VehicleType.CAR));
 
+        assert(
+            bicycleController.movementCapability() === AvatarMovementCapabilityKind.GROUND_VEHICLE
+            && motorcycleController.movementCapability() === AvatarMovementCapabilityKind.GROUND_VEHICLE
+            && carController.movementCapability() === AvatarMovementCapabilityKind.GROUND_VEHICLE,
+            '14. BICYCLE, MOTORCYCLE, and CAR still all report the exact same GROUND_VEHICLE movement kind through the real movement pipeline — capability and vehicle identity are two different dimensions'
+        );
+
         for (const controller of [bicycleController, motorcycleController, carController]) {
             controller.keyDown('w');
         }
@@ -337,11 +356,11 @@ async function runTests() {
             motorcycleController.tick(0.05);
             carController.tick(0.05);
         }
-        assert(
-            Math.abs(bicycleSession.current.position.z - motorcycleSession.current.position.z) < 1e-9
-            && Math.abs(bicycleSession.current.position.z - carSession.current.position.z) < 1e-9,
-            '14. BICYCLE, MOTORCYCLE, and CAR all produce byte-identical positions for identical input — this milestone deliberately does not yet differentiate them numerically'
-        );
+        const bicycleDistance = bicycleSession.current.position.z;
+        const motorcycleDistance = motorcycleSession.current.position.z;
+        const carDistance = carSession.current.position.z;
+        assert(bicycleDistance < motorcycleDistance && motorcycleDistance < carDistance,
+            '14a. as of 0.9.87, BICYCLE < MOTORCYCLE < CAR: for identical input over identical elapsed time, driven through the real movement pipeline (simulateAvatarMovement()), not just by inspecting capability objects — superseding 0.9.86\'s own "all three produce byte-identical positions" behavior');
     }
 
     // -------------------------------------------------------------

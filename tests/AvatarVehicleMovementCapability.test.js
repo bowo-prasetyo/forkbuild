@@ -25,15 +25,21 @@ import {
 //              imports anywhere in this file's own source
 //
 // Central architectural claim under test throughout: this file answers
-// only "what movement capability — kind, support, and (as of 0.9.86)
-// base speed — does the avatar's current vehicle relationship imply,"
-// never how, or whether yet, that capability actually moves anything.
-// See docs/Roadmap.md, 0.9.84 and 0.9.86.
+// only "what movement capability — kind, support, and (as of 0.9.86,
+// now per-vehicle as of 0.9.87) base speed — does the avatar's current
+// vehicle relationship imply," never how, or whether yet, that
+// capability actually moves anything. See docs/Roadmap.md, 0.9.84,
+// 0.9.86, and 0.9.87.
 //
 // 0.9.86 note: every constructor call below now passes a fourth
 // `movementSpeed` argument (the class's own new required field — see
 // core/AvatarVehicleMovementCapability.js's own 0.9.86 header), and
 // each section's own expected-shape assertions now include it.
+//
+// 0.9.87 note: BICYCLE/MOTORCYCLE/CAR no longer share one number —
+// Sections B/C/D now assert the exact per-vehicle values and the
+// WALK < BICYCLE < MOTORCYCLE < CAR ordering, superseding 0.9.86's own
+// "all three share the exact same movementSpeed" assertions.
 
 function assert(condition, message) {
     if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
@@ -80,7 +86,10 @@ async function runTests() {
         assert(capability.movementKind === AvatarMovementCapabilityKind.GROUND_VEHICLE, '7. MOTORCYCLE resolves to the GROUND_VEHICLE capability kind');
         assert(capability.vehicleType === VehicleType.MOTORCYCLE, '8. the resolved capability carries VehicleType.MOTORCYCLE');
         assert(capability.supported === true, '9. GROUND_VEHICLE is a supported capability kind, for motorcycle too');
-        assert(capability.movementSpeed === 6, '9a. MOTORCYCLE\'s own movementSpeed is also 6 — the same shared GROUND_VEHICLE speed as BICYCLE');
+        assert(capability.movementSpeed === 9, '9a. MOTORCYCLE\'s own movementSpeed is 9 world units/second — strictly greater than BICYCLE\'s own 6 (0.9.87)');
+
+        const bicycleCapability = resolveAvatarVehicleMovementCapability(VehicleType.BICYCLE);
+        assert(capability.movementSpeed > bicycleCapability.movementSpeed, '9b. MOTORCYCLE is strictly faster than BICYCLE (0.9.87)');
     }
 
     // -------------------------------------------------------------
@@ -91,13 +100,19 @@ async function runTests() {
         assert(capability.movementKind === AvatarMovementCapabilityKind.GROUND_VEHICLE, '10. CAR resolves to the GROUND_VEHICLE capability kind');
         assert(capability.vehicleType === VehicleType.CAR, '11. the resolved capability carries VehicleType.CAR');
         assert(capability.supported === true, '12. GROUND_VEHICLE is a supported capability kind, for car too');
+        assert(capability.movementSpeed === 12, '12a. CAR\'s own movementSpeed is 12 world units/second — strictly greater than MOTORCYCLE\'s own 9 (0.9.87)');
 
+        const walkCapability = resolveAvatarVehicleMovementCapability(VehicleType.NONE);
         const bicycleCapability = resolveAvatarVehicleMovementCapability(VehicleType.BICYCLE);
         const motorcycleCapability = resolveAvatarVehicleMovementCapability(VehicleType.MOTORCYCLE);
         assert(capability.movementKind === bicycleCapability.movementKind && capability.movementKind === motorcycleCapability.movementKind,
             '13. bicycle, motorcycle, and car all share the exact same GROUND_VEHICLE movement kind — grouped, not three separate ground vocabularies');
-        assert(capability.movementSpeed === bicycleCapability.movementSpeed && capability.movementSpeed === motorcycleCapability.movementSpeed,
-            '13a. ...and, as of 0.9.86, the exact same movementSpeed too — this milestone deliberately does not yet differentiate bicycle/motorcycle/car numerically');
+        assert(
+            walkCapability.movementSpeed < bicycleCapability.movementSpeed
+            && bicycleCapability.movementSpeed < motorcycleCapability.movementSpeed
+            && motorcycleCapability.movementSpeed < capability.movementSpeed,
+            '13a. WALK < BICYCLE < MOTORCYCLE < CAR — the exact ordering this milestone (0.9.87) exists to establish, superseding 0.9.86\'s own "bicycle/motorcycle/car share one number" behavior'
+        );
     }
 
     // -------------------------------------------------------------
@@ -211,8 +226,8 @@ async function runTests() {
     {
         const original = resolveAvatarVehicleMovementCapability(VehicleType.MOTORCYCLE);
         const json = original.toJSON();
-        assert(JSON.stringify(json) === JSON.stringify({ movementKind: 'ground_vehicle', vehicleType: 'motorcycle', supported: true, movementSpeed: 6 }),
-            '41. toJSON() produces the plain expected shape, movementSpeed (0.9.86) included');
+        assert(JSON.stringify(json) === JSON.stringify({ movementKind: 'ground_vehicle', vehicleType: 'motorcycle', supported: true, movementSpeed: 9 }),
+            '41. toJSON() produces the plain expected shape, movementSpeed (0.9.86, per-vehicle as of 0.9.87) included');
 
         const reconstructed = AvatarVehicleMovementCapability.fromJSON(json);
         assert(reconstructed.movementKind === original.movementKind && reconstructed.vehicleType === original.vehicleType && reconstructed.supported === original.supported && reconstructed.movementSpeed === original.movementSpeed,

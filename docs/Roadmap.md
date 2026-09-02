@@ -57137,4 +57137,125 @@ the opposite, by design.
 Next: with a single, shared `GROUND_VEHICLE` speed now real, a future
 milestone can differentiate BICYCLE/MOTORCYCLE/CAR numerically from one
 another — but only once there is an actual design reason to, not
-merely for symmetry.
+merely for symmetry. See 0.9.87 below — the original intended
+progression (0.9.70) is that reason.
+
+## 0.9.87 — Per-Vehicle Ground Movement Speed Resolution
+
+0.9.86 made GROUND_VEHICLE faster than WALK, deliberately with ONE
+shared number across BICYCLE, MOTORCYCLE, and CAR, and named
+differentiating them as its own explicit next step. This milestone is
+that step: the original intended progression named all the way back in
+0.9.70's own header — `WALK < BICYCLE < MOTORCYCLE < CAR` — is now real.
+
+```
+BICYCLE ─────┐                          BICYCLE ───────► GROUND_VEHICLE ──► 6
+MOTORCYCLE ──┼──► GROUND_VEHICLE ──► 6   MOTORCYCLE ────► GROUND_VEHICLE ──► 9
+CAR ─────────┘                          CAR ───────────► GROUND_VEHICLE ──► 12
+        (0.9.86)                                  (0.9.87)
+```
+
+**The change is confined entirely to
+`core/AvatarVehicleMovementCapability.js`'s own resolution data.**
+0.9.86's single `GROUND_VEHICLE_MOVEMENT_SPEED` constant is replaced by
+three: `BICYCLE_MOVEMENT_SPEED` (`6` — unchanged from 0.9.86, so nothing
+that already mounted a bicycle changes speed), `MOTORCYCLE_MOVEMENT_SPEED`
+(`9`), and `CAR_MOVEMENT_SPEED` (`12`) — each fed to its own vehicle's
+entry in the resolver's frozen `CAPABILITY_BY_VEHICLE_TYPE` table.
+`WALK_MOVEMENT_SPEED` (`3`) is untouched. The one semantic requirement
+this milestone's own brief asks for is simply
+`WALK < BICYCLE < MOTORCYCLE < CAR` — the exact three constants chosen
+are deliberately conservative, not tuned game-balance numbers.
+
+**`AvatarMovementCapabilityKind` still has exactly three values.** This
+milestone does NOT add `BICYCLE`/`MOTORCYCLE`/`CAR` as sibling
+capability kinds alongside `WALK`/`GROUND_VEHICLE`/`AERIAL_VEHICLE` —
+all three ground vehicles still resolve to the exact same
+`AvatarMovementCapabilityKind.GROUND_VEHICLE`. `movementKind` names
+WHICH movement algorithm applies (one, unchanged); `movementSpeed`
+names a PARAMETER fed to it (now three different values). Differentiating
+vehicles by giving the ONE existing ground-movement algorithm three
+different numbers — rather than three new algorithms, or three new
+capability kinds — is this milestone's entire architectural point:
+movement semantics and movement parameters are separate dimensions, and
+the same `GROUND_VEHICLE` algorithm can consume different parameters.
+
+**Zero corresponding changes to movement simulation.**
+`application/AvatarMovementController.js` and
+`core/AvatarMovementSimulation.js` are untouched by this milestone —
+both already read only a resolved capability's own generic
+`movementSpeed` number (0.9.86's own seam), with no idea a bicycle, a
+motorcycle, a car, or a drone exists. This milestone hands that seam
+three different numbers instead of one; it changes no line of either
+file. `AvatarMovementController` still contains no `VehicleType.BICYCLE`/
+`MOTORCYCLE`/`CAR` literal, matching the exact discipline 0.9.85/0.9.86
+already established — this milestone's own architectural regression
+test (`tests/AvatarPerVehicleGroundSpeedIntegration.test.js`, Section D)
+proves it directly by scanning both files' own source.
+
+**Running still means exactly what it already did.** `RUN_SPEED_MULTIPLIER`
+(0.9.86) still multiplies whatever base speed is active — now BICYCLE's
+own 6, MOTORCYCLE's own 9, or CAR's own 12, exactly as it already
+multiplies WALK's own 3. There is no second, per-vehicle "running"
+concept: a test in this milestone's own suite proves the running/walking
+distance ratio is identical (and equals the existing multiplier) for
+each of BICYCLE, MOTORCYCLE, and CAR individually.
+
+**Switching is immediate, with no drift.** Replacing the active capability
+on the SAME `AvatarMovementController` instance — BICYCLE -> MOTORCYCLE
+-> CAR -> WALK — changes the effective speed on the very next tick, and
+returning to WALK at the end of that chain produces byte-identical
+ground to a controller that only ever walked. No controller
+reconstruction, no residual influence from whichever vehicle was
+previously active.
+
+**`AERIAL_VEHICLE`/DRONE is untouched.** Still `supported: false`,
+still `movementSpeed: 0`, still fully blocked by
+`AvatarMovementController`'s own 0.9.85 `tick()` guard before any speed
+is ever consulted. No ground speed is assigned to it merely to make the
+capability descriptor "complete."
+
+## What this milestone deliberately does NOT do
+
+A second, per-vehicle `AvatarMovementCapabilityKind` vocabulary
+alongside the existing WALK/GROUND_VEHICLE/AERIAL_VEHICLE three.
+Acceleration, braking, momentum, vehicle-specific turning radius,
+vehicle dimensions, vehicle collision, different steering models,
+road/path behavior, terrain-specific vehicle behavior, camera changes,
+animation, or drone movement — none of these exist anywhere in this
+codebase, this milestone included; motorcycles and cars still do not
+"feel" different from one another beyond speed. Any change to the
+tree/terrain/building/step constraint pipeline, mounting/dismounting
+semantics, vehicle placement, proximity, or target resolution — all
+untouched, exactly as 0.9.86 left them.
+
+Tests: `tests/AvatarVehicleMovementCapability.test.js` (0.9.84's own
+suite) is updated in place — Section B/C/D now assert BICYCLE's,
+MOTORCYCLE's, and CAR's own exact `movementSpeed` values and the
+WALK < BICYCLE < MOTORCYCLE < CAR ordering, superseding 0.9.86's own
+"all three share one number" assertions; Section J's reconstruction
+check is updated for MOTORCYCLE's new value. `tests/AvatarVehicleMovementSpeedIntegration.test.js`
+(0.9.86's own suite) is updated in place — Section C now asserts
+BICYCLE < MOTORCYCLE < CAR through the real movement pipeline instead
+of byte-identical positions; every other section (WALK regression,
+GROUND_VEHICLE-outpaces-WALK, switching, running, DRONE blocked,
+determinism, and the architectural regression sweep) is unchanged and
+still passes unmodified, proving this milestone touched nothing else.
+A new dedicated suite, `tests/AvatarPerVehicleGroundSpeedIntegration.test.js`,
+covers this milestone directly: exact per-vehicle values; the full
+ordering; BICYCLE/MOTORCYCLE/CAR still sharing one GROUND_VEHICLE kind;
+an architectural regression sweep of both
+`application/AvatarMovementController.js` and
+`core/AvatarMovementSimulation.js` for any BICYCLE/MOTORCYCLE/CAR
+literal; end-to-end distance ratios through the real
+`simulateAvatarMovement()` pipeline matching the resolved speed ratios
+exactly; running covering exactly twice the ground for each of
+BICYCLE/MOTORCYCLE/CAR individually; the full BICYCLE -> MOTORCYCLE ->
+CAR -> WALK switching chain on one controller instance; and
+AERIAL_VEHICLE/DRONE remaining fully blocked.
+
+Next: with BICYCLE/MOTORCYCLE/CAR now numerically differentiated,
+ground-vehicle movement behavior beyond speed — most likely steering/
+turning or vehicle collision — becomes the next genuinely interesting
+seam, but only once actual runtime behavior tells us which one is
+needed first.
