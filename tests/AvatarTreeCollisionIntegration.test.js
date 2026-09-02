@@ -4,6 +4,8 @@ import { AvatarMovementController } from '../application/AvatarMovementControlle
 import { treeCollisionGeometryInRegion } from '../core/TreeCollisionGeometry.js';
 import { DEFAULT_WORLD_SEED } from '../core/TerrainHeightField.js';
 import { AVATAR_COLLISION_RADIUS } from '../core/AvatarCollision.js';
+import { VehicleType } from '../core/VehicleType.js';
+import { resolveAvatarVehicleMovementCapability } from '../core/AvatarVehicleMovementCapability.js';
 import { AvatarTemplateRegistry } from '../core/AvatarTemplateRegistry.js';
 import { CoreAvatarTemplateLibrary } from '../core/library/CoreAvatarTemplateLibrary.js';
 import { AvatarProfileUseCase } from '../application/AvatarProfileUseCase.js';
@@ -174,6 +176,36 @@ async function runTests() {
         assert(JSON.stringify(a) === JSON.stringify(b),
             '11. AvatarTreeConstraint: two independent default-seed instances resolve the identical movement identically');
     }
+    {
+        // 0.9.88 — avatarRadius passthrough: a caller-supplied radius
+        // (a mounted vehicle's own, larger collisionRadius) reaches BOTH
+        // the candidate query and the resolution step, stopping strictly
+        // further from a real tree than the default (walking-avatar)
+        // radius does — this is the exact end-to-end proof the
+        // milestone's own brief calls out as its single most important
+        // technical detail: the candidate query and the resolver must
+        // never disagree about which radius is active.
+        const carRadius = 0.80; // matches CAR_COLLISION_RADIUS, core/AvatarVehicleMovementCapability.js
+        const approachStart = { x: realTree.center.x, y: 0, z: realTree.center.z - (realTree.radius + carRadius + 5) };
+        const desired = { x: realTree.center.x, y: 0, z: realTree.center.z };
+
+        const walkResult = new AvatarTreeConstraint().apply(approachStart, desired);
+        const carResult = new AvatarTreeConstraint().apply(approachStart, desired, { avatarRadius: carRadius });
+
+        const walkDistToCenter = Math.hypot(walkResult.position.x - realTree.center.x, walkResult.position.z - realTree.center.z);
+        const carDistToCenter = Math.hypot(carResult.position.x - realTree.center.x, carResult.position.z - realTree.center.z);
+        assert(carResult.collided === true, '11a. AvatarTreeConstraint: a car-sized avatarRadius still detects the real tree as a collision');
+        assert(carDistToCenter > walkDistToCenter,
+            '11b. AvatarTreeConstraint: a car-sized avatarRadius stops strictly further from the real tree\'s own center than the default (walking) radius does');
+        assert(Math.abs(carDistToCenter - (carRadius + realTree.radius)) < 1e-6,
+            '11c. AvatarTreeConstraint: the car-sized resolution stops exactly at carRadius + tree.radius — the SAME radius reached both the candidate query and the resolver, never a mismatched pair');
+
+        // Omitting avatarRadius entirely reproduces the exact default
+        // (walking-avatar) result, byte for byte.
+        const explicitWalkRadius = new AvatarTreeConstraint().apply(approachStart, desired, { avatarRadius: AVATAR_COLLISION_RADIUS });
+        assert(JSON.stringify(walkResult) === JSON.stringify(explicitWalkRadius),
+            '11d. AvatarTreeConstraint: omitting the options argument entirely produces the exact same result as explicitly passing { avatarRadius: AVATAR_COLLISION_RADIUS }');
+    }
 
     // -------------------------------------------------------------
     // Section B — application/AvatarMovementController.js
@@ -248,6 +280,44 @@ async function runTests() {
         controller.tick(0.5);
         assert(treeSawTo.x === startPos.x && treeSawTo.z === startPos.z,
             '19. AvatarMovementController: tree collision is evaluated against the position building collision ALREADY resolved to, never the raw pre-collision kinematic proposal');
+    }
+    {
+        // 0.9.88 — the ONE new wire this milestone adds: whatever the
+        // ACTIVE movement capability's own collisionRadius currently is
+        // reaches the tree constraint's own `avatarRadius` option, every
+        // tick, tracking capability changes with no drift.
+        const { avatarPresenceSession } = buildAvatarStack(registry, 'tree-radius-wire');
+        let treeSawOptions = null;
+        const observingTree = {
+            apply: (position, desired, options) => {
+                treeSawOptions = options;
+                return { position: desired, collided: false };
+            }
+        };
+        const controller = new AvatarMovementController(avatarPresenceSession, null, null, null, observingTree);
+
+        // No capability ever set — the documented default degrades to
+        // `undefined`, letting the tree constraint's own downstream
+        // default (AVATAR_COLLISION_RADIUS) take over.
+        controller.keyDown('w');
+        controller.tick(0.5);
+        assert(treeSawOptions.avatarRadius === undefined,
+            '19a. AvatarMovementController: with no movement capability ever set, the tree constraint\'s own avatarRadius option is undefined — the documented "never set means WALK\'s own existing radius" default');
+
+        // Switching to CAR immediately changes the radius the very next
+        // tick — no drift, no residual WALK influence.
+        controller.setMovementCapability(resolveAvatarVehicleMovementCapability(VehicleType.CAR));
+        controller.tick(0.5);
+        assert(treeSawOptions.avatarRadius === 0.80,
+            '19b. AvatarMovementController: setting CAR movement capability immediately feeds its own collisionRadius (0.80) to the tree constraint on the very next tick');
+
+        // Switching back to WALK (VehicleType.NONE) immediately restores
+        // the avatar's own existing radius.
+        controller.setMovementCapability(resolveAvatarVehicleMovementCapability(VehicleType.NONE));
+        controller.tick(0.5);
+        assert(treeSawOptions.avatarRadius === 0.35,
+            '19c. AvatarMovementController: switching back to WALK immediately restores the 0.35 avatar radius on the very next tick, with no residual CAR influence');
+        controller.keyUp('w');
     }
     {
         // F — Swept-path detection: a single, fast tick straight through
