@@ -347,7 +347,8 @@ async function runTests() {
         const forwardOnlyCapability = new AvatarVehicleMovementCapability(
             forwardOnly.movementKind, forwardOnly.vehicleType, forwardOnly.supported,
             forwardOnly.movementSpeed, forwardOnly.collisionRadius,
-            new AvatarMovementDirectionCapability(true, false)
+            new AvatarMovementDirectionCapability(true, false),
+            forwardOnly.acceleration
         );
 
         const { avatarPresenceSession } = buildAvatarStack(registry, 'dir-g1');
