@@ -57635,3 +57635,187 @@ vehicle someday disallowing reverse, say) is real future scope this
 milestone deliberately leaves open, exactly as 0.9.84 left per-vehicle
 speed differentiation open until 0.9.87 gave it an actual reason to
 exist.
+
+## 0.9.90 — Vehicle Acceleration Capability
+
+0.9.86-0.9.89 gave a movement capability an opinion about HOW FAST it
+moves, HOW MUCH SPACE it occupies, and WHICH DIRECTIONS it permits — all
+three STATELESS: capability -> value, resolved once, with no notion of
+time. This milestone asks the first genuinely different question:
+0.9.87 defined how fast a vehicle CAN move; this milestone defines how
+QUICKLY it reaches that speed. Deliberately kept extremely small — the
+pure capability vocabulary and the pure mathematical resolution it
+implies, with NEITHER wired into `application/AvatarMovementController.js`
+yet. Existing instantaneous movement behavior remains completely
+unchanged; braking, coasting, friction, momentum, and any transient
+"current speed" state are all explicit future scope.
+
+```
+VehicleType
+    │
+    ▼
+AvatarVehicleMovementCapability
+    │
+    ├── movementKind
+    ├── supported
+    ├── movementSpeed        (0.9.86/0.9.87)
+    ├── collisionRadius      (0.9.88)
+    ├── movementDirections   (0.9.89)
+    └── acceleration         (0.9.90)
+              │
+              ▼
+   AvatarMovementAccelerationCapability
+        kind: INSTANT | RATE_LIMITED
+        acceleration: world units/second^2
+
+   (a completely separate pure function,
+    not yet called by anything in this
+    codebase — see below)
+
+  resolveMovementSpeed({
+      currentSpeed, targetSpeed,
+      acceleration, deltaTime
+  }) -> number
+```
+
+**A small, closed, two-field value — the direct structural twin of
+`core/AvatarMovementDirectionCapability.js`.** `core/AvatarMovementAccelerationCapability.js`
+is a new sibling file, `AvatarMovementAccelerationCapability`, carrying
+exactly `kind` (`AvatarMovementAccelerationKind.INSTANT` or
+`.RATE_LIMITED`) and `acceleration` (world units/second^2). Both fields
+required, both booleans/numbers never omitted — matching every prior
+capability field's "fully-formed value, never conditionally absent"
+discipline. Unlike `AvatarMovementDirectionCapability`'s two independent
+booleans, this class enforces ONE coupling invariant at construction
+time: `INSTANT` requires `acceleration === 0` exactly; `RATE_LIMITED`
+forbids `acceleration === 0` (a rate-limited capability that never
+actually changes speed is a contradiction, not a valid third state).
+
+**No arbitrary "999" value for WALK.** An earlier shape for this
+milestone considered a single `acceleration` number alone, with WALK
+given some implausibly large placeholder to fake "reaches full speed
+immediately" — exactly the kind of invented, undocumented magic number
+this codebase's roadmap has repeatedly refused (see
+`core/AvatarVehicleMovementCapability.js`'s own precedent:
+`WALK_MOVEMENT_SPEED`/`WALK_COLLISION_RADIUS` are deliberately-documented
+duplicates, never guesses). `AvatarMovementAccelerationKind.INSTANT`
+instead says outright, in the vocabulary itself, "this capability's
+movement is not rate-limited at all" — the avatar's own existing
+on-foot behavior, completely unchanged since long before this
+milestone — rather than asking a number to imply it by being
+implausibly huge.
+
+**`AvatarVehicleMovementCapability` gains a sixth field, `acceleration`.**
+WALK is `INSTANT`/`0`. BICYCLE/MOTORCYCLE/CAR are each `RATE_LIMITED`
+with their own strictly positive rates (3/5/4 world units/second^2 —
+simple, deliberately not final game-balance values, exactly like every
+prior per-vehicle constant). AERIAL_VEHICLE/DRONE reuses the exact same
+shared `INSTANT`/`0` instance WALK uses — both genuinely mean "no rate
+applies," even though for different reasons: WALK because on-foot
+movement has always been instantaneous, DRONE only inertly, because
+`supported: false` already blocks movement, acceleration included,
+before this field is ever consulted.
+
+**Acceleration is a genuinely independent dimension from `movementSpeed`
+— a faster vehicle does not automatically accelerate faster.** Unlike
+`movementSpeed`/`collisionRadius`, which both satisfy the strict
+`WALK < BICYCLE < MOTORCYCLE < CAR` ordering, this milestone deliberately
+gives CAR — the fastest ground vehicle — a strictly LOWER acceleration
+rate than MOTORCYCLE's own. `tests/AvatarVehicleMovementCapability.test.js`
+asserts this directly: no ordering constraint is claimed for
+`acceleration`, precisely so nothing in this codebase can quietly
+assume the two dimensions move together.
+
+**`core/AvatarMovementAccelerationSimulation.js` is the pure mathematical
+half — a completely separate file, on purpose.** It exports exactly one
+function, `resolveMovementSpeed({ currentSpeed, targetSpeed, acceleration,
+deltaTime })`, the direct structural twin of `core/AvatarMovementSimulation.js`'s
+own `simulateAvatarMovement()`: pure math, independently testable, zero
+engine or vocabulary dependency. It never imports
+`AvatarMovementAccelerationCapability` (or `VehicleType`,
+`VehiclePresence`, `AvatarVehicleMount`, `WorldNavigationSession`, or
+anything else) — it receives `acceleration` as a bare number, exactly
+as `AvatarMovementSimulation.js` receives `movementSpeed` as a bare
+number without knowing a capability exists. Deciding WHETHER to call
+this function at all — an `INSTANT` capability has no reason to ever
+reach it — is left entirely to a future integration.
+
+**Never overshoots the target, in either direction.** Speed moves
+toward `targetSpeed` by at most `acceleration * deltaTime` this tick,
+clamped exactly AT the target the moment that step would pass it —
+whether approaching from below or decelerating from above. This one
+clamp is the entire "never overshoots" guarantee; there is deliberately
+no separate braking/deceleration rate — the SAME `acceleration` rate
+governs closing the gap from either direction, until a future milestone
+gives braking its own, independently-tunable number. A non-finite or
+non-positive `deltaTime`, a non-finite `acceleration`/`currentSpeed`/
+`targetSpeed`, `acceleration <= 0`, or `currentSpeed === targetSpeed`
+all degrade to "no change this tick" — the same defensive,
+never-throws, never-NaN posture `AvatarMovementSimulation.js`'s own
+sanitizers already establish.
+
+**The controller owns transient "current speed"; this seam holds no
+state.** `resolveMovementSpeed()` is called once per tick with the
+PREVIOUS tick's result fed back in as `currentSpeed` — the direct
+structural twin of `application/AvatarMovementController.js`'s own
+`_verticalVelocity`/`_grounded` bookkeeping. Neither the capability
+class nor the simulation function remembers anything between calls.
+
+**Nothing in this codebase calls `resolveMovementSpeed()` yet, and
+existing movement behavior is completely unchanged.**
+`application/AvatarMovementController.js` and
+`core/AvatarMovementSimulation.js` are BOTH untouched by this milestone
+— proven directly by `tests/AvatarMovementAccelerationSimulation.test.js`'s
+own architectural regression section, which asserts neither file
+references this seam at all. Deliberately separating the capability
+from its controller integration, exactly as prior milestones separated
+`movementDirections`'s own seam from its consumer, gives a future
+milestone a safe foundation without turning the movement controller
+into a vehicle-physics subsystem prematurely.
+
+## What this milestone deliberately does NOT do
+
+Braking/deceleration as its own rate, coasting, friction, drag,
+momentum, reverse-acceleration asymmetry, any transient/current-speed
+state living in the capability layer, wiring `resolveMovementSpeed()`
+into `application/AvatarMovementController.js` or
+`core/AvatarMovementSimulation.js`, turning radius, vehicle orientation,
+animation, camera changes, vehicle-to-vehicle collision, terrain-specific
+acceleration, drone flight, and gear/transmission simulation — none of
+these exist anywhere in this codebase, this milestone included.
+
+Tests: `tests/AvatarVehicleMovementCapability.test.js` (0.9.84's own
+suite) is extended in place — every section now asserts `acceleration`
+alongside `movementSpeed`/`collisionRadius`/`movementDirections`,
+Section H gains invalid-input coverage for the new field (including
+`AvatarMovementAccelerationCapability`'s own INSTANT/RATE_LIMITED
+coupling invariant), Section I gains
+`isValidAvatarMovementAccelerationCapability()` coverage, Section J's
+`toJSON()`/`fromJSON()` round-trip now includes the nested value, and
+Section K gains a third architectural sweep over the new sibling file
+— including the "CAR's own acceleration is strictly LOWER than
+MOTORCYCLE's" independence assertion.
+`tests/AvatarVehicleCollisionFootprintIntegration.test.js`'s own "exactly
+these fields, no extra field has crept in" assertion is updated in
+place to include `acceleration`.
+`tests/AvatarVehicleMovementDirectionIntegration.test.js`'s own
+synthetic forward-only capability construction is updated to pass a
+real `acceleration` value. A new dedicated suite,
+`tests/AvatarMovementAccelerationSimulation.test.js`, covers
+`resolveMovementSpeed()` directly: approaching a higher target speed
+one tick at a time without overshoot, decelerating toward a lower
+target without overshoot, zero/negative/non-finite deltaTime, fractional
+deltaTime accumulating correctly across many ticks, a sufficiently
+large deltaTime or acceleration reaching the target exactly, every
+edge case around a zero/negative/non-finite acceleration or an
+already-at-target current speed, determinism, and an architectural
+sweep proving this file imports no vehicle/capability/runtime/rendering
+concept and that neither `AvatarMovementController.js` nor
+`AvatarMovementSimulation.js` references it yet.
+
+Next: a future milestone integrates this seam into
+`application/AvatarMovementController.js` — introducing the transient
+"current speed" bookkeeping, deciding where `kind` is actually
+consulted, and giving braking its own explicit semantics — followed by
+steering/handling and, eventually, aerial movement for the drone, but
+only once actual runtime behavior tells us which is needed first.
