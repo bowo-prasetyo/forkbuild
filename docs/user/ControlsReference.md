@@ -76,8 +76,8 @@ Walking your avatar directly, instead of flying the camera — see
 | `W` / `A` / `S` / `D` | Move / turn | Blocked by nearby buildings and trees, same as a wall |
 | `Shift` (held) | Run | |
 | `Space` | Jump | |
-| `Caps Lock` + `W` / `S` | Start continuous walk forward/backward | Keeps moving after keys are released; an ordinary `W`/`S` tap without Caps Lock cancels it |
-| `Caps Lock` + `Shift` + `W` / `S` | Start continuous run forward/backward | Same cancellation rule as above |
+| `Alt` + `W` / `S` | Start continuous walk forward/backward | Keeps moving after keys are released; an ordinary `W`/`S` tap without Alt cancels it |
+| `Alt` + `Shift` + `W` / `S` | Start continuous run forward/backward | Same cancellation rule as above |
 
 ## Selection (click/marquee work in both views; only the Editor mutates)
 

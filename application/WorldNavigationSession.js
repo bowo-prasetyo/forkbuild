@@ -419,16 +419,16 @@ export class WorldNavigationSession {
 	    // session's own small bit of caller-owned bookkeeping for
 	    // core/AvatarContinuousMovementInputAdapter.js — see
 	    // avatarKeyDown/avatarKeyUp below, and that file's own header
-	    // for why the physical Caps Lock KEY's hold state is tracked
+	    // for why the physical Alt KEY's hold state is tracked
 	    // here rather than read from an event's own toggle state.
 	    // `_avatarMovementController` itself remains the one place the
 	    // resulting NONE/FORWARD/BACKWARD intent value lives (see
 	    // application/AvatarMovementController.js#continuousMovementIntent) —
-	    // this field is ONLY ever `capsLockDown`, never a second copy of
+	    // this field is ONLY ever `altDown`, never a second copy of
 	    // that intent.
-	    this._capsLockDown = false;
+	    this._altDown = false;
 	    // 0.9.69 — Continuous Movement Direction + Mode Integration. The
-	    // direct structural twin of `_capsLockDown` above, tracking the
+	    // direct structural twin of `_altDown` above, tracking the
 	    // physical Shift key's hold state the identical way, for the
 	    // identical reason (see core/AvatarContinuousMovementInputAdapter.js's
 	    // own 0.9.68 header): a caller-owned physical-hold boolean, never a
@@ -1619,7 +1619,7 @@ export class WorldNavigationSession {
     // at once, never leave a key "stuck" because its keyup never
     // arrived (e.g. focus moved to a dialog mid-press).
     //
-    // 0.9.66 — also resets `_capsLockDown`: the exact same "never leave
+    // 0.9.66 — also resets `_altDown`: the exact same "never leave
     // physical input state stuck" reasoning `releaseAll()` already
     // applies to `_keys` applies here too, one layer up, to the Caps
     // Lock hold-state this session tracks for continuous-movement
@@ -1630,7 +1630,7 @@ export class WorldNavigationSession {
     // silently cancel a deliberately activated continuous walk.
     //
     // 0.9.69 — also resets `_shiftDown`, the direct structural twin of
-    // `_capsLockDown` above, for the identical reason. `_continuousMovementMode`
+    // `_altDown` above, for the identical reason. `_continuousMovementMode`
     // itself (owned by `_avatarMovementController`) is likewise
     // deliberately left untouched — see that class's own 0.9.69 header
     // for why turning off Avatar Control Mode must never silently
@@ -1638,7 +1638,7 @@ export class WorldNavigationSession {
     // it already leaves persistent FORWARD/BACKWARD untouched.
     setAvatarControlMode(active) {
         this._avatarControlModeActive = Boolean(active);
-        this._capsLockDown = false;
+        this._altDown = false;
         this._shiftDown = false;
         if (!this._avatarControlModeActive && this._avatarMovementController) {
             this._avatarMovementController.releaseAll();
@@ -1667,7 +1667,7 @@ export class WorldNavigationSession {
     // and disabling the mode are two different things — this is the
     // one that only ever does the first.
     releaseAvatarMovementKeys() {
-        this._capsLockDown = false;
+        this._altDown = false;
         this._shiftDown = false;
         if (this._avatarMovementController) {
             this._avatarMovementController.releaseAll();
@@ -1688,7 +1688,7 @@ export class WorldNavigationSession {
     // 0.9.66 — Continuous Movement Controller Integration. Before
     // forwarding to the controller's own ordinary keyDown(), this raw
     // key is ALSO run through `_processContinuousMovementInput()` —
-    // the seam that translates a real Caps Lock + W/S chord into
+    // the seam that translates a real Alt + W/S chord into
     // `_avatarMovementController.setContinuousMovementIntent()` calls,
     // via core/AvatarContinuousMovementInputAdapter.js (0.9.65) and
     // core/AvatarContinuousMovementIntent.js's own transition function
@@ -1720,11 +1720,11 @@ export class WorldNavigationSession {
         // 0.9.66 — same translation as avatarKeyDown above, but NOT
         // gated on `_avatarControlModeActive` — matching this method's
         // own pre-existing "always forwarded" posture for ordinary
-        // keys, so a Caps Lock release that arrives after control mode
-        // was already switched off still cleanly updates `_capsLockDown`
+        // keys, so an Alt release that arrives after control mode
+        // was already switched off still cleanly updates `_altDown`
         // rather than leaving it stale (see `deriveAvatarContinuousMovementInputEvent`'s
         // own header: key-up never produces a `transition`, so this
-        // can only ever update the caps-lock hold bit, never the
+        // can only ever update the Alt hold bit, never the
         // continuous-movement intent itself).
         this._processContinuousMovementInput(key, 'keyup');
         // Always forwarded, even if control mode was switched off
@@ -1745,7 +1745,7 @@ export class WorldNavigationSession {
     // 0.9.66 — Continuous Movement Controller Integration. The ONE
     // seam that turns a raw keyboard fact into a call to
     // `_avatarMovementController.setContinuousMovementIntent()`. This
-    // session owns `_capsLockDown` (the only piece of mutable state
+    // session owns `_altDown` (the only piece of mutable state
     // core/AvatarContinuousMovementInputAdapter.js needs a caller to
     // carry between calls — see that file's own header) and reads
     // `_avatarMovementController.continuousMovementIntent()` as the
@@ -1761,7 +1761,7 @@ export class WorldNavigationSession {
     // calls — nothing here re-implements or second-guesses either one.
     //
     // 0.9.69 — this method now ALSO owns `_shiftDown` (the direct
-    // structural twin of `_capsLockDown`, same call, same
+    // structural twin of `_altDown`, same call, same
     // core/AvatarContinuousMovementInputAdapter.js seam) and, on every
     // transition, independently derives the persistent MODE alongside
     // the persistent DIRECTION already derived above — via
@@ -1780,13 +1780,13 @@ export class WorldNavigationSession {
     // outcome is already fully determined by `activationRequested`/
     // `runRequested` alone.
     _processContinuousMovementInput(key, type) {
-        const { capsLockDown, shiftDown, transition } = deriveAvatarContinuousMovementInputEvent({
-            capsLockDown: this._capsLockDown,
+        const { altDown, shiftDown, transition } = deriveAvatarContinuousMovementInputEvent({
+            altDown: this._altDown,
             shiftDown: this._shiftDown,
             key,
             type
         });
-        this._capsLockDown = capsLockDown;
+        this._altDown = altDown;
         this._shiftDown = shiftDown;
         if (transition && this._avatarMovementController) {
             this._avatarMovementController.setContinuousMovementIntent(
@@ -5702,7 +5702,7 @@ export class WorldNavigationSession {
         this._avatarMovementController = null;
         this._avatarVehicleInteractionController = null;
         this._avatarControlModeActive = false;
-        this._capsLockDown = false;
+        this._altDown = false;
         this._shiftDown = false;
         this._followAvatarEnabled = false;
         this._lastAvatarFollowPosition = null;

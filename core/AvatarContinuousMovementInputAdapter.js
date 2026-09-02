@@ -6,7 +6,7 @@
 // boolean. 0.9.67 (core/AvatarContinuousMovementMode.js) defined the
 // MEANING of a continuous-movement MODE transition — the same
 // `activationRequested` plus `runRequested`. Both are deliberately
-// keyboard-blind: neither has any idea a Caps Lock or Shift key exists.
+// keyboard-blind: neither has any idea an Alt or Shift key exists.
 // This file is the one seam that produces BOTH shapes from an actual
 // keyboard event — it is an INPUT INTERPRETATION step, not controller
 // integration. Wiring the resulting DIRECTION transition into
@@ -16,8 +16,8 @@
 // deriveAvatarContinuousMovementInputEvent() below reads exactly two
 // kinds of raw fact — which key, and whether it went down or up — plus
 // two pieces of caller-owned state carried between calls: whether the
-// physical Caps Lock key is currently held down, and whether the
-// physical Shift key is currently held down. It returns that same state,
+// physical Alt key is currently held down, and whether the physical
+// Shift key is currently held down. It returns that same state,
 // updated, alongside either `null` (this event has no continuous-
 // movement meaning at all) or a `transition` object carrying every fact
 // BOTH 0.9.64's and 0.9.67's own transition functions need —
@@ -27,48 +27,58 @@
 // "continuous movement mode" is even being tracked, let alone what its
 // current value is. Same "caller owns the only mutable state, this file
 // never remembers anything itself" discipline 0.9.65 already followed
-// for `capsLockDown` — here extended to `shiftDown` alongside it.
+// for `altDown` — here extended to `shiftDown` alongside it.
 //
-// Why track capsLockDown/shiftDown (physical HOLDS) rather than read
-// event.getModifierState('CapsLock'/'Shift') (TOGGLE/transient event
-// state): see this file's own 0.9.65 reasoning, unchanged by this
-// milestone — a physical hold this file tracks itself is the only way
-// to tell a deliberate CHORD from an unrelated coincidence (Caps Lock
-// already being ON for unrelated reasons; `event.shiftKey` would work
-// for Shift specifically, but reading Caps Lock and Shift two different
-// ways would make the resulting chord logic depend on which of the two
-// modifiers happened to be held, which is exactly the kind of
-// inconsistency this adapter exists to avoid).
+// Why track altDown/shiftDown (physical HOLDS) rather than read
+// event.altKey/event.getModifierState('Alt'/'Shift') directly on the
+// W/S event: tracking a key's own down/up transitions ourselves, the
+// same way for both modifiers, is the only way to tell a deliberate
+// CHORD from an unrelated coincidence, and keeps the resulting chord
+// logic from depending on which of the two modifiers happened to be
+// read which way. This activation key was originally Caps Lock
+// (0.9.65's own original choice) and was changed to Alt after real-world
+// testing surfaced a genuine cross-browser inconsistency: Chrome,
+// Safari, and Edge report a LOCK key's (Caps Lock, Num Lock, Scroll
+// Lock) two physical presses as one keydown-only event (turning the
+// lock ON) and one keyup-only event (turning it OFF) — an asymmetry
+// tied to the key's OS-level TOGGLE state, not to how long it's
+// physically held — which could leave this file's own tracked
+// "held" bit silently desynchronized from the real keyboard depending on
+// whatever state the lock key happened to already be in. Alt (like
+// Shift) is an ordinary momentary key with no OS-level toggle state at
+// all: every browser reports a real keydown when it's physically
+// pressed and a real keyup when it's physically released, every time,
+// so this exact class of bug cannot recur.
 //
-//   capsLockDown — the CALLER's current belief about whether the
-//                  physical Caps Lock key is held down, from the
-//                  previous call's own returned `capsLockDown` (or
-//                  `false` for the very first event of a session).
-//   shiftDown    — the CALLER's current belief about whether the
-//                  physical Shift key is held down, from the previous
-//                  call's own returned `shiftDown` (or `false` for the
-//                  very first event of a session). Tracked the exact
-//                  same way, for the exact same reason, as
-//                  `capsLockDown` — see 0.9.65's own header.
-//   key          — the raw key name, e.g. a KeyboardEvent's own `.key`
-//                  ('w', 'S', 'CapsLock', 'Shift', ...). Compared
-//                  case-insensitively, matching every other raw-key
-//                  comparison already in this codebase (see
-//                  application/AvatarMovementController.js#_setKey).
-//   type         — 'keydown' or 'keyup'. Anything else is treated as
-//                  'keydown', matching this codebase's "degrade
-//                  gracefully" posture for malformed input.
+//   altDown   — the CALLER's current belief about whether the physical
+//               Alt key is held down, from the previous call's own
+//               returned `altDown` (or `false` for the very first event
+//               of a session).
+//   shiftDown — the CALLER's current belief about whether the physical
+//               Shift key is held down, from the previous call's own
+//               returned `shiftDown` (or `false` for the very first
+//               event of a session). Tracked the exact same way, for
+//               the exact same reason, as `altDown` — see 0.9.65's own
+//               header.
+//   key       — the raw key name, e.g. a KeyboardEvent's own `.key`
+//               ('w', 'S', 'Alt', 'Shift', ...). Compared
+//               case-insensitively, matching every other raw-key
+//               comparison already in this codebase (see
+//               application/AvatarMovementController.js#_setKey).
+//   type      — 'keydown' or 'keyup'. Anything else is treated as
+//               'keydown', matching this codebase's "degrade
+//               gracefully" posture for malformed input.
 //
 // The translation rule:
 //
-//   Caps Lock key down   -> capsLockDown becomes true;  no transition
-//   Caps Lock key up     -> capsLockDown becomes false; no transition
-//   Shift key down       -> shiftDown becomes true;     no transition
-//   Shift key up         -> shiftDown becomes false;    no transition
-//   W or S key down      -> transition { direction, activationRequested: capsLockDown, runRequested: shiftDown }
-//   W or S key up        -> no transition (key-up is never a signal —
+//   Alt key down          -> altDown becomes true;  no transition
+//   Alt key up            -> altDown becomes false; no transition
+//   Shift key down        -> shiftDown becomes true;     no transition
+//   Shift key up          -> shiftDown becomes false;    no transition
+//   W or S key down       -> transition { direction, activationRequested: altDown, runRequested: shiftDown }
+//   W or S key up         -> no transition (key-up is never a signal —
 //                            see 0.9.64's and 0.9.67's own headers for why)
-//   anything else, any type -> capsLockDown/shiftDown unchanged; no transition
+//   anything else, any type -> altDown/shiftDown unchanged; no transition
 //
 // `runRequested` is reported as the raw physical Shift-hold fact on
 // EVERY W/S key-down, activating or not — this file never asks "does
@@ -80,7 +90,7 @@
 // state, nothing more — exactly like `activationRequested` itself was
 // already reported unconditionally by 0.9.65. This is also why the
 // milestone brief's own "Shift determines the requested continuous
-// movement mode only when Caps Lock is physically held" reads correctly
+// movement mode only when Alt is physically held" reads correctly
 // end to end without this file needing to encode that rule anywhere:
 // the rule already lives entirely inside deriveAvatarContinuousMovementMode()'s
 // own `activationRequested` gate, and this file simply hands both raw
@@ -104,12 +114,12 @@
 // That single rule already produces every behavior the milestone brief
 // asks for:
 //
-//   ordinary W/S (capsLockDown false)            -> activationRequested: false
+//   ordinary W/S (altDown false)                  -> activationRequested: false
 //     -> deriveAvatarContinuousMovementIntent() cancels persistent direction
 //     -> deriveAvatarContinuousMovementMode() cancels persistent mode
-//   CapsLock-held W/S, Shift NOT held             -> activationRequested: true,  runRequested: false
+//   Alt-held W/S, Shift NOT held                  -> activationRequested: true,  runRequested: false
 //     -> intent activates/switches; mode resolves to WALK
-//   CapsLock-held W/S, Shift ALSO held            -> activationRequested: true,  runRequested: true
+//   Alt-held W/S, Shift ALSO held                 -> activationRequested: true,  runRequested: true
 //     -> intent activates/switches; mode resolves to RUN
 //
 // Nothing here decides what either press MEANS for the current intent
@@ -120,10 +130,10 @@
 // Movement = what the avatar does" are different concerns, and this
 // file is only ever the first one.
 //
-// Modifier-order independence: because capsLockDown/shiftDown are both
+// Modifier-order independence: because altDown/shiftDown are both
 // plain current-state booleans, not a record of WHICH order the two
-// modifiers were pressed in, "Shift down, then Caps Lock down, then W"
-// and "Caps Lock down, then Shift down, then W" produce byte-identical
+// modifiers were pressed in, "Shift down, then Alt down, then W"
+// and "Alt down, then Shift down, then W" produce byte-identical
 // transitions. This file is concerned with current physical modifier
 // FACTS, never the history that produced them.
 //
@@ -142,33 +152,33 @@
 // listener wiring, camera, UI, persistence. Those belong to 0.9.69 (the
 // milestone that wires this adapter's mode-facing output into the
 // movement pipeline, the direct counterpart to 0.9.66).
-export function deriveAvatarContinuousMovementInputEvent({ capsLockDown = false, shiftDown = false, key, type } = {}) {
-    const safeCapsLockDown = Boolean(capsLockDown);
+export function deriveAvatarContinuousMovementInputEvent({ altDown = false, shiftDown = false, key, type } = {}) {
+    const safeAltDown = Boolean(altDown);
     const safeShiftDown = Boolean(shiftDown);
     const normalizedKey = String(key || '').toLowerCase();
     const isKeyUp = type === 'keyup';
 
-    if (normalizedKey === 'capslock') {
-        return { capsLockDown: !isKeyUp, shiftDown: safeShiftDown, transition: null };
+    if (normalizedKey === 'alt') {
+        return { altDown: !isKeyUp, shiftDown: safeShiftDown, transition: null };
     }
 
     if (normalizedKey === 'shift') {
-        return { capsLockDown: safeCapsLockDown, shiftDown: !isKeyUp, transition: null };
+        return { altDown: safeAltDown, shiftDown: !isKeyUp, transition: null };
     }
 
     if (isKeyUp) {
-        return { capsLockDown: safeCapsLockDown, shiftDown: safeShiftDown, transition: null };
+        return { altDown: safeAltDown, shiftDown: safeShiftDown, transition: null };
     }
 
     const direction = directionForKey(normalizedKey);
     if (direction === null) {
-        return { capsLockDown: safeCapsLockDown, shiftDown: safeShiftDown, transition: null };
+        return { altDown: safeAltDown, shiftDown: safeShiftDown, transition: null };
     }
 
     return {
-        capsLockDown: safeCapsLockDown,
+        altDown: safeAltDown,
         shiftDown: safeShiftDown,
-        transition: { direction, activationRequested: safeCapsLockDown, runRequested: safeShiftDown }
+        transition: { direction, activationRequested: safeAltDown, runRequested: safeShiftDown }
     };
 }
 

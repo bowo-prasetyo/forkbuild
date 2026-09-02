@@ -11,7 +11,7 @@ import {
 //   Section B: activation — an activating press sets/switches the intent
 //   Section C: cancellation — an ordinary press always clears it
 //   Section D: defensive/malformed input — degrades gracefully
-//   Section E: FLAGSHIP — the design doc's own scripted Caps Lock + W/S
+//   Section E: FLAGSHIP — the design doc's own scripted Alt + W/S
 //              scenario, replayed as a sequence of derive() calls, plus
 //              purity/determinism
 //   Section F: architectural regression — no movement, no controller, no
@@ -54,11 +54,11 @@ async function runTests() {
     // -------------------------------------------------------------
     {
         const next = deriveAvatarContinuousMovementIntent({ currentIntent: NONE, direction: 'forward', activationRequested: true });
-        assert(next === FORWARD, '10. CapsLock+W from no intent activates FORWARD');
+        assert(next === FORWARD, '10. Alt+W from no intent activates FORWARD');
     }
     {
         const next = deriveAvatarContinuousMovementIntent({ currentIntent: NONE, direction: 'backward', activationRequested: true });
-        assert(next === BACKWARD, '11. CapsLock+S from no intent activates BACKWARD');
+        assert(next === BACKWARD, '11. Alt+S from no intent activates BACKWARD');
     }
     {
         const next = deriveAvatarContinuousMovementIntent({ currentIntent: FORWARD, direction: 'forward', activationRequested: true });
@@ -146,15 +146,15 @@ async function runTests() {
     // plus purity/determinism
     // -------------------------------------------------------------
     {
-        // "CapsLock + W activates forward mode; W up; CapsLock up;
+        // "Alt + W activates forward mode; W up; Alt up;
         // avatar keeps moving forward" — key-UP is never modeled here
         // at all, so between derive() calls below, intent simply
         // persists on its own with no call needed to keep it alive.
         let intent = NONE;
         intent = deriveAvatarContinuousMovementIntent({ currentIntent: intent, direction: 'forward', activationRequested: true });
-        assert(intent === FORWARD, '30. FLAGSHIP step 1: CapsLock+W activates continuous FORWARD');
+        assert(intent === FORWARD, '30. FLAGSHIP step 1: Alt+W activates continuous FORWARD');
 
-        // Releasing W and Caps Lock is not a call into this function at
+        // Releasing W and Alt is not a call into this function at
         // all (see this file's own header) — `intent` above already IS
         // "what should exist after release": FORWARD, unchanged.
 
@@ -164,7 +164,7 @@ async function runTests() {
 
         // Now the backward equivalent, from scratch.
         intent = deriveAvatarContinuousMovementIntent({ currentIntent: intent, direction: 'backward', activationRequested: true });
-        assert(intent === BACKWARD, '32. FLAGSHIP step 3: CapsLock+S activates continuous BACKWARD');
+        assert(intent === BACKWARD, '32. FLAGSHIP step 3: Alt+S activates continuous BACKWARD');
 
         // This time, the escape hatch: the OPPOSITE ordinary key cancels it.
         intent = deriveAvatarContinuousMovementIntent({ currentIntent: intent, direction: 'forward', activationRequested: false });
@@ -173,7 +173,7 @@ async function runTests() {
         // And a direct switch mid-flight, with no cancelling step at all.
         intent = deriveAvatarContinuousMovementIntent({ currentIntent: intent, direction: 'forward', activationRequested: true });
         intent = deriveAvatarContinuousMovementIntent({ currentIntent: intent, direction: 'backward', activationRequested: true });
-        assert(intent === BACKWARD, '34. FLAGSHIP step 5: CapsLock+W then CapsLock+S switches straight from FORWARD to BACKWARD, no NONE in between');
+        assert(intent === BACKWARD, '34. FLAGSHIP step 5: Alt+W then Alt+S switches straight from FORWARD to BACKWARD, no NONE in between');
     }
     {
         const options = { currentIntent: FORWARD, direction: 'backward', activationRequested: false };
@@ -200,7 +200,7 @@ async function runTests() {
             'AvatarMovementController', 'AvatarMovementState', 'simulateAvatarMovement',
             'AvatarMovementConstraint', 'AvatarTerrainConstraint', 'AvatarStepConstraint', 'AvatarTreeConstraint',
             'setTimeout', 'setInterval', 'requestAnimationFrame', 'performance.now', 'Date.now',
-            'addEventListener', 'keydown', 'keyup', 'KeyboardEvent', 'getModifierState', 'CapsLock', 'capslock',
+            'addEventListener', 'keydown', 'keyup', 'KeyboardEvent', 'getModifierState', 'Alt', 'alt',
             'THREE', 'from \'three\'', 'Renderer', 'WorldNavigationSession',
             'Math.random', 'localStorage', 'StorageProvider', 'fetch(', 'WebSocket',
             'velocity', 'acceleration', 'speed', 'position', 'rotation'

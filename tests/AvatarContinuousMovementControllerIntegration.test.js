@@ -20,7 +20,7 @@ import { CreateBrickRegistryUseCase } from '../application/CreateBrickRegistryUs
 //   Section A: application/AvatarMovementController.js — priority rule
 //              (ordinary W/S > continuous intent > idle), consumed via
 //              setContinuousMovementIntent()/continuousMovementIntent()
-//   Section B: application/WorldNavigationSession.js — real Caps Lock +
+//   Section B: application/WorldNavigationSession.js — real Alt +
 //              W/S keyboard chords, wired end to end through
 //              core/AvatarContinuousMovementInputAdapter.js (0.9.65) and
 //              core/AvatarContinuousMovementIntent.js (0.9.64), with NO
@@ -30,11 +30,11 @@ import { CreateBrickRegistryUseCase } from '../application/CreateBrickRegistryUs
 //              movement runs through the EXACT SAME constraint pipeline
 //              ordinary W/S already does
 //   Section D: determinism and backward compatibility
-//   Section E: FLAGSHIP — a real avatar, Caps Lock + W held then
+//   Section E: FLAGSHIP — a real avatar, Alt + W held then
 //              released, walking on with no keys held, straight at a
 //              real deterministic tree, through the entire chain
 //   Section F: architectural regression — the controller never learns
-//              what Caps Lock is
+//              what Alt is
 //
 // Central architectural claim under test throughout: continuous
 // movement is an ADDITIONAL SOURCE of movement intent, never a second
@@ -215,8 +215,8 @@ async function runTests() {
     }
 
     // -------------------------------------------------------------
-    // Section B — application/WorldNavigationSession.js: real Caps
-    // Lock + W/S keyboard chords, end to end
+    // Section B — application/WorldNavigationSession.js: real Alt +
+    // W/S keyboard chords, end to end
     // -------------------------------------------------------------
     {
         const { avatarProfileUseCase, avatarPresenceSession } = buildAvatarStack(registry, 'session-b1');
@@ -228,18 +228,18 @@ async function runTests() {
         session._setupLocalAvatar();
         session.setAvatarControlMode(true);
 
-        // Caps Lock held, then W pressed: activates continuous FORWARD.
-        session.avatarKeyDown('CapsLock');
+        // Alt held, then W pressed: activates continuous FORWARD.
+        session.avatarKeyDown('Alt');
         session.avatarKeyDown('w');
         assert(session._avatarMovementController.continuousMovementIntent() === AvatarContinuousMovementIntent.FORWARD,
-            '16. WorldNavigationSession: a real Caps Lock + W chord activates continuous FORWARD, with zero changes to avatarKeyDown\'s own public shape');
+            '16. WorldNavigationSession: a real Alt + W chord activates continuous FORWARD, with zero changes to avatarKeyDown\'s own public shape');
 
-        // Releasing W (and Caps Lock) does not cancel it — key-up is
+        // Releasing W (and Alt) does not cancel it — key-up is
         // never a signal (0.9.64).
         session.avatarKeyUp('w');
-        session.avatarKeyUp('CapsLock');
+        session.avatarKeyUp('Alt');
         assert(session._avatarMovementController.continuousMovementIntent() === AvatarContinuousMovementIntent.FORWARD,
-            '17. WorldNavigationSession: releasing W and Caps Lock leaves the continuous intent untouched');
+            '17. WorldNavigationSession: releasing W and Alt leaves the continuous intent untouched');
 
         // The avatar keeps moving, tick after tick, with NO key held at
         // all — the actual point of the entire milestone.
@@ -250,10 +250,10 @@ async function runTests() {
         assert(avatarPresenceSession.current.position.z > startZ,
             '18. WorldNavigationSession: the avatar keeps walking forward, tick after tick, with no key physically held — the flagship behavior this milestone exists to deliver');
 
-        // A later plain W tap (Caps Lock no longer held) cancels it.
+        // A later plain W tap (Alt no longer held) cancels it.
         session.avatarKeyDown('w');
         assert(session._avatarMovementController.continuousMovementIntent() === AvatarContinuousMovementIntent.NONE,
-            '19. WorldNavigationSession: an ordinary W tap (no Caps Lock) cancels the continuous intent, per 0.9.64\'s own transition rule');
+            '19. WorldNavigationSession: an ordinary W tap (no Alt) cancels the continuous intent, per 0.9.64\'s own transition rule');
         session.avatarKeyUp('w');
         const afterCancelZ = avatarPresenceSession.current.position.z;
         session._avatarMovementController.tick(0.1);
@@ -261,8 +261,8 @@ async function runTests() {
             '20. WorldNavigationSession: once cancelled and released, the avatar genuinely stops — no residual movement');
     }
     {
-        // Caps Lock + S from rest activates BACKWARD; a plain W
-        // afterward (the OPPOSITE ordinary key, Caps Lock no longer
+        // Alt + S from rest activates BACKWARD; a plain W
+        // afterward (the OPPOSITE ordinary key, Alt no longer
         // held) cancels it too — the "obvious escape hatch."
         const { avatarProfileUseCase, avatarPresenceSession } = buildAvatarStack(registry, 'session-b2');
         const session = new WorldNavigationSession({
@@ -273,12 +273,12 @@ async function runTests() {
         session._setupLocalAvatar();
         session.setAvatarControlMode(true);
 
-        session.avatarKeyDown('CapsLock');
+        session.avatarKeyDown('Alt');
         session.avatarKeyDown('s');
         session.avatarKeyUp('s');
         assert(session._avatarMovementController.continuousMovementIntent() === AvatarContinuousMovementIntent.BACKWARD,
-            '21. WorldNavigationSession: Caps Lock + S activates continuous BACKWARD');
-        session.avatarKeyUp('CapsLock');
+            '21. WorldNavigationSession: Alt + S activates continuous BACKWARD');
+        session.avatarKeyUp('Alt');
 
         session.avatarKeyDown('w');
         assert(session._avatarMovementController.continuousMovementIntent() === AvatarContinuousMovementIntent.NONE,
@@ -296,14 +296,14 @@ async function runTests() {
         session._session = spyFacade();
         session._setupLocalAvatar();
         // Avatar Control Mode is OFF (the default).
-        session.avatarKeyDown('CapsLock');
+        session.avatarKeyDown('Alt');
         session.avatarKeyDown('w');
         assert(session._avatarMovementController.continuousMovementIntent() === AvatarContinuousMovementIntent.NONE,
-            '23. WorldNavigationSession: a Caps Lock + W chord while Avatar Control Mode is off never arms continuous movement');
+            '23. WorldNavigationSession: an Alt + W chord while Avatar Control Mode is off never arms continuous movement');
     }
     {
-        // Turning Avatar Control Mode off cancels the physical Caps
-        // Lock hold-tracking (so a later re-enable starts clean) but
+        // Turning Avatar Control Mode off cancels the physical Alt
+        // hold-tracking (so a later re-enable starts clean) but
         // never touches the continuous intent value itself.
         const { avatarProfileUseCase, avatarPresenceSession } = buildAvatarStack(registry, 'session-b4');
         const session = new WorldNavigationSession({
@@ -313,7 +313,7 @@ async function runTests() {
         session._session = spyFacade();
         session._setupLocalAvatar();
         session.setAvatarControlMode(true);
-        session.avatarKeyDown('CapsLock');
+        session.avatarKeyDown('Alt');
         session.avatarKeyDown('w');
         assert(session._avatarMovementController.continuousMovementIntent() === AvatarContinuousMovementIntent.FORWARD,
             '24. WorldNavigationSession setup: continuous FORWARD is active before turning control mode off');
@@ -454,7 +454,7 @@ async function runTests() {
     {
         // L — Backward compatibility: a controller that never once
         // touches continuous movement (setContinuousMovementIntent()
-        // never called, no Caps Lock chord ever run through
+        // never called, no Alt chord ever run through
         // WorldNavigationSession) behaves EXACTLY as it did before this
         // milestone — replaying the exact assertions
         // tests/AvatarMovement.test.js's own Section C already makes.
@@ -471,7 +471,7 @@ async function runTests() {
     }
 
     // -------------------------------------------------------------
-    // Section E — FLAGSHIP: Caps Lock + W held then released, the
+    // Section E — FLAGSHIP: Alt + W held then released, the
     // avatar keeps walking with NO key held, straight at a real
     // deterministic tree, through the entire chain — Keyboard ->
     // core/AvatarContinuousMovementInputAdapter.js (0.9.65) ->
@@ -499,15 +499,15 @@ async function runTests() {
         session._setupLocalAvatar();
         session.setAvatarControlMode(true);
 
-        // Caps Lock + W: activate continuous FORWARD, then release BOTH
+        // Alt + W: activate continuous FORWARD, then release BOTH
         // keys immediately — the avatar must keep walking with nothing
         // held down at all.
-        session.avatarKeyDown('CapsLock');
+        session.avatarKeyDown('Alt');
         session.avatarKeyDown('w');
         session.avatarKeyUp('w');
-        session.avatarKeyUp('CapsLock');
+        session.avatarKeyUp('Alt');
         assert(session._avatarMovementController.continuousMovementIntent() === AvatarContinuousMovementIntent.FORWARD,
-            '44. FLAGSHIP: Caps Lock + W activates continuous FORWARD and survives releasing both keys');
+            '44. FLAGSHIP: Alt + W activates continuous FORWARD and survives releasing both keys');
 
         let everCollided = false;
         let maxStepDistance = 0;
@@ -542,7 +542,7 @@ async function runTests() {
         assert(JSON.stringify(avatarProfileUseCase.getProfile().toJSON()) === profileJsonBefore,
             '50. FLAGSHIP: AvatarProfile is completely untouched by continuous movement');
         const documentKeysAfter = storage.list().filter((k) => k.startsWith('document:')).length;
-        assert(documentKeysAfter === documentKeysBefore, '51. FLAGSHIP: no document is ever created for the avatar, its movement, or a Caps Lock chord');
+        assert(documentKeysAfter === documentKeysBefore, '51. FLAGSHIP: no document is ever created for the avatar, its movement, or an Alt chord');
 
         // Now cancel with a plain ordinary key and confirm the avatar
         // genuinely stops.
@@ -565,7 +565,7 @@ async function runTests() {
 
     // -------------------------------------------------------------
     // Section F — architectural regression: the controller never
-    // learns what Caps Lock is
+    // learns what Alt is
     // -------------------------------------------------------------
     {
         const sourceUrl = new URL('../application/AvatarMovementController.js', import.meta.url);
@@ -575,8 +575,8 @@ async function runTests() {
             .filter((line) => !line.trim().startsWith('//'))
             .join('\n');
 
-        assert(!/capslock/i.test(codeOnly),
-            '55. application/AvatarMovementController.js\'s own CODE (comments excluded) never references Caps Lock in any form — this class has no idea it exists');
+        assert(!/\balt\b/i.test(codeOnly) && !codeOnly.includes('Alt'),
+            '55. application/AvatarMovementController.js\'s own CODE (comments excluded) never references Alt in any form — this class has no idea it exists');
         assert(!codeOnly.includes('getModifierState'),
             '56. application/AvatarMovementController.js never reads a raw keyboard modifier state directly');
         assert(!codeOnly.includes('AvatarContinuousMovementInputAdapter'),

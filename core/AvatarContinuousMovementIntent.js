@@ -39,10 +39,10 @@
 // follows for verticalVelocity/grounded. The one new signal is
 // deliberately already semantic — `direction` is 'forward'/'backward',
 // never a raw key name ('w'/'s') or a raw physical modifier
-// ('capslock') — mapping an actual keyboard event to this shape is
+// ('alt') — mapping an actual keyboard event to this shape is
 // explicitly future scope (0.9.66); see that milestone's own header once
-// written for why a physical Caps Lock TOGGLE is deliberately never read
-// directly as this activation signal.
+// written for how a physical modifier hold gets translated into this
+// activation signal.
 //
 //   direction            — 'forward' or 'backward': which of the two
 //                           movement keys produced the key-DOWN event
@@ -51,7 +51,7 @@
 //   activationRequested  — true when this particular key-down asks to
 //                           ACTIVATE (or switch) continuous movement in
 //                           `direction` (e.g., the future input layer's
-//                           own Caps Lock + W/S combination), false for
+//                           own Alt + W/S combination), false for
 //                           an ordinary, momentary key-down.
 //
 // The transition rule collapses to one sentence: only an ACTIVATING
@@ -60,14 +60,14 @@
 // produces every behavior the milestone brief asks for, with no separate
 // cases to keep in sync:
 //
-//   activationRequested, NONE      -> that direction (e.g. CapsLock+W activates FORWARD)
+//   activationRequested, NONE      -> that direction (e.g. Alt+W activates FORWARD)
 //   activationRequested, FORWARD   -> re-activating the SAME direction is a no-op (still FORWARD)
-//   activationRequested, opposite  -> re-activating the OTHER direction switches directly (FORWARD -> CapsLock+S -> BACKWARD)
+//   activationRequested, opposite  -> re-activating the OTHER direction switches directly (FORWARD -> Alt+S -> BACKWARD)
 //   ordinary press, matching       -> cancels (continuous FORWARD + a plain W tap -> NONE)
 //   ordinary press, opposite       -> cancels (continuous FORWARD + a plain S tap -> NONE — the "obvious escape")
 //   ordinary press, NONE           -> stays NONE (ordinary WASD walking is never touched by this file at all)
 //
-// Releasing a key — physical W/S, or Caps Lock itself — is never a
+// Releasing a key — physical W/S, or Alt itself — is never a
 // signal this function reads. Once FORWARD is active, it stays active
 // through any number of key-ups; only a subsequent key-DOWN (ordinary or
 // activating) can ever change it. That is the entire point of the
@@ -77,7 +77,7 @@
 // Deliberately excluded, matching the explicit brief for this milestone:
 // actual movement, AvatarMovementController/AvatarMovementState
 // integration, timers, acceleration, speed changes, collision, camera,
-// UI, persistence, raw keyboard/Caps-Lock event handling. See
+// UI, persistence, raw keyboard/Alt event handling. See
 // docs/Roadmap.md, 0.9.64, for the full list and the two milestones that
 // follow it.
 export const AvatarContinuousMovementIntent = Object.freeze({

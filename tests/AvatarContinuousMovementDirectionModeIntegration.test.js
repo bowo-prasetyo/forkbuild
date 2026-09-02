@@ -23,7 +23,7 @@ import { CreateBrickRegistryUseCase } from '../application/CreateBrickRegistryUs
 //              mode > idle), mirroring 0.9.66's own forwardAxis
 //              priority rule exactly, consumed via
 //              setContinuousMovementMode()/continuousMovementMode()
-//   Section B: application/WorldNavigationSession.js — real Caps Lock +
+//   Section B: application/WorldNavigationSession.js — real Alt +
 //              Shift + W/S keyboard chords, wired end to end through
 //              core/AvatarContinuousMovementInputAdapter.js (0.9.68),
 //              core/AvatarContinuousMovementIntent.js (0.9.64), and
@@ -37,7 +37,7 @@ import { CreateBrickRegistryUseCase } from '../application/CreateBrickRegistryUs
 //              (reusing the real 0.9.63 tree constraint, nothing new)
 //   Section E: determinism and backward compatibility
 //   Section F: architectural regression — the controller never learns
-//              what Shift/Caps Lock are; no new continuous-run physics
+//              what Shift/Alt are; no new continuous-run physics
 //
 // Central architectural claim under test throughout: direction and mode
 // are two independent dimensions that converge, before simulation, into
@@ -224,19 +224,19 @@ async function runTests() {
     {
         const { session, avatarPresenceSession } = newControlledSession(registry, 'session-b1');
 
-        // Caps Lock + Shift + W: activates continuous FORWARD + RUN.
-        session.avatarKeyDown('CapsLock');
+        // Alt + Shift + W: activates continuous FORWARD + RUN.
+        session.avatarKeyDown('Alt');
         session.avatarKeyDown('Shift');
         session.avatarKeyDown('w');
         assert(session._avatarMovementController.continuousMovementIntent() === AvatarContinuousMovementIntent.FORWARD,
-            '12. WorldNavigationSession: CapsLock+Shift+W activates continuous FORWARD');
+            '12. WorldNavigationSession: Alt+Shift+W activates continuous FORWARD');
         assert(session._avatarMovementController.continuousMovementMode() === AvatarContinuousMovementMode.RUN,
-            '13. WorldNavigationSession: CapsLock+Shift+W activates continuous RUN, with zero changes to avatarKeyDown\'s own public shape');
+            '13. WorldNavigationSession: Alt+Shift+W activates continuous RUN, with zero changes to avatarKeyDown\'s own public shape');
 
         // Releasing every key does not cancel either dimension.
         session.avatarKeyUp('w');
         session.avatarKeyUp('Shift');
-        session.avatarKeyUp('CapsLock');
+        session.avatarKeyUp('Alt');
         assert(session._avatarMovementController.continuousMovementIntent() === AvatarContinuousMovementIntent.FORWARD,
             '14. WorldNavigationSession: releasing every key leaves continuous FORWARD untouched');
         assert(session._avatarMovementController.continuousMovementMode() === AvatarContinuousMovementMode.RUN,
@@ -253,12 +253,12 @@ async function runTests() {
             '17. WorldNavigationSession: the animation is RUNNING throughout, driven entirely by persistent state');
     }
     {
-        // CapsLock + W (no Shift) activates WALK, not RUN.
+        // Alt + W (no Shift) activates WALK, not RUN.
         const { session } = newControlledSession(registry, 'session-b2');
-        session.avatarKeyDown('CapsLock');
+        session.avatarKeyDown('Alt');
         session.avatarKeyDown('w');
         assert(session._avatarMovementController.continuousMovementMode() === AvatarContinuousMovementMode.WALK,
-            '18. WorldNavigationSession: CapsLock+W (Shift not held) activates continuous WALK, not RUN');
+            '18. WorldNavigationSession: Alt+W (Shift not held) activates continuous WALK, not RUN');
     }
     {
         // Continuous mode can never be armed while Avatar Control Mode
@@ -271,18 +271,18 @@ async function runTests() {
         session._session = spyFacade();
         session._setupLocalAvatar();
         // Avatar Control Mode is OFF (the default).
-        session.avatarKeyDown('CapsLock');
+        session.avatarKeyDown('Alt');
         session.avatarKeyDown('Shift');
         session.avatarKeyDown('w');
         assert(session._avatarMovementController.continuousMovementMode() === AvatarContinuousMovementMode.NONE,
-            '19. WorldNavigationSession: a CapsLock+Shift+W chord while Avatar Control Mode is off never arms continuous mode');
+            '19. WorldNavigationSession: a Alt+Shift+W chord while Avatar Control Mode is off never arms continuous mode');
     }
     {
         // Turning Avatar Control Mode off never cancels an already
         // active continuous mode, the direct mode-dimension twin of
         // 0.9.66's own direction assertion.
         const { session, avatarPresenceSession } = newControlledSession(registry, 'session-b4');
-        session.avatarKeyDown('CapsLock');
+        session.avatarKeyDown('Alt');
         session.avatarKeyDown('Shift');
         session.avatarKeyDown('w');
         assert(session._avatarMovementController.continuousMovementMode() === AvatarContinuousMovementMode.RUN,
@@ -303,74 +303,74 @@ async function runTests() {
     {
         // 1. Continuous walk -> continuous run, no need to stop first.
         const { session } = newControlledSession(registry, 'session-c1');
-        session.avatarKeyDown('CapsLock');
+        session.avatarKeyDown('Alt');
         session.avatarKeyDown('w');
         session.avatarKeyUp('w');
         assert(session._avatarMovementController.continuousMovementIntent() === AvatarContinuousMovementIntent.FORWARD
             && session._avatarMovementController.continuousMovementMode() === AvatarContinuousMovementMode.WALK,
-            '23. Flagship 1: CapsLock+W -> FORWARD + WALK');
+            '23. Flagship 1: Alt+W -> FORWARD + WALK');
         session.avatarKeyDown('Shift');
         session.avatarKeyDown('w');
         assert(session._avatarMovementController.continuousMovementIntent() === AvatarContinuousMovementIntent.FORWARD
             && session._avatarMovementController.continuousMovementMode() === AvatarContinuousMovementMode.RUN,
-            '24. Flagship 1: CapsLock+Shift+W (Caps Lock still held) -> FORWARD + RUN, no stop required');
+            '24. Flagship 1: Alt+Shift+W (Alt still held) -> FORWARD + RUN, no stop required');
         session.avatarKeyUp('w');
         session.avatarKeyUp('Shift');
-        session.avatarKeyUp('CapsLock');
+        session.avatarKeyUp('Alt');
     }
     {
         // 2. Continuous run -> continuous walk — proves mode is
         // genuinely independent of direction.
         const { session } = newControlledSession(registry, 'session-c2');
-        session.avatarKeyDown('CapsLock');
+        session.avatarKeyDown('Alt');
         session.avatarKeyDown('Shift');
         session.avatarKeyDown('w');
         session.avatarKeyUp('w');
         assert(session._avatarMovementController.continuousMovementMode() === AvatarContinuousMovementMode.RUN,
-            '25. Flagship 2: CapsLock+Shift+W -> RUN');
+            '25. Flagship 2: Alt+Shift+W -> RUN');
         session.avatarKeyUp('Shift');
         session.avatarKeyDown('w');
         assert(session._avatarMovementController.continuousMovementIntent() === AvatarContinuousMovementIntent.FORWARD,
-            '26. Flagship 2: CapsLock+W (Shift released, Caps Lock still held) -> direction stays FORWARD');
+            '26. Flagship 2: Alt+W (Shift released, Alt still held) -> direction stays FORWARD');
         assert(session._avatarMovementController.continuousMovementMode() === AvatarContinuousMovementMode.WALK,
             '27. Flagship 2: ...and mode switches RUN -> WALK, proving mode is a genuinely independent dimension');
         session.avatarKeyUp('w');
-        session.avatarKeyUp('CapsLock');
+        session.avatarKeyUp('Alt');
     }
     {
         // 3. Forward run -> backward run.
         const { session } = newControlledSession(registry, 'session-c3');
-        session.avatarKeyDown('CapsLock');
+        session.avatarKeyDown('Alt');
         session.avatarKeyDown('Shift');
         session.avatarKeyDown('w');
         session.avatarKeyUp('w');
         assert(session._avatarMovementController.continuousMovementIntent() === AvatarContinuousMovementIntent.FORWARD
             && session._avatarMovementController.continuousMovementMode() === AvatarContinuousMovementMode.RUN,
-            '28. Flagship 3: CapsLock+Shift+W -> FORWARD + RUN');
+            '28. Flagship 3: Alt+Shift+W -> FORWARD + RUN');
         session.avatarKeyDown('s');
         assert(session._avatarMovementController.continuousMovementIntent() === AvatarContinuousMovementIntent.BACKWARD
             && session._avatarMovementController.continuousMovementMode() === AvatarContinuousMovementMode.RUN,
-            '29. Flagship 3: CapsLock+Shift+S (Caps Lock/Shift still held) -> BACKWARD + RUN');
+            '29. Flagship 3: Alt+Shift+S (Alt/Shift still held) -> BACKWARD + RUN');
         session.avatarKeyUp('s');
         session.avatarKeyUp('Shift');
-        session.avatarKeyUp('CapsLock');
+        session.avatarKeyUp('Alt');
     }
     {
         // 4. Running cancellation: an ordinary W tap clears BOTH
         // dimensions to NONE + NONE.
         const { session } = newControlledSession(registry, 'session-c4');
-        session.avatarKeyDown('CapsLock');
+        session.avatarKeyDown('Alt');
         session.avatarKeyDown('Shift');
         session.avatarKeyDown('w');
         session.avatarKeyUp('w');
         session.avatarKeyUp('Shift');
-        session.avatarKeyUp('CapsLock');
+        session.avatarKeyUp('Alt');
         assert(session._avatarMovementController.continuousMovementIntent() === AvatarContinuousMovementIntent.FORWARD
             && session._avatarMovementController.continuousMovementMode() === AvatarContinuousMovementMode.RUN,
-            '30. Flagship 4: CapsLock+Shift+W, then release everything -> FORWARD + RUN survives');
+            '30. Flagship 4: Alt+Shift+W, then release everything -> FORWARD + RUN survives');
         session.avatarKeyDown('w');
         assert(session._avatarMovementController.continuousMovementIntent() === AvatarContinuousMovementIntent.NONE,
-            '31. Flagship 4: an ordinary W tap (no Caps Lock) cancels the continuous direction to NONE');
+            '31. Flagship 4: an ordinary W tap (no Alt) cancels the continuous direction to NONE');
         assert(session._avatarMovementController.continuousMovementMode() === AvatarContinuousMovementMode.NONE,
             '32. Flagship 4: ...and cancels the continuous mode to NONE at the same time, from the same key event');
         session.avatarKeyUp('w');
@@ -381,9 +381,9 @@ async function runTests() {
         session.avatarKeyDown('Shift');
         session.avatarKeyDown('w');
         assert(session._avatarMovementController.continuousMovementIntent() === AvatarContinuousMovementIntent.NONE,
-            '33. Flagship 5: ordinary Shift+W (no Caps Lock) never activates continuous direction');
+            '33. Flagship 5: ordinary Shift+W (no Alt) never activates continuous direction');
         assert(session._avatarMovementController.continuousMovementMode() === AvatarContinuousMovementMode.NONE,
-            '34. Flagship 5: ordinary Shift+W (no Caps Lock) never activates continuous mode');
+            '34. Flagship 5: ordinary Shift+W (no Alt) never activates continuous mode');
         session._avatarMovementController.tick(0.1);
         assert(avatarPresenceSession.current.animation === AvatarAnimationState.RUNNING,
             '35. Flagship 5: ...even though the avatar IS ordinarily running right now');
@@ -427,7 +427,7 @@ async function runTests() {
             '40. Section D: a tree collision never clears the continuous movement mode either');
     }
     {
-        // FLAGSHIP REGRESSION: CapsLock+Shift+W -> release every key ->
+        // FLAGSHIP REGRESSION: Alt+Shift+W -> release every key ->
         // avatar continues running -> encounters the real deterministic
         // tree -> the existing tree collision constraint stops it,
         // exactly as it already stops an ordinary running avatar. Run
@@ -452,15 +452,15 @@ async function runTests() {
         session._setupLocalAvatar();
         session.setAvatarControlMode(true);
 
-        session.avatarKeyDown('CapsLock');
+        session.avatarKeyDown('Alt');
         session.avatarKeyDown('Shift');
         session.avatarKeyDown('w');
         session.avatarKeyUp('w');
         session.avatarKeyUp('Shift');
-        session.avatarKeyUp('CapsLock');
+        session.avatarKeyUp('Alt');
         assert(session._avatarMovementController.continuousMovementIntent() === AvatarContinuousMovementIntent.FORWARD
             && session._avatarMovementController.continuousMovementMode() === AvatarContinuousMovementMode.RUN,
-            '41. FLAGSHIP REGRESSION: CapsLock+Shift+W activates FORWARD + RUN and survives releasing every key');
+            '41. FLAGSHIP REGRESSION: Alt+Shift+W activates FORWARD + RUN and survives releasing every key');
 
         let everCollided = false;
         let sawRunningAnimation = false;
@@ -532,8 +532,8 @@ async function runTests() {
             .filter((line) => !line.trim().startsWith('//'))
             .join('\n');
 
-        assert(!/capslock/i.test(codeOnly),
-            '49. application/AvatarMovementController.js\'s own CODE (comments excluded) never references Caps Lock in any form');
+        assert(!/\balt\b/i.test(codeOnly) && !codeOnly.includes('Alt'),
+            '49. application/AvatarMovementController.js\'s own CODE (comments excluded) never references Alt in any form');
         assert(!codeOnly.includes('shiftDown'),
             '50. application/AvatarMovementController.js\'s own CODE never tracks a physical Shift hold-state — that stays one layer up, in WorldNavigationSession');
         assert(!codeOnly.includes('getModifierState'),
@@ -561,7 +561,7 @@ async function runTests() {
         assert(codeOnly.includes('setContinuousMovementMode'),
             '57. application/WorldNavigationSession.js feeds the resolved mode into AvatarMovementController through its own public setter, never by reaching into a private field');
         assert(codeOnly.includes('this._shiftDown'),
-            '58. application/WorldNavigationSession.js tracks its own Shift hold-state, the direct structural twin of _capsLockDown');
+            '58. application/WorldNavigationSession.js tracks its own Shift hold-state, the direct structural twin of _altDown');
     }
 
     console.log('✅ All Avatar Continuous Movement Direction + Mode Integration tests passed.');

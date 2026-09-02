@@ -119,11 +119,11 @@ import { AvatarContinuousMovementMode, isValidAvatarContinuousMovementMode } fro
 // ever changes, and this class never asks where it came from —
 // exactly like `_keys` never asks whether a `keyDown('w')` call came
 // from a real keyboard, a UI button, a gamepad, or a test. Deliberately
-// NOT wired here: no Caps Lock detection, no
+// NOT wired here: no Alt detection, no
 // core/AvatarContinuousMovementInputAdapter.js import, no raw-key
-// translation of any kind — `if (capsLock && w)` conceptually never
+// translation of any kind — `if (alt && w)` conceptually never
 // appears in this file, and it couldn't, because this file has no idea
-// a "Caps Lock" exists. That seam belongs one layer up, in
+// an "Alt" exists. That seam belongs one layer up, in
 // `application/WorldNavigationSession.js#avatarKeyDown`/`avatarKeyUp`
 // — the same place raw keys already reach this class through
 // `keyDown()`/`keyUp()` — which owns the keyboard-specific translation
@@ -176,7 +176,7 @@ import { AvatarContinuousMovementMode, isValidAvatarContinuousMovementMode } fro
 // `_continuousMovementMode`, like `_continuousMovementIntent` before
 // it, is deliberately untouched by `releaseAll()` and by every step of
 // `tick()` after `_currentMovementState()` has already read it — the
-// physical Shift/Caps Lock keys releasing must never silently cancel a
+// physical Shift/Alt keys releasing must never silently cancel a
 // deliberately activated persistent RUN any more than releasing W/S
 // cancels persistent FORWARD/BACKWARD. Cancellation remains governed
 // entirely by `deriveAvatarContinuousMovementMode()`'s own ordinary-
@@ -528,7 +528,7 @@ export class AvatarMovementController {
     // `_resolvedForwardAxis()` already uses — direction and mode
     // resolve from the same "which source is currently driving
     // movement" decision, never two independently-timed ones — so
-    // ordinary Shift+W and continuous CapsLock+Shift+W converge to the
+    // ordinary Shift+W and continuous Alt+Shift+W converge to the
     // exact same AvatarMovementState shape before simulation ever runs.
     _resolvedRunning() {
         if (this._keys.forward || this._keys.backward) {
