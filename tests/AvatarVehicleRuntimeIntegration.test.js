@@ -248,8 +248,17 @@ async function runTests() {
 
         assert(codeOnly.includes('AvatarVehicleInteractionController'),
             '16. application/WorldNavigationSession.js does construct application/AvatarVehicleInteractionController.js — the integration this milestone exists to make');
-        assert(!/vehicleSpeed|VehicleMovement|vehicleVelocity/.test(codeOnly),
-            '17. application/WorldNavigationSession.js never references vehicle speed, vehicle movement, or vehicle velocity — this milestone deliberately never touches vehicle movement');
+        // 0.9.85 note: `VehicleMovement(?!Capability)` deliberately still
+        // catches a parallel `VehicleMovementController`/vehicle speed
+        // system (what THIS milestone, 0.9.83, forbids), while allowing
+        // the one legitimate `AvatarVehicleMovementCapability`/
+        // `resolveAvatarVehicleMovementCapability` reference 0.9.85 adds
+        // — see tests/AvatarVehicleMovementCapabilityIntegration.test.js
+        // Section D for that milestone's own, stricter regression sweep
+        // (no vehicleSpeed/vehicleAcceleration/vehicleBraking/etc. of any
+        // kind, capability integration included).
+        assert(!/vehicleSpeed|VehicleMovement(?!Capability)|vehicleVelocity/.test(codeOnly),
+            '17. application/WorldNavigationSession.js never references vehicle speed, vehicle velocity, or a parallel vehicle movement system — this milestone deliberately never touches vehicle movement (0.9.85\'s later capability integration excepted)');
         // The composition itself stays a one-line construction + a
         // one-line tick() call + a pass-through in avatarKeyDown/
         // avatarKeyUp — never a second copy of the mount/dismount rule

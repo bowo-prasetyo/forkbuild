@@ -1,4 +1,5 @@
 import { DEFAULT_WORLD_SEED } from '../core/TerrainHeightField.js';
+import { VehicleType } from '../core/VehicleType.js';
 import {
     deriveAvatarVehicleInteractionIntent
 } from '../core/AvatarVehicleInteractionIntent.js';
@@ -179,6 +180,41 @@ export class AvatarVehicleInteractionController {
         return this._mount;
     }
 
+    // 0.9.85 — the VehicleType of the vehicle this controller is
+    // currently mounted on, or VehicleType.NONE when not mounted —
+    // never `null`, mirroring core/AvatarVehicleMovementCapability.js's
+    // own header: "VehicleType.NONE is passed for 'not currently
+    // mounted,' reusing the exact value core/VehicleType.js's own
+    // header already reserved for this," never a second not-mounted
+    // spelling alongside `mount`'s own `null`. Reuses the exact
+    // `_findMountedVehicle()` lookup `_tickDismount()` already performs
+    // below — see this file's own header, "Vehicle lookup: a requery,
+    // never a registry" — rather than a second copy of the same
+    // seed-scoped query. Read by application/WorldNavigationSession.js,
+    // once per animation frame, to resolve the local avatar's current
+    // movement capability (core/AvatarVehicleMovementCapability.js) —
+    // the one new consumer 0.9.85 adds for this controller's own
+    // `mount` state, and still not application/AvatarMovementController.js
+    // itself, which never learns a VehicleType exists at all (see that
+    // file's own 0.9.85 header).
+    //
+    // Subject to the exact same known boundary `_findMountedVehicle()`
+    // itself already documents below ("A known boundary"): if the
+    // avatar has walked far enough that the mounted vehicle no longer
+    // falls inside `_nearbyVehicles()`'s own query rectangle, this
+    // reports VehicleType.NONE even though `mount()` itself is still
+    // non-null — the same honest "no destination is known from here"
+    // this controller already settles for on the dismount path, never
+    // a crash or a guessed type.
+    mountedVehicleType() {
+        if (!this._avatarPresenceSession || this._mount === null) {
+            return VehicleType.NONE;
+        }
+        const avatarPosition = this._avatarPresenceSession.current.position;
+        const vehicle = this._findMountedVehicle(avatarPosition);
+        return vehicle ? vehicle.type : VehicleType.NONE;
+    }
+
     // Returns true when `key` is the one this controller understands,
     // so a caller knows whether to preventDefault/swallow the event —
     // the same contract application/AvatarMovementController.js#keyDown/
@@ -341,9 +377,14 @@ export class AvatarVehicleInteractionController {
     }
 }
 
-// Deliberately not yet: vehicle movement, speed, or any coupling with
-// application/AvatarMovementController.js (see this file's own header,
-// "A known boundary — no movement coupling"); vehicle switching while
+// Deliberately not yet: vehicle movement, speed, or any DIRECT coupling
+// with application/AvatarMovementController.js (see this file's own
+// header, "A known boundary — no movement coupling") — this file still
+// never imports or references that class; 0.9.85's own `mountedVehicleType()`
+// above is a pure read of this controller's already-existing vehicle
+// lookup, and application/WorldNavigationSession.js is the one place
+// that composes it into an actual movement-capability change, never
+// this file. Also not yet: vehicle switching while
 // already mounted (0.9.78's own no-op rule already prevents it, and
 // this controller invents no override); a persistent vehicle registry
 // of any kind (see "Vehicle lookup: a requery, never a registry");
@@ -354,4 +395,5 @@ export class AvatarVehicleInteractionController {
 // local, and unsigned as AvatarPresence's own position — see
 // core/AvatarPresence.js's own header); collision or physics beyond
 // the existing tree-clearance check 0.9.81 already supplies. See
-// docs/Roadmap.md, 0.9.83, for the full list.
+// docs/Roadmap.md, 0.9.83, for the full pre-0.9.85 list, and 0.9.85 for
+// `mountedVehicleType()` itself.
