@@ -363,6 +363,24 @@ async function runTests() {
 
     // -------------------------------------------------------------
     // Section I — real, key-driven controller behavior is unchanged
+    //
+    // 0.9.95 UPDATE: as of 0.9.92, this section's own title was true for
+    // a stronger reason than it is now — `_currentMovementState()` had
+    // no source for `brakingRequested` at all, so it was UNCONDITIONALLY
+    // false. 0.9.95 (core/AvatarVehicleBrakingIntent.js +
+    // application/AvatarMovementController.js's own new
+    // `setVehicleBrakingIntent()`/`_resolvedBrakingRequested()`) gives it
+    // a real source — but that source is a dedicated method call, never
+    // a keyboard key. The scenario below calls ONLY `keyDown('w')`/
+    // `keyUp('w')`, exactly as it always has, and never calls
+    // `setVehicleBrakingIntent()` — so `_vehicleBrakingIntent` stays at
+    // its own default, `AvatarVehicleBrakingIntent.NONE`, and
+    // `brakingRequested` resolves `false` throughout, exactly as before
+    // 0.9.95 existed. This section's title, and every assertion below,
+    // therefore remains true — see
+    // tests/AvatarVehicleBrakingIntentControllerIntegration.test.js
+    // (0.9.95's own new suite) for the scenarios where
+    // `setVehicleBrakingIntent()` genuinely IS called.
     // -------------------------------------------------------------
     {
         // The exact CAR ramp scenario tests/AvatarVehicleAccelerationStateIntegration.test.js's
@@ -370,8 +388,10 @@ async function runTests() {
         // controller built AFTER this milestone's own changes, to prove
         // 0.9.92 changed nothing about it: braking is fully wired, but
         // brakingRequested is never true anywhere `_currentMovementState()`
-        // produces, so every tick still resolves through the ACCELERATION
-        // branch exactly as before.
+        // produces (as of 0.9.95: because `setVehicleBrakingIntent()` is
+        // never called in this scenario — see the 0.9.95 update above),
+        // so every tick still resolves through the ACCELERATION branch
+        // exactly as before.
         const { avatarPresenceSession } = buildAvatarStack(registry, 'brake-i1');
         const controller = new AvatarMovementController(avatarPresenceSession);
         controller.setMovementCapability(car);
@@ -406,12 +426,28 @@ async function runTests() {
             '27. application/AvatarMovementController.js never reads AvatarMovementBrakingCapability\'s own .kind — the bare braking rate alone already carries the distinction');
         assert(controllerCodeOnly.includes('_resolvedBraking'),
             '28. application/AvatarMovementController.js exposes the _resolvedBraking() seam this milestone adds');
-        assert(!controllerCodeOnly.includes('brakingRequested'),
-            '29. application/AvatarMovementController.js never sets movementState.brakingRequested anywhere — real, key-driven movement never engages braking, as of 0.9.92 (see this file\'s own 0.9.92 header)');
+        // 29. AS OF 0.9.92, `application/AvatarMovementController.js`
+        // never set `movementState.brakingRequested` anywhere — this
+        // exact assertion (`!controllerCodeOnly.includes('brakingRequested')`)
+        // was this suite's own proof of that. 0.9.95
+        // (core/AvatarVehicleBrakingIntent.js's own controller
+        // integration) deliberately makes that literal string appear —
+        // `_currentMovementState()` now builds `brakingRequested:
+        // this._resolvedBrakingRequested()` — so the ORIGINAL assertion
+        // would now be a false claim about the current architecture, not
+        // a true regression check. Updated in place, matching this
+        // codebase's own precedent (see docs/Roadmap.md, 0.9.94, Section
+        // H "now proves the OPPOSITE of its 0.9.93 claim"): the new
+        // regression check the milestone brief actually cares about
+        // going forward is the one 30/31 already establish below — no
+        // KEYBOARD key drives braking — which stays completely true
+        // after 0.9.95.
+        assert(controllerCodeOnly.includes('_resolvedBrakingRequested') && controllerCodeOnly.includes('setVehicleBrakingIntent'),
+            '29. application/AvatarMovementController.js gained a genuine brakingRequested source in 0.9.95 (_resolvedBrakingRequested()/setVehicleBrakingIntent()) — see tests/AvatarVehicleBrakingIntentControllerIntegration.test.js for full coverage of that seam');
         assert(!/setBrakingRequested/.test(controllerCodeOnly),
-            '30. no keyboard-facing setter for braking was added — deciding which user action produces this fact is deliberately left to a future input milestone');
+            '30. no keyboard-facing setter literally named setBrakingRequested was added — 0.9.95\'s own setVehicleBrakingIntent() takes an already-resolved AvatarVehicleBrakingIntent value, never a raw key or boolean');
         assert(!/case\s+'[^']*':\s*this\._keys\.brak/i.test(controllerCodeOnly),
-            '31. no key is bound to braking in _setKey() — W/A/S/D/Shift/Space remain the only recognized keys');
+            '31. no key is bound to braking in _setKey() — W/A/S/D/Shift/Space remain the only recognized keys, unchanged by 0.9.95');
 
         const simulationSource = await readFile(new URL('../core/AvatarMovementSimulation.js', import.meta.url), 'utf8');
         const simulationCodeOnly = simulationSource.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
