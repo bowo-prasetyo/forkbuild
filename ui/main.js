@@ -125,6 +125,7 @@ import {
     composeDecentralizedWorldEncounterMaterialDiscoveryServices,
     composeDecentralizedWorldEncounterMaterialDiscoveryRuntime
 } from '../application/DecentralizedWorldEncounterMaterialDiscoveryRuntimeComposition.js';
+import { composeDiscoverWorldEncounterPublicationCommand } from '../application/DiscoverWorldEncounterPublicationCommandComposition.js';
 
 const identityProvider = new CreateIdentityProviderUseCase().execute();
 const identityUseCase = new IdentityUseCase(identityProvider);
@@ -1393,26 +1394,21 @@ app.provide('worldEncounterMaterialSources', worldEncounterMaterialSources);
 app.provide('worldEncounterMaterialVerifier', worldEncounterMaterialVerifier);
 app.provide('worldDiscoveryLeadRegistry', worldDiscoveryLeadRegistry);
 
-// The one application-facing capability this composition exists to
-// produce, provided app-wide exactly like `publicationDistributionCommand`
-// below it: a thin, pre-bound closure a future World View action calls
-// with only `{ objectId, discoveryTag }` — see that function's own header
-// for the full `{ discovery, resolution, inspection }` shape it returns.
-// `publications` is supplied FRESH on every call, read from the SAME
-// `forkbuild-publications` storage key `LocalWorldEncounterMaterialSource`
-// itself already reads (via a fresh `LocalDiscoveryProvider`, never a
-// second repository) — association evidence can only ever connect a
-// discovered lead to a Publication this replica already knows about; see
-// that function's own header, "publications is the caller's own evidence
-// source, never fetched here."
-function discoverWorldEncounterPublicationCommand({ objectId, discoveryTag } = {}) {
-    const publications = new LocalDiscoveryProvider(new LocalStorageProvider()).list();
-    return decentralizedWorldEncounterMaterialDiscoveryRuntime.discoverWorldEncounterPublication({
-        objectId,
-        discoveryTag,
-        publications
-    });
-}
+// 0.9.111 — World View Decentralized Publication Retrieval. The one
+// application-facing capability this composition exists to produce,
+// provided app-wide exactly like `publicationDistributionCommand` below
+// it: a thin, pre-bound closure `ui/views/WorldView.js` calls with only
+// `{ objectId, discoveryTag }` — see `application/DiscoverWorldEncounterPublicationCommandComposition.js`'s
+// own header for the full `{ discovery, resolution, inspection }` shape it
+// returns. `discoveryProvider` is a fresh `LocalDiscoveryProvider`, reading
+// the SAME `forkbuild-publications` storage key `LocalWorldEncounterMaterialSource`
+// itself already reads — its own `.list()` is called fresh on every
+// discovery call (never cached here), so association evidence always
+// reflects this replica's CURRENT local publications.
+const discoverWorldEncounterPublicationCommand = composeDiscoverWorldEncounterPublicationCommand({
+    runtime: decentralizedWorldEncounterMaterialDiscoveryRuntime,
+    discoveryProvider: new LocalDiscoveryProvider(new LocalStorageProvider())
+});
 app.provide('discoverWorldEncounterPublicationCommand', discoverWorldEncounterPublicationCommand);
 
 // 0.9.100 — Publication Distribution World View Integration.
