@@ -4,6 +4,7 @@ import { describeWorldFromDiscoveryRegistry } from '../../application/WorldDisco
 import { describeWorldEncounterInspection } from '../../application/WorldEncounterInspection.js';
 import { describeWorldEncounterSelectionOutcomeFromRegistry, WorldEncounterSelectionOutcomeStatus } from '../../application/WorldEncounterSelectionOutcome.js';
 import { inspectWorldEncounterMaterial } from '../../application/WorldEncounterMaterialInspection.js';
+import { PublicationDistributionState } from '../../application/PublicationDistributionLifecycle.js';
 import { describeDecentralizedWorldEncounterLeadSelectionOutcomeFromRegistry, DecentralizedWorldEncounterLeadSelectionOutcomeStatus } from '../../application/DecentralizedWorldEncounterLeadSelection.js';
 
 // 0.9.3 — World View UI / Wanderer Presence.
@@ -753,6 +754,52 @@ import { describeDecentralizedWorldEncounterLeadSelectionOutcomeFromRegistry, De
 //   anything else this milestone adds, beyond this component's own mount.**
 //   Both live and die with this component instance, exactly like
 //   `selectionOutcome`/`materialInspection` already do.
+// 0.9.100 — Publication Distribution Observation.
+//
+// `application/PublicationDistributionLifecycle.js` (0.9.50) through
+// `application/PublicationDistributionLifecycleStore.js` (0.9.52/0.9.53)
+// already built a complete, independently-tested distribution lifecycle —
+// a two-dimensional `{ material: { state }, discovery: { state } }`
+// description, kept live in a `PublicationDistributionLifecycleMemoryStore`
+// a caller can `subscribe()` to. This component becomes another such
+// caller, exactly the way it already is one of
+// `WorldDiscoverySourceRegistry.subscribe()` (0.9.13) and
+// `DecentralizedWorldDiscoveryLeadRegistry.subscribe()` (0.9.40).
+//
+//   distributionLifecycleStore (injected, 0.9.100 ★)
+//        │
+//        │ .get(publicationId)  +  .subscribe(publicationId, listener)
+//        ▼
+//   distributionLifecycle = { material: { state }, discovery: { state } }
+//        │
+//        ▼
+//   this component's own "Distribution" panel
+//   ( {{ distributionMaterialState }} / {{ distributionDiscoveryState }} )
+//
+// OBSERVATION ONLY, NEVER EXECUTION. This component never imports
+// `PublicationDistributionOrchestrator.js`, `...RuntimeComposition.js`,
+// `...Executor.js`, `ArweavePublicationMaterialUploader.js`, or
+// `NostrPublicationDiscoveryPublisher.js` — it has no "distribute" action
+// of its own, and constructs neither an Arweave uploader nor a Nostr
+// publisher. Composing the runtime that actually PRODUCES a distribution
+// result stays entirely `ui/main.js`'s own, separate, unscheduled concern —
+// wiring an actual distribute command is a future, unscheduled interaction
+// milestone, not this one.
+//
+// NO SECOND LIFECYCLE, NO POLLING. `refreshDistributionLifecycle()` never
+// calls `describePublicationDistributionLifecycle()`,
+// `transitionPublicationDistributionLifecycle()`, or constructs a
+// `PublicationDistributionLifecycleMemoryStore` of its own — it only reads
+// and subscribes to the ONE store `ui/main.js` composes and injects. There
+// is no `setInterval()` anywhere in this addition; `distributionLifecycle`
+// changes only in reaction to a real store notification, or a fresh
+// selection.
+//
+// NO NEW VOCABULARY. `distributionMaterialState`/`distributionDiscoveryState`
+// are exactly `PublicationDistributionState.ABSENT`/`.PRESENT` — the two
+// values `PublicationDistributionLifecycle.js` (0.9.50) already defines.
+// No TRUSTED/PUBLISHED/POPULAR/SUCCESSFUL/ONLINE/DECENTRALIZED status is
+// invented at this layer.
 const WORLD_HALF_SPAN = 50;
 const CANVAS_SIZE = 600;
 
@@ -828,6 +875,18 @@ export default {
         decentralizedLeadAssociations: {
             type: Array,
             default: () => []
+        },
+        // 0.9.100 — optional. A `PublicationDistributionLifecycleMemoryStore`-
+        // shaped object (duck-typed: `get(publicationId)`/`subscribe(publicationId,
+        // listener)`), read for the CURRENT `selectedEncounter` only when its
+        // `kind` is `'PUBLICATION'` — see this file's own header, "0.9.100 —
+        // Publication Distribution Observation." `null` by default: a mount
+        // with no store supplied never renders the Distribution panel and
+        // never calls `get()`/`subscribe()`. Never constructed by this
+        // component itself, and never written to.
+        distributionLifecycleStore: {
+            type: Object,
+            default: null
         }
     },
     data() {
@@ -896,7 +955,24 @@ export default {
             // `worldDiscoveryLeadRegistry.subscribe()` itself returned, held
             // only so `beforeUnmount()` can call it. `null` whenever this
             // mount never subscribed to a lead registry.
-            unsubscribeWorldDiscoveryLeadRegistry: null
+            unsubscribeWorldDiscoveryLeadRegistry: null,
+            // 0.9.100 — page-local, store-derived lifecycle description for
+            // the CURRENT `selectedEncounter`, exactly the `{ material,
+            // discovery }` shape `describePublicationDistributionLifecycle()`
+            // (0.9.50) already produces. `null` until
+            // `refreshDistributionLifecycle()` writes it; stays `null`
+            // whenever there is no current `selectedEncounter`, its `kind`
+            // isn't `'PUBLICATION'`, no `distributionLifecycleStore` was
+            // supplied, or the store itself holds nothing yet for this
+            // publication — see this file's own header, "0.9.100 —
+            // Publication Distribution Observation."
+            distributionLifecycle: null,
+            // 0.9.100 — the `unsubscribe` function
+            // `distributionLifecycleStore.subscribe()` itself returned, held
+            // only so `beforeUnmount()` (and every fresh
+            // `refreshDistributionLifecycle()` call) can call it. `null`
+            // whenever this mount never subscribed.
+            unsubscribeDistributionLifecycle: null
         };
     },
     computed: {
@@ -1001,6 +1077,22 @@ export default {
                 return stillOffered ? choice : null;
             }
             return null;
+        },
+        // 0.9.100 — `distributionLifecycle.material.state`, defaulting to
+        // `PublicationDistributionState.ABSENT` (the SAME enum
+        // `describePublicationDistributionLifecycle()`, 0.9.50, already
+        // uses) whenever `distributionLifecycle` is still `null` — no new
+        // vocabulary invented at this layer.
+        distributionMaterialState() {
+            return this.distributionLifecycle ? this.distributionLifecycle.material.state : PublicationDistributionState.ABSENT;
+        },
+        // 0.9.100 — mirrors `distributionMaterialState` immediately above,
+        // exactly, for `distributionLifecycle.discovery.state`. Material
+        // and discovery state stay independent, never collapsed into one
+        // overall verdict — see `PublicationDistributionLifecycle.js`'s own
+        // header, unrevisited here.
+        distributionDiscoveryState() {
+            return this.distributionLifecycle ? this.distributionLifecycle.discovery.state : PublicationDistributionState.ABSENT;
         }
     },
     methods: {
@@ -1031,6 +1123,15 @@ export default {
             // place decentralizedLeadOutcome is ever written."
             this.refreshDecentralizedLeadOutcome();
             this.refreshSelectionOutcome();
+            // 0.9.100 — a fresh selection always re-derives distribution
+            // observation from scratch, independent of both calls above:
+            // distribution state is keyed by `selectedEncounter.objectId`
+            // alone (a Publication's own id, the same regardless of which
+            // origin served this encounter), never by
+            // `selectionOutcome`/`resolvedEncounterSelection` — see this
+            // file's own header, "0.9.100 — Publication Distribution
+            // Observation."
+            this.refreshDistributionLifecycle();
         },
         // 0.9.13 — the only writer of `worldView`, and the only caller
         // of `describeWorldFromDiscoveryRegistry()` in this file. See
@@ -1152,6 +1253,37 @@ export default {
                     this.materialInspection = result;
                 }
             });
+        },
+        // 0.9.100 — the only writer of `distributionLifecycle`, and the
+        // only caller of `distributionLifecycleStore.get()`/`.subscribe()`
+        // in this file. Never calls `describePublicationDistributionLifecycle()`,
+        // never constructs a `PublicationDistributionLifecycleMemoryStore`,
+        // and never executes a distribution — this method only OBSERVES a
+        // store a caller already composed and injected. Always unsubscribes
+        // any previous subscription first, so a changed selection (or a
+        // repeated call) never leaves more than one live subscription behind
+        // — the same discipline `beforeUnmount()` already holds for
+        // `unsubscribeWorldRegistry`/`unsubscribeWorldDiscoveryLeadRegistry`.
+        // A no-op (`distributionLifecycle` cleared to `null`) whenever there
+        // is no current `selectedEncounter`, its `kind` isn't `'PUBLICATION'`,
+        // or no `distributionLifecycleStore` was supplied — see this file's
+        // own header, "0.9.100 — Publication Distribution Observation."
+        refreshDistributionLifecycle() {
+            if (typeof this.unsubscribeDistributionLifecycle === 'function') {
+                this.unsubscribeDistributionLifecycle();
+            }
+            this.unsubscribeDistributionLifecycle = null;
+
+            if (!this.selectedEncounter || this.selectedEncounter.kind !== 'PUBLICATION' || !this.distributionLifecycleStore) {
+                this.distributionLifecycle = null;
+                return;
+            }
+
+            const publicationId = this.selectedEncounter.objectId;
+            this.distributionLifecycle = this.distributionLifecycleStore.get(publicationId);
+            this.unsubscribeDistributionLifecycle = this.distributionLifecycleStore.subscribe(publicationId, (_publicationId, lifecycle) => {
+                this.distributionLifecycle = lifecycle;
+            });
         }
     },
     // 0.9.13 — seed, then subscribe; see this file's own header,
@@ -1213,6 +1345,12 @@ export default {
         // request; see this file's own header, "beforeUnmount() also
         // invalidates any in-flight request."
         this.materialInspectionRequestId += 1;
+        // 0.9.100 — unsubscribes from `distributionLifecycleStore` too,
+        // unconditionally and idempotently, mirroring the two blocks above.
+        if (typeof this.unsubscribeDistributionLifecycle === 'function') {
+            this.unsubscribeDistributionLifecycle();
+        }
+        this.unsubscribeDistributionLifecycle = null;
     },
     template: `
         <div class="world-encounter-view">
@@ -1346,6 +1484,22 @@ export default {
                 <dl class="world-encounter-verification-detail">
                     <dt>Status</dt>
                     <dd>{{ materialInspection.verification.status }}</dd>
+                </dl>
+            </div>
+
+            <!-- 0.9.100 — reads exactly distributionLifecycle.material.state /
+                 .discovery.state, the SAME two independent
+                 PublicationDistributionState values
+                 describePublicationDistributionLifecycle() (0.9.50) already
+                 defines. See this file's own header, "0.9.100 — Publication
+                 Distribution Observation." -->
+            <div v-if="selectedEncounter && selectedEncounter.kind === 'PUBLICATION' && distributionLifecycleStore" class="world-encounter-distribution-panel">
+                <h4 class="world-encounter-distribution-title">Distribution</h4>
+                <dl class="world-encounter-distribution-detail">
+                    <dt>Material</dt>
+                    <dd>{{ distributionMaterialState }}</dd>
+                    <dt>Discovery</dt>
+                    <dd>{{ distributionDiscoveryState }}</dd>
                 </dl>
             </div>
         </div>

@@ -110,6 +110,11 @@ import { bootstrapWorldDiscoveryRuntime } from '../application/WorldDiscoveryRun
 import { LocalStorageProvider } from '../storage/LocalStorageProvider.js';
 import { LocalWorldEncounterMaterialSource } from '../application/LocalWorldEncounterMaterialSource.js';
 import { composeWorldEncounterMaterialVerifier } from '../application/WorldEncounterMaterialVerifierRuntimeComposition.js';
+import { PublicationDistributionLifecycleMemoryStore } from '../application/PublicationDistributionLifecycleStore.js';
+import { PublicationDistributionLifecyclePersistence } from '../application/PublicationDistributionLifecyclePersistence.js';
+import { PublicationDistributionLifecyclePersistenceBridge } from '../application/PublicationDistributionLifecyclePersistenceBridge.js';
+import { PublicationDistributionLifecycleRestorer } from '../application/PublicationDistributionLifecycleRestorer.js';
+import { hydratePublicationDistributionLifecycles } from '../application/PublicationDistributionLifecycleHydration.js';
 
 const identityProvider = new CreateIdentityProviderUseCase().execute();
 const identityUseCase = new IdentityUseCase(identityProvider);
@@ -1348,6 +1353,55 @@ const worldEncounterMaterialSources = Object.freeze({
 const { verifier: worldEncounterMaterialVerifier } = composeWorldEncounterMaterialVerifier();
 app.provide('worldEncounterMaterialSources', worldEncounterMaterialSources);
 app.provide('worldEncounterMaterialVerifier', worldEncounterMaterialVerifier);
+
+// 0.9.100 — Publication Distribution World View Integration.
+// `application/PublicationDistributionLifecycle.js` (0.9.50) through
+// `...LifecycleHydration.js` (0.9.57) already built a complete lifecycle
+// line — description, transition, an in-memory observation store,
+// snapshot persistence, a persistence bridge, restoration, and startup
+// hydration — entirely independent of any UI. This is the first time any
+// of it is actually composed: ONE app-wide `PublicationDistributionLifecycleMemoryStore`
+// (0.9.52/0.9.53, unmodified) is restored from whatever this replica
+// already persisted for its own known publications (via
+// `PublicationDistributionLifecycleRestorer`/`hydratePublicationDistributionLifecycles`,
+// 0.9.56/0.9.57, unmodified, fed `publicationCatalog.list()`'s own ids —
+// the SAME catalog every other local composition in this file already
+// reads), then bridged so that any FUTURE change to it is persisted the
+// same way (`PublicationDistributionLifecyclePersistenceBridge`, 0.9.55,
+// unmodified), using the SAME `LocalStorageProvider` idiom the material-
+// verification wiring immediately above already uses. Provided the same
+// way `worldEncounterMaterialSources`/`worldEncounterMaterialVerifier` are,
+// for `ui/views/WorldView.js` to `inject()` and hand straight through to
+// `WorldEncounterCanvas`'s own new `distributionLifecycleStore` prop.
+//
+// NEITHER AN ARWEAVE UPLOADER NOR A NOSTR PUBLISHER IS EVER CONSTRUCTED
+// HERE. `PublicationDistributionRuntimeComposition.js`, `...Executor.js`,
+// `...Orchestrator.js`, `ArweavePublicationMaterialUploader.js`, and
+// `NostrPublicationDiscoveryPublisher.js` are all unimported — actually
+// EXECUTING a distribution needs real signer/relay configuration this
+// file has nowhere else established, the same "a materially larger,
+// network-facing composition decision" restraint the material-verification
+// wiring immediately above already holds for peer/decentralized material
+// sources. This milestone wires observation of whatever lifecycle already
+// exists; it introduces no way to produce a new one.
+const publicationDistributionLifecycleStore = new PublicationDistributionLifecycleMemoryStore();
+const publicationDistributionLifecyclePersistence = new PublicationDistributionLifecyclePersistence(new LocalStorageProvider());
+const publicationDistributionLifecycleRestorer = new PublicationDistributionLifecycleRestorer(
+    publicationDistributionLifecyclePersistence,
+    publicationDistributionLifecycleStore
+);
+const publicationDistributionLifecyclePersistenceBridge = new PublicationDistributionLifecyclePersistenceBridge(
+    publicationDistributionLifecycleStore,
+    publicationDistributionLifecyclePersistence
+);
+const restoredPublicationDistributionLifecycles = hydratePublicationDistributionLifecycles(
+    publicationDistributionLifecycleRestorer,
+    publicationCatalog.list().map((publication) => publication.id)
+);
+for (const { publicationId } of restoredPublicationDistributionLifecycles) {
+    publicationDistributionLifecyclePersistenceBridge.observe(publicationId);
+}
+app.provide('publicationDistributionLifecycleStore', publicationDistributionLifecycleStore);
 
 app.use(router);
 app.mount('#app');

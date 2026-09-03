@@ -153,6 +153,18 @@ function canvasCtx(overrides = {}) {
         resolvedLeadChoice: null,
         refreshDecentralizedLeadOutcome: WorldEncounterCanvas.methods.refreshDecentralizedLeadOutcome,
         chooseDecentralizedLead: WorldEncounterCanvas.methods.chooseDecentralizedLead,
+        // 0.9.100 — `selectEncounter()` now also calls
+        // `this.refreshDistributionLifecycle()`. `distributionLifecycleStore`
+        // stays `null` throughout this file's own tests, so that call
+        // always leaves `distributionLifecycle` at `null` without ever
+        // touching a `PublicationDistributionLifecycleMemoryStore` — see
+        // tests/WorldViewPublicationDistributionIntegration.test.js for that
+        // wiring itself. This file's own sections stay focused on 0.9.39's
+        // own material-inspection contract, unaffected by that addition.
+        distributionLifecycleStore: null,
+        distributionLifecycle: null,
+        unsubscribeDistributionLifecycle: null,
+        refreshDistributionLifecycle: WorldEncounterCanvas.methods.refreshDistributionLifecycle,
         ...overrides
     };
     ctx.effectiveView = WorldEncounterCanvas.computed.effectiveView.call(ctx);
