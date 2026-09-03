@@ -437,11 +437,15 @@ async function runTests() {
         // dimension field. 0.9.92 note: this now also includes `braking`
         // (core/AvatarMovementBrakingCapability.js) — the direct
         // structural twin of `acceleration`, still not a shape,
-        // orientation, or dimension field.
+        // orientation, or dimension field. 0.9.93 note: this now also
+        // includes `steering` (core/AvatarMovementSteeringCapability.js) —
+        // the angular counterpart of `acceleration`/`braking`, still not a
+        // shape, orientation, or dimension field: a rate only, never a
+        // current heading.
         const capability = resolveAvatarVehicleMovementCapability(VehicleType.CAR);
         const jsonKeys = Object.keys(capability.toJSON()).sort();
-        assert(JSON.stringify(jsonKeys) === JSON.stringify(['acceleration', 'braking', 'collisionRadius', 'movementDirections', 'movementKind', 'movementSpeed', 'supported', 'vehicleType']),
-            '37. AvatarVehicleMovementCapability.toJSON() carries exactly movementKind/vehicleType/supported/movementSpeed/collisionRadius/movementDirections/acceleration (0.9.90)/braking (0.9.92) — no shape, orientation, or dimension field beyond the one radius');
+        assert(JSON.stringify(jsonKeys) === JSON.stringify(['acceleration', 'braking', 'collisionRadius', 'movementDirections', 'movementKind', 'movementSpeed', 'steering', 'supported', 'vehicleType']),
+            '37. AvatarVehicleMovementCapability.toJSON() carries exactly movementKind/vehicleType/supported/movementSpeed/collisionRadius/movementDirections/acceleration (0.9.90)/braking (0.9.92)/steering (0.9.93) — no shape, orientation, or dimension field beyond the one radius');
     }
 
     console.log('✅ All Ground Vehicle Collision Footprint Capability tests passed.');

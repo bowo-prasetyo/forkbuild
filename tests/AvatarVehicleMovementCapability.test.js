@@ -21,6 +21,11 @@ import {
     AvatarMovementBrakingCapability,
     isValidAvatarMovementBrakingCapability
 } from '../core/AvatarMovementBrakingCapability.js';
+import {
+    AvatarMovementSteeringKind,
+    AvatarMovementSteeringCapability,
+    isValidAvatarMovementSteeringCapability
+} from '../core/AvatarMovementSteeringCapability.js';
 
 // 0.9.84 — Avatar-Vehicle Movement Capability Resolution,
 // core/AvatarVehicleMovementCapability.js.
@@ -92,6 +97,16 @@ import {
 // reuses; BICYCLE/MOTORCYCLE/CAR are each `RATE_LIMITED`, with their own
 // strictly positive rates, each strictly GREATER than that same
 // vehicle's own `acceleration` rate (see Section D).
+//
+// 0.9.93 note: every constructor call below now passes a ninth
+// `steering` argument (an `AvatarMovementSteeringCapability` — the
+// class's own new required field, see
+// core/AvatarVehicleMovementCapability.js's own 0.9.93 header), and each
+// section's own expected-shape assertions now include it. WALK is
+// `INSTANT`/`0`, the identical shared instance AERIAL_VEHICLE/DRONE also
+// reuses; BICYCLE/MOTORCYCLE/CAR are each `RATE_LIMITED`, with their own
+// strictly positive, independently chosen radians/second rates — never
+// derived from `movementSpeed`/`acceleration`/`braking` (see Section D).
 
 function assert(condition, message) {
     if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
@@ -113,6 +128,8 @@ const INSTANT_ACCEL = new AvatarMovementAccelerationCapability(AvatarMovementAcc
 const RATE_LIMITED_ACCEL = new AvatarMovementAccelerationCapability(AvatarMovementAccelerationKind.RATE_LIMITED, 3);
 const INSTANT_BRAKE = new AvatarMovementBrakingCapability(AvatarMovementBrakingKind.INSTANT, 0);
 const RATE_LIMITED_BRAKE = new AvatarMovementBrakingCapability(AvatarMovementBrakingKind.RATE_LIMITED, 6);
+const INSTANT_STEER = new AvatarMovementSteeringCapability(AvatarMovementSteeringKind.INSTANT, 0);
+const RATE_LIMITED_STEER = new AvatarMovementSteeringCapability(AvatarMovementSteeringKind.RATE_LIMITED, 3.5);
 
 async function runTests() {
     // -------------------------------------------------------------
@@ -131,6 +148,8 @@ async function runTests() {
         assert(capability.acceleration.acceleration === 0, '3e. WALK\'s own acceleration rate is 0 — inert, paired with INSTANT (0.9.90)');
         assert(capability.braking.kind === AvatarMovementBrakingKind.INSTANT, '3f. WALK\'s own braking kind is INSTANT — on-foot movement has never had a notion of braking (0.9.92)');
         assert(capability.braking.braking === 0, '3g. WALK\'s own braking rate is 0 — inert, paired with INSTANT (0.9.92)');
+        assert(capability.steering.kind === AvatarMovementSteeringKind.INSTANT, '3h. WALK\'s own steering kind is INSTANT — the avatar\'s existing on-foot turning is completely unchanged by this milestone (0.9.93)');
+        assert(capability.steering.steeringRate === 0, '3i. WALK\'s own steeringRate is 0 — inert, paired with INSTANT (0.9.93)');
     }
 
     // -------------------------------------------------------------
@@ -150,6 +169,8 @@ async function runTests() {
         assert(capability.braking.kind === AvatarMovementBrakingKind.RATE_LIMITED, '6f. BICYCLE\'s own braking kind is RATE_LIMITED (0.9.92)');
         assert(capability.braking.braking === 6 && capability.braking.braking > capability.acceleration.acceleration,
             '6g. BICYCLE\'s own braking rate is 6 world units/second^2 — strictly greater than its own acceleration rate of 3 (0.9.92)');
+        assert(capability.steering.kind === AvatarMovementSteeringKind.RATE_LIMITED, '6h. BICYCLE\'s own steering kind is RATE_LIMITED (0.9.93)');
+        assert(capability.steering.steeringRate === 3.5 && capability.steering.steeringRate > 0, '6i. BICYCLE\'s own steeringRate is 3.5 radians/second — strictly positive (0.9.93)');
     }
 
     // -------------------------------------------------------------
@@ -173,6 +194,8 @@ async function runTests() {
         assert(capability.braking.kind === AvatarMovementBrakingKind.RATE_LIMITED, '9h. MOTORCYCLE\'s own braking kind is RATE_LIMITED (0.9.92)');
         assert(capability.braking.braking === 9 && capability.braking.braking > capability.acceleration.acceleration,
             '9i. MOTORCYCLE\'s own braking rate is 9 world units/second^2 — strictly greater than its own acceleration rate of 5 (0.9.92)');
+        assert(capability.steering.kind === AvatarMovementSteeringKind.RATE_LIMITED, '9j. MOTORCYCLE\'s own steering kind is RATE_LIMITED (0.9.93)');
+        assert(capability.steering.steeringRate === 4.5, '9k. MOTORCYCLE\'s own steeringRate is 4.5 radians/second (0.9.93)');
     }
 
     // -------------------------------------------------------------
@@ -192,6 +215,8 @@ async function runTests() {
         assert(capability.braking.kind === AvatarMovementBrakingKind.RATE_LIMITED, '12f. CAR\'s own braking kind is RATE_LIMITED (0.9.92)');
         assert(capability.braking.braking === 8 && capability.braking.braking > capability.acceleration.acceleration,
             '12g. CAR\'s own braking rate is 8 world units/second^2 — strictly greater than its own acceleration rate of 4 (0.9.92)');
+        assert(capability.steering.kind === AvatarMovementSteeringKind.RATE_LIMITED, '12h. CAR\'s own steering kind is RATE_LIMITED (0.9.93)');
+        assert(capability.steering.steeringRate === 2.5, '12i. CAR\'s own steeringRate is 2.5 radians/second (0.9.93)');
 
         const walkCapability = resolveAvatarVehicleMovementCapability(VehicleType.NONE);
         const bicycleCapability = resolveAvatarVehicleMovementCapability(VehicleType.BICYCLE);
@@ -259,6 +284,27 @@ async function runTests() {
             && capability.braking.kind === AvatarMovementBrakingKind.RATE_LIMITED,
             '13i. WALK alone is INSTANT; BICYCLE, MOTORCYCLE, and CAR are each RATE_LIMITED, for braking too (0.9.92)'
         );
+        // 0.9.93 — steering is a genuinely INDEPENDENT dimension from
+        // movementSpeed, acceleration, AND braking alike: MOTORCYCLE's
+        // own steeringRate (4.5) is the strict maximum of the three
+        // ground vehicles, exactly matching its own position as the
+        // strict maximum for braking (9), but CAR — the fastest vehicle,
+        // with the second-highest acceleration and braking — has the
+        // LOWEST steeringRate (2.5) of the three, strictly below even
+        // BICYCLE's own (3.5). No formula derives steering from any
+        // sibling field.
+        assert(capability.steering.steeringRate < bicycleCapability.steering.steeringRate,
+            '13j. CAR\'s own steeringRate is strictly LESS than BICYCLE\'s, even though CAR is strictly faster and has a higher acceleration/braking rate — steering follows no cross-vehicle ordering shared with any other dimension (0.9.93)');
+        assert(motorcycleCapability.steering.steeringRate > bicycleCapability.steering.steeringRate
+            && motorcycleCapability.steering.steeringRate > capability.steering.steeringRate,
+            '13k. MOTORCYCLE\'s own steeringRate is the strict maximum of the three ground vehicles — an independently chosen fact, never derived from movementSpeed/acceleration/braking (0.9.93)');
+        assert(
+            walkCapability.steering.kind === AvatarMovementSteeringKind.INSTANT
+            && bicycleCapability.steering.kind === AvatarMovementSteeringKind.RATE_LIMITED
+            && motorcycleCapability.steering.kind === AvatarMovementSteeringKind.RATE_LIMITED
+            && capability.steering.kind === AvatarMovementSteeringKind.RATE_LIMITED,
+            '13l. WALK alone is INSTANT; BICYCLE, MOTORCYCLE, and CAR are each RATE_LIMITED, for steering too (0.9.93)'
+        );
     }
 
     // -------------------------------------------------------------
@@ -283,6 +329,10 @@ async function runTests() {
             '17f. DRONE\'s own braking is INSTANT/0 — inert, for the identical reason movementSpeed\'s/collisionRadius\'s/movementDirections\'s/acceleration\'s own inert values already are (0.9.92)');
         assert(capability.braking === walkCapabilityForAcceleration.braking,
             '17g. DRONE\'s own braking is the exact same (===) shared instance WALK\'s own is — reused, not duplicated, for the identical reason its own acceleration already is (0.9.92)');
+        assert(capability.steering.kind === AvatarMovementSteeringKind.INSTANT && capability.steering.steeringRate === 0,
+            '17h. DRONE\'s own steering is INSTANT/0 — inert, for the identical reason movementSpeed\'s/collisionRadius\'s/movementDirections\'s/acceleration\'s/braking\'s own inert values already are (0.9.93)');
+        assert(capability.steering === walkCapabilityForAcceleration.steering,
+            '17i. DRONE\'s own steering is the exact same (===) shared instance WALK\'s own is — reused, not duplicated, for the identical reason its own acceleration/braking already are (0.9.93)');
 
         const carCapability = resolveAvatarVehicleMovementCapability(VehicleType.CAR);
         assert(capability.movementKind !== carCapability.movementKind, '18. drone is never folded into the same movement kind as a ground vehicle merely because both are vehicles');
@@ -308,6 +358,10 @@ async function runTests() {
                 `20d. resolving ${vehicleType} twice returns the identical (===) braking instance both times (${vehicleType}) (0.9.92)`);
             assert(first.braking.kind === second.braking.kind && first.braking.braking === second.braking.braking,
                 `20e. resolving ${vehicleType} twice returns field-identical braking results (${vehicleType}) (0.9.92)`);
+            assert(first.steering === second.steering,
+                `20f. resolving ${vehicleType} twice returns the identical (===) steering instance both times (${vehicleType}) (0.9.93)`);
+            assert(first.steering.kind === second.steering.kind && first.steering.steeringRate === second.steering.steeringRate,
+                `20g. resolving ${vehicleType} twice returns field-identical steering results (${vehicleType}) (0.9.93)`);
         }
     }
 
@@ -389,7 +443,23 @@ async function runTests() {
         }
         assert(capability.braking.braking === 6, '23j. attempting to reassign a field directly on the braking value never changes it (0.9.92)');
 
-        assertThrows(() => new AvatarVehicleMovementCapability(AvatarMovementCapabilityKind.WALK, VehicleType.NONE, true, 3, 0.35, BOTH_DIRECTIONS, INSTANT_ACCEL, INSTANT_BRAKE).movementKind = AvatarMovementCapabilityKind.RUN,
+        try {
+            capability.steering = INSTANT_STEER;
+        } catch (err) {
+            // see above.
+        }
+        assert(capability.steering.kind === AvatarMovementSteeringKind.RATE_LIMITED && capability.steering.steeringRate === 3.5,
+            '23k. attempting to reassign steering never changes it (0.9.93)');
+        assert(Object.isFrozen(capability.steering), '23l. the steering value itself is also frozen (0.9.93)');
+
+        try {
+            capability.steering.steeringRate = 999;
+        } catch (err) {
+            // see above.
+        }
+        assert(capability.steering.steeringRate === 3.5, '23m. attempting to reassign a field directly on the steering value never changes it (0.9.93)');
+
+        assertThrows(() => new AvatarVehicleMovementCapability(AvatarMovementCapabilityKind.WALK, VehicleType.NONE, true, 3, 0.35, BOTH_DIRECTIONS, INSTANT_ACCEL, INSTANT_BRAKE, INSTANT_STEER).movementKind = AvatarMovementCapabilityKind.RUN,
             '24. directly constructing and then mutating a capability throws in strict module code');
     }
 
@@ -416,7 +486,7 @@ async function runTests() {
         // A movementSpeed of exactly 0 is valid (DRONE's own inert value
         // — see core/AvatarVehicleMovementCapability.js's own 0.9.86
         // header) — never rejected merely for being falsy.
-        const zeroSpeedCapability = new AvatarVehicleMovementCapability(AvatarMovementCapabilityKind.AERIAL_VEHICLE, VehicleType.DRONE, false, 0, 0, NO_DIRECTIONS, INSTANT_ACCEL, INSTANT_BRAKE);
+        const zeroSpeedCapability = new AvatarVehicleMovementCapability(AvatarMovementCapabilityKind.AERIAL_VEHICLE, VehicleType.DRONE, false, 0, 0, NO_DIRECTIONS, INSTANT_ACCEL, INSTANT_BRAKE, INSTANT_STEER);
         assert(zeroSpeedCapability.movementSpeed === 0, '32g. a movementSpeed of exactly 0 is accepted, not rejected as falsy');
 
         // 0.9.88 — the new collisionRadius field gets the identical
@@ -431,7 +501,7 @@ async function runTests() {
         // A collisionRadius of exactly 0 is valid (DRONE's own inert
         // value — see core/AvatarVehicleMovementCapability.js's own
         // 0.9.88 header) — never rejected merely for being falsy.
-        const zeroRadiusCapability = new AvatarVehicleMovementCapability(AvatarMovementCapabilityKind.AERIAL_VEHICLE, VehicleType.DRONE, false, 0, 0, NO_DIRECTIONS, INSTANT_ACCEL, INSTANT_BRAKE);
+        const zeroRadiusCapability = new AvatarVehicleMovementCapability(AvatarMovementCapabilityKind.AERIAL_VEHICLE, VehicleType.DRONE, false, 0, 0, NO_DIRECTIONS, INSTANT_ACCEL, INSTANT_BRAKE, INSTANT_STEER);
         assert(zeroRadiusCapability.collisionRadius === 0, '32n. a collisionRadius of exactly 0 is accepted, not rejected as falsy');
 
         // 0.9.89 — the new movementDirections field is rejected unless
@@ -506,6 +576,36 @@ async function runTests() {
         assert(validInstantBraking.kind === AvatarMovementBrakingKind.INSTANT && validInstantBraking.braking === 0, '32ax. INSTANT paired with exactly 0 is accepted');
         const validRateLimitedBraking = new AvatarMovementBrakingCapability(AvatarMovementBrakingKind.RATE_LIMITED, 0.01);
         assert(validRateLimitedBraking.kind === AvatarMovementBrakingKind.RATE_LIMITED && validRateLimitedBraking.braking === 0.01, '32ay. RATE_LIMITED paired with a small strictly-positive braking is accepted');
+
+        // 0.9.93 — the new steering field is rejected unless it is a
+        // genuine, valid AvatarMovementSteeringCapability instance —
+        // never a plain object shaped like one, and never omitted. Direct
+        // structural twin of the acceleration/braking coverage above.
+        assertThrows(() => new AvatarVehicleMovementCapability(AvatarMovementCapabilityKind.WALK, VehicleType.NONE, true, 3, 0.35, BOTH_DIRECTIONS, INSTANT_ACCEL, INSTANT_BRAKE), '32az. constructing with steering omitted (undefined) throws');
+        assertThrows(() => new AvatarVehicleMovementCapability(AvatarMovementCapabilityKind.WALK, VehicleType.NONE, true, 3, 0.35, BOTH_DIRECTIONS, INSTANT_ACCEL, INSTANT_BRAKE, null), '32ba. constructing with a null steering throws');
+        assertThrows(() => new AvatarVehicleMovementCapability(AvatarMovementCapabilityKind.WALK, VehicleType.NONE, true, 3, 0.35, BOTH_DIRECTIONS, INSTANT_ACCEL, INSTANT_BRAKE, { kind: 'instant', steeringRate: 0 }), '32bb. constructing with a plain object shaped like steering (not an actual instance) throws');
+
+        // AvatarMovementSteeringCapability's own constructor invariants
+        // (core/AvatarMovementSteeringCapability.js) — the direct
+        // structural twin of AvatarMovementAccelerationCapability's/
+        // AvatarMovementBrakingCapability's own, above.
+        assertThrows(() => new AvatarMovementSteeringCapability('not-a-kind', 0), '32bc. AvatarMovementSteeringCapability rejects an invalid kind');
+        assertThrows(() => new AvatarMovementSteeringCapability(), '32bd. AvatarMovementSteeringCapability rejects being constructed with no arguments at all');
+        assertThrows(() => new AvatarMovementSteeringCapability(AvatarMovementSteeringKind.RATE_LIMITED, undefined), '32be. constructing with steeringRate omitted (undefined) throws');
+        assertThrows(() => new AvatarMovementSteeringCapability(AvatarMovementSteeringKind.RATE_LIMITED, null), '32bf. constructing with a null steeringRate throws');
+        assertThrows(() => new AvatarMovementSteeringCapability(AvatarMovementSteeringKind.RATE_LIMITED, '3.5'), '32bg. constructing with a string steeringRate throws');
+        assertThrows(() => new AvatarMovementSteeringCapability(AvatarMovementSteeringKind.RATE_LIMITED, -1), '32bh. constructing with a negative steeringRate throws');
+        assertThrows(() => new AvatarMovementSteeringCapability(AvatarMovementSteeringKind.RATE_LIMITED, NaN), '32bi. constructing with a NaN steeringRate throws');
+        assertThrows(() => new AvatarMovementSteeringCapability(AvatarMovementSteeringKind.RATE_LIMITED, Infinity), '32bj. constructing with an infinite steeringRate throws');
+        // The one coupling invariant this class enforces: INSTANT
+        // requires exactly 0, RATE_LIMITED forbids exactly 0 — see this
+        // file's own header.
+        assertThrows(() => new AvatarMovementSteeringCapability(AvatarMovementSteeringKind.INSTANT, 4), '32bk. INSTANT with a non-zero steeringRate throws');
+        assertThrows(() => new AvatarMovementSteeringCapability(AvatarMovementSteeringKind.RATE_LIMITED, 0), '32bl. RATE_LIMITED with a steeringRate of exactly 0 throws — 0 is reserved for INSTANT');
+        const validInstantSteering = new AvatarMovementSteeringCapability(AvatarMovementSteeringKind.INSTANT, 0);
+        assert(validInstantSteering.kind === AvatarMovementSteeringKind.INSTANT && validInstantSteering.steeringRate === 0, '32bm. INSTANT paired with exactly 0 is accepted');
+        const validRateLimitedSteering = new AvatarMovementSteeringCapability(AvatarMovementSteeringKind.RATE_LIMITED, 0.01);
+        assert(validRateLimitedSteering.kind === AvatarMovementSteeringKind.RATE_LIMITED && validRateLimitedSteering.steeringRate === 0.01, '32bn. RATE_LIMITED paired with a small strictly-positive steeringRate is accepted');
     }
 
     // -------------------------------------------------------------
@@ -550,6 +650,17 @@ async function runTests() {
         assert(isValidAvatarMovementBrakingCapability({ kind: 'rate_limited', braking: 8 }) === false, '40q. a plain object shaped like a braking capability is not itself a valid instance');
         assert(isValidAvatarVehicleMovementCapability(capability) === true && isValidAvatarMovementBrakingCapability(capability.braking) === true,
             '40r. a fully-valid capability\'s own braking is itself a fully-valid AvatarMovementBrakingCapability — the two validators agree');
+
+        // 0.9.93 — isValidAvatarMovementSteeringCapability(). Direct
+        // structural twin of the acceleration/braking validator coverage
+        // above.
+        assert(isValidAvatarMovementSteeringCapability(RATE_LIMITED_STEER) === true, '40s. a genuine AvatarMovementSteeringCapability instance is valid');
+        assert(isValidAvatarMovementSteeringCapability(capability.steering) === true, '40t. a resolved capability\'s own steering is a valid AvatarMovementSteeringCapability');
+        assert(isValidAvatarMovementSteeringCapability(null) === false, '40u. null is not a valid AvatarMovementSteeringCapability');
+        assert(isValidAvatarMovementSteeringCapability(undefined) === false, '40v. undefined is not a valid AvatarMovementSteeringCapability');
+        assert(isValidAvatarMovementSteeringCapability({ kind: 'rate_limited', steeringRate: 2.5 }) === false, '40w. a plain object shaped like a steering capability is not itself a valid instance');
+        assert(isValidAvatarVehicleMovementCapability(capability) === true && isValidAvatarMovementSteeringCapability(capability.steering) === true,
+            '40x. a fully-valid capability\'s own steering is itself a fully-valid AvatarMovementSteeringCapability — the two validators agree');
     }
 
     // -------------------------------------------------------------
@@ -558,8 +669,8 @@ async function runTests() {
     {
         const original = resolveAvatarVehicleMovementCapability(VehicleType.MOTORCYCLE);
         const json = original.toJSON();
-        assert(JSON.stringify(json) === JSON.stringify({ movementKind: 'ground_vehicle', vehicleType: 'motorcycle', supported: true, movementSpeed: 9, collisionRadius: 0.55, movementDirections: { forward: true, backward: true }, acceleration: { kind: 'rate_limited', acceleration: 5 }, braking: { kind: 'rate_limited', braking: 9 } }),
-            '41. toJSON() produces the plain expected shape, movementSpeed (0.9.86, per-vehicle as of 0.9.87), collisionRadius (0.9.88), movementDirections (0.9.89), acceleration (0.9.90), and braking (0.9.92) included');
+        assert(JSON.stringify(json) === JSON.stringify({ movementKind: 'ground_vehicle', vehicleType: 'motorcycle', supported: true, movementSpeed: 9, collisionRadius: 0.55, movementDirections: { forward: true, backward: true }, acceleration: { kind: 'rate_limited', acceleration: 5 }, braking: { kind: 'rate_limited', braking: 9 }, steering: { kind: 'rate_limited', steeringRate: 4.5 } }),
+            '41. toJSON() produces the plain expected shape, movementSpeed (0.9.86, per-vehicle as of 0.9.87), collisionRadius (0.9.88), movementDirections (0.9.89), acceleration (0.9.90), braking (0.9.92), and steering (0.9.93) included');
 
         const reconstructed = AvatarVehicleMovementCapability.fromJSON(json);
         assert(reconstructed.movementKind === original.movementKind && reconstructed.vehicleType === original.vehicleType && reconstructed.supported === original.supported && reconstructed.movementSpeed === original.movementSpeed && reconstructed.collisionRadius === original.collisionRadius,
@@ -573,11 +684,15 @@ async function runTests() {
         assert(reconstructed.braking.kind === original.braking.kind && reconstructed.braking.braking === original.braking.braking,
             '42e. fromJSON(toJSON()) round-trips braking field-identically too (0.9.92)');
         assert(reconstructed.braking !== original.braking, '42f. fromJSON() constructs a genuinely new braking instance, not the shared cached one (0.9.92)');
+        assert(reconstructed.steering.kind === original.steering.kind && reconstructed.steering.steeringRate === original.steering.steeringRate,
+            '42g. fromJSON(toJSON()) round-trips steering field-identically too (0.9.93)');
+        assert(reconstructed.steering !== original.steering, '42h. fromJSON() constructs a genuinely new steering instance, not the shared cached one (0.9.93)');
         assert(reconstructed !== original, '43. fromJSON() constructs a genuinely new instance, not the shared cached one');
         assert(Object.isFrozen(reconstructed), '44. a reconstructed instance is frozen too');
         assert(Object.isFrozen(reconstructed.movementDirections), '44a. a reconstructed instance\'s own movementDirections is frozen too');
         assert(Object.isFrozen(reconstructed.acceleration), '44b. a reconstructed instance\'s own acceleration is frozen too (0.9.90)');
         assert(Object.isFrozen(reconstructed.braking), '44c. a reconstructed instance\'s own braking is frozen too (0.9.92)');
+        assert(Object.isFrozen(reconstructed.steering), '44d. a reconstructed instance\'s own steering is frozen too (0.9.93)');
 
         const roundTripAgain = AvatarVehicleMovementCapability.fromJSON(JSON.parse(JSON.stringify(original)));
         assert(roundTripAgain.movementKind === original.movementKind && roundTripAgain.movementSpeed === original.movementSpeed && roundTripAgain.collisionRadius === original.collisionRadius,
@@ -588,6 +703,8 @@ async function runTests() {
             '45a. a full JSON.stringify/JSON.parse round trip preserves movementDirections too');
         assert(roundTripAgain.braking.kind === original.braking.kind && roundTripAgain.braking.braking === original.braking.braking,
             '45c. a full JSON.stringify/JSON.parse round trip preserves braking too (0.9.92)');
+        assert(roundTripAgain.steering.kind === original.steering.kind && roundTripAgain.steering.steeringRate === original.steering.steeringRate,
+            '45d. a full JSON.stringify/JSON.parse round trip preserves steering too (0.9.93)');
     }
 
     // -------------------------------------------------------------
@@ -631,6 +748,20 @@ async function runTests() {
         // (still forbidden, unchanged) — this file still commits no
         // opinion about how EITHER rate is actually simulated tick to
         // tick, or whether a given tick is actually braking at all.
+        //
+        // 0.9.93 note: bare "steering" is likewise deliberately no longer
+        // forbidden, for the identical reason "acceleration"/"braking"
+        // stopped being forbidden in 0.9.90/0.9.92 — this file's own
+        // point, as of 0.9.93, is to carry a `steering` capability field
+        // too. What stays forbidden is any reference to the STEERING MATH
+        // MODULE that field eventually feeds —
+        // `AvatarMovementSteeringSimulation`/`resolveMovementHeading` —
+        // and any notion of "heading"/"orientation" (a current heading is
+        // transient controller state, never something this file resolves
+        // or stores) — this file still commits no opinion about how a
+        // steering rate is actually simulated tick to tick. "turning"
+        // itself stays forbidden too: this file names a RATE capability,
+        // never the act of turning.
         const forbidden = [
             'AvatarMovementController', 'WorldNavigationSession',
             'AvatarVehicleInteractionController', 'AvatarVehicleMount',
@@ -640,14 +771,17 @@ async function runTests() {
             'circlesIntersect', 'avatarTreeCollision', 'resolveAvatarTreeMovement',
             'treeCollisionCandidatesForMovement', 'AVATAR_COLLISION_RADIUS',
             'AvatarMovementState', 'AvatarMovementSimulation', 'AvatarMovementAccelerationSimulation',
+            'AvatarMovementSteeringSimulation', 'resolveMovementHeading',
+            'currentHeading', 'targetHeading', 'heading', 'Heading', 'orientation', 'Orientation',
             'resolveMovementSpeed', 'currentSpeed', 'deltaTime', 'brakingRequested',
             'AvatarContinuousMovement', 'AvatarPresence',
             'terrain', 'Terrain', 'keyboard', 'Keyboard', 'gamepad', 'Gamepad',
             'THREE', 'from \'three\'', 'Renderer', 'render',
             'animation', 'Animation', 'camera', 'Camera',
             'velocity', 'maxSpeed', 'mass', 'gravity', 'physics',
-            'turnAxis', 'turning', 'steering', 'left', 'right',
+            'turnAxis', 'turning', 'left', 'right',
             'coasting', 'friction', 'drag', 'momentum',
+            'turningRadius', 'Ackermann', 'drift', 'skid',
             'Math.random', 'Date.now',
             'localStorage', 'StorageProvider', 'fetch(', 'WebSocket'
         ];
@@ -793,6 +927,62 @@ async function runTests() {
             'isValidAvatarMovementBrakingCapability',
             'isValidAvatarMovementBrakingKind'
         ]), '53. core/AvatarMovementBrakingCapability.js exports exactly the kind vocabulary, the descriptor class, and its two validators — nothing else');
+    }
+    {
+        // 0.9.93 — the new AvatarMovementSteeringCapability sibling file
+        // gets the identical architectural sweep, the direct structural
+        // twin of AvatarMovementAccelerationCapability.js's/
+        // AvatarMovementBrakingCapability.js's own sweeps immediately
+        // above. Bare "steering" is NOT forbidden here — it is this
+        // file's entire subject — but bare "acceleration"/"braking" ARE
+        // forbidden (this file commits no opinion about either sibling
+        // rate), and the ACTUAL HEADING SIMULATION MATH that consumes a
+        // steering rate (core/AvatarMovementSteeringSimulation.js) is
+        // forbidden too, along with any notion of a current/target
+        // heading or vehicle orientation — this file only ever resolves
+        // a kind/rate pair, never simulates a tick of turning or stores a
+        // heading.
+        const sourceUrl = new URL('../core/AvatarMovementSteeringCapability.js', import.meta.url);
+        const source = await readFile(sourceUrl, 'utf8');
+        const codeOnly = source
+            .split('\n')
+            .filter((line) => !line.trim().startsWith('//'))
+            .join('\n');
+
+        const forbidden = [
+            'AvatarMovementController', 'WorldNavigationSession',
+            'AvatarVehicleInteractionController', 'AvatarVehicleMount',
+            'VehiclePlacement', 'VehiclePresence', 'VehicleType',
+            'AvatarMovementState', 'AvatarMovementSimulation',
+            'AvatarMovementAccelerationSimulation', 'AvatarMovementSteeringSimulation',
+            'resolveMovementSpeed', 'resolveMovementHeading',
+            'currentSpeed', 'targetSpeed', 'currentHeading', 'targetHeading',
+            'heading', 'Heading', 'orientation', 'Orientation',
+            'deltaTime', 'brakingRequested',
+            'AvatarContinuousMovement', 'AvatarPresence',
+            'acceleration', 'Acceleration', 'braking', 'Braking',
+            'terrain', 'Terrain', 'keyboard', 'Keyboard', 'gamepad', 'Gamepad',
+            'THREE', 'from \'three\'', 'Renderer', 'render',
+            'animation', 'Animation', 'camera', 'Camera',
+            'velocity', 'maxSpeed', 'mass', 'gravity', 'physics',
+            'turnAxis', 'turning', 'left', 'right',
+            'coasting', 'friction', 'drag', 'momentum',
+            'turningRadius', 'Ackermann', 'drift', 'skid',
+            'Math.random', 'Date.now',
+            'localStorage', 'StorageProvider', 'fetch(', 'WebSocket'
+        ];
+        for (const term of forbidden) {
+            assert(!codeOnly.includes(term), `54. core/AvatarMovementSteeringCapability.js's own code never references "${term}" — a small, closed kind/rate value, nothing else`);
+        }
+
+        const exportsModule = await import('../core/AvatarMovementSteeringCapability.js');
+        const exportedNames = Object.keys(exportsModule).sort();
+        assert(JSON.stringify(exportedNames) === JSON.stringify([
+            'AvatarMovementSteeringCapability',
+            'AvatarMovementSteeringKind',
+            'isValidAvatarMovementSteeringCapability',
+            'isValidAvatarMovementSteeringKind'
+        ]), '55. core/AvatarMovementSteeringCapability.js exports exactly the kind vocabulary, the descriptor class, and its two validators — nothing else');
     }
 
     console.log('✅ All Avatar-Vehicle Movement Capability tests passed.');
