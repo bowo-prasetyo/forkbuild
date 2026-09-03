@@ -59938,3 +59938,144 @@ a distribution is signer/relay configuration — wallet integration and
 relay selection are both real, separate, larger design decisions, not
 mechanical wiring. That is the natural next milestone to reassess, once
 this one has had a chance to be used.
+
+## 0.9.105 — Publication Distribution Configuration Boundary
+
+The gap 0.9.104's own "Recommendation" named on its way out: "the one
+thing still standing between this and an end user actually completing a
+distribution is signer/relay configuration." Every caller up through
+`ui/main.js` itself had left `arweaveUploaderOptions`/`nostrPublisherOptions`
+`undefined`, so a real World View click reached exactly 0.9.45's/0.9.46's
+own honest "a signer/publishImpl is required" throw. This milestone makes
+that decision point explicit, named, and independently testable — without
+building a wallet UI, without inventing a concrete signer or relay client,
+and without World View learning anything new about infrastructure
+configuration.
+
+    ui/main.js
+         │
+         ├──► resolveArweaveUploaderOptions({ signer, gatewayUrl, fetchImpl })   (0.9.105, NEW)
+         ├──► resolveNostrPublisherOptions({ publishImpl, relayUrl, discoveryTag })   (0.9.105, NEW)
+         │        │
+         │        ▼   a valid options object | undefined
+         │
+         └──► composePublicationDistributionCommand({                            (0.9.105, NEW)
+                  lifecycleStore, arweaveUploaderOptions, nostrPublisherOptions
+              })
+                  │
+                  ▼
+              publicationDistributionCommand   (app.provide, unchanged shape)
+                  │
+                  ▼
+              WorldView.js's distributeWorldEncounterPublication()   (0.9.104, unmodified)
+                  │
+                  ▼
+              executePublicationDistributionCommand()   (0.9.103, unmodified)
+
+**Two independent resolvers, never one combined "credentials" shape.**
+`application/PublicationDistributionConfigurationProvider.js` exports
+`resolveArweaveUploaderOptions()` and `resolveNostrPublisherOptions()` —
+two pure functions, each deciding exactly one question for its own
+substrate ("is there enough here to even attempt this?"), duck-typed the
+same way every collaborator in this whole family already is: Arweave needs
+a `signer` exposing `sign()`; Nostr needs a `publishImpl` function and a
+non-empty `discoveryTag`. Neither resolver reads the other's input, and
+neither invents a shared vocabulary — Arweave and Nostr keep the same
+operational independence `orchestratePublicationDistribution()` (0.9.58)
+already gives them as two separate parameters. Everything else
+(`gatewayUrl`/`fetchImpl`, `relayUrl`/`tagName`/`kind`) is forwarded
+verbatim, including `undefined`, so 0.9.45's/0.9.46's own constructor
+defaults remain the one place those defaults are decided.
+
+**`undefined`, never `null`, is what an unresolvable substrate returns.**
+`composePublicationDistributionRuntime()`'s own `{ arweaveUploaderOptions =
+{} }` default parameter only applies for `undefined`; returning `null`
+here instead would have replaced 0.9.45's own friendly "a signer with a
+sign() method is required" with a much less useful "Cannot destructure
+property 'signer' of 'null'" — a regression this milestone avoids, not
+introduces.
+
+**`composePublicationDistributionCommand()` generalizes the one-off
+closure `ui/main.js` already had.** 0.9.103's own header pointed straight
+at this: "if the existing command can be configured through a closure, the
+composition root could pre-bind it." Previously `ui/main.js` hand-rolled
+an arrow function pre-binding only `lifecycleStore`;
+`application/PublicationDistributionCommandComposition.js` (NEW) pre-binds
+all three composition-root collaborators — `lifecycleStore` (unchanged)
+plus the two resolved distribution configurations — with the
+composition-root's own values always winning over anything a caller's
+`request` happens to carry, the same restraint the old closure already
+held for `lifecycleStore` alone.
+
+**Nothing real to resolve yet, and that is the honest answer, not an
+oversight.** `ArweavePublicationMaterialUploader.js`'s and
+`NostrPublicationDiscoveryPublisher.js`'s own headers still name a
+concrete `signer`/`publishImpl` implementation as later, unscheduled work.
+`ui/main.js` calls both resolvers with an empty options object, so both
+presently resolve `undefined`, and a real World View click today still
+reaches exactly the same synchronous throw it always has — **this
+milestone changes no observable behavior in the currently running app.**
+Its entire value is the seam: supplying a real signer or `publishImpl`
+later — most naturally a browser wallet-extension adapter, mirroring
+`base/BaseInjectedProviderWalletAdapter.js`'s own already-established
+`window.ethereum`-detection pattern one substrate over — touches only the
+two `resolve...()` calls in `ui/main.js`, never `WorldView.js`, never
+`WorldEncounterCanvas.js`, never the command, orchestrator, or executor.
+
+**No wallet UI, no credential persistence, no relay-management UI.**
+`application/IpfsRemotePublishingConfiguration.js`'s own 0.8.68 pattern —
+a person typing an endpoint/credential into a form — was deliberately NOT
+followed here; both resolvers are plain, side-effect-free functions with
+no relationship to `ui/` beyond being called from it, no `localStorage`,
+no `window` read, no form.
+
+**World View still knows nothing about any of this.** `WorldView.js` and
+`WorldEncounterCanvas.js` are byte-for-byte unchanged — both files' own
+0.9.104 architectural-regression assertions (`tests/WorldViewPublicationDistributionActionIntegration.test.js`,
+Sections H/I) still pass unmodified, including the assertion that
+`WorldView.js` supplies no `arweaveUploaderOptions`/`nostrPublisherOptions`
+of its own. The composition root absorbs the configuration decision
+entirely; the UI layer's own request shape (`{ publication,
+serializedMaterial }`) needed no change at all.
+
+The flagship test (`tests/WorldViewPublicationDistributionConfigurationIntegration.test.js`)
+drives the exact SAME `WorldEncounterCanvas` click handler 0.9.104 built,
+through a `distributionCommand` composed the way `ui/main.js` now actually
+composes one — real `composePublicationDistributionCommand()`, real
+`resolveArweaveUploaderOptions()`/`resolveNostrPublisherOptions()`, fed
+fake signer/gateway/relay collaborators standing in only for the network
+boundary — and proves the exact user-facing action that used to end in
+"Distribution could not be completed." now reaches PRESENT material and
+discovery facts, observed entirely through 0.9.100's own existing
+subscription. A second section proves the identical click, composed the
+way `ui/main.js` composes it today (nothing resolvable), still ends in
+exactly the same plain notice — no regression, no fabricated success.
+
+### What this milestone deliberately does NOT do
+
+No concrete `signer` or `publishImpl` implementation, and no wallet-
+extension adapter of either — later, unscheduled work, the same restraint
+`ArweavePublicationMaterialUploader.js`'s and
+`NostrPublicationDiscoveryPublisher.js`'s own headers already hold. No
+wallet management, key management, or credential persistence of any kind.
+No environment-variable or config-file parsing — both resolvers take
+already-resolved values as plain fields, leaving where those values
+themselves originate entirely to their caller. No UI of any kind: no relay
+picker, no gateway picker, no "configure distribution" form, no signer
+creation UI. No combined `PublicationDistributionCredentials` shape —
+Arweave and Nostr stay two independently resolved configurations. No
+change to `WorldView.js`, `WorldEncounterCanvas.js`, `PublicationDistributionCommand.js`,
+the orchestrator, or the executor.
+
+### Recommendation
+
+With this milestone in place, "can the application composition root
+supply valid collaborators to the already-existing distribution
+infrastructure" has a mechanical, tested answer: yes, through exactly two
+named seams. What still stands between this and an end user actually
+completing a distribution is a genuine, larger design decision — real
+wallet/relay integration — not mechanical wiring. That decision (a browser
+wallet-extension adapter for Arweave signing, a real NIP-01 relay client
+for Nostr publishing, or some other source entirely) is the natural next
+milestone to reassess, once this one has had a chance to be used, exactly
+as 0.9.104's own "Recommendation" already anticipated.
