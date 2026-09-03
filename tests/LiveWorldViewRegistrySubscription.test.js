@@ -306,7 +306,17 @@ async function run() {
             // allows one layer over, for World-discovery-source selection
             // instead of decentralized leads. Never a raw source's own
             // `.origin`.
-            const allowedOriginAccessors = new Set(['candidate', 'resolvedSelection', 'choice', 'resolvedEncounterSelection', 'resolvedLead']);
+            //
+            // 0.9.112 note: 'materialProvenance'/'provenance' are a THIRD,
+            // deliberately distinct `.origin` — `application/
+            // PublicationMaterialProvenance.js`'s own `{ origin: 'LOCAL' |
+            // 'DECENTRALIZED' }` fact, read here as `materialProvenance.origin`
+            // (this component's own 0.9.112 computed) and
+            // `discoveryResult.provenance.origin` (0.9.110's own runtime
+            // composition result, forwarded verbatim). Neither is a raw
+            // `WorldDiscoverySource`'s own `.origin` — see that file's own
+            // header, "deliberately two values, never more."
+            const allowedOriginAccessors = new Set(['candidate', 'resolvedSelection', 'choice', 'resolvedEncounterSelection', 'resolvedLead', 'materialProvenance', 'provenance']);
             assert(originAccessors.length > 0, '23a. WorldEncounterCanvas.js reads .origin only via 0.9.20\'s own resolved-selection candidates, not never at all');
             assert(originAccessors.every((accessor) => allowedOriginAccessors.has(accessor)), `23b. WorldEncounterCanvas.js never reads a raw source's own .origin field — every .origin access is scoped to a 0.9.19/0.9.20 selection candidate (candidate/resolvedSelection/choice), found: ${JSON.stringify(originAccessors)}`);
             assert(!/\bsource\.origin\b/.test(codeOnly) && !/\brow\.origin\b/.test(codeOnly), '23c. WorldEncounterCanvas.js never reads .origin off a raw source or view row');

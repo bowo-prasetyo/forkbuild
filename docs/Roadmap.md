@@ -61150,3 +61150,153 @@ As with 0.9.110, I would pause here rather than automatically inventing a
 `queryImpl`, a wallet `signer`) remain unbuilt, and the next genuinely
 useful milestone is better chosen from an observed product gap once this
 work has actually been used, not manufactured from the plumbing itself.
+
+## 0.9.112 — Publication Provenance in World View
+
+0.9.111 made a decentralized-discovered Publication render through the
+EXACT SAME Material/Verification `<dl>` a local, selection-driven
+inspection already uses — deliberately keeping `materialInspection` and
+`discoveryResult.inspection` two separate facts, never merged. That
+convergence created one question neither answers on its own: where did
+THIS particular inspected material come from? This milestone is a
+semantic milestone, not another plumbing one — a small, additive
+provenance seam, never a new trust state:
+
+    Origin
+      │
+      ├── LOCAL           — reached inspectWorldEncounterMaterial()
+      │                      through the origin-routed loading boundary
+      │                      (0.9.21) — no resolved decentralized lead
+      │
+      └── DECENTRALIZED    — reached inspectWorldEncounterMaterial()
+                              through the lead-aware loading boundary
+                              (0.9.34) — a resolved Arweave/Nostr lead
+                              (0.9.28) actually drove the load
+
+    Discovery                Material                Verification
+      │                        │                        │
+      ├── UNAVAILABLE          └── AVAILABLE / ...       ├── VERIFIED
+      ├── RESOLVED                                       └── REJECTED
+      └── AMBIGUOUS
+
+Origin, Discovery, Material, and Verification answer four different
+questions and stay four independent facts — `Origin: DECENTRALIZED` next
+to `Verification: REJECTED` is exactly as coherent as `Origin: LOCAL` next
+to `Verification: VERIFIED`.
+
+**`application/PublicationMaterialProvenance.js` is the one new file this
+milestone adds.** A deliberately closed, two-value vocabulary —
+`PublicationMaterialProvenanceOrigin.LOCAL`/`.DECENTRALIZED`, nothing else
+— mirroring the shape (and the "this is not a trust score" restraint)
+`application/PublicationObservationArchiveProvenance.js` (0.8.83) already
+established one domain over, for archive ingestion instead of material
+retrieval. `describePublicationMaterialProvenance(origin)` returns a
+frozen `{ origin }` fact, or `null` for anything malformed.
+`describePublicationMaterialProvenanceFromInspection(inspection)` derives
+that fact from an already-computed `inspectWorldEncounterMaterial()`
+result (0.9.39, unmodified) — reading exactly one existing signal, its own
+`lead` field: non-null only when a resolved decentralized lead actually
+drove the load. `null` when `inspection` itself is `null` — no material,
+no provenance to report. This file adds no query, no registry read, and no
+second resolution of its own; it is a pure, synchronous label over a fact
+that already exists.
+
+**One shared derivation, used at both convergence points.** The
+decentralized runtime composition
+(`application/DecentralizedWorldEncounterMaterialDiscoveryRuntimeComposition.js`,
+0.9.110) now returns `{ discovery, resolution, inspection, provenance }` —
+`provenance` computed once, at the source, and forwarded verbatim through
+0.9.111's own `DiscoverWorldEncounterPublicationCommand.js`/
+`...Composition.js` pass-through boundaries, unchanged. `WorldEncounterCanvas.js`
+gains one new computed, `materialProvenance`, deriving the SAME fact for
+the selection-driven panel from its own already-existing
+`materialInspection` — never a new page-local `data()` field, exactly like
+`selectedEncounterInspection` (0.9.18) before it. The discovery panel
+never re-derives provenance a second time; it renders
+`discoveryResult.provenance.origin` directly, the same "never a second
+orchestrator" restraint 0.9.111 already holds for `discoveryResult.inspection`
+itself.
+
+**World View gains one new "Source" row, in both panels — never a new
+panel.** The existing selection-driven Material/Verification `<dl>` and
+the discovery-driven one each gain a `<dl v-if="…provenance">` row between
+Material and Verification, reusing the same restrained rendering style
+(`{{ provenance.origin }}`, no color, no icon, no severity) every other
+status field in these panels already uses. "Source" never replaces
+"Discovery" (`selectionOutcome`'s own "Choose Source"/"Source: local" panel,
+0.9.20, answers a different question — which `WorldDiscoverySource` offered
+this encounter — and is untouched), "Material," or "Verification" — all
+four facts render side by side.
+
+**Never mutates the underlying inspection/material/Publication.**
+`describePublicationMaterialProvenance()` returns a brand-new, frozen
+object; nothing in this milestone writes an `origin`/`provenance` field
+onto `inspection`, `inspection.loading.material`, or any `Publication`
+domain object. Provenance belongs to the observation/retrieval context,
+never to the Publication's own intrinsic identity — a caller holds both
+values side by side, exactly as specified.
+
+Tests: a new suite, `tests/PublicationMaterialProvenance.test.js`, covers
+`application/PublicationMaterialProvenance.js` in isolation — the closed
+two-value vocabulary, `describePublicationMaterialProvenance()`'s frozen-
+`{ origin }`-or-`null` contract, `describePublicationMaterialProvenanceFromInspection()`'s
+lead-presence derivation, that deriving provenance never mutates or clones
+the inspection/material it reads, determinism across repeated calls, and
+an architectural sweep (zero imports, no trust/rank/preference vocabulary
+anywhere in the file). A second new suite,
+`tests/PublicationMaterialProvenanceIntegration.test.js`, proves the
+milestone's own six flagship scenarios end to end through the real running
+collaborators (a real signed `Publication`, the real decentralized runtime
+composition, `WorldEncounterCanvas.computed.materialProvenance` itself):
+Section A proves a local, selection-driven inspection reports `LOCAL`
+without changing its own `loading`/`verification` result. Section B proves
+a discovery-driven inspection reports `DECENTRALIZED` alongside a real
+`RESOLVED`/`VERIFIED` outcome. Section C proves a decentralized material
+that fails verification stays `DECENTRALIZED` + `REJECTED`, never a new
+combined status. Section D proves an unresolved (`AMBIGUOUS`/`UNAVAILABLE`)
+discovery carries no provenance at all, and resolution itself is
+unaffected. Section E proves computing one path's own provenance never
+reads or writes the other path's own state — a local case computed after a
+decentralized one still reports `LOCAL`, and vice versa. Section F proves
+the provenance fact is frozen, carries no reference back to the material
+or the inspection envelope, and never gets written onto either. The two
+existing architectural-regression suites that already counted
+`WorldEncounterCanvas.js`'s own `application/` import surface
+(`tests/WorldEncounterCanvasUI.test.js`, `tests/WorldViewDecentralizedPublicationRetrievalIntegration.test.js`)
+are updated from six to seven imports, and the pre-existing `.origin`-access
+allowlist regression (`tests/LiveWorldViewRegistrySubscription.test.js`)
+gains `materialProvenance`/`provenance` as a third, deliberately reviewed
+exception, alongside a note distinguishing this new fact's own `.origin`
+from a raw `WorldDiscoverySource`'s.
+
+### What this milestone deliberately does NOT do
+
+No source ranking, no "preferred source," no trust score, no source
+reliability, no peer reputation, no freshness ranking — provenance is a
+fact about the current observation, nothing more. No automatic fallback
+between LOCAL and DECENTRALIZED, and no merging of local and decentralized
+Publications — both panels stay exactly as independent as 0.9.111 already
+left them. No new verification states and no new discovery states —
+`loading.status`/`verification.status`/`resolution.status` are entirely
+0.9.21's/0.9.37's/0.9.28's own, unchanged. No persistence of provenance
+history — `materialProvenance`/`discoveryResult.provenance` live and die
+with the observation that produced them, exactly like `materialInspection`/
+`discoveryResult` already do. No distribution changes and no background
+discovery — this milestone touches neither family.
+
+### Recommendation
+
+With Origin now sitting alongside Discovery/Material/Verification, World
+View's Publication architecture has a clean four-layer separation:
+
+    WHERE DID IT COME FROM?          →  Origin (Provenance)
+    WHAT DID DISCOVERY FIND?         →  Discovery (Resolution)
+    WHAT MATERIAL EXISTS?            →  Material (Loading)
+    IS THE MATERIAL VALID?           →  Verification
+
+As with 0.9.110/0.9.111, I would pause again here rather than manufacture a
+0.9.113 from the plumbing itself — a PEER origin, a third acquisition path,
+or persisted provenance history are all real future seams this design
+leaves room for, but none is a demonstrated product need yet. The real
+remaining obstacle, as before, is host capability (a real Nostr `queryImpl`,
+a real wallet `signer`) — not more architecture.

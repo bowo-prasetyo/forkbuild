@@ -9,6 +9,7 @@ import {
 } from './DecentralizedWorldEncounterLeadResolution.js';
 import { inspectWorldEncounterMaterial } from './WorldEncounterMaterialInspection.js';
 import { composeWorldEncounterMaterialSources } from './DecentralizedWorldEncounterMaterialRuntimeComposition.js';
+import { describePublicationMaterialProvenanceFromInspection } from './PublicationMaterialProvenance.js';
 import { WorldEncounterKind } from '../core/WorldEncounter.js';
 
 // 0.9.110 — Decentralized Material Retrieval Runtime Composition.
@@ -56,7 +57,9 @@ import { WorldEncounterKind } from '../core/WorldEncounter.js';
 //             chain 0.9.99 already wired for local material)
 //                                     │
 //                                     ▼
-//        { discovery, resolution, inspection }
+//        { discovery, resolution, inspection, provenance }
+//             provenance added 0.9.112 — see `application/
+//             PublicationMaterialProvenance.js`'s own header
 //
 // A COMPOSITION ROOT, NEVER A FOURTH ALGORITHM. This file performs no
 // discovery, no resolution, no ranking, no retrieval, and no verification
@@ -288,7 +291,18 @@ export function composeDecentralizedWorldEncounterMaterialDiscoveryRuntime({
             });
         }
 
-        return Object.freeze({ discovery: Object.freeze(discovery), resolution, inspection });
+        // 0.9.112 — a small, additive provenance fact alongside the
+        // existing discovery/resolution/inspection facts — see
+        // `application/PublicationMaterialProvenance.js`'s own header.
+        // `null` whenever `inspection` itself is `null` (an AMBIGUOUS or
+        // UNAVAILABLE resolution never inspected any material to have
+        // provenance about); DECENTRALIZED whenever it is present, since
+        // this function only ever inspects material via a resolved
+        // decentralized lead (see `resolvedLead: resolution.resolvedLead`
+        // immediately above).
+        const provenance = describePublicationMaterialProvenanceFromInspection(inspection);
+
+        return Object.freeze({ discovery: Object.freeze(discovery), resolution, inspection, provenance });
     }
 
     return Object.freeze({ registry, materialSources, discoverWorldEncounterPublication });
