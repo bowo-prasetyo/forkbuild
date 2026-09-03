@@ -323,8 +323,25 @@ async function runTests() {
         const walkDistance = avatarPresenceSession.current.position.z - walkZ0;
         session.avatarKeyUp('w');
 
-        assert(mountedDistance > walkDistance,
-            '13. FLAGSHIP: the SAME real session, same script, covers strictly more ground while mounted on the real bicycle than on foot');
+        // 0.9.91 note: this used to assert `mountedDistance > walkDistance`
+        // — true when GROUND_VEHICLE reached its own movementSpeed the
+        // instant W was pressed (0.9.86-0.9.90's own world). BICYCLE is
+        // now RATE_LIMITED (core/AvatarVehicleMovementCapability.js,
+        // 0.9.90): starting from rest, it only overtakes WALK's own
+        // already-at-full-speed pace after ramping for a couple of
+        // seconds — far longer than the SHORT burst this block is
+        // deliberately limited to above (staying within
+        // VEHICLE_INTERACTION_RADIUS so the very next dismount attempt
+        // still succeeds). That comparison is not this FLAGSHIP's own
+        // job to re-prove in the first place — Section B's very first
+        // block above (an unconstrained, non-proximity-limited burst)
+        // already establishes "GROUND_VEHICLE eventually covers more
+        // ground than WALK" directly. What THIS block exists to prove —
+        // that a real, mounted `WorldNavigationSession` genuinely moves
+        // the avatar through the real frame loop, not a synthetic
+        // `setMovementCapability()` call — still holds unchanged.
+        assert(mountedDistance > 0,
+            '13. FLAGSHIP: the SAME real session, real frame loop, genuinely moves the avatar forward while mounted on the real bicycle');
     }
 
     // -------------------------------------------------------------
@@ -351,7 +368,26 @@ async function runTests() {
         for (const controller of [bicycleController, motorcycleController, carController]) {
             controller.keyDown('w');
         }
-        for (let i = 0; i < 40; i++) {
+        // 0.9.91 note: bumped from 40 ticks (2s) to 200 (10s). Each
+        // GROUND_VEHICLE is now RATE_LIMITED (0.9.90) at its own
+        // acceleration — BICYCLE/MOTORCYCLE/CAR reach their own
+        // 6/9/12 unit/second movementSpeed after ramping for 2/1.8/3
+        // seconds respectively. Over a SHORT window (this assertion's
+        // original 2s), MOTORCYCLE's own faster acceleration can
+        // legitimately put it ahead of CAR despite CAR's higher eventual
+        // top speed — see core/AvatarVehicleMovementCapability.js's own
+        // 0.9.90 header ("acceleration is an independent dimension from
+        // movementSpeed") and
+        // tests/AvatarVehicleAccelerationStateIntegration.test.js's own
+        // dedicated coverage of exactly that relationship. This
+        // assertion's own claim was always about the EVENTUAL,
+        // fully-accelerated ordering (BICYCLE < MOTORCYCLE < CAR, per
+        // their own strictly increasing movementSpeed — 0.9.87's own
+        // ordering) — a long enough window (10s comfortably outlasts
+        // every one of the three ramp times above) is what actually
+        // proves that claim now that reaching cruise speed is no longer
+        // instantaneous.
+        for (let i = 0; i < 200; i++) {
             bicycleController.tick(0.05);
             motorcycleController.tick(0.05);
             carController.tick(0.05);
@@ -372,14 +408,20 @@ async function runTests() {
         const walkCapability = resolveAvatarVehicleMovementCapability(VehicleType.NONE);
         const vehicleCapability = resolveAvatarVehicleMovementCapability(VehicleType.CAR);
 
+        // 0.9.91 note: bumped from 20 ticks (1s) to 60 (3s) per phase.
+        // CAR is now RATE_LIMITED (0.9.90), reaching its own 12 unit/
+        // second movementSpeed only after ramping at 4 units/second^2 for
+        // 3 seconds — a 1s burst from rest still trails WALK's own
+        // already-at-3-units/second INSTANT pace. See this file's own
+        // Section C note above for the identical reasoning.
         controller.setMovementCapability(walkCapability);
-        const walkDistanceBefore = forwardDistance(controller, avatarPresenceSession, 20, 0.05);
+        const walkDistanceBefore = forwardDistance(controller, avatarPresenceSession, 60, 0.05);
 
         controller.setMovementCapability(vehicleCapability);
-        const vehicleDistance = forwardDistance(controller, avatarPresenceSession, 20, 0.05);
+        const vehicleDistance = forwardDistance(controller, avatarPresenceSession, 60, 0.05);
 
         controller.setMovementCapability(walkCapability);
-        const walkDistanceAfter = forwardDistance(controller, avatarPresenceSession, 20, 0.05);
+        const walkDistanceAfter = forwardDistance(controller, avatarPresenceSession, 60, 0.05);
 
         assert(vehicleDistance > walkDistanceBefore, '15. switching WALK -> GROUND_VEHICLE (on the SAME controller instance, no reconstruction) immediately covers more ground');
         assert(Math.abs(walkDistanceAfter - walkDistanceBefore) < 1e-9,
@@ -409,10 +451,45 @@ async function runTests() {
         walkRunningController.keyDown('shift');
         vehicleRunningController.keyDown('shift');
 
-        const walkWalkingDistance = forwardDistance(walkWalkingController, walkWalking, 40, 0.05);
-        const walkRunningDistance = forwardDistance(walkRunningController, walkRunning, 40, 0.05);
-        const vehicleWalkingDistance = forwardDistance(vehicleWalkingController, vehicleWalking, 40, 0.05);
-        const vehicleRunningDistance = forwardDistance(vehicleRunningController, vehicleRunning, 40, 0.05);
+        // 0.9.91 note: this used to compare TOTAL distance over a single
+        // 40-tick (2s) burst from rest. MOTORCYCLE is now RATE_LIMITED
+        // (0.9.90): running's own target speed (18 units/second — double
+        // the walking target, 9) takes twice as long to actually ramp up
+        // to (3.6s) as the walking target does (1.8s), so a from-rest
+        // burst's TOTAL distance no longer ratios to an exact 2 — the
+        // ramp-up itself contributes a "deficit" that shrinks the
+        // observed ratio below 2, exactly the same way Section C's own
+        // note above explains for BICYCLE/MOTORCYCLE/CAR. Comparing
+        // INCREMENTAL distance AFTER both have already reached their own
+        // cruise speed (a warm-up phase, discarded, followed by a
+        // measured burst) sidesteps that deficit entirely — once
+        // cruising, resolveMovementSpeed() is an exact no-op every tick
+        // (currentSpeed === targetSpeed, see
+        // core/AvatarMovementAccelerationSimulation.js's own header), so
+        // the measured distance is exactly `targetSpeed * measureTime`
+        // for both, and the ratio between them is exactly the ratio of
+        // their own target speeds — RUN_SPEED_MULTIPLIER, 2, verbatim.
+        // WALK's own comparison needs no such warm-up (it has always
+        // reached its target the instant a key is pressed), but is
+        // driven through the identical warm-up+measure shape below for a
+        // true apples-to-apples comparison.
+        function warmedUpDistance(controller, session, warmupTicks, measureTicks, dt) {
+            controller.keyDown('w');
+            for (let i = 0; i < warmupTicks; i++) controller.tick(dt);
+            const startZ = session.current.position.z;
+            for (let i = 0; i < measureTicks; i++) controller.tick(dt);
+            const distance = session.current.position.z - startZ;
+            controller.keyUp('w');
+            return distance;
+        }
+
+        const WARMUP_TICKS = 100; // 5s — comfortably past MOTORCYCLE running's own 3.6s ramp-to-18 time
+        const MEASURE_TICKS = 40; // 2s of pure cruise, once warmed up
+
+        const walkWalkingDistance = warmedUpDistance(walkWalkingController, walkWalking, WARMUP_TICKS, MEASURE_TICKS, 0.05);
+        const walkRunningDistance = warmedUpDistance(walkRunningController, walkRunning, WARMUP_TICKS, MEASURE_TICKS, 0.05);
+        const vehicleWalkingDistance = warmedUpDistance(vehicleWalkingController, vehicleWalking, WARMUP_TICKS, MEASURE_TICKS, 0.05);
+        const vehicleRunningDistance = warmedUpDistance(vehicleRunningController, vehicleRunning, WARMUP_TICKS, MEASURE_TICKS, 0.05);
 
         assert(vehicleRunningDistance > vehicleWalkingDistance, '17. running a mounted ground vehicle still covers more ground than not running it');
 

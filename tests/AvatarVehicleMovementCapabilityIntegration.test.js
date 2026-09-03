@@ -314,7 +314,18 @@ async function runTests() {
             controller.keyDown('w');
             controller.keyDown('shift');
         }
-        for (let i = 0; i < 30; i++) {
+        // 0.9.91 note: bumped from 30 ticks (1.5s) to 150 (7.5s). CAR is
+        // now RATE_LIMITED (core/AvatarVehicleMovementCapability.js,
+        // 0.9.90) and only reaches its own (running-doubled) 24 units/
+        // second target after ramping at 4 units/second^2 for 6 seconds
+        // — over a short window it can still trail WALK's own INSTANT,
+        // already-at-12-units/second pace. A long enough window is still
+        // exactly what this section's own claim needs: CAR strictly
+        // exceeds WALK once it has had time to accelerate, which this
+        // window comfortably provides. See
+        // tests/AvatarVehicleAccelerationStateIntegration.test.js for
+        // the dedicated coverage of the acceleration ramp itself.
+        for (let i = 0; i < 150; i++) {
             walkController.tick(0.05);
             vehicleController.tick(0.05);
         }

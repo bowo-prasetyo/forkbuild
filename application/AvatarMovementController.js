@@ -387,6 +387,71 @@ import { AvatarMovementCapabilityKind, isValidAvatarVehicleMovementCapability } 
 // capability field, never brand a decision by vehicle identity"
 // discipline `_resolvedMovementSpeed()`/`_resolvedCollisionRadius()`
 // already established.
+//
+// 0.9.91 — Vehicle Acceleration State Integration. 0.9.90
+// (core/AvatarMovementAccelerationCapability.js +
+// core/AvatarMovementAccelerationSimulation.js) built the acceleration
+// vocabulary and its pure math half, and deliberately stopped there —
+// its own header names wiring it into this class as explicit future
+// scope. This is that wiring, and it adds exactly ONE new piece of
+// caller-owned transient state, `_currentMovementSpeed` (the direct
+// structural twin of `_verticalVelocity` — see this class's own
+// constructor comment), plus ONE new resolution seam,
+// `_resolvedAcceleration()` (the direct structural twin of
+// `_resolvedMovementSpeed()`/`_resolvedCollisionRadius()`/
+// `_resolvedMovementDirections()` above) — no second movement pipeline,
+// no per-vehicle branching, matching the exact discipline every prior
+// capability-field integration in this file already established.
+//
+// `_currentMovementSpeed` NEVER LIVES ANYWHERE BUT HERE. Exactly like
+// `_verticalVelocity`/`_grounded` before it (see this class's own
+// original header), it is never part of `AvatarPresence` — a future
+// network peer receiving presence updates has no reason to know or care
+// about the sender's mid-acceleration speed, only where it currently is.
+//
+// THE ACTUAL ACCELERATION MATH STAYS OUTSIDE THIS CLASS, EXACTLY LIKE
+// EVERY SIBLING SEAM BEFORE IT. This class still never calls
+// `core/AvatarMovementAccelerationSimulation.js#resolveMovementSpeed()`
+// itself, and never imports that file — it merely reads
+// `this._movementCapability.acceleration.acceleration` (a bare number)
+// and hands it, alongside its own `_currentMovementSpeed` bookkeeping,
+// to the ONE existing simulation function
+// (core/AvatarMovementSimulation.js#simulateAvatarMovement()), which
+// decides how they combine with the running-aware target speed it
+// already computes — see that file's own 0.9.91 header for why the
+// integration point lives there rather than here. `if (capability.
+// acceleration.kind === INSTANT) { ... }` conceptually never appears in
+// this file, and it doesn't need to: see `_resolvedAcceleration()`'s own
+// comment for why the bare rate alone already carries that distinction.
+//
+// A CAPABILITY CHANGE RESETS `_currentMovementSpeed` TO `0`; AN
+// UNCHANGED ONE NEVER DOES. See `setMovementCapability()`'s own 0.9.91
+// comment for the identity-based change detection this relies on, and
+// why re-applying the SAME resolved capability every animation frame
+// (WorldNavigationSession's own existing 0.9.85 behavior) must never
+// reset a vehicle's own build-up of speed mid-ride.
+//
+// WALK IS BYTE-FOR-BYTE UNCHANGED, AS OF 0.9.91. WALK's own resolved
+// `acceleration.acceleration` is always exactly `0` (INSTANT — see
+// core/AvatarMovementAccelerationCapability.js's own header), which
+// degrades `simulateAvatarMovement()`'s own new rate-limiting branch to
+// a no-op every single tick — the avatar's own existing on-foot movement
+// reaches its target speed immediately, exactly as it always has. Every
+// ground vehicle (BICYCLE/MOTORCYCLE/CAR), by contrast, now genuinely
+// ramps toward its own `movementSpeed` at its own `acceleration` rate —
+// see tests/AvatarVehicleAccelerationStateIntegration.test.js for the
+// full scenario coverage, including the "motorcycle can briefly pull
+// ahead of car despite a lower eventual top speed" relationship
+// core/AvatarVehicleMovementCapability.js's own 0.9.90 header already
+// named as the reason acceleration and movementSpeed are independent
+// dimensions.
+//
+// Deliberately excluded, matching this milestone's own brief: braking as
+// its own rate/behavior, coasting, friction, drag, momentum, turning
+// radius, vehicle orientation, animation, camera behavior, terrain- or
+// slope-dependent acceleration, vehicle-to-vehicle collision, drone
+// flight, and a second `VehicleMovementController` — this class remains
+// the one, single movement executor. See docs/Roadmap.md, 0.9.91.
 const EPSILON = 1e-6;
 
 export class AvatarMovementController {
@@ -399,6 +464,15 @@ export class AvatarMovementController {
         this._keys = { forward: false, backward: false, left: false, right: false, running: false, jumpHeld: false };
         this._verticalVelocity = 0;
         this._grounded = true;
+        // 0.9.91 — this controller's own transient, signed "current
+        // movement speed" (world units/second — negative while moving
+        // backward), the direct structural twin of `_verticalVelocity`
+        // above: fed into core/AvatarMovementSimulation.js#simulateAvatarMovement()
+        // as `currentMovementSpeed` every tick, and overwritten with
+        // whatever that same call returns, tick to tick. Reset to `0`
+        // only by setMovementCapability() below, on an actual capability
+        // change — see that method's own 0.9.91 comment.
+        this._currentMovementSpeed = 0;
         // 0.9.66 — the CURRENT persistent continuous-movement intent
         // (core/AvatarContinuousMovementIntent.js's own NONE/FORWARD/
         // BACKWARD vocabulary), set only via setContinuousMovementIntent()
@@ -530,10 +604,28 @@ export class AvatarMovementController {
     // posture setContinuousMovementIntent()/setContinuousMovementMode()
     // already establish above — never a malformed value sitting in
     // `_movementCapability`.
+    // 0.9.91 — a genuinely CHANGED capability (mounting, dismounting, or
+    // — per this milestone's own brief — a future vehicle-to-vehicle
+    // switch) resets `_currentMovementSpeed` to `0`: a newly mounted
+    // vehicle starts from rest, and a dismounted avatar returns to
+    // ordinary walking from rest, rather than inheriting whatever
+    // transient speed the PREVIOUS capability had reached. Compared by
+    // identity, never by field-by-field equality:
+    // resolveAvatarVehicleMovementCapability() (core/AvatarVehicleMovementCapability.js)
+    // already returns the literal same frozen instance for the same
+    // VehicleType, so `WorldNavigationSession`'s own every-frame
+    // re-application of an UNCHANGED capability (see this class's own
+    // 0.9.85 header) is a no-op here too — `_currentMovementSpeed` only
+    // ever resets on a REAL transition, never merely because this setter
+    // was called again with the same value.
     setMovementCapability(capability) {
-        this._movementCapability = isValidAvatarVehicleMovementCapability(capability)
+        const resolved = isValidAvatarVehicleMovementCapability(capability)
             ? capability
             : null;
+        if (resolved !== this._movementCapability) {
+            this._currentMovementSpeed = 0;
+        }
+        this._movementCapability = resolved;
     }
 
     // 0.9.85 — the CURRENT movement capability KIND, same "debug/UI
@@ -598,10 +690,13 @@ export class AvatarMovementController {
             movementState,
             deltaSeconds,
             groundHeight: currentSupportHeight,
-            movementSpeed: this._resolvedMovementSpeed()
+            movementSpeed: this._resolvedMovementSpeed(),
+            acceleration: this._resolvedAcceleration(),
+            currentMovementSpeed: this._currentMovementSpeed
         });
         this._verticalVelocity = result.verticalVelocity;
         this._grounded = result.grounded;
+        this._currentMovementSpeed = result.currentMovementSpeed;
 
         // 0.2.42 — the pure simulation result is only ever a PROPOSED
         // position; the movement constraint (when wired) is the one
@@ -826,6 +921,26 @@ export class AvatarMovementController {
     // place, tick()'s own call into simulateAvatarMovement() above.
     _resolvedMovementSpeed() {
         return this._movementCapability ? this._movementCapability.movementSpeed : undefined;
+    }
+
+    // 0.9.91 — the acceleration-resolution seam this milestone adds: the
+    // CURRENT movement capability's own resolved `acceleration.acceleration`
+    // rate (a plain number — core/AvatarMovementAccelerationCapability.js's
+    // own job to have already decided what it is), or `undefined` when
+    // `_movementCapability` is `null` — the identical "never set" state
+    // `_resolvedMovementSpeed()` already handles. `undefined` lets
+    // core/AvatarMovementSimulation.js#simulateAvatarMovement()'s own
+    // default take over — reach the target speed this very tick, exactly
+    // the INSTANT behavior every caller got before this milestone existed
+    // — the direct structural twin of `_resolvedMovementSpeed()` above.
+    // This method never reads `.kind`: `AvatarMovementAccelerationCapability`'s
+    // own constructor already guarantees INSTANT's rate is always exactly
+    // `0` and RATE_LIMITED's is always strictly positive (see that file's
+    // own header), so the bare rate alone already carries the distinction
+    // simulateAvatarMovement() needs — this class still has no
+    // `AvatarMovementAccelerationKind` literal anywhere in its own code.
+    _resolvedAcceleration() {
+        return this._movementCapability ? this._movementCapability.acceleration.acceleration : undefined;
     }
 
     // 0.9.88 — the ONE collision-radius-resolution seam this milestone

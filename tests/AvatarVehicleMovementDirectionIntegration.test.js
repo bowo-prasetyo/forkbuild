@@ -226,12 +226,27 @@ async function runTests() {
     // Section B — bicycle
     // -------------------------------------------------------------
     {
-        const { avatarPresenceSession } = buildAvatarStack(registry, 'dir-b1');
-        const controller = new AvatarMovementController(avatarPresenceSession);
-        controller.setMovementCapability(resolveAvatarVehicleMovementCapability(VehicleType.BICYCLE));
-        const forwardDistance = drive(controller, avatarPresenceSession, 'w', 20, 0.05);
+        // 0.9.91 note: forward and backward are now driven on TWO
+        // separate controllers, each starting from rest — BICYCLE is
+        // RATE_LIMITED (0.9.90), so a controller that just spent 20
+        // ticks accelerating forward still carries real positive
+        // `_currentMovementSpeed` residual; reusing it immediately for
+        // "backward" would spend the SAME window mostly decelerating
+        // that residual back through zero (see the milestone's own
+        // "passes through zero, never jumps" design — application/AvatarMovementController.js's
+        // own 0.9.91 header) rather than genuinely moving backward. This
+        // section's own concern is direction PERMISSION (0.9.89), not
+        // deceleration timing — a fresh controller per direction removes
+        // that unrelated confound entirely.
+        const { avatarPresenceSession: forwardSession } = buildAvatarStack(registry, 'dir-b1-forward');
+        const { avatarPresenceSession: backwardSession } = buildAvatarStack(registry, 'dir-b1-backward');
+        const forwardController = new AvatarMovementController(forwardSession);
+        const backwardController = new AvatarMovementController(backwardSession);
+        forwardController.setMovementCapability(resolveAvatarVehicleMovementCapability(VehicleType.BICYCLE));
+        backwardController.setMovementCapability(resolveAvatarVehicleMovementCapability(VehicleType.BICYCLE));
+        const forwardDistance = drive(forwardController, forwardSession, 'w', 20, 0.05);
         assert(forwardDistance > 0, '8. BICYCLE — forward is accepted');
-        const backwardDistance = drive(controller, avatarPresenceSession, 's', 20, 0.05);
+        const backwardDistance = drive(backwardController, backwardSession, 's', 20, 0.05);
         assert(backwardDistance < 0, '9. BICYCLE — backward is accepted');
     }
     {
@@ -258,9 +273,17 @@ async function runTests() {
         session.avatarKeyUp('w');
         assert(forwardDistance > 0, '12. FLAGSHIP: forward moves the avatar while genuinely mounted on the real bicycle');
 
+        // 0.9.91 note: bumped from 5 frames (0.1s) to 30 (0.6s). BICYCLE
+        // is now RATE_LIMITED (0.9.90): the forward burst just above
+        // leaves real positive `_currentMovementSpeed` residual, and
+        // reversing direction must decelerate THROUGH zero before making
+        // genuine backward progress (see application/AvatarMovementController.js's
+        // own 0.9.91 header) — a longer window gives it time to actually
+        // cross zero and accumulate net negative displacement, not just
+        // cancel the forward residual.
         session.avatarKeyDown('s');
         const backwardZ0 = avatarPresenceSession.current.position.z;
-        for (let i = 0; i < 5; i++) frameCallback(0.02);
+        for (let i = 0; i < 30; i++) frameCallback(0.02);
         const backwardDistance = avatarPresenceSession.current.position.z - backwardZ0;
         session.avatarKeyUp('s');
         assert(backwardDistance < 0, '13. FLAGSHIP: backward also moves the avatar while genuinely mounted on the real bicycle');
@@ -270,12 +293,18 @@ async function runTests() {
     // Section C — motorcycle
     // -------------------------------------------------------------
     {
-        const { avatarPresenceSession } = buildAvatarStack(registry, 'dir-c1');
-        const controller = new AvatarMovementController(avatarPresenceSession);
-        controller.setMovementCapability(resolveAvatarVehicleMovementCapability(VehicleType.MOTORCYCLE));
-        const forwardDistance = drive(controller, avatarPresenceSession, 'w', 20, 0.05);
+        // 0.9.91 note: see Section B's own note above — two fresh
+        // controllers avoid the forward-then-backward residual-speed
+        // confound now that MOTORCYCLE is RATE_LIMITED (0.9.90).
+        const { avatarPresenceSession: forwardSession } = buildAvatarStack(registry, 'dir-c1-forward');
+        const { avatarPresenceSession: backwardSession } = buildAvatarStack(registry, 'dir-c1-backward');
+        const forwardController = new AvatarMovementController(forwardSession);
+        const backwardController = new AvatarMovementController(backwardSession);
+        forwardController.setMovementCapability(resolveAvatarVehicleMovementCapability(VehicleType.MOTORCYCLE));
+        backwardController.setMovementCapability(resolveAvatarVehicleMovementCapability(VehicleType.MOTORCYCLE));
+        const forwardDistance = drive(forwardController, forwardSession, 'w', 20, 0.05);
         assert(forwardDistance > 0, '14. MOTORCYCLE — forward is accepted');
-        const backwardDistance = drive(controller, avatarPresenceSession, 's', 20, 0.05);
+        const backwardDistance = drive(backwardController, backwardSession, 's', 20, 0.05);
         assert(backwardDistance < 0, '15. MOTORCYCLE — backward is accepted');
     }
 
@@ -283,12 +312,18 @@ async function runTests() {
     // Section D — car
     // -------------------------------------------------------------
     {
-        const { avatarPresenceSession } = buildAvatarStack(registry, 'dir-d1');
-        const controller = new AvatarMovementController(avatarPresenceSession);
-        controller.setMovementCapability(resolveAvatarVehicleMovementCapability(VehicleType.CAR));
-        const forwardDistance = drive(controller, avatarPresenceSession, 'w', 20, 0.05);
+        // 0.9.91 note: see Section B's own note above — two fresh
+        // controllers avoid the forward-then-backward residual-speed
+        // confound now that CAR is RATE_LIMITED (0.9.90).
+        const { avatarPresenceSession: forwardSession } = buildAvatarStack(registry, 'dir-d1-forward');
+        const { avatarPresenceSession: backwardSession } = buildAvatarStack(registry, 'dir-d1-backward');
+        const forwardController = new AvatarMovementController(forwardSession);
+        const backwardController = new AvatarMovementController(backwardSession);
+        forwardController.setMovementCapability(resolveAvatarVehicleMovementCapability(VehicleType.CAR));
+        backwardController.setMovementCapability(resolveAvatarVehicleMovementCapability(VehicleType.CAR));
+        const forwardDistance = drive(forwardController, forwardSession, 'w', 20, 0.05);
         assert(forwardDistance > 0, '16. CAR — forward is accepted');
-        const backwardDistance = drive(controller, avatarPresenceSession, 's', 20, 0.05);
+        const backwardDistance = drive(backwardController, backwardSession, 's', 20, 0.05);
         assert(backwardDistance < 0, '17. CAR — backward is accepted');
     }
 
@@ -325,7 +360,14 @@ async function runTests() {
         for (const vehicleType of sequence) {
             controller.setMovementCapability(resolveAvatarVehicleMovementCapability(vehicleType));
             const forwardDistance = drive(controller, avatarPresenceSession, 'w', 10, 0.05);
-            const backwardDistance = drive(controller, avatarPresenceSession, 's', 10, 0.05);
+            // 0.9.91 note: bumped from 10 ticks (0.5s) to 80 (4s) for the
+            // backward phase — see Section B's own note above. Each
+            // RATE_LIMITED vehicle's forward burst just above leaves
+            // real positive residual speed on this SAME controller (the
+            // capability itself only changes at the TOP of this loop, not
+            // between the forward/backward calls within one iteration),
+            // and reversing must decelerate through zero first.
+            const backwardDistance = drive(controller, avatarPresenceSession, 's', 80, 0.05);
             assert(forwardDistance > 0, `20. ${vehicleType} — forward still moves the avatar during WALK -> BICYCLE -> MOTORCYCLE -> CAR -> WALK switching`);
             assert(backwardDistance < 0, `21. ${vehicleType} — backward still moves the avatar during the same switching sequence`);
         }
@@ -351,14 +393,31 @@ async function runTests() {
             forwardOnly.acceleration
         );
 
-        const { avatarPresenceSession } = buildAvatarStack(registry, 'dir-g1');
-        const controller = new AvatarMovementController(avatarPresenceSession);
-        controller.setMovementCapability(forwardOnlyCapability);
+        // 0.9.91 note: forward and the blocked-backward check now use TWO
+        // separate controllers. CAR (the capability this synthetic value
+        // is built from) is RATE_LIMITED (0.9.90) — a controller that had
+        // just spent 20 ticks accelerating forward still carries real
+        // positive `_currentMovementSpeed` residual, and a disallowed
+        // direction contributes exactly `0` to the target speed (never a
+        // negative one — see `_resolvedForwardAxis()`'s own header), so
+        // that residual would spend the next window COASTING TO A STOP
+        // rather than producing an immediate, exact-zero displacement —
+        // genuinely the new intended behavior (this milestone's own
+        // brief: "the current speed moves toward zero rather than
+        // remaining at cruising speed"), just not what THIS assertion is
+        // about. A controller that starts at rest, with backward blocked
+        // the whole time, never accumulates any speed to coast on.
+        const { avatarPresenceSession: forwardOnlySession } = buildAvatarStack(registry, 'dir-g1-forward');
+        const { avatarPresenceSession: blockedSession } = buildAvatarStack(registry, 'dir-g1-blocked');
+        const forwardOnlyController = new AvatarMovementController(forwardOnlySession);
+        const blockedController = new AvatarMovementController(blockedSession);
+        forwardOnlyController.setMovementCapability(forwardOnlyCapability);
+        blockedController.setMovementCapability(forwardOnlyCapability);
 
-        const forwardDistance = drive(controller, avatarPresenceSession, 'w', 20, 0.05);
+        const forwardDistance = drive(forwardOnlyController, forwardOnlySession, 'w', 20, 0.05);
         assert(forwardDistance > 0, '22. forward is still accepted when only backward is disallowed');
 
-        const backwardDistance = drive(controller, avatarPresenceSession, 's', 20, 0.05);
+        const backwardDistance = drive(blockedController, blockedSession, 's', 20, 0.05);
         assert(backwardDistance === 0, '23. backward is fully blocked (exactly 0 displacement) when the active capability disallows it — read as "the key was never pressed," not as a collision or a stall');
 
         // Holding BOTH W and S with backward disallowed: this is no
