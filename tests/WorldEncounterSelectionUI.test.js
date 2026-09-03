@@ -290,8 +290,22 @@ async function run() {
         ];
         for (const path of ['../ui/components/WorldEncounterCanvas.js', '../ui/components/WorldEncounterMarker.js']) {
             const source = await readFile(new URL(path, import.meta.url), 'utf8');
-            const codeOnly = source.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n').toLowerCase();
+            const rawCodeOnly = source.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
+            const codeOnly = rawCodeOnly.toLowerCase();
             for (const term of forbiddenInCode) {
+                if (term === 'verified' && path.includes('WorldEncounterCanvas.js')) {
+                    // 0.9.113 note — see tests/WorldEncounterCanvasUI.test.js's
+                    // own identical exception: comparing against the
+                    // literal, already-existing `'VERIFIED'` status value
+                    // for one selection-eligibility gate
+                    // (`isDiscoveredPublicationSelectable`) is not new
+                    // trust/verified vocabulary. Every other occurrence of
+                    // "verified" stays banned.
+                    const sanctioned = rawCodeOnly.split("status === 'VERIFIED'").join('');
+                    assert(!sanctioned.toLowerCase().includes('verified'),
+                        `18. ${path}'s own code never carries "verified" beyond the one sanctioned status === 'VERIFIED' eligibility comparison`);
+                    continue;
+                }
                 assert(!codeOnly.includes(term), `18. ${path}'s own code never carries "${term}"`);
             }
         }

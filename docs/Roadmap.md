@@ -61300,3 +61300,154 @@ or persisted provenance history are all real future seams this design
 leaves room for, but none is a demonstrated product need yet. The real
 remaining obstacle, as before, is host capability (a real Nostr `queryImpl`,
 a real wallet `signer`) — not more architecture.
+
+## 0.9.113 — World View Discovered Publication Selection
+
+0.9.111 rendered a discovered, resolved, verified Publication through the
+exact same Material/Verification `<dl>` a local selection already uses;
+0.9.112 then let a Wanderer see WHERE that material came from. Neither
+milestone let a Wanderer actually DO anything with a discovered
+Publication beyond looking at it — `discoveryResult` stayed a read-only
+snapshot of the Discover Publication panel's own most recent search. This
+milestone is a genuine usability seam, not another plumbing one: a small,
+additive interaction fact — the Wanderer's own explicit pick of "the
+Publication I want to work with next":
+
+    discoveryResult                      (0.9.111, unchanged)
+          │
+          │ Wanderer clicks "Select Publication"
+          ▼
+    selectDiscoveredPublication()
+          │
+          ▼
+    selectedDiscoveredPublication = discoveryResult   (verbatim, same reference)
+
+**A selection intent, not a new Publication state.** `selectedDiscoveredPublication`
+is a plain interaction fact — the Wanderer's own explicit pick among what
+discovery already returned — never a new lifecycle value, never a
+provenance judgment, and never a verification outcome of its own.
+Selecting stores `discoveryResult` itself, verbatim, the exact same `{
+discovery, resolution, inspection, provenance }` reference
+`discoverPublication()` (0.9.111) already produced; nothing is re-derived,
+re-inspected, or reshaped.
+
+**Three independent selection concepts now coexist, never merged.**
+`selectedEncounter` (0.9.4, a spatial/World Encounter marker click) and
+`resolvedEncounterSelection` (0.9.20, which source resolved it) name a
+completely different interaction idiom from `selectedDiscoveredPublication`
+— a purely decentralized-discovered Publication has no marker at all, per
+0.9.111's own header. `selectEncounter()` is untouched by this milestone
+and never resets `selectedDiscoveredPublication`; conversely, selecting a
+discovered Publication never writes into `selectedEncounter` or
+`materialInspection`. This is 0.9.111's own "local/decentralized
+separation" held one layer over, for selection instead of inspection.
+
+**Only a `VERIFIED` discovery result is selectable — an explicit rule.**
+`isDiscoveredPublicationSelectable` requires
+`discoveryResult.inspection.verification.status === 'VERIFIED'`; a
+`REJECTED`/`UNVERIFIABLE` verification, or no inspection at all (an
+`UNAVAILABLE`/`AMBIGUOUS` resolution never produces one), is never
+selectable. `selectDiscoveredPublication()` re-checks this rule itself
+before ever writing the field — the "Select Publication" button being
+hidden otherwise is a rendering convenience, never the only enforcement.
+Per the milestone's own framing: "selection means the Publication I
+intend to work with," and this codebase never lets a Wanderer intend to
+work with material that actively failed verification.
+
+**No new application-layer command.** Unlike `distributionCommand`/
+`discoveryCommand` — both real, caller-injected boundaries fronting an
+actual network/runtime action — this milestone introduces no
+`application/SelectDiscoveredPublicationCommand.js` and no new prop: there
+is nothing yet for such a command to decide or forward to.
+`distributablePublication` (0.9.104) is the precedent: a plain
+computed/method pair, entirely inside `WorldEncounterCanvas.js`, is
+already this codebase's convention for a UI-local eligibility rule with no
+application collaborator behind it. `WorldEncounterCanvas.js`'s own
+`application/` import count stays at seven, unchanged. A future milestone
+that gives `selectedDiscoveredPublication` a real consumer (distribution,
+most plausibly) is the moment such a boundary would earn its own file —
+not before, and not this one.
+
+**`selectedDiscoveredPublication` never auto-resets, and is never
+persisted.** Starting a new `discoverPublication()` search overwrites
+`discoveryResult` but never touches `selectedDiscoveredPublication`; a
+Wanderer's earlier explicit pick stays exactly what it was. It is
+ephemeral, page-local UI state only, exactly like `selectedEncounter`/
+`discoveryResult` already are — written by exactly one method, never
+written to a `StorageProvider`, and back to `null` on a fresh mount even
+immediately after a real selection was made.
+
+**One new button, one new confirmation notice — no second inspection
+panel.** The existing Discover Publication panel gains a "Select
+Publication" button, rendered only when `isDiscoveredPublicationSelectable`
+is true, immediately below its existing Material/Source/Verification rows.
+A small, separate "Selected discovered publication." notice renders
+whenever `selectedDiscoveredPublication` is set, independent of the live
+panel above it — this milestone deliberately does not duplicate the full
+Discovery/Material/Source/Verification `<dl>` a second time for the
+selected copy; a caller wanting to inspect the selection's own full detail
+already has the identical, real object to read directly.
+
+Tests: a new suite, `tests/WorldViewDiscoveredPublicationSelectionIntegration.test.js`,
+proves the milestone's six flagship scenarios through the real running
+collaborators (a real signed `Publication`, the real decentralized runtime
+composition): Section A proves discover → `RESOLVED` → `VERIFIED` → select
+→ `selectedDiscoveredPublication` holds the exact `discoveryResult`
+reference. Section B proves selecting a discovered Publication never
+alters `selectedEncounter`/`materialInspection`. Section C proves the
+selected discovered Publication continues to report `DECENTRALIZED`
+provenance. Section D proves a `REJECTED` discovery result can never
+become a selected Publication, even calling `selectDiscoveredPublication()`
+directly (never trusting the button's own `v-if` as the only enforcement).
+Section E proves a stale, superseded discovery response — mirroring
+0.9.111's own Section H race exactly — can never become the selection.
+Section F proves a fresh component context always starts with no
+selection, never restored from anywhere. Section G is an architectural
+regression: the `application/` import count stays at seven, the new
+field/method/computed are actually present, `selectedDiscoveredPublication`
+is written from exactly one place, and `selectDiscoveredPublication()`
+itself never calls `distributionCommand`/`discoveryCommand`/
+`inspectWorldEncounterMaterial()` or reads/writes `selectedEncounter`/
+`materialInspection`. Three pre-existing architectural-vocabulary
+regressions (`tests/WorldEncounterCanvasUI.test.js`,
+`tests/WorldEncounterSelectionUI.test.js`,
+`tests/WorldEncounterSelectionResolutionUI.test.js`) that ban the word
+"verified" anywhere in `WorldEncounterCanvas.js`'s own code gain one
+narrow, documented exception for the one sanctioned
+`status === 'VERIFIED'` eligibility comparison this milestone adds — every
+other occurrence of "verified" (an `isVerified` label, narrative "Verified"
+UI copy, or any other casing) stays exactly as banned as before.
+
+### What this milestone deliberately does NOT do
+
+No distribution integration — `selectedDiscoveredPublication` has no
+consumer yet, and this milestone does not wire one in. No Publication
+persistence changes, no discovery history, no source ranking, no trust
+scoring — selection is a plain interaction fact, not a judgment. No
+automatic selection of any kind, `VERIFIED` results included — a Wanderer
+must click "Select Publication" explicitly, every time. No merging of
+local and decentralized selections into one concept. No new verification
+states and no new discovery states — `loading.status`/`verification.status`/
+`resolution.status` are entirely unchanged. No background discovery, no
+wallet/signer work, no retry/progress machinery — none of those are
+touched by this milestone.
+
+### Recommendation
+
+With this milestone landed, World View's decentralized retrieval path has
+a genuine bridge into the rest of the Publication architecture:
+
+    Discover Publication
+            ↓
+    Discovery → Resolution → Material → Verification
+            ↓
+    Select Publication
+            ↓
+    selectedDiscoveredPublication   (a real, held fact — ready to be consumed)
+
+I would not predetermine 0.9.114 yet. `selectedDiscoveredPublication` now
+exists as a real, held fact; the genuinely useful next question — whether
+its first real consumer should be distribution, a material-interaction
+action, persistence, or something else entirely — is better answered once
+this milestone has actually been used, exactly the same restraint 0.9.110
+through 0.9.112 already held for their own next steps.

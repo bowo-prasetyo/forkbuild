@@ -367,8 +367,29 @@ async function run() {
         ];
         for (const path of ['../ui/components/WorldEncounterCanvas.js', '../ui/components/WorldEncounterMarker.js', '../ui/components/WandererMarker.js']) {
             const source = await readFile(new URL(path, import.meta.url), 'utf8');
-            const codeOnly = source.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n').toLowerCase();
+            const rawCodeOnly = source.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
+            const codeOnly = rawCodeOnly.toLowerCase();
             for (const term of forbiddenInCode) {
+                if (term === 'verified' && path.includes('WorldEncounterCanvas.js')) {
+                    // 0.9.113 note: comparing a discovery result's own
+                    // ALREADY-EXISTING `verification.status` against the
+                    // literal `'VERIFIED'` value 0.9.37 itself defines — for
+                    // exactly one selection-eligibility gate,
+                    // `isDiscoveredPublicationSelectable` — is not new
+                    // trust/verified vocabulary invented at this layer; see
+                    // WorldEncounterCanvas.js's own 0.9.113 header, "only a
+                    // VERIFIED discovery result is selectable." This is
+                    // narrowly distinct from `isVerified`/`isTrusted`/
+                    // `isAuthentic`-style labels or narrative "Verified" UI
+                    // copy, which stay banned exactly as before: the check
+                    // below strips ONLY that one sanctioned literal
+                    // comparison, then re-applies the full ban to whatever
+                    // remains.
+                    const sanctioned = rawCodeOnly.split("status === 'VERIFIED'").join('');
+                    assert(!sanctioned.toLowerCase().includes('verified'),
+                        `42. ${path}'s own code never carries "verified" beyond the one sanctioned status === 'VERIFIED' eligibility comparison`);
+                    continue;
+                }
                 assert(!codeOnly.includes(term), `42. ${path}'s own code never carries "${term}"`);
             }
         }
