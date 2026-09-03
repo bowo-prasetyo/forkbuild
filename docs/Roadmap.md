@@ -61771,3 +61771,202 @@ mounted avatar's continuous-movement intent into a real
 `VehicleInstance.withPosition()` call, each frame, so the bicycle a
 player is riding actually moves out from under the "[E] Mount" prompt
 that first made it visible.
+
+## 0.9.116 — Mounted Vehicle Movement
+
+0.9.115 made a `VehicleInstance` visible at its current runtime
+position, but that position never actually changed at runtime: riding a
+bicycle still meant the avatar's OWN position moved faster (0.9.85's own
+capability integration), while the bicycle itself sat frozen at its
+deterministic spawn point underneath the "[E] Mount" prompt that first
+made it visible. This milestone is the one that changes the vehicle's
+own physical meaning:
+
+    Movement Intent
+          |
+          v
+    Mounted Vehicle
+          |
+          v
+    vehicle movement simulation
+          |
+          v
+    VehicleInstance.withPosition()
+          |
+          +----> VehicleRenderer (0.9.115, unchanged)
+          |
+          v
+    avatar follows the moving vehicle
+
+**No second movement system — the existing capability/simulation layer,
+reconnected.** `application/AvatarVehicleMovementController.js` is the
+new seam, and it invents no kinematics of its own: it calls
+`core/AvatarMovementSimulation.js#simulateAvatarMovement()` — the exact
+pure function `application/AvatarMovementController.js` already calls
+for on-foot movement — VERBATIM, supplying a different subject (a
+`VehicleInstance`'s own position, not an `AvatarPresence`'s) and a
+different destination for the result
+(`application/VehicleRuntimeInstances.js#setPosition()`, not
+`AvatarPresenceSession#update()`). `core/AvatarVehicleMovementCapability.js`
+(0.9.84 through 0.9.95 — speed, acceleration, braking, steering) is
+resolved exactly as before and fed straight in; nothing about that
+capability vocabulary changed to make this milestone possible.
+
+**The vehicle moves; the avatar follows — never the reverse.**
+`application/WorldNavigationSession.js`'s own per-frame loop now decides,
+independently of whatever `AvatarMovementController#movementCapability()`
+itself reports (see "A known boundary, deliberately not touched," below),
+whether this frame's movement intent is routed to the vehicle or to the
+ordinary on-foot pipeline. While genuinely riding a movable vehicle,
+`AvatarMovementController#tick()` is never called at all — this session
+instead calls `AvatarVehicleMovementController#tick()`, and applies its
+result to the avatar's own position/rotation through the SAME
+`AvatarPresenceSession#update()` call the avatar's own pipeline already
+used, so camera-follow, presence advertisement, and sequence
+advancement all keep working unmodified. `application/AvatarMovementController.js`
+itself is untouched by this milestone — not one line.
+
+**`VehicleInstance` stays immutable — `withPosition()`, never a setter.**
+Exactly as 0.9.114's own header insists: the runtime owner
+(`application/VehicleRuntimeInstances.js`) holds `currentVehicle =
+currentVehicle.withPosition(nextPosition)`, never
+`currentVehicle.position = nextPosition`. Nothing in this milestone
+mutates a `VehicleInstance` in place.
+
+**The one subtle issue this milestone actually had to resolve: the
+runtime vehicle-instance ownership boundary.** 0.9.115's own
+`application/NearbyVehicleInstances.js` rebuilds a fresh, spawn-equal
+`VehicleInstance` on every call — exactly right for a world of
+stationary vehicles, actively dangerous once anything can move one: a
+bare requery would silently overwrite a moving vehicle's own runtime
+position with its frozen spawn point every single frame. Worse,
+`core/VehiclePlacement.js#vehiclePresenceInRegion()` only ever returns a
+vehicle whose FIXED spawn point falls inside the queried region — once a
+mounted bicycle has ridden more than `VEHICLE_RENDER_RADIUS` away from
+where it spawned, a query centered on the avatar's (now far-away)
+current position stops mentioning that vehicle's spawn point at all,
+regardless of where the vehicle actually is now. `application/VehicleRuntimeInstances.js`
+is the new small runtime store this milestone introduces to close
+exactly that gap: `sync(seed, centerPosition, radius)` still calls
+`nearbyVehicleInstances()` to discover which vehicles exist at all, but
+an ALREADY-TRACKED vehicle is never overwritten by a freshly re-derived
+candidate, and removal is decided by the STORE'S OWN current runtime
+position relative to `centerPosition` — never by whether the
+deterministic query still happens to mention the vehicle. Deterministic
+placement keeps answering "which vehicles exist initially"; it no longer
+answers "where is the vehicle right now." `application/WorldNavigationSession.js`'s
+own `_setupVehicleRendering()` now reconciles through this store instead
+of calling `nearbyVehicleInstances()` directly — the one other line this
+milestone changes in that method.
+
+**Only the currently implemented visual vocabulary is movable.**
+`core/VehiclePlacement.js` only ever places `VehicleType.BICYCLE`, and
+`renderer/VehicleRenderer.js` only has a builder for `BICYCLE` — so
+`application/AvatarVehicleMovementController.js#canMove()`/`isMovableVehicleType()`
+gates on that same fact, deliberately never on
+`AvatarVehicleMovementCapability#supported` (which reports `true` for
+MOTORCYCLE/CAR too, purely because they share BICYCLE's own
+GROUND_VEHICLE kind). `tick()` itself re-checks this — defense in depth,
+not merely a caller-side convention — so a hypothetical future
+MOTORCYCLE/CAR/DRONE mount can never silently start moving merely because
+the generic runtime now knows how to hold a `VehicleInstance`.
+
+**A known boundary, deliberately not touched.**
+`AvatarVehicleInteractionController#mountedVehicleType()` still degrades
+to `VehicleType.NONE` once the avatar (and, after this milestone, the
+vehicle it rides) has moved more than the tiny, 1.5-unit
+`VEHICLE_INTERACTION_RADIUS` from the vehicle's FIXED spawn point — the
+exact "known boundary" 0.9.83's own header already named, and 0.9.114's
+own opening paragraph restated as the motivating bug this whole line of
+milestones exists to eventually fix. This milestone does not fix it:
+`application/AvatarVehicleMovementController.js` simply never depends on
+that fragile lookup, resolving the mounted vehicle's own identity from
+`AvatarVehicleInteractionController#mount()` (session-local, never
+distance-gated) and its TYPE/position from `VehicleRuntimeInstances`
+(this session's own runtime authority) instead — both robust to exactly
+the distance `mountedVehicleType()` is not. `AvatarMovementController`'s
+own `setMovementCapability()` call is left completely unchanged, known
+quirk included; only which controller's `tick()` actually runs each
+frame is now decided independently of it.
+
+**No dismount fix — that stays 0.9.117's own job**, per this milestone's
+own brief: a vehicle now has a runtime position worth reading, but
+`core/AvatarVehicleDismountPosition.js` and
+`application/AvatarVehicleInteractionController.js` are both completely
+untouched, still computing a dismount destination from a freshly
+re-queried `VehiclePresence`'s own FIXED spawn position, never from a
+`VehicleInstance`'s current one.
+
+Tests: `tests/VehicleRuntimeInstances.test.js` (Sections A-H) proves the
+runtime store in isolation — discovery matches `nearbyVehicleInstances()`
+one-for-one on an empty store; an already-tracked vehicle is returned by
+REFERENCE, never re-derived; the central claim (Section C) that a moved
+vehicle survives `sync()` even once its own deterministic spawn point
+falls outside the region a query centered on its NEW position would
+scan; a stationary vehicle still drops out once genuinely out of range;
+`setPosition()` never fabricates an entry; and an architectural sweep
+confirms no second placement algorithm and no direct `VehicleInstance`
+mutation. `tests/AvatarVehicleMovementController.test.js` (Sections A-H)
+proves the movement seam in isolation, against a duck-typed fake store —
+`canMove()`/`isMovableVehicleType()` (BICYCLE only); an untracked id
+returns `null`; forward intent produces forward displacement with
+`spawnPosition` untouched; 100 frames of continuous forward movement
+never stalls or resets; braking (Section E) covers strictly less ground
+than plain coasting over an identical window, through the SAME
+capability layer 0.9.92 already built; `reset()` (Section F) makes a
+resumed ride of the same vehicle id advance by exactly the delta a
+brand-new controller's own first tick would; and MOTORCYCLE/CAR/DRONE
+(Section G) are never moved even when directly tracked and ticked, proving
+the gate is defense in depth, not merely a caller-side convention.
+`tests/AvatarVehicleMovementControllerIntegration.test.js` (Sections A-H)
+is the flagship suite, end to end through a real `WorldNavigationSession`
+and a real deterministically-placed bicycle: mounting and holding
+movement actually changes the `VehicleInstance`'s own runtime position
+(Section A); the SAME moved vehicle's new position reaches `syncVehicles()`
+on the very next render frame (Section B); the avatar's own position
+exactly equals the mounted vehicle's current position after movement
+(Section C); ordinary unmounted W/A/S/D movement, and an unmounted
+vehicle's own stillness, are both completely unaffected (Section D);
+mounting an already-moved vehicle never resets it back to its spawn
+point (Section E); `spawnPosition` survives 200 frames of continuous
+movement unchanged, while `position` does not (Section F); holding the
+real Control-key braking binding covers strictly less ground than plain
+coasting (Section G); and a directly-injected, mounted MOTORCYCLE is
+never moved by this session's own frame loop (Section H).
+
+### What this milestone deliberately does NOT do
+
+No vehicle physics engine, no vehicle-vs-vehicle or vehicle-vs-building/
+tree collision, no vehicle rotation/orientation as a concept independent
+of the avatar's own existing `rotationY` (reused as the vehicle's heading
+while mounted — no new field was added to `VehicleInstance`), no wheel or
+rider animation, no road/path following, no gears/reverse/turning-radius
+physics beyond what `core/AvatarMovementSteeringSimulation.js` already
+provides, no multiplayer synchronization of a vehicle's runtime position
+(exactly as ephemeral and session-local as it already was), no
+persistence, no vehicle spawning/despawning redesign, no MOTORCYCLE/CAR/
+DRONE implementation, and — deliberately, explicitly — no dismount
+redesign: `core/AvatarVehicleDismountPosition.js` and
+`application/AvatarVehicleInteractionController.js` are both completely
+untouched.
+
+### Recommendation
+
+    VehicleInstance          spawnPosition + position   (0.9.114)
+            v
+    Vehicle Rendering        VehicleInstance -> visible world object   (0.9.115)
+            v
+    Mounted Vehicle Movement VehicleInstance actually moves; avatar follows   (this milestone)
+            v
+    0.9.117 — Vehicle-Aware Dismount (reads a mounted VehicleInstance's
+              CURRENT position, never its spawn position)
+
+With the vehicle now the authoritative moving body and its runtime
+position preserved independently of deterministic spawn placement across
+every frame (see `application/VehicleRuntimeInstances.js`'s own "one
+subtle issue to resolve"), the next milestone can finally connect
+`core/AvatarVehicleDismountPosition.js` to a mounted `VehicleInstance`'s
+CURRENT position instead of a freshly re-queried `VehiclePresence`'s
+fixed one — directly eliminating the "ride far away, then dismount fails
+to find a destination" failure mode this entire line of milestones was
+motivated by in the first place.
