@@ -119,6 +119,7 @@ import { composePublicationDistributionCommand } from '../application/Publicatio
 import { resolvePublicationDistributionRuntimeConfiguration } from '../application/PublicationDistributionRuntimeConfiguration.js';
 import { createPublicationDistributionRuntimeProvider } from '../application/PublicationDistributionRuntimeProvider.js';
 import { createNostrPublicationDistributionRuntimeAdapter } from '../application/NostrPublicationDistributionRuntimeAdapter.js';
+import { createArweavePublicationDistributionRuntimeAdapter } from '../application/ArweavePublicationDistributionRuntimeAdapter.js';
 
 const identityProvider = new CreateIdentityProviderUseCase().execute();
 const identityUseCase = new IdentityUseCase(identityProvider);
@@ -1513,8 +1514,42 @@ app.provide('publicationDistributionLifecycleStore', publicationDistributionLife
 // the one object passed to `createNostrPublicationDistributionRuntimeAdapter()`,
 // never this file's own call to `createPublicationDistributionRuntimeProvider()`,
 // and never anything below it.
+//
+// 0.9.109 — Arweave Publication Distribution Runtime Adapter. The symmetric
+// counterpart to 0.9.108, closing the one gap that file's own header
+// explicitly left open: nothing in this codebase actually PRODUCES a
+// `signer` from a real host Arweave signing capability.
+// `createArweavePublicationDistributionRuntimeAdapter()`
+// (`application/ArweavePublicationDistributionRuntimeAdapter.js`, NEW) is
+// that bridge — but unlike Nostr's own adapter, there is no renaming to
+// perform: the runtime provider already accepts a field named exactly
+// `signer`, the same name a host signing capability is expected to already
+// carry, so `signer`/`gatewayUrl`/`fetchImpl` pass through this adapter
+// completely unchanged. The seam exists so a future host signer source (a
+// wallet extension, an application-provided signer, a development/test
+// fixture) plugs into ONE function this file already calls, rather than
+// into a `{}` literal shaped by hand inline — the identical value 0.9.107's
+// own header already gave for itself.
+//
+// NO HOST ARWEAVE SIGNING CAPABILITY EXISTS ANYWHERE IN THIS CODEBASE YET
+// EITHER, SO THIS MILESTONE ALSO CHANGES NO OBSERVABLE BEHAVIOR.
+// `createArweavePublicationDistributionRuntimeAdapter({})` resolves
+// `{ signer: undefined, gatewayUrl: undefined, fetchImpl: undefined }` —
+// spread into `createPublicationDistributionRuntimeProvider({ ... })`
+// below, functionally identical to before this adapter existed. This
+// milestone's entire value is that a real, independently tested
+// Arweave-specific bridge now sits between a host signing capability and
+// this file, so wiring a real one later touches only the one object passed
+// to `createArweavePublicationDistributionRuntimeAdapter()`, never this
+// file's own call to `createPublicationDistributionRuntimeProvider()`, and
+// never anything below it. See that file's own header for why it is
+// particularly strict about accepting an already-usable `signer` — never a
+// `privateKey`/`mnemonic`/`seed`/`walletPassword` this file would have to
+// turn into one.
 const nostrPublicationRuntimeCapabilities = createNostrPublicationDistributionRuntimeAdapter({});
+const arweavePublicationRuntimeCapabilities = createArweavePublicationDistributionRuntimeAdapter({});
 const publicationDistributionRuntimeProvider = createPublicationDistributionRuntimeProvider({
+    ...arweavePublicationRuntimeCapabilities,
     ...nostrPublicationRuntimeCapabilities
 });
 const { arweaveUploaderOptions, nostrPublisherOptions } = resolvePublicationDistributionRuntimeConfiguration(publicationDistributionRuntimeProvider.resolveRuntimeCapabilities());

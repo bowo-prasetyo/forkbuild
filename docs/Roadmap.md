@@ -60566,3 +60566,199 @@ interesting a next step as either. What this milestone does not recommend
 is more indirection: the provider/factory/adapter chain is complete for
 Nostr: the next milestone touching this family should make a capability
 real, not add another layer around it.
+
+## 0.9.109 — Arweave Publication Distribution Runtime Adapter
+
+0.9.108 closed the Nostr half of the gap its own "Recommendation" named,
+and explicitly deferred the other half: Arweave's own signing-authority
+capability, "a materially different, later, unscheduled milestone." This
+milestone is that symmetric counterpart — the last purely capability-bridge
+milestone in the 0.9.103–0.9.109 plumbing run before reassessing:
+
+    host signing capability   (nothing, today — see "Nothing real to
+         │                     adapt yet")
+         │  { signer, gatewayUrl, fetchImpl }
+         ▼
+    createArweavePublicationDistributionRuntimeAdapter({ signer, gatewayUrl, fetchImpl })   (0.9.109, NEW)
+         │
+         ▼
+    { signer, gatewayUrl, fetchImpl }
+         │
+         ▼
+    createPublicationDistributionRuntimeProvider({ ...adapted, publishImpl, relayUrl, discoveryTag, tagName, kind })   (0.9.107, unmodified)
+         │
+         ▼
+    resolvePublicationDistributionRuntimeConfiguration({ arweave, nostr })   (0.9.106, unmodified)
+         │
+         ▼
+    composePublicationDistributionCommand({ lifecycleStore, ... })   (0.9.105, unmodified)
+
+**A seam, never a rename — the one difference from 0.9.108's own shape.**
+Nostr's own adapter had real translation work to do: a host capability
+named `publish` had to become the `publishImpl` field the runtime provider
+already expects. Arweave's own runtime provider already expects a field
+named exactly `signer` — the same name
+`ArweavePublicationMaterialUploader.js`'s own constructor (0.9.45)
+established first, and the same name a host signing capability is expected
+to already carry. `createArweavePublicationDistributionRuntimeAdapter({
+signer, gatewayUrl, fetchImpl })` therefore performs no renaming at all —
+every field passes through completely unchanged. The file exists anyway,
+as a named, independently testable function rather than an inline object
+literal `ui/main.js` shapes by hand, for the identical reason 0.9.107's own
+header already gave for itself: a future host signer source plugs into ONE
+function this codebase already calls. The seam is the value, not a
+transformation.
+
+**`signer`, never a credential — the one distinction this milestone is
+particularly strict about.** The adapter accepts an already-usable
+capability — `signer.sign(material) -> Promise<{ id, transaction }>`,
+exactly `ArweavePublicationMaterialUploader.js`'s own documented contract
+— never a `privateKey`, `mnemonic`, `seed`, or `walletPassword` it would
+have to turn into one. That transformation would cross this file from a
+runtime adapter into credential management, a materially different
+responsibility this milestone deliberately does not take on:
+
+    wallet / host / external provider
+                 │
+                 ▼
+            signer capability
+                 │
+                 ▼
+    createArweavePublicationDistributionRuntimeAdapter()   (0.9.109, THIS)
+                 │
+                 ▼
+            existing uploader
+
+**A regrouping, never a new sufficiency check** — the same restraint
+0.9.106, 0.9.107, and 0.9.108 all already held. Whether the resulting
+`signer` is actually usable remains entirely
+`resolveArweaveUploaderOptions()`'s own decision (0.9.105, unmodified).
+Calling this function with no `signer` returns `{ signer: undefined,
+gatewayUrl: undefined, fetchImpl: undefined }` — never a throw — exactly
+the graceful degradation every seam below it already holds.
+
+**Synchronous — deliberately, like every seam below it.** No `connect()`,
+`await connect()`, `login()`, or `unlock()` inside this file. A host
+capability needing asynchronous setup (a wallet-extension permission
+prompt, a hardware-wallet handshake) resolves that entirely BEFORE its
+result is ever handed to this function — the same restraint 0.9.107's and
+0.9.108's own headers already held one layer up.
+
+**Nostr is deliberately untouched — the reverse of 0.9.108's own
+restraint.** This file imports nothing from
+`NostrPublicationDiscoveryPublisher.js` or
+`NostrPublicationDistributionRuntimeAdapter.js`, and produces no `nostr`
+section of any kind. 0.9.108's own adapter remains the one place a host
+Nostr capability is translated.
+
+**No wallet system.** This milestone is deliberately not "ForkBuild Wallet
+Integration" — no wallet identity, no connection flow, no account list, no
+permission model, no disconnect handling, no persistence, no UI of any
+kind. A wallet remains merely one possible provider of a `signer` — the
+identical restraint `PublicationDistributionRuntimeProvider.js`'s own
+header already holds ("a provider, never a wallet").
+
+**Nothing real to adapt yet, so this milestone changes no observable
+behavior in the running app.** `ui/main.js` calls
+`createArweavePublicationDistributionRuntimeAdapter({})` — no wallet
+extension, hardware signer, or other concrete host Arweave signing
+capability is wired up anywhere in this codebase yet.
+`arweaveUploaderOptions` still resolves `undefined`, and a real World View
+click still reaches exactly today's existing synchronous throw. This
+milestone's entire value is proving that a real, independently tested,
+Arweave-specific bridge now sits between a host capability and
+`ui/main.js`'s own call to `createPublicationDistributionRuntimeProvider()`,
+so wiring a real capability later touches only the one object passed to
+this function.
+
+The flagship test
+(`tests/ArweavePublicationDistributionRuntimeAdapter.test.js`, Section D,
+and `tests/WorldViewArweavePublicationDistributionRuntimeAdapterIntegration.test.js`)
+drives a fake HOST signer — named `signer`, the same name a real host would
+already call its own capability — through the new adapter, a real runtime
+provider, 0.9.106's own unmodified configuration seam, 0.9.105's own
+unmodified command composition, the real orchestrator and executor, and
+the same `WorldEncounterCanvas` click handler 0.9.104 built, ending in a
+`PRESENT`/`PRESENT` lifecycle fact World View actually observes — proving
+the transaction id reported all the way up to the lifecycle store came
+from the fake HOST signer. A second section retains the independent-
+substrate proof this architecture has held since 0.9.105, this time in the
+direction 0.9.108's own test left unproven: Arweave available, Nostr
+unavailable at any layer. With no `publishImpl`/`relayUrl`/`discoveryTag`
+supplied anywhere, the adapter's own Arweave capability still resolves to a
+real `arweaveUploaderOptions`, and an `ArweavePublicationMaterialUploader`
+built from it still uploads successfully entirely on its own — proven at
+the provider/configuration layer and the uploader itself, not through a
+full orchestrated command, because `composePublicationDistributionRuntime()`'s
+own unconditional construction of both collaborators (0.9.47, unmodified)
+means a full ORCHESTRATED distribution still requires a constructible
+Nostr publisher too, the identical existing, unrelated restraint 0.9.108's
+own flagship test already documented in the opposite direction.
+
+### What this milestone deliberately does NOT do
+
+No concrete host Arweave signing capability, wallet-extension integration,
+key generation, or any actual signing implementation — later, unscheduled
+work, exactly as `ArweavePublicationMaterialUploader.js`'s own header
+already leaves `signer` itself. No turning a `privateKey`/`mnemonic`/
+`seed`/`walletPassword` into a signer — see "`signer`, never a credential,"
+above. No wallet account management, identity UI, key storage, key
+generation, or wallet login/connection UI of any kind. No new lifecycle
+state, and no change to `PublicationDistributionLifecycle.js`,
+`WorldEncounterCanvas.js`, the Distribution panel, the orchestrator, or the
+executor. No asynchronous discovery or connection of any kind — see
+"Synchronous — deliberately," above. No change to Nostr's own runtime
+adapter, or any Nostr-side decision — see "Nostr is deliberately
+untouched," above. No gateway selection, gateway-URL validation, or any
+Arweave transaction knowledge of any kind — every field is forwarded
+verbatim, unread.
+
+### Recommendation
+
+With this milestone in place, the 0.9.103–0.9.109 plumbing run is complete
+for both substrates: a World View click flows through a command, a runtime
+configuration, a runtime provider, a Nostr adapter, an Arweave adapter, an
+orchestrator, Arweave and Nostr independently, the existing lifecycle, and
+back to World View — every seam real, named, and independently tested,
+waiting on exactly two things, a real host Nostr publishing capability and
+a real host Arweave signer, neither of which is architectural work anymore.
+
+    World View action                         done
+    Application command                       done
+    Lifecycle recording                       done
+    Lifecycle persistence                     done
+    Runtime configuration seam                done
+    Runtime provider                          done
+    Nostr capability adapter                  done
+    Arweave capability adapter                done
+    Actual host capability                    open — a product decision, not a missing seam
+
+This is deliberately the stopping point for this whole plumbing sequence.
+**0.9.110 should not be another abstraction milestone** — there is no
+seam left to build; adding one now would only be indirection for its own
+sake. Three genuinely different directions are open instead, none of them
+more architecture:
+
+- **Make Nostr actually usable** — a real host `publish` capability (a
+  NIP-46 bunker, a browser extension, or whichever concrete mechanism is
+  actually wanted) flowing through the already-shipped 0.9.108 adapter into
+  the existing distribution path.
+- **Make Arweave actually usable** — a real host `signer` (most naturally a
+  browser wallet-extension adapter, mirroring
+  `base/BaseInjectedProviderWalletAdapter.js`'s own already-established
+  pattern one substrate over) flowing through this milestone's own 0.9.109
+  adapter the identical way.
+- **Close the other half of the decentralized loop** — switch away from
+  Distribution entirely and make the already-existing discovery
+  infrastructure reachable: Nostr/Arweave discovery, lead resolution,
+  material resolution, verification, back into World View. This is the
+  other major gap 0.9.102's own audit named, still unaddressed by anything
+  in the 0.9.103–0.9.109 run.
+
+The third option is arguably the most attractive now: distribution and
+discovery would then form two halves of one larger decentralized-publishing
+feature, rather than this codebase spending further milestones on
+configuration infrastructure neither half of the loop still needs. But all
+three are real product/runtime decisions now, not "what seam are we
+missing" — which is exactly the question this whole plumbing run existed
+to retire.
