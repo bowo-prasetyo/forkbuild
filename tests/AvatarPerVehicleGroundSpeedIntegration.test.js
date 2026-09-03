@@ -97,6 +97,27 @@ function forwardDistance(controller, avatarPresenceSession, ticks, dt) {
     return avatarPresenceSession.current.position.z - startZ;
 }
 
+// 0.9.91 — the direct structural twin of forwardDistance() above, for
+// sections that need a distance ratio EXACT to floating-point precision.
+// A RATE_LIMITED capability's own TOTAL distance from rest never ratios
+// exactly to its movementSpeed (the ramp-up itself contributes a
+// duration-dependent "deficit" — see the callers' own 0.9.91 comments),
+// but once a capability has already reached its own cruise movementSpeed,
+// core/AvatarMovementAccelerationSimulation.js#resolveMovementSpeed()'s
+// own `currentSpeed === targetSpeed` case is an exact no-op every tick —
+// so distance measured ENTIRELY after that point is exactly
+// `movementSpeed * measureTime`, discarding `warmupTicks` worth of ramp
+// gets there.
+function warmedUpDistance(controller, avatarPresenceSession, warmupTicks, measureTicks, dt) {
+    controller.keyDown('w');
+    for (let i = 0; i < warmupTicks; i++) controller.tick(dt);
+    const startZ = avatarPresenceSession.current.position.z;
+    for (let i = 0; i < measureTicks; i++) controller.tick(dt);
+    const distance = avatarPresenceSession.current.position.z - startZ;
+    controller.keyUp('w');
+    return distance;
+}
+
 async function runTests() {
     const registry = buildRegistry();
 
@@ -172,9 +193,33 @@ async function runTests() {
         motorcycleController.setMovementCapability(resolveAvatarVehicleMovementCapability(VehicleType.MOTORCYCLE));
         carController.setMovementCapability(resolveAvatarVehicleMovementCapability(VehicleType.CAR));
 
-        const bicycleDistance = forwardDistance(bicycleController, bicycleSession, 40, 0.05);
-        const motorcycleDistance = forwardDistance(motorcycleController, motorcycleSession, 40, 0.05);
-        const carDistance = forwardDistance(carController, carSession, 40, 0.05);
+        // 0.9.91 note: this used to drive a single 40-tick (2s) burst
+        // from rest and compare TOTAL distance. Each GROUND_VEHICLE is
+        // now RATE_LIMITED (0.9.90) at its OWN acceleration
+        // (BICYCLE/MOTORCYCLE/CAR: 3/5/4 units/second^2) — over a short
+        // window, MOTORCYCLE's own faster ramp can legitimately put it
+        // ahead of CAR despite CAR's higher eventual top speed (see
+        // core/AvatarVehicleMovementCapability.js's own 0.9.90 header,
+        // "acceleration is an independent dimension from movementSpeed",
+        // and tests/AvatarVehicleAccelerationStateIntegration.test.js's
+        // own dedicated coverage of exactly that relationship) — and the
+        // exact 9:6/12:6 TOTAL-distance ratios below no longer hold
+        // either, since each vehicle's own ramp-up time differs
+        // (BICYCLE 2s, MOTORCYCLE 1.8s, CAR 3s). A warm-up phase (driven
+        // and discarded, long enough for every vehicle to have already
+        // reached its own cruise movementSpeed) followed by a measured
+        // burst sidesteps both problems at once: once cruising,
+        // resolveMovementSpeed() is an exact no-op every tick (see
+        // core/AvatarMovementAccelerationSimulation.js's own header), so
+        // the measured distance is exactly `movementSpeed * measureTime`
+        // for each — both the strict ordering and the exact resolved-
+        // speed ratios this section exists to prove.
+        const WARMUP_TICKS = 80; // 4s — comfortably past CAR's own 3s ramp-to-12 time
+        const MEASURE_TICKS = 40; // 2s of pure cruise, once warmed up
+
+        const bicycleDistance = warmedUpDistance(bicycleController, bicycleSession, WARMUP_TICKS, MEASURE_TICKS, 0.05);
+        const motorcycleDistance = warmedUpDistance(motorcycleController, motorcycleSession, WARMUP_TICKS, MEASURE_TICKS, 0.05);
+        const carDistance = warmedUpDistance(carController, carSession, WARMUP_TICKS, MEASURE_TICKS, 0.05);
 
         assert(bicycleDistance < motorcycleDistance && motorcycleDistance < carDistance,
             '11. for identical W-held input over identical elapsed time, driven through the real simulateAvatarMovement() pipeline (not by inspecting capability objects), BICYCLE < MOTORCYCLE < CAR');
@@ -192,6 +237,19 @@ async function runTests() {
     // Section F — running
     // -------------------------------------------------------------
     {
+        // 0.9.91 note: this used to drive a single 40-tick (2s) burst
+        // from rest. CAR's own RUNNING target (24 units/second, double
+        // its 12 unit/second base — see application/AvatarMovementController.js's
+        // own 0.9.91 header) now takes a full 6 seconds to actually ramp
+        // up to at CAR's own 4 units/second^2 rate — see this file's own
+        // Section E note above for why TOTAL distance from rest no
+        // longer ratios exactly to 2 under acceleration, and why a
+        // warm-up phase (long enough for every vehicle's own RUNNING
+        // target to have fully ramped up) followed by a measured burst
+        // restores the exact ratio.
+        const WARMUP_TICKS = 140; // 7s — comfortably past CAR's own 6s ramp-to-24 (running) time
+        const MEASURE_TICKS = 40; // 2s of pure cruise, once warmed up
+
         for (const vehicleType of [VehicleType.BICYCLE, VehicleType.MOTORCYCLE, VehicleType.CAR]) {
             const { avatarPresenceSession: walkingSession } = buildAvatarStack(registry, `pvgs-f1-${vehicleType}-walking`);
             const { avatarPresenceSession: runningSession } = buildAvatarStack(registry, `pvgs-f1-${vehicleType}-running`);
@@ -201,8 +259,8 @@ async function runTests() {
             runningController.setMovementCapability(resolveAvatarVehicleMovementCapability(vehicleType));
             runningController.keyDown('shift');
 
-            const walkingDistance = forwardDistance(walkingController, walkingSession, 40, 0.05);
-            const runningDistance = forwardDistance(runningController, runningSession, 40, 0.05);
+            const walkingDistance = warmedUpDistance(walkingController, walkingSession, WARMUP_TICKS, MEASURE_TICKS, 0.05);
+            const runningDistance = warmedUpDistance(runningController, runningSession, WARMUP_TICKS, MEASURE_TICKS, 0.05);
 
             assert(runningDistance > walkingDistance, `14. ${vehicleType}: running covers more ground than not running`);
             assert(Math.abs(runningDistance / walkingDistance - 2) < 1e-9,
@@ -217,17 +275,30 @@ async function runTests() {
         const { avatarPresenceSession } = buildAvatarStack(registry, 'pvgs-g1');
         const controller = new AvatarMovementController(avatarPresenceSession);
 
+        // 0.9.91 note: each phase used to be a single 20-tick (1s) burst.
+        // setMovementCapability() still resets the controller's own
+        // transient _currentMovementSpeed to 0 on every one of these
+        // genuine capability changes (see application/AvatarMovementController.js's
+        // own 0.9.91 header) — so each phase below still starts from
+        // rest, exactly as before — but CAR's own 3s ramp-to-12 no
+        // longer completes within a 1s window. See this file's own
+        // Section E note above for why warming up before measuring
+        // restores both the strict ordering and the exact WALK
+        // byte-identity this section exists to prove.
+        const WARMUP_TICKS = 80; // 4s — comfortably past CAR's own 3s ramp-to-12 time
+        const MEASURE_TICKS = 40; // 2s of pure cruise, once warmed up
+
         controller.setMovementCapability(resolveAvatarVehicleMovementCapability(VehicleType.BICYCLE));
-        const bicycleDistance = forwardDistance(controller, avatarPresenceSession, 20, 0.05);
+        const bicycleDistance = warmedUpDistance(controller, avatarPresenceSession, WARMUP_TICKS, MEASURE_TICKS, 0.05);
 
         controller.setMovementCapability(resolveAvatarVehicleMovementCapability(VehicleType.MOTORCYCLE));
-        const motorcycleDistance = forwardDistance(controller, avatarPresenceSession, 20, 0.05);
+        const motorcycleDistance = warmedUpDistance(controller, avatarPresenceSession, WARMUP_TICKS, MEASURE_TICKS, 0.05);
 
         controller.setMovementCapability(resolveAvatarVehicleMovementCapability(VehicleType.CAR));
-        const carDistance = forwardDistance(controller, avatarPresenceSession, 20, 0.05);
+        const carDistance = warmedUpDistance(controller, avatarPresenceSession, WARMUP_TICKS, MEASURE_TICKS, 0.05);
 
         controller.setMovementCapability(resolveAvatarVehicleMovementCapability(VehicleType.NONE));
-        const walkDistance = forwardDistance(controller, avatarPresenceSession, 20, 0.05);
+        const walkDistance = warmedUpDistance(controller, avatarPresenceSession, WARMUP_TICKS, MEASURE_TICKS, 0.05);
 
         assert(bicycleDistance < motorcycleDistance && motorcycleDistance < carDistance,
             '16. switching BICYCLE -> MOTORCYCLE -> CAR, on the SAME controller instance, immediately covers strictly more ground at each step, with no controller reconstruction');
@@ -237,7 +308,7 @@ async function runTests() {
         const { avatarPresenceSession: freshWalkSession } = buildAvatarStack(registry, 'pvgs-g2');
         const freshWalkController = new AvatarMovementController(freshWalkSession);
         freshWalkController.setMovementCapability(resolveAvatarVehicleMovementCapability(VehicleType.NONE));
-        const freshWalkDistance = forwardDistance(freshWalkController, freshWalkSession, 20, 0.05);
+        const freshWalkDistance = warmedUpDistance(freshWalkController, freshWalkSession, WARMUP_TICKS, MEASURE_TICKS, 0.05);
         assert(Math.abs(walkDistance - freshWalkDistance) < 1e-9,
             '18. the WALK speed reached at the end of the BICYCLE -> MOTORCYCLE -> CAR -> WALK chain is byte-identical to a controller that only ever walked — no residual vehicle influence survives the chain');
     }

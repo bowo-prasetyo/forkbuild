@@ -1,5 +1,6 @@
 import { AvatarAnimationState } from './AvatarAnimationState.js';
 import { deriveAvatarVerticalState } from './AvatarVerticalState.js';
+import { resolveMovementSpeed } from './AvatarMovementAccelerationSimulation.js';
 
 // 0.2.36 — deterministic, Three.js-free kinematics: given where the
 // avatar IS (position/rotationY, plus the small bit of physics-only
@@ -95,6 +96,48 @@ const MAX_Y = 8; // world units — "reasonable vertical bounds" ABOVE whatever 
 // where a non-default `movementSpeed` actually comes from — this
 // file still has no idea a vehicle, or a capability, exists; it only
 // ever receives a plain number.
+//
+// 0.9.91 — Vehicle Acceleration State Integration. `acceleration`/
+// `currentMovementSpeed` (both optional, both bare numbers — no
+// AvatarMovementAccelerationCapability, no AvatarMovementAccelerationKind,
+// no vehicle vocabulary of any kind reaches this file) are the two new
+// parameters this milestone adds, and the ONE place
+// core/AvatarMovementAccelerationSimulation.js's own `resolveMovementSpeed()`
+// — the pure acceleration math 0.9.90 built and deliberately left
+// unconsumed — is actually wired in. See the function body's own 0.9.91
+// comment for exactly how `targetMovementSpeed` (forwardAxis * the
+// existing running-aware `speed` this file already computed) and
+// `currentMovementSpeed` combine into this tick's resolved,
+// SIGNED speed. Doing the wiring HERE, rather than in
+// application/AvatarMovementController.js, is deliberate: this file
+// already owns the one true "target speed a base speed plus running
+// implies" computation (RUN_SPEED_MULTIPLIER above) — teaching the
+// controller a second, duplicate copy of that arithmetic merely to feed
+// a pre-multiplied target into this function would be the exact kind of
+// redundant reinvention this codebase's own architecture consistently
+// avoids (see tests/AvatarVehicleMovementSpeedIntegration.test.js's own
+// architectural regression sweep, which forbids the controller from ever
+// hardcoding a "double the speed" multiplication of its own).
+// `application/AvatarMovementController.js` still passes only bare
+// numbers — its own resolved capability's `acceleration.acceleration`,
+// and its own transient `currentMovementSpeed` bookkeeping, the direct
+// structural twin of how it already threads `verticalVelocity`/
+// `grounded` through this same function — never `AvatarMovementAccelerationKind`,
+// never a vehicle identity.
+//
+// WALK'S OWN INSTANT BEHAVIOR IS BYTE-FOR-BYTE UNCHANGED. WALK's resolved
+// `acceleration.acceleration` is always exactly `0` (see
+// core/AvatarMovementAccelerationCapability.js's own "INERT ACCELERATION
+// VALUE" header) — `Number.isFinite(acceleration) && acceleration > 0` is
+// `false`, so `resolvedMovementSpeed` degrades to `targetMovementSpeed`
+// directly, with zero rate math, on every tick, regardless of
+// `currentMovementSpeed`. This is the SAME degrade path every pre-0.9.91
+// caller already takes by never passing `acceleration` at all — WALK
+// does not need a special "instant" branch anywhere in this file or in
+// the controller; the existing numeric invariant
+// `AvatarMovementAccelerationCapability`'s own constructor already
+// enforces (INSTANT's rate is always exactly `0`; RATE_LIMITED's is
+// always strictly positive) IS the branch.
 export function simulateAvatarMovement({
     position,
     rotationY = 0,
@@ -103,7 +146,9 @@ export function simulateAvatarMovement({
     movementState,
     deltaSeconds,
     groundHeight = GROUND_Y,
-    movementSpeed
+    movementSpeed,
+    acceleration,
+    currentMovementSpeed
 }) {
     const floorY = Number.isFinite(groundHeight) ? groundHeight : GROUND_Y;
     const dt = sanitizeDeltaSeconds(deltaSeconds);
@@ -116,7 +161,40 @@ export function simulateAvatarMovement({
 
     const baseSpeed = Number.isFinite(movementSpeed) && movementSpeed > 0 ? movementSpeed : WALK_SPEED;
     const speed = movementState.running ? baseSpeed * RUN_SPEED_MULTIPLIER : baseSpeed;
-    const stepDistance = clamp(movementState.forwardAxis * speed * dt, -MAX_STEP_PER_TICK, MAX_STEP_PER_TICK);
+    const targetMovementSpeed = movementState.forwardAxis * speed;
+
+    // 0.9.91 — Vehicle Acceleration State Integration. `acceleration`
+    // (world units/second^2, optional — a bare number, exactly like
+    // `movementSpeed` above) is the ONE new parameter this milestone
+    // adds. Omitted, non-finite, or <= 0 means "reach targetMovementSpeed
+    // this very tick" — the exact same INSTANT behavior this function has
+    // always had, and the only behavior every pre-0.9.91 caller (every
+    // test that has never heard of acceleration, and every call site
+    // until application/AvatarMovementController.js starts passing a real
+    // rate) ever produces: `resolvedMovementSpeed` below degrades to
+    // `targetMovementSpeed` directly, computed with no rate math at all,
+    // byte-for-byte identical to the pre-0.9.91 `forwardAxis * speed`
+    // formula it replaces. Only a genuine positive rate hands the
+    // approach itself to core/AvatarMovementAccelerationSimulation.js's
+    // own `resolveMovementSpeed()` — the pure math half 0.9.90 already
+    // built and deliberately left unconsumed — closing over
+    // `currentMovementSpeed` (the caller's own previous-tick result,
+    // sanitized to `0` when omitted/non-finite, the same "controller owns
+    // the state, this file never remembers anything" discipline
+    // `verticalVelocity`/`grounded` already establish) and this tick's
+    // `dt`. See core/AvatarMovementAccelerationSimulation.js's own header
+    // for why acceleration <= 0 could never mean "no change this tick"
+    // here the way it does inside `resolveMovementSpeed()` itself — an
+    // INSTANT capability must still reach its target, never freeze.
+    const resolvedMovementSpeed = Number.isFinite(acceleration) && acceleration > 0
+        ? resolveMovementSpeed({
+            currentSpeed: Number.isFinite(currentMovementSpeed) ? currentMovementSpeed : 0,
+            targetSpeed: targetMovementSpeed,
+            acceleration,
+            deltaTime: dt
+        })
+        : targetMovementSpeed;
+    const stepDistance = clamp(resolvedMovementSpeed * dt, -MAX_STEP_PER_TICK, MAX_STEP_PER_TICK);
     const radians = nextRotationY * (Math.PI / 180);
     const dx = Math.sin(radians) * stepDistance;
     const dz = Math.cos(radians) * stepDistance;
@@ -168,6 +246,14 @@ export function simulateAvatarMovement({
         rotationY: nextRotationY,
         verticalVelocity: nextVerticalVelocity,
         grounded: nextGrounded,
+        // 0.9.91 — this tick's resolved, SIGNED forward speed (world
+        // units/second — negative while moving backward), the direct
+        // structural twin of `verticalVelocity` above: the caller feeds
+        // it back in as next tick's own `currentMovementSpeed`, and this
+        // function never remembers it itself. Always `targetMovementSpeed`
+        // verbatim when no rate-limited acceleration applied this tick —
+        // see `resolvedMovementSpeed` above.
+        currentMovementSpeed: resolvedMovementSpeed,
         verticalState: deriveAvatarVerticalState({ grounded: nextGrounded, verticalVelocity: nextVerticalVelocity }),
         animation: resolveAnimationState({
             moving: movementState.forwardAxis !== 0,

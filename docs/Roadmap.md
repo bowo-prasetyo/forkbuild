@@ -57819,3 +57819,219 @@ Next: a future milestone integrates this seam into
 consulted, and giving braking its own explicit semantics — followed by
 steering/handling and, eventually, aerial movement for the drone, but
 only once actual runtime behavior tells us which is needed first.
+
+## 0.9.91 — Vehicle Acceleration State Integration
+
+0.9.90 built the acceleration vocabulary and its pure math half and
+deliberately stopped there — its own closing paragraph named exactly
+this as next: wiring `resolveMovementSpeed()` into the real movement
+pipeline, introducing the transient "current speed" bookkeeping that
+seam requires. This milestone is that wiring, and nothing more: the
+avatar's own capability + acceleration already fully described HOW a
+vehicle should move; this milestone finally lets that description
+actually drive movement.
+
+```
+Vehicle capability
+├── movementSpeed  ──┐
+└── acceleration  ───┤
+                      ▼
+           target movement speed
+   (forwardAxis, gated by movementDirections,
+    times movementSpeed, doubled while running)
+                      │
+      current movement speed (controller-owned,
+        transient, fed back in tick to tick —
+        the direct twin of _verticalVelocity)
+                      │
+                      ▼
+     core/AvatarMovementSimulation.js
+       resolveMovementSpeed(...) when
+       acceleration > 0, else an instant
+       jump to the target (WALK's own,
+       byte-for-byte unchanged behavior)
+                      │
+                      ▼
+                actual movement
+```
+
+**The integration seam lives in `core/AvatarMovementSimulation.js`, not
+`application/AvatarMovementController.js`.** This was the one real design
+choice this milestone had to make. `simulateAvatarMovement()` already
+owns the one true "target speed a base speed plus running implies"
+computation (`RUN_SPEED_MULTIPLIER`, since 0.9.86) — teaching the
+controller a second, duplicate copy of that arithmetic merely to
+pre-multiply a target before handing it to
+`core/AvatarMovementAccelerationSimulation.js#resolveMovementSpeed()`
+would itself be exactly the kind of redundant reinvention this
+codebase's own architecture consistently refuses (see
+`tests/AvatarVehicleMovementSpeedIntegration.test.js`'s own long-standing
+architectural sweep, which forbids the controller from ever hardcoding a
+"double the speed" multiplication of its own). So `simulateAvatarMovement()`
+gains two new, optional, bare-number parameters — `acceleration` and
+`currentMovementSpeed` — the direct structural twins of `movementSpeed`
+before them: computes `targetMovementSpeed` exactly as it always has
+(`forwardAxis * (running ? baseSpeed * RUN_SPEED_MULTIPLIER : baseSpeed)`),
+then, only when `acceleration` is a genuine positive rate, calls
+`resolveMovementSpeed({ currentSpeed: currentMovementSpeed, targetSpeed,
+acceleration, deltaTime })` to close the gap by at most one tick's worth
+of rate, and returns the result as a new `currentMovementSpeed` field —
+the direct structural twin of `verticalVelocity` in the same result
+object. Omitted, non-finite, or non-positive `acceleration` (WALK's own
+resolved rate is always exactly `0` — see
+`core/AvatarMovementAccelerationCapability.js`'s own "INERT ACCELERATION
+VALUE" — and every pre-0.9.91 caller that has never heard of
+acceleration at all) degrades to the target verbatim: the exact
+`forwardAxis * speed` formula this file has computed since 0.2.36,
+byte-for-byte.
+
+**`application/AvatarMovementController.js` gains one new piece of
+transient state, `_currentMovementSpeed`, and one new resolution seam,
+`_resolvedAcceleration()`.** The direct structural twins of
+`_verticalVelocity` and `_resolvedMovementSpeed()`/`_resolvedCollisionRadius()`/
+`_resolvedMovementDirections()` respectively — read in exactly one
+place, `tick()`'s own call into `simulateAvatarMovement()`, and written
+back from that same call's own returned `currentMovementSpeed`.
+`_resolvedAcceleration()` returns `this._movementCapability.acceleration.acceleration`
+(a bare number) or `undefined` — it never reads `.kind`, and never
+imports `AvatarMovementAccelerationKind` or
+`core/AvatarMovementAccelerationSimulation.js` at all:
+`AvatarMovementAccelerationCapability`'s own constructor already
+guarantees `INSTANT`'s rate is always exactly `0` and `RATE_LIMITED`'s is
+always strictly positive, so the bare rate alone already carries the
+distinction `simulateAvatarMovement()` needs. The controller still has
+no `AvatarMovementAccelerationKind`, `BICYCLE`, `MOTORCYCLE`, `CAR`, or
+`DRONE` literal anywhere in its own code — it reads one more generic
+number off a resolved capability, exactly as every prior integration
+already does.
+
+**A capability CHANGE resets `_currentMovementSpeed` to `0`; the SAME
+capability re-applied every frame never does.** `setMovementCapability()`
+compares the newly-resolved capability against the current one by
+IDENTITY, not field equality — safe because
+`resolveAvatarVehicleMovementCapability()` (0.9.84) already returns the
+literal same frozen instance for the same `VehicleType`, so
+`WorldNavigationSession`'s own every-frame re-application of an
+UNCHANGED capability (0.9.85) is a no-op here too. A genuine mount,
+dismount, or (once a future milestone makes it possible) vehicle-to-
+vehicle switch resets to `0` — "CAR at +12 -> dismount -> WALK at +12"
+and "BICYCLE at +5 -> mount motorcycle -> motorcycle starts at +5" are
+exactly the outcomes this reset exists to prevent, per this milestone's
+own brief.
+
+**Passes through zero; never jumps a positive target directly to a
+negative one, or vice versa.** `_currentMovementSpeed` is a single
+SIGNED number — forward positive, backward negative — closing toward
+whichever signed `targetMovementSpeed` the currently-held input (and the
+active capability's own `movementDirections` gating, from 0.9.89)
+implies. Reversing direction while cruising forward does not invent a
+second "reverse" state or a separate deceleration rate: the SAME
+`acceleration` rate governs closing the gap regardless of which
+direction it is closed from (see
+`core/AvatarMovementAccelerationSimulation.js`'s own 0.9.90 header, "the
+SAME `acceleration` rate governs closing the gap ... until a future
+milestone gives braking its own ... number") — a car moving forward at
+full speed that has the wheel yanked toward reverse smoothly decelerates
+through zero and then accelerates backward, never teleporting straight
+to reverse. This is a free byproduct of feeding a SIGNED target and a
+SIGNED current speed through the SAME 0.9.90 math, not a new mechanism
+this milestone had to build.
+
+**WALK is byte-for-byte unchanged.** WALK's own resolved `acceleration.acceleration`
+is always exactly `0` — `simulateAvatarMovement()`'s own new rate-limiting
+branch is a no-op every single tick, regardless of `currentMovementSpeed`,
+so ordinary on-foot movement reaches its target speed immediately, exactly
+as it always has, all the way back to 0.2.36.
+`tests/AvatarVehicleAccelerationStateIntegration.test.js`'s own Section A
+proves this directly, byte-identical position sequences included.
+BICYCLE/MOTORCYCLE/CAR, by contrast, now genuinely ramp: each reaches its
+own `movementSpeed` only after accelerating at its own rate — visibly
+different, per-vehicle, ramp shapes (see 0.9.90's own "acceleration is an
+independent dimension from movementSpeed": MOTORCYCLE's faster
+acceleration can put it ahead of CAR over a short window despite CAR's
+higher eventual top speed, even though CAR still wins once both are given
+time to reach cruise).
+
+**The run multiplier still only ever touches the TARGET speed, never the
+acceleration RATE.** `_resolvedRunning()` (0.9.69) is completely
+untouched; what changed, exactly as it did in 0.9.86, is one layer down
+inside `simulateAvatarMovement()`'s own existing `speed = running ?
+baseSpeed * RUN_SPEED_MULTIPLIER : baseSpeed` line — now feeding the
+acceleration-aware target instead of driving `stepDistance` directly.
+CAR's own walk target is 12, its run target is 24, and its acceleration
+stays exactly 4 either way — never a doubled "run acceleration" of 8.
+
+**Existing regression tests that assumed an INSTANT vehicle needed
+updating, not the production code.** Several pre-0.9.90 suites
+(`tests/AvatarVehicleMovementSpeedIntegration.test.js`,
+`tests/AvatarPerVehicleGroundSpeedIntegration.test.js`,
+`tests/AvatarVehicleMovementCapabilityIntegration.test.js`,
+`tests/AvatarVehicleMovementDirectionIntegration.test.js`) compared total
+distance covered by a vehicle, from rest, over a short fixed burst —
+implicitly assuming a vehicle reaches its own `movementSpeed` in a single
+tick, exactly the assumption this milestone exists to correct. Each is
+updated in place, with an inline `0.9.91 note:` explaining why, using one
+of two techniques depending on what the assertion actually needed to
+prove: a longer window (enough for every vehicle involved to have
+genuinely reached its own cruise speed, when the claim was about the
+EVENTUAL/terminal relationship — e.g. 0.9.87's own strict
+BICYCLE < MOTORCYCLE < CAR ordering, which still holds once acceleration
+is no longer the deciding factor), or a warm-up-then-measure split (drive
+and discard enough ticks to reach cruise, THEN measure a further burst —
+restoring an EXACT ratio assertion, since `resolveMovementSpeed()`'s own
+`currentSpeed === targetSpeed` case is an exact no-op every tick once
+cruising). A few forward/backward comparisons that reused ONE controller
+sequentially for both directions were split into two fresh controllers
+instead, since a controller that just spent a window accelerating
+forward legitimately carries real residual speed into whatever comes
+next — exactly this milestone's own "passes through zero" behavior,
+just not what those particular assertions were about. No assertion's
+underlying CLAIM changed; several needed more elapsed time, or a cleaner
+measurement window, to still be true.
+
+## What this milestone deliberately does NOT do
+
+Braking/deceleration as its own rate, coasting, friction, drag, turning
+radius, vehicle orientation, animation, camera behavior, terrain- or
+slope-dependent acceleration, vehicle-to-vehicle collision, drone flight,
+and a second, per-vehicle `VehicleMovementController` —
+`application/AvatarMovementController.js` remains the one, single
+movement executor, exactly as every prior integration milestone already
+established.
+
+Tests: a new dedicated suite,
+`tests/AvatarVehicleAccelerationStateIntegration.test.js`, covers WALK
+regression (byte-identical positions, an INSTANT first tick, no residual
+coasting on release), BICYCLE/MOTORCYCLE/CAR ramps (each tick's speed
+checked against the exact `resolveMovementSpeed()` recurrence, strictly
+increasing, landing exactly on `movementSpeed` and staying there),
+acceleration independence (MOTORCYCLE ahead of CAR over a short window,
+CAR ahead over a long one), releasing movement (speed decays toward zero
+following the same recurrence, animation goes IDLE immediately even
+while still visibly coasting), direction reversal (passes through
+exactly zero, never jumps straight from positive to negative), the run
+multiplier (an identical first tick whether running or not, an exact 2x
+ratio once both are cruising), capability switching (mounting,
+dismounting, and switching through an intermediate WALK stop all reset
+transient speed to zero; re-applying the SAME resolved capability every
+frame never does), AERIAL_VEHICLE/DRONE (still fully blocked, mounting it
+mid-walk still stops movement outright), and an architectural sweep
+(the controller never reads `.kind`, never imports the pure math file
+directly, never gains a second vehicle-specific controller;
+`core/AvatarMovementSimulation.js` now does import and call
+`resolveMovementSpeed()`; `core/AvatarVehicleMovementCapability.js`
+still carries no transient state of its own).
+`tests/AvatarMovementAccelerationSimulation.test.js`'s own architectural
+sweep is updated in place: its own header had named "a future milestone"
+as the one that would wire `resolveMovementSpeed()` in — this is that
+milestone, so its assertion now checks (code only, comments stripped)
+that `core/AvatarMovementSimulation.js` DOES reference it, while
+`application/AvatarMovementController.js` still does not, directly.
+
+Next: 0.9.92 gives braking/deceleration its own explicit semantics
+(currently the same single `acceleration` rate governs closing the gap
+from either direction — see `core/AvatarMovementAccelerationSimulation.js`'s
+own 0.9.90 header), followed by steering/handling (0.9.93) and vehicle
+orientation (0.9.94), letting the movement-state composition milestone
+(0.9.95) eventually tie speed, direction, and orientation together —
+but only once actual runtime behavior tells us which is needed first.
