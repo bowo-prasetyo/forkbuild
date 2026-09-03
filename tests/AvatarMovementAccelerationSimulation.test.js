@@ -22,7 +22,14 @@ import { resolveMovementSpeed } from '../core/AvatarMovementAccelerationSimulati
 //              non-finite inputs
 //   Section G: determinism — identical inputs always produce identical
 //              outputs
-//   Section H: architectural regression — no VehicleType/VehiclePresence/
+//   Section H: (0.9.92) braking — an explicit brakingRequested tick uses
+//              `braking` instead of `acceleration`, with the identical
+//              never-overshoots clamp
+//   Section I: (0.9.92) brakingRequested/braking edge cases — anything
+//              but the literal `true`, an invalid `braking` while
+//              requested, reversal through zero without a direct sign
+//              flip
+//   Section J: architectural regression — no VehicleType/VehiclePresence/
 //              AvatarVehicleMount/WorldNavigationSession/capability-
 //              vocabulary import anywhere in this file's own source
 //
@@ -31,7 +38,7 @@ import { resolveMovementSpeed } from '../core/AvatarMovementAccelerationSimulati
 // speed one simulation tick later," never "which vehicle, if any, is
 // involved" or "should a rate even apply here" — see
 // core/AvatarMovementAccelerationSimulation.js's own header. See
-// docs/Roadmap.md, 0.9.90.
+// docs/Roadmap.md, 0.9.90 and 0.9.92.
 
 function assert(condition, message) {
     if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
@@ -124,7 +131,73 @@ async function runTests() {
     }
 
     // -------------------------------------------------------------
-    // Section H — architectural regression
+    // Section H — braking (0.9.92)
+    // -------------------------------------------------------------
+    {
+        const first = resolveMovementSpeed({ currentSpeed: 12, targetSpeed: 0, acceleration: 4, braking: 8, brakingRequested: true, deltaTime: 1 });
+        assert(first === 4, '26. current=12, target=0, acceleration=4, braking=8, brakingRequested=true, dt=1 -> 4 — braking uses ITS OWN rate, never acceleration\'s, once explicitly requested');
+
+        const second = resolveMovementSpeed({ currentSpeed: first, targetSpeed: 0, acceleration: 4, braking: 8, brakingRequested: true, deltaTime: 1 });
+        assert(second === 0, '27. current=4, target=0, braking=8, dt=1 -> 0, clamped exactly at the target rather than overshooting to -4 — the identical never-overshoots guarantee acceleration already has');
+
+        // The SAME current/target/dt, WITHOUT brakingRequested, uses
+        // acceleration instead — proof braking is never silently used
+        // merely because a `braking` value happens to be present.
+        const coasting = resolveMovementSpeed({ currentSpeed: 12, targetSpeed: 0, acceleration: 4, braking: 8, deltaTime: 1 });
+        assert(coasting === 8, '28. the identical inputs, but brakingRequested omitted, close the gap at the ACCELERATION rate (4) instead — braking never applies unless explicitly requested');
+
+        // Braking also governs a rising target (however unusual a
+        // scenario, e.g. easing off reverse toward a less-negative
+        // target while still holding the brake) — brakingRequested
+        // alone decides which rate applies, never the direction the gap
+        // is closed from.
+        const risingWhileBraking = resolveMovementSpeed({ currentSpeed: -12, targetSpeed: 0, acceleration: 4, braking: 8, brakingRequested: true, deltaTime: 1 });
+        assert(risingWhileBraking === -4, '29. current=-12, target=0, braking=8, brakingRequested=true, dt=1 -> -4 — braking governs closing the gap from below too, exactly as acceleration always has (0.9.90)');
+    }
+
+    // -------------------------------------------------------------
+    // Section I — brakingRequested/braking edge cases (0.9.92)
+    // -------------------------------------------------------------
+    {
+        assert(resolveMovementSpeed({ currentSpeed: 12, targetSpeed: 0, acceleration: 4, braking: 8, brakingRequested: false, deltaTime: 1 }) === 8,
+            '30. brakingRequested=false explicitly uses acceleration, identical to omitting it altogether');
+        assert(resolveMovementSpeed({ currentSpeed: 12, targetSpeed: 0, acceleration: 4, braking: 8, brakingRequested: 1, deltaTime: 1 }) === 8,
+            '31. a truthy-but-not-literally-true brakingRequested (1) is sanitized to "not requested" — never loosely coerced — and falls through to acceleration');
+        assert(resolveMovementSpeed({ currentSpeed: 12, targetSpeed: 0, acceleration: 4, braking: 8, brakingRequested: 'yes', deltaTime: 1 }) === 8,
+            '32. a truthy-but-not-literally-true brakingRequested (a string) likewise falls through to acceleration');
+        assert(resolveMovementSpeed({ currentSpeed: 12, targetSpeed: 0, acceleration: 4, brakingRequested: true, deltaTime: 1 }) === 12,
+            '33. brakingRequested=true with braking omitted (undefined) degrades to "no rate applies" — current speed unchanged this tick, never a silent fall back to acceleration instead');
+        assert(resolveMovementSpeed({ currentSpeed: 12, targetSpeed: 0, acceleration: 4, braking: 0, brakingRequested: true, deltaTime: 1 }) === 12,
+            '34. brakingRequested=true with braking=0 likewise degrades to "no rate applies" — 0 never means "instant" here any more than acceleration=0 already does (0.9.90)');
+        assert(resolveMovementSpeed({ currentSpeed: 12, targetSpeed: 0, acceleration: 4, braking: -8, brakingRequested: true, deltaTime: 1 }) === 12,
+            '35. brakingRequested=true with a negative braking is sanitized to "no rate applies," the identical treatment a negative acceleration already gets (0.9.90)');
+        assert(resolveMovementSpeed({ currentSpeed: 12, targetSpeed: 0, acceleration: 4, braking: NaN, brakingRequested: true, deltaTime: 1 }) === 12,
+            '36. brakingRequested=true with a NaN braking is sanitized to "no rate applies"');
+
+        // Reversal through exactly zero while braking is requested the
+        // whole time — never a direct sign flip, the identical
+        // "clamped at the target" guarantee proven for acceleration in
+        // Section B, now proven for braking too.
+        let current = 12;
+        const target = -12;
+        const speeds = [];
+        for (let i = 0; i < 4; i++) {
+            current = resolveMovementSpeed({ currentSpeed: current, targetSpeed: target, acceleration: 4, braking: 8, brakingRequested: true, deltaTime: 1 });
+            speeds.push(current);
+        }
+        assert(JSON.stringify(speeds) === JSON.stringify([4, -4, -12, -12]),
+            '37. current=12 -> target=-12 with braking=8 requested the whole time visits +4, -4, and exactly -12 — passing through the gap at the braking rate, never jumping straight from positive to negative');
+
+        // Determinism — identical inputs, braking included, always
+        // produce the identical result.
+        for (let i = 0; i < 5; i++) {
+            const result = resolveMovementSpeed({ currentSpeed: 9, targetSpeed: 0, acceleration: 3, braking: 7, brakingRequested: true, deltaTime: 0.4 });
+            assert(result === 9 - 7 * 0.4, `38.${i} identical inputs, braking included, always produce the identical result — no hidden clock, no Math.random`);
+        }
+    }
+
+    // -------------------------------------------------------------
+    // Section J — architectural regression
     // -------------------------------------------------------------
     {
         const sourceUrl = new URL('../core/AvatarMovementAccelerationSimulation.js', import.meta.url);
@@ -139,23 +212,25 @@ async function runTests() {
             'AvatarVehicleInteractionController', 'AvatarVehicleMount',
             'VehiclePlacement', 'VehiclePresence', 'VehicleType',
             'AvatarVehicleMovementCapability', 'AvatarMovementAccelerationCapability',
+            'AvatarMovementBrakingCapability',
             'AvatarMovementDirectionCapability', 'AvatarMovementState', 'AvatarPresence',
             'terrain', 'Terrain', 'keyboard', 'Keyboard', 'gamepad', 'Gamepad',
             'THREE', 'from \'three\'', 'Renderer', 'render',
             'animation', 'Animation', 'camera', 'Camera',
             'mass', 'physics', 'collision', 'Collision',
             'turnAxis', 'turning', 'steering', 'left', 'right',
+            'coasting', 'friction', 'drag', 'momentum',
             'Math.random', 'Date.now',
             'localStorage', 'StorageProvider', 'fetch(', 'WebSocket'
         ];
         for (const term of forbidden) {
-            assert(!codeOnly.includes(term), `26. core/AvatarMovementAccelerationSimulation.js's own code never references "${term}" — pure rate math only, no vehicle/capability/runtime/rendering/collision knowledge whatsoever`);
+            assert(!codeOnly.includes(term), `39. core/AvatarMovementAccelerationSimulation.js's own code never references "${term}" — pure rate math only, no vehicle/capability/runtime/rendering/collision knowledge whatsoever`);
         }
 
         const exportsModule = await import('../core/AvatarMovementAccelerationSimulation.js');
         const exportedNames = Object.keys(exportsModule).sort();
         assert(JSON.stringify(exportedNames) === JSON.stringify(['resolveMovementSpeed']),
-            '27. core/AvatarMovementAccelerationSimulation.js exports exactly the one resolution function — nothing else');
+            '40. core/AvatarMovementAccelerationSimulation.js exports exactly the one resolution function — nothing else (braking folded into the SAME function, per this milestone\'s own "ONE speed-resolution algorithm" brief — see 0.9.92)');
     }
     {
         // SUPERSEDED BY 0.9.91 — Vehicle Acceleration State Integration
@@ -185,11 +260,11 @@ async function runTests() {
             .filter((line) => !line.trim().startsWith('//'))
             .join('\n');
         assert(!controllerCodeOnly.includes('AvatarMovementAccelerationSimulation') && !controllerCodeOnly.includes('resolveMovementSpeed'),
-            '28. (as of 0.9.91) application/AvatarMovementController.js\'s own CODE (comments aside) still never imports this file or calls resolveMovementSpeed() directly — it only ever passes bare numbers to core/AvatarMovementSimulation.js, which is the one place this seam is actually wired in');
+            '41. (as of 0.9.91) application/AvatarMovementController.js\'s own CODE (comments aside) still never imports this file or calls resolveMovementSpeed() directly — it only ever passes bare numbers to core/AvatarMovementSimulation.js, which is the one place this seam is actually wired in');
 
         const simulationSource = await readFile(new URL('../core/AvatarMovementSimulation.js', import.meta.url), 'utf8');
         assert(simulationSource.includes('AvatarMovementAccelerationSimulation') && simulationSource.includes('resolveMovementSpeed'),
-            '29. (as of 0.9.91) core/AvatarMovementSimulation.js now DOES reference this file and calls resolveMovementSpeed() — this is the "future milestone" this suite\'s own header originally named as wiring this seam in');
+            '42. (as of 0.9.91) core/AvatarMovementSimulation.js now DOES reference this file and calls resolveMovementSpeed() — this is the "future milestone" this suite\'s own header originally named as wiring this seam in');
     }
 
     console.log('✅ All Vehicle Acceleration Simulation tests passed.');

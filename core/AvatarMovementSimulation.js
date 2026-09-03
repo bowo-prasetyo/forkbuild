@@ -138,6 +138,23 @@ const MAX_Y = 8; // world units — "reasonable vertical bounds" ABOVE whatever 
 // `AvatarMovementAccelerationCapability`'s own constructor already
 // enforces (INSTANT's rate is always exactly `0`; RATE_LIMITED's is
 // always strictly positive) IS the branch.
+//
+// 0.9.92 — Vehicle Braking and Coasting Semantics. This is the ONE place
+// `core/AvatarMovementAccelerationSimulation.js#resolveMovementSpeed()`'s
+// own new `braking`/`brakingRequested` parameters (see that file's own
+// 0.9.92 header) are actually threaded through — this file already owns
+// the one call site 0.9.91 built, so extending it here, rather than
+// giving braking a parallel call site of its own, is what keeps this
+// "ONE speed-resolution algorithm" (this milestone's own brief) rather
+// than two. COASTING gets no new code at all: releasing a movement
+// request already drives `forwardAxis` (and therefore
+// `targetMovementSpeed`) to 0 exactly as it always has, and with
+// `movementState.brakingRequested` false (the default —
+// core/AvatarMovementState.js's own 0.9.92 header), that lower target is
+// closed using `acceleration` — the SAME mechanism a rising target
+// already used, byte-for-byte unchanged from 0.9.91. See the function
+// body's own 0.9.92 comment for exactly how `effectiveRate` decides
+// whether this tick is rate-limited at all.
 export function simulateAvatarMovement({
     position,
     rotationY = 0,
@@ -148,6 +165,7 @@ export function simulateAvatarMovement({
     groundHeight = GROUND_Y,
     movementSpeed,
     acceleration,
+    braking,
     currentMovementSpeed
 }) {
     const floorY = Number.isFinite(groundHeight) ? groundHeight : GROUND_Y;
@@ -186,11 +204,33 @@ export function simulateAvatarMovement({
     // for why acceleration <= 0 could never mean "no change this tick"
     // here the way it does inside `resolveMovementSpeed()` itself — an
     // INSTANT capability must still reach its target, never freeze.
-    const resolvedMovementSpeed = Number.isFinite(acceleration) && acceleration > 0
+    // 0.9.92 — Vehicle Braking and Coasting Semantics. `braking` (world
+    // units/second^2, optional — a bare number, exactly like
+    // `acceleration`) is the one new parameter this milestone adds here;
+    // `movementState.brakingRequested` (core/AvatarMovementState.js's own
+    // 0.9.92 fact) is the other. `effectiveRate` mirrors
+    // resolveMovementSpeed()'s own internal rate selection (braking when
+    // explicitly requested, acceleration otherwise) purely to decide
+    // WHETHER this tick is rate-limited AT ALL — the identical role the
+    // bare `acceleration > 0` check already played here since 0.9.91 (see
+    // that milestone's own comment, immediately above): a tick with no
+    // real rate to apply (WALK's own INSTANT `acceleration`/`braking`,
+    // both always exactly 0) still needs its instant jump-to-target, not
+    // a frozen no-op — so it skips resolveMovementSpeed() entirely rather
+    // than calling it with a rate that would just resolve to "no change."
+    // resolveMovementSpeed() itself independently re-sanitizes both
+    // `acceleration` and `braking` when it IS called (see that function's
+    // own 0.9.92 header) — this gate and that function agreeing on which
+    // rate governs is what keeps this a single seam, not two.
+    const requestingBrake = Boolean(movementState.brakingRequested);
+    const effectiveRate = requestingBrake ? braking : acceleration;
+    const resolvedMovementSpeed = Number.isFinite(effectiveRate) && effectiveRate > 0
         ? resolveMovementSpeed({
             currentSpeed: Number.isFinite(currentMovementSpeed) ? currentMovementSpeed : 0,
             targetSpeed: targetMovementSpeed,
             acceleration,
+            braking,
+            brakingRequested: requestingBrake,
             deltaTime: dt
         })
         : targetMovementSpeed;
