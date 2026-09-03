@@ -34,6 +34,8 @@ import { resolveAvatarVehicleMovementCapability } from '../core/AvatarVehicleMov
 import { deriveAvatarContinuousMovementInputEvent } from '../core/AvatarContinuousMovementInputAdapter.js';
 import { deriveAvatarContinuousMovementIntent } from '../core/AvatarContinuousMovementIntent.js';
 import { deriveAvatarContinuousMovementMode } from '../core/AvatarContinuousMovementMode.js';
+import { deriveAvatarVehicleBrakingInputFact } from '../core/AvatarVehicleBrakingInputAdapter.js';
+import { AvatarVehicleBrakingIntent, deriveAvatarVehicleBrakingIntent } from '../core/AvatarVehicleBrakingIntent.js';
 import { DEFAULT_MAX_STEP_HEIGHT } from '../core/BrickWalkability.js';
 import { PresenceSyncService } from './PresenceSyncService.js';
 import { LocalPresenceStore } from './LocalPresenceStore.js';
@@ -133,6 +135,18 @@ const PRESENCE_HEARTBEAT_INTERVAL_MS = 2000;
 // camera position; see exploreHere/whatsHere below.
 const DEFAULT_EXPLORE_RADIUS = 25;
 const NEARBY_RADIUS = 5;
+// 0.9.96 — the ONE physical key that produces a vehicle braking
+// request — see `_processVehicleBrakingInput()`'s own header, below,
+// for why Control is the key this milestone picks: every other "hold
+// it down" key already means something (W/A/S/D the movement axes
+// themselves, Shift running, Space jumping — still live for a mounted
+// ground vehicle, see core/AvatarMovementSimulation.js's own
+// unconditional jump handling — Alt the continuous-movement activation
+// chord, 'E' mount/dismount), and Control is the one remaining
+// modifier-row key, reachable by the same hand already resting on
+// WASD, with no existing meaning anywhere in this file or its sibling
+// controllers.
+const VEHICLE_BRAKE_KEY = 'control';
 // 0.2.43 — the default radius getNearbyAvatars() searches within when
 // no radius is given. Deliberately its OWN constant, not a reuse of
 // NEARBY_RADIUS above: that one answers "is a document essentially at
@@ -1695,6 +1709,22 @@ export class WorldNavigationSession {
         if (!this._avatarControlModeActive && this._avatarVehicleInteractionController) {
             this._avatarVehicleInteractionController.releaseAll();
         }
+        // 0.9.96 — the direct structural twin of the two releases above,
+        // for the brake key. UNLIKE `_continuousMovementIntent`/
+        // `_continuousMovementMode` (deliberately left untouched here —
+        // see this method's own 0.9.66/0.9.69 comments), a braking
+        // request is a HELD-KEY fact, not a persistent toggle: it has no
+        // mechanism of its own to ever decay back to NONE once this
+        // session forgets whether Control is physically down, so turning
+        // Avatar Control Mode off must force it back to NONE explicitly,
+        // exactly like `_keys.jumpHeld` inside `releaseAll()` itself —
+        // otherwise a Control key stuck down by a lost keyup (the same
+        // failure this whole method exists to guard against) would leave
+        // the avatar braking forever, even after the mode is switched
+        // back on.
+        if (!this._avatarControlModeActive && this._avatarMovementController) {
+            this._avatarMovementController.setVehicleBrakingIntent(AvatarVehicleBrakingIntent.NONE);
+        }
     }
 
     // 0.3.2 — Avatar Control Mode is persistent LOCAL INTERACTION STATE,
@@ -1719,6 +1749,14 @@ export class WorldNavigationSession {
         // extended to the interaction key.
         if (this._avatarVehicleInteractionController) {
             this._avatarVehicleInteractionController.releaseAll();
+        }
+        // 0.9.96 — same "release keys without touching the mode" seam,
+        // extended to the brake key — see setAvatarControlMode()'s own
+        // 0.9.96 comment for why braking needs an explicit forced reset
+        // here that `_continuousMovementIntent`/`_continuousMovementMode`
+        // deliberately do not.
+        if (this._avatarMovementController) {
+            this._avatarMovementController.setVehicleBrakingIntent(AvatarVehicleBrakingIntent.NONE);
         }
     }
 
@@ -1753,7 +1791,12 @@ export class WorldNavigationSession {
         const vehicleInteractionConsumed = this._avatarVehicleInteractionController
             ? this._avatarVehicleInteractionController.keyDown(key)
             : false;
-        return movementConsumed || vehicleInteractionConsumed;
+        // 0.9.96 — same "tried independently" posture as the interaction
+        // key above: Control is not a movement key either, so neither
+        // controller above ever recognizes it — see
+        // `_processVehicleBrakingInput()`'s own header, below.
+        const vehicleBrakingConsumed = this._processVehicleBrakingInput(key, 'keydown');
+        return movementConsumed || vehicleInteractionConsumed || vehicleBrakingConsumed;
     }
 
     avatarKeyUp(key) {
@@ -1782,7 +1825,13 @@ export class WorldNavigationSession {
         const vehicleInteractionConsumed = this._avatarVehicleInteractionController
             ? this._avatarVehicleInteractionController.keyUp(key)
             : false;
-        return movementConsumed || vehicleInteractionConsumed;
+        // 0.9.96 — same "always forwarded" posture as movement's/
+        // interaction's own keyUp above, for the identical reason: a
+        // Control release that arrives after control mode was already
+        // switched off must still clear the braking request rather than
+        // leaving it stale.
+        const vehicleBrakingConsumed = this._processVehicleBrakingInput(key, 'keyup');
+        return movementConsumed || vehicleInteractionConsumed || vehicleBrakingConsumed;
     }
 
     // 0.9.66 — Continuous Movement Controller Integration. The ONE
@@ -1846,6 +1895,86 @@ export class WorldNavigationSession {
                 })
             );
         }
+    }
+
+    // 0.9.96 — Vehicle Braking Input Binding. The ONE seam that decides
+    // WHICH physical key finally calls
+    // `_avatarMovementController.setVehicleBrakingIntent()` in real
+    // play — the direct counterpart to 0.9.65/0.9.66's own keyboard
+    // wiring for continuous movement above, and the missing half 0.9.95
+    // deliberately left for a later milestone (see
+    // core/AvatarVehicleBrakingInputAdapter.js's own header: "deciding
+    // WHICH physical control feeds that adapter is left to a
+    // still-later milestone" — this is that milestone).
+    //
+    // See VEHICLE_BRAKE_KEY's own comment, above, for why Control is
+    // the key this milestone picks.
+    //
+    // A THIN TRANSLATION, NOT A NEW DECISION LAYER. This method's own
+    // job is exactly what core/AvatarVehicleBrakingInputAdapter.js's own
+    // header names as still missing: turning Control's own down/up
+    // transition into the CONTROL-shaped `type: 'brakedown'/'brakeup'`
+    // that adapter already expects. Every actual decision after that —
+    // is this a brake request, what BRAKE means, whether it ever reaches
+    // simulation — is made entirely inside
+    // deriveAvatarVehicleBrakingInputFact(),
+    // deriveAvatarVehicleBrakingIntent(), and
+    // AvatarMovementController#_resolvedBrakingRequested()/
+    // core/AvatarMovementSimulation.js, exactly as
+    // core/AvatarVehicleBrakingIntent.js's own header insists: this
+    // method has no idea what braking eventually does to speed, only
+    // that a request either is or is not being made right now. Nothing
+    // here changes braking's own vocabulary or simulation semantics —
+    // this is purely the wire between an existing key and an existing,
+    // already-complete intent chain.
+    //
+    // STATELESS ACROSS CALLS, UNLIKE `_processContinuousMovementInput()`'s
+    // OWN `_altDown`/`_shiftDown`. core/AvatarVehicleBrakingInputAdapter.js's
+    // own header is explicit that a brake control's down/up transition is
+    // already the complete fact it needs, in the same call that reports
+    // it — there is no chord to resolve, so this method carries no
+    // caller-owned hold bit of its own, mirroring that adapter's own
+    // stateless design. Holding Control therefore reports BRAKE on every
+    // repeated keydown a browser's own key-repeat fires — never a toggle
+    // — and releasing it reports NONE on the very next call, the exact
+    // level-driven shape core/AvatarVehicleBrakingIntent.js's own header
+    // requires.
+    //
+    // NEVER VEHICLE-AWARE, NEVER MOVEMENT-AWARE. This method reads only
+    // `key`/`type` and calls `setVehicleBrakingIntent()` — it never
+    // reads `movementCapability()`, never checks `avatarVehicleMount()`,
+    // and never asks whether the avatar is even moving. Braking while
+    // unmounted, while idle, or while walking on foot is not this
+    // method's problem to prevent — exactly the same "not this file's
+    // problem" boundary core/AvatarVehicleBrakingIntent.js's own header
+    // already draws for itself.
+    //
+    // A KEY THAT DOES NOT MATCH LEAVES BRAKING ENTIRELY ALONE. Unlike
+    // Alt/Shift (which `_processContinuousMovementInput()` must still
+    // silently absorb to keep its own hold bits current), an unrelated
+    // key here has no cross-call state to update — this method simply
+    // returns `false` (not consumed) and calls nothing.
+    //
+    // Deliberately excluded, matching this milestone's own brief: any
+    // change to core/AvatarVehicleBrakingIntent.js or
+    // core/AvatarVehicleBrakingInputAdapter.js (both remain exactly as
+    // 0.9.95 left them), a second brake control (mouse button, gamepad
+    // trigger), brake-overrides-throttle behavior, a handbrake, and any
+    // vehicle-specific branching — this method's own body never mentions
+    // a vehicle type. See docs/Roadmap.md, 0.9.96.
+    _processVehicleBrakingInput(key, type) {
+        if (String(key || '').toLowerCase() !== VEHICLE_BRAKE_KEY) {
+            return false;
+        }
+        if (this._avatarMovementController) {
+            const { brakeRequested } = deriveAvatarVehicleBrakingInputFact({
+                type: type === 'keyup' ? 'brakeup' : 'brakedown'
+            });
+            this._avatarMovementController.setVehicleBrakingIntent(
+                deriveAvatarVehicleBrakingIntent({ brakeRequested })
+            );
+        }
+        return true;
     }
 
     // Whether the camera currently follows the local avatar's
