@@ -15,12 +15,30 @@
 // vector, because the simulation needs to turn-then-move (rotate
 // facing first, then step along the NEW facing) to read as an
 // ordinary third-person walk rather than strafing.
+//
+// 0.9.92 — Vehicle Braking and Coasting Semantics. `brakingRequested`
+// (a boolean, default `false`) is the ONE new fact this milestone adds:
+// the direct structural twin of `jumpRequested` — a snapshot of INTENT
+// ("is the player asking to brake, right now"), never itself a speed, a
+// rate, or a vehicle. See core/AvatarMovementSimulation.js's own 0.9.92
+// header for where this fact is actually consulted, and
+// core/AvatarMovementAccelerationSimulation.js's own 0.9.92 header for
+// what it changes about how speed is resolved.
+//
+// DELIBERATELY NOT BOUND TO ANY KEY, AS OF 0.9.92. Unlike `jumpRequested`
+// (Space, wired since 0.2.36), nothing in application/AvatarMovementController.js
+// ever sets `brakingRequested` true — see that file's own header for why
+// deciding WHICH user action produces this fact is deliberately left to
+// a future input milestone. Constructing an `AvatarMovementState` with
+// `brakingRequested: true` directly (as this milestone's own tests do)
+// is, for now, the only way this fact is ever true.
 export class AvatarMovementState {
-    constructor({ forwardAxis = 0, turnAxis = 0, running = false, jumpRequested = false } = {}) {
+    constructor({ forwardAxis = 0, turnAxis = 0, running = false, jumpRequested = false, brakingRequested = false } = {}) {
         this.forwardAxis = clampAxis(forwardAxis);
         this.turnAxis = clampAxis(turnAxis);
         this.running = Boolean(running);
         this.jumpRequested = Boolean(jumpRequested);
+        this.brakingRequested = Boolean(brakingRequested);
     }
 
     // Whether this snapshot represents any player-driven locomotion

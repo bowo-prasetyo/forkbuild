@@ -390,7 +390,8 @@ async function runTests() {
             forwardOnly.movementKind, forwardOnly.vehicleType, forwardOnly.supported,
             forwardOnly.movementSpeed, forwardOnly.collisionRadius,
             new AvatarMovementDirectionCapability(true, false),
-            forwardOnly.acceleration
+            forwardOnly.acceleration,
+            forwardOnly.braking
         );
 
         // 0.9.91 note: forward and the blocked-backward check now use TWO

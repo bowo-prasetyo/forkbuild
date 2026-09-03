@@ -452,6 +452,22 @@ import { AvatarMovementCapabilityKind, isValidAvatarVehicleMovementCapability } 
 // slope-dependent acceleration, vehicle-to-vehicle collision, drone
 // flight, and a second `VehicleMovementController` — this class remains
 // the one, single movement executor. See docs/Roadmap.md, 0.9.91.
+//
+// 0.9.92 — Vehicle Braking and Coasting Semantics. This class gains
+// exactly one new resolution seam, `_resolvedBraking()` (the direct
+// structural twin of `_resolvedAcceleration()`, immediately preceding
+// it below) — read in the same one place, `tick()`'s own call into
+// `simulateAvatarMovement()`, as a new `braking` argument. It gains NO
+// new caller-owned state, and no new key binding: `_currentMovementState()`
+// is completely untouched, so every `AvatarMovementState` this class
+// builds still carries `brakingRequested: false` (its own documented
+// default — core/AvatarMovementState.js's own 0.9.92 header), and real,
+// key-driven movement is therefore byte-for-byte unchanged by this
+// milestone, exactly as WALK's own instantaneous movement stayed
+// unchanged when 0.9.90 built the acceleration vocabulary a full
+// milestone before 0.9.91 ever consumed it. See this file's own
+// `_resolvedBraking()` header, below, for why that gap is deliberate
+// scope, not an oversight — see docs/Roadmap.md, 0.9.92.
 const EPSILON = 1e-6;
 
 export class AvatarMovementController {
@@ -692,6 +708,7 @@ export class AvatarMovementController {
             groundHeight: currentSupportHeight,
             movementSpeed: this._resolvedMovementSpeed(),
             acceleration: this._resolvedAcceleration(),
+            braking: this._resolvedBraking(),
             currentMovementSpeed: this._currentMovementSpeed
         });
         this._verticalVelocity = result.verticalVelocity;
@@ -941,6 +958,28 @@ export class AvatarMovementController {
     // `AvatarMovementAccelerationKind` literal anywhere in its own code.
     _resolvedAcceleration() {
         return this._movementCapability ? this._movementCapability.acceleration.acceleration : undefined;
+    }
+
+    // 0.9.92 — the braking-resolution seam this milestone adds: the
+    // CURRENT movement capability's own resolved `braking.braking` rate
+    // (a plain number — core/AvatarMovementBrakingCapability.js's own
+    // job to have already decided what it is), or `undefined` when
+    // `_movementCapability` is `null` — the identical "never set" state
+    // `_resolvedAcceleration()` already handles. The direct structural
+    // twin of `_resolvedAcceleration()` immediately above, down to never
+    // reading `.kind` for the identical reason. DELIBERATELY NOT PAIRED
+    // WITH ANY WAY TO SET `movementState.brakingRequested` true — this
+    // class still constructs every `AvatarMovementState` itself, in
+    // `_currentMovementState()` below, and that method passes no
+    // `brakingRequested` at all (defaulting to `false` — see
+    // core/AvatarMovementState.js's own 0.9.92 header) — so this seam
+    // reaches core/AvatarMovementSimulation.js#simulateAvatarMovement()
+    // every tick, but real, key-driven controller behavior is completely
+    // UNCHANGED by this milestone: braking never actually engages until
+    // a future input milestone decides which user action should set that
+    // fact, and wires it in here.
+    _resolvedBraking() {
+        return this._movementCapability ? this._movementCapability.braking.braking : undefined;
     }
 
     // 0.9.88 — the ONE collision-radius-resolution seam this milestone

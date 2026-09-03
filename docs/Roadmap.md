@@ -58035,3 +58035,193 @@ own 0.9.90 header), followed by steering/handling (0.9.93) and vehicle
 orientation (0.9.94), letting the movement-state composition milestone
 (0.9.95) eventually tie speed, direction, and orientation together —
 but only once actual runtime behavior tells us which is needed first.
+
+## 0.9.92 — Vehicle Braking and Coasting Semantics
+
+0.9.90/0.9.91 gave a movement capability an opinion about HOW QUICKLY it
+approaches a HIGHER target speed, and wired that into real, key-driven
+movement. Both milestones were explicit that a lower target — releasing
+a movement request, or reversing direction — closed at the exact SAME
+`acceleration` rate, and named the distinction this milestone draws as
+explicit future scope: "there is deliberately no separate
+braking/deceleration RATE anywhere in this file... until a future
+milestone gives braking its own, independently-tunable number." This
+milestone is that number, established as narrowly as possible:
+
+> Acceleration determines how quickly a vehicle approaches a requested
+> speed; braking determines what happens when the movement request
+> disappears or changes — coasting when no request is made, braking
+> when one is explicitly requested at a faster rate than the engine
+> alone would slow it.
+
+```
+AvatarVehicleMovementCapability
+├── movementKind
+├── supported
+├── movementSpeed        (0.9.86/0.9.87)
+├── collisionRadius       (0.9.88)
+├── movementDirections    (0.9.89)
+├── acceleration          (0.9.90)
+└── braking               (0.9.92)
+          │
+          ▼
+ AvatarMovementBrakingCapability
+      kind: INSTANT | RATE_LIMITED
+      braking: world units/second^2
+
+  resolveMovementSpeed({
+      currentSpeed, targetSpeed,
+      acceleration, braking, brakingRequested,
+      deltaTime
+  }) -> number        (0.9.92 extends the SAME function)
+```
+
+**ONE speed-resolution algorithm, not two.** The core design choice this
+milestone had to make — and the one place it deliberately departs from a
+literal reading of "introduce `resolveMovementSpeedWithBraking()`" —
+is that `core/AvatarMovementAccelerationSimulation.js#resolveMovementSpeed()`
+itself grows two new, optional parameters, `braking` (a bare number) and
+`brakingRequested` (a bare boolean), rather than gaining a sibling
+function. `brakingRequested` (anything other than the literal `true`,
+never loosely coerced) alone decides, once, up front, which of the two
+rates governs closing this tick's gap toward `targetSpeed`; every
+existing guarantee (never overshoots, in either direction; defensive
+sanitization of a non-finite/non-positive rate; `currentSpeed ===
+targetSpeed` is an exact no-op; pure, stateless, deterministic) applies
+identically to whichever rate is selected. **Coasting gets no new
+mechanism at all**: releasing a movement request still means "target
+speed becomes 0," resolved by the unmodified acceleration path — exactly
+0.9.90's own existing behavior, byte-for-byte — because `brakingRequested`
+defaults to not-`true`. No rolling resistance, aerodynamic drag, engine
+braking, tire friction, or slope effects were introduced to make that
+work, matching this milestone's own explicit scope boundary.
+
+**`core/AvatarMovementBrakingCapability.js` is the direct structural twin
+of `core/AvatarMovementAccelerationCapability.js`**, one milestone later:
+the identical `kind`/`rate` shape, the identical INSTANT-requires-exactly-0/
+RATE_LIMITED-forbids-0 coupling invariant, and the identical
+"independently declared, not reused" relationship to its sibling vocabulary
+that keeps the two capability dimensions genuinely decoupled. WALK's own
+braking is `INSTANT`/`0` — on-foot movement has never had a notion of
+braking — reusing the exact same shared instance AERIAL_VEHICLE/DRONE also
+reuses, for the identical `supported: false` reason its own acceleration
+already does. `AvatarVehicleMovementCapability` gains a seventh field,
+`braking`. BICYCLE/MOTORCYCLE/CAR are each `RATE_LIMITED`, with their own
+braking rates (6/9/8 world units/second^2) — the one semantic requirement
+this milestone establishes is that every ground vehicle's own braking
+rate is strictly GREATER than that same vehicle's own acceleration rate
+(a vehicle always sheds speed faster than it builds it up), never derived
+from acceleration by a formula, and never following `movementSpeed`'s own
+`WALK < BICYCLE < MOTORCYCLE < CAR` ordering across vehicles (MOTORCYCLE's
+own braking is the strict maximum of the three, not CAR's) — braking
+remains a genuinely independent dimension, exactly like acceleration's own
+relationship to `movementSpeed` before it. **Braking never alters
+`movementSpeed`** — it changes how fast a vehicle slows, never how fast it
+can eventually go.
+
+**`core/AvatarMovementState.js` gains one new fact, `brakingRequested`**
+(boolean, default `false`) — the direct structural twin of `jumpRequested`:
+a snapshot of intent, never itself a speed, a rate, or a vehicle identity.
+**Deliberately not bound to any key.** Unlike `jumpRequested` (Space, wired
+since 0.2.36), nothing in `application/AvatarMovementController.js` ever
+sets `brakingRequested` true — deciding which user action (a dedicated
+key, a mouse button, a gamepad trigger) should produce this fact is left
+entirely to a future input milestone, matching the architecture's own
+established "vocabulary now, input binding later" precedent (0.9.64's
+continuous-movement intent vocabulary preceded 0.9.65/0.9.66's own keyboard
+wiring by a full milestone boundary).
+
+**`core/AvatarMovementSimulation.js#simulateAvatarMovement()` is the one
+place `braking`/`brakingRequested` are actually threaded through** — the
+same integration point 0.9.91 already built for `acceleration`, extended
+rather than duplicated. A new `effectiveRate` local mirrors
+`resolveMovementSpeed()`'s own internal rate selection purely to decide
+whether this tick is rate-limited at all (an INSTANT-only tick, WALK's own
+`acceleration`/`braking` both always exactly 0, still needs its instant
+jump-to-target, never a frozen no-op) — the identical role the bare
+`acceleration > 0` gate already played here since 0.9.91.
+
+**`application/AvatarMovementController.js` gains exactly one new
+resolution seam, `_resolvedBraking()`** — the direct structural twin of
+`_resolvedAcceleration()`, read in the same one place, `tick()`'s own call
+into `simulateAvatarMovement()`. It gains no new caller-owned state, and no
+new key binding: `_currentMovementState()` is completely untouched, so
+every `AvatarMovementState` this class builds still carries
+`brakingRequested: false` (its own documented default) — real, key-driven
+movement is therefore byte-for-byte unchanged by this milestone. Braking is
+fully wired, end to end, but unreachable through this codebase's real
+keyboard input until a future input milestone decides how to reach it —
+exactly the gap 0.9.90 deliberately left for acceleration a full milestone
+before 0.9.91 ever consumed it, now closed one milestone sooner for
+braking because both the vocabulary and the wiring needed here were small
+enough to combine safely.
+
+## What this milestone deliberately does NOT do
+
+Coasting as anything beyond "target speed 0, resolved the same way as any
+other target" (no rolling resistance, aerodynamic drag, engine braking,
+tire friction, or slope effects), a third rate, directional gating of
+`brakingRequested` (braking always wins when requested, regardless of
+which way the gap is being closed), binding braking to Space, Shift, or
+any other key, a `setBrakingRequested()`-style controller method, a
+second, parallel "braking simulation engine," turning radius, vehicle
+orientation, animation, camera behavior, vehicle-to-vehicle collision,
+drone flight, and a second, per-vehicle `VehicleMovementController` —
+`application/AvatarMovementController.js` remains the one, single
+movement executor, exactly as every prior integration milestone already
+established.
+
+Tests: `tests/AvatarMovementAccelerationSimulation.test.js` is extended in
+place — new Section H covers the braking rate directly (an explicit
+`brakingRequested` tick uses `braking` instead of `acceleration`, with the
+identical never-overshoots clamp, in either direction), new Section I
+covers `brakingRequested`/`braking` edge cases (anything but the literal
+`true` falls through to acceleration, an invalid `braking` while requested
+degrades to "no rate applies" rather than silently falling back to
+acceleration, reversal through exactly zero while braking never jumps
+directly from positive to negative, and determinism), and the renamed
+Section J's own architectural sweep now also forbids
+`AvatarMovementBrakingCapability` and confirms this file still exports
+exactly the one `resolveMovementSpeed()` function — braking folded into
+the SAME algorithm, never a second one.
+`tests/AvatarVehicleMovementCapability.test.js` (0.9.84's own suite) is
+extended in place — every section now asserts `braking` alongside
+`movementKind`/`supported`/`movementSpeed`/`collisionRadius`/
+`movementDirections`/`acceleration`, including the "every ground vehicle's
+own braking is strictly greater than its own acceleration, yet follows no
+cross-vehicle ordering" independence assertion, Section H gains
+invalid-input coverage for the new field (including
+`AvatarMovementBrakingCapability`'s own INSTANT/RATE_LIMITED coupling
+invariant), Section I gains `isValidAvatarMovementBrakingCapability()`
+coverage, Section J's `toJSON()`/`fromJSON()` round-trip now includes the
+nested value, Section K's own forbidden-term sweep no longer forbids bare
+"braking" (mirroring "acceleration" ceasing to be forbidden in 0.9.90) but
+gains `brakingRequested` and keeps `coasting`/`friction`/`drag`/`momentum`
+forbidden, and a new closing block gives
+`core/AvatarMovementBrakingCapability.js` the identical sibling-file sweep
+`core/AvatarMovementAccelerationCapability.js` already has.
+`tests/AvatarVehicleCollisionFootprintIntegration.test.js`'s own "exactly
+these fields, no extra field has crept in" assertion is updated in place
+to include `braking`. `tests/AvatarVehicleMovementDirectionIntegration.test.js`'s
+own synthetic forward-only capability construction is updated to pass a
+real `braking` value. A new dedicated suite,
+`tests/AvatarVehicleBrakingCoastingIntegration.test.js`, covers WALK/DRONE
+regression at the controller level, coasting decaying at the acceleration
+rate (byte-identical to 0.9.91), an explicit brake request decaying at the
+strictly-faster braking rate, no overshoot in either direction, reversal
+while braking passing through exactly zero without a direct sign flip,
+acceleration/braking independence, determinism, vehicle differentiation
+being completely unchanged, real key-driven controller behavior being
+byte-for-byte unchanged (braking wired but unreachable), and an
+architectural sweep proving no vehicle-identity branching, no keyboard
+binding, and no second speed-resolution algorithm anywhere in this
+codebase.
+
+Next: 0.9.93 gives ground vehicles a steering/handling capability — the
+first capability dimension this arc has introduced that is not purely
+about forward/backward speed — followed by vehicle orientation (0.9.94),
+letting the movement-state composition milestone (0.9.95) eventually tie
+speed, direction, braking, and orientation together, and only then
+deciding whether/how a future input milestone ever binds a real key to
+`brakingRequested` — but only once actual runtime behavior tells us which
+is needed first.
