@@ -106,6 +106,25 @@ opposite direction the same way also cancels it, rather than reversing
 it. There's no on-screen indicator that it's active — the only sign is
 that your avatar keeps walking on its own.
 
+### Vehicles
+
+Some worlds place a bicycle your avatar can ride instead of walking. Walk
+close enough to one and a prompt appears telling you which key mounts it:
+
+| Key | Action |
+|---|---|
+| **E** (near a vehicle) | Mount |
+| **E** (while mounted) | Dismount |
+| **W / S** | Accelerate / reverse |
+| **A / D** | Steer |
+| **Ctrl** (held) | Brake |
+
+Once mounted, the same **W/A/S/D** keys drive the vehicle instead of
+walking — there's no separate "driving mode" to turn on. Dismounting puts
+your avatar back on foot at a clear spot beside the vehicle. A vehicle's
+top speed, acceleration, braking, and turning all depend on what kind of
+vehicle it is, and its collision footprint is sized to match.
+
 ### Spatial awareness and activity
 
 When other people are present, you'll see contextual indicators showing what
