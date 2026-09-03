@@ -8,6 +8,40 @@ import { terrainHeightAt } from '../core/TerrainHeightField.js';
 //   Movement Intent -> Mounted Vehicle -> vehicle movement simulation
 //   -> VehicleInstance.withPosition() -> VehicleRenderer / avatar follows
 //
+// 0.9.119 — Vehicle–World Collision Constraint. 0.9.116 through 0.9.118
+// gave a mounted, movable vehicle its own runtime position and made
+// every consumer of it agree on that position — but `tick()` below fed
+// `simulateAvatarMovement()`'s own pure kinematics result STRAIGHT into
+// `VehicleRuntimeInstances#setPosition()`, with nothing standing between
+// them. A bicycle could ride straight through a tree, a brick, or an
+// entire building, because no world-collision constraint was ever
+// consulted for vehicle movement at all — 0.9.88's own
+// `collisionRadius` (core/AvatarVehicleMovementCapability.js) had a
+// physically-correct footprint sitting ready and unused, since the ONLY
+// pipeline that ever consumed it was the on-foot
+// AvatarMovementController, never this class.
+//
+//   Movement Intent -> Mounted Vehicle -> vehicle movement simulation
+//   -> candidate position -> world collision constraint (building/brick,
+//   then tree) -> allowed position -> VehicleInstance.withPosition()
+//   -> VehicleRenderer / avatar follows
+//
+// THE FIX REUSES THE EXISTING COLLISION INFRASTRUCTURE, NEVER A SECOND
+// ONE. `tick()` below now optionally applies the SAME
+// application/AvatarMovementConstraint.js (buildings/bricks) and
+// application/AvatarTreeConstraint.js (trees) instances the on-foot
+// avatar already uses — see application/WorldNavigationSession.js's own
+// 0.9.119 wiring, which shares one pair of instances between both
+// controllers, and this file's own constructor/tick() comments below for
+// exactly how. No `VehicleCollision*` class, no rectangular/oriented
+// footprint, no vehicle-specific spatial index — see
+// core/AvatarCollision.js's own 0.9.119 header for the one change that
+// made building/brick collision reusable here at all: its existing
+// `resolveHorizontalMovement()` now accepts an optional `radius`,
+// mirroring the identical `avatarRadius` seam
+// core/AvatarTreeCollisionQuery.js already established for trees in
+// 0.9.88.
+//
 // 0.9.85 through 0.9.95 built a complete movement CAPABILITY/simulation
 // layer (speed, collision radius, permitted directions, acceleration,
 // braking, steering) and wired it into
@@ -83,8 +117,30 @@ export class AvatarVehicleMovementController {
     // all. This class never constructs its own store, exactly like
     // application/AvatarMovementController.js never constructs its own
     // AvatarPresenceSession.
-    constructor(vehicleRuntimeInstances) {
+    //
+    // 0.9.119 — Vehicle–World Collision Constraint. `movementConstraint`/
+    // `treeConstraint` (both optional, same "enforce/offer only when
+    // wired" posture every constraint in application/AvatarMovementController.js
+    // already follows) are the exact SAME constraint INSTANCES a real
+    // caller already builds for the on-foot avatar
+    // (application/AvatarMovementConstraint.js for bricks/buildings,
+    // application/AvatarTreeConstraint.js for trees) — see
+    // application/WorldNavigationSession.js's own 0.9.119 wiring, which
+    // shares one pair of instances between both controllers. This class
+    // never constructs either constraint itself, and never duplicates
+    // the collision geometry/query they already wrap — see this file's
+    // own tick(), below, for where they are applied.
+    constructor(vehicleRuntimeInstances, movementConstraint = null, treeConstraint = null) {
         this._vehicleRuntimeInstances = vehicleRuntimeInstances;
+        this._movementConstraint = movementConstraint;
+        this._treeConstraint = treeConstraint;
+        // 0.9.119 — transient, debug-only outcome of the MOST RECENT
+        // tick()'s own constraint pipeline, the direct structural twin
+        // of application/AvatarMovementController.js's own `_collided`/
+        // `_collidedWithTree` fields. Never part of VehicleInstance,
+        // never read by any other logic in this class.
+        this._collided = false;
+        this._collidedWithTree = false;
         // The vehicle id this controller most recently simulated a tick
         // for, or `null` — used only to detect "this is a genuinely NEW
         // ride" (a fresh mount, possibly of a different bicycle) so the
@@ -219,14 +275,70 @@ export class AvatarVehicleMovementController {
         this._grounded = result.grounded;
         this._currentMovementSpeed = result.currentMovementSpeed;
 
+        // 0.9.119 — Vehicle–World Collision Constraint. The pure
+        // kinematics result above is only ever a PROPOSED position —
+        // exactly the same "simulation proposes, a constraint disposes"
+        // split application/AvatarMovementController.js's own tick()
+        // already applies for the on-foot avatar (see that class's own
+        // 0.2.42/0.9.63 headers). Building/brick collision is applied
+        // FIRST, tree collision LAST — the identical ordering that
+        // pipeline already establishes — and BOTH are handed
+        // `capability.collisionRadius`, never a hardcoded avatar-sized
+        // radius, so a bicycle is tested against world geometry at its
+        // own, larger footprint (see core/AvatarVehicleMovementCapability.js's
+        // own 0.9.88 header). Y is untouched by either constraint — both
+        // are purely horizontal (X/Z) — so `result.position.y` (already
+        // the vehicle's own raw-terrain-height Y, per this class's own
+        // 0.9.116 header) survives the pipeline unchanged.
+        let finalPosition = result.position;
+        this._collided = false;
+        if (this._movementConstraint) {
+            const constrained = this._movementConstraint.apply(currentPosition, finalPosition, {
+                avatarRadius: capability.collisionRadius
+            });
+            finalPosition = constrained.position;
+            this._collided = constrained.collided;
+        }
+        this._collidedWithTree = false;
+        if (this._treeConstraint) {
+            const treeResult = this._treeConstraint.apply(currentPosition, finalPosition, {
+                avatarRadius: capability.collisionRadius
+            });
+            finalPosition = treeResult.position;
+            this._collidedWithTree = treeResult.collided;
+        }
+
         // The ONE line this whole class exists to reach: the vehicle's
         // own runtime position actually changes, through the exact
         // mechanism 0.9.114 built for it —
         // VehicleRuntimeInstances#setPosition(), itself a thin wrapper
         // over VehicleInstance#withPosition(). Never a direct field
-        // assignment, never a second position-replacement path.
-        const nextVehicleInstance = this._vehicleRuntimeInstances.setPosition(vehicleId, result.position);
+        // assignment, never a second position-replacement path. Commits
+        // `finalPosition` — the ALREADY-CONSTRAINED position — so the
+        // avatar (which follows this store's own committed position,
+        // never a pre-constraint one — see
+        // application/WorldNavigationSession.js's own 0.9.116 "the
+        // vehicle moves, the avatar follows" wiring) can never end up
+        // standing inside an obstacle the vehicle itself was just
+        // stopped short of.
+        const nextVehicleInstance = this._vehicleRuntimeInstances.setPosition(vehicleId, finalPosition);
         return { vehicleInstance: nextVehicleInstance, rotationY: result.rotationY };
+    }
+
+    // 0.9.119 — whether the MOST RECENT tick()'s desired movement was
+    // altered by building/brick collision geometry. Same transient,
+    // debug/UI-only posture as application/AvatarMovementController.js's
+    // own isCollided() — recomputed fresh every tick, never persisted,
+    // never part of VehicleInstance.
+    isCollided() {
+        return this._collided;
+    }
+
+    // 0.9.119 — the direct structural twin of isCollided() above, for
+    // tree collision — mirroring application/AvatarMovementController.js's
+    // own isCollidedWithTree().
+    isCollidedWithTree() {
+        return this._collidedWithTree;
     }
 
     // Clears this controller's own transient per-ride bookkeeping —
@@ -247,20 +359,25 @@ export class AvatarVehicleMovementController {
         this._verticalVelocity = 0;
         this._grounded = true;
         this._currentMovementSpeed = 0;
+        this._collided = false;
+        this._collidedWithTree = false;
     }
 }
 
 // Deliberately not yet, matching this milestone's own brief: a vehicle
-// physics engine, vehicle-vs-vehicle or vehicle-vs-building/tree
-// collision, vehicle rotation/orientation as a concept independent of
-// this simulation's own `rotationY` result (the avatar's existing
-// `rotationY` IS the vehicle's heading while mounted — see
+// physics engine, vehicle-vs-vehicle collision (0.9.119 added only
+// vehicle-vs-WORLD collision — trees, bricks, buildings — never
+// vehicle-vs-vehicle), vehicle rotation/orientation as a concept
+// independent of this simulation's own `rotationY` result (the avatar's
+// existing `rotationY` IS the vehicle's heading while mounted — see
 // application/WorldNavigationSession.js's own 0.9.116 header for why no
 // separate heading field was added to VehicleInstance), wheel or rider
 // animation, road/path following, gears, reverse, or turning-radius
 // physics beyond core/AvatarMovementSteeringSimulation.js's own existing
-// math, multiplayer synchronization, persistence, or a redesign of
-// mounting/dismounting/spawning of any kind. This file answers only
-// "given a movement intent and a mounted, movable vehicle, what is its
-// next runtime position" — never any of those. See docs/Roadmap.md,
-// 0.9.116.
+// math, collision response beyond the existing "stop at the combined
+// radius" resolution (no sliding response redesign, no bounce, no
+// damage/sound/animation), multiplayer synchronization, persistence, or
+// a redesign of mounting/dismounting/spawning of any kind. This file
+// answers only "given a movement intent and a mounted, movable vehicle,
+// what is its next, WORLD-COLLISION-CONSTRAINED runtime position" —
+// never any of those. See docs/Roadmap.md, 0.9.116 and 0.9.119.

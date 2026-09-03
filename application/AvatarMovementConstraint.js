@@ -34,6 +34,17 @@ import { WalkableSurfaceKind, walkableSurfaceKindFor } from '../core/WalkableSur
 // Deliberately axis-aligned per-brick, ignoring `Brick.rotation` — the
 // same simplification core/AvatarCollision.js's own `brickAabb()`
 // documents; "start simple," per the design doc.
+//
+// 0.9.119 — Vehicle–World Collision Constraint. `apply()`/`_collectObstacles()`
+// gained one new optional argument, `avatarRadius` — the direct
+// structural twin of the seam application/AvatarTreeConstraint.js
+// already established for tree collision in 0.9.88. Reused, never
+// reinvented: this class still contains no vehicle vocabulary of its
+// own (no `VehicleType`, no `collisionRadius` field), it only widens
+// `resolveHorizontalMovement()`'s existing radius parameter and the
+// broad-phase distance cull to whatever radius a caller supplies.
+// Omitting it reproduces the exact pre-0.9.119 behavior, byte for
+// byte — see core/AvatarCollision.js's own 0.9.119 header.
 const DEFAULT_QUERY_RADIUS = 12; // world units — see below
 
 export class AvatarMovementConstraint {
@@ -86,8 +97,20 @@ export class AvatarMovementConstraint {
     // Omitting `supportHeight` (every caller before 0.3.2, and any
     // caller built with the default `maxStepHeight: 0`) excludes
     // nothing at all — identical behavior to every pre-0.3.2 release.
-    apply(position, desiredPosition, { supportHeight } = {}) {
-        const obstacles = this._collectObstacles(position, supportHeight);
+    //
+    // `avatarRadius` (0.9.119, optional) — the horizontal collision
+    // radius of whatever body is actually moving this tick: `undefined`
+    // (the walking avatar's own existing radius, via
+    // core/AvatarCollision.js's own default) when the caller omits it
+    // entirely, or a mounted vehicle's own, larger
+    // `AvatarVehicleMovementCapability#collisionRadius` when
+    // application/AvatarVehicleMovementController.js supplies one — the
+    // exact same seam application/AvatarTreeConstraint.js already
+    // established for tree collision (0.9.88), applied here to
+    // building/brick collision so a vehicle is never tested against
+    // world geometry as though it were the avatar's own smaller body.
+    apply(position, desiredPosition, { supportHeight, avatarRadius } = {}) {
+        const obstacles = this._collectObstacles(position, supportHeight, avatarRadius);
         if (obstacles.length === 0) {
             return { position: desiredPosition, collided: false };
         }
@@ -95,7 +118,8 @@ export class AvatarMovementConstraint {
             position,
             dx: desiredPosition.x - position.x,
             dz: desiredPosition.z - position.z,
-            obstacles
+            obstacles,
+            radius: avatarRadius
         });
         return {
             position: { x: resolved.x, y: desiredPosition.y, z: resolved.z },
@@ -103,7 +127,7 @@ export class AvatarMovementConstraint {
         };
     }
 
-    _collectObstacles(position, supportHeight) {
+    _collectObstacles(position, supportHeight, avatarRadius) {
         const obstacles = [];
         if (!this._loadedDocuments || !this._getWorldPosition) {
             return obstacles;
@@ -128,7 +152,7 @@ export class AvatarMovementConstraint {
                     // or future-versioned brick.
                     if (!definition) continue;
                     const worldAabb = translateAabb(brickAabb(brick.position, definition), worldPosition);
-                    if (flatAabbDistance(worldAabb, position) > this._queryRadius) continue;
+                    if (flatAabbDistance(worldAabb, position, avatarRadius) > this._queryRadius) continue;
                     if (canStep) {
                         // 0.3.3 — a DIRECTIONAL walkable shape (a
                         // stair, a slope) is never treated as a flat
@@ -193,8 +217,8 @@ function flatDistance(a, b) {
     return Math.sqrt(dx * dx + dz * dz);
 }
 
-function flatAabbDistance(aabb, point) {
+function flatAabbDistance(aabb, point, radius = AVATAR_COLLISION_RADIUS) {
     const dx = Math.max(aabb.min.x - point.x, 0, point.x - aabb.max.x);
     const dz = Math.max(aabb.min.z - point.z, 0, point.z - aabb.max.z);
-    return Math.sqrt(dx * dx + dz * dz) - AVATAR_COLLISION_RADIUS;
+    return Math.sqrt(dx * dx + dz * dz) - radius;
 }

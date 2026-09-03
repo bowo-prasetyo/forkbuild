@@ -1068,12 +1068,26 @@ export class WorldNavigationSession {
         // test facade, e.g. Section C's spy) — movement simply never
         // ticks, exactly the same graceful-absence posture every other
         // optional collaborator in this file already follows.
+        // 0.9.119 — Vehicle–World Collision Constraint. `movementConstraint`/
+        // `treeConstraint` are built ONCE, here, and stored so the exact
+        // SAME two instances can also be handed to
+        // AvatarVehicleMovementController below — see that class's own
+        // 0.9.119 header for why: building/brick and tree collision are
+        // ONE shared collision system, parameterized by whichever body's
+        // own radius is currently moving through it, never a second,
+        // vehicle-specific copy of either constraint. `terrainConstraint`/
+        // `stepConstraint` stay avatar-only — a mounted vehicle's own Y
+        // still follows raw terrain height, unrelated to either (see
+        // application/AvatarVehicleMovementController.js's own 0.9.116
+        // header).
+        const movementConstraint = this._buildAvatarMovementConstraint();
+        const treeConstraint = this._buildAvatarTreeConstraint();
         this._avatarMovementController = new AvatarMovementController(
             this._avatarPresenceSession,
-            this._buildAvatarMovementConstraint(),
+            movementConstraint,
             this._buildAvatarTerrainConstraint(),
             this._buildAvatarStepConstraint(),
-            this._buildAvatarTreeConstraint()
+            treeConstraint
         );
         // 0.9.83 — built alongside the movement controller, from the
         // same avatarPresenceSession. See
@@ -1105,8 +1119,17 @@ export class WorldNavigationSession {
         // constructor — see that field's own header) as the ONE store
         // both vehicle rendering and vehicle movement read from and
         // write to.
+        //
+        // 0.9.119 — sharing the exact SAME `movementConstraint`/
+        // `treeConstraint` instances the avatar's own
+        // AvatarMovementController was just built with, above — one
+        // world-collision system, two subjects (the on-foot avatar, a
+        // ridden vehicle), never two parallel copies of the same
+        // building/brick/tree geometry.
         this._avatarVehicleMovementController = new AvatarVehicleMovementController(
-            this._vehicleRuntimeInstances
+            this._vehicleRuntimeInstances,
+            movementConstraint,
+            treeConstraint
         );
         this._lastAvatarFollowPosition = this._avatarPresenceSession.current.position;
         if (typeof this._session.onAnimationFrame === 'function') {

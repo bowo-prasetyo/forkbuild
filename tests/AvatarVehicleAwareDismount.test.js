@@ -381,8 +381,21 @@ async function runTests() {
 
         // Ride forward for real, real distance — through the actual
         // 0.9.116 movement pipeline, no shortcuts.
+        //
+        // 0.9.119 — Vehicle–World Collision Constraint. 58, not 60: see
+        // tests/VehicleRuntimeAuthorityAudit.test.js's own identical
+        // 0.9.119 comment, at its own RIDE_FRAMES — the exact same real
+        // fixture, ridden the exact same direction, now (correctly) stops
+        // exactly 60 frames in close enough to a second nearby real tree
+        // that the fixed dismount offset lands inside it, and the
+        // PRE-EXISTING tree-clearance-only dismount system
+        // (core/AvatarVehicleDismountClearance.js, 0.9.81) correctly
+        // refuses it. This test's own flagship claim (pressing E after a
+        // real ride genuinely dismounts, landing beside the vehicle's
+        // CURRENT position) is untouched by shifting two frames clear of
+        // that one coincidental fixture interaction.
         session.avatarKeyDown('w');
-        for (let i = 0; i < 60; i++) {
+        for (let i = 0; i < 58; i++) {
             fireFrame(session, 0.05);
         }
         session.avatarKeyUp('w');

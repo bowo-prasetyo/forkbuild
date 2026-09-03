@@ -90,20 +90,32 @@ export function aabbsOverlap(a, b) {
 //
 // Each axis is resolved as a SWEEP, not just an endpoint check —
 // obstacles are tested against the full [current, proposed] range on
-// that axis (padded by the avatar's own radius), never merely whether
-// the FINAL position happens to overlap something. A single large
-// step (a slow frame, bounded by MAX_STEP_PER_TICK in
+// that axis (padded by the moving body's own radius), never merely
+// whether the FINAL position happens to overlap something. A single
+// large step (a slow frame, bounded by MAX_STEP_PER_TICK in
 // core/AvatarMovementSimulation.js) can therefore never pass clean
 // through a thin obstacle just because neither its start nor end
 // position happened to land inside it.
-export function resolveHorizontalMovement({ position, dx, dz, obstacles }) {
+//
+// `radius` (0.9.119, optional, defaults to AVATAR_COLLISION_RADIUS) —
+// the horizontal collision radius of whatever body is actually
+// sweeping this step: the walking avatar's own existing radius by
+// default, or a mounted vehicle's own, larger
+// `AvatarVehicleMovementCapability#collisionRadius` when a caller
+// supplies one — the exact same "parameterize the existing query by
+// the moving body's own radius, never invent a second collision
+// system" seam core/AvatarTreeCollisionQuery.js already established
+// for tree collision (0.9.88), applied here to building/brick
+// collision. Omitting `radius` reproduces the exact pre-0.9.119
+// behavior, byte for byte.
+export function resolveHorizontalMovement({ position, dx, dz, obstacles, radius = AVATAR_COLLISION_RADIUS }) {
     let x = position.x;
     let z = position.z;
     let collidedX = false;
     let collidedZ = false;
 
     if (dx !== 0 && obstacles.length > 0) {
-        const resolvedX = resolveAxis({ axis: 'x', origin: x, delta: dx, fixed: { x, y: position.y, z }, obstacles });
+        const resolvedX = resolveAxis({ axis: 'x', origin: x, delta: dx, fixed: { x, y: position.y, z }, obstacles, radius });
         collidedX = resolvedX !== x + dx;
         x = resolvedX;
     } else {
@@ -111,7 +123,7 @@ export function resolveHorizontalMovement({ position, dx, dz, obstacles }) {
     }
 
     if (dz !== 0 && obstacles.length > 0) {
-        const resolvedZ = resolveAxis({ axis: 'z', origin: z, delta: dz, fixed: { x, y: position.y, z }, obstacles });
+        const resolvedZ = resolveAxis({ axis: 'z', origin: z, delta: dz, fixed: { x, y: position.y, z }, obstacles, radius });
         collidedZ = resolvedZ !== z + dz;
         z = resolvedZ;
     } else {
@@ -121,20 +133,20 @@ export function resolveHorizontalMovement({ position, dx, dz, obstacles }) {
     return { x, z, collided: collidedX || collidedZ };
 }
 
-function resolveAxis({ axis, origin, delta, fixed, obstacles }) {
+function resolveAxis({ axis, origin, delta, fixed, obstacles, radius }) {
     const proposed = origin + delta;
     const movingPositive = delta > 0;
-    const sweepMin = Math.min(origin, proposed) - AVATAR_COLLISION_RADIUS;
-    const sweepMax = Math.max(origin, proposed) + AVATAR_COLLISION_RADIUS;
+    const sweepMin = Math.min(origin, proposed) - radius;
+    const sweepMax = Math.max(origin, proposed) + radius;
     const minY = fixed.y;
     const maxY = fixed.y + AVATAR_COLLISION_HEIGHT;
-    // The avatar's position on the OTHER horizontal axis (already-
+    // The moving body's position on the OTHER horizontal axis (already-
     // resolved X when this call is resolving Z, current X/Z
-    // throughout) — a brick only obstructs THIS axis if the avatar
+    // throughout) — a brick only obstructs THIS axis if the body
     // would actually pass through it sideways too, not merely stand
     // somewhere along its infinite extension.
-    const crossMin = (axis === 'x' ? fixed.z : fixed.x) - AVATAR_COLLISION_RADIUS;
-    const crossMax = (axis === 'x' ? fixed.z : fixed.x) + AVATAR_COLLISION_RADIUS;
+    const crossMin = (axis === 'x' ? fixed.z : fixed.x) - radius;
+    const crossMax = (axis === 'x' ? fixed.z : fixed.x) + radius;
 
     let boundary = proposed;
     for (const obstacle of obstacles) {
@@ -155,12 +167,12 @@ function resolveAxis({ axis, origin, delta, fixed, obstacles }) {
         // filters that case out: an obstacle already fully on the
         // trailing side of the avatar's CURRENT position is never a
         // valid reason to stop it.
-        if (movingPositive && obstacleAxisMin < origin - AVATAR_COLLISION_RADIUS) continue;
-        if (!movingPositive && obstacleAxisMax > origin + AVATAR_COLLISION_RADIUS) continue;
+        if (movingPositive && obstacleAxisMin < origin - radius) continue;
+        if (!movingPositive && obstacleAxisMax > origin + radius) continue;
 
         boundary = movingPositive
-            ? Math.min(boundary, obstacleAxisMin - AVATAR_COLLISION_RADIUS - SKIN_EPSILON)
-            : Math.max(boundary, obstacleAxisMax + AVATAR_COLLISION_RADIUS + SKIN_EPSILON);
+            ? Math.min(boundary, obstacleAxisMin - radius - SKIN_EPSILON)
+            : Math.max(boundary, obstacleAxisMax + radius + SKIN_EPSILON);
     }
 
     // Never let a resolved boundary move the avatar BACKWARD past
