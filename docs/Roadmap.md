@@ -58529,3 +58529,192 @@ orientation into one vehicle movement state, and only then does
 deciding whether/how a future input milestone binds real keys to
 `brakingRequested` (still unreachable since 0.9.92) become a question
 actual runtime behavior can answer.
+
+## 0.9.95 — Vehicle Braking Intent
+
+**This milestone deliberately preempts the composition arc 0.9.94's own
+"Next" paragraph, immediately above, named.** Composing speed, direction,
+acceleration, braking, and orientation into one vehicle movement state is
+real future work, but doing it now would still leave the exact same gap
+open that every acceleration/braking/steering milestone since 0.9.90 has
+pointed at and then explicitly declined to close: `AvatarMovementState.brakingRequested`
+has been real, wired end to end, and completely unreachable through this
+codebase's own real input since 0.9.92 — three milestones' worth of
+"deliberately left for later." A composition layer built on top of a
+capability nothing can ever actually request is composing around a hole,
+not filling it. This milestone closes that hole FIRST, as narrowly as
+every intent-vocabulary milestone before it (0.9.64, 0.9.75, 0.9.79) has
+already established the discipline for — composition itself, and the
+question of which physical control finally reaches this new seam, are
+both pushed later (0.9.96/0.9.97 in the revised sequence below) rather
+than solved here.
+
+> Introduce a vehicle-independent braking INTENT, and translate an
+> external input fact into `brakingRequested`, without choosing a
+> keyboard binding yet.
+
+```
+external input fact                 core/AvatarVehicleBrakingIntent.js
+  { type: 'brakedown'/'brakeup' }           NONE | BRAKE
+       │                                          │
+       ▼                                          ▼
+core/AvatarVehicleBrakingInputAdapter.js ───► deriveAvatarVehicleBrakingIntent()
+       │
+       ▼
+application/AvatarMovementController.js
+  setVehicleBrakingIntent(intent)  (new, public — the ONLY way
+                                     _vehicleBrakingIntent changes)
+       │
+       ▼
+  _resolvedBrakingRequested()  (new — reads _vehicleBrakingIntent alone)
+       │
+       ▼
+  _currentMovementState().brakingRequested   (real, at last)
+       │
+       ▼
+  core/AvatarMovementSimulation.js — UNCHANGED since 0.9.92, now finally reachable
+```
+
+**`core/AvatarVehicleBrakingIntent.js` is a NONE/BRAKE vocabulary — the
+direct sibling of `core/AvatarVehicleInteractionIntent.js`'s own
+MOUNT and `core/AvatarVehicleDismountIntent.js`'s own DISMOUNT, with one
+deliberate structural DIFFERENCE.** Mounting and dismounting are
+one-shot ACTIONS — a single key-down must produce exactly one request,
+and holding the key must never spam a second one — so both of those
+files' own transition rules are careful one-shot state machines that
+accept (and ignore) a `currentIntent`. Braking is not an action, it is a
+CONDITION that must keep applying for as long as it is requested — the
+exact same level-driven shape `AvatarMovementState.jumpRequested` and
+`brakingRequested` itself already have. `deriveAvatarVehicleBrakingIntent({ brakeRequested })`
+is therefore the simplest vocabulary function in this codebase: no
+`currentIntent` parameter at all, because there is nothing for a
+remembered past value to influence — `brakeRequested: true` is always
+`BRAKE`, `false` is always `NONE`, full stop. Zero imports, matching
+every intent vocabulary before it.
+
+**`core/AvatarVehicleBrakingInputAdapter.js` is the one seam that will
+eventually translate a real physical control into `{ brakeRequested }`
+— deliberately left almost trivial in this milestone.** Its own
+`deriveAvatarVehicleBrakingInputFact({ type })` reads `type:
+'brakedown'/'brakeup'` — named after the CONTROL, never a KEY, the one
+property that keeps this milestone's own explicit "don't choose a key
+yet" promise structural rather than a matter of convention: there is no
+`key` parameter here for a later caller to start comparing against
+`'Space'`. Unlike `core/AvatarContinuousMovementInputAdapter.js`'s own
+`altDown`/`shiftDown`, this adapter carries no state between calls at
+all — a brake control's own down/up transition is already the complete
+fact this milestone needs, in the same call that reports it, so
+`deriveAvatarVehicleBrakingInputFact()` is pure and stateless, unlike its
+older, chord-tracking sibling.
+
+**`application/AvatarMovementController.js` gains a genuine source for
+`brakingRequested` for the first time — `_vehicleBrakingIntent` (default
+`AvatarVehicleBrakingIntent.NONE`), `setVehicleBrakingIntent()`,
+`vehicleBrakingIntent()`, and `_resolvedBrakingRequested()`, the direct
+structural twins of `_continuousMovementIntent`/
+`setContinuousMovementIntent()`/`continuousMovementIntent()`.**
+`_currentMovementState()` gains exactly one new field,
+`brakingRequested: this._resolvedBrakingRequested()` — `tick()`'s own
+call into `simulateAvatarMovement()` is completely UNCHANGED, because
+`braking` has already been resolved and threaded through since 0.9.92;
+only the fact deciding whether it is ever SELECTED was ever missing.
+**Still no key binding, exactly as the brief insists**: nothing in
+`keyDown()`/`keyUp()`/`_setKey()` changes, and `_keys` gains no new
+field — `setVehicleBrakingIntent()` is a public method a caller invokes
+directly with an already-resolved value, never a raw key this class
+interprets itself. **The controller resolves only the generic fact,
+never a vehicle question**: `_resolvedBrakingRequested()` reads
+`_vehicleBrakingIntent` alone — never `_movementCapability`, never
+`isMounted()`, `vehicleType()`, or `isCar()`. Whether a BRAKE request
+actually changes anything this tick is entirely
+`core/AvatarMovementSimulation.js`'s own existing job (unchanged since
+0.9.92): a BRAKE request against WALK's own `INSTANT`/`0` braking
+degrades to the identical instant snap-to-target every capability with a
+`0` rate has always had.
+
+**Braking reduces the MAGNITUDE of the current signed speed toward zero
+— it never redefines the TARGET.** This is unchanged from 0.9.92's own
+`resolveMovementSpeed()` selection (`brakingRequested ? braking :
+acceleration`), which governs only the RATE closing the gap toward
+whatever `movementState.forwardAxis`/`movementSpeed` already asked for —
+this milestone changes nothing about that selection, only how
+`brakingRequested` ever becomes `true` in real play. A held W with
+braking requested still approaches forward `movementSpeed`, just faster;
+a held S with braking requested still approaches `-movementSpeed`,
+passing through EXACTLY zero on the way, at the braking rate, never
+`BRAKE -> target = -movementSpeed` on its own; braking alone (no
+movement key held) still approaches `0`, from a positive OR a negative
+current speed alike — `+10 -> ... -> 0` and `-10 -> ... -> 0`, direction-
+independent, never a special case for either sign.
+
+## What this milestone deliberately does NOT do
+
+A specific brake key, mouse button, or gamepad trigger (the entire point
+of splitting this milestone from the one that binds it), throttle
+semantics, brake-overrides-throttle behavior (braking SELECTS a rate for
+whatever target movement intent already asked for; it does not redefine
+that target), a handbrake, reverse gear, engine braking, friction, drag,
+ABS, traction, brake lights, vehicle animation, vehicle orientation
+changes, steering changes while braking, and the movement-state
+composition layer 0.9.94's own "Next" paragraph named — that arc is
+deferred, not abandoned; see the revised sequence below.
+`application/AvatarMovementController.js` remains the one, single
+movement executor.
+
+Tests: a new suite, `tests/AvatarVehicleBrakingIntent.test.js`, covers
+the vocabulary itself (NONE/BRAKE, frozen, exactly two values), a brake
+request producing BRAKE, the level-driven hold semantics that make this
+file the direct architectural OPPOSITE of
+`tests/AvatarVehicleDismountIntent.test.js`'s own one-shot consumption
+(an arbitrarily long hold keeps reporting BRAKE, never "already
+consumed"; releasing reports NONE on the very next call), defensive/
+malformed input, a FLAGSHIP request/hold/release/request cycle plus
+purity/determinism, and an architectural sweep proving zero imports and
+zero vehicle/capability/movement/keyboard awareness of any kind. A new
+suite, `tests/AvatarVehicleBrakingInputAdapter.test.js`, covers
+brakedown/brakeup translation (case-insensitive), unrecognized input
+degrading gracefully, the deliberate ABSENCE of any `key` parameter
+(an unrelated `key` field never changes the outcome), statelessness/
+idempotence (unlike `core/AvatarContinuousMovementInputAdapter.js`'s own
+carried `altDown`/`shiftDown`), a FLAGSHIP scenario feeding this
+adapter's own output straight into `deriveAvatarVehicleBrakingIntent()`,
+and the identical architectural sweep. A new suite,
+`tests/AvatarVehicleBrakingIntentControllerIntegration.test.js`, proves
+the controller-level integration: `setVehicleBrakingIntent(BRAKE)`
+genuinely reaches `brakingRequested` and the real simulation uses the
+braking rate instead of acceleration; BICYCLE/MOTORCYCLE/CAR's own
+independently declared braking rates (6/9/8) are each individually
+observable through the real controller; direction independence (braking
+alone approaches zero from a positive OR a negative current speed);
+reversal (a held opposite-direction key plus a simultaneous brake
+request still passes through exactly zero at the braking rate, never a
+direct sign flip, and is measurably faster than the same reversal
+without braking); coasting regression (releasing a movement request
+without ever requesting braking still decays at the acceleration rate,
+byte-identical to 0.9.91/0.9.92); WALK's own instantaneous behavior is
+byte-identical whether braking is requested or not; DRONE remains fully
+blocked regardless of any pending braking intent; and an architectural
+sweep proving `_resolvedBrakingRequested()`'s own method body reads only
+`_vehicleBrakingIntent`, no key is bound to braking in `_setKey()`, and
+`core/AvatarMovementSimulation.js` remains vehicle-identity-free.
+`tests/AvatarVehicleBrakingCoastingIntegration.test.js`'s own Section I
+is updated in place: its own architectural assertion that
+`application/AvatarMovementController.js`'s source never contains the
+string `brakingRequested` at all was true, and was this suite's own
+proof, only as of 0.9.92 — this milestone deliberately makes that
+string appear (`_currentMovementState()` now builds
+`brakingRequested: this._resolvedBrakingRequested()`), so the assertion
+is replaced with the one this milestone's own brief actually cares
+about: still no KEYBOARD key drives it, and its own Section I's real
+CAR-ramp scenario (which never calls `setVehicleBrakingIntent()`) is
+confirmed to still be byte-for-byte unchanged.
+
+Next: 0.9.96 decides which physical control — a dedicated key, a mouse
+button, a gamepad trigger — finally calls `setVehicleBrakingIntent()` in
+real play, the direct counterpart to 0.9.65/0.9.66's own keyboard wiring
+for continuous movement. Only once that binding exists, and actual
+runtime behavior can be observed end to end, does 0.9.97 revisit the
+movement-state composition layer 0.9.94 originally named for this slot —
+composing speed, direction, acceleration, braking, and orientation with
+a genuinely reachable `brakingRequested` already in hand, rather than
+composing around the hole this milestone closes.

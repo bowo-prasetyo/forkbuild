@@ -4,6 +4,7 @@ import { deriveAvatarVerticalState } from '../core/AvatarVerticalState.js';
 import { AvatarContinuousMovementIntent, isValidAvatarContinuousMovementIntent } from '../core/AvatarContinuousMovementIntent.js';
 import { AvatarContinuousMovementMode, isValidAvatarContinuousMovementMode } from '../core/AvatarContinuousMovementMode.js';
 import { AvatarMovementCapabilityKind, isValidAvatarVehicleMovementCapability } from '../core/AvatarVehicleMovementCapability.js';
+import { AvatarVehicleBrakingIntent, isValidAvatarVehicleBrakingIntent } from '../core/AvatarVehicleBrakingIntent.js';
 
 // 0.2.36 — the ONE place raw input becomes an AvatarPresence update.
 // See docs/Principles.md, "Input Changes Presence; Presence Changes
@@ -536,6 +537,67 @@ import { AvatarMovementCapabilityKind, isValidAvatarVehicleMovementCapability } 
 // binding `brakingRequested` to any key — this class remains the one,
 // single movement executor, and `_currentMovementState()` below is
 // completely untouched by this milestone. See docs/Roadmap.md, 0.9.94.
+//
+// 0.9.95 — Vehicle Braking Intent. This class gains exactly one new
+// piece of CALLER-OWNED state, `_vehicleBrakingIntent`
+// (core/AvatarVehicleBrakingIntent.js's own NONE/BRAKE vocabulary), the
+// direct structural twin of `_continuousMovementIntent` above: set only
+// via a new `setVehicleBrakingIntent()` below, read only by a new
+// `_resolvedBrakingRequested()`, which is in turn read in exactly one
+// place — `_currentMovementState()`'s own new `brakingRequested` field.
+// That is the ENTIRE milestone. `AvatarMovementState.brakingRequested`
+// has been real, wired, and unreachable since 0.9.92 (see this file's
+// own 0.9.92 header, and core/AvatarMovementState.js's own): this
+// milestone closes the gap this class's own 0.9.92 header explicitly
+// left open, by giving `_currentMovementState()` a genuine source for
+// that field for the first time. `tick()`'s own call into
+// `simulateAvatarMovement()` is completely UNCHANGED — `braking` was
+// already resolved and threaded through since 0.9.92; only the fact
+// that decides whether it is ever SELECTED was ever missing.
+//
+// STILL NO KEY BINDING, EXACTLY AS THE MILESTONE BRIEF INSISTS. Nothing
+// in `keyDown()`/`keyUp()`/`_setKey()` changes, and `_keys` gains no new
+// field: `setVehicleBrakingIntent()` is a public method a caller invokes
+// directly with an already-resolved `AvatarVehicleBrakingIntent` value —
+// the identical shape `setContinuousMovementIntent()`/
+// `setContinuousMovementMode()` already established for their own
+// vocabularies — never a raw key this class interprets itself. Deciding
+// which physical control ultimately calls it (via
+// core/AvatarVehicleBrakingInputAdapter.js) is explicitly deferred to a
+// later milestone.
+//
+// THE CONTROLLER RESOLVES ONLY THE GENERIC FACT, EXACTLY AS EVERY OTHER
+// RESOLUTION SEAM IN THIS FILE ALREADY DOES. `_resolvedBrakingRequested()`
+// reads `_vehicleBrakingIntent` alone — never `movementCapability()`,
+// never `isMounted`, never a vehicle type. Whether braking actually DOES
+// anything this tick is entirely `core/AvatarMovementSimulation.js`'s
+// own existing job (since 0.9.92): a BRAKE request while the active
+// capability's own `braking.braking` is `0` (WALK, or DRONE were it ever
+// unblocked) degrades to the identical INSTANT behavior that capability
+// already had, never an error and never a special case here.
+//
+// BRAKING NEVER CHANGES THE TARGET, ONLY THE RATE — ALREADY TRUE, AND
+// UNTOUCHED BY THIS MILESTONE. `resolveMovementSpeed()`'s own 0.9.92
+// selection (`brakingRequested ? braking : acceleration`) governs ONLY
+// which RATE closes the gap toward whatever target `_resolvedForwardAxis()`
+// (via `movementState.forwardAxis` and `movementSpeed`) already asked
+// for; it does not, and never did, redefine that target to `-movementSpeed`
+// or to `0`. A held W with braking requested therefore still approaches
+// forward `movementSpeed`, just at the braking rate rather than the
+// acceleration rate — and a cruising vehicle with no movement key held
+// and braking requested approaches the SAME `0` target coasting already
+// used, only faster. See tests/AvatarVehicleBrakingIntentControllerIntegration.test.js's
+// own Section E ("direction independence") and Section F ("reversal
+// never jumps the sign") for the full scenario coverage.
+//
+// Deliberately excluded, matching this milestone's own brief: a specific
+// brake key or physical control of any kind, throttle semantics,
+// brake-overrides-throttle behavior, a handbrake, reverse gear, engine
+// braking, friction, drag, ABS, traction, brake lights, vehicle
+// animation, vehicle orientation changes, steering changes while
+// braking, and a movement-state composition layer — this class remains
+// the one, single movement executor, and `_setKey()` below is completely
+// untouched by this milestone. See docs/Roadmap.md, 0.9.95.
 const EPSILON = 1e-6;
 
 export class AvatarMovementController {
@@ -570,6 +632,14 @@ export class AvatarMovementController {
         // and read only by `_resolvedRunning()`. See this file's own
         // 0.9.69 header for why this class never derives it itself.
         this._continuousMovementMode = AvatarContinuousMovementMode.NONE;
+        // 0.9.95 — the CURRENT vehicle braking intent
+        // (core/AvatarVehicleBrakingIntent.js's own NONE/BRAKE
+        // vocabulary), set only via setVehicleBrakingIntent() below and
+        // read only by `_resolvedBrakingRequested()`. The direct
+        // structural twin of `_continuousMovementIntent`/
+        // `_continuousMovementMode` above — see this file's own 0.9.95
+        // header for why this class still never derives it itself.
+        this._vehicleBrakingIntent = AvatarVehicleBrakingIntent.NONE;
         // 0.9.85 — the CURRENT movement capability (an
         // AvatarVehicleMovementCapability instance, or `null` for
         // "never set" — see this file's own 0.9.85 header above), set
@@ -676,6 +746,29 @@ export class AvatarMovementController {
     // future UI indicator) that wants to observe it.
     continuousMovementMode() {
         return this._continuousMovementMode;
+    }
+
+    // 0.9.95 — the ONLY way `_vehicleBrakingIntent` ever changes, the
+    // direct structural twin of setContinuousMovementIntent()/
+    // setContinuousMovementMode() above. Callers are expected to have
+    // already resolved a raw signal down to one of
+    // core/AvatarVehicleBrakingIntent.js's own NONE/BRAKE values —
+    // typically via that milestone's own sibling file,
+    // core/AvatarVehicleBrakingInputAdapter.js, once a future milestone
+    // decides which physical control feeds it. Invalid input degrades to
+    // NONE, the same "degrade gracefully" posture every other pure
+    // vocabulary setter in this codebase already follows.
+    setVehicleBrakingIntent(intent) {
+        this._vehicleBrakingIntent = isValidAvatarVehicleBrakingIntent(intent)
+            ? intent
+            : AvatarVehicleBrakingIntent.NONE;
+    }
+
+    // 0.9.95 — the CURRENT vehicle braking intent, same "debug/UI
+    // surface, not something any other internal logic reads" posture as
+    // continuousMovementIntent()/continuousMovementMode() above.
+    vehicleBrakingIntent() {
+        return this._vehicleBrakingIntent;
     }
 
     // 0.9.85 — the ONLY way `_movementCapability` ever changes. Callers
@@ -933,7 +1026,8 @@ export class AvatarMovementController {
             forwardAxis: this._resolvedForwardAxis(),
             turnAxis: (this._keys.right ? 1 : 0) - (this._keys.left ? 1 : 0),
             running: this._resolvedRunning(),
-            jumpRequested: this._keys.jumpHeld
+            jumpRequested: this._keys.jumpHeld,
+            brakingRequested: this._resolvedBrakingRequested()
         });
     }
 
@@ -1036,19 +1130,45 @@ export class AvatarMovementController {
     // `_movementCapability` is `null` — the identical "never set" state
     // `_resolvedAcceleration()` already handles. The direct structural
     // twin of `_resolvedAcceleration()` immediately above, down to never
-    // reading `.kind` for the identical reason. DELIBERATELY NOT PAIRED
-    // WITH ANY WAY TO SET `movementState.brakingRequested` true — this
-    // class still constructs every `AvatarMovementState` itself, in
-    // `_currentMovementState()` below, and that method passes no
+    // reading `.kind` for the identical reason.
+    //
+    // AS OF 0.9.92, DELIBERATELY NOT PAIRED WITH ANY WAY TO SET
+    // `movementState.brakingRequested` true — this class still
+    // constructed every `AvatarMovementState` itself, in
+    // `_currentMovementState()` below, and that method passed no
     // `brakingRequested` at all (defaulting to `false` — see
-    // core/AvatarMovementState.js's own 0.9.92 header) — so this seam
-    // reaches core/AvatarMovementSimulation.js#simulateAvatarMovement()
-    // every tick, but real, key-driven controller behavior is completely
-    // UNCHANGED by this milestone: braking never actually engages until
-    // a future input milestone decides which user action should set that
-    // fact, and wires it in here.
+    // core/AvatarMovementState.js's own 0.9.92 header), so this seam
+    // reached core/AvatarMovementSimulation.js#simulateAvatarMovement()
+    // every tick, but real, key-driven controller behavior stayed
+    // completely UNCHANGED: braking never actually engaged.
+    //
+    // 0.9.95 CLOSES THAT GAP — see this file's own 0.9.95 header, above
+    // `EPSILON`. `_currentMovementState()` now passes a genuine
+    // `brakingRequested` (`_resolvedBrakingRequested()`, immediately
+    // below), so this seam is no longer merely reachable in principle —
+    // an actual `AvatarVehicleBrakingIntent.BRAKE`, set via
+    // `setVehicleBrakingIntent()`, makes braking real. Still no key
+    // binding: only the SOURCE of the request changed, not this method
+    // itself, which is untouched by 0.9.95.
     _resolvedBraking() {
         return this._movementCapability ? this._movementCapability.braking.braking : undefined;
+    }
+
+    // 0.9.95 — the braking-REQUEST resolution seam this milestone adds:
+    // whether the CURRENT vehicle braking intent
+    // (core/AvatarVehicleBrakingIntent.js's own NONE/BRAKE vocabulary,
+    // set only via setVehicleBrakingIntent() above) is BRAKE, as a bare
+    // boolean — the fact `_currentMovementState()` feeds straight into
+    // `AvatarMovementState.brakingRequested`. Read in exactly one place,
+    // `_currentMovementState()` itself, mirroring how `_resolvedBraking()`
+    // immediately above is read in exactly one place, `tick()`'s own call
+    // into `simulateAvatarMovement()`. This method never reads
+    // `_movementCapability`: WHETHER braking is being requested is
+    // entirely independent of WHAT vehicle (if any) is being ridden — see
+    // this file's own 0.9.95 header, "THE CONTROLLER RESOLVES ONLY THE
+    // GENERIC FACT."
+    _resolvedBrakingRequested() {
+        return this._vehicleBrakingIntent === AvatarVehicleBrakingIntent.BRAKE;
     }
 
     // 0.9.94 — the steering-resolution seam this milestone adds: the
