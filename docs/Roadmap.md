@@ -61591,3 +61591,183 @@ it. I'd make 0.9.115 next: giving the World View something to actually
 render for a `VehicleInstance` is what turns "[E] Mount" from a prompt
 referring to an invisible coordinate into a prompt referring to something
 a Wanderer can actually see.
+
+## 0.9.115 — Vehicle Rendering
+
+0.9.114 gave a vehicle somewhere to hold a position that isn't its
+deterministic spawn point, but stopped there deliberately — nothing in
+`application/` or `ui/` constructed a `VehicleInstance`, and the World
+View still had no idea a vehicle could be seen at all. A player standing
+right next to a bicycle sees only a floating `[E] Mount Bicycle` prompt —
+the interaction radius works, but the thing it refers to is invisible.
+This milestone closes exactly that gap, and only that gap:
+
+    VehicleInstance
+          │
+          ├── id
+          ├── type
+          ├── spawnPosition ─────── deterministic, never rendered directly
+          │
+          └── position ──────────── current runtime position
+                                      │
+                                      ▼
+                                  Renderer
+                                      │
+                                      ▼
+                                  World View
+
+**A procedural placeholder, not a real asset.** `renderer/VehicleRenderer.js`
+is the renderer-side "dumb executor" for a `VehicleType` — the exact role
+`renderer/AvatarRenderer.js` already plays for an avatar template plus
+appearance — built from the same low-poly Three.js primitives
+`renderer/NaturalFeatureTileMesh.js`'s own trees and `renderer/AvatarRenderer.js`'s
+own avatar bodies already use: two torus wheels, three box frame members,
+a cylinder seat post, a box handlebar. `VehicleType.BICYCLE` is the only
+type with a builder; `build()` returns `null` for every other
+`VehicleType` (`MOTORCYCLE`, `CAR`, `DRONE`) rather than falling back to
+the bicycle shape — this renderer has no meaningful representation for
+any of them yet, and silently turning a `DRONE` into a bicycle would be a
+worse lie than rendering nothing.
+
+**Renders `position`, never `spawnPosition` — the milestone's own central
+regression, proven with deliberately different coordinates.**
+`renderer/VehicleVisual.js` (one vehicle's live Three.js presence,
+built once per `type` at construction — a `VehicleInstance`'s own `type`
+never changes for its lifetime, so there is no diff/rebuild lifecycle to
+manage the way `renderer/AvatarVisual.js` needs for a changing
+appearance) has no idea `spawnPosition` even exists; it only ever
+receives a plain `{x, y, z}` from its caller. `renderer/VehicleFieldRenderer.js`
+is the one seam that reads a `VehicleInstance` and decides which field to
+use — `setVehicle(instance)` always calls `visual.setPosition(instance.position)`,
+never `instance.spawnPosition`. `tests/VehicleRendering.test.js`'s own
+Section E constructs a `VehicleInstance` with `spawnPosition = (10, 0, 10)`
+and `position = (30, 0, 40)` directly and proves the rendered object sits
+at `(30, 0, 40)`.
+
+**`renderVehicleInstance` as a collection, not a single upsert.**
+`renderer/VehicleFieldRenderer.js` is the renderer-side counterpart to
+`renderer/RemoteSpatialPresenceRenderer.js` — every currently-visible
+vehicle, keyed by `VehicleInstance#id`, reusing that class's own "one
+stable Object3D per stable id, created lazily, updated cheaply, torn
+down explicitly" shape as a PATTERN, not by subclassing or importing it.
+`setVehicle(instance)`'s only domain input is a `VehicleInstance` — it
+never computes placement, never decides whether a vehicle should exist,
+never mutates the instance it is handed, and never imports
+`core/VehiclePlacement.js` or `core/VehicleIdentity.js` itself.
+
+**Stable identity across a position change.** `VehicleInstance#withPosition()`
+returns a new instance carrying the same `id` (see `core/VehicleInstance.js`'s
+own header, "identity never changes") — calling `setVehicle()` again with
+that new instance finds the SAME tracked `VehicleVisual` by id and only
+updates its position; it never tears down and rebuilds the Object3D, and
+a caller holding a reference to a vehicle's root object never sees it go
+stale. `tests/VehicleRendering.test.js`'s own Section G proves this by
+reference equality.
+
+**Renders every currently-instantiated vehicle nearby, not just the
+nearest.** `application/NearbyVehicleInstances.js` is a new, pure
+`nearbyVehicleInstances(seed, centerPosition, radius)` function that
+reuses `core/VehiclePlacement.js`'s own `vehiclePresenceInRegion()` — the
+exact same deterministic query
+`application/AvatarVehicleInteractionController.js#_nearbyVehicles()`
+already runs for mount/dismount, just over a larger `VEHICLE_RENDER_RADIUS`
+(50, versus `core/AvatarVehicleProximity.js#VEHICLE_INTERACTION_RADIUS`'s
+own 1.5) — and maps every result through `core/VehicleInstance.js`'s own
+`vehicleInstanceFromPresence()` bridge. No second placement algorithm, no
+second observation model: this file is the bridge 0.9.114 already named
+as the intended one, reused, never reinvented.
+
+**`application/WorldNavigationSession.js#_setupVehicleRendering()`** rides
+the same per-render-frame loop `_setupCameraFocusAnimation()` already
+established, deliberately independent of whether a local avatar exists —
+a vehicle is a fact about the World, never about whether the viewer has
+an avatar (see `docs/Principles.md`, "Watching Presence Never Requires
+Having One"). Every frame it resolves `getAvatarPosition() ||
+getCameraPosition()` (the same fallback `application/WorldSpatialContextService.js`
+already established for "what is around me right now") and hands
+`nearbyVehicleInstances()`'s own output straight to the render facade's
+new `syncVehicles()` — a full collection sync (add newly-tracked, update
+in place, remove whatever fell out of range), mirroring
+`setRemoteSpatialPresence()`'s own "create lazily, update cheaply, scene
+add/remove happens here" shape one level up in
+`application/RenderWorldViewUseCase.js`.
+
+**A requery every frame, never a cache** — the identical posture
+`AvatarVehicleInteractionController.js`'s own header already established
+for its own, smaller-radius lookup: vehicles are a pure function of
+`(seed, x, z)`, so there is nothing to keep in sync, and the query itself
+is a handful of cheap deterministic hash evaluations over a few lattice
+cells, negligible next to the mesh work this same frame loop already
+tolerates elsewhere.
+
+**Do not change movement yet.** `VehicleInstance.withPosition()` exists
+and is exercised by this milestone's own tests, but nothing in
+`application/`/`renderer/` ever calls it during a running session — the
+World View renders whatever `position` a `VehicleInstance` currently
+holds, and for every vehicle this milestone can actually produce
+(`nearbyVehicleInstances()`'s own output), that is still exactly the
+deterministic spawn point. Movement is 0.9.116's own job.
+
+**Existing interaction survives, untouched.**
+`core/AvatarVehicleInteractionController.js` is not modified by this
+milestone at all — `_nearbyVehicles()`, mount, dismount, and the `[E]
+Mount`/`[E] Dismount` prompt all keep working exactly as 0.9.83/0.9.98
+left them, off the SAME 1.5-unit `VEHICLE_INTERACTION_RADIUS`, completely
+independent of this milestone's own, much larger render radius. The new
+renderer never takes ownership of interaction detection, and the
+interaction controller never learns rendering exists —
+`tests/WorldViewVehicleRenderingIntegration.test.js`'s own Section F
+proves this with a source sweep.
+
+Tests: `tests/VehicleRendering.test.js` (Sections A through I) proves the
+renderer layer in isolation — `VehicleRenderer.build()` produces real,
+visible Three.js geometry for `BICYCLE` and `null` for every unsupported
+type; `VehicleVisual`/`VehicleFieldRenderer` place a vehicle at
+`instance.position`, never `instance.spawnPosition`, using deliberately
+different coordinates; multiple vehicles render independently; a position
+change never rebuilds the Object3D; and an unsupported `VehicleType` is
+never tracked, never returned, and never substituted with a bicycle.
+`tests/WorldViewVehicleRenderingIntegration.test.js` (Sections A through
+F) proves the application-layer wiring — `nearbyVehicleInstances()`
+matches a real `vehiclePresenceInRegion()` call one-for-one;
+`WorldNavigationSession` calls `syncVehicles()` once per render frame,
+centered on the avatar when one exists and the camera when it doesn't;
+neither position at all means no call and no throw; `dispose()` actually
+unsubscribes the frame listener; and the mount/dismount controller's own
+source has no knowledge of any renderer file this milestone adds.
+
+### What this milestone deliberately does NOT do
+
+No vehicle movement, steering, acceleration, braking, or physics of any
+kind — `position` is rendered exactly as `nearbyVehicleInstances()`
+produces it, which for every vehicle this milestone can actually see is
+still the deterministic spawn point. No new vehicle spawning rules or
+procedural placement changes — `core/VehiclePlacement.js` is untouched.
+No mount/dismount redesign — `core/AvatarVehicleInteractionController.js`
+is untouched. No vehicle animation, no real vehicle models, no textures
+or assets, no vehicle customization. No camera changes. No multiplayer
+synchronization of vehicle state (every replica already recomputes the
+identical deterministic set independently — there is nothing to
+synchronize). No second observation model alongside `VehicleInstance` —
+`application/NearbyVehicleInstances.js` only ever bridges through the
+existing `vehicleInstanceFromPresence()`.
+
+### Recommendation
+
+    VehicleInstance          spawnPosition + position   (0.9.114)
+            ↓
+    Vehicle Rendering        VehicleInstance -> visible world object   (this milestone)
+            ↓
+    0.9.116 — Mounted Vehicle Movement
+            ↓
+    0.9.117 — Vehicle-Aware Dismount (reads a mounted VehicleInstance's
+              CURRENT position, never its spawn position)
+
+With a `VehicleInstance` now visibly existing in the World View at its
+current runtime position, the next milestone can finally connect the
+avatar's own already-complete movement/braking/steering capability
+(0.9.75 through 0.9.98) to the `VehicleInstance` itself: resolving a
+mounted avatar's continuous-movement intent into a real
+`VehicleInstance.withPosition()` call, each frame, so the bicycle a
+player is riding actually moves out from under the "[E] Mount" prompt
+that first made it visible.
