@@ -110,24 +110,63 @@ If more than one connected peer offers the same encounter, a
 inspect. Like everything else in World View, this is purely for
 looking — nothing here moves your camera or edits anything.
 
-Selecting a publication also shows two more read-only status blocks
-beneath it. **Material** / **Verification** try to actually load that
-publication's content and check it cryptographically against what was
-claimed for it — but today that only works for content this device
-already holds itself, so for anything a peer has shown you (which is
-everything you'll encounter here) they read **Unavailable** /
-**Unverifiable**. A **Distribution** block tracks whether the
+Selecting a publication also shows two more status blocks beneath it.
+**Material** / **Verification** try to actually load that publication's
+content and check it cryptographically against what was claimed for
+it. For content this device already holds itself that works directly;
+for anything a peer has shown you it normally reads **Unavailable** /
+**Unverifiable** instead — unless you've separately run **Discover
+Publication** (below) for that same publication, in which case a
+resolved decentralized lead it found is reused here too, and Material /
+Verification can come back **Available** / **Verified** the same way a
+direct discovery does. Either way, a **Source** line beneath Material
+tells you where the inspected content actually came from — **Local**
+(already on this device) or **Decentralized** (retrieved through a
+resolved Arweave/Nostr lead) — a plain fact about this one observation,
+never a trust score. A **Distribution** block tracks whether the
 publication has separately been pushed through Arweave/Nostr
 distribution, reading **Absent** for both **Material** and
-**Discovery** until that becomes possible from World View. Neither
-block is something you can act on — they're read-only status, already
-wired up for capability this app doesn't expose a way to trigger yet.
+**Discovery** until it has. It also offers a **Distribute Publication**
+button once this device holds the publication's own material — clicking
+it genuinely attempts a real Arweave upload and Nostr announcement, but
+on this device today it always ends in "Distribution could not be
+completed," because no wallet or relay connection is configured yet;
+the button and the attempt are real, the missing piece is host capability,
+not app plumbing.
 
-World Encounters only ever shows what a currently or recently connected
-peer has actually told you about; it reads **Nothing encounterable here
-yet** until at least one has. See
-[Peer Connections & Friends](07-PeerConnectionsAndFriends.md) for
-connecting to someone.
+### Discover Publication — searching decentralized networks directly
+
+Still inside the World Encounters group, but needing no marker click and
+no connected peer at all, sits a separate **Discover Publication**
+panel. Enter a **Publication id** and the **discovery tag** it was
+distributed under, then click **Discover Publication** to query Arweave
+(and, once this device has a relay connection, Nostr) directly for it.
+The result shows a **Discovery** line (**Unavailable**, **Resolved**, or
+**Ambiguous** when more than one independent lead turns up for the same
+location) and, once resolved, the same Material/Source/Verification
+readout described above, reusing the identical fields and wording. Today
+this only ever resolves for one of your own publications — one you
+signed and still hold locally, whose own claimed location matches what
+the network reports — so think of it as "is my publication really out
+there, intact?" rather than a general search over everyone else's work.
+
+Once a discovered result comes back **Verified**, a **Select
+Publication** button appears; clicking it records that result as "the
+publication you're currently working with," shown afterward in its own
+small notice underneath. Selecting is just that explicit pick — it
+never distributes, re-verifies, or feeds into your local selection above
+— and it stays in place even after you run another search, until you
+select something else or leave the page. Only a verified result is ever
+selectable; anything **Rejected**, **Unverifiable**, or not yet resolved
+never offers the button.
+
+World Encounters' marker-driven panels only ever show what a currently
+or recently connected peer has actually told you about; the group
+itself reads **Nothing encounterable here yet** until at least one has.
+Discover Publication is the one exception — it works even with no
+connected peer at all, since it queries a decentralized network
+directly. See [Peer Connections & Friends](07-PeerConnectionsAndFriends.md)
+for connecting to someone.
 
 ### Info — what am I looking at?
 
