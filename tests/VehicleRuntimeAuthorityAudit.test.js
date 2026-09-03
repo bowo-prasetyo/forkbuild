@@ -347,7 +347,22 @@ async function runTests() {
         // own syncVehicles() also runs (application/WorldNavigationSession.js
         // wires both loops independently — see this file's own header).
         session.avatarKeyDown('w');
-        const RIDE_FRAMES = 60;
+        // 0.9.119 — Vehicle–World Collision Constraint. 58, not 60:
+        // under this exact fixture (REAL_VEHICLE_ID, DEFAULT_WORLD_SEED),
+        // riding forward for EXACTLY 60 frames now (correctly) stops the
+        // bicycle close enough to a second, nearby real tree that the
+        // fixed dismount-offset landing spot itself overlaps it — the
+        // PRE-EXISTING, tree-clearance-only dismount system
+        // (core/AvatarVehicleDismountClearance.js, 0.9.81) correctly
+        // refuses that dismount, exactly as its own header already
+        // documents ("Existing clearance logic should determine whether
+        // the dismount location is valid" — see docs/Roadmap.md,
+        // 0.9.119). That is real, desired behavior — this test's own
+        // FLAGSHIP claim is about movement/rendering/dismount AUTHORITY
+        // across a ride, never about a fixed frame count landing clear of
+        // every real tree — so the ride length shifts by two frames to
+        // avoid this one fixture-specific coincidence.
+        const RIDE_FRAMES = 58;
         for (let i = 0; i < RIDE_FRAMES; i++) {
             fireFrame(session, 0.05);
         }

@@ -62339,3 +62339,189 @@ options, but none of them is owed to this line of milestones merely
 because `VehicleType` already contains the vocabulary for it. Capability
 should follow an actual product requirement, not a vocabulary already
 present in the model.
+
+## 0.9.119 — Vehicle–World Collision Constraint
+
+0.9.114 through 0.9.118 gave a mounted, movable vehicle its own runtime
+position and made every consumer of that position agree on it — but
+`application/AvatarVehicleMovementController.js#tick()` fed
+`core/AvatarMovementSimulation.js#simulateAvatarMovement()`'s own pure
+kinematics result STRAIGHT into `VehicleRuntimeInstances#setPosition()`,
+with nothing standing between them. A ridden bicycle could pass straight
+through a tree, a brick, or an entire building: no world-collision
+constraint was ever consulted for vehicle movement at all, even though
+0.9.88 (`core/AvatarVehicleMovementCapability.js`) had already given every
+vehicle type a physically-correct `collisionRadius` — the ONLY pipeline
+that ever consumed it was the on-foot `AvatarMovementController`, never
+the vehicle one.
+
+    Movement Intent
+          |
+          v
+    AvatarVehicleMovementController
+          |
+          v
+    candidate vehicle position
+          |
+          v
+    vehicle collision constraint
+          |
+          +-- clear   --> candidate position
+          |
+          +-- blocked --> constrained position
+                               |
+                               v
+                        VehicleInstance
+                               |
+                    +----------+----------+
+                    v                     v
+                Renderer               Avatar
+
+`VehicleRuntimeInstances` stays the one state authority throughout —
+collision is a constraint APPLIED to a proposed position, never a second
+place `position` is decided or stored.
+
+### The fix: reuse the avatar's own existing collision constraints,
+parameterized by the vehicle's own radius — never a second collision
+system
+
+The avatar already has exactly two world-collision constraints:
+`application/AvatarMovementConstraint.js` (buildings/bricks, via
+`core/AvatarCollision.js#resolveHorizontalMovement()`) and
+`application/AvatarTreeConstraint.js` (trees, via
+`core/AvatarTreeCollisionQuery.js`/`core/AvatarTreeMovement.js`). Both
+already answer "does the moving body's own footprint fit here" against
+the SAME world geometry a vehicle needs to respect. The only real gap was
+that building/brick collision had never been parameterized by the moving
+body's own radius the way tree collision already was (0.9.88) —
+`resolveHorizontalMovement()` hard-coded `AVATAR_COLLISION_RADIUS`
+throughout its own axis-resolution math.
+
+`core/AvatarCollision.js#resolveHorizontalMovement()`/`resolveAxis()` now
+accept an optional `radius` (default `AVATAR_COLLISION_RADIUS` — every
+existing caller, omitting it, is byte-for-byte unchanged).
+`application/AvatarMovementConstraint.js#apply()`/`_collectObstacles()`
+gained the direct structural twin of `AvatarTreeConstraint.js`'s own
+0.9.88 `avatarRadius` option, threaded through to both the broad-phase
+distance cull and the real horizontal resolution. Building/brick
+collision is now parameterizable by radius exactly the way tree collision
+already was — the ONE change that makes it reusable for a vehicle at all.
+
+`application/AvatarVehicleMovementController.js` gained two new, optional
+constructor parameters — `movementConstraint`/`treeConstraint` — the
+exact same "enforce/offer only when wired" posture every constraint on
+`AvatarMovementController` already follows. `tick()` now applies
+building/brick collision FIRST, then tree collision LAST, to the raw
+`simulateAvatarMovement()` result before it ever reaches
+`VehicleRuntimeInstances#setPosition()` — mirroring
+`AvatarMovementController`'s own existing pipeline order exactly. Both
+constraints are handed `capability.collisionRadius` — the SAME 0.9.88
+field, never a hardcoded avatar-sized radius, never two independently
+resolved numbers. `isCollided()`/`isCollidedWithTree()` are new,
+transient debug getters, the direct structural twins of
+`AvatarMovementController`'s own.
+
+`application/WorldNavigationSession.js` builds ONE
+`movementConstraint`/ONE `treeConstraint` pair and hands the SAME two
+instances to both `AvatarMovementController` (the on-foot avatar) and
+`AvatarVehicleMovementController` (a ridden vehicle) — one shared
+collision system, parameterized per-tick by whichever body's own radius
+is currently moving through it, never two parallel copies of the same
+building/brick/tree geometry. `terrainConstraint`/`stepConstraint` stay
+avatar-only: a mounted vehicle's own Y still follows raw terrain height,
+unrelated to either (see that controller's own 0.9.116 header).
+
+THE VEHICLE MOVES; COLLISION CONSTRAINS; THE AVATAR FOLLOWS THE
+CONSTRAINED RESULT — NEVER A SEPARATE, PRE-COLLISION POSITION.
+`AvatarVehicleMovementController#tick()` commits the ALREADY-CONSTRAINED
+position to `VehicleRuntimeInstances`, and `WorldNavigationSession`'s own
+existing 0.9.116 "avatar follows vehicle" wiring reads that same,
+already-committed position — so the avatar can never end up standing
+inside an obstacle the vehicle itself was just stopped short of, with no
+additional avatar-side change needed at all.
+
+### What this milestone deliberately does NOT do
+
+Vehicle-vs-vehicle collision. A vehicle physics engine — mass, momentum,
+acceleration changes, bounce, sliding response redesign. Vehicle
+rotation/orientation, steering, or turning radius beyond what already
+exists. Wheel or rider animation, collision sounds, damage, or
+destruction. A rectangular or oriented footprint — still the same circle/
+AABB primitives every existing constraint already used. A new spatial
+index of any kind. Multiplayer synchronization or persistence of
+collision state. A redesign of mounting, dismounting, or spawning.
+Motorcycle/car/drone collision — `isMovableVehicleType()` still gates on
+`VehicleType.BICYCLE` alone, untouched; collision is simply never reached
+for a vehicle type this codebase cannot yet move. New world obstacle
+types — the SAME trees, bricks, and buildings the avatar already
+collides with, nothing more.
+
+**Tests: `tests/VehicleWorldCollisionConstraint.test.js` is the new
+suite.** Section A proves `core/AvatarCollision.js`'s own new `radius`
+parameter — omitting it reproduces the exact pre-0.9.119 behavior, and a
+wider radius genuinely stops farther from the same obstacle. Section B is
+the same proof one layer up, in `application/AvatarMovementConstraint.js`,
+against a REAL brick. Section C is the FLAGSHIP for the actual
+composition seam in `AvatarVehicleMovementController` — building
+collision runs first, tree collision receives building collision's own
+already-adjusted position, both are handed
+`capability.collisionRadius`, a controller built without either
+constraint (every pre-0.9.119 caller's own shape) is byte-for-byte
+unchanged, repeated blocked movement never penetrates, and unsupported
+vehicle types still never reach either constraint at all. Section D is
+the end-to-end flagship: the real fixture bicycle genuinely collides with
+a real tree along its own path, the bicycle's final position never
+overlaps any real nearby tree, the avatar's position exactly equals the
+vehicle's own constrained position throughout, a genuinely clear path is
+completely unaffected, and — the architecturally critical regression —
+an unmounted, walking avatar approaching the SAME real tree still stops
+at exactly its OWN smaller `AVATAR_COLLISION_RADIUS` combined boundary,
+proving that sharing one constraint instance between two subjects never
+leaks a vehicle's own wider radius into ordinary on-foot collision.
+Section E is the architectural regression sweep: no
+`VehicleCollisionController`/`VehicleTreeCollision`/oriented-footprint/
+second-spatial-index vocabulary anywhere in the touched files, and
+`capability.collisionRadius` genuinely reaches both constraints, never a
+hardcoded number.
+
+Fixing this milestone's own gap also surfaced one genuine, pre-existing,
+narrow coincidence in two earlier fixture tests
+(`tests/VehicleRuntimeAuthorityAudit.test.js`'s own Section C,
+`tests/AvatarVehicleAwareDismount.test.js`'s own Section G): riding the
+SAME real fixture bicycle forward for EXACTLY 60 frames now (correctly)
+stops it close enough to a second, nearby real tree that the fixed
+dismount-offset landing spot itself overlaps that tree —
+`core/AvatarVehicleDismountClearance.js`'s own pre-existing (0.9.81),
+tree-clearance-only, no-retry dismount check correctly refuses that one
+dismount. Both tests' own flagship claims were never about landing clear
+of every real tree at one exact, arbitrary frame count; both now ride for
+58 frames instead of 60, clear of this one coincidental fixture
+interaction, with every other assertion in either test untouched.
+
+### Recommendation
+
+    VehicleInstance          spawnPosition + position           (0.9.114)
+            v
+    Vehicle Rendering        renders current position            (0.9.115)
+            v
+    Mounted Vehicle Movement vehicle actually moves               (0.9.116)
+            v
+    Vehicle-Aware Dismount   dismount reads current position      (0.9.117)
+            v
+    Runtime Authority Audit  every consumer verified               (0.9.118)
+            v
+    World Collision          vehicle constrained by trees/bricks/
+                             buildings, reusing the avatar's own
+                             existing collision constraints         (this milestone)
+
+A vehicle can no longer pass through solid world geometry, and the
+existing dismount clearance system already decides whether a stop right
+beside an obstacle is also a safe place to dismount. I'd treat
+`tests/VehicleWorldCollisionConstraint.test.js`'s own Section D as the
+audit a follow-up milestone would otherwise have needed to redo:
+rendering, mounting, dismounting, and on-foot collision were all directly
+exercised against the new collision behavior in this same milestone,
+never deferred. The next genuinely open vehicle question is steering/
+orientation, and only once the driving experience actually calls for it
+— not owed to this line of milestones merely because collision now
+exists.
