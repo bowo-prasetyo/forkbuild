@@ -1269,10 +1269,7 @@ export default {
         // or no `distributionLifecycleStore` was supplied — see this file's
         // own header, "0.9.100 — Publication Distribution Observation."
         refreshDistributionLifecycle() {
-            if (typeof this.unsubscribeDistributionLifecycle === 'function') {
-                this.unsubscribeDistributionLifecycle();
-            }
-            this.unsubscribeDistributionLifecycle = null;
+            this.stopSubscription('unsubscribeDistributionLifecycle');
 
             if (!this.selectedEncounter || this.selectedEncounter.kind !== 'PUBLICATION' || !this.distributionLifecycleStore) {
                 this.distributionLifecycle = null;
@@ -1284,6 +1281,31 @@ export default {
             this.unsubscribeDistributionLifecycle = this.distributionLifecycleStore.subscribe(publicationId, (_publicationId, lifecycle) => {
                 this.distributionLifecycle = lifecycle;
             });
+        },
+        // 0.9.101 — World View Integration Boundary Review. The one
+        // piece of real, mechanical duplication that review found: three
+        // separate collaborator subscriptions (`registry`, 0.9.13;
+        // `worldDiscoveryLeadRegistry`, 0.9.40; `distributionLifecycleStore`,
+        // 0.9.100) each held their own "call the stored unsubscribe
+        // function if one exists, then clear the field" idiom, repeated
+        // identically four times — three times in `beforeUnmount()`, and
+        // a fourth, inline, at the top of `refreshDistributionLifecycle()`
+        // (which re-subscribes per selection, not per mount, so it can't
+        // simply reuse `beforeUnmount()`'s own copy). This is that one
+        // idiom, factored out to its one place — it changes nothing about
+        // WHEN or WHY each of the three subscriptions starts or stops
+        // (still three independent lifetimes, two mount-scoped and one
+        // selection-scoped, exactly as their own 0.9.13/0.9.40/0.9.100
+        // headers already establish), only how the "stop and forget"
+        // mechanics of ANY ONE of them gets written. `fieldName` names
+        // one of this component's own `data()` fields holding either an
+        // `unsubscribe` function or `null` — never a subscription object,
+        // never a registry/store reference itself.
+        stopSubscription(fieldName) {
+            if (typeof this[fieldName] === 'function') {
+                this[fieldName]();
+            }
+            this[fieldName] = null;
         }
     },
     // 0.9.13 — seed, then subscribe; see this file's own header,
@@ -1329,28 +1351,24 @@ export default {
         }
     },
     // 0.9.13 — unsubscribes, unconditionally and idempotently; see this
-    // file's own header, "`beforeUnmount()` unsubscribes."
+    // file's own header, "`beforeUnmount()` unsubscribes." As of 0.9.101
+    // this, and the two mirrored blocks below it, all call the one
+    // `stopSubscription()` helper (see that method's own header) rather
+    // than repeating its three-line body per collaborator — the three
+    // subscriptions themselves stay exactly as independent as they always
+    // were.
     beforeUnmount() {
-        if (typeof this.unsubscribeWorldRegistry === 'function') {
-            this.unsubscribeWorldRegistry();
-        }
-        this.unsubscribeWorldRegistry = null;
+        this.stopSubscription('unsubscribeWorldRegistry');
         // 0.9.40 — unsubscribes the lead registry too, unconditionally and
         // idempotently, mirroring the block immediately above.
-        if (typeof this.unsubscribeWorldDiscoveryLeadRegistry === 'function') {
-            this.unsubscribeWorldDiscoveryLeadRegistry();
-        }
-        this.unsubscribeWorldDiscoveryLeadRegistry = null;
+        this.stopSubscription('unsubscribeWorldDiscoveryLeadRegistry');
         // 0.9.39 — invalidates any still-pending `inspectWorldEncounterMaterial()`
         // request; see this file's own header, "beforeUnmount() also
         // invalidates any in-flight request."
         this.materialInspectionRequestId += 1;
         // 0.9.100 — unsubscribes from `distributionLifecycleStore` too,
         // unconditionally and idempotently, mirroring the two blocks above.
-        if (typeof this.unsubscribeDistributionLifecycle === 'function') {
-            this.unsubscribeDistributionLifecycle();
-        }
-        this.unsubscribeDistributionLifecycle = null;
+        this.stopSubscription('unsubscribeDistributionLifecycle');
     },
     template: `
         <div class="world-encounter-view">

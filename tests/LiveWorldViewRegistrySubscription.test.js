@@ -297,7 +297,16 @@ async function run() {
         assert(!codeOnly.includes('.listSources('), '22. WorldEncounterCanvas.js never calls registry.listSources() itself — that stays entirely inside describeWorldFromDiscoveryRegistry()/describeWorldEncounterSelectionOutcomeFromRegistry()');
         {
             const originAccessors = Array.from(codeOnly.matchAll(/([A-Za-z_$][\w$]*)\.origin\b/g)).map((match) => match[1]);
-            const allowedOriginAccessors = new Set(['candidate', 'resolvedSelection', 'choice', 'resolvedEncounterSelection']);
+            // 0.9.101 note (pre-existing gap, unrelated to this milestone's
+            // own boundary review): 'resolvedLead' was missing from this
+            // allowlist even though 0.9.40 already reads `resolvedLead.origin`
+            // in this component's own template (the "Choose Location" active-
+            // choice class binding) — the exact same sanctioned
+            // candidate/choice provenance vocabulary this assertion already
+            // allows one layer over, for World-discovery-source selection
+            // instead of decentralized leads. Never a raw source's own
+            // `.origin`.
+            const allowedOriginAccessors = new Set(['candidate', 'resolvedSelection', 'choice', 'resolvedEncounterSelection', 'resolvedLead']);
             assert(originAccessors.length > 0, '23a. WorldEncounterCanvas.js reads .origin only via 0.9.20\'s own resolved-selection candidates, not never at all');
             assert(originAccessors.every((accessor) => allowedOriginAccessors.has(accessor)), `23b. WorldEncounterCanvas.js never reads a raw source's own .origin field — every .origin access is scoped to a 0.9.19/0.9.20 selection candidate (candidate/resolvedSelection/choice), found: ${JSON.stringify(originAccessors)}`);
             assert(!/\bsource\.origin\b/.test(codeOnly) && !/\brow\.origin\b/.test(codeOnly), '23c. WorldEncounterCanvas.js never reads .origin off a raw source or view row');

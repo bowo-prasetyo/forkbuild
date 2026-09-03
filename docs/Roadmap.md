@@ -59342,3 +59342,184 @@ milestones' own closing notes, is to pause and review the entire 0.9.x
 World View architecture — vehicles, materials, and publications, each now
 reaching World View through its own application-level composition/
 observation seam — before scheduling whatever comes after 0.9.100.
+
+## 0.9.101 — World View Integration Boundary Review
+
+The pause 0.9.99/0.9.100 each asked for on their own way out. This
+milestone builds no feature — it inspects the three integrations
+0.9.98/0.9.99/0.9.100 landed for real, *accidental* duplication at the
+World View boundary, and changes only what it actually finds. Per its own
+acceptance criterion, a milestone like this is allowed to produce no code
+change at all; this one found one small, genuine thing, fixed exactly
+that, and left everything else alone.
+
+**The three integrations do not share one boundary shape — and that
+turned out to be correct, not a gap.** The premise going in was that all
+three enter World View "the same way, at `WorldEncounterCanvas`." Reading
+`ui/views/WorldView.js` end to end found that isn't what happened:
+
+```
+Material verification  →  ui/main.js provides worldEncounterMaterialSources/
+                           worldEncounterMaterialVerifier
+                        →  WorldView.js injects, forwards as props
+                        →  WorldEncounterCanvas owns the request/response
+                           inspection lifecycle (0.9.39/0.9.42)
+
+Publication distribution → ui/main.js provides publicationDistributionLifecycleStore
+                          → WorldView.js injects, forwards as a prop
+                          → WorldEncounterCanvas subscribes/observes (0.9.100)
+
+Vehicle interaction     →  WorldView.js's own `session`
+                           (WorldNavigationSession, already owned here)
+                        →  polled on its own 150ms interval, straight into
+                           `vehicleInteractionState`
+                        →  VehicleInteractionPrompt (a sibling of
+                           WorldEncounterCanvas, purely presentational,
+                           zero imports of its own) — never a
+                           WorldEncounterCanvas prop at all
+```
+
+Vehicle interaction never touches `WorldEncounterCanvas` — it rides
+`WorldView.js`'s own already-owned `session`, on its own cadence, to its
+own sibling component. Material verification and publication distribution
+both ride `ui/main.js`'s provide/inject composition root into
+`WorldEncounterCanvas`'s own props instead. These are two genuinely
+different shapes because the facts themselves are different: vehicle
+mount/dismount is proximity to something World View's own navigation
+session already tracks moment-to-moment, where material/distribution are
+facts about a *selected* Publication, a concept `WorldEncounterCanvas`
+already owns (`selectedEncounter`, 0.9.4) and the session does not. Forcing
+vehicle state through `WorldEncounterCanvas` just to match the other two's
+shape would have been the "unify because it's all state" mistake this
+review was explicitly asked not to make.
+
+**One real, mechanical duplication, found and fixed.**
+`WorldEncounterCanvas.js` now owns three independent collaborator
+subscriptions — `registry` (0.9.13), `worldDiscoveryLeadRegistry` (0.9.40),
+`distributionLifecycleStore` (0.9.100) — each holding its own `unsubscribeX`
+data field. Every one of them repeated the identical three-line disposal
+idiom — "call the stored unsubscribe function if one exists, then clear
+the field" — four times: three copies inline in `beforeUnmount()`, and a
+fourth, separately, at the top of `refreshDistributionLifecycle()` (which
+re-subscribes per *selection*, not per mount, so it couldn't reuse
+`beforeUnmount()`'s own copy). That idiom is now one method,
+`stopSubscription(fieldName)`, called from all four sites. This does not
+merge the three subscriptions or touch when any of them starts or stops —
+two stay mount-lifetime (`mounted()`/`beforeUnmount()`), one stays
+selection-lifetime (`refreshDistributionLifecycle()`), exactly as their own
+0.9.13/0.9.40/0.9.100 headers already established. Only the "stop and
+forget" mechanics moved to one place.
+
+**Checked for the rest of the list, found nothing worth changing:**
+
+- **Repeated UI refresh plumbing (`WorldView.js`'s three intervals).**
+  `spatialInterval` (3000ms), `spatialPresenceSyncInterval` (100ms), and
+  `vehicleInteractionInterval` (150ms) each get their own
+  `setInterval`/`clearInterval` pair. The setup/teardown itself is already
+  about as small as it can be — a helper would trade two lines of native
+  API for one line of indirection without removing any real complexity,
+  and would blur the one thing each interval's own comment goes out of its
+  way to keep visible: three deliberately independent cadences serving
+  three different concerns. Left alone.
+- **Repeated null/absence guards.** `refreshSelectionOutcome()`,
+  `refreshDecentralizedLeadOutcome()`, `refreshDistributionLifecycle()`,
+  and `refreshMaterialInspection()` each open with an early-return guard
+  clearing their own derived field to `null`. The conditions differ
+  (`registry` vs. `worldDiscoveryLeadRegistry` vs.
+  `distributionLifecycleStore` plus a `kind` check vs. `materialSources`),
+  and so does what runs after (a synchronous describe call, a subscribe,
+  an async load) and which other refresh methods each one tail-calls.
+  Collapsing four different guard-then-act shapes behind one parameterized
+  helper would save a few lines and cost a reader having to unpack which
+  branch does what. Left alone.
+- **Components reaching below the application boundary.** Swept
+  `VehicleInteractionPrompt.js` (zero imports — a pure `state` prop →
+  template leaf), `WorldEncounterCanvas.js` (still exactly six
+  `application/` imports, zero `core/` imports — 0.9.101 adds a private
+  method, not an import), and `WorldView.js`'s own vehicle/material/
+  distribution wiring. No component anywhere in the three integrations
+  imports a `core/` module directly or reaches past its own established
+  `application/` seam.
+- **Duplicated composition-root forwarding.** `ui/main.js` provides
+  `worldDiscoverySourceRegistry`/`worldEncounterMaterialSources`+
+  `worldEncounterMaterialVerifier`/`publicationDistributionLifecycleStore`
+  as three separate `app.provide()` calls; `WorldView.js` injects and
+  forwards each as its own prop. This repeats Vue's own provide/inject
+  shape three times, which is what that shape looks like used correctly —
+  each collaborator has its own independent lifecycle and its own
+  independent default (`null`), and bundling them into one combined object
+  would invent a grouping none of the three domains actually share. Left
+  alone. `ui/views/LiveWorldView.js` staying registry-only (no material/
+  distribution props) is its own documented, deliberate scope boundary
+  from 0.9.15/0.9.99 — a different, intentionally minimal route, not an
+  inconsistency to fix.
+
+**Is `WorldEncounterCanvas` becoming an integration hub?** It now carries
+four optional, independently-gated collaborators (`registry`,
+`worldDiscoveryLeadRegistry`, `materialSources`+`materialVerifier`,
+`distributionLifecycleStore`) and, as of 0.9.100, three subscription
+lifecycles plus one async request lifecycle. Every one of them is
+observation only — nothing this component holds ever calls `setSource()`/
+`removeSource()`, executes a distribution, verifies a signature itself, or
+decides vehicle eligibility; each of those stays exactly where its own
+milestone put it, one layer down. That is presentation-with-subscriptions,
+not domain policy, so this review does not restructure it — but the count
+is worth naming out loud rather than assuming: a fourth or fifth such
+collaborator would be the point to ask this question again, not to keep
+adding quietly.
+
+**Also fixed, out of scope but discovered while verifying — a pre-existing,
+unrelated test gap.** `tests/LiveWorldViewRegistrySubscription.test.js`'s
+own architectural-boundary check (Section H) allowlists which identifiers
+may read a `.origin` field in `WorldEncounterCanvas.js`. 0.9.40 already
+added a legitimate `resolvedLead.origin` read to that component's own
+template (the "Choose Location" active-choice class binding) but never
+added `resolvedLead` to the allowlist, leaving this one assertion failing
+on `main` independent of anything this milestone touches (confirmed by
+running it against the pre-0.9.101 tree). One line, added to the allowlist
+alongside `candidate`/`resolvedSelection`/`choice`/
+`resolvedEncounterSelection` it already trusted.
+
+Tests: no new suite — this milestone is a review, not a feature. Every
+existing suite that stubs a fake `WorldEncounterCanvas` context including
+`refreshDistributionLifecycle` (`WorldEncounterSelectionUI.test.js`,
+`WorldEncounterSelectionResolutionUI.test.js`,
+`DecentralizedWorldEncounterLeadSelectionUI.test.js`,
+`WorldEncounterMaterialInspectionUI.test.js`,
+`WorldViewPublicationDistributionIntegration.test.js`) now also stubs the
+new `stopSubscription` method that call now makes, the same "update every
+fake context the same way the milestone that changed the real one already
+did" discipline 0.9.4/0.9.39/0.9.40/0.9.100 each held in turn.
+`WorldEncounterCanvasUI.test.js`'s own exact-import-count regression is
+unchanged (still eight total imports, six from `application/`, none from
+`core/` — 0.9.101 added no import). Every test file that touches
+`WorldEncounterCanvas.js`'s mount/selection/unmount behavior
+(`WorldEncounterCanvasUI`, `WorldEncounterInspectionUI`,
+`WorldEncounterSelectionIdentity`, `LiveWorldView`,
+`LiveWorldViewRegistrySubscription`, `WorldEncounterMaterialInspectionCompletion`,
+`WorldViewEncounterIntegration`, `WorldViewMaterialVerificationIntegration`)
+was re-run and passes.
+
+## What this milestone deliberately does NOT do
+
+No merging of `registry`/`worldDiscoveryLeadRegistry`/
+`distributionLifecycleStore` into one subscription, one prop, or one
+observation object — see "one real, mechanical duplication," above; their
+three lifetimes (two mount-scoped, one selection-scoped) stay exactly as
+independent as 0.9.13/0.9.40/0.9.100 each left them. No change to
+`WorldView.js`'s three intervals, to any `refresh*()` guard clause, to the
+composition-root `provide()`/`inject()` shape, to `VehicleInteractionPrompt.js`,
+or to `ui/views/LiveWorldView.js` — see the "checked, found nothing worth
+changing" list, above. No move of vehicle interaction into
+`WorldEncounterCanvas`, and no new shared "World View integration" seam
+invented to paper over the fact that vehicle state reaches World View
+differently than material/distribution do — that difference reflects a
+real difference in what each fact is about, not an inconsistency. No
+change to any `application/` or `core/` file, and no new one added. No
+distribute/publish/mount/dismount command wired anywhere.
+
+With the review complete and the architecture confirmed sound (one small
+disposal-idiom dedup aside), the three directions the request that opened
+this milestone named — deeper World View interaction, a richer encounter/
+content experience, or a new vehicle capability — are each still open,
+each still unscheduled, and none is implied or begun by this milestone.
