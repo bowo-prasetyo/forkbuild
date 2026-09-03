@@ -145,6 +145,36 @@ export class VehicleRuntimeInstances {
         return this._instances.get(id) || null;
     }
 
+    // 0.9.118 — Vehicle Runtime Authority Audit. Every ALREADY-TRACKED
+    // VehicleInstance within `radius` of `centerPosition`, measured
+    // against each entry's own CURRENT `position` — never a spawn-
+    // anchored one. Added for exactly one caller:
+    // application/AvatarVehicleInteractionController.js's own
+    // `_nearbyVehicles()`, which needs "which vehicles this store already
+    // knows about are near here right now" to fix the audit's own
+    // central finding — mount TARGET resolution could only ever find a
+    // vehicle by its deterministic spawn point, so a vehicle ridden away
+    // from its spawn and left there could never be mounted again from
+    // where it now actually sits. See that controller's own 0.9.118
+    // header for the full story.
+    //
+    // A READ, NEVER A sync(). This deliberately never calls
+    // `nearbyVehicleInstances()` and never touches `this._instances` —
+    // no discovery, no eviction, no mutation of any kind. That distinction
+    // matters: sync()'s own removal step drops any tracked entry outside
+    // ITS OWN `radius` of ITS OWN `centerPosition` — calling sync() a
+    // second time, from a second call site, with a DIFFERENT (smaller)
+    // interaction radius centered on the avatar, would evict a vehicle
+    // still within the render loop's own larger render radius, out from
+    // under application/WorldNavigationSession.js's own
+    // `_setupVehicleRendering()`. nearby() carries none of that hazard —
+    // it only ever narrows what this store already, independently knows,
+    // exactly like get() does for a single id.
+    nearby(centerPosition, radius) {
+        return Array.from(this._instances.values())
+            .filter((instance) => withinRadiusXZ(instance.position, centerPosition, radius));
+    }
+
     // The one way a tracked vehicle's own `position` ever changes here.
     // See this file's own header, "setPosition() is the only way...".
     setPosition(id, nextPosition) {

@@ -1,4 +1,5 @@
 import { VehiclePresence } from './VehiclePresence.js';
+import { VehicleInstance } from './VehicleInstance.js';
 import { withinRadiusXZ, VEHICLE_INTERACTION_RADIUS } from './AvatarVehicleProximity.js';
 import { AvatarVehicleInteractionIntent } from './AvatarVehicleInteractionIntent.js';
 
@@ -92,6 +93,33 @@ import { AvatarVehicleInteractionIntent } from './AvatarVehicleInteractionIntent
 // future mounting milestone decides whether and how a resolved target
 // ever becomes a stored fact; this file only ever answers the question
 // for the instant it is asked.
+//
+// 0.9.118 UPDATE — ALSO ACCEPTS A VehicleInstance, THE SAME WIDENED-INPUT
+// FIX core/AvatarVehicleDismountPosition.js ALREADY APPLIED IN 0.9.117.
+// Through 0.9.117, `application/AvatarVehicleInteractionController.js`'s
+// own mount-target candidate list (`_nearbyVehicles()`) could only ever
+// be a fresh `vehiclePresenceInRegion()` result — vehicles found by their
+// FIXED deterministic spawn point falling near the avatar. That was
+// honest as long as a vehicle's position never changed, but 0.9.118's own
+// audit found the exact same "reads spawn, not current position" gap
+// 0.9.117 already closed for dismounting: a bicycle ridden away from its
+// spawn point and left there is, by 0.9.116, a real vehicle sitting at
+// its CURRENT position — yet an avatar walking up to that current
+// position could never mount it, because the deterministic query that
+// finds MOUNT candidates only ever looks for a spawn point nearby, and a
+// moved vehicle's spawn point is wherever it USED to be, not where it now
+// is. `application/AvatarVehicleInteractionController.js`'s own 0.9.118
+// update is the call-site half of this fix — merging
+// `application/VehicleRuntimeInstances.js`'s own tracked, CURRENT-position
+// candidates into the list this function is handed. This function's own
+// half is, again, the smallest change that could possibly work: this
+// function has only ever read `vehicle.id`/`vehicle.position` from each
+// candidate, and a `VehicleInstance` already exposes both, so
+// `vehicle instanceof VehiclePresence || vehicle instanceof VehicleInstance`
+// is now accepted, with the exact same ranking/tie-break policy applied
+// uniformly across whichever shape each candidate happens to be. Still no
+// vehicle id / registry lookup, still no mount-state awareness, still no
+// selection-policy change — a widened INPUT TYPE, never a new rule.
 
 function isFiniteCoordinate(value) {
     return typeof value === 'number' && Number.isFinite(value);
@@ -120,8 +148,8 @@ export function resolveAvatarVehicleInteractionTarget({ avatarPosition, vehicles
         throw new Error('resolveAvatarVehicleInteractionTarget requires a vehicles array');
     }
     for (const vehicle of vehicles) {
-        if (!(vehicle instanceof VehiclePresence)) {
-            throw new Error('resolveAvatarVehicleInteractionTarget requires every entry in vehicles to be a VehiclePresence instance');
+        if (!(vehicle instanceof VehiclePresence) && !(vehicle instanceof VehicleInstance)) {
+            throw new Error('resolveAvatarVehicleInteractionTarget requires every entry in vehicles to be a VehiclePresence or VehicleInstance instance');
         }
     }
 
