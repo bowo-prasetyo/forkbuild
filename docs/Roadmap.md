@@ -62183,3 +62183,159 @@ only after that audit would I pick up an actual new vehicle capability —
 collision geometry, orientation, a second movable vehicle type, or
 persistence — on a foundation confirmed to have no more code quietly
 treating deterministic placement as current state.
+
+## 0.9.118 — Vehicle Runtime Authority Audit
+
+0.9.114 through 0.9.117 built `VehicleInstance`'s own runtime `position`,
+then progressively fixed every consumer that was still quietly reading a
+vehicle's deterministic spawn point instead: rendering (0.9.115),
+movement (0.9.116), and dismounting (0.9.117). 0.9.117's own closing
+recommendation named exactly one open question: has every OTHER
+runtime-vehicle consumer been checked against the same "identity vs.
+spatial rediscovery" test? This milestone is that audit, plus the one
+fix it found:
+
+    every vehicle consumer
+          │
+          ▼
+    "does this need the vehicle's INITIAL position,
+     or its CURRENT position?"
+          │
+          ├── initial  → VehiclePlacement / VehiclePresence   (unchanged)
+          │
+          └── current  → VehicleRuntimeInstances.position
+                              │
+              ┌───────────────┼───────────────┬───────────────┐
+              ▼               ▼               ▼               ▼
+          movement        rendering       dismount      mount targeting
+         (0.9.116, OK)   (0.9.115, OK)   (0.9.117, OK)   (THE ONE GAP)
+
+**The audit itself: everywhere the invariant already holds.** A full
+source sweep (`tests/VehicleRuntimeAuthorityAudit.test.js`, Section A)
+confirms `.spawnPosition` is never read by
+`application/AvatarVehicleMovementController.js`,
+`renderer/VehicleFieldRenderer.js`,
+`application/RenderWorldViewUseCase.js`,
+`application/WorldNavigationSession.js`, or
+`application/VehicleRuntimeInstances.js` itself — every one of them reads
+only `.position`. `vehicleInstanceFromPresence()` — the one bridge from
+deterministic placement into runtime state — is still called from
+exactly one production call site, `application/NearbyVehicleInstances.js`'s
+own discovery bridge; nothing that already holds a tracked
+`VehicleInstance` ever reconstructs a second, fresh one from a
+`VehiclePresence` and silently discards whatever runtime position
+movement had already produced. And `VehicleInstance#withPosition()` is
+only ever called through `application/VehicleRuntimeInstances.js#setPosition()`
+— no other file writes a vehicle's current position directly. Movement,
+rendering, and dismounting were already exactly right.
+
+**The one gap: mount TARGET resolution still read spawn, not current,
+position.** `application/AvatarVehicleInteractionController.js#_nearbyVehicles()`
+— the candidate list `_tickMount()` hands to
+`core/AvatarVehicleInteractionTarget.js#resolveAvatarVehicleInteractionTarget()`
+— was still a bare `vehiclePresenceInRegion()` requery, exactly as
+0.9.117's own header noted it left it: "only the DISMOUNT-side vehicle
+lookup changes, since only a MOUNTED vehicle's identity is already
+known." That was honest for mounting a vehicle that has never moved (the
+overwhelming majority of cases), but it is the identical "reads spawn,
+not current position" bug 0.9.117 already fixed for dismounting, still
+alive for mounting: a bicycle ridden away from its spawn point and left
+there — a real vehicle, sitting at its CURRENT position, exactly as
+0.9.116/0.9.117 already made possible — could never be mounted again by
+an avatar walking up to where it now actually is. The deterministic
+query centered on the avatar only ever finds a vehicle by its FIXED
+spawn point falling nearby, and a moved vehicle's spawn point is
+wherever it USED to be. Confirmed as a real, reproducible gap (not a
+hypothetical) before fixing it: a real fixture bicycle, ridden ~150+
+units from its own deterministic spawn point and left there, could not
+be remounted from its new location — pressing E did nothing, silently,
+forever, until the player happened to walk all the way back to the
+long-vacated spawn point instead.
+
+**The fix, matching 0.9.117's own shape exactly: a widened input type,
+plus one merge at one call site — never a new selection policy.**
+`application/VehicleRuntimeInstances.js` gains one new reader,
+`nearby(centerPosition, radius)` — every already-tracked
+`VehicleInstance` within `radius` of `centerPosition`, measured against
+each entry's own CURRENT position. It deliberately never calls `sync()`
+and never mutates `_instances`: `sync()`'s own eviction step is keyed to
+ITS OWN radius/center, and calling it a second time from a smaller,
+avatar-centered interaction radius would evict a vehicle the render
+loop's own larger `VEHICLE_RENDER_RADIUS` (50) still wants tracked.
+`application/AvatarVehicleInteractionController.js#_nearbyVehicles()`
+now merges `vehicleRuntimeInstances.nearby()`'s own current-position
+candidates ahead of the deterministic query's results, deduplicated by
+id — a tracked vehicle's current-position entry always wins over the
+deterministic query's stale, spawn-anchored one for the same id, while a
+vehicle this store has never discovered (still the common case) is
+completely unaffected, coming only from the deterministic query exactly
+as before. `core/AvatarVehicleInteractionTarget.js#resolveAvatarVehicleInteractionTarget()`
+now accepts `vehicle instanceof VehiclePresence || vehicle instanceof
+VehicleInstance` — the identical widened-input-type fix
+`core/AvatarVehicleDismountPosition.js` already applied in 0.9.117, since
+this function has only ever read `.id`/`.position` off of whichever
+shape it is handed. `_tickMount()`'s own composition of intent + target
+resolution + mount transition is completely unchanged; only the
+candidate list it is handed grew richer.
+
+**Tests: `tests/VehicleRuntimeAuthorityAudit.test.js` is the new
+suite.** Section A is the architectural source sweep described above.
+Section B is the FLAGSHIP for the fix itself — mounts a real fixture
+bicycle, rides it a real, substantial distance from its own spawn point
+through the actual 0.9.116 movement pipeline, dismounts, confirms (as a
+negative control) that the deterministic placement query alone does NOT
+find the vehicle at its new location, then walks away and back to that
+CURRENT location and proves pressing E mounts it again. Section C is the
+cross-pipeline FLAGSHIP — one continuous session exercising mounting,
+real movement, real render-frame `syncVehicles()`, several idle
+reconciliation frames once dismounted, and a real dismount together,
+proving `position !== spawnPosition` throughout and that no step ever
+resets a moved vehicle's position back toward its spawn point. Section D
+proves stable identity — `id`/`type`/`spawnPosition` survive discovery,
+movement, rendering, and dismount completely unchanged, with only
+`position` ever moving. Section E is the architectural regression: the
+fix is real, minimal wiring (one new non-mutating reader, one merge at
+one call site, a widened input type with no public-surface change to
+either touched core file) — never a second target-resolution policy, and
+introduces no persistence, networking, or new movable vehicle type of
+any kind.
+
+### What this milestone deliberately does NOT do
+
+No vehicle-specific collision geometry, orientation, steering, or
+rotation. No new movable vehicle type — `isMovableVehicleType()` still
+gates on `VehicleType.BICYCLE` alone, untouched. No persistence of a
+vehicle's runtime position across a session, and no multiplayer
+synchronization of one — `application/VehicleRuntimeInstances.js` stays
+exactly as session-local as its own 0.9.116 header already established.
+No redesign of mounting itself, of `_tickMount()`'s own
+intent/target/transition composition, or of the existing tree-only
+dismount clearance system. No UI changes. No new vehicle capability of
+any kind — this milestone is strictly the audit its own name promises,
+plus the one fix that audit found.
+
+### Recommendation
+
+    VehicleInstance          spawnPosition + position           (0.9.114)
+            v
+    Vehicle Rendering        renders current position            (0.9.115)
+            v
+    Mounted Vehicle Movement vehicle actually moves               (0.9.116)
+            v
+    Vehicle-Aware Dismount   dismount reads current position      (0.9.117)
+            v
+    Runtime Authority Audit  every consumer verified,
+                             mount targeting fixed to match        (this milestone)
+
+With the audit table above now fully green — every runtime-vehicle
+consumer this codebase has reads current position from
+`VehicleRuntimeInstances` once a vehicle is known, and deterministic
+placement only ever answers "does a vehicle exist here at all" — the
+vehicle subsystem has reached the stopping point 0.9.117's own
+recommendation already anticipated. I'd treat the next vehicle milestone
+as a genuinely new decision, not a default continuation: a second
+movable vehicle type, persistence, or richer collision are all real
+options, but none of them is owed to this line of milestones merely
+because `VehicleType` already contains the vocabulary for it. Capability
+should follow an actual product requirement, not a vocabulary already
+present in the model.

@@ -26,6 +26,8 @@ import { treeCollisionCandidatesForMovement } from '../core/AvatarTreeCollisionQ
 
 // 0.9.83 — Avatar-Vehicle Mount/Dismount Runtime Integration.
 // Extended by 0.9.117 — Vehicle-Aware Dismount.
+// Extended by 0.9.118 — Vehicle Runtime Authority Audit (mount-target
+// resolution — see `_nearbyVehicles()`'s own 0.9.118 header below).
 //
 // 0.9.73 through 0.9.82 built a complete mount/dismount semantic chain —
 // proximity, identity, intent, target resolution, a mount descriptor, a
@@ -544,14 +546,61 @@ export class AvatarVehicleInteractionController {
     // either 0.9.76's target resolution or this controller's own
     // dismount lookup could otherwise consider in range. See this
     // file's own header, "Vehicle lookup: a requery, never a registry."
+    //
+    // 0.9.118 UPDATE — MERGED WITH TRACKED, CURRENT-POSITION CANDIDATES.
+    // THE AUDIT'S OWN CENTRAL FINDING. Through 0.9.117 this method
+    // returned the deterministic query's own result, unmodified — correct
+    // for MOUNTING a vehicle that has never moved (the overwhelming
+    // majority of cases, since most vehicles are never ridden), but wrong
+    // for the exact scenario 0.9.116/0.9.117 already made possible: a
+    // bicycle ridden away from its spawn point and left there is a real
+    // vehicle sitting at its CURRENT position, yet the deterministic
+    // query only ever finds a vehicle by its FIXED spawn point falling
+    // inside this box — so an avatar walking up to that vehicle's ACTUAL,
+    // current location could never mount it again; only walking back to
+    // its long-vacated spawn point would ever surface it, and that spot
+    // no longer has anything there. This is the identical "reads spawn,
+    // not current position" bug 0.9.117 already fixed for dismounting,
+    // found here for mount TARGETING by this milestone's own audit.
+    //
+    // The fix merges `this._vehicleRuntimeInstances.nearby()` — every
+    // ALREADY-TRACKED vehicle within interaction range of the avatar,
+    // measured against its own CURRENT position (application/
+    // VehicleRuntimeInstances.js's own 0.9.118 addition) — ahead of the
+    // deterministic candidates, deduplicated by id so a tracked vehicle's
+    // CURRENT-position entry always wins over the deterministic query's
+    // stale, spawn-anchored one for the same id. A vehicle this store has
+    // never discovered (the common case) is entirely unaffected — it
+    // still only ever comes from the deterministic query, exactly as
+    // before. Absent entirely when no `vehicleRuntimeInstances` was wired
+    // in (an older test, a minimal setup — see this class's own
+    // constructor), the identical graceful-degradation posture
+    // `_currentMountedVehicle()` already established for the dismount
+    // path.
+    //
+    // NEVER CALLS `sync()`. See application/VehicleRuntimeInstances.js's
+    // own `nearby()` header for exactly why: `sync()`'s own eviction step
+    // is keyed to ITS OWN radius/center, and this controller's own
+    // interaction radius (1.5) is far smaller than
+    // application/WorldNavigationSession.js's own render radius (50) —
+    // calling `sync()` from here, too, would evict a vehicle the render
+    // loop still wants tracked the moment the avatar is merely near it
+    // but not within mounting range. `nearby()` only ever reads; it never
+    // discovers or evicts anything.
     _nearbyVehicles(avatarPosition) {
-        return vehiclePresenceInRegion(
+        const deterministic = vehiclePresenceInRegion(
             this._seed,
             avatarPosition.x - VEHICLE_INTERACTION_RADIUS,
             avatarPosition.z - VEHICLE_INTERACTION_RADIUS,
             avatarPosition.x + VEHICLE_INTERACTION_RADIUS,
             avatarPosition.z + VEHICLE_INTERACTION_RADIUS
         );
+        if (!this._vehicleRuntimeInstances) {
+            return deterministic;
+        }
+        const tracked = this._vehicleRuntimeInstances.nearby(avatarPosition, VEHICLE_INTERACTION_RADIUS);
+        const trackedIds = new Set(tracked.map((vehicle) => vehicle.id));
+        return [...tracked, ...deterministic.filter((vehicle) => !trackedIds.has(vehicle.id))];
     }
 
     // On release, also re-arms `_interactKeyConsumed` — a fresh press
@@ -618,3 +667,20 @@ export class AvatarVehicleInteractionController {
 // "identity vs. spatial rediscovery" question is deliberately left to a
 // future audit milestone — see docs/Roadmap.md, 0.9.117's own closing
 // recommendation.
+//
+// 0.9.118 IS THAT AUDIT MILESTONE, AND `_nearbyVehicles()` IS THE ONE
+// PLACE IT FOUND SOMETHING TO FIX. The paragraph immediately above is
+// still accurate AS OF 0.9.117 — `_tickMount()`/`_nearbyVehicles()` were
+// genuinely unchanged by that milestone. 0.9.118's own audit swept mount
+// TARGET resolution specifically and found the same "reads spawn, not
+// current position" gap 0.9.117 already closed for dismounting: see
+// `_nearbyVehicles()`'s own 0.9.118 header above for the fix. Still no
+// redesign of mounting itself — `_tickMount()`'s own composition of
+// intent + target resolution + mount transition is completely unchanged;
+// only the CANDIDATE LIST `_nearbyVehicles()` hands it now also includes
+// already-tracked vehicles at their current position. 0.9.118 deliberately
+// adds nothing else: no vehicle-specific collision geometry, no
+// orientation/steering, no persistence of runtime position across a
+// session, no multiplayer synchronization, no MOTORCYCLE/CAR/DRONE
+// movement, no new vehicle capability of any kind — see docs/Roadmap.md,
+// 0.9.118, for the complete audit and its one fix.
