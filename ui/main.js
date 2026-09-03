@@ -117,6 +117,7 @@ import { PublicationDistributionLifecycleRestorer } from '../application/Publica
 import { hydratePublicationDistributionLifecycles } from '../application/PublicationDistributionLifecycleHydration.js';
 import { composePublicationDistributionCommand } from '../application/PublicationDistributionCommandComposition.js';
 import { resolvePublicationDistributionRuntimeConfiguration } from '../application/PublicationDistributionRuntimeConfiguration.js';
+import { createPublicationDistributionRuntimeProvider } from '../application/PublicationDistributionRuntimeProvider.js';
 
 const identityProvider = new CreateIdentityProviderUseCase().execute();
 const identityUseCase = new IdentityUseCase(identityProvider);
@@ -1454,7 +1455,19 @@ app.provide('publicationDistributionLifecycleStore', publicationDistributionLife
 // which does nothing but forward `arweave`/`nostr` verbatim into the same
 // two 0.9.105 resolvers this file already called directly.
 //
-// THE RUNTIME CONFIGURATION SOURCE IS STILL EMPTY, SO BOTH RESOLVERS STILL
+// 0.9.107 — Publication Distribution Runtime Provider. 0.9.106 gave this
+// file exactly one seam a runtime capability could enter through, but the
+// object fed to it was still a hand-written `{}` literal — nothing in this
+// codebase actually PRODUCED an `{ arweave, nostr }` shape from a host's
+// own flat capability vocabulary (`signer`, `publishImpl`, and the rest).
+// `createPublicationDistributionRuntimeProvider()`
+// (`application/PublicationDistributionRuntimeProvider.js`, NEW) is that
+// producer: a real, injectable factory this file calls with whatever this
+// environment/replica currently exposes, returning an object whose
+// `resolveRuntimeCapabilities()` regroups it into the exact shape
+// `resolvePublicationDistributionRuntimeConfiguration()` already accepts.
+//
+// THE HOST CAPABILITIES SUPPLIED ARE STILL NONE, SO BOTH RESOLVERS STILL
 // RESOLVE `undefined` — THIS MILESTONE CHANGES NO OBSERVABLE BEHAVIOR IN
 // THE RUNNING APP. No concrete Arweave signer or Nostr `publishImpl`
 // implementation exists anywhere in this codebase yet (see
@@ -1462,19 +1475,20 @@ app.provide('publicationDistributionLifecycleStore', publicationDistributionLife
 // `application/NostrPublicationDiscoveryPublisher.js`'s own headers, both
 // still naming a concrete implementation as later, unscheduled work) — so
 // a real World View click still reaches exactly today's existing
-// synchronous throw, honestly. This milestone's entire value is that the
-// decision point is now ONE named, independently testable seam (see
-// `tests/PublicationDistributionRuntimeConfiguration.test.js`) rather than
-// two separate call sites; supplying a real signer or `publishImpl` later —
-// most naturally a browser wallet-extension adapter, mirroring
+// synchronous throw, honestly. This milestone's entire value is that a
+// real, independently testable factory function (see
+// `tests/PublicationDistributionRuntimeProvider.test.js`) is now the thing
+// this file calls, rather than a plain object literal it shapes by hand;
+// supplying a real signer or `publishImpl` later — most naturally a
+// browser wallet-extension adapter, mirroring
 // `base/BaseInjectedProviderWalletAdapter.js`'s own already-established
-// pattern one substrate over — touches only how
-// `publicationDistributionRuntimeConfiguration` is defined immediately
-// below, never `WorldView.js`, never `WorldEncounterCanvas.js`, never the
-// command, orchestrator, or executor, and not even the two `resolve...()`
-// calls themselves.
-const publicationDistributionRuntimeConfiguration = {};
-const { arweaveUploaderOptions, nostrPublisherOptions } = resolvePublicationDistributionRuntimeConfiguration(publicationDistributionRuntimeConfiguration);
+// pattern one substrate over — touches only the one object passed to
+// `createPublicationDistributionRuntimeProvider()` immediately below,
+// never `WorldView.js`, never `WorldEncounterCanvas.js`, never the
+// command, orchestrator, or executor, and not even
+// `resolvePublicationDistributionRuntimeConfiguration()` itself.
+const publicationDistributionRuntimeProvider = createPublicationDistributionRuntimeProvider({});
+const { arweaveUploaderOptions, nostrPublisherOptions } = resolvePublicationDistributionRuntimeConfiguration(publicationDistributionRuntimeProvider.resolveRuntimeCapabilities());
 const publicationDistributionCommand = composePublicationDistributionCommand({
     lifecycleStore: publicationDistributionLifecycleStore,
     arweaveUploaderOptions,
