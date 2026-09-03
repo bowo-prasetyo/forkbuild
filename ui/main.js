@@ -115,7 +115,8 @@ import { PublicationDistributionLifecyclePersistence } from '../application/Publ
 import { PublicationDistributionLifecyclePersistenceBridge } from '../application/PublicationDistributionLifecyclePersistenceBridge.js';
 import { PublicationDistributionLifecycleRestorer } from '../application/PublicationDistributionLifecycleRestorer.js';
 import { hydratePublicationDistributionLifecycles } from '../application/PublicationDistributionLifecycleHydration.js';
-import { executePublicationDistributionCommand } from '../application/PublicationDistributionCommand.js';
+import { composePublicationDistributionCommand } from '../application/PublicationDistributionCommandComposition.js';
+import { resolveArweaveUploaderOptions, resolveNostrPublisherOptions } from '../application/PublicationDistributionConfigurationProvider.js';
 
 const identityProvider = new CreateIdentityProviderUseCase().execute();
 const identityUseCase = new IdentityUseCase(identityProvider);
@@ -1420,16 +1421,46 @@ app.provide('publicationDistributionLifecycleStore', publicationDistributionLife
 //
 // NEITHER AN ARWEAVE UPLOADER NOR A NOSTR PUBLISHER IS CONSTRUCTED HERE,
 // EITHER — the identical restraint the 0.9.100 wiring immediately above
-// already holds, unrevisited by this milestone. `arweaveUploaderOptions`/
-// `nostrPublisherOptions` remain per-call arguments a future caller of
-// `publicationDistributionCommand` supplies itself; this composition root
-// makes no signer/relay configuration decision on anyone's behalf.
-// `publicationDistributionLifecycleStore` is the one collaborator bound
-// here, via a thin closure, purely so a future caller never has to thread
-// the app's own store instance through by hand.
-const publicationDistributionCommand = (request) => executePublicationDistributionCommand({
-    ...request,
-    lifecycleStore: publicationDistributionLifecycleStore
+// already holds, unrevisited by 0.9.103. `publicationDistributionLifecycleStore`
+// was the one collaborator bound here, via a thin closure, purely so a
+// future caller never has to thread the app's own store instance through
+// by hand.
+//
+// 0.9.105 — Publication Distribution Configuration Boundary. The gap
+// 0.9.103's own header named on its own way out: `arweaveUploaderOptions`/
+// `nostrPublisherOptions` were per-call arguments nobody in this file ever
+// supplied, so a real World View click (0.9.104) reached this command only
+// to hit 0.9.45's/0.9.46's own synchronous "a signer/publishImpl is
+// required" throw. `resolveArweaveUploaderOptions()`/`resolveNostrPublisherOptions()`
+// (`application/PublicationDistributionConfigurationProvider.js`, NEW) are
+// the one place that decision now gets made, and
+// `composePublicationDistributionCommand()` (`application/PublicationDistributionCommandComposition.js`,
+// NEW) is the seam that pre-binds their result into this command exactly
+// the way `publicationDistributionLifecycleStore` alone already was.
+//
+// BOTH RESOLVERS ARE CALLED WITH AN EMPTY OPTIONS OBJECT, SO BOTH PRESENTLY
+// RESOLVE `undefined` — THIS MILESTONE CHANGES NO OBSERVABLE BEHAVIOR IN
+// THE RUNNING APP. No concrete Arweave signer or Nostr `publishImpl`
+// implementation exists anywhere in this codebase yet (see
+// `application/ArweavePublicationMaterialUploader.js`'s and
+// `application/NostrPublicationDiscoveryPublisher.js`'s own headers, both
+// still naming a concrete implementation as later, unscheduled work) — so
+// a real World View click still reaches exactly today's existing
+// synchronous throw, honestly. This milestone's entire value is that the
+// decision point is now explicit, named, and independently testable (see
+// `tests/PublicationDistributionConfigurationProvider.test.js` and
+// `tests/PublicationDistributionCommandComposition.test.js`); supplying a
+// real signer or `publishImpl` later — most naturally a browser wallet-
+// extension adapter, mirroring `base/BaseInjectedProviderWalletAdapter.js`'s
+// own already-established pattern one substrate over — touches only the
+// two `resolve...()` calls immediately below, never `WorldView.js`, never
+// `WorldEncounterCanvas.js`, never the command, orchestrator, or executor.
+const arweaveUploaderOptions = resolveArweaveUploaderOptions({});
+const nostrPublisherOptions = resolveNostrPublisherOptions({});
+const publicationDistributionCommand = composePublicationDistributionCommand({
+    lifecycleStore: publicationDistributionLifecycleStore,
+    arweaveUploaderOptions,
+    nostrPublisherOptions
 });
 app.provide('publicationDistributionCommand', publicationDistributionCommand);
 
