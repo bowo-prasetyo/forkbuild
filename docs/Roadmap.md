@@ -59523,3 +59523,179 @@ disposal-idiom dedup aside), the three directions the request that opened
 this milestone named — deeper World View interaction, a richer encounter/
 content experience, or a new vehicle capability — are each still open,
 each still unscheduled, and none is implied or begun by this milestone.
+
+## 0.9.102 — World View Feature Integration Audit
+
+The pause 0.9.101 closed with, applied one level up. 0.9.101 asked whether
+the three recent integrations (vehicle, material verification, publication
+distribution) were *wired* into World View consistently. This milestone
+asks a different question: across everything World View can now do,
+what is actually reachable end-to-end by a player, what is reachable but
+limited, what exists but isn't reachable at all, and what was deliberately
+left out? It builds no new domain vocabulary and no new capability — it
+inspects, and fixes only what it finds broken along the way, exactly as
+0.9.101 did.
+
+Four areas were traced in full, each against the real code rather than
+the roadmap's own prior descriptions of itself.
+
+### COMPLETE — reachable end-to-end today
+
+- **Vehicle mount, dismount, and ground movement.** `E` mounts/dismounts
+  a nearby vehicle (`application/AvatarVehicleInteractionController.js`
+  `keyDown`/`_tickMount`/`_tickDismount`), the existing W/A/S/D keys drive
+  it once mounted (`application/AvatarMovementController.js`
+  `_resolvedMovementSpeed()`/`_resolvedAcceleration()`/
+  `_resolvedSteeringRate()`, each reading
+  `core/AvatarVehicleMovementCapability.js`'s per-type values), `Ctrl`
+  brakes (`application/WorldNavigationSession.js`'s `VEHICLE_BRAKE_KEY`),
+  and `ui/components/VehicleInteractionPrompt.js` renders a live "[E]
+  Mount/Dismount" prompt off a 150ms poll of
+  `session.avatarVehicleInteractionState()`. This loop was previously
+  undocumented for end users — see "Fixed," below.
+- **Local material verification and inspection.** Lead → resolution →
+  material → verification → the inspection panel in
+  `ui/components/WorldEncounterCanvas.js` all work end-to-end against the
+  local sources `ui/main.js` composes (`LocalWorldEncounterMaterialSource`,
+  `composeWorldEncounterMaterialVerifier()`), exactly as 0.9.99 scoped it.
+- **Publication distribution lifecycle observation.** 0.9.100's
+  `distributionLifecycleStore` prop lets `WorldEncounterCanvas` observe a
+  publication's ARWEAVE/NOSTR/lifecycle status live, subscribed per
+  selection.
+
+### REACHABLE BUT LIMITED
+
+- **Only one vehicle type ever exists to mount.** `core/VehiclePlacement.js`
+  hardcodes every deterministically-placed vehicle to
+  `type: VehicleType.BICYCLE`. `core/AvatarVehicleMovementCapability.js`
+  fully defines distinct speed/acceleration/braking/steering/collision
+  values for `MOTORCYCLE` and `CAR` (lines 781-782) — real, tested,
+  reachable *code* — but no placement path ever creates one, so no player
+  can ever encounter, mount, or drive anything but a bicycle. This is
+  different from DRONE/`AERIAL_VEHICLE`, which is `supported: false` and
+  genuinely out of scope (see Deferred, below): motorcycle and car are
+  fully modeled capability data sitting behind a placement gap, not an
+  unfinished capability.
+- **No visible vehicle mesh.** Vehicles have no rendering in `renderer/`
+  at all (0.9.98 already named this out of scope) — mount/dismount and
+  driving all work, but there is nothing to see; the only visible cue is
+  the floating prompt text.
+- **Local material verification only, by design.** Real, tested Arweave
+  and Nostr client code already exists in the codebase —
+  `application/ArweaveGraphqlDiscoveryQueryService.js` and
+  `application/ArweaveWorldEncounterMaterialResolver.js` make genuine
+  `fetch()` calls against `arweave.net`, and
+  `application/NostrDiscoveryQueryService.js` is a real (adapter-injected)
+  NIP-01 relay client — but none of it is threaded through `ui/main.js`'s
+  composition root. `composeArweaveDecentralizedWorldEncounterMaterialSource`
+  (`application/DecentralizedWorldEncounterMaterialRuntimeComposition.js`)
+  is imported only by its own test. This is unwired-but-real capability,
+  not vaporware: 0.9.99's own closing notes already named exactly this as
+  future, unscheduled work, and this audit found no reason to disagree —
+  wiring live Arweave/Nostr sources into the composition root is a
+  materially larger, network-facing decision (signer/relay
+  configuration, trust handling) than anything this review's scope
+  covers.
+- **Publication distribution observation without execution** — see NOT
+  YET REACHABLE, below; this is the sharpest finding of the four areas.
+
+### NOT YET REACHABLE
+
+- **Initiating publication distribution.** Nothing in `ui/`, no CLI, no
+  server script calls `PublicationDistributionOrchestrator.
+  orchestratePublicationDistribution()` or
+  `PublicationDistributionExecutor` outside their own test suites — 0.9.100
+  said this outright at the time ("No second lifecycle, no execution
+  runtime, no distribute action... Wiring an actual 'distribute this
+  publication' command is a separate, later, unscheduled interaction
+  milestone") and nothing built since has changed it.
+  `orchestratePublicationDistribution({ publication, serializedMaterial,
+  materialStorage, arweaveUploaderOptions, nostrPublisherOptions })` is
+  already one clean call — the sequencing itself is not the problem — but
+  it needs real signer/relay configuration World View has no source for
+  today, and its result still has to be fed into the existing lifecycle
+  transition + persistence bridge (0.9.51/0.9.55) by hand; nothing wraps
+  that today. `application/commands/` already establishes a
+  Command-plus-registry convention for wrapping one intent as one class
+  (`Command.js`, `CommandRegistry.js`), but it's specialized to undoable
+  spatial edits against a live `World` context — distribution isn't
+  undoable and doesn't touch a `World` — so it's a shape to imitate, not a
+  registry to join. A UI-reachable "Distribute Publication" action needs
+  its own small adapter (composition-root signer/relay config →
+  `orchestratePublicationDistribution()` → lifecycle store), not a bigger
+  version of anything that exists today.
+
+### DELIBERATELY DEFERRED (confirmed, not re-litigated)
+
+- Drone/aerial vehicle movement — `AERIAL_VEHICLE`/`DRONE` is
+  `supported: false` throughout `core/AvatarVehicleMovementCapability.js`.
+- Vehicle 3D rendering, vehicle-switching/occupancy UI, and
+  `AvatarMovementController#movementState()`'s telemetry (0.9.97) staying
+  unwired to any HUD — all named explicitly in 0.9.97/0.9.98's own closing
+  notes.
+- Peer-sourced and Arweave/Nostr-backed discovery and material sources —
+  named explicitly in 0.9.99's own closing notes as future, unscheduled
+  work; this audit confirms nothing has changed that since.
+- Road/path placement realism for ground vehicles — named in
+  `core/VehiclePlacement.js`'s own header as future work.
+
+### Interaction-model consistency (existing vs. new World View mechanisms)
+
+Checked whether the newest UI paths (vehicle interaction) created a
+subtly different interaction model from the two that came before it
+(spatial pick/inspect in the 3D viewport; World Encounters' click-a-marker
+selection in its own sidebar panel). They are, in fact, three different
+idioms — click-release in the viewport, click-a-marker in a separate
+panel, and proximity-driven auto-prompt plus an explicit keypress — and
+`spatialSelection`/`spatialInspection` and `WorldEncounterCanvas`'s own
+`selectedEncounter` are independent state with no shared identity check,
+so a Publication's brick and its World Encounter marker can be selected
+at once with no cross-highlighting. This was deliberate and is already
+correctly documented for two of the three:
+`docs/user/03-WorldView.md` explicitly distinguishes the 3D-viewport click
+from the World Encounters marker click, including naming that the latter
+lacks the "Edit a Copy" escalation the former has. The one real gap this
+audit found — not a code inconsistency, a documentation one — was that
+vehicle mount/dismount, a real and fully working third idiom, appeared
+nowhere in `docs/user/`. Fixed below.
+
+### Fixed while auditing
+
+`docs/user/ControlsReference.md` and `docs/user/06-AvatarsAndPresence.md`
+had zero mentions of vehicles, mount, dismount, or any of the keys
+described above, despite the feature being fully implemented and playable
+since 0.9.83/0.9.98. Added a "Vehicles" section to each, in the same
+table style the existing Avatar Movement section already uses, describing
+`E` to mount/dismount, W/A/S/D to drive, and `Ctrl` to brake — no code
+change, no new capability, just documenting what already ships.
+
+### What this milestone deliberately does NOT do
+
+No command seam for publication distribution — that is named above as
+the leading candidate for the *next* milestone, not built here. No
+motorcycle/car placement logic added to `core/VehiclePlacement.js`, even
+though the capability data behind it is fully modeled — deciding how
+richer vehicle variety should be placed (density, roads, spawn rules) is
+a design question, not this review's to answer by fiat. No wiring of
+Arweave/Nostr discovery sources into `ui/main.js` — a network-facing,
+trust-relevant composition-root decision 0.9.99 already deferred on
+purpose. No unification of the three interaction idioms (spatial pick,
+World Encounters selection, vehicle proximity) — each is well-motivated
+by what it's about, and two of the three are already correctly
+documented as distinct; only the documentation gap was worth closing.
+
+### Recommendation
+
+Of the three gaps found, **initiating Publication Distribution from
+World View** is the strongest next milestone: it is the one place a real
+application-level capability (a working, tested Orchestrator/Executor
+pair) is fully built and sitting completely unreachable behind a missing
+command seam, rather than behind a larger, deliberately-deferred
+architectural decision (decentralized discovery) or a content/design
+decision (vehicle variety). Building that seam — composition-root
+signer/relay configuration, a small adapter wrapping
+`orchestratePublicationDistribution()` and routing its result into the
+existing lifecycle store, and one UI action in `WorldEncounterCanvas` —
+would close the loop this audit's own diagram opened with: World View →
+application command → distribution executor → Arweave/Nostr → lifecycle
+→ observation → World View.

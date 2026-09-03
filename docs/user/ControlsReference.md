@@ -79,6 +79,19 @@ Walking your avatar directly, instead of flying the camera — see
 | `Alt` + `W` / `S` | Start continuous walk forward/backward | Keeps moving after keys are released; an ordinary `W`/`S` tap without Alt cancels it |
 | `Alt` + `Shift` + `W` / `S` | Start continuous run forward/backward | Same cancellation rule as above |
 
+## Vehicles (World View)
+
+See [Avatars & Presence](06-AvatarsAndPresence.md#vehicles). Requires Avatar
+Control Mode; a prompt appears automatically when you're close enough to a
+vehicle to mount it.
+
+| Input | Action | Notes |
+|---|---|---|
+| `E` | Mount the nearby vehicle, or dismount the one you're on | Only shown/active when a vehicle is in range or you're mounted |
+| `W` / `S` | Accelerate / reverse | Replaces on-foot walking while mounted |
+| `A` / `D` | Steer | Turn rate depends on the vehicle |
+| `Ctrl` (held) | Brake | |
+
 ## Selection (click/marquee work in both views; only the Editor mutates)
 
 | Input | Action | Notes |
