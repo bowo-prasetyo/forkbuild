@@ -61970,3 +61970,216 @@ CURRENT position instead of a freshly re-queried `VehiclePresence`'s
 fixed one — directly eliminating the "ride far away, then dismount fails
 to find a destination" failure mode this entire line of milestones was
 motivated by in the first place.
+
+## 0.9.117 — Vehicle-Aware Dismount
+
+0.9.116 made a `VehicleInstance` actually move — a mounted, ridden
+bicycle's own runtime `position` genuinely changes now, frame by frame —
+but that milestone's own closing paragraph was explicit that it left one
+thing deliberately broken: `core/AvatarVehicleDismountPosition.js` and
+`application/AvatarVehicleInteractionController.js` still computed a
+dismount destination from a freshly re-queried `VehiclePresence`, whose
+`position` is, by that type's own contract, always the vehicle's FIXED
+deterministic spawn point. In practice this was worse than a merely
+wrong destination: `application/AvatarVehicleInteractionController.js`'s
+own dismount-path vehicle lookup (`_findMountedVehicle()`) re-derives
+"which vehicle is this" by re-querying deterministic placement in a tiny,
+`VEHICLE_INTERACTION_RADIUS`-sized (1.5 units) box around the AVATAR's
+own current position — and once a ridden vehicle (carrying the avatar
+along with it, 0.9.116's own "the vehicle moves; the avatar follows")
+has traveled more than 1.5 units from where it spawned, that box no
+longer contains the spawn point at all. The dismount transition's own
+honest `dismountPosition: null` case then left the avatar mounted with
+its position unchanged, forever: an avatar that rides a bicycle any real
+distance could never press E to get off again. This milestone is the
+fix, and only the fix:
+
+    Mounted vehicle
+          │
+          ▼
+    VehicleRuntimeInstances
+          │
+          └── current VehicleInstance.position
+                        │
+                        ▼
+                 Dismount position
+                        │
+                        ▼
+                   Clearance check
+                        │
+                        ▼
+                  Dismount transition
+                        │
+                        ▼
+                 Avatar position
+
+**The central invariant: once mounted, the vehicle's CURRENT runtime
+position — never its deterministic spawn position — is the spatial
+authority for dismounting.** `application/AvatarVehicleInteractionController.js`
+gains one new collaborator, `vehicleRuntimeInstances` (the SAME
+`application/VehicleRuntimeInstances.js` store `_setupVehicleRendering()`
+and `application/AvatarVehicleMovementController.js` already read from
+and write to — one store, three readers/writers, never a second parallel
+copy of "where is this vehicle right now"), and one new lookup,
+`_currentMountedVehicle()`, that resolves the mounted vehicle by
+IDENTITY — `this._mount.vehicleId`, session-local, set the instant
+mounting succeeds, never itself distance-gated — against that store
+first, before ever falling back to the old, spatial `_findMountedVehicle()`
+requery. `_tickDismount()` and `mountedVehicleType()` (0.9.85's own
+observation seam, subject to the identical bug) both now go through this
+one lookup. The fallback survives only for a caller with no runtime store
+wired at all (an older test, a minimal setup) or for the one narrow,
+harmless race — this controller's own frame subscription can tick before
+`_setupVehicleRendering()`'s within the very same frame — where a vehicle
+has never yet been discovered, and therefore has, by construction, never
+yet been moved either.
+
+**`core/AvatarVehicleDismountPosition.js`'s own fix is the smallest one
+that could possibly work: a widened INPUT TYPE, never a new rule.**
+`resolveAvatarVehicleDismountPosition()` now accepts `vehicle instanceof
+VehiclePresence || vehicle instanceof VehicleInstance` — both already
+expose the same `type`/`position` fields this function has only ever
+read. `VehicleInstance.spawnPosition` is never read anywhere in this
+file, even now; only `.position`, exactly as before. A caller handing in
+a `VehicleInstance` therefore automatically resolves from the CURRENT
+runtime position, with zero new code path or special case. The file's
+public surface is completely unchanged — same two exports, same
+bicycle-only geometry, same fixed `+X` offset, same flattened `y = 0`,
+same "no occupancy validation" boundary — this milestone touches exactly
+one `instanceof` check and the error message next to it.
+
+**The existing 0.9.81 clearance system remains the entire clearance
+authority, untouched.** `isAvatarVehicleDismountPositionClear()` is not
+imported differently, not called differently, and gains no vehicle-aware
+collision geometry of any kind — it still only ever judges an
+ALREADY-RESOLVED candidate position against real tree circles. What
+changed is only which position reaches it: the vehicle's current one,
+never its spawn point.
+
+**Vehicle identity is the primary reference, once mounted — never
+spatial rediscovery.** Before this milestone, "which vehicle am I
+mounted on" was answered by re-deriving a spatial guess from the
+avatar's own current position on every single tick — correct only by
+accident, because through 0.9.115 a vehicle's position never changed, so
+"near the avatar" and "the vehicle I'm mounted on" always agreed. This
+milestone breaks that habit for the dismount path and its sibling
+`mountedVehicleType()` observation: identity first, space never, once a
+`vehicleId` is already known. Mount TARGET resolution (finding a vehicle
+to mount in the first place, before any identity exists to reference) is
+completely unchanged — that question is inherently spatial, and stays
+exactly as spatial as it always was.
+
+**The vehicle's own runtime record is never touched by dismounting.**
+`_tickDismount()` reads a vehicle's current position through
+`_currentMountedVehicle()` but never writes to `VehicleRuntimeInstances`
+— dismounting changes the AVATAR's own `AvatarPresenceSession` position
+(exactly as it always has, since 0.9.82), never the vehicle's `id`,
+`type`, `spawnPosition`, or `position`. A dismounted bicycle stays
+exactly where the player left it, precisely because nothing about
+dismounting was ever the vehicle's own concern.
+
+**Runtime position remains exactly as session-local as it already was
+— reload/persistence is deliberately left undecided, not implemented.**
+`application/VehicleRuntimeInstances.js` was already, by its own 0.9.116
+header, "session-local, in-memory, never persisted or networked"; this
+milestone does not change that. A moved vehicle's position does not
+survive a fresh session — it resets to its deterministic spawn point,
+exactly as it always has, since nothing here adds persistence of any
+kind. Keeping that boundary explicit and undecided (rather than guessing
+at a persistence scheme nothing has asked for) keeps runtime state and
+persistence the two separate concerns they have always been in this
+codebase.
+
+Tests: `tests/AvatarVehicleDismountPosition.test.js`'s new Section J
+proves the core-layer half in isolation — a `VehicleInstance` is
+accepted and resolves from `position`, never `spawnPosition`; a
+never-moved `VehicleInstance` resolves identically to an equivalent
+`VehiclePresence`; MOTORCYCLE/CAR/DRONE still honestly resolve to `null`;
+and a plain object shaped like a `VehicleInstance` is still rejected.
+`tests/AvatarVehicleAwareDismount.test.js` is the new flagship suite —
+Section A proves stationary dismount is completely unchanged once a
+runtime store is wired in; Section B is the FLAGSHIP claim, isolating
+the fix to vehicle IDENTITY alone by moving only the tracked
+`VehicleInstance`'s own position (never the avatar's) and proving the
+resolved destination tracks it; Section C proves spawn position is
+architecturally irrelevant, both by value and by a source sweep
+confirming neither changed file's code ever reads `.spawnPosition`;
+Section D proves the existing tree-clearance system still blocks a
+MOVED vehicle's dismount candidate, using the exact real, deterministic
+blocked-destination fixture `tests/AvatarVehicleInteractionController.test.js`
+already established; Section E proves a vehicle's own runtime identity
+(id/type/spawnPosition/position) survives a dismount completely
+untouched; Section F proves unmounted, on-foot behavior and a controller
+built with no runtime store at all are both unaffected; Section G is the
+end-to-end FLAGSHIP, through a real `WorldNavigationSession` and real
+0.9.116 movement — mounting a real fixture bicycle, riding it a genuine
+12+ units from its own spawn point, and proving pressing E now actually
+dismounts (rather than leaving the avatar stuck mounted forever, the
+actual bug this entire line of milestones was motivated by), landing the
+avatar next to where the bicycle now IS; and Section H is an
+architectural regression proving the fix is real wiring — exactly one
+call site for `resolveAvatarVehicleDismountPosition()`, a real reference
+to `_vehicleRuntimeInstances`/`_currentMountedVehicle()`, and
+`core/AvatarVehicleDismountPosition.js`'s own public surface unchanged.
+
+### What this milestone deliberately does NOT do
+
+No vehicle-specific collision geometry — the existing, tree-only
+`isAvatarVehicleDismountPositionClear()` stays the entire clearance
+authority, completely unmodified. No vehicle orientation, steering, or
+rotation. No alternative dismount directions or automatic repositioning
+of a blocked destination. No vehicle despawning. No persistence of a
+vehicle's runtime position across a session — a moved vehicle still
+resets to its deterministic spawn point on a fresh session, exactly as
+before. No multiplayer synchronization of a vehicle's runtime position.
+No MOTORCYCLE/CAR/DRONE movement — still gated entirely by
+`isMovableVehicleType()`, untouched here. No redesign of mounting or of
+mount TARGET resolution — `_tickMount()`/`_nearbyVehicles()` are
+completely unchanged; only the DISMOUNT-side vehicle lookup changes,
+since only a MOUNTED vehicle's identity is already known. No broader
+audit of every other runtime-vehicle consumer for the same
+"identity vs. spatial rediscovery" question — deliberately left to the
+next milestone.
+
+### Recommendation
+
+    VehicleInstance          spawnPosition + position   (0.9.114)
+            v
+    Vehicle Rendering        VehicleInstance -> visible world object   (0.9.115)
+            v
+    Mounted Vehicle Movement VehicleInstance actually moves; avatar follows   (0.9.116)
+            v
+    Vehicle-Aware Dismount   dismount reads the vehicle's CURRENT position   (this milestone)
+            v
+    0.9.118 — Vehicle Runtime Authority Audit
+
+With mounting, movement, rendering, and now dismounting all correctly
+reading a vehicle's CURRENT runtime position rather than its
+deterministic spawn point, the vehicle subsystem has crossed the exact
+boundary 0.9.114's own header opened the door to: genuine runtime state
+now exists, and every consumer of it needs to be checked against the
+same "identity vs. spatial rediscovery" question this milestone answered
+for exactly one seam (dismount). I'd spend 0.9.118 on that audit —
+walking every remaining runtime-vehicle consumer (mount target
+resolution's own boundaries, the `[E] Mount`/`[E] Dismount` UI
+affordance's edge cases, anything a future replica or persistence layer
+might eventually read) against the authority table this line of
+milestones has now fully established:
+
+| Concern                             | Authority                                  |
+| ------------------------------------ | ------------------------------------------ |
+| Which vehicles initially exist?      | `VehiclePlacement`                         |
+| Vehicle identity                     | `VehicleInstance.id`                       |
+| Vehicle type                         | `VehicleInstance.type`                     |
+| Where vehicle spawned                | `VehicleInstance.spawnPosition`            |
+| Where vehicle currently is           | `VehicleInstance.position` / runtime store |
+| How vehicle moves                    | existing movement simulation               |
+| How vehicle is rendered              | runtime `position`                         |
+| Which vehicle is mounted             | mounted vehicle identity                   |
+| Where dismount occurs                | mounted vehicle's runtime `position`       |
+| Whether dismount is spatially valid  | existing clearance system                  |
+
+only after that audit would I pick up an actual new vehicle capability —
+collision geometry, orientation, a second movable vehicle type, or
+persistence — on a foundation confirmed to have no more code quietly
+treating deterministic placement as current state.

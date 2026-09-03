@@ -1,8 +1,10 @@
 import { Position } from './Position.js';
 import { VehiclePresence } from './VehiclePresence.js';
+import { VehicleInstance } from './VehicleInstance.js';
 import { VehicleType } from './VehicleType.js';
 
 // 0.9.80 — Vehicle Dismount Position Resolution.
+// Extended by 0.9.117 — Vehicle-Aware Dismount.
 //
 // 0.9.79 (core/AvatarVehicleDismountIntent.js) answered "did the avatar
 // just ask to leave," and deliberately stopped there — by its own
@@ -144,6 +146,43 @@ import { VehicleType } from './VehicleType.js';
 // happen — only WHERE one would land if it did. A future 0.9.81 reads
 // this file's own output alongside 0.9.79's intent and 0.9.77's mount
 // state to perform the actual `mounted -> unmounted` transition.
+//
+// 0.9.117 UPDATE — ALSO ACCEPTS A VehicleInstance, THE ONE CHANGE THIS
+// MILESTONE MAKES HERE. Through 0.9.116, every caller of this function
+// (in practice, only `application/AvatarVehicleInteractionController.js`)
+// could only ever hand it a freshly-requeried `VehiclePresence` — whose
+// `position` is, by that type's own contract, always the vehicle's FIXED
+// deterministic spawn point (see core/VehiclePresence.js's own header).
+// That was honest through 0.9.113, but became a live bug the moment
+// core/VehicleInstance.js (0.9.114) gave a vehicle a `position` that can
+// actually differ from `spawnPosition`, and application/AvatarVehicleMovementController.js
+// (0.9.116) started actually moving it: a mounted, ridden vehicle's own
+// dismount destination kept resolving from where it STARTED, never from
+// where it now IS. This function's own core promise — "the same shape of
+// input in, the same deterministic offset applied" — does not care WHICH
+// object shape carries `type` and `position`, so the fix is the smallest
+// one that could possibly work: `vehicle instanceof VehiclePresence ||
+// vehicle instanceof VehicleInstance` is now accepted, and the SAME
+// offset math below reads `vehicle.type`/`vehicle.position` off of
+// whichever one it was actually handed. A `VehiclePresence` still means
+// exactly what it always has (a deterministic descriptor, whose
+// `position` is its own spawn point); a `VehicleInstance` means "the
+// avatar's actual mounted vehicle, right now" (see
+// core/VehicleInstance.js's own header) — this file has no opinion on
+// which one is "more correct" to pass in, only that BOTH already expose
+// the two fields this function has only ever needed. Crucially,
+// `VehicleInstance.spawnPosition` is never read anywhere in this file,
+// even now — only `.position`, exactly as before this update — so a
+// caller handing in a `VehicleInstance` automatically gets the CURRENT
+// runtime position resolved from, never the frozen spawn one, with zero
+// new code path or special case here. See
+// application/AvatarVehicleInteractionController.js's own 0.9.117
+// header for the call-site half of this fix — the actual switch from
+// "always hand this function a spawn-anchored VehiclePresence" to
+// "prefer handing it the mounted vehicle's own current VehicleInstance."
+// Still no vehicleId lookup, still no mount-state awareness, still no
+// orientation/collision/occupancy validation added — this update is
+// purely a widened, backward-compatible INPUT TYPE, not a new rule.
 
 // See this file's own header, "A fixed world-space offset," for the
 // full reasoning behind both the direction (+X, arbitrary but fixed
@@ -164,8 +203,8 @@ function isFiniteXZPosition(position) {
 // The one entry point. See this file's own header for the exact
 // reasoning behind every deliberate choice below.
 export function resolveAvatarVehicleDismountPosition(vehicle) {
-    if (!(vehicle instanceof VehiclePresence)) {
-        throw new Error('resolveAvatarVehicleDismountPosition requires a VehiclePresence instance');
+    if (!(vehicle instanceof VehiclePresence) && !(vehicle instanceof VehicleInstance)) {
+        throw new Error('resolveAvatarVehicleDismountPosition requires a VehiclePresence or VehicleInstance instance');
     }
     if (!isFiniteXZPosition(vehicle.position)) {
         throw new Error('resolveAvatarVehicleDismountPosition requires a vehicle with a finite numeric x and z position');
@@ -192,14 +231,15 @@ export function resolveAvatarVehicleDismountPosition(vehicle) {
 // awareness of any kind (a `currentMount` parameter, importing
 // core/AvatarVehicleMount.js/core/AvatarVehicleMountTransition.js); a
 // vehicle id / vehicle registry lookup (this file takes the actual
-// VehiclePresence it needs — see this file's own header, "Takes the
-// actual VehiclePresence"); vehicle orientation or heading of any kind
-// (see "A fixed world-space offset"); generic or per-type vehicle
-// geometry (dimensions, wheelbase, seat position); occupancy or terrain
-// validity checking, or any expansion of core/AvatarTreeCollision.js's
-// existing avatar-vs-tree-only collision machinery (see "No occupancy
-// or terrain validation yet"); nearest-vehicle selection; remounting;
+// VehiclePresence or VehicleInstance it needs — see this file's own
+// header, "Takes the actual VehiclePresence" and its own 0.9.117
+// update); vehicle orientation or heading of any kind (see "A fixed
+// world-space offset"); generic or per-type vehicle geometry
+// (dimensions, wheelbase, seat position); occupancy or terrain validity
+// checking, or any expansion of core/AvatarTreeCollision.js's existing
+// avatar-vs-tree-only collision machinery (see "No occupancy or terrain
+// validation yet"); nearest-vehicle selection; remounting;
 // keyboard/controller input of any kind; avatar or vehicle movement;
 // vehicle collision; animation; camera changes; rendering; networking;
-// persistence; randomness; the clock. See docs/Roadmap.md, 0.9.80, for
-// the full list.
+// persistence; randomness; the clock. See docs/Roadmap.md, 0.9.80 and
+// 0.9.117, for the full list.

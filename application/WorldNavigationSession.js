@@ -1080,8 +1080,24 @@ export class WorldNavigationSession {
         // application/AvatarVehicleInteractionController.js's own
         // header for why `mount` lives here rather than on either the
         // movement controller or AvatarPresenceSession itself.
+        //
+        // 0.9.117 — Vehicle-Aware Dismount. This session's own
+        // `_vehicleRuntimeInstances` (constructed unconditionally in the
+        // constructor, well before any avatar exists — see that field's
+        // own header) is now also handed to the interaction controller,
+        // so its dismount-path vehicle lookup resolves the mounted
+        // vehicle's CURRENT runtime position by identity, rather than
+        // re-deriving it from a spawn-anchored deterministic requery —
+        // see that controller's own 0.9.117 header, "Vehicle identity is
+        // the primary reference, once mounted." The SAME store
+        // application/AvatarVehicleMovementController.js already writes
+        // a ridden vehicle's new position to below, and
+        // _setupVehicleRendering() already reads from — one store, three
+        // readers/writers, never a second parallel copy of "where is
+        // this vehicle right now."
         this._avatarVehicleInteractionController = new AvatarVehicleInteractionController(
-            this._avatarPresenceSession
+            this._avatarPresenceSession,
+            { vehicleRuntimeInstances: this._vehicleRuntimeInstances }
         );
         // 0.9.116 — Mounted Vehicle Movement. Built alongside the mount/
         // dismount controller above, sharing this session's own
@@ -1135,24 +1151,23 @@ export class WorldNavigationSession {
                 // (below) or to the ordinary on-foot pipeline
                 // (AvatarMovementController#tick(), completely
                 // unchanged) is decided here, independently of
-                // `setMovementCapability()` above — see
-                // application/AvatarVehicleMovementController.js's own
-                // header for why: `mountedVehicleType()`'s own requery
-                // degrades to VehicleType.NONE once the avatar (and,
-                // after this milestone, the vehicle it is riding) has
-                // moved more than core/AvatarVehicleProximity.js's own
-                // tiny VEHICLE_INTERACTION_RADIUS away from the
-                // vehicle's FIXED spawn point (see
-                // AvatarVehicleInteractionController#mountedVehicleType()'s
-                // own "known boundary" header) — a bound this milestone
-                // deliberately does not touch, since fixing it is
-                // 0.9.117's own job. Vehicle movement instead resolves
-                // its own vehicle identity from `mount()` (session-local,
-                // never distance-gated) and its own vehicle TYPE from
-                // `_vehicleRuntimeInstances` (this session's own runtime
-                // authority — see that store's own header) — both
-                // robust to exactly the distance the capability lookup
-                // above is not.
+                // `setMovementCapability()` above. Vehicle movement
+                // resolves its own vehicle identity from `mount()`
+                // (session-local, never distance-gated) and its own
+                // vehicle TYPE from `_vehicleRuntimeInstances` (this
+                // session's own runtime authority — see that store's own
+                // header) directly, rather than through
+                // `mountedVehicleType()`'s own lookup above — belt and
+                // suspenders, not a workaround for a bound that still
+                // exists: as of 0.9.117,
+                // `AvatarVehicleInteractionController#mountedVehicleType()`
+                // itself also resolves the mounted vehicle by identity
+                // against this SAME `_vehicleRuntimeInstances` store
+                // first (see that controller's own 0.9.117 header,
+                // "Vehicle identity is the primary reference, once
+                // mounted"), so it no longer degrades to VehicleType.NONE
+                // merely because the avatar and vehicle have ridden far
+                // from the vehicle's FIXED spawn point.
                 const mount = this._avatarVehicleInteractionController.mount();
                 const mountedVehicleInstance = mount ? this._vehicleRuntimeInstances.get(mount.vehicleId) : null;
                 const vehicleMovementActive = mountedVehicleInstance !== null
