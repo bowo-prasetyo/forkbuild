@@ -58718,3 +58718,124 @@ movement-state composition layer 0.9.94 originally named for this slot —
 composing speed, direction, acceleration, braking, and orientation with
 a genuinely reachable `brakingRequested` already in hand, rather than
 composing around the hole this milestone closes.
+
+## 0.9.96 — Vehicle Braking Input Binding
+
+0.9.95 built a complete, real, key-free path from an already-resolved
+braking request down to `AvatarMovementState.brakingRequested`, and
+deliberately stopped at the door: nothing in this codebase's own real
+input ever called `setVehicleBrakingIntent()`. This milestone connects
+one existing physical input to the already-defined braking intent,
+without touching braking semantics at all:
+
+```
+physical Control key transition        application/WorldNavigationSession.js
+  keydown/keyup                          _processVehicleBrakingInput(key, type)
+       │                                          │
+       ▼                                          ▼
+core/AvatarVehicleBrakingInputAdapter.js ───► deriveAvatarVehicleBrakingInputFact()
+  { type: 'brakedown'/'brakeup' }               { brakeRequested }
+                                                   │
+                                                   ▼
+                                core/AvatarVehicleBrakingIntent.js
+                                  deriveAvatarVehicleBrakingIntent()
+                                                   │
+                                                   ▼
+                    application/AvatarMovementController.js#setVehicleBrakingIntent(intent)
+                                    (unchanged since 0.9.95)
+```
+
+**The binding lives entirely at the application seam that already owns
+raw keyboard events — `WorldNavigationSession#avatarKeyDown`/
+`avatarKeyUp` — the same place 0.9.65/0.9.66 wired continuous movement's
+own Alt+W/S chord.** A new `_processVehicleBrakingInput(key, type)`
+method, called from both `avatarKeyDown()` and `avatarKeyUp()` alongside
+the existing `_processContinuousMovementInput()` call, is a THIN
+TRANSLATION and nothing more: it compares `key` against the one physical
+key this milestone picks, turns the matching down/up transition into
+`type: 'brakedown'/'brakeup'`, and hands that straight to 0.9.95's own
+two already-complete, already-tested pure functions
+(`deriveAvatarVehicleBrakingInputFact()` then
+`deriveAvatarVehicleBrakingIntent()`), ending in
+`setVehicleBrakingIntent()`. Neither
+`core/AvatarVehicleBrakingIntent.js` nor
+`core/AvatarVehicleBrakingInputAdapter.js` is touched — both remain
+byte-for-byte as 0.9.95 left them.
+
+**The chosen key is Control.** Every other "hold it down" key this
+codebase already recognizes has an existing meaning: W/A/S/D drive the
+movement axes themselves, Shift is the run modifier, Space is
+`jumpRequested` (still live for a mounted ground vehicle —
+`core/AvatarMovementSimulation.js` gates jump on nothing vehicle-related
+— so it cannot double as brake without colliding with an
+already-meaningful action), Alt is the continuous-movement activation
+chord, and 'E' is the mount/dismount interaction key
+(`application/AvatarVehicleInteractionController.js`). Control is the
+one remaining modifier-row key, reachable by the same hand already
+resting on WASD, with no existing meaning anywhere in this file or its
+sibling controllers.
+
+**Stateless across calls, like 0.9.95's own input adapter, unlike
+`_processContinuousMovementInput()`'s own `_altDown`/`_shiftDown`.** A
+brake control's down/up transition is already the complete fact this
+milestone needs, in the same call that reports it — there is no chord to
+resolve — so holding Control reports BRAKE on every repeated keydown a
+browser's own key-repeat fires (never a toggle), and releasing it
+reports NONE on the very next call.
+
+**A held Control is a PHYSICAL KEY fact, not a persistent toggle —
+unlike `_continuousMovementIntent`/`_continuousMovementMode`, this one
+needs an explicit forced release.** Those two are deliberately left
+untouched by `setAvatarControlMode(false)`/`releaseAvatarMovementKeys()`
+(see their own 0.9.66/0.9.69 headers) because they are toggles with no
+"stuck key" failure mode. Braking has no such immunity: it is defined
+entirely by "is the control currently held," the same shape
+`_keys.jumpHeld` already has, so a Control key stuck down by a lost
+keyup (a window blur, Avatar Control Mode toggling off mid-press) would
+leave the avatar braking forever without an explicit fix. Both release
+methods now also force `setVehicleBrakingIntent(AvatarVehicleBrakingIntent.NONE)`
+— the same "never leave a key stuck" guarantee `releaseAll()` already
+gives every entry in `_keys`.
+
+**Never vehicle-aware, matching every seam before it.** This binding
+method reads only `key`/`type` — it never asks `movementCapability()`,
+never checks `avatarVehicleMount()`, and never branches on a vehicle
+type. Braking while unmounted, idle, or on foot is not its problem to
+prevent, exactly the boundary `core/AvatarVehicleBrakingIntent.js`'s own
+header already draws for itself.
+
+## What this milestone deliberately does NOT do
+
+Any change to `core/AvatarVehicleBrakingIntent.js` or
+`core/AvatarVehicleBrakingInputAdapter.js` (both remain exactly as
+0.9.95 left them), a second brake control (mouse button, gamepad
+trigger), brake-overrides-throttle behavior, a handbrake, and any
+vehicle-specific branching in the keyboard seam — this milestone adds
+exactly one method to `application/WorldNavigationSession.js` and wires
+it into the two existing key handlers.
+
+Tests: a new suite,
+`tests/AvatarVehicleBrakingInputBindingIntegration.test.js`, covers the
+raw key binding (Control down/up reaching `vehicleBrakingIntent()`, a
+held/repeated keydown never toggling, case-insensitivity, gating on
+Avatar Control Mode, and the two forced-release seams), real simulation
+through the actual Control key for BICYCLE/MOTORCYCLE/CAR's own
+independently declared braking rates, direction independence, and a
+regression/independence sweep (ordinary W/S, continuous WALK/RUN,
+mount/dismount via 'E', and DRONE remaining fully blocked) plus an
+architectural sweep proving no vehicle-specific branching exists in the
+new binding method and that 0.9.95's own three files are untouched.
+`tests/AvatarVehicleMovementCapabilityIntegration.test.js`'s own
+architectural sweep of `application/WorldNavigationSession.js` is
+updated in place: its own "never references any numeric vehicle physics
+quantity" check, written in 0.9.85 before this vocabulary existed, now
+strips whole identifier tokens containing "VehicleBraking" (this
+milestone's own legitimate `setVehicleBrakingIntent`/
+`_processVehicleBrakingInput`/`AvatarVehicleBrakingIntent` call sites)
+before running — the same "an old string legitimately starts appearing;
+the assertion is updated to the claim it actually cares about"
+precedent 0.9.95 itself already set.
+
+Next: 0.9.97 can now revisit the movement-state composition layer 0.9.94
+originally named for this slot, with a genuinely player-reachable
+`brakingRequested` already in hand.

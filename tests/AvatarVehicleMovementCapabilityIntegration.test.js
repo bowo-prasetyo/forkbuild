@@ -540,7 +540,25 @@ async function runTests() {
             .filter((line) => !line.trim().startsWith('//'))
             .join('\n');
 
-        assert(!/vehicleSpeed|vehicleAcceleration|vehicleBraking|vehicleTurning|vehicleMass|vehicleDrag|vehicleVelocity/i.test(codeOnly),
+        // 0.9.96 note: application/WorldNavigationSession.js now
+        // legitimately binds a real Control key to
+        // core/AvatarVehicleBrakingIntent.js's own NONE/BRAKE
+        // vocabulary and core/AvatarVehicleBrakingInputAdapter.js (see
+        // that milestone's own header) — every identifier that seam
+        // needs (setVehicleBrakingIntent, _processVehicleBrakingInput,
+        // AvatarVehicleBrakingIntent, ...) contains "VehicleBraking" as
+        // part of an INTENT/INPUT type or method name, never a numeric
+        // physics quantity. Whole tokens containing that substring are
+        // stripped here before the check below runs — never individual
+        // identifiers named one by one, so this stays correct as this
+        // vocabulary's own call sites grow — the same "this milestone
+        // deliberately makes an old string appear; the assertion is
+        // updated to the claim it actually cares about" precedent
+        // 0.9.95 itself already set for
+        // tests/AvatarVehicleBrakingCoastingIntegration.test.js's own
+        // Section I.
+        const codeOnlyWithoutBrakingVocabulary = codeOnly.replace(/[A-Za-z_]*[Vv]ehicleBraking[A-Za-z]*/g, '');
+        assert(!/vehicleSpeed|vehicleAcceleration|vehicleBraking|vehicleTurning|vehicleMass|vehicleDrag|vehicleVelocity/i.test(codeOnlyWithoutBrakingVocabulary),
             '44. application/WorldNavigationSession.js never references any numeric vehicle physics quantity — this milestone integrates a capability KIND, never a speed');
         assert(!/BicycleMovementController|MotorcycleMovementController|CarMovementController|DroneMovementController|VehicleMovementController/.test(codeOnly),
             '45. application/WorldNavigationSession.js constructs no per-vehicle movement controller of any kind');
