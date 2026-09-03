@@ -60239,3 +60239,176 @@ wallet-extension adapter directly, so that whether Arweave signing and
 Nostr publishing actually need separate product-facing configuration
 experiences can still be decided once a real source is in hand, not
 guessed at now. That decision is the natural next milestone.
+
+## 0.9.107 — Publication Distribution Runtime Provider
+
+0.9.106 closed the configuration seam cleanly: `ui/main.js` had exactly
+one named place, `resolvePublicationDistributionRuntimeConfiguration({
+arweave, nostr })`, for a runtime capability to enter this codebase. But
+the object fed to that seam was still a hand-written `{}` literal —
+nothing in this codebase actually PRODUCED an `{ arweave, nostr }` shape
+from a host's own capability vocabulary. 0.9.103 through 0.9.106 built the
+PLACE capabilities enter the system; this milestone provides the first
+actual PRODUCER of one.
+
+    host-provided capabilities (nothing, today — see "Nothing real to
+    supply yet")
+         │
+         │  { signer?, gatewayUrl?, fetchImpl?,
+         │    publishImpl?, relayUrl?, discoveryTag?, tagName?, kind? }
+         ▼
+    createPublicationDistributionRuntimeProvider({ ... })   (0.9.107, NEW)
+         │
+         ▼
+    { resolveRuntimeCapabilities() }
+         │
+         │  .resolveRuntimeCapabilities()
+         ▼
+    { arweave: { signer, gatewayUrl, fetchImpl },
+      nostr: { publishImpl, relayUrl, discoveryTag, tagName, kind } }
+         │
+         ▼
+    resolvePublicationDistributionRuntimeConfiguration({ arweave, nostr })   (0.9.106, unmodified)
+         │
+         ▼
+    composePublicationDistributionCommand({ lifecycleStore, ... })   (0.9.105, unmodified)
+         │
+         ▼
+    WorldView.js's distributeWorldEncounterPublication()   (0.9.104, unmodified)
+         │
+         ▼
+    executePublicationDistributionCommand()   (0.9.103, unmodified)
+
+**A provider, never a wallet.** A signer is a capability; a wallet is one
+possible mechanism for obtaining one. `application/PublicationDistributionRuntimeProvider.js`
+has no opinion about where `signer`/`publishImpl` came from — a browser
+wallet extension, an application service, a development fixture, anything
+else — it only accepts whatever a caller already obtained and regroups it
+into the shape 0.9.106's own seam already consumes. Nothing here is named
+"Wallet," constructs one, or assumes one exists.
+
+**A regrouping, never a new sufficiency check.** `createPublicationDistributionRuntimeProvider()`
+validates nothing. It takes a flat vocabulary of individually optional
+fields — the union of what `resolveArweaveUploaderOptions()`'s and
+`resolveNostrPublisherOptions()`'s own options objects already accept —
+and regroups them into the two-section `{ arweave, nostr }` shape
+0.9.106's own seam already consumes. Whether any of it is actually enough
+to attempt a substrate remains entirely 0.9.105's own two resolvers'
+decision, exactly the redundant-verification refusal 0.9.106's own header
+already held one layer up, held here one layer up again.
+
+**Two independent sections, still never a combined "credentials" shape.**
+`resolveRuntimeCapabilities()` always returns both an `arweave` section and
+a `nostr` section, built from disjoint fields of the provider's own single
+argument. Section C of `tests/PublicationDistributionRuntimeProvider.test.js`
+proves neither ever influences the other — supplying only `signer` leaves
+the `nostr` section's fields `undefined` (never inferred from `arweave`'s
+own fields), and supplying only `publishImpl`/`discoveryTag` leaves the
+`arweave` section's fields `undefined` (never inferred the other way).
+The existing orchestrator alone still decides what supplied capabilities
+mean — this milestone introduces no rule that both substrates must be
+configured before distribution can be attempted.
+
+**`ui/main.js` now calls a real, injectable factory, never a hand-shaped
+object literal.** Where 0.9.106 left `publicationDistributionRuntimeConfiguration`
+as a plain `{}` this file defined by hand, `ui/main.js` now calls
+`createPublicationDistributionRuntimeProvider({})` and resolves the
+provider's own `resolveRuntimeCapabilities()` result through 0.9.106's
+unmodified seam. `ui/main.js` still supplies no host capabilities — the
+call is still `({})` — so this is a mechanical seam swap, not a new
+capability.
+
+**Nothing real to supply yet, so this milestone changes no observable
+behavior in the running app.** No concrete Arweave signer or Nostr
+`publishImpl` implementation exists anywhere in this codebase yet —
+`application/ArweavePublicationMaterialUploader.js`'s and
+`application/NostrPublicationDiscoveryPublisher.js`'s own headers still
+name a concrete implementation as later, unscheduled work, unrevisited by
+this milestone. Both 0.9.105 resolvers still resolve `undefined`, and a
+real World View click still reaches exactly today's existing synchronous
+"a signer/publishImpl is required" throw. This milestone's entire value is
+proving that a REAL, INJECTABLE factory function is the thing `ui/main.js`
+calls, not another hand-shaped literal — so wiring a real source later
+touches only the one object `ui/main.js` passes to
+`createPublicationDistributionRuntimeProvider()`, never `WorldView.js`,
+never `WorldEncounterCanvas.js`, never the command, orchestrator, executor,
+or either the 0.9.105 or 0.9.106 seam.
+
+**Synchronous — deliberately, like every seam below it.** No `CONNECTING`/
+`CONNECTED`/`DISCONNECTED`, no asynchronous discovery lifecycle. A host
+capability needing asynchronous connection (a browser wallet extension,
+for instance) resolves that entirely BEFORE it is ever handed to
+`createPublicationDistributionRuntimeProvider()` — the same restraint
+0.9.106's own header already held, and the same place
+`base/BaseWalletConnection.js`'s own `connect()` already resolves before
+anything downstream of it runs.
+
+**World View still knows nothing about any of this.** `WorldView.js` and
+`WorldEncounterCanvas.js` are byte-for-byte unchanged — both files' own
+0.9.104 architectural-regression assertions still pass unmodified.
+
+The flagship test
+(`tests/WorldViewPublicationDistributionRuntimeProviderIntegration.test.js`)
+drives the exact same `WorldEncounterCanvas` click handler 0.9.104 built,
+through a `distributionCommand` built the way `ui/main.js` now actually
+builds one — a runtime provider constructed from concrete (fake-backed)
+host capabilities, regrouped through the new 0.9.107 seam, resolved
+through 0.9.106's own unmodified seam, then composed through 0.9.105's own
+unmodified `composePublicationDistributionCommand()` — and proves the same
+successful path 0.9.106's own flagship test first reached now reaches it
+through the new provider seam instead. A second section proves the
+identical click, with the provider built the way `ui/main.js` has it
+today (no host capabilities supplied), still ends in exactly the same
+plain notice — no regression, no fabricated success. 0.9.106's own
+flagship test (`tests/WorldViewPublicationDistributionRuntimeConfigurationIntegration.test.js`)
+is updated in one place only — its own architectural-regression assertion
+about the exact call `ui/main.js` now makes — and otherwise passes
+unmodified, since it drives 0.9.106's own seam directly and this milestone
+leaves that seam's contract untouched.
+
+### What this milestone deliberately does NOT do
+
+No concrete `signer` or `publishImpl` implementation, and no wallet-
+extension adapter of either — later, unscheduled work, the same restraint
+0.9.105 and 0.9.106 already held. No wallet connection UI, wallet-selection
+UI, private-key entry or storage, or credential persistence of any kind.
+No automatic wallet discovery, Nostr relay-management UI, relay discovery,
+distribution preferences, retry management, or progress tracking. No new
+lifecycle state, and no change to `PublicationDistributionLifecycle.js`,
+`WorldEncounterCanvas.js`, or the Distribution panel — World View remains
+entirely unaware this file exists. No asynchronous runtime-source
+discovery — see "Synchronous — deliberately," above. No rule that both
+substrates must be configured before distribution can be attempted — see
+"Two independent sections," above. No change to `WorldView.js`,
+`WorldEncounterCanvas.js`, `PublicationDistributionCommand.js`,
+`PublicationDistributionCommandComposition.js`,
+`PublicationDistributionConfigurationProvider.js`,
+`PublicationDistributionRuntimeConfiguration.js`, the orchestrator, or the
+executor — every one of those six files is byte-for-byte unchanged by this
+milestone.
+
+### Recommendation
+
+With this milestone in place, Publication Distribution is genuinely
+end-to-end from an architectural standpoint: a World View click flows
+through a command, a runtime configuration, an orchestrator, Arweave and
+Nostr independently, the existing lifecycle, and back to World View —
+every seam real and independently tested, only the concrete host
+capabilities themselves still absent. That is a deliberate stopping point
+for the 0.9.103–0.9.107 plumbing chain, not an oversight: what still
+stands between this and an end user actually completing a distribution is
+a genuine, larger product decision, not more mechanical wiring.
+
+Two genuinely different directions open from here. One is real user
+credential integration — a browser wallet-extension adapter (mirroring
+`base/BaseInjectedProviderWalletAdapter.js`'s own already-established
+pattern one substrate over) supplying `createPublicationDistributionRuntimeProvider()`
+with a real signer, and a Nostr browser extension or relay service
+supplying a real `publishImpl`. The other is decentralized material
+retrieval — the other major gap 0.9.102's own audit named: resolving a
+discovery lead through Arweave/Nostr discovery back into verified material
+World View can actually display, closing the other half of the
+decentralized-publication loop. The latter may be the more interesting
+next feature now that distribution is executable — but that product
+question, not another architectural one, is what this milestone was meant
+to finally make askable.

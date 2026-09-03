@@ -1,6 +1,7 @@
 import WorldEncounterCanvas from '../ui/components/WorldEncounterCanvas.js';
 import { composePublicationDistributionCommand } from '../application/PublicationDistributionCommandComposition.js';
 import { resolvePublicationDistributionRuntimeConfiguration } from '../application/PublicationDistributionRuntimeConfiguration.js';
+import { createPublicationDistributionRuntimeProvider } from '../application/PublicationDistributionRuntimeProvider.js';
 import { PublicationDistributionLifecycleMemoryStore } from '../application/PublicationDistributionLifecycleStore.js';
 import { PublicationDistributionState } from '../application/PublicationDistributionLifecycle.js';
 import { WorldEncounterMaterialLoadStatus } from '../application/WorldEncounterMaterialLoading.js';
@@ -8,32 +9,32 @@ import { Publication } from '../publisher/Publication.js';
 import { ContentReference } from '../core/ContentReference.js';
 import { Signature } from '../core/Signature.js';
 
-// 0.9.106 — Publication Distribution Runtime Configuration.
+// 0.9.107 — Publication Distribution Runtime Provider.
 //
-// 0.9.105's own flagship test (`WorldViewPublicationDistributionConfigurationIntegration.test.js`)
-// fed fake signer/publishImpl collaborators straight into
-// `resolveArweaveUploaderOptions()`/`resolveNostrPublisherOptions()` — the
-// two 0.9.105 resolvers, called directly, exactly as `ui/main.js` called
-// them at the time. `ui/main.js` no longer calls those resolvers directly;
-// it now defines ONE `publicationDistributionRuntimeConfiguration` object
-// and resolves it through `resolvePublicationDistributionRuntimeConfiguration()`
-// (0.9.106, NEW). This is the flagship test for THAT seam: the SAME
+// 0.9.106's own flagship test fed a hand-shaped `{ arweave, nostr }`
+// literal straight into `resolvePublicationDistributionRuntimeConfiguration()` —
+// the exact way `ui/main.js` composed it at the time. `ui/main.js` no
+// longer builds that object by hand; it now calls a real, injectable
+// factory, `createPublicationDistributionRuntimeProvider()` (0.9.107,
+// NEW), and resolves ITS OWN `resolveRuntimeCapabilities()` result
+// instead. This is the flagship test for that seam: the SAME
 // `WorldEncounterCanvas` click handler 0.9.104 built, driving a
 // `distributionCommand` built the way `ui/main.js` now actually builds
-// one — a single runtime configuration object resolved through the new
-// 0.9.106 seam, then composed through 0.9.105's own unmodified
-// `composePublicationDistributionCommand()` — fed fake signer/gateway/relay
-// collaborators standing in for a real wallet/relay capability this
-// codebase does not concretely implement yet.
+// one — a runtime provider constructed from concrete (fake-backed) host
+// capabilities, regrouped through the new 0.9.107 seam, resolved through
+// 0.9.106's own unmodified seam, then composed through 0.9.105's own
+// unmodified `composePublicationDistributionCommand()`.
 //
 //   Section A: FLAGSHIP — a World View click, a real command composed from
-//              a single resolved runtime configuration object, a real
-//              orchestrator/executor, fake Arweave + fake Nostr, PRESENT
-//              material/discovery facts, observed through the existing
-//              lifecycle store and the existing Distribution panel
-//   Section B: the identical click, with the runtime configuration source
-//              empty — the way ui/main.js composes it TODAY — still ends
-//              in the SAME plain notice 0.9.104/0.9.105 already produce
+//              a real runtime provider fed concrete host capabilities,
+//              a real orchestrator/executor, fake Arweave + fake Nostr,
+//              PRESENT material/discovery facts, observed through the
+//              existing lifecycle store and the existing Distribution
+//              panel
+//   Section B: the identical click, with the provider built the way
+//              ui/main.js builds it TODAY (no host capabilities supplied)
+//              — still ends in the SAME plain notice 0.9.104/0.9.105/
+//              0.9.106 already produce
 //   Section C: architectural regression — ui/main.js wiring
 
 function assert(condition, message) {
@@ -50,9 +51,9 @@ async function flushMicrotasks() {
 
 function signedPublication(overrides = {}) {
     const publication = new Publication({
-        id: 'pub-runtime-config-integration-1',
-        documentId: 'doc-runtime-config-integration-1',
-        title: 'A Runtime-Configuration-Distributed Publication',
+        id: 'pub-runtime-provider-integration-1',
+        documentId: 'doc-runtime-provider-integration-1',
+        title: 'A Runtime-Provider-Distributed Publication',
         author: 'author-1',
         contentReference: new ContentReference({ hash: 'legacy-hash', uri: 'ipfs://legacy-cid', storage: 'ipfs' }),
         ...overrides
@@ -118,29 +119,26 @@ async function run() {
     {
         const lifecycleStore = new PublicationDistributionLifecycleMemoryStore();
         const publication = signedPublication();
-        const transactionId = 'RuntimeConfigIntegrationTxId1234567';
+        const transactionId = 'RuntimeProviderIntegrationTxId12345';
         const eventId = 'd'.repeat(64);
 
-        // Exactly the shape a real runtime configuration source (a future
-        // wallet adapter's already-connected signer, a development/test
-        // signer, or any other host-provided capability — see
-        // application/PublicationDistributionRuntimeConfiguration.js's own
-        // header) would hand ui/main.js.
-        const publicationDistributionRuntimeConfiguration = {
-            arweave: {
-                signer: { sign: async () => ({ id: transactionId, transaction: {} }) },
-                fetchImpl: async () => gatewayResponse('accepted')
-            },
-            nostr: {
-                publishImpl: async () => ({ published: true, id: eventId }),
-                relayUrl: 'wss://relay.example',
-                discoveryTag: 'forkbuild-runtime-config-integration'
-            }
-        };
+        // Exactly the flat vocabulary a real host capability source (a
+        // future wallet adapter's already-connected signer, a
+        // development/test signer, or any other host-provided capability —
+        // see application/PublicationDistributionRuntimeProvider.js's own
+        // header) would hand createPublicationDistributionRuntimeProvider().
+        const publicationDistributionRuntimeProvider = createPublicationDistributionRuntimeProvider({
+            signer: { sign: async () => ({ id: transactionId, transaction: {} }) },
+            fetchImpl: async () => gatewayResponse('accepted'),
+            publishImpl: async () => ({ published: true, id: eventId }),
+            relayUrl: 'wss://relay.example',
+            discoveryTag: 'forkbuild-runtime-provider-integration'
+        });
 
-        // Exactly ui/main.js's own two calls, in order: resolve the single
-        // runtime configuration object, then compose the command from it.
-        const { arweaveUploaderOptions, nostrPublisherOptions } = resolvePublicationDistributionRuntimeConfiguration(publicationDistributionRuntimeConfiguration);
+        // Exactly ui/main.js's own three calls, in order: build the
+        // provider, resolve its own capabilities into a runtime
+        // configuration, then compose the command from it.
+        const { arweaveUploaderOptions, nostrPublisherOptions } = resolvePublicationDistributionRuntimeConfiguration(publicationDistributionRuntimeProvider.resolveRuntimeCapabilities());
         const publicationDistributionCommand = composePublicationDistributionCommand({
             lifecycleStore,
             arweaveUploaderOptions,
@@ -173,22 +171,23 @@ async function run() {
         assert(ctx.distributionExecuting === false, '3. FLAGSHIP — execution returns to idle once the command resolves');
         assert(ctx.distributionError === null, '4. FLAGSHIP — a successful call leaves no error notice — the "Distribution could not be completed" path is NOT taken');
         assert(ctx.distributionMaterialState === PublicationDistributionState.PRESENT, '5. FLAGSHIP — the Distribution panel now observes a real material fact, through the existing subscription alone');
-        assert(ctx.distributionDiscoveryState === PublicationDistributionState.PRESENT, '6. FLAGSHIP — both dimensions are observed — real orchestrator/executor reached end to end, through the new runtime configuration seam');
+        assert(ctx.distributionDiscoveryState === PublicationDistributionState.PRESENT, '6. FLAGSHIP — both dimensions are observed — real orchestrator/executor reached end to end, through the new runtime provider seam');
         assert(lifecycleStore.get(publication.id).material.uri === `ar://${transactionId}`, '7. FLAGSHIP — the SAME app-wide lifecycle store the panel watches now holds the real result');
         assert(lifecycleStore.get(publication.id).discovery.id === eventId, '8. FLAGSHIP — the discovery fact is real too, not fabricated');
 
-        console.log('✓ Flagship: a World View click, driven through a command composed from a single runtime configuration object resolved the way ui/main.js now resolves it, reaches the successful distribution path end to end');
+        console.log('✓ Flagship: a World View click, driven through a command composed from a real runtime provider fed concrete host capabilities, resolved the way ui/main.js now resolves it, reaches the successful distribution path end to end');
     }
 
     // ---------------------------------------------------------------
-    // Section B — the identical click, with the runtime configuration
-    // source empty, the way ui/main.js composes it TODAY.
+    // Section B — the identical click, with the provider built the way
+    // ui/main.js builds it TODAY (no host capabilities supplied).
     // ---------------------------------------------------------------
     {
         const lifecycleStore = new PublicationDistributionLifecycleMemoryStore();
-        const publication = signedPublication({ id: 'pub-runtime-config-integration-b' });
+        const publication = signedPublication({ id: 'pub-runtime-provider-integration-b' });
 
-        const { arweaveUploaderOptions, nostrPublisherOptions } = resolvePublicationDistributionRuntimeConfiguration({});
+        const publicationDistributionRuntimeProvider = createPublicationDistributionRuntimeProvider({});
+        const { arweaveUploaderOptions, nostrPublisherOptions } = resolvePublicationDistributionRuntimeConfiguration(publicationDistributionRuntimeProvider.resolveRuntimeCapabilities());
         const publicationDistributionCommand = composePublicationDistributionCommand({
             lifecycleStore,
             arweaveUploaderOptions,
@@ -213,7 +212,7 @@ async function run() {
         assert(ctx.distributionError === 'Distribution could not be completed.', '10. today\'s configuration — the click still ends in exactly 0.9.104\'s own plain notice, unchanged');
         assert(lifecycleStore.get(publication.id) === null, '11. today\'s configuration — the lifecycle store is left untouched, exactly as before this milestone');
 
-        console.log('✓ Section B: with the runtime configuration source empty, the way ui/main.js composes it today, the identical click still reaches exactly today\'s existing honest failure');
+        console.log('✓ Section B: with the provider built the way ui/main.js builds it today, the identical click still reaches exactly today\'s existing honest failure');
     }
 
     // ---------------------------------------------------------------
@@ -227,27 +226,24 @@ async function run() {
         assert(codeOnly.includes("import { composePublicationDistributionCommand } from '../application/PublicationDistributionCommandComposition.js'"),
             '12. ui/main.js imports the real composition function, never a hand-rolled equivalent');
         assert(codeOnly.includes("import { resolvePublicationDistributionRuntimeConfiguration } from '../application/PublicationDistributionRuntimeConfiguration.js'"),
-            '13. ui/main.js imports the real runtime configuration seam, never the 0.9.105 resolvers directly');
+            '13. ui/main.js imports the real 0.9.106 runtime configuration seam, unmodified by this milestone');
+        assert(codeOnly.includes("import { createPublicationDistributionRuntimeProvider } from '../application/PublicationDistributionRuntimeProvider.js'"),
+            '14. ui/main.js imports the real runtime provider factory, never a hand-rolled equivalent');
         assert(!codeOnly.includes("PublicationDistributionConfigurationProvider.js'"),
-            '14. ui/main.js no longer imports the 0.9.105 resolvers directly — resolvePublicationDistributionRuntimeConfiguration() is the one seam now');
-        // 0.9.107 — Publication Distribution Runtime Provider — folds this
-        // file's own runtime configuration object into a real, injectable
-        // `createPublicationDistributionRuntimeProvider()` factory call;
-        // `ui/main.js` now resolves that provider's own
-        // `resolveRuntimeCapabilities()` result rather than a hand-shaped
-        // object literal. Updated here, in this one place only — this
-        // section's own remaining assertions (12-14, 16-17) still hold.
+            '15. ui/main.js still never imports the 0.9.105 resolvers directly');
+        assert(codeOnly.includes('createPublicationDistributionRuntimeProvider({})'),
+            '16. ui/main.js actually calls the new provider factory — still with nothing to supply yet, exactly today\'s honest state');
         assert(codeOnly.includes('resolvePublicationDistributionRuntimeConfiguration(publicationDistributionRuntimeProvider.resolveRuntimeCapabilities())'),
-            '15. ui/main.js resolves the new seam from the real runtime provider\'s own resolveRuntimeCapabilities(), never a hand-shaped object literal');
+            '17. ui/main.js resolves the runtime configuration from the provider\'s own resolveRuntimeCapabilities(), never a hand-shaped object literal');
         assert(codeOnly.includes('composePublicationDistributionCommand({') && codeOnly.includes('lifecycleStore: publicationDistributionLifecycleStore'),
-            '16. ui/main.js still composes the command with the SAME lifecycle store 0.9.100/0.9.103 already wired for observation');
+            '18. ui/main.js still composes the command with the SAME lifecycle store 0.9.100/0.9.103 already wired for observation');
         assert(!/ArweavePublicationMaterialUploader|NostrPublicationDiscoveryPublisher|PublicationDistributionExecutor|PublicationDistributionOrchestrator|PublicationDistributionRuntimeComposition|orchestratePublicationDistribution|executePublicationDistribution\(/.test(codeOnly),
-            '17. ui/main.js still never constructs distribution infrastructure or calls the orchestrator/executor directly — even after adding the runtime configuration seam');
+            '19. ui/main.js still never constructs distribution infrastructure or calls the orchestrator/executor directly — even after adding the runtime provider seam');
 
-        console.log('✓ Section C: ui/main.js wires the real runtime configuration seam, with no distribution infrastructure of its own');
+        console.log('✓ Section C: ui/main.js wires the real runtime provider seam, with no distribution infrastructure of its own');
     }
 
-    console.log('\n✅ All World View Publication Distribution Runtime Configuration tests passed.');
+    console.log('\n✅ All World View Publication Distribution Runtime Provider tests passed.');
 }
 
 run().catch((error) => {
