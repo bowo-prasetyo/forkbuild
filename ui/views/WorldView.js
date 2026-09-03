@@ -455,6 +455,17 @@ export default {
         // at their own default of `null`.
         const worldEncounterMaterialSources = inject('worldEncounterMaterialSources', null);
         const worldEncounterMaterialVerifier = inject('worldEncounterMaterialVerifier', null);
+        // 0.9.100 — Publication Distribution World View Integration. The
+        // SAME app-wide `publicationDistributionLifecycleStore` `ui/main.js`
+        // now composes (restored + persistence-bridged from the existing
+        // 0.9.50-through-0.9.57 lifecycle chain), handed straight through as
+        // `WorldEncounterCanvas`'s own new `distributionLifecycleStore`
+        // prop below — never a second store, never a lifecycle this view
+        // derives, transitions, or persists itself. This view's only job is
+        // to stop leaving that prop at its own default of `null`, mirroring
+        // 0.9.99's own restraint immediately above exactly, one collaborator
+        // over.
+        const publicationDistributionLifecycleStore = inject('publicationDistributionLifecycleStore', null);
         const registry = new CreateBrickRegistryUseCase().execute();
         const worldViewFactory = new CreateWorldViewUseCase().execute(identityUseCase.provider, {
             peerMessageBus,
@@ -2947,6 +2958,7 @@ export default {
             worldDiscoverySourceRegistry,
             worldEncounterMaterialSources,
             worldEncounterMaterialVerifier,
+            publicationDistributionLifecycleStore,
             nearbyLandmarkRows,
             nearbyPeopleRows,
             goToNearbyCollaborator,
@@ -3156,7 +3168,15 @@ export default {
                      handed through the same way: unmodified collaborators,
                      never anything this file constructs or judges itself.
                      See this file's own setup()-level comment on
-                     worldEncounterMaterialSources, above. -->
+                     worldEncounterMaterialSources, above.
+
+                     0.9.100 — distributionLifecycleStore, a new
+                     WorldEncounterCanvas prop, handed through the same
+                     way: an already-composed, already-restored
+                     observation store, never anything this file
+                     constructs, persists, or transitions itself. See
+                     this file's own setup()-level comment on
+                     publicationDistributionLifecycleStore, above. -->
                 <CollapsibleSection
                     title="World Encounters"
                     :collapsed="nearbySectionsCollapsed.worldEncounters"
@@ -3166,6 +3186,7 @@ export default {
                         :registry="worldDiscoverySourceRegistry"
                         :materialSources="worldEncounterMaterialSources"
                         :materialVerifier="worldEncounterMaterialVerifier"
+                        :distributionLifecycleStore="publicationDistributionLifecycleStore"
                     />
                 </CollapsibleSection>
             </div>

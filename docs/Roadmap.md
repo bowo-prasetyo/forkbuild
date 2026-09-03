@@ -59196,3 +59196,149 @@ Next: the same investigate-before-building discipline this milestone used
 applies again to the second paused integration —
 `PublicationDistributionLifecycle`/Arweave/Nostr publication distribution
 — whenever that is picked back up.
+
+## 0.9.100 — Publication Distribution World View Integration
+
+The second (and, per the request that opened this milestone, final) of
+the two paused World View integrations 0.9.98/0.9.99 left behind. Unlike
+material verification (0.9.99), publication distribution is not a
+request/response inspection operation — 0.9.48 through 0.9.58 already
+built the entire Arweave/Nostr distribution story, and 0.9.50 through
+0.9.57 then built a complete LIFECYCLE on top of it: a two-dimensional
+`{ material: { state }, discovery: { state } }` description (0.9.50),
+transition (0.9.51), a live in-memory observation store (0.9.52/0.9.53),
+snapshot persistence (0.9.54), a persistence bridge (0.9.55), restoration
+(0.9.56), and startup hydration (0.9.57) — entirely independent of any
+UI. The goal this milestone set for itself was narrower than 0.9.99's:
+expose that existing lifecycle to World View through composition and
+observation, without creating a second lifecycle or publication state
+machine, and without inventing a distribute action nobody asked for yet.
+
+```
+                 World View
+                     │
+              existing observation
+                     │
+                     ▼
+       PublicationDistributionLifecycleMemoryStore   (0.9.52/0.9.53, unmodified)
+                     │
+          restored from / bridged to
+                     │
+                     ▼
+       PublicationDistributionLifecyclePersistence    (0.9.54, unmodified)
+```
+
+**Composition-root first, the same discipline 0.9.99 established.**
+`ui/main.js` now composes the full observation-and-persistence half of the
+chain: ONE app-wide `PublicationDistributionLifecycleMemoryStore` is
+restored from whatever this replica already persisted for its own known
+publications — `PublicationDistributionLifecycleRestorer` +
+`hydratePublicationDistributionLifecycles`, fed `publicationCatalog.list()`'s
+own ids, the SAME catalog every other local composition in this file
+already reads — and then bridged so that any future change is persisted
+the same way (`PublicationDistributionLifecyclePersistenceBridge`), using
+the SAME `LocalStorageProvider` idiom the 0.9.99 wiring immediately above
+it already uses. Provided app-wide exactly like
+`worldEncounterMaterialSources`/`worldEncounterMaterialVerifier` are.
+`ui/views/WorldView.js` injects it (defaulting to `null`, never throwing)
+and hands it straight through to `WorldEncounterCanvas`'s own new
+`distributionLifecycleStore` prop.
+
+**WorldEncounterCanvas becomes another subscriber, not a second store.**
+It already subscribes to a `WorldDiscoverySourceRegistry` (0.9.13) and a
+`DecentralizedWorldDiscoveryLeadRegistry` (0.9.40); `distributionLifecycleStore`
+is a third instance of the exact same shape. A new `refreshDistributionLifecycle()`
+method — called from `selectEncounter()`, independent of
+`selectionOutcome`/`resolvedEncounterSelection` since a Publication's
+distribution state is keyed by its own id alone, never by which origin
+served the encounter — calls `distributionLifecycleStore.get(publicationId)`
+for an immediate snapshot, then `.subscribe(publicationId, listener)` for
+live updates, unsubscribing the previous subscription first (mirroring
+`unsubscribeWorldRegistry`/`unsubscribeWorldDiscoveryLeadRegistry` exactly)
+and again in `beforeUnmount()`. A new "Distribution" panel renders
+`distributionMaterialState`/`distributionDiscoveryState` — computed
+properties that read `distributionLifecycle.material.state`/`.discovery.state`,
+defaulting to `PublicationDistributionState.ABSENT` when nothing has been
+recorded yet — alongside the existing "Material"/"Verification" panel.
+Material and discovery state stay independent, never collapsed into one
+overall verdict, exactly as `PublicationDistributionLifecycle.js`'s own
+0.9.50 header requires.
+
+**No polling.** `refreshDistributionLifecycle()` contains no `setInterval`/
+`setTimeout` of any kind; `distributionLifecycle` changes only in reaction
+to a real store notification or a fresh selection — publication
+distribution is a lifecycle-plus-observation concern, not a continuously-
+changing spatial relationship like vehicle proximity (0.9.98's own 150ms
+poll) or a request/response operation like material verification (0.9.99).
+
+**No second lifecycle, no execution runtime, no distribute action.**
+Neither `ui/main.js` nor `ui/views/WorldView.js` nor
+`ui/components/WorldEncounterCanvas.js` imports
+`ArweavePublicationMaterialUploader.js`, `NostrPublicationDiscoveryPublisher.js`,
+`PublicationDistributionRuntimeComposition.js`,
+`PublicationDistributionExecutor.js`, or `PublicationDistributionOrchestrator.js`
+— actually EXECUTING a distribution needs real signer/relay configuration
+this app establishes nowhere, the same "a materially larger, network-facing
+composition decision" restraint 0.9.99 already held for peer/decentralized
+material sources. No file this milestone touches calls
+`describePublicationDistributionLifecycle()` or
+`transitionPublicationDistributionLifecycle()` either — `WorldEncounterCanvas`
+only ever reads a lifecycle a caller (the store) already produced, never
+derives one itself. With nothing anywhere in this app yet calling
+`orchestratePublicationDistribution()`, every publication's distribution
+lifecycle observed today reads `ABSENT`/`ABSENT` — an honest reflection of
+reality, not a placeholder this milestone papers over. Wiring an actual
+"distribute this publication" command is a separate, later, unscheduled
+interaction milestone, exactly as the request that opened this one asked.
+
+**No new vocabulary.** The panel renders exactly the two
+`PublicationDistributionState` values 0.9.50 already defined —
+`ABSENT`/`PRESENT` — on two independent dimensions. No TRUSTED/PUBLISHED/
+POPULAR/SUCCESSFUL/ONLINE/DECENTRALIZED status is invented anywhere in
+this milestone's own code.
+
+Tests: a new suite, `tests/WorldViewPublicationDistributionIntegration.test.js`,
+proves the REAL, unmodified lifecycle chain (memory store, persistence,
+persistence bridge, restorer, hydration) carries a lifecycle across a
+simulated process restart exactly the way `ui/main.js` now composes it;
+that `WorldEncounterCanvas` observes an already-recorded lifecycle
+immediately on selection and stays live via subscription (never polling);
+that no store, a non-`PUBLICATION` selection, switching the selected
+publication, and unmounting each degrade or unsubscribe correctly; that
+repeated observation is deterministic; and an architectural sweep
+confirming `ui/main.js` composes the five real lifecycle collaborators
+and provides the store app-wide (never constructing an Arweave uploader,
+Nostr publisher, executor, or orchestrator), `ui/views/WorldView.js` only
+forwards the store (with the pre-existing registry/materialSources/
+materialVerifier/VehicleInteractionPrompt wiring left untouched), and
+`WorldEncounterCanvas.js` only calls `get()`/`subscribe()` on it, with no
+polling loop and no invented vocabulary anywhere in the new wiring.
+`tests/WorldEncounterCanvasUI.test.js`'s own exact-import-count regression
+test is updated for the one new `application/` import (0.9.100 adds
+`PublicationDistributionLifecycle.js`'s own `PublicationDistributionState`
+enum — the sixth), and every other existing UI test file that already
+stubs a full `WorldEncounterCanvas` context for `selectEncounter()` (0.9.4,
+0.9.39, 0.9.40) is updated to include the one new no-op collaborator the
+same way each of those milestones was, in turn, when it first landed.
+
+## What this milestone deliberately does NOT do
+
+No distribute/publish command, and no wiring of
+`PublicationDistributionOrchestrator.js`/`PublicationDistributionRuntimeComposition.js`
+into any UI action — see "No second lifecycle, no execution runtime, no
+distribute action," above; a separate, later, unscheduled interaction
+milestone. No change to `ui/views/LiveWorldView.js` (still mounts
+`WorldEncounterCanvas` with `registry` alone, exactly as 0.9.99 already
+left it) — the same "one page the task named" restraint 0.9.99 held. No
+new `application/` file — investigating first, rather than assuming one
+was needed, found the entire 0.9.50-through-0.9.57 chain already was the
+observation boundary this milestone needed. No change to any file inside
+the 0.9.44-through-0.9.58 chain itself.
+
+With this milestone landed, all three World View integrations 0.9.97
+paused (vehicle mount/dismount, material verification, publication
+distribution) are complete. The next step, per each of the last two
+milestones' own closing notes, is to pause and review the entire 0.9.x
+World View architecture — vehicles, materials, and publications, each now
+reaching World View through its own application-level composition/
+observation seam — before scheduling whatever comes after 0.9.100.
