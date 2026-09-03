@@ -1,6 +1,7 @@
 import { AvatarAnimationState } from './AvatarAnimationState.js';
 import { deriveAvatarVerticalState } from './AvatarVerticalState.js';
 import { resolveMovementSpeed } from './AvatarMovementAccelerationSimulation.js';
+import { resolveMovementHeading } from './AvatarMovementSteeringSimulation.js';
 
 // 0.2.36 — deterministic, Three.js-free kinematics: given where the
 // avatar IS (position/rotationY, plus the small bit of physics-only
@@ -46,6 +47,21 @@ const GROUND_Y = 0;
 const MAX_STEP_PER_TICK = 2; // world units
 const MAX_DELTA_SECONDS = 0.25; // seconds — clamps a single tick's dt
 const MAX_Y = 8; // world units — "reasonable vertical bounds" ABOVE whatever surface the avatar stands on
+// 0.9.94 — how far around the circle, in the requested direction, this
+// file places the "requested heading" it manufactures from `turnAxis`
+// each tick for a RATE_LIMITED steering capability (see the 0.9.94
+// comment above `simulateAvatarMovement()` for why one is manufactured
+// at all). Its ONLY job is to sit comfortably beyond whatever a single
+// tick's own `steeringRate * dt` could ever close — so `steeringRate`
+// alone governs how much heading actually changes this tick, never this
+// offset — while staying safely short of π (`shortestAngularDifference()`'s
+// own ambiguous boundary in core/AvatarMovementSteeringSimulation.js).
+// The largest per-vehicle steering rate defined as of this milestone
+// (core/AvatarVehicleMovementCapability.js's own MOTORCYCLE_STEERING,
+// 4.5 rad/s) at this file's own `MAX_DELTA_SECONDS` clamp (0.25s) closes
+// at most 1.125 rad in a single tick — comfortably under this constant,
+// with headroom for a future, faster capability besides.
+const STEERING_TARGET_HEADING_OFFSET_RADIANS = 2; // radians (~114.6°)
 
 // 0.3.2 — `groundHeight` (world Y) is what the avatar snaps to/falls
 // toward while grounded, and the floor of its "reasonable vertical
@@ -155,6 +171,33 @@ const MAX_Y = 8; // world units — "reasonable vertical bounds" ABOVE whatever 
 // already used, byte-for-byte unchanged from 0.9.91. See the function
 // body's own 0.9.92 comment for exactly how `effectiveRate` decides
 // whether this tick is rate-limited at all.
+//
+// 0.9.94 — Vehicle Steering State Integration. `steeringRate`
+// (radians/second, optional — a bare number, exactly like `acceleration`/
+// `braking` above) is the ONE new parameter this milestone adds: the ONE
+// place core/AvatarMovementSteeringSimulation.js's own `resolveMovementHeading()`
+// — the pure heading math 0.9.93 built and deliberately left unconsumed —
+// is actually wired in. See the function body's own 0.9.94 comment,
+// immediately below the `nextRotationY` computation, for exactly how a
+// held turn direction becomes a "requested heading" resolveMovementHeading()
+// closes the gap toward, and why WALK's own existing instantaneous turning
+// is untouched, byte-for-byte.
+//
+// THE CONTROLLER OWNS NO NEW TRANSIENT HEADING STATE, UNLIKE
+// `currentMovementSpeed` ABOVE. Speed had no other home — `AvatarPresence`
+// was never the place a signed current speed lived. Heading is different:
+// `rotationY` IS the avatar's current heading, already part of
+// `AvatarPresence`, already threaded through this exact function every
+// tick (see `application/AvatarMovementController.js#tick()`, unchanged
+// since 0.2.36). Reusing it is not a shortcut — it is the direct
+// consequence of `docs/Roadmap.md`'s own framing for this milestone:
+// "connects this milestone's pure heading math to an actual, STATEFUL
+// vehicle heading" — that stateful heading already exists, and always has.
+// A capability switch (mount/dismount) therefore preserves the avatar's
+// own physical facing automatically, with no reset logic anywhere in this
+// file or in `application/AvatarMovementController.js#setMovementCapability()`
+// — heading is spatial state, never capability-relative transient state
+// the way speed is (see that method's own 0.9.91 comment for the contrast).
 export function simulateAvatarMovement({
     position,
     rotationY = 0,
@@ -166,16 +209,72 @@ export function simulateAvatarMovement({
     movementSpeed,
     acceleration,
     braking,
-    currentMovementSpeed
+    currentMovementSpeed,
+    steeringRate
 }) {
     const floorY = Number.isFinite(groundHeight) ? groundHeight : GROUND_Y;
     const dt = sanitizeDeltaSeconds(deltaSeconds);
 
     // Turn first, then step along the NEW facing — an ordinary
     // third-person walk, not strafing.
-    const nextRotationY = normalizeDegrees(
-        sanitizeNumber(rotationY, 0) + movementState.turnAxis * TURN_RATE_DEGREES_PER_SECOND * dt
-    );
+    //
+    // 0.9.94 — `resolvedSteeringRate <= 0` (omitted, non-finite, or the
+    // INSTANT case's own required `0` — see
+    // core/AvatarMovementSteeringCapability.js's own header) takes the
+    // EXACT SAME branch this file has always taken: WALK's own existing
+    // turnAxis * TURN_RATE_DEGREES_PER_SECOND * dt advance, computed
+    // directly in degrees, with zero heading-math involved. Only a
+    // genuine positive rate (a mounted ground vehicle) takes the new
+    // branch below.
+    //
+    // THAT NEW BRANCH MANUFACTURES A "REQUESTED HEADING" FROM `turnAxis`
+    // — IT NEVER INTRODUCES A SECOND TURNING VOCABULARY. Holding A/D has
+    // always meant "keep rotating this way while held," never "face
+    // exactly N degrees" — there is no target angle a held turn key
+    // names on its own, the same way holding W names a target SPEED
+    // (`movementSpeed`) but never a target POSITION. This function
+    // manufactures a requested heading the identical way
+    // `targetMovementSpeed` below is already manufactured from
+    // `forwardAxis`: `currentHeading + turnAxis * STEERING_TARGET_HEADING_OFFSET_RADIANS`,
+    // a fixed angular offset far enough around the circle (see that
+    // constant's own comment) that `steeringRate` — never this
+    // manufactured offset — is always what actually governs how much
+    // heading changes THIS tick. `turnAxis === 0` collapses the
+    // manufactured target back onto the current heading itself, so
+    // `resolveMovementHeading()`'s own `diff === 0` no-op fires — a
+    // released turn key stops heading change outright, the same tick,
+    // with no residual creep and no persistent "turning left" state
+    // required anywhere (see application/AvatarMovementController.js's
+    // own 0.9.94 header for why no new controller state was needed for
+    // this either).
+    //
+    // DEGREES AT THE BOUNDARY, RADIANS ONLY FOR THE DURATION OF THIS ONE
+    // CALL. `rotationY`/`nextRotationY` stay in degrees, exactly as
+    // before this milestone (see core/AvatarMovementSteeringCapability.js's
+    // own header for why the new pure math is deliberately radians-only,
+    // and this file's own principle, unchanged since before 0.9.94: "do
+    // not migrate the existing heading representation merely because a
+    // new mathematical seam uses radians") — conversion happens only
+    // around this one call, and core/AvatarMovementSteeringSimulation.js
+    // never sees a degree value.
+    const resolvedSteeringRate = Number.isFinite(steeringRate) && steeringRate > 0 ? steeringRate : 0;
+    let nextRotationY;
+    if (resolvedSteeringRate > 0) {
+        const currentHeadingRadians = sanitizeNumber(rotationY, 0) * (Math.PI / 180);
+        const requestedHeadingRadians = currentHeadingRadians
+            + movementState.turnAxis * STEERING_TARGET_HEADING_OFFSET_RADIANS;
+        const resolvedHeadingRadians = resolveMovementHeading({
+            currentHeading: currentHeadingRadians,
+            targetHeading: requestedHeadingRadians,
+            steeringRate: resolvedSteeringRate,
+            deltaTime: dt
+        });
+        nextRotationY = normalizeDegrees(resolvedHeadingRadians * (180 / Math.PI));
+    } else {
+        nextRotationY = normalizeDegrees(
+            sanitizeNumber(rotationY, 0) + movementState.turnAxis * TURN_RATE_DEGREES_PER_SECOND * dt
+        );
+    }
 
     const baseSpeed = Number.isFinite(movementSpeed) && movementSpeed > 0 ? movementSpeed : WALK_SPEED;
     const speed = movementState.running ? baseSpeed * RUN_SPEED_MULTIPLIER : baseSpeed;

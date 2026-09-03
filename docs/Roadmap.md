@@ -58382,3 +58382,150 @@ and orientation together into one composed vehicle movement state, and
 only then does deciding whether/how a future input milestone binds real
 keys to steering intent (and to `brakingRequested`, still unreachable
 since 0.9.92) become a question actual runtime behavior can answer.
+
+## 0.9.94 — Vehicle Steering State Integration
+
+0.9.93 built the steering vocabulary and its pure heading math, and
+deliberately stopped exactly where 0.9.90 originally did for
+acceleration: zero wiring into any real controller. This milestone is
+that wiring — the angular counterpart of 0.9.91:
+
+```
+steering capability
+        │
+        ▼
+  target heading  (manufactured from the EXISTING turnAxis input)
+        │
+        ▼
+ current heading  (AvatarPresence.rotation.y — already real, already
+        │           stateful; no new field needed)
+        ▼
+ resolveMovementHeading()
+        │
+        ▼
+  actual heading
+        │
+        ▼
+ movement direction   (unchanged: dx/dz already derive from rotationY)
+```
+
+**No new transient state field, unlike `_currentMovementSpeed` (0.9.91).**
+Speed had no other home — `AvatarPresence` never carried a signed current
+speed. Heading is different: `rotationY` **is** the avatar's current
+heading, already part of `AvatarPresence` since 0.2.36, already threaded
+through `simulateAvatarMovement()` every tick. 0.9.93's own closing
+paragraph asked for connecting the pure math "to an actual, stateful
+vehicle heading" — that stateful heading already existed, so this
+milestone reuses it rather than inventing a duplicate. This also means
+capability switching (mount/dismount) preserves the avatar's own physical
+facing **automatically**, with no reset logic anywhere: unlike
+`_currentMovementSpeed` (capability-relative transient state, reset to 0
+on every genuine capability change), heading is spatial state, and
+`setMovementCapability()` gains no analogous reset for it — an avatar
+facing east that mounts a car continues facing east, and simply steers,
+gradually, from there.
+
+**The existing turning input is reused outright — no second steering
+vocabulary.** `application/AvatarMovementController.js`'s own existing
+`turnAxis` (A/D, and since 0.9.66/0.9.69 the same continuous-movement
+machinery) is the only source of turning intent this milestone consumes.
+The actual wiring lives one layer down, in `core/AvatarMovementSimulation.js`
+— exactly where 0.9.91 wired `resolveMovementSpeed()` in, never in the
+controller directly:
+
+```
+core/AvatarMovementSimulation.js
+    resolvedSteeringRate = steeringRate > 0 ? steeringRate : 0
+    if (resolvedSteeringRate > 0):
+        currentHeadingRadians = rotationY (degrees) → radians
+        requestedHeadingRadians = currentHeadingRadians
+            + turnAxis * STEERING_TARGET_HEADING_OFFSET_RADIANS
+        nextRotationY = resolveMovementHeading({
+            currentHeading: currentHeadingRadians,
+            targetHeading: requestedHeadingRadians,
+            steeringRate: resolvedSteeringRate,
+            deltaTime: dt
+        }) → degrees
+    else:
+        nextRotationY = rotationY + turnAxis * TURN_RATE_DEGREES_PER_SECOND * dt   (unchanged since 0.2.36)
+```
+
+A held turn key has never named a target ANGLE — only a target
+*direction*, the same way holding W names a target *speed*
+(`movementSpeed`) but never a target position. `STEERING_TARGET_HEADING_OFFSET_RADIANS`
+(2 radians, ~114.6°) manufactures a "requested heading" far enough around
+the circle, in whichever direction `turnAxis` names, that `steeringRate`
+— never this manufactured offset — always governs how much heading
+actually changes in a single tick (the largest rate defined as of this
+milestone, MOTORCYCLE's 4.5 rad/s, closes at most 1.125 radians in one
+tick at this file's own `MAX_DELTA_SECONDS` clamp). `turnAxis === 0`
+collapses the manufactured target back onto the current heading itself,
+so `resolveMovementHeading()`'s own `diff === 0` no-op fires the instant a
+turn key is released — no residual creep, and no persistent "turning
+left" state needed anywhere, matching this milestone's own "steering
+should be applied continuously, not as a one-shot transition" brief.
+Degrees stay at the boundary exactly as before: `rotationY` is converted
+to radians and back only around this one call — `core/AvatarMovementSimulation.js`
+never migrates its own existing degrees-based representation merely
+because the new pure math is radians-only.
+
+**WALK is byte-for-byte unchanged, as of 0.9.94.** WALK's own resolved
+`steering.steeringRate` is always exactly `0` (INSTANT), so
+`resolvedSteeringRate > 0` is `false` and this function takes the exact
+same branch, with the exact same formula, it always has — the identical
+degrade path 0.9.91/0.9.92 already established for
+`acceleration`/`braking`. Every ground vehicle (BICYCLE/MOTORCYCLE/CAR)
+now genuinely turns toward a held A/D direction at its own
+`steeringRate`, continuously for as long as the key is held — CAR's own
+slower rate (2.5 rad/s) is respected despite its own higher `movementSpeed`
+(12), proving steering stays the independent dimension 0.9.93 established
+it to be, now observable through real turning.
+
+**`application/AvatarMovementController.js` gains exactly one new
+resolution seam, `_resolvedSteeringRate()`** — the direct structural twin
+of `_resolvedAcceleration()`/`_resolvedBraking()`, reading only the
+resolved capability's bare `steering.steeringRate` number, never `.kind`
+— fed into `simulateAvatarMovement()`'s new `steeringRate` argument.
+`_currentMovementState()` is completely untouched: `turnAxis` is built
+exactly as it always has been.
+
+Tests: `tests/AvatarMovementSteeringSimulation.test.js`'s own Section H
+is updated in place — it now proves the OPPOSITE of its 0.9.93 claim:
+`core/AvatarMovementSimulation.js` **does** import and call
+`resolveMovementHeading()`, while `application/AvatarMovementController.js`
+still never references that pure-math file or the steering capability
+vocabulary directly, only a bare resolved number — the identical
+one-layer-down discipline `tests/AvatarVehicleAccelerationStateIntegration.test.js`'s
+own Section K already proved for `resolveMovementSpeed()`. A new suite,
+`tests/AvatarVehicleSteeringStateIntegration.test.js`, is the direct
+structural twin of `tests/AvatarVehicleAccelerationStateIntegration.test.js`:
+WALK regression, each ground vehicle's own gradual steering at its own
+rate (including CAR's slower rate despite its higher speed), no
+overshoot (every tick turns by exactly `steeringRate * dt`), angular
+wraparound (350°->10° and the reverse, seeded directly via
+`avatarPresenceSession.update({ rotation: { y } })`), turn release
+stopping heading change immediately, a held turn continuing every tick,
+capability switching preserving the avatar's own physical heading through
+WALK->BICYCLE->MOTORCYCLE->CAR and back, steering's independence from
+`movementSpeed`/running/concurrent forward motion, DRONE remaining fully
+blocked, and an architectural sweep proving no second heading/orientation
+vocabulary (no `_currentMovementHeading`, no `VehicleOrientation`) was
+introduced anywhere.
+
+## What this milestone deliberately does NOT do
+
+Turning radius, Ackermann steering geometry, bicycle/motorcycle lean,
+tire friction, lateral acceleration, drift/skid behavior, speed-
+proportional steering, terrain-dependent steering, camera rotation,
+animation, wheel rotation, drone flight steering, a second
+`VehicleOrientation` object or steering-input vocabulary (the existing
+`turnAxis`/`AvatarPresence.rotation.y` pair covers this milestone's own
+needs completely), and binding `brakingRequested` to any key.
+`application/AvatarMovementController.js` remains the one, single
+movement executor.
+
+Next: 0.9.95 composes speed, direction, acceleration, braking, and now
+orientation into one vehicle movement state, and only then does
+deciding whether/how a future input milestone binds real keys to
+`brakingRequested` (still unreachable since 0.9.92) become a question
+actual runtime behavior can answer.
