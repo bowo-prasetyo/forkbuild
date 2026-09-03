@@ -30,7 +30,8 @@ import { AvatarTerrainConstraint } from './AvatarTerrainConstraint.js';
 import { AvatarStepConstraint } from './AvatarStepConstraint.js';
 import { AvatarTreeConstraint } from './AvatarTreeConstraint.js';
 import { AvatarVehicleInteractionController } from './AvatarVehicleInteractionController.js';
-import { nearbyVehicleInstances } from './NearbyVehicleInstances.js';
+import { VehicleRuntimeInstances } from './VehicleRuntimeInstances.js';
+import { AvatarVehicleMovementController } from './AvatarVehicleMovementController.js';
 import { resolveAvatarVehicleMovementCapability } from '../core/AvatarVehicleMovementCapability.js';
 import { deriveAvatarContinuousMovementInputEvent } from '../core/AvatarContinuousMovementInputAdapter.js';
 import { deriveAvatarContinuousMovementIntent } from '../core/AvatarContinuousMovementIntent.js';
@@ -444,6 +445,18 @@ export class WorldNavigationSession {
 	    // session is the only place that reads from one and writes to the
 	    // other, exactly like every other composition in this class.
 	    this._avatarVehicleInteractionController = null;
+	    // 0.9.116 — Mounted Vehicle Movement. The direct structural twin
+	    // of `_avatarMovementController` above, one layer removed: built
+	    // alongside it in _setupLocalAvatar() (a mounted vehicle's
+	    // movement is meaningless without an avatar to mount it), ticked
+	    // on the same animation frame, and reads its vehicle's current
+	    // runtime position from — and commits its next one to —
+	    // `_vehicleRuntimeInstances` below rather than an
+	    // AvatarPresenceSession. See
+	    // application/AvatarVehicleMovementController.js's own header,
+	    // and the frame loop below for the exact "vehicle moves, avatar
+	    // follows" ordering.
+	    this._avatarVehicleMovementController = null;
 	    this._avatarFrameSubscription = null;
 	    this._avatarControlModeActive = false;
 	    // 0.9.66 — Continuous Movement Controller Integration. This
@@ -766,6 +779,19 @@ export class WorldNavigationSession {
         this._cameraFocusFrameSubscription = null;
         // 0.9.115 — Vehicle Rendering. See _setupVehicleRendering() below.
         this._vehicleRenderFrameSubscription = null;
+        // 0.9.116 — Mounted Vehicle Movement. The runtime
+        // vehicle-instance ownership boundary — see
+        // application/VehicleRuntimeInstances.js's own header. Built
+        // here, unconditionally, exactly like `_worldLocationDirectory`
+        // above: a vehicle's own current position is a fact about the
+        // World, independent of whether a local avatar exists (see
+        // docs/Principles.md, "Watching Presence Never Requires Having
+        // One" — the same reasoning `_setupVehicleRendering()` already
+        // applies for a spectator with no avatar at all). Read by
+        // _setupVehicleRendering() below and by
+        // _avatarVehicleMovementController above once an avatar exists
+        // to mount something.
+        this._vehicleRuntimeInstances = new VehicleRuntimeInstances();
     }
 
     // 0.2.97 — the ONE place a CommandHistory ever enters
@@ -852,14 +878,29 @@ export class WorldNavigationSession {
     // getCameraPosition()`, so a logged-out viewer just spectating still
     // sees the vehicles nearby their own camera.
     //
-    // A REQUERY EVERY FRAME, NEVER A CACHE — the identical posture
-    // application/AvatarVehicleInteractionController.js#_nearbyVehicles()
-    // already takes for its own, smaller-radius lookup every tick (see
-    // that file's own header, "Vehicle lookup: a requery, never a
-    // registry"). application/NearbyVehicleInstances.js's own query is a
-    // handful of cheap deterministic hash evaluations over a few lattice
-    // cells — negligible next to the mesh/geometry work this same frame
-    // loop already tolerates elsewhere in this file.
+    // A RECONCILE EVERY FRAME, NEVER A BARE REQUERY — as of 0.9.116.
+    // Through 0.9.115 this called application/NearbyVehicleInstances.js's
+    // own `nearbyVehicleInstances()` directly, which was safe only
+    // because every vehicle it could ever produce was stationary (see
+    // that file's own header). Now that a mounted vehicle's own position
+    // can genuinely change (application/AvatarVehicleMovementController.js),
+    // calling that pure, deterministic bridge directly here again would
+    // silently overwrite a moving vehicle's own runtime position with its
+    // fixed spawn point every single frame — see
+    // application/VehicleRuntimeInstances.js's own header, "One subtle
+    // issue to resolve." `_vehicleRuntimeInstances.sync()` is the fix:
+    // it still calls that exact same deterministic bridge to discover
+    // which vehicles exist at all, but never lets it overwrite a vehicle
+    // this store already knows the CURRENT position of.
+    // `application/AvatarVehicleInteractionController.js#_nearbyVehicles()`'s
+    // own header — "Vehicle lookup: a requery, never a registry" — still
+    // describes THAT controller's own, smaller-radius, deliberately
+    // vehicle-agnostic lookup accurately; it is unmodified by this
+    // milestone and continues to requery the deterministic placement
+    // directly, exactly as before. This file's own query is a handful of
+    // cheap deterministic hash evaluations over a few lattice cells,
+    // negligible next to the mesh/geometry work this same frame loop
+    // already tolerates elsewhere.
     //
     // Absent entirely when the render facade supports neither
     // onAnimationFrame nor syncVehicles (a minimal test double, or an
@@ -875,7 +916,7 @@ export class WorldNavigationSession {
             if (!position) {
                 return;
             }
-            this._session.syncVehicles(nearbyVehicleInstances(this.getWorldSeed(), position));
+            this._session.syncVehicles(this._vehicleRuntimeInstances.sync(this.getWorldSeed(), position));
         });
     }
 
@@ -1042,6 +1083,15 @@ export class WorldNavigationSession {
         this._avatarVehicleInteractionController = new AvatarVehicleInteractionController(
             this._avatarPresenceSession
         );
+        // 0.9.116 — Mounted Vehicle Movement. Built alongside the mount/
+        // dismount controller above, sharing this session's own
+        // `_vehicleRuntimeInstances` (constructed unconditionally in the
+        // constructor — see that field's own header) as the ONE store
+        // both vehicle rendering and vehicle movement read from and
+        // write to.
+        this._avatarVehicleMovementController = new AvatarVehicleMovementController(
+            this._vehicleRuntimeInstances
+        );
         this._lastAvatarFollowPosition = this._avatarPresenceSession.current.position;
         if (typeof this._session.onAnimationFrame === 'function') {
             this._avatarFrameSubscription = this._session.onAnimationFrame((deltaSeconds) => {
@@ -1080,7 +1130,79 @@ export class WorldNavigationSession {
                         this._avatarVehicleInteractionController.mountedVehicleType()
                     )
                 );
-                this._avatarMovementController.tick(deltaSeconds);
+                // 0.9.116 — Mounted Vehicle Movement. Whether THIS
+                // frame's movement intent is routed to the vehicle
+                // (below) or to the ordinary on-foot pipeline
+                // (AvatarMovementController#tick(), completely
+                // unchanged) is decided here, independently of
+                // `setMovementCapability()` above — see
+                // application/AvatarVehicleMovementController.js's own
+                // header for why: `mountedVehicleType()`'s own requery
+                // degrades to VehicleType.NONE once the avatar (and,
+                // after this milestone, the vehicle it is riding) has
+                // moved more than core/AvatarVehicleProximity.js's own
+                // tiny VEHICLE_INTERACTION_RADIUS away from the
+                // vehicle's FIXED spawn point (see
+                // AvatarVehicleInteractionController#mountedVehicleType()'s
+                // own "known boundary" header) — a bound this milestone
+                // deliberately does not touch, since fixing it is
+                // 0.9.117's own job. Vehicle movement instead resolves
+                // its own vehicle identity from `mount()` (session-local,
+                // never distance-gated) and its own vehicle TYPE from
+                // `_vehicleRuntimeInstances` (this session's own runtime
+                // authority — see that store's own header) — both
+                // robust to exactly the distance the capability lookup
+                // above is not.
+                const mount = this._avatarVehicleInteractionController.mount();
+                const mountedVehicleInstance = mount ? this._vehicleRuntimeInstances.get(mount.vehicleId) : null;
+                const vehicleMovementActive = mountedVehicleInstance !== null
+                    && this._avatarVehicleMovementController.canMove(mountedVehicleInstance.type);
+
+                if (vehicleMovementActive) {
+                    // The VEHICLE moves; the avatar FOLLOWS — never the
+                    // reverse. See docs/Roadmap.md, 0.9.116, "Mounted
+                    // vs. unmounted." `AvatarMovementController#tick()`
+                    // is deliberately never called this frame — this
+                    // session, not that controller, decides where the
+                    // avatar's own position comes from while genuinely
+                    // riding a movable vehicle.
+                    const current = this._avatarPresenceSession.current;
+                    const moved = this._avatarVehicleMovementController.tick({
+                        seed: this.getWorldSeed(),
+                        vehicleId: mount.vehicleId,
+                        capability: resolveAvatarVehicleMovementCapability(mountedVehicleInstance.type),
+                        movementIntent: this._avatarMovementController.movementState(),
+                        currentRotationY: current.rotation.y || 0,
+                        deltaSeconds
+                    });
+                    if (moved) {
+                        const positionChanged = moved.vehicleInstance.position.x !== current.position.x
+                            || moved.vehicleInstance.position.y !== current.position.y
+                            || moved.vehicleInstance.position.z !== current.position.z;
+                        const rotationChanged = Math.abs(moved.rotationY - (current.rotation.y || 0)) > 1e-6;
+                        // "No movement, no sequence advancement, no
+                        // network traffic" (docs/Principles.md) applies
+                        // to a stationary mounted vehicle exactly as it
+                        // already does to an idle on-foot avatar.
+                        if (positionChanged || rotationChanged) {
+                            this._avatarPresenceSession.update({
+                                position: moved.vehicleInstance.position,
+                                rotation: { y: moved.rotationY }
+                            });
+                        }
+                    }
+                } else {
+                    // Not currently moving a vehicle (unmounted, or
+                    // mounted on something this codebase cannot yet
+                    // move) — this controller's own transient per-ride
+                    // bookkeeping is cleared so a LATER ride never
+                    // inherits it (see
+                    // AvatarVehicleMovementController#reset()'s own
+                    // header), and the ordinary on-foot pipeline runs
+                    // completely UNCHANGED from before this milestone.
+                    this._avatarVehicleMovementController.reset();
+                    this._avatarMovementController.tick(deltaSeconds);
+                }
                 const now = Date.now();
                 // 0.2.44 — expires a finished gesture and refreshes the
                 // local avatar's facing override, both purely local,
@@ -5930,6 +6052,7 @@ export class WorldNavigationSession {
         }
         this._avatarMovementController = null;
         this._avatarVehicleInteractionController = null;
+        this._avatarVehicleMovementController = null;
         this._avatarControlModeActive = false;
         this._altDown = false;
         this._shiftDown = false;
@@ -5955,6 +6078,11 @@ export class WorldNavigationSession {
             this._vehicleRenderFrameSubscription();
             this._vehicleRenderFrameSubscription = null;
         }
+        // 0.9.116 — Mounted Vehicle Movement. A fresh start() after this
+        // dispose() should behave like a genuinely fresh session for
+        // vehicles too — no runtime position from a previous World View
+        // visit should bleed into a reloaded one.
+        this._vehicleRuntimeInstances.clear();
         if (this._presenceSyncService) {
             this._presenceSyncService.dispose();
             this._presenceSyncService = null;

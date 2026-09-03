@@ -560,10 +560,29 @@ async function runTests() {
         const codeOnlyWithoutBrakingVocabulary = codeOnly.replace(/[A-Za-z_]*[Vv]ehicleBraking[A-Za-z]*/g, '');
         assert(!/vehicleSpeed|vehicleAcceleration|vehicleBraking|vehicleTurning|vehicleMass|vehicleDrag|vehicleVelocity/i.test(codeOnlyWithoutBrakingVocabulary),
             '44. application/WorldNavigationSession.js never references any numeric vehicle physics quantity — this milestone integrates a capability KIND, never a speed');
-        assert(!/BicycleMovementController|MotorcycleMovementController|CarMovementController|DroneMovementController|VehicleMovementController/.test(codeOnly),
-            '45. application/WorldNavigationSession.js constructs no per-vehicle movement controller of any kind');
+        // 0.9.116 note: application/WorldNavigationSession.js now
+        // legitimately constructs application/AvatarVehicleMovementController.js
+        // — a single, GENERIC vehicle movement controller (see that
+        // file's own header) that actually connects this capability
+        // layer to a moving VehicleInstance, exactly as 0.9.84's own
+        // closing paragraph named as future scope. What THIS assertion
+        // still forbids, unchanged since 0.9.85, is a PER-VEHICLE-TYPE
+        // parallel system — a BicycleMovementController,
+        // MotorcycleMovementController, CarMovementController, or
+        // DroneMovementController, each duplicating the same math for
+        // one vehicle kind — which 0.9.116 does not introduce either
+        // (see that file's own header, "no second movement system").
+        // The bare "VehicleMovementController" substring is therefore
+        // no longer itself forbidden; only a per-vehicle-type spelling
+        // of it is. The same "an old string legitimately reappears; the
+        // assertion is updated to the claim it actually cares about"
+        // precedent 0.9.95/0.9.96 already set is applied here.
+        assert(!/BicycleMovementController|MotorcycleMovementController|CarMovementController|DroneMovementController/.test(codeOnly),
+            '45. application/WorldNavigationSession.js constructs no PER-VEHICLE-TYPE movement controller of any kind — 0.9.116\'s own generic AvatarVehicleMovementController is the one legitimate exception, reusing this exact same capability/simulation layer rather than forking it per vehicle type');
         assert(codeOnly.includes('resolveAvatarVehicleMovementCapability') && codeOnly.includes('setMovementCapability') && codeOnly.includes('mountedVehicleType'),
             '46. application/WorldNavigationSession.js does compose mountedVehicleType() -> resolveAvatarVehicleMovementCapability() -> setMovementCapability() — the integration this milestone exists to make');
+        assert(codeOnly.includes('AvatarVehicleMovementController') && codeOnly.includes('VehicleRuntimeInstances'),
+            '47. 0.9.116 note: application/WorldNavigationSession.js does compose the mounted-vehicle-movement integration — application/AvatarVehicleMovementController.js reading from and writing to application/VehicleRuntimeInstances.js — the follow-on integration that connects this capability KIND to an actual moving VehicleInstance; see tests/AvatarVehicleMovementControllerIntegration.test.js for that integration\'s own dedicated coverage');
     }
     {
         const sourceUrl = new URL('../application/AvatarVehicleInteractionController.js', import.meta.url);

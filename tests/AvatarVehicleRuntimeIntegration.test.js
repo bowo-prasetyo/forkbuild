@@ -257,8 +257,21 @@ async function runTests() {
         // Section D for that milestone's own, stricter regression sweep
         // (no vehicleSpeed/vehicleAcceleration/vehicleBraking/etc. of any
         // kind, capability integration included).
-        assert(!/vehicleSpeed|VehicleMovement(?!Capability)|vehicleVelocity/.test(codeOnly),
-            '17. application/WorldNavigationSession.js never references vehicle speed, vehicle velocity, or a parallel vehicle movement system — this milestone deliberately never touches vehicle movement (0.9.85\'s later capability integration excepted)');
+        //
+        // 0.9.116 note: the negative lookahead now also allows
+        // `...Controller` — application/WorldNavigationSession.js
+        // legitimately constructs application/AvatarVehicleMovementController.js
+        // as of that milestone, the ONE generic vehicle movement
+        // controller connecting the capability layer 0.9.85 already
+        // integrates to an actual moving VehicleInstance (see that
+        // file's own header). That is still a single, generic
+        // controller, never a per-vehicle-type one — see
+        // tests/AvatarVehicleMovementCapabilityIntegration.test.js's own
+        // 0.9.116 assertion 45 for the sweep that specifically forbids a
+        // BicycleMovementController/MotorcycleMovementController/
+        // CarMovementController/DroneMovementController.
+        assert(!/vehicleSpeed|VehicleMovement(?!Capability|Controller)|vehicleVelocity/.test(codeOnly),
+            '17. application/WorldNavigationSession.js never references vehicle speed, vehicle velocity, or an ad-hoc parallel vehicle movement system — 0.9.85\'s own capability integration and 0.9.116\'s own generic AvatarVehicleMovementController are the two allowed exceptions');
         // The composition itself stays a one-line construction + a
         // one-line tick() call + a pass-through in avatarKeyDown/
         // avatarKeyUp — never a second copy of the mount/dismount rule
