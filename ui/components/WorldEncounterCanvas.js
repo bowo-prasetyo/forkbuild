@@ -800,6 +800,143 @@ import { describeDecentralizedWorldEncounterLeadSelectionOutcomeFromRegistry, De
 // values `PublicationDistributionLifecycle.js` (0.9.50) already defines.
 // No TRUSTED/PUBLISHED/POPULAR/SUCCESSFUL/ONLINE/DECENTRALIZED status is
 // invented at this layer.
+//
+// 0.9.104 — World View Publication Distribution Action.
+//
+// 0.9.100 gave this component OBSERVATION of a Publication's own
+// distribution lifecycle; 0.9.103 then built the one thing missing to
+// actually PRODUCE a fresh one — `executePublicationDistributionCommand()`
+// — and stopped deliberately short of any UI trigger, naming it as
+// separate, later, unscheduled work. This milestone is that trigger, and
+// nothing more:
+//
+//   distributablePublication (this component's own, below)
+//        │
+//        │ click "Distribute Publication"
+//        ▼
+//   distributeSelectedPublication()
+//        │
+//        ▼
+//   distributionCommand(publication)   (injected, 0.9.104 ★)
+//        │
+//        ▼
+//   Promise<PublicationDistributionResult | null>  (or a rejection)
+//        │
+//        ▼
+//   (recorded into distributionLifecycleStore by whatever
+//    distributionCommand itself already is — this component never
+//    touches the store directly)
+//        │
+//        ▼
+//   distributionLifecycle (0.9.100's own subscription, unmodified)
+//        │
+//        ▼
+//   the SAME Distribution panel already rendering Material/Discovery
+//
+// `distributionCommand` IS THE ENTIRE REQUEST-BUILDING BOUNDARY — THIS
+// COMPONENT SUPPLIES NOTHING BUT THE PUBLICATION ITSELF. A caller injects
+// a single function, `(publication) -> Promise<PublicationDistributionResult
+// | null>`, exactly the way `materialSources`/`materialVerifier`/
+// `distributionLifecycleStore` are already caller-injected. This component
+// never decides what `serializedMaterial` is, never chooses a
+// `materialStorage` tag, and never supplies `arweaveUploaderOptions`/
+// `nostrPublisherOptions` — deciding what "the material" consists of, and
+// which signer/relay configuration to distribute it through, stays
+// entirely the injected function's own concern (in the real running app,
+// `ui/views/WorldView.js`'s own thin wrapper around the app-wide
+// `publicationDistributionCommand`, 0.9.103). `null` by default: a mount
+// with no `distributionCommand` supplied renders no action at all — the
+// same "no collaborator, no capability" restraint every other optional
+// prop on this component already holds.
+//
+// `distributablePublication` IS THE SAME `Publication` DOMAIN OBJECT
+// 0.9.39's OWN MATERIAL INSPECTION ALREADY LOADED — NEVER A SECOND FETCH.
+// This component already loads the actual signed `Publication` for a
+// resolved, local-origin PUBLICATION selection via `materialInspection.
+// loading.material` (0.9.21/0.9.22/0.9.39); the one thing genuinely new
+// here is reading that same value for a second purpose. No new material
+// source, no new load, no new request is introduced — a selection whose
+// material hasn't (or can't) load AVAILABLE simply has no distributable
+// publication, and the action stays disabled, exactly the same
+// "unavailable, never guessed" restraint 0.9.20's/0.9.39's own headers
+// already hold one layer over.
+//
+// EXECUTION IS EPHEMERAL UI STATE — NEVER A THIRD LIFECYCLE VALUE.
+// `distributionExecuting`/`distributionError` are page-local `data()`
+// fields, exactly like `wandererPosition`/`selectedEncounter` — an
+// idle -> executing -> idle transition this component owns purely to
+// disable the button while a call is in flight and to hold a plain-text
+// notice for a genuine rejection. Neither is ever written into
+// `PublicationDistributionLifecycle.js`'s own vocabulary
+// (`ABSENT`/`PRESENT`); this milestone introduces no `INITIATED`/
+// `RUNNING`/`COMPLETED`/`FAILED` state anywhere, in this file or any
+// collaborator it calls. A resolved call is never turned into a
+// fabricated "success" fact here — the Distribution panel's own
+// `distributionMaterialState`/`distributionDiscoveryState` (0.9.100,
+// unmodified) remain the only place a completed distribution's own facts
+// are ever shown, observed entirely through the existing subscription,
+// never written by this milestone's own click handler.
+//
+// A GENUINE REJECTION (OR A SYNCHRONOUS CONSTRUCTION THROW) BECOMES ONE
+// PLAIN NOTICE — NEVER A RECLASSIFIED DOMAIN RESULT. `distributeSelectedPublication()`
+// wraps the call in `Promise.resolve().then(...)` specifically so a
+// SYNCHRONOUS throw (e.g. `distributionCommand`'s own collaborator
+// rejecting malformed signer/relay configuration before ever returning a
+// promise — see `application/PublicationDistributionCommand.js`'s own
+// "synchronous validation, synchronous throw") is caught exactly the same
+// way as an asynchronous rejection would be. Either becomes the same
+// generic `distributionError` text; this component never inspects an
+// error's own message, `name`, or any other field to decide a more
+// specific notice — doing so would mean interpreting a domain failure the
+// UI has no business classifying.
+//
+// A `distributionRequestId` COUNTER GUARDS AGAINST A STALE RESPONSE —
+// MIRRORING `materialInspectionRequestId` (0.9.39) EXACTLY, ONE LAYER
+// OVER. Switching the selected encounter, or unmounting, bumps the
+// counter so a still-in-flight call's own eventual resolution/rejection
+// never writes `distributionExecuting`/`distributionError` for a
+// selection (or a component instance) that has since moved on. This is
+// purely a last-response-wins correctness guard, never a cache and never
+// a retry.
+//
+// REPEATED CLICKS NEVER START A SECOND, OVERLAPPING CALL. The action is
+// disabled (`:disabled="!distributablePublication || distributionExecuting"`)
+// the moment a call starts, and `distributeSelectedPublication()` itself
+// re-checks `distributionExecuting` before ever calling
+// `distributionCommand` — the same double guard (template `:disabled`
+// plus a method-level check) this codebase already uses nowhere else
+// because nothing else in this file was ever a fire-and-forget async
+// action a Wanderer could double-click.
+//
+// DELIBERATELY EXCLUDED — NOT THIS MILESTONE.
+// - **Constructing an Arweave client, a Nostr client, or calling
+//   `orchestratePublicationDistribution()`/`executePublicationDistribution()`
+//   directly.** This component imports none of them, and calls exactly
+//   one function it was handed: `distributionCommand`.
+//   `PublicationDistributionCommand.js`, `PublicationDistributionOrchestrator.js`,
+//   `PublicationDistributionExecutor.js`, `PublicationDistributionRuntimeComposition.js`,
+//   `ArweavePublicationMaterialUploader.js`, and
+//   `NostrPublicationDiscoveryPublisher.js` remain unimported here, exactly
+//   as they already were before this milestone.
+// - **Manipulating `distributionLifecycleStore` directly, or transitioning
+//   lifecycle state of any kind.** This component still never calls
+//   `.set()`, `describePublicationDistributionLifecycle()`, or
+//   `transitionPublicationDistributionLifecycle()` — whatever
+//   `distributionCommand` itself already does to the store (0.9.103,
+//   unmodified) is the only way a fresh fact ever reaches it.
+// - **Deciding distribution success or failure.** A resolved
+//   `distributionCommand` call is never inspected for
+//   `result.material`/`result.discovery` by this component — the existing
+//   Distribution panel's own live subscription is the only place that
+//   ever renders what actually happened.
+// - **Retry, cancel, progress percentage, distribution history, a
+//   transaction explorer, a relay browser, relay selection, wallet/signer
+//   UI, or any distribution-configuration UI.** None of those exist
+//   anywhere in this file; a rejected call surfaces exactly one plain
+//   notice and returns the action to idle.
+// - **A second selection concept, or gating the action on anything beyond
+//   the CURRENT `selectedEncounter`/`materialInspection` this component
+//   already tracks.** No new page-local selection state is introduced.
 const WORLD_HALF_SPAN = 50;
 const CANVAS_SIZE = 600;
 
@@ -887,6 +1024,22 @@ export default {
         distributionLifecycleStore: {
             type: Object,
             default: null
+        },
+        // 0.9.104 — optional. A `(publication) -> Promise<PublicationDistributionResult
+        // | null>` function, called with exactly the loaded `Publication`
+        // domain object for the CURRENTLY selected, local-origin
+        // PUBLICATION encounter — see this file's own header, "0.9.104 —
+        // World View Publication Distribution Action." `null` by default:
+        // a mount with no `distributionCommand` supplied renders no
+        // distribution action at all. Never constructed by this component
+        // itself, and never called with anything but that one `Publication`
+        // argument — every other input a real distribution needs
+        // (`serializedMaterial`, `materialStorage`, `arweaveUploaderOptions`,
+        // `nostrPublisherOptions`) stays entirely this function's own,
+        // caller-side concern.
+        distributionCommand: {
+            type: Function,
+            default: null
         }
     },
     data() {
@@ -972,7 +1125,23 @@ export default {
             // only so `beforeUnmount()` (and every fresh
             // `refreshDistributionLifecycle()` call) can call it. `null`
             // whenever this mount never subscribed.
-            unsubscribeDistributionLifecycle: null
+            unsubscribeDistributionLifecycle: null,
+            // 0.9.104 — ephemeral UI interaction state only, never a
+            // lifecycle fact — see this file's own header, "execution is
+            // ephemeral UI state." `true` for exactly as long as a call to
+            // `distributionCommand` is in flight for the current selection.
+            distributionExecuting: false,
+            // 0.9.104 — a plain-text notice for the most recent genuine
+            // `distributionCommand` rejection (or synchronous construction
+            // throw), or `null` when there is none to show. Reset on every
+            // fresh selection and on every new attempt.
+            distributionError: null,
+            // 0.9.104 — bumped on every call to `distributeSelectedPublication()`,
+            // on every fresh selection, and on unmount — see this file's own
+            // header, "a distributionRequestId counter guards against a
+            // stale response," mirroring `materialInspectionRequestId`
+            // (0.9.39) exactly, one layer over.
+            distributionRequestId: 0
         };
     },
     computed: {
@@ -1093,6 +1262,32 @@ export default {
         // header, unrevisited here.
         distributionDiscoveryState() {
             return this.distributionLifecycle ? this.distributionLifecycle.discovery.state : PublicationDistributionState.ABSENT;
+        },
+        // 0.9.104 — the loaded `Publication` domain object for the CURRENT
+        // selection, when (and only when) there genuinely is one to
+        // distribute — see this file's own header, "distributablePublication
+        // is the same Publication domain object 0.9.39's own material
+        // inspection already loaded." `null` whenever there is no current
+        // PUBLICATION selection, no `materialInspection` yet, or its own
+        // `loading.status` isn't `AVAILABLE` — never a guess, never a second
+        // load of any kind.
+        distributablePublication() {
+            if (!this.selectedEncounter || this.selectedEncounter.kind !== 'PUBLICATION') {
+                return null;
+            }
+            if (!this.materialInspection || !this.materialInspection.loading) {
+                return null;
+            }
+            // The literal string, not an imported enum — this file already
+            // renders `materialInspection.loading.status` literally in its
+            // own template (see this file's own header, "status is
+            // rendered literally") without ever importing
+            // `WorldEncounterMaterialLoading.js` directly; that boundary
+            // stays entirely behind `inspectWorldEncounterMaterial()`.
+            if (this.materialInspection.loading.status !== 'AVAILABLE') {
+                return null;
+            }
+            return this.materialInspection.loading.material || null;
         }
     },
     methods: {
@@ -1132,6 +1327,16 @@ export default {
             // file's own header, "0.9.100 — Publication Distribution
             // Observation."
             this.refreshDistributionLifecycle();
+            // 0.9.104 — a fresh selection never carries a stale execution/
+            // error notice from whatever was previously selected, and
+            // invalidates any still-in-flight call so its eventual
+            // resolution can never write ephemeral state for a selection
+            // that has since moved on — see this file's own header, "a
+            // distributionRequestId counter guards against a stale
+            // response."
+            this.distributionExecuting = false;
+            this.distributionError = null;
+            this.distributionRequestId += 1;
         },
         // 0.9.13 — the only writer of `worldView`, and the only caller
         // of `describeWorldFromDiscoveryRegistry()` in this file. See
@@ -1306,6 +1511,45 @@ export default {
                 this[fieldName]();
             }
             this[fieldName] = null;
+        },
+        // 0.9.104 — the only writer of `distributionExecuting`/
+        // `distributionError`, and the only caller of `distributionCommand`
+        // in this file. A no-op whenever there is nothing to distribute
+        // (`distributablePublication` is `null`), no `distributionCommand`
+        // was supplied, or a call is already in flight for this selection —
+        // see this file's own header, "repeated clicks never start a
+        // second, overlapping call." Wrapping the call in
+        // `Promise.resolve().then(...)` catches a SYNCHRONOUS construction
+        // throw exactly the same way as an asynchronous rejection — see
+        // this file's own header, "a genuine rejection (or a synchronous
+        // construction throw) becomes one plain notice." Never inspects a
+        // resolved result — see "deciding distribution success or
+        // failure," above; whatever fresh fact a call actually produced
+        // reaches this component only through `distributionLifecycleStore`'s
+        // own existing subscription (0.9.100, unmodified).
+        distributeSelectedPublication() {
+            const publication = this.distributablePublication;
+            if (!publication || !this.distributionCommand || this.distributionExecuting) {
+                return;
+            }
+
+            this.distributionExecuting = true;
+            this.distributionError = null;
+            this.distributionRequestId += 1;
+            const requestId = this.distributionRequestId;
+
+            Promise.resolve()
+                .then(() => this.distributionCommand(publication))
+                .catch(() => {
+                    if (requestId === this.distributionRequestId) {
+                        this.distributionError = 'Distribution could not be completed.';
+                    }
+                })
+                .then(() => {
+                    if (requestId === this.distributionRequestId) {
+                        this.distributionExecuting = false;
+                    }
+                });
         }
     },
     // 0.9.13 — seed, then subscribe; see this file's own header,
@@ -1369,6 +1613,10 @@ export default {
         // 0.9.100 — unsubscribes from `distributionLifecycleStore` too,
         // unconditionally and idempotently, mirroring the two blocks above.
         this.stopSubscription('unsubscribeDistributionLifecycle');
+        // 0.9.104 — invalidates any still-in-flight `distributionCommand`
+        // call, mirroring `materialInspectionRequestId`'s own unmount
+        // invalidation immediately above, one layer over.
+        this.distributionRequestId += 1;
     },
     template: `
         <div class="world-encounter-view">
@@ -1519,6 +1767,22 @@ export default {
                     <dt>Discovery</dt>
                     <dd>{{ distributionDiscoveryState }}</dd>
                 </dl>
+
+                <!-- 0.9.104 — a request/attempt action, never a claim of
+                     success; see this file's own header, "0.9.104 — World
+                     View Publication Distribution Action." Rendered only
+                     when a caller supplied a distributionCommand; disabled
+                     whenever there is nothing distributable yet for this
+                     selection, or a call is already in flight. -->
+                <button
+                    v-if="distributionCommand"
+                    type="button"
+                    class="action-btn world-encounter-distribution-action"
+                    :disabled="!distributablePublication || distributionExecuting"
+                    @click="distributeSelectedPublication"
+                >{{ distributionExecuting ? 'Distributing…' : 'Distribute Publication' }}</button>
+
+                <p v-if="distributionError" class="world-encounter-distribution-error">{{ distributionError }}</p>
             </div>
         </div>
     `

@@ -466,6 +466,15 @@ export default {
         // 0.9.99's own restraint immediately above exactly, one collaborator
         // over.
         const publicationDistributionLifecycleStore = inject('publicationDistributionLifecycleStore', null);
+        // 0.9.104 — World View Publication Distribution Action. The SAME
+        // app-wide `publicationDistributionCommand` `ui/main.js` has
+        // provided since 0.9.103 (a thin closure already bound to the
+        // SAME `publicationDistributionLifecycleStore` injected
+        // immediately above), injected here so `distributeWorldEncounterPublication()`
+        // below can call it — never a second command, never anything this
+        // view constructs, orchestrates, or writes into the lifecycle
+        // store itself.
+        const publicationDistributionCommand = inject('publicationDistributionCommand', null);
         const registry = new CreateBrickRegistryUseCase().execute();
         const worldViewFactory = new CreateWorldViewUseCase().execute(identityUseCase.provider, {
             peerMessageBus,
@@ -700,6 +709,49 @@ export default {
                 feedback.show(`Published "${publication.title}"`);
             });
             refreshSpatialUI();
+        }
+
+        // 0.9.104 — World View Publication Distribution Action. The one
+        // thing standing between `WorldEncounterCanvas`'s own new
+        // `distributionCommand` prop (a plain `(publication) -> Promise`
+        // function, see that file's own header) and the app-wide
+        // `publicationDistributionCommand` injected above: that command's
+        // own full request shape (`{ publication, serializedMaterial,
+        // materialStorage, arweaveUploaderOptions, nostrPublisherOptions }`)
+        // is more than a bare `Publication`. This function supplies exactly
+        // one more field — `serializedMaterial`, this replica's own signed
+        // JSON record of the Publication itself — and forwards everything
+        // else unchanged.
+        //
+        // `arweaveUploaderOptions`/`nostrPublisherOptions` ARE DELIBERATELY
+        // NOT SUPPLIED HERE. Composing either means either genuine wallet/
+        // key management or a live relay choice — both explicitly out of
+        // scope for this milestone (see docs/Roadmap.md's own 0.9.104
+        // entry, "wallet/signer UI... relay selection UI," both excluded).
+        // Calling this function today therefore reaches the REAL command
+        // boundary, the REAL orchestrator, and the REAL lifecycle store —
+        // 0.9.103's own construction validation still throws synchronously
+        // for the still-missing signer/relay configuration, exactly as it
+        // already would calling `publicationDistributionCommand()` directly
+        // with the same incomplete request. `WorldEncounterCanvas`'s own
+        // `distributeSelectedPublication()` catches that throw (and any
+        // other genuine rejection) and surfaces one plain notice — see that
+        // file's own header. Wiring real signer/relay configuration in
+        // remains a separate, later milestone's own decision to make.
+        //
+        // NEVER CONSTRUCTS AN ARWEAVE CLIENT, A NOSTR CLIENT, OR CALLS THE
+        // ORCHESTRATOR DIRECTLY. This function calls exactly one thing:
+        // the already-composed `publicationDistributionCommand` injected
+        // above — the same restraint `WorldEncounterCanvas` itself holds
+        // one layer down.
+        function distributeWorldEncounterPublication(publication) {
+            if (!publicationDistributionCommand) {
+                return Promise.reject(new Error('Publication distribution is not available.'));
+            }
+            return publicationDistributionCommand({
+                publication,
+                serializedMaterial: JSON.stringify(publication.toJSON())
+            });
         }
 
         // 0.2.23: Move Placement — deliberately NOT routed through
@@ -3011,7 +3063,8 @@ export default {
             editInspectedCopy,
             onSaveMetadata,
             saveActiveDocument,
-            publishActiveDocument
+            publishActiveDocument,
+            distributeWorldEncounterPublication
         };
     },
     template: `
@@ -3176,7 +3229,15 @@ export default {
                      observation store, never anything this file
                      constructs, persists, or transitions itself. See
                      this file's own setup()-level comment on
-                     publicationDistributionLifecycleStore, above. -->
+                     publicationDistributionLifecycleStore, above.
+
+                     0.9.104 — distributionCommand, a new WorldEncounterCanvas
+                     prop, bound to this file's own distributeWorldEncounterPublication()
+                     — a thin wrapper around the injected
+                     publicationDistributionCommand, never a second
+                     command and never anything this file orchestrates or
+                     writes into the lifecycle store itself. See that
+                     function's own comment, above. -->
                 <CollapsibleSection
                     title="World Encounters"
                     :collapsed="nearbySectionsCollapsed.worldEncounters"
@@ -3187,6 +3248,7 @@ export default {
                         :materialSources="worldEncounterMaterialSources"
                         :materialVerifier="worldEncounterMaterialVerifier"
                         :distributionLifecycleStore="publicationDistributionLifecycleStore"
+                        :distributionCommand="distributeWorldEncounterPublication"
                     />
                 </CollapsibleSection>
             </div>
