@@ -283,6 +283,19 @@ async function run() {
             'preferred', 'dedup', 'reconcile', 'compare', 'localstorage', 'sessionstorage', 'fetch('
         ];
         for (const term of forbiddenTerms) {
+            if (term === 'verified') {
+                // 0.9.113 note — see tests/WorldEncounterCanvasUI.test.js's
+                // own identical exception: comparing against the literal,
+                // already-existing `'VERIFIED'` status value for one
+                // selection-eligibility gate
+                // (`isDiscoveredPublicationSelectable`) is not new
+                // trust/verified vocabulary. Every other occurrence of
+                // "verified" stays banned.
+                const sanctioned = codeOnly.split("status === 'VERIFIED'").join('');
+                assert(!sanctioned.toLowerCase().includes('verified'),
+                    `20. WorldEncounterCanvas.js never uses "verified" anywhere in its own code beyond the one sanctioned status === 'VERIFIED' eligibility comparison`);
+                continue;
+            }
             assert(!codeOnly.toLowerCase().includes(term.toLowerCase()), `20. WorldEncounterCanvas.js never uses "${term}" anywhere in its own code`);
         }
         assert(!codeOnly.includes('.find('), '21. WorldEncounterCanvas.js never calls .find() to guess among selection candidates');

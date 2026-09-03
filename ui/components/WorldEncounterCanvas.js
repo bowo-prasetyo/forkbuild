@@ -1138,6 +1138,124 @@ import { describePublicationMaterialProvenanceFromInspection } from '../../appli
 //   unchanged here.
 // - **Persisting provenance, or computing it anywhere but freshly, on
 //   read, from state this component already tracks.**
+//
+// 0.9.113 — World View Discovered Publication Selection.
+//
+// 0.9.111 rendered a discovered, resolved, verified Publication through the
+// exact same Material/Verification markup a local selection already uses;
+// 0.9.112 then let a Wanderer see WHERE that material came from. Neither
+// milestone let a Wanderer actually DO anything with a discovered
+// Publication beyond looking at it — `discoveryResult` stayed a read-only
+// snapshot of the Discover Publication panel's own most recent search,
+// never something a Wanderer could explicitly pick as "the Publication I
+// want to work with next." This milestone is exactly that one small,
+// additive interaction fact:
+//
+//   discoveryResult                      (0.9.111, unchanged)
+//         │
+//         │ Wanderer clicks "Select Publication"
+//         ▼
+//   selectDiscoveredPublication()   ★ (THIS milestone)
+//         │
+//         ▼
+//   selectedDiscoveredPublication = discoveryResult   (verbatim, same reference)
+//
+// A SELECTION INTENT, NOT A NEW PUBLICATION STATE. Selecting never mutates
+// `discoveryResult`, the `Publication`/material it names, or any lifecycle
+// vocabulary — it is a plain interaction fact, the Wanderer's own explicit
+// pick among what discovery already returned. This mirrors
+// `selectEncounter()`'s own restraint (0.9.4) one concept over: no lookup,
+// no join, no re-derivation of any kind.
+//
+// NEVER REPLACES `selectedEncounter`, `resolvedEncounterSelection`, OR
+// `materialInspection`. Those name a spatial/World Encounter selection and
+// its own locally-loaded material — a different interaction idiom this
+// milestone does not read from and does not write to.
+// `selectedDiscoveredPublication` is a THIRD, independent selection
+// concept, existing alongside the other two, never merged with either —
+// see 0.9.111's own header, "local/decentralized separation," held here
+// once more, one layer over. `selectEncounter()` is not touched by this
+// milestone at all, and never resets `selectedDiscoveredPublication`.
+//
+// `selectedDiscoveredPublication` IS `discoveryResult` ITSELF, VERBATIM —
+// NEVER A RESHAPED OR RE-COMPUTED COPY. `selectDiscoveredPublication()`
+// stores the exact same `{ discovery, resolution, inspection, provenance }`
+// reference `discoverPublication()` (0.9.111) already wrote into
+// `discoveryResult`. It never re-derives provenance, never re-inspects
+// material, and never fabricates a shape a caller would have to learn
+// separately from `discoveryResult`'s own already-established one.
+//
+// ONLY A VERIFIED DISCOVERY RESULT IS SELECTABLE — AN EXPLICIT RULE, NEVER
+// A SILENT DEFAULT. `isDiscoveredPublicationSelectable` requires
+// `discoveryResult.inspection.verification.status === 'VERIFIED'` — a
+// `REJECTED`/`UNVERIFIABLE` verification, or no inspection at all (an
+// `UNAVAILABLE`/`AMBIGUOUS` resolution never produces one, per 0.9.110's
+// own restraint), is never selectable. `selectDiscoveredPublication()`
+// re-checks this same rule itself before ever writing
+// `selectedDiscoveredPublication` — the "Select Publication" button being
+// hidden otherwise is a rendering convenience, never the only enforcement
+// of this rule. "Selection" means "the Publication I intend to work
+// with," and this codebase never lets a Wanderer intend to work with
+// material that actively failed verification.
+//
+// SELECTING NEVER TRIGGERS DISTRIBUTION, NEVER FEEDS A LOCAL SELECTION, AND
+// NEVER RUNS A SECOND DISCOVERY. `selectDiscoveredPublication()` writes
+// exactly one field and returns; it calls no `distributionCommand`, no
+// `discoveryCommand`, and no `inspectWorldEncounterMaterial()` a second
+// time. Consuming `selectedDiscoveredPublication` for a later distribution
+// (or any other purpose) is explicitly separate, later, unscheduled work —
+// this milestone establishes the selection fact alone.
+//
+// NO APPLICATION-LAYER COMMAND — SELECTION IS EPHEMERAL UI STATE WITH NO
+// APPLICATION DECISION BEHIND IT YET. Unlike `distributionCommand`/
+// `discoveryCommand` (both real, caller-injected boundaries fronting an
+// actual network/runtime action this component has no business performing
+// itself), this milestone introduces no
+// `application/SelectDiscoveredPublicationCommand.js` and no new prop:
+// there is nothing yet for such a command to decide or forward to.
+// `distributablePublication` (0.9.104) is the precedent, one layer over: a
+// plain computed/method pair, entirely inside this component, is already
+// this codebase's convention for a UI-local eligibility rule with no
+// application collaborator behind it. A future milestone that gives
+// `selectedDiscoveredPublication` a real consumer (distribution, most
+// plausibly) is the moment such a boundary would earn its own file — not
+// before.
+//
+// `selectedDiscoveredPublication` NEVER AUTO-RESETS. Starting a new
+// `discoverPublication()` search overwrites `discoveryResult` (0.9.111,
+// unchanged) but never touches `selectedDiscoveredPublication`; selecting a
+// different World Encounter marker (`selectEncounter()`) never touches it
+// either. A Wanderer's earlier explicit pick stays exactly what it was
+// until a future, unscheduled milestone gives this component an actual
+// reason to clear it — there is no hidden "the newest thing found is
+// implicitly what's selected" behavior anywhere in this file.
+//
+// EPHEMERAL, PAGE-LOCAL UI STATE ONLY — NEVER PERSISTED. Exactly like
+// `selectedEncounter`/`discoveryResult` already are:
+// `selectedDiscoveredPublication` lives in this component's own `data()`,
+// is written by exactly one method, and is never written to a
+// `StorageProvider` or restored on mount. A page reload starts with
+// `selectedDiscoveredPublication` back at `null`, even immediately after a
+// selection was made.
+//
+// DELIBERATELY EXCLUDED — NOT THIS MILESTONE.
+// - **Consuming `selectedDiscoveredPublication` for distribution, or any
+//   other operation.** See "selecting never triggers distribution," above
+//   — a future, unscheduled milestone decides whether/how to wire this in.
+// - **Merging `selectedDiscoveredPublication` with `selectedEncounter` or
+//   `resolvedEncounterSelection` into one selection concept.** See "never
+//   replaces selectedEncounter," above.
+// - **A trust/rank/preference judgment favoring a selected Publication
+//   over an unselected one, beyond the plain VERIFIED eligibility rule.**
+//   See "only a VERIFIED discovery result is selectable," above.
+// - **Discovery history, multiple simultaneous selections, or an automatic
+//   selection of any kind.** Exactly one `selectedDiscoveredPublication`
+//   value exists at a time, written only by an explicit Wanderer click —
+//   never by `discoverPublication()` itself.
+// - **Persisting the selection across a reload, or any `StorageProvider`
+//   write of any kind.** See "ephemeral, page-local UI state only," above.
+// - **An application-layer `SelectDiscoveredPublicationCommand`.** See "no
+//   application-layer command," above.
 
 const WORLD_HALF_SPAN = 50;
 const CANVAS_SIZE = 600;
@@ -1381,7 +1499,16 @@ export default {
             // on unmount — mirrors `distributionRequestId` exactly, guarding
             // against a stale response; see this file's own header,
             // "ephemeral UI state only."
-            discoveryRequestId: 0
+            discoveryRequestId: 0,
+            // 0.9.113 — the Wanderer's own explicit pick of a successfully
+            // discovered, VERIFIED Publication — see this file's own
+            // header, "0.9.113 — World View Discovered Publication
+            // Selection." `null` until `selectDiscoveredPublication()`
+            // writes it; that method is this field's only writer.
+            // Deliberately never reset by `selectEncounter()` or a fresh
+            // `discoverPublication()` call — see that header's own
+            // "selectedDiscoveredPublication never auto-resets."
+            selectedDiscoveredPublication: null
         };
     },
     computed: {
@@ -1537,6 +1664,19 @@ export default {
         // provenance to report.
         materialProvenance() {
             return describePublicationMaterialProvenanceFromInspection(this.materialInspection);
+        },
+        // 0.9.113 — whether the CURRENT `discoveryResult` is eligible for
+        // explicit selection — see this file's own header, "only a
+        // VERIFIED discovery result is selectable." `false` whenever there
+        // is no `discoveryResult`, no `inspection` on it (an
+        // `UNAVAILABLE`/`AMBIGUOUS` resolution never produces one), or a
+        // `verification.status` other than `'VERIFIED'`.
+        isDiscoveredPublicationSelectable() {
+            return !!(
+                this.discoveryResult &&
+                this.discoveryResult.inspection &&
+                this.discoveryResult.inspection.verification.status === 'VERIFIED'
+            );
         }
     },
     methods: {
@@ -1843,6 +1983,20 @@ export default {
                         this.discovering = false;
                     }
                 });
+        },
+        // 0.9.113 — the only writer of `selectedDiscoveredPublication`.
+        // Stores the CURRENT `discoveryResult` verbatim — the exact same
+        // reference `discoverPublication()` (0.9.111) already wrote — never
+        // a reshaped copy, and never a second inspection/derivation of any
+        // kind. A no-op whenever `isDiscoveredPublicationSelectable` is
+        // false, re-checked here rather than trusted to the template's own
+        // `v-if` alone — see this file's own header, "only a VERIFIED
+        // discovery result is selectable."
+        selectDiscoveredPublication() {
+            if (!this.isDiscoveredPublicationSelectable) {
+                return;
+            }
+            this.selectedDiscoveredPublication = this.discoveryResult;
         }
     },
     // 0.9.13 — seed, then subscribe; see this file's own header,
@@ -2142,8 +2296,27 @@ export default {
                             <dt>Status</dt>
                             <dd>{{ discoveryResult.inspection.verification.status }}</dd>
                         </dl>
+
+                        <!-- 0.9.113 — see isDiscoveredPublicationSelectable,
+                             below, and this file's own 0.9.113 header, for
+                             the one eligibility rule gating this button. -->
+                        <button
+                            v-if="isDiscoveredPublicationSelectable"
+                            type="button"
+                            class="action-btn world-encounter-discovery-selection-action"
+                            @click="selectDiscoveredPublication"
+                        >Select Publication</button>
                     </template>
                 </template>
+            </div>
+
+            <!-- 0.9.113 — independent of discoveryResult's own CURRENT
+                 state: see this file's own header, "selectedDiscoveredPublication
+                 never auto-resets." Renders for as long as a selection
+                 exists, regardless of whether the panel above still shows
+                 the same result, a different one, or none at all. -->
+            <div v-if="selectedDiscoveredPublication" class="world-encounter-discovered-selection-panel">
+                <p class="world-encounter-discovered-selection-notice">Selected discovered publication.</p>
             </div>
         </div>
     `
