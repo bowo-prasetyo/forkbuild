@@ -59699,3 +59699,107 @@ existing lifecycle store, and one UI action in `WorldEncounterCanvas` —
 would close the loop this audit's own diagram opened with: World View →
 application command → distribution executor → Arweave/Nostr → lifecycle
 → observation → World View.
+
+## 0.9.103 — Publication Distribution Command Boundary
+
+The leading candidate 0.9.102 named on its own way out. That audit found a
+fully built, fully tested `PublicationDistributionOrchestrator`/`...Executor`
+pair (0.9.44 through 0.9.58) sitting completely unreachable from anywhere
+outside its own test suite — not behind a deliberately-deferred
+architectural decision, but behind a missing command seam. This milestone
+builds that seam, and stops there: composition-root wiring, not a UI
+trigger.
+
+    Application caller (a future UI action, a script, a test)
+         │
+         │  { publication, serializedMaterial, materialStorage,
+         │    arweaveUploaderOptions, nostrPublisherOptions, lifecycleStore }
+         ▼
+    application/PublicationDistributionCommand.js   (0.9.103, NEW)
+         ├──► orchestratePublicationDistribution()      (0.9.58, unmodified)
+         ├──► describePublicationDistributionLifecycle() (0.9.50, unmodified)
+         ├──► transitionPublicationDistributionLifecycle() (0.9.51, unmodified)
+         └──► lifecycleStore.set(publicationId, lifecycle) (0.9.52, unmodified)
+         │
+         ▼
+    PublicationDistributionResult | null   (0.9.58's own return value, unmodified)
+
+**A transition into the store, never a blind overwrite.** The one design
+decision this file adds on top of what 0.9.50/0.9.51 already offer
+separately: because `orchestratePublicationDistribution()` always runs
+upload-then-publish as one sequence, a single call's own result can
+under-report a dimension a PREVIOUS call already established (a second
+attempt whose upload itself declines reports `material: null, discovery:
+null`, even though an earlier attempt already got material onto Arweave).
+Recording a fresh result straight into the store with `describePublicationDistributionLifecycle()`
+alone would silently regress that already-obtained fact back to `ABSENT`.
+The command instead reads whatever lifecycle the store already holds (or
+the well-known `ABSENT`/`ABSENT` baseline), and applies
+`transitionPublicationDistributionLifecycle()` only for the dimension(s)
+the fresh result actually reports `PRESENT` — never for one it reports
+`ABSENT`. A call that learns nothing new writes nothing to the store at
+all, the same "not attempted and attempted-but-declined stay
+indistinguishable" restraint 0.9.48's own header already holds, extended
+here to whether an attempt is worth recording.
+
+**Synchronous validation, synchronous throw — the same observable shape
+0.9.58's own call already has.** `executePublicationDistributionCommand()`
+is a plain function, not `async`. It validates the one new collaborator it
+introduces — `lifecycleStore`, checked for `get()`/`set()`, duck-typed like
+every other collaborator in this family — and calls
+`orchestratePublicationDistribution()` synchronously, before ever returning
+a promise. A missing `lifecycleStore`, or a malformed
+`arweaveUploaderOptions`/`nostrPublisherOptions` 0.9.47's own composed
+constructors already reject, throws synchronously, exactly where it already
+would calling the orchestrator directly — writing this as an `async`
+function would have silently turned that synchronous throw into an
+asynchronous rejection instead, a change of observable behavior this file
+exists to avoid. A genuine collaborator rejection (upload/publish) still
+propagates through the returned promise unchanged; this file wraps neither
+the orchestration call nor its own store-recording step in a `try`/`catch`.
+
+**`ui/main.js` wiring, deliberately narrow.** The command is provided
+app-wide (`app.provide('publicationDistributionCommand', ...)`) as a thin
+closure that pre-binds the app's own `publicationDistributionLifecycleStore`
+instance (the same one 0.9.100 already wired for observation), so a future
+caller never has to thread it through by hand. Consistent with 0.9.99's and
+0.9.100's own restraint, this milestone makes **no signer/relay
+configuration decision** — no Arweave client, no Nostr client, and no
+"distribution runtime" is constructed at the composition root; those stay
+exactly what `orchestratePublicationDistribution()` already makes them,
+transient collaborators built fresh per call from whatever
+`arweaveUploaderOptions`/`nostrPublisherOptions` a future caller supplies.
+Inventing real signer/relay configuration here would mean either genuine
+wallet/key management (explicitly out of scope for this whole family) or a
+placeholder wired into production code — worse than not wiring it. This is
+a deliberate narrowing of this milestone's own originating request, which
+asked for an Arweave client and a Nostr client to be constructed in
+`ui/main.js`; the actual architecture has no long-lived instance of either
+to construct; only the command itself needed providing.
+
+**No UI trigger.** No `[E] Distribute` action, no World View control, no
+loading/progress/error presentation, no Arweave- or Nostr-specific UI. This
+milestone's own tests (`tests/PublicationDistributionCommand.test.js`)
+assert `ui/` is never imported by the command file at all.
+
+**No new lifecycle vocabulary, no registration with `application/commands/`.**
+The command introduces no `COMMANDED`/`INITIATED`/`DISPATCHED` state, and
+never extends `application/commands/Command.js` or registers with
+`CommandRegistry` — that family is specialized to undoable spatial edits
+against a live `World` context; distribution is neither undoable nor
+`World`-scoped, so it is a shape this file's plain-function convention
+imitates (matching 0.9.58's own), never a registry it joins, exactly as
+0.9.102's own audit anticipated.
+
+The most valuable test this milestone adds is the regression one: a second
+command call, against the same publication, whose upload declines, must
+never erase the first call's already-recorded material fact. That is the
+one behavior a naive "describe the fresh result, write it to the store"
+implementation would have gotten wrong.
+
+Next: with the command boundary now real and tested, 0.9.104 can revisit
+wiring a `[E] Distribute` action into `WorldEncounterCanvas` — the UI
+becomes a thin initiator calling `publicationDistributionCommand()`
+(provided here), while the Distribution panel 0.9.100 already built
+becomes the observer. Composition-root signer/relay configuration remains
+that milestone's own decision to make, not this one's.
