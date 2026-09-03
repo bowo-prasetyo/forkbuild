@@ -58225,3 +58225,160 @@ speed, direction, braking, and orientation together, and only then
 deciding whether/how a future input milestone ever binds a real key to
 `brakingRequested` — but only once actual runtime behavior tells us which
 is needed first.
+
+## 0.9.93 — Vehicle Steering Capability
+
+0.9.86-0.9.92 gave a movement capability an opinion about HOW FAST it
+moves, HOW MUCH SPACE it occupies, WHICH DIRECTIONS it permits, and HOW
+QUICKLY it approaches a higher or (when braking is requested) lower
+target speed. Every one of those is a LONGITUDINAL question — motion
+along the single axis a capability already faces. This milestone asks
+the arc's first LATERAL one, named explicitly as future scope by 0.9.92's
+own closing paragraph:
+
+> Given a capability's current heading and a requested one, how quickly
+> can it actually turn?
+
+```
+AvatarVehicleMovementCapability
+├── movementKind
+├── supported
+├── movementSpeed        (0.9.86/0.9.87)
+├── collisionRadius       (0.9.88)
+├── movementDirections    (0.9.89)
+├── acceleration          (0.9.90)
+├── braking               (0.9.92)
+└── steering              (0.9.93)
+          │
+          ▼
+ AvatarMovementSteeringCapability
+      kind: INSTANT | RATE_LIMITED
+      steeringRate: radians/second
+
+  resolveMovementHeading({
+      currentHeading, targetHeading,
+      steeringRate, deltaTime
+  }) -> number (radians, in [0, 2π))     (new, separate function)
+```
+
+**Capability now, mathematics now, integration deliberately later.** Unlike
+0.9.92 (which combined a new capability field with real wiring into
+`resolveMovementSpeed()` in the same milestone), this milestone
+deliberately stops exactly where 0.9.90 originally did: a small, closed
+capability vocabulary (`core/AvatarMovementSteeringCapability.js`) and a
+pure, independently-testable mathematical function
+(`core/AvatarMovementSteeringSimulation.js#resolveMovementHeading()`),
+with **zero wiring into any real controller**. `application/AvatarMovementController.js`
+and `core/AvatarMovementSimulation.js` are BOTH untouched by this
+milestone — existing on-foot turning (`TURN_RATE_DEGREES_PER_SECOND`/
+`rotationY`) remains byte-for-byte unchanged. Connecting steering to an
+actual, stateful vehicle heading is explicitly 0.9.94's job, matching the
+one-dimension-at-a-time discipline this entire arc has followed since
+0.9.84.
+
+**`core/AvatarMovementSteeringCapability.js` is the direct structural twin
+of `core/AvatarMovementAccelerationCapability.js`/
+`core/AvatarMovementBrakingCapability.js`** — the identical `kind`/rate
+shape, the identical INSTANT-requires-exactly-0/RATE_LIMITED-forbids-0
+coupling invariant, and the identical "independently declared, not
+reused" relationship to its sibling vocabularies that keeps all three
+capability dimensions genuinely decoupled. Its one new field,
+`steeringRate`, is expressed in **radians/second** — deliberately NOT the
+degrees this codebase's existing turn code
+(`TURN_RATE_DEGREES_PER_SECOND`) uses, because this is a genuinely new,
+independent quantity for a genuinely new pure heading simulation, not a
+value fed into that existing degrees-based advance (see that file's own
+header, "RADIANS/SECOND, DELIBERATELY, NOT DEGREES"). WALK's own steering
+is `INSTANT`/`0` — naming the avatar's existing on-foot turning behavior
+in this new vocabulary, without changing a single line of how it
+actually turns — the identical shared instance AERIAL_VEHICLE/DRONE also
+reuses, for the identical `supported: false` reason its own
+acceleration/braking already do. `AvatarVehicleMovementCapability` gains
+an eighth field, `steering`. BICYCLE/MOTORCYCLE/CAR are each
+`RATE_LIMITED`, with their own steering rates (3.5/4.5/2.5
+radians/second) — deliberately NOT derived from `movementSpeed`/
+`acceleration`/`braking` by any formula, and deliberately NOT following
+`movementSpeed`'s own `WALK < BICYCLE < MOTORCYCLE < CAR` ordering: CAR,
+the fastest vehicle with the second-highest acceleration and braking, has
+the LOWEST steering rate of the three ground vehicles, proving steering
+is a genuinely independent dimension, never proportional to speed.
+
+**`core/AvatarMovementSteeringSimulation.js#resolveMovementHeading()`
+is the angular counterpart of `resolveMovementSpeed()`**, with one
+genuinely new concern that speed never had: a heading is a position on a
+circle, not a line. Every `currentHeading`/`targetHeading` is normalized
+into `[0, 2π)`, and the gap between them is always closed along the
+**shortest angular path** — 350° toward 10° moves through 350° -> 360°/0°
+-> 10° (a 20° turn), never the long 340° route the other way. Beyond that
+one addition, every existing guarantee `resolveMovementSpeed()` already
+established carries over unchanged: never overshoots the target (clamped
+exactly at it, along the shortest arc); a non-finite/non-positive
+`deltaTime` or `steeringRate` degrades to "no change this tick," never a
+thrown error; `currentHeading` already equal to `targetHeading` (after
+normalization) is an exact no-op; pure, stateless, deterministic — no
+clock, no `Math.random`. `targetHeading` is received already-resolved,
+exactly as `resolveMovementSpeed()` already receives an already-resolved
+`targetSpeed`: this function has no notion of keyboard input, mouse
+movement, a vehicle's identity, or a camera.
+
+## What this milestone deliberately does NOT do
+
+Vehicle orientation state integration (a current heading is transient
+CONTROLLER state — this milestone establishes the pure math, not where a
+heading actually lives), turning-radius physics, Ackermann steering
+geometry, bicycle/motorcycle lean, tire friction, lateral acceleration,
+drift/skid behavior, speed-proportional steering (steering rate is
+received as a flat number, never derived from a current/target speed),
+terrain-dependent steering, camera rotation, animation, wheel rotation,
+drone flight steering, binding steering to any keyboard/mouse/gamepad
+input, and a second, per-vehicle capability-kind vocabulary.
+`application/AvatarMovementController.js` remains the one, single
+movement executor, exactly as every prior integration milestone already
+established — this milestone does not even reach it.
+
+Tests: `tests/AvatarVehicleMovementCapability.test.js` (0.9.84's own
+suite) is extended in place — every section now asserts `steering`
+alongside `movementKind`/`supported`/`movementSpeed`/`collisionRadius`/
+`movementDirections`/`acceleration`/`braking`, including the "steering
+follows no ordering shared with any sibling dimension" independence
+assertion (CAR's own steering rate is strictly the LOWEST of the three
+ground vehicles, despite being the fastest), Section H gains
+invalid-input coverage for the new field (including
+`AvatarMovementSteeringCapability`'s own INSTANT/RATE_LIMITED coupling
+invariant), Section I gains `isValidAvatarMovementSteeringCapability()`
+coverage, Section J's `toJSON()`/`fromJSON()` round-trip now includes the
+nested value, Section K's own forbidden-term sweep no longer forbids bare
+"steering" (mirroring "acceleration"/"braking" ceasing to be forbidden in
+0.9.90/0.9.92) but gains `AvatarMovementSteeringSimulation`/
+`resolveMovementHeading`/`heading`/`orientation`, and a new closing block
+gives `core/AvatarMovementSteeringCapability.js` the identical
+sibling-file sweep `core/AvatarMovementAccelerationCapability.js`/
+`core/AvatarMovementBrakingCapability.js` already have.
+`tests/AvatarVehicleCollisionFootprintIntegration.test.js`'s own "exactly
+these fields, no extra field has crept in" assertion is updated in place
+to include `steering`. `tests/AvatarVehicleMovementDirectionIntegration.test.js`'s
+own synthetic forward-only capability construction is updated to pass a
+real `steering` value. A new dedicated suite,
+`tests/AvatarMovementSteeringSimulation.test.js`, is the direct
+structural twin of `tests/AvatarMovementAccelerationSimulation.test.js`:
+approaching a target heading without overshoot, angular wraparound taking
+the shortest path (350°->10°, 359°->1°, and the mirror cases proving the
+direction of travel in each), deltaTime edge cases, fractional deltaTime,
+a large deltaTime/rate reaching the target exactly, steeringRate/heading
+edge cases (including angle normalization of negative and many-full-turn
+headings), determinism, and an architectural sweep proving this file
+never imports any vehicle/capability/runtime/rendering vocabulary and — a
+new assertion this suite adds beyond its acceleration twin — that neither
+`core/AvatarMovementSimulation.js` nor
+`application/AvatarMovementController.js` reference this file, its one
+function, or the steering capability vocabulary at all, proving existing
+WALK turning stays byte-for-byte unchanged.
+
+Next: 0.9.94 connects this milestone's pure heading math to an actual,
+stateful vehicle heading — the "current heading" this milestone
+deliberately left as a bare function parameter, owned by nothing. Only
+once orientation is real can 0.9.95 ever tie speed, direction, braking,
+and orientation together into one composed vehicle movement state, and
+only then does deciding whether/how a future input milestone binds real
+keys to steering intent (and to `brakingRequested`, still unreachable
+since 0.9.92) become a question actual runtime behavior can answer.
