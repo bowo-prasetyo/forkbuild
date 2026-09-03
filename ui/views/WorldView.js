@@ -31,6 +31,7 @@ import GeographicPlacePanel from '../components/GeographicPlacePanel.js';
 import CollapsibleSection from '../components/CollapsibleSection.js';
 import WorldFocusPanel from '../components/WorldFocusPanel.js';
 import WorldEncounterCanvas from '../components/WorldEncounterCanvas.js';
+import VehicleInteractionPrompt from '../components/VehicleInteractionPrompt.js';
 import { CameraPerspective } from '../../core/CameraPerspective.js';
 import { geographicPlaceLocationId } from '../../core/GeographicPlaceNavigation.js';
 import { WorldFocusKind } from '../../core/WorldFocusContext.js';
@@ -71,7 +72,7 @@ export default {
         WorldMembersPanel, WorldPresenceIndicator, WorldCollaboratorIndicator,
         WorldWelcomePanel, WorldMapPanel, PlaceNamingPanel,
         GeographicPlaceDirectoryPanel, GeographicPlacePanel, CollapsibleSection,
-        WorldFocusPanel, WorldEncounterCanvas
+        WorldFocusPanel, WorldEncounterCanvas, VehicleInteractionPrompt
     },
     setup() {
         const route = useRoute();
@@ -481,6 +482,20 @@ export default {
         // session below.
         const avatarControlMode = ref(true);
         const followAvatar = ref(true);
+        // 0.9.98 — Vehicle Mount/Dismount World View Integration. Mirrors
+        // session.avatarVehicleInteractionState() the same way
+        // avatarControlMode/followAvatar above mirror their own session
+        // getters: this view never decides mount/dismount eligibility
+        // itself, only reflects the already-authoritative
+        // { mounted, vehicleType, targetVehicleId } snapshot
+        // application/AvatarVehicleInteractionController.js#vehicleInteractionState()
+        // resolves. Refreshed on its own short interval, alongside
+        // spatialPresenceSyncInterval below — see that interval's own
+        // "why the two cadences must stay independent" precedent; a
+        // mount/dismount affordance needs to track proximity closely
+        // enough to feel responsive, far tighter than refreshSpatialUI's
+        // own 3-second cadence.
+        const vehicleInteractionState = ref(null);
         // 0.3.2 — Camera Perspective. Mirrors session.getCameraPerspective()
         // exactly the same way avatarControlMode/followAvatar mirror
         // their own session getters above: this view never decides the
@@ -546,6 +561,9 @@ export default {
         // after the first showing.
         const welcomeShownForDocumentId = new Set();
         let spatialPresenceSyncInterval = null;
+        // 0.9.98 — its own independent interval; see
+        // vehicleInteractionState's own ref comment above.
+        let vehicleInteractionInterval = null;
 
         // ----------------------------- 0.1.50 action surface -------------
 
@@ -2720,11 +2738,32 @@ export default {
                     session.syncWorldSpatialPresence(presentSpatialWorldDocumentId);
                 }
             }, 100);
+
+            // 0.9.98 — Vehicle Mount/Dismount World View Integration. Its
+            // own short interval, deliberately separate from both
+            // spatialInterval (3000ms — far too slow for an affordance
+            // that must appear/disappear as the avatar walks up to or
+            // away from a vehicle) and spatialPresenceSyncInterval above
+            // (a different concern — publishing THIS avatar's own
+            // presence to others, not reading local mount/dismount
+            // state). Only ever reads
+            // session.avatarVehicleInteractionState() — see that
+            // method's own header; this view computes nothing about
+            // proximity or targeting itself. Gated on avatarControlMode:
+            // showing "[E] Mount/Dismount" while the key that would
+            // actually do something is off would be misleading.
+            vehicleInteractionInterval = setInterval(() => {
+                vehicleInteractionState.value = (hasLocalAvatar.value && avatarControlMode.value
+                    && typeof session.avatarVehicleInteractionState === 'function')
+                    ? session.avatarVehicleInteractionState()
+                    : null;
+            }, 150);
         });
 
         onBeforeUnmount(() => {
             clearInterval(spatialInterval);
             clearInterval(spatialPresenceSyncInterval);
+            clearInterval(vehicleInteractionInterval);
             if (feedbackTimer) {
                 clearTimeout(feedbackTimer);
             }
@@ -2770,6 +2809,7 @@ export default {
             toggleShowMyAvatar,
             avatarControlMode,
             followAvatar,
+            vehicleInteractionState,
             cameraPerspective,
             CameraPerspective,
             setCameraPerspective,
@@ -3483,6 +3523,11 @@ export default {
             </div>
             <div ref="viewport" class="world-viewport"></div>
             <ActionFeedback :message="feedbackMessage" :visible="feedbackVisible" />
+            <!-- 0.9.98 — Vehicle Mount/Dismount World View Integration.
+                 Purely presentational — see VehicleInteractionPrompt.js's
+                 own header for why it never decides mount/dismount
+                 eligibility itself. -->
+            <VehicleInteractionPrompt :state="vehicleInteractionState" />
             <MetadataEditorDialog
                 v-if="showMetadataEditor"
                 :info="metadataEditTarget"

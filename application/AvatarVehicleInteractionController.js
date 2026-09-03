@@ -1,6 +1,7 @@
 import { DEFAULT_WORLD_SEED } from '../core/TerrainHeightField.js';
 import { VehicleType } from '../core/VehicleType.js';
 import {
+    AvatarVehicleInteractionIntent,
     deriveAvatarVehicleInteractionIntent
 } from '../core/AvatarVehicleInteractionIntent.js';
 import {
@@ -215,6 +216,79 @@ export class AvatarVehicleInteractionController {
         return vehicle ? vehicle.type : VehicleType.NONE;
     }
 
+    // 0.9.98 — Vehicle Mount/Dismount World View Integration. The one new
+    // read-only observation seam this milestone adds — the controller-
+    // level counterpart to application/AvatarMovementController.js's own
+    // `movementState()` (0.9.97). A caller (ordinarily
+    // application/WorldNavigationSession.js, ordinarily World View
+    // itself, on its own independent poll cadence) needs to know, at any
+    // moment, whether to present a "[E] Mount" or "[E] Dismount"
+    // affordance and which vehicle type it refers to — WITHOUT
+    // recomputing proximity or target resolution itself:
+    //
+    //   mounted
+    //       -> { mounted: true, vehicleType: <mounted vehicle's type>,
+    //            targetVehicleId: null }
+    //   not mounted, a vehicle is in interaction range
+    //       -> { mounted: false, vehicleType: <that vehicle's type>,
+    //            targetVehicleId: <its id> }
+    //   not mounted, nothing in range
+    //       -> { mounted: false, vehicleType: VehicleType.NONE,
+    //            targetVehicleId: null }
+    //
+    // REUSES resolveAvatarVehicleInteractionTarget() — never a second
+    // nearest-candidate search. `_tickMount()` only ever calls that
+    // function with a REAL, key-driven `interactionIntent` (NONE most
+    // ticks, MOUNT only the instant the key is actually held), because
+    // ITS job is deciding whether to actually mount. This method's job is
+    // different — "what WOULD be targeted right now" — so it always asks
+    // with `interactionIntent` forced to MOUNT, purely to read 0.9.76's
+    // own ranked-candidate answer as a PREVIEW. This is not a second
+    // target-resolution policy: it is the exact same pure function,
+    // called for observation rather than for a decision — the same
+    // posture `mountedVehicleType()` above already takes, reusing
+    // `_findMountedVehicle()`'s own query for a read rather than a
+    // transition.
+    //
+    // NEVER CALLED FROM tick(). A UI observation seam must never itself
+    // influence the actual mount/dismount decision, and never does here —
+    // this method is called only from OUTSIDE the tick loop, exactly like
+    // `mount()`/`mountedVehicleType()` above already are.
+    //
+    // A plain, frozen object — not a new class — the identical posture
+    // `AvatarMovementController#movementState()` already established for
+    // the same reason: every field is already a primitive or a plain
+    // string, so `Object.freeze()` alone keeps a caller from ever
+    // mutating this controller's own bookkeeping through the returned
+    // value.
+    vehicleInteractionState() {
+        if (!this._avatarPresenceSession) {
+            return Object.freeze({ mounted: false, vehicleType: VehicleType.NONE, targetVehicleId: null });
+        }
+        if (this._mount !== null) {
+            return Object.freeze({
+                mounted: true,
+                vehicleType: this.mountedVehicleType(),
+                targetVehicleId: null
+            });
+        }
+        const avatarPosition = this._avatarPresenceSession.current.position;
+        const vehicles = this._nearbyVehicles(avatarPosition);
+        const { targetVehicleId } = resolveAvatarVehicleInteractionTarget({
+            avatarPosition,
+            vehicles,
+            interactionIntent: AvatarVehicleInteractionIntent.MOUNT
+        });
+        const targetVehicle = targetVehicleId
+            ? vehicles.find((vehicle) => vehicle.id === targetVehicleId)
+            : null;
+        return Object.freeze({
+            mounted: false,
+            vehicleType: targetVehicle ? targetVehicle.type : VehicleType.NONE,
+            targetVehicleId
+        });
+    }
+
     // Returns true when `key` is the one this controller understands,
     // so a caller knows whether to preventDefault/swallow the event —
     // the same contract application/AvatarMovementController.js#keyDown/
@@ -384,7 +458,11 @@ export class AvatarVehicleInteractionController {
 // above is a pure read of this controller's already-existing vehicle
 // lookup, and application/WorldNavigationSession.js is the one place
 // that composes it into an actual movement-capability change, never
-// this file. Also not yet: vehicle switching while
+// this file. 0.9.98's own `vehicleInteractionState()` above is likewise
+// a pure read — no vehicle-type label, no keyboard-hint string, no
+// rendering of any kind lives here; that formatting is
+// ui/components/VehicleInteractionPrompt.js's job, never this
+// controller's. Also not yet: vehicle switching while
 // already mounted (0.9.78's own no-op rule already prevents it, and
 // this controller invents no override); a persistent vehicle registry
 // of any kind (see "Vehicle lookup: a requery, never a registry");
