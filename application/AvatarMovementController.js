@@ -598,6 +598,57 @@ import { AvatarVehicleBrakingIntent, isValidAvatarVehicleBrakingIntent } from '.
 // braking, and a movement-state composition layer — this class remains
 // the one, single movement executor, and `_setKey()` below is completely
 // untouched by this milestone. See docs/Roadmap.md, 0.9.95.
+//
+// 0.9.97 — Vehicle Movement State Observation Boundary. Every milestone
+// from 0.9.86 through 0.9.96 gave this class a new piece of transient,
+// caller-owned movement state — `_currentMovementSpeed`,
+// `_vehicleBrakingIntent`, `_movementCapability` — because the
+// SIMULATION needed it. None of it was ever readable from outside this
+// class except by inferring it from `tick()`'s own side effect on
+// `AvatarPresence` (position/rotation/animation): a test, a debugger, or
+// a future UI indicator wanting to know "is the avatar CURRENTLY
+// braking" had no way to ask except reconstructing a second, informal
+// definition of a fact this class already holds authoritatively. This
+// milestone closes that gap with exactly one new public method,
+// `movementState()` below, and nothing else.
+//
+// OBSERVATION DESCRIBES STATE; IT NEVER CALCULATES OR REINTERPRETS IT.
+// `movementState()` reuses `_currentMovementState()` — the EXACT
+// resolution `tick()` itself already calls into `simulateAvatarMovement()`
+// every tick — for `direction`/`turnAxis`/`running`/`jumpRequested`/
+// `brakingRequested`, and reads `_currentMovementSpeed`/
+// `movementCapability()` directly for the other two. There is no second
+// "is it braking" question anywhere in this method — it never asks
+// whether `movementSpeed` is currently decreasing, which would invent a
+// SECOND, inference-based definition of braking alongside 0.9.95's own
+// authoritative `_vehicleBrakingIntent`-derived one, and the two would
+// eventually disagree (0.9.95's own semantics deliberately let
+// `brakingRequested` be true while the target speed itself stays
+// forward/backward, not zero — see this file's own 0.9.95 header,
+// "BRAKING NEVER CHANGES THE TARGET, ONLY THE RATE"). See
+// tests/AvatarMovementStateObservation.test.js for that exact
+// distinction under test.
+//
+// STATE, NOT CAPABILITY. `movementState()` deliberately exposes none of
+// `_movementCapability`'s own numeric fields — its `movementSpeed` (the
+// CAPABILITY's base speed), `acceleration`, `braking`, `steering`,
+// `movementDirections`. Those describe what the ACTIVE CAPABILITY
+// PERMITS; `movementState()` describes what is happening RIGHT NOW. A
+// caller that wants the former already has `movementCapability()` (this
+// class's own existing 0.9.85 getter, returning the KIND) and, one layer
+// up, whatever `core/AvatarVehicleMovementCapability.js` instance
+// produced it — this class still has no reason to re-expose fields it
+// merely reads, and doing so now would blur a distinction that only
+// matters more as the vehicle system grows. See docs/Roadmap.md, 0.9.97.
+//
+// NO NEW STATE, NO SECOND MOVEMENT SYSTEM, NO `VehicleMovementState`
+// CLASS. `movementState()` returns a plain, frozen object built from
+// fields this class already owns — it adds nothing to `tick()`, changes
+// no existing resolution seam, and this class remains the one, single
+// movement executor. A caller cannot mutate this controller's own
+// bookkeeping through the returned value: every field is a primitive, so
+// `Object.freeze()` alone makes the snapshot immutable — no nested
+// object or array exists to defensively copy.
 const EPSILON = 1e-6;
 
 export class AvatarMovementController {
@@ -817,6 +868,40 @@ export class AvatarMovementController {
         return this._movementCapability
             ? this._movementCapability.movementKind
             : AvatarMovementCapabilityKind.WALK;
+    }
+
+    // 0.9.97 — the read-only observation boundary this milestone adds.
+    // See this file's own 0.9.97 header, above `EPSILON`, for the full
+    // "observation describes state; it never calculates or reinterprets
+    // it" reasoning. Every field is READ from state this class already
+    // tracks, never derived fresh from position or re-inferred from
+    // anything else:
+    //
+    //   direction/turnAxis/running/jumpRequested/brakingRequested — the
+    //     SAME per-tick input resolution `tick()` itself already calls
+    //     into `simulateAvatarMovement()`, via `_currentMovementState()`.
+    //   movementSpeed — `_currentMovementSpeed` itself (0.9.91), this
+    //     controller's own transient SIGNED current speed, never a
+    //     position-delta estimate.
+    //   movementCapability — `movementCapability()` (0.9.85), unchanged.
+    //
+    // Callable at any time, including between ticks and while an
+    // unsupported capability (AERIAL_VEHICLE/DRONE) is blocking `tick()`
+    // outright — it reads whatever this class currently holds either
+    // way, exactly like `isCollided()`/`verticalState()` above already
+    // do regardless of whether the most recent `tick()` published
+    // anything.
+    movementState() {
+        const intent = this._currentMovementState();
+        return Object.freeze({
+            direction: intent.forwardAxis,
+            turnAxis: intent.turnAxis,
+            running: intent.running,
+            jumpRequested: intent.jumpRequested,
+            brakingRequested: intent.brakingRequested,
+            movementSpeed: this._currentMovementSpeed,
+            movementCapability: this.movementCapability()
+        });
     }
 
     // Runs one simulation step and, if the result is actually
