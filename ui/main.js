@@ -107,6 +107,9 @@ import { ObservePeerSnapshotPossessionUseCase } from '../application/ObservePeer
 import { SnapshotPeerPossessionCoordinator } from '../application/SnapshotPeerPossessionCoordinator.js';
 import { SnapshotMaterializationSelectionCoordinator } from '../application/SnapshotMaterializationSelectionCoordinator.js';
 import { bootstrapWorldDiscoveryRuntime } from '../application/WorldDiscoveryRuntimeBootstrap.js';
+import { LocalStorageProvider } from '../storage/LocalStorageProvider.js';
+import { LocalWorldEncounterMaterialSource } from '../application/LocalWorldEncounterMaterialSource.js';
+import { composeWorldEncounterMaterialVerifier } from '../application/WorldEncounterMaterialVerifierRuntimeComposition.js';
 
 const identityProvider = new CreateIdentityProviderUseCase().execute();
 const identityUseCase = new IdentityUseCase(identityProvider);
@@ -1305,6 +1308,46 @@ const worldDiscoveryRuntime = bootstrapWorldDiscoveryRuntime({
     peerMessageBus
 });
 app.provide('worldDiscoverySourceRegistry', worldDiscoveryRuntime.registry);
+
+// 0.9.99 — Decentralized Material Verification World View Integration.
+// `ui/components/WorldEncounterCanvas.js` has carried its own `materialSources`/
+// `materialVerifier` props, and rendered their result, since 0.9.39/0.9.42 —
+// but every mount of it in this running app (this file's own
+// `worldDiscoverySourceRegistry` wiring above, `ui/views/WorldView.js`,
+// `ui/views/LiveWorldView.js`) has always left both `null`, so the panel it
+// already renders has never had anything real to show. This is the first
+// time either composition root is actually called: `LocalWorldEncounterMaterialSource`
+// (0.9.22, unmodified) reads this replica's own local publications, using
+// the SAME `LocalStorageProvider` idiom `CreateDiscoveryUseCase`/
+// `CreatePublisherUseCase` already construct fresh instances of elsewhere in
+// this file (a stateless `window.localStorage` wrapper — never a second,
+// disconnected store); `composeWorldEncounterMaterialVerifier()` (0.9.43,
+// unmodified) builds the identity+signature verifier composition this
+// codebase already ships, never a new verification algorithm. Provided the
+// same way `worldDiscoverySourceRegistry` is, immediately above, for
+// `ui/views/WorldView.js` to `inject()` and hand straight through to
+// `WorldEncounterCanvas`'s own existing props.
+//
+// PEER AND DECENTRALIZED (ARWEAVE/NOSTR) MATERIAL SOURCES, AND DECENTRALIZED
+// LEAD RESOLUTION, STAY DELIBERATELY UNWIRED HERE — the same "local first,
+// everything else a separate, later milestone" restraint 0.9.22 itself
+// already held before 0.9.23/0.9.33 through 0.9.36 built the rest. Wiring
+// `PeerWorldEncounterMaterialSource`, the Arweave-backed `.decentralized`
+// slot, and a live `DecentralizedWorldDiscoveryLeadRegistry` fed by real
+// Nostr queries is a materially larger, network-facing composition decision
+// (relay/gateway configuration, the same kind of choice `peer/RendezvousConfig.js`
+// already isolates) — left for its own future, unscheduled wiring milestone
+// rather than folded into this one. A `local`-origin selection (anything
+// this replica published itself) already exercises the full loading →
+// identity-verification → signature-verification chain end to end; a
+// peer/decentralized-origin selection still resolves to `UNAVAILABLE`/
+// `UNVERIFIABLE`, exactly as it always has.
+const worldEncounterMaterialSources = Object.freeze({
+    local: new LocalWorldEncounterMaterialSource(new LocalStorageProvider())
+});
+const { verifier: worldEncounterMaterialVerifier } = composeWorldEncounterMaterialVerifier();
+app.provide('worldEncounterMaterialSources', worldEncounterMaterialSources);
+app.provide('worldEncounterMaterialVerifier', worldEncounterMaterialVerifier);
 
 app.use(router);
 app.mount('#app');

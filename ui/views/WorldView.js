@@ -441,6 +441,20 @@ export default {
         // otherwise share a name only because of where in this file they
         // happen to appear.
         const worldDiscoverySourceRegistry = inject('worldDiscoverySourceRegistry', null);
+        // 0.9.99 — Decentralized Material Verification World View
+        // Integration. The SAME app-wide `worldEncounterMaterialSources`/
+        // `worldEncounterMaterialVerifier` `ui/main.js` now provides,
+        // handed straight through as `WorldEncounterCanvas`'s own already-
+        // existing `materialSources`/`materialVerifier` props below —
+        // never reconstructed, never a second verifier, never a fact this
+        // view derives or judges itself. `WorldEncounterCanvas` already
+        // owns the entire request/response inspection lifecycle
+        // (0.9.39/0.9.40) and already renders its own Material/
+        // Verification panel (`loading.status`/`verification.status`,
+        // unchanged); this view's only job is to stop leaving both props
+        // at their own default of `null`.
+        const worldEncounterMaterialSources = inject('worldEncounterMaterialSources', null);
+        const worldEncounterMaterialVerifier = inject('worldEncounterMaterialVerifier', null);
         const registry = new CreateBrickRegistryUseCase().execute();
         const worldViewFactory = new CreateWorldViewUseCase().execute(identityUseCase.provider, {
             peerMessageBus,
@@ -2931,6 +2945,8 @@ export default {
             NEARBY_PEOPLE_SECTION,
             WORLD_ENCOUNTERS_SECTION,
             worldDiscoverySourceRegistry,
+            worldEncounterMaterialSources,
+            worldEncounterMaterialVerifier,
             nearbyLandmarkRows,
             nearbyPeopleRows,
             goToNearbyCollaborator,
@@ -3131,13 +3147,26 @@ export default {
                      markers, owning selectedEncounter — stays entirely
                      WorldEncounterCanvas's own job, exactly as it always
                      has been; this section changes WHERE it is mounted,
-                     never what it does. -->
+                     never what it does.
+
+                     0.9.99 — materialSources/materialVerifier, both
+                     already-existing WorldEncounterCanvas props
+                     (0.9.39/0.9.42) that stayed at their own default of
+                     null everywhere in this running app until now, are
+                     handed through the same way: unmodified collaborators,
+                     never anything this file constructs or judges itself.
+                     See this file's own setup()-level comment on
+                     worldEncounterMaterialSources, above. -->
                 <CollapsibleSection
                     title="World Encounters"
                     :collapsed="nearbySectionsCollapsed.worldEncounters"
                     @toggle="setNearbySectionCollapsed('worldEncounters', WORLD_ENCOUNTERS_SECTION, $event)"
                 >
-                    <WorldEncounterCanvas :registry="worldDiscoverySourceRegistry" />
+                    <WorldEncounterCanvas
+                        :registry="worldDiscoverySourceRegistry"
+                        :materialSources="worldEncounterMaterialSources"
+                        :materialVerifier="worldEncounterMaterialVerifier"
+                    />
                 </CollapsibleSection>
             </div>
                 <!-- 0.2.99 — World Collaboration UX. Deliberately
