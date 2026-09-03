@@ -120,6 +120,8 @@ import { resolvePublicationDistributionRuntimeConfiguration } from '../applicati
 import { createPublicationDistributionRuntimeProvider } from '../application/PublicationDistributionRuntimeProvider.js';
 import { createNostrPublicationDistributionRuntimeAdapter } from '../application/NostrPublicationDistributionRuntimeAdapter.js';
 import { createArweavePublicationDistributionRuntimeAdapter } from '../application/ArweavePublicationDistributionRuntimeAdapter.js';
+import { createArweaveInjectedProviderSigner } from '../arweave/ArweaveInjectedProviderSigner.js';
+import { createNostrInjectedProviderPublisher } from '../nostr/NostrInjectedProviderPublisher.js';
 import { LocalDiscoveryProvider } from '../discovery/LocalDiscoveryProvider.js';
 import {
     composeDecentralizedWorldEncounterMaterialDiscoveryServices,
@@ -1598,11 +1600,37 @@ app.provide('publicationDistributionLifecycleStore', publicationDistributionLife
 // particularly strict about accepting an already-usable `signer` — never a
 // `privateKey`/`mnemonic`/`seed`/`walletPassword` this file would have to
 // turn into one.
-const nostrPublicationRuntimeCapabilities = createNostrPublicationDistributionRuntimeAdapter({});
-const arweavePublicationRuntimeCapabilities = createArweavePublicationDistributionRuntimeAdapter({});
+// 0.9.121 — Publication Distribution Host Capability Integration. 0.9.107
+// through 0.9.109 built the seam a host signer/publish capability plugs
+// into; nothing before this milestone ever produced one. `window.arweaveWallet`
+// (ArConnect/Wander) and `window.nostr` (any NIP-07 extension) are the real
+// host capabilities this composition root resolves them from — see
+// `arweave/ArweaveInjectedProviderSigner.js` and
+// `nostr/NostrInjectedProviderPublisher.js` for the actual signing/
+// publishing logic, entirely absent from this file. Neither is present in
+// every browser; `createArweaveInjectedProviderSigner()`/
+// `createNostrInjectedProviderPublisher()` already degrade to `undefined`
+// when the corresponding extension is not installed, which the two runtime
+// adapters below already treat exactly as they treat any other absent
+// capability — a graceful "not currently configured," never a throw here.
+// `discoveryTag` is ForkBuild's own distribution campaign marker, not a
+// host concern — see `application/NostrPublicationDistributionRuntimeAdapter.js`'s
+// own header, "`publish` and `relayUrl` are what a host provides;
+// `discoveryTag`... are ForkBuild's own campaign configuration" — supplied
+// here, once, for the same reason this file is the one place 0.9.108's own
+// header already named for it.
+const arweaveHostSigner = createArweaveInjectedProviderSigner({
+    injectedProvider: typeof window !== 'undefined' ? window.arweaveWallet : undefined
+});
+const nostrHostPublisher = createNostrInjectedProviderPublisher({
+    injectedProvider: typeof window !== 'undefined' ? window.nostr : undefined
+});
+const nostrPublicationRuntimeCapabilities = createNostrPublicationDistributionRuntimeAdapter({ publish: nostrHostPublisher });
+const arweavePublicationRuntimeCapabilities = createArweavePublicationDistributionRuntimeAdapter({ signer: arweaveHostSigner });
 const publicationDistributionRuntimeProvider = createPublicationDistributionRuntimeProvider({
     ...arweavePublicationRuntimeCapabilities,
-    ...nostrPublicationRuntimeCapabilities
+    ...nostrPublicationRuntimeCapabilities,
+    discoveryTag: 'forkbuild-publication'
 });
 const { arweaveUploaderOptions, nostrPublisherOptions } = resolvePublicationDistributionRuntimeConfiguration(publicationDistributionRuntimeProvider.resolveRuntimeCapabilities());
 const publicationDistributionCommand = composePublicationDistributionCommand({
