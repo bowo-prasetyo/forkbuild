@@ -6,6 +6,7 @@ import { describeWorldEncounterSelectionOutcomeFromRegistry, WorldEncounterSelec
 import { inspectWorldEncounterMaterial } from '../../application/WorldEncounterMaterialInspection.js';
 import { PublicationDistributionState } from '../../application/PublicationDistributionLifecycle.js';
 import { describeDecentralizedWorldEncounterLeadSelectionOutcomeFromRegistry, DecentralizedWorldEncounterLeadSelectionOutcomeStatus } from '../../application/DecentralizedWorldEncounterLeadSelection.js';
+import { describePublicationMaterialProvenanceFromInspection } from '../../application/PublicationMaterialProvenance.js';
 
 // 0.9.3 — World View UI / Wanderer Presence.
 //
@@ -1058,6 +1059,85 @@ import { describeDecentralizedWorldEncounterLeadSelectionOutcomeFromRegistry, De
 //   anything else this milestone adds, beyond this component's own mount.**
 //   All of it lives and dies with this component instance, exactly like
 //   `selectedEncounter`/`materialInspection` already do.
+//
+// 0.9.112 — Publication Provenance in World View.
+//
+// 0.9.111 made the selection-driven Material/Verification panel
+// (`materialInspection`) and the discovery-driven one (`discoveryResult.
+// inspection`) render through the exact same markup — see this file's own
+// header, "the existing inspection mechanism stays canonical." That
+// convergence left one question unanswered for a Wanderer looking at
+// either panel: where did THIS inspected material come from? This
+// milestone adds exactly that one small fact — `application/
+// PublicationMaterialProvenance.js`'s own `{ origin: 'LOCAL' |
+// 'DECENTRALIZED' }` — rendered as one new "Source" row alongside the
+// existing Material/Verification rows in both panels, never a new panel of
+// its own.
+//
+//   materialInspection            discoveryResult.inspection
+//   (selection-driven, 0.9.39)    (discovery-driven, 0.9.111)
+//         │                              │
+//         ▼                              ▼
+//   materialProvenance             discoveryResult.provenance
+//   (THIS milestone — computed,     (THIS milestone — already
+//    derived here)                   computed by 0.9.110's own
+//         │                          runtime composition, forwarded
+//         │                          verbatim, never re-derived here)
+//         ▼                              ▼
+//   "Source" row, selection panel   "Source" row, discovery panel
+//
+// `materialProvenance` IS A COMPUTED, DERIVED FROM `materialInspection`
+// ALONE — NEVER A NEW PAGE-LOCAL DATA FIELD. Exactly like
+// `selectedEncounterInspection` (0.9.18), this needs no field of its own
+// in `data()`: it is a pure function of state this component already
+// tracks, recomputed automatically whenever `materialInspection` itself
+// changes. This component never writes an `origin` onto `materialInspection`
+// itself, and never mutates the `Publication`/material it names — see
+// `application/PublicationMaterialProvenance.js`'s own header, "never
+// mutates the underlying inspection/material/Publication."
+//
+// `discoveryResult.provenance` IS RENDERED VERBATIM, NEVER RE-DERIVED HERE.
+// Unlike `materialProvenance`, this component computes nothing for the
+// discovery panel's own Source row — `discoverWorldEncounterPublicationCommand()`'s
+// own result already carries a `provenance` field (0.9.110's own runtime
+// composition, 0.9.112), forwarded through 0.9.111's own command boundary
+// unchanged. Calling `describePublicationMaterialProvenanceFromInspection()`
+// a second time on `discoveryResult.inspection` here would be a redundant,
+// pointless recomputation of a fact the caller already handed over — this
+// file reads `discoveryResult.provenance.origin` directly, exactly the same
+// "never a second orchestrator" restraint 0.9.111's own header already
+// holds for `discoveryResult.inspection`.
+//
+// SOURCE NEVER REPLACES DISCOVERY, MATERIAL, OR VERIFICATION — ALL FOUR
+// FACTS RENDER SIDE BY SIDE. The "Choose Source"/"Source: local" panel
+// 0.9.20 already renders (`selectionOutcome`) answers "which
+// WorldDiscoverySource offered this encounter?" — an entirely different
+// question from "which loading boundary produced the material a Wanderer
+// is currently looking at?" this milestone's own "Source" row answers. Both
+// coexist unchanged; this milestone renames nothing and removes nothing.
+//
+// NO PROVENANCE ROW WHEN THERE IS NO MATERIAL TO REPORT PROVENANCE FOR.
+// `materialProvenance` is `null` whenever `materialInspection` itself is
+// `null` (see `describePublicationMaterialProvenanceFromInspection()`'s own
+// "no material, no provenance"); the template's own `v-if="materialProvenance"`
+// simply renders nothing in that case, exactly the same restraint every
+// other optional row in these panels already holds.
+//
+// DELIBERATELY EXCLUDED — NOT THIS MILESTONE.
+// - **A trust score, source ranking, "preferred source," or any styling
+//   implying one origin is better than the other.** See `application/
+//   PublicationMaterialProvenance.js`'s own header, "this is not a trust
+//   state."
+// - **A third origin value, or any per-service (Arweave vs. Nostr)
+//   breakout.** `discoveryResult.discovery` already names which services
+//   were queried; this milestone adds no second, competing breakdown.
+// - **Merging the local and decentralized panels into one, or letting a
+//   discovered Publication overwrite `materialInspection`, or vice versa.**
+//   Both stay exactly as independent as 0.9.111 already left them — see
+//   "local/decentralized separation" in that milestone's own header,
+//   unchanged here.
+// - **Persisting provenance, or computing it anywhere but freshly, on
+//   read, from state this component already tracks.**
 
 const WORLD_HALF_SPAN = 50;
 const CANVAS_SIZE = 600;
@@ -1448,6 +1528,15 @@ export default {
                 return null;
             }
             return this.materialInspection.loading.material || null;
+        },
+        // 0.9.112 — the selection-driven Material panel's own "Source"
+        // fact, derived fresh from `materialInspection` on every read —
+        // see this file's own header, "materialProvenance is a computed,
+        // derived from materialInspection alone." `null` whenever
+        // `materialInspection` itself is `null` — no material, no
+        // provenance to report.
+        materialProvenance() {
+            return describePublicationMaterialProvenanceFromInspection(this.materialInspection);
         }
     },
     methods: {
@@ -1954,6 +2043,15 @@ export default {
                     <dd>{{ materialInspection.loading.status }}</dd>
                 </dl>
 
+                <!-- 0.9.112 — Publication Provenance in World View. A plain
+                     origin fact about THIS observation — see
+                     application/PublicationMaterialProvenance.js's own
+                     header. -->
+                <dl v-if="materialProvenance" class="world-encounter-provenance-detail">
+                    <dt>Source</dt>
+                    <dd>{{ materialProvenance.origin }}</dd>
+                </dl>
+
                 <h4 class="world-encounter-verification-title">Verification</h4>
                 <dl class="world-encounter-verification-detail">
                     <dt>Status</dt>
@@ -2024,6 +2122,19 @@ export default {
                         <dl class="world-encounter-material-detail">
                             <dt>Status</dt>
                             <dd>{{ discoveryResult.inspection.loading.status }}</dd>
+                        </dl>
+
+                        <!-- 0.9.112 — discoveryResult.provenance is already
+                             computed by 0.9.110's own runtime composition
+                             (application/DecentralizedWorldEncounterMaterialDiscoveryRuntimeComposition.js)
+                             and forwarded verbatim through 0.9.111's own
+                             command boundary — rendered directly, never
+                             re-derived here. See this file's own header,
+                             "discoveryResult.provenance is rendered
+                             verbatim." -->
+                        <dl v-if="discoveryResult.provenance" class="world-encounter-provenance-detail">
+                            <dt>Source</dt>
+                            <dd>{{ discoveryResult.provenance.origin }}</dd>
                         </dl>
 
                         <h4 class="world-encounter-verification-title">Verification</h4>
