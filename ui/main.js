@@ -116,7 +116,7 @@ import { PublicationDistributionLifecyclePersistenceBridge } from '../applicatio
 import { PublicationDistributionLifecycleRestorer } from '../application/PublicationDistributionLifecycleRestorer.js';
 import { hydratePublicationDistributionLifecycles } from '../application/PublicationDistributionLifecycleHydration.js';
 import { composePublicationDistributionCommand } from '../application/PublicationDistributionCommandComposition.js';
-import { resolveArweaveUploaderOptions, resolveNostrPublisherOptions } from '../application/PublicationDistributionConfigurationProvider.js';
+import { resolvePublicationDistributionRuntimeConfiguration } from '../application/PublicationDistributionRuntimeConfiguration.js';
 
 const identityProvider = new CreateIdentityProviderUseCase().execute();
 const identityUseCase = new IdentityUseCase(identityProvider);
@@ -1432,13 +1432,29 @@ app.provide('publicationDistributionLifecycleStore', publicationDistributionLife
 // supplied, so a real World View click (0.9.104) reached this command only
 // to hit 0.9.45's/0.9.46's own synchronous "a signer/publishImpl is
 // required" throw. `resolveArweaveUploaderOptions()`/`resolveNostrPublisherOptions()`
-// (`application/PublicationDistributionConfigurationProvider.js`, NEW) are
-// the one place that decision now gets made, and
-// `composePublicationDistributionCommand()` (`application/PublicationDistributionCommandComposition.js`,
-// NEW) is the seam that pre-binds their result into this command exactly
-// the way `publicationDistributionLifecycleStore` alone already was.
+// (`application/PublicationDistributionConfigurationProvider.js`) are the
+// one place that decision now gets made, and
+// `composePublicationDistributionCommand()` (`application/PublicationDistributionCommandComposition.js`)
+// is the seam that pre-binds their result into this command exactly the
+// way `publicationDistributionLifecycleStore` alone already was.
 //
-// BOTH RESOLVERS ARE CALLED WITH AN EMPTY OPTIONS OBJECT, SO BOTH PRESENTLY
+// 0.9.106 — Publication Distribution Runtime Configuration. 0.9.105's own
+// "Recommendation" already named this file as the one place a future
+// runtime capability (a browser wallet extension, an application-provided
+// signer, an externally injected adapter, a development/test signer, or
+// any other host-provided source) would eventually get supplied from —
+// but this file still called `resolveArweaveUploaderOptions()`/
+// `resolveNostrPublisherOptions()` as two separate, hand-written `{}`
+// literals, giving such a source no single place to plug into.
+// `publicationDistributionRuntimeConfiguration` below is that one place:
+// a plain object describing whatever this environment/replica currently
+// exposes for each substrate, resolved through
+// `resolvePublicationDistributionRuntimeConfiguration()`
+// (`application/PublicationDistributionRuntimeConfiguration.js`, NEW),
+// which does nothing but forward `arweave`/`nostr` verbatim into the same
+// two 0.9.105 resolvers this file already called directly.
+//
+// THE RUNTIME CONFIGURATION SOURCE IS STILL EMPTY, SO BOTH RESOLVERS STILL
 // RESOLVE `undefined` — THIS MILESTONE CHANGES NO OBSERVABLE BEHAVIOR IN
 // THE RUNNING APP. No concrete Arweave signer or Nostr `publishImpl`
 // implementation exists anywhere in this codebase yet (see
@@ -1447,16 +1463,18 @@ app.provide('publicationDistributionLifecycleStore', publicationDistributionLife
 // still naming a concrete implementation as later, unscheduled work) — so
 // a real World View click still reaches exactly today's existing
 // synchronous throw, honestly. This milestone's entire value is that the
-// decision point is now explicit, named, and independently testable (see
-// `tests/PublicationDistributionConfigurationProvider.test.js` and
-// `tests/PublicationDistributionCommandComposition.test.js`); supplying a
-// real signer or `publishImpl` later — most naturally a browser wallet-
-// extension adapter, mirroring `base/BaseInjectedProviderWalletAdapter.js`'s
-// own already-established pattern one substrate over — touches only the
-// two `resolve...()` calls immediately below, never `WorldView.js`, never
-// `WorldEncounterCanvas.js`, never the command, orchestrator, or executor.
-const arweaveUploaderOptions = resolveArweaveUploaderOptions({});
-const nostrPublisherOptions = resolveNostrPublisherOptions({});
+// decision point is now ONE named, independently testable seam (see
+// `tests/PublicationDistributionRuntimeConfiguration.test.js`) rather than
+// two separate call sites; supplying a real signer or `publishImpl` later —
+// most naturally a browser wallet-extension adapter, mirroring
+// `base/BaseInjectedProviderWalletAdapter.js`'s own already-established
+// pattern one substrate over — touches only how
+// `publicationDistributionRuntimeConfiguration` is defined immediately
+// below, never `WorldView.js`, never `WorldEncounterCanvas.js`, never the
+// command, orchestrator, or executor, and not even the two `resolve...()`
+// calls themselves.
+const publicationDistributionRuntimeConfiguration = {};
+const { arweaveUploaderOptions, nostrPublisherOptions } = resolvePublicationDistributionRuntimeConfiguration(publicationDistributionRuntimeConfiguration);
 const publicationDistributionCommand = composePublicationDistributionCommand({
     lifecycleStore: publicationDistributionLifecycleStore,
     arweaveUploaderOptions,
