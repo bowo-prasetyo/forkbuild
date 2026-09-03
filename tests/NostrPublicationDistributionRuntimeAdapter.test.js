@@ -141,9 +141,11 @@ async function run() {
             relayUrl: 'wss://relay.example'
         });
 
-        // Arweave has no adapter yet (0.9.109, unscheduled) — a plain fake
-        // signer supplied directly, exactly as every prior milestone's own
-        // flagship test already does.
+        // This flagship test is scoped to the Nostr adapter alone — a plain
+        // fake signer supplied directly, exactly as every prior milestone's
+        // own flagship test already does, rather than through 0.9.109's own
+        // (now-shipped) Arweave adapter, which has its own dedicated
+        // flagship test.
         const provider = createPublicationDistributionRuntimeProvider({
             signer: { sign: async () => ({ id: transactionId, transaction: {} }) },
             fetchImpl: async () => gatewayResponse('accepted'),
