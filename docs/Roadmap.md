@@ -60412,3 +60412,157 @@ decentralized-publication loop. The latter may be the more interesting
 next feature now that distribution is executable — but that product
 question, not another architectural one, is what this milestone was meant
 to finally make askable.
+
+## 0.9.108 — Nostr Publication Discovery Runtime Adapter
+
+0.9.107 finished the provider/factory chain the 0.9.103–0.9.107 plumbing
+run set out to build — but its own "Recommendation" also named the honest
+conclusion sitting underneath that success: the remaining gap is no longer
+architectural plumbing, it is an actual host capability. Rather than reach
+for the larger, less-defined "wallet integration" work next, this milestone
+starts with the substrate whose own architecture already models publishing
+as a single, generic function — `publishImpl` — and gives it the first real
+producer: something that turns a host's own Nostr publishing capability
+into that exact field, without changing the orchestrator, executor,
+lifecycle, or World View.
+
+    host Nostr publishing capability   (nothing, today — see "Nothing
+         │                              real to adapt yet")
+         │  { publish, relayUrl }
+         ▼
+    createNostrPublicationDistributionRuntimeAdapter({ publish, relayUrl })   (0.9.108, NEW)
+         │
+         ▼
+    { publishImpl, relayUrl }
+         │
+         ▼
+    createPublicationDistributionRuntimeProvider({ ...adapted, discoveryTag, tagName, kind })   (0.9.107, unmodified)
+         │
+         ▼
+    resolvePublicationDistributionRuntimeConfiguration({ arweave, nostr })   (0.9.106, unmodified)
+         │
+         ▼
+    composePublicationDistributionCommand({ lifecycleStore, ... })   (0.9.105, unmodified)
+
+**A bridge, never a Nostr abstraction layer inside the domain.**
+`application/NostrPublicationDistributionRuntimeAdapter.js` has no
+envelope-shape knowledge, no NIP-01 vocabulary, and no relay-selection
+policy — `NostrDiscoveryQueryService.js` and `NostrPublicationDiscoveryPublisher.js`
+remain responsible for every semantic they already own; this file imports
+neither. `createNostrPublicationDistributionRuntimeAdapter({ publish,
+relayUrl })` does exactly one thing: rename a host's own `publish`
+capability onto the `publishImpl` field 0.9.107's own factory already
+accepts, and forward `relayUrl` alongside it, unread and undefaulted.
+
+**`publish`/`relayUrl` are what a host provides; `discoveryTag`/`tagName`/
+`kind` are ForkBuild's own campaign configuration, never a host concern —
+the one design decision this file itself adds.** A host Nostr capability
+can plausibly expose "sign and broadcast this event" and "which relay" —
+that is transport. Which free-form tag names ForkBuild's own discovery
+campaign, which Nostr tag name carries it, and which event kind a
+publication announcement declares are ForkBuild's own domain decisions, not
+something any host capability would know about — exactly why
+`NostrPublicationDiscoveryPublisher.js`'s own header already leaves
+`discoveryTag` required, with no ambient default, for "a caller" to decide.
+This file stays a caller of that decision: `discoveryTag`/`tagName`/`kind`
+aren't parameters of this function at all — a caller merges them alongside
+this function's own `{ publishImpl, relayUrl }` result directly into
+`createPublicationDistributionRuntimeProvider({ ... })`, exactly as
+`ui/main.js` (0.9.108) now does.
+
+**A regrouping, never a new sufficiency check** — the same restraint
+0.9.106 and 0.9.107 both already held, held here one layer over.
+`publishImpl: publish` is the entire transformation; whether the resulting
+`publishImpl` is actually usable remains entirely
+`resolveNostrPublisherOptions()`'s own decision (0.9.105, unmodified).
+Calling this function with no `publish` returns `{ publishImpl: undefined,
+relayUrl: undefined }` — never a throw — exactly the graceful degradation
+every seam below it already holds.
+
+**Synchronous — deliberately, like every seam below it.** No `connect()`,
+`await connect()`, `login()`, or `authenticate()` inside this file. A host
+capability needing asynchronous setup (a NIP-46 bunker handshake, a browser
+extension permission prompt) resolves that entirely BEFORE its result is
+ever handed to this function — the same restraint 0.9.107's own header
+already held one layer up.
+
+**Arweave is deliberately untouched.** This file imports nothing from
+`ArweavePublicationMaterialUploader.js` and produces no `arweave` section
+of any kind. Arweave's own signing-authority capability is a materially
+different, later, unscheduled milestone (0.9.109, tentative) — never folded
+into this one merely because both eventually feed the same runtime
+provider.
+
+**Nothing real to adapt yet, so this milestone changes no observable
+behavior in the running app.** `ui/main.js` calls
+`createNostrPublicationDistributionRuntimeAdapter({})` — no NIP-46 bunker,
+browser extension, or other concrete host Nostr publishing capability is
+wired up anywhere in this codebase yet. `nostrPublisherOptions` still
+resolves `undefined`, and a real World View click still reaches exactly
+today's existing synchronous throw. This milestone's entire value is
+proving that a real, independently tested, Nostr-specific bridge now sits
+between a host capability and `ui/main.js`'s own call to
+`createPublicationDistributionRuntimeProvider()`, so wiring a real
+capability later touches only the one object passed to this function.
+
+The flagship test
+(`tests/NostrPublicationDistributionRuntimeAdapter.test.js`, Section D, and
+`tests/WorldViewNostrPublicationDistributionRuntimeAdapterIntegration.test.js`)
+drives a fake HOST publisher — named `publish`, never `publishImpl`,
+exactly as a real host would call its own capability — through the new
+adapter, a real runtime provider, 0.9.106's own unmodified configuration
+seam, 0.9.105's own unmodified command composition, the real orchestrator
+and executor, and the same `WorldEncounterCanvas` click handler 0.9.104
+built, ending in a `PRESENT`/`PRESENT` lifecycle fact World View actually
+observes — proving the event id reported all the way up to the lifecycle
+store came from the fake HOST publisher, not a coincidence of the adapter
+happening to also satisfy `publishImpl`'s own shape. A second section
+retains the independent-substrate proof this architecture has held since
+0.9.105: with no Arweave capability supplied anywhere, the adapter's own
+Nostr capability still resolves to a real `nostrPublisherOptions` and a
+`NostrPublicationDiscoveryPublisher` built from it still publishes
+successfully entirely on its own — the level at which this codebase's own
+existing orchestrator (0.9.49's own unmodified upload-first sequencing)
+actually keeps the two substrates independent, since a full ORCHESTRATED
+distribution still requires a working material upload before it ever
+attempts a publish, unrevisited by this milestone. 0.9.107's own flagship
+test (`tests/WorldViewPublicationDistributionRuntimeProviderIntegration.test.js`)
+is updated in one place only — its own architectural-regression assertion
+about the exact call `ui/main.js` now makes — and otherwise passes
+unmodified.
+
+### What this milestone deliberately does NOT do
+
+No concrete host Nostr publishing capability, NIP-46/NIP-07 integration,
+key management, or any actual signing/broadcast implementation — later,
+unscheduled work, exactly as `NostrPublicationDiscoveryPublisher.js`'s own
+header already leaves `publishImpl` itself. No Nostr account management,
+identity UI, relay-management UI, private-key storage, key generation,
+automatic relay discovery, or Nostr login. No new lifecycle state, and no
+change to `PublicationDistributionLifecycle.js`, `WorldEncounterCanvas.js`,
+the Distribution panel, the orchestrator, or the executor. No asynchronous
+discovery or connection of any kind — see "Synchronous — deliberately,"
+above. No Arweave signing-authority adapter, or any wallet-integration
+decision for Arweave — see "Arweave is deliberately untouched," above. No
+`discoveryTag`/`tagName`/`kind` resolution of any kind — see "`publish`/
+`relayUrl` are what a host provides," above.
+
+### Recommendation
+
+With this milestone in place, the Nostr half of Publication Distribution
+has a real, named, independently tested seam waiting for exactly one thing
+— a concrete host Nostr publishing capability — with no further
+architectural work standing between that capability and a working
+distribution. Two directions were open before this milestone started, and
+the same two remain open now, one substrate narrower: Arweave's own
+signing-authority adapter (0.9.109, tentative — deliberately not committed
+to yet, the same restraint 0.9.107's own header already held for this
+milestone), or reassessing whether application-owned wallet integration is
+even the right shape at all, versus a host environment simply supplying
+both capabilities directly. The other major gap 0.9.102's own audit
+named — decentralized material retrieval, resolving a discovery lead back
+into verified material World View can display — remains at least as
+interesting a next step as either. What this milestone does not recommend
+is more indirection: the provider/factory/adapter chain is complete for
+Nostr: the next milestone touching this family should make a capability
+real, not add another layer around it.

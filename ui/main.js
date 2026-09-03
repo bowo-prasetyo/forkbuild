@@ -118,6 +118,7 @@ import { hydratePublicationDistributionLifecycles } from '../application/Publica
 import { composePublicationDistributionCommand } from '../application/PublicationDistributionCommandComposition.js';
 import { resolvePublicationDistributionRuntimeConfiguration } from '../application/PublicationDistributionRuntimeConfiguration.js';
 import { createPublicationDistributionRuntimeProvider } from '../application/PublicationDistributionRuntimeProvider.js';
+import { createNostrPublicationDistributionRuntimeAdapter } from '../application/NostrPublicationDistributionRuntimeAdapter.js';
 
 const identityProvider = new CreateIdentityProviderUseCase().execute();
 const identityUseCase = new IdentityUseCase(identityProvider);
@@ -1487,7 +1488,35 @@ app.provide('publicationDistributionLifecycleStore', publicationDistributionLife
 // never `WorldView.js`, never `WorldEncounterCanvas.js`, never the
 // command, orchestrator, or executor, and not even
 // `resolvePublicationDistributionRuntimeConfiguration()` itself.
-const publicationDistributionRuntimeProvider = createPublicationDistributionRuntimeProvider({});
+//
+// 0.9.108 — Nostr Publication Discovery Runtime Adapter. 0.9.107 gave this
+// file a real factory to call, but the object fed to it below was still a
+// bare `{}` — nothing in this codebase actually PRODUCES a `publishImpl`
+// from a real host Nostr capability. `createNostrPublicationDistributionRuntimeAdapter()`
+// (`application/NostrPublicationDistributionRuntimeAdapter.js`, NEW) is
+// that bridge: it renames whatever a host's own `publish` capability is
+// called onto the `publishImpl` field the runtime provider already accepts,
+// and forwards `relayUrl` alongside it. Arweave's own signing-authority
+// capability remains exactly as unaddressed as 0.9.107 left it — no
+// adapter of any kind exists for it yet (a separate, later, unscheduled
+// milestone).
+//
+// NO HOST NOSTR CAPABILITY EXISTS ANYWHERE IN THIS CODEBASE YET, SO THIS
+// MILESTONE CHANGES NO OBSERVABLE BEHAVIOR EITHER. `createNostrPublicationDistributionRuntimeAdapter({})`
+// resolves `{ publishImpl: undefined, relayUrl: undefined }` — spread into
+// `createPublicationDistributionRuntimeProvider({ ... })` below, this is
+// functionally identical to yesterday's bare `{}`. Both resolvers still
+// resolve `undefined`, and a real World View click still reaches exactly
+// today's existing synchronous throw. This milestone's entire value is
+// that a real, independently tested Nostr-specific bridge now sits between
+// a host capability and this file, so wiring a real one later touches only
+// the one object passed to `createNostrPublicationDistributionRuntimeAdapter()`,
+// never this file's own call to `createPublicationDistributionRuntimeProvider()`,
+// and never anything below it.
+const nostrPublicationRuntimeCapabilities = createNostrPublicationDistributionRuntimeAdapter({});
+const publicationDistributionRuntimeProvider = createPublicationDistributionRuntimeProvider({
+    ...nostrPublicationRuntimeCapabilities
+});
 const { arweaveUploaderOptions, nostrPublisherOptions } = resolvePublicationDistributionRuntimeConfiguration(publicationDistributionRuntimeProvider.resolveRuntimeCapabilities());
 const publicationDistributionCommand = composePublicationDistributionCommand({
     lifecycleStore: publicationDistributionLifecycleStore,
