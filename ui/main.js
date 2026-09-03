@@ -120,6 +120,11 @@ import { resolvePublicationDistributionRuntimeConfiguration } from '../applicati
 import { createPublicationDistributionRuntimeProvider } from '../application/PublicationDistributionRuntimeProvider.js';
 import { createNostrPublicationDistributionRuntimeAdapter } from '../application/NostrPublicationDistributionRuntimeAdapter.js';
 import { createArweavePublicationDistributionRuntimeAdapter } from '../application/ArweavePublicationDistributionRuntimeAdapter.js';
+import { LocalDiscoveryProvider } from '../discovery/LocalDiscoveryProvider.js';
+import {
+    composeDecentralizedWorldEncounterMaterialDiscoveryServices,
+    composeDecentralizedWorldEncounterMaterialDiscoveryRuntime
+} from '../application/DecentralizedWorldEncounterMaterialDiscoveryRuntimeComposition.js';
 
 const identityProvider = new CreateIdentityProviderUseCase().execute();
 const identityUseCase = new IdentityUseCase(identityProvider);
@@ -1338,26 +1343,77 @@ app.provide('worldDiscoverySourceRegistry', worldDiscoveryRuntime.registry);
 // `ui/views/WorldView.js` to `inject()` and hand straight through to
 // `WorldEncounterCanvas`'s own existing props.
 //
-// PEER AND DECENTRALIZED (ARWEAVE/NOSTR) MATERIAL SOURCES, AND DECENTRALIZED
-// LEAD RESOLUTION, STAY DELIBERATELY UNWIRED HERE — the same "local first,
-// everything else a separate, later milestone" restraint 0.9.22 itself
-// already held before 0.9.23/0.9.33 through 0.9.36 built the rest. Wiring
-// `PeerWorldEncounterMaterialSource`, the Arweave-backed `.decentralized`
-// slot, and a live `DecentralizedWorldDiscoveryLeadRegistry` fed by real
-// Nostr queries is a materially larger, network-facing composition decision
-// (relay/gateway configuration, the same kind of choice `peer/RendezvousConfig.js`
-// already isolates) — left for its own future, unscheduled wiring milestone
-// rather than folded into this one. A `local`-origin selection (anything
-// this replica published itself) already exercises the full loading →
+// PEER MATERIAL SOURCES STAY DELIBERATELY UNWIRED HERE — the same "local
+// first, everything else a separate, later milestone" restraint 0.9.22
+// itself already held before 0.9.23 built the rest. `PeerWorldEncounterMaterialSource`
+// is a materially larger, network-facing composition decision this file
+// still does not make. A `local`- or decentralized-origin selection (see
+// 0.9.110, immediately below) already exercises the full loading →
 // identity-verification → signature-verification chain end to end; a
-// peer/decentralized-origin selection still resolves to `UNAVAILABLE`/
-// `UNVERIFIABLE`, exactly as it always has.
-const worldEncounterMaterialSources = Object.freeze({
-    local: new LocalWorldEncounterMaterialSource(new LocalStorageProvider())
-});
+// peer-origin selection still resolves to `UNAVAILABLE`/`UNVERIFIABLE`,
+// exactly as it always has.
 const { verifier: worldEncounterMaterialVerifier } = composeWorldEncounterMaterialVerifier();
+
+// 0.9.110 — Decentralized Material Retrieval Runtime Composition.
+// 0.9.99's own header left the Arweave-backed `.decentralized` slot and a
+// live `DecentralizedWorldDiscoveryLeadRegistry` explicitly unwired,
+// naming the gap 0.9.102's own audit later confirmed: real, tested
+// Nostr/Arweave discovery and retrieval code sat in this codebase,
+// reachable only from its own test suites. `composeDecentralizedWorldEncounterMaterialDiscoveryServices()`
+// and `composeDecentralizedWorldEncounterMaterialDiscoveryRuntime()`
+// (both new, `application/DecentralizedWorldEncounterMaterialDiscoveryRuntimeComposition.js`)
+// are the missing composition root — they build no algorithm of their own;
+// they wire the already-existing 0.9.24-through-0.9.43 chain together and
+// hand back one application-facing capability.
+//
+// NO HOST NOSTR RELAY-QUERY CAPABILITY EXISTS ANYWHERE IN THIS CODEBASE
+// YET, so `nostrQueryImpl` is omitted here — the composition gracefully
+// resolves `nostr: null` rather than constructing a service that could
+// only ever throw on its own `search()`, the discovery-side mirror of
+// 0.9.108's own restraint for distribution. Arweave's own discovery query
+// needs no such capability — like `ArweaveWorldEncounterMaterialResolver`
+// (0.9.35) itself, it already works against the browser's own global
+// `fetch`. `worldDiscoveryLeadRegistry` is provided app-wide the same way
+// `worldEncounterMaterialSources`/`worldEncounterMaterialVerifier` already
+// are, so `WorldEncounterCanvas`'s own existing (0.9.40) `worldDiscoveryLeadRegistry`
+// prop — wired to `null` everywhere in this running app until now — finally
+// has a real registry to observe. `worldEncounterMaterialSources` gains its
+// `.decentralized` slot (0.9.36's own unmodified Arweave-backed source)
+// alongside the pre-existing `.local` one; peer stays unwired, per the
+// comment immediately above.
+const decentralizedWorldDiscoveryServices = composeDecentralizedWorldEncounterMaterialDiscoveryServices({});
+const decentralizedWorldEncounterMaterialDiscoveryRuntime = composeDecentralizedWorldEncounterMaterialDiscoveryRuntime({
+    discoveryServices: decentralizedWorldDiscoveryServices,
+    local: new LocalWorldEncounterMaterialSource(new LocalStorageProvider()),
+    verifier: worldEncounterMaterialVerifier
+});
+const worldDiscoveryLeadRegistry = decentralizedWorldEncounterMaterialDiscoveryRuntime.registry;
+const worldEncounterMaterialSources = decentralizedWorldEncounterMaterialDiscoveryRuntime.materialSources;
 app.provide('worldEncounterMaterialSources', worldEncounterMaterialSources);
 app.provide('worldEncounterMaterialVerifier', worldEncounterMaterialVerifier);
+app.provide('worldDiscoveryLeadRegistry', worldDiscoveryLeadRegistry);
+
+// The one application-facing capability this composition exists to
+// produce, provided app-wide exactly like `publicationDistributionCommand`
+// below it: a thin, pre-bound closure a future World View action calls
+// with only `{ objectId, discoveryTag }` — see that function's own header
+// for the full `{ discovery, resolution, inspection }` shape it returns.
+// `publications` is supplied FRESH on every call, read from the SAME
+// `forkbuild-publications` storage key `LocalWorldEncounterMaterialSource`
+// itself already reads (via a fresh `LocalDiscoveryProvider`, never a
+// second repository) — association evidence can only ever connect a
+// discovered lead to a Publication this replica already knows about; see
+// that function's own header, "publications is the caller's own evidence
+// source, never fetched here."
+function discoverWorldEncounterPublicationCommand({ objectId, discoveryTag } = {}) {
+    const publications = new LocalDiscoveryProvider(new LocalStorageProvider()).list();
+    return decentralizedWorldEncounterMaterialDiscoveryRuntime.discoverWorldEncounterPublication({
+        objectId,
+        discoveryTag,
+        publications
+    });
+}
+app.provide('discoverWorldEncounterPublicationCommand', discoverWorldEncounterPublicationCommand);
 
 // 0.9.100 — Publication Distribution World View Integration.
 // `application/PublicationDistributionLifecycle.js` (0.9.50) through
