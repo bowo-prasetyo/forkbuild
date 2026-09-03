@@ -110,6 +110,19 @@ If more than one connected peer offers the same encounter, a
 inspect. Like everything else in World View, this is purely for
 looking — nothing here moves your camera or edits anything.
 
+Selecting a publication also shows two more read-only status blocks
+beneath it. **Material** / **Verification** try to actually load that
+publication's content and check it cryptographically against what was
+claimed for it — but today that only works for content this device
+already holds itself, so for anything a peer has shown you (which is
+everything you'll encounter here) they read **Unavailable** /
+**Unverifiable**. A **Distribution** block tracks whether the
+publication has separately been pushed through Arweave/Nostr
+distribution, reading **Absent** for both **Material** and
+**Discovery** until that becomes possible from World View. Neither
+block is something you can act on — they're read-only status, already
+wired up for capability this app doesn't expose a way to trigger yet.
+
 World Encounters only ever shows what a currently or recently connected
 peer has actually told you about; it reads **Nothing encounterable here
 yet** until at least one has. See
