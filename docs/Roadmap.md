@@ -60762,3 +60762,206 @@ configuration infrastructure neither half of the loop still needs. But all
 three are real product/runtime decisions now, not "what seam are we
 missing" — which is exactly the question this whole plumbing run existed
 to retire.
+
+## 0.9.110 — Decentralized Material Retrieval Runtime Composition
+
+The third option 0.9.109's own recommendation named: close the OTHER half
+of the decentralized loop 0.9.102's own audit found — "real, tested Arweave
+and Nostr client code already exists in the codebase... but none of it is
+threaded through `ui/main.js`'s composition root" — rather than deepen
+distribution further. Like 0.9.103 through 0.9.109, this milestone builds
+no new algorithm: 0.9.24 through 0.9.43 already built a complete discovery
+→ lead → resolution → loading → verification chain, independently tested
+end to end; nothing in this running app had ever called all of it together.
+
+    World View "Discover Publication" action
+                     │
+                     │  { objectId, discoveryTag }
+                     ▼
+    discoverWorldEncounterPublicationCommand   (ui/main.js, NEW closure)
+                     │
+                     ▼
+    application/DecentralizedWorldEncounterMaterialDiscoveryRuntimeComposition.js   (NEW)
+        discoverWorldEncounterPublication()
+                     │
+        ┌────────────┼─────────────┐
+        ▼                          ▼
+    NostrDiscoveryQueryService   ArweaveGraphqlDiscoveryQueryService
+    (0.9.31, unmodified —          (0.9.25, unmodified — works with no
+     omitted: no host relay         host capability at all, exactly like
+     capability exists yet)         the material resolver already does)
+        │                          │
+        └────────────┬─────────────┘
+                      ▼   queryDecentralizedWorldDiscoveryIntoRegistry()   (0.9.27, unmodified)
+        DecentralizedWorldDiscoveryLeadRegistry   (0.9.26, unmodified)
+                      │
+        deriveDecentralizedWorldEncounterLeadAssociationEvidenceFromRegistry()   (0.9.29, unmodified)
+                      │
+        resolveDecentralizedWorldEncounterLeadFromRegistry()   (0.9.28, unmodified
+                      │                                          — UNAVAILABLE/RESOLVED/AMBIGUOUS)
+              only when RESOLVED
+                      ▼
+        inspectWorldEncounterMaterial()   (0.9.39, unmodified — loading →
+                      │                     identity verification → signature
+                      ▼                     verification, the SAME chain 0.9.99
+        { discovery, resolution, inspection }   already wired for local material)
+
+**A composition root, never a fourth algorithm.** `application/
+DecentralizedWorldEncounterMaterialDiscoveryRuntimeComposition.js` has no
+`search()`, no `resolveIdentity()`, and no `verifyIdentity()` anywhere in
+it. Its two exported functions —
+`composeDecentralizedWorldEncounterMaterialDiscoveryServices()` and
+`composeDecentralizedWorldEncounterMaterialDiscoveryRuntime()` — build the
+concrete discovery-service pair and wire the already-existing pipeline's
+own functions together, in the order the 0.9.24-through-0.9.43 chain
+already established. `discoverWorldEncounterPublication()` calls
+`queryDecentralizedWorldDiscoveryIntoRegistry()` once per configured
+service (never combined, never ranked — every lead either service reports
+lands in the same shared registry side by side), derives association
+evidence from the caller's own already-known local Publications, resolves,
+and — only when resolution is exactly `RESOLVED` — calls
+`inspectWorldEncounterMaterial()` once. An `AMBIGUOUS` or `UNAVAILABLE`
+resolution carries a `null` inspection; this file never picks a candidate
+for a caller, exactly the restraint every file in this chain already holds.
+
+**Two substrates, two different reachability stories — the discovery-side
+mirror of 0.9.108/0.9.109's own restraint, in the opposite direction.**
+Arweave's own discovery query is a read-only GraphQL `fetch` and already
+works with no host capability at all — `composeDecentralizedWorldEncounterMaterialDiscoveryServices()`
+always constructs it. Nostr's own discovery query needs a real relay
+connection (`queryImpl`) this codebase has never had a host capability for;
+`NostrDiscoveryQueryService`'s own constructor already throws without one,
+so this file only constructs it when a real `nostrQueryImpl` is supplied —
+none is, anywhere in this codebase yet, so `ui/main.js` calls
+`composeDecentralizedWorldEncounterMaterialDiscoveryServices({})` and
+`services.nostr` resolves `null`, gracefully skipped rather than
+constructed-to-throw. A real host Nostr relay-query capability, when one
+exists, plugs into this ONE call — never anything below it.
+
+**`publications` is the caller's own evidence source, never fetched by this
+file.** Association evidence (0.9.29) can only ever connect a currently-
+known lead to a Publication this replica has ALREADY signed and stored
+locally — a decentralized lead corroborating a Publication this replica
+published itself, discovered back through Nostr/Arweave, is exactly the
+scenario this family was built to make verifiable end to end. `ui/main.js`'s
+own `discoverWorldEncounterPublicationCommand` closure reads a fresh
+`LocalDiscoveryProvider(new LocalStorageProvider()).list()` — the SAME
+`forkbuild-publications` storage key `LocalWorldEncounterMaterialSource`
+itself already reads — on every call, never a second repository.
+
+**`worldEncounterMaterialSources` finally gains its `.decentralized`
+slot.** 0.9.99 left it unwired on purpose ("a materially larger, network-
+facing composition decision... left for its own future, unscheduled wiring
+milestone"). `ui/main.js` now reads `materialSources` straight off
+`composeDecentralizedWorldEncounterMaterialDiscoveryRuntime()`'s own
+result — 0.9.36's own unmodified `composeWorldEncounterMaterialSources()`,
+called one layer down — rather than shaping the `{ local }` object literal
+by hand; peer stays exactly as unwired as it always has.
+
+**`worldDiscoveryLeadRegistry` is provided app-wide for the first time.**
+`ui/components/WorldEncounterCanvas.js` has accepted this prop, subscribed
+to it, resolved a lead for the current selection against it, and rendered
+the Wanderer's own ambiguity choice, since 0.9.40 — every mount of it in
+this running app left the prop at its own default of `null`, so that whole
+reactive path was real, tested, and permanently dark, exactly the same
+"the panel was real, tested, and permanently empty" gap 0.9.99 found and
+closed for material verification. `ui/main.js` now provides the SAME
+registry instance the new discovery runtime populates; `ui/views/WorldView.js`
+injects it (defaulting to `null`, never throwing) and forwards it,
+unmodified, to `WorldEncounterCanvas`'s own already-existing prop — no
+change to `WorldEncounterCanvas.js` itself anywhere in this milestone.
+
+**The World View action is deliberately tiny, and renders no second
+inspection UI.** "Discover Publication" — a Publication id and a discovery
+tag, one button — calls the one injected `discoverWorldEncounterPublicationCommand`
+and displays its result using ONLY the vocabulary the existing chain
+already defines: `resolution.status` (`UNAVAILABLE`/`RESOLVED`/`AMBIGUOUS`,
+0.9.28), and, only when present, `inspection.loading.status`
+(`UNAVAILABLE`/`AVAILABLE`, 0.9.21) and `inspection.verification.status`
+(`UNVERIFIABLE`/`VERIFIED`/`REJECTED`, 0.9.37). No `TRUSTED`/`SAFE`/
+`AUTHENTIC` word of any kind is introduced anywhere in this milestone;
+`ui/views/WorldView.js` never decides itself whether a result is
+trustworthy. Because the discovered lead(s) land in the SAME registry
+`WorldEncounterCanvas` already observes, any candidate this action resolves
+is also, independently, visible to that component's own existing
+decentralized-lead panel — this action triggers the query the registry was
+always missing; it does not duplicate what already renders once one lands.
+
+Tests: a new suite,
+`tests/DecentralizedWorldEncounterMaterialDiscoveryRuntimeComposition.test.js`,
+drives the REAL, unmodified chain — a real `ArweaveGraphqlDiscoveryQueryService`,
+a real `NostrDiscoveryQueryService`, a real
+`DecentralizedWorldDiscoveryLeadRegistry`, a real
+`DecentralizedWorldEncounterMaterialSource` wired to a real
+`ArweaveWorldEncounterMaterialResolver`, and the real, composed identity+
+signature verifier — with only the network boundary faked, the same
+established technique this codebase's own discovery/resolver suites
+already use. Section A (flagship) carries a genuinely signed local
+Publication through Arweave-only discovery all the way to `VERIFIED`.
+Section B proves the identical path through Nostr alone, independent of
+Arweave (which stays configured but reports nothing for that tag). Section
+C proves neither service reporting anything degrades honestly to
+`UNAVAILABLE`, never a thrown error. Section D proves two independently-
+reported leads for the same uri resolve `AMBIGUOUS`, never merged or
+guessed down to one. Section E proves material tampered with after signing
+is actively `REJECTED` even when retrieved through the decentralized path.
+Section F is an architectural sweep: the composition file itself never
+reads a signature or calls a cryptographic verifier, never invents trust/
+ranking vocabulary, and imports the existing loading/resolution/bridge
+functions rather than reimplementing any of them; `ui/main.js` and
+`ui/views/WorldView.js` wire the new capability in without constructing a
+second inspection pipeline.
+
+### What this milestone deliberately does NOT do
+
+No wallet integration, private-key handling, or automatic signer
+acquisition — this file only ever reads (a discovery query, a material
+retrieval); it imports nothing from the distribution/signing family. No
+Nostr relay management UI — no relay picker, no connection status, no
+`queryImpl` implementation of any kind (none exists in this codebase yet).
+No publication-distribution retries or distribution progress UI — this
+milestone never imports `PublicationDistributionOrchestrator.js` or
+anything in that family. No ranking discovered publications and no "best
+source" selection — see "each configured service is queried independently,"
+above. No new lifecycle states and no new verification semantics — the
+result carries exactly the status vocabulary 0.9.21/0.9.28/0.9.37 already
+define. No decentralized caching, peer reputation, or automatic background
+discovery — `discoverWorldEncounterPublication()` runs to completion once
+per call; there is no timer and no cache anywhere in this milestone. No
+replacing local material loading — `.local` is forwarded through unchanged,
+`.decentralized` sits alongside it, never in place of it. No new World View
+inspection UI beyond the one small, vocabulary-neutral "Discover
+Publication" readout described above — `WorldEncounterCanvas.js` itself is
+untouched, and its own existing decentralized-lead panel is exactly what
+0.9.40 already built.
+
+### Recommendation
+
+With this milestone landed, both major gaps 0.9.102's own audit named are
+closed: initiating publication distribution (0.9.103/0.9.104) and reaching
+decentralized discovery/material retrieval (this milestone) are each now
+real, composed, and reachable — one behind a World View "Distribute
+Publication" action, the other behind a World View "Discover Publication"
+action, both still waiting on the identical thing: a real host capability
+(a Nostr relay connection, an Arweave signer) neither is architectural work
+anymore to supply. The next milestone is therefore a genuinely product-
+driven choice, not another seam to build:
+
+- **Make Nostr actually usable** — a real host relay-query capability
+  (`queryImpl`) flowing into this milestone's own
+  `composeDecentralizedWorldEncounterMaterialDiscoveryServices()`, and a
+  real host `publish` capability flowing into 0.9.108's own adapter — the
+  two Nostr-side gaps this codebase still has, discovery and distribution
+  alike.
+- **Make Arweave signing actually usable** — a real host `signer` (most
+  naturally a browser wallet-extension adapter) flowing into 0.9.109's own
+  adapter, closing the one remaining distribution-side gap.
+- **Deepen decentralized discovery semantics** — richer association
+  evidence producers beyond a self-published Publication's own location
+  claim, or surfacing a discovered-but-unresolved lead's own diagnostics —
+  each a real, later, unscheduled design question this milestone
+  deliberately leaves open rather than answering by fiat.
+
+This is a healthier place to pause than continuing to add plumbing: every
+remaining gap in the decentralized-publishing story is now a real host-
+capability or product-semantics decision, not a missing composition root.
