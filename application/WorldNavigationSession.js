@@ -1671,6 +1671,21 @@ export class WorldNavigationSession {
             : null;
     }
 
+    // 0.9.98 — Vehicle Mount/Dismount World View Integration. The local
+    // avatar's current mount/dismount AFFORDANCE — a plain pass-through
+    // to application/AvatarVehicleInteractionController.js#vehicleInteractionState(),
+    // never a second computation. See that method's own header for the
+    // exact `{ mounted, vehicleType, targetVehicleId }` shape and why it
+    // is safe to poll from World View on its own independent cadence.
+    // Returns `null` when no local avatar exists at all, the same
+    // graceful-absence posture avatarVehicleMount() above already
+    // follows.
+    avatarVehicleInteractionState() {
+        return this._avatarVehicleInteractionController
+            ? this._avatarVehicleInteractionController.vehicleInteractionState()
+            : null;
+    }
+
     // Turning the mode OFF immediately releases every held key —
     // exiting must return keyboard control to the rest of World View
     // at once, never leave a key "stuck" because its keyup never

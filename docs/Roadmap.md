@@ -58959,3 +58959,120 @@ isolated. Rather than automatically inventing a 0.9.98, this is a good
 point to pause and reassess the vehicle architecture against what the
 actual World View experience still lacks before adding another
 capability.
+
+## 0.9.98 — Vehicle Mount/Dismount World View Integration
+
+The reassessment 0.9.97 deferred to: with the entire ground-vehicle
+mount/dismount/movement chain (0.9.73 through 0.9.97) fully wired into
+`application/WorldNavigationSession.js`, a player standing right next to
+a real, deterministically-placed bicycle still saw nothing — no
+indication a vehicle was even there, no feedback that pressing the
+interaction key would do anything, no confirmation that mounting or
+dismounting had actually happened. The runtime was completely correct
+and completely invisible. This milestone does not add a new vehicle
+capability; it makes the capability that already exists observable and
+usable through World View itself:
+
+```
+AvatarVehicleInteractionController
+        │
+        │ vehicleInteractionState()
+        ▼
+{ mounted, vehicleType, targetVehicleId }
+        │
+        │ WorldNavigationSession#avatarVehicleInteractionState()
+        ▼
+ui/views/WorldView.js  (its own short poll interval)
+        │
+        ▼
+VehicleInteractionPrompt.js
+  "[E] Mount Bicycle"  /  "[E] Dismount"
+```
+
+**One new read-only method, reusing the existing chain verbatim.**
+`AvatarVehicleInteractionController#vehicleInteractionState()` is the
+controller-level counterpart to `AvatarMovementController#movementState()`
+(0.9.97) — a plain, frozen snapshot, never a new class. While mounted, it
+reads `mount()`/`mountedVehicleType()`, both already existing. While
+unmounted, it asks the exact same
+`core/AvatarVehicleInteractionTarget.js#resolveAvatarVehicleInteractionTarget()`
+`_tickMount()` already calls, just with `interactionIntent` forced to
+MOUNT so it reads 0.9.76's own ranked-candidate answer as a PREVIEW
+rather than as a real decision. This is not a second target-resolution
+policy — it is the same pure function, called once for an action and
+once for an observation of "what WOULD be targeted right now." Crucially,
+`vehicleInteractionState()` is never called from `tick()`: the
+observation seam is not permitted to influence the real mount/dismount
+decision, only to describe it.
+
+**The UI decides nothing.** `ui/components/VehicleInteractionPrompt.js`
+takes exactly the `{ mounted, vehicleType, targetVehicleId }` snapshot
+World View already polled and formats one of two fixed strings from it —
+it never computes distance, never queries a vehicle list, never re-derives
+eligibility, and never even displays the raw `targetVehicleId` (an
+internal deterministic identity string, never a player-facing label).
+Styled as a tiny, floating, bottom-center, `pointer-events: none` overlay,
+deliberately mirroring `ActionFeedback.js`'s own existing convention
+rather than introducing a new UI framework, modal, or toast queue.
+
+**Its own poll cadence, deliberately independent of every existing
+interval.** World View already runs two independently-cadenced polls —
+`spatialInterval` (3000ms, general spatial UI refresh) and
+`spatialPresenceSyncInterval` (100ms, publishing the LOCAL avatar's own
+presence to others). Neither fits: 3000ms is far too slow for an
+affordance that must track the avatar walking up to or away from a
+vehicle, and the 100ms interval is a different concern (outbound
+presence, not inbound mount/dismount state). This milestone adds a third,
+150ms interval, gated on `hasLocalAvatar`/`avatarControlMode` — showing
+"[E] Mount/Dismount" while the key that would actually act is off would
+be misleading — that only ever calls
+`session.avatarVehicleInteractionState()`, never computes anything
+itself.
+
+**`WorldNavigationSession#avatarVehicleInteractionState()` is a plain
+pass-through**, the exact same one-line-forward posture
+`avatarVehicleMount()` already established (0.9.83) — never a second
+copy of the controller's own logic, and returning `null` when no local
+avatar exists at all, the same graceful-absence convention every sibling
+getter on this class already follows.
+
+## What this milestone deliberately does NOT do
+
+No 3D rendering of vehicles in the scene (there still is none — vehicles
+remain a purely deterministic data fact, `core/VehiclePlacement.js`'s own
+"recomputed, never stored" posture, with no mesh anywhere in `renderer/`;
+out of scope for this milestone, which is about the mount/dismount
+INTERACTION becoming visible, not the vehicle itself). No new
+mount/dismount policy, eligibility rule, or status vocabulary of any
+kind — this milestone reads facts the existing chain already establishes,
+it invents none. No vehicle-switching UI, no occupancy/passenger UI, no
+speedometer or movement-telemetry HUD (`AvatarMovementController#movementState()`,
+0.9.97, stays completely unwired to World View — a distinct, deliberately
+deferred future seam). No change to the mount/dismount transition rules,
+the interaction-key binding, or `tick()`'s own pipeline in either
+controller. No new UI framework, animation library, or toast/notification
+subsystem.
+
+Tests: a new suite, `tests/WorldViewVehicleInteractionIntegration.test.js`,
+covers a vehicle in range producing the mount affordance with the
+correct target and type, nothing in range producing no affordance,
+mounting changing the observed state and correctly reflecting the
+mounted vehicle's own type, a successful dismount returning the observed
+state to "not mounted," a BLOCKED dismount never falsely displaying a
+successful (unmounted) state — even under repeated retries — repeated
+observation being deterministic, immune to mutation, and provably
+non-mutating of the controller's own real mount/dismount/tick state,
+`WorldNavigationSession`'s own pass-through end to end (including the "no
+local avatar" absence case), and an architectural sweep confirming
+`resolveAvatarVehicleInteractionTarget()` is called from exactly the two
+legitimate sites (the real decision and this milestone's own preview),
+that `WorldNavigationSession` never computes proximity or targeting
+itself, and that the UI component contains no proximity/target-resolution
+or mount/dismount-transition logic of any kind.
+
+Next: the same "expose an existing, already-authoritative chain through
+one small observation seam and a purely presentational component" pattern
+this milestone establishes is available to the other two paused World
+View integrations — decentralized lead/material verification, and
+Arweave/Nostr publication distribution — whenever those are picked back
+up.
