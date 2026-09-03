@@ -61451,3 +61451,143 @@ its first real consumer should be distribution, a material-interaction
 action, persistence, or something else entirely — is better answered once
 this milestone has actually been used, exactly the same restraint 0.9.110
 through 0.9.112 already held for their own next steps.
+
+## 0.9.114 — Vehicle Runtime Instance State
+
+0.9.113 closed out the decentralized-Publication line of work 0.9.103
+through 0.9.113 had been building. This milestone opens a different one,
+prompted by a genuine architectural gap in the vehicle line 0.9.70 through
+0.9.98 built: an avatar can mount a bicycle, brake, steer, and accelerate
+it — but the bicycle ITSELF never moves. Its position is
+`core/VehiclePlacement.js`'s own deterministic, seed-derived point,
+recomputed identically on every query, forever. A player who "rides away"
+is, mechanically, just an avatar walking near an immovable coordinate;
+walk far enough and `core/AvatarVehicleInteractionController.js`'s own
+"known boundary" note starts to bite — the mounted vehicle silently falls
+out of the requery radius, and dismount quietly stops finding a
+destination at all.
+
+Fixing that for real needs a vehicle whose position can actually change —
+but building movement, rendering, and a movement-aware dismount all in one
+step would be exactly the kind of large, hard-to-test milestone this
+codebase's own roadmap has consistently avoided. So this milestone builds
+only the one prerequisite fact none of that can exist without: a vehicle
+needs somewhere to HOLD a position that isn't the deterministic one.
+
+    world seed ──▶ VehiclePlacement ──▶ VehiclePresence.position
+                                               │
+                                               │ vehicleInstanceFromPresence()
+                                               ▼
+                                      VehicleInstance
+                                        spawnPosition  (deterministic, frozen forever)
+                                        position       (current runtime fact, starts equal)
+
+**A new wrapper, not a change to what already exists.**
+`core/VehiclePlacement.js` and `core/VehiclePresence.js` are untouched —
+not one line. `vehiclePresenceInRegion()` still recomputes the exact same
+deterministic lattice it always has, and stays the sole authority on
+whether a vehicle exists at a given slot at all. `core/VehicleInstance.js`
+is a new, separate class that wraps a VehiclePresence's own
+identity/type/position and adds exactly the one fact neither was ever
+designed to hold: a position allowed to differ from the deterministic one.
+`vehicleInstanceFromPresence(presence)` is the one bridge between them — a
+pure, one-way copy that takes a real VehiclePresence (ordinarily one
+element of a `vehiclePresenceInRegion()` result) and returns a
+VehicleInstance whose `spawnPosition` and `position` both start equal to
+that VehiclePresence's own position.
+
+**`spawnPosition` is a deterministic fact; `position` is a runtime fact —
+and only one of them can ever change.** `spawnPosition` is set once, at
+construction, and nothing in this file — no method, no code path — ever
+alters it after that. `position` starts equal to `spawnPosition` (a
+vehicle that has never moved IS at its spawn point) and changes only
+through `withPosition(nextPosition)`, which returns a genuinely NEW
+VehicleInstance carrying the exact same `id`, the exact same `type`, and
+— the whole point of the split — the exact same `spawnPosition`
+reference, with only `position` replaced. `this` is never mutated;
+`core/VehiclePlacement.js`'s own deterministic calculation is never
+re-run, re-consulted, or perturbed by moving a vehicle any number of
+times.
+
+**Identity never changes either.** `id` is copied verbatim from the
+VehiclePresence a VehicleInstance was built from — ultimately
+`core/VehicleIdentity.js`'s own `vehicleIdFor(seed, cellX, cellZ)` — and
+this file never recomputes, reformats, or validates its format, the same
+restraint `core/VehiclePresence.js`'s own header already holds itself to.
+Moving a vehicle can never change which vehicle it is.
+
+**`VehicleType.NONE` is rejected, and `null` is not a valid
+VehicleInstance.** Both mirror `core/VehiclePresence.js`'s own precedent:
+"no vehicle" is the absence of an instance, never a placeholder value of
+one kind or another. Unlike `core/AvatarVehicleMount.js`'s own
+`isValidAvatarVehicleMount()`, `isValidVehicleInstance(null)` is `false`
+— there is no in-band "not present" spelling here, because a
+VehicleInstance is asserted only once a vehicle genuinely, currently
+exists at runtime.
+
+**Immutable, getter-only, frozen** — the identical
+`Object.freeze(this)`-enforced discipline `core/VehiclePresence.js` and
+`core/AvatarVehicleMount.js` already apply to themselves.
+
+**This milestone establishes state; it wires nothing else up yet.**
+Nothing in `application/` or `ui/` constructs a VehicleInstance as of this
+milestone — `core/AvatarVehicleInteractionController.js` still requeries
+raw VehiclePresence instances exactly as it did before, completely
+unchanged. That is deliberate, the same restraint `core/VehiclePresence.js`'s
+own 0.9.71 header and `core/AvatarVehicleMount.js`'s own 0.9.77 header
+each already modeled for themselves: a fact needs to exist before
+anything is asked to consume it.
+
+Tests: a new suite, `tests/VehicleInstance.test.js` (Sections A through
+I), proves construction and defaulting, the `vehicleInstanceFromPresence()`
+bridge, `withPosition()`'s copy-on-write behavior, immutability,
+defensive validation, JSON round-tripping, and `isValidVehicleInstance()`.
+Section D is the milestone's own central claim, proven against the real
+running `core/VehiclePlacement.js`: a VehicleInstance built from a real,
+deterministically-placed VehiclePresence is moved 25 times, after which
+its `spawnPosition` is still the exact original object reference, its
+`id` is still the exact original vehicle id, and a completely independent,
+freshly-re-run `vehiclePresenceInRegion()` call over the same region
+reproduces the identical id and position — proving the deterministic
+placement calculation itself was never fed back into, read from, or
+otherwise perturbed by anything done to the VehicleInstance. Section I is
+an architectural regression: a source sweep bans every placement/mount/
+dismount/movement/rendering/persistence/networking term from
+`core/VehicleInstance.js`'s own code, the module exports exactly three
+names, and `core/VehiclePlacement.js`/`core/VehiclePresence.js` are
+independently confirmed to have no knowledge of `VehicleInstance` at all.
+
+### What this milestone deliberately does NOT do
+
+No wiring into `core/AvatarVehicleInteractionController.js` or any other
+existing mount/dismount/proximity consumer — every one of them still reads
+a bare VehiclePresence, entirely unchanged. No vehicle rendering. No
+vehicle movement, speed, heading, acceleration, or any physics that would
+actually change `position` over time — this milestone only gives
+`position` somewhere to live and a pure way to replace it, never a reason
+or a rule for when it should. No dismount (or any other transition)
+reading a VehicleInstance's current position instead of a VehiclePresence's
+fixed one. No "which VehicleInstance is this avatar mounted on" registry
+or session-held collection of any kind. No persistence, no networking, no
+collision or terrain interaction, no keyboard/controller input.
+
+### Recommendation
+
+    VehiclePlacement (deterministic, unchanged)
+            ↓
+    VehicleInstance          spawnPosition + position   (this milestone)
+            ↓
+    0.9.115 — Vehicle Rendering
+            ↓
+    0.9.116 — Mounted Vehicle Movement
+            ↓
+    0.9.117 — Vehicle-Aware Dismount (reads a mounted VehicleInstance's
+              CURRENT position, never its spawn position)
+
+With `VehicleInstance` landed, a vehicle finally has somewhere to hold a
+position that isn't the deterministic one — the one prerequisite every
+step in that sequence needs and none of them could honestly build without
+it. I'd make 0.9.115 next: giving the World View something to actually
+render for a `VehicleInstance` is what turns "[E] Mount" from a prompt
+referring to an invisible coordinate into a prompt referring to something
+a Wanderer can actually see.
