@@ -937,6 +937,128 @@ import { describeDecentralizedWorldEncounterLeadSelectionOutcomeFromRegistry, De
 // - **A second selection concept, or gating the action on anything beyond
 //   the CURRENT `selectedEncounter`/`materialInspection` this component
 //   already tracks.** No new page-local selection state is introduced.
+// 0.9.111 — World View Decentralized Publication Retrieval.
+//
+// 0.9.110 gave this component a live `worldDiscoveryLeadRegistry` and gave
+// `ui/main.js` a real, composed `discoverWorldEncounterPublicationCommand`
+// — but that command lived only in `ui/views/WorldView.js`'s own page-local
+// state, rendering its own ad-hoc "Resolution: …" / "Loading: …" text
+// instead of the SAME Material/Verification panel this component already
+// renders for a selection-driven `materialInspection` (0.9.39). This
+// milestone is that convergence:
+//
+//   discoveryCommand({ objectId, discoveryTag })   (caller-injected, 0.9.111)
+//                  │
+//                  ▼
+//   discoveryResult = { discovery, resolution, inspection }   ★ (THIS)
+//                  │
+//        ┌─────────┴──────────┐
+//        ▼                    ▼
+//   resolution.status    inspection (only when RESOLVED — 0.9.110's own
+//   rendered as its       restraint, unchanged)
+//   own existing               │
+//   vocabulary                 ▼
+//   (UNAVAILABLE/          THE SAME "Material"/"Verification" `<dl>`
+//   RESOLVED/AMBIGUOUS,    markup (identical CSS classes, identical
+//   0.9.28, unchanged)     `loading.status`/`verification.status` fields)
+//                          this component already renders for a
+//                          SELECTION-driven `materialInspection`, below —
+//                          see "the existing inspection mechanism stays
+//                          canonical," below.
+//
+// A DISCOVERED PUBLICATION IS NEVER A MARKER, NEVER A `selectedEncounter`,
+// AND NEVER FORCED INTO ONE. Everything else this component already knows
+// how to inspect (`selectedEncounterInspection`, `selectionOutcome`,
+// `decentralizedLeadOutcome`, `materialInspection`) is reached by clicking
+// a marker `effectiveView` already projects — a purely decentralized-
+// discovered Publication has no such marker (it isn't part of any
+// currently-known World source at all; that is the entire reason discovery
+// exists). Rather than fabricate a fake `selectedEncounter`/`view` entry to
+// route it through that machinery, this milestone adds one small,
+// independent, ADDITIVE panel — `discoveryResult`, driven by its own
+// `discoverPublication()` action — that exists entirely alongside
+// `selectedEncounter`/`materialInspection`, never in place of them. See
+// "local/decentralized separation," below.
+//
+// THE EXISTING INSPECTION MECHANISM STAYS CANONICAL — NO SECOND
+// REPRESENTATION. The template block below reuses the EXACT `world-encounter-material-title`/
+// `world-encounter-material-detail`/`world-encounter-verification-title`/
+// `world-encounter-verification-detail` CSS classes and `<dl>` shape the
+// selection-driven Material/Verification panel (0.9.39) already renders —
+// same two fields (`loading.status`, `verification.status`), same literal
+// status vocabulary, no new trust word of any kind. This is deliberately a
+// second RENDERING of the same shape against a second, independent data
+// source — never a second `inspectWorldEncounterMaterial()` call, and never
+// a fork of that panel's own markup into something visually different.
+//
+// `discoveryCommand` IS THE ONE NEW COLLABORATOR THIS MILESTONE INTRODUCES
+// — A PLAIN INJECTED FUNCTION, MIRRORING `distributionCommand` (0.9.104)
+// EXACTLY. `({ objectId, discoveryTag }) -> Promise<{ discovery, resolution,
+// inspection }>`, `null` by default. This component never constructs a
+// discovery service, a lead registry, a material source, or a verifier
+// itself — it calls exactly the one function it was handed, exactly once
+// per click, and renders exactly what that call resolves to. In the real
+// running app this is `ui/main.js`'s own composed
+// `discoverWorldEncounterPublicationCommand` (0.9.111,
+// `application/DiscoverWorldEncounterPublicationCommandComposition.js`),
+// forwarded by `ui/views/WorldView.js` verbatim — no wrapper, no added
+// field, unlike `distributionCommand`'s own `serializedMaterial` addition,
+// because `discoverWorldEncounterPublicationCommand`'s own `{ objectId,
+// discoveryTag }` shape is already everything a caller needs to supply.
+//
+// EPHEMERAL UI STATE ONLY — MIRRORING `distributionExecuting`/
+// `distributionError`/`distributionRequestId` (0.9.104) EXACTLY, ONE LAYER
+// OVER. `discoveryObjectId`/`discoveryTag` are the Wanderer's own typed
+// input; `discovering`/`discoveryError`/`discoveryResult`/`discoveryRequestId`
+// track an idle -> discovering -> idle transition and hold the plain result
+// to render. None of it is persisted, and none of it is written into any
+// lifecycle vocabulary — a rejected or malformed call surfaces one plain
+// notice via `discoveryError`, exactly like `distributionError` already
+// does. `discoveryRequestId` guards a still-in-flight call's own eventual
+// resolution from overwriting a NEWER click's own result or from writing
+// into an unmounted component — the same "a request counter guards against
+// a stale response" restraint `materialInspectionRequestId`/
+// `distributionRequestId` already hold, applied here a third time.
+//
+// LOCAL/DECENTRALIZED SEPARATION — `discoveryResult` NEVER TOUCHES
+// `materialInspection`, `selectedEncounter`, OR ANY LOCAL MATERIAL SOURCE.
+// `discoverPublication()` writes only `discoveryResult` (and the ephemeral
+// `discovering`/`discoveryError` fields); it never assigns to
+// `materialInspection`, never calls `selectEncounter()`, and never touches
+// `materialSources`/`materialVerifier` directly. A discovered Publication
+// therefore never overwrites or masquerades as this replica's own locally
+// stored evidence — the two stay two independent facts, rendered in two
+// independent panels, exactly the way `materialSources.local` and
+// `materialSources.decentralized` already stay two independent entries
+// inside `composeWorldEncounterMaterialSources()` (0.9.36, unmodified) one
+// layer down.
+//
+// NO DUPLICATE FETCHING. `discoverPublication()` calls `discoveryCommand`
+// exactly once per click; this component never calls
+// `inspectWorldEncounterMaterial()` a second time for the SAME discovered
+// material afterward — `discoveryResult.inspection`, when present, is
+// already the complete, already-loaded-and-verified result 0.9.110's own
+// runtime produced in that one call. The template renders it directly; no
+// method in this file re-derives, re-loads, or re-verifies it.
+//
+// DELIBERATELY EXCLUDED — NOT THIS MILESTONE.
+// - **A second inspection panel, a new decentralized publication viewer, or
+//   any new trust/status vocabulary.** See "the existing inspection
+//   mechanism stays canonical," above.
+// - **Constructing discovery infrastructure, a lead registry, or a
+//   verifier.** This component calls exactly one caller-injected function —
+//   see "discoveryCommand is the one new collaborator," above.
+// - **Turning a discovered lead into a `selectedEncounter`, a marker, or an
+//   entry in `effectiveView`.** See "a discovered Publication is never a
+//   marker," above.
+// - **Ranking, retry, caching, or background/automatic discovery.**
+//   `discoverPublication()` runs once per click and returns; there is no
+//   timer and no cache anywhere in this addition.
+// - **Persisting `discoveryObjectId`/`discoveryTag`/`discoveryResult`, or
+//   anything else this milestone adds, beyond this component's own mount.**
+//   All of it lives and dies with this component instance, exactly like
+//   `selectedEncounter`/`materialInspection` already do.
+
 const WORLD_HALF_SPAN = 50;
 const CANVAS_SIZE = 600;
 
@@ -1040,6 +1162,18 @@ export default {
         distributionCommand: {
             type: Function,
             default: null
+        },
+        // 0.9.111 — optional. A `({ objectId, discoveryTag }) -> Promise<{
+        // discovery, resolution, inspection }>` function — see this file's
+        // own header, "discoveryCommand is the one new collaborator this
+        // milestone introduces." `null` by default: a mount with no
+        // `discoveryCommand` supplied renders no Discover Publication panel
+        // at all, the same "no collaborator, no capability" restraint every
+        // other optional prop on this component already holds. Never
+        // constructed by this component itself.
+        discoveryCommand: {
+            type: Function,
+            default: null
         }
     },
     data() {
@@ -1141,7 +1275,33 @@ export default {
             // header, "a distributionRequestId counter guards against a
             // stale response," mirroring `materialInspectionRequestId`
             // (0.9.39) exactly, one layer over.
-            distributionRequestId: 0
+            distributionRequestId: 0,
+            // 0.9.111 — the Wanderer's own typed discovery input, page-local
+            // UI state only — see this file's own header, "ephemeral UI
+            // state only." Never persisted, never validated beyond a plain
+            // trim/empty check in `discoverPublication()` below.
+            discoveryObjectId: '',
+            discoveryTag: '',
+            // 0.9.111 — `true` for exactly as long as a call to
+            // `discoveryCommand` is in flight — mirrors `distributionExecuting`
+            // exactly.
+            discovering: false,
+            // 0.9.111 — a plain-text notice for the most recent genuine
+            // `discoveryCommand` rejection (or synchronous construction
+            // throw), or `null` when there is none to show — mirrors
+            // `distributionError` exactly.
+            discoveryError: null,
+            // 0.9.111 — the composed capability's own `{ discovery,
+            // resolution, inspection }` result, rendered verbatim below
+            // using only the existing status vocabulary — see this file's
+            // own header, "the existing inspection mechanism stays
+            // canonical." `null` until a call resolves.
+            discoveryResult: null,
+            // 0.9.111 — bumped on every call to `discoverPublication()` and
+            // on unmount — mirrors `distributionRequestId` exactly, guarding
+            // against a stale response; see this file's own header,
+            // "ephemeral UI state only."
+            discoveryRequestId: 0
         };
     },
     computed: {
@@ -1550,6 +1710,50 @@ export default {
                         this.distributionExecuting = false;
                     }
                 });
+        },
+        // 0.9.111 — the only writer of `discoveryResult`/`discoveryError`/
+        // `discovering`, and the only caller of `discoveryCommand` in this
+        // file. A no-op whenever there is no `discoveryCommand`, a call is
+        // already in flight, or `discoveryObjectId`/`discoveryTag` is blank
+        // — mirrors `distributeSelectedPublication()`'s own guards exactly,
+        // one collaborator over. Wrapping the call in
+        // `Promise.resolve().then(...)` catches a synchronous construction
+        // throw the same way a rejection is caught — see this file's own
+        // header, "ephemeral UI state only." Never inspects
+        // `discoveryResult` beyond storing it verbatim — see this file's
+        // own header, "the existing inspection mechanism stays canonical."
+        discoverPublication() {
+            if (!this.discoveryCommand || this.discovering) {
+                return;
+            }
+            const objectId = this.discoveryObjectId.trim();
+            const discoveryTag = this.discoveryTag.trim();
+            if (!objectId || !discoveryTag) {
+                return;
+            }
+
+            this.discovering = true;
+            this.discoveryError = null;
+            this.discoveryRequestId += 1;
+            const requestId = this.discoveryRequestId;
+
+            Promise.resolve()
+                .then(() => this.discoveryCommand({ objectId, discoveryTag }))
+                .then((result) => {
+                    if (requestId === this.discoveryRequestId) {
+                        this.discoveryResult = result;
+                    }
+                })
+                .catch(() => {
+                    if (requestId === this.discoveryRequestId) {
+                        this.discoveryError = 'Discovery could not be completed.';
+                    }
+                })
+                .then(() => {
+                    if (requestId === this.discoveryRequestId) {
+                        this.discovering = false;
+                    }
+                });
         }
     },
     // 0.9.13 — seed, then subscribe; see this file's own header,
@@ -1617,6 +1821,10 @@ export default {
         // call, mirroring `materialInspectionRequestId`'s own unmount
         // invalidation immediately above, one layer over.
         this.distributionRequestId += 1;
+        // 0.9.111 — invalidates any still-in-flight `discoveryCommand`
+        // call, mirroring `distributionRequestId`'s own unmount
+        // invalidation immediately above, one layer over.
+        this.discoveryRequestId += 1;
     },
     template: `
         <div class="world-encounter-view">
@@ -1783,6 +1991,48 @@ export default {
                 >{{ distributionExecuting ? 'Distributing…' : 'Distribute Publication' }}</button>
 
                 <p v-if="distributionError" class="world-encounter-distribution-error">{{ distributionError }}</p>
+            </div>
+
+            <!-- 0.9.111 — entirely independent of selectedEncounter: a
+                 discovered Publication is never a marker — see this file's
+                 own header, "a discovered Publication is never a marker."
+                 Rendered only when a caller supplied a discoveryCommand.
+                 The Material/Verification dl blocks below reuse the EXACT
+                 same CSS classes/shape the selection-driven panel above
+                 already renders — see this file's own header, "the
+                 existing inspection mechanism stays canonical." -->
+            <div v-if="discoveryCommand" class="world-encounter-discovery-panel">
+                <h4 class="world-encounter-discovery-title">Discover Publication</h4>
+                <input v-model="discoveryObjectId" placeholder="Publication id" :disabled="discovering" />
+                <input v-model="discoveryTag" placeholder="Discovery tag" :disabled="discovering" />
+                <button
+                    type="button"
+                    class="action-btn world-encounter-discovery-action"
+                    :disabled="discovering"
+                    @click="discoverPublication"
+                >{{ discovering ? 'Discovering…' : 'Discover Publication' }}</button>
+
+                <p v-if="discoveryError" class="world-encounter-discovery-error">{{ discoveryError }}</p>
+                <template v-else-if="discoveryResult">
+                    <dl class="world-encounter-discovery-detail">
+                        <dt>Discovery</dt>
+                        <dd>{{ discoveryResult.resolution.status }}</dd>
+                    </dl>
+
+                    <template v-if="discoveryResult.inspection">
+                        <h4 class="world-encounter-material-title">Material</h4>
+                        <dl class="world-encounter-material-detail">
+                            <dt>Status</dt>
+                            <dd>{{ discoveryResult.inspection.loading.status }}</dd>
+                        </dl>
+
+                        <h4 class="world-encounter-verification-title">Verification</h4>
+                        <dl class="world-encounter-verification-detail">
+                            <dt>Status</dt>
+                            <dd>{{ discoveryResult.inspection.verification.status }}</dd>
+                        </dl>
+                    </template>
+                </template>
             </div>
         </div>
     `

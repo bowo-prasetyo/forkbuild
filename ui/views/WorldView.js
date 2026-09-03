@@ -484,11 +484,11 @@ export default {
         // the current selection, the Wanderer's own ambiguity choice),
         // has been real and tested since 0.9.40; only the registry handed
         // to it was ever missing. `discoverWorldEncounterPublicationCommand`
-        // is the new capability this milestone actually adds reachability
-        // for — a thin, pre-bound closure (`{ objectId, discoveryTag } ->
-        // Promise<{ discovery, resolution, inspection }>`) this view calls
-        // from `discoverWorldEncounterPublication()` below, never
-        // reconstructed and never a second discovery/resolution/
+        // is the capability that gap left unreachable — a thin, pre-bound
+        // closure (`{ objectId, discoveryTag } -> Promise<{ discovery,
+        // resolution, inspection }>`). 0.9.111 (below) forwards it straight
+        // to `WorldEncounterCanvas`'s own new `discoveryCommand` prop —
+        // never reconstructed and never a second discovery/resolution/
         // verification algorithm of its own.
         const worldDiscoveryLeadRegistry = inject('worldDiscoveryLeadRegistry', null);
         const discoverWorldEncounterPublicationCommand = inject('discoverWorldEncounterPublicationCommand', null);
@@ -771,52 +771,21 @@ export default {
             });
         }
 
-        // 0.9.110 — Decentralized Material Retrieval Runtime Composition.
-        // The one, deliberately tiny, World View action this milestone
-        // adds: "Discover Publication." Ephemeral, page-local UI state
-        // only — an idle → discovering → idle transition this view owns
-        // purely to disable the action while a call is in flight and hold
-        // the plain result to display, never a fourth lifecycle and never
-        // persisted (mirrors `distributionExecuting`/`distributionError`'s
-        // own restraint in `WorldEncounterCanvas.js`, one layer up).
-        const discoveryObjectId = ref('');
-        const discoveryTag = ref('');
-        const discovering = ref(false);
-        const discoveryError = ref(null);
-        // The composed capability's own `{ discovery, resolution,
-        // inspection }` result, rendered verbatim below using only the
-        // status vocabulary `application/DecentralizedWorldEncounterLeadResolution.js`
-        // (UNAVAILABLE/RESOLVED/AMBIGUOUS), `application/WorldEncounterMaterialLoading.js`
-        // (UNAVAILABLE/AVAILABLE), and `application/WorldEncounterMaterialVerification.js`
-        // (UNVERIFIABLE/VERIFIED/REJECTED) already define — this view
-        // introduces no new trust word, and never decides itself whether
-        // the result is "trustworthy." Because the discovered lead(s) land
-        // in the SAME `worldDiscoveryLeadRegistry` instance
-        // `WorldEncounterCanvas` already observes (0.9.40, unmodified),
-        // any candidate this call resolves is also, independently and
-        // automatically, visible to that component's own existing
-        // decentralized-lead panel the next time a Wanderer selects a
-        // matching World Encounter — this action never duplicates that
-        // rendering, it only triggers the query the registry was always
-        // missing.
-        const discoveryResult = ref(null);
-
-        function discoverWorldEncounterPublication() {
-            if (!discoverWorldEncounterPublicationCommand || discovering.value) {
-                return;
-            }
-            const objectId = discoveryObjectId.value.trim();
-            const tag = discoveryTag.value.trim();
-            if (!objectId || !tag) {
-                return;
-            }
-            discovering.value = true;
-            discoveryError.value = null;
-            discoverWorldEncounterPublicationCommand({ objectId, discoveryTag: tag })
-                .then((result) => { discoveryResult.value = result; })
-                .catch((error) => { discoveryError.value = error && error.message ? error.message : String(error); })
-                .finally(() => { discovering.value = false; });
-        }
+        // 0.9.111 — World View Decentralized Publication Retrieval.
+        // `discoverWorldEncounterPublicationCommand` (injected above) is
+        // forwarded straight to `WorldEncounterCanvas`'s own new
+        // `discoveryCommand` prop below, verbatim — its `{ objectId,
+        // discoveryTag } -> Promise<{ discovery, resolution, inspection }>`
+        // shape is already exactly what that prop expects, so this view
+        // needs no wrapper function of its own (unlike
+        // `distributeWorldEncounterPublication()` above, which adds
+        // `serializedMaterial`). `WorldEncounterCanvas` now owns the entire
+        // discover/render lifecycle — the input fields, the action, and the
+        // result panel (rendered through the SAME existing Material/
+        // Verification markup 0.9.39's own selection-driven panel already
+        // uses) — this view constructs, calls, and interprets none of it
+        // itself. See that file's own header, "0.9.111 — World View
+        // Decentralized Publication Retrieval."
 
         // 0.2.23: Move Placement — deliberately NOT routed through
         // updateDocumentMetadata/saveDocument/publishDocument's
@@ -1879,18 +1848,11 @@ export default {
         // separate `/live-world` destination — is this milestone's own
         // point.
         const WORLD_ENCOUNTERS_SECTION = 'explore:world-encounters';
-        // 0.9.110 — a sixth Explore-mode CollapsibleSection, the SAME
-        // "pure module, mirrored into a ref" pattern every section above
-        // already uses. Defaults collapsed (true) — unlike World
-        // Encounters, this action is not something every Wanderer needs
-        // open by default.
-        const DISCOVER_PUBLICATION_SECTION = 'explore:discover-publication';
         const nearbySectionsCollapsed = ref({
             places: worldViewNav.isSectionCollapsed(NEARBY_PLACES_SECTION, false),
             landmarks: worldViewNav.isSectionCollapsed(NEARBY_LANDMARKS_SECTION, true),
             people: worldViewNav.isSectionCollapsed(NEARBY_PEOPLE_SECTION, true),
-            worldEncounters: worldViewNav.isSectionCollapsed(WORLD_ENCOUNTERS_SECTION, false),
-            discoverPublication: worldViewNav.isSectionCollapsed(DISCOVER_PUBLICATION_SECTION, true)
+            worldEncounters: worldViewNav.isSectionCollapsed(WORLD_ENCOUNTERS_SECTION, false)
         });
 
         // CollapsibleSection already computes the intended NEXT
@@ -3078,19 +3040,12 @@ export default {
             NEARBY_LANDMARKS_SECTION,
             NEARBY_PEOPLE_SECTION,
             WORLD_ENCOUNTERS_SECTION,
-            DISCOVER_PUBLICATION_SECTION,
             worldDiscoverySourceRegistry,
             worldEncounterMaterialSources,
             worldEncounterMaterialVerifier,
             publicationDistributionLifecycleStore,
             worldDiscoveryLeadRegistry,
             discoverWorldEncounterPublicationCommand,
-            discoveryObjectId,
-            discoveryTag,
-            discovering,
-            discoveryError,
-            discoveryResult,
-            discoverWorldEncounterPublication,
             nearbyLandmarkRows,
             nearbyPeopleRows,
             goToNearbyCollaborator,
@@ -3328,13 +3283,25 @@ export default {
                      Wanderer's own ambiguity choice — stays entirely
                      WorldEncounterCanvas's own job, unmodified; this
                      section changes only that the registry it was already
-                     built to observe is real. -->
+                     built to observe is real.
+
+                     0.9.111 — discoveryCommand, WorldEncounterCanvas's own
+                     new prop, forwarded the app-wide
+                     discoverWorldEncounterPublicationCommand verbatim — no
+                     wrapper, no added field. WorldEncounterCanvas now owns
+                     the entire Discover Publication trigger AND result
+                     panel (rendered through the SAME existing Material/
+                     Verification markup 0.9.39's own selection-driven
+                     panel already uses) — see that file's own header,
+                     "0.9.111 — World View Decentralized Publication
+                     Retrieval." -->
                 <CollapsibleSection
                     title="World Encounters"
                     :collapsed="nearbySectionsCollapsed.worldEncounters"
                     @toggle="setNearbySectionCollapsed('worldEncounters', WORLD_ENCOUNTERS_SECTION, $event)"
                 >
                     <WorldEncounterCanvas
+                        :discoveryCommand="discoverWorldEncounterPublicationCommand"
                         :registry="worldDiscoverySourceRegistry"
                         :materialSources="worldEncounterMaterialSources"
                         :materialVerifier="worldEncounterMaterialVerifier"
@@ -3342,43 +3309,6 @@ export default {
                         :distributionCommand="distributeWorldEncounterPublication"
                         :worldDiscoveryLeadRegistry="worldDiscoveryLeadRegistry"
                     />
-                </CollapsibleSection>
-                <!-- 0.9.110 — Decentralized Material Retrieval Runtime
-                     Composition. The one new, deliberately tiny action
-                     this milestone adds: given a Publication id this
-                     replica does not otherwise have a local marker for,
-                     query the configured decentralized discovery
-                     services (Nostr/Arweave — whichever are actually
-                     configured in ui/main.js) for a discovery tag, and
-                     show exactly what the existing pipeline already
-                     knows how to say: a resolution status
-                     (UNAVAILABLE/RESOLVED/AMBIGUOUS), and — only when
-                     resolved — a loading status (UNAVAILABLE/AVAILABLE)
-                     and a verification status (UNVERIFIABLE/VERIFIED/
-                     REJECTED). No new vocabulary, no trust judgment made
-                     by this view, and no second inspection panel — see
-                     this file's own setup()-level comment on
-                     discoveryResult, above. -->
-                <CollapsibleSection
-                    title="Discover Publication"
-                    :collapsed="nearbySectionsCollapsed.discoverPublication"
-                    @toggle="setNearbySectionCollapsed('discoverPublication', DISCOVER_PUBLICATION_SECTION, $event)"
-                >
-                    <div class="discover-publication-panel">
-                        <input v-model="discoveryObjectId" placeholder="Publication id" :disabled="discovering" />
-                        <input v-model="discoveryTag" placeholder="Discovery tag" :disabled="discovering" />
-                        <button
-                            type="button"
-                            :disabled="discovering || !discoverWorldEncounterPublicationCommand"
-                            @click="discoverWorldEncounterPublication"
-                        >{{ discovering ? 'Discovering…' : 'Discover Publication' }}</button>
-                        <p v-if="discoveryError">{{ discoveryError }}</p>
-                        <div v-else-if="discoveryResult">
-                            <p>Resolution: {{ discoveryResult.resolution.status }}</p>
-                            <p v-if="discoveryResult.inspection">Loading: {{ discoveryResult.inspection.loading.status }}</p>
-                            <p v-if="discoveryResult.inspection">Verification: {{ discoveryResult.inspection.verification.status }}</p>
-                        </div>
-                    </div>
                 </CollapsibleSection>
             </div>
                 <!-- 0.2.99 — World Collaboration UX. Deliberately

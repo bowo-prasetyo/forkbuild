@@ -60965,3 +60965,188 @@ driven choice, not another seam to build:
 This is a healthier place to pause than continuing to add plumbing: every
 remaining gap in the decentralized-publishing story is now a real host-
 capability or product-semantics decision, not a missing composition root.
+
+## 0.9.111 — World View Decentralized Publication Retrieval
+
+0.9.110 closed the reachability gap: the application could construct and
+reach the decentralized discovery pipeline. It deliberately stopped there —
+`ui/views/WorldView.js`'s own "Discover Publication" action rendered its
+result with ad-hoc "Resolution: …" / "Loading: …" text, a second, bespoke
+inspection representation living entirely outside `WorldEncounterCanvas`'s
+own existing (0.9.39) Material/Verification panel. This milestone is the
+different question 0.9.110's own recommendation named: can a Wanderer
+actually RETRIEVE a discovered Publication and inspect the resulting
+material, through the SAME inspection path 0.9.39 through 0.9.43 already
+established as canonical? No new discovery protocol, no new verification
+algorithm, no new decentralized UI architecture — one convergence:
+
+    Publication
+         │
+    ┌────┴────┐
+    │         │
+  local    decentralized
+  material  (discovered via
+    │        discoveryCommand)
+    └────┬────┘
+         ▼
+    existing inspection   (0.9.39's own Material/Verification `<dl>`,
+         │                 identical CSS classes, identical status
+         ▼                 vocabulary, rendered twice against two
+     World View             independent data sources — never a second
+                             representation)
+
+**The application command 0.9.110 left as a bare closure is now a named,
+independently testable seam.** `ui/main.js`'s own inline
+`discoverWorldEncounterPublicationCommand` function — untested, unnamed,
+living only in the composition root — becomes
+`application/DiscoverWorldEncounterPublicationCommand.js`'s
+`executeDiscoverWorldEncounterPublicationCommand({ objectId, discoveryTag,
+publications, runtime })`, exactly mirroring `PublicationDistributionCommand.js`'s
+(0.9.103) own shape one story over: it validates the one new collaborator it
+introduces (`runtime`), and forwards everything else to `runtime.discoverWorldEncounterPublication()`
+(0.9.110, unmodified) verbatim, returning its result unchanged. A sibling,
+`application/DiscoverWorldEncounterPublicationCommandComposition.js`'s
+`composeDiscoverWorldEncounterPublicationCommand({ runtime, discoveryProvider })`,
+mirrors `PublicationDistributionCommandComposition.js` (0.9.105) exactly:
+it pre-binds `runtime` and a `discoveryProvider` (a fresh
+`LocalDiscoveryProvider`, reading the SAME `forkbuild-publications` storage
+key `LocalWorldEncounterMaterialSource` already reads) into one closure,
+reading `discoveryProvider.list()` fresh on every call, never cached at
+composition time. `ui/main.js` now composes through this named seam instead
+of an inline closure — zero change in observable behavior, a real gain in
+testability.
+
+**The convergence itself lives in `WorldEncounterCanvas.js`, mirroring the
+Distribution feature's own shape exactly.** The old "Discover Publication"
+CollapsibleSection in `WorldView.js` — its own input fields, button, and
+ad-hoc result text — is gone. `WorldEncounterCanvas` gains a new
+`discoveryCommand` prop (`({ objectId, discoveryTag }) -> Promise<{
+discovery, resolution, inspection }>`, `null` by default), the SAME shape
+`distributionCommand` (0.9.104) already established one story over, plus
+its own `discoveryObjectId`/`discoveryTag`/`discovering`/`discoveryError`/
+`discoveryResult`/`discoveryRequestId` ephemeral UI state and a
+`discoverPublication()` method — an idle → discovering → idle transition
+guarded by the identical stale-response request-counter discipline
+`distributionRequestId`/`materialInspectionRequestId` already hold.
+`ui/views/WorldView.js` forwards the app-wide `discoverWorldEncounterPublicationCommand`
+straight through as this new prop, verbatim — no wrapper function, unlike
+`distributeWorldEncounterPublication()`'s own `serializedMaterial` addition,
+because the command's existing `{ objectId, discoveryTag }` shape is
+already everything the prop needs.
+
+**The existing inspection mechanism stays canonical — literally, not just
+in spirit.** The new "Discover Publication" panel's Material/Verification
+`<dl>` blocks reuse the EXACT `world-encounter-material-title`/
+`world-encounter-material-detail`/`world-encounter-verification-title`/
+`world-encounter-verification-detail` CSS classes and field shape
+(`loading.status`, `verification.status`) the selection-driven panel
+(0.9.39) already renders — the same status vocabulary, the same two
+fields, no new trust word anywhere. It is a second RENDERING of the same
+shape against a second, independent data source (`discoveryResult.inspection`,
+already fully loaded-and-verified by the one `discoveryCommand` call),
+never a second call to `inspectWorldEncounterMaterial()` and never a fork
+of that panel's own markup into something visually different.
+
+**Discovery is not verification — preserved all the way into the UI.** The
+panel exposes `discoveryResult.resolution.status` (`UNAVAILABLE`/`RESOLVED`/
+`AMBIGUOUS`, 0.9.28, unchanged) as its own "Discovery" line, separate from
+"Material"/"Verification" — never collapsed into one "Found → trustworthy"
+verdict. A `RESOLVED` lead whose material fails signature verification
+still renders `REJECTED`, exactly as honestly as a local selection already
+does.
+
+**Local/decentralized separation, structurally enforced.** `discoverPublication()`
+writes only `discoveryResult`/`discovering`/`discoveryError` — it never
+assigns to `materialInspection`, never calls `selectEncounter()`, and never
+touches `materialSources`/`materialVerifier`. A decentralized discovery
+result can never overwrite or masquerade as this replica's own locally
+stored Publication evidence; the two remain two independent facts in two
+independent panels, exactly the way `materialSources.local` and
+`materialSources.decentralized` already stay independent one layer down.
+
+**No duplicate fetching.** `discoverPublication()` calls `discoveryCommand`
+exactly once per click. `discoveryResult.inspection`, when present, is
+already the complete result 0.9.110's own runtime produced in that one
+call — the template renders it directly; no method in `WorldEncounterCanvas.js`
+re-derives, re-loads, or re-verifies it.
+
+Tests: a new suite, `tests/DiscoverWorldEncounterPublicationCommand.test.js`,
+covers the command boundary in isolation — synchronous throw on a missing/
+malformed `runtime`, verbatim forwarding of `objectId`/`discoveryTag`/
+`publications`, a verbatim (never re-described) result, a genuine rejection
+propagating unchanged, and an architectural sweep (zero imports, no trust
+vocabulary). A second new suite,
+`tests/DiscoverWorldEncounterPublicationCommandComposition.test.js`, drives
+the REAL composed discovery runtime (real `ArweaveGraphqlDiscoveryQueryService`,
+real verifier, only the network boundary faked) through the composed
+command end to end, proves `discoveryProvider.list()` is read fresh on
+every call rather than cached at composition time, proves the composition-
+root's own `runtime`/`discoveryProvider` always win over anything a
+caller's request happens to carry, and sweeps the file's own import
+boundary. The flagship suite,
+`tests/WorldViewDecentralizedPublicationRetrievalIntegration.test.js`,
+exercises the complete path — World View → Discover Publication →
+application command → real Arweave discovery → lead registry → `RESOLVED`
+→ real material retrieval → real signature verification → `VERIFIED` →
+the existing Material/Verification inspection shape — through
+`WorldEncounterCanvas.methods.discoverPublication.call(ctx)`, the same
+`Component.methods.x.call(ctx)` discipline every UI test in this chain
+already uses. Section A is that flagship. Section B proves `UNAVAILABLE`
+stays `UNAVAILABLE` with no discovery. Section C proves an `AMBIGUOUS`
+resolution (two independently-reported leads for the same uri) never
+produces an inspection object. Section D proves a `RESOLVED` lead whose
+retrieved material was tampered with after signing renders `REJECTED` —
+discovery is not verification, preserved end to end. Section E proves a
+decentralized discovery result never overwrites the CURRENT
+`selectedEncounter`/`materialInspection` — the exact same object
+references, untouched. Section F proves `discoveryCommand` is called
+exactly once per click. Section G proves the panel stays entirely inert
+with no `discoveryCommand` supplied. Section H proves repeated clicks never
+overlap and a stale in-flight response is discarded. Sections I/J/K are
+architectural regressions across `WorldEncounterCanvas.js`, `WorldView.js`,
+and `ui/main.js` — the six-`application/`-import count on
+`WorldEncounterCanvas.js` is unchanged (a plain injected function needs no
+new import), the reused CSS classes appear exactly twice each (once per
+rendering), and the old ad-hoc UI is verifiably gone.
+
+### What this milestone deliberately does NOT do
+
+No new discovery protocol and no new verification algorithm — every fact
+this milestone renders comes from 0.9.21's/0.9.28's/0.9.37's own,
+unmodified vocabulary. No trust/reputation system, no source ranking, and
+no automatic fallback policy — `discoveryResult` renders `resolution.status`/
+`loading.status`/`verification.status` exactly as they already exist, with
+no derived verdict layered on top. No background discovery, no persistent
+discovery history, and no retry system — `discoverPublication()` runs once
+per click and returns; there is no timer and no cache anywhere in this
+milestone. No new lifecycle vocabulary — `discovering`/`discoveryError`/
+`discoveryResult` are ephemeral UI state only, exactly like
+`distributionExecuting`/`distributionError` already are, never written into
+any lifecycle store. No wallet integration and no publication-distribution
+changes — this milestone touches nothing in the signing/distribution
+family. No replacement of local material inspection, and no new
+decentralized UI architecture — the selection-driven Material/Verification
+panel (0.9.39) is untouched; this milestone adds one small, additional
+panel that reuses its exact markup, never a second component or a second
+inspection representation.
+
+### Recommendation
+
+With this milestone landed, World View now substantially represents all
+three major publication stories the architecture was building toward:
+
+    World View
+         │
+    ┌────┼────┐
+    ▼    ▼    ▼
+  Local  Discover  Distribute
+  material remotely  publication
+    │    │    │
+    ▼    ▼    ▼
+  Inspect Verify  Lifecycle
+
+As with 0.9.110, I would pause here rather than automatically inventing a
+0.9.112 — both real host capabilities Nostr/Arweave still need (a relay
+`queryImpl`, a wallet `signer`) remain unbuilt, and the next genuinely
+useful milestone is better chosen from an observed product gap once this
+work has actually been used, not manufactured from the plumbing itself.
