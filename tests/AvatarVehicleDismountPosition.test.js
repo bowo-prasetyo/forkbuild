@@ -214,6 +214,64 @@ async function runTests() {
         );
     }
 
+    // -------------------------------------------------------------
+    // Section J — 0.9.117: also accepts a VehicleInstance, and resolves
+    // from its CURRENT `position`, never its `spawnPosition`.
+    // -------------------------------------------------------------
+    {
+        const { VehicleInstance } = await import('../core/VehicleInstance.js');
+
+        // A VehicleInstance whose position has diverged from its
+        // spawnPosition — exactly what riding a mounted bicycle
+        // (application/AvatarVehicleMovementController.js, 0.9.116)
+        // actually produces.
+        const ridden = new VehicleInstance({
+            id: 'vehicle:1:0,0',
+            type: VehicleType.BICYCLE,
+            spawnPosition: new Position(100, 3, 100),
+            position: new Position(130, 3, 100)
+        });
+        const result = resolveAvatarVehicleDismountPosition(ridden);
+        assert(result instanceof Position, '27. a VehicleInstance is accepted and produces a real Position, just like a VehiclePresence');
+        assert(result.x === 130 + BICYCLE_DISMOUNT_OFFSET_X, '28. THE CENTRAL 0.9.117 CLAIM: x is resolved from `position` (130), never `spawnPosition` (100)');
+        assert(result.z === 100, '29. z likewise tracks `position`, unshifted');
+        assert(result.y === 0, '30. y is still the flat avatar-domain ground level, never copied from either `position.y` or `spawnPosition.y`');
+    }
+    {
+        // A VehicleInstance that has never moved — position still equals
+        // spawnPosition — resolves identically to the pre-0.9.117
+        // VehiclePresence-only behavior. Stationary regression.
+        const { VehicleInstance } = await import('../core/VehicleInstance.js');
+        const stationary = new VehicleInstance({
+            id: 'vehicle:1:0,0', type: VehicleType.BICYCLE,
+            spawnPosition: new Position(5, 1.2, 7)
+        });
+        const fromInstance = resolveAvatarVehicleDismountPosition(stationary);
+        const fromPresence = resolveAvatarVehicleDismountPosition(bicycleAt(5, 1.2, 7));
+        assert(fromInstance.equals(fromPresence), '31. a never-moved VehicleInstance resolves to exactly the same position a VehiclePresence at the same coordinates always has');
+    }
+    {
+        // Non-bicycle VehicleInstance types still honestly resolve to
+        // null — the same "no rule for this type yet" answer a
+        // VehiclePresence of the same type already gives (Section E).
+        const { VehicleInstance } = await import('../core/VehicleInstance.js');
+        for (const type of [VehicleType.MOTORCYCLE, VehicleType.CAR, VehicleType.DRONE]) {
+            const instance = new VehicleInstance({ id: 'vehicle:1:0,0', type, spawnPosition: new Position(1, 1, 1) });
+            assert(resolveAvatarVehicleDismountPosition(instance) === null,
+                `32. a ${type} VehicleInstance resolves to null, exactly like a ${type} VehiclePresence already does`);
+        }
+    }
+    {
+        // A plain object shaped like a VehicleInstance is still
+        // rejected — only a real instance of either recognized class is
+        // accepted, the identical discipline Section E already
+        // establishes for VehiclePresence.
+        assertThrows(
+            () => resolveAvatarVehicleDismountPosition({ id: 'vehicle:1:0,0', type: VehicleType.BICYCLE, position: { x: 0, y: 0, z: 0 }, spawnPosition: { x: 0, y: 0, z: 0 } }),
+            '33. a plain object shaped like a VehicleInstance is rejected — only a real VehiclePresence or VehicleInstance instance is accepted'
+        );
+    }
+
     console.log('✅ All Vehicle Dismount Position Resolution tests passed.');
 }
 
