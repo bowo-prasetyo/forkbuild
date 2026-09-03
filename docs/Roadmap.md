@@ -58839,3 +58839,123 @@ precedent 0.9.95 itself already set.
 Next: 0.9.97 can now revisit the movement-state composition layer 0.9.94
 originally named for this slot, with a genuinely player-reachable
 `brakingRequested` already in hand.
+
+## 0.9.97 — Vehicle Movement State Observation Boundary
+
+0.9.86 through 0.9.96 gave `application/AvatarMovementController.js` one
+new piece of transient movement state per milestone — signed current
+speed (0.9.91), braking intent (0.9.95), the active movement capability
+(0.9.85) — each added because the SIMULATION needed it. None of it was
+ever readable from outside the class except by inferring it from
+`tick()`'s own side effect on `AvatarPresence` (position/rotation/
+animation): a test, a debugger, or a future UI indicator wanting to know
+"is the avatar currently braking" had no way to ask except reconstructing
+a second, informal definition of a fact this class already holds
+authoritatively. This milestone closes that gap with exactly one new
+read-only method:
+
+```
+AvatarMovementController
+        │
+        │ movementState()
+        ▼
+{ direction,           (the resolved forward/backward axis, -1/0/1)
+  turnAxis,            (the resolved left/right axis, -1/0/1)
+  running,
+  jumpRequested,
+  brakingRequested,
+  movementSpeed,       (the transient SIGNED current speed, 0.9.91)
+  movementCapability }  (the active capability KIND, 0.9.85)
+```
+
+**Observation describes state; it never calculates or reinterprets it.**
+`movementState()` reuses `_currentMovementState()` — the EXACT
+resolution `tick()` itself already calls into `simulateAvatarMovement()`
+every tick — for `direction`/`turnAxis`/`running`/`jumpRequested`/
+`brakingRequested`, and reads `_currentMovementSpeed`/`movementCapability()`
+directly for the other two fields. There is no second "is it braking"
+question anywhere in this method: it never asks whether `movementSpeed`
+is currently decreasing, which would invent a second, inference-based
+definition of braking alongside 0.9.95's own authoritative
+`_vehicleBrakingIntent`-derived one — and the two would eventually
+disagree, because 0.9.95's own semantics deliberately let
+`brakingRequested` be true while the resolved TARGET speed stays
+forward/backward, not zero. `tests/AvatarMovementStateObservation.test.js`'s
+own Section 13 proves this directly: braking requested from a standing
+start while still holding the accelerator observes `movementSpeed`
+genuinely INCREASING, tick over tick, the entire time `brakingRequested`
+reads `true`.
+
+**Capability, State, and Observation stay three different things.**
+`movementState()` deliberately exposes none of the active capability's
+own numeric fields — its `movementSpeed` (the CAPABILITY's base speed,
+as distinct from the transient current one above), `acceleration`,
+`braking`, `steering`, `movementDirections`. Those describe what the
+active capability PERMITS; `movementState()` describes what is
+happening RIGHT NOW. A caller that wants the former already has
+`movementCapability()` (this class's own existing 0.9.85 getter,
+returning the KIND) and, one layer up, whatever
+`core/AvatarVehicleMovementCapability.js` instance produced it — this
+class still has no reason to re-expose fields it merely reads, and
+doing so now would blur a distinction that only matters more as the
+vehicle system grows.
+
+**A plain, frozen object — not a new `VehicleMovementState` class.**
+Every field `movementState()` returns is already a primitive (a number,
+a boolean, or a string), so `Object.freeze()` alone is sufficient to
+guarantee a caller can never mutate this controller's own bookkeeping
+through the returned value — there is no nested object or array to
+defensively copy. The avatar still has exactly one movement system; a
+vehicle remains a capability of that system, never a second state
+object standing next to it.
+
+**Callable at any time, including while an unsupported capability is
+blocking `tick()` outright.** `movementState()` reads whatever this
+class currently holds regardless of `_movementCapability.supported` —
+the same posture `isCollided()`/`verticalState()` already have. A
+mounted, unsupported DRONE therefore still observes something coherent:
+`movementCapability` reads `AERIAL_VEHICLE`, `movementSpeed` stays
+exactly `0` (it never advances while `tick()` returns `null`), and
+`direction` reads `0` even with a movement key held, because AERIAL_
+VEHICLE's own `movementDirections` permits neither forward nor
+backward — `_resolvedForwardAxis()`'s own existing 0.9.89 gating applies
+here exactly as it would if `tick()` were actually running.
+
+## What this milestone deliberately does NOT do
+
+No `VehicleMovementState`, `VehiclePhysicsState`, `VehicleTelemetry`, or
+`VehicleDashboardState` object, and none of engine/wheel/throttle/RPM/
+gear state — all premature for a codebase with exactly one, generic
+ground-vehicle model and no engine simulation of any kind. No new
+capability-derived field is exposed (acceleration/braking/steering
+rates, movement direction permissions) — see the "Capability, State, and
+Observation" distinction above. No change to `tick()`'s own pipeline, to
+any existing resolution seam, or to `AvatarMovementState` itself — this
+milestone adds exactly one new public method and touches nothing else in
+`application/AvatarMovementController.js`.
+
+Tests: a new suite, `tests/AvatarMovementStateObservation.test.js`,
+covers initial state, movement speed as observed against the actual
+position-delta speed every sibling integration suite already uses,
+signed forward/backward preservation, acceleration genuinely changing
+the observed speed, braking-request observability (both via
+`setVehicleBrakingIntent()` directly and via the real Control key
+binding from 0.9.96), steering leaving `movementSpeed` untouched,
+capability switching updating `movementCapability` and resetting the
+observed `movementSpeed` to 0, DRONE staying observably blocked, the
+returned snapshot being immune to mutation, repeated calls being
+deterministic, a byte-for-byte regression proof that calling
+`movementState()` every tick never changes the resulting `AvatarPresence`,
+the braking-does-not-imply-decreasing-speed distinction above, and an
+architectural sweep confirming `movementState()` reads existing fields
+only — never `AvatarPresence`, position, or a capability-only numeric
+field — and that no second vehicle-state class was introduced.
+
+Next: with speed, acceleration, braking, steering, direction
+permissions, collision footprint, mounting/dismounting, real input, and
+now observation all in place, the ground-vehicle movement model is
+surprisingly complete while drone movement remains intentionally
+isolated. Rather than automatically inventing a 0.9.98, this is a good
+point to pause and reassess the vehicle architecture against what the
+actual World View experience still lacks before adding another
+capability.
