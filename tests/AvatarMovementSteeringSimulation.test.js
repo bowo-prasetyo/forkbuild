@@ -25,10 +25,13 @@ import { resolveMovementHeading } from '../core/AvatarMovementSteeringSimulation
 //   Section H: architectural regression — no VehicleType/VehiclePresence/
 //              AvatarVehicleMount/WorldNavigationSession/capability-
 //              vocabulary/keyboard import anywhere in this file's own
-//              source, and no wiring into
-//              application/AvatarMovementController.js or
-//              core/AvatarMovementSimulation.js as of 0.9.93 (existing
-//              WALK turning remains byte-for-byte unchanged)
+//              source; and (0.9.94 update — see that milestone's own note
+//              below) core/AvatarMovementSimulation.js now DOES call
+//              resolveMovementHeading(), gated on a real steeringRate, but
+//              application/AvatarMovementController.js still never
+//              references this file or the steering capability vocabulary
+//              directly — the actual wiring lives exactly one layer down,
+//              matching how 0.9.91 wired resolveMovementSpeed() in.
 //
 // Central architectural claim under test throughout: this file answers
 // only "given a rate, a current heading, and a target heading, what is
@@ -36,6 +39,20 @@ import { resolveMovementHeading } from '../core/AvatarMovementSteeringSimulation
 // is involved" or "should a rate even apply here" — see
 // core/AvatarMovementSteeringSimulation.js's own header. See
 // docs/Roadmap.md, 0.9.93.
+//
+// 0.9.94 note — Vehicle Steering State Integration. This file's own
+// Section H originally asserted (as of 0.9.93) that NEITHER
+// core/AvatarMovementSimulation.js NOR application/AvatarMovementController.js
+// referenced this seam at all — "steering is resolved and testable, but
+// not yet wired into any real controller." 0.9.94 is that wiring, and
+// this suite's own architectural regression section is updated in place
+// (not superseded — the exact same "prove the wiring lives where the
+// milestone's own header says it does" claim, now proving the OPPOSITE
+// half: that it DOES exist, in EXACTLY the one place documented) — see
+// tests/AvatarVehicleSteeringStateIntegration.test.js for the full
+// behavioral integration suite (WALK regression, per-vehicle ramps,
+// held/released turning, capability switching, wraparound, DRONE
+// blocking) this milestone adds alongside it.
 
 function assert(condition, message) {
     if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
@@ -223,21 +240,33 @@ async function runTests() {
             '30. core/AvatarMovementSteeringSimulation.js exports exactly the one resolution function — nothing else');
     }
     {
-        // As of 0.9.93, this seam is deliberately NOT wired into real
-        // movement — see this file's own header and
-        // core/AvatarVehicleMovementCapability.js's own 0.9.93 header.
-        // Existing on-foot turning
-        // (core/AvatarMovementSimulation.js's own `TURN_RATE_DEGREES_PER_SECOND`/
-        // `rotationY` advance) remains completely untouched: neither that
-        // file nor application/AvatarMovementController.js references
-        // this one, or the steering capability vocabulary, at all.
+        // 0.9.94 update — Vehicle Steering State Integration. This seam is
+        // now wired into real movement, EXACTLY one layer down from where
+        // 0.9.91 wired resolveMovementSpeed() in: core/AvatarMovementSimulation.js
+        // itself, never application/AvatarMovementController.js directly —
+        // see core/AvatarMovementSimulation.js's own 0.9.94 header for the
+        // gate (a real, positive `steeringRate`) that keeps WALK's own
+        // existing `TURN_RATE_DEGREES_PER_SECOND`/`rotationY` advance
+        // completely untouched, byte-for-byte, whenever that gate is not
+        // met.
         const simulationSource = await readFile(new URL('../core/AvatarMovementSimulation.js', import.meta.url), 'utf8');
-        assert(!simulationSource.includes('AvatarMovementSteeringSimulation') && !simulationSource.includes('resolveMovementHeading'),
-            '31. (as of 0.9.93) core/AvatarMovementSimulation.js never references this file or calls resolveMovementHeading() — existing WALK turning is untouched, byte-for-byte');
+        assert(simulationSource.includes('AvatarMovementSteeringSimulation') && simulationSource.includes('resolveMovementHeading'),
+            '31. (as of 0.9.94) core/AvatarMovementSimulation.js now imports and calls resolveMovementHeading() — this is the "future milestone" this file\'s own header originally named as wiring this seam in, the direct twin of resolveMovementSpeed()\'s own 0.9.91 wiring');
 
         const controllerSource = await readFile(new URL('../application/AvatarMovementController.js', import.meta.url), 'utf8');
-        assert(!controllerSource.includes('AvatarMovementSteeringSimulation') && !controllerSource.includes('resolveMovementHeading') && !controllerSource.includes('AvatarMovementSteeringCapability'),
-            '32. (as of 0.9.93) application/AvatarMovementController.js never references this file, resolveMovementHeading(), or the steering capability vocabulary — steering is resolved and testable, but not yet wired into any real controller');
+        // Comment lines are excluded before checking — this class's own
+        // prose (like this test file's own) documents the seam by name in
+        // several header paragraphs; what matters architecturally is that
+        // no CODE line ever imports/instantiates the pure math module or
+        // the capability vocabulary directly.
+        const controllerCodeOnly = controllerSource
+            .split('\n')
+            .filter((line) => !line.trim().startsWith('//'))
+            .join('\n');
+        assert(!controllerCodeOnly.includes('AvatarMovementSteeringSimulation') && !controllerCodeOnly.includes('resolveMovementHeading'),
+            '32. application/AvatarMovementController.js still never imports core/AvatarMovementSteeringSimulation.js or calls resolveMovementHeading() directly — it only ever hands a bare steeringRate number to core/AvatarMovementSimulation.js, which is the one place this seam is actually wired in (the direct twin of _resolvedAcceleration()\'s own 0.9.91 discipline)');
+        assert(!controllerCodeOnly.includes('AvatarMovementSteeringCapability') && !controllerCodeOnly.includes('AvatarMovementSteeringKind'),
+            '33. application/AvatarMovementController.js never imports the AvatarMovementSteeringCapability vocabulary itself — it reads only a resolved capability\'s bare steering.steeringRate number (see its own _resolvedSteeringRate())');
     }
 
     console.log('✅ All Vehicle Steering Simulation tests passed.');

@@ -468,6 +468,74 @@ import { AvatarMovementCapabilityKind, isValidAvatarVehicleMovementCapability } 
 // milestone before 0.9.91 ever consumed it. See this file's own
 // `_resolvedBraking()` header, below, for why that gap is deliberate
 // scope, not an oversight — see docs/Roadmap.md, 0.9.92.
+//
+// 0.9.94 — Vehicle Steering State Integration. This class gains exactly
+// one new resolution seam, `_resolvedSteeringRate()` (the direct
+// structural twin of `_resolvedAcceleration()`/`_resolvedBraking()`
+// above) — read in the same one place, `tick()`'s own call into
+// `simulateAvatarMovement()`, as a new `steeringRate` argument.
+//
+// NO NEW TRANSIENT STATE FIELD, UNLIKE `_currentMovementSpeed` (0.9.91).
+// A held turn direction has no other home to come from —
+// `_currentMovementState()` already builds `turnAxis` from the exact same
+// A/D keys (and, since 0.9.66/0.9.69, the same continuous-movement
+// machinery) it always has; this milestone reuses that EXISTING intent
+// rather than inventing a second, steering-specific input vocabulary (see
+// core/AvatarMovementSimulation.js's own 0.9.94 header for exactly how a
+// held `turnAxis` becomes a "requested heading" `resolveMovementHeading()`
+// closes the gap toward). And a "current heading" to converge FROM
+// already exists too — `rotationY`, part of `AvatarPresence` since 0.2.36,
+// already threaded into `simulateAvatarMovement()` every tick as
+// `currentRotationY` (see `tick()` above). Unlike `_currentMovementSpeed`,
+// which needed a new field because `AvatarPresence` never carried a
+// signed current speed, heading needed nothing new: it was already real,
+// stateful, and persisted.
+//
+// CAPABILITY SWITCHING PRESERVES THE AVATAR'S OWN PHYSICAL HEADING, NEVER
+// RESETS IT — THE OPPOSITE OF `_currentMovementSpeed`'S OWN 0.9.91
+// BEHAVIOR, DELIBERATELY. `setMovementCapability()` below resets
+// `_currentMovementSpeed` to `0` on every genuine capability change,
+// because a transient speed is CAPABILITY-RELATIVE state — a fresh ride
+// starts from rest, whatever the previous one was doing. Heading is
+// SPATIAL state — which way the avatar's own body is actually facing in
+// the world — and mounting a vehicle must never spin the avatar to face
+// some arbitrary default. `setMovementCapability()` gains no analogous
+// reset for heading, and needs none: `rotationY` was never part of
+// `_movementCapability` to begin with, so there is nothing to reset it
+// against — an avatar facing east that mounts a car continues facing
+// east, and simply steers (gradually, per CAR's own `steeringRate`) from
+// there.
+//
+// STEERING IS INDEPENDENT OF `movementSpeed`/`acceleration`/`braking` —
+// A FASTER OR QUICKER-ACCELERATING VEHICLE DOES NOT AUTOMATICALLY STEER
+// FASTER OR SLOWER. This class still never branches on a vehicle's
+// identity, or derives one resolved field from another — `_resolvedSteeringRate()`
+// reads `steering.steeringRate` alone, exactly as `_resolvedAcceleration()`/
+// `_resolvedBraking()`/`_resolvedMovementSpeed()` each read their own
+// field alone (see core/AvatarVehicleMovementCapability.js's own 0.9.93
+// header for why CAR's own `steeringRate` is deliberately the LOWEST of
+// the three ground vehicles despite having the HIGHEST `movementSpeed`).
+//
+// WALK IS BYTE-FOR-BYTE UNCHANGED, AS OF 0.9.94. WALK's own resolved
+// `steering.steeringRate` is always exactly `0` (INSTANT — see
+// core/AvatarMovementSteeringCapability.js's own header), which degrades
+// `simulateAvatarMovement()`'s own new heading branch to a no-op every
+// single tick — the avatar's own existing on-foot turning
+// (`TURN_RATE_DEGREES_PER_SECOND`) reaches its requested facing exactly
+// as it always has. Every ground vehicle (BICYCLE/MOTORCYCLE/CAR), by
+// contrast, now genuinely turns toward a held A/D direction at its own
+// `steeringRate`, continuously for as long as the key is held, and stops
+// changing heading the instant it is released — see
+// tests/AvatarVehicleSteeringStateIntegration.test.js for the full
+// scenario coverage.
+//
+// Deliberately excluded, matching this milestone's own brief: turning
+// radius, Ackermann steering geometry, bicycle/motorcycle lean, tire
+// friction, lateral acceleration, drift/skid behavior, speed-proportional
+// steering, a second `VehicleOrientation`/steering-input vocabulary, and
+// binding `brakingRequested` to any key — this class remains the one,
+// single movement executor, and `_currentMovementState()` below is
+// completely untouched by this milestone. See docs/Roadmap.md, 0.9.94.
 const EPSILON = 1e-6;
 
 export class AvatarMovementController {
@@ -709,7 +777,8 @@ export class AvatarMovementController {
             movementSpeed: this._resolvedMovementSpeed(),
             acceleration: this._resolvedAcceleration(),
             braking: this._resolvedBraking(),
-            currentMovementSpeed: this._currentMovementSpeed
+            currentMovementSpeed: this._currentMovementSpeed,
+            steeringRate: this._resolvedSteeringRate()
         });
         this._verticalVelocity = result.verticalVelocity;
         this._grounded = result.grounded;
@@ -980,6 +1049,25 @@ export class AvatarMovementController {
     // fact, and wires it in here.
     _resolvedBraking() {
         return this._movementCapability ? this._movementCapability.braking.braking : undefined;
+    }
+
+    // 0.9.94 — the steering-resolution seam this milestone adds: the
+    // CURRENT movement capability's own resolved `steering.steeringRate`
+    // (a plain number, radians/second — core/AvatarMovementSteeringCapability.js's
+    // own job to have already decided what it is), or `undefined` when
+    // `_movementCapability` is `null` — the identical "never set" state
+    // `_resolvedAcceleration()`/`_resolvedBraking()` already handle. The
+    // direct structural twin of both, down to never reading `.kind` for
+    // the identical reason: `AvatarMovementSteeringCapability`'s own
+    // constructor already guarantees INSTANT's rate is always exactly `0`
+    // and RATE_LIMITED's is always strictly positive, so the bare rate
+    // alone already carries the distinction
+    // core/AvatarMovementSimulation.js#simulateAvatarMovement() needs —
+    // this class still has no `AvatarMovementSteeringKind` literal
+    // anywhere in its own code. Read in exactly one place, tick()'s own
+    // call into simulateAvatarMovement() above.
+    _resolvedSteeringRate() {
+        return this._movementCapability ? this._movementCapability.steering.steeringRate : undefined;
     }
 
     // 0.9.88 — the ONE collision-radius-resolution seam this milestone
