@@ -30,6 +30,7 @@ import { AvatarTerrainConstraint } from './AvatarTerrainConstraint.js';
 import { AvatarStepConstraint } from './AvatarStepConstraint.js';
 import { AvatarTreeConstraint } from './AvatarTreeConstraint.js';
 import { AvatarVehicleInteractionController } from './AvatarVehicleInteractionController.js';
+import { nearbyVehicleInstances } from './NearbyVehicleInstances.js';
 import { resolveAvatarVehicleMovementCapability } from '../core/AvatarVehicleMovementCapability.js';
 import { deriveAvatarContinuousMovementInputEvent } from '../core/AvatarContinuousMovementInputAdapter.js';
 import { deriveAvatarContinuousMovementIntent } from '../core/AvatarContinuousMovementIntent.js';
@@ -763,6 +764,8 @@ export class WorldNavigationSession {
         this._worldLocationDirectory = new WorldLocationDirectory(this);
         this._activeCameraFocus = null;
         this._cameraFocusFrameSubscription = null;
+        // 0.9.115 — Vehicle Rendering. See _setupVehicleRendering() below.
+        this._vehicleRenderFrameSubscription = null;
     }
 
     // 0.2.97 — the ONE place a CommandHistory ever enters
@@ -835,6 +838,45 @@ export class WorldNavigationSession {
         this._setupRemoteAvatars();
         this._setupLocalAvatar();
         this._setupCameraFocusAnimation();
+        this._setupVehicleRendering();
+    }
+
+    // 0.9.115 — Vehicle Rendering. Deliberately independent of
+    // _setupLocalAvatar() above — a vehicle is a fact about the WORLD,
+    // never about whether the viewer happens to have an avatar (see
+    // docs/Principles.md, "Watching Presence Never Requires Having One,"
+    // the identical reasoning `showOtherAvatars` already applies one
+    // layer up in ui/views/WorldView.js). Rides the SAME per-render-frame
+    // loop application/WorldSpatialContextService.js's own "what is
+    // around me right now" already keys off of — `getAvatarPosition() ||
+    // getCameraPosition()`, so a logged-out viewer just spectating still
+    // sees the vehicles nearby their own camera.
+    //
+    // A REQUERY EVERY FRAME, NEVER A CACHE — the identical posture
+    // application/AvatarVehicleInteractionController.js#_nearbyVehicles()
+    // already takes for its own, smaller-radius lookup every tick (see
+    // that file's own header, "Vehicle lookup: a requery, never a
+    // registry"). application/NearbyVehicleInstances.js's own query is a
+    // handful of cheap deterministic hash evaluations over a few lattice
+    // cells — negligible next to the mesh/geometry work this same frame
+    // loop already tolerates elsewhere in this file.
+    //
+    // Absent entirely when the render facade supports neither
+    // onAnimationFrame nor syncVehicles (a minimal test double, or an
+    // older facade that hasn't been extended) — the same graceful-
+    // absence posture every other optional frame-driven feature in this
+    // file already follows.
+    _setupVehicleRendering() {
+        if (typeof this._session.onAnimationFrame !== 'function' || typeof this._session.syncVehicles !== 'function') {
+            return;
+        }
+        this._vehicleRenderFrameSubscription = this._session.onAnimationFrame(() => {
+            const position = this.getAvatarPosition() || this.getCameraPosition();
+            if (!position) {
+                return;
+            }
+            this._session.syncVehicles(nearbyVehicleInstances(this.getWorldSeed(), position));
+        });
     }
 
     // 0.2.94 — advances any in-flight goHome()/focusLocation() animation
@@ -5907,6 +5949,12 @@ export class WorldNavigationSession {
             this._cameraFocusFrameSubscription = null;
         }
         this._activeCameraFocus = null;
+        // 0.9.115 — Vehicle Rendering. Mirrors _cameraFocusFrameSubscription's
+        // own teardown immediately above exactly.
+        if (this._vehicleRenderFrameSubscription) {
+            this._vehicleRenderFrameSubscription();
+            this._vehicleRenderFrameSubscription = null;
+        }
         if (this._presenceSyncService) {
             this._presenceSyncService.dispose();
             this._presenceSyncService = null;

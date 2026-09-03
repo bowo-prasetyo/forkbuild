@@ -10,6 +10,7 @@ import { TransformMath } from './TransformMath.js';
 import { AvatarRenderer } from '../renderer/AvatarRenderer.js';
 import { AvatarVisual } from '../renderer/AvatarVisual.js';
 import { RemoteSpatialPresenceRenderer } from '../renderer/RemoteSpatialPresenceRenderer.js';
+import { VehicleFieldRenderer } from '../renderer/VehicleFieldRenderer.js';
 import { WorldSpatialPresentationMode } from '../core/WorldSpatialAnchor.js';
 
 // World View's render wiring. Exposes the same narrow gizmo surface
@@ -81,6 +82,12 @@ export class RenderWorldViewUseCase {
             worldRenderer.placementMeshRegistry,
             (x, z) => renderer.terrainHeightAt(x, z)
         );
+        // 0.9.115 — Vehicle Rendering. Deliberately NOT keyed off
+        // worldRenderer.meshRegistry/placementMeshRegistry the way
+        // remoteSpatialPresenceRenderer above is — a VehicleInstance is
+        // never a document/placement fact (see core/VehicleInstance.js's
+        // own header), so this has nothing to look up a mesh for.
+        const vehicleFieldRenderer = new VehicleFieldRenderer();
         const transformGizmoRenderer = new TransformGizmoRenderer(renderer);
         const transformGizmoController = new TransformGizmoController({
             camera: renderer.camera,
@@ -431,6 +438,49 @@ export class RenderWorldViewUseCase {
                 }
                 remoteSpatialPresenceRenderer.removePresence(deviceId);
             },
+            // 0.9.115 — Vehicle Rendering. `vehicleInstances` is the
+            // FULL current set of VehicleInstance objects that should be
+            // visible right now (ordinarily
+            // application/NearbyVehicleInstances.js's own output,
+            // supplied once per render frame by
+            // application/WorldNavigationSession.js's own
+            // `_setupVehicleRendering()`) — this is a SYNC, not an
+            // incremental add/update: every call reconciles the scene
+            // against exactly this set, adding a root for a
+            // newly-tracked vehicle, updating position in place for one
+            // already tracked (renderer/VehicleFieldRenderer.js's own
+            // setVehicle() never rebuilds an existing entry — see that
+            // file's own header, "stable identity"), and removing
+            // whichever previously-tracked vehicle id is no longer
+            // present (walked out of render range, or the region query
+            // simply no longer returns it). Mirrors
+            // setRemoteSpatialPresence's own "create lazily, update
+            // cheaply, scene add/remove happens HERE" shape one level up
+            // — a collection sync rather than a single-entity upsert,
+            // because unlike a remote participant's own presence, this
+            // facade has no per-vehicle identity to be told about
+            // individually; a caller always knows the whole current set.
+            syncVehicles: (vehicleInstances) => {
+                const nextIds = new Set();
+                for (const instance of vehicleInstances) {
+                    nextIds.add(instance.id);
+                    const alreadyTracked = vehicleFieldRenderer.trackedVehicleIds().includes(instance.id);
+                    const object = vehicleFieldRenderer.setVehicle(instance);
+                    if (object && !alreadyTracked) {
+                        renderer.add(object);
+                    }
+                }
+                for (const id of vehicleFieldRenderer.trackedVehicleIds()) {
+                    if (nextIds.has(id)) {
+                        continue;
+                    }
+                    const object = vehicleFieldRenderer.getObject(id);
+                    if (object) {
+                        renderer.remove(object);
+                    }
+                    vehicleFieldRenderer.removeVehicle(id);
+                }
+            },
             // A pure client rendering preference, exactly like
             // setLocalAvatarVisible — never touches presence sync or
             // the known-remote-avatar set, only which already-built
@@ -465,6 +515,13 @@ export class RenderWorldViewUseCase {
                     }
                 }
                 remoteSpatialPresenceRenderer.dispose();
+                for (const id of vehicleFieldRenderer.trackedVehicleIds()) {
+                    const object = vehicleFieldRenderer.getObject(id);
+                    if (object) {
+                        renderer.remove(object);
+                    }
+                }
+                vehicleFieldRenderer.dispose();
                 renderer.dispose();
             }
         };
