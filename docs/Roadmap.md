@@ -59076,3 +59076,123 @@ this milestone establishes is available to the other two paused World
 View integrations — decentralized lead/material verification, and
 Arweave/Nostr publication distribution — whenever those are picked back
 up.
+
+## 0.9.99 — Decentralized Material Verification World View Integration
+
+The first of the two paused World View integrations 0.9.98 named on its
+own way out. Unlike vehicle mount/dismount, this one turned out not to
+need a new observation seam at all — investigating the existing
+architecture (rather than assuming 0.9.98's own `WorldNavigationSession`
+pattern would repeat unchanged) found that the entire material inspection/
+verification chain already had both an authoritative result *and* a
+presentation surface for it:
+
+```
+WorldEncounterCanvas.js (0.9.3 onward)
+        │
+        │ selectEncounter() → resolveSelection() → refreshMaterialInspection()
+        ▼
+inspectWorldEncounterMaterial()   (0.9.39, unmodified)
+        │
+   loading (0.9.21/0.9.34)   verification (0.9.37/0.9.38/0.9.41/0.9.42)
+        │                              │
+        └──────────────┬───────────────┘
+                        ▼
+        materialInspection = { selection, lead, loading, verification }
+                        │
+                        ▼
+        WorldEncounterCanvas's OWN "Material"/"Verification" panel
+        ( {{ loading.status }} / {{ verification.status }}, unchanged )
+```
+
+`WorldEncounterCanvas` — mounted inside `ui/views/WorldView.js` since
+0.9.17 — has rendered that exact panel since 0.9.39. What was missing was
+never a seam or a UI: it was that `materialSources`/`materialVerifier`,
+both already-existing props on that component (0.9.39/0.9.42), had been
+left at their own default of `null` everywhere this app actually runs.
+`application/WorldEncounterMaterialVerifierRuntimeComposition.js`'s own
+0.9.43 header named the gap by name: "wiring it into `ui/main.js`'s own
+dependency graph... remains a separate, later, unscheduled step." Nobody
+had taken that step. The panel was real, tested, and permanently empty.
+
+**This milestone is composition-root wiring, not new pipeline.**
+`ui/main.js` now calls the two existing, unmodified roots —
+`new LocalWorldEncounterMaterialSource(new LocalStorageProvider())` (the
+same stateless-`localStorage`-wrapper idiom `CreateDiscoveryUseCase`/
+`CreatePublisherUseCase` already use) and
+`composeWorldEncounterMaterialVerifier()` — and provides both app-wide,
+the same convention `worldDiscoverySourceRegistry` itself already
+follows. `ui/views/WorldView.js` injects both (defaulting to `null`,
+never throwing) and hands them straight through as `WorldEncounterCanvas`'s
+own existing props, alongside the `registry` prop it has passed through
+since 0.9.17. Neither file imports, names, or constructs a concrete
+verifier/identity/signature class, a loader, or any inspection logic of
+its own — every fact the panel now shows still comes entirely from the
+0.9.16-through-0.9.43 chain, unmodified.
+
+**Deliberately local-only, matching this chain's own established
+incremental discipline.** `PeerWorldEncounterMaterialSource`, the
+Arweave-backed `.decentralized` material slot, and a live
+`DecentralizedWorldDiscoveryLeadRegistry` fed by real Nostr queries all
+stay unwired this milestone — each is a materially larger, network-facing
+composition decision (relay/gateway configuration, mirroring the same
+kind of choice `peer/RendezvousConfig.js` already isolates) than
+"construct one stateless local source and one already-composed verifier."
+0.9.22 held the identical restraint for loading itself, seven milestones
+before peer/decentralized loading existed at all. A `local`-origin
+selection — anything this replica published itself — now exercises the
+full loading → identity-verification → signature-verification chain end
+to end; a peer- or decentralized-origin selection still resolves to
+`UNAVAILABLE`/`UNVERIFIABLE`, exactly as it always has.
+
+**No new verification semantics, no new UI vocabulary, no polling.**
+This milestone introduces no `TRUSTED`/`UNTRUSTED`/`SAFE`/`UNSAFE`/
+`AUTHENTIC`/`SUSPICIOUS` status of any kind — `WorldEncounterCanvas`'s own
+panel already rendered exactly `loading.status`
+(`WorldEncounterMaterialLoadStatus`) and `verification.status`
+(`WorldEncounterMaterialVerificationStatus`), unchanged, and continues to.
+It adds no observation-bridge module and no interval — material
+verification is a request/response operation lifecycle, not a
+continuously-changing spatial relationship like vehicle proximity
+(0.9.98's own 150ms poll), and `WorldEncounterCanvas`'s own existing
+`refreshMaterialInspection()` (triggered on selection/resolution change,
+never on a timer) already answers it completely.
+
+## What this milestone deliberately does NOT do
+
+No `PeerWorldEncounterMaterialSource`, Arweave/`.decentralized` material
+retrieval, or `DecentralizedWorldDiscoveryLeadRegistry` wiring — see
+"Deliberately local-only," above; a separate, later, unscheduled
+composition-root milestone. No new `application/` observation-bridge
+file — investigating first, rather than assuming one was needed, found
+`inspectWorldEncounterMaterial()` and `WorldEncounterCanvas`'s own
+`refreshMaterialInspection()` already were that boundary. No new UI
+component — `WorldEncounterCanvas`'s own existing Material/Verification
+panel already presented exactly what this milestone's own task asked for
+("what the system actually knows," never a trust judgment), so no
+`MaterialVerificationPanel.js` was built alongside it. No change to
+`ui/views/LiveWorldView.js` (still mounts `WorldEncounterCanvas` with
+`registry` alone) — `/world` is this app's one canonical destination
+(0.9.17); wiring the same collaborators there too is a trivial follow-up,
+left out of this milestone to keep it to the one page the task named. No
+change to any file inside the 0.9.16-through-0.9.43 chain itself.
+
+Tests: a new suite, `tests/WorldViewMaterialVerificationIntegration.test.js`,
+proves the REAL production composition (`LocalWorldEncounterMaterialSource`
++ `composeWorldEncounterMaterialVerifier()`, never fakes) carries a
+genuinely, cryptographically signed local Publication to VERIFIED end to
+end, that tampering with the persisted material after signing is actively
+REJECTED, that a selection naming a Publication this replica never stored
+degrades honestly to UNAVAILABLE/UNVERIFIABLE rather than throwing or
+guessing, that repeated inspection of unchanged material is deterministic,
+and an architectural sweep confirming `ui/main.js` composes the two
+existing roots verbatim (no concrete verifier class named directly, no
+peer/decentralized/lead-registry wiring) and that `ui/views/WorldView.js`
+only forwards them (no inspection/verification call of its own, no new
+trust vocabulary, and the pre-existing `registry` and
+`VehicleInteractionPrompt` wiring left untouched).
+
+Next: the same investigate-before-building discipline this milestone used
+applies again to the second paused integration —
+`PublicationDistributionLifecycle`/Arweave/Nostr publication distribution
+— whenever that is picked back up.

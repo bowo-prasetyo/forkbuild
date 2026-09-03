@@ -82,8 +82,20 @@ async function run() {
             '2. WorldView.js registers WorldEncounterCanvas among its own components');
         assert(worldViewCodeOnly.includes("inject('worldDiscoverySourceRegistry', null)"),
             '3. WorldView.js injects the SAME key ui/main.js provides app-wide, defaulting to null rather than throwing with no provider above it');
-        assert(/<WorldEncounterCanvas\s+:registry="worldDiscoverySourceRegistry"\s*\/>/.test(worldViewCodeOnly),
-            '4. WorldView.js hands the injected registry straight through as WorldEncounterCanvas\'s own registry prop, with no view prop');
+        // 0.9.99 note: the tag itself grew two more already-existing
+        // WorldEncounterCanvas props (materialSources/materialVerifier —
+        // see tests/WorldViewMaterialVerificationIntegration.test.js) and
+        // now spans multiple lines; this assertion still requires no
+        // `view` prop anywhere on the tag and the registry passed through
+        // unchanged.
+        assert(/<WorldEncounterCanvas[\s\S]{0,300}:registry="worldDiscoverySourceRegistry"[\s\S]{0,300}\/>/.test(worldViewCodeOnly),
+            '4. WorldView.js hands the injected registry straight through as WorldEncounterCanvas\'s own registry prop');
+        const worldEncounterCanvasTag = worldViewCodeOnly.slice(
+            worldViewCodeOnly.indexOf('<WorldEncounterCanvas'),
+            worldViewCodeOnly.indexOf('/>', worldViewCodeOnly.indexOf('<WorldEncounterCanvas')) + 2
+        );
+        assert(!/\sview="/.test(worldEncounterCanvasTag),
+            '4b. WorldView.js still passes no view prop to WorldEncounterCanvas');
         assert(/<CollapsibleSection[\s\S]{0,120}title="World Encounters"/.test(worldViewCodeOnly),
             '5. the canvas is mounted inside a "World Encounters" CollapsibleSection, alongside Explore mode\'s existing Nearby sections');
 
