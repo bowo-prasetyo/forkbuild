@@ -62525,3 +62525,153 @@ never deferred. The next genuinely open vehicle question is steering/
 orientation, and only once the driving experience actually calls for it
 — not owed to this line of milestones merely because collision now
 exists.
+
+## 0.9.120 — Vehicle Collision & Movement Audit
+
+0.9.119 built the seam — a mounted vehicle's own `collisionRadius` reaches
+the avatar's existing building/brick and tree constraints — and its own
+closing paragraph already argued that its Section D ("real fixture
+bicycle, real tree, real dismount, real on-foot avatar, one continuous
+session") was the audit a follow-up milestone would otherwise have needed
+to redo. That argument holds for what it covered. It did not cover
+everything a genuine audit of "one collision system now serves two moving
+bodies" should: only ONE approach direction was ever exercised (a real
+tree happened to sit ahead of the fixture bicycle's own forward path); no
+test ever showed the SAME obstacle stopping the bicycle at an equivalent
+gap from more than one side; nothing ever showed retreating from, or
+moving alongside, an obstacle the vehicle was already blocked against;
+building/brick collision (as opposed to tree collision) was proven to
+exist through a fake, always-blocking constraint at the controller layer,
+never through a real brick and a real multi-tick ride; the avatar-equals-
+vehicle-position claim was checked only at each test's own FINAL frame,
+never on every frame along the way; and dismount-after-a-COLLISION-caused
+stop was never itself exercised — 0.9.119's own dismount coverage was a
+byproduct of riding into a tree, not a scenario built to test dismount
+specifically. This milestone closes exactly those gaps, and adds no new
+behavior of any kind:
+
+    Movement Intent
+          |
+    +-----+-----+
+    |           |
+    Avatar    Vehicle
+    |           |
+    Movement  Movement
+    Simulation  Simulation
+    |           |
+    +-----+-----+
+          |
+    Shared Collision Constraints
+          |
+    Final Position
+          |
+    +-----+-----+
+    |           |
+    Avatar    Vehicle
+    position  position
+                |
+          Runtime Instance
+
+Section A (`tests/VehicleCollisionMovementAudit.test.js`) is a literal
+source-order audit: `core/AvatarMovementSimulation.js` still mentions no
+collision vocabulary at all (`obstacle`, `brick`, `AABB`, `collision`,
+`Constraint` — none appear), `AvatarVehicleMovementController#tick()`
+calls `simulateAvatarMovement()` exactly once, and that call's own text
+position in the source precedes both `_movementConstraint.apply(` and
+`_treeConstraint.apply(` — kinematics genuinely never sees a collision
+decision fed back into it, proven as a source fact, not merely inferred
+from passing behavior. Section B proves the boundary itself, entirely at
+the `application/AvatarMovementConstraint.js` layer: a real brick stops
+the bicycle at the identical `BICYCLE_RADIUS`-wide gap whether approached
+from north, south, east, or west (all four gaps equal, within floating
+tolerance); a genuinely diagonal approach, walked in real-sized small
+steps (a single giant leap can legitimately "cut the corner" past a
+diagonal obstacle — that is the axis-separated resolver's own existing,
+correct behavior for one huge step, not a bug), never ends up overlapping
+the obstacle's own combined-radius footprint; a step directly away from
+an obstacle the vehicle is already snug against is completely free; a
+step alongside that same obstacle's own face is also completely free; and
+querying the identical forward step from an already-blocked position
+returns the bit-identical stop every time. Section C re-proves the exact
+same `obstacle face minus BICYCLE_RADIUS` formula through the REAL,
+ticked `AvatarVehicleMovementController` pipeline — not merely the
+constraint layer — over 150 real simulated ticks, checks that Y equals
+raw terrain height (sampled before each tick's own horizontal step, per
+`AvatarVehicleMovementController`'s own 0.9.116 convention) on every
+single one of those ticks regardless of whether that tick was blocked,
+proves the stopped vehicle never advances one unit further under 50 more
+ticks of held forward input, proves holding backward genuinely and
+measurably retreats it, and confirms an unmounted avatar against the SAME
+real brick stops at its own, smaller `AVATAR_COLLISION_RADIUS`. Section D
+confirms MOTORCYCLE/CAR/DRONE still never move even with a real, wired,
+genuinely obstacle-free `movementConstraint` — the type gate alone
+decides this, never collision outcome. Section E is the FLAGSHIP: one
+continuous session — spawn, mount, ride into a real brick, and on EVERY
+single frame (not merely the last one) the avatar's position exactly
+equals the vehicle's own already-constrained position; the stopped
+vehicle stays stable under continued held input; a REAL E-key dismount
+(never a direct field write) lands the avatar beside the vehicle's
+CURRENT, collision-stopped position — the exact runtime-position dismount
+authority `tests/VehicleRuntimeAuthorityAudit.test.js` already
+established, now proven specifically through a collision-caused stop,
+genuinely far from `spawnPosition`/`VehiclePlacement`; the avatar then
+walks away normally, with no stuck state and no silent remount; and
+`id`/`type`/`spawnPosition` survive the entire mount-collide-dismount
+lifecycle unchanged. Section F reconfirms 0.9.119's own architectural
+regression sweep still holds, extended with the collision-RESPONSE
+vocabulary this milestone's own brief explicitly declines to add
+(`sliding`, `bounce`, `momentum`, `friction`, `suspension` — none appear).
+
+This milestone also found, and fixed, one unrelated pre-existing gap:
+`tests/VehicleWorldCollisionConstraint.test.js` (0.9.119) was never added
+to `tests.html`'s own test manifest, so its entire suite silently never
+ran under the browser test runner. Both that file and this milestone's
+own new suite are now registered, in their correct alphabetical position.
+
+**No production code changes.** Every invariant this milestone locks down
+already held under 0.9.119's own implementation — confirmed directly by
+temporarily disabling `AvatarVehicleMovementController#tick()`'s own
+`_movementConstraint` branch and observing this milestone's own Section C
+correctly fail, then restoring it. This file is the audit itself, not a
+fix: `application/AvatarVehicleMovementController.js`,
+`application/AvatarMovementConstraint.js`, `core/AvatarCollision.js`, and
+`core/AvatarMovementSimulation.js` are all byte-for-byte unchanged.
+
+Deliberately not attempted, matching the brief this milestone was given:
+sliding, bouncing, momentum, friction, mass, impact forces, damage,
+rotation, suspension, or wheel collision as a response to contact — a
+vehicle simply cannot occupy an invalid position, and that remains
+exactly enough. Vehicle orientation/steering, vehicle-vs-vehicle
+collision, a rectangular or oriented footprint, terrain-based vehicle
+collision (slopes, ramps), and any new obstacle kind beyond the trees/
+bricks/buildings the avatar already collides with are equally untouched.
+
+### Recommendation
+
+    World Collision           vehicle constrained by trees/bricks/
+                              buildings                              (0.9.119)
+            v
+    Collision & Movement      every invariant locked down as a
+    Audit                     regression suite, zero behavior change (this milestone)
+            v
+    Vehicle Orientation       the bicycle visually faces the
+                              direction it is travelling             (next)
+            v
+    Vehicle Steering Intent   a held turn key becomes a requested
+                              heading, independent of movement
+            v
+    Vehicle Steering
+    Simulation                the requested heading actually steers
+                              the ridden vehicle
+
+Collision has now been directly exercised against rendering, mounting,
+movement, dismounting, and runtime identity, from every approach
+direction that matters, at both the constraint and the full-pipeline
+layer — the seam 0.9.119 opened is provably stable. The bicycle still
+behaves like a point translating through the world with no facing of its
+own; orientation is the next genuinely open, user-visible question, and
+only orientation — not steering, which needs a real heading to steer
+FROM first. I would not fold orientation and steering into one milestone:
+each deserves its own seam, exactly as this line of milestones has
+treated every other movement dimension (speed, collision radius,
+direction, acceleration, braking) as its own, separately-landed concern.
