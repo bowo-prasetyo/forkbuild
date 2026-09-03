@@ -59803,3 +59803,138 @@ becomes a thin initiator calling `publicationDistributionCommand()`
 (provided here), while the Distribution panel 0.9.100 already built
 becomes the observer. Composition-root signer/relay configuration remains
 that milestone's own decision to make, not this one's.
+
+## 0.9.104 — World View Publication Distribution Action
+
+The seam 0.9.103 built and deliberately left unreachable. This milestone
+closes the loop 0.9.102's own diagram opened with: a "Distribute
+Publication" action on `WorldEncounterCanvas`'s own existing Distribution
+panel, calling exactly one caller-injected function with the currently
+selected Publication, while the panel's own already-existing lifecycle
+observation (0.9.100, unmodified) renders whatever fact that call
+actually produces.
+
+    WorldEncounterCanvas
+         │  selected, materially-loaded Publication
+         │  click "Distribute Publication"
+         ▼
+    distributionCommand(publication)        (new prop, caller-injected)
+         │
+         ▼
+    ui/views/WorldView.js#distributeWorldEncounterPublication()
+         │  { publication, serializedMaterial }
+         ▼
+    publicationDistributionCommand()         (0.9.103, unmodified)
+         │
+         ▼
+    PublicationDistributionResult | null, or a rejection
+         │
+         ▼
+    (recorded into publicationDistributionLifecycleStore by 0.9.103's
+     own command — WorldEncounterCanvas never touches the store directly)
+         │
+         ▼
+    distributionLifecycle subscription        (0.9.100, unmodified)
+         │
+         ▼
+    the SAME Distribution panel, observing a real new fact
+
+**`distributionCommand` is the entire request-building boundary — the
+component supplies nothing but the Publication itself.** `WorldEncounterCanvas`
+never decides what `serializedMaterial` is, never picks a `materialStorage`
+tag, and never supplies `arweaveUploaderOptions`/`nostrPublisherOptions` —
+those stay entirely the injected function's own concern. The component's
+one new computed, `distributablePublication`, reads the exact same
+`Publication` domain object 0.9.39's own material inspection already loads
+(`materialInspection.loading.material`, when `loading.status` is
+`AVAILABLE` for the currently selected PUBLICATION encounter) — no second
+fetch, no second material source.
+
+**Execution is ephemeral UI state, never a third lifecycle value.**
+`distributionExecuting`/`distributionError` are page-local `data()`
+fields — an idle → executing → idle transition the component owns purely
+to disable the button while a call is in flight and hold a plain-text
+notice for a genuine failure. Neither is ever written into
+`PublicationDistributionLifecycle.js`'s own `ABSENT`/`PRESENT` vocabulary,
+and this milestone introduces no `INITIATED`/`RUNNING`/`COMPLETED`/`FAILED`
+state anywhere. A resolved call's own result is never inspected by the
+click handler — whatever fact it actually produced reaches the panel
+exclusively through the existing `distributionLifecycleStore` subscription,
+exactly the same "the UI never manufactures a success fact" restraint the
+milestone's own request insisted on.
+
+**A genuine rejection — or a synchronous construction throw — becomes one
+plain notice, never a reclassified domain result.** `distributeSelectedPublication()`
+wraps the call in `Promise.resolve().then(...)` specifically so a
+SYNCHRONOUS throw (e.g. `distributionCommand`'s own collaborator rejecting
+still-missing signer/relay configuration before ever returning a promise —
+see 0.9.103's own "synchronous validation, synchronous throw") is caught
+exactly the same way an asynchronous rejection would be. Both become the
+identical generic "Distribution could not be completed." text; the
+component never inspects an error's own message to decide a more specific
+notice.
+
+**`ui/views/WorldView.js#distributeWorldEncounterPublication()` — the one
+new piece of composition-root wiring.** A thin wrapper around the
+app-wide `publicationDistributionCommand` (0.9.103, unmodified),
+supplying exactly one additional field the bare `Publication` doesn't
+carry: `serializedMaterial`, this replica's own `JSON.stringify(publication.toJSON())`.
+`arweaveUploaderOptions`/`nostrPublisherOptions` are deliberately NOT
+supplied — composing either would mean either genuine wallet/key
+management or a live relay choice, both explicitly out of scope for this
+milestone (no wallet/signer UI, no relay selection UI, no distribution
+configuration UI). Clicking the action in the currently running app
+therefore reaches the REAL command boundary, the REAL orchestrator, and
+the REAL lifecycle store — 0.9.103's own construction validation still
+throws synchronously for the still-missing configuration, and
+`WorldEncounterCanvas`'s own error handling surfaces that honestly rather
+than pretending the feature is complete. Wiring real signer/relay
+configuration in remains a separate, later milestone's own decision.
+
+**Repeated clicks never start a second, overlapping call.** The action is
+disabled the moment a call starts (`:disabled="!distributablePublication
+|| distributionExecuting"`), and the method itself re-checks
+`distributionExecuting` before ever calling `distributionCommand` — a
+double guard this file needed nowhere else, because nothing else in it
+was ever a fire-and-forget async action a Wanderer could double-click.
+
+**A `distributionRequestId` counter guards against a stale response**,
+mirroring `materialInspectionRequestId` (0.9.39) exactly, one layer over:
+switching the selected encounter, or unmounting, invalidates any
+still-in-flight call so its eventual resolution can never write ephemeral
+state for a selection (or a component instance) that has since moved on.
+
+The flagship test (`tests/WorldViewPublicationDistributionActionIntegration.test.js`)
+drives the real, unmodified `executePublicationDistributionCommand()` →
+`orchestratePublicationDistribution()` → executor chain, with fake
+signer/gateway/relay collaborators standing in only for the network
+boundary, and confirms the Distribution panel observes the resulting fact
+entirely through 0.9.100's own existing subscription — the first
+genuinely user-reachable Arweave/Nostr Publication Distribution path in
+this codebase.
+
+### What this milestone deliberately does NOT do
+
+No Arweave client, Nostr client, or orchestrator/executor constructed by
+`WorldEncounterCanvas` or `WorldView.js` — both call exactly one function
+each was handed. No lifecycle store writes, transitions, or descriptions
+performed by either file — that stays entirely `publicationDistributionCommand`'s
+(0.9.103's) own job. No distribution-management UI: no history, retry,
+cancel, progress percentage, transaction explorer, relay browser, relay
+selection, or wallet/signer UI. No new lifecycle vocabulary. No signer/
+relay configuration at the composition root — the action is wired to the
+real command boundary today, honestly incomplete (a synchronous throw,
+caught and surfaced as one plain notice) until a later, separate
+milestone supplies real credentials.
+
+### Recommendation
+
+With this milestone running, Arweave/Nostr Publication Distribution is no
+longer merely code sitting behind a missing seam — it is reachable from a
+real World View click, through a real command, a real orchestrator, and a
+real lifecycle store, observed by the panel 0.9.100 already built. The
+one thing still standing between this and an end user actually completing
+a distribution is signer/relay configuration — wallet integration and
+relay selection are both real, separate, larger design decisions, not
+mechanical wiring. That is the natural next milestone to reassess, once
+this one has had a chance to be used.
