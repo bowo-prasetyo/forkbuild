@@ -115,6 +115,7 @@ import { PublicationDistributionLifecyclePersistence } from '../application/Publ
 import { PublicationDistributionLifecyclePersistenceBridge } from '../application/PublicationDistributionLifecyclePersistenceBridge.js';
 import { PublicationDistributionLifecycleRestorer } from '../application/PublicationDistributionLifecycleRestorer.js';
 import { hydratePublicationDistributionLifecycles } from '../application/PublicationDistributionLifecycleHydration.js';
+import { executePublicationDistributionCommand } from '../application/PublicationDistributionCommand.js';
 
 const identityProvider = new CreateIdentityProviderUseCase().execute();
 const identityUseCase = new IdentityUseCase(identityProvider);
@@ -1402,6 +1403,35 @@ for (const { publicationId } of restoredPublicationDistributionLifecycles) {
     publicationDistributionLifecyclePersistenceBridge.observe(publicationId);
 }
 app.provide('publicationDistributionLifecycleStore', publicationDistributionLifecycleStore);
+
+// 0.9.103 — Publication Distribution Command Boundary.
+// The 0.9.100 wiring immediately above provides OBSERVATION of whatever
+// distribution lifecycle already exists; nothing before this point in the
+// file ever produces a new one. `executePublicationDistributionCommand()`
+// (0.9.103, unmodified) is that missing production seam —
+// `orchestratePublicationDistribution()` (0.9.58) plus routing its result
+// into this SAME `publicationDistributionLifecycleStore` instance, so a
+// distribution any future caller commands through it is observable through
+// the exact store `WorldEncounterCanvas` already watches. Provided the same
+// way `publicationDistributionLifecycleStore` itself is, immediately above,
+// for a future World View action to `inject()` — this file wires no such
+// action yet; see this milestone's own header, "Deliberately excluded...
+// a UI trigger of any kind."
+//
+// NEITHER AN ARWEAVE UPLOADER NOR A NOSTR PUBLISHER IS CONSTRUCTED HERE,
+// EITHER — the identical restraint the 0.9.100 wiring immediately above
+// already holds, unrevisited by this milestone. `arweaveUploaderOptions`/
+// `nostrPublisherOptions` remain per-call arguments a future caller of
+// `publicationDistributionCommand` supplies itself; this composition root
+// makes no signer/relay configuration decision on anyone's behalf.
+// `publicationDistributionLifecycleStore` is the one collaborator bound
+// here, via a thin closure, purely so a future caller never has to thread
+// the app's own store instance through by hand.
+const publicationDistributionCommand = (request) => executePublicationDistributionCommand({
+    ...request,
+    lifecycleStore: publicationDistributionLifecycleStore
+});
+app.provide('publicationDistributionCommand', publicationDistributionCommand);
 
 app.use(router);
 app.mount('#app');
