@@ -107,6 +107,12 @@ function canvasCtx(overrides = {}) {
         distributionLifecycle: null,
         unsubscribeDistributionLifecycle: null,
         refreshDistributionLifecycle: WorldEncounterCanvas.methods.refreshDistributionLifecycle,
+        // 0.9.101 — refreshDistributionLifecycle() now calls the shared
+        // stopSubscription() helper instead of repeating its own
+        // unsubscribe-and-clear idiom inline; this fake context needs it
+        // too, the same way it already needs every other collaborator
+        // method above.
+        stopSubscription: WorldEncounterCanvas.methods.stopSubscription,
         ...overrides
     };
     ctx.effectiveView = WorldEncounterCanvas.computed.effectiveView.call(ctx);
