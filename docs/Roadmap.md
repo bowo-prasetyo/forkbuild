@@ -66407,3 +66407,197 @@ into decentralized distribution: return to vehicle/world-interaction
 work, or pick up the Signed Claim counterpart named above, based on
 which seam gives ForkBuild the most value next — not simply because the
 Snapshot distribution infrastructure happens to already be there.
+
+## 0.9.142 — World View Snapshot Discovery Command
+
+0.9.141's own "Recommendation" declined to schedule a follow-up
+automatically, naming the choice explicitly as a human reassessment:
+return to vehicle/world-interaction work, or extend decentralized
+distribution further. That reassessment landed on neither option named
+there — it landed on the OTHER half of decentralized Snapshot handling
+that had quietly gone unbuilt while distribution matured: discovery.
+`application/DecentralizedSnapshotResolver.js` (0.9.134) has answered
+"can a Snapshot for this contentHash be discovered, retrieved, and
+verified" — Nostr discovery, locator resolution, content retrieval, hash
+verification, all four layers, never collapsed into one status — since
+before Snapshot DISTRIBUTION was ever reachable from the UI. Nothing has
+ever called it outside its own test suite. This milestone is the
+"application command boundary" seam that closes that gap, mirroring
+`application/DiscoverWorldEncounterPublicationCommand.js` (0.9.111), the
+identical seam already built for Publication discovery one family over.
+
+```text
+World View
+    │
+    ▼
+Discover Snapshot
+    │
+    ▼
+Snapshot Discovery Command
+    │
+    ▼
+DecentralizedSnapshotResolver
+    │
+    ├── Nostr discovery
+    ├── locator resolution
+    ├── content retrieval
+    └── hash verification
+    │
+    ▼
+Snapshot resolution result
+```
+
+### Only the discovery command — attribution stays a separate seam
+
+Snapshot discovery and Snapshot attribution/verification remain two
+separate seams, deliberately not collapsed into one milestone:
+
+```text
+Q1: What Snapshot locations have been announced?        DISCOVERY
+Q2: Can one of those locations provide valid bytes?     RESOLUTION + VERIFICATION
+Q3: Does this verified Snapshot belong to this
+    Publication?                                        ATTRIBUTION
+```
+
+`DecentralizedSnapshotResolver` already answers Q1+Q2. This milestone's
+new `application/DiscoverSnapshotCommand.js` is a pure assembly boundary
+over it — it forwards `discoveryTag`/`contentHash`/`contentStore`/
+`storeRegistry` to `resolver.resolve()` verbatim and returns that same
+`{ outcome, bytes, candidates, locator, storage, reason }` result
+unmodified. It introduces no `MATCHED`/`ATTRIBUTED`/`OWNED`/`TRUSTED`/
+`AUTHENTIC` vocabulary — only the already-established
+`DecentralizedSnapshotResolutionOutcome` values (`RESOLVED`,
+`NOT_DISCOVERED`, `STORE_UNAVAILABLE`, `CONTENT_UNAVAILABLE`,
+`CONTENT_HASH_MISMATCH`) ever reach a caller. Q3 — comparing a resolved
+Snapshot's own hash against `Publication.contentReference.hash` — remains
+entirely unbuilt, a separate, later, unscheduled milestone ("0.9.143 —
+Snapshot Attribution," a boring `publication.contentReference.hash ===
+resolvedSnapshot.hash` comparison, no Nostr, no Arweave, no discovery, no
+cryptography, no ranking, no trust model, no mutation).
+
+### `contentHash` is always an explicit input, never guessed
+
+`application/DiscoverSnapshotCommand.js` never imports `publisher/
+Publication.js` and never searches Nostr for "whatever looks relevant."
+The one place a `Publication`'s own `contentReference.hash` is read is
+`ui/views/WorldView.js`'s own new `discoverOwnSnapshot(publication)`
+wrapper — the identical "turn 'which publication' into 'which X'" role
+`distributeWorldEncounterSnapshot()` already plays for distribution, one
+family over. A discovered candidate naming a DIFFERENT contentHash than
+the one requested is never treated as a match — `resolve()` only ever
+resolves against candidates whose own `contentHash` equals the requested
+one; an unrelated candidate under the same `discoveryTag` correctly
+reports `NOT_DISCOVERED`, not a fabricated near-match (see this
+milestone's own `tests/WorldViewOwnPublicationSnapshotDiscovery.test.js`,
+Section D, for a Publication claiming a hash nothing ever announced).
+
+### Runtime composition — the same graceful-degradation shape as distribution
+
+`application/DiscoverSnapshotRuntimeComposition.js` mirrors `application/
+SnapshotDistributionRuntimeComposition.js` (0.9.137) exactly: it turns
+`{ arweaveContentStoreOptions, nostrSnapshotDiscoveryQueryServiceOptions }`
+into `{ resolver, contentStore }`, each independently `null` when its own
+host capability is absent, never a throw and never a summary
+`available` boolean collapsing the two. `resolver` depends only on a
+usable `queryImpl` — never also on `contentStore` — because
+`DecentralizedSnapshotResolver`'s own constructor requires only a query
+service; a host with working Nostr query but no Arweave signer still gets
+a real resolver whose `resolve()` calls genuinely complete DISCOVERY and
+honestly report the pre-existing `STORE_UNAVAILABLE` for LOCATION,
+exactly the structural distinction 0.9.134 already named and this
+milestone refuses to blur (`tests/DiscoverSnapshotRuntimeComposition.test.js`,
+Section F).
+
+`ui/main.js` wires this composition the same way it already wires Snapshot
+distribution — `arweaveHostSigner` is the SAME instance already resolved
+from `window.arweaveWallet` for both prior distribution families, never a
+second read of that host capability. `nostrSnapshotDiscoveryQueryServiceOptions.queryImpl`
+is deliberately omitted: querying a Nostr relay (send `REQ`, collect
+`EVENT`, stop at `EOSE`) is a fundamentally different capability from
+PUBLISHING one (NIP-07 `signEvent`, already wrapped for distribution), and
+no host-reachable implementation of it exists anywhere in this codebase
+yet — the identical, already-documented gap this file's own 0.9.110
+comment names for Publication discovery's own `nostrQueryImpl`. So, as of
+this milestone, `composeDiscoverSnapshotRuntime()` gracefully resolves
+`resolver: null` in the running application, exactly as 0.9.110's own
+composition already gracefully resolves `nostr: null` — the "Discover
+Snapshot" action is genuinely wired end to end (command, composition,
+UI, tests all real and passing against real Arweave/Nostr fakes), but
+will honestly report failure in the live app until a future milestone
+supplies a real relay-query capability. This is not a new gap introduced
+here; it is the same, already-accepted shape 0.9.110/0.9.111 shipped for
+the sibling feature one family over.
+
+### `ui/components/OwnPublicationPanel.js` — Discover Snapshot
+
+A second, independent action on the same "even with zero peers" surface
+0.9.140 already built: "Discover Snapshot," reachable beside "Distribute
+Snapshot," with its own entirely separate ephemeral state
+(`snapshotDiscoveryExecuting`/`snapshotDiscoveryError`/
+`snapshotDiscoveryResult`/`snapshotDiscoveryRequestId`) so the two actions
+never clobber one another's in-flight/result state, reset on the same
+Publication-change the distribution fields already reset on. Disabled
+whenever there is no local Publication yet, or the Publication has never
+been placed (no `contentReference` yet — nothing to discover). The result
+panel renders `DecentralizedSnapshotResolutionOutcome`'s own vocabulary
+verbatim (`Outcome`/`Reason`/`Locator`), never a re-described status.
+
+`WorldEncounterCanvas`'s own selected-Publication surface is a natural
+second entry point for the identical command (mirroring how Snapshot
+DISTRIBUTION eventually gained two entry points, 0.9.138 then 0.9.140) —
+deliberately not built this milestone, to keep this a single, provable
+vertical slice; a follow-up convergence audit, if a second entry point is
+ever added, is the natural place to prove "two entry points, one command"
+the way 0.9.141 already did for distribution.
+
+### What this milestone deliberately does NOT do
+
+- **Snapshot–Publication attribution of any kind.** No comparison of a
+  resolved Snapshot's own hash against `Publication.contentReference.hash`,
+  no `MATCHED`/`OWNED`/`ATTRIBUTED` vocabulary. See "0.9.143 — Snapshot
+  Attribution," above — a separate, later, unscheduled milestone.
+- **Any change to `DecentralizedSnapshotResolver.js`, `application/
+  NostrSnapshotDiscoveryQueryService.js`, `application/
+  NostrSnapshotDiscoveryPublisher.js`, `application/
+  SnapshotDistributionCommand.js`, `application/
+  SnapshotDistributionRuntimeComposition.js`, or `content/
+  ArweaveContentStore.js`.** All six remain completely unmodified — this
+  milestone only builds an assembly boundary and a composition root over
+  them, exactly as 0.9.111/0.9.110 already did for Publication discovery.
+- **A real, host-reachable Nostr relay-query implementation.** See
+  "runtime composition," above — building a genuine NIP-01 WebSocket
+  `REQ`/`EVENT`/`EOSE` client is a materially larger, separate,
+  unscheduled feature; this milestone wires the seam that will consume
+  one the moment it exists.
+- **A `SnapshotPlacementStoreRegistry` wiring for discovery.** This
+  milestone passes an explicit `contentStore` (the same Arweave capability
+  already resolved for distribution) directly to `resolve()`'s own
+  per-call option — never a registry — mirroring `application/
+  DecentralizedSnapshotResolver.js`'s own header, "reuses
+  `SnapshotPlacementStoreRegistry.js`... never a NEW registry," extended
+  here to mean "a caller may also simply supply an explicit store."
+- **A second entry point on `WorldEncounterCanvas.js`.** See "Discover
+  Snapshot," above — `WorldEncounterCanvas.js` is completely untouched by
+  this milestone.
+- **Retry, caching, ranking, or automatic failover across discovered
+  candidates.** All of that remains entirely `DecentralizedSnapshotResolver.js`'s
+  own, unmodified, deliberate exclusion.
+
+### Recommendation
+
+```text
+0.9.137  Snapshot Distribution Runtime Composition               ✓
+0.9.138  World View Snapshot Distribution Action                 ✓
+0.9.139  Snapshot Distribution End-to-End Runtime & UI Audit      ✓
+0.9.140  Own Publication Distribution Entry Point                 ✓
+0.9.141  Distribution Entry-Point Convergence Audit                ✓
+0.9.142  World View Snapshot Discovery Command                     ✓
+```
+
+`DecentralizedSnapshotResolver` is no longer reachable only from its own
+test suite — a real user, with zero peers and an empty World Encounters
+panel, can click "Discover Snapshot" on their own Publication and get back
+an honest, structural outcome. The natural next step is 0.9.143 — Snapshot
+Attribution, the small, boring hash comparison this milestone's own
+header names — but per this codebase's own established rhythm, that
+remains the next milestone's own decision to schedule, not this one's.

@@ -504,6 +504,16 @@ export default {
         // below, for how the two are used together.
         const snapshotDistributionCommand = inject('snapshotDistributionCommand', null);
         const publicationCatalogContentResolver = inject('publicationCatalogContentResolver', null);
+        // 0.9.142 — World View Snapshot Discovery Command. The SAME
+        // app-wide `discoverSnapshotCommand` `ui/main.js` now composes
+        // (0.9.142's own `composeDiscoverSnapshotRuntime()`, sequenced by
+        // `executeDiscoverSnapshotCommand()`) — a thin `(discoveryTag,
+        // contentHash, ...) -> Promise<{ outcome, bytes, candidates,
+        // locator, storage, reason }>` capability, injected here so
+        // `discoverOwnSnapshot()` below can call it. See that function's
+        // own header for how "which publication" becomes "which
+        // contentHash."
+        const discoverSnapshotCommand = inject('discoverSnapshotCommand', null);
         // 0.9.110 — Decentralized Material Retrieval Runtime Composition.
         // The SAME app-wide `DecentralizedWorldDiscoveryLeadRegistry`
         // `ui/main.js` now composes, handed straight through as
@@ -842,6 +852,44 @@ export default {
                 return Promise.reject(new Error('Snapshot distribution is not available.'));
             }
             return snapshotDistributionCommand(JSON.stringify(snapshotJson));
+        }
+
+        // 0.9.142 — World View Snapshot Discovery Command. The one thing
+        // standing between `OwnPublicationPanel`'s own new
+        // `discoverSnapshotCommand` prop (a plain `(publication) ->
+        // Promise<{ outcome, bytes, candidates, locator, storage,
+        // reason }>` function) and the app-wide `discoverSnapshotCommand`
+        // injected above: that command's own full shape
+        // (`executeDiscoverSnapshotCommand({ discoveryTag, contentHash,
+        // resolver, contentStore })`) takes an explicit `contentHash`,
+        // never a `Publication` domain object — `discoveryTag`/`resolver`/
+        // `contentStore` are already bound in by `ui/main.js`'s own
+        // composition, so this function's only job is turning "which
+        // publication" into "which contentHash."
+        //
+        // `contentHash` COMES FROM THE PUBLICATION'S OWN, ALREADY-COMPUTED
+        // `contentReference.hash` — NEVER RE-DERIVED, NEVER GUESSED, AND
+        // NEVER AN OPEN-ENDED SEARCH. This function never calls
+        // `publicationCatalogContentResolver.resolve()`, never computes a
+        // content hash of its own, and never asks the injected command to
+        // search Nostr for "whatever looks relevant" — see `application/
+        // DiscoverSnapshotCommand.js`'s own header, "contentHash is always
+        // an explicit, caller-supplied input." A Publication that has
+        // never been placed (no `contentReference` yet) has nothing to
+        // discover, so this function rejects rather than guessing.
+        //
+        // NEVER CONSTRUCTS `DecentralizedSnapshotResolver`/
+        // `NostrSnapshotDiscoveryQueryService`/`ArweaveContentStore`, AND
+        // NEVER CALLS `executeDiscoverSnapshotCommand()`/
+        // `composeDiscoverSnapshotRuntime()` DIRECTLY. This function calls
+        // exactly one thing: the already-composed `discoverSnapshotCommand`
+        // injected above — the same restraint `distributeWorldEncounterSnapshot()`
+        // already holds, one action over.
+        function discoverOwnSnapshot(publication) {
+            if (!discoverSnapshotCommand || !publication || !publication.contentReference) {
+                return Promise.reject(new Error('Snapshot discovery is not available.'));
+            }
+            return discoverSnapshotCommand(publication.contentReference.hash);
         }
 
         // 0.9.111 — World View Decentralized Publication Retrieval.
@@ -3178,7 +3226,8 @@ export default {
             saveActiveDocument,
             publishActiveDocument,
             distributeWorldEncounterPublication,
-            distributeWorldEncounterSnapshot
+            distributeWorldEncounterSnapshot,
+            discoverOwnSnapshot
         };
     },
     template: `
@@ -3242,6 +3291,7 @@ export default {
                     v-if="cameraPosition"
                     :publication="ownPublication"
                     :snapshotDistributionCommand="distributeWorldEncounterSnapshot"
+                    :discoverSnapshotCommand="discoverOwnSnapshot"
                 />
             <!-- 0.5.7 — World View UX & Progressive Exploration. Home
                  and Locations stay plain navigation utilities; Explore /
