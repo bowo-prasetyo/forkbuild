@@ -64611,3 +64611,240 @@ test-only: naming a boundary and building across it are two different
 kinds of work, and conflating them is how the boundary stops being
 trustworthy documentation and starts being an implementation detail
 nobody can cleanly audit later.
+
+## 0.9.132 — Arweave Snapshot Content Store
+
+0.9.131 named, and proved already held, the boundary between SIGNED
+CLAIM distribution and SNAPSHOT distribution — and closed with a direct
+recommendation: "Option A — `ArweaveContentStore`: a real `content/
+ContentStore.js` backed by Arweave, registered into
+`SnapshotPlacementStoreRegistry` exactly like `content/
+IpfsContentStore.js` already is." This milestone is that file:
+`content/ArweaveContentStore.js`, the first ever concrete implementation
+of the third `ContentStore` `content/ContentStore.js`'s own 0.2.14 header
+named directly as future work ("Future implementations: IPFSContentStore,
+ArweaveContentStore, HttpContentStore") — and the exact tripwire 0.9.131's
+own point 5 test set for itself the moment this file would exist.
+
+```text
+Snapshot
+   │
+   │ content bytes
+   ▼
+ArweaveContentStore
+   │
+   │ injected signer / gateway capabilities
+   ▼
+Arweave
+   │
+   ▼
+Arweave snapshot locator (ar://<transaction-id>)
+```
+
+The crucial distinction 0.9.131 already drew stays exactly as drawn —
+this milestone crosses the boundary in one place only, never widens it:
+
+```text
+                 Publication
+                      │
+          ┌───────────┴───────────┐
+          ▼                       ▼
+    Signed Claim              Snapshot
+          │                       │
+          ▼                       ▼
+      Arweave              ArweaveContentStore   ★ (THIS)
+          │                       │
+          ▼                       ▼
+       Nostr                  Snapshot locator
+     discovery
+```
+
+There is no arrow from `ArweaveContentStore` to Nostr. There is no arrow
+from it to `PublicationSnapshotPlacement`'s own signing/catalog machinery
+either — `ArweaveContentStore` is a plain `content/ContentStore.js`
+implementation, `put(bytes) -> ContentReference` / `get(reference) ->
+bytes` / `has(reference) -> boolean`, exactly as interchangeable with
+`content/IpfsContentStore.js` as that file already is with `content/
+LocalContentStore.js`.
+
+### The identity rule this milestone treats as flagship
+
+```text
+contentReference.hash
+        ≠
+Arweave transaction ID
+        ≠
+material URI (a Signed Claim's own, unrelated ar:// fact)
+```
+
+`put()` computes its returned `ContentReference`'s `hash` locally, from
+the bytes this replica is looking at — the identical `computeContentHash()`
+every other `ContentStore` in this codebase already uses — and only ever
+puts the Arweave transaction id into `uri`, one retrieval mechanism among
+however many a `ContentReference` may carry. `contentReference.hash` stays
+the one fact 0.9.131's own point 1 proved a claim's distribution and a
+snapshot's placement could ever share; the transaction id this file
+produces is emphatically not that fact, and nothing in this file treats it
+as one. tests/ArweaveContentStore.test.js's own Section A and SEQUENCE
+assert this directly: the hash computed before placement, immediately
+after placement, and after a full round-trip retrieval are the identical
+value throughout.
+
+### Reusing the existing Arweave capability boundary, not duplicating it
+
+`arweave/ArweaveInjectedProviderSigner.js` (0.9.121) already produces
+exactly the shape this file's own `signer` constructor parameter
+requires — `{ sign(material) -> Promise<{ id, transaction }> }` — the
+same contract `application/ArweavePublicationMaterialUploader.js` (0.9.45)
+already consumes on the Signed Claim side. `content/ArweaveContentStore.js`
+imports NEITHER of them: it never imports `arweave/
+ArweaveInjectedProviderSigner.js` (a caller wires a concrete signer in
+from outside, at a composition root this milestone deliberately does not
+build), and it never imports `application/
+ArweavePublicationMaterialUploader.js` either — the two consumers share a
+capability shape, never a code path, so browser-specific wallet APIs stay
+confined to whichever host adapter a future milestone wires in, and
+neither Arweave-facing family becomes coupled to the other's own
+composition.
+
+```text
+UI                                     (unbuilt this milestone)
+ │
+ ▼
+composition                            (unbuilt this milestone)
+ │
+ ├──────────────► ArweaveContentStore
+ │                         │
+ │                         ▼
+ │                injected signer contract
+ │                (arweave/ArweaveInjectedProviderSigner.js, unmodified)
+ │
+ └──────────────► existing claim distribution
+                  (application/PublicationDistribution*, unmodified)
+```
+
+`put()` never returns `null` or a fake `ContentReference` — it succeeds
+or throws, the identical contract `content/IpfsContentStore.js#put()`
+already holds, and a deliberate departure from `application/
+ArweavePublicationMaterialUploader.js#upload()`'s own `null`-on-gateway-
+failure vocabulary: that file serves a caller whose own result shape
+already has room for an absent `material`, `content/ContentStore.js`'s
+own contract does not. Every network-shaped failure (`put()` or `get()`)
+throws the SAME `content/IpfsContentStore.js#ContentUnavailableError`
+every other concrete store in this codebase already throws — never a new,
+store-specific error class nothing else recognizes. A genuine signer
+failure propagates completely unwrapped, and a signer that resolves but
+violates its own `{ id, transaction }` contract throws a plain `Error`
+instead — a bug in how the store was wired, never a fact about Arweave's
+own gateway, the identical distinction `application/
+ArweavePublicationMaterialUploader.js`'s own header already draws.
+
+### Tests
+
+`tests/ArweaveContentStore.test.js` — deterministic, network-free,
+covering: the flagship put()/get() round trip and hash-vs-locator
+identity (Section A); no caching/dedup, one stable hash across two
+independent placements (Section B); signer delegation — the signed
+transaction, never raw bytes, is POSTed, and construction without a
+valid signer throws (Section C); locator semantics — a non-`ar://`
+reference is simply not this store's content, never an error (Section D);
+failure propagation for a signer rejection, a transport failure, and a
+non-2xx gateway response, on both `put()` and `get()`, plus `has()`
+degrading to `false` (Section E); a signer violating its own contract
+throwing rather than faking success (Section F); an oversized `get()`
+response rejected by declared `Content-Length` and by actual decoded
+body size independently (Section G); a structural no-coupling sweep of
+this file's own source proving it never references the Signed Claim
+family, Nostr, or the placement orchestration layer, plus a live
+`SnapshotPlacementStoreRegistry.register()` proving it plugs in exactly
+like `content/IpfsContentStore.js` already does (Section H); and a
+flagship SEQUENCE — a snapshot's bytes hashed before placement, placed,
+retrieved purely by its own locator, re-hashed identically, and proven
+resolvable even after a second, unrelated placement genuinely fails
+against an overloaded gateway.
+
+`tests/SnapshotDistributionBoundary.test.js`'s own point 5 — the exact
+tripwire 0.9.131 set for itself — is updated in place rather than left to
+rot: it no longer asserts `content/ArweaveContentStore.js` doesn't exist
+(it now does), and instead asserts the boundary held anyway — the new
+store is not auto-wired into any composition root, `content/
+ContentStore.js` itself still constructs nothing, and a claim's own
+Arweave `material.uri` stays unreachable through
+`SnapshotPlacementStoreRegistry` unless a caller explicitly, separately
+registers this exact store — which the same point now also demonstrates
+working, exactly like every other `ContentStore` already does, proving
+this is a genuine, interchangeable plugin, never a special case. Every
+other point (1-4) and the file's own flagship SEQUENCE are unchanged and
+still pass, unmodified.
+
+### What this milestone deliberately does NOT do
+
+Matches `docs/Roadmap.md`'s own 0.9.131 closing list, narrowed to exactly
+one new file:
+
+- **No composition wiring.** Nothing in this codebase's own runtime
+  composition (`ui/main.js`, `application/
+  CreateSnapshotPlacementOrchestratorUseCase.js`'s own callers) passes an
+  `ArweaveContentStore` into `stores` — 0.9.131's own point 5 test now
+  proves that directly. A caller opts in explicitly, later, exactly as
+  wiring in `content/IpfsContentStore.js` already requires.
+- **No Nostr snapshot announcement or discovery.** A `PublicationSnapshotPlacement`'s
+  own discovery stays peer-based (`application/
+  PublicationSnapshotPlacementDiscoveryCoordinator.js`, 0.8.19) — this
+  file is a storage adapter, never a discovery path.
+- **No automatic replication, synchronization, provider selection,
+  storage ranking, or retry policy.** `put()`/`get()` each issue exactly
+  one gateway request, fresh, matching `application/
+  ArweavePublicationMaterialUploader.js`'s and `application/
+  ArweaveWorldEncounterMaterialResolver.js`'s own identical restraint.
+- **No new snapshot lifecycle states, automatic Signed Claim
+  generation/distribution, or change to IPFS/local storage behavior.**
+  `content/IpfsContentStore.js` and `content/LocalContentStore.js` are
+  read only, by this milestone's own test suite, never edited.
+- **No UI, no new verification/trust semantics, no Arweave-specific logic
+  in a core domain object.** `core/ContentReference.js`, `core/
+  PublicationSnapshotPlacement.js`, and every file under `publisher/`
+  are unmodified.
+- **No size ceiling of its own on outgoing content.** The injected
+  `signer` already owns that decision (`arweave/
+  ArweaveInjectedProviderSigner.js`'s own `MAX_SINGLE_CHUNK_BYTES`
+  throws for material it cannot single-chunk) — the same "transaction-
+  shape knowledge lives with whoever signs" restraint held one layer
+  earlier; this file only ever bounds what it will read back on
+  retrieval.
+
+### The resulting architectural rule
+
+A Snapshot can now actually be placed on Arweave without knowing anything
+about Signed Claims or Nostr — not merely "in principle," as 0.9.131 left
+it, but with a real, tested `ContentStore` a caller can register today.
+And, unchanged: a Signed Claim can continue to be distributed through
+Arweave/Nostr without knowing anything about Snapshot storage — 0.9.131's
+own contract test, re-run unmodified except for its own point 5 tripwire,
+still proves it.
+
+### Recommendation
+
+Two narrower seams remain, and I would not fold them into this one:
+
+```text
+0.9.133 — Snapshot Location Discovery via Nostr: a completely separate,
+          snapshot-specific discovery path — explicitly NOT a reuse of
+          application/NostrPublicationDiscoveryPublisher.js, per 0.9.131's
+          own point 4 — for a caller who wants a Snapshot placed on
+          Arweave to also be FINDABLE without the peer-based coordinator
+          already covering that case.
+
+0.9.134 — Composition wiring: actually constructing an
+          ArweaveInjectedProviderSigner and an ArweaveContentStore
+          together at a real composition root (ui/main.js or a sibling),
+          registering it into a real orchestrator's own `stores` list —
+          the one step this milestone's own point 5 test explicitly
+          proves is still NOT taken.
+```
+
+I would keep these as two separate milestones, for the same reason
+0.9.131 kept claim distribution and snapshot placement apart: wiring a
+capability in and teaching the world how to discover it are two
+different kinds of work, and building both in one milestone is how a
+later bug becomes hard to attribute to either.

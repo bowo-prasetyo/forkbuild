@@ -233,7 +233,8 @@ const SNAPSHOT_PLACEMENT_FILES = [
     'application/PublicationSnapshotPlacementExchange.js',
     'content/ContentStore.js',
     'content/IpfsContentStore.js',
-    'content/LocalContentStore.js'
+    'content/LocalContentStore.js',
+    'content/ArweaveContentStore.js'
 ];
 
 async function run() {
@@ -316,29 +317,49 @@ async function run() {
         console.log('✓ 4. no file in the Snapshot Placement family references Nostr — placing a snapshot is never itself a discovery announcement');
     }
 
-    // 5 — no ArweaveContentStore exists yet, and a claim's Arweave
-    // material is never reachable through SnapshotPlacementStoreRegistry.
+    // 5 — 0.9.132 filled the boundary this point originally named as
+    // still-empty: content/ArweaveContentStore.js now exists. What this
+    // point still proves, unchanged in spirit, is that its EXISTENCE
+    // alone changes nothing about the boundary — it is not auto-wired
+    // into any composition root, content/ContentStore.js still
+    // constructs nothing itself, and a claim's own Arweave material is
+    // still never reachable through SnapshotPlacementStoreRegistry
+    // unless a caller explicitly, separately registers this exact store.
     {
-        assert(!(await fileExists('content/ArweaveContentStore.js')), '5a. no content/ArweaveContentStore.js exists yet — this milestone names the boundary, it does not fill it');
+        assert(await fileExists('content/ArweaveContentStore.js'), '5a. content/ArweaveContentStore.js exists as of 0.9.132 — the boundary named at 0.9.131 is now filled in exactly the one place that milestone\'s own header said it should be');
         const contentStoreSource = await codeOnlySource('content/ContentStore.js');
-        assert(!contentStoreSource.includes('ArweaveContentStore'), '5b. content/ContentStore.js itself constructs no ArweaveContentStore — it remains an abstract base only');
+        assert(!contentStoreSource.includes('ArweaveContentStore'), '5b. content/ContentStore.js itself still constructs no ArweaveContentStore — it remains an abstract base only');
 
-        const { alice, publication, discoveryProvider, contentResolver } = publishLocally('No Arweave Content Store Yet');
-        const { result: claimResult } = await distributeClaim(publication, { transactionId: 'NoArweaveContentStoreTx00000000000001', relayHandler: () => ({ published: true, id: 'b'.repeat(64) }) });
-        assert(claimResult.material.storage === 'ar', '5c. sanity: the claim really was distributed onto the "ar" storage label');
+        const { ArweaveContentStore } = await import('../content/ArweaveContentStore.js');
+        const arweave = new ArweaveContentStore({
+            signer: { sign: async () => ({ id: 'BoundaryPoint5FillerTxId0000000000001', transaction: {} }) },
+            fetchImpl: async () => new Response('accepted', { status: 200 })
+        });
+        assert(arweave.storage === 'ar', '5c. the new store self-identifies with the SAME "ar" storage label the claim family\'s own material.storage already uses — the scheme is shared, the referent is not (see this file\'s own header, point 5)');
+
+        const { alice, publication, discoveryProvider, contentResolver } = publishLocally('Arweave Content Store Exists But Is Not Auto-Wired');
+        const { result: claimResult } = await distributeClaim(publication, { transactionId: 'ArweaveContentStoreExistsTx00000000001', relayHandler: () => ({ published: true, id: 'b'.repeat(64) }) });
+        assert(claimResult.material.storage === 'ar', '5d. sanity: the claim really was distributed onto the "ar" storage label');
 
         // The registry a real composition root actually builds
         // (application/CreateSnapshotPlacementOrchestratorUseCase.js)
-        // only ever gets whatever `stores` a caller passes it — and no
-        // caller anywhere in this codebase passes an 'ar' store, because
-        // none exists.
+        // only ever gets whatever `stores` a caller EXPLICITLY passes it
+        // — content/ArweaveContentStore.js existing changes nothing here,
+        // because no caller anywhere in this codebase's own production
+        // composition passes one in automatically.
         const registry = new SnapshotPlacementStoreRegistry();
         const placementCatalog = new LocalPublicationSnapshotPlacementCatalog(new InMemoryStorageProvider());
         const orchestrator = new CreateSnapshotPlacementOrchestratorUseCase().execute({ discoveryProvider, contentResolver, placementCatalog, identityProvider: alice, stores: [] });
-        assert(orchestrator.storeRegistry.get('ar') === null, '5d. SnapshotPlacementStoreRegistry has no store registered for "ar" — the claim\'s own material.uri is not resolvable as a snapshot locator through this registry');
-        assert(registry.get('ar') === null, '5e. ...true of a freshly constructed registry too, not merely this one orchestrator instance');
+        assert(orchestrator.storeRegistry.get('ar') === null, '5e. SnapshotPlacementStoreRegistry still has no store registered for "ar" when no caller passes one — the claim\'s own material.uri is not resolvable as a snapshot locator through this registry merely because ArweaveContentStore now exists somewhere in the codebase');
+        assert(registry.get('ar') === null, '5f. ...true of a freshly constructed registry too, not merely this one orchestrator instance');
 
-        console.log('✓ 5. no ArweaveContentStore exists, and a claim\'s own Arweave material is unreachable through the snapshot placement registry');
+        // Registering it explicitly works exactly like every other
+        // ContentStore already does — proving this store is a genuine,
+        // interchangeable plugin, never a special case.
+        const wiredOrchestrator = new CreateSnapshotPlacementOrchestratorUseCase().execute({ discoveryProvider, contentResolver, placementCatalog: new LocalPublicationSnapshotPlacementCatalog(new InMemoryStorageProvider()), identityProvider: alice, stores: [arweave] });
+        assert(wiredOrchestrator.storeRegistry.get('ar') === arweave, '5g. once a caller explicitly registers content/ArweaveContentStore.js, SnapshotPlacementStoreRegistry resolves "ar" to it — exactly the same opt-in wiring content/IpfsContentStore.js already requires, never automatic');
+
+        console.log('✓ 5. content/ArweaveContentStore.js now exists, is not auto-wired anywhere, and a claim\'s own Arweave material stays unreachable through the snapshot placement registry unless a caller opts in explicitly');
     }
 
     // ===============================================================
@@ -401,7 +422,7 @@ async function run() {
         } catch (error) {
             placementThrew = true;
         }
-        assert(placementThrew, 'SEQ. independence 2: placing onto an unregistered "arweave" storage name fails, exactly as documented (no ArweaveContentStore is ever registered)');
+        assert(placementThrew, 'SEQ. independence 2: placing onto an unregistered "arweave" storage name fails — this orchestrator\'s own stores list never included one, exactly as documented (content/ArweaveContentStore.js exists as of 0.9.132, but nothing here registered it)');
         assert(claimResult.material.uri === 'ar://FlagshipClaimTransactionId000000000001', 'SEQ. independence 2: the original claim\'s own material fact is untouched by the failed placement attempt');
         assert(claimResult.discovery.id === 'c'.repeat(64), 'SEQ. independence 2: ...and its discovery fact too — nothing about it was ever mutated');
 
