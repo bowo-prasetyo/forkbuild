@@ -65296,3 +65296,228 @@ and reassess before scheduling 0.9.136 — composition wiring into World
 View or any UI is a genuinely new kind of decision (who decides a
 Snapshot should be globally announced at all), better made deliberately
 than as a default next milestone.
+
+## 0.9.135 — End-to-End Decentralized Snapshot Distribution Audit
+
+0.9.131 named the boundary between Signed Claim distribution and Snapshot
+distribution. 0.9.132 built the placement half of a genuinely
+decentralized Snapshot path (`content/ArweaveContentStore.js`). 0.9.133
+built the discovery half (`application/NostrSnapshotDiscoveryPublisher.js`
+/ `NostrSnapshotDiscoveryQueryService.js`, `core/
+SnapshotDiscoveryEnvelope.js`). 0.9.134 connected the two
+(`application/DecentralizedSnapshotResolver.js`). Each of those four
+milestones tested its own new seam in isolation. This milestone tests
+nothing new — a test-only audit, exactly as 0.9.124, 0.9.129, and 0.9.130
+were — proving the complete chain those four milestones assembled still
+behaves as ONE continuous pipeline, and that none of the boundaries they
+drew have quietly collapsed:
+
+```text
+Snapshot
+     │ content bytes
+     ▼
+ArweaveContentStore.put()
+     │
+     ▼
+contentReference
+     │
+     ├── hash ─────────────────────────┐
+     │                                 │
+     └── ar:// locator                 │
+                                       ▼
+                     NostrSnapshotDiscoveryPublisher
+                                       │
+                                       ▼
+                                    Nostr
+                                       │
+                                       ▼
+                     NostrSnapshotDiscoveryQueryService
+                                       │
+                                       ▼
+                       DecentralizedSnapshotResolver
+                                       │
+                                       ▼
+                     SnapshotPlacementStoreRegistry
+                                       │
+                                       ▼
+                          ArweaveContentStore
+                                       │
+                                       ▼
+                            Snapshot bytes
+                                       │
+                                       ▼
+                       computeContentHash()
+                                       │
+                                       ▼
+                                    MATCH
+```
+
+The final assertion `tests/SnapshotDistributionAudit.test.js`'s own
+Section A establishes is exactly `originalSnapshot.hash ===
+resolvedSnapshot.hash` — driven through a single `resolve()` call that
+receives only a `discoveryTag` and a `contentHash`, never the locator
+itself, so the resolved locator can only have arrived by actually
+travelling through discovery. A shared call-order log threaded through
+both the fake Arweave gateway and the fake Nostr relay proves, positively,
+that the Nostr query happens before the Arweave retrieval inside that one
+call — DISCOVERY strictly precedes RETRIEVAL, never the reverse.
+
+### Eight sections, each a distinct claim about the pipeline
+
+`tests/SnapshotDistributionAudit.test.js` is organized as sections A
+through H, each proving one claim this milestone's own header names —
+deliberately not a re-run of any one prior milestone's own test under a
+new file name:
+
+```text
+A. Complete placement -> discovery -> retrieval -> verification, in one
+   resolve() call, with the locator proven to have travelled through
+   discovery rather than being passed to the resolver directly.
+B. Identity separation — contentReference.hash, the Arweave transaction
+   id, and the Nostr event id are three distinct identifiers for one
+   Snapshot identity, never collapsed into one, and never multiplied into
+   several identities merely because a Snapshot was announced twice.
+C. Candidate preservation — H -> L1, L2, L3 are all preserved on the
+   result, and resolution is proven deterministic-first-match rather than
+   "best match": a second, independently verified, genuinely valid
+   candidate is never even consulted once the first one succeeds.
+D. The failure matrix — DISCOVERY, LOCATION, RETRIEVAL, and VERIFICATION
+   failures are four pairwise-distinct outcomes, produced in that exact
+   order, and no layer's failure carries evidence of having gotten
+   further than it did.
+E. False discovery, given special emphasis (its own section, not folded
+   into D) — Nostr discovery is evidence about a LOCATION, never evidence
+   that the location holds the expected content. Retrieval is proven,
+   via an instrumented store, to have genuinely run exactly once before
+   verification rejects the result.
+F. Failure independence, three ways — Signed Claim distribution,
+   direct-storage Snapshot retrieval with Nostr broken, and decentralized
+   Snapshot placement all fail independently, in both directions, against
+   ONE shared publication and re-checked baseline.
+G. Structural boundary audit (source-scanning) — DecentralizedSnapshotResolver.js
+   imports nothing from Signed Claim distribution, UI, or wallet code;
+   NostrSnapshotDiscoveryPublisher.js never imports the Signed Claim
+   family's own Nostr publisher or a concrete host adapter;
+   ArweaveContentStore.js stays ignorant of Nostr and of everything built
+   on top of it.
+H. No implicit application wiring — `ui/main.js` never references
+   ArweaveContentStore, NostrSnapshotDiscoveryPublisher,
+   NostrSnapshotDiscoveryQueryService, or DecentralizedSnapshotResolver,
+   even though this same test's own Section A already proved the whole
+   chain is explicitly composable by any caller who chooses to.
+```
+
+### Section F in detail — three families sharing substrates, never state
+
+Section F is this milestone's own extension of 0.9.131's flagship
+independence proof, carried into the new decentralized material:
+
+```text
+Alice publishes a Document -> Publication
+     │
+     ├── Signed Claim distribution        Decentralized Snapshot
+     │   (Arweave material + Nostr        (ArweaveContentStore +
+     │    discovery, 0.9.44-0.9.122)       NostrSnapshotDiscoveryPublisher,
+     │                                     0.9.132-0.9.134)
+     │        │                                  │
+     │        ▼                                  ▼
+     │   both fail independently           both succeed, then:
+     │   of the Snapshot side's                  │
+     │   own success/failure              Nostr is broken; the
+     │                                     Arweave content is
+     │                                     re-resolved through the
+     │                                     DIRECT storage path
+     │                                     (SnapshotPlacementStoreRegistry
+     │                                     -> ArweaveContentStore),
+     │                                     completely intact
+     │
+     └── contentReference.hash — still the one fact both sides trace
+         back to, exactly as 0.9.131 first proved
+```
+
+Both families genuinely reach the same physical substrates — Arweave,
+Nostr — yet a broken relay, a down gateway, or a failed signer on one
+side never once touches the other's own already-established facts. The
+shared infrastructure never becomes shared semantic state.
+
+### What this milestone deliberately does NOT do
+
+No production file changes — `docs/Roadmap.md` (this entry), `tests.html`
+(one new registration), and `tests/SnapshotDistributionAudit.test.js` are
+the only files touched, the identical posture 0.9.131, 0.9.129, and
+0.9.130 already held for their own audit milestones.
+
+- **No new resolver, publisher, envelope, or outcome enum.** Every class
+  this test drives — `content/ArweaveContentStore.js`, `application/
+  NostrSnapshotDiscoveryPublisher.js`, `application/
+  NostrSnapshotDiscoveryQueryService.js`, `application/
+  SnapshotPlacementStoreRegistry.js`, `application/
+  DecentralizedSnapshotResolver.js`, `application/
+  DecentralizedSnapshotResolutionOutcome.js`, `core/
+  SnapshotDiscoveryEnvelope.js` — is read only, exercised through its own
+  existing public contract, never edited.
+- **No composition wiring into World View, `ui/main.js`, or any UI.**
+  Section H proves this remains true after four milestones of new
+  decentralized material; see 0.9.134's own "what this milestone
+  deliberately does not do" for why that decision stays deferred.
+- **No automatic retry, failover, ranking, or trust scoring.** Section C's
+  own flagship negative — a second, genuinely valid, never-attempted
+  candidate — is the proof, not merely a restated rule.
+- **No re-litigating 0.9.131's own CONTRACT/SEQUENCE sections.**
+  `tests/SnapshotDistributionBoundary.test.js` needed no changes and is
+  not re-run by this file; Section F extends its independence proof into
+  the new decentralized material rather than repeating what it already
+  established for the peer-based Snapshot Placement family.
+
+### The resulting architectural rule
+
+Four milestones of new decentralized-distribution material — placement,
+discovery, resolution, and now this audit — leave the two subsystems
+0.9.131 first named exactly as separate as they were before any of it
+existed, while proving, for the first time in one continuous test, that
+the new material genuinely composes into the single pipeline its own
+milestones always described only in isolation: a Snapshot can be placed
+once, on Arweave, and thereafter found, retrieved, and cryptographically
+verified by any caller holding nothing but a `discoveryTag` and a
+`contentHash` — never trusting discovery as verification, never trusting
+a first-found candidate as a "best" one, and never coupling any of it to
+Signed Claim distribution or to any composition root.
+
+### Recommendation
+
+```text
+0.9.131  Snapshot Distribution Boundary                    ✓
+0.9.132  ArweaveContentStore                                ✓
+0.9.133  Nostr Snapshot Location Discovery                  ✓
+0.9.134  Decentralized Snapshot Retrieval                   ✓
+0.9.135  End-to-End Decentralized Snapshot Distribution     ✓
+         Audit
+```
+
+The decentralized Snapshot path — place, announce, discover, locate,
+retrieve, verify — is now a stable, independently audited checkpoint. I
+would not automatically proceed to 0.9.136. The next decision is whether
+this infrastructure needs an actual application-level use case:
+
+```text
+Option 1 — Integrate decentralized Snapshot retrieval into an existing
+           material-loading workflow, if a real consumer exists.
+Option 2 — Integrate decentralized Snapshot publication into a real
+           publication workflow, if automatic placement is genuinely
+           wanted — a real product decision this codebase has never
+           made, per 0.9.134's own "what this milestone deliberately
+           does not do."
+Option 3 — Return to the vehicle subsystem (0.9.125-0.9.130), now that
+           the decentralized Snapshot architecture has reached a stable
+           checkpoint.
+Option 4 — Introduce explicit multi-candidate failover only if a real
+           use case demonstrates first-match resolution is insufficient
+           — Section C's own flagship negative is the reason this stays
+           unbuilt until a real need, not a hypothetical one, demands it.
+```
+
+I would not schedule any of these as a default next milestone. Four
+consecutive infrastructure milestones plus this audit is enough new
+capability accumulated ahead of an actual consumer; the risk from here is
+building further decentralized machinery faster than the application
+has a genuine use for it, not a gap in what already exists.
