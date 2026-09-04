@@ -66125,3 +66125,143 @@ limitation of ForkBuild is, rather than what decentralized infrastructure
 can be built next. That is a genuine decision point between returning to
 the vehicle/world-interaction work and extending decentralized
 distribution further — not one this milestone should preempt.
+
+## 0.9.140 — Own Publication Distribution Entry Point
+
+0.9.139's own audit proved that "Distribute Snapshot" (0.9.138) is real,
+correct, and reachable — but reachable only through one path: select a
+PUBLICATION marker in `WorldEncounterCanvas`'s own World Encounters panel.
+That panel only ever shows something once a Publication has both a
+`WorldPlacement` AND is currently loaded/nearby (`core/WorldEncounter.js`'s
+own "an encounter requires a present-tense location" rule) — in practice,
+almost always because a connected peer's own presence brought it into
+view. A solo user with zero connected peers sees an empty World Encounters
+panel and, until this milestone, had no way to distribute their OWN
+Snapshot at all, even though nothing about Snapshot distribution — see
+`application/SnapshotDistributionCommand.js`'s own header — ever required
+a peer, a marker, or a selection in the first place:
+
+```text
+BEFORE (0.9.138)                        AFTER (0.9.140)
+
+peer/marker present                     local Publication exists
+       ↓                                        ↓
+World Encounters non-empty              OwnPublicationPanel (new, WorldView.js)
+       ↓                                        ↓
+selectedEncounter                       distributeOwnSnapshot()
+       ↓                                        ↓
+"Distribute Snapshot" reachable         snapshotDistributionCommand(publication)
+                                                 ↓  (the SAME injected command
+                                                 ▼   0.9.138's own action already calls)
+                                         Arweave placement -> Nostr announcement
+```
+
+This milestone is a second, independent entry point to the exact same
+command boundary — never a change to it. `ui/components/OwnPublicationPanel.js`
+(new) receives two things from its host, both already-existing facts: the
+local user's own current `Publication` (`application/
+WorldNavigationSession.js`'s own new `getPublicationForDocument(documentId)`,
+resolved for whichever document `ui/views/WorldView.js` already tracks as
+`activeDocumentId`) and the SAME `snapshotDistributionCommand` closure
+`ui/views/WorldView.js`'s own `distributeWorldEncounterSnapshot()` already
+wraps around `publicationCatalogContentResolver` for 0.9.138's own action.
+Nothing about the command, the runtime composition
+(`application/SnapshotDistributionRuntimeComposition.js`), the bytes-
+resolution mechanism, or `WorldEncounterCanvas.js` itself changes — all
+four are untouched by this milestone.
+
+### `getPublicationForDocument` — one new query, reusing an existing reduction
+
+`WorldNavigationSession.js` already computed "the most recently published
+Publication for this documentId" THREE separate times internally
+(`getPublicationIdForDocument`, `_checkForkPolicy`,
+`_resolvePublicationForPlacement`) but never exposed the actual object to
+a caller outside the session — only `getPublicationIdForDocument` was
+public, and only ever returned a bare id. `getPublicationForDocument(documentId)`
+is a one-line public wrapper around the already-existing
+`_resolvePublicationForPlacement()` — the identical reduction, not a
+fourth one — returning the real `Publication` domain object (title,
+author, `contentReference`, `id`) a caller can hand straight to
+`snapshotDistributionCommand` the same way `WorldEncounterCanvas`'s own
+`distributablePublication` already does for a selected encounter.
+
+### A completely separate surface, deliberately never folded into World Encounters
+
+The task's own framing named the trap directly: "do not solve the
+empty-panel problem by inserting the local publication into World
+Encounters." `OwnPublicationPanel` is mounted in `ui/views/WorldView.js`
+beside Save/Publish/Move Placement — never inside the Explore-mode
+"Nearby" section `WorldEncounterCanvas` lives in, and never gated on
+`primaryMode`. It owns its own ephemeral `snapshotDistributionExecuting`/
+`snapshotDistributionError`/`snapshotDistributionResult`/
+`snapshotDistributionRequestId` state, mirroring `WorldEncounterCanvas`'s
+own identical fields for the Snapshot family (0.9.138) exactly, one
+surface over — the two panels distribute different Publications and must
+never share (or clobber) each other's in-flight/result state. A changed
+`publication` prop (a different document became active, or the active
+fork got published) resets that state exactly the way a fresh
+`selectedEncounter` already resets `WorldEncounterCanvas`'s own.
+
+### The flagship test
+
+`tests/WorldViewOwnPublicationDistribution.test.js`'s own Section D drives
+the scenario 0.9.138 could never exercise — zero connected peers, an
+empty World Encounters panel, and no `WorldDiscoverySourceRegistry` of any
+kind in scope — and still reaches the real chain:
+
+```text
+local Publication only (no registry, no peer, no encounter, no selection)
+     │
+     ▼  OwnPublicationPanel click -> distributeOwnSnapshot()
+     ▼  distributeWorldEncounterSnapshot()          -> Arweave placement
+     ▼  executeSnapshotDistributionCommand()        -> Nostr announcement
+     ▼  NostrSnapshotDiscoveryQueryService + DecentralizedSnapshotResolver
+        (0.9.133/0.9.134, unmodified)                -> discovery -> retrieval
+     ▼  computeContentHash()                         -> verification
+same original Snapshot bytes
+```
+
+Section J adds the structural regression 0.9.139's own precedent would
+call for: `OwnPublicationPanel` is mounted before (outside) the
+Explore/Map/Places primary-mode toolbar and before the World Encounters
+section in `ui/views/WorldView.js`'s own template, and `WorldEncounterCanvas.js`
+carries no reference to it at all.
+
+### What this milestone deliberately does NOT do
+
+- **Change `SnapshotDistributionCommand.js`, `SnapshotDistributionRuntimeComposition.js`,
+  `ArweaveContentStore.js`, `NostrSnapshotDiscoveryPublisher.js`, or
+  `WorldEncounterCanvas.js`.** All five remain completely unmodified.
+- **A "Distribute Signed Claim" entry point, or any merging of the
+  Snapshot and Signed Claim distribution families.** This milestone adds
+  an own-material entry point for the Snapshot family alone, matching
+  0.9.138's own scope exactly, one surface over.
+- **A generic "publication owner" abstraction, or making the local user
+  appear as a fake World Encounter/marker.** See "A completely separate
+  surface," above — the task's own named trap.
+- **A lifecycle store, persistence, retry, cancel, progress percentage,
+  distribution history, or any distribution-configuration UI.** None of
+  those exist for either existing distribution action either.
+- **Any change to which document is "active."** `OwnPublicationPanel`
+  never decides that itself — it only ever renders whatever `publication`
+  prop `ui/views/WorldView.js` hands it.
+
+### Recommendation
+
+```text
+0.9.135  End-to-End Decentralized Snapshot Distribution         ✓
+         Audit
+0.9.136  Snapshot Distribution Command                          ✓
+0.9.137  Snapshot Distribution Runtime Composition               ✓
+0.9.138  World View Snapshot Distribution Action                 ✓
+0.9.139  Snapshot Distribution End-to-End Runtime & UI Audit      ✓
+0.9.140  Own Publication Distribution Entry Point                 ✓
+```
+
+Distributing your own material no longer accidentally depends on peer
+presence. I would pause here rather than schedule 0.9.141 preemptively —
+per this milestone's own task framing, the next milestone is a genuine
+reassessment (returning to vehicle/world-interaction work, or extending
+decentralized distribution further — e.g. a "Distribute Signed Claim"
+counterpart to this same own-material entry point), not one this
+milestone should decide on its author's behalf.

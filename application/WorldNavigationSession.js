@@ -5349,6 +5349,24 @@ export class WorldNavigationSession {
         return publication.id;
     }
 
+    // 0.9.140 — Own Publication Distribution Entry Point. The actual
+    // Publication domain object (never just its id) governing
+    // `documentId`, when — and only when — the document is itself a
+    // known, published snapshot. Reuses `_resolvePublicationForPlacement()`
+    // verbatim (the SAME "most recent Publication for this documentId
+    // wins" reduction `getPublicationIdForDocument`, immediately above,
+    // and `_checkForkPolicy` already each perform independently) rather
+    // than introducing a second, competing notion of "the" Publication
+    // for a document. Exists so a caller that needs the OBJECT itself —
+    // World View's own local "distribute my current snapshot" action,
+    // which has no use for a bare id — never has to resolve it through
+    // a discovery provider of its own. null, never throws, for a
+    // document with no known Publication (an unpublished fork, or a
+    // plain loaded document that was never published at all).
+    getPublicationForDocument(documentId) {
+        return this._resolvePublicationForPlacement(documentId);
+    }
+
     // Remaps this session's live references — selection, focus, active
     // document, hover — from the just-superseded source document onto
     // its fork. Bricks get fresh ids on clone (DocumentCloneService),

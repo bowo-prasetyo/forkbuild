@@ -31,6 +31,7 @@ import GeographicPlacePanel from '../components/GeographicPlacePanel.js';
 import CollapsibleSection from '../components/CollapsibleSection.js';
 import WorldFocusPanel from '../components/WorldFocusPanel.js';
 import WorldEncounterCanvas from '../components/WorldEncounterCanvas.js';
+import OwnPublicationPanel from '../components/OwnPublicationPanel.js';
 import VehicleInteractionPrompt from '../components/VehicleInteractionPrompt.js';
 import { CameraPerspective } from '../../core/CameraPerspective.js';
 import { geographicPlaceLocationId } from '../../core/GeographicPlaceNavigation.js';
@@ -72,7 +73,7 @@ export default {
         WorldMembersPanel, WorldPresenceIndicator, WorldCollaboratorIndicator,
         WorldWelcomePanel, WorldMapPanel, PlaceNamingPanel,
         GeographicPlaceDirectoryPanel, GeographicPlacePanel, CollapsibleSection,
-        WorldFocusPanel, WorldEncounterCanvas, VehicleInteractionPrompt
+        WorldFocusPanel, WorldEncounterCanvas, OwnPublicationPanel, VehicleInteractionPrompt
     },
     setup() {
         const route = useRoute();
@@ -123,6 +124,19 @@ export default {
         // layers), not a naming choice made for this milestone.
         const placementInfo = ref(null);
         const activePlacementInfo = ref(null);
+        // 0.9.140 — Own Publication Distribution Entry Point. The actual
+        // Publication (`publisher/Publication.js`) governing the ACTIVE
+        // document — session.getPublicationForDocument(activeId) — when
+        // (and only when) that document is itself a known, published
+        // snapshot. Mirrors activeDocumentInfo/activePlacementInfo's own
+        // "re-read fresh every refreshSpatialUI() tick, never cached"
+        // pattern exactly, one field over. `null` for an unpublished
+        // fork or a document that was never published — OwnPublicationPanel
+        // (below) renders that as "nothing to distribute yet," never a
+        // guess. Deliberately NEVER derived from spatialSelection,
+        // worldDiscoverySourceRegistry, or anything World Encounters
+        // itself produces — see that component's own header for why.
+        const ownPublication = ref(null);
         // 0.2.39 — the Avatar Info panel's data, mirroring documentInfo/
         // placementInfo's own shape: read fresh from session.getAvatarInfo()
         // every refreshSpatialUI(), null whenever there is no current
@@ -1101,6 +1115,10 @@ export default {
                 : null;
             activePlacementInfo.value = (activeId && typeof session.getPlacementInfo === 'function')
                 ? session.getPlacementInfo(activeId)
+                : null;
+            // 0.9.140 — see ownPublication's own ref comment above.
+            ownPublication.value = (activeId && typeof session.getPublicationForDocument === 'function')
+                ? session.getPublicationForDocument(activeId)
                 : null;
             if (activeId && activeId !== route.params.documentId) {
                 router.replace({ path: `/world/${activeId}` });
@@ -3009,6 +3027,7 @@ export default {
             openMetadataEditor,
             placementInfo,
             activePlacementInfo,
+            ownPublication,
             showPlacementEditor,
             placementEditTarget,
             placementOverlapWarning,
@@ -3204,6 +3223,26 @@ export default {
                     >Move Placement</button>
                 </div>
                 <p v-if="author">by {{ author }}</p>
+                <!-- 0.9.140 — Own Publication Distribution Entry Point.
+                     Deliberately mounted here, beside Save/Publish/Move
+                     Placement — never inside the Explore-mode "World
+                     Encounters" section below — so distributing the
+                     local user's own current Snapshot never depends on
+                     primaryMode, on a connected peer, or on World
+                     Encounters having anything to show. Visible whenever
+                     a World is loaded (cameraPosition exists), exactly
+                     like the Home/Locations toolbar immediately below;
+                     ownPublication/distributeWorldEncounterSnapshot are
+                     both described in this file's own setup()-level
+                     comments above. See ui/components/OwnPublicationPanel.js's
+                     own header for why this stays a completely separate
+                     surface from WorldEncounterCanvas's own "Distribute
+                     Snapshot" action. -->
+                <OwnPublicationPanel
+                    v-if="cameraPosition"
+                    :publication="ownPublication"
+                    :snapshotDistributionCommand="distributeWorldEncounterSnapshot"
+                />
             <!-- 0.5.7 — World View UX & Progressive Exploration. Home
                  and Locations stay plain navigation utilities; Explore /
                  Map / Places below are the three PRIMARY, mutually
