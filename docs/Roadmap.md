@@ -64419,3 +64419,195 @@ narrowing the open question from "is the architecture ready for more
 steering work" (0.9.127/0.9.129 already answered yes) to "is the CURRENT
 control scheme itself good enough to ship as-is" — and the answer, on the
 evidence this milestone's own contract and flagship test produced, is yes.
+
+## 0.9.131 — Snapshot Distribution Boundary
+
+0.9.44 through 0.9.122 built, and then explicitly closed, an entire
+subsystem for distributing a SIGNED CLAIM — `publisher/Publication.js`'s
+own signed record — onto Arweave (its serialized bytes, via
+`application/ArweavePublicationMaterialUploader.js`) and announcing that
+onto Nostr (`application/NostrPublicationDiscoveryPublisher.js`),
+sequenced by `application/PublicationDistributionExecutor.js` into one
+`PublicationDistributionResult` whose own header already insists
+`material` and `discovery` stay two independent, independently-absent
+facts. Separately, and much earlier, 0.8.18 built an entire subsystem for
+distributing a SNAPSHOT — the actual World content a publication's own
+`contentReference.hash` names — as an additive, signed `core/
+PublicationSnapshotPlacement.js` locator, resolved independently by
+`application/SnapshotPlacementResolver.js` against whichever `content/
+ContentStore.js` a `application/SnapshotPlacementStoreRegistry.js` names
+for that placement's own `storage`.
+
+Nothing in this codebase had ever written down that these are two
+DIFFERENT distribution problems, deliberately kept apart — until now, no
+milestone had even named the two halves against each other, let alone
+proven the separation holds. This milestone is that name, plus a
+contract test proving the boundary already stood, unplanned, before this
+milestone ever ran:
+
+```text
+publisher/Publication.js  (signed once, immutable)
+     │
+     ├── SIGNED CLAIM distribution         SNAPSHOT distribution
+     │   (0.9.44-0.9.122)                   (0.8.18+)
+     │        │                                  │
+     │        ▼                                  ▼
+     │   material.uri                    PublicationSnapshotPlacement
+     │   (the claim's OWN                 .locator
+     │   serialized bytes,                (the CONTENT's bytes,
+     │   e.g. ar://TX...)                 e.g. ipfs://Qm...)
+     │        │                                  │
+     │        ▼                                  ▼
+     │   discovery announcement           storeRegistry.get(storage)
+     │   (Nostr — 0.9.46)                 (never Nostr — peer-based,
+     │                                     0.8.19)
+     │
+     └── contentReference.hash — the ONE fact both sides trace back to,
+         and the ONLY thing they share
+```
+
+**The boundary contract**, verified directly by
+`tests/SnapshotDistributionBoundary.test.js`'s own CONTRACT section —
+one check per statement, either structural (sweep the source of the file
+that owns the claim, the same technique
+`tests/PublicationDistributionDescriptor.test.js`'s own Section 8
+established) or behavioral (drive both real pipelines and observe):
+
+```text
+1. A claim's own distributed material.uri and a snapshot's own locator
+   are never the same value, and a placement's contentHash traces to the
+   publication's own contentReference, never to anything the claim
+   distribution pipeline produced.
+2. Distributing a Signed Claim never imports, constructs, or reads
+   anything from the Snapshot Placement family.
+3. Placing or resolving a Snapshot never imports, constructs, or reads
+   anything from the Signed Claim distribution family.
+4. Snapshot placement/resolution never imports or references Nostr — a
+   snapshot's own discovery stays peer-based (0.8.19); placing one is
+   never itself a Nostr announcement.
+5. No ArweaveContentStore exists anywhere in this codebase yet, and a
+   claim's own Arweave material upload is never reachable through
+   SnapshotPlacementStoreRegistry — the ar:// scheme is used by both
+   families, but names two unconnected referents.
+6. Both distributions are independently failable and independently
+   successful, in either direction, within one continuous scenario —
+   neither pipeline's outcome is affected by the other's failure.
+```
+
+Point 5 is the one most worth dwelling on, because it is a genuinely
+falsifiable claim rather than an obvious restatement of "these are
+different files." A grep-backed structural check confirms
+`content/ArweaveContentStore.js` does not exist, and — separately — that
+running a real Signed Claim distribution to `storage: 'ar'` and then
+building a real `SnapshotPlacementStoreRegistry` the way every actual
+composition root in this codebase does (`application/
+CreateSnapshotPlacementOrchestratorUseCase.js`, fed only the concrete
+stores a caller explicitly lists) leaves `registry.get('ar')` returning
+`null`. The two families already share a scheme string — `ar://` — by
+historical accident, not by design; this milestone is what makes that
+coincidence a documented, tested fact rather than a landmine for whoever
+eventually writes `ArweaveContentStore.js`.
+
+**The flagship SEQUENCE test** is the milestone's own centerpiece: one
+publication, distributed as a Signed Claim (Arweave material + Nostr
+discovery, both against fakes) and placed as a Snapshot (a real fake-IPFS
+network, resolved by a second replica who never touches Arweave or Nostr
+at all), in one continuous scenario — then both directions of failure
+independence are exercised against that SAME already-succeeded state,
+never against a fresh, disposable fixture:
+
+```text
+Alice publishes -> distributes claim (material+discovery succeed)
+                 -> places snapshot on IPFS (succeeds)
+                 -> Bob resolves snapshot from catalog+IPFS (succeeds,
+                    byte-identical, no Arweave/Nostr involved)
+                 -> a SECOND claim distribution fails at the material
+                    step -> the already-resolved snapshot is re-resolved,
+                    still perfect
+                 -> placing a SECOND snapshot on an unregistered
+                    "arweave" storage name throws -> the original claim's
+                    material/discovery facts are re-checked, still exactly
+                    what they were
+```
+
+Re-resolving the snapshot and re-reading the claim's own result object
+after each induced failure — rather than merely asserting the failure
+itself occurred — is what actually proves independence: a boundary that
+merely happened not to be exercised yet would still pass a test that only
+checked the failing call's own return value.
+
+### What this milestone deliberately does NOT do
+
+No production file changes. This is a documentation-and-test milestone,
+matching 0.9.130's own precedent: `docs/Roadmap.md` (this entry),
+`tests.html` (one new registration), and
+`tests/SnapshotDistributionBoundary.test.js` are the only files touched.
+Deliberately excluded from this milestone's own scope:
+
+- **`ArweaveContentStore`, or any Arweave-backed `content/ContentStore.js`
+  implementation.** Point 5's own structural check exists precisely to
+  keep this milestone honest about that — naming the boundary is not
+  building across it.
+- **An `ArweaveSnapshotPlacementView`, or any UI surface for placing or
+  resolving a snapshot on Arweave.** Unbuilt, unscheduled.
+- **Nostr-based snapshot discovery of any kind.** Point 4 pins down that
+  the existing peer-based snapshot discovery (`application/
+  PublicationSnapshotPlacementDiscoveryCoordinator.js`, 0.8.19) is
+  untouched and stays the only discovery path a `PublicationSnapshotPlacement`
+  has.
+- **Any change to either family's own files.** Every file this test
+  imports from `application/PublicationDistribution*`,
+  `application/ArweavePublicationMaterialUploader.js`,
+  `application/NostrPublicationDiscoveryPublisher.js`,
+  `core/PublicationSnapshotPlacement.js`, and the entire
+  `content/ContentStore.js` family is read, exercised, and sourced from —
+  never edited.
+- **A unifying abstraction spanning both families** — a generic
+  `DistributionDescriptor`/`DistributionExecutor` that a Signed Claim and
+  a Snapshot would both flow through. The whole point of this milestone is
+  that they should NOT share one, at least not yet; see the diagram above,
+  "the ONLY thing they share" is `contentReference.hash`, not a shared
+  pipeline.
+
+### Recommendation
+
+This milestone settles the question 0.9.122's own closing note left
+unasked: whether ForkBuild's two existing decentralized-distribution
+subsystems (claim distribution, snapshot placement) were ever meant to
+converge. The answer this milestone's own contract test proves is no —
+not yet, and not by accident either, since the separation already held
+before this milestone existed to check it. That leaves the actual
+Arweave-content-storage question open in a narrower, better-scoped form:
+
+```text
+Option A — ArweaveContentStore: a real content/ContentStore.js backed by
+           Arweave, registered into SnapshotPlacementStoreRegistry
+           exactly like content/IpfsContentStore.js already is — the
+           straightforward next step now that point 5's own test pins
+           down there is no existing wiring to conflict with.
+
+Option B — Arweave-side snapshot discovery: extending
+           application/PublicationSnapshotPlacementDiscoveryCoordinator.js's
+           peer-based model, or (more speculatively) a NEW,
+           snapshot-specific Nostr discovery path that is explicitly NOT
+           application/NostrPublicationDiscoveryPublisher.js reused —
+           point 4 above means this would be new code, never a rewire of
+           the existing claim-discovery publisher.
+
+Option C — leave both subsystems exactly as they are, and treat this
+           milestone as documentation-only closure, the same posture
+           0.9.122 already took on the claim side alone.
+```
+
+I would recommend Option A whenever real Arweave-backed snapshot storage
+is actually wanted: `content/IpfsContentStore.js` is the direct template,
+`SnapshotPlacementStoreRegistry` already accepts any `ContentStore` by
+its own `storage` name with zero code change required elsewhere, and this
+milestone's own point 5 test would need updating in exactly one place
+(the `fileExists` check) the moment that file is created — a deliberate
+tripwire, not an oversight. I would not build it in the same milestone as
+this one, for the same reason 0.9.130 kept the bicycle's own contract
+test-only: naming a boundary and building across it are two different
+kinds of work, and conflating them is how the boundary stops being
+trustworthy documentation and starts being an implementation detail
+nobody can cleanly audit later.
