@@ -63553,3 +63553,199 @@ can read that intent alongside movement intent, feed both into vehicle
 movement realization, and let `core/VehicleMovementHeading.js` keep
 resolving heading exactly as it does today — from realized displacement,
 and nothing else.
+
+## 0.9.126 — Vehicle Steering Simulation
+
+0.9.125 gave the driver's request a name and, by its own explicit design,
+stopped there. This milestone is the first place steering intent acquires
+behavioral meaning — but deliberately only ONE new fact: what direction is
+the vehicle now attempting to move in. Whether it actually gets there
+stays entirely downstream, exactly as it already did before this
+milestone:
+
+```text
+VehicleSteeringIntent
+        │
+        ▼
+┌─────────────────────┐
+│ Steering simulation │   (core/VehicleSteeringSimulation.js, new)
+└──────────┬──────────┘
+           │
+           ▼
+ steering-adjusted movement direction
+           │
+           ▼
+ existing movement simulation (core/AvatarMovementSimulation.js, untouched)
+           │
+           ▼
+ collision constraints (application/AvatarMovementConstraint.js, etc., untouched)
+           │
+           ▼
+ realized position
+           │
+           ▼
+ VehicleMovementHeading.resolveVehicleHeadingFromMovement() (untouched)
+           │
+           ▼
+ final heading
+```
+
+**The rule this milestone exists to preserve, unchanged from 0.9.123/0.9.124:**
+steering changes the direction of ATTEMPTED vehicle movement; it does not
+directly set vehicle heading.
+
+```text
+LEFT  ≠ heading - 90 (as a heading mutation)
+RIGHT ≠ heading + 90 (as a heading mutation)
+```
+
+`core/VehicleSteeringSimulation.js`'s one export,
+`resolveVehicleMovementDirectionFromSteering({ previousHeading, steeringIntent, steeringTurnDegrees })`,
+answers only "given a previous heading and a steering request, which
+direction is the vehicle now attempting to move in" — a pure, deterministic
+directional transformation:
+
+```text
+NONE  -> previousHeading, unchanged (the current travel direction)
+LEFT  -> previousHeading, rotated left by steeringTurnDegrees
+RIGHT -> previousHeading, rotated right by steeringTurnDegrees
+```
+
+`steeringTurnDegrees` is one explicit, named, caller-overridable parameter
+(`DEFAULT_VEHICLE_STEERING_TURN_DEGREES`, `45`) rather than an arbitrary
+constant embedded inside a future controller — the identical "name the
+number" discipline every other tunable in this vehicle arc
+(`AvatarVehicleMovementCapability`'s own `movementSpeed`/`acceleration`/
+`braking`/`steering` fields) already follows. RIGHT increases heading,
+LEFT decreases it, matching `application/AvatarMovementController.js`'s
+own existing `turnAxis` sign convention (`right(1) - left(1)`) and
+`core/VehicleMovementHeading.js`'s own degrees representation (0 = +Z,
+90 = +X). The transformation is degrees, matching `VehicleInstance.heading`
+directly — never `core/AvatarMovementSteeringSimulation.js`'s own radians —
+so a caller can feed `VehicleInstance.heading` straight in with no
+conversion.
+
+**Heading is an input to this file, never its output.** Previously,
+movement alone determined heading. Now:
+
+```text
+previous heading + steering intent -> attempted movement direction
+                                            │
+                                            ▼
+                                    actual movement (existing pipeline)
+                                            │
+                                            ▼
+                                       new heading
+```
+
+So `previous heading` no longer automatically becomes `new heading` even
+when steering is held: if the vehicle is blocked, the attempted direction
+this file returns is simply never realized, and
+`core/VehicleMovementHeading.js`'s own "no genuine horizontal movement, no
+new heading" rule (already in force since 0.9.123) leaves heading exactly
+where it was. This milestone adds no new logic to make that true — it was
+already true — this milestone only proves it stays true once an attempted
+direction can genuinely diverge from a vehicle's current heading.
+
+**What this file does NOT do**, matching its own header precisely: mutate
+a `VehicleInstance`, access `VehicleRuntimeInstances` or any runtime
+store, perform collision detection, update `heading` or `position`, know
+about Three.js, or know about the avatar. It imports nothing from
+`core/VehicleInstance.js`, `core/VehicleMovementHeading.js`, or
+`application/VehicleRuntimeInstances.js`, and none of them import it — the
+boundary 0.9.124's own audit proved clean, and 0.9.125 kept clean, stays
+exactly that clean, one file wider. No steering angle as persistent
+vehicle state, no steering wheel angle, no angular velocity, no
+acceleration changes, no turning radius, no wheelbase, no tire friction,
+no banking, no drifting, no momentum, no vehicle physics of any kind —
+the transformation is applied in full, in one call, never smoothed or
+rate-limited across ticks (deliberately unlike
+`core/AvatarMovementSteeringSimulation.js`'s own `resolveMovementHeading()`,
+which governs a completely different concern — the avatar's own rendered
+facing while mounted — and is left entirely untouched).
+
+`tests/VehicleSteeringSimulation.test.js` is the primary suite, in eight
+sections. Section A proves NONE is a pure identity across every heading a
+real ride could already be at — the regression guarantee that
+"existing movement + NONE steering = existing movement semantics."
+Section B proves LEFT's deterministic rotation across cardinal, diagonal,
+and 0/360-boundary headings, plus a caller-supplied `steeringTurnDegrees`.
+Section C mirrors Section B for RIGHT. Section D proves LEFT/RIGHT
+symmetry — both rotate away from a given heading by exactly the same
+magnitude in opposite directions, and LEFT-then-RIGHT (or the reverse)
+always returns to the original heading. Section E proves purity — repeated
+calls with identical inputs are identical, the passed-in
+`VehicleSteeringIntent` is never mutated, and a structural sweep confirms
+no `Math.random`/`Date.now`/timer of any kind. Section F is the flagship
+for no behavioral coupling to `VehicleInstance`: a real vehicle's own
+`heading` is completely unchanged by calling this function, a structural
+sweep confirms the file never references `VehicleInstance`,
+`VehicleRuntimeInstances`, `withHeading`/`setHeading`, or
+`resolveVehicleHeadingFromMovement`, and the module's exports are audited
+exactly. Section G proves collision separation — the function's own arity
+reveals no collision-shaped parameter exists at all, and a structural
+sweep confirms the file never references buildings, trees, terrain,
+collision, obstacles, or any vehicle-physics term. Section H is the
+flagship scenario: intent -> attempted direction -> realized movement ->
+heading, composed from this file plus the existing, untouched
+`resolveVehicleHeadingFromMovement()` alone (no controller, no real
+collision constraint) — an open-path LEFT and RIGHT turn each realize
+their attempted direction as the new heading, and a fully-blocked LEFT
+turn leaves heading completely unchanged even though the attempted
+direction genuinely differed from it, the regression proof that steering
+never becomes a disguised heading setter.
+
+**No production code changes outside the one new file.**
+`core/VehicleSteeringIntent.js`, `core/VehicleMovementHeading.js`,
+`core/VehicleInstance.js`, `application/VehicleRuntimeInstances.js`,
+`application/AvatarVehicleMovementController.js`, and every other existing
+vehicle file are all byte-for-byte unchanged — this milestone does not yet
+wire steering into the real movement pipeline at all.
+
+### What this milestone deliberately does NOT do
+
+No wiring into `application/AvatarVehicleMovementController.js` or any
+other real controller — that stays a later milestone's job (see
+"Recommendation," below). No keyboard, gamepad, or other raw input
+handling producing a `VehicleSteeringIntent` — the vocabulary is usable
+purely programmatically, exactly as 0.9.125 left it. No steering angle,
+rate, turn radius, angular velocity, acceleration, wheelbase, tire
+friction, banking, drifting, or momentum. No collision detection or
+world/terrain awareness. No rendering, persistence, or networking changes.
+
+### Recommendation
+
+```text
+Vehicle Steering Intent   a closed, immutable NONE/LEFT/RIGHT
+                          vocabulary — driver request only,
+                          semantically independent of any vehicle  (0.9.125)
+        v
+Vehicle Steering          a pure, stateless directional transformation —
+Simulation                intent + previous heading -> attempted
+                          direction; only realized displacement still
+                          resolves heading                     (this milestone)
+        v
+Vehicle Steering          wire resolveVehicleMovementDirectionFromSteering()
+Integration Audit         into application/AvatarVehicleMovementController.js
+                          itself: movement intent + steering intent both
+                          feed vehicle movement realization, proven end to
+                          end through the real controller and real
+                          collision constraints, with the "blocked ->
+                          heading unchanged" invariant as its own
+                          flagship regression test
+        v
+Vehicle Steering          decide how A/D, arrow keys, or a controller
+Input                     input produce a VehicleSteeringIntent, once
+                          simulation and integration are both already
+                          proven correct in isolation
+```
+
+I would not add keyboard bindings yet. This milestone proves
+`intent -> simulation -> attempted direction` works correctly in
+isolation; a next milestone should prove
+`attempted direction -> realized movement -> heading` through the REAL
+vehicle pipeline (`application/AvatarVehicleMovementController.js`,
+real collision constraints) before any raw input layer gets to decide
+what a held turn key means. That keeps input mapping, steering semantics,
+and vehicle behavior three separate seams, never letting the keyboard
+layer become the accidental owner of vehicle steering.
