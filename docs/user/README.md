@@ -25,7 +25,9 @@ top-level [docs/](..) folder.
    status (now also reachable through a resolved decentralized lead, not
    only content this device already holds), where that material actually
    came from, its distribution status and a **Distribute Publication**
-   action, and a separate **Discover Publication** search that queries
+   action, a separate, independent **Snapshot Distribution** panel with
+   its own **Distribute Snapshot** action for that publication's Snapshot
+   protocol, and a separate **Discover Publication** search that queries
    Arweave/Nostr directly by publication id and tag — independent of any
    marker or connected peer — letting you inspect and explicitly select a
    verified result found that way.

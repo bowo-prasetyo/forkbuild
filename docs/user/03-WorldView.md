@@ -134,6 +134,23 @@ completed," because no wallet or relay connection is configured yet;
 the button and the attempt are real, the missing piece is host capability,
 not app plumbing.
 
+Right beneath the Distribution block sits a separate **Snapshot
+Distribution** panel with its own **Distribute Snapshot** button — same
+eligibility (it lights up once this device holds the selected
+publication's own material) and the same "real attempt, honest failure"
+behavior, but a different protocol: Snapshots (see
+[Publications & External Evidence](09-PublicationsAndEvidence.md#local-snapshot))
+are placed and discovered independently of Signed Claim distribution, so
+this panel never shares state, history, or a result with the Distribute
+Publication button above it. Clicking it also uploads to Arweave and
+announces over Nostr, then shows exactly what came back: a **Content
+hash**, a **Locator**, and an **Announcement** id — or "No announcement"
+if the Arweave placement succeeded but the Nostr announcement didn't,
+which is reported as a partial result, never an error. A genuine failure
+instead shows a plain "Snapshot distribution could not be completed."
+notice. Neither the button's state nor its result is remembered anywhere
+— selecting a different encounter, or leaving the page, clears it.
+
 ### Discover Publication — searching decentralized networks directly
 
 Still inside the World Encounters group, but needing no marker click and
