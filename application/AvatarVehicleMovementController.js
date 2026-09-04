@@ -3,6 +3,7 @@ import { AvatarMovementState } from '../core/AvatarMovementState.js';
 import { simulateAvatarMovement } from '../core/AvatarMovementSimulation.js';
 import { terrainHeightAt } from '../core/TerrainHeightField.js';
 import { resolveVehicleHeadingFromMovement } from '../core/VehicleMovementHeading.js';
+import { resolveVehicleMovementDirectionFromSteering } from '../core/VehicleSteeringSimulation.js';
 
 // 0.9.116 — Mounted Vehicle Movement.
 //
@@ -104,6 +105,22 @@ import { resolveVehicleHeadingFromMovement } from '../core/VehicleMovementHeadin
 // generic runtime now knows how to hold a VehicleInstance; see
 // docs/Roadmap.md, 0.9.116, "What should happen to the avatar?"/
 // Section H.
+//
+// 0.9.127 — Vehicle Steering Integration Audit. 0.9.125/0.9.126 built a
+// closed steering-intent vocabulary (core/VehicleSteeringIntent.js) and a
+// pure directional transformation over it (core/VehicleSteeringSimulation.js)
+// and deliberately stopped short of ever calling either from here — see
+// that second file's own closing "Recommendation." This is the milestone
+// that wires them in: `tick()` below now accepts an OPTIONAL
+// `steeringIntent`, defaulting to `null` so every existing caller (this
+// file's own real caller, application/WorldNavigationSession.js, until
+// some future input layer starts supplying one — see docs/Roadmap.md,
+// 0.9.127's own "Recommendation" — and every test predating this
+// milestone) is completely unaffected. See `tick()`'s own signature
+// comment, below, for exactly what changes when a real one IS supplied,
+// and this file's own closing 0.9.127 comment for why heading resolution
+// itself needed no change at all to already be correct once steering
+// entered the real pipeline.
 const MOVABLE_VEHICLE_TYPES = new Set([VehicleType.BICYCLE]);
 
 export function isMovableVehicleType(type) {
@@ -204,7 +221,23 @@ export class AvatarVehicleMovementController {
     // cannot jump (see docs/Roadmap.md, 0.9.116's own exclusion list),
     // so this method always simulates with `jumpRequested: false`,
     // regardless of whether Space is currently held.
-    tick({ seed, vehicleId, capability, movementIntent, currentRotationY, deltaSeconds }) {
+    // 0.9.127 — Vehicle Steering Integration Audit. `steeringIntent`
+    // (optional, default `null`) is the ONE new parameter this milestone
+    // adds — a real `core/VehicleSteeringIntent.js` instance, ordinarily
+    // `application/WorldNavigationSession.js`'s own `_vehicleSteeringIntent`
+    // field, reused VERBATIM. `null` (every existing caller, including
+    // every test predating this milestone, and the real session's own
+    // frame loop until a future milestone decides how physical input
+    // produces one — see docs/Roadmap.md, 0.9.127's own "Recommendation")
+    // takes a completely untouched path: this tick's own attempted
+    // direction is left exactly where it has always come from —
+    // `result.rotationY`, the avatar's own held-turn-key facing — and
+    // every line below this comment behaves byte-for-byte as it did
+    // before this milestone. See this method's own body, below, for
+    // exactly where a REAL `VehicleSteeringIntent` diverges from that
+    // path, and this file's own closing 0.9.127 comment for the full
+    // architectural picture.
+    tick({ seed, vehicleId, capability, movementIntent, currentRotationY, deltaSeconds, steeringIntent = null }) {
         const vehicleInstance = this._vehicleRuntimeInstances.get(vehicleId);
         if (!vehicleInstance) {
             return null;
@@ -276,8 +309,55 @@ export class AvatarVehicleMovementController {
         this._grounded = result.grounded;
         this._currentMovementSpeed = result.currentMovementSpeed;
 
+        // 0.9.127 — Vehicle Steering Integration Audit. `result.position`
+        // above is `currentPosition` stepped along `result.rotationY` —
+        // the avatar's own held-turn-key facing, entirely unrelated to
+        // `core/VehicleSteeringSimulation.js`. A REAL `steeringIntent`
+        // (see this method's own signature comment, above) redirects
+        // that SAME step onto the vehicle's own steering-attempted
+        // direction instead, WITHOUT re-deriving how far it travels: the
+        // scalar distance this tick's movement simulation already
+        // resolved (speed, acceleration, braking — every bit of it,
+        // completely untouched) is recovered from the vector
+        // `simulateAvatarMovement()` already returned by projecting it
+        // back onto its own `sin(rotationY), cos(rotationY)` unit
+        // direction — the exact inverse of how that file's own `dx`/`dz`
+        // were built in the first place — then re-applied along
+        // `resolveVehicleMovementDirectionFromSteering()`'s own output.
+        // This is a pure geometric re-projection, never a second speed/
+        // acceleration/braking computation: the "no second movement
+        // system" discipline this file's own header already establishes
+        // for `simulateAvatarMovement()` itself extends to this
+        // redirection too. `result.rotationY` itself — and everything
+        // this method returns it for (the avatar's own visual facing
+        // while riding, see application/WorldNavigationSession.js's own
+        // `rotation: { y: moved.rotationY }`) — is left completely
+        // unread by this block beyond that one projection, and is
+        // returned to the caller absolutely unchanged: steering the
+        // VEHICLE's own attempted travel direction never becomes a
+        // second way to set the avatar's own rendered rotation. See
+        // this file's own closing 0.9.127 comment for the full chain
+        // this one redirection completes.
+        let candidatePosition = result.position;
+        if (steeringIntent) {
+            const attemptedDirection = resolveVehicleMovementDirectionFromSteering({
+                previousHeading: vehicleInstance.heading,
+                steeringIntent
+            });
+            const travelRadians = result.rotationY * (Math.PI / 180);
+            const signedStepDistance = (result.position.x - currentPosition.x) * Math.sin(travelRadians)
+                + (result.position.z - currentPosition.z) * Math.cos(travelRadians);
+            const attemptedRadians = attemptedDirection * (Math.PI / 180);
+            candidatePosition = {
+                x: currentPosition.x + Math.sin(attemptedRadians) * signedStepDistance,
+                y: result.position.y,
+                z: currentPosition.z + Math.cos(attemptedRadians) * signedStepDistance
+            };
+        }
+
         // 0.9.119 — Vehicle–World Collision Constraint. The pure
-        // kinematics result above is only ever a PROPOSED position —
+        // kinematics result above — 0.9.127's own steering redirection
+        // included, when active — is only ever a PROPOSED position —
         // exactly the same "simulation proposes, a constraint disposes"
         // split application/AvatarMovementController.js's own tick()
         // already applies for the on-foot avatar (see that class's own
@@ -288,10 +368,10 @@ export class AvatarVehicleMovementController {
         // radius, so a bicycle is tested against world geometry at its
         // own, larger footprint (see core/AvatarVehicleMovementCapability.js's
         // own 0.9.88 header). Y is untouched by either constraint — both
-        // are purely horizontal (X/Z) — so `result.position.y` (already
+        // are purely horizontal (X/Z) — so `candidatePosition.y` (already
         // the vehicle's own raw-terrain-height Y, per this class's own
         // 0.9.116 header) survives the pipeline unchanged.
-        let finalPosition = result.position;
+        let finalPosition = candidatePosition;
         this._collided = false;
         if (this._movementConstraint) {
             const constrained = this._movementConstraint.apply(currentPosition, finalPosition, {
@@ -400,10 +480,27 @@ export class AvatarVehicleMovementController {
 // heading is simply left exactly as this store already holds it; see
 // this class's own `tick()` below for where that check happens.
 //
+// 0.9.127 — Vehicle Steering Integration Audit. `tick()` above now also
+// accepts an optional `steeringIntent`
+// (core/VehicleSteeringIntent.js) — see that parameter's own signature
+// comment for the full picture. Still no steering ANGLE, RATE, turning
+// radius, or angular velocity of any kind: a real `steeringIntent`
+// changes only which direction this tick's ALREADY-RESOLVED step
+// magnitude is applied along, computed in one call to
+// core/VehicleSteeringSimulation.js's own pure
+// `resolveVehicleMovementDirectionFromSteering()` — never smoothed,
+// rate-limited, or tracked as persistent state between ticks, the exact
+// same "applied in full, in one call" discipline that file's own header
+// already establishes for itself. Heading STILL only ever comes from
+// core/VehicleMovementHeading.js's own `resolveVehicleHeadingFromMovement()`,
+// fed this tick's REALIZED (post-collision) displacement — a steered
+// tick that collision fully absorbs leaves heading exactly where a
+// steered tick was already required to, before this milestone.
+//
 // Deliberately not yet, matching this milestone's own brief: a vehicle
 // physics engine, vehicle-vs-vehicle collision (0.9.119 added only
 // vehicle-vs-WORLD collision — trees, bricks, buildings — never
-// vehicle-vs-vehicle), steering input, steering angle, turning radius, or
+// vehicle-vs-vehicle), steering angle, turning radius, or
 // vehicle angular velocity of any kind (heading SNAPS to the realized
 // movement direction each tick — see core/VehicleMovementHeading.js's own
 // header — it is never smoothed/rate-limited the way `rotationY` itself

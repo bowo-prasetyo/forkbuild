@@ -33,6 +33,7 @@ import { AvatarVehicleInteractionController } from './AvatarVehicleInteractionCo
 import { VehicleRuntimeInstances } from './VehicleRuntimeInstances.js';
 import { AvatarVehicleMovementController } from './AvatarVehicleMovementController.js';
 import { resolveAvatarVehicleMovementCapability } from '../core/AvatarVehicleMovementCapability.js';
+import { isValidVehicleSteeringIntent } from '../core/VehicleSteeringIntent.js';
 import { deriveAvatarContinuousMovementInputEvent } from '../core/AvatarContinuousMovementInputAdapter.js';
 import { deriveAvatarContinuousMovementIntent } from '../core/AvatarContinuousMovementIntent.js';
 import { deriveAvatarContinuousMovementMode } from '../core/AvatarContinuousMovementMode.js';
@@ -457,6 +458,22 @@ export class WorldNavigationSession {
 	    // and the frame loop below for the exact "vehicle moves, avatar
 	    // follows" ordering.
 	    this._avatarVehicleMovementController = null;
+	    // 0.9.127 — Vehicle Steering Integration Audit. The session-held,
+	    // programmatic COUNTERPART to the mount identity above — a real
+	    // core/VehicleSteeringIntent.js instance, or `null` (the default,
+	    // meaning "no steering request active," never
+	    // `VehicleSteeringDirection.NONE` — see `setVehicleSteeringIntent()`,
+	    // below, for exactly why that distinction matters). Read by the
+	    // frame loop below and handed to
+	    // `_avatarVehicleMovementController.tick()`'s own new
+	    // `steeringIntent` parameter VERBATIM, every frame. Set ONLY through
+	    // `setVehicleSteeringIntent()` — this milestone wires
+	    // `VehicleSteeringIntent` into the REAL mounted-vehicle pipeline
+	    // without deciding how a physical key produces one; no
+	    // `avatarKeyDown`/`avatarKeyUp` binding reads or writes this field —
+	    // see docs/Roadmap.md, 0.9.127's own "Recommendation," for why that
+	    // stays a later milestone's job.
+	    this._vehicleSteeringIntent = null;
 	    this._avatarFrameSubscription = null;
 	    this._avatarControlModeActive = false;
 	    // 0.9.66 — Continuous Movement Controller Integration. This
@@ -1211,7 +1228,18 @@ export class WorldNavigationSession {
                         capability: resolveAvatarVehicleMovementCapability(mountedVehicleInstance.type),
                         movementIntent: this._avatarMovementController.movementState(),
                         currentRotationY: current.rotation.y || 0,
-                        deltaSeconds
+                        deltaSeconds,
+                        // 0.9.127 — this session's own current steering
+                        // request, VERBATIM — see
+                        // `_vehicleSteeringIntent`'s own constructor
+                        // comment and `setVehicleSteeringIntent()`,
+                        // above. `null` (the default, until some future
+                        // milestone's input layer starts calling that
+                        // setter) reaches `tick()`'s own `steeringIntent`
+                        // parameter, which itself defaults to `null` —
+                        // this line changes nothing about a real session's
+                        // own observable behavior yet.
+                        steeringIntent: this._vehicleSteeringIntent
                     });
                     if (moved) {
                         const positionChanged = moved.vehicleInstance.position.x !== current.position.x
@@ -1886,6 +1914,34 @@ export class WorldNavigationSession {
         return this._avatarVehicleInteractionController
             ? this._avatarVehicleInteractionController.vehicleInteractionState()
             : null;
+    }
+
+    // 0.9.127 — Vehicle Steering Integration Audit. The ONE way
+    // `_vehicleSteeringIntent` (see that field's own constructor comment)
+    // is ever set — a plain, programmatic setter, deliberately never a
+    // key binding. `intent` must be `null` (releases any active steering
+    // request — the frame loop's own `steeringIntent: null` default path
+    // through `AvatarVehicleMovementController#tick()` then applies, byte-
+    // for-byte identical to every frame before this milestone) or a real
+    // `core/VehicleSteeringIntent.js` instance; anything else is silently
+    // treated as `null` rather than thrown, the same permissive-setter
+    // posture this file already applies to camera/selection state that a
+    // caller might hand a stale or malformed value to. This method never
+    // reads `avatarVehicleMount()`, `movementCapability()`, or any other
+    // vehicle fact — exactly like `application/AvatarMovementController.js#setVehicleBrakingIntent()`,
+    // it only ever records the CALLER's own request; whether a mounted,
+    // movable vehicle exists to apply it to is resolved fresh, every
+    // frame, by the frame loop below, never by this setter.
+    setVehicleSteeringIntent(intent) {
+        this._vehicleSteeringIntent = isValidVehicleSteeringIntent(intent) ? intent : null;
+    }
+
+    // 0.9.127 — the current, session-held steering request (or `null`),
+    // the direct structural twin of avatarVehicleMount() above — a
+    // debug/UI read-back of exactly what setVehicleSteeringIntent() last
+    // recorded, never a second source of truth.
+    vehicleSteeringIntent() {
+        return this._vehicleSteeringIntent;
     }
 
     // Turning the mode OFF immediately releases every held key —
@@ -6091,6 +6147,7 @@ export class WorldNavigationSession {
         this._avatarMovementController = null;
         this._avatarVehicleInteractionController = null;
         this._avatarVehicleMovementController = null;
+        this._vehicleSteeringIntent = null;
         this._avatarControlModeActive = false;
         this._altDown = false;
         this._shiftDown = false;

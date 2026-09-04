@@ -823,12 +823,25 @@ async function runTests() {
     }
     {
         // A closed vocabulary for steering intent (NONE/LEFT/RIGHT, or
-        // any equivalent) does not exist anywhere yet — that is 0.9.125's
-        // own job, deliberately not started here.
-        for (const path of ['../core/VehicleInstance.js', '../core/VehicleMovementHeading.js', '../application/AvatarVehicleMovementController.js']) {
+        // any equivalent) did not exist anywhere as of this milestone —
+        // that was 0.9.125's own job, deliberately not started here.
+        // core/VehicleInstance.js and core/VehicleMovementHeading.js
+        // still define none of it, and still never will (see
+        // tests/VehicleSteeringIntegrationAudit.test.js's own Section E,
+        // "no steering field needs to be added to VehicleInstance").
+        // application/AvatarVehicleMovementController.js is the ONE
+        // exception, by explicit, later design — 0.9.127 (Vehicle
+        // Steering Integration Audit) is the milestone this orientation
+        // audit's own header already named as this line's own future
+        // recommendation, wiring `core/VehicleSteeringIntent.js` into
+        // that one file's own `tick()`; see that milestone's own suite
+        // for the full audit of exactly how, and why every invariant
+        // THIS file itself already covers (heading comes only from
+        // realized movement, never steering) still holds unchanged.
+        for (const path of ['../core/VehicleInstance.js', '../core/VehicleMovementHeading.js']) {
             const codeOnly = await sourceOf(path);
             for (const term of ['SteeringIntent', 'VehicleSteering', 'steeringIntent']) {
-                assert(!codeOnly.includes(term), `82. ${path} defines no steering-intent vocabulary of any kind yet — that seam has not been opened`);
+                assert(!codeOnly.includes(term), `82. ${path} defines no steering-intent vocabulary of any kind — that seam was never opened here`);
             }
         }
     }

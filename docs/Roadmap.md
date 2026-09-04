@@ -63749,3 +63749,182 @@ real collision constraints) before any raw input layer gets to decide
 what a held turn key means. That keeps input mapping, steering semantics,
 and vehicle behavior three separate seams, never letting the keyboard
 layer become the accidental owner of vehicle steering.
+
+## 0.9.127 — Vehicle Steering Integration Audit
+
+0.9.126's own "Recommendation" named this milestone precisely: wire
+`resolveVehicleMovementDirectionFromSteering()` into
+`application/AvatarVehicleMovementController.js` itself, and prove the
+result end to end through the real controller and real collision
+constraints. Unlike 0.9.124 (Vehicle Orientation Audit), which audited a
+seam 0.9.123 had already wired into the real pipeline, 0.9.125/0.9.126
+deliberately left `VehicleSteeringIntent`/`VehicleSteeringSimulation`
+completely unconsumed — so this milestone is genuinely both the wiring
+AND the audit, not audit alone. No new production files: every change
+lives inside the two files 0.9.126's own "Recommendation" already named.
+
+```text
+VehicleSteeringIntent
+        |
+        v
+VehicleSteeringSimulation
+        |
+        v
+attempted direction
+        |
+        v
+movement simulation (speed/acceleration/braking — untouched)
+        |
+        v
+world collision constraints
+        |
+        v
+realized position
+        |
+        v
+VehicleMovementHeading
+        |
+        v
+VehicleInstance.heading
+```
+
+**The central invariant:** steering modifies ATTEMPTED movement; collision
+determines REALIZED movement; realized movement — and only realized
+movement — determines heading. No step in that chain may be skipped:
+`steering -> heading`, `steering -> position`, and `steering -> runtime
+state` directly are all still exactly as forbidden as before this
+milestone; only `steering -> attempted movement` is new.
+
+`application/AvatarVehicleMovementController.js#tick()` gains one
+optional parameter, `steeringIntent` (default `null`). `null` — every
+existing caller, including every test predating this milestone —
+reproduces the exact pre-0.9.127 pipeline, byte for byte: `tick()`'s own
+attempted direction stays exactly where it always came from,
+`result.rotationY` (the avatar's own held-turn-key facing). A REAL
+`VehicleSteeringIntent` redirects that SAME tick's already-resolved
+step magnitude — recovered from the movement-simulation vector via a
+pure geometric projection onto its own `sin(rotationY), cos(rotationY)`
+direction, never a second speed/acceleration/braking computation — onto
+`resolveVehicleMovementDirectionFromSteering()`'s own output instead,
+before collision constraints are ever applied. `result.rotationY` itself
+is read only for that one projection and returned to the caller
+completely unchanged, so steering the vehicle's own attempted travel
+direction never becomes a second way to set the avatar's own rendered
+facing.
+
+`application/WorldNavigationSession.js` gains a session-held field,
+`_vehicleSteeringIntent` (default `null`), a getter
+(`vehicleSteeringIntent()`), and a setter (`setVehicleSteeringIntent()`)
+— a plain, programmatic seam, deliberately never a key binding — and
+passes that field to `AvatarVehicleMovementController#tick()`'s own new
+parameter, every frame, verbatim. A real session's own observable
+behavior is therefore completely unaffected until something calls that
+setter; no `avatarKeyDown`/`avatarKeyUp` binding reads or writes it.
+
+**A steering request is a single, discrete turn, not a continuous rate.**
+`resolveVehicleMovementDirectionFromSteering()` was always documented as
+"applied in full, in one call, never smoothed or rate-limited across
+ticks" — feeding a real, previous-heading-dependent call every single
+simulation tick while a direction is held would therefore compound a
+further `steeringTurnDegrees` every tick, not hold a steady turn. The
+correct shape for "turn left once, then keep going the way I just
+turned" is one tick with `LEFT`/`RIGHT`, then every subsequent tick with
+an explicit `NONE` (never `null` — `NONE` keeps the steering-redirect
+path active, continuing along the vehicle's own current heading; `null`
+falls back to the legacy rotationY-driven path entirely). Deciding how a
+physical, HELD key should actually drive this per-tick shape is
+explicitly 0.9.128's own job, not this one's.
+
+`tests/VehicleSteeringIntegrationAudit.test.js` is the primary suite, in
+eight sections. Section A proves steering reaches the real controller
+without a parallel movement implementation (exactly one call site each
+for `simulateAvatarMovement()` and
+`resolveVehicleMovementDirectionFromSteering()`). Section B is the
+flagship: an unobstructed steered turn realizes its own attempted
+direction as the new heading, and the identical steering request against
+a real wall realizes something genuinely different instead. Section C
+proves a steering request whose entire attempted step is absorbed by
+collision leaves heading completely unchanged. Section D proves the
+avatar follows the vehicle's own committed position, and that
+`rotationY` (the avatar's own facing) stays completely independent of
+vehicle steering. Section E confirms `VehicleRuntimeInstances` remains
+the one authoritative runtime store and `VehicleInstance` gains no
+steering field of any kind. Section F confirms rendering stays entirely
+unaware of steering. Section G is the second flagship: a full continuous
+session — spawn, mount, ride, LEFT steering, RIGHT steering, a real
+blocked steered turn, dismount, on-foot walking resuming normally.
+Section H is the structural exclusion audit: no steering angle, turn
+radius, angular velocity, wheel rotation, vehicle physics, banking,
+drifting, wheelbase, or persistent steering state anywhere this
+milestone's own integration touches, and `core/VehicleMovementHeading.js`
+remains the only heading-resolution authority.
+
+**A collision-geometry note surfaced while building the flagship tests:**
+`core/AvatarCollision.js#resolveAxis()` requires genuine VERTICAL overlap
+between a moving body's own collision-height band and an obstacle's own
+Y range before that obstacle can block anything at all. A test obstacle
+built at a flat, made-up Y unrelated to this codebase's own real terrain
+(rather than `core/TerrainHeightField.js#terrainHeightAt()`, which is
+what a genuinely terrain-grounded controller ride actually snaps a
+vehicle's own Y to, every tick) can therefore silently never register as
+an obstacle at all — not because its horizontal geometry was wrong, but
+because it sits entirely underground (or entirely in the air) relative
+to where the vehicle actually rides. Every obstacle
+`tests/VehicleSteeringIntegrationAudit.test.js` builds is grounded at its
+own real terrain height for exactly this reason.
+
+**Existing regression suites updated, not weakened.**
+`tests/VehicleOrientationAudit.test.js`'s own Section H previously
+asserted that NO steering-intent vocabulary existed anywhere yet,
+including inside `application/AvatarVehicleMovementController.js` — that
+assertion was always explicitly time-bound ("that seam has not been
+opened," naming 0.9.125 as the future job that would open it elsewhere).
+This milestone narrows that one check to the two files whose own
+exclusion never changes (`core/VehicleInstance.js`,
+`core/VehicleMovementHeading.js`) — `application/AvatarVehicleMovementController.js`
+is the one, explicitly-planned exception, audited on its own terms by
+this milestone's own Section E instead. Every other invariant that
+suite covers (heading comes only from realized movement, never steering)
+still holds, unchanged, and its own full suite still passes.
+
+### What this milestone deliberately does NOT do
+
+No keyboard, gamepad, or other raw input handling producing a
+`VehicleSteeringIntent` inside a real session — `setVehicleSteeringIntent()`
+is a plain, programmatic setter, not a key binding; deciding what A/D,
+arrow keys, or a controller map onto stays 0.9.128's own job. No
+steering angle, rate, turn radius, angular velocity, wheelbase, tire
+friction, banking, drifting, or momentum. No change to
+`core/VehicleSteeringIntent.js` or `core/VehicleSteeringSimulation.js`
+themselves — both are reused verbatim. No steering field of any kind
+added to `VehicleInstance` or `VehicleRuntimeInstances`. No rendering,
+persistence, or networking changes.
+
+### Recommendation
+
+```text
+Vehicle Steering          wires resolveVehicleMovementDirectionFromSteering()
+Integration Audit         into application/AvatarVehicleMovementController.js
+                          itself, and application/WorldNavigationSession.js's
+                          own setVehicleSteeringIntent() seam — proven end
+                          to end through the real controller and real
+                          collision constraints                (this milestone)
+        v
+Vehicle Steering          decide how A/D, arrow keys, or a controller
+Input                     input produce a VehicleSteeringIntent, and
+                          on what per-tick cadence (a single discrete
+                          event per key-DOWN, matching this milestone's
+                          own "turn once, then NONE" shape, is the
+                          natural fit — never a fresh LEFT/RIGHT re-issued
+                          every held-key frame, which would compound a
+                          further 45 degrees every tick)
+```
+
+I would map a turn key's DOWN edge to one `VehicleSteeringIntent.left()`/
+`.right()` call through `setVehicleSteeringIntent()`, immediately
+followed by `VehicleSteeringIntent.none()` the very next frame — held vs.
+tapped becomes irrelevant to the steering seam itself, exactly the
+"applied in full, in one call" behavior `core/VehicleSteeringSimulation.js`
+already documents. The input layer should not know about 45 degrees,
+heading, vehicle position, collision, movement simulation, or Three.js —
+only which of NONE/LEFT/RIGHT a key edge implies.
