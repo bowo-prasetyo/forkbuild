@@ -539,13 +539,31 @@ async function run() {
         const commandSource = await codeOnlySource('application/SnapshotDistributionCommand.js');
         assert(!commandSource.includes('SnapshotDistributionRuntimeComposition'), '38. the 0.9.136 command itself is never modified to know about this composition file — it remains, per this milestone\'s own brief, completely unchanged');
 
+        // As of this milestone (0.9.137) itself, ui/main.js referenced none
+        // of the terms below — this composition was composable (Section H
+        // proves it works) but not yet composed into the running
+        // application. 0.9.138 — World View Snapshot Distribution Action —
+        // later wired ui/main.js to call composeSnapshotDistributionRuntime()
+        // and executeSnapshotDistributionCommand() directly (see that
+        // milestone's own tests/WorldViewSnapshotDistribution.test.js,
+        // Section I, for the full architectural boundary this supersedes).
+        // The concrete ArweaveContentStore/NostrSnapshotDiscoveryPublisher
+        // classes are still never constructed or referenced BY NAME in
+        // ui/main.js — 0.9.138 calls only composeSnapshotDistributionRuntime()
+        // (this file's own export) and executeSnapshotDistributionCommand()
+        // (0.9.136's own export), never a concrete collaborator class
+        // directly. ui/main.js DOES now import from both files by path
+        // (hence 'SnapshotDistributionRuntimeComposition.js'/
+        // 'SnapshotDistributionCommand.js' themselves are no longer in this
+        // forbidden list — only the concrete classes are).
         const uiMainCode = await codeOnlySource('ui/main.js');
-        const stillUnwiredTerms = ['SnapshotDistributionRuntimeComposition', 'composeSnapshotDistributionRuntime', 'ArweaveContentStore', 'NostrSnapshotDiscoveryPublisher', 'SnapshotDistributionCommand'];
-        for (const term of stillUnwiredTerms) {
-            assert(!uiMainCode.includes(term), `39. ui/main.js never references '${term}' — this composition is composable (Section H proves it works) but still not composed into the running application, exactly as 0.9.136 left it`);
+        assert(uiMainCode.includes('composeSnapshotDistributionRuntime('), "39a. ui/main.js now calls composeSnapshotDistributionRuntime(), wired by 0.9.138 — World View Snapshot Distribution Action");
+        const stillUnreferencedTerms = ['ArweaveContentStore', 'NostrSnapshotDiscoveryPublisher'];
+        for (const term of stillUnreferencedTerms) {
+            assert(!uiMainCode.includes(term), `39b. ui/main.js still never references '${term}' by name — 0.9.138 calls only the composed functions this file and 0.9.136 already export`);
         }
 
-        console.log('✓ Section I: architectural regression — no browser API, no orchestration entry point, no summary availability flag, no coupling to Signed Claim distribution, and still completely unwired into ui/main.js');
+        console.log('✓ Section I: architectural regression — no browser API, no orchestration entry point, no summary availability flag, no coupling to Signed Claim distribution, and (as of 0.9.138) composed into ui/main.js through composition-level functions only, never a concrete collaborator class directly');
     }
 
     console.log('\n✅ All Snapshot Distribution Runtime Composition tests passed.');

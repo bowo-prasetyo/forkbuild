@@ -144,12 +144,20 @@ async function run() {
         console.log('✓ 1. the command owns orchestration — one call places and announces a Snapshot from bytes and two collaborators alone');
     }
 
-    // 2 — ui/main.js never references this command; no UI wiring exists
-    // yet for this milestone.
+    // 2 — as of 0.9.136 itself, ui/main.js referenced this command nowhere;
+    // no UI wiring existed yet for that milestone. 0.9.138 — World View
+    // Snapshot Distribution Action — later wired ui/main.js to call
+    // executeSnapshotDistributionCommand() directly (see that milestone's
+    // own tests/WorldViewSnapshotDistribution.test.js, Section I, for the
+    // full architectural boundary this supersedes), exactly the same
+    // "composable, not composed" -> "now composed" transition the
+    // Publication family's own 0.9.103/0.9.121 milestones already made for
+    // application/PublicationDistributionCommand.js. This section now
+    // records that later fact instead of re-asserting the superseded one.
     {
         const uiMainCode = await codeOnlySource('ui/main.js');
-        assert(!uiMainCode.includes('SnapshotDistributionCommand'), '2a. ui/main.js never references SnapshotDistributionCommand — this milestone wires no composition root or UI trigger');
-        console.log('✓ 2. no UI wiring — application/SnapshotDistributionCommand.js is a plain, constructible collaborator, not yet reachable from any UI action');
+        assert(uiMainCode.includes('executeSnapshotDistributionCommand('), '2a. ui/main.js now calls executeSnapshotDistributionCommand() directly, wired by 0.9.138 — World View Snapshot Distribution Action');
+        console.log('✓ 2. application/SnapshotDistributionCommand.js is a plain, constructible collaborator, wired into ui/main.js by 0.9.138');
     }
 
     // 3 — contentStore.put() is called strictly before

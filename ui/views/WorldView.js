@@ -475,6 +475,21 @@ export default {
         // view constructs, orchestrates, or writes into the lifecycle
         // store itself.
         const publicationDistributionCommand = inject('publicationDistributionCommand', null);
+        // 0.9.138 — World View Snapshot Distribution Action. The SAME
+        // app-wide `snapshotDistributionCommand` `ui/main.js` now composes
+        // (0.9.137's own `composeSnapshotDistributionRuntime()`, sequenced
+        // by 0.9.136's own unmodified `executeSnapshotDistributionCommand()`)
+        // — a thin `(bytes) -> Promise<{ contentReference, announcement }>`
+        // function, injected here so `distributeWorldEncounterSnapshot()`
+        // below can call it. `publicationCatalogContentResolver` is the
+        // SAME already-provided resolver `application/
+        // CreateExternalSnapshotPlacementUseCase.js` (0.8.18) already reads
+        // a published Snapshot's own local bytes back through — injected
+        // here for the identical reason, never a second serialization
+        // mechanism of this view's own. See `distributeWorldEncounterSnapshot()`,
+        // below, for how the two are used together.
+        const snapshotDistributionCommand = inject('snapshotDistributionCommand', null);
+        const publicationCatalogContentResolver = inject('publicationCatalogContentResolver', null);
         // 0.9.110 — Decentralized Material Retrieval Runtime Composition.
         // The SAME app-wide `DecentralizedWorldDiscoveryLeadRegistry`
         // `ui/main.js` now composes, handed straight through as
@@ -769,6 +784,50 @@ export default {
                 publication,
                 serializedMaterial: JSON.stringify(publication.toJSON())
             });
+        }
+
+        // 0.9.138 — World View Snapshot Distribution Action. The one thing
+        // standing between `WorldEncounterCanvas`'s own new
+        // `snapshotDistributionCommand` prop (a plain `(publication) ->
+        // Promise<{ contentReference, announcement }>` function) and the
+        // app-wide `snapshotDistributionCommand` injected above: that
+        // command's own full shape (`executeSnapshotDistributionCommand({
+        // bytes, contentStore, discoveryPublisher })`) takes raw `bytes`,
+        // never a `Publication` domain object — `contentStore`/
+        // `discoveryPublisher` are already bound in by `ui/main.js`'s own
+        // composition, so this function's only job is turning "which
+        // publication" into "which bytes."
+        //
+        // `bytes` COME FROM THE EXISTING SNAPSHOT/MATERIAL BOUNDARY, NEVER
+        // A NEW SERIALIZATION MECHANISM OF THIS VIEW'S OWN. This function
+        // never calls `publication.toJSON()`, never computes a content
+        // hash, and never constructs an Arweave transaction or a Nostr
+        // event — it reads this replica's own already-stored Snapshot bytes
+        // back through `publicationCatalogContentResolver.resolve()`, the
+        // SAME collaborator `application/CreateExternalSnapshotPlacementUseCase.js`
+        // (0.8.18) already reads a Snapshot's own bytes through for the
+        // OLDER, peer-based placement family, and stringifies them the
+        // identical way that file's own `bytes = JSON.stringify(snapshotJson)`
+        // line already does. `SnapshotDistributionCommand.js`'s own header
+        // is explicit that `contentStore` is the one and only place a
+        // content hash is ever computed — this function computes none.
+        //
+        // NEVER CONSTRUCTS `ArweaveContentStore`/`NostrSnapshotDiscoveryPublisher`,
+        // AND NEVER CALLS `executeSnapshotDistributionCommand()`/
+        // `composeSnapshotDistributionRuntime()` DIRECTLY. This function
+        // calls exactly one thing: the already-composed
+        // `snapshotDistributionCommand` injected above — the same restraint
+        // `distributeWorldEncounterPublication()` already holds, one family
+        // over.
+        function distributeWorldEncounterSnapshot(publication) {
+            if (!snapshotDistributionCommand || !publicationCatalogContentResolver) {
+                return Promise.reject(new Error('Snapshot distribution is not available.'));
+            }
+            const snapshotJson = publicationCatalogContentResolver.resolve(publication.id);
+            if (snapshotJson === null) {
+                return Promise.reject(new Error('Snapshot distribution is not available.'));
+            }
+            return snapshotDistributionCommand(JSON.stringify(snapshotJson));
         }
 
         // 0.9.111 — World View Decentralized Publication Retrieval.
@@ -3099,7 +3158,8 @@ export default {
             onSaveMetadata,
             saveActiveDocument,
             publishActiveDocument,
-            distributeWorldEncounterPublication
+            distributeWorldEncounterPublication,
+            distributeWorldEncounterSnapshot
         };
     },
     template: `
@@ -3294,7 +3354,15 @@ export default {
                      Verification markup 0.9.39's own selection-driven
                      panel already uses) — see that file's own header,
                      "0.9.111 — World View Decentralized Publication
-                     Retrieval." -->
+                     Retrieval."
+
+                     0.9.138 — snapshotDistributionCommand, WorldEncounterCanvas's
+                     own new prop, bound to this file's own
+                     distributeWorldEncounterSnapshot() — a thin wrapper
+                     around the injected snapshotDistributionCommand, never
+                     a second command and never anything this file
+                     orchestrates itself. See that function's own comment,
+                     above. -->
                 <CollapsibleSection
                     title="World Encounters"
                     :collapsed="nearbySectionsCollapsed.worldEncounters"
@@ -3307,6 +3375,7 @@ export default {
                         :materialVerifier="worldEncounterMaterialVerifier"
                         :distributionLifecycleStore="publicationDistributionLifecycleStore"
                         :distributionCommand="distributeWorldEncounterPublication"
+                        :snapshotDistributionCommand="distributeWorldEncounterSnapshot"
                         :worldDiscoveryLeadRegistry="worldDiscoveryLeadRegistry"
                     />
                 </CollapsibleSection>

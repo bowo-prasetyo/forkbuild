@@ -65811,13 +65811,169 @@ null" legitimate partial-success shape — reached only when a REAL
 A Snapshot's decentralized distribution runtime can now be composed from
 whatever host capability a browser/replica genuinely exposes, gracefully
 and honestly degrading when either substrate is absent — but it still
-reaches no user. I would make 0.9.138 the small, product-facing step this
-whole family has been building toward: a real `[E] Distribute Snapshot`
-World View action, wiring `ui/main.js` to read `window.arweaveWallet`/
-`window.nostr`, call this file's own `composeSnapshotDistributionRuntime()`,
-and hand the result to 0.9.136's own unmodified command — an ephemeral
-`idle`/`executing`/`completed`/`failed` UI state showing exactly the facts
-the command already returns, nothing reconstructed. After that, 0.9.139
-should be one more audit-only milestone, proving the whole UI-to-Nostr
-chain genuinely traverses every layer this family has built, before
-pausing to reassess the Snapshot feature from the user's own perspective.
+reaches no user. 0.9.138 (below) is the small, product-facing step this
+whole family has been building toward.
+
+## 0.9.138 — World View Snapshot Distribution Action
+
+0.9.137's own composition and 0.9.136's own command each closed their own
+header with the identical refusal: no UI wiring exists yet. This milestone
+is the one that finally reaches a user — a real "Distribute Snapshot"
+action on `ui/components/WorldEncounterCanvas.js`'s own new Snapshot
+Distribution panel, calling exactly one caller-injected function —
+`snapshotDistributionCommand`, `(publication) -> Promise<{ contentReference,
+announcement }>` — with the same `Publication` domain object 0.9.39's own
+material inspection already loads. `ui/main.js` composes the real runtime
+(`composeSnapshotDistributionRuntime()`, reusing the SAME
+`window.arweaveWallet`/`window.nostr`-derived `arweaveHostSigner`/
+`nostrHostPublisher` the Signed Claim family's own 0.9.121 wiring already
+resolves) and sequences it through 0.9.136's own unmodified
+`executeSnapshotDistributionCommand()`; `ui/views/WorldView.js` supplies a
+thin wrapper — `distributeWorldEncounterSnapshot()` — that turns "which
+publication" into "which bytes" by reading this replica's own already-
+stored Snapshot bytes back through `publicationCatalogContentResolver`
+(the SAME resolver `application/CreateExternalSnapshotPlacementUseCase.js`,
+0.8.18, already reads a Snapshot's own bytes through for the older,
+peer-based placement family), never inventing a new serialization
+mechanism of its own.
+
+```text
+publicationCatalogContentResolver.resolve(publication.id)   (0.8.18's own
+     │                                                        resolver, reused)
+     ▼
+snapshotJson
+     │  JSON.stringify()
+     ▼
+bytes
+     │
+     ▼  distributeWorldEncounterSnapshot()        (ui/views/WorldView.js ★)
+snapshotDistributionCommand(bytes)                (ui/main.js's own composed closure ★)
+     │
+     ▼  executeSnapshotDistributionCommand()      (0.9.136, unmodified)
+{ contentReference, announcement }
+     │
+     ▼
+WorldEncounterCanvas's own Snapshot Distribution panel — stored directly
+in ephemeral state and rendered verbatim
+```
+
+### Deliberately NOT a mechanical copy of 0.9.104
+
+0.9.104 — World View Publication Distribution Action — is this milestone's
+own closest precedent, but two things about the Snapshot family's own
+architecture make a literal copy wrong:
+
+- **No lifecycle store exists for this family** (`application/
+  SnapshotDistributionCommand.js`'s own header is explicit: "no result
+  describer, no new status vocabulary"). 0.9.104's own
+  `distributeSelectedPublication()` deliberately discards its own command
+  call's resolved value, because `distributionLifecycleStore`'s own live
+  subscription is already the canonical place the Signed Claim family's
+  own facts surface. `WorldEncounterCanvas.js` instead stores the resolved
+  `{ contentReference, announcement }` directly, in ephemeral, page-local
+  `data()` state — the only record of what just happened, for a family
+  with no second observation channel.
+- **A separate panel, never folded into the existing Distribution panel.**
+  Signed Claim distribution and Snapshot distribution are two different
+  protocols sharing some of the same physical substrates by historical
+  accident (see 0.9.131's own boundary contract) — rendering both under
+  one heading would visually imply they are one distribution with two
+  facets. The new "Snapshot Distribution" panel stays entirely separate,
+  gated on `snapshotDistributionCommand` alone.
+
+Everything else mirrors 0.9.104 deliberately, one collaborator over:
+`distributablePublication` is reused verbatim (never re-derived), ephemeral
+execution/error state is duplicate- and stale-response protected by a
+`snapshotDistributionRequestId` counter exactly like 0.9.104's own
+`distributionRequestId`, and a genuine rejection (or synchronous
+construction throw — no Arweave wallet installed, most naturally) becomes
+one plain, generic notice, never the underlying error message.
+
+### A legitimate partial success is never an error
+
+`application/SnapshotDistributionCommand.js`'s own contract makes "Arweave
+placement succeeds, Nostr announcement declines" a first-class,
+non-error outcome (`{ contentReference, announcement: null }`). The
+Snapshot Distribution panel renders that result exactly as received —
+"No announcement," never a failure — matching the asymmetric dependency
+0.9.131 through 0.9.137 already established:
+
+```text
+Placement
+    ↓
+Announcement
+
+(never the reverse — a failed or absent announcement never rolls back an
+ already-successful placement)
+```
+
+A genuine Arweave placement failure, by contrast, is caught before any
+Nostr announcement is even attempted (0.9.136's own "placement failure
+prevents discovery"), and surfaces as the ordinary error notice.
+
+### The flagship test
+
+`tests/WorldViewSnapshotDistribution.test.js`'s own Section C drives the
+complete, previously-unreachable chain end to end:
+
+```text
+Snapshot bytes
+     │
+     ▼  World View click -> distributeSelectedSnapshot()
+     ▼  distributeWorldEncounterSnapshot()          -> Arweave placement
+     ▼  executeSnapshotDistributionCommand()        -> Nostr announcement
+     ▼  NostrSnapshotDiscoveryQueryService + DecentralizedSnapshotResolver
+        (0.9.133/0.9.134, unmodified)                -> discovery -> retrieval
+     ▼  computeContentHash()                         -> verification
+same original Snapshot bytes
+```
+
+That proves this milestone is not merely adding a button — it makes the
+entire runtime 0.9.131 through 0.9.137 built genuinely reachable, and
+genuinely correct, from a real World View action.
+
+### What this milestone deliberately does NOT do
+
+- **A lifecycle store, persistence, or restoration of any kind for
+  Snapshot distribution results.** See "No lifecycle store exists for this
+  family," above.
+- **Modification of `application/SnapshotDistributionCommand.js`,
+  `application/SnapshotDistributionRuntimeComposition.js`, `content/
+  ArweaveContentStore.js`, or `application/NostrSnapshotDiscoveryPublisher.js`.**
+  All four remain completely unmodified; `ui/main.js` calls only their
+  already-exported composition-level functions.
+- **A new `SnapshotDistributionResult` descriptor, or any new status
+  vocabulary.** The panel renders 0.9.136's own `{ contentReference,
+  announcement }` shape directly.
+- **Retry, cancel, progress percentage, distribution history, a provider-
+  selection UI, or any distribution-configuration UI.** None of those
+  exist for the Signed Claim family's own equivalent action either.
+- **Snapshot lifecycle, persistence, or restoration; automatic
+  synchronization or background distribution; peer-to-peer snapshot
+  execution; snapshot trust or UI-level verification logic beyond what
+  the command itself already returns.**
+
+### Recommendation
+
+```text
+0.9.131  Snapshot Distribution Boundary                       ✓
+0.9.132  ArweaveContentStore                                   ✓
+0.9.133  Nostr Snapshot Location Discovery                     ✓
+0.9.134  Decentralized Snapshot Retrieval                       ✓
+0.9.135  End-to-End Decentralized Snapshot Distribution         ✓
+         Audit
+0.9.136  Snapshot Distribution Command                          ✓
+0.9.137  Snapshot Distribution Runtime Composition               ✓
+0.9.138  World View Snapshot Distribution Action                 ✓
+```
+
+Snapshot distribution now has a complete, genuinely reachable vertical
+slice — storage → discovery → resolution → verification → command →
+runtime composition → World View. I would make 0.9.139 one more
+audit-only milestone (mirroring 0.9.122's and 0.9.135's own precedent),
+proving the whole UI-to-Nostr chain traverses every layer this family has
+built, and proving the Signed Claim and Snapshot families remain two
+genuinely independent distribution protocols despite sharing some of the
+same physical substrates. I would not start another Snapshot protocol
+feature after 0.9.139 — 0.9.140 should be a genuine architectural
+reassessment point instead.

@@ -122,6 +122,8 @@ import { createNostrPublicationDistributionRuntimeAdapter } from '../application
 import { createArweavePublicationDistributionRuntimeAdapter } from '../application/ArweavePublicationDistributionRuntimeAdapter.js';
 import { createArweaveInjectedProviderSigner } from '../arweave/ArweaveInjectedProviderSigner.js';
 import { createNostrInjectedProviderPublisher } from '../nostr/NostrInjectedProviderPublisher.js';
+import { composeSnapshotDistributionRuntime } from '../application/SnapshotDistributionRuntimeComposition.js';
+import { executeSnapshotDistributionCommand } from '../application/SnapshotDistributionCommand.js';
 import { LocalDiscoveryProvider } from '../discovery/LocalDiscoveryProvider.js';
 import {
     composeDecentralizedWorldEncounterMaterialDiscoveryServices,
@@ -1639,6 +1641,53 @@ const publicationDistributionCommand = composePublicationDistributionCommand({
     nostrPublisherOptions
 });
 app.provide('publicationDistributionCommand', publicationDistributionCommand);
+
+// 0.9.138 — World View Snapshot Distribution Action.
+//
+// 0.9.137's own `composeSnapshotDistributionRuntime()` turns a host
+// signing/publishing capability into a `{ contentStore, discoveryPublisher }`
+// pair; 0.9.136's own `executeSnapshotDistributionCommand()` sequences that
+// pair against a caller-supplied `bytes`. Nothing before this milestone ever
+// called either — this is that one composition, mirroring the immediately
+// preceding `publicationDistributionCommand` wiring one family over, and
+// nothing more.
+//
+// `arweaveHostSigner`/`nostrHostPublisher` ARE THE SAME INSTANCES the
+// Publication Distribution wiring above already resolved from
+// `window.arweaveWallet`/`window.nostr` — never a second read of either
+// host capability. Both adapters are stateless wrappers around whatever
+// extension is installed (see `arweave/ArweaveInjectedProviderSigner.js`/
+// `nostr/NostrInjectedProviderPublisher.js`'s own headers), so sharing them
+// across the two independent distribution families is exactly the "host
+// capability, not a family-specific one" boundary 0.9.121 already drew —
+// Signed Claim distribution and Snapshot distribution remain two
+// unconnected pipelines regardless (see `application/
+// SnapshotDistributionCommand.js`'s and `application/
+// SnapshotDistributionRuntimeComposition.js`'s own "no coupling to Signed
+// Claim distribution" restraints, both unmodified by this reuse).
+//
+// `discoveryTag: 'forkbuild-snapshot'` IS A DIFFERENT CAMPAIGN MARKER THAN
+// `'forkbuild-publication'`, ABOVE — the two families announce onto the
+// same Nostr relay without becoming the same discovery stream.
+//
+// `snapshotContentStore`/`snapshotDiscoveryPublisher` MAY BOTH BE `null` —
+// composeSnapshotDistributionRuntime()'s own graceful degradation, unchanged
+// — in which case `snapshotDistributionCommand(bytes)` throws synchronously,
+// exactly as calling `executeSnapshotDistributionCommand()` directly with no
+// usable collaborators already would. `ui/views/WorldView.js`'s own
+// `distributeWorldEncounterSnapshot()` wraps every call to this function in
+// a `Promise.resolve().then(...)`, catching that synchronous throw the same
+// way it already catches a genuine rejection.
+const { contentStore: snapshotContentStore, discoveryPublisher: snapshotDiscoveryPublisher } = composeSnapshotDistributionRuntime({
+    arweaveContentStoreOptions: { signer: arweaveHostSigner },
+    nostrSnapshotDiscoveryPublisherOptions: { publishImpl: nostrHostPublisher, discoveryTag: 'forkbuild-snapshot' }
+});
+const snapshotDistributionCommand = (bytes) => executeSnapshotDistributionCommand({
+    bytes,
+    contentStore: snapshotContentStore,
+    discoveryPublisher: snapshotDiscoveryPublisher
+});
+app.provide('snapshotDistributionCommand', snapshotDistributionCommand);
 
 app.use(router);
 app.mount('#app');
