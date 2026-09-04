@@ -82,16 +82,17 @@ async function run() {
             '2. WorldView.js registers WorldEncounterCanvas among its own components');
         assert(worldViewCodeOnly.includes("inject('worldDiscoverySourceRegistry', null)"),
             '3. WorldView.js injects the SAME key ui/main.js provides app-wide, defaulting to null rather than throwing with no provider above it');
-        // 0.9.99/0.9.104 note: the tag itself grew further already-existing
-        // WorldEncounterCanvas props (materialSources/materialVerifier —
+        // 0.9.99/0.9.104/0.9.138 note: the tag itself grew further already-
+        // existing WorldEncounterCanvas props (materialSources/materialVerifier —
         // see tests/WorldViewMaterialVerificationIntegration.test.js —
-        // and distributionLifecycleStore/distributionCommand — see
+        // distributionLifecycleStore/distributionCommand — see
         // tests/WorldViewPublicationDistributionIntegration.test.js and
-        // tests/WorldViewPublicationDistributionActionIntegration.test.js)
-        // and now spans multiple lines; this assertion still requires no
-        // `view` prop anywhere on the tag and the registry passed through
-        // unchanged.
-        assert(/<WorldEncounterCanvas[\s\S]{0,300}:registry="worldDiscoverySourceRegistry"[\s\S]{0,500}\/>/.test(worldViewCodeOnly),
+        // tests/WorldViewPublicationDistributionActionIntegration.test.js —
+        // and snapshotDistributionCommand — see
+        // tests/WorldViewSnapshotDistribution.test.js) and now spans
+        // multiple lines; this assertion still requires no `view` prop
+        // anywhere on the tag and the registry passed through unchanged.
+        assert(/<WorldEncounterCanvas[\s\S]{0,300}:registry="worldDiscoverySourceRegistry"[\s\S]{0,700}\/>/.test(worldViewCodeOnly),
             '4. WorldView.js hands the injected registry straight through as WorldEncounterCanvas\'s own registry prop');
         const worldEncounterCanvasTag = worldViewCodeOnly.slice(
             worldViewCodeOnly.indexOf('<WorldEncounterCanvas'),

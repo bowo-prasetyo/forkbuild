@@ -1257,6 +1257,112 @@ import { describePublicationMaterialProvenanceFromInspection } from '../../appli
 // - **An application-layer `SelectDiscoveredPublicationCommand`.** See "no
 //   application-layer command," above.
 
+// 0.9.138 — World View Snapshot Distribution Action.
+//
+// 0.9.104 wired the Signed Claim family's own distribution command into
+// this component; 0.9.136/0.9.137 separately built a complete, independently
+// tested Snapshot distribution command and runtime composition that,
+// exactly like 0.9.103's own command before 0.9.104, "reaches no user" —
+// see `application/SnapshotDistributionRuntimeComposition.js`'s own
+// "Deliberately excluded" list, naming this milestone directly. This
+// addition is that seam, one family over, deliberately NOT copying 0.9.104's
+// own implementation mechanically — see the two divergences called out
+// below.
+//
+//   distributablePublication (0.9.104's own computed, reused verbatim)
+//        │ click "Distribute Snapshot"
+//        ▼
+//   distributeSelectedSnapshot()
+//        │
+//        ▼
+//   snapshotDistributionCommand(publication)   (injected, 0.9.138 ★)
+//        │
+//        ▼
+//   Promise<{ contentReference, announcement }>  (or a rejection)
+//        │
+//        ▼
+//   snapshotDistributionResult   (stored directly — see divergence 1, below)
+//        │
+//        ▼
+//   the Snapshot Distribution panel's own result display
+//
+// DIVERGENCE 1 — THIS FAMILY HAS NO LIFECYCLE STORE, SO THIS COMPONENT
+// STORES THE RESOLVED RESULT DIRECTLY. 0.9.104's own `distributeSelectedPublication()`
+// deliberately discards its own command call's resolved value — see that
+// method's own comment, "never inspects a resolved result" — because
+// `distributionLifecycleStore`'s own live subscription (0.9.100) is already
+// the canonical place that family's own facts surface. `application/
+// SnapshotDistributionCommand.js`'s own header is explicit that it
+// introduces "no result describer, no new status vocabulary" and no
+// lifecycle store of any kind for this family — so there is no second
+// channel for `snapshotDistributionResult` to arrive through. This
+// component holds the resolved `{ contentReference, announcement }`
+// verbatim instead, in page-local, ephemeral `data()` state — never
+// persisted, never a lifecycle fact, reset on every fresh selection exactly
+// like `distributionError` already is.
+//
+// DIVERGENCE 2 — A SEPARATE PANEL, NEVER FOLDED INTO THE EXISTING
+// DISTRIBUTION PANEL. Signed Claim distribution and Snapshot distribution
+// are two different protocols that happen to share some of the same
+// physical substrates (Arweave, Nostr) — see `application/
+// SnapshotDistributionCommand.js`'s own header, "no coupling to Signed
+// Claim distribution," and `docs/Roadmap.md`'s own 0.9.131 entry naming
+// the boundary directly. Rendering both under one "Distribution" heading
+// would visually imply they are one distribution with two facets; the new
+// "Snapshot Distribution" panel stays entirely separate, with its own
+// title, its own action, and its own result display, gated on
+// `snapshotDistributionCommand` alone — never on `distributionLifecycleStore`.
+//
+// `distributablePublication` IS REUSED VERBATIM, NEVER RE-DERIVED. Both
+// panels distribute the SAME currently selected, local-origin PUBLICATION
+// encounter's material — see 0.9.104's own comment on that computed for the
+// full eligibility rule. This addition introduces no second selection
+// concept and no second "is there something to distribute" check.
+//
+// EPHEMERAL UI STATE ONLY, DUPLICATE- AND STALE-RESPONSE PROTECTED —
+// MIRRORING `distributionExecuting`/`distributionError`/`distributionRequestId`
+// (0.9.104) EXACTLY, ONE COLLABORATOR OVER. `distributeSelectedSnapshot()`
+// is a no-op while `snapshotDistributionExecuting` is already `true` (see
+// this file's own header, "repeated clicks never start a second,
+// overlapping call"), and a `snapshotDistributionRequestId` counter,
+// bumped on every call and on unmount, guards `snapshotDistributionResult`/
+// `snapshotDistributionError`/`snapshotDistributionExecuting` against a
+// stale response exactly the way `distributionRequestId` already guards
+// its own three fields.
+//
+// PLAIN NOTICE — NEVER A RECLASSIFIED DOMAIN RESULT. A genuine
+// `snapshotDistributionCommand` rejection (or synchronous construction
+// throw, e.g. no Arweave wallet installed) becomes the same generic
+// `snapshotDistributionError` text every other command failure in this
+// file already becomes — this component never inspects an error's own
+// message or type. A successfully resolved `{ contentReference,
+// announcement: null }` — Arweave placement succeeded, Nostr announcement
+// did not — is never treated as an error; see the template's own comment
+// on why `announcement: null` renders as "No announcement," not a failure.
+//
+// NEVER CONSTRUCTS AN ARWEAVE CLIENT, A NOSTR CLIENT, OR CALLS
+// `executeSnapshotDistributionCommand()`/`composeSnapshotDistributionRuntime()`
+// DIRECTLY. This component calls exactly one thing: the already-composed
+// `snapshotDistributionCommand` prop — the same restraint 0.9.104's own
+// `distributionCommand` already holds, one collaborator over. This file
+// never imports `application/SnapshotDistributionCommand.js`,
+// `application/SnapshotDistributionRuntimeComposition.js`, `content/
+// ArweaveContentStore.js`, or `application/NostrSnapshotDiscoveryPublisher.js`.
+//
+// DELIBERATELY EXCLUDED — NOT THIS MILESTONE.
+// - **A lifecycle store, persistence, or restoration of any kind for
+//   Snapshot distribution results.** See "Divergence 1," above.
+// - **Retry, cancel, progress percentage, distribution history, a
+//   provider-selection UI, or any distribution-configuration UI.** None of
+//   those exist for the Signed Claim family either — see 0.9.104's own
+//   identical exclusion, one collaborator over.
+// - **Merging this panel with the existing Distribution panel, or any new
+//   summary state combining both families' own outcomes.** See
+//   "Divergence 2," above.
+// - **Consuming `snapshotDistributionResult` for anything beyond display**
+//   (e.g. feeding it into a later retrieval/verification action). A
+//   future, unscheduled milestone decides whether/how to wire that in.
+
 const WORLD_HALF_SPAN = 50;
 const CANVAS_SIZE = 600;
 
@@ -1358,6 +1464,34 @@ export default {
         // `nostrPublisherOptions`) stays entirely this function's own,
         // caller-side concern.
         distributionCommand: {
+            type: Function,
+            default: null
+        },
+        // 0.9.138 — optional. A `(publication) -> Promise<{ contentReference,
+        // announcement }>` function, called with exactly the loaded
+        // `Publication` domain object for the CURRENTLY selected,
+        // local-origin PUBLICATION encounter — the SAME `distributablePublication`
+        // `distributionCommand` above already reads, one collaborator over.
+        // `null` by default: a mount with no `snapshotDistributionCommand`
+        // supplied renders no Snapshot Distribution panel at all. Never
+        // constructed by this component itself, and never called with
+        // anything but that one `Publication` argument — turning it into
+        // bytes stays entirely this function's own, caller-side concern
+        // (see `ui/views/WorldView.js`'s own `distributeWorldEncounterSnapshot()`).
+        //
+        // UNLIKE `distributionCommand`, THIS COMPONENT DOES STORE THE
+        // RESOLVED RESULT — see `snapshotDistributionResult`, below. The
+        // Signed Claim family's own result reaches this component only
+        // through `distributionLifecycleStore`'s live subscription (see
+        // "0.9.104 — World View Publication Distribution Action," above);
+        // `application/SnapshotDistributionCommand.js`'s own header is
+        // explicit that it introduces "no result describer, no new status
+        // vocabulary" and no lifecycle store of any kind — the resolved
+        // `{ contentReference, announcement }` object IS the only record of
+        // what just happened, so this component holds onto it directly,
+        // exactly as received, rather than inventing an observation channel
+        // that does not exist for this family.
+        snapshotDistributionCommand: {
             type: Function,
             default: null
         },
@@ -1474,6 +1608,30 @@ export default {
             // stale response," mirroring `materialInspectionRequestId`
             // (0.9.39) exactly, one layer over.
             distributionRequestId: 0,
+            // 0.9.138 — ephemeral UI interaction state only, mirroring
+            // `distributionExecuting`/`distributionError`/`distributionRequestId`
+            // (0.9.104) exactly, one collaborator over. `true` for exactly
+            // as long as a call to `snapshotDistributionCommand` is in
+            // flight for the current selection.
+            snapshotDistributionExecuting: false,
+            // 0.9.138 — a plain-text notice for the most recent genuine
+            // `snapshotDistributionCommand` rejection (or synchronous
+            // construction throw), or `null` when there is none to show.
+            // Reset on every fresh selection and on every new attempt.
+            snapshotDistributionError: null,
+            // 0.9.138 — bumped on every call to `distributeSelectedSnapshot()`,
+            // on every fresh selection, and on unmount — guards against a
+            // stale response exactly as `distributionRequestId` already
+            // does, one collaborator over.
+            snapshotDistributionRequestId: 0,
+            // 0.9.138 — the composed command's own resolved `{
+            // contentReference, announcement }` result, rendered verbatim
+            // below — see this component's own `snapshotDistributionCommand`
+            // prop comment, "unlike distributionCommand, this component
+            // does store the resolved result." `null` until a call
+            // resolves; reset on every fresh selection and on every new
+            // attempt, exactly like `snapshotDistributionError`.
+            snapshotDistributionResult: null,
             // 0.9.111 — the Wanderer's own typed discovery input, page-local
             // UI state only — see this file's own header, "ephemeral UI
             // state only." Never persisted, never validated beyond a plain
@@ -1726,6 +1884,15 @@ export default {
             this.distributionExecuting = false;
             this.distributionError = null;
             this.distributionRequestId += 1;
+            // 0.9.138 — mirrors the 0.9.104 reset immediately above,
+            // exactly, one collaborator over: a fresh selection never
+            // carries a stale Snapshot Distribution execution/error/result
+            // from whatever was previously selected, and invalidates any
+            // still-in-flight call.
+            this.snapshotDistributionExecuting = false;
+            this.snapshotDistributionError = null;
+            this.snapshotDistributionResult = null;
+            this.snapshotDistributionRequestId += 1;
         },
         // 0.9.13 — the only writer of `worldView`, and the only caller
         // of `describeWorldFromDiscoveryRegistry()` in this file. See
@@ -1940,6 +2107,48 @@ export default {
                     }
                 });
         },
+        // 0.9.138 — the only writer of `snapshotDistributionExecuting`/
+        // `snapshotDistributionError`/`snapshotDistributionResult`, and the
+        // only caller of `snapshotDistributionCommand` in this file —
+        // mirrors `distributeSelectedPublication()` immediately above,
+        // exactly, with one deliberate addition: a resolved result is
+        // stored (see this component's own `snapshotDistributionCommand`
+        // prop comment for why). A no-op whenever there is nothing to
+        // distribute (`distributablePublication` is `null`), no
+        // `snapshotDistributionCommand` was supplied, or a call is already
+        // in flight for this selection. Wrapping the call in
+        // `Promise.resolve().then(...)` catches a synchronous construction
+        // throw the same way as an asynchronous rejection, exactly as
+        // `distributeSelectedPublication()` already does.
+        distributeSelectedSnapshot() {
+            const publication = this.distributablePublication;
+            if (!publication || !this.snapshotDistributionCommand || this.snapshotDistributionExecuting) {
+                return;
+            }
+
+            this.snapshotDistributionExecuting = true;
+            this.snapshotDistributionError = null;
+            this.snapshotDistributionRequestId += 1;
+            const requestId = this.snapshotDistributionRequestId;
+
+            Promise.resolve()
+                .then(() => this.snapshotDistributionCommand(publication))
+                .then((result) => {
+                    if (requestId === this.snapshotDistributionRequestId) {
+                        this.snapshotDistributionResult = result;
+                    }
+                })
+                .catch(() => {
+                    if (requestId === this.snapshotDistributionRequestId) {
+                        this.snapshotDistributionError = 'Snapshot distribution could not be completed.';
+                    }
+                })
+                .then(() => {
+                    if (requestId === this.snapshotDistributionRequestId) {
+                        this.snapshotDistributionExecuting = false;
+                    }
+                });
+        },
         // 0.9.111 — the only writer of `discoveryResult`/`discoveryError`/
         // `discovering`, and the only caller of `discoveryCommand` in this
         // file. A no-op whenever there is no `discoveryCommand`, a call is
@@ -2064,6 +2273,10 @@ export default {
         // call, mirroring `materialInspectionRequestId`'s own unmount
         // invalidation immediately above, one layer over.
         this.distributionRequestId += 1;
+        // 0.9.138 — invalidates any still-in-flight `snapshotDistributionCommand`
+        // call, mirroring `distributionRequestId`'s own unmount invalidation
+        // immediately above, one collaborator over.
+        this.snapshotDistributionRequestId += 1;
         // 0.9.111 — invalidates any still-in-flight `discoveryCommand`
         // call, mirroring `distributionRequestId`'s own unmount
         // invalidation immediately above, one layer over.
@@ -2243,6 +2456,50 @@ export default {
                 >{{ distributionExecuting ? 'Distributing…' : 'Distribute Publication' }}</button>
 
                 <p v-if="distributionError" class="world-encounter-distribution-error">{{ distributionError }}</p>
+            </div>
+
+            <!-- 0.9.138 — a SEPARATE panel from Distribution, immediately
+                 above: Snapshot distribution is a different protocol than
+                 Signed Claim distribution (see application/
+                 SnapshotDistributionCommand.js's own header, "no coupling
+                 to Signed Claim distribution"), so it gets its own action
+                 and its own result display, never folded into the
+                 Material/Discovery dl above. Rendered only when a caller
+                 supplied a snapshotDistributionCommand; independent of
+                 distributionLifecycleStore, which this panel never reads. -->
+            <div v-if="selectedEncounter && selectedEncounter.kind === 'PUBLICATION' && snapshotDistributionCommand" class="world-encounter-snapshot-distribution-panel">
+                <h4 class="world-encounter-snapshot-distribution-title">Snapshot Distribution</h4>
+
+                <!-- 0.9.138 — a request/attempt action, never a claim of
+                     success — mirrors the Distribute Publication button
+                     immediately above, exactly. Disabled whenever there is
+                     nothing distributable yet for this selection, or a call
+                     is already in flight. -->
+                <button
+                    type="button"
+                    class="action-btn world-encounter-snapshot-distribution-action"
+                    :disabled="!distributablePublication || snapshotDistributionExecuting"
+                    @click="distributeSelectedSnapshot"
+                >{{ snapshotDistributionExecuting ? 'Distributing…' : 'Distribute Snapshot' }}</button>
+
+                <!-- 0.9.138 — the resolved contentReference/announcement,
+                     rendered verbatim, never reinterpreted or collapsed
+                     into a single success/failure verdict — see this
+                     component's own snapshotDistributionCommand prop
+                     comment. announcement is legitimately null (Arweave
+                     placement succeeded, Nostr announcement did not — see
+                     application/SnapshotDistributionCommand.js's own
+                     header, "a successful placement is never rolled back")
+                     — shown as "No announcement," never as an error. -->
+                <p v-if="snapshotDistributionError" class="world-encounter-snapshot-distribution-error">{{ snapshotDistributionError }}</p>
+                <dl v-else-if="snapshotDistributionResult" class="world-encounter-snapshot-distribution-detail">
+                    <dt>Content hash</dt>
+                    <dd>{{ snapshotDistributionResult.contentReference.hash }}</dd>
+                    <dt>Locator</dt>
+                    <dd>{{ snapshotDistributionResult.contentReference.uri }}</dd>
+                    <dt>Announcement</dt>
+                    <dd>{{ snapshotDistributionResult.announcement ? snapshotDistributionResult.announcement.id : 'No announcement' }}</dd>
+                </dl>
             </div>
 
             <!-- 0.9.111 — entirely independent of selectedEncounter: a
