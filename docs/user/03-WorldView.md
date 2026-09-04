@@ -499,6 +499,30 @@ you're editing something, so you can capture and share a world without
 leaving it. The status line (**🔒 Published** or **✎ Editing fork**) always
 shows which one it is.
 
+### My Publication — distributing your own Snapshot, no peers required
+
+Right beside Save/Publish sits a **My Publication** panel, showing your
+current world's title and author once it's actually published, plus its
+own **Distribute Snapshot** button. This is a completely separate action
+from the **Distribute Snapshot** button inside
+[World Encounters](#world-encounters--publications-and-avatars-your-peers-are-sharing)
+— that one distributes whichever encountered publication you've selected;
+this one always distributes *your own current world*. Clicking it
+genuinely attempts a real Arweave upload and Nostr announcement, and shows
+back the same **Content hash** / **Locator** / **Announcement** readout
+(or "No announcement" for a placement that succeeded without one, or a
+plain failure notice) that World Encounters' own Snapshot Distribution
+panel already does.
+
+The point of My Publication is that it never depends on World Encounters
+having anything to show. World Encounters only ever displays what a
+currently or recently connected peer has told you about — with nobody
+else around, it stays empty, and used to leave no way to distribute your
+own material at all. My Publication needs none of that: it's always here
+whenever you have a world open, whether or not anyone else is nearby, and
+whether or not it's currently published (until you publish it, the button
+is simply disabled, with a note that there's nothing to distribute yet).
+
 ## The Operation Timeline
 
 This is one of ForkBuild's most powerful features. Every change you make —
