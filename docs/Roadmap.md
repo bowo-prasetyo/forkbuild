@@ -64226,3 +64226,196 @@ I would decide between these based on actual play experience with the
 current arcade model rather than assume continuous steering is the next
 "obvious" step — a discrete pulse is a legitimate, intentional design for a
 bicycle, not an unfinished version of a smoother one.
+
+## 0.9.130 — Vehicle Steering UX / Control Contract
+
+0.9.125 through 0.9.129 built and then exhaustively audited every piece of
+the steering pipeline — intent, simulation, integration, input binding,
+held-bit/decay state. Every one of those milestones proved a PIECE of the
+chain correct in isolation. None of them, until now, wrote down the
+bicycle's own control contract as one closed, numbered list a player — or a
+future implementer of a second steerable vehicle type — could read start to
+end. This milestone is that list, plus one flagship test that drives the
+entire chain as a single continuous narrative, the shape a real player's
+own session actually takes, rather than fragmented across independent
+scenarios:
+
+```text
+ArrowLeft / ArrowRight
+          |
+          v
+VehicleSteeringInputAdapter
+          |
+          v
+VehicleSteeringIntent
+          |
+          v
+VehicleSteeringSimulation
+          |
+          v
+attempted movement
+          |
+          v
+world collision
+          |
+          v
+realized movement
+          |
+          v
+VehicleMovementHeading
+          |
+          v
+VehicleInstance.heading
+          |
+          v
+VehicleVisual
+```
+
+**The bicycle control contract**, verified directly by
+`tests/VehicleSteeringUXControlContract.test.js`'s own CONTRACT section —
+one check per statement, either behavioral (drive a real session and
+observe) or structural (sweep the source of the file that owns the claim):
+
+```text
+1. ArrowLeft/ArrowRight are discrete steering pulses, not a held rate.
+2. Browser key-repeat does not generate repeated turns.
+3. A steering pulse rotates the attempted travel direction by 45 degrees.
+4. NONE means no new steering operation.
+5. The vehicle's heading is still determined by realized displacement,
+   never by the raw steering request.
+6. Collision can prevent the requested turn from becoming realized
+   movement.
+7. A blocked turn therefore does not rotate the vehicle.
+8. A/D remains avatar rotation, not vehicle steering.
+9. Steering is currently bicycle behavior, not a generic all-vehicle one.
+```
+
+Point 9 matters structurally, not just as trivia: `VehicleType` already
+names `MOTORCYCLE`, `CAR`, and `DRONE` alongside `BICYCLE`
+(`core/VehicleType.js`, 0.9.70), but
+`application/AvatarVehicleMovementController.js`'s own `MOVABLE_VEHICLE_TYPES`
+still contains only `BICYCLE` — the sole vehicle type this codebase can
+actually spawn (`core/VehiclePlacement.js`, 0.9.72) or render
+(`renderer/VehicleRenderer.js`, 0.9.115). The CONTRACT section's own check
+for this point calls `AvatarVehicleMovementController#tick()` directly with
+a `MOTORCYCLE` capability and a real `VehicleSteeringIntent.left()`, and
+confirms it still returns `null` — steering never becomes a backdoor path
+to moving a vehicle type this codebase cannot otherwise show moving at all.
+
+**The flagship SEQUENCE test** is the milestone's own centerpiece: one
+single session, one single mount, `W` held continuously start to finish —
+never reset mid-scenario — through the exact sequence this milestone's own
+brief named:
+
+```text
+mount bicycle
+      |
+ride forward
+      |
+LEFT
+      |
+ride in new direction
+      |
+LEFT
+      |
+ride in another direction
+      |
+RIGHT
+      |
+ride in resulting direction
+      |
+blocked
+      |
+heading remains unchanged
+      |
+NONE
+      |
+continue along current heading
+```
+
+Three chained, independent steering pulses (LEFT, LEFT, RIGHT: heading
+0 -> 315 -> 270 -> 315) each land on a real ride segment afterward, with
+displacement itself checked against the resulting heading's own
+`sin`/`cos` direction — never merely a relabeled heading with no genuine
+movement behind it. The "blocked" step teleports the already-moving
+vehicle, via `VehicleRuntimeInstances#setPosition()` (the one real
+mechanism the movement controller itself uses — never a direct field
+write), to sit exactly flush against a freshly installed obstacle placed
+directly ahead along its own current, diagonal (315-degree) heading —
+heading itself is left completely untouched by the teleport, so the
+vehicle arrives at the wall still genuinely heading 315, as if it had
+ridden there. The obstacle is a small right-angle CORNER of bricks,
+not a single flat wall: a flat wall approached at a diagonal heading would
+let the vehicle clip and slide along it
+(`tests/VehicleSteeringControlAudit.test.js`'s own Section F1 is exactly
+that different claim, deliberately exercised there), where this section's
+own claim is the other one — full, symmetric absorption, zero realized
+displacement, heading exactly unchanged — the flagship, continuous-ride
+version of that same file's own Section F2. The final stretch confirms
+`NONE` across ten further ticks: steering intent reports an explicit
+`NONE` every single tick, never reverting or reissuing on its own, and
+heading stays pinned at exactly 315 throughout — the vehicle keeps
+attempting the same heading every further tick, blocked or not, exactly as
+the contract's own point 4 requires.
+
+Every assertion in both sections was mutation-tested by hand while writing
+this milestone — deliberately breaking one claim at a time (a wrong
+collision clearance, a wrong expected heading) and confirming the affected
+assertion, and only that one, fails — so this suite is known to be
+load-bearing, not a set of checks that would silently pass regardless of
+the behavior underneath.
+
+### What this milestone deliberately does NOT do
+
+No production behavior changes of any kind — every file this milestone
+touches is a test file (`tests/VehicleSteeringUXControlContract.test.js`)
+plus its own registration in `tests.html`, plus this Roadmap entry. No
+change to `core/VehicleSteeringInputAdapter.js`, `core/VehicleSteeringIntent.js`,
+`core/VehicleSteeringSimulation.js`,
+`application/AvatarVehicleMovementController.js`, or
+`application/WorldNavigationSession.js`. No new simultaneous-steering
+semantic, no continuous/held-key steering, no vehicle-specific steering
+behavior for `MOTORCYCLE`/`CAR`/`DRONE` — point 9 above documents their
+current exclusion, it does not begin closing it. No change to
+`docs/user/ControlsReference.md`'s own existing Vehicles table (0.9.128's
+own `←`/`→` row already states this contract's own points 1-3 accurately;
+this milestone's own job was proving it, not restating it a second time).
+
+### Recommendation
+
+This milestone answers the question 0.9.129 itself raised but declined to
+settle: whether the discrete 45-degree pulse model is a finished control
+scheme worth keeping, or an unfinished draft of a smoother one. Having now
+written the contract down as an explicit, numbered, fully-tested list — and
+having driven it end to end as one continuous ride rather than only in
+isolated fragments — I would treat **Option A, keep discrete arcade
+steering, as the settled answer** for the bicycle specifically. The control
+scheme is small, internally consistent, and every one of its nine
+behavioral claims now has a direct, load-bearing test behind it; nothing
+about writing it down surfaced a rough edge that argues for smoothing it
+into a continuous rate.
+
+That leaves two genuinely open, and genuinely separate, next steps —
+separate because point 9 above draws the line between them precisely:
+
+```text
+Option B — Continuous Vehicle Steering State: a new semantic model (never
+           an incremental mutation of the existing LEFT/RIGHT/NONE
+           vocabulary — see 0.9.128's and 0.9.129's own Recommendations),
+           only worth pursuing if actual play experience with the settled
+           discrete model above shows 45-degree pulses feel too coarse in
+           practice.
+
+Option C — Vehicle-specific steering: MOTORCYCLE, CAR, and DRONE remain
+           named but unreachable (no spawn, no render, no movement path —
+           point 9, above) — extending steering to any of them is
+           premature before any of them exist in practice, and would be a
+           new vehicle-capability milestone in its own right, not a
+           steering one.
+```
+
+I would not queue either automatically. This milestone's own job was
+narrowing the open question from "is the architecture ready for more
+steering work" (0.9.127/0.9.129 already answered yes) to "is the CURRENT
+control scheme itself good enough to ship as-is" — and the answer, on the
+evidence this milestone's own contract and flagship test produced, is yes.
