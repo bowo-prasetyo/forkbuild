@@ -372,8 +372,8 @@ async function runTests() {
         const codeOnly = source.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
 
         const applicationImportLines = codeOnly.split('\n').filter((line) => line.includes("from '../../application/"));
-        assert(applicationImportLines.length === 7,
-            '23. WorldEncounterCanvas.js still imports exactly seven application/ modules — discoveryCommand is a plain injected function, never a new algorithm import; the seventh is 0.9.112\'s own PublicationMaterialProvenance.js');
+        assert(applicationImportLines.length === 8,
+            '23. WorldEncounterCanvas.js still imports exactly eight application/ modules — discoveryCommand is a plain injected function, never a new algorithm import; the seventh is 0.9.112\'s own PublicationMaterialProvenance.js, the eighth 0.9.144\'s own SnapshotPublicationAttribution.js');
 
         assert(codeOnly.includes('discoveryCommand') && codeOnly.includes('discoverPublication'),
             '24. the new prop/method are actually present');

@@ -7,6 +7,7 @@ import { inspectWorldEncounterMaterial } from '../../application/WorldEncounterM
 import { PublicationDistributionState } from '../../application/PublicationDistributionLifecycle.js';
 import { describeDecentralizedWorldEncounterLeadSelectionOutcomeFromRegistry, DecentralizedWorldEncounterLeadSelectionOutcomeStatus } from '../../application/DecentralizedWorldEncounterLeadSelection.js';
 import { describePublicationMaterialProvenanceFromInspection } from '../../application/PublicationMaterialProvenance.js';
+import { resolveSnapshotPublicationAttribution } from '../../application/SnapshotPublicationAttribution.js';
 
 // 0.9.3 — World View UI / Wanderer Presence.
 //
@@ -1362,6 +1363,83 @@ import { describePublicationMaterialProvenanceFromInspection } from '../../appli
 // - **Consuming `snapshotDistributionResult` for anything beyond display**
 //   (e.g. feeding it into a later retrieval/verification action). A
 //   future, unscheduled milestone decides whether/how to wire that in.
+//
+// 0.9.144 — World View Snapshot Attribution Integration.
+//
+// `OwnPublicationPanel.js` (0.9.142/0.9.144) already reaches "Discover
+// Snapshot" + "Snapshot Attribution" for the local user's own current
+// Publication, entirely independent of World Encounters. This milestone
+// gives this component the SAME "which Publication owns this verified
+// Snapshot?" question for a Wanderer-SELECTED encounter instead — the
+// second of the two entry points 0.9.144's own design calls for, sharing
+// exactly the same application seam, differing only in where `publication`
+// comes from:
+//
+//   distributablePublication (0.9.104's own computed, reused verbatim)
+//                  │
+//                  │ click "Discover Snapshot"
+//                  ▼
+//   discoverSelectedSnapshot()
+//                  │
+//                  ▼
+//   discoverSnapshotCommand(publication)   (injected, 0.9.144 ★ — the
+//                                            SAME `(publication) -> Promise<{
+//                                            outcome, bytes, candidates,
+//                                            locator, storage, reason }>`
+//                                            function OwnPublicationPanel's
+//                                            own `discoverSnapshotCommand`
+//                                            prop already is; in the real
+//                                            running app, `ui/views/
+//                                            WorldView.js`'s own
+//                                            `discoverOwnSnapshot()`, bound
+//                                            here too)
+//                  │
+//                  ▼
+//   snapshotDiscoveryResult
+//                  │
+//                  ▼
+//   resolveSnapshotPublicationAttribution(publication, snapshotDiscoveryResult)
+//   (application/SnapshotPublicationAttribution.js, 0.9.143, unmodified —
+//   the identical pure, no-I/O function OwnPublicationPanel.js already
+//   calls directly)
+//                  │
+//                  ▼
+//   snapshotAttributionResult
+//
+// MIRRORS `snapshotDistributionExecuting`/`snapshotDistributionError`/
+// `snapshotDistributionResult`/`snapshotDistributionRequestId` (0.9.138)
+// EXACTLY, ONE ACTION OVER — its own separate ephemeral state, reset in
+// `selectEncounter()` alongside every other selection-scoped field this
+// file already resets there, and invalidated on unmount exactly like
+// `snapshotDistributionRequestId` already is. `distributablePublication`
+// is reused verbatim, never re-derived — the same restraint 0.9.138's own
+// `snapshotDistributionCommand` already holds for the identical computed.
+//
+// `snapshotAttributionResult` IS COMPUTED IMMEDIATELY, IN THE SAME
+// `.then()` AS `snapshotDiscoveryResult` ITSELF — mirroring
+// `OwnPublicationPanel.js`'s own identical restraint, one surface over.
+// This component still never hashes bytes, compares hashes, or interprets
+// a resolution outcome itself; `resolveSnapshotPublicationAttribution()`
+// does all of that.
+//
+// A SEPARATE PANEL FROM Snapshot Distribution, NEVER MERGED — mirrors this
+// file's own "Divergence 2" restraint (0.9.138) for the identical reason:
+// discovering/attributing a Snapshot and distributing one are different
+// questions about the same Publication.
+//
+// DELIBERATELY EXCLUDED — NOT THIS MILESTONE.
+// - **A default `discoverSnapshotCommand`, or constructing
+//   `DecentralizedSnapshotResolver`/`ArweaveContentStore`/
+//   `NostrSnapshotDiscoveryQueryService` of its own.** `null` by default,
+//   exactly like every other optional command prop on this component —
+//   composing the real capability stays `ui/main.js`'s own concern.
+// - **Any trust/ownership/authenticity vocabulary beyond MATCH/NO_MATCH and
+//   `DecentralizedSnapshotResolutionOutcome`'s own four failure values,
+//   rendered verbatim.** See `application/SnapshotPublicationAttribution.js`'s
+//   own header, unrevisited here.
+// - **Automatic attribution during Snapshot Distribution, or any change to
+//   `distributeSelectedSnapshot()`.** Distribution and discovery/attribution
+//   remain independent actions, exactly as 0.9.138 already left them.
 
 const WORLD_HALF_SPAN = 50;
 const CANVAS_SIZE = 600;
@@ -1506,6 +1584,23 @@ export default {
         discoveryCommand: {
             type: Function,
             default: null
+        },
+        // 0.9.144 — optional. A `(publication) -> Promise<{ outcome, bytes,
+        // candidates, locator, storage, reason }>` function, called with
+        // exactly the loaded `Publication` domain object for the CURRENTLY
+        // selected, local-origin PUBLICATION encounter — the SAME
+        // `distributablePublication` `distributionCommand`/
+        // `snapshotDistributionCommand` above already read, and the SAME
+        // contract `OwnPublicationPanel.js`'s own `discoverSnapshotCommand`
+        // prop already is (in the real running app, the identical function
+        // instance — see this file's own header, "0.9.144 — World View
+        // Snapshot Attribution Integration"). `null` by default: a mount
+        // with no `discoverSnapshotCommand` supplied renders no Snapshot
+        // Discovery/Attribution panel at all. Never constructed by this
+        // component itself.
+        discoverSnapshotCommand: {
+            type: Function,
+            default: null
         }
     },
     data() {
@@ -1632,6 +1727,36 @@ export default {
             // resolves; reset on every fresh selection and on every new
             // attempt, exactly like `snapshotDistributionError`.
             snapshotDistributionResult: null,
+            // 0.9.144 — ephemeral UI interaction state only, mirroring
+            // `snapshotDistributionExecuting`/`snapshotDistributionError`/
+            // `snapshotDistributionRequestId` (0.9.138) exactly, one action
+            // over. `true` for exactly as long as a call to
+            // `discoverSnapshotCommand` is in flight for the current
+            // selection.
+            snapshotDiscoveryExecuting: false,
+            // 0.9.144 — a plain-text notice for the most recent genuine
+            // `discoverSnapshotCommand` rejection (or synchronous
+            // construction throw), or `null` when there is none to show.
+            // Reset on every fresh selection and on every new attempt.
+            snapshotDiscoveryError: null,
+            // 0.9.144 — bumped on every call to `discoverSelectedSnapshot()`,
+            // on every fresh selection, and on unmount — guards against a
+            // stale response exactly as `snapshotDistributionRequestId`
+            // already does, one action over.
+            snapshotDiscoveryRequestId: 0,
+            // 0.9.144 — the composed command's own resolved `{ outcome,
+            // bytes, candidates, locator, storage, reason }` result,
+            // rendered verbatim below. `null` until a call resolves; reset
+            // on every fresh selection and on every new attempt.
+            snapshotDiscoveryResult: null,
+            // 0.9.144 — `resolveSnapshotPublicationAttribution(publication,
+            // snapshotDiscoveryResult)`'s own result — a SEPARATE field,
+            // never a replacement of `snapshotDiscoveryResult`, mirroring
+            // `OwnPublicationPanel.js`'s own identical restraint. `null`
+            // until a discovery call resolves; written only by
+            // `discoverSelectedSnapshot()`, below, in the same `.then()` as
+            // `snapshotDiscoveryResult` itself.
+            snapshotAttributionResult: null,
             // 0.9.111 — the Wanderer's own typed discovery input, page-local
             // UI state only — see this file's own header, "ephemeral UI
             // state only." Never persisted, never validated beyond a plain
@@ -1893,6 +2018,16 @@ export default {
             this.snapshotDistributionError = null;
             this.snapshotDistributionResult = null;
             this.snapshotDistributionRequestId += 1;
+            // 0.9.144 — mirrors the 0.9.138 reset immediately above,
+            // exactly, one action over: a fresh selection never carries a
+            // stale Snapshot Discovery/Attribution execution/error/result
+            // from whatever was previously selected, and invalidates any
+            // still-in-flight call.
+            this.snapshotDiscoveryExecuting = false;
+            this.snapshotDiscoveryError = null;
+            this.snapshotDiscoveryResult = null;
+            this.snapshotAttributionResult = null;
+            this.snapshotDiscoveryRequestId += 1;
         },
         // 0.9.13 — the only writer of `worldView`, and the only caller
         // of `describeWorldFromDiscoveryRegistry()` in this file. See
@@ -2149,6 +2284,49 @@ export default {
                     }
                 });
         },
+        // 0.9.144 — the only writer of `snapshotDiscoveryExecuting`/
+        // `snapshotDiscoveryError`/`snapshotDiscoveryResult`/
+        // `snapshotAttributionResult`, and the only caller of
+        // `discoverSnapshotCommand`/`resolveSnapshotPublicationAttribution()`
+        // in this file — mirrors `distributeSelectedSnapshot()` immediately
+        // above, exactly, with one deliberate addition: a resolved
+        // discovery result is immediately turned into an attribution
+        // verdict, computed under the SAME `requestId` guard — see this
+        // file's own header, "0.9.144 — World View Snapshot Attribution
+        // Integration." A no-op whenever there is nothing to discover
+        // (`distributablePublication` is `null`), no
+        // `discoverSnapshotCommand` was supplied, or a call is already in
+        // flight for this selection.
+        discoverSelectedSnapshot() {
+            const publication = this.distributablePublication;
+            if (!publication || !this.discoverSnapshotCommand || this.snapshotDiscoveryExecuting) {
+                return;
+            }
+
+            this.snapshotDiscoveryExecuting = true;
+            this.snapshotDiscoveryError = null;
+            this.snapshotDiscoveryRequestId += 1;
+            const requestId = this.snapshotDiscoveryRequestId;
+
+            Promise.resolve()
+                .then(() => this.discoverSnapshotCommand(publication))
+                .then((result) => {
+                    if (requestId === this.snapshotDiscoveryRequestId) {
+                        this.snapshotDiscoveryResult = result;
+                        this.snapshotAttributionResult = resolveSnapshotPublicationAttribution(publication, result);
+                    }
+                })
+                .catch(() => {
+                    if (requestId === this.snapshotDiscoveryRequestId) {
+                        this.snapshotDiscoveryError = 'Snapshot discovery could not be completed.';
+                    }
+                })
+                .then(() => {
+                    if (requestId === this.snapshotDiscoveryRequestId) {
+                        this.snapshotDiscoveryExecuting = false;
+                    }
+                });
+        },
         // 0.9.111 — the only writer of `discoveryResult`/`discoveryError`/
         // `discovering`, and the only caller of `discoveryCommand` in this
         // file. A no-op whenever there is no `discoveryCommand`, a call is
@@ -2277,6 +2455,10 @@ export default {
         // call, mirroring `distributionRequestId`'s own unmount invalidation
         // immediately above, one collaborator over.
         this.snapshotDistributionRequestId += 1;
+        // 0.9.144 — invalidates any still-in-flight `discoverSnapshotCommand`
+        // call, mirroring `snapshotDistributionRequestId`'s own unmount
+        // invalidation immediately above, one action over.
+        this.snapshotDiscoveryRequestId += 1;
         // 0.9.111 — invalidates any still-in-flight `discoveryCommand`
         // call, mirroring `distributionRequestId`'s own unmount
         // invalidation immediately above, one layer over.
@@ -2499,6 +2681,54 @@ export default {
                     <dd>{{ snapshotDistributionResult.contentReference.uri }}</dd>
                     <dt>Announcement</dt>
                     <dd>{{ snapshotDistributionResult.announcement ? snapshotDistributionResult.announcement.id : 'No announcement' }}</dd>
+                </dl>
+            </div>
+
+            <!-- 0.9.144 — a SEPARATE panel from Snapshot Distribution,
+                 immediately above, mirroring its own "Divergence 2"
+                 restraint: discovering/attributing a Snapshot and
+                 distributing one are different questions about the same
+                 Publication. Rendered only when a caller supplied a
+                 discoverSnapshotCommand. See this file's own header,
+                 "0.9.144 — World View Snapshot Attribution Integration." -->
+            <div v-if="selectedEncounter && selectedEncounter.kind === 'PUBLICATION' && discoverSnapshotCommand" class="world-encounter-snapshot-discovery-panel">
+                <h4 class="world-encounter-snapshot-discovery-title">Snapshot Discovery</h4>
+
+                <!-- Disabled whenever there is nothing to discover for this
+                     selection, or a call is already in flight — mirrors the
+                     Distribute Snapshot button immediately above, exactly. -->
+                <button
+                    type="button"
+                    class="action-btn world-encounter-snapshot-discovery-action"
+                    :disabled="!distributablePublication || snapshotDiscoveryExecuting"
+                    @click="discoverSelectedSnapshot"
+                >{{ snapshotDiscoveryExecuting ? 'Discovering…' : 'Discover Snapshot' }}</button>
+
+                <!-- The resolver's own outcome vocabulary, rendered
+                     verbatim — see this file's own header. -->
+                <p v-if="snapshotDiscoveryError" class="world-encounter-snapshot-discovery-error">{{ snapshotDiscoveryError }}</p>
+                <dl v-else-if="snapshotDiscoveryResult" class="world-encounter-snapshot-discovery-detail">
+                    <dt>Outcome</dt>
+                    <dd>{{ snapshotDiscoveryResult.outcome }}</dd>
+                    <template v-if="snapshotDiscoveryResult.reason">
+                        <dt>Reason</dt>
+                        <dd>{{ snapshotDiscoveryResult.reason }}</dd>
+                    </template>
+                    <template v-if="snapshotDiscoveryResult.locator">
+                        <dt>Locator</dt>
+                        <dd>{{ snapshotDiscoveryResult.locator }}</dd>
+                    </template>
+                </dl>
+
+                <!-- A separate result, below Snapshot Discovery's own,
+                     never merged into it — see this file's own header,
+                     "0.9.144 — World View Snapshot Attribution
+                     Integration," and application/
+                     SnapshotPublicationAttribution.js's own header for what
+                     MATCH does and does not mean. -->
+                <dl v-if="snapshotAttributionResult" class="world-encounter-snapshot-attribution-detail">
+                    <dt>Snapshot Attribution</dt>
+                    <dd>{{ snapshotAttributionResult.outcome }}</dd>
                 </dl>
             </div>
 

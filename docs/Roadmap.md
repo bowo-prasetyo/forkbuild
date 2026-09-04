@@ -66813,3 +66813,195 @@ Nostr announcement cannot produce attribution merely by claiming the
 correct publication hash — but per this codebase's own established
 rhythm, that remains the next milestone's own decision to schedule, not
 this one's.
+
+## 0.9.144 — World View Snapshot Attribution Integration
+
+0.9.143 completed the semantic seam — `resolveSnapshotPublicationAttribution()`
+— and stopped deliberately short of any UI wiring, per its own header ("a
+UI badge or any composition-root wiring... a future, separate milestone").
+Rather than schedule the end-to-end audit its own "Recommendation"
+tentatively named next, this milestone reaches the actual product gap
+first: the new attribution capability sat completely isolated from the
+user-facing flow. 0.9.144 is that wiring, at both World View entry points,
+deferring the audit to 0.9.145.
+
+```text
+Publication
+    │
+    │ contentReference.hash
+    ▼
+Discover Snapshot
+    │
+    ▼
+DecentralizedSnapshotResolver
+    │
+    ├── discover
+    ├── locate
+    ├── retrieve
+    └── verify
+    │
+    ▼
+resolved Snapshot
+    │
+    ▼
+SnapshotPublicationAttribution
+    │
+    ▼
+MATCH / NO_MATCH
+```
+
+### The UI stays a consumer, never a second implementation
+
+Neither `ui/components/OwnPublicationPanel.js` nor `ui/components/
+WorldEncounterCanvas.js` hashes bytes, compares hashes, interprets a
+resolution outcome, or constructs an Arweave/Nostr/resolver collaborator of
+its own. Both call `resolveSnapshotPublicationAttribution()` — imported
+directly, the same way this codebase's UI layer already imports every
+other pure, no-I/O `application/` describer (`WorldEncounterSelectionOutcome.js`,
+`PublicationMaterialProvenance.js`) — from exactly one place each, in the
+same `.then()` that already stores a successful discovery's own result:
+
+```text
+discover
+   ↓
+receive resolution result
+   ↓
+invoke attribution
+   ↓
+render result
+```
+
+Attribution needs no injected command prop the way `discoverSnapshotCommand`/
+`snapshotDistributionCommand` do — it has no I/O of its own, and both
+inputs (`publication`, the freshly resolved `snapshotDiscoveryResult`) are
+already in hand the instant discovery resolves. There is no separate
+"Attribute" button.
+
+### Two entry points, one seam
+
+`OwnPublicationPanel.js` already had "Discover Snapshot" for the local
+user's own current Publication (0.9.142). `WorldEncounterCanvas.js` gets
+the identical capability for a Wanderer-selected World Encounter, as a new
+"Snapshot Discovery" panel alongside its existing "Snapshot Distribution"
+one. Both are wired to the exact same `ui/views/WorldView.js#discoverOwnSnapshot()`
+function — reused verbatim, never forked into two near-identical copies —
+mirroring the precedent `distributeWorldEncounterSnapshot()` already set
+for Snapshot Distribution's own two entry points:
+
+```text
+                 Publication
+                     │
+            ┌────────┴────────┐
+            │                 │
+         local             remote
+    (OwnPublicationPanel)  (WorldEncounterCanvas,
+                             a selected encounter)
+            │                 │
+            └────────┬────────┘
+                     ▼
+        discoverOwnSnapshot(publication)
+                     ▼
+        resolveSnapshotPublicationAttribution(publication, result)
+                     ▼
+              same attribution seam
+```
+
+### A separate UI field, never a replacement
+
+Both components add `snapshotAttributionResult` as a field independent of
+their existing `snapshotDiscoveryResult` — the sequence stays visible as
+two facts, never collapsed into one combined status:
+
+```text
+Snapshot Discovery
+    RESOLVED
+
+Snapshot Attribution
+    MATCH
+```
+
+A discovery that never reaches `RESOLVED` (`NOT_DISCOVERED`/
+`STORE_UNAVAILABLE`/`CONTENT_UNAVAILABLE`/`CONTENT_HASH_MISMATCH`) still
+produces an attribution result — `resolveSnapshotPublicationAttribution()`
+passes that same failure outcome through unchanged, exactly as 0.9.143
+already specified, so `Snapshot Discovery: NOT_DISCOVERED` never renders as
+a fabricated `Snapshot Attribution: NO_MATCH`. Both fields reset together —
+on a changed local Publication (the existing `publication` watcher) and on
+a fresh selection (the existing `selectEncounter()`), exactly where
+`snapshotDiscoveryResult` already resets, and a stale in-flight response is
+discarded by the same `requestId` guard already governing discovery.
+
+### Distribution stays untouched
+
+`distributeOwnSnapshot()`/`distributeSelectedSnapshot()` are unmodified —
+neither calls `resolveSnapshotPublicationAttribution()`. Distributing a
+Snapshot and discovering/attributing one remain independent actions; the
+user may distribute without discovering, and discover without
+distributing, exactly as before this milestone.
+
+### Test coverage — `tests/WorldViewSnapshotAttribution.test.js`
+
+- **Section A:** `OwnPublicationPanel` computes an attribution verdict
+  immediately after a successful discovery, held as its own field.
+- **Section B:** `WorldEncounterCanvas` computes the identical verdict for
+  a Wanderer-selected Publication, through the same seam.
+- **Section C (flagship):** zero peers, a real local Publication,
+  distributed and discovered through the real (unmodified) Arweave/Nostr
+  chain, attributed end to end through `OwnPublicationPanel` alone,
+  reporting `MATCH`.
+- **Section D (negative):** a verified Snapshot whose content genuinely
+  differs from the Publication being attributed reports `NO_MATCH`, at
+  both entry points — distinguishing "verified the wrong content" from a
+  resolution failure.
+- **Section E:** a resolution failure (`NOT_DISCOVERED`, via the real
+  chain, nothing ever announced) is passed through unchanged, never
+  fabricated into `NO_MATCH`.
+- **Section F:** Snapshot Discovery and Snapshot Attribution coexist as two
+  independently readable facts, never overwriting one another.
+- **Section G:** a changed Publication/selection invalidates a stale
+  attribution result exactly as it already invalidates discovery.
+- **Section H:** a stale in-flight response can never write an attribution
+  result for a Publication/selection that has since moved on.
+- **Section I:** an architectural regression sweep — neither UI file
+  hashes bytes or constructs Arweave/Nostr/resolver collaborators
+  directly, both call `resolveSnapshotPublicationAttribution()` from
+  exactly one place each, both entry points share the exact same
+  `discoverOwnSnapshot()` function, and Snapshot Distribution remains
+  untouched.
+
+### What this milestone deliberately does NOT do
+
+- **A trust/ownership/authenticity layer, or any vocabulary beyond
+  `MATCH`/`NO_MATCH` and `DecentralizedSnapshotResolutionOutcome`'s own
+  four failure values, rendered verbatim.** The UI's own labels say
+  "Snapshot Attribution: MATCH," never "Publication verified" or
+  "Publication authentic" — `MATCH` means exactly what 0.9.143 already
+  established, and nothing more.
+- **Automatic attribution during Snapshot Distribution.** See "Distribution
+  stays untouched," above.
+- **The end-to-end audit 0.9.143's own "Recommendation" tentatively named
+  0.9.144.** That audit — proving the full chain holds together across
+  composition roots and UI, and that a false Nostr announcement can never
+  buy attribution across the entire running system — remains 0.9.145's own
+  concern, named next.
+- **Any change to `application/SnapshotPublicationAttribution.js`,
+  `application/SnapshotPublicationAttributionOutcome.js`, `application/
+  DecentralizedSnapshotResolver.js`, `application/DiscoverSnapshotCommand.js`,
+  or any Arweave/Nostr collaborator.** All remain completely unmodified.
+
+### Recommendation
+
+```text
+0.9.140  Own Publication Distribution Entry Point                 ✓
+0.9.141  Distribution Entry-Point Convergence Audit                ✓
+0.9.142  World View Snapshot Discovery Command                     ✓
+0.9.143  Snapshot–Publication Attribution                          ✓
+0.9.144  World View Snapshot Attribution Integration                ✓
+```
+
+A user can now discover a Snapshot for a Publication — their own, or one
+encountered in the World — and see, honestly, whether the independently
+verified Snapshot is attributable to it. The natural next step is 0.9.145
+— the end-to-end audit deferred above — and, per this codebase's own
+established rhythm, a reassessment of the broader roadmap after it rather
+than another automatic step deeper into the Snapshot subsystem.
