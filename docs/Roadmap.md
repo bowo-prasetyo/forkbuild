@@ -65054,3 +65054,245 @@ caller's own, later initiative. What remains, named already at the close
 of 0.9.132: 0.9.134, composition wiring an actual retrieval path — and,
 now, deciding whether/when that path should also consult this
 milestone's own discovery query service — end to end.
+
+## 0.9.134 — Snapshot Retrieval from Decentralized Discovery
+
+0.9.132 and 0.9.133 each closed one independent half of decentralized
+Snapshot distribution — `content/ArweaveContentStore.js` can PLACE a
+Snapshot's bytes, and `application/NostrSnapshotDiscoveryQueryService.js`
+can DISCOVER where a Snapshot's bytes claim to be. Nothing yet connected
+the two: a caller who only held a `discoveryTag` and a `contentHash` had
+to drive discovery, store resolution, retrieval, and verification by
+hand, exactly as `tests/NostrSnapshotDiscovery.test.js`'s own flagship
+SEQUENCE already did entirely within a TEST's own scope. This milestone
+is that connection: `application/DecentralizedSnapshotResolver.js`, a
+narrow application-level resolver — the missing seam named at the close
+of 0.9.132 and again at the close of 0.9.133.
+
+```text
+Nostr discovery
+      │
+      │ contentHash + locator
+      ▼
+Snapshot locator
+      │
+      ▼
+Snapshot ContentStore
+      │
+      │ get(locator)
+      ▼
+Snapshot bytes
+      │
+      ▼
+content hash verification
+      │
+      ▼
+usable Snapshot
+```
+
+### One new file, reusing two families it deliberately never merges
+
+```text
+application/NostrSnapshotDiscoveryQueryService.js#search(discoveryTag)
+        │
+        │   [ { contentHash, locator, storage }, ... ]
+        ▼
+application/DecentralizedSnapshotResolver.js          ★ (NEW)
+     #resolve(discoveryTag, contentHash, { contentStore, storeRegistry })
+        │
+        ├── filter candidates by the REQUESTED contentHash
+        ├── select the first match (deterministic — see below)
+        ├── resolve a store via storeRegistry.get(candidate.storage),
+        │   or an explicit contentStore — application/
+        │   SnapshotPlacementStoreRegistry.js (0.8.18), UNMODIFIED,
+        │   REUSED — no new ContentStoreRegistry is built
+        ├── store.get(reference) — content/ContentStore.js's own
+        │   existing contract, whichever concrete store is registered
+        └── reference.verify(bytes) — core/ContentReference.js's own
+            existing hash check, UNMODIFIED
+        │
+        ▼
+{ outcome, bytes, candidates, locator, storage, reason }
+```
+
+`application/DecentralizedSnapshotResolutionOutcome.js` names every way
+`resolve()` can end, in the same order its own pipeline checks them —
+the identical "name the difference structurally" discipline `application/
+SnapshotPlacementResolutionOutcome.js` (0.8.18) already established,
+deliberately NOT reused here because that enum's own
+`INVALID_ENVELOPE`/`INVALID_SIGNATURE` members describe a SIGNED
+`PublicationSnapshotPlacement`'s own checks, which a Nostr-discovered
+candidate — self-declared, never signed, per `core/
+SnapshotDiscoveryEnvelope.js`'s own header — never has.
+
+### The centerpiece invariant this milestone treats as flagship
+
+```text
+Nostr says:  contentHash = H, locator = L
+        │
+        ▼
+ContentStore.get(L)
+        │
+        ▼
+bytes = B
+        │
+        ▼
+computeContentHash(B) == H ?
+```
+
+Only if that final comparison succeeds does `resolve()` report
+`RESOLVED`. Four layers, never collapsed into one status:
+
+```text
+DISCOVERY     "A locator was announced."            -> NOT_DISCOVERED
+LOCATION      "The locator can be queried."          -> STORE_UNAVAILABLE
+RETRIEVAL     "Bytes were obtained."                  -> CONTENT_UNAVAILABLE
+VERIFICATION  "Those bytes are the expected Snapshot." -> CONTENT_HASH_MISMATCH
+```
+
+A stale locator (genuinely discoverable, genuinely well-formed, but the
+store cannot presently retrieve it) reports `CONTENT_UNAVAILABLE`. A false
+discovery record (genuinely discoverable, its locator genuinely resolves
+and genuinely retrieves bytes) reports `CONTENT_HASH_MISMATCH` — the
+retrieval pipeline refuses to promote false discovery into a Snapshot,
+directly extending `tests/NostrSnapshotDiscovery.test.js`'s own flagship
+negative case (which proved discovery alone verifies nothing) into a
+proof that the RETRIEVAL pipeline built on top of it verifies nothing on
+a caller's behalf either — only `resolve()`'s own final step does.
+
+### Multiple candidates: preserved, never ranked
+
+For `H -> L1`, `H -> L2`, `H -> L3`, this milestone does not introduce
+ranking, trust scoring, or a "best provider." `resolve()`'s own
+`candidates` field reports every discovered candidate whose own
+`contentHash` matched, in the exact order `search()` reported them;
+resolution itself acts against the FIRST one — the identical
+deterministic rule `application/
+NostrSnapshotDiscoveryQueryService.js#resolveLocator()` (0.9.133) already
+documents and implements, extended only far enough to also carry that
+candidate's own `storage` (`resolveLocator()` reports a bare locator
+string alone, which is not enough to pick a `ContentStore`). A caller
+wanting to try a different candidate after a `CONTENT_UNAVAILABLE` or
+`CONTENT_HASH_MISMATCH` does so explicitly, by calling `resolve()` again
+with a different `contentStore` — this class never performs that retry
+automatically, since automatic failover across candidates is itself a
+form of provider selection.
+
+### Reusing `application/SnapshotPlacementStoreRegistry.js`
+
+The resolver never knows about `ArweaveContentStore` or `IpfsContentStore`
+specifically — it only ever calls `storeRegistry.get(candidate.storage)`
+and then that resolved store's own `get()`. `application/
+SnapshotPlacementStoreRegistry.js` (0.8.18) already provides exactly the
+`storage -> ContentStore` lookup a "ContentStoreRegistry" would — a second,
+competing registry mapping the identical relationship would drift out of
+sync by hand, so none is built. This is the one place this milestone
+deliberately reaches across the boundary `tests/
+SnapshotDistributionBoundary.test.js`'s own point 4 protects: it reuses
+the Snapshot Placement family's registry (a plain, generic
+`storage -> ContentStore` lookup table that itself references nothing
+Nostr-shaped) without importing anything from that family's SIGNED half
+(`core/PublicationSnapshotPlacement.js`, `application/
+SnapshotPlacementResolver.js`) — the boundary test's own
+`SNAPSHOT_PLACEMENT_FILES` list is unchanged, and still passes, because
+`application/DecentralizedSnapshotResolver.js` was never added to it: it
+is a new, parallel file, not a member of that family.
+
+### Tests
+
+`tests/DecentralizedSnapshotResolution.test.js` is the milestone's own
+flagship, mirroring the section structure `tests/
+NostrSnapshotDiscovery.test.js` already established. Section CONTRACT
+verifies, directly, the nine statements this milestone's own header
+names (the four layers are distinct outcomes; a DISCOVERY failure; a
+LOCATION failure; a RETRIEVAL failure — a stale locator; a VERIFICATION
+failure — a false discovery record; `SnapshotPlacementStoreRegistry` is
+reused, not re-invented; multiple candidates are preserved, not ranked;
+`resolve()` never throws for a pipeline failure, only a caller contract
+violation; no composition wiring exists yet). Section SEQUENCE drives one
+continuous flagship scenario — create a snapshot, place it on a real
+(fake-gateway) Arweave, publish discovery to a real (in-memory) Nostr
+network, and resolve it end to end via ONE `resolve()` call — against one
+shared scenario exercising the real `ArweaveContentStore`, the real
+`NostrSnapshotDiscoveryQueryService`, and the real
+`SnapshotPlacementStoreRegistry` together. It then breaks each of the
+four layers independently against that SAME already-working scenario
+(an unannounced `contentHash`; an empty registry; a broken gateway; a
+false announcement under a fresh tag) and proves, each time, that the
+original resolution still succeeds afterward — one failure mode never
+contaminates another, and never contaminates global state.
+
+`tests/SnapshotDistributionBoundary.test.js` (0.9.131) and `tests/
+NostrSnapshotDiscovery.test.js` (0.9.133) required no changes — neither
+new file belongs to either the Claim Distribution family, the Snapshot
+Placement family, or the 0.9.133 discovery family; both are read only, by
+this milestone's own test suite.
+
+### What this milestone deliberately does NOT do
+
+- **No composition wiring into World View, `ui/main.js`, or any UI, and
+  no automatic publication-time or load-time consultation of this
+  resolver.** `tests/DecentralizedSnapshotResolution.test.js`'s own point
+  9 proves `ui/main.js` never references `DecentralizedSnapshotResolver`.
+  Something higher-level, unbuilt this milestone, decides WHEN a
+  resolution should be attempted.
+- **No new `ContentStoreRegistry`.** See "reusing
+  `application/SnapshotPlacementStoreRegistry.js`," above.
+- **No automatic retry or failover across multiple discovered
+  candidates, no trust scoring, no "preferred provider."** See
+  "multiple candidates: preserved, never ranked," above.
+- **No change to `core/SnapshotDiscoveryEnvelope.js`, `application/
+  NostrSnapshotDiscoveryPublisher.js`, `application/
+  NostrSnapshotDiscoveryQueryService.js`, `application/
+  SnapshotPlacementResolver.js`, or `application/
+  SnapshotPlacementStoreRegistry.js`.** All five are read only, by this
+  milestone's own test suite, never edited.
+- **No signature or envelope re-validation of its own.** A discovered
+  candidate already passed `core/SnapshotDiscoveryEnvelope.js`'s own
+  shape validation inside `search()`; this resolver trusts that shape and
+  spends its own effort entirely on the one thing that shape never
+  proves — whether the locator actually serves the announced content.
+- **No replication, caching, or persistence of a resolved result.**
+  Calling `resolve()` twice always re-derives its answer from scratch —
+  the identical restraint `application/
+  SnapshotPlacementResolutionCoordinator.js` (0.8.20) already holds for
+  the signed-placement side of this same question.
+
+### The resulting architectural rule
+
+A caller holding only a `discoveryTag` and a `contentHash` can now obtain
+a genuinely verified Snapshot in one call — `application/
+DecentralizedSnapshotResolver.js` — that internally still keeps
+DISCOVERY, LOCATION, RETRIEVAL, and VERIFICATION as four independently
+observable outcomes, never a single boolean. A Snapshot can be
+independently placed on Arweave, discovered through Nostr, retrieved
+through the existing `ContentStore` abstraction, and cryptographically
+tied back to its content identity — without coupling any of this to
+Signed Claim distribution, and without either the Signed Claim family or
+the Snapshot Placement family's own signed/peer-based resolution path
+gaining a dependency on this new, narrower one.
+
+### Recommendation
+
+```text
+0.9.131  Snapshot Distribution Boundary                    ✓
+0.9.132  ArweaveContentStore                                ✓
+0.9.133  Nostr Snapshot Location Discovery                  ✓
+0.9.134  Decentralized Snapshot Retrieval                   ✓
+0.9.135  End-to-End Snapshot Distribution Audit             ← NEXT
+```
+
+I would make 0.9.135 a test-only milestone: an audit proving the complete
+chain (Snapshot -> content hash -> Arweave placement -> Arweave locator
+-> Nostr announcement -> Nostr discovery -> locator resolution ->
+`ContentStore` retrieval -> content hash verification -> Snapshot) using
+nothing but already-existing, unmodified production files, and
+explicitly re-proving — after four milestones of new decentralized
+material — that Signed Claim distribution and Snapshot distribution
+remain independent, exactly as `tests/
+SnapshotDistributionBoundary.test.js` (0.9.131) first proved before
+either half of this new material existed. After 0.9.135, I would pause
+and reassess before scheduling 0.9.136 — composition wiring into World
+View or any UI is a genuinely new kind of decision (who decides a
+Snapshot should be globally announced at all), better made deliberately
+than as a default next milestone.
