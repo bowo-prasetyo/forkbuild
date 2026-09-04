@@ -90,6 +90,7 @@ vehicle to mount it.
 | `E` | Mount the nearby vehicle, or dismount the one you're on | Only shown/active when a vehicle is in range or you're mounted |
 | `W` / `S` | Accelerate / reverse | Replaces on-foot walking while mounted |
 | `A` / `D` | Steer | Turn rate depends on the vehicle |
+| `←` / `→` (press) | Turn the vehicle's own attempted travel direction left/right | A single 45° turn per press — holding the key does not keep turning |
 | `Ctrl` (held) | Brake | |
 
 ## Selection (click/marquee work in both views; only the Editor mutates)

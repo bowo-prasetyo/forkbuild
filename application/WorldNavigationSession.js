@@ -33,7 +33,8 @@ import { AvatarVehicleInteractionController } from './AvatarVehicleInteractionCo
 import { VehicleRuntimeInstances } from './VehicleRuntimeInstances.js';
 import { AvatarVehicleMovementController } from './AvatarVehicleMovementController.js';
 import { resolveAvatarVehicleMovementCapability } from '../core/AvatarVehicleMovementCapability.js';
-import { isValidVehicleSteeringIntent } from '../core/VehicleSteeringIntent.js';
+import { isValidVehicleSteeringIntent, createVehicleSteeringIntent, VehicleSteeringIntent } from '../core/VehicleSteeringIntent.js';
+import { deriveVehicleSteeringInputEvent } from '../core/VehicleSteeringInputAdapter.js';
 import { deriveAvatarContinuousMovementInputEvent } from '../core/AvatarContinuousMovementInputAdapter.js';
 import { deriveAvatarContinuousMovementIntent } from '../core/AvatarContinuousMovementIntent.js';
 import { deriveAvatarContinuousMovementMode } from '../core/AvatarContinuousMovementMode.js';
@@ -150,6 +151,17 @@ const NEARBY_RADIUS = 5;
 // WASD, with no existing meaning anywhere in this file or its sibling
 // controllers.
 const VEHICLE_BRAKE_KEY = 'control';
+// 0.9.128 — the two physical keys that produce a real steering request —
+// see `_processVehicleSteeringInput()`'s own header, below, for why arrow
+// keys are the pair this milestone picks: W/A/S/D, Shift, Space, Alt, 'E',
+// and Control (VEHICLE_BRAKE_KEY, immediately above) are all already
+// claimed, exactly as that constant's own comment already explains for
+// itself. The arrow keys carry no meaning anywhere in World View — the
+// Transform panel's own arrow-key bindings (docs/user/ControlsReference.md,
+// "Transform — keyboard") are explicitly Editor-only, over a selection, and
+// never reachable from World View at all.
+const VEHICLE_STEER_LEFT_KEY = 'arrowleft';
+const VEHICLE_STEER_RIGHT_KEY = 'arrowright';
 // 0.2.43 — the default radius getNearbyAvatars() searches within when
 // no radius is given. Deliberately its OWN constant, not a reuse of
 // NEARBY_RADIUS above: that one answers "is a document essentially at
@@ -499,6 +511,19 @@ export class WorldNavigationSession {
 	    // this field is ONLY ever `shiftDown`, never a second copy of that
 	    // mode.
 	    this._shiftDown = false;
+	    // 0.9.128 — Vehicle Steering Input Binding. The direct structural
+	    // twins of `_altDown`/`_shiftDown` above, one layer over for
+	    // core/VehicleSteeringInputAdapter.js's own `leftHeld`/`rightHeld` —
+	    // this session's own caller-owned bookkeeping for telling a genuine
+	    // new press of the LEFT/RIGHT steering key from an uninteresting
+	    // repeat of one already held (see that adapter's own header for why
+	    // steering, a discrete PULSE, needs this and braking's own stateless
+	    // adapter does not). `_vehicleSteeringIntent` itself remains the one
+	    // place the resulting LEFT/RIGHT/NONE request lives — these two
+	    // fields are ONLY ever the raw physical hold bits, never a second
+	    // copy of that request.
+	    this._vehicleSteerLeftHeld = false;
+	    this._vehicleSteerRightHeld = false;
 	    this._followAvatarEnabled = false;
 	    this._lastAvatarFollowPosition = null;
 	    // 0.3.2 — Camera Perspective. `null` means "off" — the free/orbit
@@ -1241,6 +1266,26 @@ export class WorldNavigationSession {
                         // own observable behavior yet.
                         steeringIntent: this._vehicleSteeringIntent
                     });
+                    // 0.9.128 — Vehicle Steering Input Binding. A real
+                    // LEFT/RIGHT steering request is a single, discrete
+                    // turn, never a continuous rate (see
+                    // core/VehicleSteeringSimulation.js's own header) — it
+                    // was already handed to tick() above, in full, exactly
+                    // once. Decaying it to an explicit NONE here (never back
+                    // to `null`) is what keeps a held steer key from
+                    // compounding a further turn on every subsequent frame:
+                    // the very next tick continues along the vehicle's own
+                    // now-current heading through the SAME steering-redirect
+                    // path (see application/AvatarVehicleMovementController.js's
+                    // own tick(), "NONE -> previousHeading, unchanged") —
+                    // never a fresh LEFT/RIGHT re-issued every frame a steer
+                    // key merely happens to still be physically held. See
+                    // docs/Roadmap.md, 0.9.127's own "A steering request is
+                    // a single, discrete turn, not a continuous rate," and
+                    // 0.9.128.
+                    if (this._vehicleSteeringIntent && !this._vehicleSteeringIntent.isNone) {
+                        this.setVehicleSteeringIntent(VehicleSteeringIntent.none());
+                    }
                     if (moved) {
                         const positionChanged = moved.vehicleInstance.position.x !== current.position.x
                             || moved.vehicleInstance.position.y !== current.position.y
@@ -1970,6 +2015,19 @@ export class WorldNavigationSession {
         this._avatarControlModeActive = Boolean(active);
         this._altDown = false;
         this._shiftDown = false;
+        // 0.9.128 — the direct structural twins of `_altDown`/`_shiftDown`
+        // above, reset for the identical reason: a steer key physically
+        // held down when Avatar Control Mode is switched off (so its own
+        // keydown never reached `_processVehicleSteeringInput()`) must not
+        // read as "already held" the next time the mode is switched back
+        // on while that same key is still physically down — otherwise the
+        // repeated keydown a browser's own key-repeat fires would be
+        // silently treated as a REPEAT rather than the genuine new press it
+        // represents from this mode-cycle's own perspective, and the
+        // steering request it should have produced would simply never
+        // fire.
+        this._vehicleSteerLeftHeld = false;
+        this._vehicleSteerRightHeld = false;
         if (!this._avatarControlModeActive && this._avatarMovementController) {
             this._avatarMovementController.releaseAll();
         }
@@ -2015,6 +2073,12 @@ export class WorldNavigationSession {
     releaseAvatarMovementKeys() {
         this._altDown = false;
         this._shiftDown = false;
+        // 0.9.128 — same "release keys without touching the mode" seam,
+        // extended to the steer keys — see setAvatarControlMode()'s own
+        // 0.9.128 comment for why the hold bits need an explicit reset
+        // here too.
+        this._vehicleSteerLeftHeld = false;
+        this._vehicleSteerRightHeld = false;
         if (this._avatarMovementController) {
             this._avatarMovementController.releaseAll();
         }
@@ -2069,7 +2133,12 @@ export class WorldNavigationSession {
         // controller above ever recognizes it — see
         // `_processVehicleBrakingInput()`'s own header, below.
         const vehicleBrakingConsumed = this._processVehicleBrakingInput(key, 'keydown');
-        return movementConsumed || vehicleInteractionConsumed || vehicleBrakingConsumed;
+        // 0.9.128 — same "tried independently" posture as the interaction
+        // and braking keys above: the arrow keys are not movement keys
+        // either, so neither controller above ever recognizes them — see
+        // `_processVehicleSteeringInput()`'s own header, below.
+        const vehicleSteeringConsumed = this._processVehicleSteeringInput(key, 'keydown');
+        return movementConsumed || vehicleInteractionConsumed || vehicleBrakingConsumed || vehicleSteeringConsumed;
     }
 
     avatarKeyUp(key) {
@@ -2104,7 +2173,13 @@ export class WorldNavigationSession {
         // switched off must still clear the braking request rather than
         // leaving it stale.
         const vehicleBrakingConsumed = this._processVehicleBrakingInput(key, 'keyup');
-        return movementConsumed || vehicleInteractionConsumed || vehicleBrakingConsumed;
+        // 0.9.128 — same "always forwarded" posture as movement's/
+        // interaction's/braking's own keyUp above, for the identical
+        // reason: an arrow-key release that arrives after control mode was
+        // already switched off must still clear the steering hold bit
+        // rather than leaving it stale.
+        const vehicleSteeringConsumed = this._processVehicleSteeringInput(key, 'keyup');
+        return movementConsumed || vehicleInteractionConsumed || vehicleBrakingConsumed || vehicleSteeringConsumed;
     }
 
     // 0.9.66 — Continuous Movement Controller Integration. The ONE
@@ -2246,6 +2321,93 @@ export class WorldNavigationSession {
             this._avatarMovementController.setVehicleBrakingIntent(
                 deriveAvatarVehicleBrakingIntent({ brakeRequested })
             );
+        }
+        return true;
+    }
+
+    // 0.9.128 — Vehicle Steering Input Binding. The ONE seam that decides
+    // WHICH physical keys finally call
+    // `setVehicleSteeringIntent()` in real play — the direct counterpart to
+    // 0.9.96's own `_processVehicleBrakingInput()` above, and the missing
+    // half 0.9.127 deliberately left for a later milestone (see that
+    // milestone's own "Recommendation": "decide how A/D, arrow keys, or a
+    // controller input produce a VehicleSteeringIntent").
+    //
+    // See `VEHICLE_STEER_LEFT_KEY`/`VEHICLE_STEER_RIGHT_KEY`'s own comment,
+    // above, for why the arrow keys are the pair this milestone picks —
+    // deliberately NOT 'a'/'d', which already drive the avatar's own
+    // held-turn-key facing (`_keys.left`/`_keys.right` -> `turnAxis` ->
+    // `result.rotationY`, core/AvatarMovementSimulation.js) both on foot and
+    // while riding — a continuous, smooth, `rotationY`-driven turn that
+    // 0.9.127's own audit proved deliberately independent of, and
+    // unaffected by, vehicle steering (see that milestone's own Section D).
+    // Reusing 'a'/'d' for this milestone's own discrete LEFT/RIGHT pulse
+    // would entangle two already-independent, already-tested turning
+    // models in the same physical key; a fresh pair keeps them exactly as
+    // separate as 0.9.127 already established.
+    //
+    // A THIN TRANSLATION, NOT A NEW DECISION LAYER. This method's own job is
+    // exactly what core/VehicleSteeringInputAdapter.js's own header names as
+    // still missing: turning an arrow key's own down/up transition into the
+    // CONTROL-shaped `type: 'steerleftdown'/'steerleftup'/'steerrightdown'/
+    // 'steerrightup'` that adapter already expects, and threading its own
+    // `leftHeld`/`rightHeld` hold bits through this session's own
+    // `_vehicleSteerLeftHeld`/`_vehicleSteerRightHeld` fields. Every actual
+    // decision after that — is this genuinely a NEW press, what a LEFT/RIGHT
+    // steering request means, whether it ever reaches simulation — is made
+    // entirely inside `deriveVehicleSteeringInputEvent()`,
+    // `createVehicleSteeringIntent()` (core/VehicleSteeringIntent.js), and
+    // `core/VehicleSteeringSimulation.js`/`AvatarVehicleMovementController#tick()`
+    // (both completely untouched by this milestone): this method has no
+    // idea what steering eventually does to the vehicle's own attempted
+    // direction, only that a NEW turn either is or is not being requested
+    // right now.
+    //
+    // NEVER VEHICLE-AWARE, NEVER MOVEMENT-AWARE, NEVER HEADING-AWARE. This
+    // method reads only `key`/`type`, this session's own two hold bits, and
+    // calls `setVehicleSteeringIntent()` — it never reads
+    // `movementCapability()`, never checks `avatarVehicleMount()`, never
+    // computes or reads a heading, and never invokes
+    // `core/VehicleSteeringSimulation.js` itself. Steering while unmounted,
+    // while idle, or while walking on foot is not this method's problem to
+    // prevent — exactly the same "not this file's problem" boundary
+    // `_processVehicleBrakingInput()`'s own header already draws for
+    // itself; the frame loop below is the one place that decides whether a
+    // pending request ever actually reaches a moving vehicle.
+    //
+    // A KEY THAT DOES NOT MATCH LEAVES STEERING ENTIRELY ALONE, returning
+    // `false` (not consumed) and updating no hold bit — the identical
+    // "unrelated key, no cross-call state to touch" posture
+    // `_processVehicleBrakingInput()`'s own header already establishes.
+    //
+    // Deliberately excluded, matching this milestone's own brief: any
+    // change to core/VehicleSteeringIntent.js, core/VehicleSteeringSimulation.js,
+    // or application/AvatarVehicleMovementController.js (all three remain
+    // exactly as 0.9.127 left them), a gamepad or on-screen steering
+    // control, continuous/held-key steering, steering angle, rate, turn
+    // radius, or angular velocity of any kind, and any vehicle-specific
+    // branching — this method's own body never mentions a vehicle type. See
+    // docs/Roadmap.md, 0.9.128.
+    _processVehicleSteeringInput(key, type) {
+        const normalizedKey = String(key || '').toLowerCase();
+        let controlType;
+        if (normalizedKey === VEHICLE_STEER_LEFT_KEY) {
+            controlType = type === 'keyup' ? 'steerleftup' : 'steerleftdown';
+        } else if (normalizedKey === VEHICLE_STEER_RIGHT_KEY) {
+            controlType = type === 'keyup' ? 'steerrightup' : 'steerrightdown';
+        } else {
+            return false;
+        }
+
+        const { leftHeld, rightHeld, direction } = deriveVehicleSteeringInputEvent({
+            leftHeld: this._vehicleSteerLeftHeld,
+            rightHeld: this._vehicleSteerRightHeld,
+            type: controlType
+        });
+        this._vehicleSteerLeftHeld = leftHeld;
+        this._vehicleSteerRightHeld = rightHeld;
+        if (direction) {
+            this.setVehicleSteeringIntent(createVehicleSteeringIntent(direction));
         }
         return true;
     }
@@ -6151,6 +6313,8 @@ export class WorldNavigationSession {
         this._avatarControlModeActive = false;
         this._altDown = false;
         this._shiftDown = false;
+        this._vehicleSteerLeftHeld = false;
+        this._vehicleSteerRightHeld = false;
         this._followAvatarEnabled = false;
         this._lastAvatarFollowPosition = null;
         this._cameraPerspective = null;
