@@ -64848,3 +64848,209 @@ I would keep these as two separate milestones, for the same reason
 capability in and teaching the world how to discover it are two
 different kinds of work, and building both in one milestone is how a
 later bug becomes hard to attribute to either.
+
+## 0.9.133 — Snapshot Location Discovery via Nostr
+
+0.9.132 closed the STORAGE half of the gap 0.9.131 named:
+`content/ArweaveContentStore.js` can place a Snapshot's bytes on Arweave
+and hand back a real `ContentReference{ hash, uri, storage }`. Nothing in
+this codebase could yet let a second replica — one who was never handed
+that `ContentReference` directly — learn it exists at all. This milestone
+is that: a Nostr-based discovery path for a Snapshot's own locator, built
+as a completely separate, snapshot-specific family, exactly as 0.9.132's
+own closing recommendation named it — explicitly NOT a reuse of
+`application/NostrPublicationDiscoveryPublisher.js`, per tests/
+SnapshotDistributionBoundary.test.js's own point 4.
+
+```text
+contentReference.hash
+        │
+        │ identifies content
+        ▼
+     Snapshot
+
+Arweave transaction ID
+        │
+        │ locates content
+        ▼
+Arweave snapshot
+
+Nostr event
+        │
+        │ discovers locator
+        ▼
+Arweave snapshot
+```
+
+Nostr does not store the Snapshot. It announces evidence that CAN LEAD to
+its storage location. The Arweave transaction ID does not become the
+Snapshot's identity — the identical discipline `content/
+ArweaveContentStore.js`'s own header already holds for placement, held
+here for discovery too.
+
+### Three new files, one narrow discovery path
+
+```text
+ArweaveContentStore#put(bytes) -> ContentReference{ hash, uri, storage }
+        │
+        │   { contentHash: reference.hash, locator: reference.uri,
+        │     storage: reference.storage }
+        ▼
+core/SnapshotDiscoveryEnvelope.js                     ★ (NEW)
+     describeSnapshotDiscoveryEnvelope()
+     parseSnapshotDiscoveryEnvelope()
+        │
+        ├──────────────────────────────┬───────────────────────────
+        ▼                               ▼
+application/NostrSnapshotDiscoveryPublisher.js   application/NostrSnapshotDiscoveryQueryService.js   ★ (NEW)
+     #publish({ contentHash, locator, storage })      #search(discoveryTag)
+        │                                                 #resolveLocator(discoveryTag, contentHash)
+        ▼                                                 │
+injected publishImpl(relayUrl, eventTemplate)              ▼
+     (nostr/NostrInjectedProviderPublisher.js,        injected queryImpl(relayUrl, filter)
+      0.9.121, unmodified — no new NIP-07 adapter          (a relay client a caller supplies)
+      built or required)
+```
+
+`core/SnapshotDiscoveryEnvelope.js` names a wire shape deliberately
+distinct from `core/DecentralizedDiscoveryEnvelope.js` (0.9.30) — keyed by
+`contentHash`/`locator`/`storage`, the identical vocabulary `core/
+PublicationSnapshotPlacement.js` (0.8.18) already uses for its own,
+peer-based discovery, reused rather than renamed. Its own `protocol`
+string (`forkbuild-snapshot-discovery`) is distinct from the Signed
+Claim's own `forkbuild`, so the two envelope contracts are never
+ambiguous on the wire. `application/NostrSnapshotDiscoveryPublisher.js`
+and `application/NostrSnapshotDiscoveryQueryService.js` mirror their
+respective 0.9.46/0.9.31 siblings' own `publishImpl`/`queryImpl`
+injection-point contracts exactly — including every failure-degradation
+rule (malformed input and a relay decline both resolve to `null`/`[]`; a
+genuine transport failure propagates; a collaborator that resolves but
+violates its own `{ published, id }` contract throws) — but a `publish()`
+call takes the three raw fields a `ContentReference` already carries,
+rather than a pre-described envelope from an upstream descriptor, because
+no such descriptor exists for a Snapshot's own placement.
+
+### The identity/verification distinction this milestone treats as flagship
+
+```text
+Nostr contains a discovery record
+        │
+        ▼
+   locator resolves
+        │
+        ▼
+Arweave content retrieved
+        │
+        ▼
+content hash DOES NOT match
+        │
+        ▼
+ discovery ≠ verification
+```
+
+`application/NostrSnapshotDiscoveryQueryService.js#search()` reports
+exactly what an announcing event's own envelope claimed — finding a
+matching event means only "someone announced this locator for this
+contentHash." It does not mean the locator serves those bytes, and it
+does not mean the announcer is trusted. `tests/
+NostrSnapshotDiscovery.test.js`'s own flagship negative case proves this
+directly: a discovery record is published pairing a real, retrievable
+Arweave locator with a `contentHash` that locator was never actually
+placed under. The record is exactly as discoverable as a true one, its
+locator resolves, and retrieval genuinely succeeds — but the retrieved
+bytes' own hash does not match the announced `contentHash`, and
+`ContentReference#verify()` independently confirms the mismatch. A caller
+who trusted the Nostr announcement alone would have accepted the wrong
+content as the expected Snapshot; verification (retrieving the bytes and
+checking them against `contentReference.hash`) is a separate, later step
+this milestone deliberately never performs on a caller's behalf.
+
+### Tests
+
+`tests/SnapshotDiscoveryEnvelope.test.js`,
+`tests/NostrSnapshotDiscoveryPublisher.test.js`, and
+`tests/NostrSnapshotDiscoveryQueryService.test.js` are deterministic,
+network-free unit coverage of each new file, mirroring the section
+structure `tests/DecentralizedDiscoveryEnvelope.test.js`, `tests/
+NostrPublicationDiscoveryPublisher.test.js`, and `tests/
+NostrDiscoveryQueryService.test.js` already established for their own
+0.9.30/0.9.46/0.9.31 siblings — including, in each, an architectural
+regression sweep proving no forbidden import (the Signed Claim family,
+the Snapshot Placement family, `window.nostr`/`WebSocket` directly) and no
+trust/ranking vocabulary anywhere in the new files.
+
+`tests/NostrSnapshotDiscovery.test.js` is the milestone's own flagship:
+Section CONTRACT verifies, directly, the eight statements this
+milestone's own header names (content-hash-based identity; locator
+distinct from identity; Nostr as discovery-only, embedding no snapshot
+bytes; an injected publisher/query service, no new `window.nostr`
+adapter; the Signed Claim family untouched; the Snapshot Placement family
+untouched; discovery evidence is not verification; multiple discovery
+records never become ranking). Section SEQUENCE drives one continuous
+flagship scenario — create a snapshot, place it on a real (fake-gateway)
+Arweave, publish discovery to a real (in-memory) Nostr network, query it,
+resolve the locator, retrieve the bytes, and verify identity — against
+one shared in-memory Nostr network exercising the real publisher and the
+real query service together, never two isolated mocks that merely assert
+they were called correctly. It then breaks each half independently (a
+declined Nostr publication never disturbs an already-placed Arweave
+snapshot; a failed Arweave retrieval never disturbs already-published
+discovery evidence) and closes with the flagship negative case described
+above.
+
+`tests/SnapshotDistributionBoundary.test.js` (0.9.131) required no
+changes — its own `SNAPSHOT_PLACEMENT_FILES` structural sweep (point 4:
+"no file in the Snapshot Placement family references Nostr") still
+passes unmodified, because none of this milestone's three new files
+belong to that family; they are a new, parallel one, imported by nothing
+under `core/PublicationSnapshotPlacement.js` or `application/
+SnapshotPlacementResolver.js`/`SnapshotPlacementStoreRegistry.js`.
+
+### What this milestone deliberately does NOT do
+
+- **No composition wiring, and no automatic publication of every
+  locally-created snapshot.** Nothing constructs an `ArweaveInjectedProviderSigner`,
+  an `ArweaveContentStore`, and a `NostrSnapshotDiscoveryPublisher`
+  together at a real composition root — that remains 0.9.134's own,
+  narrower job. A discovery publisher deciding on its own that every
+  placed snapshot should be globally announced would silently turn
+  private snapshot creation into public distribution; something
+  higher-level, unbuilt this milestone, decides WHEN a snapshot is
+  intended for decentralized discovery.
+- **No snapshot retrieval integration of its own.** `tests/
+  NostrSnapshotDiscovery.test.js`'s own flagship SEQUENCE retrieves bytes
+  using the existing, unmodified `content/ArweaveContentStore.js`
+  entirely within the TEST's own scope — no new production class
+  automatically chains discovery into retrieval. That remains 0.9.134's
+  own job, named already in 0.9.132's own recommendation.
+- **No automatic verification, trust scoring, discovery ranking, or
+  provider selection.** See "the identity/verification distinction," and
+  Section CONTRACT points 7-8, above.
+- **No replication, synchronization, or retry policy.** `publish()`/
+  `search()` each issue exactly one relay exchange, fresh — the identical
+  restraint every file in this whole Nostr-facing family already holds.
+- **No change to the Signed Claim distribution family or the Snapshot
+  Placement family.** `application/NostrPublicationDiscoveryPublisher.js`,
+  `core/DecentralizedDiscoveryEnvelope.js`, `core/
+  PublicationSnapshotPlacement.js`, `application/SnapshotPlacementResolver.js`,
+  and `application/SnapshotPlacementStoreRegistry.js` are all read only, by
+  this milestone's own test suite, never edited.
+- **No new NIP-07/browser adapter.** `nostr/NostrInjectedProviderPublisher.js`
+  (0.9.121) already provides that host capability boundary; both new
+  Nostr-facing files here take an injected `publishImpl`/`queryImpl`
+  exactly as their 0.9.46/0.9.31 siblings already do.
+- **No UI, no snapshot lifecycle states.**
+
+### The resulting architectural rule
+
+A Snapshot placed on Arweave can now also be announced, and discovered, on
+Nostr — without either side of that exchange knowing anything about
+Signed Claims, and without the Snapshot Placement family's own
+peer-based discovery (0.8.19) gaining a Nostr dependency it never had.
+Discovering an announcement is cheap and requires no trust; treating a
+discovered locator as verified content still requires the exact same
+`ContentReference#verify()` step this codebase has always required, on a
+caller's own, later initiative. What remains, named already at the close
+of 0.9.132: 0.9.134, composition wiring an actual retrieval path — and,
+now, deciding whether/when that path should also consult this
+milestone's own discovery query service — end to end.
