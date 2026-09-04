@@ -63928,3 +63928,170 @@ tapped becomes irrelevant to the steering seam itself, exactly the
 already documents. The input layer should not know about 45 degrees,
 heading, vehicle position, collision, movement simulation, or Three.js —
 only which of NONE/LEFT/RIGHT a key edge implies.
+
+## 0.9.128 — Vehicle Steering Input Binding
+
+0.9.127's own "Recommendation" named this milestone precisely, down to the
+per-tick shape: "map a turn key's DOWN edge to one `VehicleSteeringIntent.left()`/
+`.right()` call through `setVehicleSteeringIntent()`, immediately followed by
+`VehicleSteeringIntent.none()` the very next frame." This milestone builds
+exactly that — a real physical input, genuinely reaching
+`VehicleSteeringIntent` and, through it, 0.9.127's own already-tested
+steering/movement/collision/heading pipeline, without re-implementing or
+touching any part of that pipeline itself.
+
+```text
+Keyboard input (ArrowLeft/ArrowRight)
+        |
+        v
+core/VehicleSteeringInputAdapter.js        <- "what happened"
+        |
+        v
+VehicleSteeringIntent                      <- "what the driver requests"
+        |
+        v
+VehicleSteeringSimulation / AvatarVehicleMovementController#tick()  (0.9.127, untouched)
+        |
+        v
+attempted movement -> collision -> realized position -> heading
+```
+
+**One new production file, `core/VehicleSteeringInputAdapter.js`** — the
+direct structural twin of `core/AvatarVehicleBrakingInputAdapter.js` (0.9.95),
+not of `core/AvatarContinuousMovementInputAdapter.js`: it is deliberately
+CONTROL-NAME-BLIND, reading a generic `type: 'steerleftdown'/'steerleftup'/
+'steerrightdown'/'steerrightup'` transition rather than a raw key, because
+deciding which physical key produces that fact is a session-level concern,
+not this file's own. `deriveVehicleSteeringInputEvent()` reads `leftHeld`/
+`rightHeld` (caller-owned, fed back in every call, the direct structural
+twin of `core/AvatarContinuousMovementInputAdapter.js`'s own `altDown`/
+`shiftDown`) and returns a `direction` — `VehicleSteeringDirection.LEFT`/
+`.RIGHT`, or `null` — that is non-null ONLY on a genuine false-to-true
+hold-bit edge, never on a repeat of a control already held and never on a
+release. That held-bit tracking is the one thing this file needs that
+0.9.95's own stateless braking adapter does not: braking is a LEVEL (holding
+the brake control down means "keep braking," and repeating the identical
+fact on every browser key-repeat event is exactly the desired, idempotent
+behavior), but steering is a PULSE (`core/VehicleSteeringSimulation.js` was
+always documented as "applied in full, in one call, never smoothed or
+rate-limited across ticks," so feeding a fresh LEFT/RIGHT on every repeated
+keydown a browser's own key-repeat fires while a key is held would compound
+a further turn on every single one of those events, not hold a steady
+turn). This file never constructs a `VehicleSteeringIntent`, never calls
+`setVehicleSteeringIntent()`, and has no idea a steering intent is even
+being tracked anywhere — the identical "caller wires the two together"
+discipline every input adapter in this codebase already follows.
+
+**The physical keys: `ArrowLeft`/`ArrowRight`, deliberately not `A`/`D`.**
+`A`/`D` already drive the avatar's own held-turn-key facing
+(`_keys.left`/`_keys.right` -> `turnAxis` -> `result.rotationY`,
+`core/AvatarMovementSimulation.js`) both on foot and while riding — a
+continuous, smooth, `rotationY`-driven turn that 0.9.127's own audit proved
+deliberately independent of, and unaffected by, vehicle steering (see that
+milestone's own Section D: "the avatar's own rotationY... stayed
+completely independent of the vehicle's own steering-driven heading
+change"). Reusing `A`/`D` for this milestone's own discrete LEFT/RIGHT
+pulse would entangle two already-independent, already-tested turning
+models in the same physical key; the arrow keys keep them exactly as
+separate as 0.9.127 already established, and carry no existing meaning
+anywhere in World View — the Transform panel's own arrow-key bindings
+(`docs/user/ControlsReference.md`, "Transform — keyboard") are explicitly
+Editor-only, over a selection, never reachable from World View at all.
+
+`application/WorldNavigationSession.js` gains one new private method,
+`_processVehicleSteeringInput(key, type)` — the direct structural twin of
+0.9.96's own `_processVehicleBrakingInput()` — wired into the same
+`avatarKeyDown`/`avatarKeyUp` seam every other movement/interaction/braking
+key already uses. It owns two new caller-side hold bits
+(`_vehicleSteerLeftHeld`/`_vehicleSteerRightHeld`, reset alongside
+`_altDown`/`_shiftDown` on `setAvatarControlMode(false)` and
+`releaseAvatarMovementKeys()` — the identical "never leave physical input
+state stuck" guarantee those two fields already get), translates the raw
+key into the adapter's own control-shaped `type`, and calls
+`setVehicleSteeringIntent(createVehicleSteeringIntent(direction))` whenever
+the adapter reports a genuine new edge. Gated on Avatar Control Mode on
+keydown, always forwarded on keyup — the exact same posture 0.9.96's own
+brake-key binding already established, so a steer key held before the mode
+is switched off still cleanly releases its own hold bit rather than
+leaving it stale.
+
+**The per-tick decay lives in the frame loop, not the adapter.** Right
+after `application/WorldNavigationSession.js`'s own frame loop hands
+`_vehicleSteeringIntent` to `AvatarVehicleMovementController#tick()`
+(0.9.127's own seam, unchanged), a real LEFT/RIGHT value is immediately
+decayed to an explicit `VehicleSteeringIntent.none()` — never back to
+`null` — matching 0.9.127's own documented distinction: `NONE` keeps the
+steering-redirect path active, continuing along the vehicle's own
+now-current heading, while `null` would fall back to the legacy
+`rotationY`-driven path entirely. This is a per-SIMULATION-TICK concern,
+deliberately kept out of `core/VehicleSteeringInputAdapter.js` itself
+(which has no idea a simulation tick even exists) and out of
+`application/AvatarVehicleMovementController.js` (untouched by this
+milestone, exactly as 0.9.127 left it) — `application/WorldNavigationSession.js`
+is the one place that already owns both "when did a key produce a new
+request" and "when does one tick's worth of simulation consume it," so it
+is the one place equipped to decide when a pulse has been spent.
+
+`tests/VehicleSteeringInputIntegration.test.js` is the primary suite, in
+eight sections. Section A/B prove the LEFT/RIGHT mapping itself, including
+the central semantic claim this milestone exists to prove: holding a steer
+key — a real browser's own key-repeat firing keydown over and over with no
+keyup in between — turns the vehicle exactly once, never a further
+compounding turn on every repeated keydown. Section C proves NONE is a
+real, explicit `VehicleSteeringIntent` once steering has genuinely engaged
+(never `null`/`undefined`), while a session that has never steered at all
+still reports no active request at all (`null`, the pre-0.9.127 default,
+unchanged). Section D proves forward/backward movement, mount/dismount,
+braking, and avatar-follows-vehicle are all byte-for-byte unaffected.
+Section E is the structural separation audit: the adapter and the
+key-binding seam calculate no heading, no 45 degrees, and never call
+`core/VehicleSteeringSimulation.js` directly. Section F is the flagship: a
+real ArrowLeft press, through the real key binding, realizes a genuine LEFT
+turn end to end through the real controller and real collision constraints,
+then the mirror for ArrowRight. Section G proves a real ArrowLeft press
+against an already-flush obstacle leaves position and heading completely
+unchanged. Section H is the structural exclusion audit: no steering angle,
+wheel state, angular velocity, turning radius, vehicle physics, rendering,
+persistence, or networking anywhere this milestone's own input layer
+touches.
+
+### What this milestone deliberately does NOT do
+
+Continuous/held-key steering of any kind — holding a steer key still turns
+exactly once, per the "single, discrete turn" semantics 0.9.127 already
+established; no key-repeat accumulation, no steering-rate-over-time, no
+smooth rotation. No change to `core/VehicleSteeringIntent.js`,
+`core/VehicleSteeringSimulation.js`, or
+`application/AvatarVehicleMovementController.js` — all three are reused
+verbatim, exactly as 0.9.127 left them. No gamepad or on-screen steering
+control (a future milestone's own job, following this same adapter's own
+control-name-blind contract). No steering angle, rate, turn radius, angular
+velocity, wheelbase, tire friction, banking, drifting, or momentum. No
+rendering, persistence, or networking changes.
+
+### Recommendation
+
+```text
+Vehicle Steering          decide how A/D, arrow keys, or a controller
+Input Binding             input produce a VehicleSteeringIntent, and on
+                          what per-tick cadence — a single discrete event
+                          per key-DOWN edge, decayed to an explicit NONE
+                          the very next simulated tick             (this milestone)
+        v
+Continuous Vehicle        only if this milestone's own discrete, one-shot
+Steering Semantics        45-degree pulse per press reads as too artificial
+                          in practice — an explicit decision between
+                          "holding a steer key continuously changes the
+                          attempted direction over time" and "a steer key
+                          press is one discrete directional change,"
+                          never assumed by default
+```
+
+I would reassess after this milestone rather than committing to continuous
+steering in advance: the discrete "turn once, then hold" model this
+milestone implements is a deliberate, documented design choice (see
+0.9.127's own "A steering request is a single, discrete turn, not a
+continuous rate"), not a placeholder standing in for a smoother one. If a
+future continuous-steering milestone is warranted, it should make an
+explicit semantic decision about the two control models named above,
+rather than quietly blending them into the existing discrete pulse.
