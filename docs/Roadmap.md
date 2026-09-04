@@ -64095,3 +64095,134 @@ continuous rate"), not a placeholder standing in for a smoother one. If a
 future continuous-steering milestone is warranted, it should make an
 explicit semantic decision about the two control models named above,
 rather than quietly blending them into the existing discrete pulse.
+
+## 0.9.129 — Vehicle Steering Control & State Audit
+
+0.9.128 built the first genuinely stateful piece of the entire steering
+pipeline: a physical key's own down/up transition, threaded through a
+caller-owned held bit (`core/VehicleSteeringInputAdapter.js`'s own
+`leftHeld`/`rightHeld`), into a per-tick `VehicleSteeringIntent` that decays
+to an explicit `NONE` the instant it is consumed
+(`application/WorldNavigationSession.js`'s own frame loop). Every prior
+steering milestone (0.9.125/0.9.126/0.9.127) was either stateless or driven
+entirely by direct, programmatic calls — this was the first one with real
+TEMPORAL state: held-vs-repeated keys, a hold bit that outlives a single
+call, a per-tick decay, and an Avatar Control Mode boundary that resets some
+of that state but deliberately not all of it. This milestone is a TEST-ONLY
+audit of exactly that new state — no production file changes.
+
+```text
+physical key -> held-bit -> steering pulse -> steering simulation
+    -> movement -> realized heading
+```
+
+**Two invariants, audited independently:**
+
+```text
+1. Each deliberate ArrowLeft/ArrowRight press produces AT MOST ONE steering
+   pulse; the pulse is consumed once, then steering intent returns to an
+   explicit NONE.
+2. Vehicle heading remains exclusively derived from REALIZED movement —
+   never from the raw steering request, and never invented.
+```
+
+`tests/VehicleSteeringControlAudit.test.js` is the new suite, in eight
+sections. Section A proves one press produces one turn, including real
+browser-style key-repeat (four repeated `keydown` events with no `keyup`
+between them still turn the vehicle exactly once). Section B proves release-
+and-re-press: a key held continuously is ignored on every repeat, while a
+genuine release-then-re-press produces a second, independent pulse. Section
+C proves LEFT/RIGHT transitions each produce exactly one corresponding
+intent, and documents the actual — never newly invented — simultaneous-key
+behavior this codebase already has: `leftHeld`/`rightHeld` are tracked as
+two entirely independent bits, so a fresh edge on either control always
+overwrites whatever steering intent is currently pending, whether or not the
+other control is still physically held, and a control that stays
+continuously held throughout never fires again until it is genuinely
+released and re-pressed. Section D proves intent consumption: a real pulse
+decays to an explicit `NONE` — never `null`/`undefined` — immediately after
+being applied, and further ticks with no new key press produce no additional
+rotation.
+
+Section E is this milestone's own centerpiece: mode transitions and stale
+input. A steer key physically held THROUGH an Avatar Control Mode off/on
+cycle neither vanishes forever nor double-fires — mode-off resets the hold
+bit (0.9.128's own documented reasoning), so the browser's own key-repeat,
+once the mode returns, reads as a genuine new press, producing exactly one
+further turn. Separately, a genuine pulse requested BEFORE a mode toggle,
+and not yet consumed by any tick, still fires EXACTLY once once a tick
+finally runs: unlike the hold bits, `_vehicleSteeringIntent` itself is left
+completely alone by `setAvatarControlMode()` — a deliberate asymmetry with
+braking, whose own intent IS forced back to `NONE` on the identical
+transition (0.9.96). This audit documents that asymmetry directly rather
+than treating it as a defect: the frame loop itself is never gated on Avatar
+Control Mode, so an already-requested pulse simply fires on the next real
+tick, mode cycle or not. `releaseAvatarMovementKeys()` (the window-blur seam)
+gets the identical treatment, one call further.
+
+Section F re-proves steering-vs-heading authority end to end through real
+key input rather than a programmatic `setVehicleSteeringIntent()` call: a
+real `ArrowLeft` press against a real, collision-clipping wall realizes a
+heading substantially different from the raw 45-degree attempt, and a real
+press against an already-flush obstacle leaves position and heading
+completely unchanged. Section G proves existing controls stay isolated —
+most notably avatar A/D rotation, the reason arrow keys were chosen for
+steering in the first place: holding `'a'` keeps changing the avatar's own
+rendered facing at an unchanged per-frame rate whether or not a steering
+pulse fires in the same window, and a steering pulse turns the vehicle's own
+heading by exactly 45 degrees whether or not `'a'` is held throughout —
+proven only once steering has genuinely engaged and decoupled heading from
+the avatar's own `rotationY` (0.9.127's own Section D), since an entirely
+un-steered ride is legitimately still coupled to it. A consolidated flow
+also reconfirms mount/dismount, forward movement, braking, and avatar-
+follows-vehicle survive real, steering-capable rides undisturbed — deeper
+coverage of each already exists elsewhere; this is the regression net for
+this audit's own concern. Section H re-verifies the structural exclusions
+0.9.128 already established: no steering angle, rate, angular velocity,
+turning radius, physics, wheel rotation, rendering, persistence, or
+networking anywhere this milestone's own input path touches, and the
+adapter remains blind to both the controller and to heading.
+
+### What this milestone deliberately does NOT do
+
+No production behavior changes of any kind — every file this milestone
+touches is a test file (`tests/VehicleSteeringControlAudit.test.js`) plus
+its own registration in `tests.html`. No new production seam, no change to
+`core/VehicleSteeringInputAdapter.js`, `core/VehicleSteeringIntent.js`,
+`core/VehicleSteeringSimulation.js`, `application/AvatarVehicleMovementController.js`,
+or `application/WorldNavigationSession.js`. No new simultaneous-steering
+semantic (LEFT+RIGHT exclusivity, priority, or blending) — Section C
+documents the existing last-edge-wins behavior exactly as found, never
+redesigns it. No continuous/held-key steering — still one discrete pulse per
+genuine press, exactly as 0.9.128 left it.
+
+### Recommendation
+
+This audit surfaced no regression and no defect — every scenario the
+milestone brief asked for resolved to intentional, already-documented
+behavior (most notably the steering-intent/braking-intent asymmetry across
+an Avatar Control Mode toggle, Section E). With the audit clean, I would
+**not** automatically queue a 0.9.130. The discrete 45-degree pulse model
+is a complete, coherent arcade-style control scheme on its own; the
+remaining open questions are no longer architectural plumbing but
+behavioral/UX choices:
+
+```text
+Option A — keep arcade steering: treat the discrete 45-degree pulse as the
+           finished control model and move to a different vehicle
+           capability entirely.
+
+Option B — continuous steering: a genuine held-key steering rate ("hold
+           LEFT -> gradual directional change over time"), which needs its
+           own semantic decision and should NOT reuse the current pulse
+           model — see 0.9.128's own Recommendation.
+
+Option C — vehicle-specific steering: let bicycle/motorcycle/car steer
+           differently, once multiple vehicle types are actually reachable
+           in practice — premature while only the bicycle exists.
+```
+
+I would decide between these based on actual play experience with the
+current arcade model rather than assume continuous steering is the next
+"obvious" step — a discrete pulse is a legitimate, intentional design for a
+bicycle, not an unfinished version of a smoother one.
