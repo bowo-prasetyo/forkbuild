@@ -116,14 +116,18 @@ close enough to one and a prompt appears telling you which key mounts it:
 | **E** (near a vehicle) | Mount |
 | **E** (while mounted) | Dismount |
 | **W / S** | Accelerate / reverse |
-| **A / D** | Steer |
+| **A / D** | Turn your avatar's own facing — the same continuous turn as on foot, not vehicle steering |
+| **← / →** (press) | Steer — a single 45° turn of the vehicle's attempted travel direction per press; holding the key doesn't keep turning, and a fresh press is needed for each turn |
 | **Ctrl** (held) | Brake |
 
-Once mounted, the same **W/A/S/D** keys drive the vehicle instead of
-walking — there's no separate "driving mode" to turn on. Dismounting puts
-your avatar back on foot at a clear spot beside the vehicle. A vehicle's
-top speed, acceleration, braking, and turning all depend on what kind of
-vehicle it is, and its collision footprint is sized to match.
+Once mounted, **W/S** and **Ctrl** drive the vehicle, while **←/→**
+steer it — there's no separate "driving mode" to turn on. **A/D** still
+turn your avatar's own body, exactly as they do on foot, and are
+independent of steering. Dismounting puts your avatar back on foot at a
+clear spot beside the vehicle. A vehicle's top speed, acceleration,
+braking, and turning all depend on what kind of vehicle it is, and its
+collision footprint is sized to match — today that's the bicycle, the only
+vehicle worlds actually place and render.
 
 ### Spatial awareness and activity
 
