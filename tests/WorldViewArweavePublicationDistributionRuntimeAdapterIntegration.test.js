@@ -245,8 +245,8 @@ async function run() {
 
         assert(codeOnly.includes("import { createArweavePublicationDistributionRuntimeAdapter } from '../application/ArweavePublicationDistributionRuntimeAdapter.js'"),
             '12. ui/main.js imports the real Arweave runtime adapter, never a hand-rolled equivalent');
-        assert(codeOnly.includes('createArweavePublicationDistributionRuntimeAdapter({})'),
-            '13. ui/main.js actually calls the new adapter — still with no host capability to supply yet, exactly today\'s honest state');
+        assert(codeOnly.includes('createArweavePublicationDistributionRuntimeAdapter({ signer: arweaveHostSigner })'),
+            '13. ui/main.js actually calls the new adapter — as of 0.9.121, with a real host capability resolved via createArweaveInjectedProviderSigner(), superseding this test\'s own original 0.9.109-era snapshot ({})');
         assert(codeOnly.includes('const publicationDistributionRuntimeProvider = createPublicationDistributionRuntimeProvider({') &&
             codeOnly.includes('...arweavePublicationRuntimeCapabilities') &&
             codeOnly.includes('...nostrPublicationRuntimeCapabilities'),

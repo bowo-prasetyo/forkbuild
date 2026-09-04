@@ -62675,3 +62675,190 @@ FROM first. I would not fold orientation and steering into one milestone:
 each deserves its own seam, exactly as this line of milestones has
 treated every other movement dimension (speed, collision radius,
 direction, acceleration, braking) as its own, separately-landed concern.
+
+## 0.9.121 — Publication Distribution Host Capability Integration
+
+0.9.103 through 0.9.109 built the entire Publication Distribution seam one
+layer at a time — command, orchestrator, executor, lifecycle, runtime
+configuration, runtime provider, and two runtime adapters — and every one
+of those milestones closed with the same honest line: `ui/main.js` calls
+`createArweavePublicationDistributionRuntimeAdapter({})` and
+`createNostrPublicationDistributionRuntimeAdapter({})`, so a real World
+View click still ends in "Distribution could not be completed." This
+milestone is the first to change that observable behavior: two new files,
+`arweave/ArweaveInjectedProviderSigner.js` and
+`nostr/NostrInjectedProviderPublisher.js`, are the concrete host
+capabilities 0.9.109's and 0.9.108's own headers each named as "a separate,
+later, unscheduled milestone" — and `ui/main.js` now resolves both from a
+real browser's own injected wallet/extension.
+
+    Host / browser                     Distribution subsystem
+    ───────────────                     ──────────────────────
+    window.arweaveWallet                application/Arweave...RuntimeAdapter.js
+    (ArConnect/Wander)          ┐              (0.9.109, unmodified)
+            │                   │                      │
+            ▼                   │                      ▼
+    arweave/                    │       createPublicationDistributionRuntimeProvider()
+    ArweaveInjectedProvider     ─┘              (0.9.107, unmodified)
+    Signer.js  (THIS, NEW)                             │
+            │                                           ▼
+            └──────────{ signer }──────►  resolvePublicationDistributionRuntimeConfiguration()
+                                                  (0.9.106, unmodified)
+    window.nostr                                        │
+    (any NIP-07 extension)      ┐                       ▼
+            │                   │       composePublicationDistributionCommand()
+            ▼                   │              (0.9.105, unmodified)
+    nostr/                      │                       │
+    NostrInjectedProvider      ─┘                        ▼
+    Publisher.js  (THIS, NEW)          orchestrator → executor → lifecycle
+            │                                (0.9.58/0.9.49/0.9.50/0.9.51,
+            └──────{ publish }─────────►       all unmodified)
+                                                         │
+                                                         ▼
+                                          the SAME World View "Distribute
+                                          Publication" action, unmodified
+                                          since 0.9.104
+
+**The distribution subsystem still does not know a host exists, and the
+host capability files still do not know the distribution subsystem
+exists.** That mutual ignorance was the whole point of 0.9.105 through
+0.9.109's own restraint, and this milestone extends it rather than
+breaking it: `arweave/ArweaveInjectedProviderSigner.js` and
+`nostr/NostrInjectedProviderPublisher.js` import nothing from
+`application/` — no `Publication`, no `PublicationDistributionLifecycle.js`,
+no orchestrator, no executor — and the existing adapters they feed
+(0.9.108/0.9.109) still import nothing about wallets, extensions, or
+browser globals. `ui/main.js` is the one place, and the only place, that
+knows both halves exist.
+
+**A signer producer, and a publish producer — never a second seam.**
+0.9.109's own `createArweavePublicationDistributionRuntimeAdapter()`
+already forwards a `signer` verbatim; 0.9.108's own
+`createNostrPublicationDistributionRuntimeAdapter()` already renames a
+host's own `publish` onto `publishImpl`. Neither function changed. What
+changed is what `ui/main.js` now HANDS them: the real, injected-wallet-
+backed `signer`/`publish` objects the two new files produce, in place of
+the literal `{}` every earlier milestone's own header was honest about
+leaving empty.
+
+**Arweave: `data_root` computed here, RSA-PSS signing never.**
+`arweave/ArweaveInjectedProviderSigner.js` builds a real, plain-object,
+format-2 Arweave transaction — `last_tx`/`reward` fetched from the
+gateway, `data`/`data_size` from the material itself, and `data_root`
+computed via the single-leaf case of Arweave's own Merkle scheme
+(`SHA-256(SHA-256(chunkHash) || SHA-256(offsetNote))`, valid because
+`application/ArweavePublicationMaterialUploader.js`'s own
+`DEFAULT_MAX_MATERIAL_BYTES` already guarantees single-chunk material) —
+then hands that transaction to `injectedProvider.sign()` for the one thing
+this file will never do itself: produce `owner`/`signature`/`id` from the
+wallet's own private key. Connection is lazy, inside `sign()` itself,
+triggered by the same click that already triggers signing — no new
+"Connect Wallet" button, no new lifecycle state.
+
+**Nostr: NIP-07 signs, a plain WebSocket broadcasts.**
+`nostr/NostrInjectedProviderPublisher.js` asks the injected extension to
+sign a `{ kind, tags, content, created_at, pubkey }` event via the
+standard `signEvent()` NIP-07 already defines — computing no event id,
+no serialization, no Schnorr signature of its own — then opens one
+WebSocket to the configured relay, sends `["EVENT", event]`, and resolves
+on the relay's own `["OK", id, ok, message?]` frame. `publishImpl` treats
+signing and broadcast as one opaque exchange from its own caller's
+vantage point, exactly as 0.9.108's own header already described it;
+internally, inside this one new file, they are two separate steps.
+
+**No external dependency, on either substrate.** Exactly like
+`anchoring/BitcoinAnchorPsbtBuilder.js` hand-builds a PSBT and
+`base/BaseInjectedProviderWalletAdapter.js` hand-rolls its own EIP-1193
+call rather than importing a chain SDK, both new files use only
+`crypto.subtle`, `TextEncoder`/`btoa`, `fetch`, and `WebSocket` — nothing
+loaded from a CDN, nothing added to `index.html`'s or `tests.html`'s own
+import map.
+
+**`discoveryTag` is ForkBuild's own campaign configuration, supplied here
+for the first time.** 0.9.108's own header named this precisely:
+`discoveryTag`/`tagName`/`kind` are never a host concern, and are not
+parameters of either new file — a caller merges them alongside whatever
+`{ signer }`/`{ publishImpl }` a host capability resolved. Until this
+milestone, nothing in `ui/main.js` ever supplied one at all, so even a
+hypothetically-real `publishImpl` would still have failed
+`resolveNostrPublisherOptions()`'s own sufficiency check. `ui/main.js` now
+supplies `discoveryTag: 'forkbuild-publication'`, the one new literal
+config value this milestone actually adds.
+
+**Independent availability, proved at the factory layer.**
+`createArweaveInjectedProviderSigner({ injectedProvider: null })` and
+`createNostrInjectedProviderPublisher({ injectedProvider: null })` each
+degrade to `undefined` — never a throw — exactly the same graceful "not
+currently configured" outcome the existing adapters and resolvers already
+treat an absent `signer`/`publishImpl` as. A browser with only ArConnect
+installed resolves a real `arweaveUploaderOptions` with `nostrPublisherOptions`
+still `undefined`, and vice versa — `tests/PublicationDistributionHostCapabilityIntegration.test.js`
+proves both directions. A full ORCHESTRATED distribution still requires
+both substrates configured, the same pre-existing,
+unrelated restraint 0.9.109's own flagship test already named
+(`composePublicationDistributionRuntime()`'s own unconditional
+construction of both collaborators) and this milestone does not revisit.
+
+**No UI change.** World View's "Distribute Publication" action —
+`WorldEncounterCanvas.distributeSelectedPublication()`, unmodified since
+0.9.104 — reaches the identical command/orchestrator/executor/lifecycle
+chain it always has; only the composition root's own two adapter calls
+changed what they are fed. The existing, deliberately generic
+`distributionError` message ("Distribution could not be completed.") is
+untouched — `tests/WorldViewPublicationDistributionActionIntegration.test.js`'s
+own Section testing that a genuine rejection "becomes one plain, generic
+notice — never the underlying error message" is a real, tested invariant
+this milestone does not have license to break merely to distinguish
+"capability unavailable" from "attempt failed" in the UI. That
+distinction remains available to a future, separate milestone through a
+pre-flight capability check, if the added UI surface is ever judged worth
+it — not through leaking an error string.
+
+**The flagship proof.** `tests/PublicationDistributionHostCapabilityIntegration.test.js`
+drives a `WorldEncounterCanvas` click through a command wired exactly as
+`ui/main.js` now wires it — a fake, ArConnect-shaped `window.arweaveWallet`
+and a fake, NIP-07-shaped `window.nostr`, both real fetch/WebSocket
+transports faked at their own edges — through both new files, both
+existing adapters, the existing runtime provider/configuration/command
+composition, the real orchestrator and executor, into a `PublicationDistributionLifecycleMemoryStore`
+that ends the click holding `material.state === PRESENT` and
+`discovery.state === PRESENT`. `tests/ArweaveInjectedProviderSigner.test.js`
+and `tests/NostrInjectedProviderPublisher.test.js` cover each new file on
+its own — undefined-when-unavailable, lazy connection, single-chunk
+enforcement, malformed-response handling, relay decline/timeout — and each
+includes its own flagship proving its output reaches the real, unmodified
+`ArweavePublicationMaterialUploader`/`NostrPublicationDiscoveryPublisher`
+on its own.
+
+Deliberately not attempted: multi-chunk Arweave data (material is already
+capped well below the single-chunk ceiling by the existing uploader), any
+wallet-selection or wallet-connection UI, NIP-46 remote signing, multi-relay
+fan-out or relay-selection policy, encryption of any kind, and the UI
+capability-unavailable distinction named above. Nothing about
+`PublicationDistributionLifecycle.js`, the Distribution panel, the
+orchestrator, or the executor changed at all.
+
+### Recommendation
+
+    Plumbing            command → orchestrator → executor → lifecycle
+                         → runtime configuration → runtime provider →
+                         two runtime adapters                         (0.9.103–0.9.109)
+            v
+    Host Capability      real signer/publish producers, wired into
+    Integration          ui/main.js for real                          (this milestone)
+            v
+    Publication Distribution Runtime/UX Audit — confirm the whole
+    chain end to end against every existing invariant, exactly the
+    audit shape 0.9.102/0.9.118/0.9.120 already used for their own
+    subsystems, before adding anything further to this one          (next)
+
+This milestone closes the LAST gap 0.9.103 through 0.9.109 each left
+named and unscheduled: a real host capability, on both substrates, now
+reaches a real World View click. I would not treat that as license to
+immediately add more here — a wallet-selection UI, multi-relay fan-out, or
+a NIP-46 integration are all real, separate, later decisions, each
+deserving the same one-seam-at-a-time treatment this whole family has
+held since 0.9.103. An audit milestone, confirming nothing already built
+regressed now that two genuinely new, real files sit at the bottom of the
+chain, is the more valuable next step — the same shape 0.9.118 and 0.9.120
+each already gave the vehicle subsystem before it grew further.

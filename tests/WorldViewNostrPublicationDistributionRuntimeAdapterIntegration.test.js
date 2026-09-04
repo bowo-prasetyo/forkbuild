@@ -232,8 +232,8 @@ async function run() {
 
         assert(codeOnly.includes("import { createNostrPublicationDistributionRuntimeAdapter } from '../application/NostrPublicationDistributionRuntimeAdapter.js'"),
             '12. ui/main.js imports the real Nostr runtime adapter, never a hand-rolled equivalent');
-        assert(codeOnly.includes('createNostrPublicationDistributionRuntimeAdapter({})'),
-            '13. ui/main.js actually calls the new adapter — still with no host capability to supply yet, exactly today\'s honest state');
+        assert(codeOnly.includes('createNostrPublicationDistributionRuntimeAdapter({ publish: nostrHostPublisher })'),
+            '13. ui/main.js actually calls the new adapter — as of 0.9.121, with a real host capability resolved via createNostrInjectedProviderPublisher(), superseding this test\'s own original 0.9.108-era snapshot ({})');
         assert(codeOnly.includes('const publicationDistributionRuntimeProvider = createPublicationDistributionRuntimeProvider({') &&
             codeOnly.includes('...nostrPublicationRuntimeCapabilities'),
             '14. ui/main.js spreads the adapter\'s own resolved capabilities into the runtime provider, never a hand-shaped publishImpl/relayUrl literal');
