@@ -65977,3 +65977,151 @@ genuinely independent distribution protocols despite sharing some of the
 same physical substrates. I would not start another Snapshot protocol
 feature after 0.9.139 — 0.9.140 should be a genuine architectural
 reassessment point instead.
+
+## 0.9.139 — Snapshot Distribution End-to-End Runtime & UI Audit
+
+0.9.138's own "Recommendation" named this milestone directly: one more
+test-only audit, proving every seam 0.9.131 through 0.9.138 built still
+holds now that a real World View click can reach all of them at once.
+This file is that audit — `tests/SnapshotDistributionEndToEndRuntimeAudit.test.js`
+— and adds ZERO new production code, the same posture 0.9.122 and 0.9.135
+already held for their own subsystems.
+
+```text
+World View
+     │ "Distribute Snapshot" click
+     ▼
+WorldEncounterCanvas#distributeSelectedSnapshot()
+     │
+     ▼
+snapshotDistributionCommand(publication)     (ui/views/WorldView.js, 0.9.138)
+     │
+     ▼
+executeSnapshotDistributionCommand()          (0.9.136, unmodified)
+     │
+     ├──► ArweaveContentStore.put()                        PLACEMENT
+     └──► NostrSnapshotDiscoveryPublisher.publish()          ANNOUNCEMENT
+     │
+     ▼  (a later caller separately drives discovery/retrieval/verification)
+NostrSnapshotDiscoveryQueryService.search()                  DISCOVERY
+     ▼
+DecentralizedSnapshotResolver.resolve()
+     ├──► ArweaveContentStore.get()                          RETRIEVAL
+     └──► content-hash comparison                            VERIFICATION
+     ▼
+original bytes, byte-identical
+```
+
+### Nine sections, none a mechanical repeat of an earlier milestone's own test
+
+- **A — the complete reachable path.** A shared call-order log (`ACTION`,
+  `PLACEMENT`, `ANNOUNCEMENT`, `DISCOVERY`, `RETRIEVAL`, then `VERIFICATION`
+  appended once the hash comparison it stands in for is confirmed) proves
+  the actual sequence a reproduced World View click produces, rather than
+  merely asserting the final resolved result. The resolved locator is
+  checked against the click's own `contentReference.uri` directly, proving
+  it travelled through discovery rather than being handed to the resolver
+  by the test.
+- **B — identity separation.** `contentReference.hash`, the Arweave
+  transaction id, the Nostr event id, and the snapshot locator (the `ar://`
+  URI) are checked pairwise-distinct, and — new beyond 0.9.135's own
+  Section B — the resolver is handed the transaction id and the event id
+  in place of a `contentHash` and proven to report `NOT_DISCOVERED` for
+  both: this pipeline does not merely happen to keep the three identifiers
+  distinct, it actively refuses to treat either substitute as content
+  identity. Publication identity (`Publication#id`) is confirmed as a
+  fifth, disjoint axis: the same publication id paired with two different
+  Snapshot byte payloads produces two different `contentHash` values.
+- **C — distribution-family isolation.** A structural source scan, run in
+  both directions: `application/SnapshotDistributionCommand.js` and
+  `application/SnapshotDistributionRuntimeComposition.js` never reference
+  `PublicationDistributionCommand`/`PublicationDistributionLifecycle`/
+  `PublicationDistributionOrchestrator`/`DecentralizedDiscoveryEnvelope`/
+  the Signed Claim family's own Arweave/Nostr classes; conversely,
+  `application/PublicationDistributionCommand.js`,
+  `application/PublicationDistributionLifecycle.js`, and
+  `application/NostrPublicationDiscoveryPublisher.js` never reference the
+  Snapshot family's own classes either. The two Nostr publishers, and the
+  two Arweave placement classes, are each confirmed mutually unaware of
+  the other's existence.
+- **D — the asymmetric failure matrix.** Six rows: Arweave unavailable
+  (placement fails, announcement never attempted), Arweave succeeds/Nostr
+  declines (a legitimate partial result), Nostr transport failure
+  (genuine rejection), wrong discovered bytes (`CONTENT_HASH_MISMATCH`),
+  discovery unavailable (`NOT_DISCOVERED`), and retrieval unavailable
+  (`CONTENT_UNAVAILABLE`). Row 3 is this section's own flagship: a
+  `contentStore.put()` call is instrumented from outside so the test can
+  capture the exact `contentReference` a rejecting command call produced
+  internally, then independently confirm that reference is still fully
+  retrievable — proving a Nostr failure never undoes an already-made
+  Arweave placement, not merely asserting that it "shouldn't."
+- **E — discovery is not verification.** The false-discovery flagship
+  negative, unchanged in spirit from 0.9.135's own Section E:
+  `store.get()` is instrumented to confirm retrieval genuinely ran exactly
+  once before `CONTENT_HASH_MISMATCH` is reported — this is never a
+  shortcut that skips straight to rejection.
+- **F — candidate preservation.** Three independently announced
+  candidates for one `contentHash` all survive on the result in their own
+  announced order; only candidate #1's own store is ever consulted
+  (candidates #2/#3 point at locators that do not exist, and are proven
+  never even attempted). New beyond 0.9.135's own Section C: the actual
+  source of `DecentralizedSnapshotResolver.js` and
+  `NostrSnapshotDiscoveryQueryService.js` (comments stripped) is scanned
+  for `best`/`trusted`/`rank`/`fastest`/`newest`/`winner`/`preferred`
+  vocabulary and confirmed to contain none.
+- **G — World View structural boundary.** A recursive scan of every `.js`
+  file under `ui/` (mirroring `tests/PublicationDistributionEndToEndRuntimeAudit.test.js`'s
+  own Section E exactly) confirms none of them touch
+  `window.arweaveWallet`/`window.nostr`/`WebSocket`/`crypto.subtle`/
+  `computeContentHash()`/Arweave transaction construction/Nostr event
+  signing directly — `ui/main.js` alone is exempted as the composition
+  root, with a positive control confirming it genuinely does resolve both
+  host capabilities and genuinely is where `composeSnapshotDistributionRuntime()`/
+  `executeSnapshotDistributionCommand()` are actually called.
+- **H — UI state semantics.** Four sub-sections: (i) execution is
+  ephemeral and a result belongs to its own selection — reproducing the
+  milestone's own named scenario, "Snapshot A selected → distribute A →
+  switch to Snapshot B → delayed result for A arrives → A's result must
+  not appear for B;" (ii) duplicate clicks never start an overlapping
+  call; (iii) a legitimate partial success (placement without
+  announcement) is never reclassified as an error; (iv) new beyond
+  0.9.138's own tests — the Snapshot Distribution panel's state and the
+  Publication Distribution panel's state are proven mutually inert by
+  wiring each family's own command to throw if the OTHER family's method
+  ever calls it, then confirming the other family's own fields never
+  moved.
+- **I — no hidden second path.** Every `.js` file in this repository
+  (tests/docs/assets excluded) is scanned for `new ArweaveContentStore(`,
+  `new NostrSnapshotDiscoveryPublisher(`, `executeSnapshotDistributionCommand(`,
+  and `composeSnapshotDistributionRuntime(`; the resulting file sets are
+  compared, file for file, against exactly what 0.9.136/0.9.137 already
+  established — construction confined to
+  `application/SnapshotDistributionRuntimeComposition.js`, both
+  entry-point functions called only from `ui/main.js`. A negative control
+  confirms `ui/components/WorldEncounterCanvas.js` specifically —
+  the one file positioned to grow a second, direct path to
+  `ArweaveContentStore`/`NostrSnapshotDiscoveryPublisher` — does not.
+
+### Recommendation
+
+```text
+0.9.131  Snapshot Distribution Boundary                       ✓
+0.9.132  ArweaveContentStore                                   ✓
+0.9.133  Nostr Snapshot Location Discovery                     ✓
+0.9.134  Decentralized Snapshot Retrieval                       ✓
+0.9.135  End-to-End Decentralized Snapshot Distribution         ✓
+         Audit
+0.9.136  Snapshot Distribution Command                          ✓
+0.9.137  Snapshot Distribution Runtime Composition               ✓
+0.9.138  World View Snapshot Distribution Action                 ✓
+0.9.139  Snapshot Distribution End-to-End Runtime & UI Audit      ✓
+```
+
+Snapshot distribution is now a complete, independently audited vertical
+feature — not merely a collection of infrastructure classes. I would stop
+here and reassess rather than schedule another Snapshot protocol feature:
+0.9.140 should ask what the next real user-visible or architectural
+limitation of ForkBuild is, rather than what decentralized infrastructure
+can be built next. That is a genuine decision point between returning to
+the vehicle/world-interaction work and extending decentralized
+distribution further — not one this milestone should preempt.
