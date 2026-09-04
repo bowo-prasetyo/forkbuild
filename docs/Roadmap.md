@@ -63410,3 +63410,146 @@ such vocabulary exists yet anywhere. Steering SIMULATION — a requested
 heading actually bending realized movement — stays its own, later
 milestone again, the same one-new-fact-at-a-time discipline this vehicle
 line has kept since 0.9.114.
+
+## 0.9.125 — Vehicle Steering Intent
+
+0.9.124's own audit proved, exhaustively, that a vehicle's `heading` comes
+only from realized horizontal displacement — never from steering, never
+invented. Its own closing recommendation named this milestone's exact
+shape: an explicit, closed vocabulary for steering INTENT that
+deliberately does not yet turn the vehicle. This is that seam, and nothing
+else:
+
+```text
+Movement input ──▶ vehicle movement realization ──▶ position ──▶ heading
+
+Steering input ──▶ VehicleSteeringIntent
+                        │
+                  0.9.125 stops here
+```
+
+`core/VehicleSteeringIntent.js` (new) exports a closed three-value
+vocabulary, `VehicleSteeringDirection.NONE`/`LEFT`/`RIGHT`, plus a small
+immutable value object, `VehicleSteeringIntent`, wrapping exactly one
+validated `direction` field — the direct structural twin of
+`core/AvatarVehicleMount.js` (a small, closed vocabulary plus a frozen,
+getter-only, JSON-capable value object around one validated field),
+deliberately NOT the shape of `core/AvatarContinuousMovementIntent.js`,
+which ships a transition function alongside its vocabulary because its own
+job is deciding what a NEW key-down does to intent that already existed.
+This milestone has no such question yet — a caller simply constructs
+whichever `VehicleSteeringIntent` the current input state calls for,
+fresh, exactly like `core/AvatarMovementState.js`'s own per-tick
+`forwardAxis`/`turnAxis` snapshot — so a transition function would be
+answering a question nobody asked yet.
+
+**The most important invariant this milestone enforces by construction:**
+a `VehicleSteeringIntent` describes what the driver REQUESTS, never what
+the vehicle actually does.
+
+```text
+LEFT  ≠ heading - 90
+RIGHT ≠ heading + 90
+```
+
+Those are behavioral interpretations that belong to a later steering
+SIMULATION milestone, never to this one. `core/VehicleMovementHeading.js`
+is untouched, byte-for-byte — it stays exactly
+`realized displacement -> heading`, never
+`steering intent + displacement -> heading`. This file never imports
+`core/VehicleMovementHeading.js`, `core/VehicleInstance.js`, or
+`application/VehicleRuntimeInstances.js`, and none of them import this
+file — the boundary 0.9.124's own audit proved clean stays exactly that
+clean, not narrower.
+
+**A runtime value, never runtime state.** `application/VehicleRuntimeInstances.js`
+acquires no `steering` field or setter, and `core/VehicleInstance.js` gains
+no `steering` getter or `withSteering()` method — both files are left
+completely unchanged, mirroring 0.9.124's own Section H, which already
+confirmed no steering-intent vocabulary existed anywhere yet. A
+`VehicleSteeringIntent` exists entirely independently of any vehicle
+runtime instance: constructing `NONE`, `LEFT`, or `RIGHT` requires no
+vehicle position, heading, type, movement capability, collision state, or
+avatar rotation. A caller (an application-layer controller, in a later
+milestone) is free to hold the current intent itself, transiently, outside
+the tracked-vehicle store entirely.
+
+`tests/VehicleSteeringIntent.test.js` is the primary suite, in seven
+sections. Section A proves the vocabulary itself — the three values,
+frozen, `isValidVehicleSteeringDirection()` accepting only them, rejecting
+an unrelated string, `undefined`, `null`, the empty string, and the wrong
+case, and that both the vocabulary and the constructor reject any
+attempted mutation or invalid value. Section B proves immutability — no
+setter, `Object.isFrozen()`, a direct backing-field reassignment throwing.
+Section C proves semantic independence — `NONE`/`LEFT`/`RIGHT` all
+construct with zero vehicle position, heading, type, collision, or
+rotation in scope, the class carries no such field, and its constructor's
+own one-parameter arity rejects a `VehicleInstance`-shaped object outright.
+Section D is the flagship for no behavioral coupling: a real
+`VehicleInstance` held at heading 90 has a `LEFT`, then a `RIGHT`, steering
+intent merely constructed nearby, and its position and heading — still
+exactly 90, never 0 or 180 — never move; a further check confirms
+`resolveVehicleHeadingFromMovement()` returns the identical heading for
+the identical displacement whether or not a steering intent was
+constructed in between. Section E proves the runtime exclusion directly —
+`VehicleRuntimeInstances` gains no `setSteering()`-shaped method or field,
+`VehicleInstance` gains no `steering` field or `withSteering()` method,
+`toJSON()` still carries exactly its existing five fields, and a source
+sweep of `application/VehicleRuntimeInstances.js`, `core/VehicleInstance.js`,
+and `core/VehicleMovementHeading.js` confirms none of the three so much as
+mention steering or import this new file. Section F is the structural
+audit of this milestone's own new file: a source sweep confirms it never
+references steering angle, steering rate, turn radius, angular velocity,
+wheel rotation, `rotationY`, oriented collision, Ackermann geometry,
+drift/skid/lean, position, heading, collision, physics, keyboard/gamepad
+input, rendering, persistence, or networking — and confirms the module
+exports exactly the vocabulary, the value-object class, its factory
+function, and both validators. Section G proves `toJSON()`/`fromJSON()`
+round-trips, the `none()`/`left()`/`right()` static factories each
+returning a fresh, independently frozen instance, the `isNone`/`isLeft`/
+`isRight` predicates, and `isValidVehicleSteeringIntent()` — which,
+deliberately unlike `core/AvatarVehicleMount.js`'s own `null`-as-absence
+convention, rejects `null` outright: `NONE` already names "not currently
+steering," so there is no separate absence spelling needed here.
+
+**No production code changes outside the one new file.** `core/VehicleMovementHeading.js`,
+`core/VehicleInstance.js`, `application/VehicleRuntimeInstances.js`,
+`application/AvatarVehicleMovementController.js`, `renderer/VehicleVisual.js`,
+and every other existing vehicle file are all byte-for-byte unchanged.
+
+### What this milestone deliberately does NOT do
+
+No wiring into `core/VehicleMovementHeading.js`, `core/VehicleInstance.js`,
+or `application/VehicleRuntimeInstances.js`. No transition function (there
+is no prior intent this milestone reads). No steering angle, steering
+rate, turn radius, angular velocity, heading mutation, or wheel rotation of
+any kind. No oriented collision or vehicle physics. No keyboard, gamepad,
+or other raw input handling — the first seam is usable purely
+programmatically; translating an actual held turn key into this
+vocabulary is explicit future scope. No rendering, persistence, or
+networking changes.
+
+### Recommendation
+
+```text
+Vehicle Orientation      the bicycle visually and semantically
+                          faces the direction it actually moved   (0.9.123)
+        v
+Vehicle Orientation      every invariant locked down as a
+Audit                    regression suite, zero behavior change   (0.9.124)
+        v
+Vehicle Steering Intent  a closed, immutable NONE/LEFT/RIGHT
+                         vocabulary — driver request only,
+                         semantically independent of any vehicle  (this milestone)
+        v
+Vehicle Steering          movement intent and steering intent both
+Simulation                feed vehicle movement realization; only
+                          realized displacement ever resolves heading
+```
+
+With this seam in place, a later milestone can decide how a held turn key
+produces a `VehicleSteeringIntent` without touching this file, and 0.9.126
+can read that intent alongside movement intent, feed both into vehicle
+movement realization, and let `core/VehicleMovementHeading.js` keep
+resolving heading exactly as it does today — from realized displacement,
+and nothing else.
