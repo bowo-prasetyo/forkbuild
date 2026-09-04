@@ -2,6 +2,7 @@ import { VehicleType } from '../core/VehicleType.js';
 import { AvatarMovementState } from '../core/AvatarMovementState.js';
 import { simulateAvatarMovement } from '../core/AvatarMovementSimulation.js';
 import { terrainHeightAt } from '../core/TerrainHeightField.js';
+import { resolveVehicleHeadingFromMovement } from '../core/VehicleMovementHeading.js';
 
 // 0.9.116 — Mounted Vehicle Movement.
 //
@@ -321,7 +322,26 @@ export class AvatarVehicleMovementController {
         // vehicle moves, the avatar follows" wiring) can never end up
         // standing inside an obstacle the vehicle itself was just
         // stopped short of.
-        const nextVehicleInstance = this._vehicleRuntimeInstances.setPosition(vehicleId, finalPosition);
+        let nextVehicleInstance = this._vehicleRuntimeInstances.setPosition(vehicleId, finalPosition);
+
+        // 0.9.123 — Vehicle Orientation. Only a GENUINE horizontal
+        // position change (never a raw request/intent, and never the
+        // pre-collision simulated one) ever produces a new heading — see
+        // this file's own 0.9.123 header. `currentPosition` is this
+        // tick's OWN starting position (captured above, before
+        // simulation ran), so a fully-blocked tick (finalPosition ===
+        // currentPosition in X/Z) is indistinguishable here from a tick
+        // with no movement intent at all — both correctly leave heading
+        // untouched.
+        if (finalPosition.x !== currentPosition.x || finalPosition.z !== currentPosition.z) {
+            const nextHeading = resolveVehicleHeadingFromMovement({
+                dx: finalPosition.x - currentPosition.x,
+                dz: finalPosition.z - currentPosition.z,
+                previousHeading: vehicleInstance.heading
+            });
+            nextVehicleInstance = this._vehicleRuntimeInstances.setHeading(vehicleId, nextHeading) || nextVehicleInstance;
+        }
+
         return { vehicleInstance: nextVehicleInstance, rotationY: result.rotationY };
     }
 
@@ -364,20 +384,43 @@ export class AvatarVehicleMovementController {
     }
 }
 
+// 0.9.123 — Vehicle Orientation. `tick()` now also commits a new
+// VehicleInstance.heading — see core/VehicleInstance.js's own 0.9.123
+// header — WHENEVER the vehicle's own final, ALREADY-CONSTRAINED
+// position genuinely differs (in X/Z) from where it started this tick.
+// The heading itself comes from core/VehicleMovementHeading.js's own
+// pure `resolveVehicleHeadingFromMovement()`, fed the REALIZED
+// displacement (finalPosition minus currentPosition, after collision) —
+// never from `result.rotationY`, which tracks requested STEERING, not
+// realized movement (see that file's own header for exactly why those
+// two can differ). A tick that produced no real horizontal movement —
+// no movement intent, or a movement fully absorbed by
+// `_movementConstraint`/`_treeConstraint` — never calls
+// `setHeading()` at all, so a stationary or fully-blocked vehicle's own
+// heading is simply left exactly as this store already holds it; see
+// this class's own `tick()` below for where that check happens.
+//
 // Deliberately not yet, matching this milestone's own brief: a vehicle
 // physics engine, vehicle-vs-vehicle collision (0.9.119 added only
 // vehicle-vs-WORLD collision — trees, bricks, buildings — never
-// vehicle-vs-vehicle), vehicle rotation/orientation as a concept
-// independent of this simulation's own `rotationY` result (the avatar's
-// existing `rotationY` IS the vehicle's heading while mounted — see
-// application/WorldNavigationSession.js's own 0.9.116 header for why no
-// separate heading field was added to VehicleInstance), wheel or rider
-// animation, road/path following, gears, reverse, or turning-radius
-// physics beyond core/AvatarMovementSteeringSimulation.js's own existing
-// math, collision response beyond the existing "stop at the combined
-// radius" resolution (no sliding response redesign, no bounce, no
+// vehicle-vs-vehicle), steering input, steering angle, turning radius, or
+// vehicle angular velocity of any kind (heading SNAPS to the realized
+// movement direction each tick — see core/VehicleMovementHeading.js's own
+// header — it is never smoothed/rate-limited the way `rotationY` itself
+// still is), wheel or rider animation, road/path following, gears,
+// reverse, or turning-radius physics beyond
+// core/AvatarMovementSteeringSimulation.js's own existing math (which
+// still governs `result.rotationY`, the avatar's own facing while
+// mounted — entirely unchanged by this milestone, see
+// application/WorldNavigationSession.js's own 0.9.116 header), an
+// oriented/rectangular collision footprint (the vehicle's own
+// `collisionRadius` stays circular — see core/VehicleInstance.js's own
+// 0.9.123 header, "keep the bicycle a circular collision body"),
+// collision response beyond the existing "stop at the combined radius"
+// resolution (no sliding response redesign, no bounce, no
 // damage/sound/animation), multiplayer synchronization, persistence, or
 // a redesign of mounting/dismounting/spawning of any kind. This file
 // answers only "given a movement intent and a mounted, movable vehicle,
-// what is its next, WORLD-COLLISION-CONSTRAINED runtime position" —
-// never any of those. See docs/Roadmap.md, 0.9.116 and 0.9.119.
+// what is its next, WORLD-COLLISION-CONSTRAINED runtime position AND
+// facing" — never any of those. See docs/Roadmap.md, 0.9.116, 0.9.119,
+// and 0.9.123.

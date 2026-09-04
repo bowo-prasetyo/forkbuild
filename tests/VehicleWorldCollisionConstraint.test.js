@@ -241,6 +241,11 @@ async function runTests() {
                 current = current.withPosition(nextPosition);
                 return current;
             },
+            setHeading(id, nextHeading) {
+                if (id !== current.id) return null;
+                current = current.withHeading(nextHeading);
+                return current;
+            },
             _current: () => current
         };
     }
@@ -279,6 +284,7 @@ async function runTests() {
             '10. a movementConstraint reporting collided:true genuinely stops the vehicle at the pre-collision position — the simulated forward step never reaches the store');
         assert(controller.isCollided() === true, '11. isCollided() reports the movementConstraint\'s own collided flag');
         assert(controller.isCollidedWithTree() === false, '12. isCollidedWithTree() stays false — no treeConstraint was even wired for this controller');
+        assert(result.vehicleInstance.heading === 0, '12b. 0.9.123 — heading stays at its neutral default: a fully-blocked tick never achieved a different horizontal position');
     }
 
     {

@@ -201,6 +201,11 @@ function fakeVehicleStore(instance) {
             current = current.withPosition(nextPosition);
             return current;
         },
+        setHeading(id, nextHeading) {
+            if (id !== current.id) return null;
+            current = current.withHeading(nextHeading);
+            return current;
+        },
         _current: () => current
     };
 }

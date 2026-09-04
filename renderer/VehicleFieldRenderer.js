@@ -79,6 +79,11 @@ export class VehicleFieldRenderer {
         // file's own header, "Renders instance.position, never
         // instance.spawnPosition."
         visual.setPosition(instance.position);
+        // 0.9.123 — Vehicle Orientation. The renderer OBSERVES
+        // instance.heading, exactly as it already observes
+        // instance.position — never computes a facing of its own. See
+        // renderer/VehicleVisual.js's own 0.9.123 header.
+        visual.setHeading(instance.heading);
         return visual.root;
     }
 
