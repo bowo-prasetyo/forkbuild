@@ -1,3 +1,5 @@
+import { resolveSnapshotPublicationAttribution } from '../../application/SnapshotPublicationAttribution.js';
+
 // 0.9.140 — Own Publication Distribution Entry Point.
 //
 // 0.9.104/0.9.138 each gave WorldEncounterCanvas a "Distribute
@@ -139,6 +141,60 @@
 // and must never clobber one another's in-flight/result state. Reset on
 // the identical `publication` change the distribution fields already
 // reset on.
+// 0.9.144 — World View Snapshot Attribution Integration.
+//
+// 0.9.142 gave this panel "Discover Snapshot"; 0.9.143 built
+// `application/SnapshotPublicationAttribution.js#resolveSnapshotPublicationAttribution()`
+// — the pure Q3 comparison — and stopped deliberately short of any UI
+// wiring (see that file's own header, "a UI badge or any composition-root
+// wiring... not this milestone"). This is that wiring, and nothing more:
+//
+//   discoverOwnSnapshot()  (unchanged, 0.9.142)
+//           │
+//           ▼
+//   snapshotDiscoveryResult   (unchanged, 0.9.142's own field)
+//           │
+//           ▼
+//   resolveSnapshotPublicationAttribution(publication, snapshotDiscoveryResult)
+//           │
+//           ▼
+//   snapshotAttributionResult   ★ (THIS milestone's own new field)
+//
+// A SEPARATE FIELD, NEVER A REPLACEMENT OF `snapshotDiscoveryResult`. The
+// two stay independently readable — "Snapshot Discovery: RESOLVED" and
+// "Snapshot Attribution: MATCH" are two different facts about two
+// different questions (see `application/SnapshotPublicationAttribution.js`'s
+// own header, Q2 vs Q3), never collapsed into one combined status.
+//
+// THIS FILE CALLS `resolveSnapshotPublicationAttribution()` — A PURE, NO-I/O
+// FUNCTION — DIRECTLY, RATHER THAN THROUGH AN INJECTED COMMAND PROP. Unlike
+// `discoverSnapshotCommand`/`snapshotDistributionCommand` (both real I/O,
+// composed by `ui/main.js`), attribution needs no collaborator to inject —
+// it is the identical restraint every other pure `application/` describer
+// this codebase's UI layer already imports directly (e.g. `application/
+// WorldEncounterSelectionOutcome.js`, one surface over). This component
+// still never hashes bytes, compares hashes, or interprets a resolution
+// outcome itself — `resolveSnapshotPublicationAttribution()` does all of
+// that; this file only calls it and renders what comes back, verbatim.
+//
+// COMPUTED IMMEDIATELY AFTER A SUCCESSFUL DISCOVERY, NEVER ON A SEPARATE
+// CLICK. Attribution has no I/O of its own and nothing further to ask the
+// user for — `publication` and `snapshotDiscoveryResult` are already both
+// in hand the instant discovery resolves, so `discoverOwnSnapshot()` (below)
+// computes both in the same `.then()`, under the same `requestId` guard. A
+// resolution failure (`NOT_DISCOVERED`/`STORE_UNAVAILABLE`/
+// `CONTENT_UNAVAILABLE`/`CONTENT_HASH_MISMATCH`) still produces a
+// `snapshotAttributionResult` — `resolveSnapshotPublicationAttribution()`
+// passes that same failure outcome through unchanged rather than reporting
+// `NO_MATCH` — see that file's own header, "a resolution failure is never
+// reported as no_match."
+//
+// RESET EXACTLY WHERE `snapshotDiscoveryResult` ALREADY IS. A changed
+// Publication (the `publication` watcher, below) and a stale in-flight
+// response (the existing `snapshotDiscoveryRequestId` guard) invalidate
+// `snapshotAttributionResult` the identical way they already invalidate
+// `snapshotDiscoveryResult` — this milestone adds no second reset
+// mechanism of its own.
 export default {
     name: 'OwnPublicationPanel',
     props: {
@@ -176,7 +232,12 @@ export default {
             snapshotDiscoveryExecuting: false,
             snapshotDiscoveryError: null,
             snapshotDiscoveryResult: null,
-            snapshotDiscoveryRequestId: 0
+            snapshotDiscoveryRequestId: 0,
+            // 0.9.144 — see this file's own header, "a separate field,
+            // never a replacement of snapshotDiscoveryResult." `null` until
+            // a discovery call resolves; never written by anything but
+            // `discoverOwnSnapshot()`, below.
+            snapshotAttributionResult: null
         };
     },
     watch: {
@@ -198,6 +259,10 @@ export default {
             this.snapshotDiscoveryError = null;
             this.snapshotDiscoveryResult = null;
             this.snapshotDiscoveryRequestId += 1;
+            // 0.9.144 — a different (or cleared) Publication invalidates
+            // any prior attribution verdict the same way it already
+            // invalidates the discovery result it was computed from.
+            this.snapshotAttributionResult = null;
         }
     },
     beforeUnmount() {
@@ -265,6 +330,14 @@ export default {
                 .then((result) => {
                     if (requestId === this.snapshotDiscoveryRequestId) {
                         this.snapshotDiscoveryResult = result;
+                        // 0.9.144 — the one call site of
+                        // resolveSnapshotPublicationAttribution() in this
+                        // file. Computed immediately, under the same
+                        // requestId guard as snapshotDiscoveryResult itself
+                        // — see this file's own header, "computed
+                        // immediately after a successful discovery, never
+                        // on a separate click."
+                        this.snapshotAttributionResult = resolveSnapshotPublicationAttribution(publication, result);
                     }
                 })
                 .catch(() => {
@@ -344,6 +417,16 @@ export default {
                     <dt>Locator</dt>
                     <dd>{{ snapshotDiscoveryResult.locator }}</dd>
                 </template>
+            </dl>
+
+            <!-- 0.9.144 — a separate result, below Snapshot Discovery's own,
+                 never merged into it — see this file's own header, "a
+                 separate field, never a replacement," and application/
+                 SnapshotPublicationAttribution.js's own header for what
+                 MATCH does and does not mean. -->
+            <dl v-if="snapshotAttributionResult" class="own-publication-attribution-detail">
+                <dt>Snapshot Attribution</dt>
+                <dd>{{ snapshotAttributionResult.outcome }}</dd>
             </dl>
         </div>
     `

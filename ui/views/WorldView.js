@@ -885,6 +885,19 @@ export default {
         // exactly one thing: the already-composed `discoverSnapshotCommand`
         // injected above — the same restraint `distributeWorldEncounterSnapshot()`
         // already holds, one action over.
+        //
+        // 0.9.144 — REUSED VERBATIM FOR WorldEncounterCanvas'S OWN NEW
+        // `discoverSnapshotCommand` PROP, NEVER FORKED INTO A SECOND
+        // FUNCTION. This function already takes any `Publication` — never
+        // reading `ownPublication` or anything else scoped to "own" — so it
+        // is bound below to BOTH `OwnPublicationPanel`'s own
+        // `discoverSnapshotCommand` prop AND `WorldEncounterCanvas`'s, the
+        // same "same seam, only the source of the Publication object
+        // differs" restraint `distributeWorldEncounterSnapshot()` already
+        // holds for Snapshot distribution's own two entry points. Its name
+        // stays `discoverOwnSnapshot` — unchanged, to avoid disturbing
+        // 0.9.142's own already-passing test suite — despite now serving a
+        // second, non-"own" caller too.
         function discoverOwnSnapshot(publication) {
             if (!discoverSnapshotCommand || !publication || !publication.contentReference) {
                 return Promise.reject(new Error('Snapshot discovery is not available.'));
@@ -3451,7 +3464,18 @@ export default {
                      around the injected snapshotDistributionCommand, never
                      a second command and never anything this file
                      orchestrates itself. See that function's own comment,
-                     above. -->
+                     above.
+
+                     0.9.144 — discoverSnapshotCommand, WorldEncounterCanvas's
+                     own new prop, bound to this file's own
+                     discoverOwnSnapshot() — the SAME function already bound
+                     to OwnPublicationPanel's own discoverSnapshotCommand
+                     prop above, reused verbatim rather than forked; see
+                     that function's own comment for why. WorldEncounterCanvas
+                     now owns the entire Snapshot Discovery/Attribution
+                     trigger and result panel for a selected World Encounter,
+                     exactly the way it already owns Snapshot Distribution's
+                     own. -->
                 <CollapsibleSection
                     title="World Encounters"
                     :collapsed="nearbySectionsCollapsed.worldEncounters"
@@ -3465,6 +3489,7 @@ export default {
                         :distributionLifecycleStore="publicationDistributionLifecycleStore"
                         :distributionCommand="distributeWorldEncounterPublication"
                         :snapshotDistributionCommand="distributeWorldEncounterSnapshot"
+                        :discoverSnapshotCommand="discoverOwnSnapshot"
                         :worldDiscoveryLeadRegistry="worldDiscoveryLeadRegistry"
                     />
                 </CollapsibleSection>
