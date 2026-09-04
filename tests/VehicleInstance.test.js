@@ -16,12 +16,14 @@ import { DEFAULT_WORLD_SEED } from '../core/TerrainHeightField.js';
 //   Section B: vehicleInstanceFromPresence() — the bridge from a real,
 //              deterministically-placed VehiclePresence
 //   Section C: withPosition() — the only way position ever changes
+//   Section C2 (0.9.123): heading — defaulting, withHeading(), and
+//              independence from withPosition()
 //   Section D: the central architectural claim — moving position never
 //              alters spawnPosition, id, or the underlying deterministic
 //              placement calculation itself
 //   Section E: immutability — getter-only, frozen, no mutation
 //   Section F: defensive validation of malformed inputs
-//   Section G: toJSON()/fromJSON() round-trips both positions
+//   Section G: toJSON()/fromJSON() round-trips both positions and heading
 //   Section H: isValidVehicleInstance()
 //   Section I: architectural regression — no rendering/movement/mount/
 //              dismount/placement wiring, source sweep + exports check
@@ -65,6 +67,7 @@ async function runTests() {
         assert(instance.position instanceof Position, '5. position is a Position instance');
         assert(instance.position.equals(instance.spawnPosition), '6. position defaults to spawnPosition when omitted');
         assert(instance.position === instance.spawnPosition, '7. the default position is the exact same Position reference as spawnPosition, not merely equal');
+        assert(instance.heading === 0, '7b. heading defaults to 0 (a neutral fact, never invented) when omitted');
     }
     {
         // spawnPosition and position may differ from construction.
@@ -77,6 +80,15 @@ async function runTests() {
         assert(instance.spawnPosition.equals(new Position(0, 0, 0)), '8. spawnPosition preserved when explicitly given');
         assert(instance.position.equals(new Position(50, 0, -25)), '9. an explicitly different position is preserved verbatim');
         assert(!instance.position.equals(instance.spawnPosition), '10. position and spawnPosition can genuinely differ');
+    }
+    {
+        const instance = new VehicleInstance({
+            id: 'vehicle:1:0,0',
+            type: VehicleType.CAR,
+            spawnPosition: { x: 0, y: 0, z: 0 },
+            heading: 137.5
+        });
+        assert(instance.heading === 137.5, '10b. an explicitly given heading is preserved verbatim');
     }
     {
         // Every non-NONE VehicleType constructs.
@@ -102,6 +114,7 @@ async function runTests() {
         assert(instance.type === presence.type, '14. type is copied verbatim from the VehiclePresence');
         assert(instance.spawnPosition.equals(presence.position), '15. spawnPosition equals the VehiclePresence\'s own position');
         assert(instance.position.equals(presence.position), '16. position also starts equal to the VehiclePresence\'s own position');
+        assert(instance.heading === 0, '16b. heading starts at the neutral 0 default — VehiclePresence has no facing fact to copy');
 
         assertThrows(() => vehicleInstanceFromPresence({ id: 'x', type: VehicleType.CAR, position: { x: 0, y: 0, z: 0 } }), '17. a VehiclePresence-shaped plain object is rejected — a real VehiclePresence instance is required');
         assertThrows(() => vehicleInstanceFromPresence(null), '18. null is rejected');
@@ -115,7 +128,8 @@ async function runTests() {
         const original = new VehicleInstance({
             id: 'vehicle:1:0,0',
             type: VehicleType.BICYCLE,
-            spawnPosition: new Position(5, 0, 5)
+            spawnPosition: new Position(5, 0, 5),
+            heading: 45
         });
         const moved = original.withPosition(new Position(9, 0, 12));
 
@@ -125,6 +139,7 @@ async function runTests() {
         assert(moved.id === original.id, '23. id is carried forward unchanged');
         assert(moved.type === original.type, '24. type is carried forward unchanged');
         assert(moved.spawnPosition === original.spawnPosition, '25. spawnPosition is carried forward as the EXACT SAME reference, not merely an equal value');
+        assert(moved.heading === 45, '25b. withPosition() carries heading forward UNCHANGED — it never recomputes orientation as a side effect');
 
         // The original is entirely untouched.
         assert(original.position.equals(new Position(5, 0, 5)), '26. the original instance\'s own position is unchanged after withPosition() is called on it');
@@ -138,6 +153,39 @@ async function runTests() {
         assert(afterThreeMoves.position.equals(new Position(3, 0, 3)), '28. the final position reflects the last move in the chain');
         assert(afterThreeMoves.spawnPosition === original.spawnPosition, '29. spawnPosition survives an arbitrarily long chain of withPosition() calls, identical by reference throughout');
         assert(afterThreeMoves.id === original.id, '30. id survives the same chain, unchanged');
+        assert(afterThreeMoves.heading === 45, '30b. heading survives the same chain of withPosition() calls, unchanged throughout');
+    }
+
+    // -------------------------------------------------------------
+    // Section C2 (0.9.123) — heading / withHeading()
+    // -------------------------------------------------------------
+    {
+        const original = new VehicleInstance({
+            id: 'vehicle:1:0,0',
+            type: VehicleType.BICYCLE,
+            spawnPosition: new Position(5, 0, 5),
+            position: new Position(9, 0, 12),
+            heading: 10
+        });
+        const faced = original.withHeading(270);
+
+        assert(faced instanceof VehicleInstance, '30c. withHeading() returns a VehicleInstance');
+        assert(faced !== original, '30d. withHeading() returns a genuinely new instance, never the same object');
+        assert(faced.heading === 270, '30e. the new instance carries the new heading');
+        assert(faced.id === original.id, '30f. id is carried forward unchanged');
+        assert(faced.type === original.type, '30g. type is carried forward unchanged');
+        assert(faced.spawnPosition === original.spawnPosition, '30h. spawnPosition is carried forward as the exact same reference');
+        assert(faced.position.equals(original.position), '30i. position is carried forward unchanged — withHeading() never touches position');
+        assert(original.heading === 10, '30j. the original instance is entirely untouched by withHeading()');
+
+        // Chaining withHeading() repeatedly never touches position/spawnPosition.
+        const afterThreeTurns = original.withHeading(90).withHeading(180).withHeading(359.5);
+        assert(afterThreeTurns.heading === 359.5, '30k. the final heading reflects the last turn in the chain');
+        assert(afterThreeTurns.position.equals(original.position), '30l. position survives an arbitrarily long chain of withHeading() calls, unchanged throughout');
+        assert(afterThreeTurns.spawnPosition === original.spawnPosition, '30m. spawnPosition survives the same chain, identical by reference');
+
+        assertThrows(() => original.withHeading(NaN), '30n. withHeading(NaN) throws — heading must stay a finite number');
+        assertThrows(() => original.withHeading('north'), '30o. withHeading() rejects a non-numeric heading');
     }
 
     // -------------------------------------------------------------
@@ -185,11 +233,13 @@ async function runTests() {
         assert(Object.getOwnPropertyDescriptor(VehicleInstance.prototype, 'type').set === undefined, '40. no type setter exists');
         assert(Object.getOwnPropertyDescriptor(VehicleInstance.prototype, 'spawnPosition').set === undefined, '41. no spawnPosition setter exists');
         assert(Object.getOwnPropertyDescriptor(VehicleInstance.prototype, 'position').set === undefined, '42. no position setter exists');
+        assert(Object.getOwnPropertyDescriptor(VehicleInstance.prototype, 'heading').set === undefined, '42b. no heading setter exists');
 
         assert(Object.isFrozen(instance), '43. the instance itself is frozen');
         assertThrows(() => { instance._id = 'vehicle:1:9,9'; }, '44. reassigning the backing id field directly throws (frozen, strict-mode ESM)');
         assertThrows(() => { instance._position = new Position(0, 0, 0); }, '45. reassigning the backing position field directly throws (frozen, strict-mode ESM)');
         assertThrows(() => { instance._spawnPosition = new Position(0, 0, 0); }, '46. reassigning the backing spawnPosition field directly throws (frozen, strict-mode ESM)');
+        assertThrows(() => { instance._heading = 45; }, '46b. reassigning the backing heading field directly throws (frozen, strict-mode ESM)');
         assert(instance.id === 'vehicle:1:1,1' && instance.type === VehicleType.CAR, '47. the instance is unchanged after the rejected reassignment attempts');
     }
 
@@ -218,6 +268,17 @@ async function runTests() {
         assertThrows(() => new VehicleInstance(null), '63. null options throws');
         assertThrows(() => new VehicleInstance(), '64. no options at all throws');
         assertThrows(() => new VehicleInstance({}), '65. an empty options object throws');
+
+        assertThrows(() => new VehicleInstance({ id: 'vehicle:1:0,0', type: VehicleType.CAR, spawnPosition: { x: 0, y: 0, z: 0 }, heading: NaN }), '65b. a NaN heading throws');
+        assertThrows(() => new VehicleInstance({ id: 'vehicle:1:0,0', type: VehicleType.CAR, spawnPosition: { x: 0, y: 0, z: 0 }, heading: Infinity }), '65c. a non-finite heading throws');
+        assertThrows(() => new VehicleInstance({ id: 'vehicle:1:0,0', type: VehicleType.CAR, spawnPosition: { x: 0, y: 0, z: 0 }, heading: 'north' }), '65d. a non-numeric heading throws');
+        assertThrows(() => new VehicleInstance({ id: 'vehicle:1:0,0', type: VehicleType.CAR, spawnPosition: { x: 0, y: 0, z: 0 }, heading: null }), '65e. an explicit null heading throws (only an OMITTED heading defaults to 0)');
+        {
+            const zeroHeading = new VehicleInstance({ id: 'vehicle:1:0,0', type: VehicleType.CAR, spawnPosition: { x: 0, y: 0, z: 0 }, heading: 0 });
+            assert(zeroHeading.heading === 0, '65f. an explicit heading of exactly 0 is accepted, not treated as "omitted"');
+            const negativeHeading = new VehicleInstance({ id: 'vehicle:1:0,0', type: VehicleType.CAR, spawnPosition: { x: 0, y: 0, z: 0 }, heading: -45 });
+            assert(negativeHeading.heading === -45, '65g. a negative heading is accepted verbatim — this file never normalizes it');
+        }
     }
 
     // -------------------------------------------------------------
@@ -228,10 +289,11 @@ async function runTests() {
             id: 'vehicle:9:3,-4',
             type: VehicleType.MOTORCYCLE,
             spawnPosition: new Position(1, 0, 2),
-            position: new Position(30, 0, 40)
+            position: new Position(30, 0, 40),
+            heading: 217
         });
         const json = instance.toJSON();
-        assert(JSON.stringify(Object.keys(json).sort()) === JSON.stringify(['id', 'position', 'spawnPosition', 'type']), '66. toJSON() carries exactly id/type/spawnPosition/position');
+        assert(JSON.stringify(Object.keys(json).sort()) === JSON.stringify(['heading', 'id', 'position', 'spawnPosition', 'type']), '66. toJSON() carries exactly id/type/spawnPosition/position/heading');
 
         const roundTripped = VehicleInstance.fromJSON(json);
         assert(roundTripped instanceof VehicleInstance, '67. fromJSON() returns a VehicleInstance instance');
@@ -239,6 +301,7 @@ async function runTests() {
         assert(roundTripped.type === instance.type, '69. fromJSON(toJSON()) preserves type');
         assert(roundTripped.spawnPosition.equals(instance.spawnPosition), '70. fromJSON(toJSON()) preserves spawnPosition');
         assert(roundTripped.position.equals(instance.position), '71. fromJSON(toJSON()) preserves position');
+        assert(roundTripped.heading === instance.heading, '71b. fromJSON(toJSON()) preserves heading');
         assert(roundTripped !== instance, '72. fromJSON() always produces a new instance, never the same object');
 
         json.id = 'vehicle:tampered:0,0';
@@ -276,7 +339,13 @@ async function runTests() {
             'AvatarVehicleDismountPosition', 'AvatarVehicleDismountTransition', 'AvatarVehicleDismountClearance',
             'AvatarVehicleProximity', 'AvatarPresence',
             'mount', 'dismount', 'ride', 'rider', 'occupant',
-            'velocity', 'acceleration', 'heading', 'rotation', 'steering', 'braking', 'speed',
+            // 'heading' is deliberately no longer forbidden here — see
+            // this file's own 0.9.123 header: it is a legitimate runtime
+            // fact this class now owns, the direct structural twin of
+            // 'position'. 'rotation' stays forbidden: this file's own
+            // heading is expressed purely as a plain number of degrees,
+            // never as a rotation/Three.js concept.
+            'velocity', 'acceleration', 'rotation', 'steering', 'braking', 'speed',
             'battery', 'fuel', 'health', 'inventory',
             'setTimeout', 'setInterval', 'requestAnimationFrame', 'performance.now', 'Date.now',
             'addEventListener', 'keydown', 'keyup', 'KeyboardEvent',

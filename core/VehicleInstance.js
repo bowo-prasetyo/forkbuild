@@ -149,6 +149,43 @@ import { VehiclePresence } from './VehiclePresence.js';
 // battery/fuel/health/inventory; equality/comparison helpers beyond
 // what `id` (a plain string) and `Position#equals()` already give a
 // caller for free.
+//
+// 0.9.123 — Vehicle Orientation adds exactly ONE more runtime fact,
+// alongside `position`, for the identical reason `position` itself was
+// added here rather than to core/VehiclePresence.js: a moving vehicle's
+// current FACING is a runtime fact that can change independently of
+// anything core/VehiclePlacement.js ever computes.
+//
+//   heading = a current runtime fact, in DEGREES — the exact same
+//             representation core/AvatarMovementSimulation.js's own
+//             `rotationY` already uses (0 = facing +Z, 90 = facing +X,
+//             per that file's own `dx = sin(radians)*stepDistance,
+//             dz = cos(radians)*stepDistance` step formula). Defaults to
+//             `0` when omitted — NEVER derived from `position` or
+//             `spawnPosition` here, and never invented from nothing: a
+//             vehicle that has never moved has no real fact about which
+//             way it is "facing," so this file settles for the same
+//             neutral default core/AvatarPresence.js's own
+//             `rotation = {x:0, y:0, z:0}` already settles for, rather
+//             than pretending a deterministic placement fact exists that
+//             it does not.
+//
+// withHeading(nextHeading) IS THE ONLY WAY `heading` EVER CHANGES, AND
+// IT NEVER TOUCHES `position`/`spawnPosition` — the identical
+// "one fact, one explicit replacement method" discipline `withPosition()`
+// already established for itself. A caller that wants to change BOTH
+// facts on the same tick (ordinarily
+// application/AvatarVehicleMovementController.js, once movement genuinely
+// changes a vehicle's horizontal position) calls both methods explicitly
+// — `withPosition()` deliberately does NOT recompute `heading` as a
+// side effect, and `withHeading()` deliberately does NOT touch
+// `position`. Two explicit operations, never one method silently doing
+// the other's job — see docs/Roadmap.md, 0.9.123, "keeps the data model
+// operations explicit."
+//
+// vehicleInstanceFromPresence() sets `heading` to the same neutral `0`
+// default described above — core/VehiclePresence.js has no facing
+// concept of its own to copy, and this file never invents one.
 
 function isNonEmptyString(value) {
     return typeof value === 'string' && value.length > 0;
@@ -156,6 +193,16 @@ function isNonEmptyString(value) {
 
 function isFiniteCoordinate(value) {
     return typeof value === 'number' && Number.isFinite(value);
+}
+
+function toHeading(value) {
+    if (value === undefined) {
+        return 0;
+    }
+    if (typeof value !== 'number' || !Number.isFinite(value)) {
+        throw new Error(`VehicleInstance requires heading to be a finite number when provided, got ${JSON.stringify(value)}`);
+    }
+    return value;
 }
 
 function toPosition(value, fieldName) {
@@ -176,7 +223,7 @@ function toPosition(value, fieldName) {
 }
 
 export class VehicleInstance {
-    constructor({ id, type, spawnPosition, position } = {}) {
+    constructor({ id, type, spawnPosition, position, heading } = {}) {
         if (!isNonEmptyString(id)) {
             throw new Error(`VehicleInstance requires a non-empty string id, got ${JSON.stringify(id)}`);
         }
@@ -196,6 +243,7 @@ export class VehicleInstance {
         // file's own header, "position = a current runtime fact...
         // starts equal to spawnPosition."
         this._position = position === undefined ? this._spawnPosition : toPosition(position, 'position');
+        this._heading = toHeading(heading);
         Object.freeze(this);
     }
 
@@ -203,17 +251,35 @@ export class VehicleInstance {
     get type() { return this._type; }
     get spawnPosition() { return this._spawnPosition; }
     get position() { return this._position; }
+    get heading() { return this._heading; }
 
     // The ONE way `position` ever changes — see this file's own header,
     // "withPosition() is the only way position ever changes." Returns a
     // brand new VehicleInstance; `this` is never mutated, and
     // `spawnPosition` is carried forward by reference, untouched.
+    // `heading` is likewise carried forward unchanged — see this file's
+    // own 0.9.123 header, "withPosition() deliberately does NOT
+    // recompute heading as a side effect."
     withPosition(nextPosition) {
         return new VehicleInstance({
             id: this._id,
             type: this._type,
             spawnPosition: this._spawnPosition,
-            position: nextPosition
+            position: nextPosition,
+            heading: this._heading
+        });
+    }
+
+    // 0.9.123 — the ONE way `heading` ever changes, the direct
+    // structural twin of withPosition() above. `position`/`spawnPosition`
+    // are carried forward untouched.
+    withHeading(nextHeading) {
+        return new VehicleInstance({
+            id: this._id,
+            type: this._type,
+            spawnPosition: this._spawnPosition,
+            position: this._position,
+            heading: nextHeading
         });
     }
 
@@ -222,7 +288,8 @@ export class VehicleInstance {
             id: this._id,
             type: this._type,
             spawnPosition: this._spawnPosition.toJSON(),
-            position: this._position.toJSON()
+            position: this._position.toJSON(),
+            heading: this._heading
         };
     }
 
@@ -231,7 +298,8 @@ export class VehicleInstance {
             id: json.id,
             type: json.type,
             spawnPosition: Position.fromJSON(json.spawnPosition),
-            position: Position.fromJSON(json.position)
+            position: Position.fromJSON(json.position),
+            heading: json.heading
         });
     }
 }
@@ -252,7 +320,11 @@ export function vehicleInstanceFromPresence(presence) {
         id: presence.id,
         type: presence.type,
         spawnPosition: presence.position,
-        position: presence.position
+        position: presence.position,
+        // No deterministic facing fact exists — see this file's own
+        // 0.9.123 header, "vehicleInstanceFromPresence() sets heading to
+        // the same neutral 0 default."
+        heading: 0
     });
 }
 

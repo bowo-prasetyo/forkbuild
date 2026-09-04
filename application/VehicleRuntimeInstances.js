@@ -187,6 +187,22 @@ export class VehicleRuntimeInstances {
         return next;
     }
 
+    // 0.9.123 — Vehicle Orientation. The direct structural twin of
+    // setPosition() above, for `heading` — reuses
+    // VehicleInstance#withHeading() (never a direct field assignment),
+    // and returns `null` for an id this store has not itself discovered,
+    // the identical "no destination is known from here" honesty
+    // setPosition() already established.
+    setHeading(id, nextHeading) {
+        const current = this._instances.get(id);
+        if (!current) {
+            return null;
+        }
+        const next = current.withHeading(nextHeading);
+        this._instances.set(id, next);
+        return next;
+    }
+
     clear() {
         this._instances.clear();
     }

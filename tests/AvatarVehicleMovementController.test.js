@@ -26,6 +26,10 @@ import { DEFAULT_WORLD_SEED } from '../core/TerrainHeightField.js';
 //              never moved, even when directly tracked and ticked —
 //              defense in depth, independent of any caller-side canMove()
 //              check
+//   Section G2 (0.9.123): heading tracks realized movement direction —
+//              forward, reverse, blocked (unchanged), and idle
+//              (unchanged) — never core/AvatarMovementSimulation.js's own
+//              steering-derived rotationY
 //   Section H: architectural regression — no duplicated movement math,
 //              no AvatarPresenceSession/rendering coupling
 //
@@ -49,6 +53,13 @@ function fakeVehicleStore(initialInstances = []) {
             const next = current.withPosition(nextPosition);
             map.set(id, next);
             return next;
+        },
+        setHeading(id, nextHeading) {
+            const current = map.get(id);
+            if (!current) return null;
+            const next = current.withHeading(nextHeading);
+            map.set(id, next);
+            return next;
         }
     };
 }
@@ -59,6 +70,7 @@ function bicycle(id, position) {
 
 const IDLE_INTENT = Object.freeze({ direction: 0, turnAxis: 0, running: false, brakingRequested: false });
 const FORWARD_INTENT = Object.freeze({ direction: 1, turnAxis: 0, running: false, brakingRequested: false });
+const BACKWARD_INTENT = Object.freeze({ direction: -1, turnAxis: 0, running: false, brakingRequested: false });
 const BRAKE_INTENT = Object.freeze({ direction: 0, turnAxis: 0, running: false, brakingRequested: true });
 
 const bicycleCapability = resolveAvatarVehicleMovementCapability(VehicleType.BICYCLE);
@@ -255,6 +267,88 @@ async function runTests() {
             assert(store.get(instance.id).position.x === spawn.x && store.get(instance.id).position.z === spawn.z,
                 `21.${type} ...and the store's own tracked ${type} position is completely untouched`);
         }
+    }
+
+    // -------------------------------------------------------------
+    // Section G2 (0.9.123) — heading tracks realized movement direction.
+    // -------------------------------------------------------------
+    {
+        // A. Eastward (+X) movement: heading resolves to 90, matching
+        // core/VehicleMovementHeading.js's own convention — never
+        // rotationY itself, which tracks steering intent instead.
+        const spawn = { x: 0, y: 0, z: 0 };
+        const store = fakeVehicleStore([bicycle('vehicle:h1', spawn)]);
+        const controller = new AvatarVehicleMovementController(store);
+        // currentRotationY: 90 drives the simulated STEP direction (+X);
+        // this deliberately differs from what heading is asserted to
+        // become, to prove heading is read from the vehicle's own
+        // realized position change, not merely echoed from rotationY.
+        let lastResult = null;
+        for (let i = 0; i < 20; i++) {
+            lastResult = controller.tick({
+                seed: DEFAULT_WORLD_SEED, vehicleId: 'vehicle:h1', capability: bicycleCapability,
+                movementIntent: FORWARD_INTENT, currentRotationY: 90, deltaSeconds: 0.05
+            });
+        }
+        assert(lastResult.vehicleInstance.position.x > spawn.x, '25a. sanity: the vehicle actually moved in +X');
+        assert(Math.abs(lastResult.vehicleInstance.heading - 90) < 1e-6, '25b. FLAGSHIP: heading resolves to 90 (facing +X), matching the realized movement direction');
+        assert(store.get('vehicle:h1').heading === lastResult.vehicleInstance.heading, '25c. the committed store entry carries the same heading returned from tick()');
+    }
+    {
+        // B. Reversing direction: heading changes to reflect the new
+        // realized direction once the vehicle actually starts moving the
+        // other way.
+        const spawn = { x: 0, y: 0, z: 0 };
+        const store = fakeVehicleStore([bicycle('vehicle:h2', spawn)]);
+        const controller = new AvatarVehicleMovementController(store);
+        for (let i = 0; i < 30; i++) {
+            controller.tick({ seed: DEFAULT_WORLD_SEED, vehicleId: 'vehicle:h2', capability: bicycleCapability, movementIntent: FORWARD_INTENT, currentRotationY: 0, deltaSeconds: 0.05 });
+        }
+        const forwardHeading = store.get('vehicle:h2').heading;
+        assert(Math.abs(forwardHeading - 0) < 1e-6, '26a. sanity: forward (+Z) travel resolved to heading 0');
+
+        let lastZ = store.get('vehicle:h2').position.z;
+        let reversedHeading = null;
+        for (let i = 0; i < 200; i++) {
+            const result = controller.tick({ seed: DEFAULT_WORLD_SEED, vehicleId: 'vehicle:h2', capability: bicycleCapability, movementIntent: BACKWARD_INTENT, currentRotationY: 0, deltaSeconds: 0.05 });
+            if (result.vehicleInstance.position.z < lastZ) {
+                reversedHeading = result.vehicleInstance.heading;
+                break;
+            }
+            lastZ = result.vehicleInstance.position.z;
+        }
+        assert(reversedHeading !== null, '26b. sanity: the vehicle genuinely reversed at some point');
+        assert(Math.abs(reversedHeading - 180) < 1e-6, '26c. heading flips to 180 (facing -Z) once the vehicle actually reverses');
+    }
+    {
+        // C. Blocked movement: a movementConstraint that clamps every
+        // step back to the pre-tick position must leave heading exactly
+        // as it already was — the vehicle never achieved a different
+        // horizontal position.
+        const blockingConstraint = { apply(position) { return { position: { x: position.x, y: position.y, z: position.z }, collided: true }; } };
+        const spawn = { x: 0, y: 0, z: 0 };
+        const store = fakeVehicleStore([bicycle('vehicle:h3', spawn)]);
+        const controller = new AvatarVehicleMovementController(store, blockingConstraint, null);
+        const before = store.get('vehicle:h3').heading;
+        for (let i = 0; i < 20; i++) {
+            controller.tick({ seed: DEFAULT_WORLD_SEED, vehicleId: 'vehicle:h3', capability: bicycleCapability, movementIntent: FORWARD_INTENT, currentRotationY: 0, deltaSeconds: 0.05 });
+        }
+        assert(store.get('vehicle:h3').position.x === spawn.x && store.get('vehicle:h3').position.z === spawn.z,
+            '27a. sanity: the blocking constraint genuinely prevented any movement');
+        assert(store.get('vehicle:h3').heading === before, '27b. FLAGSHIP: heading remains completely unchanged after repeated blocked movement — the vehicle never actually moved');
+    }
+    {
+        // D. Idle intent: repeated ticks with zero movement intent never
+        // recreate or alter heading, even from a fresh (default, 0)
+        // heading.
+        const spawn = { x: 0, y: 0, z: 0 };
+        const store = fakeVehicleStore([bicycle('vehicle:h4', spawn)]);
+        const controller = new AvatarVehicleMovementController(store);
+        const before = store.get('vehicle:h4').heading;
+        for (let i = 0; i < 20; i++) {
+            controller.tick({ seed: DEFAULT_WORLD_SEED, vehicleId: 'vehicle:h4', capability: bicycleCapability, movementIntent: IDLE_INTENT, currentRotationY: 0, deltaSeconds: 0.05 });
+        }
+        assert(store.get('vehicle:h4').heading === before, '28. repeated zero-intent ticks never alter heading');
     }
 
     // -------------------------------------------------------------

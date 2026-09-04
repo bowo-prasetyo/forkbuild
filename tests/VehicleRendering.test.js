@@ -8,9 +8,11 @@ import { VehicleType } from '../core/VehicleType.js';
 // 0.9.115 — Vehicle Rendering.
 //
 //   Section A: renderer/VehicleRenderer.js — VehicleType -> Three.js geometry
-//   Section B: renderer/VehicleVisual.js   — one vehicle's live presence
+//   Section B: renderer/VehicleVisual.js   — one vehicle's live presence,
+//              including 0.9.123's own setHeading()
 //   Section C: renderer/VehicleFieldRenderer.js — VehicleInstance -> visible object
-//   Section D: correct position (renders instance.position)
+//   Section D: correct position (renders instance.position) and heading
+//              (renders instance.heading)
 //   Section E: spawn/runtime distinction — the milestone's own central claim
 //   Section F: multiple vehicles render independently
 //   Section G: stable identity across a position change
@@ -80,6 +82,29 @@ async function runTests() {
         assert(visual.root.position.x === 3 && visual.root.position.y === 1.5 && visual.root.position.z === -7,
             '10. setPosition() writes root.position directly, matching whatever it is handed');
     }
+    {
+        // 0.9.123 — setHeading() applies a real Y rotation, and a
+        // DIFFERENT heading produces a DIFFERENT rotation — the actual
+        // constant offset is renderer/VehicleVisual.js's own private
+        // fact about this particular procedural model (see that file's
+        // own header), so this test only proves the OBSERVABLE contract:
+        // heading in, rotation changes out, deterministically.
+        const visual = new VehicleVisual(new VehicleRenderer(), VehicleType.BICYCLE);
+        visual.setHeading(0);
+        const rotationAtZero = visual.root.rotation.y;
+        visual.setHeading(90);
+        const rotationAtNinety = visual.root.rotation.y;
+        assert(rotationAtZero !== rotationAtNinety, '10b. setHeading() with a different heading produces a different root.rotation.y');
+        assert(Math.abs((rotationAtNinety - rotationAtZero) - (Math.PI / 2)) < 1e-9,
+            '10c. a 90-degree heading change produces exactly a quarter-turn (PI/2 radians) change in rotation.y');
+
+        // Calling setHeading() repeatedly updates the SAME root in
+        // place — never rebuilds it — mirroring setPosition()'s own
+        // "writes root.position directly" contract above.
+        visual.setHeading(270);
+        assert(Math.abs(visual.root.rotation.y - (270 * Math.PI / 180 - Math.PI / 2)) < 1e-9,
+            '10d. setHeading() writes root.rotation.y deterministically from whatever heading it is handed');
+    }
 
     // -------------------------------------------------------------
     // Section C/D — renderer/VehicleFieldRenderer.js: appearance + position
@@ -97,6 +122,28 @@ async function runTests() {
             '12. the rendered position equals instance.position');
         assert(field.getObject('vehicle:1:0,0') === object, '13. getObject() returns the exact same tracked root');
         assert(field.trackedVehicleIds().length === 1, '14. exactly one vehicle is now tracked');
+    }
+    {
+        // 0.9.123 — setVehicle() also observes instance.heading, never
+        // computing a facing of its own.
+        const field = new VehicleFieldRenderer();
+        const facingEast = new VehicleInstance({
+            id: 'vehicle:heading:0,0',
+            type: VehicleType.BICYCLE,
+            spawnPosition: { x: 0, y: 0, z: 0 },
+            heading: 90
+        });
+        const facingSouth = new VehicleInstance({
+            id: 'vehicle:heading:0,0',
+            type: VehicleType.BICYCLE,
+            spawnPosition: { x: 0, y: 0, z: 0 },
+            heading: 180
+        });
+        const objectEast = field.setVehicle(facingEast);
+        const rotationEast = objectEast.rotation.y;
+        const objectSouth = field.setVehicle(facingSouth);
+        assert(objectSouth === objectEast, '14b. sanity: the same tracked root is reused for the same vehicle id');
+        assert(objectSouth.rotation.y !== rotationEast, '14c. a different heading for the SAME vehicle updates the SAME root\'s own rotation');
     }
 
     // -------------------------------------------------------------

@@ -30,6 +30,33 @@ import * as THREE from 'three';
 // could get `position` vs. `spawnPosition` backwards is
 // VehicleFieldRenderer#setVehicle(), and this milestone wants exactly one
 // place capable of that mistake, not two.
+//
+// 0.9.123 — Vehicle Orientation. setHeading(headingDegrees) is the
+// direct structural twin of setPosition() above: it ONLY EVER APPLIES a
+// heading this class is handed — see core/VehicleInstance.js's own
+// `heading` (degrees, 0 = facing +Z) and
+// core/VehicleMovementHeading.js's own header — never computes one
+// itself. This is the "renderer remains an observer" seam
+// docs/Roadmap.md, 0.9.123 asks for explicitly: heading flows
+// VehicleInstance -> VehicleVisual, never the reverse.
+//
+// THE -90° OFFSET IS A FACT ABOUT THIS PARTICULAR PROCEDURAL MODEL, NOT
+// ABOUT HEADING ITSELF. renderer/VehicleRenderer.js's own buildBicycle()
+// places the front wheel/handlebar at LOCAL +X (see that file's own
+// header) — but heading 0 means "facing world +Z" (the same convention
+// core/AvatarMovementSimulation.js's own rotationY already uses, and
+// renderer/AvatarVisual.js's own `_applyFacing()` applies with NO offset,
+// because an avatar's own body is modeled facing local +Z). Three.js's
+// own right-handed Y-axis rotation maps local +X to world
+// (cos(rotation.y), 0, -sin(rotation.y)) — setting `rotation.y =
+// headingRadians - HALF_TURN_RADIANS` (a quarter turn, i.e. -90°) is the
+// one constant correction that makes THIS model's own local +X forward
+// track world (sin(heading), 0, cos(heading)) exactly, for every
+// heading. A future, differently-modeled vehicle type would supply its
+// own offset here; this constant is deliberately local to this file, not
+// exported or treated as a general fact about headings.
+const BICYCLE_MODEL_FORWARD_OFFSET_RADIANS = -Math.PI / 2;
+
 export class VehicleVisual {
     constructor(vehicleRenderer, type) {
         this.root = new THREE.Group();
@@ -50,6 +77,12 @@ export class VehicleVisual {
 
     setPosition(position) {
         this.root.position.set(position.x, position.y, position.z);
+    }
+
+    // 0.9.123 — see this file's own header, "the -90 offset is a fact
+    // about this particular procedural model, not about heading itself."
+    setHeading(headingDegrees) {
+        this.root.rotation.y = headingDegrees * (Math.PI / 180) + BICYCLE_MODEL_FORWARD_OFFSET_RADIANS;
     }
 
     dispose() {

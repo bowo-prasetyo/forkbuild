@@ -20,6 +20,8 @@ import { isValidVehicleInstance } from '../core/VehicleInstance.js';
 //              for the case 0.9.115 alone ever exercised
 //   Section E: setPosition() never fabricates an entry for an id this
 //              store has not itself discovered
+//   Section E2 (0.9.123): setHeading() — the direct structural twin of
+//              setPosition(), same "never fabricates an entry" honesty
 //   Section F: get() returns null for an unknown id
 //   Section G: clear() empties the store
 //   Section H: architectural regression — no second placement algorithm,
@@ -154,6 +156,33 @@ async function runTests() {
     }
 
     // -------------------------------------------------------------
+    // Section E2 (0.9.123) — setHeading()
+    // -------------------------------------------------------------
+    {
+        const store = new VehicleRuntimeInstances();
+        const result = store.setHeading('vehicle:nobody:0,0', 45);
+        assert(result === null, '16b. setHeading() on an untracked id returns null, never inventing a vehicle');
+        assert(store.get('vehicle:nobody:0,0') === null, '16c. ...and never adds one either');
+    }
+    {
+        const store = new VehicleRuntimeInstances();
+        const spawnCenter = { x: realVehicle.position.x, z: realVehicle.position.z };
+        store.sync(DEFAULT_WORLD_SEED, spawnCenter);
+        const before = store.get(REAL_VEHICLE_ID);
+        assert(before.heading === 0, '16d. sanity: a freshly-discovered vehicle starts with the neutral heading default');
+
+        const updated = store.setHeading(REAL_VEHICLE_ID, 200);
+        assert(updated.heading === 200, '16e. setHeading() actually updated the tracked runtime heading');
+        assert(updated.position.equals(before.position), '16f. ...and position is entirely untouched by setHeading()');
+        assert(store.get(REAL_VEHICLE_ID) === updated, '16g. get() returns the exact same object setHeading() just returned');
+
+        // A subsequent setPosition() never resets the heading setHeading()
+        // just committed — the two facts are independently replaceable.
+        const moved = store.setPosition(REAL_VEHICLE_ID, { x: before.position.x + 5, y: before.position.y, z: before.position.z });
+        assert(moved.heading === 200, '16h. setPosition() never resets heading back to its own default — the two facts change independently');
+    }
+
+    // -------------------------------------------------------------
     // Section F — get() returns null for an unknown id.
     // -------------------------------------------------------------
     {
@@ -191,6 +220,8 @@ async function runTests() {
             '21b. application/VehicleRuntimeInstances.js\'s own code never calls core/VehiclePlacement.js directly — discovery is exclusively through application/NearbyVehicleInstances.js\'s own bridge, never a second placement query');
         assert(codeOnly.includes('withinRadiusXZ'), '22. removal reuses core/AvatarVehicleProximity.js\'s own withinRadiusXZ(), never a second distance primitive');
         assert(codeOnly.includes('withPosition'), '23. position replacement reuses VehicleInstance#withPosition(), never a direct field assignment');
+        assert(codeOnly.includes('withHeading'), '23b. heading replacement reuses VehicleInstance#withHeading(), never a direct field assignment');
+        assert(!codeOnly.includes('.heading ='), '23c. heading is never assigned directly either');
     }
 
     console.log('✅ All Vehicle Runtime Instances tests passed.');
