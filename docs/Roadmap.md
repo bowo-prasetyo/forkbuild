@@ -66601,3 +66601,215 @@ an honest, structural outcome. The natural next step is 0.9.143 — Snapshot
 Attribution, the small, boring hash comparison this milestone's own
 header names — but per this codebase's own established rhythm, that
 remains the next milestone's own decision to schedule, not this one's.
+
+## 0.9.143 — Snapshot–Publication Attribution
+
+0.9.142's own header already drew the three-question split this milestone
+completes:
+
+```text
+Q1: What Snapshot locations have been announced?        DISCOVERY
+Q2: Can one of those locations provide valid bytes?    RESOLUTION + VERIFICATION
+Q3: Does this verified Snapshot belong to this
+    Publication?                                        ATTRIBUTION
+```
+
+`application/DecentralizedSnapshotResolver.js` (0.9.134) and
+`application/DiscoverSnapshotCommand.js` (0.9.142) together answer Q1+Q2,
+and answer them well — DISCOVERY, LOCATION, RETRIEVAL, and VERIFICATION
+stay four distinct outcomes, never collapsed into one status. Nothing
+answers Q3. This milestone is that answer, and nothing more: a single
+pure function, `application/SnapshotPublicationAttribution.js#resolveSnapshotPublicationAttribution()`,
+that compares a Publication's own `contentReference.hash` against an
+already-verified Snapshot's own content hash.
+
+```text
+Publication.contentReference.hash
+             │
+             │ compare
+             ▼
+verified Snapshot content hash
+   (recomputed from resolvedSnapshot.bytes — see "identity, never a
+    locator," below)
+             │
+             ▼
+       MATCH / NO_MATCH
+```
+
+### The seam sits after verification, never inside discovery
+
+```text
+DISCOVERY
+    ↓
+RESOLUTION
+    ↓
+VERIFICATION
+    ↓
+ATTRIBUTION       ← 0.9.143
+```
+
+Explicitly rejected: `discovered locator + matching announced hash ->
+ATTRIBUTED`. A Nostr-discovered candidate's own `contentHash` field is a
+self-declared claim (`core/SnapshotDiscoveryEnvelope.js`'s own header,
+"a self-declared claim, never evidence") — never evidence on its own.
+Only bytes that already passed `DecentralizedSnapshotResolver#resolve()`'s
+own hash verification (`DecentralizedSnapshotResolutionOutcome.RESOLVED`)
+are ever compared here:
+
+```text
+Nostr discovery -> candidate -> retrieve bytes -> verify actual bytes
+    -> verified Snapshot -> compare publication hash -> attribution
+```
+
+The announcement is evidence of location; the retrieved and verified
+content establishes content identity.
+
+### A pure function — no I/O, no rediscovery
+
+`resolveSnapshotPublicationAttribution(publication, resolvedSnapshot)`
+performs no network access, no storage access, and no discovery of its
+own. It never imports Nostr, Arweave, `DecentralizedSnapshotResolver`, a
+content store, a store registry, World View, or any UI state — it
+receives two already-computed facts (a Publication and the exact
+`{ outcome, bytes, candidates, locator, storage, reason }` result
+`resolver.resolve()`/`executeDiscoverSnapshotCommand()` itself resolves
+to) and compares them:
+
+```text
+resolver.resolve(...)   (0.9.134, unmodified)
+        │
+        ▼
+resolvedSnapshot
+        │
+        ▼
+resolveSnapshotPublicationAttribution(publication, resolvedSnapshot)   (THIS)
+```
+
+never the reverse — this file is never handed a bare Publication and left
+to go discover a Snapshot for it itself. It is called from exactly one
+place in its own module and constructs no collaborator of any kind.
+
+### A tiny result vocabulary — two new values, four reused
+
+`application/SnapshotPublicationAttributionOutcome.js` names exactly two
+new outcomes, `MATCH` and `NO_MATCH` — deliberately as small as
+`DecentralizedSnapshotResolutionOutcome` (0.9.134) itself, for the
+identical reason. No `TRUSTED`/`AUTHENTIC`/`OWNED`/`CONFIRMED`/
+`PUBLISHED`/`CANONICAL` vocabulary is introduced.
+
+**Attribution requires an already-verified Snapshot — the most important
+rule this milestone holds.** When `resolvedSnapshot.outcome` is anything
+other than `RESOLVED` — `NOT_DISCOVERED`, `STORE_UNAVAILABLE`,
+`CONTENT_UNAVAILABLE`, or `CONTENT_HASH_MISMATCH` — that outcome is
+passed through completely unchanged, including its own `reason`. It is
+NEVER folded into `NO_MATCH`:
+
+```text
+NO_MATCH        "We have a verified Snapshot, and its identity differs."
+NOT_DISCOVERED  "We don't have a verified Snapshot to compare at all."
+```
+
+Erasing that distinction would silently teach a caller that "nothing was
+ever found" and "we checked, and it's the wrong content" are the same
+fact. They are not, and 0.9.134's own four-layer failure vocabulary
+(`NOT_DISCOVERED`/`STORE_UNAVAILABLE`/`CONTENT_UNAVAILABLE`/
+`CONTENT_HASH_MISMATCH`) remains the only vocabulary a caller ever sees
+for "attribution could not even be attempted."
+
+### Identity, never a locator
+
+The verified Snapshot's own content hash is RECOMPUTED from
+`resolvedSnapshot.bytes` via `computeContentHash()` — the identical
+function `core/ContentReference.js#verify()` already uses — rather than
+read off a candidate's own self-declared, unverified `contentHash` field.
+This matters precisely when a caller holds a `resolvedSnapshot` that was
+resolved against some OTHER contentHash (a different Publication, or a
+bare exploratory lookup) and is now asking whether that already-verified
+Snapshot also happens to belong to THIS Publication:
+
+```text
+publication.contentReference.hash == verifiedSnapshot content hash   MEANINGFUL
+
+publication.id == arweaveTransactionId                                NEVER
+publication.id == nostrEventId                                        NEVER
+locator == publication.contentReference.hash                          NEVER
+```
+
+### Test coverage — `tests/SnapshotPublicationAttribution.test.js`
+
+- **Section A (flagship):** a verified Snapshot whose recomputed content
+  hash equals the Publication's own `contentReference.hash` reports
+  `MATCH`.
+- **Section B:** a genuinely different, but fully verified, Snapshot
+  reports `NO_MATCH` — proving attribution asks "does this valid Snapshot
+  belong to THIS Publication," never merely "was the Snapshot valid."
+- **Section C:** a discovery-only/unverified candidate produces neither
+  `MATCH` nor `NO_MATCH` — attribution has a verification prerequisite.
+- **Section D:** each of `NOT_DISCOVERED`/`STORE_UNAVAILABLE`/
+  `CONTENT_UNAVAILABLE`/`CONTENT_HASH_MISMATCH` is passed through
+  unchanged, with its own `reason` intact, never collapsed into
+  `NO_MATCH`.
+- **Section E:** neither `publication` nor `resolvedSnapshot` is ever
+  mutated; repeated calls with identical inputs produce identical
+  results.
+- **Section F:** `publicationHash`/`snapshotHash` stay distinct from a
+  real Arweave transaction id, a real Nostr event id, the resolved
+  locator URI, and `publication.id`, against one real, fully-wired
+  scenario.
+- **Section G:** an architectural regression sweep proves no network,
+  storage, or discovery import, and no self-invoked `resolve()`/
+  `search()`/`get()` call anywhere in the file.
+- **Section H (flagship, end to end):** distribution -> Nostr discovery
+  -> retrieval -> verification -> attribution, in one continuous chain
+  ending in `MATCH`; and, as its own flagship negative, a false Nostr
+  announcement claiming the correct Publication hash is refused at
+  `resolve()`'s own verification step (`CONTENT_HASH_MISMATCH`) and never
+  reaches `MATCH` — proof that a forged announcement cannot buy
+  attribution merely by claiming the right hash.
+
+### What this milestone deliberately does NOT do
+
+- **A UI badge, "Attributed" indicator, or any composition-root wiring.**
+  This file has no idea `ui/` or World View exists — see 0.9.143's own
+  header, "UI integration should come afterward." A future, separate
+  milestone can wire `resolveSnapshotPublicationAttribution()` into an
+  Own Publication panel exactly as thinly as 0.9.142 wired
+  `DiscoverSnapshotCommand` in, once there is a reason to show a result
+  rather than merely prove the seam.
+- **Any change to `application/DecentralizedSnapshotResolver.js`,
+  `application/DecentralizedSnapshotResolutionOutcome.js`, `application/
+  DiscoverSnapshotCommand.js`, `application/
+  NostrSnapshotDiscoveryQueryService.js`, `application/
+  NostrSnapshotDiscoveryPublisher.js`, or `content/
+  ArweaveContentStore.js`.** All remain completely unmodified — this
+  milestone only reads their own outcome vocabulary and result shape.
+- **Any trust, ranking, or ownership semantics.** `MATCH`/`NO_MATCH` is
+  the complete vocabulary; see "a tiny result vocabulary," above.
+- **Retry, caching, or automatic re-resolution.** A caller who wants a
+  fresh `resolvedSnapshot` calls `resolver.resolve()` again itself,
+  before calling this file again — this file never does so on its own.
+- **An end-to-end audit proving a false Nostr announcement can never buy
+  attribution across the FULL system** (composition roots, UI,
+  `SnapshotPlacementStoreRegistry` wiring included). Section H proves the
+  seam itself holds; a fuller, test-only audit in that spirit is
+  0.9.144's own concern, named next.
+
+### Recommendation
+
+```text
+0.9.140  Own Publication Distribution Entry Point                 ✓
+0.9.141  Distribution Entry-Point Convergence Audit                ✓
+0.9.142  World View Snapshot Discovery Command                     ✓
+0.9.143  Snapshot–Publication Attribution                          ✓
+```
+
+Attribution is no longer an unbuilt seam — `publication.contentReference.hash`
+and an independently verified Snapshot's own content hash can now be
+compared, honestly, with resolution failure and content mismatch kept
+permanently distinct. The natural next step is 0.9.144 — an end-to-end
+audit proving the complete chain (distribution -> Nostr discovery ->
+retrieval -> verification -> attribution) holds together, and that a false
+Nostr announcement cannot produce attribution merely by claiming the
+correct publication hash — but per this codebase's own established
+rhythm, that remains the next milestone's own decision to schedule, not
+this one's.
