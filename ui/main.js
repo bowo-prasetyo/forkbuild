@@ -124,6 +124,8 @@ import { createArweaveInjectedProviderSigner } from '../arweave/ArweaveInjectedP
 import { createNostrInjectedProviderPublisher } from '../nostr/NostrInjectedProviderPublisher.js';
 import { composeSnapshotDistributionRuntime } from '../application/SnapshotDistributionRuntimeComposition.js';
 import { executeSnapshotDistributionCommand } from '../application/SnapshotDistributionCommand.js';
+import { composeDiscoverSnapshotRuntime } from '../application/DiscoverSnapshotRuntimeComposition.js';
+import { executeDiscoverSnapshotCommand } from '../application/DiscoverSnapshotCommand.js';
 import { LocalDiscoveryProvider } from '../discovery/LocalDiscoveryProvider.js';
 import {
     composeDecentralizedWorldEncounterMaterialDiscoveryServices,
@@ -1688,6 +1690,54 @@ const snapshotDistributionCommand = (bytes) => executeSnapshotDistributionComman
     discoveryPublisher: snapshotDiscoveryPublisher
 });
 app.provide('snapshotDistributionCommand', snapshotDistributionCommand);
+
+// 0.9.142 — World View Snapshot Discovery Command.
+//
+// application/DecentralizedSnapshotResolver.js (0.9.134) has answered
+// "can a Snapshot for this contentHash be discovered, retrieved, and
+// verified" since before Snapshot DISTRIBUTION was ever wired into this
+// file — nothing before this milestone ever called it outside its own
+// test suite. `composeDiscoverSnapshotRuntime()` (this milestone's own
+// application/DiscoverSnapshotRuntimeComposition.js) turns a host Nostr
+// query/Arweave capability into a `{ resolver, contentStore }` pair;
+// `executeDiscoverSnapshotCommand()` (application/DiscoverSnapshotCommand.js)
+// sequences that pair against a caller-supplied `contentHash`. This is
+// that one composition, mirroring the immediately preceding
+// `snapshotDistributionCommand` wiring, and nothing more.
+//
+// `arweaveHostSigner` IS THE SAME INSTANCE the Snapshot Distribution
+// wiring immediately above (and the Publication Distribution wiring
+// before it) already resolved from `window.arweaveWallet` — never a
+// second read of that host capability.
+//
+// `nostrSnapshotDiscoveryQueryServiceOptions.queryImpl` IS OMITTED HERE —
+// THE IDENTICAL, ALREADY-DOCUMENTED GAP THIS FILE'S OWN 0.9.110 COMMENT
+// NAMES FOR `nostrQueryImpl`, ABOVE ("NO HOST NOSTR RELAY-QUERY
+// CAPABILITY EXISTS ANYWHERE IN THIS CODEBASE YET"). Querying a Nostr
+// relay (send REQ, collect EVENT, stop at EOSE) is a fundamentally
+// different capability from PUBLISHING one (window.nostr's own NIP-07
+// `signEvent`, already wrapped by `createNostrInjectedProviderPublisher()`
+// above) — no host-reachable implementation of it exists anywhere in
+// this codebase yet. `composeDiscoverSnapshotRuntime()` therefore
+// gracefully resolves `resolver: null` today, exactly as 0.9.110's own
+// composition already gracefully resolves `nostr: null` for Publication
+// discovery — see that file's own header, "graceful degradation."
+// `discoverSnapshotCommand(contentHash)` throws synchronously until a
+// future milestone supplies a real `queryImpl`; `ui/components/
+// OwnPublicationPanel.js`'s own `discoverOwnSnapshot()` wraps every call
+// to this function in a `Promise.resolve().then(...)`, catching that
+// synchronous throw the same way it already catches a genuine rejection.
+const { resolver: snapshotResolver, contentStore: snapshotRetrievalContentStore } = composeDiscoverSnapshotRuntime({
+    arweaveContentStoreOptions: { signer: arweaveHostSigner },
+    nostrSnapshotDiscoveryQueryServiceOptions: {}
+});
+const discoverSnapshotCommand = (contentHash) => executeDiscoverSnapshotCommand({
+    discoveryTag: 'forkbuild-snapshot',
+    contentHash,
+    resolver: snapshotResolver,
+    contentStore: snapshotRetrievalContentStore
+});
+app.provide('discoverSnapshotCommand', discoverSnapshotCommand);
 
 app.use(router);
 app.mount('#app');

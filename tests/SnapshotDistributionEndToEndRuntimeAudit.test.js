@@ -860,9 +860,19 @@ async function run() {
             }
         });
 
+        // 0.9.142 — World View Snapshot Discovery Command added a SECOND,
+        // independent composition root over ArweaveContentStore:
+        // application/DiscoverSnapshotRuntimeComposition.js, the READ-side
+        // counterpart of this WRITE-side one (never importing or reusing
+        // it — see that file's own header, "no coupling to... Snapshot
+        // distribution"). The invariant this section protects — no OTHER
+        // file, and above all no UI component, ever constructs
+        // ArweaveContentStore directly — still holds exactly as before;
+        // only the closed, recognized set of composition roots allowed to
+        // do so has grown by the one this milestone legitimately added.
         assert(
-            constructions['new ArweaveContentStore('].sort().join(',') === 'application/SnapshotDistributionRuntimeComposition.js',
-            `I1. 'new ArweaveContentStore(' appears in exactly ONE production file (application/SnapshotDistributionRuntimeComposition.js) — found in: ${constructions['new ArweaveContentStore('].join(', ') || '(none)'}`
+            constructions['new ArweaveContentStore('].sort().join(',') === 'application/DiscoverSnapshotRuntimeComposition.js,application/SnapshotDistributionRuntimeComposition.js',
+            `I1. 'new ArweaveContentStore(' appears only in the two recognized composition roots (distribution + discovery) — found in: ${constructions['new ArweaveContentStore('].join(', ') || '(none)'}`
         );
         assert(
             constructions['new NostrSnapshotDiscoveryPublisher('].sort().join(',') === 'application/SnapshotDistributionRuntimeComposition.js',

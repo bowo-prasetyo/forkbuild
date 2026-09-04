@@ -99,6 +99,46 @@
 // - **Any change to which Publication is "active."** This component
 //   never decides that itself — it only ever renders whatever
 //   `publication` prop it was handed.
+//
+// 0.9.142 — World View Snapshot Discovery Command.
+//
+// Adds a second, independent action to this SAME "even with zero peers"
+// surface — "Discover Snapshot" — reaching the exact seam this
+// milestone's own header names: `discoverSnapshotCommand`, injected the
+// identical way `snapshotDistributionCommand` already is, a `(publication)
+// -> Promise<{ outcome, bytes, candidates, locator, storage, reason }>`
+// function bound (by `ui/views/WorldView.js`) to a `discoverOwnSnapshot()`
+// wrapper that turns "which publication" into "which contentHash" —
+// `publication.contentReference.hash` — exactly the way
+// `distributeWorldEncounterSnapshot()` already turns "which publication"
+// into "which bytes." This component never reads `contentReference`
+// itself; it forwards the whole `publication` object to the injected
+// command, unread, the identical restraint `distributeOwnSnapshot()`
+// already holds for `snapshotDistributionCommand`.
+//
+// DISCOVERY, NEVER ATTRIBUTION. The result this panel renders is
+// `application/DecentralizedSnapshotResolver.js`'s own
+// `DecentralizedSnapshotResolutionOutcome` vocabulary (RESOLVED,
+// NOT_DISCOVERED, STORE_UNAVAILABLE, CONTENT_UNAVAILABLE,
+// CONTENT_HASH_MISMATCH), rendered VERBATIM — this file introduces no
+// MATCHED/ATTRIBUTED/OWNED/TRUSTED/AUTHENTIC vocabulary of its own, and
+// never compares the resolved Snapshot's own hash against
+// `publication.contentReference.hash` itself (a resolve() call already
+// only ever resolves for that exact `contentHash` — see `application/
+// DiscoverSnapshotCommand.js`'s own header, "contentHash is always an
+// explicit, caller-supplied input"). Comparing a verified Snapshot
+// against a Publication is a separate, later, unscheduled seam (see
+// docs/Roadmap.md's own 0.9.142 entry, "0.9.143 — Snapshot Attribution").
+//
+// A SEPARATE EPHEMERAL STATE, NEVER SHARED WITH DISTRIBUTION'S OWN.
+// `snapshotDiscoveryExecuting`/`snapshotDiscoveryError`/
+// `snapshotDiscoveryResult`/`snapshotDiscoveryRequestId` mirror
+// `snapshotDistributionExecuting`/`snapshotDistributionError`/
+// `snapshotDistributionResult`/`snapshotDistributionRequestId` exactly,
+// one action over — the two actions distribute/discover independently
+// and must never clobber one another's in-flight/result state. Reset on
+// the identical `publication` change the distribution fields already
+// reset on.
 export default {
     name: 'OwnPublicationPanel',
     props: {
@@ -117,6 +157,14 @@ export default {
         snapshotDistributionCommand: {
             type: Function,
             default: null
+        },
+        // 0.9.142 — optional. A `(publication) -> Promise<{ outcome,
+        // bytes, candidates, locator, storage, reason }>` function, or
+        // `null` when the capability is unavailable — see this file's
+        // own header, "0.9.142 — World View Snapshot Discovery Command."
+        discoverSnapshotCommand: {
+            type: Function,
+            default: null
         }
     },
     data() {
@@ -124,7 +172,11 @@ export default {
             snapshotDistributionExecuting: false,
             snapshotDistributionError: null,
             snapshotDistributionResult: null,
-            snapshotDistributionRequestId: 0
+            snapshotDistributionRequestId: 0,
+            snapshotDiscoveryExecuting: false,
+            snapshotDiscoveryError: null,
+            snapshotDiscoveryResult: null,
+            snapshotDiscoveryRequestId: 0
         };
     },
     watch: {
@@ -142,6 +194,10 @@ export default {
             this.snapshotDistributionError = null;
             this.snapshotDistributionResult = null;
             this.snapshotDistributionRequestId += 1;
+            this.snapshotDiscoveryExecuting = false;
+            this.snapshotDiscoveryError = null;
+            this.snapshotDiscoveryResult = null;
+            this.snapshotDiscoveryRequestId += 1;
         }
     },
     beforeUnmount() {
@@ -149,6 +205,7 @@ export default {
         // WorldEncounterCanvas's own `beforeUnmount()` invalidation of
         // `snapshotDistributionRequestId`.
         this.snapshotDistributionRequestId += 1;
+        this.snapshotDiscoveryRequestId += 1;
     },
     methods: {
         // The only writer of `snapshotDistributionExecuting`/
@@ -183,6 +240,41 @@ export default {
                 .then(() => {
                     if (requestId === this.snapshotDistributionRequestId) {
                         this.snapshotDistributionExecuting = false;
+                    }
+                });
+        },
+        // 0.9.142 — the only writer of `snapshotDiscoveryExecuting`/
+        // `snapshotDiscoveryError`/`snapshotDiscoveryResult`, and the
+        // only caller of `discoverSnapshotCommand` in this file — mirrors
+        // `distributeOwnSnapshot()` exactly, one action over. A no-op
+        // whenever there is no `publication`, no `discoverSnapshotCommand`,
+        // or a call is already in flight.
+        discoverOwnSnapshot() {
+            const publication = this.publication;
+            if (!publication || !this.discoverSnapshotCommand || this.snapshotDiscoveryExecuting) {
+                return;
+            }
+
+            this.snapshotDiscoveryExecuting = true;
+            this.snapshotDiscoveryError = null;
+            this.snapshotDiscoveryRequestId += 1;
+            const requestId = this.snapshotDiscoveryRequestId;
+
+            Promise.resolve()
+                .then(() => this.discoverSnapshotCommand(publication))
+                .then((result) => {
+                    if (requestId === this.snapshotDiscoveryRequestId) {
+                        this.snapshotDiscoveryResult = result;
+                    }
+                })
+                .catch(() => {
+                    if (requestId === this.snapshotDiscoveryRequestId) {
+                        this.snapshotDiscoveryError = 'Snapshot discovery could not be completed.';
+                    }
+                })
+                .then(() => {
+                    if (requestId === this.snapshotDiscoveryRequestId) {
+                        this.snapshotDiscoveryExecuting = false;
                     }
                 });
         }
@@ -220,6 +312,38 @@ export default {
                 <dd>{{ snapshotDistributionResult.contentReference.uri }}</dd>
                 <dt>Announcement</dt>
                 <dd>{{ snapshotDistributionResult.announcement ? snapshotDistributionResult.announcement.id : 'No announcement' }}</dd>
+            </dl>
+
+            <!-- 0.9.142 — reachable with zero connected peers and an
+                 empty World Encounters panel, exactly like Distribute
+                 Snapshot above. Rendered only when a caller supplied a
+                 discoverSnapshotCommand. Disabled whenever there is no
+                 local Publication yet, the Publication has never been
+                 placed (no contentReference), or a call is already in
+                 flight. -->
+            <button
+                v-if="discoverSnapshotCommand"
+                type="button"
+                class="action-btn own-publication-discovery-action"
+                :disabled="!publication || !publication.contentReference || snapshotDiscoveryExecuting"
+                @click="discoverOwnSnapshot"
+            >{{ snapshotDiscoveryExecuting ? 'Discovering…' : 'Discover Snapshot' }}</button>
+
+            <!-- The resolver's own DecentralizedSnapshotResolutionOutcome
+                 vocabulary, rendered verbatim — see this file's own
+                 header, "discovery, never attribution." -->
+            <p v-if="snapshotDiscoveryError" class="own-publication-discovery-error">{{ snapshotDiscoveryError }}</p>
+            <dl v-else-if="snapshotDiscoveryResult" class="own-publication-discovery-detail">
+                <dt>Outcome</dt>
+                <dd>{{ snapshotDiscoveryResult.outcome }}</dd>
+                <template v-if="snapshotDiscoveryResult.reason">
+                    <dt>Reason</dt>
+                    <dd>{{ snapshotDiscoveryResult.reason }}</dd>
+                </template>
+                <template v-if="snapshotDiscoveryResult.locator">
+                    <dt>Locator</dt>
+                    <dd>{{ snapshotDiscoveryResult.locator }}</dd>
+                </template>
             </dl>
         </div>
     `
