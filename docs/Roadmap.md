@@ -65653,3 +65653,171 @@ deliberate milestone — `[E] Distribute Snapshot` and its own runtime
 composition (constructing a real signer, gateway, and relay from
 application configuration) — rather than being folded into this one as an
 afterthought.
+
+## 0.9.137 — Snapshot Distribution Runtime Composition
+
+0.9.136's own command is deliberately "composable, not composed": it takes
+an already-constructed `contentStore`/`discoveryPublisher` pair and
+decides nothing about where either one comes from. Nothing in this
+codebase yet turns a real host capability — a browser's own
+`window.arweaveWallet`, `window.nostr` — into that pair, the exact seam
+`application/PublicationDistributionRuntimeComposition.js` (0.9.47)
+already closed for the Signed Claim family. This milestone closes it for
+the Snapshot family: `application/SnapshotDistributionRuntimeComposition.js`,
+and nothing more.
+
+```text
+arweaveContentStoreOptions{ signer, gatewayUrl, fetchImpl }
+     │  (a caller already resolved `signer`, most naturally via
+     │   arweave/ArweaveInjectedProviderSigner.js's own
+     │   createArweaveInjectedProviderSigner({ injectedProvider:
+     │   window.arweaveWallet }), unimported here)
+     ▼
+composeSnapshotDistributionRuntime({
+    arweaveContentStoreOptions,
+    nostrSnapshotDiscoveryPublisherOptions
+})
+     │
+     ├──► new ArweaveContentStore(...)              — only when signer.sign is usable;
+     │                                                 null otherwise, never a throw
+     └──► new NostrSnapshotDiscoveryPublisher(...)  — only when publishImpl/discoveryTag
+                                                        are usable; null otherwise
+     │
+     ▼
+{ contentStore, discoveryPublisher }
+```
+
+### Graceful degradation, never a throw, for an absent capability
+
+The centerpiece design decision, mirroring `arweave/
+ArweaveInjectedProviderSigner.js`'s and `nostr/
+NostrInjectedProviderPublisher.js`'s own 0.9.121 "`undefined`, never a
+throw, when no wallet is injected" restraint one layer over:
+
+```text
+no window.arweaveWallet
+      ↓
+no usable signer
+      ↓
+composeSnapshotDistributionRuntime() still returns normally —
+contentStore: null, never a throw
+
+no window.nostr
+      ↓
+no usable publishImpl
+      ↓
+discoveryPublisher: null, never a throw
+```
+
+A GENUINELY MALFORMED — not merely absent — capability still throws,
+unchanged: a real `signer` alongside an empty-string `gatewayUrl` still
+hits `content/ArweaveContentStore.js`'s own synchronous validation, exactly
+as constructing it directly already would. Only "no capability at all" is
+forgiven; a caller who supplied something broken still learns about it
+immediately, at composition time, never later and never silently.
+
+### No summary availability flag — two independently truthful facts instead
+
+Because `application/SnapshotDistributionCommand.js`'s own sequencing
+makes Arweave placement the prerequisite step before Nostr announcement is
+ever attempted, a single `available`/`distributionAvailable` boolean can
+only ever encode one true, useful fact and would misrepresent the other:
+"Nostr available, therefore Snapshot distribution available" is exactly
+the misleading shape this milestone avoids. `composeSnapshotDistributionRuntime()`
+returns `{ contentStore, discoveryPublisher }` instead — `null` means
+exactly "not currently usable," nothing more — and leaves any summarizing
+judgment to a future caller (0.9.138's own World View action, most
+naturally).
+
+### Composable, not composed — still no UI, still unwired into ui/main.js
+
+`application/SnapshotDistributionRuntimeComposition.js` never imports
+`application/SnapshotDistributionCommand.js` and never calls it — it
+builds collaborators, never sequences them. And exactly as every milestone
+in this family has held before it: `ui/main.js` never references this
+file, `ArweaveContentStore`, or `NostrSnapshotDiscoveryPublisher` — no
+`[E] Distribute Snapshot` action, no World View control, no composition
+root wiring exists yet. `tests/SnapshotDistributionRuntimeComposition.test.js`'s
+own Section I proves this structurally.
+
+### The flagship composition test
+
+`tests/SnapshotDistributionRuntimeComposition.test.js`'s own Section H
+drives the complete chain the milestone's own brief called for:
+
+```text
+fake window.arweaveWallet + fake window.nostr
+     │
+     ▼  createArweaveInjectedProviderSigner() / createNostrInjectedProviderPublisher()  (0.9.121, unmodified)
+signer + publishImpl
+     │
+     ▼  composeSnapshotDistributionRuntime()
+contentStore + discoveryPublisher
+     │
+     ▼  executeSnapshotDistributionCommand()  (0.9.136, unmodified)
+Arweave placement + Nostr announcement
+     │
+     ▼  NostrSnapshotDiscoveryQueryService + DecentralizedSnapshotResolver  (0.9.133/0.9.134, unmodified)
+discovery → retrieval → hash verification
+```
+
+Two negative sections carry equal weight. With no Arweave capability
+(Section F): no fake store is ever constructed, `discoveryPublisher.publish()`
+is never even reached when a caller mistakenly hands the unmodified
+command a `null` `contentStore` (it throws first), and `content/
+IpfsContentStore.js` — constructed and exercised independently — is
+completely unaffected. With no Nostr capability (Section G): Arweave
+placement still occurs directly against the composed `contentStore`
+(the architecture's own partial-distribution provision), the placement
+remains genuinely retrievable, no announcement is ever fabricated, and
+0.9.136's own already-established "placement succeeds, announcement:
+null" legitimate partial-success shape — reached only when a REAL
+`discoveryPublisher` genuinely declines, never when one is simply absent
+— is proven completely unchanged.
+
+### What this milestone deliberately does NOT do
+
+- **No wiring of `ui/main.js`.** This composition is now composable by any
+  caller who chooses to; it is not yet composed into the running
+  application anywhere. See "Composable, not composed," above.
+- **No `[E] Distribute Snapshot` UI action, no World View control.** A
+  separate, later, unscheduled step (0.9.138).
+- **No reading of `window.arweaveWallet`/`window.nostr`, and no call to
+  either injected-provider factory.** Those stay entirely a caller's own
+  concern — this file accepts already-resolved `signer`/`publishImpl`
+  values only.
+- **No `distributionAvailable`/`available`-style summary boolean.** See
+  "No summary availability flag," above.
+- **No new orchestration entry point.** This file never calls
+  `executeSnapshotDistributionCommand()` itself.
+- **No coupling to Signed Claim distribution**, and no change to
+  `application/SnapshotDistributionCommand.js`, `content/
+  ArweaveContentStore.js`, or `application/NostrSnapshotDiscoveryPublisher.js`
+  — all three remain completely unmodified.
+
+### Recommendation
+
+```text
+0.9.131  Snapshot Distribution Boundary                       ✓
+0.9.132  ArweaveContentStore                                   ✓
+0.9.133  Nostr Snapshot Location Discovery                     ✓
+0.9.134  Decentralized Snapshot Retrieval                       ✓
+0.9.135  End-to-End Decentralized Snapshot Distribution         ✓
+         Audit
+0.9.136  Snapshot Distribution Command                          ✓
+0.9.137  Snapshot Distribution Runtime Composition               ✓
+```
+
+A Snapshot's decentralized distribution runtime can now be composed from
+whatever host capability a browser/replica genuinely exposes, gracefully
+and honestly degrading when either substrate is absent — but it still
+reaches no user. I would make 0.9.138 the small, product-facing step this
+whole family has been building toward: a real `[E] Distribute Snapshot`
+World View action, wiring `ui/main.js` to read `window.arweaveWallet`/
+`window.nostr`, call this file's own `composeSnapshotDistributionRuntime()`,
+and hand the result to 0.9.136's own unmodified command — an ephemeral
+`idle`/`executing`/`completed`/`failed` UI state showing exactly the facts
+the command already returns, nothing reconstructed. After that, 0.9.139
+should be one more audit-only milestone, proving the whole UI-to-Nostr
+chain genuinely traverses every layer this family has built, before
+pausing to reassess the Snapshot feature from the user's own perspective.
