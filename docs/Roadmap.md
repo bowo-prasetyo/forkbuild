@@ -63246,3 +63246,167 @@ A narrow, well-precedented seam: one new runtime fact, one pure function
 to compute it from realized movement, one renderer method to observe it.
 I would follow the same rhythm this vehicle line has kept since 0.9.114 —
 an audit next, before reaching for steering.
+
+## 0.9.124 — Vehicle Orientation Audit
+
+0.9.123 opened a genuinely new seam — a vehicle's own `heading`, resolved
+from realized horizontal displacement, independent of collision geometry,
+steering intent, and avatar rotation. Its own closing recommendation named
+exactly the next step this vehicle line has taken after every prior seam
+(0.9.114's own runtime position, 0.9.119's own collision constraint): an
+audit, before reaching for the next capability. This milestone is that
+audit. The invariant under test throughout:
+
+    A vehicle's heading represents the direction of its realized
+    horizontal displacement during the latest successful movement,
+    and nothing else.
+
+        movement intent
+              |
+              v
+        vehicle movement simulation
+              |
+              v
+        collision constraints
+              |
+              v
+        realized final position
+              |
+        +-----+------------------------+
+        |                              |
+    no horizontal displacement    horizontal displacement
+        |                              |
+    heading unchanged              resolve heading
+                                       |
+                                       v
+                                 VehicleInstance
+                                       |
+                                       v
+                                 VehicleVisual
+
+`tests/VehicleOrientationAudit.test.js` is the new suite, in eight
+sections. Section A proves the pure `resolveVehicleHeadingFromMovement()`
+itself: every cardinal and diagonal direction, an arbitrary non-45-degree
+diagonal (proving genuine trigonometry, never a compass lookup table),
+finiteness under extreme magnitudes, `[0, 360)` normalization in every
+quadrant, and that the expected heading is driven by
+`finalPosition - tickStartPosition`, never by `spawnPosition` or a raw
+request. Section B is the FLAGSHIP for realized-vs-requested movement: a
+vehicle held at a fixed facing (`rotationY` pinned to 0/north, `turnAxis`
+never held) that rides backward genuinely displaces toward -Z, so heading
+flips to 180 (south) while the steering fact it was fed back stays
+completely unchanged at 0 — the cleanest possible proof that heading
+tracks realized displacement, never steering. A second case requests a
+steady diagonal against a real wall that clips only the X axis; the
+realized heading bends sharply back toward due north, far from the same
+request's own unconstrained 45-degree control value. A third case rides a
+real brick to a full stop and proves several further ticks of the SAME
+requested forward movement, now fully absorbed by collision, never move
+heading again. Section C proves the pure function's own zero-displacement
+and non-finite-input fallbacks, then proves a vehicle already spawned
+flush against an obstacle's own combined-radius boundary — whose very
+first attempted step is therefore already fully absorbed — never snaps its
+non-zero starting heading to 0, and that repeated idle ticks (no movement
+intent at all) never alter heading or position either. Section D proves
+`VehicleRuntimeInstances#setHeading()`: an unknown id returns `null`; a
+known id updates in place while position/spawnPosition/id/type all stay
+untouched; a second, untargeted tracked vehicle is completely unaffected;
+and rendering subsequently observes the new heading through the exact
+store-to-renderer path the real pipeline uses. Section E proves the
+immutability boundary `withPosition()`/`withHeading()` were built as —
+neither ever alters the other's own fact, repeated interleaved calls in
+either order never leak state between them, and every produced
+`VehicleInstance` stays genuinely `Object.frozen`. Section F proves
+`VehicleVisual` observes heading rather than computing one: the same
+`Object3D` and the same built geometry survive any number of heading
+changes, a position change never resets a prior heading and vice versa,
+unsupported vehicle types stay unsupported, and a source sweep confirms
+neither renderer file ever mentions `atan2` or reimplements
+`resolveVehicleHeadingFromMovement()`'s own math. Section G is the
+cross-pipeline FLAGSHIP: one continuous real session — spawn, mount, ride
+straight ahead (heading resolves to north), hold the turn key alongside
+forward to genuinely steer and ride a second, different realized direction
+(heading resolves to the new direction), then a real collision block
+directly ahead. The avatar's own position exactly equals the vehicle's own
+already-committed position on every single frame throughout all three
+phases; once heading itself is observed to stay bit-identical across
+several consecutive frames (the actual signal that no further realized
+movement is occurring — `isCollided()` alone can still fire on a tick that
+still carries partial real movement), it never changes again under
+continued held input; and `id`/`type`/`spawnPosition` survive the entire
+spawn-mount-ride-turn-block lifecycle unchanged. Section H is the
+structural exclusion audit the milestone's own brief asked for: a source
+sweep of every file 0.9.123 touched confirms none of them reference real
+steering-angle, turn-rate, angular-velocity, turning-radius, wheel-
+rotation, oriented-collision, vehicle-physics, persistence, or networking
+identifiers in their own code (comments describing what these files
+deliberately exclude are stripped first, so only genuine code can trip
+this); confirms heading is never derived from `rotationY`/steering in
+either direction; confirms `application/WorldNavigationSession.js` — the
+one place both facts are read in the same frame — never reads a mounted
+vehicle's own `.heading` to drive the avatar's rotation (that still comes
+only from `moved.rotationY`, exactly as before 0.9.123); confirms no
+steering-intent vocabulary exists anywhere yet; and confirms
+`isMovableVehicleType()` still gates on `BICYCLE` alone.
+
+**No production code changes.** Every invariant this milestone locks down
+already holds under 0.9.123's own implementation —
+`core/VehicleMovementHeading.js`, `core/VehicleInstance.js`,
+`application/VehicleRuntimeInstances.js`,
+`application/AvatarVehicleMovementController.js`,
+`renderer/VehicleVisual.js`, and `renderer/VehicleFieldRenderer.js` are all
+byte-for-byte unchanged. This file is the audit itself, not a fix.
+
+One genuinely new fact surfaced while building Section G's own collision
+phase, worth recording even though it changed no production code: once a
+vehicle is held against an obstacle at a slight residual approach angle,
+`core/AvatarCollision.js`'s own axis-separated resolver can keep making
+tiny, rapidly-decaying positional corrections along the axis collision did
+NOT block, for many further ticks, even while the blocked axis itself
+stays bit-exact and heading itself has already fully settled. That is a
+pre-existing fact about the collision resolver, entirely unrelated to
+orientation and outside this milestone's own scope — Section G's own
+stability assertions account for it (a small, explicit numerical tolerance
+on the unblocked axis) rather than treating it as a heading regression,
+and it is called out here as a candidate finding for a future collision-
+specific audit, not something this milestone attempts to fix.
+
+### What this milestone deliberately does NOT do
+
+No steering input, steering angle, angular velocity, turn rate, turning
+radius, or wheel rotation of any kind. No oriented or rectangular collision
+footprint — the bicycle's own collision body stays exactly the circle
+0.9.119/0.9.120 already established. No vehicle physics, drifting, or
+banking. No avatar `rotationY` synchronization with a vehicle's own
+heading, in either direction. No persistence of a vehicle's runtime
+heading across a session, and no multiplayer synchronization of one. No
+new movable vehicle type — `isMovableVehicleType()` still gates on
+`VehicleType.BICYCLE` alone. No UI changes. No fix to the collision
+resolver's own small residual-angle drift noted above — that is a
+candidate for its own, future, narrowly-scoped audit, not something folded
+into this one.
+
+### Recommendation
+
+    Vehicle Orientation      the bicycle visually and semantically
+                              faces the direction it actually moved   (0.9.123)
+            v
+    Vehicle Orientation      every invariant locked down as a
+    Audit                    regression suite, zero behavior change   (this milestone)
+            v
+    Vehicle Steering Intent  a held turn key becomes a requested
+                             heading, independent of movement
+
+With this audit green, `heading` has been directly exercised against
+realized-vs-requested movement, blocked and idle ticks, runtime-store
+authority, the immutability boundary, rendering, and the full cross-
+pipeline session — from every angle 0.9.123's own brief asked this
+follow-up to check. I would treat 0.9.125 as this line's own next honest
+step, exactly as 0.9.123's own recommendation already named: an explicit,
+closed vocabulary for steering INTENT (a held turn key becomes a
+requested direction, however represented) that deliberately does not yet
+turn the vehicle — mirroring how this milestone's own Section H proved no
+such vocabulary exists yet anywhere. Steering SIMULATION — a requested
+heading actually bending realized movement — stays its own, later
+milestone again, the same one-new-fact-at-a-time discipline this vehicle
+line has kept since 0.9.114.
