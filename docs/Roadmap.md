@@ -62862,3 +62862,213 @@ held since 0.9.103. An audit milestone, confirming nothing already built
 regressed now that two genuinely new, real files sit at the bottom of the
 chain, is the more valuable next step — the same shape 0.9.118 and 0.9.120
 each already gave the vehicle subsystem before it grew further.
+
+## 0.9.122 — Publication Distribution End-to-End Runtime Audit
+
+0.9.121's own "Recommendation" section already named this exact next step
+— confirm the whole chain end to end against every existing invariant,
+the same audit shape 0.9.102/0.9.118/0.9.120 already gave their own
+subsystems, before adding anything further to Publication Distribution.
+This milestone is that audit, run against the question 0.9.121 could only
+partially answer by construction: does a REAL, injected browser wallet/
+extension — with real failure modes (a rejected permission prompt, a
+silent relay, a declining gateway) a fake collaborator could previously
+only approximate — still respect every semantic boundary this family has
+held since 0.9.44?
+
+    World View
+       |
+       v
+    Selected / distributable publication
+       |
+       v
+    Distribution Command -> Orchestrator -> [ Arweave | Nostr ] -> Result
+       |                                        |         |
+       |                                     injected   injected
+       |                                      wallet     NIP-07
+       v
+    Lifecycle transition -> World View
+
+`tests/PublicationDistributionEndToEndRuntimeAudit.test.js` answers it in
+eight sections, lettered to match the audit brief this milestone was
+commissioned against:
+
+**Section A — Arweave semantics.** A multi-byte-character material string
+round-trips through `signer.sign()` and back out of the transaction's own
+`data` field byte-for-byte identical to `TextEncoder(material)`; `data_root`
+is a deterministic function of the material bytes alone (two independent
+signer instances, same material, same anchor/reward, agree exactly, even
+though their wallet-produced transaction `id`s still differ); `owner`/
+`signature` on the resolved transaction are exactly the wallet's own
+values, never computed by the adapter; no private-key vocabulary
+(`privateKey`/`jwk`/`generateKey`/`importKey`) exists anywhere in the
+adapter's own code; a gateway failure and a genuine WALLET REJECTION
+(`injectedProvider.sign()` itself rejecting — the real-world shape only
+possible now that a real wallet sits behind this seam) both propagate as
+rejections, never swallowed; `application/ArweavePublicationMaterialUploader.js`
+itself contains no `data_root`/`crypto.subtle`/transaction-format literal
+of its own; and the single-chunk ceiling still rejects oversized material
+before any network call.
+
+**Section B — Nostr semantics.** The extension is asked to sign exactly
+the intended `kind`/`tags`/`content`; the relay receives exactly the event
+the extension signed, unmodified; an OK-true frame resolves
+`published: true`, an OK-false frame resolves `published: false` with the
+relay's own reason (never thrown, never conflated with success); relay
+silence past `timeoutMs` times out as a genuine rejection; a genuine
+SIGNING failure (the extension itself rejecting the NIP-07 prompt) also
+propagates as a rejection rather than ever masquerading as
+`published: false` — the two failure sites (wallet declined vs. relay
+declined) stay distinguishable by construction, never collapsed into one;
+and `nostr/NostrInjectedProviderPublisher.js` contains no verification
+vocabulary of any kind — distribution state and
+`WorldEncounterMaterialVerificationStatus` remain two entirely disjoint
+enumerations, confirmed by set intersection rather than assumed.
+
+**Section C — independence.** The flagship: Arweave succeeds, Nostr
+declines (a real OK-false frame), through the FULL host-wired chain —
+Arweave's own already-obtained material fact is recorded and never rolled
+back. The audit brief's own diagram also asked for the converse (Arweave
+fails, Nostr succeeds); this section proves that direction is
+architecturally UNREACHABLE by design, rather than forcing it to happen —
+`application/PublicationDistributionDescriptor.js`'s own discovery
+envelope `uri` IS the Arweave `materialUri`, so a Nostr announcement of
+where material lives cannot exist before material does.
+`PublicationDistributionExecutor.js`'s own "stop-on-failure ordering"
+(0.9.49) already encodes exactly this: with a wallet that genuinely
+rejects, the Nostr leg is proven, by a spy that would fail the test if
+ever invoked, to never run at all. This is the correct, deliberate shape
+of this codebase's own distribution pipeline, not a gap the diagram
+exposed — Arweave and Nostr are independent in the direction that matters
+(material can exist and be discoverable-later even if discovery itself
+never lands) and coupled in the one direction that has to be (discovery
+cannot outrun the thing it discovers). A third check confirms no
+transaction-like "both must succeed" semantic has crept in anywhere: a
+partial result (material present, discovery absent) resolves normally,
+never as a thrown failure.
+
+**Section D — lifecycle semantics.** A wallet-rejection-shaped failure,
+driven through the real `WorldEncounterCanvas.distributeSelectedPublication()`
+click path, ends in EXACTLY the same generic `'Distribution could not be
+completed.'` notice as every failure this component has ever produced —
+no leaked wallet error text, no `WALLET_REJECTED`/`RELAY_TIMEOUT`/
+`GATEWAY_UNAVAILABLE` value anywhere, and `PublicationDistributionState`
+still names exactly `ABSENT`/`PRESENT`. Worth naming explicitly, though
+deliberately NOT changed by this milestone: `PublicationDistributionCommand.js`'s
+own 0.9.58 header already documents, as a considered design choice, that
+a genuine collaborator REJECTION (as opposed to an ordinary decline
+resolving `null`) records nothing to `lifecycleStore` at all — even when
+an earlier step (the Arweave upload) already completed for real. Before
+0.9.121 this was a theoretical corner of the design; a real relay
+dropping mid-broadcast now makes it a genuinely reachable outcome, where a
+person's material is truly on Arweave but their own World View shows no
+record of it. This audit confirms the behavior is unchanged and exactly
+as documented — it is not fixed here, because fixing it would mean
+inventing new recording/retry semantics this milestone's own brief
+explicitly excludes ("don't make the pipeline bigger"). It is named here
+so it is a known, considered gap rather than a silently-discovered one, if
+a future milestone ever judges it worth its own design pass.
+
+**Section E — the UI stays a thin observer.** Every `.js` file under
+`ui/`, recursively, except `ui/main.js` itself (the composition root),
+contains no reference to `window.arweaveWallet`, `window.nostr`,
+`crypto.subtle`, `new WebSocket(`, or any transaction/event construction
+literal — `ui/main.js` is allowed to RESOLVE those two host capabilities
+(that is its entire job) but is held to the identical "never signs, never
+chunks, never broadcasts" restraint as everything else.
+
+**Section F — structural invisibility to discovery/verification.**
+Neither `arweave/ArweaveInjectedProviderSigner.js` nor
+`nostr/NostrInjectedProviderPublisher.js` imports anything from
+`application/` or `core/` — confirmed by source inspection, not merely by
+absence of a bug report — and `PublicationDistributionState`,
+`WorldEncounterMaterialVerificationStatus`, and
+`WorldEncounterMaterialLoadStatus` remain three vocabularies with zero
+shared values: DISCOVERED, VERIFIED, and DISTRIBUTED stay three genuinely
+different facts, exactly as this codebase has held since 0.9.29–0.9.33.
+
+**Section G — one real-browser-capability-boundary chain test**, on top
+of the seven `PublicationDistributionHostCapabilityIntegration.test.js`
+already ran at 0.9.121: window-shaped fake -> host adapter -> runtime
+adapter -> runtime provider -> configuration -> command composition ->
+orchestrator -> executor -> lifecycle store, all in one call, using
+realistic ArConnect-/NIP-07-shaped fakes and never a real wallet or relay.
+
+**Section H — the host-adapter-vs.-protocol-implementation boundary
+question**, answered structurally rather than merely argued:
+`application/ArweavePublicationMaterialUploader.js`'s own header (0.9.45,
+unmodified, three milestones before `ArweaveInjectedProviderSigner.js`
+existed) already documents "Delegating 'construct, sign' entirely to an
+injected `signer`" and treats the signer's own `transaction` field as
+"completely opaque, POSTing it unread." Building a real, format-2
+transaction is therefore not Arweave protocol logic that migrated into
+the UI-side host adapter — it is the host adapter fulfilling a contract
+the distribution layer had already, deliberately, pushed outward, before
+any concrete signer existed to fill it. The one genuinely cryptographic
+computation the signer performs on its own — the single-leaf `data_root`
+Merkle digest — has no other legitimate home: it is public and keyless,
+but it is also not something a real wallet's own `sign()` call can be
+assumed to compute on a caller's behalf (ArConnect/Wander sign what they
+are given; they do not reshape it). No RSA-PSS signing, deep-hash
+computation, or other genuine protocol logic requiring the wallet's own
+key exists in the adapter's own code — confirmed, not merely asserted, by
+a code-only (comment-stripped) source scan. The same question, applied to
+`nostr/NostrInjectedProviderPublisher.js`'s own event construction, has an
+even smaller surface: the adapter builds only the plain
+`{ kind, tags, content, created_at, pubkey }` shape NIP-07's own
+`signEvent()` already requires as input, and reads nothing back from the
+signed result beyond the `id`/`sig` presence check every sibling adapter
+in this family already performs.
+
+**No production code changes.** This is a pure audit: every file this
+milestone touches is a test file (`tests/PublicationDistributionEndToEndRuntimeAudit.test.js`,
+new) plus `tests.html`'s own manifest registration, in correct
+alphabetical position. `arweave/ArweaveInjectedProviderSigner.js`,
+`nostr/NostrInjectedProviderPublisher.js`, every `application/`
+distribution file, and `ui/main.js`/`ui/components/WorldEncounterCanvas.js`
+are all byte-for-byte unchanged. Every invariant this milestone locks down
+already held under 0.9.121's own implementation.
+
+Deliberately not attempted, matching the brief this milestone was given:
+new wallets, wallet-selection UI, account management, persistent wallet
+connections, automatic reconnect, retry policies, background publishing,
+distribution scheduling, multi-relay Nostr publishing, Arweave bundling,
+large-file/chunked upload, new lifecycle states, distribution history UI,
+new discovery protocols, and any new vehicle functionality. The one
+lifecycle-recording gap named in Section D above is documented, not
+fixed, for exactly this reason.
+
+### Recommendation
+
+    Host Capability      real signer/publish producers, wired into
+    Integration           ui/main.js for real                         (0.9.121)
+            v
+    End-to-End Runtime   every semantic boundary confirmed intact
+    Audit                 against real host failure modes, zero
+                          production code changes                     (this milestone)
+            v
+    Publication Distribution subsystem — CLOSED for now
+            v
+    Vehicle Orientation   the bicycle visually faces the direction
+                          it is travelling                            (next)
+
+This audit passed cleanly — no boundary issue was discovered, only one
+already-documented, already-considered design point (Section D) worth
+naming now that it is real rather than theoretical. Per this milestone's
+own brief, that means treating the Publication Distribution subsystem as
+closed for the moment, the same way 0.9.120's own clean audit closed out
+vehicle collision. The vehicle line was left at exactly the same kind of
+stopping point 0.9.120 itself named: a mounted vehicle can be blocked,
+mounted, ridden, and dismounted correctly, but still translates through
+the world with no facing of its own. That is the more concrete, more
+clearly-scoped next seam of the two candidates on the table — a decision
+between "discover -> verify -> select -> distribute -> observe" (real,
+but every stage already exists and is already exercised; the only
+missing piece is an explicit end-user OBSERVE surface, which is itself a
+new capability question, not an audit one) and vehicle orientation (a
+narrow, already-well-precedented next step in a line of eight consecutive
+one-seam milestones). I would pick up vehicle orientation next, and treat
+"what does Publication Distribution need as a user-facing capability
+beyond distribute-and-forget" as its own, separate, future design
+question rather than folding it into whichever milestone happens to be in
+flight.
