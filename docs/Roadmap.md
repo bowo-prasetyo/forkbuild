@@ -65521,3 +65521,135 @@ consecutive infrastructure milestones plus this audit is enough new
 capability accumulated ahead of an actual consumer; the risk from here is
 building further decentralized machinery faster than the application
 has a genuine use for it, not a gap in what already exists.
+
+## 0.9.136 — Snapshot Distribution Command
+
+0.9.135's own audit proved the complete decentralized Snapshot chain —
+placement, discovery, resolution — genuinely works end to end, but only
+ever by hand: every section of `tests/SnapshotDistributionAudit.test.js`
+manually calls `contentStore.put()` and then `discoveryPublisher.publish()`
+itself, in the right order, with the right fields copied across by hand.
+Nothing in this codebase turns "a Snapshot's bytes plus a configured
+`ContentStore` and `NostrSnapshotDiscoveryPublisher`" into one call — the
+identical gap `application/PublicationDistributionExecutor.js` (0.9.49)
+once closed for the Signed Claim family, still open here for the
+Snapshot family four milestones later. This is that missing seam:
+`application/SnapshotDistributionCommand.js`, and nothing more.
+
+```text
+Snapshot bytes
+     │
+     ▼
+executeSnapshotDistributionCommand({ bytes, contentStore, discoveryPublisher })
+     │
+     ├──► contentStore.put(bytes)                    (content/ArweaveContentStore.js,
+     │        │                                        unmodified — or any
+     │        ▼   ContentReference{ hash, uri, storage }   ContentStore a caller supplies)
+     │
+     └──► discoveryPublisher.publish({                (application/
+              contentHash, locator, storage })          NostrSnapshotDiscoveryPublisher.js,
+                  │                                      unmodified)
+                  ▼   { published, relayUrl, id } | null
+     │
+     ▼
+{ contentReference, announcement }
+```
+
+### The asymmetric failure contract
+
+The centerpiece design decision this milestone makes, proven directly by
+`tests/SnapshotDistributionCommand.test.js`'s own Section CONTRACT points
+6 and 7:
+
+```text
+placement fails  ──X──  discovery is never even attempted
+                          (Nostr never receives a locator for
+                           content that does not exist)
+
+placement succeeds ──✓──  discovery declines or fails ──X──
+                          the placement is NEVER rolled back —
+                          { contentReference, announcement: null }
+                          is a legitimate, reportable result
+```
+
+This is not a new rule invented for Snapshots — it is exactly the
+"genuine failure propagates, ordinary decline composes" line
+`application/PublicationDistributionExecutor.js`'s own header already
+drew for the Signed Claim family, held here unchanged for its Snapshot
+sibling. `contentStore.put()` never resolving to anything but a real
+`ContentReference` or a rejection (unlike the Signed Claim family's own
+`materialUploader.upload()`, which can resolve `null`) makes this
+command's own sequencing simpler than 0.9.49's: there is no
+"placement declined but did not fail" branch to compose around, only
+succeed-and-continue or reject-and-stop.
+
+### Composable, not composed — no new construction, no new UI
+
+`application/SnapshotDistributionCommand.js` takes `contentStore` and
+`discoveryPublisher` as already-constructed collaborators, duck-typed
+exactly like every other file in this family — it never imports
+`content/ArweaveContentStore.js` or `application/
+NostrSnapshotDiscoveryPublisher.js` concretely, and never performs an
+`instanceof` check against either. `tests/SnapshotDistributionCommand.test.js`'s
+own flagship SEQUENCE proves the command works identically against
+`content/IpfsContentStore.js` too — this file is `ContentStore`-agnostic,
+not Arweave-specific. And, exactly as every milestone in this family
+before it has held: `ui/main.js` never references
+`SnapshotDistributionCommand` — no `[E] Distribute` action, no World View
+control, no composition root wiring exists yet. This command is now
+composable by any caller who chooses to; it is not yet composed into the
+running application anywhere.
+
+### What this milestone deliberately does NOT do
+
+- **No `SnapshotDistributionResult` descriptor, no lifecycle, no
+  persistence.** The command resolves to a plain
+  `{ contentReference, announcement }` object — `contentReference` and
+  `announcement` are each the unmodified return values of the two
+  collaborators this file sequences, never re-described or re-wrapped.
+- **No composition/runtime-construction file** (mirroring `application/
+  PublicationDistributionRuntimeComposition.js`) that builds a real
+  `ArweaveContentStore`/`NostrSnapshotDiscoveryPublisher` pair from raw
+  signer/relay options. Not needed yet — a real caller can already
+  construct both directly; this stays a separate, later, unscheduled
+  step if a real caller ever needs the convenience.
+- **No UI trigger, no World View control, no loading/progress/error
+  presentation.** See "Composable, not composed," above.
+- **No coupling to Signed Claim distribution, and no "Publication
+  package" combining a Signed Claim and a Snapshot into one coordinated
+  publication.** The Signed Claim distribution workflow (0.9.44-0.9.122)
+  and this Snapshot distribution command remain two independent
+  subsystems, exactly as 0.9.131 named them — a higher-level publication
+  workflow that deliberately invokes both remains a separate, later,
+  unscheduled decision.
+- **No registration with `application/commands/`'s own `Command`/
+  `CommandRegistry` pair.** Distributing a Snapshot is neither undoable
+  nor `World`-scoped — the identical exclusion `application/
+  PublicationDistributionCommand.js`'s own header already draws for the
+  Signed Claim family.
+- **No retries, no multi-store or multi-relay fan-out, no automatic or
+  background distribution.**
+
+### Recommendation
+
+```text
+0.9.131  Snapshot Distribution Boundary                     ✓
+0.9.132  ArweaveContentStore                                 ✓
+0.9.133  Nostr Snapshot Location Discovery                   ✓
+0.9.134  Decentralized Snapshot Retrieval                     ✓
+0.9.135  End-to-End Decentralized Snapshot Distribution       ✓
+         Audit
+0.9.136  Snapshot Distribution Command                        ✓
+```
+
+A Snapshot can now be placed and announced through one application-level
+call, by any caller — a script, a test, or a future UI action — holding
+nothing but its bytes and two configured collaborators. I would not
+proceed directly to wiring a UI action on top of this command. The next
+decision is a genuinely new product question, not an infrastructure one:
+who decides a given Snapshot should be globally, decentrally announced at
+all, and through what World View control. That deserves its own
+deliberate milestone — `[E] Distribute Snapshot` and its own runtime
+composition (constructing a real signer, gateway, and relay from
+application configuration) — rather than being folded into this one as an
+afterthought.
