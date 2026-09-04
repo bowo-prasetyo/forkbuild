@@ -66265,3 +66265,145 @@ reassessment (returning to vehicle/world-interaction work, or extending
 decentralized distribution further — e.g. a "Distribute Signed Claim"
 counterpart to this same own-material entry point), not one this
 milestone should decide on its author's behalf.
+
+## 0.9.141 — Distribution Entry-Point Convergence Audit
+
+0.9.140 closed the UI reachability gap cleanly, and its own
+"Recommendation" (above) explicitly declined to schedule a follow-up —
+the reassessment it named belonged to a human, not to the milestone
+itself. That reassessment concluded this: not another distribution
+feature, but a check on the one it just shipped. World View now has TWO
+UI entry points onto Snapshot distribution — `OwnPublicationPanel`
+(0.9.140) and `WorldEncounterCanvas` (0.9.138) — and every test proving
+either one correct, up to this point, proved it in isolation. Nothing had
+yet driven both at once and shown the architecture actually holds:
+**two entry points, one execution path.** This milestone is test/
+documentation-only, adding zero production code — the same audit shape
+`tests/SnapshotDistributionEndToEndRuntimeAudit.test.js` (0.9.139) and
+`tests/PublicationDistributionEndToEndRuntimeAudit.test.js` (0.9.122)
+already established for their own subsystems, one layer up.
+
+```text
+                    World View
+                       │
+             ┌─────────┴─────────┐
+             │                   │
+             ▼                   ▼
+      My Publication       World Encounters
+    (OwnPublicationPanel)  (WorldEncounterCanvas)
+             │                   │
+        local snapshot      selected snapshot
+             │                   │
+             └─────────┬─────────┘
+                       ▼
+        distributeWorldEncounterSnapshot()   (ui/views/WorldView.js,
+                       │                        ONE function, bound to
+                       ▼                        both templates)
+        executeSnapshotDistributionCommand()
+                       │
+             ┌─────────┴─────────┐
+             ▼                   ▼
+       ArweaveContentStore  NostrSnapshotDiscoveryPublisher
+```
+
+### `tests/SnapshotDistributionEntryPointAudit.test.js` — eight sections
+
+**A — Two entry points, one command.** Structural: `ui/views/WorldView.js`
+binds the identical `distributeWorldEncounterSnapshot` function to both
+`<OwnPublicationPanel>` and `<WorldEncounterCanvas>`, declared exactly
+once. Behavioral: that SAME function reference (`===`, not merely
+equivalent), handed to a simulated instance of each surface, genuinely
+places and announces for both against one shared Arweave/Nostr scenario.
+
+**B/C — Local/remote entry-point independence.** Each surface distributes
+successfully with the OTHER surface's own vocabulary entirely absent from
+scope — no `selectedEncounter`/`materialInspection` anywhere near the
+local scenario, no `publication` anywhere near the remote one.
+
+**D — State isolation, the flagship combined sequence.** Local-then-
+remote, remote-then-local, and genuine concurrent overlap (both calls in
+flight at once, over the same shared collaborators) — in every ordering,
+one surface's own result/executing/error/requestId state is provably
+untouched by the other's activity.
+
+**E — Identity preservation.** Local and remote source `Publication`
+objects keep distinct, unmutated `id`s throughout; a distribution result
+carries no publication-identity field at all — only `contentReference`/
+`announcement`, keyed by content, never by which entry point produced it.
+
+**F — Failure isolation.** A genuine Nostr transport failure through one
+entry point, and a genuine Arweave placement failure through the other,
+each tested independently: neither ever corrupts the OTHER entry point's
+own concurrent, independent call, and a failing entry point's own prior
+Arweave placement (when it made one) survives regardless — the same
+"a Nostr failure never undoes a placement" invariant 0.9.139's own
+Section D proved once, now held with a second entry point concurrently
+succeeding against the identical store.
+
+**G — Structural boundary.** Neither `OwnPublicationPanel.js` nor
+`WorldEncounterCanvas.js` references a wallet/Nostr/WebSocket/crypto
+global, constructs a concrete Arweave/Nostr collaborator, or calls the
+command/composition functions directly — and neither contains a
+`.put(`/`.publish(` call of its own, the literal shape a duplicated,
+UI-level sequencing of the command's two steps would take.
+
+**H — Single execution path.** A whole-repository scan confirms
+`new ArweaveContentStore(`/`new NostrSnapshotDiscoveryPublisher(` still
+construct in exactly `application/SnapshotDistributionRuntimeComposition.js`
+alone, `executeSnapshotDistributionCommand(`/`composeSnapshotDistributionRuntime(`
+appear only where each is defined and where `ui/main.js` composes/calls
+it, the UI-level `distributeWorldEncounterSnapshot` wrapper is declared
+in exactly one file, its template binding (`:snapshotDistributionCommand=`)
+appears in exactly one file, and exactly two — never three —
+`ui/components/*.js` files declare a `snapshotDistributionCommand` prop
+at all.
+
+### A real finding, not a hypothetical one
+
+Building this audit surfaced a genuine gap rather than a merely
+theoretical one: `tests/WorldViewOwnPublicationDistribution.test.js` —
+0.9.140's own flagship end-to-end test — was never added to `tests.html`,
+the one place any test in this repository actually executes (it imports
+`application/WorldNavigationSession.js`, which transitively needs the
+`three` import map only `tests.html`'s own browser environment provides,
+so it cannot run under plain Node the way this milestone's own new audit
+file does). That test has therefore never once run since it was written.
+This milestone fixes the registration alongside adding its own new test —
+exactly the kind of "did the solution create an architectural problem"
+question this milestone exists to ask.
+
+### What this milestone deliberately does NOT do
+
+- **Change `SnapshotDistributionCommand.js`, `SnapshotDistributionRuntimeComposition.js`,
+  `WorldEncounterCanvas.js`, or `OwnPublicationPanel.js`.** All four remain
+  completely unmodified — this milestone adds one new test file, one
+  `tests.html` registration fix, and this roadmap entry.
+- **A shared `PublicationDistributionPanel` abstraction merging the two UI
+  surfaces.** They passed this audit precisely because they stay two
+  separate components over one shared command — collapsing them now would
+  trade a proven-independent architecture for an unproven shared one, to
+  save a few duplicated lines. If duplication becomes genuinely painful
+  later, that is a decision for then, not a preemptive one now.
+- **A "Distribute Signed Claim" entry point, or any other new
+  distribution feature.** Per the task's own framing, this is the LAST
+  Snapshot Distribution milestone for now — not the next feature.
+
+### Recommendation
+
+```text
+0.9.137  Snapshot Distribution Runtime Composition               ✓
+0.9.138  World View Snapshot Distribution Action                 ✓
+0.9.139  Snapshot Distribution End-to-End Runtime & UI Audit      ✓
+0.9.140  Own Publication Distribution Entry Point                 ✓
+0.9.141  Distribution Entry-Point Convergence Audit                ✓
+```
+
+0.9.140 solved the product problem (distributing your own material no
+longer depends on peer presence); 0.9.141 proves that solution did not
+quietly create an architectural one — two entry points, genuinely one
+execution path, genuinely isolated UI state. I would stop here and make
+0.9.142 a real roadmap reassessment, not another automatic step deeper
+into decentralized distribution: return to vehicle/world-interaction
+work, or pick up the Signed Claim counterpart named above, based on
+which seam gives ForkBuild the most value next — not simply because the
+Snapshot distribution infrastructure happens to already be there.
