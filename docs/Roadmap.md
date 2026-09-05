@@ -69421,3 +69421,166 @@ Publication-authoritative World position, registered through the existing
 World discovery registry, and rendered at that position through the
 existing World View pipeline, is now one continuous, provable fact this
 codebase can point to.
+
+## 0.9.162 — Snapshot World Convergence Audit
+
+0.9.161's own header, above, sketched 0.9.162 as a single flagship
+reproducing the full Nostr-to-rendered path as one named fact. Before that
+work was taken up, the roadmap was deliberately redirected: 0.9.161 already
+proved a registered Snapshot renders, VERTICALLY, start to finish — nothing
+yet asked the HORIZONTAL question every one of 0.9.150 through 0.9.161 left
+open by construction, because each of those milestones deliberately worked
+with exactly one Publication at a time. This codebase now has THREE
+independent paths capable of contributing World-visible material for the
+same Publication — local, a connected peer, and (since 0.9.160) a
+materialized Snapshot — and nothing had ever asked what happens when more
+than one of them actually does, for the same object, at the same time.
+That is a genuinely different, and genuinely more foundational, question
+than one more end-to-end narrative assertion — so it became this milestone
+instead, and 0.9.161's own "full narrative" idea remains real, unbuilt,
+later work (see "What's left," below).
+
+```text
+                         ┌─ Local (0.9.5)
+                         │
+                         ├─ Peer World Discovery (0.9.6/0.9.11)
+                         │
+Snapshot pipeline ───────┤
+   (0.9.150-0.9.161)     └─ Snapshot registration (0.9.160)
+                                │
+                                ▼
+                    WorldDiscoverySourceRegistry   (0.9.9)
+                                │
+                                ▼
+                    assembleWorldDiscoveryInputs()   (0.9.7)
+                                │
+                                ▼
+                       deriveWorldEncounters()        (0.9.0)
+                                │
+                                ▼
+                         WorldEncounterCanvas         (0.9.3/0.9.13)
+```
+
+**This milestone is test-only, and finds exactly one genuine gap — which
+it proves and stops short of fixing.** Three files already documented, in
+their own headers, exactly what was going to happen once the same World
+material reached the registry through more than one path:
+`core/WorldDiscoverySourceAssembly.js`'s own "assembly is not
+reconciliation... never deduplicates," `application/WorldDiscoverySourceRegistry.js`'s
+own "replacement, not accumulation" (scoped to ONE origin's own slot,
+never across two different ones), and `core/WorldEncounter.js`'s own
+`Array#find()` join by `publicationId` (the FIRST matching publication
+record in the assembled array wins, regardless of which source actually
+contributed the placement being resolved). Combining those three
+already-documented facts predicts a specific, checkable behavior for "the
+same Publication through three sources" — and Section A's own flagship
+runs the real, unmodified code and confirms the prediction exactly: three
+encounters survive, never collapsed, each keeping its own placement's own
+position, all three sharing whichever source's publication record happened
+to be assembled first for that id.
+
+**The one place prediction and reality diverged is where this milestone
+earned its name.** `application/MaterializedSnapshotWorldDiscoveryBridge.js`'s
+own `materializedSnapshotWorldOrigin(contentHash)` (0.9.160) derives a
+registered Snapshot's registry slot from `contentHash` ALONE — a
+deliberate choice, per that file's own header, so re-registering the
+IDENTICAL Snapshot is idempotent. But `WorldDiscoverySourceRegistry` has no
+idea a `"snapshot:<hash>"` origin is supposed to name one Publication
+forever; it is a plain string key, and "replacement, not accumulation"
+applies to it exactly as it applies to `"peer:<id>"`. Two DIFFERENT
+Publications whose Snapshot bytes merely happen to hash identically — an
+unremarkable case in a content-addressed system; nothing stops two
+independent publishers from separately publishing the same file — collide
+on that one derived slot. Section B proves it with the real, unmodified
+`registerMaterializedSnapshotWorldSource()`: registering Publication B
+after Publication A, both sharing one contentHash, silently evicts A from
+the World entirely — no error, no merge, no record it was ever there. This
+is not deduplication (the two Publications are never compared or judged
+"the same thing") — it is an accidental identity COLLISION, one layer
+below where 0.9.160's own "content identity is not Publication identity"
+rule was always supposed to hold.
+
+`tests/SnapshotWorldConvergenceAudit.test.js` — seven sections: **A** (same
+Publication, three sources — no deduplication; three encounters survive,
+documenting the existing, predicted "first-assembled record wins the
+shared metadata" quirk), **B** — THE GAP (same contentHash, two different
+Publications, both registered through the real bridge — the second
+registration silently replaces the first's entire World presence), **C**
+(same Publication, a peer origin and a snapshot origin — unlike Section B,
+distinct origin STRINGS never collide; both coexist, and origin itself
+never leaks into a rendered row), **D** (same contentHash, same
+Publication, two different locators — the locator never enters the
+registry key or the rendered encounter; re-registration is a harmless,
+idempotent replacement), **E** (spatial convergence — a registered
+Snapshot's own position is always the pre-existing, authoritative
+`WorldPlacement` position, copied through every seam unchanged; no source
+ever overrides another source's own claimed position for the same
+Publication), **F** (rendering convergence — local/peer/Snapshot-sourced
+encounters all reach the identical `WorldEncounterCanvas`/
+`WorldEncounterMarker` machinery, confirmed both behaviorally and by
+reading the actual `publicationRows`/`projectedPublications` computed
+bodies, which read no discovery source's own `origin` field), **G** (no
+premature deduplication — a structural sweep for dedup/reconciliation
+vocabulary across the entire convergence path, plus a direct behavioral
+check that even byte-for-byte identical records from two origins are never
+collapsed into one).
+
+Deliberately excluded, per this milestone's own narrow, audit-only scope:
+- **Fixing the Section B gap.** Deriving `"snapshot:<hash>"` from
+  contentHash alone, without also folding in `publicationId`, is a real
+  bug this milestone deliberately proves and does not touch — see "Don't
+  invent semantics merely because two things look similar," this
+  codebase's own running principle, applied here in the opposite
+  direction: don't silently patch a found seam either, inside an audit
+  whose only deliverable is supposed to be proof. See the Recommendation,
+  below.
+- **Deduplication, contentHash → Publication identity mapping, trust
+  ranking, source preference, automatic merging or replacement, background
+  synchronization, Snapshot lifecycle, retry/failover, new World state, a
+  new renderer, or a new visibility system.** None of these were needed to
+  answer this milestone's own question, and none were added.
+- **The full Nostr → ... → rendered end-to-end narrative assertion**
+  0.9.161's own header had sketched for this slot. Still real, still
+  unbuilt, later work — this milestone answered a different, more
+  foundational question first.
+
+```text
+0.9.150  Snapshot Candidate Discovery Command                      ✓
+0.9.151  World View Snapshot Candidate Browser                     ✓
+0.9.152  Selected Snapshot Candidate Resolution                    ✓
+0.9.153  Selected Snapshot Resolution End-to-End Audit              ✓
+0.9.154  Selected Snapshot Attribution                              ✓
+0.9.155  Selected Snapshot Attribution End-to-End Audit              ✓
+0.9.156  Snapshot Lifecycle & Semantic Boundary Audit                ✓
+0.9.157  Snapshot Candidate Interaction Completion Audit             ✓
+0.9.158  Selected Snapshot Materialization                           ✓
+0.9.159  Selected Snapshot World Placement                           ✓
+0.9.160  Selected Snapshot World Runtime Registration                ✓
+0.9.161  Snapshot World Rendering                                    ✓
+0.9.162  Snapshot World Convergence Audit                            ✓
+```
+
+### Recommendation
+
+This audit found exactly one genuine, narrow, well-understood gap: a
+registered Snapshot's own World registration slot
+(`materializedSnapshotWorldOrigin()`, 0.9.160) is keyed by `contentHash`
+alone, so two different Publications that happen to reference
+byte-identical content silently evict one another from the World. I would
+call the next milestone **0.9.163 — Materialized Snapshot Registration
+Identity**, scoped as narrowly as this gap actually is: derive the
+registered origin from BOTH `contentHash` AND `publicationId` (e.g.
+`` `snapshot:${contentHash}:${publicationId}` ``), so two distinct
+Publications sharing identical bytes each get their own durable slot,
+while re-registering the SAME Publication's SAME content stays exactly as
+idempotent as it is today. I would not fold in anything wider than that
+one key derivation — not deduplication, not trust ranking, not a
+Publication-identity index keyed by contentHash, and not the Section A
+"first-assembled record wins the shared metadata" behavior, which is
+`core/WorldEncounter.js`'s own long-settled, unrelated join semantics and
+never this bridge's problem to solve. If, once that narrow fix lands,
+convergence behavior across all three sources is exactly what this
+milestone's own Sections A/C/E/F already documented as correct — I would
+then consider the Snapshot World Convergence question closed, and move to
+whichever genuinely missing World capability is exposed next, rather than
+manufacturing further Snapshot-specific milestones.
