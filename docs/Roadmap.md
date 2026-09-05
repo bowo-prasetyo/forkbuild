@@ -67808,3 +67808,130 @@ types/capability vocabulary, but their actual world reachability and
 placement semantics are not yet established. That looks like a more
 substantial next application capability than deepening decentralized
 discovery infrastructure further.
+
+## 0.9.149 — Snapshot Discovery Semantics Audit & API Boundary
+
+0.9.148's own audit — and every Snapshot-discovery test before it —
+proved exactly one shape of question, over and over, with increasing
+rigor: "does a locator exist for THIS ONE, already-known contentHash?"
+That is `application/DecentralizedSnapshotResolver.js#resolve()`'s own
+contract, and it is attribution-oriented resolution — the right question
+for "does this Publication have a corresponding decentralized Snapshot?",
+and never once, in any prior milestone, exercised for the OTHER question
+the underlying mechanism was already, quietly, capable of answering:
+"what has been announced under this discoveryTag, period — regardless of
+which contentHash each candidate names?" That second question is
+`application/NostrSnapshotDiscoveryQueryService.js#search()`'s own
+existing, unmodified contract; nothing before this milestone ever asked
+it that way, or proved the two questions stay genuinely separate under
+load. Test/documentation-only. Zero production changes — every file this
+milestone reads (`application/NostrSnapshotDiscoveryQueryService.js`,
+`application/DecentralizedSnapshotResolver.js`, `application/
+DiscoverSnapshotCommand.js`, `application/
+DiscoverSnapshotRuntimeComposition.js`, `application/
+SnapshotPublicationAttribution.js`, `core/SnapshotDiscoveryEnvelope.js`)
+is edited by none of it.
+
+```text
+   ATTRIBUTION-ORIENTED RESOLUTION              BROWSING-ORIENTED DISCOVERY
+   "Can I retrieve THIS                  "What has been announced under
+    exact content?"                       this discoveryTag, at all?"
+
+        contentHash                            discoveryTag
+            │                                       │
+            ▼                                       ▼
+   DecentralizedSnapshotResolver            NostrSnapshotDiscoveryQueryService
+        .resolve(tag, hash)                      .search(tag)
+            │                                       │
+            ▼                                       ▼
+   ONE verified answer                      EVERY announced candidate,
+   (or a specific,                          UNFILTERED by contentHash,
+    structural failure)                     UNRANKED, UNVERIFIED
+```
+
+`tests/SnapshotDiscoverySemanticsAudit.test.js` — six sections, built on
+the identical injected-`queryImpl`/fake-Arweave-gateway techniques
+`tests/NostrSnapshotDiscoveryQueryService.test.js` and `tests/
+DecentralizedSnapshotResolution.test.js` already established:
+
+```text
+Section A: candidate discovery — one discoveryTag produces many
+           candidates across DIFFERENT contentHashes (not merely several
+           locators for one Snapshot, which 0.9.148 Section D already
+           covers), with no selection performed by search() itself
+Section B: candidate preservation — contentHash/locator/storage and
+           relay-arrival order both survive verbatim; a candidate carries
+           EXACTLY those three documented fields, never more and never
+           fewer
+Section C: discovery carries no verification verdict — a bare candidate
+           has no outcome/status/verified/match field, confirmed both
+           behaviorally and structurally (the discovery file's own source
+           never references MATCH/NO_MATCH/VERIFIED/RESOLVED)
+Section D: discovery never retrieves bytes — a discovery-only composition
+           with NO ContentStore constructed anywhere still discovers
+           every candidate; the discovery file itself neither imports a
+           ContentStore nor calls a `.get()` retrieval method
+Section E: the existing resolver is untouched — resolve() still narrows
+           to exactly the one requested contentHash and returns its own,
+           genuine bytes, even when search() for the identical
+           discoveryTag reports two unrelated decoy candidates alongside
+           it; DecentralizedSnapshotResolutionOutcome still carries
+           exactly its own five pre-existing values
+Section F: attribution stays downstream — a candidate taken directly off
+           search()'s own browsing result (even the contentHash-correct
+           one) is refused by attribution outright, with no `outcome` to
+           evaluate; only after explicit selection and the unmodified
+           resolve() step does browse → select → resolve → attribute
+           compose to a genuine MATCH, entirely out of primitives that
+           already existed before this audit
+```
+
+### What this audit confirms
+
+The mechanism was never missing a capability — it was missing a name and
+a proof. `search()` already returned every candidate under a tag,
+unfiltered by contentHash, unranked, and untouched by retrieval; nothing
+in this codebase had ever exercised it that way or demonstrated the
+result stays inert until a caller explicitly resolves one specific
+candidate through the existing chain. Section F is this milestone's own
+centerpiece: the identical "discovery is not verification, and verifying
+is not attributing" discipline `application/
+DecentralizedSnapshotResolver.js`'s and `application/
+SnapshotPublicationAttribution.js`'s own headers already state extends,
+unbroken, to a THIRD posture — "browsing is not resolving" — a bare
+browsed candidate cannot even be handed to attribution, regardless of
+whether it happens to name the right contentHash.
+
+This audit deliberately draws a line it does not cross: it proves
+`search()` is already safe and sufficient to build a candidate-listing
+operation on top of, but it builds no such operation itself. No new
+application-facing command, no UI, no ranking/deduplication/grouping
+logic, and no change to any outcome enum or wire envelope. `application/
+DecentralizedSnapshotResolutionOutcome.js` and `application/
+SnapshotPublicationAttributionOutcome.js` are read, never extended.
+
+### Recommendation
+
+```text
+0.9.144  World View Snapshot Attribution Integration                ✓
+0.9.145  End-to-End Snapshot Attribution Audit                     ✓
+0.9.146  Snapshot & World Architecture Roadmap Reassessment        ✓
+0.9.147  Decentralized Discovery Relay Query Client                ✓
+0.9.148  End-to-End Decentralized Discovery Runtime Audit          ✓
+0.9.149  Snapshot Discovery Semantics Audit & API Boundary         ✓
+```
+
+With the boundary between browsing-oriented discovery and
+attribution-oriented resolution now proven, not merely asserted, I would
+recommend **0.9.150 — Snapshot Candidate Discovery**: a narrow
+application-layer seam (e.g. `DiscoverSnapshotCandidatesCommand`,
+consistent with this family's existing naming) that does nothing more
+than call `NostrSnapshotDiscoveryQueryService#search()` for a given
+discoveryTag and hand back its full, unranked candidate list — no
+retrieval, no verification, no attribution, no deduplication. That
+narrow seam is now provably safe to build, exactly because this
+milestone proved `search()` already behaves the way such a seam would
+need it to. Only once that seam exists should World View decide whether,
+and how, to expose candidate browsing to a user — a UI decision this
+milestone deliberately leaves open, the same restraint 0.9.142's own
+header already held for the attribution-oriented command it introduced.
