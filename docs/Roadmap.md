@@ -68608,3 +68608,158 @@ the Snapshot subsystem as a whole — at that point the discover → select
 → resolve → verify → attribute pipeline is complete and independently
 proven at every seam, and the right next step is likely a different part
 of the system entirely rather than a further layer on this one.
+
+## 0.9.155 — Selected Snapshot Attribution End-to-End Audit
+
+Test-only, exactly as 0.9.154's own recommendation named it — ZERO new
+production code. 0.9.154's own `tests/SelectedSnapshotAttribution.test.js`
+already gives thorough, exhaustive unit-level coverage of
+`attributeSelectedSnapshot()` in isolation, driven by hand-constructed
+`resolvedResult(...)` fixtures rather than a real resolver, a real content
+store, or a real Nostr discovery round trip. This milestone is the
+identical audit shape 0.9.153 already gave the seam one layer down, run
+one layer up: proof that the complete, explicit path now composes end to
+end through the REAL composed runtime
+(`composeDiscoverSnapshotRuntime`, a real `ArweaveContentStore`, a real
+`NostrSnapshotDiscoveryPublisher`/`NostrSnapshotDiscoveryQueryService`
+pair) and the REAL `OwnPublicationPanel` UI actions:
+
+```text
+DISCOVER → SELECT → RESOLVE EXACT CANDIDATE → VERIFY → ATTRIBUTE
+```
+
+**The particularly important property this audit exists to hold:** the
+user's own explicit selection can MATERIALLY DETERMINE the final
+attribution verdict — not merely relabel an unchanged result. Selecting a
+different, real, independently placed candidate, over the identical,
+unchanged Publication, flips `MATCH` to `NO_MATCH` and back; a candidate
+whose real bytes fail verification never reaches an attribution verdict
+at all.
+
+`tests/SelectedSnapshotAttributionEndToEndAudit.test.js` — ten sections:
+
+- **A** — the FLAGSHIP MATCH path: Publication → candidate discovery →
+  select the matching candidate → `resolveCandidate()` → verified bytes →
+  `attributeSelectedSnapshot()` → `MATCH`, entirely through the real
+  composed runtime and the real UI actions, confirming at each step that
+  selection alone never resolves and resolution alone never attributes.
+- **B** — the FLAGSHIP NO_MATCH path: two real, independently placed,
+  valid Snapshots under one `discoveryTag`; selecting the one that is NOT
+  the Publication's own content resolves (`RESOLVED`) and then attributes
+  `NO_MATCH` — a successfully resolved Snapshot never implies attribution.
+- **C** — SELECTION MATERIALLY CHANGES ATTRIBUTION, the strongest proof
+  of why `resolveCandidate()` over an explicit selection was necessary:
+  over the SAME, unchanged Publication, selecting candidate A yields
+  `MATCH` and selecting candidate B yields `NO_MATCH`, in both directions
+  — only the explicit candidate selection ever changes.
+- **D** — FALSE CANDIDATE / LYING METADATA, the critical attack scenario
+  preserved and extended: a candidate that CLAIMS the Publication's own
+  `contentHash` but whose real locator serves different bytes fails
+  resolution (`CONTENT_HASH_MISMATCH`) before attribution is ever reached,
+  through the real resolver and content store — never a fabricated
+  `MATCH`. The converse is proven too: a candidate whose DECLARED
+  `contentHash` differs from its own real bytes' hash fails resolution
+  under the identical rule even when those real bytes happen to equal the
+  Publication's own content — resolution is governed by the resolver's
+  own declared-vs-actual verification, never by any relationship to the
+  Publication's hash.
+- **E** — EXACT LOCATOR PRESERVATION: a content-store spy proves the
+  complete chain (select → `resolveCandidate` → attribute) is driven end
+  to end by the SELECTED candidate's own locator alone, regardless of
+  discovery order (both orders exercised), and the reported
+  `snapshotHash` is an independent recomputation of the bytes actually
+  retrieved from THAT locator — never reconstructed from
+  `publication.contentReference.hash`, a candidate's own declared
+  `contentHash` field, or discovery order.
+- **F** — TWO ATTRIBUTION PATHS CONVERGE: the already-known-contentHash
+  path (`discoverOwnSnapshot()`) and the browsed-and-selected path
+  (select → resolve → `attributeSelectedSnapshot()`), run side by side
+  against the identical real candidate and Publication, produce identical
+  verdicts and hashes — both genuinely invoke
+  `resolveSnapshotPublicationAttribution()` exactly once each (a
+  structural sweep confirms the function is imported exactly once and
+  called from exactly two sites), never two parallel comparison
+  implementations — while their own UI state
+  (`snapshotAttributionResult` vs `selectedSnapshotAttributionResult`)
+  stays fully independent, proven not merely by separate fields but by
+  separate object identity.
+- **G** — STATE ISOLATION, through the real composed runtime: candidate
+  discovery state, the selected candidate, selected-resolution state,
+  selected-attribution state, and the OTHER path's own existing
+  attribution state all stay independent — selecting a different
+  candidate clears resolution and attribution but never the candidate
+  list or the other path's own result; re-resolving the current selection
+  clears a stale attribution immediately, synchronously, before the fresh
+  resolution call even settles; a Publication change clears the entire
+  selected-candidate family, and the other path's own attribution result,
+  together.
+- **H** — FAILURE PRESERVATION: `STORE_UNAVAILABLE`,
+  `CONTENT_UNAVAILABLE`, and `CONTENT_HASH_MISMATCH` each remain
+  resolution outcomes, reported verbatim by `attributeSelectedSnapshot()`
+  through the real selected-resolution UI path — never folded into
+  `NO_MATCH`, which means something much more specific: a Snapshot that
+  was successfully resolved and verified, but whose content does not
+  correspond to the Publication.
+- **I** — NO IMPLICIT ACTIONS: `selectSnapshotCandidate()` never resolves,
+  `resolveSelectedSnapshot()` never attributes, and
+  `attributeSelectedSnapshot()` never (re-)resolves — proven both
+  structurally (source inspection of all three method bodies) and
+  behaviorally (a real call-count spy over the injected
+  `resolveSelectedSnapshotCommand`, through the real composed runtime,
+  showing selection never calls it and repeated attribution never calls
+  it again).
+- **J** — the FULL REAL-RUNTIME FLAGSHIP: three real, independently
+  placed candidates announced under one shared `discoveryTag` — one
+  matching the Publication, one a genuinely different valid Snapshot, and
+  one a deliberately invalid/mismatched announcement (a declared
+  `contentHash` its own locator's real bytes do not actually hold).
+  Selecting each in turn, through the real UI, proves the complete
+  outcome changes accordingly: `MATCH`, `NO_MATCH`, and
+  `CONTENT_HASH_MISMATCH` — and re-selecting the matching candidate last,
+  after B and C, still reports `MATCH`, proving the pipeline is
+  deterministic in the selected candidate alone, with no state
+  accumulated across prior selections.
+
+This audit also registers `tests/SelectedSnapshotAttributionEndToEndAudit.test.js`
+in `tests.html`'s own browser test-runner list, alphabetically placed.
+
+It found no regression: the boundary between candidate SELECTION and
+RESOLUTION, between RESOLUTION and VERIFICATION, and between VERIFICATION
+and ATTRIBUTION holds through the real composed runtime and the real UI,
+not merely in unit isolation — and the one architectural property this
+whole family exists to prove, that the user's own explicit selection can
+materially determine the final attribution verdict, holds in both
+directions over an unchanged Publication.
+
+```text
+0.9.150  Snapshot Candidate Discovery Command                      ✓
+0.9.151  World View Snapshot Candidate Browser                     ✓
+0.9.152  Selected Snapshot Candidate Resolution                    ✓
+0.9.153  Selected Snapshot Resolution End-to-End Audit              ✓
+0.9.154  Selected Snapshot Attribution                              ✓
+0.9.155  Selected Snapshot Attribution End-to-End Audit              ✓
+```
+
+### Recommendation
+
+With this milestone, **Discovery → Selection → Resolution → Verification
+→ Attribution** now has separate semantics, separate state boundaries,
+shared lower-level machinery where appropriate, and end-to-end evidence at
+every seam — the natural architectural checkpoint 0.9.153's own header
+already anticipated. I would preserve, rather than revisit, the one
+deliberate asymmetry this family holds: Discovery and Resolution are
+application commands (I/O-producing operations, needing a composed
+collaborator to inject), while Attribution stays a pure domain/application
+function (no orchestration, no I/O, nothing to inject) — the seam that
+matters is behavioral (I/O-producing operation → command boundary; pure
+comparison → pure function), never naming symmetry, and introducing a
+`ResolveSelectedSnapshotAttributionCommand` merely to mirror the other two
+would blur exactly that distinction rather than clarify it.
+
+I would now pause and reassess, rather than propose a 0.9.156 immediately.
+This is a natural checkpoint: the Snapshot discovery/selection/resolution/
+attribution subsystem is complete and independently proven, end to end,
+at every seam it has. The right next step is likely a different part of
+the system entirely, decided by inspecting what the actual product still
+needs, rather than inventing another layer on this one simply because
+another milestone number is available.
