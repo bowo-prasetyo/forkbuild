@@ -69584,3 +69584,120 @@ milestone's own Sections A/C/E/F already documented as correct — I would
 then consider the Snapshot World Convergence question closed, and move to
 whichever genuinely missing World capability is exposed next, rather than
 manufacturing further Snapshot-specific milestones.
+
+## 0.9.163 — Snapshot World Origin Collision Fix
+
+0.9.162's own Recommendation, above, named the fix as narrowly as the gap
+itself: derive `application/MaterializedSnapshotWorldDiscoveryBridge.js`'s
+own `materializedSnapshotWorldOrigin()` from `contentHash` AND
+`publicationId` together, rather than `contentHash` alone. This milestone
+is exactly that, and nothing wider.
+
+```text
+Publication A ── contentHash X ──→ origin "snapshot:X"
+Publication B ── contentHash X ──→ origin "snapshot:X"
+                                      │
+                                      ▼
+                                  collision (0.9.160, found by 0.9.162)
+```
+
+```text
+Publication A ── contentHash X ──→ origin "snapshot:X:A"
+Publication B ── contentHash X ──→ origin "snapshot:X:B"
+                                      │
+                                      ▼
+                              two independent slots (0.9.163)
+```
+
+**The key rule this milestone holds.** `contentHash`, `publicationId`, and
+the registered `origin` are three different identities —
+`contentHash` names WHAT a Snapshot contains, `publicationId` names WHICH
+Publication it represents, and `origin` names WHICH DISCOVERY CONTRIBUTION
+is registered. 0.9.160's own header already stated "content identity is not
+Publication identity"; 0.9.162 found that rule wasn't actually being kept
+at the registration-origin layer. This milestone folds `publicationId` into
+the origin key itself (`` `snapshot:${contentHash}:${publicationId}` ``) —
+it deliberately does NOT declare a new `snapshotIdentity = publicationId +
+contentHash` concept anywhere. The former fixes a registry-key collision;
+the latter would have introduced a new identity model this milestone has no
+need for.
+
+**Everything downstream is untouched, by construction.** The fix is
+entirely inside `materializedSnapshotWorldOrigin()`'s own derivation —
+`registerMaterializedSnapshotWorldSource()` and
+`unregisterMaterializedSnapshotWorldSource()` call it exactly as before,
+just now passing `publicationId` alongside `contentHash`.
+`WorldDiscoverySourceRegistry`, `core/WorldDiscoverySourceAssembly.js`,
+`core/WorldEncounter.js`, `WorldEncounterCanvas`, and `WorldEncounterMarker`
+receive no changes: a registered Snapshot arrives at each of them exactly
+as it always did, merely under a collision-free key.
+
+`tests/SnapshotWorldOriginCollision.test.js` — nine sections: **A**
+(existing single-Publication behavior is unchanged), **B** — FLAGSHIP (same
+contentHash, two different Publications now produce two registry entries,
+never one — the fix, proven directly against 0.9.162's own Section B
+scenario), **C** (same Publication, same contentHash — repeated
+registration remains idempotent), **D** (same Publication, different
+contentHash — the new key never accidentally collapses genuinely distinct
+Snapshot identities), **E** (different Publications, different
+contentHashes — naturally independent, unaffected by this fix), **F**
+(locator independence — changing locator/storage never changes the
+registration identity, preserving 0.9.162's own Section D finding), **G**
+(position independence — the fix never affects the authoritative
+Publication -> WorldPlacement -> position chain), **H** (rendering
+regression — both Publications reach the identical, unmodified rendering
+machinery, each with its own Publication id and position), **I**
+(structural sweep — no dedup/reconciliation/merging/trust/ranking
+vocabulary anywhere, and the fix's own Snapshot-specific origin vocabulary
+never leaks into `WorldDiscoverySourceAssembly.js`/
+`WorldDiscoverySourceRegistry.js`/`WorldEncounter.js`).
+
+`tests/SnapshotWorldConvergenceAudit.test.js`'s own Section B — originally
+titled "THE GAP" — is UPDATED in place to confirm the fix directly against
+the same real, unmodified bridge, rather than left as a stale record of a
+now-fixed defect; `tests/SnapshotWorldRuntimeRegistration.test.js` and
+`tests/SnapshotWorldRendering.test.js` had their own origin-string
+assertions (`` `snapshot:${contentHash}` ``) updated to the new scheme.
+
+Deliberately excluded, per this milestone's own narrow scope:
+- **Deduplication, reconciliation, contentHash-based merging, Publication
+  merging, trust/ranking, source preference, or lifecycle changes of any
+  kind.** None of these were needed to close the gap 0.9.162 found, and
+  none were added.
+- **Any change to `WorldDiscoverySourceRegistry`, `WorldEncounter`, or any
+  renderer.** The registry's own "replacement, not accumulation" semantics
+  are already correct; the bug was an insufficiently unique key handed to
+  it, never the registry's own behavior.
+- **A new Snapshot identity type.** See "The key rule this milestone
+  holds," above — `origin` stays a derived registry key, never a first-class
+  concept of its own.
+
+```text
+0.9.150  Snapshot Candidate Discovery Command                      ✓
+0.9.151  World View Snapshot Candidate Browser                     ✓
+0.9.152  Selected Snapshot Candidate Resolution                    ✓
+0.9.153  Selected Snapshot Resolution End-to-End Audit              ✓
+0.9.154  Selected Snapshot Attribution                              ✓
+0.9.155  Selected Snapshot Attribution End-to-End Audit              ✓
+0.9.156  Snapshot Lifecycle & Semantic Boundary Audit                ✓
+0.9.157  Snapshot Candidate Interaction Completion Audit             ✓
+0.9.158  Selected Snapshot Materialization                           ✓
+0.9.159  Selected Snapshot World Placement                           ✓
+0.9.160  Selected Snapshot World Runtime Registration                ✓
+0.9.161  Snapshot World Rendering                                    ✓
+0.9.162  Snapshot World Convergence Audit                            ✓
+0.9.163  Snapshot World Origin Collision Fix                         ✓
+```
+
+### Recommendation
+
+This milestone closed the one genuine gap 0.9.162 found, as narrowly as
+that gap was scoped. I would follow it with a small identity regression
+audit rather than immediately adding another Snapshot-specific capability
+— **0.9.164 — Snapshot World Source Identity Audit** — confirming that no
+layer accidentally uses `contentHash`, `publicationId`, `locator`,
+`origin`, or `position` as a stand-in for one another anywhere across
+DISCOVER -> SELECT -> RESOLVE -> VERIFY -> ATTRIBUTE -> MATERIALIZE ->
+PLACE -> REGISTER -> RENDER. If that audit passes, I would consider the
+entire vertical path complete and internally coherent, stop adding
+Snapshot-specific infrastructure, and reassess the broader World roadmap.
