@@ -122,6 +122,7 @@ import { createNostrPublicationDistributionRuntimeAdapter } from '../application
 import { createArweavePublicationDistributionRuntimeAdapter } from '../application/ArweavePublicationDistributionRuntimeAdapter.js';
 import { createArweaveInjectedProviderSigner } from '../arweave/ArweaveInjectedProviderSigner.js';
 import { createNostrInjectedProviderPublisher } from '../nostr/NostrInjectedProviderPublisher.js';
+import { createNostrRelayQueryClient } from '../nostr/NostrRelayQueryClient.js';
 import { composeSnapshotDistributionRuntime } from '../application/SnapshotDistributionRuntimeComposition.js';
 import { executeSnapshotDistributionCommand } from '../application/SnapshotDistributionCommand.js';
 import { composeDiscoverSnapshotRuntime } from '../application/DiscoverSnapshotRuntimeComposition.js';
@@ -1373,22 +1374,37 @@ const { verifier: worldEncounterMaterialVerifier } = composeWorldEncounterMateri
 // they wire the already-existing 0.9.24-through-0.9.43 chain together and
 // hand back one application-facing capability.
 //
-// NO HOST NOSTR RELAY-QUERY CAPABILITY EXISTS ANYWHERE IN THIS CODEBASE
-// YET, so `nostrQueryImpl` is omitted here — the composition gracefully
-// resolves `nostr: null` rather than constructing a service that could
-// only ever throw on its own `search()`, the discovery-side mirror of
-// 0.9.108's own restraint for distribution. Arweave's own discovery query
-// needs no such capability — like `ArweaveWorldEncounterMaterialResolver`
-// (0.9.35) itself, it already works against the browser's own global
-// `fetch`. `worldDiscoveryLeadRegistry` is provided app-wide the same way
-// `worldEncounterMaterialSources`/`worldEncounterMaterialVerifier` already
-// are, so `WorldEncounterCanvas`'s own existing (0.9.40) `worldDiscoveryLeadRegistry`
-// prop — wired to `null` everywhere in this running app until now — finally
-// has a real registry to observe. `worldEncounterMaterialSources` gains its
-// `.decentralized` slot (0.9.36's own unmodified Arweave-backed source)
-// alongside the pre-existing `.local` one; peer stays unwired, per the
-// comment immediately above.
-const decentralizedWorldDiscoveryServices = composeDecentralizedWorldEncounterMaterialDiscoveryServices({});
+// UPDATED 0.9.147 — this comment originally read "NO HOST NOSTR
+// RELAY-QUERY CAPABILITY EXISTS ANYWHERE IN THIS CODEBASE YET." That gap —
+// named here at 0.9.110 and again, identically, at 0.9.142 for Snapshot
+// Discovery — is what `nostr/NostrRelayQueryClient.js` (0.9.147) closes:
+// a real NIP-01 subscribe/collect/EOSE transport, injectable exactly like
+// this file's own `nostrHostPublisher`/`arweaveHostSigner` below. `nostrRelayQueryClient`
+// is constructed ONCE, immediately below, and handed to `nostrQueryImpl`
+// here AND to `nostrSnapshotDiscoveryQueryServiceOptions.queryImpl` at
+// 0.9.142's own wiring, later in this file — the SAME shared transport
+// instance unlocking both previously-dormant discovery seams, exactly the
+// "one implementation, two dormant seams" case docs/Roadmap.md's own
+// 0.9.146 reassessment named. `worldDiscoveryLeadRegistry` is provided
+// app-wide the same way `worldEncounterMaterialSources`/
+// `worldEncounterMaterialVerifier` already are, so `WorldEncounterCanvas`'s
+// own existing (0.9.40) `worldDiscoveryLeadRegistry` prop — wired to `null`
+// everywhere in this running app until 0.9.110 — has a real registry to
+// observe, now genuinely reachable through Nostr as well as Arweave.
+// `worldEncounterMaterialSources` gains its `.decentralized` slot (0.9.36's
+// own unmodified Arweave-backed source) alongside the pre-existing `.local`
+// one; peer stays unwired, per the comment immediately above.
+//
+// `nostrRelayQueryClient` MAY STILL RESOLVE `undefined` — a bare
+// environment with no `WebSocket` global and no `webSocketImpl` supplied
+// (see `nostr/NostrRelayQueryClient.js`'s own header) — in which case
+// `composeDecentralizedWorldEncounterMaterialDiscoveryServices()` degrades
+// exactly as it always has: `nostr: null`, never a throw. In any real
+// browser this resolves a real, usable transport.
+const nostrRelayQueryClient = createNostrRelayQueryClient({});
+const decentralizedWorldDiscoveryServices = composeDecentralizedWorldEncounterMaterialDiscoveryServices({
+    nostrQueryImpl: nostrRelayQueryClient
+});
 const decentralizedWorldEncounterMaterialDiscoveryRuntime = composeDecentralizedWorldEncounterMaterialDiscoveryRuntime({
     discoveryServices: decentralizedWorldDiscoveryServices,
     local: new LocalWorldEncounterMaterialSource(new LocalStorageProvider()),
@@ -1710,26 +1726,30 @@ app.provide('snapshotDistributionCommand', snapshotDistributionCommand);
 // before it) already resolved from `window.arweaveWallet` — never a
 // second read of that host capability.
 //
-// `nostrSnapshotDiscoveryQueryServiceOptions.queryImpl` IS OMITTED HERE —
-// THE IDENTICAL, ALREADY-DOCUMENTED GAP THIS FILE'S OWN 0.9.110 COMMENT
-// NAMES FOR `nostrQueryImpl`, ABOVE ("NO HOST NOSTR RELAY-QUERY
-// CAPABILITY EXISTS ANYWHERE IN THIS CODEBASE YET"). Querying a Nostr
-// relay (send REQ, collect EVENT, stop at EOSE) is a fundamentally
+// UPDATED 0.9.147 — `nostrSnapshotDiscoveryQueryServiceOptions.queryImpl`
+// WAS OMITTED HERE, naming the identical, already-documented gap this
+// file's own 0.9.110 comment named for `nostrQueryImpl`. `nostrRelayQueryClient`
+// — the SAME instance 0.9.110's own wiring above already constructed and
+// passed to `nostrQueryImpl` — is handed through here too. Querying a
+// Nostr relay (send REQ, collect EVENT, stop at EOSE) is a fundamentally
 // different capability from PUBLISHING one (window.nostr's own NIP-07
 // `signEvent`, already wrapped by `createNostrInjectedProviderPublisher()`
-// above) — no host-reachable implementation of it exists anywhere in
-// this codebase yet. `composeDiscoverSnapshotRuntime()` therefore
-// gracefully resolves `resolver: null` today, exactly as 0.9.110's own
-// composition already gracefully resolves `nostr: null` for Publication
-// discovery — see that file's own header, "graceful degradation."
-// `discoverSnapshotCommand(contentHash)` throws synchronously until a
-// future milestone supplies a real `queryImpl`; `ui/components/
-// OwnPublicationPanel.js`'s own `discoverOwnSnapshot()` wraps every call
-// to this function in a `Promise.resolve().then(...)`, catching that
-// synchronous throw the same way it already catches a genuine rejection.
+// above), which is exactly why `nostr/NostrRelayQueryClient.js` (0.9.147)
+// is a separate, transport-only producer — it needs no injected
+// extension, no wallet permission, and no user identity, only a
+// `WebSocket`. `composeDiscoverSnapshotRuntime()` still gracefully
+// resolves `resolver: null` on any environment where
+// `nostrRelayQueryClient` itself resolved `undefined` (see that file's own
+// header, "graceful degradation") — this milestone closes the capability
+// gap, not the composition root's own honest handling of an absent one.
+// `discoverSnapshotCommand(contentHash)` still throws synchronously in
+// that residual case; `ui/components/OwnPublicationPanel.js`'s own
+// `discoverOwnSnapshot()` already wraps every call in a
+// `Promise.resolve().then(...)`, catching that synchronous throw the same
+// way it already catches a genuine rejection.
 const { resolver: snapshotResolver, contentStore: snapshotRetrievalContentStore } = composeDiscoverSnapshotRuntime({
     arweaveContentStoreOptions: { signer: arweaveHostSigner },
-    nostrSnapshotDiscoveryQueryServiceOptions: {}
+    nostrSnapshotDiscoveryQueryServiceOptions: { queryImpl: nostrRelayQueryClient }
 });
 const discoverSnapshotCommand = (contentHash) => executeDiscoverSnapshotCommand({
     discoveryTag: 'forkbuild-snapshot',

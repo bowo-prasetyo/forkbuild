@@ -67466,3 +67466,200 @@ vehicle variety is, is a statement about what ForkBuild needs next, not
 a conclusion the architecture itself forces. 0.9.147 should be whichever
 of these two — or something this reassessment did not name at all — the
 person steering this roadmap actually wants next.
+
+## 0.9.147 — Decentralized Discovery Relay Query Client
+
+0.9.146 picked Candidate 1: close the ONE missing capability shape its own
+"the one correction this reassessment makes to its own premise" section
+named — a real, host-reachable `queryImpl: (relayUrl, filter) =>
+Promise<events>` — because it unlocks TWO already-built, currently dormant
+seams (World Encounter Material discovery, dormant since 0.9.110; Snapshot
+discovery, dormant since 0.9.142) in one implementation, rather than one.
+This milestone is that implementation, scoped exactly as 0.9.146's own
+"Two genuinely open next-capability candidates" section already described
+it: shared infrastructure, built once, at the lowest useful layer.
+
+```text
+   nostr/NostrRelayQueryClient.js   ★ (THIS)
+        createNostrRelayQueryClient({ webSocketImpl, timeoutMs })
+             │
+             │   queryImpl(relayUrl, filter) -> Promise<Array<event>>
+             │   — the EXACT shape both query services already required
+             │
+   ┌─────────┴──────────────────────┐
+   ▼                                 ▼
+composeDecentralizedWorldEncounter-   composeDiscoverSnapshotRuntime()
+MaterialDiscoveryServices()           (application/
+(application/                          DiscoverSnapshotRuntimeComposition.js,
+ DecentralizedWorldEncounterMaterial-  0.9.142, unmodified)
+ DiscoveryRuntimeComposition.js,
+ 0.9.110, unmodified)
+   │                                 │
+   ▼                                 ▼
+NostrDiscoveryQueryService            NostrSnapshotDiscoveryQueryService
+(0.9.31, unmodified)                  (0.9.133, unmodified)
+   │                                 │
+   ▼                                 ▼
+resolves real leads today             resolves real candidates today
+```
+
+### The one seam this milestone builds, and the one it deliberately does not
+
+`nostr/NostrRelayQueryClient.js` is a new file, in the same `nostr/`
+directory as — and structurally the read-side mirror of —
+`nostr/NostrInjectedProviderPublisher.js` (0.9.121). That file signs one
+event through a NIP-07 extension and broadcasts it over one WebSocket,
+interpreting only the relay's own `["OK", id, ok, message]` frame; this
+file opens one WebSocket, sends one `["REQ", subId, filter]`, collects
+every `["EVENT", subId, event]` frame carrying its own subscription id, and
+resolves once the relay sends `["EOSE", subId]`, sending `["CLOSE", subId]`
+first. Both are pure NIP-01 transport, both take an injectable
+`webSocketImpl` with no external dependency, and neither has ever heard of
+a `DecentralizedDiscoveryEnvelope`, a `SnapshotDiscoveryEnvelope`, a
+discovery tag, or a Publication — see `nostr/NostrRelayQueryClient.js`'s
+own header, "a `queryImpl` producer, never a third discovery service."
+
+**Not one new discovery service — the SAME two, finally supplied.** This
+milestone adds no third `DecentralizedDiscoveryQueryService`, no new
+envelope shape, and no new application-facing capability. It changes
+exactly two lines' worth of composition in `ui/main.js`: `nostrQueryImpl`
+(0.9.110's own wiring) and `nostrSnapshotDiscoveryQueryServiceOptions.queryImpl`
+(0.9.142's own wiring) now both receive the SAME
+`createNostrRelayQueryClient({})` instance, constructed once, immediately
+before the first of the two call sites — the identical "one host
+capability, shared across families" pattern `arweaveHostSigner`/
+`nostrHostPublisher` already established for signing/publishing. Neither
+`application/DecentralizedWorldEncounterMaterialDiscoveryRuntimeComposition.js`
+nor `application/DiscoverSnapshotRuntimeComposition.js` changed at all —
+both were, as 0.9.146's own audit already confirmed, "already written to
+accept a real `queryImpl` the moment one exists."
+
+### What "transport only" actually excludes
+
+The milestone brief drew a hard line: this client answers "can I query a
+Nostr relay and obtain the events matching this request," never any of the
+downstream semantic questions. Concretely, `nostr/NostrRelayQueryClient.js`:
+
+- Never reads an event's `content`, `kind`, or `tags` — an `EVENT`
+  payload is handed back exactly as the relay sent it, to be interpreted
+  by `parseDecentralizedDiscoveryEnvelope()`/`parseSnapshotDiscoveryEnvelope()`,
+  one layer up, unmodified.
+- Never checks a NIP-01 `id`/`sig`/`pubkey` — the identical, still-open
+  restraint `application/NostrDiscoveryQueryService.js`'s own header
+  already holds for the layer above it.
+- Never queries more than one relay, combines, ranks, deduplicates, or
+  retries — exactly one socket, one subscription, per call, closed either
+  way before the call's own promise settles.
+- Never decides whether a result is trustworthy, authentic, or
+  preferable to another — it has no vocabulary for any of those words.
+
+### The one place this file's own contract had to diverge from its callers'
+
+`application/NostrDiscoveryQueryService.js`'s and `application/
+NostrSnapshotDiscoveryQueryService.js`'s own `search()` methods already
+collapse every `queryImpl` failure — a rejection, a timeout, a malformed
+resolution — into `[]`, because neither file's own return shape has room
+to say more, and both already commit to that restraint in their own
+headers. The milestone brief asked for exactly the opposite at the
+transport layer: "no matching events ≠ relay unavailable ≠ malformed
+event." `nostr/NostrRelayQueryClient.js` resolves this by being a
+different, lower layer with a different obligation than its callers:
+
+```text
+no matching events        -> resolve([])           (an ordinary EOSE)
+relay unavailable          -> reject(Error(...))    (socket error / timeout)
+a malformed relay frame    -> silently skipped       (neither array entry)
+```
+
+Both existing query services then re-collapse `reject` and their own
+timeout into the identical `[]` they already produced before this
+milestone — an intentional, already-documented choice made by files this
+milestone does not touch, not something this file works around. The
+distinction the milestone's own Section D asked for is real and provably
+made, one layer earlier than where it gets deliberately re-collapsed.
+
+### Tests
+
+`tests/NostrRelayQueryClient.test.js` — twelve sections, network-free,
+built on the identical fake-WebSocket technique `tests/
+NostrInjectedProviderPublisher.test.js` already established:
+
+```text
+Section A: connect -> REQ -> EVENT -> EOSE -> completion, deterministically
+Section B: multiple EVENT frames preserved as multiple entries, never collapsed
+Section C: EOSE with zero EVENT frames is an ordinary [], not an error
+Section D: a relay connection error rejects — never silently []
+Section E: a relay that never sends EOSE rejects once timeoutMs elapses
+Section F: malformed/foreign frames are skipped, never fabricated or fatal
+Section G: the outgoing REQ carries the given relayUrl/filter; CLOSE follows EOSE
+Section H: concurrent calls use distinct subscription ids, never cross-contaminating
+Section I: no usable WebSocket implementation degrades to undefined, never a throwing function
+Section J: FLAGSHIP — the real, unmodified NostrDiscoveryQueryService discovers
+           a Publication lead through this client alone
+Section K: FLAGSHIP — the real, unmodified NostrSnapshotDiscoveryQueryService
+           discovers a Snapshot candidate through the SAME client architecture —
+           one implementation, two dormant seams, proven directly rather than asserted
+Section L: architectural regression — no discovery-semantic imports, no import
+           statement of any kind, exactly one exported function
+```
+
+Sections J/K are this milestone's own flagship proof of the claim 0.9.146's
+own reassessment made about value: the identical client, unmodified,
+carries both previously-dormant, real, unmodified query services to a real
+discovered result — never asserted in prose alone. All pre-existing
+`NostrDiscoveryQueryService.test.js`, `NostrSnapshotDiscoveryQueryService.test.js`,
+and `NostrInjectedProviderPublisher.test.js` suites pass unmodified,
+confirming this milestone changed no behavior downstream of the seam it
+fills.
+
+### What this milestone deliberately does NOT do
+
+- **No Snapshot, Publication, attribution, or verification changes.**
+  `core/DecentralizedDiscoveryEnvelope.js`, `core/SnapshotDiscoveryEnvelope.js`,
+  `application/SnapshotPublicationAttribution.js`, and every file in the
+  0.9.142-0.9.145 attribution chain are untouched.
+- **No new discovery envelope, ranking, trust, or ownership model.** See
+  "what transport only actually excludes," above.
+- **No automatic retry, relay reputation, or provider-selection policy.**
+  Exactly one relay, one subscription, per call — a genuine connection
+  failure rejects and stays rejected; a future, unscheduled milestone
+  owns retry/fan-out/health if one is ever built.
+- **No multi-relay fan-out.** `composeDecentralizedWorldEncounterMaterialDiscoveryServices()`'s/
+  `composeDiscoverSnapshotRuntime()`'s own "exactly one relay per
+  instance" restraint is unchanged; this milestone supplies ONE
+  `queryImpl`, reused by both composition roots, never a second relay
+  configured anywhere.
+- **No UI change of any kind.** `ui/components/OwnPublicationPanel.js`,
+  `ui/components/WorldEncounterCanvas.js`, and `ui/views/WorldView.js` are
+  untouched — both entry points already call their own, pre-existing
+  commands; this milestone only makes the collaborator underneath them
+  real instead of `null`.
+- **No decision about 0.9.148/0.9.149.** Whether World Material discovery
+  activation and Snapshot discovery activation (both now genuinely
+  reachable end to end for the first time) become one milestone, two
+  independent ones, or wait for an end-to-end discovery audit first, is
+  explicitly left open below, exactly as 0.9.146's own header already
+  declined to commit to either in advance.
+
+### Recommendation
+
+```text
+0.9.140  Own Publication Distribution Entry Point                 ✓
+0.9.141  Distribution Entry-Point Convergence Audit                ✓
+0.9.142  World View Snapshot Discovery Command                     ✓
+0.9.143  Snapshot–Publication Attribution                          ✓
+0.9.144  World View Snapshot Attribution Integration                ✓
+0.9.145  End-to-End Snapshot Attribution Audit                     ✓
+0.9.146  Snapshot & World Architecture Roadmap Reassessment        ✓
+0.9.147  Decentralized Discovery Relay Query Client                ✓
+```
+
+Both previously-dormant seams named at 0.9.110 and 0.9.142 are now backed
+by a real, tested, shared Nostr relay-query transport in the running
+application — `worldDiscoveryLeadRegistry` and `discoverSnapshotCommand`
+can genuinely reach a real relay for the first time. I would recommend an
+end-to-end discovery audit — proving both seams actually converge on real
+relay data under the running application, the same "prove it, don't just
+wire it" posture 0.9.111/0.9.145 already held for their own subsystems —
+before scheduling any further discovery-facing feature work, exactly as
+this milestone's own brief already asked for.
