@@ -1,6 +1,8 @@
 import { resolveSnapshotPublicationAttribution } from '../../application/SnapshotPublicationAttribution.js';
 import { resolveSnapshotWorldPlacement } from '../../application/SnapshotWorldPlacement.js';
 import { registerMaterializedSnapshotWorldSource } from '../../application/MaterializedSnapshotWorldDiscoveryBridge.js';
+import { resolveSnapshotWorldPositionClaim } from '../../application/SnapshotWorldPositionClaim.js';
+import { SnapshotWorldPositionClaimOutcome } from '../../application/SnapshotWorldPositionClaimOutcome.js';
 
 // 0.9.140 — Own Publication Distribution Entry Point.
 //
@@ -685,6 +687,131 @@ import { registerMaterializedSnapshotWorldSource } from '../../application/Mater
 //   Only application/SnapshotWorldRegistrationOutcome.js's own one new
 //   value, plus whatever outcome `selectedSnapshotWorldPlacementResult`
 //   itself already carries, passed through unchanged, are ever produced.
+//
+// 0.9.172 — Decentralized Snapshot Position Claim Consumption.
+//
+// 0.9.171 taught a Snapshot discovery candidate to optionally CARRY a
+// publisher's own `publicationId`/`claimedPosition` claim; nothing since
+// has ever CONSUMED one. `placeMaterializedSnapshot()` (0.9.159) has, until
+// now, always read `this.placementInfo` — this replica's own PRE-EXISTING
+// local placement for the active Publication — with no notion a candidate
+// might itself claim a different position entirely. This milestone adds
+// exactly one new, EXPLICIT seam between materializing a Snapshot and
+// placing it:
+//
+//   selectedSnapshotCandidate   (0.9.151, unchanged — may carry
+//        │                       publicationId/claimedPosition, 0.9.171)
+//        │
+//        │  click "Use Claimed Position"
+//        ▼
+//   useClaimedSnapshotPosition()   (THIS FILE, NEW)
+//        │
+//        ▼
+//   resolveSnapshotWorldPositionClaim(candidate, publication.id)
+//     (application/SnapshotWorldPositionClaim.js, NEW — a PURE function,
+//     no collaborator to inject, exactly like resolveSnapshotWorldPlacement()
+//     one sibling over)
+//        │
+//        ▼
+//   selectedSnapshotWorldPositionClaimResult   (NEW field)
+//        │
+//        │  click "Place Materialized Snapshot"
+//        ▼
+//   placeMaterializedSnapshot()   (0.9.159, UPDATED — see below)
+//
+// AN EXPLICIT, SEPARATE CLICK — NEVER AUTOMATIC, NEVER A BYPRODUCT OF
+// SELECTION, RESOLUTION, OR MATERIALIZATION. Selecting a candidate that
+// happens to carry a claim, resolving it, or materializing it never
+// consumes that claim on its own — the identical restraint 0.9.159's own
+// header already holds for placement itself ("a successfully materialized
+// Snapshot does not automatically acquire a World position"), held here
+// one seam earlier: a decentralized position is currently only a
+// PUBLISHER'S claim, and it would be architecturally premature to let an
+// arbitrary network announcement silently alter World state. Only a
+// person's own explicit `useClaimedSnapshotPosition()` click ever computes
+// `selectedSnapshotWorldPositionClaimResult`.
+//
+// `placeMaterializedSnapshot()` PREFERS A CONSUMED CLAIM, BUT FALLS BACK TO
+// `this.placementInfo` UNCHANGED THE MOMENT NO CLAIM WAS CONSUMED. When
+// `selectedSnapshotWorldPositionClaimResult` is `null` (nobody clicked "Use
+// Claimed Position" for this selection) or its own `outcome` is not
+// `SnapshotWorldPositionClaimOutcome.CLAIMED` (ABSENT or MISMATCHED),
+// `placeMaterializedSnapshot()` behaves EXACTLY as 0.9.159 left it — it
+// hands `resolveSnapshotWorldPlacement()` `this.placementInfo`, this
+// replica's own existing local placement, verbatim. This is what keeps
+// every pre-0.9.172 test of this panel's own placement behavior passing
+// unmodified, and is the literal meaning of "the absence of a claim means
+// no decentralized position was supplied — nothing more": no `(0,0,0)` is
+// ever invented, and the receiver's own current position is never
+// substituted either. Only when the outcome IS `CLAIMED` does this method
+// build a fresh, synthetic `placementInfo`-shaped object —
+// `{ placementId: 'claim:<contentHash>:<publicationId>', publicationId,
+// position: claim.position }` — and hand THAT to
+// `resolveSnapshotWorldPlacement()` instead, which remains completely
+// unmodified and unaware any of this happened; see that file's own header,
+// "given a resolved placement input," never taught to understand Nostr or
+// a claim of any kind.
+//
+// THE SYNTHETIC `placementId` NAMES A CLAIM, NEVER A REAL WorldPlacement.
+// `'claim:<contentHash>:<publicationId>'` is never looked up in, or written
+// to, `core/PlacementRecord.js`/`placement/LocalPlacementRegistry.js` — it
+// exists only so `resolveSnapshotWorldPlacement()`'s own placementInfo
+// contract (`placementId`/`publicationId`/`position`, all required) is
+// satisfied, and so a person inspecting `selectedSnapshotWorldPlacementResult.placementId`
+// can tell, structurally, that this placement was borrowed from a claim
+// rather than from this replica's own placement registry — mirroring the
+// identical "traceability, never treated as the Snapshot's own identity"
+// restraint `application/SnapshotWorldPlacement.js`'s own header already
+// holds for `placementId` in general.
+//
+// THE IDENTITY CHECK — `candidate.publicationId === publication.id` — IS
+// PERFORMED ENTIRELY BY `resolveSnapshotWorldPositionClaim()`, NEVER
+// RE-CHECKED HERE. `useClaimedSnapshotPosition()` passes `this.publication.id`
+// straight through; this file never compares `candidate.publicationId`
+// against anything itself, and never invents a fallback identity of its
+// own. See application/SnapshotWorldPositionClaim.js's own header for why
+// that boundary — never "the content hash matches, therefore use this
+// position" — is the one this milestone exists to hold, and for why a
+// mismatch (`MISMATCHED`) is reported distinctly from an ordinary absence
+// (`ABSENT`) rather than silently folded into it.
+//
+// SYNCHRONOUS — NO EXECUTING/ERROR STATE OF ITS OWN, mirroring
+// `attributeSelectedSnapshot()`'s and `placeMaterializedSnapshot()`'s own
+// restraint: `resolveSnapshotWorldPositionClaim()` performs no I/O and no
+// cryptographic re-verification, so there is nothing to await and nothing
+// that can reject.
+//
+// STALENESS — NARROWER THAN THE PLACEMENT FAMILY'S OWN, BY DESIGN. A
+// consumed claim depends on exactly two facts: WHICH candidate is selected,
+// and WHICH Publication is the placement target. `selectedSnapshotWorldPositionClaimResult`
+// is therefore cleared only at `selectSnapshotCandidate()` (a different
+// selection may carry a different claim, or none) and the Publication-
+// change watcher (a different target changes the identity check's own
+// right-hand side) — NEVER at `resolveSelectedSnapshot()` or
+// `materializeSelectedSnapshot()`, since re-resolving or re-materializing
+// the SAME selection against the SAME Publication changes neither fact a
+// consumed claim depends on. `useClaimedSnapshotPosition()` itself also
+// clears `selectedSnapshotWorldPlacementResult`/`selectedSnapshotWorldRegistrationResult`
+// immediately before computing a fresh claim result, the identical
+// "downstream results computed from what is about to change are already
+// stale" rule every sibling action in this family already holds.
+//
+// DELIBERATELY EXCLUDED — NOT THIS MILESTONE.
+// - **Signature verification, timestamp freshness, conflicting-position
+//   reconciliation, ranking competing claims, trust scores, or publisher
+//   reputation.** See application/SnapshotWorldPositionClaim.js's own
+//   header.
+// - **Automatic position updates, automatic relocation, or movement of any
+//   kind.** Only an explicit click ever computes or applies a claim.
+// - **Geospatial or collision validation.**
+// - **Changing `application/WorldDiscoverySourceRegistry.js`,
+//   `ui/components/WorldEncounterCanvas.js`, or the Snapshot discovery
+//   protocol (`core/SnapshotDiscoveryEnvelope.js`) again.** All three
+//   remain byte-for-byte as their own prior milestones left them.
+// - **A new `VERIFIED_POSITION` state, or any change to what "verified"
+//   means for a Snapshot.** A candidate's own claimed position remains
+//   untrusted metadata until explicitly consumed; consuming it is not
+//   verifying it.
 export default {
     name: 'OwnPublicationPanel',
     props: {
@@ -838,7 +965,15 @@ export default {
             // until registerMaterializedSnapshot() is explicitly clicked;
             // never written by anything else. No executing/error state of
             // its own — see this file's own header, "synchronous."
-            selectedSnapshotWorldRegistrationResult: null
+            selectedSnapshotWorldRegistrationResult: null,
+            // 0.9.172 — see this file's own header, "0.9.172 — Decentralized
+            // Snapshot Position Claim Consumption." A separate ephemeral
+            // field, never shared with `selectedSnapshotWorldPlacementResult`
+            // itself. `null` until `useClaimedSnapshotPosition()` is
+            // explicitly clicked; never written by anything else. No
+            // executing/error state of its own — see this file's own
+            // header, "synchronous."
+            selectedSnapshotWorldPositionClaimResult: null
         };
     },
     watch: {
@@ -904,6 +1039,12 @@ export default {
             // prior World Runtime Registration result described the OLD
             // placement result it was computed from.
             this.selectedSnapshotWorldRegistrationResult = null;
+            // 0.9.172 — a different (or cleared) Publication changes the
+            // identity check's own right-hand side
+            // (`resolveSnapshotWorldPositionClaim()`'s own `publicationId`
+            // argument) — any prior consumed claim was checked against the
+            // OLD Publication's own id.
+            this.selectedSnapshotWorldPositionClaimResult = null;
         }
     },
     beforeUnmount() {
@@ -1080,6 +1221,10 @@ export default {
             // prior World Runtime Registration result described the OLD
             // selection's own placement result too.
             this.selectedSnapshotWorldRegistrationResult = null;
+            // 0.9.172 — a different selection may carry a different claim,
+            // or none at all — any prior consumed claim described the OLD
+            // candidate.
+            this.selectedSnapshotWorldPositionClaimResult = null;
         },
         // 0.9.152 — the only writer of `selectedSnapshotResolutionExecuting`/
         // `selectedSnapshotResolutionError`/`selectedSnapshotResolutionResult`,
@@ -1220,18 +1365,48 @@ export default {
                     }
                 });
         },
+        // 0.9.172 — the only writer of `selectedSnapshotWorldPositionClaimResult`,
+        // and the only call site of `resolveSnapshotWorldPositionClaim()` in
+        // this file — mirrors `attributeSelectedSnapshot()`'s own
+        // synchronous, no-executing/error-state shape exactly. A no-op
+        // whenever there is no `selectedSnapshotCandidate` or no
+        // `publication` — the two facts the identity check itself needs
+        // (`candidate.publicationId === publication.id`). See this file's
+        // own header, "0.9.172," for why this is a SEPARATE, explicit click
+        // rather than anything selection/resolution/materialization ever
+        // does on their own.
+        useClaimedSnapshotPosition() {
+            const candidate = this.selectedSnapshotCandidate;
+            const publication = this.publication;
+            if (!candidate || !publication) {
+                return;
+            }
+            // A fresh claim result is about to replace
+            // `selectedSnapshotWorldPositionClaimResult`; any World
+            // Placement/Registration result computed from the PRIOR claim
+            // result (or from the local-placement fallback it may have
+            // overridden) no longer describes what `placeMaterializedSnapshot()`
+            // will now produce.
+            this.selectedSnapshotWorldPlacementResult = null;
+            this.selectedSnapshotWorldRegistrationResult = null;
+            this.selectedSnapshotWorldPositionClaimResult = resolveSnapshotWorldPositionClaim(candidate, publication.id);
+        },
         // 0.9.159 — the only writer of `selectedSnapshotWorldPlacementResult`,
         // and the only call site of `resolveSnapshotWorldPlacement()` in
-        // this file — mirrors `attributeSelectedSnapshot()`'s own
-        // synchronous, no-executing/error-state shape exactly, one sibling
-        // over. A no-op whenever there is no `selectedSnapshotMaterializationResult`
-        // yet to place. Needs no `publication` of its own: `placementInfo`
-        // (supplied by the host view, already keyed to whichever
-        // Publication is active) already carries its own `publicationId` —
-        // see this file's own header, "0.9.159 — Selected Snapshot World
-        // Placement." `placementInfo` being `null` (never placed yet) is a
-        // legitimate input, not a guard condition — `resolveSnapshotWorldPlacement()`
-        // itself decides PLACED vs. UNPLACED.
+        // this file. A no-op whenever there is no
+        // `selectedSnapshotMaterializationResult` yet to place.
+        //
+        // 0.9.172 — UPDATED. When `selectedSnapshotWorldPositionClaimResult`
+        // exists AND its own `outcome` is `SnapshotWorldPositionClaimOutcome.CLAIMED`,
+        // this method builds a synthetic `placementInfo`-shaped object out
+        // of the consumed claim's own `position` and hands THAT to
+        // `resolveSnapshotWorldPlacement()` instead of `this.placementInfo`.
+        // In every other case — no claim result yet, or one whose outcome
+        // is ABSENT/MISMATCHED — this method is byte-for-byte what 0.9.159
+        // already was: `this.placementInfo`, the receiver's own existing
+        // local placement, unchanged. See this file's own header, "prefers
+        // a consumed claim, but falls back... the moment no claim was
+        // consumed."
         placeMaterializedSnapshot() {
             const materialization = this.selectedSnapshotMaterializationResult;
             if (!materialization) {
@@ -1242,7 +1417,16 @@ export default {
             // Registration result computed from the PRIOR placement result
             // no longer describes it.
             this.selectedSnapshotWorldRegistrationResult = null;
-            this.selectedSnapshotWorldPlacementResult = resolveSnapshotWorldPlacement(materialization, this.placementInfo);
+
+            const claim = this.selectedSnapshotWorldPositionClaimResult;
+            const effectivePlacementInfo = (claim && claim.outcome === SnapshotWorldPositionClaimOutcome.CLAIMED && this.publication)
+                ? Object.freeze({
+                    placementId: `claim:${materialization.contentHash}:${this.publication.id}`,
+                    publicationId: this.publication.id,
+                    position: claim.position
+                })
+                : this.placementInfo;
+            this.selectedSnapshotWorldPlacementResult = resolveSnapshotWorldPlacement(materialization, effectivePlacementInfo);
         },
         // 0.9.160 — the only writer of `selectedSnapshotWorldRegistrationResult`,
         // and the only call site of `registerMaterializedSnapshotWorldSource()`
@@ -1506,6 +1690,38 @@ export default {
                 </template>
             </dl>
 
+            <!-- 0.9.172 — Decentralized Snapshot Position Claim Consumption.
+                 An independent, EXPLICIT action between "Materialize
+                 Selected Snapshot" and "Place Materialized Snapshot" below
+                 — never automatic, never a byproduct of selection,
+                 resolution, or materialization. See this file's own
+                 header, "0.9.172." Disabled whenever there is no
+                 selectedSnapshotCandidate or no publication — the two
+                 facts the identity check itself needs. Synchronous — no
+                 "…ing" label, since resolveSnapshotWorldPositionClaim()
+                 performs no I/O. -->
+            <button
+                v-if="materializeSelectedSnapshotCommand"
+                type="button"
+                class="action-btn own-publication-selected-world-position-claim-action"
+                :disabled="!selectedSnapshotCandidate || !publication"
+                @click="useClaimedSnapshotPosition"
+            >Use Claimed Position</button>
+
+            <!-- A separate result from selectedSnapshotWorldPlacementResult
+                 below. CLAIMED/ABSENT/MISMATCHED — see application/
+                 SnapshotWorldPositionClaimOutcome.js's own header. Position
+                 is rendered only on CLAIMED — a mismatched or absent claim
+                 fabricates nothing. -->
+            <dl v-if="selectedSnapshotWorldPositionClaimResult" class="own-publication-selected-world-position-claim-detail">
+                <dt>Selected Snapshot Position Claim</dt>
+                <dd>{{ selectedSnapshotWorldPositionClaimResult.outcome }}</dd>
+                <template v-if="selectedSnapshotWorldPositionClaimResult.position">
+                    <dt>Claimed Position</dt>
+                    <dd>{{ selectedSnapshotWorldPositionClaimResult.position.x }}, {{ selectedSnapshotWorldPositionClaimResult.position.y }}, {{ selectedSnapshotWorldPositionClaimResult.position.z }}</dd>
+                </template>
+            </dl>
+
             <!-- 0.9.159 — Selected Snapshot World Placement. An independent
                  SIBLING of "Materialize Selected Snapshot" above, not an
                  automatic consequence of it — see this file's own header,
@@ -1514,7 +1730,10 @@ export default {
                  has no meaning). Disabled whenever there is no
                  selectedSnapshotMaterializationResult yet. Synchronous — no
                  "…ing" label, since resolveSnapshotWorldPlacement() performs
-                 no I/O. -->
+                 no I/O. 0.9.172 — when a claim was consumed (CLAIMED), the
+                 resulting placement borrows the claim's own position
+                 instead of placementInfo; otherwise this button's own
+                 behavior is unchanged. -->
             <button
                 v-if="materializeSelectedSnapshotCommand"
                 type="button"

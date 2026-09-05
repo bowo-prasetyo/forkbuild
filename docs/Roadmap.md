@@ -71031,3 +71031,124 @@ should weigh, explicitly, whether an unverified, self-declared spatial
 claim should ever become authoritative World state, and under what
 guard, rather than wiring the two together merely because both objects
 now exist.
+
+## 0.9.172 — Decentralized Snapshot Position Claim Consumption
+
+0.9.171 taught a Snapshot discovery candidate to optionally CARRY a
+publisher's own `publicationId`/`claimedPosition` claim, then deliberately
+stopped — `application/SnapshotWorldPlacement.js` (0.9.159) remained
+completely unaware Nostr, or a position claim, exist at all, and a
+materialized, claim-bearing Snapshot with no local placement on file
+still reported `UNPLACED`. This milestone answers the POLICY question
+0.9.171's own Recommendation deferred: yes, a selected candidate's own
+claimed position may become that Snapshot's World placement — but ONLY
+when explicitly consumed, by a person's own separate click, and ONLY when
+the claim is bound to the exact Publication being placed.
+
+```text
+DISCOVER -> SELECT -> RESOLVE -> VERIFY -> MATERIALIZE -> CONSUME CLAIM -> PLACE -> REGISTER -> RENDER
+```
+
+**The new seam.** `application/SnapshotWorldPositionClaim.js` exports one
+pure function, `resolveSnapshotWorldPositionClaim(candidate, publicationId)`,
+returning one of three `application/SnapshotWorldPositionClaimOutcome.js`
+values:
+- `CLAIMED` — `candidate.publicationId === publicationId`; `position` is
+  the candidate's own `claimedPosition`, copied into a fresh, frozen
+  `{x,y,z}`.
+- `ABSENT` — the candidate carries neither `publicationId` nor
+  `claimedPosition` (every pre-0.9.171 announcement, and any that still
+  omit a claim). Never an error — it means only "no decentralized
+  position was supplied," nothing more.
+- `MISMATCHED` — the candidate carries a claim, but for a DIFFERENT
+  Publication than the one being placed. `position` is `null`, exactly as
+  on `ABSENT`, but the two stay structurally distinct values rather than
+  one, so a caller can someday choose to surface the difference.
+
+**The identity rule this milestone exists to hold.** The claim is
+considered only when `candidate.publicationId === target Publication.id`
+— never "the content hash matches, therefore use this position."
+`tests/SnapshotWorldOriginCollision.test.js` (0.9.163) already proved two
+different Publications can share one `contentHash`; this milestone's own
+flagship (Section C) proves the identical two Publications, sharing one
+`contentHash`, each independently claim and receive their OWN position,
+with the cross-assignment in both directions correctly `MISMATCHED`.
+
+**Explicit consumption, never automatic.** `ui/components/OwnPublicationPanel.js`
+gains one new action, `useClaimedSnapshotPosition()`, and one new field,
+`selectedSnapshotWorldPositionClaimResult` — reachable only by its own
+"Use Claimed Position" button, between "Materialize Selected Snapshot"
+and "Place Materialized Snapshot." Discovering candidates, selecting one,
+resolving it, and materializing it never compute a claim result or place
+anything on their own — the identical restraint 0.9.159 already held for
+placement itself, held here one seam earlier, because a decentralized
+position remains only a publisher's claim, and it would be
+architecturally premature to let an arbitrary network announcement
+silently alter World state.
+
+**`SnapshotWorldPlacement.js` stays exactly as 0.9.159 left it.** Rather
+than teaching that file to understand Nostr, `placeMaterializedSnapshot()`
+now decides WHICH `placementInfo`-shaped object to hand it: when a
+`CLAIMED` result exists, a synthetic `{ placementId:
+'claim:<contentHash>:<publicationId>', publicationId, position }`
+(`placementId` names a claim, never a real `WorldPlacement` — it is never
+looked up in, or written to, `placement/LocalPlacementRegistry.js`);
+otherwise, `this.placementInfo`, the receiver's own existing local
+placement, completely unchanged — the literal 0.9.159 behavior, byte for
+byte, whenever nobody clicks "Use Claimed Position" at all, or the
+outcome is `ABSENT`/`MISMATCHED`. `resolveSnapshotWorldPlacement()`
+itself was not modified.
+
+**`claimedPosition` remains permanently distinct from a Publication's
+CURRENT position.** Decentralized storage can be stale — an old
+announcement can outlive a publisher's later move — so consuming a claim
+once is never treated as an authoritative, ongoing statement of where a
+Publication currently is. This milestone does not solve staleness,
+reconciliation, or multiple competing announcements for one Publication;
+it only preserves the vocabulary distinction so a later milestone can.
+
+**Deliberately excluded — not this milestone.**
+- Signature verification of a position claim, timestamp freshness, or any
+  staleness/currency judgment.
+- Reconciling, ranking, or choosing among several candidates naming the
+  same Publication with different claimed positions.
+- Trust scores, publisher reputation, or geospatial/collision validation
+  of any kind.
+- Automatic position updates, automatic relocation, or movement.
+- Changing `application/WorldDiscoverySourceRegistry.js`,
+  `ui/components/WorldEncounterCanvas.js`, or the Snapshot discovery
+  protocol (`core/SnapshotDiscoveryEnvelope.js`) again — all three remain
+  byte-for-byte as their own prior milestones left them.
+- A new `VERIFIED_POSITION` state, or any change to what "verified" means
+  for a Snapshot — a candidate's own claimed position remains untrusted
+  metadata until explicitly consumed; consuming it is not verifying it.
+
+`tests/SnapshotWorldPositionClaimConsumption.test.js` — eleven sections:
+(A) `resolveSnapshotWorldPositionClaim()` contract validation and its
+three outcomes; (B) a publication identity mismatch is never consumed,
+end to end; (C) FLAGSHIP — identical `contentHash`, two Publications,
+each independently claims and receives its own position, with the
+cross-assignment correctly rejected in both directions; (D) an old,
+claim-free candidate preserves the existing local-placement path exactly,
+whether or not "Use Claimed Position" is ever clicked; (E) a claim never
+substitutes for, or exposes, any content-identity field; (F) a claim
+never influences Arweave lookup, content-store selection, byte retrieval,
+or content verification; (G) `SnapshotWorldPositionClaimOutcome` carries
+exactly its three values — no new verification vocabulary exists
+anywhere; (H) purity — no mutation, frozen output, deterministic; (I)
+explicit consumption — discovery and selection alone place nothing; only
+the explicit consume-then-place click sequence lands a recovered
+stranger's Snapshot at the PUBLISHER's own claimed position; (J) the
+pre-0.9.172 local-placement flagship (0.9.159) is preserved exactly; (K)
+structural sweep — no I/O, no cryptographic re-verification,
+`application/SnapshotWorldPlacement.js` left untouched.
+
+### Recommendation
+
+```text
+0.9.173  Decentralized Snapshot Spatial E2E Audit — the complete
+         stranger-content path from Nostr announcement through explicit
+         claim consumption to correct World positioning and rendering,
+         including the same-content-hash/different-Publication case this
+         milestone's own Section C already exercises one layer down.
+```
