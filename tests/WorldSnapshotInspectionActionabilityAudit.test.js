@@ -37,27 +37,44 @@ import { Position } from '../core/Position.js';
 // ALREADY, LEGITIMATELY do with it — using only actions that exist in the
 // running application today?
 //
-// TEST-ONLY. THIS FILE ADDS NO PRODUCTION CODE AND CHANGES NO EXISTING
-// FILE. Every collaborator this audit drives — `WorldEncounterCanvas.js`,
-// `WorldSnapshotInspection.js`, `WorldEncounterPresentation.js`,
+// TEST-ONLY, AS ORIGINALLY WRITTEN. THIS FILE ADDED NO PRODUCTION CODE AND
+// CHANGED NO EXISTING FILE AT THE TIME. Every collaborator this audit
+// drives — `WorldEncounterCanvas.js`, `WorldSnapshotInspection.js`,
+// `WorldEncounterPresentation.js`,
 // `MaterializedSnapshotWorldDiscoveryBridge.js`, `WorldEncounterMaterialLoading.js`,
-// `WorldDiscoverySourceRegistry.js`, the peer lifecycle bridge — is read,
-// real, and unmodified.
+// `WorldDiscoverySourceRegistry.js`, the peer lifecycle bridge — was read,
+// real, and unmodified as of 0.9.178.
+//
+// UPDATED 0.9.179 — Snapshot World Source Unregistration. This milestone
+// deliberately acted on exactly the one finding this audit reported rather
+// than merely noting it: `WorldEncounterCanvas.js` gained one new
+// Wanderer-reachable action, `unregisterSelectedSnapshot()`, invoking the
+// already-existing `unregisterMaterializedSnapshotWorldSource()` for a
+// resolved, SNAPSHOT-sourced selection alone — never for LOCAL or PEER (see
+// that milestone's own header for why it stayed Snapshot-specific rather
+// than the generic, all-three-families action this audit's own
+// "Recommendation" section in docs/Roadmap.md suggested). Sections A, C, E,
+// and I below are updated in place to assert the NEW true state rather than
+// stay a stale record of the gap that has since been closed; Sections B, D,
+// F, G, and H were never about that gap and are unchanged.
 //
 // OBSERVE FIRST, NEVER DECIDE A DESIRED CAPABILITY IN ADVANCE. Every
 // assertion below documents behavior already true of the real, unmodified
-// production files. Where the audit finds an application-layer capability
-// with no UI action wired to it (Section A/C — a Snapshot registration's
-// own symmetric `unregisterMaterializedSnapshotWorldSource()` undo), it
-// reports that as a fact for a future, separate, deliberately-scoped
-// milestone to weigh — it does NOT wire it in here.
+// production files. Where the audit found an application-layer capability
+// with no UI action wired to it (Section A/C, as originally written — a
+// Snapshot registration's own symmetric `unregisterMaterializedSnapshotWorldSource()`
+// undo), it reported that as a fact for a future, separate,
+// deliberately-scoped milestone to weigh — it did NOT wire it in at the
+// time. 0.9.179 later did exactly that, narrowly; Sections A and C below
+// are updated to assert the resulting state.
 //
 //   Section A: existing action inventory — which methods/template actions
 //              a selected, SNAPSHOT-sourced PUBLICATION encounter can
-//              already reach in `WorldEncounterCanvas.js`, and which
-//              Snapshot-specific action (an "unregister"/"remove this
-//              Snapshot" affordance) exists at the application layer but
-//              is wired into no UI action at all.
+//              reach in `WorldEncounterCanvas.js`. UPDATED 0.9.179: the
+//              Snapshot-specific "unregister"/"remove this Snapshot"
+//              action, previously found at the application layer but wired
+//              into no UI action, is now wired into exactly one new
+//              method, `unregisterSelectedSnapshot()`.
 //   Section B: observation vs. action — reading the Snapshot inspection
 //              descriptor, repeatedly, triggers no registry mutation and
 //              no additional material load of any kind.
@@ -65,8 +82,11 @@ import { Position } from '../core/Position.js';
 //              inspect, select, load material, distribute, and discover
 //              are ALL already symmetric across the three source families,
 //              because every one of those gates reads `distributablePublication`
-//              alone, never `sourceFamily`; "unregister" is symmetrically
-//              ABSENT for all three, never a Snapshot-specific gap.
+//              alone, never `sourceFamily`. UPDATED 0.9.179: "unregister"
+//              is now deliberately Snapshot-specific — a genuine no-op for
+//              LOCAL/PEER, a genuine removal for SNAPSHOT — never the
+//              generic, all-three-families action this audit's own
+//              "Recommendation" suggested.
 //   Section D: the material availability boundary — once a Snapshot is
 //              registered, selecting it already routes through the
 //              ordinary `materialSources.local` slot (0.9.166); there is
@@ -92,9 +112,11 @@ import { Position } from '../core/Position.js';
 //              (`selectedEncounterInspection`, `selectedEncounterPresentation`,
 //              `selectedEncounterSnapshotInspection`) ever calls a
 //              discovery/resolution/materialization/placement/registration
-//              function itself, and this milestone's own finding
-//              (`unregisterMaterializedSnapshotWorldSource`) remains
-//              unwired into `WorldEncounterCanvas.js`.
+//              function itself. UPDATED 0.9.179: this milestone's own
+//              finding (`unregisterMaterializedSnapshotWorldSource`) is now
+//              wired into `WorldEncounterCanvas.js`, but into exactly one
+//              action method (`unregisterSelectedSnapshot()`) and none of
+//              the inspection-layer computeds above.
 
 function assert(condition, message) {
     if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
@@ -292,37 +314,50 @@ async function run() {
         const expectedActions = [
             'selectEncounter', 'chooseSelectionOrigin', 'chooseDecentralizedLead',
             'distributeSelectedPublication', 'distributeSelectedSnapshot',
-            'discoverSelectedSnapshot', 'discoverPublication', 'selectDiscoveredPublication'
+            'discoverSelectedSnapshot', 'discoverPublication', 'selectDiscoveredPublication',
+            'unregisterSelectedSnapshot'
         ];
         for (const action of expectedActions) {
             assert(methodNames.includes(action), `1. ${action}() already exists as a Wanderer-reachable action`);
         }
 
-        // No method offering to unregister, remove, delete, reposition,
-        // relocate, or move a Snapshot (or anything else) exists anywhere
-        // on this component today.
+        // UPDATED 0.9.179 — exactly ONE method matching this pattern now
+        // exists: `unregisterSelectedSnapshot()`, this milestone's own,
+        // single, narrow action. No reposition/relocate/move method of any
+        // kind was added alongside it, and no second/generic "remove this
+        // source" method exists either — the milestone stayed exactly as
+        // narrow as its own brief demanded.
         const forbiddenActionNames = methodNames.filter((name) => /unregister|remove|delete|reposition|relocate|^move[A-Z]/i.test(name));
-        assert(forbiddenActionNames.length === 0,
-            `2. no unregister/remove/delete/reposition/relocate/move action exists on WorldEncounterCanvas.js today — found: ${forbiddenActionNames.join(', ')}`);
+        assert(forbiddenActionNames.length === 1 && forbiddenActionNames[0] === 'unregisterSelectedSnapshot',
+            `2. the only unregister/remove/delete/reposition/relocate/move-shaped action on WorldEncounterCanvas.js today is unregisterSelectedSnapshot() — found: ${forbiddenActionNames.join(', ')}`);
 
-        // The application layer DOES already carry the symmetric undo for
+        // The application layer already carried the symmetric undo for
         // registration — `unregisterMaterializedSnapshotWorldSource()` —
-        // but it is wired into no UI action: it never appears anywhere in
-        // WorldEncounterCanvas.js's own source (methods, template, or
-        // otherwise).
+        // and 0.9.179 wired it into exactly this one method, and nowhere
+        // else (never inside a computed, never a second call site).
         assert(typeof unregisterMaterializedSnapshotWorldSource === 'function', '3. sanity — the application-layer undo genuinely exists');
-        assert(!canvasSource.includes('unregisterMaterializedSnapshotWorldSource'),
-            '4. unregisterMaterializedSnapshotWorldSource() is not imported or called anywhere in WorldEncounterCanvas.js — an existing capability with no UI action wired to it, not a Snapshot-specific UI gap this milestone invents plumbing to fill');
+        assert(canvasSource.includes('unregisterMaterializedSnapshotWorldSource'),
+            '4. unregisterMaterializedSnapshotWorldSource() is now imported and called in WorldEncounterCanvas.js — the 0.9.178 finding, acted on');
+        const canvasCodeOnly = stripLineComments(canvasSource);
+        const unregisterCallCount = (canvasCodeOnly.match(/unregisterMaterializedSnapshotWorldSource\(/g) || []).length;
+        assert(unregisterCallCount === 1, `4b. unregisterMaterializedSnapshotWorldSource() is called from exactly ONE place in actual code (comments aside) — found ${unregisterCallCount}`);
+        const unregisterSelectedSnapshotBody = extractComputedBody(canvasSource, 'unregisterSelectedSnapshot', 'discoverPublication');
+        assert(unregisterSelectedSnapshotBody.includes('unregisterMaterializedSnapshotWorldSource('),
+            '4c. that one call site is inside unregisterSelectedSnapshot() itself');
 
-        // The template itself offers no button/input inside the inspection
-        // panel wired to anything resembling unregistration or
-        // repositioning.
+        // The template now offers exactly ONE button inside the inspection
+        // panel, wired to this one new action alone — nothing resembling
+        // repositioning/relocation, and no second unregister affordance.
         const inspectionPanelMatch = canvasSource.match(/<div v-if="selectedEncounter" class="world-encounter-inspection-panel">[\s\S]*?<\/div>/);
         assert(inspectionPanelMatch !== null, '5. sanity — the inspection panel template block is found');
-        assert(!/unregister|reposition|relocate|delete|remove/i.test(inspectionPanelMatch[0]),
-            '6. the inspection panel template itself contains no unregister/reposition/relocate/delete/remove affordance of any kind');
+        assert(!/reposition|relocate/i.test(inspectionPanelMatch[0]),
+            '6. the inspection panel template contains no reposition/relocate affordance of any kind');
+        const panelClickCount = (inspectionPanelMatch[0].match(/@click/g) || []).length;
+        assert(panelClickCount === 1, `6b. the inspection panel template contains exactly one @click action — found ${panelClickCount}`);
+        assert(inspectionPanelMatch[0].includes('@click="unregisterSelectedSnapshot"'),
+            '6c. that one @click action is unregisterSelectedSnapshot()');
 
-        console.log('✓ Section A: the existing action inventory for a selected encounter is select/choose-origin/choose-lead/distribute-publication/distribute-snapshot/discover-snapshot/discover-publication/select-discovered — no unregister/reposition action exists anywhere, though the application layer already carries an unwired, symmetric registration undo');
+        console.log('✓ Section A: the existing action inventory for a selected encounter is select/choose-origin/choose-lead/distribute-publication/distribute-snapshot/discover-snapshot/discover-publication/select-discovered/unregister-selected-snapshot (0.9.179) — exactly one unregister action exists, wired to the previously-unwired, symmetric registration undo');
     }
 
     // ---------------------------------------------------------------
@@ -443,8 +478,7 @@ async function run() {
                 select: canvas.resolvedEncounterSelection !== null,
                 load: !!canvas.materialInspection && canvas.materialInspection.loading.status === WorldEncounterMaterialLoadStatus.AVAILABLE,
                 distribute: canvas.distributablePublication !== null,
-                discover: canvas.distributablePublication !== null,
-                unregister: typeof canvas.unregisterSelectedSnapshot === 'undefined' && typeof canvas.unregisterSelectedSource === 'undefined'
+                discover: canvas.distributablePublication !== null
             };
             table[family] = row;
 
@@ -455,8 +489,6 @@ async function run() {
             canvas.discoverSelectedSnapshot();
             await flush();
 
-            unmountCanvas(canvas);
-
             assert(row.inspect, `1. [${family}] inspect is reachable`);
             assert(row.select, `2. [${family}] select is reachable`);
             assert(row.load, `3. [${family}] load material is reachable`);
@@ -464,24 +496,53 @@ async function run() {
             assert(row.discover, `5. [${family}] discover is reachable (the SAME distributablePublication gate)`);
             assert(distributeCalls.length === 2, `6. [${family}] both distribute actions genuinely executed (distributionCommand AND snapshotDistributionCommand each called once)`);
             assert(discoverCalls.length === 1, `7. [${family}] discoverSnapshotCommand genuinely executed`);
-            assert(row.unregister, `8. [${family}] no unregister action exists — symmetrically absent, not a Snapshot-specific gap`);
+
+            // UPDATED 0.9.179 — exercise unregisterSelectedSnapshot() for
+            // REAL, for every family, while the canvas is still mounted
+            // (and so still subscribed to the registry's own change
+            // notification) so a genuine removal is actually observed here,
+            // not merely inferred. Proves the new action's own gate is
+            // exactly `selectedEncounterSnapshotInspection` — SNAPSHOT
+            // alone — and never a blanket "remove whatever is currently
+            // selected," the deliberate difference from the generic,
+            // all-three-families action 0.9.178's own "Recommendation"
+            // suggested but this milestone's own brief chose not to build.
+            const sourceCountBefore = canvas.registry.listSources().length;
+            canvas.unregisterSelectedSnapshot();
+            await flush();
+            row.unregister = canvas.registry.listSources().length < sourceCountBefore;
+
+            if (family === 'SNAPSHOT') {
+                assert(row.unregister, `8. [${family}] unregisterSelectedSnapshot() genuinely removes the Snapshot's own registered source`);
+                assert(canvas.selectionOutcome.status === WorldEncounterSelectionOutcomeStatus.UNAVAILABLE, `8b. [${family}] the selection outcome collapses to UNAVAILABLE once removed — mirroring 0.9.178's own Section H`);
+            } else {
+                assert(!row.unregister, `8. [${family}] unregisterSelectedSnapshot() is a genuine no-op for a non-Snapshot-sourced selection — the registered source survives untouched`);
+                assert(canvas.resolvedEncounterSelection !== null, `8b. [${family}] the resolved selection is completely untouched`);
+            }
+
+            unmountCanvas(canvas);
         }
 
-        // The truth table the milestone brief asked for — every row
-        // identical, because every gate is `distributablePublication`
-        // alone, never `sourceFamily`.
-        assert(JSON.stringify(table.LOCAL) === JSON.stringify(table.PEER), '9. LOCAL and PEER rows are identical');
-        assert(JSON.stringify(table.PEER) === JSON.stringify(table.SNAPSHOT), '10. PEER and SNAPSHOT rows are identical');
+        // UPDATED 0.9.179 — inspect/select/load/distribute/discover stay
+        // fully symmetric across LOCAL/PEER/SNAPSHOT, exactly as 0.9.178
+        // found; `unregister` alone now differs, DELIBERATELY, because this
+        // milestone scoped the new action to Snapshot sources specifically
+        // rather than building the generic, all-three-families version.
+        const withoutUnregister = (row) => { const { unregister, ...rest } = row; return rest; };
+        assert(JSON.stringify(withoutUnregister(table.LOCAL)) === JSON.stringify(withoutUnregister(table.PEER)), '9. LOCAL and PEER rows are identical apart from unregister');
+        assert(JSON.stringify(withoutUnregister(table.PEER)) === JSON.stringify(withoutUnregister(table.SNAPSHOT)), '10. PEER and SNAPSHOT rows are identical apart from unregister');
+        assert(table.LOCAL.unregister === false && table.PEER.unregister === false, '11. unregisterSelectedSnapshot() has no effect for LOCAL or PEER sources');
+        assert(table.SNAPSHOT.unregister === true, '12. unregisterSelectedSnapshot() genuinely removes a SNAPSHOT source');
 
-        console.log('✓ Section C: LOCAL/PEER/SNAPSHOT truth table —');
+        console.log('✓ Section C: LOCAL/PEER/SNAPSHOT truth table (updated 0.9.179) —');
         console.log('               LOCAL   PEER   SNAPSHOT');
         console.log(`  inspect        ${table.LOCAL.inspect}   ${table.PEER.inspect}   ${table.SNAPSHOT.inspect}`);
         console.log(`  select         ${table.LOCAL.select}   ${table.PEER.select}   ${table.SNAPSHOT.select}`);
         console.log(`  load           ${table.LOCAL.load}   ${table.PEER.load}   ${table.SNAPSHOT.load}`);
         console.log(`  distribute     ${table.LOCAL.distribute}   ${table.PEER.distribute}   ${table.SNAPSHOT.distribute}`);
         console.log(`  discover       ${table.LOCAL.discover}   ${table.PEER.discover}   ${table.SNAPSHOT.discover}`);
-        console.log(`  unregister     ${table.LOCAL.unregister}   ${table.PEER.unregister}   ${table.SNAPSHOT.unregister}  (absent for all three, today)`);
-        console.log('✓ Section C: inspect/select/load/distribute/discover are ALREADY fully symmetric across LOCAL/PEER/SNAPSHOT — no new plumbing is needed to make that true, it already is');
+        console.log(`  unregister     ${table.LOCAL.unregister}   ${table.PEER.unregister}   ${table.SNAPSHOT.unregister}  (0.9.179 — Snapshot-specific, by design)`);
+        console.log('✓ Section C: inspect/select/load/distribute/discover stay fully symmetric across LOCAL/PEER/SNAPSHOT; unregister is now deliberately Snapshot-specific');
     }
 
     // ---------------------------------------------------------------
@@ -560,15 +621,18 @@ async function run() {
             '3. no move/reposition/relocate/setPosition/updatePosition method exists on WorldEncounterCanvas.js');
 
         // The inspection panel template block contains no input bound
-        // (v-model) to any coordinate, and no button wired to a
-        // position-changing action.
+        // (v-model) to any coordinate. UPDATED 0.9.179 — it now contains
+        // exactly ONE click action (unregisterSelectedSnapshot(), added by
+        // that milestone), and it is not a position-changing one.
         const inspectionPanelMatch = canvasSource.match(/<div v-if="selectedEncounter" class="world-encounter-inspection-panel">[\s\S]*?<\/div>/);
         assert(inspectionPanelMatch !== null, 'sanity — the inspection panel template block is found');
         assert(!/v-model/.test(inspectionPanelMatch[0]), '4. the inspection panel template contains no v-model binding of any kind — it is read-only');
-        assert(!/@click/.test(inspectionPanelMatch[0]), '5. the inspection panel template contains no click action of any kind — pure presentation');
+        const clickMatches = inspectionPanelMatch[0].match(/@click="([^"]+)"/g) || [];
+        assert(clickMatches.length === 1 && clickMatches[0] === '@click="unregisterSelectedSnapshot"',
+            `5. the inspection panel template contains exactly one click action, unregisterSelectedSnapshot() (0.9.179) — never a position-changing one — found: ${clickMatches.join(', ')}`);
 
         unmountCanvas(canvas);
-        console.log('✓ Section E: the displayed position is simply the established World position; the inspection panel offers no repositioning action, input, or method of any kind');
+        console.log('✓ Section E: the displayed position is simply the established World position; the inspection panel\'s only action (0.9.179\'s unregisterSelectedSnapshot()) offers no repositioning, and no method on this component ever moves/relocates/repositions anything');
     }
 
     // ---------------------------------------------------------------
@@ -732,11 +796,18 @@ async function run() {
         assert(!forbiddenCalls.test(stripLineComments(selectedEncounterSnapshotInspectionBody)),
             '3. selectedEncounterSnapshotInspection never calls a discovery/resolution/materialization/placement/registration function');
 
-        // This milestone's own finding — the unwired registration undo —
-        // remains exactly that: unwired. Re-checked here, structurally,
-        // as the durable record of Section A's own finding.
-        assert(!canvasSource.includes('unregisterMaterializedSnapshotWorldSource'),
-            '4. this audit did not wire unregisterMaterializedSnapshotWorldSource() into WorldEncounterCanvas.js — the finding is reported, not acted on');
+        // UPDATED 0.9.179 — this milestone's own finding (the unwired
+        // registration undo) was subsequently acted on by 0.9.179: it is
+        // now wired into exactly `unregisterSelectedSnapshot()` and NO
+        // computed of any kind — Sections 1-3 above already prove none of
+        // the three inspection-layer computeds calls it (or anything else
+        // forbidden); this assertion is the durable, structural record that
+        // the ONE call site is that one action method, never a computed.
+        assert(canvasSource.includes('unregisterMaterializedSnapshotWorldSource'),
+            '4. unregisterMaterializedSnapshotWorldSource() is now wired into WorldEncounterCanvas.js (0.9.179) — the 0.9.178 finding, acted on');
+        const unregisterSelectedSnapshotBody = extractComputedBody(canvasSource, 'unregisterSelectedSnapshot', 'discoverPublication');
+        assert(unregisterSelectedSnapshotBody.includes('unregisterMaterializedSnapshotWorldSource('),
+            '4b. unregisterSelectedSnapshot() is that one call site');
 
         // No new World Encounter kind, no new lifecycle/comparison
         // vocabulary, introduced by this milestone's own two touched
@@ -747,7 +818,7 @@ async function run() {
         assert(!/rank|trust|verified\b.{0,40}[Ss]napshot|freshness|quality|score|preferred|reliable/i.test(stripLineComments(snapshotInspectionSource)),
             '6. WorldSnapshotInspection.js still carries no rank/trust/verified/freshness/quality/score/preferred/reliable vocabulary of any kind');
 
-        console.log('✓ Section I: no inspection-layer computed calls a discovery/resolution/materialization/placement/registration function itself; this milestone\'s own finding (the unwired registration undo) is reported, not wired in; no new World Encounter kind or comparison vocabulary was introduced');
+        console.log('✓ Section I: no inspection-layer computed calls a discovery/resolution/materialization/placement/registration function itself; this milestone\'s own finding (the unwired registration undo) was subsequently wired into exactly one action method (0.9.179\'s unregisterSelectedSnapshot()), never a computed; no new World Encounter kind or comparison vocabulary was introduced');
 
         console.log('\n✅ All World Snapshot Inspection Actionability Audit checks passed.');
     }

@@ -10,6 +10,7 @@ import { describePublicationMaterialProvenanceFromInspection } from '../../appli
 import { resolveSnapshotPublicationAttribution } from '../../application/SnapshotPublicationAttribution.js';
 import { describeWorldEncounterPresentation } from '../../application/WorldEncounterPresentation.js';
 import { describeWorldSnapshotInspection } from '../../application/WorldSnapshotInspection.js';
+import { unregisterMaterializedSnapshotWorldSource } from '../../application/MaterializedSnapshotWorldDiscoveryBridge.js';
 
 // 0.9.3 — World View UI / Wanderer Presence.
 //
@@ -2501,6 +2502,44 @@ export default {
                     }
                 });
         },
+        // 0.9.179 — Snapshot World Source Unregistration. The one new
+        // Wanderer-reachable action this milestone adds: an explicit
+        // invocation of the already-existing, symmetric undo of
+        // `registerMaterializedSnapshotWorldSource()` — see
+        // `application/MaterializedSnapshotWorldDiscoveryBridge.js`'s own
+        // header, "the deliberate, symmetric undo... never invoked
+        // automatically." This method IS that "future, explicit caller."
+        //
+        // Reads `contentHash`/`publicationId` straight off
+        // `selectedEncounterSnapshotInspection` (0.9.177, already
+        // computed) — no re-derivation, no second lookup, no new join.
+        // That computed is `null` for anything other than a RESOLVED,
+        // SNAPSHOT-sourced PUBLICATION encounter (0.9.178's own Section G:
+        // an AMBIGUOUS selection reports no Snapshot inspection detail, so
+        // this action stays unreachable for one too) — this method adds no
+        // gate of its own beyond that and requiring a `registry`.
+        //
+        // Calls `unregisterMaterializedSnapshotWorldSource()` exactly once
+        // and nothing else. No rediscovery, no re-resolution, no material
+        // deletion, no Publication mutation, no Nostr/Arweave action of any
+        // kind — that scope is already `unregisterMaterializedSnapshotWorldSource()`'s
+        // own guarantee, not something reasserted here. This method writes
+        // no local state of its own (unlike `distributeSelectedSnapshot()`/
+        // `discoverSelectedSnapshot()`, which track an in-flight request):
+        // the registry mutation is synchronous, and every downstream
+        // projection (`selectionOutcome`, `resolvedEncounterSelection`,
+        // `selectedEncounterSnapshotInspection`, `materialInspection`,
+        // `distributablePublication`) already re-derives itself from the
+        // registry's own change notification — the SAME collapse-to-null
+        // behavior 0.9.178's own Section H already proved holds for a
+        // Snapshot source removed by any means.
+        unregisterSelectedSnapshot() {
+            const inspection = this.selectedEncounterSnapshotInspection;
+            if (!inspection || !this.registry) {
+                return;
+            }
+            unregisterMaterializedSnapshotWorldSource(this.registry, inspection.contentHash, inspection.publicationId);
+        },
         // 0.9.111 — the only writer of `discoveryResult`/`discoveryError`/
         // `discovering`, and the only caller of `discoveryCommand` in this
         // file. A no-op whenever there is no `discoveryCommand`, a call is
@@ -2719,6 +2758,14 @@ export default {
                 <p v-else class="world-encounter-inspection-unavailable">
                     This encounter is no longer part of the World.
                 </p>
+
+                <div v-if="selectedEncounterSnapshotInspection" class="world-encounter-inspection-actions">
+                    <button
+                        type="button"
+                        class="world-encounter-unregister-snapshot"
+                        @click="unregisterSelectedSnapshot"
+                    >Remove Snapshot from World</button>
+                </div>
             </div>
 
             <div v-if="selectedEncounter && selectionOutcome && selectionOutcome.status !== 'UNAVAILABLE'" class="world-encounter-selection-origin-panel">

@@ -71926,3 +71926,189 @@ scoped milestone (a generic "stop showing me this source" action, decided
 once for all three families) rather than a Snapshot-specific fix — folding
 it into a Snapshot-only affordance would quietly re-introduce the
 asymmetry this audit worked to rule out.
+
+## 0.9.179 — Snapshot World Source Unregistration
+
+0.9.178's own audit surfaced exactly one concrete, unwired capability:
+`unregisterMaterializedSnapshotWorldSource()` (present since 0.9.160) —
+the deliberate, symmetric undo of `registerMaterializedSnapshotWorldSource()`
+— had never been wired into any UI action. Rather than wait for a second,
+separately-scoped "generic remove" milestone across all three source
+families, this milestone acts on that one finding directly, narrowly, for
+Snapshot alone: it adds exactly ONE new Wanderer-reachable action,
+`WorldEncounterCanvas.js#unregisterSelectedSnapshot()`, invoking the SAME
+existing, unmodified bridge function.
+
+```text
+World View
+    │
+    ▼
+explicit Snapshot removal action (unregisterSelectedSnapshot(), NEW)
+    │
+    ▼
+unregisterMaterializedSnapshotWorldSource()   (0.9.160/0.9.163, UNCHANGED)
+    │
+    ▼
+WorldDiscoverySourceRegistry#removeSource()   (0.9.9, UNCHANGED)
+    │
+    ▼
+existing projections — encounter disappears, selection resolves to null
+(0.9.175's own rule, never a fallback), material inspection collapses to
+the same null every other "nothing selected" case already uses
+```
+
+**No `SnapshotLifecycle` abstraction, and no new registry.** There is no
+`SnapshotLifecycleState`, no `STALE`/`EXPIRED`/`REMOVED`/`DELETED` enum.
+The existing registry's own 0.9.9 semantics — "plain absence, never a
+tombstone," "a removed origin that returns is a fresh slot, not a revived
+one" — are the entire lifecycle this milestone needs. This is
+**explicitly not "delete Snapshot."** Unregistering removes exactly the
+World discovery *contribution*; it never implies deleting the
+materialized bytes, mutating the Publication, withdrawing a Nostr
+announcement, or deleting an Arweave transaction — storage, discovery,
+Publication, and World identities stay exactly as separate as every prior
+milestone in this arc has kept them.
+
+**Production changes — deliberately the smallest possible seam:**
+
+- `ui/components/WorldEncounterCanvas.js` — one new import
+  (`unregisterMaterializedSnapshotWorldSource` from the existing bridge —
+  never its `register*`/`SnapshotWorldRegistrationOutcome`/
+  `SnapshotWorldPlacement*` counterparts), one new method
+  (`unregisterSelectedSnapshot()`, reading `contentHash`/`publicationId`
+  straight off the already-computed `selectedEncounterSnapshotInspection`,
+  0.9.177 — no re-derivation, no second lookup), and one new button
+  (`Remove Snapshot from World`) inside the existing inspection panel,
+  shown only for a resolved, SNAPSHOT-sourced selection. The method writes
+  no local state of its own: the registry mutation is synchronous, and
+  every downstream projection (`selectionOutcome`,
+  `resolvedEncounterSelection`, `selectedEncounterSnapshotInspection`,
+  `materialInspection`, `distributablePublication`) re-derives itself from
+  the registry's own existing change notification, exactly as 0.9.178's
+  own Section H already proved holds for a Snapshot removed by any means.
+- `css/main.css` — one small button rule and one spacing rule for the new
+  action, following the existing dark-palette convention; no rank/trust
+  color coding.
+- **Deliberately, this action stays Snapshot-specific, not generic.**
+  0.9.178's own "Recommendation" suggested a generic, all-three-families
+  "stop showing me this source" action, decided once. This milestone
+  chose the narrower path its own brief asked for instead:
+  `unregisterSelectedSnapshot()` is a genuine no-op for a LOCAL- or
+  PEER-sourced selection (its own gate is exactly
+  `selectedEncounterSnapshotInspection`, which is `null` for those
+  families) — LOCAL and PEER remain exactly as unremovable from the UI as
+  0.9.178 found them. `unregisterPeerWorldSource()` remains completely
+  unwired, unchanged.
+
+**Tests updated to reflect the closed gap, not left stale:**
+0.9.178's own `tests/WorldSnapshotInspectionActionabilityAudit.test.js`
+and 0.9.161's own `tests/SnapshotWorldRendering.test.js` each asserted the
+PRIOR absence of this capability as a structural fact (no unregister
+method/import/click existed). Both are updated in place — never silently
+left to fail — to assert the NEW true state: Section A/C/E/I of the
+former now confirm exactly one unregister action exists and is wired to
+exactly one call site; Section G of the latter now confirms
+`WorldEncounterCanvas.js`'s one import of the registration bridge names
+`unregisterMaterializedSnapshotWorldSource()` alone, never
+`registerMaterializedSnapshotWorldSource()`. Three import-count audits
+(`tests/WorldEncounterCanvasUI.test.js`,
+`tests/WorldViewDecentralizedPublicationRetrievalIntegration.test.js`,
+`tests/WorldViewDiscoveredPublicationSelectionIntegration.test.js`) are
+bumped from ten to eleven `application/` imports.
+
+**`tests/SnapshotWorldSourceUnregistration.test.js` — ten sections, the
+flagship for this milestone:**
+
+- **A** — direct bridge behavior: removing one origin leaves every other
+  origin (including one sharing the same `contentHash`, per 0.9.163's own
+  collision fix) completely untouched, same object references.
+- **B** — exact identity: `snapshot:H:A`/`snapshot:H:B` and
+  `snapshot:H:A`/`snapshot:K:A` each stay pairwise independent under
+  removal.
+- **C** — the explicit UI action, exercised against a real mounted
+  canvas with spies on `registry.setSource()` and
+  `discoverSnapshotCommand`: zero rediscovery calls, zero re-resolution
+  calls, zero additional material loads, and the Publication byte-identical
+  before and after — the ONE effect is the registry losing that one entry.
+- **D** — REGISTER → RENDER → UNREGISTER → no Snapshot encounter, using
+  `WorldEncounterCanvas`'s real, unmodified `projectedPublications`.
+- **E** — unregistering the currently-selected Snapshot resolves
+  `resolvedEncounterSelection` to `null` — never a silent fallback to
+  another candidate or another family (0.9.175) — while a completely
+  independent Snapshot stays normally selectable.
+- **F** — `materialInspection` collapses to the same `null` every other
+  "nothing selected" case already uses; no new "material invalidated"
+  state exists anywhere in `WorldEncounterCanvas.js`'s own code.
+- **G** — LOCAL A / PEER A / SNAPSHOT A registered for the same
+  `objectId`: unregistering Snapshot A removes exactly that one source;
+  LOCAL A and PEER A survive as the exact same object references.
+- **H** — position independence: the bridge itself never references
+  `LocalPlacementRegistry`/`PlacementRegistry`/`claimedPosition`/a spatial
+  index; an unrelated LOCAL source's own position object reference is
+  completely unchanged after a Snapshot is removed.
+- **I** — REGISTER → UNREGISTER → REGISTER derives the identical origin,
+  re-registers the same Publication reference at the same position, and
+  leaves exactly one entry — no ghost/duplicate survives the round trip
+  — reachable again through the real UI path afterward.
+- **J** — structural audit: no `SnapshotLifecycle`/`STALE`/`EXPIRED`/
+  `REMOVED`/`DELETED` vocabulary, no new registry import, exactly one
+  origin-derivation function, `unregisterSelectedSnapshot()` referenced
+  only by its own definition and the template's `@click` (never a
+  watcher or lifecycle hook), no material/Publication deletion or
+  Nostr/Arweave vocabulary, no fallback/ranking/deduplication/trust
+  vocabulary, and `WorldDiscoverySourceRegistry.js` itself completely
+  unmodified.
+
+`tests.html` gains one new entry, alongside the other `SnapshotWorld*`
+files.
+
+Deliberately excluded, per this milestone's own narrow brief:
+- **A generic, all-three-families "remove this source" action.** See
+  above — 0.9.178's own suggestion, deliberately not taken here.
+  `unregisterPeerWorldSource()` remains unwired.
+- **A `SnapshotLifecycle` abstraction, or any `STALE`/`EXPIRED`/`REMOVED`/
+  `DELETED` state.** The existing registry's own semantics are the
+  complete lifecycle needed — see Section J.
+- **Deleting materialized bytes, the Publication, a Nostr announcement,
+  or an Arweave transaction.** Unregistering removes the World discovery
+  contribution alone — see this milestone's own "not delete Snapshot"
+  distinction, above.
+- **Automatic unregistration of any kind** (on staleness, on a fresh
+  selection, on a Publication change, or otherwise). Always one explicit
+  Wanderer click.
+- **Repositioning, relocation, or any position-changing action.** The
+  inspection panel's only action is `unregisterSelectedSnapshot()`.
+- **Ranking, fallback, deduplication, trust, freshness, or lifecycle
+  vocabulary of any kind.** Inherited unchanged from every file in this
+  chain.
+
+```text
+0.9.174  World Source Lifecycle & Staleness Audit                    ✓
+0.9.175  World Source Selection Consistency Audit                    ✓
+0.9.176  World Snapshot Presentation                                 ✓
+0.9.177  World Snapshot Inspection Detail                            ✓
+0.9.178  World Snapshot Inspection Actionability Audit               ✓
+0.9.179  Snapshot World Source Unregistration                        ✓
+```
+
+### Recommendation
+
+With 0.9.179, a materialized Snapshot has completed a full World
+participation lifecycle, each stage terminating cleanly into existing,
+generic World machinery rather than a Snapshot-specific one of its own:
+
+```text
+DISCOVER → SELECT → RESOLVE → VERIFY → MATERIALIZE → POSITION →
+REGISTER → PRESENT → INSPECT → UNREGISTER
+```
+
+A decentralized Snapshot can become an ordinary, spatially correct,
+inspectable World object, and can subsequently leave the World again
+without corrupting any other source — LOCAL, PEER, or another Snapshot
+entirely. I would pause Snapshot-specific World infrastructure work here
+and reassess the product-level goal, rather than automatically opening
+0.9.180. The remaining named loose thread — a generic, all-three-families
+"remove this source" action (closing `unregisterPeerWorldSource()`'s own
+identical gap) — is real, but it is no longer Snapshot-specific work, and
+deserves its own deliberate framing rather than being treated as the next
+item in this particular arc.

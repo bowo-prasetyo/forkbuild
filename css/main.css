@@ -5698,6 +5698,29 @@ html, body {
     word-break: break-all;
 }
 
+/* 0.9.179 — Snapshot World Source Unregistration. The one new action in
+   the inspection panel, shown only for a resolved, SNAPSHOT-sourced
+   selection (selectedEncounterSnapshotInspection). A plain, mildly
+   cautionary button — this removes a World discovery contribution alone,
+   never the underlying material/Publication — no rank/trust styling. */
+.world-encounter-inspection-actions {
+    margin-top: 0.5rem;
+}
+
+.world-encounter-unregister-snapshot {
+    padding: 0.25rem 0.5rem;
+    font-size: 12px;
+    color: #e0a05a;
+    background: #262626;
+    border: 1px solid #3a3a3a;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.world-encounter-unregister-snapshot:hover {
+    border-color: #e0a05a;
+}
+
 /* ===================================================================
    0.9.20 — World Encounter Selection Resolution
    ===================================================================
