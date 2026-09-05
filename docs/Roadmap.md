@@ -70142,3 +70142,155 @@ distinct from this milestone's own dedicated fix contract
 (`tests/SnapshotWorldEncounterMaterialLoading.test.js`) in the same way
 0.9.165's own audit was always distinct from any one vertical milestone's
 own tests.
+
+## 0.9.167 — Snapshot World Material Loading E2E Audit
+
+0.9.166 closed the one gap 0.9.165's own World Discovery Participation
+Audit (Section F) found. This milestone is the HORIZONTAL reassessment
+0.9.166's own recommendation named: with that fix in place, is the entire
+Snapshot participation path — DISCOVER through RENDER — now provably
+complete, coexisting with local and peer material under the real
+composition root, without a parallel Snapshot-specific loading path ever
+existing alongside it? **Test-only, exactly like 0.9.162/0.9.164/0.9.165 —
+adding zero production code.**
+
+```text
+DISCOVER -> SELECT -> RESOLVE -> VERIFY -> ATTRIBUTE -> MATERIALIZE
+     -> PLACE -> REGISTER -> WORLD ENCOUNTER -> SELECT ENCOUNTER
+     -> LOAD MATERIAL -> RENDER MATERIAL
+```
+
+**THE INVARIANT THIS AUDIT SET OUT TO PROVE:** the final three stages —
+WORLD ENCOUNTER, SELECT ENCOUNTER, LOAD MATERIAL (and RENDER MATERIAL) —
+run through the SAME, ordinary World View machinery a local or peer
+encounter already uses. World View never needs to know a given
+Publication's material originally arrived over Nostr/Arweave; by the time
+it is a World Encounter, that provenance is already behind it.
+
+**`tests/SnapshotWorldMaterialLoadingE2EAudit.test.js` — ten sections, run
+against the real, unmodified production code throughout:**
+
+- **A** — existing local material loading is unaffected: an ordinary
+  `origin === 'local'` selection still loads `AVAILABLE` through
+  `materialSources.local`, proven with a live peer AND a registered
+  Snapshot ALSO occupying the SAME registry, reached through the real
+  `bootstrapWorldDiscoveryRuntime()` composition root — never a hand-built
+  registry alone, the thing 0.9.166's own test used throughout.
+- **B** — existing peer material loading is unaffected: an ordinary
+  `peer:<identity>` selection still loads `AVAILABLE` through
+  `materialSources.peer`, with local and Snapshot also registered, and the
+  peer's own marker still resolves its own `peer:<identity>` origin through
+  the real, mounted canvas.
+- **C** — Snapshot origin routing, confirmed once more directly:
+  `snapshot:<contentHash>:<publicationId>` -> `materialSourceFor()` ->
+  `materialSources.local` -> `AVAILABLE`.
+- **D** — Publication identity remains authoritative under a
+  CONTENT-HASH COLLISION — the scenario 0.9.163's own fix exists for, run
+  here for the first time against the material-loading layer: two
+  DIFFERENT Publications sharing the SAME `contentHash` each register
+  under their own `snapshot:<sharedHash>:<ownId>` origin (0.9.163's own
+  `publicationId`-folded derivation), reach two genuinely distinct rendered
+  encounters at two distinct positions, and each loads its OWN correct
+  Publication — the loader never infers World identity from `contentHash`
+  alone.
+- **E** — no rediscovery: with REAL (fake-transport-backed, not merely
+  synthetic-and-throwing) `ArweaveContentStore`/`NostrSnapshotDiscoveryPublisher`/
+  `NostrSnapshotDiscoveryQueryService` collaborators wrapped in call
+  counters, selecting a materialized, registered Snapshot's own World
+  Encounter and loading its material triggers ZERO further Arweave
+  fetches, ZERO further Nostr queries, and ZERO further Nostr publishes —
+  counted immediately before and after selection/loading, not merely
+  "never imported."
+- **F** — no write-back: call-counting BOTH `storageProvider.save()` AND
+  `registry.setSource()` across selection and material loading proves
+  LOAD never MATERIALIZEs (zero storage writes) and never REGISTERs (zero
+  registry mutations) — strictly observational, in both directions 0.9.166
+  only checked separately.
+- **G** — failure semantics, proven SIDE BY SIDE: an ordinary local-origin
+  selection and a Snapshot-origin selection, reading through the identical
+  corrupted `storageProvider` (its `forkbuild-publications` record deleted
+  out from under both), degrade to the exact same `UNAVAILABLE` outcome —
+  never a distinguished Snapshot-specific failure, confirmed by direct
+  status equality between the two, not merely by each individually
+  matching the enum.
+- **H** — spatial correctness: two Snapshots placed and registered with
+  their `contentHash` lexical order, registration order, and
+  material-load order ALL deliberately scrambled relative to their own
+  placement order still each render at exactly their own, pre-existing
+  `WorldPlacement` position; positions are bit-for-bit unchanged by loading
+  either Publication's material, in either order; and the loaded
+  Publication material itself is confirmed to carry no position field a
+  renderer could ever be tempted to read instead.
+- **I** — FLAGSHIP: Nostr discovery -> candidate -> selection -> resolution
+  -> verification -> materialization -> placement -> registration -> World
+  encounter -> selection -> material loading -> rendered material, run
+  through the REAL `bootstrapWorldDiscoveryRuntime()` composition root
+  with local and peer sources ALREADY coexisting (unlike 0.9.166's own
+  flagship, which hand-built an empty registry for the Snapshot alone) —
+  closing with a direct, in-the-same-canvas-instance comparison: re-selecting
+  the local marker resolves and loads through the IDENTICAL
+  `selectEncounter()`/`refreshMaterialInspection()` machinery the Snapshot
+  marker just used, producing the same `AVAILABLE` vocabulary.
+- **J** — structural sweep: `application/WorldDiscoverySourceRegistry.js`
+  carries no Snapshot/Nostr/Arweave vocabulary of any kind;
+  `ui/components/WorldEncounterCanvas.js`'s own `selectEncounter()`,
+  `refreshSelectionOutcome()`, `refreshMaterialInspection()`, and
+  `resolvedEncounterSelection` contain no Snapshot-specific branching
+  (precisely scoped, per 0.9.165's own Section E technique, around that
+  file's own OTHER, legitimate, unrelated Snapshot-distribution UI); and
+  `application/WorldEncounterMaterialLoading.js`'s own `materialSourceFor()`
+  still holds exactly one `snapshot:` branch, routed to the shared
+  `materialSources.local` slot.
+
+**This audit found no new gap.** Every section confirms the invariant
+0.9.166 established already holds under conditions that milestone's own
+test never constructed: real network collaborators rather than synthetic
+stand-ins, the real composition root rather than a hand-built registry,
+local and peer sources genuinely coexisting rather than a Snapshot alone,
+and a genuine `contentHash` collision rather than merely two different
+hashes. No production file was added or modified.
+
+Deliberately excluded, per this milestone's own narrow scope:
+- **Automatic Snapshot discovery, materialization, placement, or
+  registration.** Every stage in Section I is still driven explicitly, one
+  call at a time, exactly as every prior Snapshot milestone already does.
+- **Snapshot caching, deduplication, trust/ranking, or retry/failover of
+  any kind.** None were needed to characterize this audit's own findings.
+- **Any new lifecycle status, Snapshot-specific renderer, or
+  `SnapshotMaterialSource` class.** Section J's own sweep confirms none
+  exist.
+- **Any change to `ui/components/WorldEncounterCanvas.js`,
+  `application/WorldDiscoverySourceRegistry.js`, or
+  `application/WorldEncounterMaterialLoading.js`.** This audit confirms
+  their existing behavior; it found no defect to fix.
+
+```text
+0.9.161  Snapshot World Rendering                                    ✓
+0.9.162  Snapshot World Convergence Audit                            ✓
+0.9.163  Snapshot World Origin Collision Fix                         ✓
+0.9.164  Snapshot World Source Identity Audit                        ✓
+0.9.165  World Discovery Participation Audit                         ✓
+0.9.166  Snapshot World Encounter Material Loading                   ✓
+0.9.167  Snapshot World Material Loading E2E Audit                   ✓
+```
+
+### Recommendation
+
+With 0.9.167, the Snapshot-specific pipeline can be regarded as ending
+exactly at REGISTER: DISCOVER through REGISTER stays Snapshot's own,
+purpose-built machinery, while WORLD ENCOUNTER through RENDER MATERIAL is
+now demonstrated, end to end and under real coexistence with local and
+peer sources, to run through the identical, unmodified World View
+machinery every other source family already shares. A decentralized
+Snapshot can be discovered, explicitly selected, cryptographically
+verified, materialized locally, assigned an existing World position,
+registered as a World source, selected as a World Encounter, loaded
+through ordinary material loading, and rendered through the same
+machinery as every other World source.
+
+Per this milestone's own brief, I would NOT add another Snapshot-specific
+milestone at this point. Continuing to name `SnapshotSomething...`
+milestones past this audit risks building unnecessary parallel
+architecture where none is needed anymore. The next milestone should look
+for the next genuine capability gap OUTSIDE the Snapshot pipeline, rather
+than inventing another Snapshot layer.
