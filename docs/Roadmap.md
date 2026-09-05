@@ -72112,3 +72112,256 @@ and reassess the product-level goal, rather than automatically opening
 identical gap) — is real, but it is no longer Snapshot-specific work, and
 deserves its own deliberate framing rather than being treated as the next
 item in this particular arc.
+
+## 0.9.180 — World Snapshot Completion & Boundary Audit
+
+0.9.179 closed the last named gap in the decentralized Snapshot -> World
+participation lifecycle: an explicit, symmetric UNREGISTER, distinct in
+every test from deleting the underlying Snapshot. This milestone is the
+pause 0.9.179's own Recommendation asked for — **not another Snapshot
+mechanism, a decision point.** TEST-ONLY, the widest audit in this whole
+arc: every collaborator it exercises (the complete DISCOVER-through-
+UNREGISTER chain, `WorldDiscoverySourceRegistry.js`,
+`MaterializedSnapshotWorldDiscoveryBridge.js`,
+`peer/PeerWorldDiscoveryLifecycleBridge.js`, `WorldEncounterCanvas.js`,
+`WorldEncounterMarker.js`, `WorldEncounterPresentation.js`,
+`WorldSnapshotInspection.js`, `WorldEncounterMaterialLoading.js`,
+`SnapshotWorldPositionClaim.js`, `SnapshotWorldPlacement.js`) is read,
+real, and unmodified. **No production file is added or changed by this
+milestone.**
+
+```text
+                 DECENTRALIZED SNAPSHOT
+                         │
+   DISCOVER → SELECT → RESOLVE → VERIFY → MATERIALIZE → [CONSUME CLAIM]
+                         │
+              POSITION / CLAIM → REGISTER
+                         │
+   WORLD ENCOUNTER → PRESENT → INSPECT → SELECT → USE/LOAD
+                         │
+                    UNREGISTER
+```
+
+**Why this milestone was more than re-running prior audits.** 0.9.173
+(Decentralized Snapshot Spatial E2E Audit) drove a real, Nostr-discovered
+Snapshot from PUBLISH all the way through RENDER — but UNREGISTER did not
+exist yet. 0.9.179 built and thoroughly proved UNREGISTER — but only
+against hand-built `placedResult()` registration stubs, never against a
+Snapshot that arrived through the real, complete decentralized pipeline.
+**No test anywhere in this codebase, before this milestone, had ever
+driven one Snapshot from a genuine Nostr announcement through an explicit
+World unregistration in a single run.** `tests/WorldSnapshotCompletionBoundaryAudit.test.js`'s
+own Section A closes exactly that gap; every other section either extends
+an existing invariant across the newly-completed UNREGISTER boundary
+(Sections B, C, D, E) or performs the wider structural sweep the brief
+that requested this milestone asked for (Sections F, G, H, I, J).
+
+`tests/WorldSnapshotCompletionBoundaryAudit.test.js` — ten sections:
+
+- **A** — FLAGSHIP: a complete stranger Snapshot travels PUBLISH →
+  DISCOVER → SELECT → RESOLVE → VERIFY → MATERIALIZE → CONSUME CLAIM →
+  PLACE → REGISTER → WORLD ENCOUNTER → SELECT → LOAD MATERIAL → PRESENT →
+  INSPECT → UNREGISTER, entirely through real, unmodified production
+  machinery — a real (fake-transport-backed) Nostr network and Arweave
+  gateway throughout. No stage secretly bypasses another; every one of the
+  fourteen named stages produces its own independently-checked outcome.
+- **B** — identity closure: `contentHash`, `locator`, the Nostr event id,
+  `publicationId`, the registry `origin`, and `position` are proven six
+  pairwise-distinct facts in one run — including the direct demonstration
+  that the registry's own origin key depends on EXACTLY `{contentHash,
+  publicationId}` (two genuinely separate announcements, two different
+  locators, two different Nostr event ids, still register to the
+  IDENTICAL origin) — and that closure survives an unregister/re-register
+  round trip unchanged.
+- **C** — source-family convergence, extended past 0.9.168's own Section
+  A: a registry holding LOCAL, PEER, and SNAPSHOT sources projects with no
+  `origin`/`source`/`sourceOrigin` field anywhere, recursively, in both
+  the discovery-registry view and the rendered marker array; `origin`
+  resurfaces exactly at explicit selection; and — the genuinely new
+  check — that recursive absence still holds for every REMAINING source
+  after a mid-lifecycle Snapshot unregistration, with LOCAL and PEER
+  proven untouched by same-reference identity.
+- **D** — lifecycle reversibility, in two parts. D1: REGISTER → UNREGISTER
+  → REGISTER, driven through the real decentralized pipeline AND the real
+  `unregisterSelectedSnapshot()` UI action (never a bridge-level stub, as
+  0.9.179's own Section I used), reaches a World state equivalent to the
+  original registration. D2: REGISTER A / REGISTER B / UNREGISTER A, for
+  every identity axis the architecture actually permits two Snapshots to
+  share — an identical `contentHash` under different Publications
+  (0.9.163's own case), an identical `publicationId` under different
+  content hashes, and an identical claimed `position` under two entirely
+  different Publications — leaves B completely untouched in every case,
+  and each case is separately shown reversible.
+- **E** — no hidden persistence, but no accidental deletion either: after
+  UNREGISTER, the encounter projection, resolved selection, Snapshot
+  inspection, presentation, material inspection, and distributable-
+  Publication state all collapse to absence together — while the
+  Publication object (byte-for-byte, via `JSON.stringify`), the
+  materialized bytes (still readable from this replica's own local
+  content store), the Nostr announcement (still on the fake relay), and
+  the Arweave transaction (still on the fake gateway) all survive
+  untouched, and the identical candidate can still be independently
+  re-resolved afterward. "World contribution" is proven a different fact
+  than any of the other four, directly, not merely asserted.
+- **F** — no accidental authority, in three parts. F1: registering two
+  Snapshots in the OPPOSITE order from their own discovery/announcement
+  still lands each at its own claimed position, never the other's, and a
+  rendered position survives the complete deletion of its own originating
+  Nostr event(s) — the registry, never the event, is the spatial
+  authority. F2: a claim that was discovered and materialized but never
+  explicitly consumed carries no authority at all — placement falls back
+  to UNPLACED, and registration registers nothing. F3: a structural sweep
+  for rank/trust/priority/weight/preferred/freshness vocabulary across
+  every core file this pipeline touches finds none.
+- **G** — temporal independence: no `setInterval` — the one recurring-poll
+  primitive — exists in any discovery/resolution/materialization/claim/
+  placement/registration/registry file, or in the one method
+  (`unregisterSelectedSnapshot()`) this milestone's own UNREGISTER stage
+  actually runs; World registry change notification is proven synchronous
+  for both register AND unregister — a subscriber fires inside the very
+  same call, before any `await` — extending 0.9.168's own Section E
+  finding to the unregister direction.
+- **H** — failure closure: `NOT_DISCOVERED`/`STORE_UNAVAILABLE`/
+  `CONTENT_UNAVAILABLE`/`CONTENT_HASH_MISMATCH` are each independently
+  reproduced against the real resolver and confirmed to remain RESOLUTION
+  outcomes alone; `SnapshotWorldRegistrationOutcome` still carries exactly
+  its own one `REGISTERED` value, passing every non-PLACED outcome
+  through verbatim; `unregisterMaterializedSnapshotWorldSource()` still
+  returns `void` — no status, no outcome enum of its own — regardless of
+  which, if any, of the four resolution failures ever occurred upstream.
+- **I** — cross-family destruction/isolation: with LOCAL X, PEER X,
+  Snapshot A (for X), and Snapshot B (for a different Publication Y,
+  sharing Snapshot A's own `contentHash`) all registered simultaneously,
+  unregistering Snapshot A removes exactly that one source — LOCAL X,
+  PEER X, and Snapshot B all survive as the exact same object references
+  — and the identical isolation holds when Snapshot B is subsequently
+  removed by its own shared-contentHash-addressed call.
+- **J** — the widest structural sweep in this arc: no Nostr/Arweave import
+  in `WorldEncounterCanvas.js`/`WorldEncounterMarker.js`; no hashing or
+  cryptographic verification in the UI or presentation/inspection layer;
+  no `WorldDiscoverySourceRegistry` reference inside either pure
+  descriptor; no Snapshot-specific `WorldEncounterKind` or Encounter
+  class (`WorldEncounterKind` still carries exactly `PUBLICATION`/
+  `AVATAR`); no `materialSources.snapshot` slot (a Snapshot still loads
+  through the ordinary `materialSources.local` path); no fallback,
+  deduplication, ranking, or trust vocabulary; no
+  `SnapshotLifecycle`/`STALE`/`EXPIRED`/`REVOKED`/`SYNCED`/`ACTIVE`/
+  `INACTIVE` vocabulary anywhere; and `WorldDiscoverySourceRegistry.js`
+  itself, once again, carries no reference to any Snapshot-specific
+  vocabulary or UI action of any kind.
+
+`tests.html` gains one new entry, alphabetically adjacent to
+`WorldSnapshotInspection.test.js` — the same "register every new test
+file" discipline every prior test-adding milestone in this file already
+followed.
+
+Deliberately excluded, per this milestone's own audit-first brief:
+- **Any production code change of any kind.** This audit found no defect
+  in the completed pipeline to fix — every section is a positive proof or
+  a structural sweep, never a bug report.
+- **Reconciling, ranking, or timestamping among several claims, several
+  Snapshots sharing an identity axis, or several discovery announcements.**
+  Inherited unchanged from every file in this chain — Section D's own
+  "shared identity axis" cases prove coexistence and isolation, never a
+  "pick one" policy.
+- **A generic, all-three-families "remove this source" action.** Still
+  the same named, not-yet-scheduled gap 0.9.178/0.9.179 already left open
+  — `unregisterPeerWorldSource()` remains unwired to any UI action. This
+  audit re-confirms the gap (Section I's own final line) without closing
+  it; see "Next candidate," below.
+- **Vehicle Reachability (MOTORCYCLE/CAR/DRONE), or any change to
+  `core/VehicleType.js`/`AvatarMovementController`.** Named repeatedly
+  since 0.9.146 and 0.9.148, entirely outside this milestone's own
+  Snapshot/World scope; see "Next candidate," below.
+- **A new lifecycle vocabulary, a new World-state authority, or a second
+  rendering/material-loading path of any kind.** Section J's own
+  structural sweep is the regression lock; none was found, and none was
+  invented to fill space.
+
+```text
+0.9.176  World Snapshot Presentation                                 ✓
+0.9.177  World Snapshot Inspection Detail                            ✓
+0.9.178  World Snapshot Inspection Actionability Audit               ✓
+0.9.179  Snapshot World Source Unregistration                        ✓
+0.9.180  World Snapshot Completion & Boundary Audit                  ✓
+```
+
+### Classification
+
+Per this milestone's own brief, the useful output here is not another
+implementation milestone — it is a classification of what this whole
+0.9.131-through-0.9.180 arc actually established, what remains
+intentionally unbuilt, and what the one evidence-backed next step is.
+
+```text
+COMPLETE
+────────
+The decentralized Snapshot -> World participation lifecycle itself.
+Every stage in DISCOVER → SELECT → RESOLVE → VERIFY → MATERIALIZE →
+[CONSUME CLAIM] → PLACE → REGISTER → WORLD ENCOUNTER → SELECT → LOAD
+MATERIAL → PRESENT → INSPECT → UNREGISTER terminates cleanly into the
+next, proven end to end by Section A, with six identities (contentHash,
+locator/storage, Nostr event id, publicationId, registry origin,
+position) proven never to collapse (Section B), no Snapshot-specific
+World-rendering seam (Sections C, J), full reversibility under every
+identity-sharing combination the architecture permits (Section D), no
+hidden persistence and no accidental deletion (Section E), no accidental
+authority anywhere in the pipeline (Section F), no hidden timer or
+synchronization role (Section G), a closed and unconfused failure
+vocabulary (Section H), and complete cross-family isolation (Section I).
+A materialized, decentralized Snapshot is, and can stop being, an
+ordinary World participant — nothing about "how it arrived" is knowable
+downstream of registration, and nothing about removing it corrupts any
+other source of any family.
+
+DEFERRED
+────────
+Named, real, and deliberately NOT built, because no concrete product
+requirement currently justifies the machinery:
+  - Reconciliation, ranking, "best claim"/"best Snapshot," or trust/
+    reputation among several Snapshots, several claims, or several
+    discovery announcements naming the same identity (contentHash,
+    Publication, or position alike).
+  - Carrying `claimedPosition` or `locator`/`storage` through
+    registration to make them inspectable (0.9.177's own audited finding,
+    unchanged) — would require new plumbing, not a join over existing
+    facts.
+  - Populating the shared `'local'` origin from this replica's own
+    general publication/placement storage (named since 0.9.14, deferred
+    at every milestone since 0.9.160).
+  - Any Snapshot-specific rendering path, lifecycle state, or World-state
+    authority beyond the existing registry.
+
+NEXT CANDIDATE
+──────────────
+Not another Snapshot mechanism. Two real, evidence-backed candidates
+exist outside this arc entirely — neither invented for this audit; both
+already named, and left unscheduled, by prior milestones:
+
+  1. Vehicle Reachability (MOTORCYCLE/CAR/DRONE). Named at 0.9.146 and
+     again at 0.9.148 as "the more substantial open candidate" once
+     decentralized discovery's own infrastructure gap closed;
+     `core/VehicleType.js` (0.9.70) has named all four vehicle types for
+     over forty milestones, and `isMovableVehicleType()` still gates on
+     `BICYCLE` alone. This is a genuine, orthogonal, previously-identified
+     product capability gap — not Snapshot-adjacent at all.
+  2. A generic, all-three-families "stop showing me this source" action.
+     Smaller, and still World/Snapshot-adjacent: `unregisterPeerWorldSource()`
+     remains exactly as unwired as 0.9.178/0.9.179 left it, and this
+     audit's own Section I re-confirms it. Deliberately NOT closed here,
+     or in 0.9.179, because doing so as a Snapshot-only affordance would
+     re-introduce the very asymmetry 0.9.178 worked to rule out.
+
+I would recommend **Candidate 1** for 0.9.181. It is the larger,
+longer-named gap, entirely outside the World/Snapshot family this arc
+just spent fifty milestones completing — exactly the kind of "different
+user-facing capability" this milestone's own brief asked for, rather than
+one more small seam inside a pipeline that Sections A through J already
+show has none left to close. Candidate 2 remains real and worth doing,
+but it is small enough, and adjacent enough to this arc, that scheduling
+it immediately risks exactly the "Snapshot feature exists → add another
+Snapshot-adjacent feature" drift this milestone was asked to interrupt. I
+would not schedule either automatically — which of the two ForkBuild
+actually needs next is a product judgment this audit's own evidence can
+narrow, but not make.
+```
