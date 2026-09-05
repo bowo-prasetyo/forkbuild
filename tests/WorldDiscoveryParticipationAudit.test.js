@@ -85,22 +85,29 @@ import { Publication } from '../publisher/Publication.js';
 //              legitimate `origin` vocabularies (material provenance
 //              display, decentralized lead selection) are NOT part of
 //              this claim and must not be mistaken for a violation of it.
-//   Section F: THE GENUINE GAP THIS AUDIT FOUND — a materialized,
-//              registered, rendered Snapshot's own resolved selection can
-//              never load its material through
+//   Section F: THE GENUINE GAP THIS AUDIT FOUND — FIXED BY 0.9.166. A
+//              materialized, registered, rendered Snapshot's own resolved
+//              selection could never load its material through
 //              `application/WorldEncounterMaterialLoading.js`'s ordinary
 //              `loadWorldEncounterMaterial()` path. That file's own
-//              `materialSourceFor()` (0.9.21, unmodified since) recognizes
-//              exactly two origin families — `origin === 'local'` and
+//              `materialSourceFor()` (0.9.21) recognized exactly two
+//              origin families — `origin === 'local'` and
 //              `origin.startsWith('peer:')` — predating Snapshot's own
 //              arrival as a World source family by over a hundred
 //              milestones. A `"snapshot:<contentHash>:<publicationId>"`
-//              origin matches neither branch, so `loadWorldEncounterMaterial()`
-//              reports `UNAVAILABLE` unconditionally for it — even when a
-//              caller supplies a fully populated, working `snapshot`
-//              material source alongside `local`/`peer`/`decentralized`.
-//              Proven against the real, unmodified function; NOT fixed
-//              here — see this file's own closing recommendation.
+//              origin matched neither branch, so `loadWorldEncounterMaterial()`
+//              reported `UNAVAILABLE` unconditionally for it. This
+//              milestone did not fix it — 0.9.166 did, adding exactly one
+//              more branch to `materialSourceFor()` that routes a
+//              `snapshot:*` origin to the SAME `materialSources.local`
+//              slot `origin === 'local'` already uses (see that file's own
+//              0.9.166 header for why). Section F below is UPDATED,
+//              post-0.9.166, to confirm the fix directly against the same
+//              real function: a registered Snapshot's own resolved
+//              selection now loads through `materialSources.local`, never
+//              through a separate `snapshot`-named slot — see
+//              `tests/SnapshotWorldEncounterMaterialLoading.test.js` for
+//              that fix's own dedicated test contract.
 //   Section G: structural sweep — this milestone adds no production file,
 //              and no dedup/reconciliation/merge/trust/ranking vocabulary
 //              anywhere it touches.
@@ -466,9 +473,10 @@ async function run() {
     }
 
     // ---------------------------------------------------------------
-    // Section F — THE GENUINE GAP THIS AUDIT FOUND: a registered
-    // Snapshot's own resolved selection can never load its material
-    // through the ordinary loadWorldEncounterMaterial() path.
+    // Section F — THE GENUINE GAP THIS AUDIT FOUND, FIXED BY 0.9.166: a
+    // registered Snapshot's own resolved selection now loads its material
+    // through the ordinary loadWorldEncounterMaterial() path, via the SAME
+    // materialSources.local slot 'local'-origin selections already use.
     // ---------------------------------------------------------------
     {
         class RecordingMaterialSource extends WorldEncounterMaterialSource {
@@ -479,10 +487,10 @@ async function run() {
         const localMaterialSource = new RecordingMaterialSource({ bytes: 'local material' });
         const peerMaterialSource = new RecordingMaterialSource({ bytes: 'peer material' });
         const decentralizedMaterialSource = new RecordingMaterialSource({ bytes: 'decentralized material' });
-        // A fully working Snapshot-shaped material source — deliberately
-        // supplied under every plausible key a caller might guess, to
-        // prove the failure is the DISPATCH, never a caller who simply
-        // forgot to register one.
+        // A Snapshot-shaped material source registered under every OTHER
+        // plausible key a caller might have guessed before 0.9.166 —
+        // proving the fix genuinely routes through `materialSources.local`
+        // and never invents a fourth, Snapshot-named slot alongside it.
         const snapshotMaterialSource = new RecordingMaterialSource({ bytes: 'snapshot material' });
 
         const publicationId = 'pub-material-gap';
@@ -503,37 +511,36 @@ async function run() {
         };
 
         const snapshotResult = await loadWorldEncounterMaterial({ resolvedSelection: resolvedSnapshotSelection, materialSources });
-        assert(snapshotResult.status === WorldEncounterMaterialLoadStatus.UNAVAILABLE, `3. THE GAP — a resolved selection naming a REAL registered Snapshot's own origin reports UNAVAILABLE, even though a fully working material source for it was supplied; got status '${snapshotResult.status}'`);
-        assert(snapshotResult.material === null, '4. no material is ever returned for it');
-        assert(snapshotMaterialSource.loadCallCount === 0, '5. THE ROOT CAUSE, MADE CONCRETE — the Snapshot-shaped material source\'s own load() was never even CALLED; materialSourceFor() (application/WorldEncounterMaterialLoading.js) has no branch that would ever reach it, under ANY key name a caller might choose');
-        assert(localMaterialSource.loadCallCount === 0 && peerMaterialSource.loadCallCount === 0 && decentralizedMaterialSource.loadCallCount === 0,
-            '6. none of the OTHER registered sources were spuriously called either — this is a genuine "nothing recognizes this origin family" dispatch failure, never a wrong-source misroute');
+        assert(snapshotResult.status === WorldEncounterMaterialLoadStatus.AVAILABLE, `3. THE GAP IS CLOSED — a resolved selection naming a REAL registered Snapshot's own origin now reports AVAILABLE; got status '${snapshotResult.status}'`);
+        assert(snapshotResult.material === localMaterialSource.material, '4. the material returned is materialSources.local\'s own — the SAME slot \'local\'-origin selections already use, never a separate Snapshot-shaped result');
+        assert(localMaterialSource.loadCallCount === 1, '5. THE FIX, MADE CONCRETE — a snapshot:* origin dispatches to materialSources.local\'s own load(), exactly once');
+        assert(snapshotMaterialSource.loadCallCount === 0, '6. materialSources.snapshot (a guessed, never-adopted key) is never called — 0.9.166 added no fourth, Snapshot-named slot');
+        assert(peerMaterialSource.loadCallCount === 0 && decentralizedMaterialSource.loadCallCount === 0,
+            '7. neither of the OTHER registered sources was spuriously called either — a snapshot:* origin dispatches to exactly one slot, never several');
 
-        // Sanity, both directions — the SAME function, unmodified, DOES
-        // correctly dispatch 'local' and 'peer:...' origins, proving
-        // Sections 3-6 above are a real, origin-specific gap, never a
-        // broken test harness.
+        // Sanity, both directions — the SAME function still correctly
+        // dispatches 'local' and 'peer:...' origins exactly as before,
+        // proving 0.9.166 added a branch rather than changing existing
+        // routing.
         const resolvedLocalSelection = describeWorldEncounterSelectionIdentity({ kind: WorldEncounterKind.PUBLICATION, objectId: 'pub-x', origin: LOCAL_WORLD_DISCOVERY_ORIGIN });
         const localResult = await loadWorldEncounterMaterial({ resolvedSelection: resolvedLocalSelection, materialSources });
-        assert(localResult.status === WorldEncounterMaterialLoadStatus.AVAILABLE && localMaterialSource.loadCallCount === 1, '7. sanity — the SAME function correctly dispatches a \'local\' origin to materialSources.local');
+        assert(localResult.status === WorldEncounterMaterialLoadStatus.AVAILABLE && localMaterialSource.loadCallCount === 2, '8. sanity — the SAME function still correctly dispatches a \'local\' origin to materialSources.local');
 
         const resolvedPeerSelection = describeWorldEncounterSelectionIdentity({ kind: WorldEncounterKind.PUBLICATION, objectId: 'pub-y', origin: 'peer:did:key:zMaterialGap' });
         const peerResult = await loadWorldEncounterMaterial({ resolvedSelection: resolvedPeerSelection, materialSources });
-        assert(peerResult.status === WorldEncounterMaterialLoadStatus.AVAILABLE && peerMaterialSource.loadCallCount === 1, '8. sanity — the SAME function correctly dispatches a \'peer:*\' origin to materialSources.peer');
+        assert(peerResult.status === WorldEncounterMaterialLoadStatus.AVAILABLE && peerMaterialSource.loadCallCount === 1, '9. sanity — the SAME function still correctly dispatches a \'peer:*\' origin to materialSources.peer');
 
         // Structural confirmation, tied to the behavioral proof above:
-        // materialSourceFor() itself contains no mention of 'snapshot' at
-        // all — this was never a guarded, deliberate exclusion (no
-        // comment, no TODO), simply a two-branch dispatch table written
-        // (0.9.21) long before Snapshot existed as a World source family
-        // (0.9.150+) and never revisited since.
+        // materialSourceFor() now DOES mention 'snapshot' — exactly one
+        // branch, routing to materialSources.local, never a new slot name.
         const loadingSource = await readFile(new URL('../application/WorldEncounterMaterialLoading.js', import.meta.url), 'utf8');
         const materialSourceForStart = loadingSource.indexOf('function materialSourceFor(');
         const materialSourceForEnd = loadingSource.indexOf('\n}\n', materialSourceForStart);
         const materialSourceForBody = loadingSource.slice(materialSourceForStart, materialSourceForEnd);
-        assert(!/snapshot/i.test(materialSourceForBody), '9. materialSourceFor()\'s own body contains no reference to \'snapshot\' in any form — confirming the gap is a plain omission, not a deliberate, documented exclusion');
+        assert(/origin\.startsWith\('snapshot:'\)/.test(materialSourceForBody), '10. materialSourceFor() now recognizes a \'snapshot:\' origin prefix');
+        assert(!/materialSources\.snapshot/.test(materialSourceForBody), '11. ...and still routes it to materialSources.local, never to a materialSources.snapshot slot of its own');
 
-        console.log('✓ Section F: THE GENUINE GAP — a registered, rendered Snapshot\'s own resolved selection can never load its material through loadWorldEncounterMaterial(); materialSourceFor() recognizes only \'local\' and \'peer:*\', predating Snapshot\'s own arrival as a World source family. Characterized here, not fixed — see this file\'s own closing recommendation.');
+        console.log('✓ Section F: THE GENUINE GAP, FIXED BY 0.9.166 — a registered, rendered Snapshot\'s own resolved selection now loads its material through loadWorldEncounterMaterial(), via the SAME materialSources.local slot \'local\'-origin selections already use; see tests/SnapshotWorldEncounterMaterialLoading.test.js for that fix\'s own dedicated test contract.');
     }
 
     // ---------------------------------------------------------------
