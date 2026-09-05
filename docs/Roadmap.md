@@ -70861,3 +70861,173 @@ ends, ordinary World View begins — and this audit found no gap to
 schedule work against. I would recommend a fresh roadmap reassessment of
 actual remaining product capabilities as the next milestone, rather than
 continuing to optimize this subsystem on momentum alone.
+
+## 0.9.171 — Decentralized Snapshot World Position Claim
+
+0.9.170's own audit confirmed a real capability gap it was never asked to
+close: `application/SnapshotWorldPlacement.js` (0.9.159) places a
+materialized, stranger-discovered Snapshot only by borrowing the
+RECEIVER's own, already-existing `WorldPlacement` for the same
+Publication — reporting `UNPLACED` when none exists — and never once
+consults the PUBLISHER's own spatial intent. A Snapshot discovered purely
+via Nostr, with no local placement already on file, can be verified and
+materialized, yet has nowhere to go. This milestone closes exactly the
+DISCOVERY half of that gap — not the PLACEMENT half; see "Deliberately
+excluded," below — per the brief that requested it: teach the Snapshot
+discovery protocol to optionally carry a claim about where a Snapshot
+belongs, explicitly bound to a Publication identity so it can never be
+confused with `contentHash`, which 0.9.163's own Convergence Audit already
+proved is NOT a reliable proxy for "which Publication" (two different
+Publications can share one contentHash).
+
+```text
+LOCAL WORLD
+     │
+     │ Publication + current WorldPlacement (read by a FUTURE publisher-
+     │ side caller, unbuilt this milestone — see "Deliberately excluded")
+     ▼
+Snapshot Discovery Announcement
+     │
+     ├── contentHash        (0.9.133, unchanged)
+     ├── locator             (0.9.133, unchanged)
+     ├── storage             (0.9.133, unchanged)
+     ├── publicationId       ★ NEW, optional
+     └── claimedPosition     ★ NEW, optional
+             │
+             ▼
+        Nostr discovery
+             │
+             ▼
+   { contentHash, locator, storage, publicationId?, claimedPosition? }
+             │
+             ▼
+      (RESOLVE -> VERIFY -> MATERIALIZE -> PLACE, all UNCHANGED,
+       0.9.152 through 0.9.159 — see "Deliberately excluded")
+```
+
+THE ONE RULE THIS MILESTONE ENFORCES, NAMED DIRECTLY IN THE BRIEF THAT
+REQUESTED IT: **do not add a bare position to the announcement — add a
+position claim explicitly bound to the Publication identity.**
+`core/SnapshotDiscoveryEnvelope.js#describeSnapshotDiscoveryEnvelope()`
+now refuses to describe an envelope carrying exactly ONE of
+`publicationId`/`claimedPosition` without the other — a position with no
+named Publication is exactly the ambiguity `contentHash + position` alone
+would create for two Publications sharing one contentHash. An envelope
+naming neither field remains the identical 0.9.133 shape, unchanged.
+
+NO VERSION BUMP. Both fields are optional additions to the existing
+`SNAPSHOT_DISCOVERY_ENVELOPE_VERSION = 1` shape. When absent, the
+described envelope (and the candidate `application/
+NostrSnapshotDiscoveryQueryService.js#search()` reports) carries EXACTLY
+its original key set — never `publicationId: null`/`claimedPosition:
+null` bolted on. Every pre-0.9.171 test asserting an exact key set —
+`tests/NostrSnapshotDiscovery.test.js`'s own Section 3c, `tests/
+SnapshotLifecycleSemanticBoundaryAudit.test.js`'s own Section C, `tests/
+SnapshotDiscoverySemanticsAudit.test.js`'s own Section B — passes
+completely unmodified; a claim-free announcement looks, on the wire,
+exactly as it always has.
+
+A CLAIM, NEVER A COMMITMENT, NEVER VERIFIED, NEVER PLACED. Exactly like
+`contentHash`/`locator`/`storage` before it, `claimedPosition` is
+validated for SHAPE only (three finite numbers) — never for truth.
+Nothing about discovering a claim implies the claimed position is correct,
+current, or was ever independently checked; a false claim is exactly as
+discoverable as a true one, the identical posture 0.9.133's own "discovery
+is not verification" already established for content identity.
+
+THREE FILES TOUCHED, EACH BY EXACTLY THE AMOUNT ITS OWN SEAM NEEDED:
+- `core/SnapshotDiscoveryEnvelope.js` — the two new, paired, optional
+  fields and their validation rule.
+- `application/NostrSnapshotDiscoveryPublisher.js` — `publish()` accepts
+  and forwards `publicationId`/`claimedPosition`, unread for any other
+  purpose; a caller who wants to announce a claim already holds both
+  values and hands them in directly, exactly like every other field this
+  file already forwards without reading.
+- `application/NostrSnapshotDiscoveryQueryService.js` — `search()`
+  forwards both, unchanged, onto the reported candidate, when the
+  announcing envelope carried them.
+
+`application/DecentralizedSnapshotResolver.js` and `application/
+MaterializeSnapshotFromSelectedCandidateUseCase.js` needed no change at
+all: both already carry a caller-supplied candidate object through by
+reference (`resolveCandidate()`'s own `candidates: [candidate]`), so a
+claim riding on that same object already survives RESOLVE and
+MATERIALIZE — verified as bytes, but never yet turned into a `MaterializeSnapshotFromSelectedCandidateUseCase`-level `publicationId`, exactly
+as that file's own 0.9.158 header already requires ("no publicationId, no
+publicationKnown — deliberately").
+
+DELIBERATELY EXCLUDED — NOT THIS MILESTONE.
+- **Wiring `application/SnapshotWorldPlacement.js`, `application/
+  MaterializedSnapshotWorldDiscoveryBridge.js`, or any other placement/
+  registration file to ever read a discovered `claimedPosition`.** Per the
+  brief's own Part D: "do not immediately change SnapshotWorldPlacement.js
+  in this same milestone" — first establish the claim as a plain, carried
+  fact; whether and how World View should ever treat an unverified,
+  publisher-declared claim as authoritative spatial state is a separate,
+  future POLICY decision (candidate name: 0.9.172 — Decentralized Snapshot
+  Position Consumption), deserving its own seam and its own tests, never
+  folded into the milestone that first defines the claim's shape.
+- **A publisher-side composition wiring a real `WorldPlacement`/
+  `WorldNavigationSession#getPlacementInfo()` into an actual
+  `publisher.publish({ publicationId, claimedPosition })` call anywhere in
+  `ui/`.** This milestone defines the protocol capability; a real caller
+  that reads a local placement and announces it is unbuilt, unscheduled,
+  later work — the identical "a model, never machinery... a caller,
+  unbuilt this milestone" restraint `application/
+  PublicationDistributionDescriptor.js` (0.9.44) already held for the
+  Signed Claim family's own distribution-side model.
+- **A new domain class (`SnapshotWorldPositionClaim` or similar).** The
+  augmented envelope/candidate shape — a plain, frozen `{ ...,
+  publicationId, claimedPosition }` — already serves as that plain-data
+  representation; inventing a wrapper class around it would be an
+  abstraction this milestone's own scope does not need.
+- **Any verification, trust, ranking, or "best claim" logic among several
+  candidates naming the same contentHash with different claims.** Section
+  C's own two-Publication collision case is reported exactly as
+  discovered — two distinct candidates, never merged, never ranked.
+- **Any signature over a claimed position**, or reusing an existing signed
+  structure (`core/PublicationAnchor.js`) as evidence a claim is genuine.
+
+`tests/SnapshotDiscoveryWorldPositionClaim.test.js` — eight sections,
+matching the brief's own requested contract exactly: (A) envelope
+round-trip through describe/parse and JSON serialization; (B) candidate
+preservation through a real, shared in-memory Nostr network; (C)
+Publication binding — two Publications sharing one contentHash remain two
+distinct, correctly-bound claims; (D) position identity independence —
+contentHash/locator/storage/publicationId/claimedPosition proven as five
+independent axes, changing one never disturbing another; (E) no
+verification semantics — a claim-bearing candidate carries no
+verified/trusted/authentic field, structurally or behaviorally; (F) old
+announcements — a claim-free envelope/candidate remains byte-for-byte
+identical to the pre-0.9.171 shape, and supplying only one of the two new
+fields is rejected rather than defaulted; (G) no World placement yet — a
+structural sweep proving `application/SnapshotWorldPlacement.js` and
+`application/MaterializedSnapshotWorldDiscoveryBridge.js` remain
+completely untouched by this milestone's own new vocabulary; (H) no
+Nostr/Arweave coupling to material retrieval — this milestone's own three
+files reference no content store, placement resolver, or Signed Claim
+distribution family.
+
+### Recommendation
+
+This milestone establishes the claim; it deliberately does not consume
+it. The natural next steps, in order:
+
+```text
+0.9.172  Decentralized Snapshot Position Consumption — the explicit,
+         narrow policy decision: when a selected, verified, materialized
+         Snapshot carries a claimedPosition, should World View ever use
+         it as that Snapshot's own WorldPlacement, and under what
+         condition (e.g., only when no local placement already exists)?
+0.9.173  Decentralized Snapshot Spatial E2E Audit — the complete
+         stranger-content path from Nostr announcement through correct
+         World positioning and rendering, including the same-content-
+         hash/different-Publication case this milestone's own Section C
+         already exercises at the discovery layer alone.
+```
+
+I would treat 0.9.172 as a POLICY milestone, not a mechanical one — it
+should weigh, explicitly, whether an unverified, self-declared spatial
+claim should ever become authoritative World state, and under what
+guard, rather than wiring the two together merely because both objects
+now exist.

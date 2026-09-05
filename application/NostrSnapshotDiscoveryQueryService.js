@@ -24,11 +24,11 @@ const DEFAULT_MAX_RESULTS = 20;
 //        │
 //        │   events, each carrying its own `.content`
 //        ▼
-//   core/SnapshotDiscoveryEnvelope.js   (0.9.133, unmodified)
-//        parseSnapshotDiscoveryEnvelope(event.content)
+//   core/SnapshotDiscoveryEnvelope.js   (0.9.133; optional publicationId/
+//        parseSnapshotDiscoveryEnvelope(event.content)   claimedPosition, 0.9.171)
 //        │
 //        ▼
-//   [ { contentHash, locator, storage }, ... ]
+//   [ { contentHash, locator, storage, publicationId?, claimedPosition? }, ... ]
 //        │
 //        │   .resolveLocator(discoveryTag, contentHash)
 //        ▼
@@ -115,7 +115,8 @@ const DEFAULT_MAX_RESULTS = 20;
 // claim, never evidence" — this class never checks a Nostr event's own
 // `sig`, and never imports anything that would.
 //
-// DELIBERATELY EXCLUDED — NOT THIS MILESTONE.
+// DELIBERATELY EXCLUDED — NOT THE 0.9.133 MILESTONE THAT ORIGINALLY WROTE
+// THIS FILE.
 // - **Implementing the Nostr wire protocol itself.** See "queryImpl is an
 //   injection point," above.
 // - **Publishing or tagging a Nostr event.** This class only ever reads.
@@ -133,6 +134,26 @@ const DEFAULT_MAX_RESULTS = 20;
 //   PublicationSnapshotPlacement.js`'s own catalog.** A Snapshot's own
 //   placement/resolution family stays peer-based and never references
 //   Nostr — tests/SnapshotDistributionBoundary.test.js's own point 4.
+//
+// 0.9.171 — PRESERVED, NEVER CONSUMED. `core/SnapshotDiscoveryEnvelope.js`
+// now optionally carries `publicationId`/`claimedPosition` — a publisher's
+// own claim about which Publication a Snapshot represents and where that
+// publisher's own World currently places it (see that file's own header
+// for the full contract and why the two fields travel together or not at
+// all). `search()` forwards BOTH straight onto the reported candidate,
+// completely unchanged, exactly as it already forwards `contentHash`/
+// `locator`/`storage` — this file adds no ranking, no filtering by
+// publicationId, and no distance/position comparison of any kind. When an
+// envelope carries neither field (every announcement published before
+// this milestone, and every one that still omits them), the reported
+// candidate carries neither key either — see "a candidate, never a
+// lead... discovery is not verification," above, held identically for a
+// position claim: `search()` still answers only "what was announced,"
+// never "where is this Snapshot, really." Whether, or how, a
+// `claimedPosition` should ever become a `WorldPlacement` is
+// `application/SnapshotWorldPlacement.js`'s own, entirely separate,
+// unscheduled next question — this file forms no opinion on it, and this
+// milestone does not touch that file.
 export class NostrSnapshotDiscoveryQueryService {
     // relayUrl: which Nostr relay to query.
     // tagName: which Nostr filter tag NAME a discovery tag is matched
@@ -162,10 +183,12 @@ export class NostrSnapshotDiscoveryQueryService {
 
     get relayUrl() { return this._relayUrl; }
 
-    // Resolves to `[{ contentHash, locator, storage }, ...]` — one
-    // candidate for every event `queryImpl` reports whose own `content`
-    // describes a well-formed Snapshot Discovery Envelope. Resolves to
-    // `[]`, never throws — see this file's own header, "never throws."
+    // Resolves to `[{ contentHash, locator, storage }, ...]` — plus, for
+    // any candidate whose own announcement claimed one (0.9.171),
+    // `publicationId`/`claimedPosition` — one candidate for every event
+    // `queryImpl` reports whose own `content` describes a well-formed
+    // Snapshot Discovery Envelope. Resolves to `[]`, never throws — see
+    // this file's own header, "never throws."
     async search(discoveryTag) {
         const filter = buildDiscoveryFilter(this._tagName, this._kinds, discoveryTag, this._maxResults);
 
@@ -208,10 +231,15 @@ function buildDiscoveryFilter(tagName, kinds, discoveryTag, maxResults) {
     };
 }
 
-// Pure. Extracts `{ contentHash, locator, storage }` candidates out of a
-// raw array of Nostr events — every event whose own `content` fails
-// `parseSnapshotDiscoveryEnvelope()` is silently skipped, never a reason
-// to fail the whole batch.
+// Pure. Extracts `{ contentHash, locator, storage }` candidates — plus,
+// when the announcing envelope carried them (0.9.171),
+// `publicationId`/`claimedPosition` — out of a raw array of Nostr events.
+// Every event whose own `content` fails `parseSnapshotDiscoveryEnvelope()`
+// is silently skipped, never a reason to fail the whole batch. A candidate
+// carries `publicationId`/`claimedPosition` ONLY when the envelope itself
+// did — never as `null` placeholders — so an announcement made before
+// 0.9.171, or one that still omits a position claim, produces a candidate
+// with exactly its original three keys, byte-for-byte unchanged.
 function parseEnvelopeCandidates(events) {
     const candidates = [];
     for (const event of events) {
@@ -219,7 +247,12 @@ function parseEnvelopeCandidates(events) {
         if (envelope === null) {
             continue;
         }
-        candidates.push({ contentHash: envelope.contentHash, locator: envelope.locator, storage: envelope.storage });
+        const candidate = { contentHash: envelope.contentHash, locator: envelope.locator, storage: envelope.storage };
+        if (envelope.publicationId !== undefined) {
+            candidate.publicationId = envelope.publicationId;
+            candidate.claimedPosition = envelope.claimedPosition;
+        }
+        candidates.push(candidate);
     }
     return candidates;
 }
