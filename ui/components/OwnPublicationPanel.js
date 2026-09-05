@@ -195,6 +195,106 @@ import { resolveSnapshotPublicationAttribution } from '../../application/Snapsho
 // `snapshotAttributionResult` the identical way they already invalidate
 // `snapshotDiscoveryResult` — this milestone adds no second reset
 // mechanism of its own.
+//
+// 0.9.151 — World View Snapshot Candidate Browser.
+//
+// 0.9.150's own `application/DiscoverSnapshotCandidatesCommand.js`
+// answers a genuinely different question than `discoverSnapshotCommand`
+// above — "what has been announced under this discoveryTag, at all?"
+// (browsing-oriented discovery) rather than "can THIS ONE, already-known
+// contentHash be retrieved and verified?" (attribution-oriented
+// resolution, unchanged, above) — see that file's own header for the
+// full ATTRIBUTION-ORIENTED-RESOLUTION-vs-BROWSING-ORIENTED-DISCOVERY
+// distinction. This is that command's UI wiring:
+//
+//   click "Discover Snapshots"
+//           │
+//           ▼
+//   discoverSnapshotCandidates()
+//           │
+//           ▼
+//   discoverSnapshotCandidatesCommand()   (injected — the SAME app-wide
+//                                           command ui/main.js composes,
+//                                           reusing the SAME
+//                                           NostrSnapshotDiscoveryQueryService
+//                                           instance `discoverSnapshotCommand`
+//                                           already wraps in a resolver)
+//           │
+//           ▼
+//   snapshotCandidateDiscoveryResult = [ { contentHash, locator,
+//                                           storage }, ... ]   (rendered
+//                                           VERBATIM, in the exact order
+//                                           received — no sort, no
+//                                           dedup, no ranking; see
+//                                           `application/
+//                                           DiscoverSnapshotCandidatesCommand.js`'s
+//                                           own header, "relay arrival
+//                                           order is an observed fact,
+//                                           not a ranking decision")
+//           │
+//           │ click one candidate row
+//           ▼
+//   selectedSnapshotCandidate = candidate   (boring: a plain assignment,
+//                                             nothing else — see below)
+//
+// A COMPLETELY INDEPENDENT REQUEST FROM `discoverSnapshotCommand`'S OWN,
+// NEEDING NO `publication` AT ALL. `discoverSnapshotCommand`/
+// `discoverOwnSnapshot()` answer "does THIS Publication's own
+// contentHash resolve?" and therefore need `publication.contentReference.hash`
+// as an explicit input. `discoverSnapshotCandidatesCommand()` answers
+// "what exists under the shared campaign discoveryTag, period?" — a
+// question with no Publication-shaped input at all (the `discoveryTag`
+// itself is already baked in by `ui/main.js`'s own composition, the
+// identical restraint already held for `discoverSnapshotCommand`'s own
+// `discoveryTag`). This component calls it with zero arguments.
+//
+// A SEPARATE EPHEMERAL STATE, NEVER SHARED WITH DISCOVERY'S OR
+// DISTRIBUTION'S OWN — `snapshotCandidateDiscoveryExecuting`/
+// `snapshotCandidateDiscoveryError`/`snapshotCandidateDiscoveryResult`/
+// `snapshotCandidateDiscoveryRequestId` mirror
+// `snapshotDiscoveryExecuting`/`snapshotDiscoveryError`/
+// `snapshotDiscoveryResult`/`snapshotDiscoveryRequestId` exactly, one
+// operation over — never reused, because the two answer different
+// questions: `snapshotDiscoveryResult` means "this requested content was
+// resolved," `snapshotCandidateDiscoveryResult` means "these candidates
+// were announced." Reset on the identical `publication` change the other
+// two families' fields already reset on, and invalidated by the
+// identical stale-request-id guard — not because browsing depends on
+// "which Publication" (it does not), but because a Publication change is
+// this panel's own existing signal that its prior in-flight/displayed
+// state no longer belongs to the current view, held here for the
+// identical lifecycle-safety reason, one surface over.
+//
+// SELECTION IS DELIBERATELY BORING — A PLAIN ASSIGNMENT, NOTHING ELSE.
+// `selectSnapshotCandidate(candidate)` only ever sets
+// `selectedSnapshotCandidate`. It never calls `discoverSnapshotCommand`,
+// never triggers retrieval/verification/attribution, and never mutates
+// `snapshotCandidateDiscoveryResult` itself — "I found this candidate" and
+// "I asked the system to retrieve and verify it" stay two separate,
+// explicit steps. Resolving a selected candidate is a deliberately
+// unscheduled, later milestone (see docs/Roadmap.md's own 0.9.151 entry).
+//
+// NO DERIVED METADATA, NO RANKING, NO PREFERENCE OF ANY KIND. This
+// component never labels a candidate "best"/"trusted"/"recommended"/
+// "fastest"/"official," never sorts by `storage`, and never deduplicates
+// candidates sharing a `contentHash` — every candidate
+// `discoveryQueryService.search()` itself returned is rendered, in the
+// exact order it arrived. `storage` (`ar`/`ipfs`/...) is displayed as an
+// observed property, never as an implied preference between candidates.
+//
+// DELIBERATELY EXCLUDED — NOT THIS MILESTONE.
+// - **Automatic resolution, verification, or attribution when candidates
+//   appear or a candidate is selected.** See "selection is deliberately
+//   boring," above.
+// - **Ranking, deduplication, filtering by contentHash, grouping, or
+//   provider preference among displayed candidates.**
+// - **A "Resolve" action wired to the selected candidate.** A separate,
+//   later, unscheduled milestone (docs/Roadmap.md's own 0.9.151 entry
+//   names this "0.9.152 — Selected Snapshot Resolution").
+// - **Caching discovered candidates across discovery calls, or
+//   persisting a selection.** Each click re-runs the full command;
+//   `selectedSnapshotCandidate` is ephemeral component state, exactly
+//   like every other field in this file.
 export default {
     name: 'OwnPublicationPanel',
     props: {
@@ -221,6 +321,15 @@ export default {
         discoverSnapshotCommand: {
             type: Function,
             default: null
+        },
+        // 0.9.151 — optional. A `() -> Promise<[{ contentHash, locator,
+        // storage }, ...]>` function, or `null` when the capability is
+        // unavailable — see this file's own header, "0.9.151 — World
+        // View Snapshot Candidate Browser." Unlike `discoverSnapshotCommand`,
+        // this function takes no argument — it is not "which Publication."
+        discoverSnapshotCandidatesCommand: {
+            type: Function,
+            default: null
         }
     },
     data() {
@@ -237,7 +346,19 @@ export default {
             // never a replacement of snapshotDiscoveryResult." `null` until
             // a discovery call resolves; never written by anything but
             // `discoverOwnSnapshot()`, below.
-            snapshotAttributionResult: null
+            snapshotAttributionResult: null,
+            // 0.9.151 — see this file's own header, "a separate ephemeral
+            // state, never shared with discovery's or distribution's own."
+            snapshotCandidateDiscoveryExecuting: false,
+            snapshotCandidateDiscoveryError: null,
+            // `null` until a candidate discovery call resolves; `[]` is a
+            // legitimate, distinct result (zero candidates announced), not
+            // an error — see `discoverSnapshotCandidates()`, below.
+            snapshotCandidateDiscoveryResult: null,
+            snapshotCandidateDiscoveryRequestId: 0,
+            // `null` until the user clicks a candidate row — see this
+            // file's own header, "selection is deliberately boring."
+            selectedSnapshotCandidate: null
         };
     },
     watch: {
@@ -263,6 +384,15 @@ export default {
             // any prior attribution verdict the same way it already
             // invalidates the discovery result it was computed from.
             this.snapshotAttributionResult = null;
+            // 0.9.151 — reset for the identical lifecycle-safety reason,
+            // one operation over — see this file's own header, "a
+            // separate ephemeral state... reset on the identical
+            // publication change."
+            this.snapshotCandidateDiscoveryExecuting = false;
+            this.snapshotCandidateDiscoveryError = null;
+            this.snapshotCandidateDiscoveryResult = null;
+            this.snapshotCandidateDiscoveryRequestId += 1;
+            this.selectedSnapshotCandidate = null;
         }
     },
     beforeUnmount() {
@@ -271,6 +401,7 @@ export default {
         // `snapshotDistributionRequestId`.
         this.snapshotDistributionRequestId += 1;
         this.snapshotDiscoveryRequestId += 1;
+        this.snapshotCandidateDiscoveryRequestId += 1;
     },
     methods: {
         // The only writer of `snapshotDistributionExecuting`/
@@ -350,6 +481,55 @@ export default {
                         this.snapshotDiscoveryExecuting = false;
                     }
                 });
+        },
+        // 0.9.151 — the only writer of `snapshotCandidateDiscoveryExecuting`/
+        // `snapshotCandidateDiscoveryError`/`snapshotCandidateDiscoveryResult`,
+        // and the only caller of `discoverSnapshotCandidatesCommand` in
+        // this file — mirrors `discoverOwnSnapshot()`'s own guard/requestId
+        // pattern exactly, one operation over. Unlike `discoverOwnSnapshot()`,
+        // this method needs no `publication` at all — see this file's own
+        // header, "a completely independent request... needing no
+        // publication at all." A no-op whenever there is no
+        // `discoverSnapshotCandidatesCommand`, or a call is already in
+        // flight.
+        discoverSnapshotCandidates() {
+            if (!this.discoverSnapshotCandidatesCommand || this.snapshotCandidateDiscoveryExecuting) {
+                return;
+            }
+
+            this.snapshotCandidateDiscoveryExecuting = true;
+            this.snapshotCandidateDiscoveryError = null;
+            this.snapshotCandidateDiscoveryRequestId += 1;
+            const requestId = this.snapshotCandidateDiscoveryRequestId;
+
+            Promise.resolve()
+                .then(() => this.discoverSnapshotCandidatesCommand())
+                .then((result) => {
+                    if (requestId === this.snapshotCandidateDiscoveryRequestId) {
+                        // Rendered verbatim, in this exact order — see
+                        // this file's own header, "no derived metadata,
+                        // no ranking, no preference of any kind."
+                        this.snapshotCandidateDiscoveryResult = result;
+                    }
+                })
+                .catch(() => {
+                    if (requestId === this.snapshotCandidateDiscoveryRequestId) {
+                        this.snapshotCandidateDiscoveryError = 'Snapshot candidate discovery could not be completed.';
+                    }
+                })
+                .then(() => {
+                    if (requestId === this.snapshotCandidateDiscoveryRequestId) {
+                        this.snapshotCandidateDiscoveryExecuting = false;
+                    }
+                });
+        },
+        // 0.9.151 — the only writer of `selectedSnapshotCandidate`. See
+        // this file's own header, "selection is deliberately boring": a
+        // plain assignment, nothing else — never a call to
+        // `discoverSnapshotCommand`, and never a mutation of
+        // `snapshotCandidateDiscoveryResult` itself.
+        selectSnapshotCandidate(candidate) {
+            this.selectedSnapshotCandidate = candidate;
         }
     },
     template: `
@@ -393,14 +573,24 @@ export default {
                  discoverSnapshotCommand. Disabled whenever there is no
                  local Publication yet, the Publication has never been
                  placed (no contentReference), or a call is already in
-                 flight. -->
+                 flight.
+
+                 0.9.151 — RENAMED from "Discover Snapshot" to "Check
+                 Snapshot Match": this action always answered "does THIS
+                 Publication's own contentHash resolve?" (attribution-
+                 oriented resolution), which "Discover Snapshot" no
+                 longer describes unambiguously now that "Discover
+                 Snapshots" (below) exists for the OTHER, browsing-
+                 oriented question. Behavior, method name
+                 (discoverOwnSnapshot), and every other field this action
+                 writes are unchanged — only this button's own label. -->
             <button
                 v-if="discoverSnapshotCommand"
                 type="button"
                 class="action-btn own-publication-discovery-action"
                 :disabled="!publication || !publication.contentReference || snapshotDiscoveryExecuting"
                 @click="discoverOwnSnapshot"
-            >{{ snapshotDiscoveryExecuting ? 'Discovering…' : 'Discover Snapshot' }}</button>
+            >{{ snapshotDiscoveryExecuting ? 'Checking…' : 'Check Snapshot Match' }}</button>
 
             <!-- The resolver's own DecentralizedSnapshotResolutionOutcome
                  vocabulary, rendered verbatim — see this file's own
@@ -428,6 +618,58 @@ export default {
                 <dt>Snapshot Attribution</dt>
                 <dd>{{ snapshotAttributionResult.outcome }}</dd>
             </dl>
+
+            <!-- 0.9.151 — World View Snapshot Candidate Browser. A
+                 genuinely different operation from Check Snapshot Match
+                 above — see this file's own header. Reachable with zero
+                 connected peers, zero World Encounters, AND no local
+                 Publication at all: browsing what has been announced
+                 under the shared campaign discoveryTag never depends on
+                 "which Publication," so this button is disabled only
+                 while a call is already in flight. Rendered only when a
+                 caller supplied a discoverSnapshotCandidatesCommand. -->
+            <button
+                v-if="discoverSnapshotCandidatesCommand"
+                type="button"
+                class="action-btn own-publication-candidate-discovery-action"
+                :disabled="snapshotCandidateDiscoveryExecuting"
+                @click="discoverSnapshotCandidates"
+            >{{ snapshotCandidateDiscoveryExecuting ? 'Discovering…' : 'Discover Snapshots' }}</button>
+
+            <p v-if="snapshotCandidateDiscoveryError" class="own-publication-candidate-discovery-error">{{ snapshotCandidateDiscoveryError }}</p>
+
+            <!-- An empty array is a legitimate, distinct result (zero
+                 candidates announced) — never treated as an error, and
+                 never collapsed into the "not yet run" (null) state. See
+                 this file's own header, "no derived metadata, no
+                 ranking, no preference of any kind" — every candidate is
+                 rendered, in the exact order discovered, with no sort,
+                 dedup, "best"/"trusted" label, or storage-type
+                 preference of any kind. -->
+            <div v-else-if="snapshotCandidateDiscoveryResult" class="own-publication-candidate-list">
+                <h5 class="own-publication-candidate-list-title">Discovered Snapshots</h5>
+                <p v-if="snapshotCandidateDiscoveryResult.length === 0" class="own-publication-candidate-list-empty">
+                    No Snapshots have been announced under this discoveryTag yet.
+                </p>
+                <ul v-else class="own-publication-candidate-list-items">
+                    <li
+                        v-for="(candidate, index) in snapshotCandidateDiscoveryResult"
+                        :key="index"
+                        class="own-publication-candidate-item"
+                        :class="{ 'own-publication-candidate-item-selected': candidate === selectedSnapshotCandidate }"
+                        @click="selectSnapshotCandidate(candidate)"
+                    >
+                        <dl class="own-publication-candidate-detail">
+                            <dt>Storage</dt>
+                            <dd>{{ candidate.storage }}</dd>
+                            <dt>Content hash</dt>
+                            <dd>{{ candidate.contentHash }}</dd>
+                            <dt>Locator</dt>
+                            <dd>{{ candidate.locator }}</dd>
+                        </dl>
+                    </li>
+                </ul>
+            </div>
         </div>
     `
 };

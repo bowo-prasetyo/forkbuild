@@ -127,6 +127,7 @@ import { composeSnapshotDistributionRuntime } from '../application/SnapshotDistr
 import { executeSnapshotDistributionCommand } from '../application/SnapshotDistributionCommand.js';
 import { composeDiscoverSnapshotRuntime } from '../application/DiscoverSnapshotRuntimeComposition.js';
 import { executeDiscoverSnapshotCommand } from '../application/DiscoverSnapshotCommand.js';
+import { executeDiscoverSnapshotCandidatesCommand } from '../application/DiscoverSnapshotCandidatesCommand.js';
 import { LocalDiscoveryProvider } from '../discovery/LocalDiscoveryProvider.js';
 import {
     composeDecentralizedWorldEncounterMaterialDiscoveryServices,
@@ -1747,7 +1748,7 @@ app.provide('snapshotDistributionCommand', snapshotDistributionCommand);
 // `discoverOwnSnapshot()` already wraps every call in a
 // `Promise.resolve().then(...)`, catching that synchronous throw the same
 // way it already catches a genuine rejection.
-const { resolver: snapshotResolver, contentStore: snapshotRetrievalContentStore } = composeDiscoverSnapshotRuntime({
+const { resolver: snapshotResolver, contentStore: snapshotRetrievalContentStore, queryService: snapshotDiscoveryQueryService } = composeDiscoverSnapshotRuntime({
     arweaveContentStoreOptions: { signer: arweaveHostSigner },
     nostrSnapshotDiscoveryQueryServiceOptions: { queryImpl: nostrRelayQueryClient }
 });
@@ -1758,6 +1759,28 @@ const discoverSnapshotCommand = (contentHash) => executeDiscoverSnapshotCommand(
     contentStore: snapshotRetrievalContentStore
 });
 app.provide('discoverSnapshotCommand', discoverSnapshotCommand);
+
+// 0.9.151 — World View Snapshot Candidate Browser.
+//
+// `application/DiscoverSnapshotCandidatesCommand.js` (0.9.150) answers a
+// different question than `discoverSnapshotCommand` above — "what has
+// been announced under this discoveryTag, at all?" rather than "can THIS
+// ONE contentHash be resolved?" — and needs the query service ITSELF,
+// never the `resolver` that wraps it. `snapshotDiscoveryQueryService` is
+// the SAME `NostrSnapshotDiscoveryQueryService` instance
+// `composeDiscoverSnapshotRuntime()` immediately above already built
+// (0.9.151's own change to that file exposes it) and already handed to
+// `snapshotResolver` — never a second query service, never a second
+// composition call, and never a second Nostr relay client. `discoveryTag:
+// 'forkbuild-snapshot'` is the SAME campaign marker `discoverSnapshotCommand`
+// already uses, immediately above — the candidate browser and
+// contentHash-targeted resolution stay two views over one campaign, never
+// two campaigns.
+const discoverSnapshotCandidatesCommand = () => executeDiscoverSnapshotCandidatesCommand({
+    discoveryTag: 'forkbuild-snapshot',
+    discoveryQueryService: snapshotDiscoveryQueryService
+});
+app.provide('discoverSnapshotCandidatesCommand', discoverSnapshotCandidatesCommand);
 
 app.use(router);
 app.mount('#app');

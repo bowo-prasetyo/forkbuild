@@ -68061,3 +68061,215 @@ unmodified `executeDiscoverSnapshotCommand()`/attribution chain. This
 milestone deliberately leaves that UI decision open, the same restraint
 0.9.142's own header already held for the resolution-oriented command it
 introduced.
+
+## 0.9.151 — World View Snapshot Candidate Browser
+
+0.9.150's own "Recommendation" named this milestone directly:
+`discoveryTag → candidate collection` was a real, tested application seam
+with no UI anywhere in front of it — `application/
+DiscoverSnapshotCandidatesCommand.js` had no idea `ui/` even existed. This
+milestone is that UI, and nothing more: a "Discover Snapshots" action and
+candidate list, added to `OwnPublicationPanel` beside the existing
+"Distribute Snapshot" and (renamed) "Check Snapshot Match" actions.
+
+```text
+World View                                       (unchanged: 0.9.140/0.9.142/0.9.144)
+    │
+    ▼
+"Discover Snapshots"                             ★ (THIS milestone, NEW)
+    │
+    ▼
+discoverSnapshotCandidatesCommand()              (ui/main.js, NEW binding —
+    │                                              reuses the SAME
+    │                                              NostrSnapshotDiscoveryQueryService
+    │                                              instance discoverSnapshotCommand's
+    │                                              own resolver already wraps)
+    ▼
+executeDiscoverSnapshotCandidatesCommand()       (application/DiscoverSnapshotCandidatesCommand.js,
+    │                                              0.9.150, unmodified)
+    ▼
+snapshotCandidateDiscoveryResult = candidate[]   ★ (NEW field, rendered
+    │                                                verbatim, exact order)
+    │  click one row
+    ▼
+selectedSnapshotCandidate = candidate            ★ (NEW field — a plain
+                                                     assignment, nothing else)
+```
+
+The one production seam this milestone needed that did not already exist:
+`application/DiscoverSnapshotRuntimeComposition.js#composeDiscoverSnapshotRuntime()`
+already constructed a `NostrSnapshotDiscoveryQueryService` internally to
+build `resolver`, but only ever returned `{ resolver, contentStore }` —
+the query service itself was unreachable outside that file. This
+milestone adds `queryService` as a third field on that same frozen return
+value (0.9.150's own "Recommendation" named exactly this reuse:
+"Runtime composition deliberately reuses whichever `discoveryQueryService`
+a caller already composed... this milestone builds no second Nostr relay
+client and no second composition path"). `ui/main.js` destructures it
+once, alongside `resolver`/`contentStore` it already destructured, and
+binds a new nullary `discoverSnapshotCandidatesCommand = () =>
+executeDiscoverSnapshotCandidatesCommand({ discoveryTag:
+'forkbuild-snapshot', discoveryQueryService: snapshotDiscoveryQueryService
+})` — the identical `'forkbuild-snapshot'` campaign marker
+`discoverSnapshotCommand` already uses. No second
+`NostrSnapshotDiscoveryQueryService` is ever constructed, and no second
+relay client of any kind.
+
+### UI terminology change
+
+"Discover Snapshot" (0.9.142) was renamed **"Check Snapshot Match"** —
+its behavior, method name (`discoverOwnSnapshot`), and every field it
+writes are unchanged; only its own button label changed, because
+"Discover Snapshot" no longer unambiguously names one operation now that
+"Discover Snapshots" (this milestone) exists for the other one. The two
+buttons now read:
+
+```text
+Own Publication
+
+[ Check Snapshot Match ]     "does THIS Publication's contentHash resolve?"
+[ Discover Snapshots     ]   "what has been announced under this discoveryTag, at all?"
+```
+
+### A completely independent request, needing no Publication at all
+
+Unlike `discoverSnapshotCommand`/`discoverOwnSnapshot()`, which need
+`publication.contentReference.hash` as an explicit input,
+`discoverSnapshotCandidatesCommand()` takes zero arguments —
+`discoveryTag` is already baked in by `ui/main.js`'s own composition, the
+identical restraint already held for `discoverSnapshotCommand`'s own
+`discoveryTag`. "Discover Snapshots" is therefore reachable with zero
+connected peers, zero World Encounters, AND no local Publication at all —
+browsing what has been announced under the shared campaign tag never
+depends on "which Publication."
+
+### A separate ephemeral state, never shared with discovery/attribution's own
+
+```text
+snapshotCandidateDiscoveryExecuting
+snapshotCandidateDiscoveryError
+snapshotCandidateDiscoveryResult    = "these candidates were announced"
+snapshotCandidateDiscoveryRequestId
+selectedSnapshotCandidate
+```
+
+Never reused: `snapshotDiscoveryResult` ("this requested content was
+resolved") and `snapshotAttributionResult` ("this verified content
+corresponds to this publication") remain two different, unmodified facts
+about two different questions — see 0.9.144's own header for that
+distinction, held here unchanged for a third, independent fact. Reset on
+the identical `publication` change that already resets the other two
+families' fields, and invalidated by the identical stale-request-id
+guard — not because browsing depends on "which Publication" (it does
+not), but because a Publication change is this panel's own existing
+signal that prior in-flight/displayed state no longer belongs to the
+current view.
+
+### Presentation: no derived metadata, no ranking
+
+Every candidate `discoveryQueryService.search()` itself returned is
+rendered, in the exact order it arrived — no sort, no dedup, no "best"/
+"trusted"/"recommended"/"fastest"/"official" label, and no storage-type
+preference (`Arweave`/`IPFS` are displayed as an observed property,
+never implying `Arweave > IPFS`). This is particularly important because
+0.9.147/0.9.148 established there is currently no ranking policy — the UI
+must not accidentally introduce one through sorting.
+
+### Selection is deliberately boring
+
+`selectSnapshotCandidate(candidate)` performs exactly one assignment:
+`this.selectedSnapshotCandidate = candidate`. It never calls
+`discoverSnapshotCommand`, never triggers retrieval/verification/
+attribution, and never mutates `snapshotCandidateDiscoveryResult` itself.
+"I found this candidate" and "I asked the system to retrieve and verify
+it" stay two separate, explicit steps — resolving a selected candidate is
+a deliberately unscheduled, later milestone (see "Recommendation," below).
+
+`tests/WorldViewSnapshotCandidateBrowser.test.js` — ten sections:
+
+```text
+Section A: candidate discovery action — UI -> command -> discoveryTag,
+           proven through the real composed runtime
+Section B: candidate collection presentation — every candidate is
+           displayed
+Section C: ordering — relay/application order survives into
+           presentation verbatim
+Section D: empty discovery — [] is a legitimate, distinct state, never
+           an error
+Section E: discovery failure — displayed without manufacturing a
+           Snapshot resolution/attribution result
+Section F: state isolation — candidate discovery state and Check
+           Snapshot Match/attribution state never overwrite one another,
+           in either order
+Section G: selection — selecting a candidate changes only
+           selectedSnapshotCandidate
+Section H: no implicit resolution — discovering or selecting a
+           candidate never calls DecentralizedSnapshotResolver.resolve(),
+           verified against the real resolver instance
+Section I: stale request protection — a changed publication/unmount
+           invalidates an in-flight candidate discovery call exactly
+           like the existing discovery/attribution actions
+Section J: structural boundary — OwnPublicationPanel.js never touches
+           Nostr/ContentStore/crypto/Arweave directly, introduces no
+           candidate-preference vocabulary, and WorldView.js/ui/main.js
+           wire the new command through the existing application seam
+```
+
+0.9.150's own `tests/DiscoverSnapshotRuntimeComposition.test.js` gained
+three small additions (never a rewrite) proving `queryService` is
+returned alongside `resolver`/`contentStore`, stays real whenever
+`resolver` does, and stays `null` under the identical absent-capability
+condition `resolver` already goes `null` under — the two are never
+independently absent.
+
+### What this milestone establishes
+
+The decentralized Snapshot discovery architecture is now an actual
+**discovery feature** for the user, not merely something that works
+internally: a person can click "Discover Snapshots," see every candidate
+genuinely announced under the shared campaign tag — unranked, unfiltered,
+in arrival order — and select one, without the UI silently deciding which
+candidate is "the" one. The very clean resolution/verification/
+attribution pipeline 0.9.142/0.9.143/0.9.144 already established stays
+completely undisturbed underneath it.
+
+### Deliberately excluded — not this milestone
+
+- **No automatic resolution, verification, or attribution** when
+  candidates appear or a candidate is selected.
+- **No ranking, deduplication, filtering by contentHash, grouping, or
+  provider preference** among displayed candidates.
+- **No "Resolve" action wired to the selected candidate.** Retrieving a
+  selected candidate stays `application/DiscoverSnapshotCommand.js`'s
+  own, entirely separate, later concern.
+- **No new outcome/status vocabulary.** The resolver's own
+  `DecentralizedSnapshotResolutionOutcome` and this file's own bare
+  candidate array are the only vocabularies in play.
+- **No multi-relay changes, retry/failover, or candidate caching.** Each
+  click re-runs `discoverSnapshotCandidatesCommand()` in full.
+- **No changes to `DecentralizedSnapshotResolver` or
+  `NostrRelayQueryClient`.** Both remain exactly as 0.9.134/0.9.147 left
+  them.
+
+```text
+0.9.147  Decentralized Discovery Relay Query Client                ✓
+0.9.148  End-to-End Decentralized Discovery Runtime Audit          ✓
+0.9.149  Snapshot Discovery Semantics Audit & API Boundary         ✓
+0.9.150  Snapshot Candidate Discovery Command                      ✓
+0.9.151  World View Snapshot Candidate Browser                     ✓
+```
+
+### Recommendation
+
+I would resist immediately adding sophisticated candidate management.
+Once this browser is actually used, the real problem (if any) becomes
+observable — e.g. if users genuinely encounter the same `contentHash`
+under several storage backends, a future milestone might introduce
+candidate grouping by content hash, but only if that proves useful.
+
+If users need to retrieve a selected candidate, I would make that its own
+narrowly-scoped milestone, **0.9.152 — Selected Snapshot Resolution**:
+wiring `selectedSnapshotCandidate` to the existing, unmodified
+`executeDiscoverSnapshotCommand()`/attribution chain (via that
+candidate's own `contentHash`) — rather than baking resolution into the
+browser this milestone built.

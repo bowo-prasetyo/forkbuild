@@ -120,6 +120,8 @@ async function run() {
         assert(runtime.resolver instanceof DecentralizedSnapshotResolver, '2. runtime.resolver is a real DecentralizedSnapshotResolver');
         assert(typeof runtime.resolver.resolve === 'function', '3. runtime.resolver exposes a working resolve()');
         assert(Object.isFrozen(runtime), '4. the returned runtime object is frozen');
+        assert(runtime.queryService instanceof NostrSnapshotDiscoveryQueryService, '4a. 0.9.151 — runtime.queryService is a real NostrSnapshotDiscoveryQueryService, returned alongside resolver/contentStore');
+        assert(typeof runtime.queryService.search === 'function', '4b. runtime.queryService exposes a working search()');
 
         console.log('✓ Section A: composeDiscoverSnapshotRuntime() builds both real, working collaborators when both host capabilities are usable');
     }
@@ -228,6 +230,7 @@ async function run() {
 
         assert(runtime.contentStore === null, '15. no signer means contentStore is null — no fake/stub store is ever constructed');
         assert(runtime.resolver instanceof DecentralizedSnapshotResolver, '16. the resolver is still real — Arweave\'s absence never blocks discovery/location reporting');
+        assert(runtime.queryService instanceof NostrSnapshotDiscoveryQueryService, '16a. 0.9.151 — queryService stays real even with no Arweave capability, the same "resolver depends only on queryImpl" independence');
 
         // Announce a candidate via the real Nostr network, then resolve
         // through the composed (contentStore-less) runtime: DISCOVERY
@@ -261,6 +264,7 @@ async function run() {
 
         assert(runtime.resolver === null, '18. no queryImpl means resolver is null — no fake/stub resolver is ever constructed');
         assert(runtime.contentStore instanceof ArweaveContentStore, '19. the contentStore is still real — Nostr\'s absence never blocks Arweave\'s own construction');
+        assert(runtime.queryService === null, '19a. 0.9.151 — no queryImpl means queryService is also null, the identical condition resolver already goes null under; the two are never independently absent');
 
         expectThrows(
             () => executeDiscoverSnapshotCommand({ discoveryTag: 'tag', contentHash: 'hash', resolver: runtime.resolver, contentStore: runtime.contentStore }),
