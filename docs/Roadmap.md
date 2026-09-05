@@ -69269,3 +69269,155 @@ independently-tested scope this entire Snapshot subsystem has held since
 where 0.9.159's own "deliberately excluded" list already put it — a
 genuinely separate concern from "does this Snapshot's own fact reach the
 runtime at all."
+
+## 0.9.161 — Snapshot World Rendering
+
+0.9.160's own recommendation, immediately above, asked one question before
+proposing any code: does `WorldEncounterCanvas` render an encounter from
+its World material representation directly, or does rendering require some
+additional material/runtime object 0.9.160 never produced? This milestone
+is that investigation, carried out before writing anything — and its own
+answer.
+
+**The investigation, and its answer.** `core/WorldEncounter.js#describeEncounterablePublication()`
+(0.9.0) already builds a complete, drawable encounter row —
+`{ objectId, title, publisherIdentity, isSigned, position, anchorCount,
+placementCount }` — from nothing but a `Publication` and a placement's own
+`position`. Both of those are EXACTLY what
+`registerMaterializedSnapshotWorldSource()` (0.9.160) already hands the
+registry at registration time. Tracing the chain one seam at a time —
+`describeWorldEncounterReadModel()` (0.9.1, flattens `position` to
+`x`/`y`/`z`), `describeWorldEncounterView()` (0.9.2),
+`WorldEncounterCanvas.js`'s own `projectedPublications` computed (0.9.3,
+`projectToCanvas(row.x)`/`projectToCanvas(row.z)`), and
+`WorldEncounterMarker.js`'s own template (0.9.3/0.9.4, reading only `x`/
+`y`/`label`/`kind`/`objectId`) — not one of them ever reads a Snapshot's
+own bytes, content hash, locator, or storage tag. A materialized Snapshot's
+actual content only ever matters for the separate, already-existing, opt-in
+selection -> inspection -> material-loading path (`materialSources`/
+`materialInspection`, 0.9.21/0.9.39) — never for whether its own marker
+appears on the map at all. **Answer: directly, and no additional material/
+runtime object was ever required.**
+
+**The second half of the investigation: is the real running app already
+wired for it?** `ui/main.js` constructs exactly ONE
+`WorldDiscoverySourceRegistry` instance
+(`worldDiscoveryRuntime.registry`) and `app.provide()`s it once, under the
+key `'worldDiscoverySourceRegistry'`. `ui/views/WorldView.js` `inject()`s
+that SAME instance once and hands it, completely unchanged, to BOTH
+`<OwnPublicationPanel :worldDiscoverySourceRegistry="...">` AND
+`<WorldEncounterCanvas :registry="...">`. `WorldEncounterCanvas.js` has
+subscribed to its own `registry` prop since 0.9.13, and
+`WorldDiscoverySourceRegistry#setSource()` has notified every subscriber
+synchronously, on every successful mutation, since 0.9.12 — both entirely
+unmodified since. **Answer: yes** — the moment a real
+`OwnPublicationPanel.registerMaterializedSnapshot()` click calls
+`registry.setSource()`, a real mounted `WorldEncounterCanvas` sharing that
+SAME registry instance already re-projects and re-renders, with no further
+wiring of any kind.
+
+**Therefore this milestone adds zero production code.** Where 0.9.150
+through 0.9.160 each closed a genuine, missing seam with new
+`application/`-layer code, this milestone closes the one that turned out,
+on inspection, to already be closed. Its only deliverable is
+`tests/SnapshotWorldRendering.test.js` — proof, exercising the REAL,
+unmodified production path start to finish, exactly the same "…End-to-End
+Audit" discipline this family already used for 0.9.153/0.9.155/0.9.156/
+0.9.157, applied here to a seam that was open, not one this milestone
+closed.
+
+```text
+DISCOVER -> SELECT -> RESOLVE -> VERIFY -> ATTRIBUTE -> MATERIALIZE -> PLACE -> REGISTER -> RENDER
+                                                                                    (0.9.160)   (already
+                                                                                                 wired —
+                                                                                                 THIS
+                                                                                                 milestone
+                                                                                                 proves it)
+```
+
+`tests/SnapshotWorldRendering.test.js` — seven sections: **A** (existing
+rendering contract unchanged — an ordinary local/peer registry with no
+Snapshot involved at all still projects exactly as 0.9.13 already
+established), **B** — FLAGSHIP (the exact real composed runtime 0.9.160's
+own Section F built — real Nostr discovery, real Arweave resolution, real
+local materialization, a real `WorldPlacement`, a real registration —
+observed through a REAL, MOUNTED `WorldEncounterCanvas` sharing the SAME
+registry instance `OwnPublicationPanel` registered into, reproducing
+`ui/views/WorldView.js`'s own real wiring by hand; the registered
+Snapshot's own Publication appears as a genuine projected marker, drawn by
+the entirely unmodified `WorldEncounterMarker.js`, with zero rendering
+code of any kind added to make it so), **C** (spatial correctness — the
+projected marker's own screen `x`/`y` is exactly `projectToCanvas()`
+applied to the real `WorldPlacement` position, elevation excluded, never a
+snapshot-specific recomputation), **D** (no visibility/range filtering
+exists at the registration/bridge layer — a Snapshot placed far outside
+the fixed projectable span still registers and still projects through the
+identical unmodified formula; whether it then falls inside or outside the
+fixed SVG viewBox stays entirely `WorldEncounterCanvas.js`'s own
+pre-existing concern), **E** (coexistence — an own local Publication, a
+peer-discovered Publication, and two independently registered Snapshots
+all project simultaneously under their own distinct origins, and a peer
+disconnecting disturbs only its own slot), **F** (identity preservation
+carried all the way to the rendered marker — the marker's own `objectId`
+is the Publication's id, never the Snapshot's own contentHash or locator),
+**G** (structural sweep: no production file was added or modified by this
+milestone; the registration bridge still references nothing
+rendering-shaped; `WorldEncounterCanvas.js` references none of this
+family's own registration/placement vocabulary; `WorldEncounterMarker.js`
+still imports nothing at all).
+
+Deliberately excluded, per this milestone's own narrow scope:
+- **Any new `application/`- or `ui/`-layer production file.** See "This
+  milestone adds zero production code," above — the seam was already
+  closed.
+- **A snapshot-specific renderer, marker, camera, or viewport.** The
+  existing, entirely unmodified `WorldEncounterCanvas.js`/
+  `WorldEncounterMarker.js` already render every encounter, origin-blind,
+  including a registered Snapshot's own.
+- **Visibility, range, proximity, or "nearby" filtering of any kind.**
+  Confirmed absent at both the registration/bridge layer (Section D) and,
+  unchanged, at the rendering layer itself (0.9.3's own long-standing "no
+  proximity, no nearby, no discovery relevance" restraint).
+- **Populating the registry's shared `'local'` origin.** Still the same
+  separate, older, already-named gap (0.9.14) 0.9.160 already declined to
+  close.
+- **The full Nostr -> ... -> rendered end-to-end narrative assertion.**
+  This milestone's own flagship exercises that full real path, but the
+  DELIBERATE single closing assertion — "a Snapshot discovered, selected,
+  verified, materialized, placed, registered, AND rendered" as one named
+  architectural fact — is 0.9.162's own job, not this one's.
+
+```text
+0.9.150  Snapshot Candidate Discovery Command                      ✓
+0.9.151  World View Snapshot Candidate Browser                     ✓
+0.9.152  Selected Snapshot Candidate Resolution                    ✓
+0.9.153  Selected Snapshot Resolution End-to-End Audit              ✓
+0.9.154  Selected Snapshot Attribution                              ✓
+0.9.155  Selected Snapshot Attribution End-to-End Audit              ✓
+0.9.156  Snapshot Lifecycle & Semantic Boundary Audit                ✓
+0.9.157  Snapshot Candidate Interaction Completion Audit             ✓
+0.9.158  Selected Snapshot Materialization                           ✓
+0.9.159  Selected Snapshot World Placement                           ✓
+0.9.160  Selected Snapshot World Runtime Registration                ✓
+0.9.161  Snapshot World Rendering                                    ✓
+```
+
+### Recommendation
+
+With a registered Snapshot now proven to render through the entirely
+unmodified existing pipeline, the natural next milestone is **0.9.162 —
+Snapshot World Rendering End-to-End Audit**: a single flagship that
+reproduces the COMPLETE path — Nostr announcement, candidate discovery,
+explicit selection, resolution, verification, attribution,
+materialization, World placement, World runtime registration, World
+encounter derivation, and rendering — as one named architectural fact,
+rather than the seam-by-seam proofs 0.9.150 through 0.9.161 each
+contributed independently. I would keep this an audit in the same sense
+0.9.153/0.9.155/0.9.156/0.9.157 already were: zero new production code,
+one flagship test whose final assertion is stronger than "the button
+succeeded" — that a Snapshot discovered from Nostr, explicitly selected,
+cryptographically verified, materialized locally, assigned its
+Publication-authoritative World position, registered through the existing
+World discovery registry, and rendered at that position through the
+existing World View pipeline, is now one continuous, provable fact this
+codebase can point to.
