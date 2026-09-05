@@ -67005,3 +67005,240 @@ verified Snapshot is attributable to it. The natural next step is 0.9.145
 — the end-to-end audit deferred above — and, per this codebase's own
 established rhythm, a reassessment of the broader roadmap after it rather
 than another automatic step deeper into the Snapshot subsystem.
+
+## 0.9.145 — End-to-End Snapshot Attribution Audit
+
+0.9.142 (discovery), 0.9.143 (the pure `resolveSnapshotPublicationAttribution()`
+comparison), and 0.9.144 (its wiring into both World View entry points)
+each proved their own seam in isolation. This milestone tests nothing
+new — a test-only audit, exactly the shape 0.9.122, 0.9.135, 0.9.139, and
+0.9.141 already gave their own subsystems — proving the complete chain
+those three milestones assembled now composes into ONE continuous
+pipeline at both entry points, and that none of the boundaries they drew
+have quietly collapsed:
+
+```text
+                    Publication
+                         │
+                contentReference.hash
+                         │
+                         ▼
+                 Discover Snapshot
+                         │
+                         ▼
+                      Nostr
+                         │
+                         ▼
+                    Snapshot locator
+                         │
+                         ▼
+                    Content Store
+                         │
+                         ▼
+                    Retrieved bytes
+                         │
+                         ▼
+                 Content verification
+                         │
+                         ▼
+                 Verified Snapshot
+                         │
+                         ▼
+              Snapshot–Publication
+                   Attribution
+                    /       \
+                   ▼         ▼
+                MATCH     NO_MATCH
+```
+
+The central architectural claim under audit: a Publication can
+independently discover a Snapshot, retrieve and cryptographically verify
+its actual bytes, and only then determine whether that verified content
+corresponds to the Publication's own existing content identity.
+
+### Adds `tests/SnapshotAttributionEndToEndAudit.test.js` — zero new production code
+
+Nine sections, each proving a distinct claim, deliberately not a repeat
+of 0.9.142/0.9.143/0.9.144's own already-passing tests with new fixture
+names:
+
+- **A — the complete local path.** My Publication, distributed and then
+  independently discovered, driven entirely through
+  `OwnPublicationPanel`'s own action, over a runtime composed exactly the
+  way `ui/main.js` composes it (the SAME `signer` instance handed to
+  both `composeSnapshotDistributionRuntime()` and
+  `composeDiscoverSnapshotRuntime()`, the SAME `'forkbuild-snapshot'`-shaped
+  discoveryTag used for both the announcement and the query) — ends in
+  MATCH.
+- **B — the complete World Encounter path.** The SAME shared
+  infrastructure Section A used, a DIFFERENT Wanderer-selected
+  Publication, driven through `WorldEncounterCanvas` instead — proving
+  local and remote genuinely converge on one machinery, not two
+  lookalikes.
+- **C — false announcement, in both its forms.** First, the shape named
+  in this milestone's own header: a candidate that claims the requested
+  hash but actually points to different bytes, refused at `resolve()`'s
+  own verification step — driven end to end through the real composed
+  runtime and `OwnPublicationPanel`'s own UI action this time, never the
+  bare resolver alone (0.9.143's own Section H already proved the bare
+  resolver refuses it). Second, and more important, the DEEPER form: a
+  `resolvedSnapshot` that genuinely is `RESOLVED` — its own bytes really
+  did pass `DecentralizedSnapshotResolver`'s own verification against the
+  hash it was resolved against — but whose self-declared `candidates[]`
+  metadata separately claims THIS Publication's own hash. This is the
+  consequence 0.9.143's implementation named but never itself tested:
+  `resolveSnapshotPublicationAttribution()` recomputes the verified
+  Snapshot's content hash from `resolvedSnapshot.bytes` and compares
+  THAT — a malicious or incorrect resolver result cannot manufacture
+  `MATCH` merely by writing the Publication's hash into a metadata
+  field, at both the pure-function and the UI level.
+- **D — verified but unrelated Snapshot.** Real placement and discovery
+  of content whose hash is H2, attributed against a Publication whose
+  own hash is H1 (never placed under this discoveryTag at all):
+  verification succeeds, attribution reports NO_MATCH — proving
+  verification and attribution remain different questions, through the
+  real chain, not merely a hand-built fixture.
+- **E — resolution failure preservation, through the real chain.**
+  NOT_DISCOVERED (nothing ever announced), STORE_UNAVAILABLE (a
+  genuinely announced candidate with no Arweave capability composed),
+  and CONTENT_UNAVAILABLE (a genuinely announced, genuinely
+  store-backed locator that was never actually placed there) are each
+  reached through the real composed runtime and UI, and reported
+  verbatim — none of the four ever becomes NO_MATCH (CONTENT_HASH_MISMATCH
+  is Section C's own).
+- **F — identity separation**, against one full real scenario:
+  `publicationHash`/`snapshotHash` stay distinct from `publication.id`,
+  the real Arweave transaction id, the real Nostr event id, and the
+  resolved locator.
+- **G — entry-point state isolation, under genuine concurrency.** The
+  one scenario nothing before this milestone drove: `OwnPublicationPanel`
+  and `WorldEncounterCanvas` running discovery/attribution
+  SIMULTANEOUSLY over the same shared infrastructure — mirroring 0.9.141's
+  own convergence-audit shape, one family over. Three sub-sections prove
+  discovery state stays separate, attribution state stays separate,
+  request ids stay separate, changing one entry point's Publication/selection
+  never invalidates the other's already-settled result, and a stale
+  in-flight response for one entry point can never overwrite either that
+  entry point's own current state or the other's.
+- **H — distribution independence, in both directions.** Distribute
+  Snapshot completes without ever touching `snapshotDiscoveryResult`/
+  `snapshotAttributionResult` or their own request counter; and Discover
+  Snapshot succeeds for content that reached Arweave/Nostr through a
+  path other than this component's own distribution action — discovery
+  never requires having called distribution first.
+- **I — structural boundary, a repository-wide sweep.** Every file under
+  `ui/` (main.js excepted as the one composition root) is scanned for a
+  decentralized-substrate construction site or a direct host-capability
+  read; `application/SnapshotPublicationAttribution.js` is confirmed to
+  perform no I/O; `application/DiscoverSnapshotCommand.js` is confirmed
+  to carry no `MATCH`/`NO_MATCH`/`publicationHash`/`snapshotHash`
+  vocabulary and never to import `publisher/Publication.js`;
+  `application/DecentralizedSnapshotResolver.js` is confirmed to carry
+  no `MATCH`/`NO_MATCH`/`publicationHash`/`OWNED`/`ATTRIBUT(E/ED/ION)`
+  vocabulary of any kind; and `application/SnapshotDistributionCommand.js`/
+  `application/DiscoverSnapshotCommand.js` are confirmed to import
+  neither the other's own family — distribution and discovery/attribution
+  remain two disjoint pipelines sharing only a runtime host, never each
+  other's code.
+
+Two pre-existing `tests.html` registration gaps were also closed as part
+of this audit (test infrastructure, not production code): 0.9.144's own
+`tests/WorldViewSnapshotAttribution.test.js` had never been added to
+`tests.html` — the identical class of gap 0.9.141's own header already
+named and fixed once for 0.9.140's own flagship test — and this
+milestone's own new file is added alongside it.
+
+### The one invariant this milestone makes explicit, not merely implicit
+
+This whole vertical slice now decomposes into four genuinely separate
+stages, and no stage is ever allowed to silently upgrade into the next:
+
+```text
+DISCOVERY
+  "Where might a Snapshot be?"
+
+        ↓
+
+RESOLUTION / VERIFICATION
+  "Can I obtain bytes whose actual content matches
+   the requested Snapshot identity?"
+
+        ↓
+
+ATTRIBUTION
+  "Does this verified content correspond
+   to this Publication?"
+
+        ↓
+
+PRESENTATION
+  "Show the resulting facts to the user."
+```
+
+Presentation never upgrades one stage into another:
+
+```text
+Nostr candidate
+    ≠ verified Snapshot
+
+verified Snapshot
+    ≠ attributed Publication
+
+MATCH
+    ≠ trusted/owned/authentic
+```
+
+That last line is the one this milestone is most deliberate about.
+`MATCH` means exactly what 0.9.143 defined it to mean — a recomputed
+content hash equals `Publication.contentReference.hash` — and nothing
+more. No `TRUSTED`/`AUTHENTIC`/`OWNED`/`CONFIRMED`/`PUBLISHED`/`CANONICAL`
+vocabulary is introduced anywhere in this family, and this milestone's
+own Section I structural sweep is the mechanism that keeps that true
+going forward, not merely a claim made once in prose.
+
+### What this milestone deliberately does NOT do
+
+- **Any production code change of any kind.** Every file this milestone
+  reads — `application/SnapshotPublicationAttribution.js`, `application/
+  DiscoverSnapshotCommand.js`, `application/DecentralizedSnapshotResolver.js`,
+  `application/SnapshotDistributionCommand.js`, `application/
+  SnapshotDistributionRuntimeComposition.js`, `application/
+  DiscoverSnapshotRuntimeComposition.js`, `ui/components/OwnPublicationPanel.js`,
+  `ui/components/WorldEncounterCanvas.js`, `ui/views/WorldView.js`,
+  `ui/main.js` — is read-only. Only this milestone's own new test file,
+  the two `tests.html` registrations named above, and `docs/Roadmap.md`
+  change.
+- **Any trust, ownership, authenticity, or provenance vocabulary.** See
+  "the one invariant this milestone makes explicit," above — this
+  milestone's own Section I is the regression lock for that restraint,
+  not a new relaxation of it.
+- **A real, host-reachable Nostr relay-query implementation, or any
+  other capability gap 0.9.142's own header already named as excluded.**
+  This milestone audits the architecture that gap already left honestly
+  wired; it does not close the gap itself.
+
+### Recommendation
+
+```text
+0.9.140  Own Publication Distribution Entry Point                 ✓
+0.9.141  Distribution Entry-Point Convergence Audit                ✓
+0.9.142  World View Snapshot Discovery Command                     ✓
+0.9.143  Snapshot–Publication Attribution                          ✓
+0.9.144  World View Snapshot Attribution Integration                ✓
+0.9.145  End-to-End Snapshot Attribution Audit                     ✓
+```
+
+This closes a complete, decentralized Snapshot vertical slice — DISCOVERY,
+RESOLUTION/VERIFICATION, ATTRIBUTION, and PRESENTATION now each hold as
+independent, honestly-reported facts, proven both in isolation
+(0.9.142-0.9.144's own suites) and composed together under real
+concurrency at both entry points (this milestone's own Section G). I
+would stop the automatic Snapshot milestone sequence here, exactly as
+0.9.141's own "Recommendation" already declined to schedule 0.9.142
+automatically. 0.9.146 should be a genuine roadmap reassessment, not
+another predetermined step deeper into the Snapshot subsystem — the
+interesting question is no longer "what other Snapshot layer can we
+build," but which remaining ForkBuild capability (vehicle/world
+interaction, the Signed Claim discovery counterpart, or something this
+sequence hasn't named at all) now has the greatest architectural or
+user-facing value next.
