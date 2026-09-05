@@ -69087,16 +69087,185 @@ Deliberately excluded, per this milestone's own narrow scope:
 0.9.159  Selected Snapshot World Placement                           ✓
 ```
 
+## 0.9.160 — Selected Snapshot World Runtime Registration
+
+0.9.159 produced a placement FACT that lived only inside
+`OwnPublicationPanel.js`'s own ephemeral interaction state — its own header
+named exactly the gap: for the snapshot to actually appear alongside
+existing World content, "something needs to make the materialized-and-
+placed Snapshot available to the existing World runtime." This milestone
+is that seam:
+
+```text
+DISCOVER -> SELECT -> RESOLVE -> VERIFY -> ATTRIBUTE -> MATERIALIZE -> PLACE -> REGISTER
+```
+
+**The audit performed before writing any code.** Before inventing a
+registration mechanism, I inspected what "existing runtime structure
+represents 'this material exists at this World position'" already means in
+this codebase — and found one, fully built and already wired into the
+running app: `application/WorldDiscoverySourceRegistry.js` (0.9.9). It is
+the ONE piece of mutable runtime state `ui/main.js` constructs once at
+startup (`bootstrapWorldDiscoveryRuntime()`, 0.9.14) and hands to both
+`ui/views/WorldView.js` and `ui/views/LiveWorldView.js`, which inject it and
+pass it straight through as `WorldEncounterCanvas`'s own already-subscribed
+`registry` prop (0.9.13). A connected peer's own World contribution already
+registers into this SAME registry, under its own dedicated
+`"peer:<identityId>"` origin, via
+`peer/PeerWorldDiscoveryLifecycleBridge.js` (0.9.11). This milestone reuses
+that EXACT mechanism, one origin scheme over, rather than inventing a
+second registry, a new runtime-state store, or a rendering-side special
+case.
+
+**One important discovery from that audit, and one deliberate scope
+boundary drawn because of it.** `application/WorldDiscoveryRuntimeBootstrap.js`'s
+own header (0.9.14) already names a much older, larger, unrelated gap: the
+registry's `'local'` origin is registered EMPTY at startup, because
+"reading real local publications/placements... out of this app's several
+storage layers... is separate, unscheduled work." Contributing this
+milestone's own one Publication+placement pair under that SAME shared
+`'local'` origin would have meant either (a) silently fixing that much
+older, unrelated gap as an accidental side effect, or (b) using
+`WorldDiscoverySourceRegistry`'s own "replacement, not accumulation" rule
+(0.9.9) to silently overwrite whatever else that shared slot might ever
+come to hold. Neither is this milestone's job. Instead, **each registered
+Snapshot gets its own dedicated origin** — `"snapshot:<contentHash>"` —
+the identical "one slot per contributor" discipline the peer bridge already
+holds for `"peer:<identityId>"`. This makes registering one Snapshot
+structurally incapable of disturbing any other origin's contribution,
+including a future `'local'` source once that separate, older gap is
+eventually closed, and it is what makes registering the SAME Snapshot
+twice idempotent for free — the registry's own existing rule, never a new
+deduplication mechanism invented here.
+
+```text
+selectedSnapshotWorldPlacementResult   (0.9.159, unchanged)
+                │
+                │  click "Register Placed Snapshot"
+                ▼
+registerMaterializedSnapshot()   (ui/components/OwnPublicationPanel.js, NEW)
+                │
+                ▼
+registerMaterializedSnapshotWorldSource(worldDiscoverySourceRegistry,
+    placement, publication)   (application/
+    MaterializedSnapshotWorldDiscoveryBridge.js, NEW)
+                │
+                ▼
+registry.setSource(describeWorldDiscoverySource({
+    origin: "snapshot:<contentHash>", publications: [publication],
+    placements: [{ publicationId, position }]
+}))   (application/WorldDiscoverySourceRegistry.js, 0.9.9, UNCHANGED)
+                │
+                ▼
+registry.listSources()  ->  assembleWorldDiscoveryInputs()  ->
+deriveWorldEncounters()  ->  ...  ->  WorldEncounterCanvas
+    (0.9.7 / 0.9.0 / 0.9.1 / 0.9.2 / 0.9.3-0.9.4 — every one of these
+    ENTIRELY UNCHANGED, exercised end to end by this milestone's own
+    flagship test)
+```
+
+**Placement is the only precondition — materialization is already
+implied.** `resolveSnapshotWorldPlacement()` (0.9.159) itself never reports
+`PLACED` unless materialization already reached `STORED`/`ALREADY_AVAILABLE`,
+so gating registration on `SnapshotWorldPlacementOutcome.PLACED` is
+simultaneously this milestone's placement gate AND its materialization
+gate, with no duplicated check. Every other outcome — `UNPLACED`, or any
+resolution/materialization failure passed through from further upstream —
+is reported here VERBATIM, and nothing is registered: the identical
+"non-terminal outcomes pass through, never remapped" restraint every file
+in this family already holds, extended one more seam.
+
+**One new outcome, and only one**
+(`application/SnapshotWorldRegistrationOutcome.js`): `REGISTERED`,
+reported identically whether this is the first registration for a
+contentHash or a later one replacing it — the registry's own idempotent
+replacement semantics already make that distinction unnecessary, and this
+file introduces no "already registered" vocabulary of its own, honoring
+the recommendation to preserve whatever identity rules the runtime already
+uses rather than inventing deduplication that was never asked for.
+
+**An independent sibling of "Place Materialized Snapshot," never an
+automatic consequence of it.** A successfully `PLACED` Snapshot does not
+register itself with the World runtime automatically — only a separate,
+explicit "Register Placed Snapshot" click does. Clearing this component's
+own `selectedSnapshotWorldRegistrationResult` on a new selection, a fresh
+resolution/materialization/placement attempt, or a Publication change never
+unregisters anything from the registry itself — that state describes only
+this component's own ephemeral "what did the last click report," while the
+registered `WorldDiscoverySource`, once created, remains in the registry
+until something explicitly removes it (a deliberately unwired
+`unregisterMaterializedSnapshotWorldSource()` is provided for exactly that
+future, explicit use).
+
+`tests/SnapshotWorldRuntimeRegistration.test.js` — seven sections: **A**
+(`registerMaterializedSnapshotWorldSource()` contract validation,
+`REGISTERED`, and every non-`PLACED` outcome passed through verbatim
+without ever calling `registry.setSource()`), **B** (identity preservation
+— the exact same `publication` object reference is registered, unchanged;
+position is placement's own, never recomputed), **C** (no independent
+spatial authority — structural sweep confirming no `PlacementRegistry`/
+spatial-index import, plus behavioral proof that two different positions
+never mix), **D** (idempotency — registering the identical contentHash
+three times leaves exactly one registry entry; two different contentHashes
+occupy two independent, mutually undisturbed slots), **E**
+(`OwnPublicationPanel`'s own guard/staleness state machine, including the
+new "clearing the UI's own result never unregisters the runtime fact"
+invariant), **F** — FLAGSHIP (a real Nostr-discovered, resolved,
+materialized, and placed Snapshot, registered into a real
+`WorldDiscoverySourceRegistry`, then run through the ENTIRELY UNMODIFIED
+existing `assembleWorldDiscoveryInputs()` -> `deriveWorldEncounters()`
+pipeline — the SAME pipeline `WorldEncounterCanvas` already renders from —
+confirming a genuine, correctly-positioned encounter appears where none
+existed before registration), **G** (structural sweep: no content-store/
+discovery/rendering import inside the bridge, no viewport/visibility
+vocabulary, `SnapshotWorldRegistrationOutcome` carries exactly its own one
+value, no automatic unregistration exists anywhere).
+
+Deliberately excluded, per this milestone's own narrow scope:
+- **Populating the registry's shared `'local'` origin, or any general
+  local-publication discovery.** A separate, much older, already-named
+  gap (0.9.14) this milestone does not attempt to close — see "The audit
+  performed before writing any code," above.
+- **Unregistering a Snapshot, automatically or via any new UI action.**
+  `unregisterMaterializedSnapshotWorldSource()` exists as the symmetric
+  undo but is wired to nothing in this milestone.
+- **Rendering, visibility, viewport, or camera logic of any kind.**
+  `WorldEncounterCanvas` observes the registry entirely unmodified.
+- **A new World-state authority, store, or registry.** This milestone
+  mutates the ONE existing `WorldDiscoverySourceRegistry` a caller already
+  holds.
+- **Deduplication, ranking, trust, or reconciliation beyond what the
+  registry's own pre-existing "replacement, not accumulation" rule already
+  provides for free.**
+
+```text
+0.9.150  Snapshot Candidate Discovery Command                      ✓
+0.9.151  World View Snapshot Candidate Browser                     ✓
+0.9.152  Selected Snapshot Candidate Resolution                    ✓
+0.9.153  Selected Snapshot Resolution End-to-End Audit              ✓
+0.9.154  Selected Snapshot Attribution                              ✓
+0.9.155  Selected Snapshot Attribution End-to-End Audit              ✓
+0.9.156  Snapshot Lifecycle & Semantic Boundary Audit                ✓
+0.9.157  Snapshot Candidate Interaction Completion Audit             ✓
+0.9.158  Selected Snapshot Materialization                           ✓
+0.9.159  Selected Snapshot World Placement                           ✓
+0.9.160  Selected Snapshot World Runtime Registration                ✓
+```
+
 ### Recommendation
 
-With placement now proven, the natural next milestone is **0.9.160 —
-Selected Snapshot World Rendering**: let World View's existing rendering
-observe a `PLACED` `selectedSnapshotWorldPlacementResult` and its
-`runtime world state` the same way it already observes any other
-placed Publication — World View should remain an OBSERVER of world
-material throughout, never a second material-loading system of its own.
-I would not fold rendering into this milestone: placement and rendering
-deserve the same narrow, independently-tested scope this entire Snapshot
-subsystem has held since 0.9.150, and rendering's own visibility/viewport
-question (0.9.159's own "deliberately excluded") is a genuinely separate
-concern from "where does this Snapshot's position come from."
+With registration now proven, the natural next milestone is **0.9.161 —
+Selected Snapshot World Rendering**: this milestone's own flagship test
+already demonstrated, by hand, that a registered Snapshot flows unmodified
+through `assembleWorldDiscoveryInputs()` -> `deriveWorldEncounters()` into
+a genuine encounter — 0.9.161's entire job would be wiring THAT SAME
+already-live `worldDiscoverySourceRegistry` subscription
+`WorldEncounterCanvas` already holds (0.9.13) into actually being mounted
+and observed wherever a person would expect to see it, and confirming the
+rendered marker's own position matches. I would not fold rendering into
+this milestone: registration and rendering deserve the same narrow,
+independently-tested scope this entire Snapshot subsystem has held since
+0.9.150, and rendering's own visibility/viewport question stays exactly
+where 0.9.159's own "deliberately excluded" list already put it — a
+genuinely separate concern from "does this Snapshot's own fact reach the
+runtime at all."

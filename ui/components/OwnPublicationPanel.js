@@ -1,5 +1,6 @@
 import { resolveSnapshotPublicationAttribution } from '../../application/SnapshotPublicationAttribution.js';
 import { resolveSnapshotWorldPlacement } from '../../application/SnapshotWorldPlacement.js';
+import { registerMaterializedSnapshotWorldSource } from '../../application/MaterializedSnapshotWorldDiscoveryBridge.js';
 
 // 0.9.140 — Own Publication Distribution Entry Point.
 //
@@ -604,6 +605,86 @@ import { resolveSnapshotWorldPlacement } from '../../application/SnapshotWorldPl
 //   application/SnapshotWorldPlacementOutcome.js's own two new values, plus
 //   whatever outcome `selectedSnapshotMaterializationResult` itself already
 //   carries, passed through unchanged, are ever produced.
+//
+// 0.9.160 — Selected Snapshot World Runtime Registration.
+//
+// 0.9.159 produced a placement FACT that lived only inside this
+// component's own ephemeral state — nothing yet made it observable to the
+// running World. This milestone is that seam:
+//
+//   selectedSnapshotWorldPlacementResult   (0.9.159, unchanged)
+//                │
+//                │  click "Register Placed Snapshot"
+//                ▼
+//   registerMaterializedSnapshot()   (THIS FILE, NEW)
+//                │
+//                ▼
+//   registerMaterializedSnapshotWorldSource(worldDiscoverySourceRegistry,
+//     placement, publication)   (application/
+//     MaterializedSnapshotWorldDiscoveryBridge.js, NEW — mutates the SAME
+//     app-wide WorldDiscoverySourceRegistry a connected peer's own World
+//     contribution already registers into, under its own dedicated
+//     origin; see that file's own header for why this is not a new World-
+//     state authority)
+//                │
+//                ▼
+//   selectedSnapshotWorldRegistrationResult   (NEW field)
+//
+// `worldDiscoverySourceRegistry` IS A NEW, PLAIN COLLABORATOR PROP —
+// NEVER AN INJECTED COMMAND. Exactly like `placementInfo` (0.9.159), this
+// is the SAME app-wide `WorldDiscoverySourceRegistry` instance
+// `ui/views/WorldView.js` already injects and hands to `WorldEncounterCanvas`
+// as its own `registry` prop — handed to this component the identical way,
+// so registering a Snapshot here mutates the EXACT registry
+// `WorldEncounterCanvas` is already subscribed to, never a second,
+// disconnected instance.
+//
+// AN INDEPENDENT SIBLING OF "PLACE MATERIALIZED SNAPSHOT," NEVER AN
+// AUTOMATIC CONSEQUENCE OF IT. A successfully PLACED Snapshot does not
+// automatically register itself with the World runtime — only this
+// separate, explicit click does, the identical restraint 0.9.159's own
+// header already holds one sibling under ("a successfully materialized
+// Snapshot does not automatically acquire a World position").
+//
+// SYNCHRONOUS — NO EXECUTING/ERROR STATE OF ITS OWN, mirroring
+// `placeMaterializedSnapshot()`'s own restraint one sibling over:
+// `registerMaterializedSnapshotWorldSource()` performs no I/O — it mutates
+// a plain, in-memory collaborator synchronously.
+//
+// STALE REGISTRATION IS CLEARED WHEREVER THE PLACEMENT RESULT IT DEPENDS
+// ON ALREADY IS, PLUS ONE ADDITIONAL SITE: `selectSnapshotCandidate()`, a
+// fresh `resolveSelectedSnapshot()`/`materializeSelectedSnapshot()`
+// attempt, and the Publication-change watcher all clear
+// `selectedSnapshotWorldRegistrationResult` at the same sites they already
+// clear `selectedSnapshotWorldPlacementResult` — and `placeMaterializedSnapshot()`
+// itself now ALSO clears it immediately before computing a fresh placement
+// result, since a stale registration described the PRIOR placement result,
+// about to be replaced.
+//
+// CLEARING THE UI'S OWN DISPLAYED RESULT NEVER UNREGISTERS ANYTHING FROM
+// THE RUNTIME REGISTRY ITSELF. See application/
+// MaterializedSnapshotWorldDiscoveryBridge.js's own header, "Deliberately
+// excluded... automatically unregistering a Snapshot when the interaction
+// state that produced it goes stale." `selectedSnapshotWorldRegistrationResult`
+// resetting to `null` describes only this component's own ephemeral
+// "what did the last click report" state — the registered
+// `WorldDiscoverySource` itself, if one was ever created, remains in the
+// registry until something explicitly removes it.
+//
+// DELIBERATELY EXCLUDED — NOT THIS MILESTONE.
+// - **Populating the registry's `'local'` origin, or any general local-
+//   publication discovery.** See application/
+//   MaterializedSnapshotWorldDiscoveryBridge.js's own header.
+// - **Unregistering a Snapshot, automatically or via any button this
+//   milestone adds.** The bridge file exports an unregister function; no
+//   UI in this file calls it.
+// - **Rendering the registered Snapshot anywhere, or any visibility/
+//   viewport concern.** World View's existing `WorldEncounterCanvas`
+//   observes the registry entirely unmodified by this milestone.
+// - **Any new resolution/materialization/placement outcome vocabulary.**
+//   Only application/SnapshotWorldRegistrationOutcome.js's own one new
+//   value, plus whatever outcome `selectedSnapshotWorldPlacementResult`
+//   itself already carries, passed through unchanged, are ever produced.
 export default {
     name: 'OwnPublicationPanel',
     props: {
@@ -674,6 +755,19 @@ export default {
         placementInfo: {
             type: Object,
             default: null
+        },
+        // 0.9.160 — optional. The SAME app-wide `application/
+        // WorldDiscoverySourceRegistry.js` (0.9.9) instance
+        // `ui/views/WorldView.js` already injects and hands to
+        // `WorldEncounterCanvas` as its own `registry` prop — see this
+        // file's own header, "0.9.160 — Selected Snapshot World Runtime
+        // Registration." A plain collaborator prop, never a command
+        // function — this component calls its `setSource()` method
+        // directly, through `registerMaterializedSnapshotWorldSource()`,
+        // rather than being handed a pre-composed capability.
+        worldDiscoverySourceRegistry: {
+            type: Object,
+            default: null
         }
     },
     data() {
@@ -736,7 +830,15 @@ export default {
             // is explicitly clicked; never written by anything else. No
             // executing/error state of its own — see this file's own
             // header, "synchronous."
-            selectedSnapshotWorldPlacementResult: null
+            selectedSnapshotWorldPlacementResult: null,
+            // 0.9.160 — see this file's own header, "0.9.160 — Selected
+            // Snapshot World Runtime Registration." A separate ephemeral
+            // field, never shared with `selectedSnapshotWorldPlacementResult`
+            // itself — an independent sibling, never a sequel. `null`
+            // until registerMaterializedSnapshot() is explicitly clicked;
+            // never written by anything else. No executing/error state of
+            // its own — see this file's own header, "synchronous."
+            selectedSnapshotWorldRegistrationResult: null
         };
     },
     watch: {
@@ -798,6 +900,10 @@ export default {
             // identical way it already invalidates the materialization
             // result it was computed from.
             this.selectedSnapshotWorldPlacementResult = null;
+            // 0.9.160 — the identical staleness rule, one sibling over: a
+            // prior World Runtime Registration result described the OLD
+            // placement result it was computed from.
+            this.selectedSnapshotWorldRegistrationResult = null;
         }
     },
     beforeUnmount() {
@@ -970,6 +1076,10 @@ export default {
             // prior World Placement result described the OLD selection's
             // own materialization result too.
             this.selectedSnapshotWorldPlacementResult = null;
+            // 0.9.160 — the identical staleness rule, one sibling over: a
+            // prior World Runtime Registration result described the OLD
+            // selection's own placement result too.
+            this.selectedSnapshotWorldRegistrationResult = null;
         },
         // 0.9.152 — the only writer of `selectedSnapshotResolutionExecuting`/
         // `selectedSnapshotResolutionError`/`selectedSnapshotResolutionResult`,
@@ -1010,6 +1120,10 @@ export default {
             // prior World Placement result was computed from the PRIOR
             // materialization result, about to be replaced.
             this.selectedSnapshotWorldPlacementResult = null;
+            // 0.9.160 — the identical staleness rule, one sibling over: a
+            // prior World Runtime Registration result was computed from
+            // the PRIOR placement result, about to be replaced.
+            this.selectedSnapshotWorldRegistrationResult = null;
             const requestId = this.selectedSnapshotResolutionRequestId;
 
             Promise.resolve()
@@ -1082,6 +1196,10 @@ export default {
             // header, "stale placement is cleared wherever the
             // materialization result it depends on already is."
             this.selectedSnapshotWorldPlacementResult = null;
+            // 0.9.160 — the identical staleness rule, one sibling over: a
+            // prior World Runtime Registration result described the PRIOR
+            // placement result, about to be replaced.
+            this.selectedSnapshotWorldRegistrationResult = null;
             const requestId = this.selectedSnapshotMaterializationRequestId;
 
             Promise.resolve()
@@ -1119,7 +1237,29 @@ export default {
             if (!materialization) {
                 return;
             }
+            // 0.9.160 — a fresh placement result is about to replace
+            // `selectedSnapshotWorldPlacementResult`; any World Runtime
+            // Registration result computed from the PRIOR placement result
+            // no longer describes it.
+            this.selectedSnapshotWorldRegistrationResult = null;
             this.selectedSnapshotWorldPlacementResult = resolveSnapshotWorldPlacement(materialization, this.placementInfo);
+        },
+        // 0.9.160 — the only writer of `selectedSnapshotWorldRegistrationResult`,
+        // and the only call site of `registerMaterializedSnapshotWorldSource()`
+        // in this file — mirrors `placeMaterializedSnapshot()`'s own
+        // synchronous, no-executing/error-state shape exactly, one sibling
+        // over. A no-op whenever there is no `selectedSnapshotWorldPlacementResult`
+        // yet to register, or no `worldDiscoverySourceRegistry` to register
+        // it with. Passes `this.publication` straight through — the SAME
+        // Publication object `placementInfo` (and therefore
+        // `selectedSnapshotWorldPlacementResult`) was already keyed to —
+        // never re-fetched or reconstructed here.
+        registerMaterializedSnapshot() {
+            const placement = this.selectedSnapshotWorldPlacementResult;
+            if (!placement || !this.worldDiscoverySourceRegistry) {
+                return;
+            }
+            this.selectedSnapshotWorldRegistrationResult = registerMaterializedSnapshotWorldSource(this.worldDiscoverySourceRegistry, placement, this.publication);
         }
     },
     template: `
@@ -1401,6 +1541,42 @@ export default {
                 <template v-if="selectedSnapshotWorldPlacementResult.reason">
                     <dt>Reason</dt>
                     <dd>{{ selectedSnapshotWorldPlacementResult.reason }}</dd>
+                </template>
+            </dl>
+
+            <!-- 0.9.160 — Selected Snapshot World Runtime Registration. An
+                 independent SIBLING of "Place Materialized Snapshot" above,
+                 not an automatic consequence of it — see this file's own
+                 header, "0.9.160." Reachable in the SAME
+                 materializeSelectedSnapshotCommand family (registering a
+                 Snapshot that was never even placed has no meaning).
+                 Disabled whenever there is no selectedSnapshotWorldPlacementResult
+                 yet. Synchronous — no "…ing" label, since
+                 registerMaterializedSnapshotWorldSource() performs no I/O. -->
+            <button
+                v-if="materializeSelectedSnapshotCommand"
+                type="button"
+                class="action-btn own-publication-selected-world-registration-action"
+                :disabled="!selectedSnapshotWorldPlacementResult"
+                @click="registerMaterializedSnapshot"
+            >Register Placed Snapshot</button>
+
+            <!-- A separate result from selectedSnapshotWorldPlacementResult
+                 above. On a placement that never reached PLACED, this
+                 reports that SAME outcome unchanged (never a registration-
+                 specific catch-all) — see application/
+                 MaterializedSnapshotWorldDiscoveryBridge.js's own header.
+                 Origin is rendered only on REGISTERED. -->
+            <dl v-if="selectedSnapshotWorldRegistrationResult" class="own-publication-selected-world-registration-detail">
+                <dt>Selected Snapshot World Registration</dt>
+                <dd>{{ selectedSnapshotWorldRegistrationResult.outcome }}</dd>
+                <template v-if="selectedSnapshotWorldRegistrationResult.origin">
+                    <dt>Origin</dt>
+                    <dd>{{ selectedSnapshotWorldRegistrationResult.origin }}</dd>
+                </template>
+                <template v-if="selectedSnapshotWorldRegistrationResult.reason">
+                    <dt>Reason</dt>
+                    <dd>{{ selectedSnapshotWorldRegistrationResult.reason }}</dd>
                 </template>
             </dl>
         </div>
