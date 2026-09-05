@@ -72365,3 +72365,149 @@ would not schedule either automatically — which of the two ForkBuild
 actually needs next is a product judgment this audit's own evidence can
 narrow, but not make.
 ```
+
+## 0.9.181 — World Snapshot Comparison
+
+0.9.180 classified the decentralized Snapshot -> World lifecycle as
+COMPLETE and recommended, as its evidence-backed "next candidate," Vehicle
+Reachability — a capability entirely outside the Snapshot/World arc. This
+milestone is a deliberate, explicit exception to that recommendation,
+made at the product owner's own direction rather than by re-opening the
+audit's own judgment: rather than another Snapshot *infrastructure*
+mechanism (which 0.9.180 correctly ruled out), it is the first milestone
+to *use* the information architecture 0.9.131-0.9.180 spent fifty
+milestones establishing — specifically, the hard-won fact that
+`publicationId` and `contentHash` never collapse into one another.
+
+```text
+application/WorldSnapshotInspection.js's own descriptor (0.9.177)
+     { kind: 'PUBLICATION', objectId, publicationId, contentHash, position }
+                       │
+                       │   (any second such descriptor — or any other
+                       │    already-known { publicationId, contentHash }
+                       │    pair, from ANY source family)
+                       ▼
+application/WorldSnapshotComparison.js   (NEW)
+     compareSnapshotWorldPublications(a, b)
+                       │
+                       ▼
+{ aPublicationId, bPublicationId, samePublication, contentComparison }
+contentComparison ∈ { SAME_CONTENT, DIFFERENT_CONTENT, null }
+```
+
+**A pure comparison descriptor, nothing else.** `application/
+WorldSnapshotComparison.js` (new) performs no discovery, retrieval,
+hashing, registry access, or materialization of any kind — it joins two
+already-known fact bundles the exact same way `describeWorldSnapshotInspection()`
+(0.9.177) already joins `presentation`/`resolvedSelection`. It is
+deliberately **source-family agnostic**: it reads only `publicationId` and
+`contentHash` off of whatever it is handed, never a `sourceFamily`/`kind`
+field, so a SNAPSHOT descriptor compares against a LOCAL or PEER one
+exactly the same way two SNAPSHOT descriptors would, provided the caller
+genuinely knows both sides' `contentHash` — this file neither requires nor
+fabricates one. `publicationId` and `contentHash` are reported
+side-by-side, never merged: `samePublication` and `contentComparison` are
+independent facts, and two Publications sharing an identical `contentHash`
+remain two distinct World objects, exactly as every prior milestone in
+this arc has preserved. When either side's `contentHash` is not honestly
+known, `contentComparison` is `null` — "not knowable," never guessed into
+`DIFFERENT_CONTENT` merely from absence, and never coerced into
+`SAME_CONTENT`.
+
+**Explicitly not "duplicate detection."** `WorldSnapshotContentComparison`'s
+vocabulary is exactly two values — `SAME_CONTENT`/`DIFFERENT_CONTENT` —
+and the new module's own header states the exclusion directly: this file
+states a verified content fact, never a removal/deduplication policy. Two
+Publications with identical content may intentionally coexist at
+different World positions; nothing here recommends collapsing them.
+
+**No UI wiring in this milestone.** The brief's own "smallest useful UI"
+sketch is illustrative, not a requirement, and its own words — "I would
+not yet build a full side-by-side viewer" — set this milestone's actual
+boundary. `ui/components/WorldEncounterCanvas.js` currently holds exactly
+one resolved selection at a time (`resolvedEncounterSelection`, 0.9.20);
+giving a Wanderer a genuine second, independently-held "compare with"
+selection to hand this function two real descriptors would be a new
+selection-holding mechanism in its own right — real UI plumbing, not a
+join over existing facts, and exactly the kind of scope growth this
+milestone's own brief asked to avoid ("0.9.181 should be deliberately
+small"). That wiring is left for a later, separate milestone, to be
+undertaken only once a concrete surface wants to offer a Wanderer two
+comparable encounters at once — the same "don't build it until a
+concrete product requirement justifies it" discipline 0.9.180's own
+DEFERRED section already applied to `claimedPosition`/`locator`
+inspectability.
+
+**`tests/WorldSnapshotComparison.test.js` — eleven sections:**
+- **A** — a Publication compared against an identical descriptor of
+  itself: same identity, same content.
+- **B** — two distinct Publications sharing an identical `contentHash` ->
+  `SAME_CONTENT`, while `aPublicationId`/`bPublicationId` stay
+  independently visible.
+- **C** — two Publications with different `contentHash` ->
+  `DIFFERENT_CONTENT`.
+- **D**/**E** — position and locator/storage fields, however different,
+  never affect the verdict.
+- **F** — source-family agnosticism: SNAPSHOT vs LOCAL and SNAPSHOT vs
+  PEER, both with a shared `contentHash`, both `SAME_CONTENT`.
+- **G** — differing `origin`/source fields never alter the result, and
+  are never forwarded onto it.
+- **H** — a missing/`null`/absent side on either argument produces no
+  comparison (`null`), never a guess.
+- **I** — malformed input (no `publicationId`, an empty-string or
+  non-string `publicationId`/`contentHash`) degrades honestly: identity is
+  still reported whenever genuinely knowable, `contentComparison` degrades
+  to `null` rather than guessing.
+- **J** — purity: frozen results (including the exported enum object
+  itself), no mutation of inputs, byte-identical results across repeated
+  calls.
+- **K** — structural audit: no I/O, no registry access, no re-invocation
+  of any discovery/resolution/placement/(un)registration function, no
+  hashing, no rank/trust/verified/best/preferred/reliable/freshness/
+  quality/score vocabulary, no "duplicate" vocabulary, no Nostr/Arweave
+  vocabulary, no `sourceFamily`/kind gating, no new World Encounter kind.
+
+`tests.html` gains one new entry, alongside the other `WorldSnapshot*`
+files.
+
+Deliberately excluded, per this milestone's own narrow brief:
+- **Any UI, panel, template, or comparison-triggering action.** See "no UI
+  wiring in this milestone," above.
+- **"Duplicate detection," deduplication, ranking, or any removal/
+  replacement policy.** See "explicitly not 'duplicate detection,'" above.
+- **A `locator`/`storage` comparison, or any field beyond
+  `publicationId`/`contentHash`.** A caller that also wants each
+  descriptor's own position already has it, unchanged, on the descriptor
+  it passed in.
+- **A new World Encounter kind, discovery mechanism, or materialization
+  trigger of any kind.** This is a read-only comparison over already-known
+  facts, never an action layer.
+- **Populating `contentHash` for LOCAL/PEER descriptors where it is not
+  already known.** This milestone makes the comparison itself
+  source-family agnostic; it does not create any new plumbing to make
+  `contentHash` reachable where 0.9.177's own audit found it was not (see
+  that file's own "not reachable here, yet, honestly").
+
+```text
+0.9.177  World Snapshot Inspection Detail                            ✓
+0.9.178  World Snapshot Inspection Actionability Audit               ✓
+0.9.179  Snapshot World Source Unregistration                        ✓
+0.9.180  World Snapshot Completion & Boundary Audit                  ✓
+0.9.181  World Snapshot Comparison                                   ✓
+```
+
+### Recommendation
+
+The comparison seam this milestone establishes is deliberately unused by
+any UI yet — it exists so that a future milestone wanting to show a
+Wanderer "these two encounters are the same content" has a proven,
+tested, source-agnostic function to call, rather than needing to invent
+one under UI-shaped time pressure. A natural next step, exactly as named
+in the original brief, is a **World Snapshot Side-by-Side Viewer** — but
+only once a concrete surface genuinely offers a Wanderer two comparable
+Publications/Snapshots at once; building the viewer first, before that
+concrete need exists, would repeat the exact "infrastructure ahead of
+product need" pattern 0.9.180 was written to interrupt. 0.9.180's own
+Vehicle Reachability recommendation also remains entirely open and
+unweakened by this milestone — this was a deliberate, one-off, product-
+directed exception to it, not a reversal of its own underlying judgment.
