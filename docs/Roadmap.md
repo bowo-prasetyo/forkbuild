@@ -69839,3 +69839,142 @@ vertical. The interesting remaining question is no longer about Snapshots
 at all: **what does the World actually need next, now that decentralized
 Snapshots can participate as ordinary World material?** That reassessment
 is itself the next milestone — not a continuation of this one.
+
+## 0.9.165 — World Discovery Participation Audit
+
+0.9.162 and 0.9.164 answered a VERTICAL question one seam at a time: can a
+single Snapshot travel DISCOVER through RENDER, and does every identity
+along that path stay exactly what it claims to be? Both passed. This
+milestone is the reassessment 0.9.164's own recommendation named — a
+HORIZONTAL question neither prior audit asked: now that Snapshot material
+can participate in the World exactly like local and peer material, is the
+overall World discovery model coherent when all three currently supported
+source families participate simultaneously, through the REAL composition
+root, under REAL concurrent membership changes, and across EVERY existing
+read path over the registry — not only the one 0.9.161 rendered?
+**Test-only, exactly like 0.9.162/0.9.164 — adding zero production code.**
+
+**`tests/WorldDiscoveryParticipationAudit.test.js` — seven sections, run
+against the real, unmodified production code throughout:**
+
+- **A** — composition-root coexistence: local (bootstrapped once, 0.9.14),
+  a live peer, and a registered Snapshot (0.9.160) all reach one rendered
+  canvas through the real `bootstrapWorldDiscoveryRuntime()` entry point —
+  never a hand-built registry alone, the one thing every prior Snapshot
+  audit used instead.
+- **B** — concurrent lifecycle: register local, peer, and Snapshot; then
+  unregister peer, replace the Snapshot in place (same contentHash+
+  publicationId), and replace local entirely — one step at a time, against
+  one already-mounted canvas that reflects every step with zero further
+  action. Each step notifies exactly once, and every OTHER origin's own
+  registry entry is proven untouched by strict `===` reference equality,
+  not merely by re-reading the same values.
+- **C** — THE TWO-PROJECTION ASYMMETRY: the same `publicationId`,
+  contributed by all three sources (only local contributing two anchors),
+  read through both projections this codebase already has. The COMBINED
+  projection `WorldEncounterCanvas` actually renders
+  (`describeWorldFromDiscoveryRegistry()`, 0.9.8/0.9.10) reports
+  `anchorCount: 2` on ALL THREE resulting encounters, including the peer-
+  and Snapshot-sourced ones that contributed zero anchors of their own,
+  because `deriveWorldEncounters()` counts anchors against the fully
+  assembled, all-sources-concatenated list, filtered by `publicationId`
+  alone. The PER-SOURCE projection 0.9.19's own selection-disambiguation
+  mechanism already uses reports `2`/`0`/`0` — strictly scoped to each
+  source's own contribution. Both are correct at their own, already
+  documented layer; this is the first place both are measured side by
+  side for one shared identity.
+- **D** — local lifecycle parity: the registry itself has no special case
+  for `'local'` — it is exactly as replaceable and removable as
+  `'peer:*'`/`'snapshot:*'` — while the real, running composition root
+  (0.9.14) calls `registry.setSource()` exactly once in its own executable
+  code and never replaces or removes `'local'` live, confirmed directly
+  against that file's own source. Registry generality and production
+  usage are two different facts; this section names the gap between them.
+- **E** — rendering uniformity, precisely scoped: a structural sweep over
+  exactly `projectedPublications`/`publicationRows` (the computed
+  properties Sections A/B's own markers are read from) and the whole of
+  `WorldEncounterMarker.js`, confirming no source-family branching
+  (`origin === 'local'`, `.startsWith('peer:')`, `.startsWith('snapshot:')`)
+  exists in the actual rendering pipeline — deliberately narrower than a
+  whole-file sweep, since this codebase's OTHER, unrelated `origin`
+  vocabularies (material-provenance display, decentralized lead selection)
+  are not part of this claim. Confirmed behaviorally too: a local marker
+  and a Snapshot marker carry field-for-field identical shapes.
+- **F** — THE GENUINE GAP THIS AUDIT FOUND: a materialized, registered,
+  rendered Snapshot's own resolved selection can never load its material
+  through `application/WorldEncounterMaterialLoading.js`'s ordinary
+  `loadWorldEncounterMaterial()` path. That file's own `materialSourceFor()`
+  (0.9.21) recognizes exactly two origin families —
+  `origin === 'local'` and `origin.startsWith('peer:')` — written well
+  before Snapshot existed as a World source family (0.9.150+) and never
+  revisited since. A `"snapshot:<contentHash>:<publicationId>"` origin
+  matches neither branch, so `loadWorldEncounterMaterial()` reports
+  `UNAVAILABLE` unconditionally for it — proven against the real function,
+  with a fully working Snapshot-shaped material source supplied and its
+  own `load()` confirmed NEVER CALLED, and confirmed structurally:
+  `materialSourceFor()`'s own body contains no mention of `'snapshot'` in
+  any form, a plain omission rather than a documented exclusion. Sanity
+  checked both directions — the same function correctly dispatches
+  `'local'` and `'peer:*'` origins, so this is a real, origin-specific gap,
+  never a broken test harness.
+- **G** — structural sweep: this milestone adds no production file, and no
+  dedup/reconciliation/merge/trust/ranking vocabulary in any file it
+  exercised.
+
+**This audit found one genuine gap — Section F — and did not fix it.**
+Every other section confirms the World discovery model already holds
+together when local, peer, and Snapshot all participate at once: sources
+stay isolated under concurrent lifecycle changes, rendering stays uniform,
+and the one asymmetry Section C measures (combined vs. per-source
+`anchorCount`) is two already-correct, already-documented behaviors that
+had simply never been placed side by side before. No production file was
+added or modified.
+
+Deliberately excluded, per this milestone's own narrow scope:
+- **Fixing Section F's own gap** — adding a `snapshot`/`origin.startsWith('snapshot:')`
+  branch to `materialSourceFor()`. Characterizing it is this milestone's
+  entire job; closing it is separate, later, unscheduled work, exactly as
+  0.9.163's fix was separate from 0.9.162's own audit.
+- **Deduplication, automatic merging, source prioritization, trust,
+  provenance ranking, lifecycle management, synchronization, or
+  retry/failover of any kind.** None were needed to characterize what this
+  audit found, and none were added.
+- **Reconciling Section C's own two-projection asymmetry into one shared
+  reading.** Both projections stay exactly as they are; this milestone
+  only measures them together for the first time.
+- **Any change to `WorldDiscoverySourceRegistry`, `WorldDiscoverySourceAssembly`,
+  `WorldDiscoveryRuntimeBootstrap`, or any renderer.** This audit confirms
+  their existing behavior, never alters it.
+
+```text
+0.9.159  Selected Snapshot World Placement                           ✓
+0.9.160  Selected Snapshot World Runtime Registration                ✓
+0.9.161  Snapshot World Rendering                                    ✓
+0.9.162  Snapshot World Convergence Audit                            ✓
+0.9.163  Snapshot World Origin Collision Fix                         ✓
+0.9.164  Snapshot World Source Identity Audit                        ✓
+0.9.165  World Discovery Participation Audit                         ✓
+```
+
+### Recommendation
+
+This audit passed, with exactly one genuine, previously invisible gap
+found and named rather than fixed: `application/WorldEncounterMaterialLoading.js`'s
+own `materialSourceFor()` has no `snapshot` origin family, so a registered
+Snapshot's own "Load Material" action can never succeed through the
+ordinary selection path, no matter what a caller supplies. Everything else
+this milestone tested — composition-root coexistence, concurrent
+multi-source lifecycle, rendering uniformity, and the registry's own
+declared generality — holds exactly as 0.9.9 through 0.9.164 already
+documented it would.
+
+Per this milestone's own brief, I would NOT fold Section F's fix into this
+same milestone. I would name a small, dedicated **0.9.166 — World Encounter
+Material Loading Snapshot Origin** to add exactly one recognized origin
+family to `materialSourceFor()`, mirroring the existing `'peer:'` branch,
+and stop there — this is a narrow, mechanical, already-fully-characterized
+fix, not an occasion to also add caching, fallback, or a fourth
+`materialSources` slot naming convention. Beyond that one fix, I would
+still perform the broader roadmap reassessment 0.9.164 already
+recommended: this audit gives no reason to keep naming Snapshot- or
+World-discovery-specific milestones past it.
