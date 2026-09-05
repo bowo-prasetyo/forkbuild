@@ -68273,3 +68273,125 @@ wiring `selectedSnapshotCandidate` to the existing, unmodified
 `executeDiscoverSnapshotCommand()`/attribution chain (via that
 candidate's own `contentHash`) — rather than baking resolution into the
 browser this milestone built.
+
+## 0.9.152 — Selected Snapshot Candidate Resolution
+
+The Recommendation immediately above turned out to describe the WRONG
+seam, and this milestone deliberately does NOT build it. Wiring
+`selectedSnapshotCandidate` into `executeDiscoverSnapshotCommand()` via
+`selectedCandidate.contentHash` looks like the obvious reuse, but it
+silently reintroduces exactly the first-match selection 0.9.151's own
+browser exists to let a user override:
+
+```text
+Discovered under one discoveryTag, sharing ONE contentHash:
+    A: contentHash=X, locator=ar://A     (discovered FIRST)
+    B: contentHash=X, locator=ipfs://B   (discovered SECOND — the user
+                                           explicitly clicks THIS one)
+
+resolve(discoveryTag, X)  -- called with B's own contentHash --
+    -> discovers [A, B] again, independently
+    -> selects candidates[0] = A            (0.9.134's own, unchanged,
+                                              documented first-match rule)
+    -> resolves A, never B
+
+The user's own selection silently vanished.
+```
+
+`resolve(contentHash)` and "resolve THIS specific, already-identified
+candidate" are two different operations that happen to look similar when
+every candidate's `contentHash` is unique — and stop being interchangeable
+the moment two candidates share one. Since 0.9.150/0.9.151 never
+deduplicate or group by `contentHash` (by design — see 0.9.151's own "no
+derived metadata, no ranking"), that collision is not a hypothetical edge
+case; it is the ordinary shape of the data this feature exists to browse.
+
+### The actual seam: `resolveCandidate()`, not a second `resolve()`
+
+`application/DecentralizedSnapshotResolver.js` (0.9.134) gains one new
+method, `resolveCandidate(candidate)`, sitting ALONGSIDE its own
+`resolve(discoveryTag, contentHash)`, untouched:
+
+```text
+resolve(discoveryTag, contentHash)          resolveCandidate(candidate)
+        │                                            │
+        ├── 1. DISCOVERY   (queryService.search)     │  (none — the
+        ├── 2. selection   (first match)             │   candidate IS
+        │         │                                  │   the selection)
+        │         ▼                                  │
+        └────► resolveCandidate(selected) ◄──────────┘
+                        │
+                        ├── LOCATION     (content store for
+                        │                 candidate.storage)
+                        ├── RETRIEVAL    (store.get() against THIS
+                        │                 candidate's own locator)
+                        └── VERIFICATION (bytes hash to THIS candidate's
+                                          own declared contentHash)
+```
+
+`resolve()` is refactored to perform DISCOVERY and first-match SELECTION
+itself, then hand the winning candidate to this SAME `resolveCandidate()`
+for LOCATION/RETRIEVAL/VERIFICATION — one actual candidate -> retrieval ->
+verification code path, never two independently-maintained copies of it.
+`resolve()`'s own externally-observable contract is completely unchanged;
+`tests/DecentralizedSnapshotResolution.test.js` passes untouched.
+
+`resolveCandidate()` never calls `queryService.search()` and never looks
+at any candidate other than the one it was handed — there is nothing for
+it to rank or select among. Selection still does not establish validity:
+`resolveCandidate()` performs the identical RETRIEVAL/VERIFICATION
+`resolve()` already does, and reports the identical `CONTENT_HASH_MISMATCH`
+when a candidate's declared `contentHash` disagrees with its own bytes —
+an explicitly SELECTED candidate is verified exactly as rigorously as a
+DISCOVERED one; selection buys no shortcut past verification.
+
+### Application command + UI wiring
+
+`application/ResolveSelectedSnapshotCommand.js` is the identical
+"application command boundary" seam `application/DiscoverSnapshotCommand.js`
+(0.9.142) already established, one operation over:
+`executeResolveSelectedSnapshotCommand({ candidate, resolver, contentStore,
+storeRegistry })` calls `resolver.resolveCandidate()` exactly once,
+forwarding every argument verbatim and returning its result unchanged —
+no algorithm, no infrastructure construction, of its own.
+
+`ui/main.js` composes `resolveSelectedSnapshotCommand` by reusing the SAME
+`snapshotResolver`/`snapshotRetrievalContentStore` `discoverSnapshotCommand`
+already wraps — never a second `composeDiscoverSnapshotRuntime()` call.
+`ui/views/WorldView.js` injects it and hands it straight through to
+`OwnPublicationPanel` with no wrapper of its own (its `(candidate) ->
+Promise<...>` shape already matches the prop exactly).
+
+`OwnPublicationPanel.js` gains a fourth, independent ephemeral-state
+family — `selectedSnapshotResolutionExecuting`/`...Error`/`...Result`/
+`...RequestId` — mirroring the existing three (distribution/discovery/
+candidate-discovery) exactly, plus a "Resolve Selected Snapshot" button
+enabled only once `selectedSnapshotCandidate` is set. It calls
+`resolveSelectedSnapshotCommand(selectedSnapshotCandidate)` — THE
+CANDIDATE OBJECT ITSELF, never `selectedSnapshotCandidate.contentHash` —
+this is the one line the entire milestone exists to get right. Selecting
+a DIFFERENT candidate now also clears any stale
+`selectedSnapshotResolutionResult` left over from the PREVIOUS selection
+(it describes a different candidate and would otherwise misrepresent the
+new one); selection itself remains a plain assignment with no I/O. No
+automatic attribution: a resolved Snapshot is never compared against
+`publication.contentReference.hash` by this milestone — that stays
+`discoverOwnSnapshot()`'s own, separate, already-known-contentHash
+question.
+
+```text
+0.9.150  Snapshot Candidate Discovery Command                      ✓
+0.9.151  World View Snapshot Candidate Browser                     ✓
+0.9.152  Selected Snapshot Candidate Resolution                    ✓
+```
+
+### Recommendation
+
+Resist wiring automatic attribution onto a resolved selected candidate
+next. A user browsing candidates is often looking at Snapshots unrelated
+to their own current Publication — resolving and verifying a candidate
+answers "are these bytes what they claim to be," never "do they belong to
+my Publication." If that comparison turns out to be wanted, reuse
+`resolveSnapshotPublicationAttribution()` exactly as it stands (it already
+takes any `{ outcome, bytes, ... }` resolution result, regardless of which
+seam produced it) rather than inventing a second comparison function.

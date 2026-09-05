@@ -282,19 +282,94 @@ import { resolveSnapshotPublicationAttribution } from '../../application/Snapsho
 // exact order it arrived. `storage` (`ar`/`ipfs`/...) is displayed as an
 // observed property, never as an implied preference between candidates.
 //
-// DELIBERATELY EXCLUDED — NOT THIS MILESTONE.
-// - **Automatic resolution, verification, or attribution when candidates
-//   appear or a candidate is selected.** See "selection is deliberately
-//   boring," above.
+// DELIBERATELY EXCLUDED — NOT THIS MILESTONE (0.9.151).
 // - **Ranking, deduplication, filtering by contentHash, grouping, or
 //   provider preference among displayed candidates.**
-// - **A "Resolve" action wired to the selected candidate.** A separate,
-//   later, unscheduled milestone (docs/Roadmap.md's own 0.9.151 entry
-//   names this "0.9.152 — Selected Snapshot Resolution").
 // - **Caching discovered candidates across discovery calls, or
 //   persisting a selection.** Each click re-runs the full command;
 //   `selectedSnapshotCandidate` is ephemeral component state, exactly
 //   like every other field in this file.
+//
+// 0.9.152 — Selected Snapshot Candidate Resolution.
+//
+// 0.9.151 stopped deliberately short of resolving `selectedSnapshotCandidate`
+// — "selecting a candidate" and "resolving that candidate" stayed two
+// separate, explicit steps. This wires the second step, reaching the
+// narrow seam `application/DecentralizedSnapshotResolver.js`'s own 0.9.152
+// addition names: `resolveCandidate(candidate)`, resolving EXACTLY the
+// candidate handed in — never re-discovered, never re-selected, and never
+// swapped for whichever candidate `resolve(candidate.contentHash)` might
+// pick instead (see that file's own header for why the two are not
+// interchangeable when several candidates can share one contentHash).
+//
+//   selectedSnapshotCandidate   (0.9.151, unchanged — set only by
+//                                 selectSnapshotCandidate(), below)
+//           │
+//           │ click "Resolve Selected Snapshot"
+//           ▼
+//   resolveSelectedSnapshot()
+//           │
+//           ▼
+//   resolveSelectedSnapshotCommand(selectedSnapshotCandidate)   (injected
+//                                           — the SAME app-wide command
+//                                           ui/main.js composes, reusing
+//                                           the SAME resolver/content
+//                                           store discoverSnapshotCommand
+//                                           already wraps)
+//           │
+//           ▼
+//   selectedSnapshotResolutionResult = { outcome, bytes, candidates,
+//                                         locator, storage, reason }
+//        (application/DecentralizedSnapshotResolutionOutcome.js's own
+//        vocabulary, rendered VERBATIM — resolution, never attribution;
+//        see this file's own header, "discovery, never attribution," the
+//        identical restraint held one operation over)
+//
+// THIS COMPONENT NEVER CALLS `resolveSelectedSnapshotCommand` WITH
+// ANYTHING BUT THE CANDIDATE OBJECT ITSELF. It never reads
+// `selectedSnapshotCandidate.contentHash` and hands that bare string to
+// `discoverSnapshotCommand`/`resolveSelectedSnapshotCommand` instead —
+// doing so would silently let the resolver re-select a DIFFERENT
+// candidate sharing that same contentHash, discarding the user's own
+// choice. See `application/ResolveSelectedSnapshotCommand.js`'s own
+// header for the identical restraint one layer down.
+//
+// A SEPARATE EPHEMERAL STATE, NEVER SHARED WITH ANY OTHER FAMILY IN THIS
+// FILE — `selectedSnapshotResolutionExecuting`/
+// `selectedSnapshotResolutionError`/`selectedSnapshotResolutionResult`/
+// `selectedSnapshotResolutionRequestId` mirror
+// `snapshotCandidateDiscoveryExecuting`/.../`snapshotCandidateDiscoveryRequestId`
+// exactly, one operation over. "These candidates were announced," "this
+// one was selected," and "this is what happened when the selected one
+// was resolved" stay three independently-readable facts, never collapsed.
+// Reset on the identical `publication` change every other family in this
+// file already resets on.
+//
+// SELECTING A DIFFERENT CANDIDATE INVALIDATES ANY PRIOR RESOLUTION —
+// `selectSnapshotCandidate()` (below) now also resets
+// `selectedSnapshotResolutionExecuting`/.../`selectedSnapshotResolutionRequestId`
+// whenever the selection actually changes. A resolution result describes
+// what happened when ONE SPECIFIC candidate was retrieved/verified;
+// leaving a stale result on screen after the user selects a DIFFERENT
+// candidate would misrepresent it as describing the new selection.
+// Selection itself is still a plain assignment with no I/O of its own —
+// only a PRIOR resolution's now-stale result is cleared, never a new one
+// computed.
+//
+// NO AUTOMATIC ATTRIBUTION. A successful resolution never triggers
+// `resolveSnapshotPublicationAttribution()` itself — that comparison
+// stays scoped to `discoverOwnSnapshot()`'s own already-known-contentHash
+// question (see this file's own header, "0.9.144"). Whether a
+// browsed-and-resolved Snapshot corresponds to the current Publication is
+// a separate, later, unscheduled question this milestone does not answer.
+//
+// DELIBERATELY EXCLUDED — NOT THIS MILESTONE.
+// - **Automatic resolution when a candidate is discovered or selected.**
+//   Resolution stays an explicit, separate click — see "selecting a
+//   different candidate invalidates any prior resolution," above.
+// - **Snapshot–Publication attribution of any kind over the resolved
+//   result.** See "no automatic attribution," above.
+// - **Retry, caching, or persistence of a resolution result.**
 export default {
     name: 'OwnPublicationPanel',
     props: {
@@ -330,6 +405,17 @@ export default {
         discoverSnapshotCandidatesCommand: {
             type: Function,
             default: null
+        },
+        // 0.9.152 — optional. A `(candidate) -> Promise<{ outcome, bytes,
+        // candidates, locator, storage, reason }>` function, or `null`
+        // when the capability is unavailable — see this file's own
+        // header, "0.9.152 — Selected Snapshot Candidate Resolution."
+        // Takes the SELECTED CANDIDATE OBJECT itself, never a bare
+        // contentHash — see that header for why the two are not
+        // interchangeable.
+        resolveSelectedSnapshotCommand: {
+            type: Function,
+            default: null
         }
     },
     data() {
@@ -358,7 +444,16 @@ export default {
             snapshotCandidateDiscoveryRequestId: 0,
             // `null` until the user clicks a candidate row — see this
             // file's own header, "selection is deliberately boring."
-            selectedSnapshotCandidate: null
+            selectedSnapshotCandidate: null,
+            // 0.9.152 — see this file's own header, "a separate ephemeral
+            // state, never shared with any other family in this file."
+            selectedSnapshotResolutionExecuting: false,
+            selectedSnapshotResolutionError: null,
+            // `null` until a selected-candidate resolution call resolves;
+            // never written by anything but `resolveSelectedSnapshot()`,
+            // below.
+            selectedSnapshotResolutionResult: null,
+            selectedSnapshotResolutionRequestId: 0
         };
     },
     watch: {
@@ -393,6 +488,14 @@ export default {
             this.snapshotCandidateDiscoveryResult = null;
             this.snapshotCandidateDiscoveryRequestId += 1;
             this.selectedSnapshotCandidate = null;
+            // 0.9.152 — reset for the identical lifecycle-safety reason,
+            // one operation over — see this file's own header, "a
+            // separate ephemeral state... reset on the identical
+            // publication change."
+            this.selectedSnapshotResolutionExecuting = false;
+            this.selectedSnapshotResolutionError = null;
+            this.selectedSnapshotResolutionResult = null;
+            this.selectedSnapshotResolutionRequestId += 1;
         }
     },
     beforeUnmount() {
@@ -402,6 +505,7 @@ export default {
         this.snapshotDistributionRequestId += 1;
         this.snapshotDiscoveryRequestId += 1;
         this.snapshotCandidateDiscoveryRequestId += 1;
+        this.selectedSnapshotResolutionRequestId += 1;
     },
     methods: {
         // The only writer of `snapshotDistributionExecuting`/
@@ -528,8 +632,64 @@ export default {
         // plain assignment, nothing else — never a call to
         // `discoverSnapshotCommand`, and never a mutation of
         // `snapshotCandidateDiscoveryResult` itself.
+        //
+        // 0.9.152 — also the only place a PRIOR selected-candidate
+        // resolution result is invalidated: when the selection actually
+        // changes, any `selectedSnapshotResolutionResult` computed for
+        // the OLD selection no longer describes the new one — see this
+        // file's own header, "selecting a different candidate invalidates
+        // any prior resolution." Still no I/O of its own: nothing here
+        // calls `resolveSelectedSnapshotCommand`.
         selectSnapshotCandidate(candidate) {
+            if (candidate === this.selectedSnapshotCandidate) {
+                return;
+            }
             this.selectedSnapshotCandidate = candidate;
+            this.selectedSnapshotResolutionExecuting = false;
+            this.selectedSnapshotResolutionError = null;
+            this.selectedSnapshotResolutionResult = null;
+            this.selectedSnapshotResolutionRequestId += 1;
+        },
+        // 0.9.152 — the only writer of `selectedSnapshotResolutionExecuting`/
+        // `selectedSnapshotResolutionError`/`selectedSnapshotResolutionResult`,
+        // and the only caller of `resolveSelectedSnapshotCommand` in this
+        // file — mirrors `discoverSnapshotCandidates()`'s own guard/
+        // requestId pattern exactly, one operation over. A no-op whenever
+        // there is no `selectedSnapshotCandidate`, no
+        // `resolveSelectedSnapshotCommand`, or a call is already in
+        // flight. Calls `resolveSelectedSnapshotCommand` with the
+        // SELECTED CANDIDATE OBJECT itself — never its bare `contentHash`
+        // — see this file's own header, "this component never calls
+        // resolveSelectedSnapshotCommand with anything but the candidate
+        // object itself."
+        resolveSelectedSnapshot() {
+            const candidate = this.selectedSnapshotCandidate;
+            if (!candidate || !this.resolveSelectedSnapshotCommand || this.selectedSnapshotResolutionExecuting) {
+                return;
+            }
+
+            this.selectedSnapshotResolutionExecuting = true;
+            this.selectedSnapshotResolutionError = null;
+            this.selectedSnapshotResolutionRequestId += 1;
+            const requestId = this.selectedSnapshotResolutionRequestId;
+
+            Promise.resolve()
+                .then(() => this.resolveSelectedSnapshotCommand(candidate))
+                .then((result) => {
+                    if (requestId === this.selectedSnapshotResolutionRequestId) {
+                        this.selectedSnapshotResolutionResult = result;
+                    }
+                })
+                .catch(() => {
+                    if (requestId === this.selectedSnapshotResolutionRequestId) {
+                        this.selectedSnapshotResolutionError = 'Selected Snapshot resolution could not be completed.';
+                    }
+                })
+                .then(() => {
+                    if (requestId === this.selectedSnapshotResolutionRequestId) {
+                        this.selectedSnapshotResolutionExecuting = false;
+                    }
+                });
         }
     },
     template: `
@@ -670,6 +830,40 @@ export default {
                     </li>
                 </ul>
             </div>
+
+            <!-- 0.9.152 — Selected Snapshot Candidate Resolution. Reachable
+                 only once a candidate has actually been selected above —
+                 resolving "nothing selected" makes no sense. Rendered only
+                 when a caller supplied a resolveSelectedSnapshotCommand.
+                 Disabled whenever there is no selection, or a call is
+                 already in flight. -->
+            <button
+                v-if="resolveSelectedSnapshotCommand"
+                type="button"
+                class="action-btn own-publication-selected-resolution-action"
+                :disabled="!selectedSnapshotCandidate || selectedSnapshotResolutionExecuting"
+                @click="resolveSelectedSnapshot"
+            >{{ selectedSnapshotResolutionExecuting ? 'Resolving…' : 'Resolve Selected Snapshot' }}</button>
+
+            <!-- The resolver's own DecentralizedSnapshotResolutionOutcome
+                 vocabulary, rendered verbatim — see this file's own
+                 header, "no automatic attribution": this is a separate
+                 result from snapshotDiscoveryResult/snapshotAttributionResult
+                 above, describing what happened when the SELECTED
+                 candidate (never the Publication) was retrieved/verified. -->
+            <p v-if="selectedSnapshotResolutionError" class="own-publication-selected-resolution-error">{{ selectedSnapshotResolutionError }}</p>
+            <dl v-else-if="selectedSnapshotResolutionResult" class="own-publication-selected-resolution-detail">
+                <dt>Selected Snapshot Resolution</dt>
+                <dd>{{ selectedSnapshotResolutionResult.outcome }}</dd>
+                <template v-if="selectedSnapshotResolutionResult.reason">
+                    <dt>Reason</dt>
+                    <dd>{{ selectedSnapshotResolutionResult.reason }}</dd>
+                </template>
+                <template v-if="selectedSnapshotResolutionResult.locator">
+                    <dt>Locator</dt>
+                    <dd>{{ selectedSnapshotResolutionResult.locator }}</dd>
+                </template>
+            </dl>
         </div>
     `
 };
