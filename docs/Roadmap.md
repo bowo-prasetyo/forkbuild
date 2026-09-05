@@ -70690,3 +70690,174 @@ exercises), followed by another roadmap reassessment. I would not
 pre-schedule a specific NEW capability beyond that audit — per 0.9.168's
 own standing recommendation, the next feature milestone should come from
 whatever that audit finds, not from momentum.
+
+## 0.9.170 — Material Inspection Refresh Precision E2E Audit
+
+0.9.169's own dedicated test contract
+(`tests/MaterialInspectionRefreshPrecision.test.js`) proved its fix one
+seam at a time: a hand-built registry, one source family per scenario,
+`WorldEncounterCanvas`'s own methods/computed called directly off a fake
+`ctx`. That file stays exactly as it is. This milestone is the wider,
+horizontal reassessment 0.9.169's own recommendation named — the same
+audit-after-fix pattern 0.9.162 → its own later convergence sweeps and
+0.9.166 → 0.9.167 already established for this family: does the fix hold
+up against the REAL running World View pipeline — the actual
+`bootstrapWorldDiscoveryRuntime()` composition root, genuine peer/Snapshot
+lifecycle bridges, and, for the Snapshot family, the full decentralized
+DISCOVER → RESOLVE → VERIFY → MATERIALIZE → PLACE → REGISTER pipeline —
+under realistic local/peer/Snapshot churn interleaved with genuine
+selection changes, rather than the more surgical, one-seam-at-a-time
+scenarios 0.9.169's own file already exercises?
+
+TEST-ONLY. THIS MILESTONE ADDS NO PRODUCTION CODE AND CHANGES NO EXISTING
+FILE. `tests/MaterialInspectionRefreshPrecisionE2EAudit.test.js` is the
+one new file; every collaborator it drives —
+`ui/components/WorldEncounterCanvas.js`,
+`application/WorldDiscoverySourceRegistry.js`,
+`application/WorldDiscoveryRuntimeBootstrap.js`,
+`peer/PeerWorldDiscoveryLifecycleBridge.js`,
+`application/MaterializedSnapshotWorldDiscoveryBridge.js`, and the real
+Nostr/Arweave Snapshot pipeline — is read, real, and unmodified.
+
+THE CENTRAL INVARIANT THIS AUDIT EXISTS TO PROVE, PROVEN BY OBJECT
+IDENTITY, NOT MERELY BY STATUS:
+
+```text
+Same resolved selection
+        +
+Any number of unrelated registry mutations
+        =
+Same materialInspection (the exact same object, by reference)
+
+Different resolved selection
+        =
+Material inspection may refresh (a genuinely NEW object)
+```
+
+Every section that asserts "no redundant reload" also asserts
+`canvas.materialInspection === inspectionBefore` — the retained result is
+never merely status-equal, it is reference-identical — and every section
+that asserts a genuine reload also asserts the opposite,
+`canvas.materialInspection !== inspectionBefore`.
+
+`tests/MaterialInspectionRefreshPrecisionE2EAudit.test.js` — eleven
+sections:
+
+- **A — complete runtime baseline.** The real
+  `bootstrapWorldDiscoveryRuntime()` composition root, a mounted canvas,
+  initial encounter selection still loads material normally.
+- **B/C — unrelated registration/unregistration, through the real
+  runtime.** The selected encounter's own resolved identity is unaffected,
+  the load count stays at 1, and `materialInspection` is retained BY
+  REFERENCE.
+- **D — the positive case.** A peer handoff of the same Publication id
+  that genuinely changes the selected encounter's own resolved origin
+  still reloads, through the real runtime, producing a genuinely new
+  `materialInspection` object reflecting the new peer's own material.
+- **E — LOCAL/PEER/SNAPSHOT symmetry.** Section B's own scenario, repeated
+  for all three source families as the selected encounter, under the real
+  runtime, plus a structural read-back confirming
+  `resolvedEncounterSelectionsEqual()`/`refreshSelectionOutcome()` contain
+  no `if (origin === 'local')`/`if (origin.startsWith('peer:'))`/
+  `if (origin.startsWith('snapshot:'))`-shaped branch, and no bare
+  reference to any of those three strings, anywhere in either function.
+- **F — Snapshot full-path regression.** The REAL decentralized pipeline —
+  a fake-transport-backed Nostr candidate, resolution, content-hash
+  verification, materialization (call-counted through
+  `MaterializeSnapshotFromSelectedCandidateUseCase.execute()`), placement,
+  and registration — followed by an unrelated registry mutation: Nostr
+  query/publish calls, Arweave fetch calls, materialization calls, and
+  material-load calls all stay exactly unchanged, and
+  `materialInspection` is retained by reference.
+- **G — UNAVAILABLE retention.** An already-`UNAVAILABLE` selection (a
+  registry-advertised Publication id never actually published into local
+  storage) survives three separate unrelated registry mutations with zero
+  reload attempts and the exact same retained result object — no implicit
+  retry merely because something else entered or left the registry.
+- **H — in-flight request safety.** Two separate unrelated registry
+  notifications arriving while a genuine `load()` call is held open by a
+  controlled Promise never bump `materialInspectionRequestId` and never
+  generate a second `load()` call; releasing the held Promise afterward
+  still writes its own correct, eventual `AVAILABLE` result.
+- **I — selection-driven refresh remains independent.** `selectEncounter()`
+  (a fresh selection, and a different-encounter re-selection),
+  `chooseSelectionOrigin()` (an explicit pick resolving an `AMBIGUOUS`
+  two-peer collision), and `chooseDecentralizedLead()` (an explicit pick
+  resolving an `AMBIGUOUS` two-lead outcome) each still trigger their own
+  existing material reload — this milestone's optimization is confined to
+  `refreshSelectionOutcome()`'s own registry-notification tail-call alone.
+- **J — concurrent source activity.** A scrambled burst of five peers and
+  five Snapshots registering and unregistering, interleaved, around one
+  held selection, produces zero reloads and the exact same retained
+  `materialInspection` object throughout — World activity is not
+  selected-material activity, without requiring any finer-grained registry
+  notification.
+- **K — structural audit.** Re-reads `WorldEncounterCanvas.js`,
+  `WorldDiscoverySourceRegistry.js`, `WorldEncounterMaterialLoading.js`,
+  and `MaterializedSnapshotWorldDiscoveryBridge.js` directly to confirm
+  0.9.169/0.9.170 introduced: no registry event taxonomy (the
+  registry's own notification still carries no named event-type
+  argument); no material cache (`WorldEncounterMaterialLoading.js`'s own
+  CODE, comments stripped, carries no cache/memoization vocabulary); no
+  Snapshot-specific refresh code or source-family branching (this fix's
+  own two functions carry no Nostr/Arweave/materialize/retry/rediscover
+  vocabulary); no new lifecycle state
+  (`WorldEncounterMaterialLoadStatus` still carries exactly its own two
+  values); no new material identity (Snapshot origin is still derived from
+  exactly `contentHash` + `publicationId`); and no renderer change (the
+  canvas still imports exactly the same two marker components it always
+  has).
+
+This audit found no new gap. Every section confirms the invariant
+0.9.169 established already holds under the real composition root,
+genuine peer/Snapshot lifecycle bridges, and the full decentralized
+Snapshot pipeline — conditions 0.9.169's own, more surgical test contract
+never constructed.
+
+Deliberately excluded, per this milestone's own narrow, test-only scope:
+- **Any production change of any kind.** This milestone touches
+  `tests/MaterialInspectionRefreshPrecisionE2EAudit.test.js`,
+  `tests.html`, and this document alone.
+- **A real DOM-mounted Vue component, a browser, or any rendering
+  technology.** Exactly like every other test in this chain,
+  "the real running World View pipeline" means the real
+  `bootstrapWorldDiscoveryRuntime()` composition root and the real,
+  unmodified `WorldEncounterCanvas.js` methods/computed properties called
+  directly, the same discipline 0.9.13 through 0.9.169's own tests already
+  established — never a claim that this codebase gained a browser-based
+  test harness it did not already have.
+- **A new capability milestone.** Per the brief that requested this
+  audit and per 0.9.168's own standing recommendation, the next milestone
+  should come from a fresh roadmap reassessment based on actual remaining
+  product capabilities, not from continuing to optimize this subsystem —
+  see "Recommendation," below.
+
+```text
+0.9.164  Snapshot World Source Identity Audit                          ✓
+0.9.165  World Discovery Participation Audit                           ✓
+0.9.166  Snapshot World Encounter Material Loading                     ✓
+0.9.167  Snapshot World Material Loading E2E Audit                     ✓
+0.9.168  World View Capability Reassessment & Architecture Audit       ✓
+0.9.169  Material Inspection Refresh Precision                        ✓
+0.9.170  Material Inspection Refresh Precision E2E Audit               ✓
+```
+
+### Recommendation
+
+This audit closes the sequence that began with 0.9.166:
+
+```text
+0.9.166  Snapshot origin → material loading
+0.9.167  Snapshot material-loading E2E audit
+0.9.168  World View capability reassessment
+0.9.169  Material inspection precision fix
+0.9.170  Precision E2E audit
+```
+
+Per the brief that requested this milestone, I would NOT immediately
+schedule another World View optimization. The recent sequence has already
+demonstrated a strong convergence boundary — decentralized acquisition
+ends, ordinary World View begins — and this audit found no gap to
+schedule work against. I would recommend a fresh roadmap reassessment of
+actual remaining product capabilities as the next milestone, rather than
+continuing to optimize this subsystem on momentum alone.
