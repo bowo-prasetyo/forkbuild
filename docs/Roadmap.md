@@ -68944,20 +68944,159 @@ exactly the exclusions its own design named going in:
 0.9.158  Selected Snapshot Materialization                           ✓
 ```
 
+## 0.9.159 — Selected Snapshot World Placement
+
+0.9.158 closed the gap between VERIFIED and POSSESSED, but deliberately
+answered nothing about WHERE a materialized Snapshot belongs in the World
+— its own header named exactly this as the one thing left out: "World
+placement, spatial position, or rendering of the materialized Snapshot...
+a separate, later, unscheduled seam over this one's own output." This
+milestone is that seam:
+
+```text
+DISCOVER -> SELECT -> RESOLVE -> VERIFY -> ATTRIBUTE -> MATERIALIZE -> PLACE
+```
+
+**The one question this milestone refused to answer with a new algorithm.**
+A materialized Snapshot carries a `contentHash` and, for the PACKAGE/
+PLACEMENT/PEER sources, a `publicationId`; a Nostr-discovered CANDIDATE
+(0.9.158) carries neither a signature nor even a `publicationId` on its own
+materialization result. None of that is a spatial coordinate, and this
+milestone never invents one from a locator, a discovery order, or anyone's
+current avatar position. Instead it asked a narrower, prior question: does
+an AUTHORITATIVE World position for the relevant Publication already
+exist? It does — `core/WorldPlacement.js` (0.2.10) already answers exactly
+"where is this Publication in shared world space," and `core/
+WorldEncounter.js` (0.9.0) already builds World View's entire notion of
+"what, in the World, is findable" by joining a Publication to its own
+WorldPlacement, never any other way. `WorldNavigationSession#getPlacementInfo()`
+(0.2.10-era) is the concrete, already-shipped, already-rendered read of
+that same authority — the exact fact the existing Placement Info panel
+already shows for the active document's own Publication. This milestone
+reuses that SAME existing authority, one layer over, for a Snapshot's bytes
+rather than a Publication's document — never a new placement algorithm, a
+new PlacementRegistry query, or a new spatial index of its own.
+
+```text
+selectedSnapshotMaterializationResult   (0.9.158, unchanged)
+                │
+                │  click "Place Materialized Snapshot"
+                ▼
+placeMaterializedSnapshot()   (ui/components/OwnPublicationPanel.js, NEW)
+                │
+                ▼
+resolveSnapshotWorldPlacement(materialization, placementInfo)
+    (application/SnapshotWorldPlacement.js, NEW — a PURE function, no
+    collaborator to inject, mirroring resolveSnapshotPublicationAttribution()'s
+    own shape exactly)
+                │
+                ▼
+selectedSnapshotWorldPlacementResult   (NEW field)
+```
+
+`placementInfo` is a new, PLAIN DATA prop — never an injected command.
+Unlike every other Snapshot-family capability in `OwnPublicationPanel.js`,
+this milestone introduces no new command function at all: since
+`resolveSnapshotWorldPlacement()` is pure, there is nothing to compose or
+inject. `placementInfo` is instead `ui/views/WorldView.js`'s own
+`activePlacementInfo` (`session.getPlacementInfo(activeId)`, already
+computed for the existing Placement Info panel) handed straight through,
+unchanged, exactly the way `publication` already is.
+
+**Materialization succeeded is a precondition, never a trigger.** A
+successfully materialized Snapshot does not automatically acquire a World
+position — clicking "Materialize Selected Snapshot" never places anything,
+and clicking "Place Materialized Snapshot" never re-materializes or
+re-attributes anything. `resolveSnapshotWorldPlacement()` requires an
+already-succeeded materialization result (`StoreSnapshotContentOutcome.STORED`/
+`.ALREADY_AVAILABLE`, the SAME shared boundary value every materialization
+source's own success value already equals) exactly the way materialization
+itself already requires an already-succeeded resolution — every other
+outcome is passed through verbatim, from whichever of the three per-source
+materialization vocabularies (CANDIDATE/PLACEMENT/PEER) produced it, never
+remapped onto a new "could not place" catch-all.
+
+**Two outcomes, and only two, invented by this file**
+(`application/SnapshotWorldPlacementOutcome.js`): `PLACED` (the relevant
+Publication already has a WorldPlacement — its own position is borrowed
+verbatim, never recomputed) and `UNPLACED` (materialization succeeded, but
+the Publication has never been placed anywhere in the World yet — exactly
+as unencounterable as any other unplaced Publication, per `core/
+WorldEncounter.js`'s own restraint). `placementId`/`publicationId` on a
+`PLACED` result name WHICH existing WorldPlacement the position came from,
+purely for traceability — never a new identity for the Snapshot itself,
+whose own identity stays `contentHash`, carried forward unchanged.
+
+**Three identities, still never merged**: `core/ContentReference.js`'s own
+`hash` (a Snapshot's content identity), `core/PublicationSnapshotPlacement.js`'s
+own `locator`/`storage` (WHERE bytes can be RETRIEVED from — a placement in
+the retrieval sense), and this milestone's own `position` (WHERE a Snapshot
+belongs in shared World SPACE — a placement in the spatial sense) answer
+three entirely different questions, and the word "placement" now names two
+of them deliberately, distinguished by which file you're reading.
+
+`tests/SelectedSnapshotWorldPlacement.test.js` — six sections: **A**
+(`resolveSnapshotWorldPlacement()` contract validation, PLACED, UNPLACED,
+and every non-terminal outcome across all three materialization
+vocabularies, passed through verbatim), **B** (identity preservation —
+`contentHash` retained unchanged; no locator/storage/contentReference field
+of any kind on the result), **C** (`OwnPublicationPanel`'s own guard/
+staleness state machine — a new selection, a fresh resolution, a fresh
+materialization, and a Publication change all clear
+`selectedSnapshotWorldPlacementResult`; independence from attribution and
+materialization; never automatic), **D** — FLAGSHIP (a real composed
+runtime: real Nostr discovery, real Arweave resolution, real local
+materialization, PLUS a real, independently-created `WorldPlacement` via a
+real `LocalPlacementRegistry` — the SAME registry
+`WorldNavigationSession#getPlacementInfo()` itself reads — composed
+together for the first time), **E** (two materialized Snapshots for two
+different Publications coexist at their own independently authoritative
+positions, no cross-contamination), **F** (structural sweep: no I/O import
+of any kind inside `application/SnapshotWorldPlacement.js`, no viewport/
+visibility/camera/rendering vocabulary, `SnapshotWorldPlacementOutcome`
+carries exactly its own two values).
+
+Deliberately excluded, per this milestone's own narrow scope:
+- **Looking up, creating, or moving a WorldPlacement of any kind.** This
+  milestone only ever reads whatever `placementInfo` the host view already
+  computed — it never queries a PlacementRegistry or spatial index itself.
+- **Choosing among several WorldPlacements for the same Publication.**
+  `placementInfo` already IS that choice — `getPlacementInfo()`'s own
+  "most recently updated" simplification is inherited unchanged, never
+  re-decided here.
+- **Visibility, viewport, camera distance, or rendering of any kind.**
+  Whether a placed Snapshot is currently on screen is a separate, later,
+  downstream question for World View's own runtime/rendering state — the
+  identical restraint `core/WorldEncounter.js`'s own header already holds
+  for "what is encounterable" vs. "what is on screen right now."
+- **Any new resolution/materialization outcome vocabulary.** Only
+  `SnapshotWorldPlacementOutcome`'s own two new values, plus whatever
+  outcome the materialization result itself already carries, passed
+  through unchanged, are ever produced.
+
+```text
+0.9.150  Snapshot Candidate Discovery Command                      ✓
+0.9.151  World View Snapshot Candidate Browser                     ✓
+0.9.152  Selected Snapshot Candidate Resolution                    ✓
+0.9.153  Selected Snapshot Resolution End-to-End Audit              ✓
+0.9.154  Selected Snapshot Attribution                              ✓
+0.9.155  Selected Snapshot Attribution End-to-End Audit              ✓
+0.9.156  Snapshot Lifecycle & Semantic Boundary Audit                ✓
+0.9.157  Snapshot Candidate Interaction Completion Audit             ✓
+0.9.158  Selected Snapshot Materialization                           ✓
+0.9.159  Selected Snapshot World Placement                           ✓
+```
+
 ### Recommendation
 
-With materialization now proven, the natural next milestone is **0.9.159
-— Selected Snapshot World Placement**: given a materialized Snapshot (this
-milestone's own `contentReference`), decide WHERE it belongs in the user's
-visible World — reusing whatever placement authority the existing World
-Encounter/vehicle-placement machinery already establishes for initial
-World material, never inventing a new spatial-placement algorithm from
-scratch. Only once placement exists would a further, still later
-milestone (**0.9.160 — Selected Snapshot World Rendering**) let World
-View's existing rendering observe that placed material — World View should
-remain an OBSERVER of world material throughout, never a second
-material-loading system of its own. I would not attempt placement and
-rendering in the same milestone that adds materialization: each of the
-three stages (materialize -> place -> render) deserves the same narrow,
-independently-tested scope this entire Snapshot subsystem has held since
-0.9.150.
+With placement now proven, the natural next milestone is **0.9.160 —
+Selected Snapshot World Rendering**: let World View's existing rendering
+observe a `PLACED` `selectedSnapshotWorldPlacementResult` and its
+`runtime world state` the same way it already observes any other
+placed Publication — World View should remain an OBSERVER of world
+material throughout, never a second material-loading system of its own.
+I would not fold rendering into this milestone: placement and rendering
+deserve the same narrow, independently-tested scope this entire Snapshot
+subsystem has held since 0.9.150, and rendering's own visibility/viewport
+question (0.9.159's own "deliberately excluded") is a genuinely separate
+concern from "where does this Snapshot's position come from."
