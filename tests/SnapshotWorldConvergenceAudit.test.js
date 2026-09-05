@@ -58,45 +58,57 @@ import { StorageProvider } from '../storage/StorageProvider.js';
 // specific source that contributed that encounter's own placement. Section
 // A below runs the real code and confirms this is exactly what happens.
 //
-//   THE ONE GENUINE GAP THIS AUDIT ACTUALLY FOUND. `application/
-// MaterializedSnapshotWorldDiscoveryBridge.js`'s own
-// `materializedSnapshotWorldOrigin(contentHash)` (0.9.160) derives a
+//   THE ONE GENUINE GAP THIS AUDIT ACTUALLY FOUND — FIXED BY 0.9.163.
+// `application/MaterializedSnapshotWorldDiscoveryBridge.js`'s own
+// `materializedSnapshotWorldOrigin(contentHash)` (0.9.160) derived a
 // registered Snapshot's registry slot from `contentHash` ALONE —
 // deliberately, per that file's own header, so re-registering the
-// IDENTICAL Snapshot is idempotent. But `WorldDiscoverySourceRegistry`
+// IDENTICAL Snapshot was idempotent. But `WorldDiscoverySourceRegistry`
 // itself has no idea a `"snapshot:<hash>"` origin is supposed to name one
 // Publication forever — it is a plain string key, and "replacement, not
 // accumulation" applies to it exactly as it applies to `"peer:<id>"`.  So
 // two DIFFERENT Publications whose Snapshot bytes merely happen to hash
 // identically — a real, unremarkable case in a content-addressed system;
-// nothing stops two people from separately publishing the same file — do
+// nothing stops two people from separately publishing the same file — did
 // not coexist in the World: the second registration's `setSource()` call
-// REPLACES the first's slot outright, and the first Publication silently
-// stops being encounterable, with no error, no warning, and no record left
-// behind that it was ever there. This is not deduplication (the two
-// Publications are never compared, matched, or judged "the same thing") —
-// it is an accidental identity COLLISION, one layer below where 0.9.160's
-// own "content identity is not Publication identity" rule was ever
-// supposed to apply. Section B proves it, with the real, unmodified
-// `registerMaterializedSnapshotWorldSource()`. This audit does not fix it —
+// REPLACED the first's slot outright, and the first Publication silently
+// stopped being encounterable, with no error, no warning, and no record
+// left behind that it was ever there. This was not deduplication (the two
+// Publications were never compared, matched, or judged "the same thing") —
+// it was an accidental identity COLLISION, one layer below where 0.9.160's
+// own "content identity is not Publication identity" rule was always
+// supposed to apply. Section B proved it, with the real, unmodified
+// `registerMaterializedSnapshotWorldSource()`. This audit did not fix it —
 // see "Deliberately excluded," below, and docs/Roadmap.md's own 0.9.163
-// recommendation.
+// recommendation, which DID fix it: `materializedSnapshotWorldOrigin()` now
+// derives the registered origin from `contentHash` AND `publicationId`
+// together (`` `snapshot:${contentHash}:${publicationId}` ``), so the two
+// identities this milestone's own header already distinguished —
+// "content identity is not Publication identity" — no longer share one
+// registry slot. Section B below is UPDATED, post-0.9.163, to confirm the
+// fix directly against the same real bridge: the two Publications now
+// occupy two independent slots and both remain encounterable. See
+// `tests/SnapshotWorldOriginCollision.test.js` for that fix's own dedicated
+// test contract.
 //
 //   Section A: same Publication, three sources (local/peer/snapshot) —
 //              documents the ACTUAL existing semantics: no deduplication,
 //              three encounters survive, and the shared-metadata quirk
 //              predicted above (title/identity borrowed from whichever
 //              source's publication record sorts first).
-//   Section B: THE GAP — same contentHash, two DIFFERENT Publications,
-//              both registered through the real Snapshot registration
-//              bridge. Proves the second registration silently evicts the
-//              first from the World, purely because the registry origin
-//              this bridge derives is a function of contentHash alone.
+//   Section B: THE GAP, FIXED (0.9.163) — same contentHash, two DIFFERENT
+//              Publications, both registered through the real Snapshot
+//              registration bridge. Originally proved the second
+//              registration silently evicted the first from the World;
+//              now confirms both coexist, because the registry origin this
+//              bridge derives folds in `publicationId` alongside
+//              `contentHash`.
 //   Section C: same Publication, two DIFFERENT discovery origins (a peer
-//              origin and a `snapshot:<contentHash>` origin) — unlike
-//              Section B, distinct origin STRINGS never collide; both
-//              contributions coexist as two encounters, and the origin
-//              itself never leaks into either rendered row.
+//              origin and a `snapshot:<contentHash>:<publicationId>`
+//              origin) — unlike Section B's original finding, distinct
+//              origin STRINGS never collide; both contributions coexist as
+//              two encounters, and the origin itself never leaks into
+//              either rendered row.
 //   Section D: same contentHash, same Publication, two DIFFERENT
 //              locators — the locator never becomes a second identity;
 //              re-registering is a harmless, idempotent replacement, and
@@ -233,8 +245,10 @@ async function run() {
     }
 
     // ---------------------------------------------------------------
-    // Section B — THE GAP: same contentHash, two DIFFERENT Publications,
-    // both registered through the real Snapshot registration bridge.
+    // Section B — THE GAP, FIXED (0.9.163): same contentHash, two
+    // DIFFERENT Publications, both registered through the real Snapshot
+    // registration bridge. Originally proved a collision; now confirms the
+    // fix directly against the same real, unmodified bridge.
     // ---------------------------------------------------------------
     {
         const registry = new WorldDiscoverySourceRegistry();
@@ -254,17 +268,17 @@ async function run() {
         );
         assert(resultB.outcome === 'registered', '3. Publication B — a DIFFERENT Publication whose Snapshot bytes merely hash identically to A\'s — also reports success');
 
-        assert(resultA.origin === resultB.origin, `4. THE GAP — both registrations resolve to the EXACT SAME registry origin, because materializedSnapshotWorldOrigin() derives it from contentHash alone: '${resultA.origin}' === '${resultB.origin}'`);
-        assert(resultA.origin === materializedSnapshotWorldOrigin('hash-shared-content'), '5. sanity — that shared origin is exactly this milestone\'s own documented derivation');
+        assert(resultA.origin !== resultB.origin, `4. THE FIX (0.9.163) — the two registrations resolve to DIFFERENT registry origins, because materializedSnapshotWorldOrigin() now derives it from contentHash AND publicationId together: '${resultA.origin}' !== '${resultB.origin}'`);
+        assert(resultA.origin === materializedSnapshotWorldOrigin('hash-shared-content', 'pub-collide-a'), '5. sanity — Publication A\'s own origin is exactly this milestone\'s own documented derivation');
+        assert(resultB.origin === materializedSnapshotWorldOrigin('hash-shared-content', 'pub-collide-b'), '5b. sanity — Publication B\'s own origin shares the same contentHash but its own distinct publicationId');
 
         const viewAfterB = describeWorldFromDiscoveryRegistry(registry);
-        assert(viewAfterB.publications.length === 1, `6. THE GAP, made concrete — the registry now holds only ONE encounter, not two; got ${viewAfterB.publications.length}`);
-        assert(viewAfterB.publications[0].objectId === 'pub-collide-b', '7. Publication B\'s registration silently REPLACED Publication A\'s — the registry\'s own "replacement, not accumulation" rule (0.9.9), applied to a slot key that was never meant to name two different Publications');
-        assert(!viewAfterB.publications.some((p) => p.objectId === 'pub-collide-a'), '8. Publication A is no longer encounterable ANYWHERE in the World — not merged, not marked stale, not superseded: simply gone, with no record it was ever registered');
+        assert(viewAfterB.publications.length === 2, `6. THE FIX, made concrete — the registry now holds BOTH encounters, never collapsing one into the other; got ${viewAfterB.publications.length}`);
+        assert(viewAfterB.publications.some((p) => p.objectId === 'pub-collide-a') && viewAfterB.publications.some((p) => p.objectId === 'pub-collide-b'),
+            '7. Publication B\'s registration no longer replaces Publication A\'s — each occupies its own dedicated registry slot');
+        assert(registry.listSources().length === 2, '8. exactly two sources occupy their own independent slots — content identity and Publication identity are no longer conflated at the registration-origin layer');
 
-        assert(registry.listSources().length === 1, '9. exactly one source occupies the shared contentHash\'s slot — this is an identity COLLISION at the registration-origin layer, never a deliberate two-Publication accumulation');
-
-        console.log('✓ Section B: THE GAP — two distinct Publications sharing one contentHash collide on the SAME derived registry origin; the second registration silently evicts the first from the World, with no dedup/reconciliation logic anywhere deciding this on purpose');
+        console.log('✓ Section B: THE FIX (0.9.163) — two distinct Publications sharing one contentHash now occupy two independent registry origins; both remain encounterable in the World, with no dedup/reconciliation logic of any kind needed to keep them apart');
     }
 
     // ---------------------------------------------------------------
@@ -284,9 +298,9 @@ async function run() {
             new Publication({ id: 'pub-multi-origin', title: 'Seen Via Snapshot' })
         );
 
-        assert(registration.origin === 'snapshot:hash-multi-origin', '1. the snapshot registration\'s own origin is content-addressed');
+        assert(registration.origin === 'snapshot:hash-multi-origin:pub-multi-origin', '1. the snapshot registration\'s own origin is content-addressed AND Publication-addressed (0.9.163)');
         const origins = registry.listSources().map((s) => s.origin).sort();
-        assert(JSON.stringify(origins) === JSON.stringify(['peer:did:key:zOriginPeer', 'snapshot:hash-multi-origin']), `2. both origins occupy their OWN distinct slots, neither replacing the other — got ${JSON.stringify(origins)}`);
+        assert(JSON.stringify(origins) === JSON.stringify(['peer:did:key:zOriginPeer', 'snapshot:hash-multi-origin:pub-multi-origin']), `2. both origins occupy their OWN distinct slots, neither replacing the other — got ${JSON.stringify(origins)}`);
 
         const view = describeWorldFromDiscoveryRegistry(registry);
         assert(view.publications.length === 2, '3. the SAME Publication id, discovered through two structurally different origins, produces two coexisting encounters — origin identity and Publication identity are orthogonal, never conflated');
@@ -324,7 +338,7 @@ async function run() {
             registry, placedResult(contentHash, publicationId, { x: 7, y: 0, z: 7 }), publicationViaLocatorTwo
         );
 
-        assert(firstRegistration.origin === secondRegistration.origin, '2. the registry origin is a function of contentHash + this milestone\'s own registration key alone — the locator plays no part in it');
+        assert(firstRegistration.origin === secondRegistration.origin, '2. the registry origin is a function of contentHash AND publicationId (0.9.163) alone — the locator plays no part in it');
 
         const view = describeWorldFromDiscoveryRegistry(registry);
         assert(view.publications.length === 1, `3. re-registering the SAME Publication under the SAME contentHash with only its locator changed is a harmless, idempotent replacement — exactly ONE encounter results, never two; got ${view.publications.length}`);

@@ -603,7 +603,7 @@ async function run() {
         assert(marker.objectId !== reference.uri, '7. the rendered marker\'s own objectId is NEVER the Snapshot\'s own locator');
 
         const [source] = registry.listSources();
-        assert(source.origin === `snapshot:${reference.hash}`, '8. the registry\'s own origin key is content-addressed, entirely separate from the rendered objectId');
+        assert(source.origin === `snapshot:${reference.hash}:${publicationId}`, '8. the registry\'s own origin key is content-addressed AND Publication-addressed (0.9.163), entirely separate from the rendered objectId');
 
         unmountCanvas(canvas);
         console.log('✓ Section F: identity preservation reaches the rendered marker unbroken — contentHash/locator/position/objectId stay pairwise distinct all the way to the screen');

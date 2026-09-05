@@ -43,7 +43,7 @@ import { SnapshotWorldRegistrationOutcome } from './SnapshotWorldRegistrationOut
 //        │
 //        ▼
 //   registry.setSource(describeWorldDiscoverySource({
-//       origin: "snapshot:<contentHash>", publications: [publication],
+//       origin: "snapshot:<contentHash>:<publicationId>", publications: [publication],
 //       placements: [{ publicationId, position }]
 //   }))   (application/WorldDiscoverySourceRegistry.js, 0.9.9, UNCHANGED)
 //        │
@@ -65,8 +65,9 @@ import { SnapshotWorldRegistrationOutcome } from './SnapshotWorldRegistrationOut
 // contributing this milestone's own one Publication+placement pair under
 // the SHARED `'local'` origin would silently overwrite (or be overwritten
 // by) whatever else that origin might ever come to hold. Giving each
-// registered Snapshot its own `"snapshot:<contentHash>"` origin — the
-// identical "one dedicated slot per contributor" discipline
+// registered Snapshot its own `"snapshot:<contentHash>:<publicationId>"`
+// origin (UPDATED 0.9.163 — see below) — the identical "one dedicated slot
+// per contributor" discipline
 // `peer/PeerWorldDiscoveryLifecycleBridge.js` already holds for
 // `"peer:<identityId>"` — makes registering one Snapshot structurally
 // incapable of disturbing any other origin's own contribution, including a
@@ -108,14 +109,16 @@ import { SnapshotWorldRegistrationOutcome } from './SnapshotWorldRegistrationOut
 // getPlacementInfo()` itself.
 //
 // IDEMPOTENT BY CONSTRUCTION — NO DEDUPLICATION CODE OF ITS OWN. Because
-// the origin `"snapshot:<contentHash>"` is a pure function of the content
-// hash alone, registering the identical Snapshot twice calls
-// `registry.setSource()` twice for the SAME origin — the registry's own
-// existing "replacement, not accumulation" rule already guarantees exactly
-// one entry survives, with no new deduplication, comparison, or "already
-// registered" tracking invented here. See docs/Principles.md and this
-// file's own header, "a new spatial-placement algorithm... never invented
-// from scratch," held here one layer up for registration.
+// the origin `"snapshot:<contentHash>:<publicationId>"` (UPDATED 0.9.163 —
+// see `materializedSnapshotWorldOrigin()`'s own header) is a pure function
+// of that pair alone, registering the identical Snapshot for the identical
+// Publication twice calls `registry.setSource()` twice for the SAME origin
+// — the registry's own existing "replacement, not accumulation" rule
+// already guarantees exactly one entry survives, with no new deduplication,
+// comparison, or "already registered" tracking invented here. See
+// docs/Principles.md and this file's own header, "a new spatial-placement
+// algorithm... never invented from scratch," held here one layer up for
+// registration.
 //
 // NO RENDERING, NO VISIBILITY, NO CAMERA, NO VIEWPORT. This file's own
 // return value carries `{ outcome, origin, contentHash, reason }` — no
@@ -125,16 +128,17 @@ import { SnapshotWorldRegistrationOutcome } from './SnapshotWorldRegistrationOut
 // exactly the restraint `application/SnapshotWorldPlacement.js`'s own
 // header already holds one seam under this one.
 //
-// `unregisterMaterializedSnapshotWorldSource(registry, contentHash)` is the
-// deliberate, symmetric undo — removing exactly the slot a prior
+// `unregisterMaterializedSnapshotWorldSource(registry, contentHash, publicationId)`
+// is the deliberate, symmetric undo — removing exactly the slot a prior
 // `registerMaterializedSnapshotWorldSource()` call for the SAME
-// `contentHash` created, via the SAME derived origin, never a second,
-// independently-computed key. Mirrors `unregisterPeerWorldSource()`'s own
-// defensive, never-throwing shape exactly: a missing/malformed `registry`
-// or `contentHash` is silently ignored, and removing an origin with no
-// current source is already a no-op at the registry's own layer (0.9.9).
-// NOT wired to any automatic lifecycle by this milestone — see "Deliberately
-// excluded," below.
+// `contentHash`/`publicationId` pair created, via the SAME derived origin,
+// never a second, independently-computed key. Mirrors
+// `unregisterPeerWorldSource()`'s own defensive, never-throwing shape
+// exactly: a missing/malformed `registry`, `contentHash`, or `publicationId`
+// is silently ignored, and removing an origin with no current source is
+// already a no-op at the registry's own layer (0.9.9). NOT wired to any
+// automatic lifecycle by this milestone — see "Deliberately excluded,"
+// below.
 //
 // DELIBERATELY EXCLUDED — NOT THIS MILESTONE.
 // - **Populating the `'local'` `WorldDiscoverySource` from this replica's
@@ -160,18 +164,40 @@ import { SnapshotWorldRegistrationOutcome } from './SnapshotWorldRegistrationOut
 //   caller already holds — it never constructs one of its own.
 
 // Derives the dedicated origin a materialized Snapshot's own registration
-// occupies — a pure function of `contentHash` alone, reused identically by
-// both `registerMaterializedSnapshotWorldSource()` and
+// occupies — a pure function of `contentHash` AND `publicationId` together,
+// reused identically by both `registerMaterializedSnapshotWorldSource()` and
 // `unregisterMaterializedSnapshotWorldSource()` so a Snapshot's disconnect
 // always targets precisely the slot its own registration created. Returns
-// `null`, never throws, for a missing/empty `contentHash` — mirroring
-// `peer/PeerWorldDataIngress.js#derivePeerWorldOrigin()`'s own "an
-// unestablished identity... creates no entry and removes none."
-export function materializedSnapshotWorldOrigin(contentHash) {
+// `null`, never throws, for a missing/empty `contentHash` OR `publicationId`
+// — mirroring `peer/PeerWorldDataIngress.js#derivePeerWorldOrigin()`'s own
+// "an unestablished identity... creates no entry and removes none."
+//
+// 0.9.163 — WHY BOTH, NOT `contentHash` ALONE. 0.9.160's own original
+// derivation, `` `snapshot:${contentHash}` ``, keyed a registered Snapshot's
+// registry slot from its content identity alone. 0.9.162's own Convergence
+// Audit (Section B) proved that a genuine, unremarkable case — two
+// DIFFERENT Publications whose Snapshot bytes merely happen to hash
+// identically; nothing stops two independent publishers from separately
+// publishing the same file — collided on that one derived slot: the second
+// registration's `registry.setSource()` call silently REPLACED the first's,
+// evicting an entirely unrelated Publication from the World with no error
+// and no record it was ever there. `contentHash` names WHAT the Snapshot
+// contains; `publicationId` names WHICH Publication it represents; the
+// origin this function derives names WHICH DISCOVERY CONTRIBUTION is
+// registered — three different identities (see this file's own "Deliberately
+// excluded," below). Folding `publicationId` into the origin key fixes
+// exactly the collision: two different Publications, even sharing identical
+// bytes, now occupy two independent slots, while re-registering the SAME
+// Publication's SAME content is exactly as idempotent as it was before,
+// because the SAME pair always derives the SAME origin string.
+export function materializedSnapshotWorldOrigin(contentHash, publicationId) {
     if (typeof contentHash !== 'string' || contentHash.length === 0) {
         return null;
     }
-    return `snapshot:${contentHash}`;
+    if (typeof publicationId !== 'string' || publicationId.length === 0) {
+        return null;
+    }
+    return `snapshot:${contentHash}:${publicationId}`;
 }
 
 // registerMaterializedSnapshotWorldSource(registry, worldPlacementResult, publication) ->
@@ -198,10 +224,11 @@ export function materializedSnapshotWorldOrigin(contentHash) {
 // nothing is registered.
 //
 // When `PLACED`: registers a fresh `WorldDiscoverySource` under
-// `"snapshot:<contentHash>"`, carrying `publication` (the exact reference
-// handed in) and one placement entry (`{ publicationId, position }`,
-// `worldPlacementResult`'s own), then returns
-// `{ outcome: SnapshotWorldRegistrationOutcome.REGISTERED, origin,
+// `"snapshot:<contentHash>:<publicationId>"` (0.9.163 — see
+// `materializedSnapshotWorldOrigin()`'s own header for why both), carrying
+// `publication` (the exact reference handed in) and one placement entry
+// (`{ publicationId, position }`, `worldPlacementResult`'s own), then
+// returns `{ outcome: SnapshotWorldRegistrationOutcome.REGISTERED, origin,
 // contentHash, reason: null }`.
 export function registerMaterializedSnapshotWorldSource(registry, worldPlacementResult, publication) {
     if (!registry || typeof registry.setSource !== 'function') {
@@ -224,7 +251,7 @@ export function registerMaterializedSnapshotWorldSource(registry, worldPlacement
         throw new Error('registerMaterializedSnapshotWorldSource: publication.id must match the placement result\'s own publicationId');
     }
 
-    const origin = materializedSnapshotWorldOrigin(worldPlacementResult.contentHash);
+    const origin = materializedSnapshotWorldOrigin(worldPlacementResult.contentHash, worldPlacementResult.publicationId);
     const source = describeWorldDiscoverySource({
         origin,
         publications: [publication],
@@ -240,21 +267,21 @@ export function registerMaterializedSnapshotWorldSource(registry, worldPlacement
     };
 }
 
-// unregisterMaterializedSnapshotWorldSource(registry, contentHash) -> void
+// unregisterMaterializedSnapshotWorldSource(registry, contentHash, publicationId) -> void
 //
 // Removes exactly the slot a prior `registerMaterializedSnapshotWorldSource()`
-// call for the SAME `contentHash` created — never invoked automatically by
-// this milestone (see this file's own header, "Deliberately excluded");
-// provided as the symmetric undo a future, explicit caller can use.
-// Defensive, never throwing: a missing/malformed `registry` or
-// `contentHash` is silently ignored, mirroring
-// `peer/PeerWorldDiscoveryLifecycleBridge.js#unregisterPeerWorldSource()`'s
+// call for the SAME `contentHash`/`publicationId` pair created — never
+// invoked automatically by this milestone (see this file's own header,
+// "Deliberately excluded"); provided as the symmetric undo a future,
+// explicit caller can use. Defensive, never throwing: a missing/malformed
+// `registry`, `contentHash`, or `publicationId` is silently ignored,
+// mirroring `peer/PeerWorldDiscoveryLifecycleBridge.js#unregisterPeerWorldSource()`'s
 // own shape exactly.
-export function unregisterMaterializedSnapshotWorldSource(registry, contentHash) {
+export function unregisterMaterializedSnapshotWorldSource(registry, contentHash, publicationId) {
     if (!registry || typeof registry.removeSource !== 'function') {
         return;
     }
-    const origin = materializedSnapshotWorldOrigin(contentHash);
+    const origin = materializedSnapshotWorldOrigin(contentHash, publicationId);
     if (origin === null) {
         return;
     }

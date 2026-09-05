@@ -290,7 +290,7 @@ async function run() {
         const publication = new Publication({ id: 'pub-c', title: 'Section A Publication' });
         const registered = registerMaterializedSnapshotWorldSource(registry, placed, publication);
         assert(registered.outcome === SnapshotWorldRegistrationOutcome.REGISTERED, '11. a matching PLACED result registers as REGISTERED');
-        assert(registered.origin === 'snapshot:hash-c', '12. origin is the deterministic snapshot:<contentHash> scheme');
+        assert(registered.origin === 'snapshot:hash-c:pub-c', '12. origin is the deterministic snapshot:<contentHash>:<publicationId> scheme (0.9.163)');
         assert(registered.contentHash === 'hash-c', '13. contentHash is retained');
         assert(registry.listSources().length === 1, '14. exactly one source now exists in the registry');
     }
@@ -348,8 +348,8 @@ async function run() {
         registerMaterializedSnapshotWorldSource(registry, placedResult('hash-x', 'pub-x', { x: 1, y: 0, z: 0 }), pubX);
         registerMaterializedSnapshotWorldSource(registry, placedResult('hash-y', 'pub-y', { x: -1, y: 0, z: 0 }), pubY);
         const sources = registry.listSources();
-        const posX = sources.find((s) => s.origin === 'snapshot:hash-x').placements[0].position.x;
-        const posY = sources.find((s) => s.origin === 'snapshot:hash-y').placements[0].position.x;
+        const posX = sources.find((s) => s.origin === 'snapshot:hash-x:pub-x').placements[0].position.x;
+        const posY = sources.find((s) => s.origin === 'snapshot:hash-y:pub-y').placements[0].position.x;
         assert(posX === 1 && posY === -1, '3. each registration carries its own supplied position, unmixed with the other');
     }
     console.log('✓ Section C: the bridge uses only the already-computed placement position — no PlacementRegistry, spatial index, or position recomputation of its own');
@@ -373,18 +373,21 @@ async function run() {
         assert(registry.listSources().length === 2, '2. a different contentHash registers as a SECOND, independent entry — never replacing the first');
 
         // Unregistering one never disturbs the other.
-        unregisterMaterializedSnapshotWorldSource(registry, 'hash-d');
-        assert(registry.listSources().length === 1, '3. unregistering hash-d removes exactly its own entry');
-        assert(registry.listSources()[0].origin === 'snapshot:hash-e', '4. the surviving entry is hash-e\'s own, untouched');
+        unregisterMaterializedSnapshotWorldSource(registry, 'hash-d', 'pub-d');
+        assert(registry.listSources().length === 1, '3. unregistering hash-d/pub-d removes exactly its own entry');
+        assert(registry.listSources()[0].origin === 'snapshot:hash-e:pub-e', '4. the surviving entry is hash-e/pub-e\'s own, untouched');
 
-        // Unregistering an absent/malformed contentHash is a harmless no-op.
-        unregisterMaterializedSnapshotWorldSource(registry, 'never-registered');
-        unregisterMaterializedSnapshotWorldSource(null, 'hash-e');
-        unregisterMaterializedSnapshotWorldSource(registry, null);
+        // Unregistering an absent/malformed contentHash/publicationId pair is
+        // a harmless no-op.
+        unregisterMaterializedSnapshotWorldSource(registry, 'never-registered', 'pub-e');
+        unregisterMaterializedSnapshotWorldSource(null, 'hash-e', 'pub-e');
+        unregisterMaterializedSnapshotWorldSource(registry, null, 'pub-e');
+        unregisterMaterializedSnapshotWorldSource(registry, 'hash-e', null);
         assert(registry.listSources().length === 1, '5. unregistering an absent/malformed target changes nothing');
 
-        assert(materializedSnapshotWorldOrigin('abc') === 'snapshot:abc', '6. materializedSnapshotWorldOrigin() is the deterministic, reused key derivation');
-        assert(materializedSnapshotWorldOrigin('') === null && materializedSnapshotWorldOrigin(null) === null, '7. an empty/missing contentHash derives no origin');
+        assert(materializedSnapshotWorldOrigin('abc', 'pub-abc') === 'snapshot:abc:pub-abc', '6. materializedSnapshotWorldOrigin() is the deterministic, reused key derivation over BOTH contentHash and publicationId (0.9.163)');
+        assert(materializedSnapshotWorldOrigin('', 'pub-abc') === null && materializedSnapshotWorldOrigin(null, 'pub-abc') === null, '7. an empty/missing contentHash derives no origin');
+        assert(materializedSnapshotWorldOrigin('abc', '') === null && materializedSnapshotWorldOrigin('abc', null) === null, '7b. an empty/missing publicationId also derives no origin');
     }
     console.log('✓ Section D: idempotent by construction — repeated registration of the identical Snapshot never accumulates, and independently registered Snapshots never disturb one another');
 
