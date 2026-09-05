@@ -69701,3 +69701,141 @@ DISCOVER -> SELECT -> RESOLVE -> VERIFY -> ATTRIBUTE -> MATERIALIZE ->
 PLACE -> REGISTER -> RENDER. If that audit passes, I would consider the
 entire vertical path complete and internally coherent, stop adding
 Snapshot-specific infrastructure, and reassess the broader World roadmap.
+
+## 0.9.164 — Snapshot World Source Identity Audit
+
+0.9.163 fixed a real collision one layer below where two identities meet:
+`materializedSnapshotWorldOrigin()` now derives a registered Snapshot's
+registry slot from `contentHash` AND `publicationId` together, rather than
+`contentHash` alone. That fix's own existence raises the wider question
+0.9.162 deliberately left unasked: now that this pipeline's central derived
+key depends on two identities instead of one, does every OTHER seam in
+DISCOVER -> SELECT -> RESOLVE -> VERIFY -> ATTRIBUTE -> MATERIALIZE ->
+PLACE -> REGISTER -> RENDER still keep all of this pipeline's identities
+strictly apart, or did some other layer quietly borrow one identity to
+stand in for another? This milestone is exactly that audit, and nothing
+more — **test-only**, adding zero production code.
+
+**The identity model this milestone froze** — six identities, each
+answering a different question, none ever standing in for another:
+
+```text
+contentHash     — what the Snapshot's bytes ARE           (content identity)
+locator/storage — WHERE those bytes can be RETRIEVED from  (retrieval identity)
+Nostr event id  — WHICH announcement a candidate came from (discovery identity)
+publicationId   — WHICH World Publication it represents    (Publication identity)
+origin          — WHICH registry slot is occupied           (registry identity,
+                                                              derived from the
+                                                              two above — 0.9.163)
+position        — WHERE it sits in shared World space        (spatial identity)
+```
+
+**`tests/SnapshotWorldSourceIdentityAudit.test.js` — ten sections, run
+against the real, unmodified production code throughout:**
+
+- **A** — content identity: `contentHash` is what RESOLUTION,
+  VERIFICATION, and ATTRIBUTION all key off — recomputed from bytes, never
+  read off a locator/storage/publicationId — and, confirmed directly
+  against `materializedSnapshotWorldOrigin()`, is never, by itself,
+  sufficient to name a World registry slot (`publicationId` is required
+  alongside it, including rejecting an empty one).
+- **B** — Publication identity: two Publications sharing one `contentHash`
+  remain independently observable in the World, and
+  `resolveSnapshotWorldPlacement()` never substitutes one `publicationId`
+  for another, even when two placements coincidentally share one position.
+- **C** — retrieval identity: `LocalContentStore` keys storage by hash,
+  never by locator, so two candidates differing only in `locator` resolve
+  to byte-identical content; the registered origin and the rendered
+  encounter both stay unaffected by locator/storage changes (reconfirming
+  0.9.162's Section D / 0.9.163's Section F).
+- **D** — discovery identity: a real `NostrSnapshotDiscoveryQueryService`
+  call proves a discovered candidate carries no `id`/`eventId`/`pubkey`/
+  `sig` field at all — two events with different ids announcing the
+  identical envelope produce structurally identical candidates. End to
+  end, two full pipeline runs for the SAME Publication, announced under two
+  different Nostr events (and two different fake Arweave transaction ids),
+  resolve to the identical `contentHash`/`publicationId`/`position`/
+  `origin`.
+- **E** — registry origin: the central 0.9.163 invariant, both as a pure
+  function (`same+same -> same`; changing either input alone -> different)
+  and live against a real registry (idempotent re-registration; the
+  symmetric undo targets exactly its own slot).
+- **F** — spatial identity: changing only retrieval metadata never moves a
+  resolved position; two different Publications sharing one `contentHash`
+  each resolve against their OWN placement authority, never reconciled or
+  averaged.
+- **G** — rendering identity: a registered Snapshot's projected marker
+  always carries `objectId = publication.id` — never `contentHash`,
+  `origin`, or `locator` — confirmed against the real, mounted
+  `WorldEncounterCanvas`/`WorldEncounterMarker`.
+- **H** — FLAGSHIP: the real pipeline, driven through
+  `OwnPublicationPanel.js`'s own real methods exactly as a person clicking
+  through the actual UI would, with every identity captured at every
+  boundary (candidate, resolution, attribution, materialization, placement,
+  registration, the already-mounted canvas's own projection) and
+  cross-checked pairwise — `contentHash`/`locator`/discovery event id/
+  `publicationId`/`origin` are all mutually distinct, and `objectId` is
+  confirmed equal to `publicationId` and nothing else.
+- **I** — THE ADVERSARIAL MATRIX: two Publications, IDENTICAL content,
+  different locators, different discovery routes (different Nostr events,
+  different fake Arweave transactions), different positions — both driven
+  through the real pipeline independently. The final World contains BOTH,
+  each at its own position, under its own registry origin, none evicting
+  or merging with the other.
+- **J** — structural sweep: no `SnapshotIdentity`/`WorldSnapshot` class
+  exists anywhere under `application/`, `core/`, `ui/`, `peer/`,
+  `publisher/`, `placement/`, `content/`, `storage/`, or `serializer/`; no
+  dedup/reconciliation/merge/trust/ranking/prioritization vocabulary was
+  added to any identity-bearing file; `materializedSnapshotWorldOrigin()`
+  still returns a plain string, never a class instance.
+
+**The audit found no genuine defect.** Every identity 0.9.150 through
+0.9.163 already established stays exactly where it was placed; 0.9.163's
+own fix is the only place two identities were ever folded together, and it
+folds them into a derived string, never a new identity type. No production
+file was added or modified.
+
+Deliberately excluded, per this milestone's own narrow scope:
+- **Deduplication, automatic merging, source prioritization, trust,
+  provenance ranking, lifecycle management, synchronization, or
+  retry/failover of any kind.** None were needed to confirm the identity
+  model holds, and none were added.
+- **Any change to `WorldDiscoverySourceRegistry`, `WorldDiscoverySourceAssembly`,
+  or any renderer.** This audit confirms their existing behavior, never
+  alters it.
+- **A new `SnapshotIdentity` class or `WorldSnapshot` aggregate.** See
+  Section J — the six identities this milestone names stay six separate,
+  narrow facts, never merged into one first-class object.
+
+```text
+0.9.155  Selected Snapshot Attribution End-to-End Audit              ✓
+0.9.156  Snapshot Lifecycle & Semantic Boundary Audit                ✓
+0.9.157  Snapshot Candidate Interaction Completion Audit             ✓
+0.9.158  Selected Snapshot Materialization                           ✓
+0.9.159  Selected Snapshot World Placement                           ✓
+0.9.160  Selected Snapshot World Runtime Registration                ✓
+0.9.161  Snapshot World Rendering                                    ✓
+0.9.162  Snapshot World Convergence Audit                            ✓
+0.9.163  Snapshot World Origin Collision Fix                         ✓
+0.9.164  Snapshot World Source Identity Audit                        ✓
+```
+
+### Recommendation
+
+This audit passed — every identity this pipeline relies on stays exactly
+where 0.9.150 through 0.9.163 placed it, and 0.9.163's own fix is the only
+place two of them were ever folded together, into a derived key, never a
+new type. Per this milestone's own brief: I now consider
+
+```text
+DISCOVER -> SELECT -> RESOLVE -> VERIFY -> ATTRIBUTE -> MATERIALIZE ->
+PLACE -> REGISTER -> RENDER
+```
+
+closed, internally coherent, and the Snapshot World feature set complete.
+I would stop making Snapshot-specific milestones here and perform a
+broader roadmap reassessment instead of naming a 0.9.165 in this same
+vertical. The interesting remaining question is no longer about Snapshots
+at all: **what does the World actually need next, now that decentralized
+Snapshots can participate as ordinary World material?** That reassessment
+is itself the next milestone — not a continuation of this one.
