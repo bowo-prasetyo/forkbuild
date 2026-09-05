@@ -1,4 +1,5 @@
 import { resolveSnapshotPublicationAttribution } from '../../application/SnapshotPublicationAttribution.js';
+import { resolveSnapshotWorldPlacement } from '../../application/SnapshotWorldPlacement.js';
 
 // 0.9.140 — Own Publication Distribution Entry Point.
 //
@@ -531,6 +532,78 @@ import { resolveSnapshotPublicationAttribution } from '../../application/Snapsho
 //   SnapshotCandidateMaterializationOutcome.js's own three new values,
 //   plus `DecentralizedSnapshotResolutionOutcome`'s own pre-existing
 //   failure values passed through unchanged, are ever produced.
+//
+// 0.9.159 — Selected Snapshot World Placement.
+//
+// 0.9.158 closed the gap between VERIFIED and POSSESSED, but deliberately
+// answered nothing about WHERE a materialized Snapshot belongs in the
+// World — see its own header, "World placement, spatial position, or
+// rendering of the materialized Snapshot... a separate, later, unscheduled
+// seam over this one's own output." This milestone is that seam:
+//
+//   selectedSnapshotMaterializationResult   (0.9.158, unchanged)
+//                │
+//                │  click "Place Materialized Snapshot"
+//                ▼
+//   placeMaterializedSnapshot()   (THIS FILE, NEW)
+//                │
+//                ▼
+//   resolveSnapshotWorldPlacement(materialization, placementInfo)
+//     (application/SnapshotWorldPlacement.js, NEW — a PURE function, no
+//     collaborator to inject, exactly like the Snapshot attribution
+//     comparison above)
+//                │
+//                ▼
+//   selectedSnapshotWorldPlacementResult   (NEW field)
+//
+// `placementInfo` IS A NEW, PLAIN DATA PROP — NEVER AN INJECTED COMMAND.
+// Unlike `discoverSnapshotCommand`/`resolveSelectedSnapshotCommand`/
+// `materializeSelectedSnapshotCommand`, this milestone introduces no new
+// capability function at all: `resolveSnapshotWorldPlacement()` is pure, so
+// there is nothing to compose or inject. `placementInfo` is instead the
+// SAME `WorldNavigationSession#getPlacementInfo()`-shaped read the host
+// view already computes for its own Placement Info panel (`activePlacementInfo`
+// in ui/views/WorldView.js) — handed to this component exactly like
+// `publication` already is, and read by `placeMaterializedSnapshot()`
+// exactly the way `attributeSelectedSnapshot()` already reads `this.publication`
+// for its own separate comparison. This component never queries a
+// PlacementRegistry, a spatial index, or any World position itself.
+//
+// AN INDEPENDENT SIBLING OF "MATERIALIZE SELECTED SNAPSHOT" AND "ATTRIBUTE
+// SELECTED SNAPSHOT," NEVER AN AUTOMATIC CONSEQUENCE OF EITHER. Clicking
+// "Materialize Selected Snapshot" never places anything; clicking "Place
+// Materialized Snapshot" never re-materializes or re-attributes anything.
+// A successfully materialized Snapshot does not automatically acquire a
+// World position — only this separate, explicit click computes one.
+//
+// SYNCHRONOUS — NO EXECUTING/ERROR STATE OF ITS OWN, mirroring
+// `attributeSelectedSnapshot()`'s own restraint one sibling over:
+// `resolveSnapshotWorldPlacement()` performs no I/O, so there is nothing to
+// await and nothing that can reject.
+//
+// STALE PLACEMENT IS CLEARED WHEREVER THE MATERIALIZATION RESULT IT DEPENDS
+// ON ALREADY IS — the identical rule `selectedSnapshotAttributionResult`
+// already holds one layer under `selectedSnapshotResolutionResult`, applied
+// here one layer under `selectedSnapshotMaterializationResult`:
+// `selectSnapshotCandidate()`, `resolveSelectedSnapshot()`, a fresh
+// `materializeSelectedSnapshot()` attempt, and the Publication-change
+// watcher all clear `selectedSnapshotWorldPlacementResult` at the same
+// sites they already clear `selectedSnapshotMaterializationResult`.
+//
+// DELIBERATELY EXCLUDED — NOT THIS MILESTONE.
+// - **Looking up, creating, or moving a WorldPlacement of any kind.** This
+//   component only ever reads whatever `placementInfo` the host view
+//   already computed — see application/SnapshotWorldPlacement.js's own
+//   header, "never rediscovers."
+// - **Rendering the materialized Snapshot anywhere.** World View stays an
+//   observer of world material — this milestone produces a placement FACT,
+//   nothing more.
+// - **Automatic placement immediately after materialization.** Only this
+//   button does.
+// - **Any new resolution/materialization outcome vocabulary.** Only
+//   application/SnapshotWorldPlacementOutcome.js's own two new values, plus
+//   whatever outcome `selectedSnapshotMaterializationResult` itself already
+//   carries, passed through unchanged, are ever produced.
 export default {
     name: 'OwnPublicationPanel',
     props: {
@@ -589,6 +662,18 @@ export default {
         materializeSelectedSnapshotCommand: {
             type: Function,
             default: null
+        },
+        // 0.9.159 — optional. `WorldNavigationSession#getPlacementInfo()`'s
+        // own already-computed `{ placementId, publicationId, position:
+        // {x,y,z}, rotation, revision, owner, movable, overlapCount }`, or
+        // `null` when the active document's own Publication has never been
+        // placed anywhere in the World — see this file's own header,
+        // "0.9.159 — Selected Snapshot World Placement." A plain DATA prop,
+        // never an injected command — this component never queries a
+        // PlacementRegistry or spatial index itself.
+        placementInfo: {
+            type: Object,
+            default: null
         }
     },
     data() {
@@ -642,7 +727,16 @@ export default {
             selectedSnapshotMaterializationExecuting: false,
             selectedSnapshotMaterializationError: null,
             selectedSnapshotMaterializationResult: null,
-            selectedSnapshotMaterializationRequestId: 0
+            selectedSnapshotMaterializationRequestId: 0,
+            // 0.9.159 — see this file's own header, "0.9.159 — Selected
+            // Snapshot World Placement." A separate ephemeral field, never
+            // shared with `selectedSnapshotAttributionResult`'s own — an
+            // independent sibling of both attribution and materialization,
+            // never a sequel to either. `null` until placeMaterializedSnapshot()
+            // is explicitly clicked; never written by anything else. No
+            // executing/error state of its own — see this file's own
+            // header, "synchronous."
+            selectedSnapshotWorldPlacementResult: null
         };
     },
     watch: {
@@ -699,6 +793,11 @@ export default {
             this.selectedSnapshotMaterializationError = null;
             this.selectedSnapshotMaterializationResult = null;
             this.selectedSnapshotMaterializationRequestId += 1;
+            // 0.9.159 — a different (or cleared) Publication invalidates
+            // any prior selected-candidate World Placement result the
+            // identical way it already invalidates the materialization
+            // result it was computed from.
+            this.selectedSnapshotWorldPlacementResult = null;
         }
     },
     beforeUnmount() {
@@ -867,6 +966,10 @@ export default {
             this.selectedSnapshotMaterializationError = null;
             this.selectedSnapshotMaterializationResult = null;
             this.selectedSnapshotMaterializationRequestId += 1;
+            // 0.9.159 — the identical staleness rule, one sibling over: a
+            // prior World Placement result described the OLD selection's
+            // own materialization result too.
+            this.selectedSnapshotWorldPlacementResult = null;
         },
         // 0.9.152 — the only writer of `selectedSnapshotResolutionExecuting`/
         // `selectedSnapshotResolutionError`/`selectedSnapshotResolutionResult`,
@@ -903,6 +1006,10 @@ export default {
             this.selectedSnapshotMaterializationError = null;
             this.selectedSnapshotMaterializationResult = null;
             this.selectedSnapshotMaterializationRequestId += 1;
+            // 0.9.159 — the identical staleness rule, one sibling over: a
+            // prior World Placement result was computed from the PRIOR
+            // materialization result, about to be replaced.
+            this.selectedSnapshotWorldPlacementResult = null;
             const requestId = this.selectedSnapshotResolutionRequestId;
 
             Promise.resolve()
@@ -968,6 +1075,13 @@ export default {
             this.selectedSnapshotMaterializationExecuting = true;
             this.selectedSnapshotMaterializationError = null;
             this.selectedSnapshotMaterializationRequestId += 1;
+            // 0.9.159 — a fresh materialization attempt is about to replace
+            // `selectedSnapshotMaterializationResult`; any World Placement
+            // result computed from the PRIOR materialization result no
+            // longer describes what will be on screen. See this file's own
+            // header, "stale placement is cleared wherever the
+            // materialization result it depends on already is."
+            this.selectedSnapshotWorldPlacementResult = null;
             const requestId = this.selectedSnapshotMaterializationRequestId;
 
             Promise.resolve()
@@ -987,6 +1101,25 @@ export default {
                         this.selectedSnapshotMaterializationExecuting = false;
                     }
                 });
+        },
+        // 0.9.159 — the only writer of `selectedSnapshotWorldPlacementResult`,
+        // and the only call site of `resolveSnapshotWorldPlacement()` in
+        // this file — mirrors `attributeSelectedSnapshot()`'s own
+        // synchronous, no-executing/error-state shape exactly, one sibling
+        // over. A no-op whenever there is no `selectedSnapshotMaterializationResult`
+        // yet to place. Needs no `publication` of its own: `placementInfo`
+        // (supplied by the host view, already keyed to whichever
+        // Publication is active) already carries its own `publicationId` —
+        // see this file's own header, "0.9.159 — Selected Snapshot World
+        // Placement." `placementInfo` being `null` (never placed yet) is a
+        // legitimate input, not a guard condition — `resolveSnapshotWorldPlacement()`
+        // itself decides PLACED vs. UNPLACED.
+        placeMaterializedSnapshot() {
+            const materialization = this.selectedSnapshotMaterializationResult;
+            if (!materialization) {
+                return;
+            }
+            this.selectedSnapshotWorldPlacementResult = resolveSnapshotWorldPlacement(materialization, this.placementInfo);
         }
     },
     template: `
@@ -1230,6 +1363,44 @@ export default {
                 <template v-if="selectedSnapshotMaterializationResult.reason">
                     <dt>Reason</dt>
                     <dd>{{ selectedSnapshotMaterializationResult.reason }}</dd>
+                </template>
+            </dl>
+
+            <!-- 0.9.159 — Selected Snapshot World Placement. An independent
+                 SIBLING of "Materialize Selected Snapshot" above, not an
+                 automatic consequence of it — see this file's own header,
+                 "0.9.159." Reachable in the SAME materializeSelectedSnapshotCommand
+                 family (placing a Snapshot that was never even materialized
+                 has no meaning). Disabled whenever there is no
+                 selectedSnapshotMaterializationResult yet. Synchronous — no
+                 "…ing" label, since resolveSnapshotWorldPlacement() performs
+                 no I/O. -->
+            <button
+                v-if="materializeSelectedSnapshotCommand"
+                type="button"
+                class="action-btn own-publication-selected-world-placement-action"
+                :disabled="!selectedSnapshotMaterializationResult"
+                @click="placeMaterializedSnapshot"
+            >Place Materialized Snapshot</button>
+
+            <!-- A separate result from selectedSnapshotMaterializationResult
+                 above — see this file's own header, "an independent sibling
+                 ... never a sequel." On a materialization that never
+                 reached STORED/ALREADY_AVAILABLE, this reports that SAME
+                 failure outcome unchanged (never a placement-specific
+                 catch-all) — see application/SnapshotWorldPlacement.js's
+                 own header. Position is rendered only on PLACED — this
+                 milestone never fabricates one. -->
+            <dl v-if="selectedSnapshotWorldPlacementResult" class="own-publication-selected-world-placement-detail">
+                <dt>Selected Snapshot World Placement</dt>
+                <dd>{{ selectedSnapshotWorldPlacementResult.outcome }}</dd>
+                <template v-if="selectedSnapshotWorldPlacementResult.position">
+                    <dt>Position</dt>
+                    <dd>{{ selectedSnapshotWorldPlacementResult.position.x }}, {{ selectedSnapshotWorldPlacementResult.position.y }}, {{ selectedSnapshotWorldPlacementResult.position.z }}</dd>
+                </template>
+                <template v-if="selectedSnapshotWorldPlacementResult.reason">
+                    <dt>Reason</dt>
+                    <dd>{{ selectedSnapshotWorldPlacementResult.reason }}</dd>
                 </template>
             </dl>
         </div>

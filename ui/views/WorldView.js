@@ -3334,7 +3334,16 @@ export default {
                      comments above. See ui/components/OwnPublicationPanel.js's
                      own header for why this stays a completely separate
                      surface from WorldEncounterCanvas's own "Distribute
-                     Snapshot" action. -->
+                     Snapshot" action.
+
+                     0.9.159 — `placementInfo` is the SAME `activePlacementInfo`
+                     (session.getPlacementInfo(activeId), computed in
+                     refreshSpatialUI() above) the Placement Info panel
+                     immediately below already renders — handed straight
+                     through, unchanged, so "Place Materialized Snapshot"
+                     reuses this replica's EXISTING spatial authority for
+                     the active Publication rather than looking one up a
+                     second time. -->
                 <OwnPublicationPanel
                     v-if="cameraPosition"
                     :publication="ownPublication"
@@ -3343,6 +3352,7 @@ export default {
                     :discoverSnapshotCandidatesCommand="discoverSnapshotCandidatesCommand"
                     :resolveSelectedSnapshotCommand="resolveSelectedSnapshotCommand"
                     :materializeSelectedSnapshotCommand="materializeSelectedSnapshotCommand"
+                    :placementInfo="activePlacementInfo"
                 />
             <!-- 0.5.7 — World View UX & Progressive Exploration. Home
                  and Locations stay plain navigation utilities; Explore /
