@@ -316,7 +316,16 @@ async function run() {
             // composition result, forwarded verbatim). Neither is a raw
             // `WorldDiscoverySource`'s own `.origin` — see that file's own
             // header, "deliberately two values, never more."
-            const allowedOriginAccessors = new Set(['candidate', 'resolvedSelection', 'choice', 'resolvedEncounterSelection', 'resolvedLead', 'materialProvenance', 'provenance']);
+            //
+            // 0.9.169 note: 'previousResolvedSelection'/'nextResolvedSelection'
+            // are the two parameter names of this milestone's own new pure
+            // helper, `resolvedEncounterSelectionsEqual()` — a field-by-field
+            // comparison of two ALREADY-RESOLVED `{ kind, objectId, origin }`
+            // values (or `null`), the exact same `resolvedEncounterSelection`
+            // shape this allowlist already covers one entry over, compared
+            // against its own previous value rather than read fresh off any
+            // raw source. Never a raw `WorldDiscoverySource`'s own `.origin`.
+            const allowedOriginAccessors = new Set(['candidate', 'resolvedSelection', 'choice', 'resolvedEncounterSelection', 'resolvedLead', 'materialProvenance', 'provenance', 'previousResolvedSelection', 'nextResolvedSelection']);
             assert(originAccessors.length > 0, '23a. WorldEncounterCanvas.js reads .origin only via 0.9.20\'s own resolved-selection candidates, not never at all');
             assert(originAccessors.every((accessor) => allowedOriginAccessors.has(accessor)), `23b. WorldEncounterCanvas.js never reads a raw source's own .origin field — every .origin access is scoped to a 0.9.19/0.9.20 selection candidate (candidate/resolvedSelection/choice), found: ${JSON.stringify(originAccessors)}`);
             assert(!/\bsource\.origin\b/.test(codeOnly) && !/\brow\.origin\b/.test(codeOnly), '23c. WorldEncounterCanvas.js never reads .origin off a raw source or view row');

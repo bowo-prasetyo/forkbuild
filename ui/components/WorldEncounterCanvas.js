@@ -548,10 +548,15 @@ import { resolveSnapshotPublicationAttribution } from '../../application/Snapsho
 // 0.9.20 ALREADY REFRESHES `selectionOutcome`. Because `refreshMaterialInspection()`
 // runs at the tail of `refreshSelectionOutcome()`, every one of that
 // method's own triggers — a fresh selection, the registry's own
-// notification when a source appears or disappears — also refreshes
-// `materialInspection`. A selection that goes stale (`selectionOutcome`
+// notification when a source appears or disappears — refreshes
+// `materialInspection` whenever `resolvedEncounterSelection` genuinely
+// changed as a result (as of 0.9.169 — see that milestone's own header,
+// below, for the precision that reads: an unrelated registry mutation
+// that leaves the current selection's own resolved identity untouched no
+// longer re-triggers a load). A selection that goes stale (`selectionOutcome`
 // becomes `'UNAVAILABLE'`, or `resolvedEncounterSelection` otherwise
-// becomes `null`) clears `materialInspection` back to `null` the same way.
+// becomes `null`) clears `materialInspection` back to `null` the same way
+// — that is itself a genuine change, so it still refreshes.
 //
 // A REQUEST COUNTER GUARDS AGAINST A STALE ASYNC RESPONSE OVERWRITING A
 // NEWER ONE — NOT A CACHE, NOT A RETRY. Because loading is asynchronous, a
@@ -1440,12 +1445,118 @@ import { resolveSnapshotPublicationAttribution } from '../../application/Snapsho
 // - **Automatic attribution during Snapshot Distribution, or any change to
 //   `distributeSelectedSnapshot()`.** Distribution and discovery/attribution
 //   remain independent actions, exactly as 0.9.138 already left them.
+//
+// 0.9.169 — Material Inspection Refresh Precision.
+//
+// 0.9.168's own Section E found and proved, without fixing, one genuine
+// seam: `refreshSelectionOutcome()` unconditionally tail-called
+// `refreshMaterialInspection()` on every one of its own triggers —
+// including the registry's own change listener — so a registry mutation
+// with nothing to do with the currently selected encounter (an unrelated
+// peer joining, an unrelated source leaving) still cost a fresh, redundant
+// `materialSources.*.load()` call for whatever stayed selected. This
+// milestone closes exactly that seam, and only that seam:
+//
+//   registry notification
+//           │
+//           ▼
+//   refreshSelectionOutcome()
+//           │
+//           ├── capture resolvedEncounterSelection BEFORE recomputing
+//           │   selectionOutcome
+//           │
+//           ├── recompute selectionOutcome (unchanged — still the only
+//           │   place it is ever written)
+//           │
+//           ▼
+//   did resolvedEncounterSelection (kind/objectId/origin) actually change?
+//           │
+//     ┌─────┴─────┐
+//    YES          NO
+//     │            │
+//     ▼            ▼
+//   refreshMaterialInspection()   (nothing — the previous
+//                                  materialInspection is retained as-is)
+//
+// `resolvedEncounterSelectionsEqual()` IS THE ONE NEW PIECE OF LOGIC THIS
+// MILESTONE ADDS — A PLAIN, PURE, FIELD-BY-FIELD COMPARISON, NEVER A NEW
+// IDENTITY SYSTEM. It compares exactly the three fields
+// `resolvedEncounterSelection` already carries (`kind`, `objectId`,
+// `origin`) against their own previous value, treating `null` as its own
+// distinct state — the SAME `{ kind, objectId, origin }` shape 0.9.20
+// already established, reused verbatim rather than reinvented. This is
+// deliberately source-family blind: it never reads `origin` to branch on
+// `'local'`/`'peer:'`/`'snapshot:'`, so local, peer, and Snapshot
+// selections are all optimized identically, exactly as 0.9.168's own
+// Section C capability matrix already required of every other seam in
+// this file.
+//
+// ONLY `refreshSelectionOutcome()`'s OWN TAIL-CALL IS GATED — EVERY OTHER
+// TRIGGER OF `refreshMaterialInspection()` IS UNCHANGED. `selectEncounter()`
+// (via `refreshSelectionOutcome()`, gated the same way — a fresh selection
+// always changes `resolvedEncounterSelection` at least in `objectId`, so it
+// always reloads), `chooseSelectionOrigin()`, `chooseDecentralizedLead()`,
+// and the `worldDiscoveryLeadRegistry` subscription's own listener
+// (`mounted()`) all keep calling `refreshMaterialInspection()`
+// unconditionally, exactly as every prior milestone left them — none of
+// those is the seam 0.9.168 named, and none of them is touched here.
+//
+// NO NEW LIFECYCLE STATE, NO CACHE, NO DEDUPLICATION. When
+// `resolvedEncounterSelection` has genuinely changed, this component
+// still reloads through the exact same `inspectWorldEncounterMaterial()`
+// call it always has — nothing here memoizes a load result or skips a
+// load that is actually owed. When nothing relevant changed, the previous
+// `materialInspection` (and its own already-resolved `loading`/
+// `verification` status — `UNAVAILABLE` included) is simply left in place,
+// never recomputed into a new value and never replaced with a fabricated
+// one.
+//
+// A SUPPRESSED REFRESH NEVER TOUCHES `materialInspectionRequestId` — SO IT
+// CANNOT INVALIDATE AN IN-FLIGHT REQUEST. Because an irrelevant registry
+// notification now skips calling `refreshMaterialInspection()` entirely,
+// it never bumps `materialInspectionRequestId` either — an in-flight,
+// genuinely-relevant material load started just before an unrelated
+// mutation arrives is never at risk of having its own eventual response
+// discarded by a request-id bump that had nothing to do with it.
+//
+// DELIBERATELY EXCLUDED — NOT THIS MILESTONE.
+// - **Any change to `WorldDiscoverySourceRegistry.js`, its own
+//   `subscribe()`/notification contract, or a coalesced/event-payload
+//   notification of any kind.** The registry stays exactly as coarse a
+//   notifier as 0.9.12 already left it; this milestone makes the OBSERVER
+//   more selective, never the registry more granular.
+// - **A Snapshot-specific branch, Nostr/Arweave vocabulary, or a change to
+//   `materializedSnapshotWorldOrigin`/`MaterializedSnapshotWorldDiscoveryBridge.js`.**
+//   See "source-family blind," above.
+// - **Gating `refreshMaterialInspection()`'s OWN internal behavior**
+//   (its `materialInspectionRequestId` guard, its `materialSources`/
+//   `resolvedLead` reads). This milestone decides whether to CALL it, not
+//   how it behaves once called.
+// - **A new `UNAVAILABLE`-adjacent status, a cache, a TTL, or any
+//   deduplication/ranking/trust vocabulary.** See "no new lifecycle
+//   state," above.
 
 const WORLD_HALF_SPAN = 50;
 const CANVAS_SIZE = 600;
 
 function projectToCanvas(value) {
     return CANVAS_SIZE / 2 + (value / WORLD_HALF_SPAN) * (CANVAS_SIZE / 2);
+}
+
+// 0.9.169 — a plain, pure, field-by-field comparison of two
+// `resolvedEncounterSelection`-shaped values (or `null`) — see this file's
+// own "0.9.169" header, above, for why this exists and what it deliberately
+// does not do.
+function resolvedEncounterSelectionsEqual(previousResolvedSelection, nextResolvedSelection) {
+    if (previousResolvedSelection === nextResolvedSelection) {
+        return true;
+    }
+    if (!previousResolvedSelection || !nextResolvedSelection) {
+        return false;
+    }
+    return previousResolvedSelection.kind === nextResolvedSelection.kind
+        && previousResolvedSelection.objectId === nextResolvedSelection.objectId
+        && previousResolvedSelection.origin === nextResolvedSelection.origin;
 }
 
 export default {
@@ -2047,6 +2158,14 @@ export default {
         // `null` whenever there is no current selection or no `registry`
         // — see "no registry, no resolution," above.
         refreshSelectionOutcome() {
+            // 0.9.169 — captured BEFORE `selectionOutcome` is overwritten,
+            // so it reads the CURRENT `resolvedEncounterSelection` computed
+            // off the value this method is about to replace. See this
+            // file's own "0.9.169" header for why this, rather than the
+            // registry's own notification, is the seam that needed
+            // narrowing.
+            const previousResolvedSelection = this.resolvedEncounterSelection;
+
             if (!this.selectedEncounter || !this.registry) {
                 this.selectionOutcome = null;
             } else {
@@ -2055,11 +2174,16 @@ export default {
                     registry: this.registry
                 });
             }
-            // 0.9.39 — every trigger that can change `selectionOutcome`
-            // can also change `resolvedEncounterSelection`, so it also
-            // refreshes material inspection — see this file's own header,
-            // "a stale or changed selection refreshes material inspection."
-            this.refreshMaterialInspection();
+            // 0.9.39 / 0.9.169 — every trigger that can change
+            // `selectionOutcome` can also change `resolvedEncounterSelection`,
+            // but only a GENUINE change to it warrants a fresh material
+            // load; a registry notification that leaves the current
+            // selection's own resolved identity untouched retains the
+            // existing `materialInspection` instead of redundantly
+            // recomputing it — see this file's own "0.9.169" header.
+            if (!resolvedEncounterSelectionsEqual(previousResolvedSelection, this.resolvedEncounterSelection)) {
+                this.refreshMaterialInspection();
+            }
         },
         // 0.9.20 — the only writer of `resolvedSelectionChoice`. Takes
         // exactly one entry of `selectionOutcome.candidates` — a

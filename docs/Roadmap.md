@@ -70520,3 +70520,173 @@ Everything else this milestone checked — source-family convergence, the
 Snapshot termination boundary, the capability matrix, and World lifecycle
 semantics — found no gap to schedule work against, and I would not invent
 one where this audit found none.
+
+## 0.9.169 — Material Inspection Refresh Precision
+
+0.9.168's own Section E found and proved, without fixing, one genuine
+seam: `ui/components/WorldEncounterCanvas.js`'s own `refreshSelectionOutcome()`
+unconditionally tail-called `refreshMaterialInspection()` on every one of
+its own triggers — including the World discovery registry's own change
+listener — so an entirely unrelated registry mutation (an unrelated peer
+joining or leaving, an unrelated Snapshot registering or unregistering)
+redundantly re-triggered a fresh `materialSources.*.load()` call for
+whatever encounter happened to stay selected. This milestone is the
+narrowly-scoped fix that closes exactly that seam, and nothing else:
+
+```text
+registry notification
+        │
+        ▼
+refreshSelectionOutcome()
+        │
+        ├── capture resolvedEncounterSelection BEFORE recomputing
+        │   selectionOutcome
+        │
+        ├── recompute selectionOutcome (unchanged — still the only place
+        │   it is ever written)
+        │
+        ▼
+did resolvedEncounterSelection (kind/objectId/origin) actually change?
+        │
+   ┌────┴────┐
+  YES        NO
+   │          │
+   ▼          ▼
+refreshMaterialInspection()   (nothing — the previous materialInspection
+                               is retained as-is, never redundantly
+                               recomputed)
+```
+
+A SMALL PRODUCTION CHANGE, EXACTLY AS SCOPED. Two things changed in
+`ui/components/WorldEncounterCanvas.js`: a new pure, module-level helper,
+`resolvedEncounterSelectionsEqual(previousResolvedSelection,
+nextResolvedSelection)` — a plain field-by-field comparison of two
+already-resolved `{ kind, objectId, origin }` values (or `null`), reusing
+0.9.20's own shape verbatim rather than inventing a new identity system —
+and `refreshSelectionOutcome()` itself, which now captures
+`resolvedEncounterSelection` immediately before overwriting
+`selectionOutcome`, and only tail-calls `refreshMaterialInspection()` when
+that comparison genuinely differs. Every OTHER trigger of
+`refreshMaterialInspection()` — `selectEncounter()`'s own tail-call (via
+the same, now-gated `refreshSelectionOutcome()`; a fresh selection always
+changes at least `objectId`, so it always still reloads),
+`chooseSelectionOrigin()`, `chooseDecentralizedLead()`, and the
+`worldDiscoveryLeadRegistry` subscription's own listener — is untouched;
+none of those was the seam 0.9.168 named.
+
+SOURCE-FAMILY BLIND, PER THE BRIEF'S OWN CONSTRAINT. The new comparison
+reads only `kind`/`objectId`/`origin` off the already-resolved selection —
+never `origin === 'local'`, `.startsWith('peer:')`, or
+`.startsWith('snapshot:')` — so local, peer, and Snapshot selections are
+all optimized identically. `tests/MaterialInspectionRefreshPrecision.test.js`
+Section F proves this by repeating the same unrelated-mutation scenario
+against all three source families and by reading the fix's own two
+functions back out of the production file to confirm neither references a
+source-family string.
+
+`tests/MaterialInspectionRefreshPrecision.test.js` — the dedicated test
+contract, ten sections:
+
+- **A — existing initial inspection.** Selecting an encounter still
+  performs its normal material load, unchanged.
+- **B/C — unrelated registration/unregistration.** With a Publication
+  selected and its material already loaded, an entirely unrelated peer
+  registering (B) or unregistering (C) leaves the selected encounter's own
+  resolved identity untouched and triggers zero redundant reloads.
+- **D — the crucial positive case.** A registry mutation that genuinely
+  changes WHICH origin serves the selected encounter's own identity (a
+  peer handing off the same Publication id to a second peer) still
+  reloads material, and the reloaded result genuinely reflects the new
+  serving peer's own material — the optimization never suppresses a
+  legitimate refresh.
+- **E — selection change.** Selecting a different encounter still loads
+  that new encounter's own material normally.
+- **F — local/peer/Snapshot symmetry.** Section B's own scenario, repeated
+  identically for all three source families as the selected encounter,
+  plus a structural read-back confirming the fix's own two functions
+  contain no source-family branch.
+- **G — Snapshot regression.** A selected, already-loaded Snapshot
+  encounter survives an unrelated registry mutation with no redundant
+  reload, no automatic `discoverSnapshotCommand` call, and no automatic
+  `snapshotDistributionCommand` call.
+- **H — existing failure semantics.** An already-`UNAVAILABLE` selection
+  (a Publication advertised by the registry but never actually published
+  into local storage — `LocalWorldEncounterMaterialSource.js`'s own
+  pre-existing "not found" boundary) stays `UNAVAILABLE`, untouched, across
+  an unrelated registry mutation; `WorldEncounterMaterialLoadStatus` still
+  carries exactly its own two values.
+- **I — race/staleness.** An unrelated registry notification arriving
+  WHILE a genuinely relevant material load is still in flight never bumps
+  `materialInspectionRequestId`, proven by holding a `load()` call open
+  with a controlled Promise, firing the unrelated mutation mid-flight, and
+  confirming both that the counter didn't move and that the held request's
+  own eventual, correct response is still written once released.
+- **J — structural boundary.** The fix's own two functions, read back out
+  of the production file, carry no Snapshot/Nostr/Arweave vocabulary, no
+  `materialize`/`Materialize` reference, and no new lifecycle term
+  (`ACTIVE`/`EXPIRED`/`STALE`/`SYNCED`/`INACTIVE`/`REVOKED`);
+  `WorldDiscoverySourceRegistry.js` itself carries no reference to the new
+  helper or to material inspection — the registry was not redesigned.
+
+`tests/WorldViewCapabilityReassessmentAudit.test.js`'s own Section E —
+which proved the seam existed, deliberately without fixing it — is updated
+in place to confirm the fix against the same real canvas (the unrelated
+peer join it already exercises now leaves the load count at 1, not 2),
+mirroring exactly how 0.9.163 updated 0.9.162's own Convergence Audit in
+place rather than leaving it describing a defect that no longer exists.
+`tests/LiveWorldViewRegistrySubscription.test.js`'s own Section H — the
+architectural-boundary sweep that bans reading `.origin` off anything but
+an already-sanctioned resolved-selection candidate — has its allowlist
+extended by exactly the two new parameter names this milestone's own
+helper introduces (`previousResolvedSelection`/`nextResolvedSelection`),
+with the same explanatory note style 0.9.101/0.9.112 already left there,
+rather than weakened or removed.
+
+Verified against the full existing suite: every test that passed before
+this milestone still passes after it, with the two exceptions above
+updated in place (never weakened) to confirm the fix rather than assert
+the now-fixed defect.
+
+Deliberately excluded, per this milestone's own narrow scope, and per the
+brief that requested it:
+- **Any change to `WorldDiscoverySourceRegistry.js`, its own `subscribe()`
+  contract, or a coalesced/event-payload notification.** The registry
+  stays exactly as coarse a notifier as 0.9.12 already left it; this
+  milestone makes the OBSERVER more selective, never the registry more
+  granular.
+- **A Snapshot-specific branch, Nostr/Arweave vocabulary, or any change to
+  `MaterializedSnapshotWorldDiscoveryBridge.js`.** The optimization is
+  keyed on `resolvedEncounterSelection` alone.
+- **Gating `refreshMaterialInspection()`'s own internal behavior** — its
+  `materialInspectionRequestId` guard, its `materialSources`/`resolvedLead`
+  reads. This milestone decides whether to CALL it, not how it behaves
+  once called.
+- **A cache, a TTL, memoization, deduplication, ranking, or trust
+  vocabulary of any kind, and any new lifecycle state.** See Section J,
+  above.
+
+```text
+0.9.163  Snapshot World Origin Collision Fix                          ✓
+0.9.164  Snapshot World Source Identity Audit                         ✓
+0.9.165  World Discovery Participation Audit                          ✓
+0.9.166  Snapshot World Encounter Material Loading                    ✓
+0.9.167  Snapshot World Material Loading E2E Audit                    ✓
+0.9.168  World View Capability Reassessment & Architecture Audit      ✓
+0.9.169  Material Inspection Refresh Precision                        ✓
+```
+
+### Recommendation
+
+Per this milestone's own brief, I would recommend
+**0.9.170 — Material Inspection Refresh Precision E2E Audit**: test-only,
+mirroring the audit-after-fix pattern 0.9.163 → (its own later convergence
+sweeps) and 0.9.166 → 0.9.167 already established for this family — a
+wider, end-to-end confirmation that this milestone's own narrow fix holds
+up against the full running World View pipeline (a live, mounted canvas
+driven through a realistic sequence of local/peer/Snapshot registry churn
+alongside genuine selection changes, rather than the more surgical,
+one-seam-at-a-time scenarios this milestone's own test contract already
+exercises), followed by another roadmap reassessment. I would not
+pre-schedule a specific NEW capability beyond that audit — per 0.9.168's
+own standing recommendation, the next feature milestone should come from
+whatever that audit finds, not from momentum.
