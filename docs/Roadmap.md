@@ -68763,3 +68763,201 @@ at every seam it has. The right next step is likely a different part of
 the system entirely, decided by inspecting what the actual product still
 needs, rather than inventing another layer on this one simply because
 another milestone number is available.
+
+0.9.156 and 0.9.157 answered that reassessment with two more test-only
+audits, at two different altitudes, over the identical subsystem: 0.9.156
+(`tests/SnapshotLifecycleSemanticBoundaryAudit.test.js`) swept the full
+twenty-five-milestone family for hidden coupling and duplicated semantics
+at the ARCHITECTURAL level (distribution/discovery independence,
+verification/attribution authority, identity separation); 0.9.157
+(`tests/SnapshotCandidateInteractionCompletionAudit.test.js`) asked the
+narrower, product-facing question of whether the complete CLICK SEQUENCE a
+person actually drives through World View behaves coherently end to end.
+Both found no regression. With those two audits complete, the pipeline
+this family has built and proven is:
+
+```text
+DISCOVER -> SELECT -> RESOLVE -> VERIFY -> ATTRIBUTE
+```
+
+Every stage above answers a question about a Snapshot that exists only in
+memory, for the duration of one browser session. Nothing in the pipeline
+ever turns a verified Snapshot into something this replica actually
+POSSESSES — the same gap application/MaterializeSnapshotFromPlacementUseCase.js
+(0.8.35) and application/MaterializeSnapshotFromPeerUseCase.js (0.8.37)
+already closed for their own explicit sources (a signed placement, an
+authenticated peer), left open here for the newest one. That is the
+product gap 0.9.158 closes.
+
+## 0.9.158 — Selected Snapshot Materialization
+
+The word that matters is MATERIALIZATION, not rendering. World View
+already owns an independent, working material system (WebRTC-based
+peer/placement material sources feeding World Encounter rendering); this
+milestone's only job is to produce something that system can consume, not
+to build a second, parallel way of getting Snapshot bytes onto the screen.
+
+```text
+DISCOVER -> SELECT -> RESOLVE -> VERIFY -> ATTRIBUTE -> MATERIALIZE
+```
+
+`application/MaterializeSnapshotFromSelectedCandidateUseCase.js` is the
+THIRD sibling of application/MaterializeSnapshotFromPlacementUseCase.js
+(0.8.35, a SIGNED placement) and application/MaterializeSnapshotFromPeerUseCase.js
+(0.8.37, an authenticated peer) — the identical shape, applied to an
+explicitly SELECTED, Nostr-discovered candidate instead:
+
+```text
+selectedSnapshotResolutionResult   (0.9.152, unchanged — the RESOLVER's
+     │                              own already-verified result)
+     │  click "Materialize Selected Snapshot"
+     ▼
+materializeSelectedSnapshot()   (ui/components/OwnPublicationPanel.js, NEW)
+     │
+     ▼
+materializeSelectedSnapshotCommand(selectedSnapshotResolutionResult)
+     (application/MaterializeSelectedSnapshotCommand.js, NEW — a pure
+     assembly boundary mirroring application/ResolveSelectedSnapshotCommand.js
+     exactly)
+     │
+     ▼
+materializer.execute(resolution)
+     (application/MaterializeSnapshotFromSelectedCandidateUseCase.js, NEW)
+     │
+     ▼
+storeSnapshotContentUseCase.execute({ contentHash, bytes })
+     (application/StoreSnapshotContentUseCase.js, 0.8.36, UNMODIFIED — the
+     SAME shared hash-verify-then-store boundary PACKAGE/PLACEMENT/PEER
+     already share)
+     │
+     ▼
+selectedSnapshotMaterializationResult   (NEW field)
+```
+
+**The one rule this milestone exists to enforce:** materialization
+consumes the ALREADY-VERIFIED RESOLUTION RESULT, never the candidate.
+`materializeSelectedSnapshot()` reads `this.selectedSnapshotResolutionResult`
+— bytes that already passed `resolveCandidate()`'s own hash verification —
+never `this.selectedSnapshotCandidate` or its own self-declared
+`contentHash`. This is the identical invariant 0.9.154's own attribution
+seam already holds one sibling over ("compares against the resolver's own
+verified result, never the candidate's own declared contentHash"), applied
+here to materialization instead of comparison. A candidate that was merely
+SELECTED, never resolved, has nothing this milestone will store; a
+candidate whose resolution ended in `CONTENT_HASH_MISMATCH` is reported as
+exactly that outcome, verbatim, never materialized.
+
+**Non-RESOLVED outcomes are reported verbatim, never remapped onto a new
+vocabulary of this milestone's own** — the identical restraint application/
+SnapshotPublicationAttribution.js's own `resolveSnapshotPublicationAttribution()`
+already holds for its own comparison, applied here one seam over:
+`NOT_DISCOVERED`/`STORE_UNAVAILABLE`/`CONTENT_UNAVAILABLE`/
+`CONTENT_HASH_MISMATCH` (application/DecentralizedSnapshotResolutionOutcome.js's
+own pre-existing values) pass straight through, unchanged, alongside their
+own `reason`. `application/SnapshotCandidateMaterializationOutcome.js`
+therefore needs only THREE new values — `STORED`/`ALREADY_AVAILABLE`/
+`HASH_MISMATCH` — describing only what happens once resolution has already
+succeeded, never a "could not materialize" catch-all sitting beside the
+resolver's own honest failure vocabulary.
+
+**An independent sibling of "Attribute Selected Snapshot," never a sequel
+to it.** Both `materializeSelectedSnapshot()` and `attributeSelectedSnapshot()`
+read the SAME `selectedSnapshotResolutionResult`, but neither depends on
+the other having run: materialization answers "can this replica now
+retrieve these bytes locally," attribution answers "does this correspond
+to the current Publication." Clicking one never triggers the other, and
+`SnapshotMaterializationSourceKind` gains a fourth value, `CANDIDATE`,
+sitting beside `PACKAGE`/`PLACEMENT`/`PEER` unranked, exactly as `PEER`
+already sits beside the first two.
+
+**No `publicationId`, no `publicationKnown` — deliberately, unlike its two
+siblings.** A Nostr-discovered candidate (`{ contentHash, locator,
+storage }`) carries no `publicationId` at all — inventing one from
+`attributeSelectedSnapshot()`'s own separate comparison would blur
+MATERIALIZATION back into ATTRIBUTION, exactly the seam this milestone's
+design keeps apart. `MaterializeSnapshotFromSelectedCandidateUseCase`
+therefore needs no `publicationCatalog` collaborator at all — only the
+SAME `storeSnapshotContentUseCase` every other explicit materialization
+source already shares.
+
+**Explicit, never automatic**, at every step this milestone touches:
+selecting a candidate never materializes it (unchanged); resolving a
+candidate never materializes it either — only a separate click on the new
+"Materialize Selected Snapshot" button does, exactly mirroring
+`attributeSelectedSnapshot()`'s own restraint one sibling over.
+
+**Staleness is invalidated exactly where the resolution result it depends
+on already is**, never with a second, independent mechanism:
+`selectSnapshotCandidate()` (a different selection) and
+`resolveSelectedSnapshot()` (a fresh resolution attempt for the CURRENT
+selection) both already clear `selectedSnapshotResolutionResult` and
+`selectedSnapshotAttributionResult` — this milestone clears
+`selectedSnapshotMaterializationResult` at those same sites, and the
+existing Publication-change watcher now resets it too.
+
+`tests/SelectedSnapshotMaterialization.test.js` — six sections: **A**
+(`MaterializeSnapshotFromSelectedCandidateUseCase` constructor validation
+and `execute()` over a hand-built resolution result for RESOLVED plus
+every non-RESOLVED outcome, each reported verbatim), **B**
+(`MaterializeSelectedSnapshotCommand` as a pure assembly boundary), **C**
+— FLAGSHIP (a real composed runtime: real Nostr discovery, real Arweave
+resolution; discover, select, resolve, materialize, and confirm the exact
+retrieved bytes are now genuinely retrievable from this replica's OWN,
+independent local content store — re-materializing is idempotent), **D**
+(the full `OwnPublicationPanel` UI state machine: guard/requestId pattern,
+staleness cleared by a new selection/fresh resolution/Publication change,
+independence from `selectedSnapshotAttributionResult`, and a stale
+in-flight materialization that can never overwrite the current
+selection's state), **E** (materialization needs no Publication at all,
+unlike attribution), **F** (structural sweep: `SnapshotMaterializationSourceKind.CANDIDATE`
+and `SnapshotCandidateMaterializationOutcome`'s own three values exist,
+and neither `materializeSelectedSnapshot()` nor the new use case touches
+attribution, a publication catalog, or discovery/retrieval machinery of
+its own).
+
+Deliberately excluded, per this milestone's own narrow scope — matching
+exactly the exclusions its own design named going in:
+- **Nostr discovery, candidate selection, candidate ranking, or
+  verification of any kind.** All unchanged, all upstream of this seam.
+- **Snapshot–Publication attribution of any kind.** See "no
+  `publicationId`," above.
+- **World placement, spatial position, or rendering of the materialized
+  Snapshot.** Answering "where does a materialized Snapshot belong in the
+  visible World" is a separate, later, unscheduled seam over this one's
+  own output — this milestone produces possessed bytes, nothing more.
+- **A new, competing retrieval/verification implementation.** This use
+  case never imports a resolver, a query service, or a remote content
+  store — it consumes an already-computed resolution result and writes
+  through the SAME `StoreSnapshotContentUseCase` boundary every other
+  explicit source already shares.
+- **Ranking, caching, retry, or automatic materialization of any kind.**
+
+```text
+0.9.150  Snapshot Candidate Discovery Command                      ✓
+0.9.151  World View Snapshot Candidate Browser                     ✓
+0.9.152  Selected Snapshot Candidate Resolution                    ✓
+0.9.153  Selected Snapshot Resolution End-to-End Audit              ✓
+0.9.154  Selected Snapshot Attribution                              ✓
+0.9.155  Selected Snapshot Attribution End-to-End Audit              ✓
+0.9.156  Snapshot Lifecycle & Semantic Boundary Audit                ✓
+0.9.157  Snapshot Candidate Interaction Completion Audit             ✓
+0.9.158  Selected Snapshot Materialization                           ✓
+```
+
+### Recommendation
+
+With materialization now proven, the natural next milestone is **0.9.159
+— Selected Snapshot World Placement**: given a materialized Snapshot (this
+milestone's own `contentReference`), decide WHERE it belongs in the user's
+visible World — reusing whatever placement authority the existing World
+Encounter/vehicle-placement machinery already establishes for initial
+World material, never inventing a new spatial-placement algorithm from
+scratch. Only once placement exists would a further, still later
+milestone (**0.9.160 — Selected Snapshot World Rendering**) let World
+View's existing rendering observe that placed material — World View should
+remain an OBSERVER of world material throughout, never a second
+material-loading system of its own. I would not attempt placement and
+rendering in the same milestone that adds materialization: each of the
+three stages (materialize -> place -> render) deserves the same narrow,
+independently-tested scope this entire Snapshot subsystem has held since
+0.9.150.
