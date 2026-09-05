@@ -124,6 +124,24 @@ const EVENT_ID_PATTERN = /^[0-9a-f]{64}$/i;
 //   the announced locator actually resolves.** A successful `publish()`
 //   means only "the relay accepted this event."
 // - **Any signature, trust, ranking, or provider-selection semantics.**
+//
+// 0.9.171 — `publish()` NOW ACCEPTS TWO ADDITIONAL, OPTIONAL FIELDS:
+// `publicationId` AND `claimedPosition`. See `core/
+// SnapshotDiscoveryEnvelope.js`'s own 0.9.171 header for the full
+// contract — both are forwarded to `describeSnapshotDiscoveryEnvelope()`
+// completely unchanged, exactly like `contentHash`/`locator`/`storage`
+// already are; this file adds no validation of its own, and reads neither
+// field for any other purpose. Omitting both (every existing caller,
+// unmodified) publishes the identical five-field envelope this file has
+// always published — see `tests/NostrSnapshotDiscoveryPublisher.test.js`'s
+// own Section B, still asserting the event content carries exactly
+// `protocol`/`version`/`contentHash`/`locator`/`storage` when neither is
+// supplied. This file never READS `publicationId`/`claimedPosition` off
+// anywhere itself (a Publication object, a `WorldPlacement`, a
+// `WorldNavigationSession`) — a caller who wants to announce a position
+// claim already holds both values and hands them in directly, the
+// identical "no I/O, no rediscovery" restraint every file in this family
+// already holds one layer over.
 export class NostrSnapshotDiscoveryPublisher {
     // relayUrl: which Nostr relay a published event is sent to.
     // tagName: which Nostr tag NAME the discovery tag is attached under —
@@ -171,22 +189,31 @@ export class NostrSnapshotDiscoveryPublisher {
     get relayUrl() { return this._relayUrl; }
     get discoveryTag() { return this._discoveryTag; }
 
-    // publish({ contentHash, locator, storage }) -> Promise<
-    //   { published: true, relayUrl, id } | null>. See this file's own
-    //   header for the full contract: `null` for a candidate that fails
-    //   `describeSnapshotDiscoveryEnvelope()`'s own validation, and `null`
-    //   for a `publishImpl` that resolves with `published: false`; a
-    //   genuine `publishImpl` failure (including this class's own timeout)
-    //   propagates as a rejection; a `publishImpl` that resolves with
-    //   `published: true` but a missing/malformed `id` throws rather than
-    //   degrading to `null`.
-    async publish({ contentHash, locator, storage } = {}) {
+    // publish({ contentHash, locator, storage, publicationId, claimedPosition }) ->
+    //   Promise<{ published: true, relayUrl, id } | null>. See this file's
+    //   own header for the full contract: `null` for a candidate that
+    //   fails `describeSnapshotDiscoveryEnvelope()`'s own validation, and
+    //   `null` for a `publishImpl` that resolves with `published: false`;
+    //   a genuine `publishImpl` failure (including this class's own
+    //   timeout) propagates as a rejection; a `publishImpl` that resolves
+    //   with `published: true` but a missing/malformed `id` throws rather
+    //   than degrading to `null`.
+    //
+    //   `publicationId`/`claimedPosition` (0.9.171, both optional) — a
+    //   position claim explicitly bound to a Publication identity; see
+    //   `core/SnapshotDiscoveryEnvelope.js`'s own header. Omitting both
+    //   publishes the identical envelope this file has always published.
+    //   Supplying only one of the two fails validation and resolves to
+    //   `null`, exactly like any other malformed candidate.
+    async publish({ contentHash, locator, storage, publicationId, claimedPosition } = {}) {
         const described = describeSnapshotDiscoveryEnvelope({
             protocol: SNAPSHOT_DISCOVERY_ENVELOPE_PROTOCOL,
             version: SNAPSHOT_DISCOVERY_ENVELOPE_VERSION,
             contentHash,
             locator,
-            storage
+            storage,
+            publicationId,
+            claimedPosition
         });
         if (described === null) {
             return null;
