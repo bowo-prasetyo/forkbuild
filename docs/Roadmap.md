@@ -67242,3 +67242,227 @@ build," but which remaining ForkBuild capability (vehicle/world
 interaction, the Signed Claim discovery counterpart, or something this
 sequence hasn't named at all) now has the greatest architectural or
 user-facing value next.
+
+## 0.9.146 — Snapshot & World Architecture Roadmap Reassessment
+
+0.9.145's own "Recommendation" named this milestone by number and
+deliberately declined to prejudge its answer. This is that reassessment:
+a read-only architectural and roadmap audit, in the same "documentation-
+only closure" posture 0.9.131's own Option C already established as a
+legitimate milestone shape — held here for the roadmap as a whole rather
+than for one subsystem. **Zero production code. Zero new tests. The only
+change this milestone makes anywhere in this repository is this entry.**
+
+```text
+                    Publication
+                         │
+              ┌──────────┴──────────┐
+              ▼                     ▼
+     Signed Claim Distribution   Snapshot Distribution
+      (Arweave + Nostr)           │
+              │           ┌───────┼────────┬─────────────┐
+              │           ▼        ▼        ▼             ▼
+              │      Placement  Discovery  Resolution/  Publication
+              │      (IPFS/     (Nostr)    Verification  Attribution
+              │       Arweave)
+              │
+     World View
+         │
+         ├── OwnPublicationPanel ──┐
+         │                         ├─→ DiscoverSnapshotCommand
+         └── WorldEncounterCanvas ─┘         │
+                                             ▼
+                              DecentralizedSnapshotResolver
+                                   Discovery / Resolution /
+                                   Verification / Attribution
+```
+
+### What is actually established, versus what only looks established
+
+| Area | Status | Grounding |
+|---|---|---|
+| Publication domain | Established | pre-0.9 |
+| Signed Claim distribution — **write** path (Arweave upload + Nostr announce) | Established | 0.9.107-0.9.109, 0.9.121 |
+| Signed Claim / World Encounter Material discovery — **read** path | **Missing infrastructure** | see below |
+| Snapshot placement (IPFS/Arweave content stores) | Established | 0.9.26, 0.9.131-0.9.132 |
+| Snapshot discovery boundary (envelope + publisher) | Established | 0.9.133 |
+| Snapshot discovery — **read** path | **Missing infrastructure** | same gap, see below |
+| Snapshot resolution / cryptographic verification | Established | 0.9.134 |
+| Publication attribution | Established | 0.9.143 |
+| World View integration, both entry points | Established | 0.9.138, 0.9.140, 0.9.144 |
+| Entry-point convergence | Audited | 0.9.141, 0.9.145 §A/B/G |
+| Failure semantics | Audited | 0.9.145 §E |
+| State isolation under concurrency | Audited | 0.9.145 §G |
+| Structural/vocabulary boundaries | Audited | 0.9.145 §I |
+| Vehicle mount/move/steer (BICYCLE only) | Established, audited | 0.9.70-0.9.130 |
+| Vehicle reachability (MOTORCYCLE/CAR/DRONE) | **Named, unreachable** | see below |
+
+### The one correction this reassessment makes to its own premise
+
+The framing that prompted this milestone treated "no live Nostr relay-
+query client" as a Snapshot-specific gap — the one piece 0.9.142's own
+header left honestly excluded. Reading `ui/main.js` end to end shows that
+framing is not quite right, and the correction matters for how any future
+infrastructure milestone should be scoped.
+
+The gap is older than the Snapshot family and shared by it, not owned by
+it. 0.9.110 — building the composition root for **Signed Claim / World
+Encounter Material discovery**, a full family before Snapshot Distribution
+existed at all — already wrote: "NO HOST NOSTR RELAY-QUERY CAPABILITY
+EXISTS ANYWHERE IN THIS CODEBASE YET, so `nostrQueryImpl` is omitted
+here." 0.9.142's own `ui/main.js` comment, wiring Snapshot discovery 32
+milestones later, says almost the identical sentence about
+`nostrSnapshotDiscoveryQueryServiceOptions.queryImpl` and calls it out
+explicitly as "THE IDENTICAL, ALREADY-DOCUMENTED GAP THIS FILE'S OWN
+0.9.110 COMMENT NAMES." `application/NostrDiscoveryQueryService.js`
+(0.9.31) and `application/NostrSnapshotDiscoveryQueryService.js` (0.9.133)
+are, structurally, near-duplicate classes: both require an injected
+`queryImpl: (relayUrl, filter) => Promise<events>` with no ambient
+default, both throw at construction if it's missing, both never throw
+from `search()`, both hold exactly one relay per instance, both skip a
+single bad event rather than fail the whole batch, and neither checks a
+NIP-01 signature. They differ only in which envelope parser they call.
+
+```text
+Decentralized discovery, read side
+              │
+              │   nostrQueryImpl: (relayUrl, filter) => Promise<events>
+              │   — ONE missing capability shape, named at 0.9.110,
+              │     never supplied since
+              │
+   ┌──────────┴───────────────────┐
+   ▼                               ▼
+World Encounter Material      Snapshot Discovery
+Discovery (0.9.110)           (0.9.142)
+NostrDiscoveryQueryService     NostrSnapshotDiscoveryQueryService
+   │                               │
+   ▼                               ▼
+resolves null today            resolves null today
+(Arweave's own read path is    (no Arweave-discovery
+ already live — 0.9.25/0.9.35,  equivalent exists; Arweave
+ ambient `fetch`, no gap)       is used here only for
+                                Content Store retrieval,
+                                never for discovery)
+```
+
+The practical implication: a live Nostr relay-query client, whenever it
+is built, is not "the Nostr Snapshot Relay Query," a Snapshot-family
+milestone. It is one shared host-capability adapter — the read-side
+counterpart to how `arweaveHostSigner`/`nostrHostPublisher` in
+`ui/main.js` are each constructed once and reused across the Signed Claim
+and Snapshot distribution families already — that plugs unchanged into
+BOTH `composeDecentralizedWorldEncounterMaterialDiscoveryServices()`'s
+`nostrQueryImpl` and `composeDiscoverSnapshotRuntime()`'s
+`nostrSnapshotDiscoveryQueryServiceOptions.queryImpl`. Scoping it as a
+Snapshot-only milestone would either duplicate the client or leave the
+older, wider half of the gap standing untouched right next to a freshly
+closed narrow one. Neither existing resolver (`application/
+DecentralizedWorldEncounterMaterialDiscoveryRuntimeComposition.js`,
+`application/DiscoverSnapshotRuntimeComposition.js`) needs to change for
+this — both are already written to accept a real `queryImpl` the moment
+one exists.
+
+### What should remain deliberately absent
+
+Verified against the "Deliberately excluded" sections actually written
+into the files named, not merely restated from memory:
+
+- No Snapshot trust, ownership, or provenance system.
+- No automatic ranking or preference among discovery providers —
+  `NostrSnapshotDiscoveryQueryService`'s own header: "MULTIPLE DISCOVERY
+  RECORDS DO NOT AUTOMATICALLY BECOME RANKING."
+- No automatic retry/failover across relays or gateways — "exactly one
+  relay per instance" is held identically in every discovery adapter in
+  this family.
+- No merging of Publication and Snapshot identity — 0.9.145 §F/§I's own
+  structural sweep is the regression lock for this.
+- No merging of Signed Claim and Snapshot discovery — two distinct
+  campaign markers (`'forkbuild-publication'` vs. `'forkbuild-snapshot'`,
+  both literal in `ui/main.js`) keep them two streams on the same relay,
+  never one.
+- No UI-level verification or hashing — stays entirely in
+  `DecentralizedSnapshotResolver`.
+- No attribution inferred from metadata alone — 0.9.145 §C's own deeper
+  case (a genuinely `RESOLVED` Snapshot whose *metadata* falsely claims
+  a Publication's hash) is exactly the attack this restraint defeats.
+- No new lifecycle vocabulary merely because Snapshot now has a mature
+  pipeline.
+- No `TRUSTED`/`AUTHENTIC`/`OWNED`/`CONFIRMED` reading of `MATCH` — 0.9.145's
+  own closing invariant, unchanged: `MATCH` means exactly "a recomputed
+  content hash equals `Publication.contentReference.hash`," nothing more.
+
+### Two genuinely open next-capability candidates, and one left honestly unnamed
+
+Two candidates are open because a *prior* milestone's own header already
+named them as a deliberately deferred gap, not because this reassessment
+invented them:
+
+```text
+Candidate 1 — Decentralized Discovery Relay Query Client
+  Closes the ONE gap described above. Value: a single implementation
+  unlocks TWO currently-dormant seams at once — World Encounter Material
+  discovery (in-world Publication/Avatar leads, dormant since 0.9.110)
+  and Snapshot discovery (dormant since 0.9.142) — rather than one.
+
+Candidate 2 — Vehicle Reachability (MOTORCYCLE / CAR / DRONE)
+  core/VehicleType.js (0.9.70) names all four vehicle types; only
+  BICYCLE can currently be spawned (core/VehiclePlacement.js), rendered
+  (renderer/VehicleRenderer.js), or moved
+  (AvatarVehicleMovementController#MOVABLE_VEHICLE_TYPES). 0.9.130's own
+  "Recommendation" named this explicitly as "Option C" and declined to
+  schedule it automatically — for the same reason this reassessment now
+  applies one layer up: an architecture proven ready is a different
+  question from which capability is worth spending effort on next.
+```
+
+A third direction — some higher-level "World state" or "content
+lifecycle" concept spanning Signed Claim and Snapshot now that both are
+mature — is deliberately left unnamed here rather than promoted to a
+candidate. Unlike the two above, no comment, test, or roadmap entry
+anywhere in this codebase names it as a deferred gap (a targeted search
+for "world state"/"content lifecycle"/"world lifecycle" across
+`docs/Roadmap.md` turns up only informal, unrelated uses of the phrase).
+Listing it as equally ready to schedule would be inventing a gap rather
+than reporting one; it belongs in a future reassessment only if a real
+use case names it first, not on the strength of it sounding plausible.
+
+### What this milestone deliberately does NOT do
+
+- **Any production code change of any kind.** No file under
+  `application/`, `core/`, `ui/`, `content/`, `renderer/`, `arweave/`, or
+  `nostr/` is modified.
+- **No new test file.** This is a reassessment, not an audit of behavior
+  already proven — there is no new behavior to pin down.
+- **No decision about which candidate becomes 0.9.147.** See
+  "Recommendation," below — that choice is a product judgment about
+  value, which architecture alone cannot settle, exactly as 0.9.130's own
+  Option B/C split and 0.9.145's own three-way close both already
+  declined to auto-resolve for their own subsystems.
+- **No closing of the Nostr relay-query gap itself, and no vehicle
+  reachability work.** Both remain exactly as open as this entry
+  describes them.
+
+### Recommendation
+
+```text
+0.9.140  Own Publication Distribution Entry Point                 ✓
+0.9.141  Distribution Entry-Point Convergence Audit                ✓
+0.9.142  World View Snapshot Discovery Command                     ✓
+0.9.143  Snapshot–Publication Attribution                          ✓
+0.9.144  World View Snapshot Attribution Integration                ✓
+0.9.145  End-to-End Snapshot Attribution Audit                     ✓
+0.9.146  Snapshot & World Architecture Roadmap Reassessment        ✓
+```
+
+If forced to pick, I would lean toward **Candidate 1** over Candidate 2:
+it is shared infrastructure that unlocks two already-built, currently
+dormant seams (World Encounter Material discovery and Snapshot discovery)
+in one implementation, rather than extending one already-working vehicle
+capability to two more types. But I would not auto-schedule it, for the
+same reason 0.9.130 and 0.9.145 both left their own open questions to a
+human rather than the next milestone number: whether decentralized
+discovery reaching a real relay is worth building now, versus whether
+vehicle variety is, is a statement about what ForkBuild needs next, not
+a conclusion the architecture itself forces. 0.9.147 should be whichever
+of these two — or something this reassessment did not name at all — the
+person steering this roadmap actually wants next.
