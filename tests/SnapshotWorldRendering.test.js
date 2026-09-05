@@ -631,12 +631,28 @@ async function run() {
         // `snapshotDiscoveryResult`, etc.), an entirely different concept
         // from THIS family's own "materialized World Snapshot." This
         // milestone's own structural boundary is narrower and more
-        // specific: no reference to THIS family's own registration/
-        // placement vocabulary exists here at all.
-        assert(!/MaterializedSnapshotWorldDiscoveryBridge|registerMaterializedSnapshotWorldSource|SnapshotWorldRegistrationOutcome|SnapshotWorldPlacement|resolveSnapshotWorldPlacement/.test(canvasCodeOnly),
-            '3. WorldEncounterCanvas.js never references this family\'s own registration/placement vocabulary — a registered Snapshot reaches it exclusively as an ordinary, origin-blind encounter, never a special-cased second rendering path');
-        assert(!canvasCodeOnly.includes('MaterializedSnapshotWorldDiscoveryBridge'),
-            '4. WorldEncounterCanvas.js never imports the registration bridge — it depends only on the registry prop it is handed, exactly as every earlier milestone already established');
+        // specific: no reference to THIS family's own REGISTRATION/
+        // PLACEMENT/RENDERING vocabulary exists here at all — a registered
+        // Snapshot still reaches this file exclusively as an ordinary,
+        // origin-blind encounter for every RENDERING purpose, never a
+        // special-cased second rendering path.
+        //
+        // UPDATED 0.9.179 — Snapshot World Source Unregistration. That
+        // milestone gave this file its own dedicated, one-line exception:
+        // `unregisterMaterializedSnapshotWorldSource()` alone, imported and
+        // called from exactly one explicit, Wanderer-initiated ACTION
+        // method (`unregisterSelectedSnapshot()`), never from anything
+        // RENDERING-shaped. The registration/placement half of this
+        // family's own vocabulary this milestone's own sweep was written to
+        // guard against — `registerMaterializedSnapshotWorldSource()`,
+        // `SnapshotWorldRegistrationOutcome`, `SnapshotWorldPlacement*`,
+        // `resolveSnapshotWorldPlacement()` — remains completely absent.
+        assert(!/(?<!un)registerMaterializedSnapshotWorldSource|SnapshotWorldRegistrationOutcome|SnapshotWorldPlacement|resolveSnapshotWorldPlacement/.test(canvasCodeOnly),
+            '3. WorldEncounterCanvas.js never references this family\'s own REGISTRATION/PLACEMENT vocabulary — a registered Snapshot reaches it exclusively as an ordinary, origin-blind encounter, never a special-cased second rendering path');
+        const canvasImportLines = canvasSource.split('\n').filter((line) => line.trim().startsWith('import '));
+        const bridgeImportLine = canvasImportLines.find((line) => line.includes('MaterializedSnapshotWorldDiscoveryBridge'));
+        assert(bridgeImportLine && bridgeImportLine.includes('unregisterMaterializedSnapshotWorldSource') && !bridgeImportLine.includes('registerMaterializedSnapshotWorldSource('),
+            '4. WorldEncounterCanvas.js\'s one import of the registration bridge (0.9.179) names unregisterMaterializedSnapshotWorldSource() ALONE — never registerMaterializedSnapshotWorldSource() — and it depends only on the registry prop it is handed for every rendering purpose, exactly as every earlier milestone already established');
 
         const markerSource = await readFile(new URL('../ui/components/WorldEncounterMarker.js', import.meta.url), 'utf8');
         assert(!/^\s*import /m.test(markerSource), '5. WorldEncounterMarker.js still imports nothing at all — no Snapshot-specific marker component was ever introduced');
