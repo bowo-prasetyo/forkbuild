@@ -71733,3 +71733,196 @@ a materially larger seam (multiple Snapshots for one `objectId`
 observable at once, a browsing UI, not merely an inspection panel) and
 deserves its own deliberate scoping rather than growing out of this
 milestone's own narrow descriptor.
+
+## 0.9.178 — World Snapshot Inspection Actionability Audit
+
+0.9.177 answered WHAT is inspectable about a selected Snapshot
+(`contentHash`, `publicationId`, `position`). This milestone asks the
+question that answer makes askable for the first time: **once a Wanderer
+can identify and inspect a Snapshot, what can they legitimately DO with
+it?** TEST-ONLY, exactly like 0.9.174/0.9.175 before it — no production
+file changed, every collaborator this audit drives (`WorldEncounterCanvas.js`,
+`WorldSnapshotInspection.js`, `WorldEncounterPresentation.js`,
+`MaterializedSnapshotWorldDiscoveryBridge.js`, `WorldEncounterMaterialLoading.js`,
+`WorldDiscoverySourceRegistry.js`, the peer lifecycle bridge) is read,
+real, and unmodified.
+
+**THE AUDIT'S FINDING — SYMMETRY ALREADY HOLDS, AND ONE UNWIRED CAPABILITY
+WAS SURFACED, NOT BUILT.**
+
+```text
+             LOCAL    PEER    SNAPSHOT
+inspect        ✓        ✓         ✓
+select         ✓        ✓         ✓
+load material  ✓        ✓         ✓
+distribute     ✓        ✓         ✓
+discover       ✓        ✓         ✓
+unregister     ✗        ✗         ✗   (absent for all three, today)
+```
+
+`distributablePublication` (0.9.104) — the one computed every
+distribute/discover action gate reads (`distributeSelectedPublication()`,
+`distributeSelectedSnapshot()`, `discoverSelectedSnapshot()`) — is derived
+from `selectedEncounter.kind === 'PUBLICATION'` and
+`materialInspection.loading.status === 'AVAILABLE'` alone; it never reads
+`sourceFamily`. Once a Snapshot is registered, selecting it already
+routes through the SAME `materialSources.local` slot `origin === 'local'`
+already uses (0.9.166's own routing, re-confirmed live here) — there is
+no second, Snapshot-specific materialization path a future milestone
+would need to build to make distribute/discover reachable for a
+Snapshot-sourced encounter. They already are.
+
+The one genuine asymmetry the audit surfaced is not Snapshot-specific:
+`application/MaterializedSnapshotWorldDiscoveryBridge.js`'s own
+`unregisterMaterializedSnapshotWorldSource()` (present since 0.9.160) has
+never been wired into any UI action — it is called only from tests and
+named only in this document. `peer/PeerWorldDiscoveryLifecycleBridge.js`'s
+own `unregisterPeerWorldSource()` is in the identical position. No source
+family gets a Wanderer-facing "remove this" action today; a future
+milestone that wants one is choosing to add a genuinely new capability
+for ALL THREE families, not closing a Snapshot-specific gap.
+
+**Also confirmed, empirically, against the real production files:**
+
+- **Observation stays observation.** Reading
+  `selectedEncounterSnapshotInspection` (and the presentation/inspection
+  computeds under it), repeatedly, calls `registry.setSource()` /
+  `registry.removeSource()` zero times and triggers no additional
+  material load — `facts → descriptor → UI` never becomes
+  `inspection → operation`.
+- **Position is display-only.** The inspection panel's own `position` is
+  exactly `selectedEncounterInspection.x/y/z` — the World's own
+  already-established placement, one authoritative value, never two.
+  The panel's own template carries no `v-model` and no `@click` of any
+  kind; no method on `WorldEncounterCanvas.js` moves, relocates, or
+  repositions anything. `claimedPosition` remains exactly as absent as
+  0.9.177 left it.
+- **Identity never substitutes.** Across selection, material loading, and
+  distribute/discover gating alike: `publicationId` never becomes
+  `contentHash`; `origin` (the compound `"snapshot:<hash>:<id>"` string)
+  never becomes `publicationId`; switching a triple-family selection's
+  explicit choice from `SNAPSHOT` to `LOCAL` changes `origin` while
+  `objectId` (World identity) stays fixed.
+  `AMBIGUOUS` means inert, together. Before an explicit choice resolves a
+  three-family (LOCAL+PEER+SNAPSHOT) ambiguity for one `objectId`:
+  `selectedEncounterPresentation` degrades to `sourceFamily: null` (never
+  a guess), `selectedEncounterSnapshotInspection` is `null`,
+  `materialInspection` is `null`, and `distributablePublication` is
+  `null` — calling `distributeSelectedPublication()` in this state is a
+  genuine no-op. Presentation, inspection, and every action gate resolve
+  together, only once the Wanderer explicitly chooses — reaffirming
+  0.9.176's own "presentation never resolves ambiguity."
+- **Removal collapses everything together.** Unregistering a Snapshot's
+  own source (`unregisterMaterializedSnapshotWorldSource()`) while it is
+  selected collapses `resolvedEncounterSelection`,
+  `selectedEncounterSnapshotInspection`, `materialInspection`, and
+  `distributablePublication` to `null` in the same tick the registry
+  notifies — no stale action survives merely because an inspection
+  object was computed a moment earlier, extending 0.9.174/0.9.175's own
+  lifecycle guarantee to this milestone's own actionability layer.
+
+**`tests/WorldSnapshotInspectionActionabilityAudit.test.js` — nine
+sections, entirely against real, mounted `WorldEncounterCanvas` instances
+and real registration bridges:**
+
+- **A** — existing action inventory: the complete, real
+  `methods` list a selected encounter can reach (select / choose-origin /
+  choose-lead / distribute-publication / distribute-snapshot /
+  discover-snapshot), no unregister/reposition method anywhere on the
+  component, and confirmation that `unregisterMaterializedSnapshotWorldSource()`
+  is unreferenced by `WorldEncounterCanvas.js`.
+- **B** — observation vs. action: a registry-mutation spy proves reading
+  the Snapshot inspection descriptor, five times over, never calls
+  `setSource()`/`removeSource()` and never triggers an extra material
+  load; 0.9.177's own I/O-free structural sweep re-confirmed unmodified.
+- **C** — the LOCAL/PEER/SNAPSHOT truth table above, built from three
+  independent real scenarios and genuinely executing
+  `distributeSelectedPublication()`, `distributeSelectedSnapshot()`, and
+  `discoverSelectedSnapshot()` against each — all three rows identical.
+- **D** — the material availability boundary: registering, then
+  selecting, a Snapshot dispatches exactly one material-load call,
+  carrying the Snapshot's own origin, to the ordinary
+  `materialSources.local` slot; no `materialSources.snapshot` slot exists
+  anywhere in the loading module's own executable code.
+- **E** — position actionability: inspection's own `position` matches the
+  base inspection panel's `x`/`y`/`z` exactly; no `v-model`/`@click` in
+  the inspection panel template; no move/reposition/relocate method
+  anywhere on the component.
+- **F** — identity preservation: `publicationId`/`contentHash`/`origin`
+  never substitute for one another through selection, material loading,
+  or the `distributablePublication` gate, including across an explicit
+  choice switch from `SNAPSHOT` to `LOCAL` for the identical `objectId`.
+- **G** — an `AMBIGUOUS` three-family selection carries zero Snapshot
+  actionability (presentation degraded, inspection/material/distribute
+  all `null`) until an explicit choice resolves it, at which point all
+  four become available together.
+- **H** — removing a selected Snapshot's own source (via the real
+  `unregisterMaterializedSnapshotWorldSource()`) collapses resolved
+  selection, Snapshot inspection, material inspection, and
+  `distributablePublication` together; a subsequent distribute attempt is
+  a genuine no-op.
+- **I** — structural audit: `selectedEncounterInspection`,
+  `selectedEncounterPresentation`, and `selectedEncounterSnapshotInspection`
+  each individually extracted and checked to call no
+  discovery/resolution/materialization/placement/registration function of
+  any kind; `unregisterMaterializedSnapshotWorldSource()` confirmed still
+  unwired; `WorldEncounterKind` still carries exactly `PUBLICATION` and
+  `AVATAR`; no rank/trust/freshness/quality vocabulary in
+  `WorldSnapshotInspection.js`.
+
+`tests.html` gains one new entry, alphabetically adjacent to
+`WorldSnapshotInspection.test.js` — the same "register every new test
+file" discipline every prior test-adding milestone in this file already
+followed.
+
+Deliberately excluded, per this milestone's own audit-first brief:
+- **Wiring `unregisterMaterializedSnapshotWorldSource()` (or
+  `unregisterPeerWorldSource()`) into any UI action.** The audit reports
+  the finding; it does not act on it. Adding a Wanderer-facing "remove
+  this" action is a new capability for ALL THREE source families, not a
+  Snapshot-specific gap, and deserves its own deliberately scoped
+  milestone.
+- **Any new field on `application/WorldSnapshotInspection.js`'s own
+  descriptor.** This milestone confirmed the EXISTING descriptor is
+  already sufficient for every action already reachable; it adds none of
+  its own.
+- **Automatic Snapshot discovery, automatic materialization, automatic
+  verification, or automatic position consumption from the inspection
+  panel.** Confirmed absent, structurally, in Section I.
+- **Ranking, fallback, deduplication, trust, freshness, or lifecycle
+  vocabulary of any kind.** Inherited unchanged from every file in this
+  chain.
+- **A new World Encounter kind, or a new Snapshot-specific World
+  Encounter class.** `WorldEncounterKind` still carries exactly
+  `PUBLICATION` and `AVATAR`.
+
+```text
+0.9.174  World Source Lifecycle & Staleness Audit                    ✓
+0.9.175  World Source Selection Consistency Audit                    ✓
+0.9.176  World Snapshot Presentation                                 ✓
+0.9.177  World Snapshot Inspection Detail                            ✓
+0.9.178  World Snapshot Inspection Actionability Audit               ✓
+```
+
+### Recommendation
+
+With 0.9.178, the honest answer to "what can a Wanderer do with an
+inspected Snapshot" is: everything a LOCAL or PEER encounter can already
+do — inspect, select, have its material load through the ordinary path,
+distribute, and be discovered/attributed against — because every one of
+those gates was already keyed to `distributablePublication` alone, never
+to source family. **Nothing needed to be added.** That is this
+milestone's own most useful outcome: it closes the "???" this arc's own
+pipeline diagram left open with a verified "already true," not a new
+seam.
+
+The one loose thread worth naming for whoever picks up next: a
+Wanderer can register a Snapshot into their World (via `OwnPublicationPanel`)
+but has no way to remove one, and neither can they remove a peer's
+contribution — `unregisterMaterializedSnapshotWorldSource()` and
+`unregisterPeerWorldSource()` both already exist, unused, at the
+application layer. I would treat that as its own small, deliberately
+scoped milestone (a generic "stop showing me this source" action, decided
+once for all three families) rather than a Snapshot-specific fix — folding
+it into a Snapshot-only affordance would quietly re-introduce the
+asymmetry this audit worked to rule out.
