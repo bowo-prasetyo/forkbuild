@@ -128,6 +128,7 @@ import { executeSnapshotDistributionCommand } from '../application/SnapshotDistr
 import { composeDiscoverSnapshotRuntime } from '../application/DiscoverSnapshotRuntimeComposition.js';
 import { executeDiscoverSnapshotCommand } from '../application/DiscoverSnapshotCommand.js';
 import { executeDiscoverSnapshotCandidatesCommand } from '../application/DiscoverSnapshotCandidatesCommand.js';
+import { executeResolveSelectedSnapshotCommand } from '../application/ResolveSelectedSnapshotCommand.js';
 import { LocalDiscoveryProvider } from '../discovery/LocalDiscoveryProvider.js';
 import {
     composeDecentralizedWorldEncounterMaterialDiscoveryServices,
@@ -1781,6 +1782,26 @@ const discoverSnapshotCandidatesCommand = () => executeDiscoverSnapshotCandidate
     discoveryQueryService: snapshotDiscoveryQueryService
 });
 app.provide('discoverSnapshotCandidatesCommand', discoverSnapshotCandidatesCommand);
+
+// 0.9.152 — Selected Snapshot Candidate Resolution.
+//
+// `application/ResolveSelectedSnapshotCommand.js` (0.9.152) answers a
+// different question than `discoverSnapshotCommand` above — "resolve
+// EXACTLY this candidate the user selected" rather than "discover, then
+// resolve whichever candidate matches first." It needs
+// `resolver.resolveCandidate()`, never `resolver.resolve()` — `snapshotResolver`
+// is the SAME `DecentralizedSnapshotResolver` instance `discoverSnapshotCommand`
+// already wraps (0.9.152 added `resolveCandidate()` to that same class;
+// see that file's own header, "one actual candidate -> retrieval ->
+// verification path, never two") — never a second resolver construction,
+// and `snapshotRetrievalContentStore` is the SAME Arweave content store
+// `discoverSnapshotCommand` already uses, immediately above.
+const resolveSelectedSnapshotCommand = (candidate) => executeResolveSelectedSnapshotCommand({
+    candidate,
+    resolver: snapshotResolver,
+    contentStore: snapshotRetrievalContentStore
+});
+app.provide('resolveSelectedSnapshotCommand', resolveSelectedSnapshotCommand);
 
 app.use(router);
 app.mount('#app');

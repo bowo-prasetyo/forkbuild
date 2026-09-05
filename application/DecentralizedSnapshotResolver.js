@@ -111,6 +111,62 @@ import { DecentralizedSnapshotResolutionOutcome } from './DecentralizedSnapshotR
 //   SnapshotPlacementResolver.js, or application/
 //   SnapshotPlacementStoreRegistry.js.** All are read only, by this
 //   milestone's own test suite, never edited.
+//
+// 0.9.152 — Selected Snapshot Candidate Resolution.
+//
+// `resolve(contentHash)` answers "discover, then resolve WHATEVER matches
+// first" — exactly the question above, unchanged. World View's own
+// candidate browser (0.9.151) raised a genuinely different one: "the user
+// already looked at several discovered candidates and explicitly picked
+// ONE of them — resolve THAT SPECIFIC candidate, not whichever one
+// discovery would pick again." Re-running `resolve(selected.contentHash)`
+// cannot answer that question — if two candidates share a contentHash
+// (deliberately unranked, see "a deterministic first-match selection,"
+// above), it would silently re-select the first one, discarding the
+// user's own choice. `resolveCandidate(candidate)` is the narrow seam
+// this milestone adds to answer it instead: given a candidate's own
+// `{ contentHash, locator, storage }` — the exact shape `discoverQueryService.search()`
+// (via `application/DiscoverSnapshotCandidatesCommand.js`) already
+// produces — it performs LOCATION, RETRIEVAL, and VERIFICATION against
+// THAT locator, and nothing else. It never searches, never discovers, and
+// never substitutes a different candidate.
+//
+//   selected candidate { contentHash, locator, storage }
+//         │
+//         ▼
+//   resolveCandidate(candidate)   ★ (THIS)
+//         │
+//         ├── LOCATION     — a content store for candidate.storage
+//         ├── RETRIEVAL    — store.get(reference built from THIS locator)
+//         └── VERIFICATION — retrieved bytes hash to candidate.contentHash
+//         │
+//         ▼
+//   { outcome, bytes, candidates: [candidate], locator, storage, reason }
+//
+// ONE ACTUAL CANDIDATE -> RETRIEVAL -> VERIFICATION PATH, NEVER TWO.
+// `resolve()` is refactored to perform DISCOVERY and first-match
+// SELECTION itself, then hand the selected candidate to THIS SAME
+// `resolveCandidate()` for LOCATION/RETRIEVAL/VERIFICATION — never a
+// second, independently-written copy of that sequence. `resolve()`'s own
+// externally-observable contract (candidates/locator/storage/outcome/
+// reason/bytes) is unchanged by this refactor; see
+// tests/DecentralizedSnapshotResolution.test.js, untouched, still passing.
+//
+// NO DISCOVERY, NO RANKING, NO SELECTION LOGIC OF ITS OWN.
+// `resolveCandidate()` never calls `this._queryService.search()` and never
+// looks at any candidate other than the one it was handed — the caller
+// (a UI selection, or `resolve()`'s own first-match rule) already decided
+// which candidate this is. This is exactly the invariant the milestone
+// that added this method exists to protect: the candidate the caller
+// handed in is the candidate that gets resolved, never a substitute.
+//
+// SELECTION DOES NOT ESTABLISH VALIDITY. A candidate's own declared
+// `contentHash` is a claim, not evidence, exactly as it already is for
+// `resolve()` — `resolveCandidate()` performs the identical RETRIEVAL and
+// VERIFICATION steps `resolve()` already does, and reports
+// CONTENT_HASH_MISMATCH under the identical condition. Nothing about a
+// candidate having been explicitly selected (rather than discovered and
+// auto-matched) skips or weakens verification.
 export class DecentralizedSnapshotResolver {
     // queryService: an application/NostrSnapshotDiscoveryQueryService.js
     // instance (or anything duck-type compatible with it) — required,
@@ -171,25 +227,73 @@ export class DecentralizedSnapshotResolver {
         // header, "a deterministic first-match selection, never ranking."
         const selected = candidates[0];
 
+        // 2-4. LOCATION, RETRIEVAL, VERIFICATION — delegated to
+        // resolveCandidate(), the SAME method a caller resolving an
+        // explicitly USER-SELECTED candidate (never discovered by this
+        // call) also goes through — see this file's own header, "0.9.152
+        // — Selected Snapshot Candidate Resolution," "one actual
+        // candidate -> retrieval -> verification path, never two." Only
+        // `candidates` (the FULL discovered set, not just the one
+        // attempted) is overridden on the returned result — every other
+        // field is resolveCandidate()'s own, unchanged.
+        const candidateResult = await this.resolveCandidate(selected, { contentStore, storeRegistry });
+        return { ...candidateResult, candidates };
+    }
+
+    // resolveCandidate(candidate, { contentStore, storeRegistry }) ->
+    // Promise<{ outcome, bytes, candidates, locator, storage, reason }>.
+    //
+    // Resolves EXACTLY the candidate handed in — never a discovery
+    // search, never a selection among several. See this file's own
+    // header, "0.9.152 — Selected Snapshot Candidate Resolution," for the
+    // full contract and why `resolve(candidate.contentHash)` cannot
+    // substitute for this method when more than one candidate can share a
+    // contentHash.
+    //
+    // `candidate` is a plain `{ contentHash, locator, storage }` object —
+    // exactly the shape a discovered candidate already has (see
+    // `application/DiscoverSnapshotCandidatesCommand.js`'s own result
+    // shape) — never a `DecentralizedSnapshotResolver`-specific type.
+    // `candidates` on the returned result is always `[candidate]` — the
+    // one candidate this call actually attempted; a caller composing this
+    // from `resolve()`'s own discovery step overrides it with the full
+    // discovered set (see `resolve()`, above).
+    //
+    // Throws synchronously (before any I/O) only for a caller contract
+    // violation — a missing/malformed candidate — never for a discovery,
+    // store, or network failure; mirrors `resolve()`'s own restraint, one
+    // layer over.
+    async resolveCandidate(candidate, { contentStore = null, storeRegistry = null } = {}) {
+        if (!candidate || typeof candidate !== 'object') {
+            throw new Error('DecentralizedSnapshotResolver: resolveCandidate() requires a candidate');
+        }
+        if (!candidate.contentHash || typeof candidate.contentHash !== 'string') {
+            throw new Error('DecentralizedSnapshotResolver: resolveCandidate() requires a candidate with a contentHash');
+        }
+        if (!candidate.locator || typeof candidate.locator !== 'string') {
+            throw new Error('DecentralizedSnapshotResolver: resolveCandidate() requires a candidate with a locator');
+        }
+
         // 2. LOCATION — "the locator can be queried." An explicit
         // contentStore always wins over a storeRegistry lookup.
-        const resolvedStore = contentStore || (storeRegistry ? storeRegistry.get(selected.storage) : null);
+        const resolvedStore = contentStore || (storeRegistry ? storeRegistry.get(candidate.storage) : null);
         if (!resolvedStore) {
             return this._failure(
                 DecentralizedSnapshotResolutionOutcome.STORE_UNAVAILABLE,
-                `no content store available for storage '${selected.storage}'`,
-                candidates,
-                selected
+                `no content store available for storage '${candidate.storage}'`,
+                [candidate],
+                candidate
             );
         }
 
         // 3. RETRIEVAL — "bytes were obtained." Addressed by an AD-HOC
-        // ContentReference this class builds from the REQUESTED
-        // contentHash and the SELECTED candidate's own locator/storage —
-        // never a reference this class invents from the candidate's own
-        // (unverified) contentHash alone, so that a mismatched candidate
-        // is caught at verification, not silently trusted at this step.
-        const reference = new ContentReference({ hash: contentHash, uri: selected.locator, storage: selected.storage });
+        // ContentReference this class builds from THIS candidate's OWN
+        // contentHash and locator/storage — never a reference built from
+        // some OTHER, previously-requested contentHash, so that a
+        // candidate whose declared contentHash disagrees with its own
+        // bytes is caught at verification, not silently trusted at this
+        // step.
+        const reference = new ContentReference({ hash: candidate.contentHash, uri: candidate.locator, storage: candidate.storage });
         let bytes;
         try {
             bytes = await resolvedStore.get(reference);
@@ -197,38 +301,39 @@ export class DecentralizedSnapshotResolver {
             return this._failure(
                 DecentralizedSnapshotResolutionOutcome.CONTENT_UNAVAILABLE,
                 error.message,
-                candidates,
-                selected
+                [candidate],
+                candidate
             );
         }
         if (bytes === null || bytes === undefined) {
             return this._failure(
                 DecentralizedSnapshotResolutionOutcome.CONTENT_UNAVAILABLE,
                 'the referenced content is not available from this content store',
-                candidates,
-                selected
+                [candidate],
+                candidate
             );
         }
 
         // 4. VERIFICATION — "those bytes are the expected Snapshot."
-        // Discovery is not verification: a discovered locator resolving
-        // and genuinely retrieving bytes is never, by itself, treated as
-        // proof those bytes are the right ones.
+        // Selection is not verification, exactly as discovery is not
+        // verification: a selected locator resolving and genuinely
+        // retrieving bytes is never, by itself, treated as proof those
+        // bytes are the right ones.
         if (!reference.verify(bytes)) {
             return this._failure(
                 DecentralizedSnapshotResolutionOutcome.CONTENT_HASH_MISMATCH,
-                'retrieved content does not match the requested contentHash — discovery is not verification',
-                candidates,
-                selected
+                'retrieved content does not match the candidate\'s own declared contentHash — selection is not verification',
+                [candidate],
+                candidate
             );
         }
 
         return {
             outcome: DecentralizedSnapshotResolutionOutcome.RESOLVED,
             bytes,
-            candidates,
-            locator: selected.locator,
-            storage: selected.storage,
+            candidates: [candidate],
+            locator: candidate.locator,
+            storage: candidate.storage,
             reason: null
         };
     }
