@@ -68395,3 +68395,108 @@ my Publication." If that comparison turns out to be wanted, reuse
 `resolveSnapshotPublicationAttribution()` exactly as it stands (it already
 takes any `{ outcome, bytes, ... }` resolution result, regardless of which
 seam produced it) rather than inventing a second comparison function.
+
+## 0.9.153 — Selected Snapshot Resolution End-to-End Audit
+
+0.9.150 (candidate discovery), 0.9.151 (the candidate browser + selection),
+and 0.9.152 (`resolveCandidate()` + its command/UI wiring) each proved their
+own seam in isolation — 0.9.152's own `tests/SelectedSnapshotCandidateResolution.test.js`
+already gives exhaustive unit-level coverage of `resolveCandidate()` itself
+(a bare `DecentralizedSnapshotResolver` + `SnapshotPlacementStoreRegistry`)
+and of `OwnPublicationPanel`'s own state machine (driven by hand-written
+fake command functions). This milestone is a **test-only audit**, the
+identical shape `tests/SnapshotAttributionEndToEndAudit.test.js` (0.9.145)
+already gave discovery/attribution — **zero new production code** — proving
+the complete chain composes end to end through the REAL composed runtime
+(`composeDiscoverSnapshotRuntime`, a real `ArweaveContentStore`, a real
+`NostrSnapshotDiscoveryPublisher`/`NostrSnapshotDiscoveryQueryService` pair)
+and the REAL `OwnPublicationPanel` UI action, and that the new
+explicit-selection path cannot accidentally regress into discovery-based
+substitution.
+
+`tests/SelectedSnapshotResolutionEndToEndAudit.test.js` — ten sections:
+
+- **A** — two candidates sharing ONE contentHash (two independently placed
+  copies of byte-identical content, two different locators), discovered in
+  both orders. A spy wrapping the real composed content store proves the
+  EXPLICITLY SELECTED candidate's own locator is the one genuinely queried
+  — exactly once — and the other, un-selected candidate's locator is never
+  queried at all, regardless of discovery order.
+- **B** — exact candidate identity (`contentHash`/`locator`/`storage`)
+  survives UI selection -> `ResolveSelectedSnapshotCommand` -> `resolver.resolveCandidate()`
+  -> `contentStore.get()` unreconstructed, and stays distinct from
+  Publication id, Arweave transaction id, and Nostr event id.
+- **C** — a `queryService` whose `search()` throws if ever reached is
+  wired into the SAME resolver instance the selected-resolution command
+  uses; selected resolution, driven through the real UI action, still
+  succeeds with zero calls to `search()` — no discovery, no ranking, no
+  candidate selection of its own.
+- **D** — a candidate whose real locator serves bytes disagreeing with its
+  own declared `contentHash` is refused (`CONTENT_HASH_MISMATCH`) through
+  the real composed runtime and UI, never `RESOLVED` — a candidate's own
+  metadata never manufactures success.
+- **E** — `resolveSelectedSnapshot()` reports `RESOLVED`, never `MATCH`,
+  even for a Snapshot that genuinely belongs to the current Publication;
+  `snapshotAttributionResult` stays untouched; only a separate, explicit
+  call to `resolveSnapshotPublicationAttribution()` produces `MATCH` —
+  RESOLUTION and ATTRIBUTION stay two explicitly separate steps.
+- **F** — `resolve(discoveryTag, contentHash)` is unchanged: still
+  discovers, still selects first-match, still delegates to
+  `resolveCandidate()` — checked both behaviorally (through the real
+  composed runtime) and structurally (source inspection of `resolve()`'s
+  own body).
+- **G** — a structural sweep: `application/ResolveSelectedSnapshotCommand.js`
+  calls `resolver.resolveCandidate()` exactly once and contains no
+  retrieval/hashing/verification of its own; `OwnPublicationPanel.js`
+  contains none either; no `SELECTED_CANDIDATE_FAILED`-shaped outcome
+  vocabulary exists anywhere in the seam; `DecentralizedSnapshotResolutionOutcome`
+  still carries exactly its five pre-existing values.
+- **H** — UI state isolation through the real composed runtime: selecting
+  a different candidate clears only the stale resolution result (candidate
+  discovery itself is untouched); a Publication change clears the
+  selection and its resolution together; a stale in-flight resolution can
+  never overwrite the CURRENT selection's state, even when it genuinely
+  resolves to `RESOLVED`.
+- **I** — `STORE_UNAVAILABLE`, `CONTENT_UNAVAILABLE`, and
+  `CONTENT_HASH_MISMATCH` are each reached and reported verbatim through
+  the real selected-resolution UI path — no invented failure vocabulary.
+- **J** — THE FLAGSHIP: three real, independently placed candidates (A, B,
+  C) discovered under one shared `discoveryTag`, where A and B
+  deliberately point at two genuinely DIFFERENT valid Snapshots. Selecting
+  B resolves EXACTLY B's own bytes (never A's or C's); attributing the
+  resolved Snapshot against a Publication whose own content is B's reports
+  `MATCH`, while attributing the IDENTICAL resolved Snapshot against a
+  Publication whose own content is A's reports `NO_MATCH` — and,
+  symmetrically, selecting A instead produces the opposite pair of
+  verdicts. Selection is proven to materially determine the answer, not
+  merely relabel an unchanged result.
+
+This audit also closed one small, unrelated bookkeeping gap it found along
+the way: `tests/SelectedSnapshotCandidateResolution.test.js` (0.9.152) had
+never been added to `tests.html`'s own browser test-runner list — both that
+file and this milestone's own new audit are now listed there, alphabetically
+placed.
+
+```text
+0.9.150  Snapshot Candidate Discovery Command                      ✓
+0.9.151  World View Snapshot Candidate Browser                     ✓
+0.9.152  Selected Snapshot Candidate Resolution                    ✓
+0.9.153  Selected Snapshot Resolution End-to-End Audit              ✓
+```
+
+### Recommendation
+
+This audit passed without finding a single regression — the boundary
+between candidate SELECTION and RESOLUTION, and between RESOLUTION and
+ATTRIBUTION, holds through the real composed runtime and the real UI, not
+merely in unit isolation. I would now consider **Selected Snapshot
+Attribution** (letting a user explicitly select one of several announced
+candidates and obtain an attribution verdict for THAT EXACT selected
+Snapshot, rather than only for whichever contentHash `discoverOwnSnapshot()`
+already asks about) the next genuine feature — reusing
+`resolveSnapshotPublicationAttribution()` exactly as it stands, called
+explicitly over `selectedSnapshotResolutionResult`, the same way this
+milestone's own Section E and Section J already called it by hand. That
+would complete the semantic meaning of the candidate browser 0.9.151
+introduced: discover, select, resolve, and now also attribute — one
+exact, user-chosen Snapshot at a time.
