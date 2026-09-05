@@ -71152,3 +71152,185 @@ structural sweep — no I/O, no cryptographic re-verification,
          including the same-content-hash/different-Publication case this
          milestone's own Section C already exercises one layer down.
 ```
+
+## 0.9.173 — Decentralized Snapshot Spatial E2E Audit
+
+0.9.171 taught a Snapshot discovery candidate to CARRY a publisher's own
+position claim; 0.9.172 taught `ui/components/OwnPublicationPanel.js` to
+explicitly CONSUME one — but stopped one seam short of the World itself:
+neither milestone ever drove a claim through REGISTRATION into a live
+`WorldDiscoverySourceRegistry`, a real `WorldEncounterCanvas` projection, a
+Wanderer's own selection, or ordinary World material loading. This
+milestone is that missing horizontal proof. **Test-only, exactly like
+0.9.162/0.9.164/0.9.165/0.9.167/0.9.170 — adding zero production code.**
+
+```text
+PUBLISH -> DISCOVER -> SELECT -> RESOLVE -> VERIFY -> MATERIALIZE
+  -> CONSUME CLAIM -> PLACE -> REGISTER -> WORLD ENCOUNTER -> SELECT
+  -> LOAD MATERIAL -> RENDER
+```
+
+**THE INVARIANT THIS AUDIT SET OUT TO PROVE:** a Snapshot published by
+someone else, carrying only a publisher's own claimed position (no
+pre-existing local placement for the receiver's own Publication at all),
+genuinely travels the complete path above and renders in World View AT
+that claimed position — through the real, unmodified `OwnPublicationPanel.js`/
+`SnapshotWorldPositionClaim.js`/`SnapshotWorldPlacement.js`/
+`MaterializedSnapshotWorldDiscoveryBridge.js`/`WorldEncounterCanvas.js`/
+`WorldEncounterMarker.js` production chain throughout — while every
+identity boundary 0.9.163/0.9.171/0.9.172 already established stays
+intact one layer further downstream than any of them individually tested.
+
+`tests/DecentralizedSnapshotSpatialE2EAudit.test.js` — eleven sections,
+run against the real, unmodified production code throughout:
+
+- **A** — FLAGSHIP: a complete stranger Snapshot, with NO pre-existing
+  local placement for the receiver's own Publication, travels PUBLISH
+  through RENDER — discovered over a real (fake-transport-backed) Nostr
+  network, resolved and verified against a real Arweave content store,
+  materialized locally, its claim explicitly consumed, placed, registered
+  into a real `WorldDiscoverySourceRegistry`, encountered by a real,
+  mounted `WorldEncounterCanvas`, explicitly selected, and loaded through
+  the ordinary `materialSources.local` path — landing exactly at the
+  publisher's own claimed position, never a fabricated or local one.
+- **B** — the claimed position's own x/y/z survive DISCOVER -> claim
+  consumption -> PLACE -> REGISTER -> World Encounter row -> projected
+  canvas coordinates bit-for-bit, checked against `WorldEncounterCanvas.js`'s
+  own known `projectToCanvas()` formula (`WORLD_HALF_SPAN = 50`,
+  `CANVAS_SIZE = 600`) rather than merely "some number."
+- **C** — publisher identity binding, driven all the way through
+  registration: a claim addressed to Publication A is MISMATCHED against
+  Publication B (identical `contentHash`), falls back to UNPLACED, and
+  registers NOTHING into the World — confirmed by `registry.listSources().length
+  === 0` for the mismatched target — while the SAME claim, checked against
+  its own correctly-addressed Publication A, registers normally.
+- **D** — receiver-local placement vs. claimed placement, run end to end
+  as two deliberately different, intentional behaviors over the SAME
+  receiver (whose own pre-existing local placement never moves, never
+  gets overwritten, and simply goes unused the moment a claim is
+  consumed) — plus the ABSENT/MISMATCHED/CLAIMED distinction made
+  directly observable as three individually different outcome values,
+  never letting MISMATCHED collapse into, or become indistinguishable
+  from, ABSENT before any placement fallback decision is made.
+- **E** — explicit consumption only, including the case 0.9.172's own
+  suite never tried: calling `placeMaterializedSnapshot()` BEFORE ever
+  clicking "Use Claimed Position" still falls back to UNPLACED, never
+  peeking at the candidate's own `claimedPosition` directly — the claim
+  stays inert until explicitly consumed regardless of call order, and
+  DISCOVER/SELECT/RESOLVE/MATERIALIZE never touch the World registry at
+  all.
+- **F** — placement identity: `claim:<contentHash>:<publicationId>` is
+  deterministic (repeated derivation), distinct between Publications,
+  independent of locator, independent of the underlying Nostr event id
+  (proven through two genuinely separate, really-published Nostr events
+  for the identical contentHash/publicationId pair), and — confirmed by
+  directly querying a real `placement/LocalPlacementRegistry.js` after a
+  full register cycle — never written into it: a claim-derived World
+  placement and a real `PlacementRecord` remain two entirely separate
+  facts.
+- **G** — spatial authority: after registration, deleting every trace of
+  the originating Nostr event from the (fake) relay leaves the rendered
+  World position completely unaffected, proving the registry — never the
+  event — is the spatial authority; a structural sweep confirms
+  `WorldDiscoverySourceRegistry.js`, `WorldDiscoveryRegistryProjection.js`,
+  `WorldEncounterIntegration.js`, `core/WorldEncounter.js`,
+  `WorldEncounterCanvas.js`, and `WorldEncounterMarker.js` import no
+  Nostr/Arweave machinery of any kind.
+- **H** — material independence: two Publications, identical Snapshot
+  bytes, two opposite claimed positions (`(1000,1000,1000)` vs.
+  `(-1000,-1000,-1000)`) — contentHash, locator, retrieved bytes, and
+  resolution outcome are all bit-for-bit identical regardless of the
+  claimed position that accompanies them, and a CLAIMED result itself
+  carries no content-identity field of any kind.
+- **I** — rendering convergence: a claimed Snapshot and a `'local'`-origin
+  Publication render side by side from the identical `projectedPublications`
+  array, carry the identical projected shape, and both load `AVAILABLE`
+  material through the identical `selectEncounter()`/
+  `refreshMaterialInspection()` sequence; a narrowly-scoped structural
+  sweep (mirroring 0.9.165's own Section E technique around this file's
+  OTHER, legitimate, unrelated Snapshot-distribution UI) confirms
+  `projectToCanvas()`, `projectedPublications()`, and `projectedAvatars()`
+  each carry zero "snapshot" vocabulary, and `WorldEncounterMarker.js`
+  carries none anywhere in the file — there is no `if snapshot ...`
+  rendering branch.
+- **J** — failure and legacy vocabulary: an absent claim, a mismatched
+  claim, a materialization failure passed through even with a claim
+  already consumed, a genuine `CONTENT_HASH_MISMATCH` on a forged
+  candidate that itself carries a claim, and a resolution that never
+  reached RESOLVED all still produce their own pre-existing,
+  unmodified outcome vocabulary — no new value was ever needed.
+- **K** — FULL FLAGSHIP: two Publications, ONE shared `contentHash`, two
+  independently publisher-claimed positions, driven through DISCOVER
+  (one call surfacing both candidates) and independently through SELECT
+  -> RESOLVE -> MATERIALIZE -> CONSUME CLAIM -> PLACE -> REGISTER,
+  landing in the SAME `WorldDiscoverySourceRegistry` under two distinct,
+  `publicationId`-folded origins (0.9.163) — then rendered
+  SIMULTANEOUSLY through one mounted `WorldEncounterCanvas`: two
+  distinct markers, two distinct titles, two distinct projected screen
+  positions, and two independently, correctly loaded Publications when
+  each is selected in turn.
+
+**This audit found no new gap.** Every section confirms that 0.9.171's
+own discovery-layer claim and 0.9.172's own explicit consumption seam
+compose correctly with every World-registration/rendering/material-loading
+milestone built before either of them (0.9.9 through 0.9.167), under
+conditions none of their own test suites individually constructed: a
+claim carried all the way to a live, mounted `WorldEncounterCanvas`; a
+receiver with genuinely zero pre-existing local placement; two
+Publications sharing one contentHash coexisting simultaneously in one
+running World; and the originating Nostr event deliberately destroyed
+after registration to prove the registry, not the event, is what a
+rendered position actually depends on. No production file was added or
+modified.
+
+Deliberately excluded, per this milestone's own narrow scope, and per its
+own explicit brief:
+- **Reconciling, ranking, timestamping, or trusting among several claims
+  for the SAME Publication.** Section F documents, as an observed fact
+  rather than a gap this milestone closes, that several valid claims can
+  coexist unranked and that the current explicit-candidate-selection
+  mechanism (0.9.151) alone decides which one is ever consumed — never a
+  "latest wins" or "most trusted" policy. `application/
+  SnapshotWorldPositionClaim.js`'s own "deliberately excluded" section
+  remains untouched by this audit.
+- **Signature verification of a position claim, staleness/currency
+  judgment, or geospatial/collision validation of any kind.**
+- **Any change to `ui/components/OwnPublicationPanel.js`,
+  `application/SnapshotWorldPositionClaim.js`,
+  `application/SnapshotWorldPlacement.js`,
+  `application/MaterializedSnapshotWorldDiscoveryBridge.js`,
+  `ui/components/WorldEncounterCanvas.js`, or
+  `ui/components/WorldEncounterMarker.js`.** This audit confirms their
+  existing behavior; it found no defect to fix.
+
+```text
+0.9.171  Decentralized Snapshot World Position Claim                 ✓
+0.9.172  Decentralized Snapshot Position Claim Consumption           ✓
+0.9.173  Decentralized Snapshot Spatial E2E Audit                    ✓
+```
+
+### Recommendation
+
+With 0.9.173, the decentralized spatial recovery path can be regarded as
+complete: a Snapshot published by someone else can be discovered, its
+publisher's own claimed position explicitly consumed, placed, registered,
+encountered, selected, loaded, and rendered — coexisting correctly with
+receiver-local placement, with content-hash collisions across different
+Publications, and with local/peer material — entirely through machinery
+that already existed one milestone at a time, never a new spatial
+algorithm, a new World-state authority, or a Snapshot-specific rendering
+path.
+
+Content identity, retrieval identity, discovery identity, Publication
+identity, spatial identity, and registry origin remain six separate
+facts, never merged, at every layer this audit exercised.
+
+Per this milestone's own brief, I would NOT add another Snapshot-specific
+milestone at this point — the pattern 0.9.167's own recommendation
+already named for the Snapshot pipeline's WORLD ENCOUNTER-through-RENDER
+half now holds for its spatial-claim half too. The next milestone should
+look for the next genuine World/product capability gap OUTSIDE the
+Snapshot pipeline entirely, the way 0.9.168's own World View Capability
+Reassessment already did one plateau earlier — never a milestone named
+for the fact that more machinery COULD still be added to Snapshot
+handling, with no actual capability gap driving it.
