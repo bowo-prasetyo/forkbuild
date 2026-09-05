@@ -3336,20 +3336,29 @@ export default {
                      surface from WorldEncounterCanvas's own "Distribute
                      Snapshot" action.
 
-                     0.9.159 — `placementInfo` is the SAME `activePlacementInfo`
+                     0.9.159 — placementInfo is the SAME activePlacementInfo
                      (session.getPlacementInfo(activeId), computed in
                      refreshSpatialUI() above) the Placement Info panel
                      immediately below already renders — handed straight
                      through, unchanged, so "Place Materialized Snapshot"
                      reuses this replica's EXISTING spatial authority for
                      the active Publication rather than looking one up a
-                     second time. -->
+                     second time.
+
+                     0.9.160 — worldDiscoverySourceRegistry is the SAME
+                     app-wide registry instance injected below and handed
+                     to WorldEncounterCanvas as its own registry prop —
+                     handed to OwnPublicationPanel too, unchanged, so
+                     "Register Placed Snapshot" mutates the EXACT registry
+                     WorldEncounterCanvas is already subscribed to,
+                     never a second, disconnected one. -->
                 <OwnPublicationPanel
                     v-if="cameraPosition"
                     :publication="ownPublication"
                     :snapshotDistributionCommand="distributeWorldEncounterSnapshot"
                     :discoverSnapshotCommand="discoverOwnSnapshot"
                     :discoverSnapshotCandidatesCommand="discoverSnapshotCandidatesCommand"
+                    :worldDiscoverySourceRegistry="worldDiscoverySourceRegistry"
                     :resolveSelectedSnapshotCommand="resolveSelectedSnapshotCommand"
                     :materializeSelectedSnapshotCommand="materializeSelectedSnapshotCommand"
                     :placementInfo="activePlacementInfo"
