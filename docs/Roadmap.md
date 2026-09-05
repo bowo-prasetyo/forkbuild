@@ -70294,3 +70294,229 @@ milestones past this audit risks building unnecessary parallel
 architecture where none is needed anymore. The next milestone should look
 for the next genuine capability gap OUTSIDE the Snapshot pipeline, rather
 than inventing another Snapshot layer.
+
+## 0.9.168 — World View Capability Reassessment & Architecture Audit
+
+0.9.167's own closing recommendation, immediately above, asked for exactly
+this: a pause before adding anything else, spent asking a wider question
+than any single milestone in the 0.9.150-through-0.9.167 Snapshot family
+was scoped to ask —
+
+> What genuine World View capability is still missing, now that local,
+> peer, and decentralized Snapshot sources all converge into the same
+> World machinery?
+
+TEST-ONLY, EXACTLY LIKE 0.9.162/0.9.164/0.9.165/0.9.167. Every file this
+milestone touches lives under `tests/` alone (Section F's own structural
+sweep, and this section's own closing line). Nothing in
+`application/WorldDiscoverySourceRegistry.js`,
+`application/MaterializedSnapshotWorldDiscoveryBridge.js`,
+`peer/PeerWorldDiscoveryLifecycleBridge.js`,
+`ui/components/WorldEncounterCanvas.js`, or any other production file was
+edited to produce this milestone's own findings — every one of them is
+read, real, and unmodified, exactly as every audit in this family already
+holds.
+
+```text
+LOCAL
+  │
+  ├── material
+  ├── placement
+  └── registry
+          │
+PEER ─────┤
+          │
+SNAPSHOT ─┘
+          ↓
+WorldDiscoverySourceRegistry
+          ↓
+assembleWorldDiscoveryInputs()
+          ↓
+deriveWorldEncounters()
+          ↓
+WorldEncounterCanvas
+          ↓
+materialSourceFor()
+          ↓
+World material presentation
+```
+
+`tests/WorldViewCapabilityReassessmentAudit.test.js` — six sections:
+
+- **A — source-family convergence.** A registry holding local, peer, and
+  Snapshot sources all at once projects through the existing, unmodified
+  `describeWorldFromDiscoveryRegistry()` into a result whose ENTIRE
+  structure — walked recursively, not merely at the top level — carries no
+  `origin`/`source`/`sourceOrigin` field anywhere. The same holds for the
+  rendered, projected markers a mounted `WorldEncounterCanvas` produces
+  from that result. `origin` resurfaces exactly once — at encounter
+  SELECTION, where `resolvedEncounterSelection.origin` carries the real
+  registered source's own identity forward — confirming the recommended
+  invariant directly: **source provenance disappears from the rendering
+  architecture except where it is genuinely needed for material
+  acquisition.**
+- **B — the Snapshot termination boundary, swept wider than 0.9.167's own
+  Section J.** Beyond the two files that section already checked
+  (`WorldDiscoverySourceRegistry.js`, and `WorldEncounterCanvas.js`'s own
+  narrowly-scoped methods), this section sweeps
+  `WorldDiscoveryRegistryProjection.js`, `core/WorldEncounter.js`,
+  `WorldEncounterReadModel.js`, `WorldEncounterView.js`,
+  `WorldEncounterSelectionOutcome.js`,
+  `WorldEncounterSelectionResolution.js`, and
+  `WorldEncounterMaterialInspection.js` — every file the ENCOUNTER ->
+  SELECT -> LOAD -> RENDER path actually touches — for any
+  Snapshot/Nostr/Arweave vocabulary. None exists in any of them. The
+  architectural rule 0.9.167's own brief asked to make explicit is
+  confirmed directly, file by file:
+
+  ```text
+  Snapshot-specific:
+  DISCOVER → SELECT → RESOLVE → VERIFY
+  → ATTRIBUTE → MATERIALIZE → PLACE → REGISTER
+
+                   ↓
+
+  Existing World infrastructure:
+  ENCOUNTER → SELECT → LOAD → RENDER
+  ```
+
+- **C — the capability matrix.** For local, peer, and Snapshot alike, one
+  running scenario proves, in order: registry participation (all three
+  hold their own slot), World placement (each carries its own distinct
+  position), encounter derivation (all three appear as derived
+  encounters), encounter selection (each resolves unambiguously to exactly
+  its own registered origin), material loading (each loads `AVAILABLE`),
+  rendering (all three project as markers simultaneously), and
+  registry-level source lifecycle (`setSource()`/`removeSource()` behave
+  identically for all three origins, `'local'` included — 0.9.165's own
+  Section D finding, re-confirmed here as one row of a wider matrix rather
+  than a standalone claim). Every cell matches the brief's own table:
+
+  | Capability             | Local | Peer | Snapshot |
+  | ---------------------- | ----: | ---: | -------: |
+  | Registry participation |     ✓ |    ✓ |        ✓ |
+  | World placement        |     ✓ |    ✓ |        ✓ |
+  | Encounter derivation   |     ✓ |    ✓ |        ✓ |
+  | Encounter selection    |     ✓ |    ✓ |        ✓ |
+  | Material loading       |     ✓ |    ✓ |        ✓ |
+  | Rendering              |     ✓ |    ✓ |        ✓ |
+  | Source lifecycle       |     ✓ |    ✓ |        ✓ |
+
+  No asymmetry was found at this layer.
+- **D — World lifecycle semantics.** REGISTER -> OBSERVE -> SELECT -> LOAD
+  -> RENDER -> UNREGISTER is proven concretely and completely for peer and
+  Snapshot — each carries its own dedicated `register*`/`unregister*`
+  pair, deriving the identical origin both directions, and each
+  notification is observed directly via `registry.subscribe()`, counted
+  across every register/unregister call. `'local'` carries no
+  `unregisterLocalWorldSource()` of its own — re-confirmed as the SAME
+  documented, intentional PRODUCTION-USAGE fact 0.9.165's own Section D
+  already named (the real running composition root sets `'local'` once at
+  startup and never replaces or removes it live), never a registry
+  limitation: Section C's own capability 7/7 already proved the registry
+  itself removes `'local'` exactly like any other origin. A structural
+  sweep across every file this section touches confirms no `ACTIVE`,
+  `EXPIRED`, `STALE`, `SYNCED`, `INACTIVE`, or `REVOKED` vocabulary exists
+  anywhere — per the brief's own instruction not to invent lifecycle
+  states without existing behavior to justify them, none were invented
+  here either.
+- **E — temporal independence, and the one genuine seam this audit
+  found.** Two independence claims are proven structurally: Snapshot's
+  own DISCOVER-through-REGISTER pipeline runs on no timer of its own
+  (a `setInterval`/`setTimeout` sweep across its own command/bridge
+  files comes back empty — every stage still runs explicitly, one call at
+  a time), and the registry's own change notification is synchronous, not
+  timer-driven (proven directly: a subscriber fires inside the very same
+  `setSource()` call, with no `await`/`flush()` needed to observe it).
+  A THIRD claim — "World registry changes != material refresh" — does
+  **not** fully hold, and this section proves the counterexample directly
+  rather than asserting the invariant blind: with a Publication already
+  selected and its material already loaded once, registering an entirely
+  unrelated peer (whose own arrival changes nothing about the selected
+  Publication's identity, origin, or position — confirmed directly by
+  comparing `resolvedEncounterSelection` before and after) triggers a
+  SECOND `materialSources.local.load()` call for that SAME selection.
+  The cause traces to one exact line:
+  `ui/components/WorldEncounterCanvas.js`'s own `refreshSelectionOutcome()`
+  unconditionally tail-calls `refreshMaterialInspection()` on every one of
+  its own triggers — including the registry's own change listener — with
+  no comparison against the PREVIOUS `resolvedEncounterSelection` to
+  decide whether a reload is actually warranted. This has been true since
+  0.9.20/0.9.39 introduced that tail-call; it is not a regression this
+  milestone caused. Correctness is unaffected — 0.9.39's own
+  `materialInspectionRequestId` guard already exists precisely to keep a
+  stale response from overwriting a fresher one — but every unrelated
+  membership change today still costs one redundant async material-load
+  call for whatever encounter happens to be selected. **This is a real,
+  named, unfixed architectural seam** — per this whole family's own
+  restraint (0.9.163 was separate, later work from 0.9.162's own audit
+  finding), it is proven and characterized here, not patched.
+- **F — structural sweep.** `WorldEncounterMaterialLoadStatus` still
+  carries exactly its own two existing values
+  (`AVAILABLE`/`UNAVAILABLE`); `SnapshotWorldRegistrationOutcome` still
+  carries exactly its own one existing value (`REGISTERED`); every
+  collaborator this audit exercises resolves to a real, already-existing
+  export, confirmed by type rather than merely by import path. This
+  milestone adds no production file.
+
+**The answer to this milestone's own opening question.** No genuine
+missing World View capability was found. Sections A through D each
+confirm an invariant the 0.9.150-through-0.9.167 family already
+established now holds at the wider, cross-source-family scope this
+milestone was scoped to check, and none of them found an asymmetry that
+was not already a known, deliberate, documented production-usage choice.
+Section E is the one exception, and it is deliberately narrow: not a
+missing capability, but an existing INEFFICIENCY in an already-working
+path — a redundant material reload, not an incorrect one, and not a
+Snapshot-specific defect at all (it reproduces identically for local and
+peer selections, exactly as readily as for a Snapshot one).
+
+Deliberately excluded, per this milestone's own narrow scope, and per the
+brief that requested it:
+- **Fixing Section E's own finding.** Naming and proving the seam is this
+  milestone's job; closing it — most likely by comparing
+  `resolvedEncounterSelection` against its own previous value inside
+  `refreshSelectionOutcome()` before tail-calling
+  `refreshMaterialInspection()` — is separate, later, unscheduled work.
+- **Another `Snapshot*` class, Snapshot caching, automatic Snapshot
+  discovery/materialization/registration, deduplication, ranking,
+  trust/ownership semantics, retry/failover, new lifecycle states, a
+  Snapshot-specific renderer or material source, or any change to
+  `WorldDiscoverySourceRegistry.js`/`WorldEncounterCanvas.js`/
+  `WorldEncounterMaterialLoading.js`.** Per this milestone's own brief,
+  none of these were needed, and none were added.
+- **Populating the registry's shared `'local'` origin from general
+  local-publication storage.** Still the same separate, much older,
+  already-named gap (0.9.14) every milestone in this family since 0.9.160
+  has already declined to close.
+
+```text
+0.9.161  Snapshot World Rendering                                    ✓
+0.9.162  Snapshot World Convergence Audit                            ✓
+0.9.163  Snapshot World Origin Collision Fix                         ✓
+0.9.164  Snapshot World Source Identity Audit                        ✓
+0.9.165  World Discovery Participation Audit                         ✓
+0.9.166  Snapshot World Encounter Material Loading                   ✓
+0.9.167  Snapshot World Material Loading E2E Audit                   ✓
+0.9.168  World View Capability Reassessment & Architecture Audit     ✓
+```
+
+### Recommendation
+
+Per the brief that requested this milestone, I would deliberately NOT
+pre-name 0.9.169 as a fresh feature — the whole point of 0.9.168 was to
+let the next milestone come from evidence rather than momentum. This
+audit found exactly one piece of evidence: Section E's own named seam. I
+would recommend **0.9.169 — Material Inspection Refresh Precision**: a
+narrowly-scoped fix, confined to
+`ui/components/WorldEncounterCanvas.js`'s own `refreshSelectionOutcome()`,
+that skips its own tail-call to `refreshMaterialInspection()` when
+`resolvedEncounterSelection` is reference-equal (or field-for-field
+identical) to its own value immediately before the triggering registry
+notification — closing the one redundant-reload gap this milestone proved
+without touching material loading's own success/failure semantics,
+`materialSourceFor()`'s own routing, or any Snapshot-specific code at all.
+Everything else this milestone checked — source-family convergence, the
+Snapshot termination boundary, the capability matrix, and World lifecycle
+semantics — found no gap to schedule work against, and I would not invent
+one where this audit found none.
