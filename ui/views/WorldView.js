@@ -536,6 +536,16 @@ export default {
         // wrapper function of this view's own — its own `(candidate) ->
         // Promise<...>` shape already matches that prop exactly.
         const resolveSelectedSnapshotCommand = inject('resolveSelectedSnapshotCommand', null);
+        // 0.9.158 — Selected Snapshot Materialization. The SAME app-wide
+        // `materializeSelectedSnapshotCommand` `ui/main.js` now composes
+        // (reusing the SAME `storeSnapshotContentUseCase` every other
+        // explicit materialization action already shares) — a thin
+        // `(resolution) -> Promise<{ outcome, contentHash, contentReference,
+        // reason, source }>` capability. Like `resolveSelectedSnapshotCommand`,
+        // it is handed straight through to `OwnPublicationPanel`, with no
+        // wrapper function of this view's own — its own `(resolution) ->
+        // Promise<...>` shape already matches that prop exactly.
+        const materializeSelectedSnapshotCommand = inject('materializeSelectedSnapshotCommand', null);
         // 0.9.110 — Decentralized Material Retrieval Runtime Composition.
         // The SAME app-wide `DecentralizedWorldDiscoveryLeadRegistry`
         // `ui/main.js` now composes, handed straight through as
@@ -3264,7 +3274,8 @@ export default {
             distributeWorldEncounterSnapshot,
             discoverOwnSnapshot,
             discoverSnapshotCandidatesCommand,
-            resolveSelectedSnapshotCommand
+            resolveSelectedSnapshotCommand,
+            materializeSelectedSnapshotCommand
         };
     },
     template: `
@@ -3331,6 +3342,7 @@ export default {
                     :discoverSnapshotCommand="discoverOwnSnapshot"
                     :discoverSnapshotCandidatesCommand="discoverSnapshotCandidatesCommand"
                     :resolveSelectedSnapshotCommand="resolveSelectedSnapshotCommand"
+                    :materializeSelectedSnapshotCommand="materializeSelectedSnapshotCommand"
                 />
             <!-- 0.5.7 — World View UX & Progressive Exploration. Home
                  and Locations stay plain navigation utilities; Explore /

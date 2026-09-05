@@ -463,6 +463,74 @@ import { resolveSnapshotPublicationAttribution } from '../../application/Snapsho
 //   NO_MATCH, plus `DecentralizedSnapshotResolutionOutcome`'s own
 //   pre-existing failure values passed through unchanged, are ever
 //   produced.
+//
+// 0.9.158 — Selected Snapshot Materialization.
+//
+// 0.9.152 through 0.9.157 proved DISCOVER -> SELECT -> RESOLVE -> VERIFY ->
+// ATTRIBUTE complete and correct, entirely in memory: a verified
+// Snapshot's own bytes live only inside `selectedSnapshotResolutionResult`,
+// gone the moment the Publication changes or this component unmounts.
+// Nothing built so far ever turns "verified" into "possessed" — the exact
+// gap `application/MaterializeSnapshotFromPlacementUseCase.js` (0.8.35)
+// and `application/MaterializeSnapshotFromPeerUseCase.js` (0.8.37) already
+// closed for their own explicit sources. This fills the identical gap for
+// a browsed-and-selected, Nostr-discovered candidate:
+//
+//   selectedSnapshotResolutionResult   (0.9.152, unchanged — the
+//                                        RESOLVER's own already-verified
+//                                        result)
+//           │
+//           │ click "Materialize Selected Snapshot"
+//           ▼
+//   materializeSelectedSnapshot()
+//           │
+//           ▼
+//   materializeSelectedSnapshotCommand(selectedSnapshotResolutionResult)
+//           (application/MaterializeSelectedSnapshotCommand.js, 0.9.158 —
+//           injected, mirroring resolveSelectedSnapshotCommand exactly)
+//           │
+//           ▼
+//   selectedSnapshotMaterializationResult   ★ (THIS milestone's own new field)
+//
+// AN INDEPENDENT SIBLING OF "ATTRIBUTE SELECTED SNAPSHOT," NEVER A SEQUEL
+// TO IT. Both `materializeSelectedSnapshot()` and `attributeSelectedSnapshot()`
+// read the SAME `selectedSnapshotResolutionResult`, but neither depends on
+// the other having run, and clicking one never triggers the other —
+// materialization answers "can this replica now retrieve these bytes
+// locally," attribution answers "does this correspond to the current
+// Publication," and a person may want either answer, both, or neither. See
+// `application/MaterializeSnapshotFromSelectedCandidateUseCase.js`'s own
+// header for why materialization never touches attribution, a placement,
+// or a World position.
+//
+// CONSUMES THE RESOLUTION RESULT, NEVER THE CANDIDATE — identical
+// restraint to `attributeSelectedSnapshot()`'s own "compares against the
+// resolver's own verified result," one sibling over.
+// `materializeSelectedSnapshot()` reads `this.selectedSnapshotResolutionResult`,
+// never `this.selectedSnapshotCandidate`. A candidate that was merely
+// SELECTED, never resolved, has no bytes to materialize at all.
+//
+// STALE MATERIALIZATION IS CLEARED WHEREVER THE RESOLUTION RESULT IT
+// DEPENDS ON ALREADY IS — the identical rule `selectedSnapshotAttributionResult`
+// already holds, one sibling over: `selectSnapshotCandidate()` (a
+// different selection), `resolveSelectedSnapshot()` (a fresh resolution
+// attempt), and the Publication-change watcher all clear
+// `selectedSnapshotMaterializationResult` at the same sites they already
+// clear `selectedSnapshotAttributionResult`.
+//
+// DELIBERATELY EXCLUDED — NOT THIS MILESTONE.
+// - **Automatic materialization immediately after selection, resolution,
+//   or attribution.** Only this button does.
+// - **World placement, spatial position, or rendering of the materialized
+//   Snapshot.** See docs/Roadmap.md's own 0.9.158 section — a separate,
+//   later, unscheduled seam over this one's own output.
+// - **Ranking, candidate recommendation, trust scores, "best snapshot,"
+//   provider reputation, ownership/authenticity claims.**
+// - **Persistence, caching, or retry of a materialization result.**
+// - **Any new resolution outcome vocabulary.** Only application/
+//   SnapshotCandidateMaterializationOutcome.js's own three new values,
+//   plus `DecentralizedSnapshotResolutionOutcome`'s own pre-existing
+//   failure values passed through unchanged, are ever produced.
 export default {
     name: 'OwnPublicationPanel',
     props: {
@@ -509,6 +577,18 @@ export default {
         resolveSelectedSnapshotCommand: {
             type: Function,
             default: null
+        },
+        // 0.9.158 — optional. A `(resolution) -> Promise<{ outcome,
+        // contentHash, contentReference, reason, source }>` function, or
+        // `null` when the capability is unavailable — see this file's own
+        // header, "0.9.158 — Selected Snapshot Materialization." Takes the
+        // ALREADY-COMPUTED `selectedSnapshotResolutionResult` itself,
+        // never the selected candidate object and never a bare
+        // contentHash — see that header for why materialization must
+        // consume an already-verified resolution result.
+        materializeSelectedSnapshotCommand: {
+            type: Function,
+            default: null
         }
     },
     data() {
@@ -551,7 +631,18 @@ export default {
             // never snapshotAttributionResult." `null` until
             // attributeSelectedSnapshot() is explicitly clicked; never
             // written by anything else.
-            selectedSnapshotAttributionResult: null
+            selectedSnapshotAttributionResult: null,
+            // 0.9.158 — see this file's own header, "0.9.158 — Selected
+            // Snapshot Materialization." A separate ephemeral family, never
+            // shared with `selectedSnapshotAttributionResult`'s own —
+            // materialization and attribution are two independent siblings
+            // over the SAME `selectedSnapshotResolutionResult`, never a
+            // sequence. `null` until materializeSelectedSnapshot() is
+            // explicitly clicked; never written by anything else.
+            selectedSnapshotMaterializationExecuting: false,
+            selectedSnapshotMaterializationError: null,
+            selectedSnapshotMaterializationResult: null,
+            selectedSnapshotMaterializationRequestId: 0
         };
     },
     watch: {
@@ -599,6 +690,15 @@ export default {
             // way it already invalidates the resolution result it was
             // computed from.
             this.selectedSnapshotAttributionResult = null;
+            // 0.9.158 — a different (or cleared) Publication invalidates
+            // any prior selected-candidate materialization result the
+            // identical way it already invalidates the resolution result
+            // it was computed from — see this file's own header, "a
+            // separate ephemeral family."
+            this.selectedSnapshotMaterializationExecuting = false;
+            this.selectedSnapshotMaterializationError = null;
+            this.selectedSnapshotMaterializationResult = null;
+            this.selectedSnapshotMaterializationRequestId += 1;
         }
     },
     beforeUnmount() {
@@ -609,6 +709,7 @@ export default {
         this.snapshotDiscoveryRequestId += 1;
         this.snapshotCandidateDiscoveryRequestId += 1;
         this.selectedSnapshotResolutionRequestId += 1;
+        this.selectedSnapshotMaterializationRequestId += 1;
     },
     methods: {
         // The only writer of `snapshotDistributionExecuting`/
@@ -759,6 +860,13 @@ export default {
             // cleared whenever the result it was computed from becomes
             // stale."
             this.selectedSnapshotAttributionResult = null;
+            // 0.9.158 — the identical staleness rule, one sibling over: a
+            // prior materialization result described the OLD selection's
+            // own resolution result too.
+            this.selectedSnapshotMaterializationExecuting = false;
+            this.selectedSnapshotMaterializationError = null;
+            this.selectedSnapshotMaterializationResult = null;
+            this.selectedSnapshotMaterializationRequestId += 1;
         },
         // 0.9.152 — the only writer of `selectedSnapshotResolutionExecuting`/
         // `selectedSnapshotResolutionError`/`selectedSnapshotResolutionResult`,
@@ -788,6 +896,13 @@ export default {
             // own header, "stale attribution is cleared whenever the
             // result it was computed from becomes stale."
             this.selectedSnapshotAttributionResult = null;
+            // 0.9.158 — the identical staleness rule, one sibling over: a
+            // prior materialization result was computed from the PRIOR
+            // resolution result, about to be replaced.
+            this.selectedSnapshotMaterializationExecuting = false;
+            this.selectedSnapshotMaterializationError = null;
+            this.selectedSnapshotMaterializationResult = null;
+            this.selectedSnapshotMaterializationRequestId += 1;
             const requestId = this.selectedSnapshotResolutionRequestId;
 
             Promise.resolve()
@@ -827,6 +942,51 @@ export default {
                 return;
             }
             this.selectedSnapshotAttributionResult = resolveSnapshotPublicationAttribution(publication, resolution);
+        },
+        // 0.9.158 — the only writer of `selectedSnapshotMaterializationExecuting`/
+        // `selectedSnapshotMaterializationError`/`selectedSnapshotMaterializationResult`,
+        // and the only caller of `materializeSelectedSnapshotCommand` in
+        // this file — mirrors `resolveSelectedSnapshot()`'s own guard/
+        // requestId pattern exactly, one sibling over. A no-op whenever
+        // there is no `selectedSnapshotResolutionResult`, no
+        // `materializeSelectedSnapshotCommand`, or a call is already in
+        // flight — needs no `publication` at all, unlike
+        // `attributeSelectedSnapshot()`, since materialization never
+        // touches the Publication (see application/
+        // MaterializeSnapshotFromSelectedCandidateUseCase.js's own header,
+        // "no publicationId, no publicationKnown"). Calls
+        // `materializeSelectedSnapshotCommand` with the RESOLUTION RESULT
+        // itself — never `selectedSnapshotCandidate`, and never a bare
+        // contentHash — see that use case's own header, "consumes the
+        // resolution result, never the candidate."
+        materializeSelectedSnapshot() {
+            const resolution = this.selectedSnapshotResolutionResult;
+            if (!resolution || !this.materializeSelectedSnapshotCommand || this.selectedSnapshotMaterializationExecuting) {
+                return;
+            }
+
+            this.selectedSnapshotMaterializationExecuting = true;
+            this.selectedSnapshotMaterializationError = null;
+            this.selectedSnapshotMaterializationRequestId += 1;
+            const requestId = this.selectedSnapshotMaterializationRequestId;
+
+            Promise.resolve()
+                .then(() => this.materializeSelectedSnapshotCommand(resolution))
+                .then((result) => {
+                    if (requestId === this.selectedSnapshotMaterializationRequestId) {
+                        this.selectedSnapshotMaterializationResult = result;
+                    }
+                })
+                .catch(() => {
+                    if (requestId === this.selectedSnapshotMaterializationRequestId) {
+                        this.selectedSnapshotMaterializationError = 'Selected Snapshot materialization could not be completed.';
+                    }
+                })
+                .then(() => {
+                    if (requestId === this.selectedSnapshotMaterializationRequestId) {
+                        this.selectedSnapshotMaterializationExecuting = false;
+                    }
+                });
         }
     },
     template: `
@@ -1033,6 +1193,43 @@ export default {
                 <template v-if="selectedSnapshotAttributionResult.reason">
                     <dt>Reason</dt>
                     <dd>{{ selectedSnapshotAttributionResult.reason }}</dd>
+                </template>
+            </dl>
+
+            <!-- 0.9.158 — Selected Snapshot Materialization. An independent
+                 SIBLING of "Attribute Selected Snapshot" above, not a
+                 sequel — both read the SAME selectedSnapshotResolutionResult,
+                 but materialization never touches the Publication and
+                 attribution never touches local storage. Reachable only
+                 once the selected candidate has actually been resolved
+                 above — materializing "nothing resolved yet" makes no
+                 sense. Rendered only when a caller supplied a
+                 materializeSelectedSnapshotCommand. Disabled whenever
+                 there is no selectedSnapshotResolutionResult yet, or a
+                 call is already in flight. -->
+            <button
+                v-if="materializeSelectedSnapshotCommand"
+                type="button"
+                class="action-btn own-publication-selected-materialization-action"
+                :disabled="!selectedSnapshotResolutionResult || selectedSnapshotMaterializationExecuting"
+                @click="materializeSelectedSnapshot"
+            >{{ selectedSnapshotMaterializationExecuting ? 'Materializing…' : 'Materialize Selected Snapshot' }}</button>
+
+            <!-- A separate result from selectedSnapshotResolutionResult/
+                 selectedSnapshotAttributionResult above — see this file's
+                 own header, "a separate ephemeral family." On a resolution
+                 that never reached RESOLVED, this reports the RESOLVER'S
+                 OWN failure outcome unchanged (never a materialization-
+                 specific catch-all) — see application/
+                 MaterializeSnapshotFromSelectedCandidateUseCase.js's own
+                 header. -->
+            <p v-if="selectedSnapshotMaterializationError" class="own-publication-selected-materialization-error">{{ selectedSnapshotMaterializationError }}</p>
+            <dl v-else-if="selectedSnapshotMaterializationResult" class="own-publication-selected-materialization-detail">
+                <dt>Selected Snapshot Materialization</dt>
+                <dd>{{ selectedSnapshotMaterializationResult.outcome }}</dd>
+                <template v-if="selectedSnapshotMaterializationResult.reason">
+                    <dt>Reason</dt>
+                    <dd>{{ selectedSnapshotMaterializationResult.reason }}</dd>
                 </template>
             </dl>
         </div>

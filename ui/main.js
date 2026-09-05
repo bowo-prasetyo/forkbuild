@@ -129,6 +129,8 @@ import { composeDiscoverSnapshotRuntime } from '../application/DiscoverSnapshotR
 import { executeDiscoverSnapshotCommand } from '../application/DiscoverSnapshotCommand.js';
 import { executeDiscoverSnapshotCandidatesCommand } from '../application/DiscoverSnapshotCandidatesCommand.js';
 import { executeResolveSelectedSnapshotCommand } from '../application/ResolveSelectedSnapshotCommand.js';
+import { MaterializeSnapshotFromSelectedCandidateUseCase } from '../application/MaterializeSnapshotFromSelectedCandidateUseCase.js';
+import { executeMaterializeSelectedSnapshotCommand } from '../application/MaterializeSelectedSnapshotCommand.js';
 import { LocalDiscoveryProvider } from '../discovery/LocalDiscoveryProvider.js';
 import {
     composeDecentralizedWorldEncounterMaterialDiscoveryServices,
@@ -1802,6 +1804,24 @@ const resolveSelectedSnapshotCommand = (candidate) => executeResolveSelectedSnap
     contentStore: snapshotRetrievalContentStore
 });
 app.provide('resolveSelectedSnapshotCommand', resolveSelectedSnapshotCommand);
+
+// 0.9.158 — Selected Snapshot Materialization.
+//
+// `application/MaterializeSnapshotFromSelectedCandidateUseCase.js` (0.9.158)
+// turns an ALREADY-RESOLVED `resolveSelectedSnapshotCommand()` result into
+// local possession, through the SAME `storeSnapshotContentUseCase` every
+// other explicit materialization action on this page already shares
+// (0.8.36's own "unified explicit snapshot materialization sources") —
+// never a second, disconnected store. `application/
+// MaterializeSelectedSnapshotCommand.js` is the thin application-command
+// boundary over it, mirroring `resolveSelectedSnapshotCommand` immediately
+// above exactly.
+const materializeSnapshotFromSelectedCandidateUseCase = new MaterializeSnapshotFromSelectedCandidateUseCase(storeSnapshotContentUseCase);
+const materializeSelectedSnapshotCommand = (resolution) => executeMaterializeSelectedSnapshotCommand({
+    resolution,
+    materializer: materializeSnapshotFromSelectedCandidateUseCase
+});
+app.provide('materializeSelectedSnapshotCommand', materializeSelectedSnapshotCommand);
 
 app.use(router);
 app.mount('#app');
