@@ -368,8 +368,101 @@ import { resolveSnapshotPublicationAttribution } from '../../application/Snapsho
 //   Resolution stays an explicit, separate click — see "selecting a
 //   different candidate invalidates any prior resolution," above.
 // - **Snapshot–Publication attribution of any kind over the resolved
-//   result.** See "no automatic attribution," above.
+//   result.** See "no automatic attribution," above. (0.9.154, below,
+//   fills this gap — still never automatic.)
 // - **Retry, caching, or persistence of a resolution result.**
+//
+// 0.9.154 — Selected Snapshot Attribution.
+//
+// 0.9.152 resolved `selectedSnapshotCandidate` into verified bytes;
+// 0.9.153's own Section E proved, end to end, that resolution alone never
+// attributes. This fills exactly that named gap:
+//
+//   selectedSnapshotResolutionResult   (0.9.152, unchanged — the
+//                                        RESOLVER's own already-verified
+//                                        result, never the candidate's
+//                                        own self-declared metadata)
+//           │
+//           │ click "Attribute Selected Snapshot"
+//           ▼
+//   attributeSelectedSnapshot()
+//           │
+//           ▼
+//   resolveSnapshotPublicationAttribution(publication, selectedSnapshotResolutionResult)
+//           (application/SnapshotPublicationAttribution.js, 0.9.143,
+//           UNMODIFIED — the SAME pure comparison discoverOwnSnapshot()
+//           already calls; no second attribution implementation)
+//           │
+//           ▼
+//   selectedSnapshotAttributionResult   ★ (THIS milestone's own new field)
+//
+// REUSES THE EXISTING PURE FUNCTION DIRECTLY, EXACTLY THE WAY
+// `discoverOwnSnapshot()`'s OWN 0.9.144 ADDITION ALREADY DOES. No new
+// application command was introduced — `resolveSnapshotPublicationAttribution()`
+// takes no I/O and needs no collaborator to inject; this component still
+// never hashes bytes or interprets a resolution outcome itself.
+//
+// COMPARES AGAINST THE RESOLVER'S OWN VERIFIED RESULT, NEVER THE
+// CANDIDATE'S OWN DECLARED contentHash — the critical invariant this
+// milestone exists to hold. `attributeSelectedSnapshot()` reads
+// `this.selectedSnapshotResolutionResult` (bytes that already passed
+// `resolveCandidate()`'s own hash verification), never
+// `this.selectedSnapshotCandidate.contentHash`. Two different candidates
+// can share one self-declared contentHash while one of them fails
+// verification (CONTENT_HASH_MISMATCH) — see `application/
+// SnapshotPublicationAttribution.js`'s own header, "attribution requires
+// an already-verified snapshot." A `selectedSnapshotResolutionResult`
+// that never reached RESOLVED still produces a well-defined attribution
+// value: `resolveSnapshotPublicationAttribution()` passes that same
+// resolution-failure outcome through unchanged rather than ever reporting
+// NO_MATCH for it.
+//
+// EXPLICIT, NEVER AUTOMATIC. Unlike `discoverOwnSnapshot()`'s own 0.9.144
+// wiring (attribution computed inline, in the same `.then()`, because
+// discovery already answers a fixed, already-known contentHash),
+// attribution over a BROWSED-AND-SELECTED candidate is deliberately its
+// own explicit click — selecting a candidate never attributes it, and
+// resolving a candidate never attributes it either. Only this button
+// does.
+//
+// A SEPARATE FIELD, NEVER `snapshotAttributionResult`. That field remains
+// `discoverOwnSnapshot()`'s own, for the already-known-contentHash path;
+// `selectedSnapshotAttributionResult` is this, genuinely independent,
+// path's own — the two paths converge on the identical comparison
+// function while keeping fully separate UI state, per this milestone's
+// own two-path design.
+//
+// NO EXECUTING/ERROR STATE OF ITS OWN — `resolveSnapshotPublicationAttribution()`
+// performs no I/O and never throws for the inputs this button ever hands
+// it (the button stays disabled until both a `publication` with a
+// `contentReference` and a `selectedSnapshotResolutionResult` exist), so
+// there is nothing to await and no rejection to catch — the identical
+// restraint `discoverOwnSnapshot()`'s own 0.9.144 addition already holds
+// for its single, synchronous call site.
+//
+// STALE ATTRIBUTION IS CLEARED WHENEVER THE RESULT IT WAS COMPUTED FROM
+// BECOMES STALE, NEVER RECOMPUTED AUTOMATICALLY. Selecting a DIFFERENT
+// candidate (`selectSnapshotCandidate()`) and re-resolving the CURRENT
+// selection (`resolveSelectedSnapshot()`) both already invalidate
+// `selectedSnapshotResolutionResult`; `selectedSnapshotAttributionResult`
+// is cleared at those same two sites, and by the same Publication-change
+// watcher every other field in this family already resets on — never
+// silently left on screen describing a resolution result that no longer
+// exists.
+//
+// DELIBERATELY EXCLUDED — NOT THIS MILESTONE.
+// - **A new application command (e.g. `ResolveSelectedSnapshotAttributionCommand`).**
+//   The existing pure function is reused directly — see "reuses the
+//   existing pure function directly," above.
+// - **Automatic attribution immediately after selection or resolution.**
+// - **Ranking, candidate recommendation, trust scores, "best snapshot,"
+//   provider reputation, ownership/authenticity claims.**
+// - **Persistence, caching, or retry of an attribution result.**
+// - **Any new resolution or attribution outcome vocabulary.** Only
+//   `SnapshotPublicationAttributionOutcome`'s own pre-existing MATCH/
+//   NO_MATCH, plus `DecentralizedSnapshotResolutionOutcome`'s own
+//   pre-existing failure values passed through unchanged, are ever
+//   produced.
 export default {
     name: 'OwnPublicationPanel',
     props: {
@@ -453,7 +546,12 @@ export default {
             // never written by anything but `resolveSelectedSnapshot()`,
             // below.
             selectedSnapshotResolutionResult: null,
-            selectedSnapshotResolutionRequestId: 0
+            selectedSnapshotResolutionRequestId: 0,
+            // 0.9.154 — see this file's own header, "a separate field,
+            // never snapshotAttributionResult." `null` until
+            // attributeSelectedSnapshot() is explicitly clicked; never
+            // written by anything else.
+            selectedSnapshotAttributionResult: null
         };
     },
     watch: {
@@ -496,6 +594,11 @@ export default {
             this.selectedSnapshotResolutionError = null;
             this.selectedSnapshotResolutionResult = null;
             this.selectedSnapshotResolutionRequestId += 1;
+            // 0.9.154 — a different (or cleared) Publication invalidates
+            // any prior selected-candidate attribution verdict the same
+            // way it already invalidates the resolution result it was
+            // computed from.
+            this.selectedSnapshotAttributionResult = null;
         }
     },
     beforeUnmount() {
@@ -649,6 +752,13 @@ export default {
             this.selectedSnapshotResolutionError = null;
             this.selectedSnapshotResolutionResult = null;
             this.selectedSnapshotResolutionRequestId += 1;
+            // 0.9.154 — a prior attribution verdict described the OLD
+            // selection's own resolution result; it no longer describes
+            // anything once that resolution result itself is cleared
+            // above. See this file's own header, "stale attribution is
+            // cleared whenever the result it was computed from becomes
+            // stale."
+            this.selectedSnapshotAttributionResult = null;
         },
         // 0.9.152 — the only writer of `selectedSnapshotResolutionExecuting`/
         // `selectedSnapshotResolutionError`/`selectedSnapshotResolutionResult`,
@@ -671,6 +781,13 @@ export default {
             this.selectedSnapshotResolutionExecuting = true;
             this.selectedSnapshotResolutionError = null;
             this.selectedSnapshotResolutionRequestId += 1;
+            // 0.9.154 — a fresh resolution attempt for the CURRENT
+            // selection is about to replace `selectedSnapshotResolutionResult`;
+            // any attribution verdict computed from the PRIOR result no
+            // longer describes what will be on screen. See this file's
+            // own header, "stale attribution is cleared whenever the
+            // result it was computed from becomes stale."
+            this.selectedSnapshotAttributionResult = null;
             const requestId = this.selectedSnapshotResolutionRequestId;
 
             Promise.resolve()
@@ -690,6 +807,26 @@ export default {
                         this.selectedSnapshotResolutionExecuting = false;
                     }
                 });
+        },
+        // 0.9.154 — the only writer of `selectedSnapshotAttributionResult`,
+        // and the only call site of `resolveSnapshotPublicationAttribution()`
+        // over the SELECTED-CANDIDATE path in this file (`discoverOwnSnapshot()`
+        // holds its own, separate call site for the already-known-contentHash
+        // path). A no-op whenever there is no `publication`, no
+        // `publication.contentReference` (the pure function itself would
+        // throw for either), or no `selectedSnapshotResolutionResult` yet
+        // to attribute. Synchronous — no executing/error state, see this
+        // file's own header, "no executing/error state of its own." Reads
+        // `selectedSnapshotResolutionResult` — the RESOLVER's own verified
+        // result — never `selectedSnapshotCandidate.contentHash`, the
+        // critical invariant this milestone exists to hold.
+        attributeSelectedSnapshot() {
+            const publication = this.publication;
+            const resolution = this.selectedSnapshotResolutionResult;
+            if (!publication || !publication.contentReference || !resolution) {
+                return;
+            }
+            this.selectedSnapshotAttributionResult = resolveSnapshotPublicationAttribution(publication, resolution);
         }
     },
     template: `
@@ -862,6 +999,40 @@ export default {
                 <template v-if="selectedSnapshotResolutionResult.locator">
                     <dt>Locator</dt>
                     <dd>{{ selectedSnapshotResolutionResult.locator }}</dd>
+                </template>
+            </dl>
+
+            <!-- 0.9.154 — Selected Snapshot Attribution. Reachable only
+                 once the selected candidate has actually been resolved
+                 above — attributing "nothing resolved yet" makes no
+                 sense. Rendered in the SAME resolveSelectedSnapshotCommand
+                 family (attribution over a browsed/selected candidate has
+                 no meaning without the resolution capability that
+                 produces its input). Disabled whenever there is no
+                 Publication, the Publication has never been placed (no
+                 contentReference), or there is no
+                 selectedSnapshotResolutionResult yet to attribute. -->
+            <button
+                v-if="resolveSelectedSnapshotCommand"
+                type="button"
+                class="action-btn own-publication-selected-attribution-action"
+                :disabled="!publication || !publication.contentReference || !selectedSnapshotResolutionResult"
+                @click="attributeSelectedSnapshot"
+            >Attribute Selected Snapshot</button>
+
+            <!-- A separate result from selectedSnapshotResolutionResult
+                 above, and from snapshotAttributionResult (the OTHER,
+                 already-known-contentHash path) — see this file's own
+                 header, "a separate field, never snapshotAttributionResult."
+                 Compares the RESOLVER's own verified bytes against this
+                 Publication, never the candidate's own self-declared
+                 contentHash. -->
+            <dl v-if="selectedSnapshotAttributionResult" class="own-publication-selected-attribution-detail">
+                <dt>Selected Snapshot Attribution</dt>
+                <dd>{{ selectedSnapshotAttributionResult.outcome }}</dd>
+                <template v-if="selectedSnapshotAttributionResult.reason">
+                    <dt>Reason</dt>
+                    <dd>{{ selectedSnapshotAttributionResult.reason }}</dd>
                 </template>
             </dl>
         </div>

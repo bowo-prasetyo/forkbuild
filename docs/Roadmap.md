@@ -68500,3 +68500,111 @@ milestone's own Section E and Section J already called it by hand. That
 would complete the semantic meaning of the candidate browser 0.9.151
 introduced: discover, select, resolve, and now also attribute — one
 exact, user-chosen Snapshot at a time.
+
+## 0.9.154 — Selected Snapshot Attribution
+
+0.9.153's own recommendation named this milestone directly: reuse
+`resolveSnapshotPublicationAttribution()` (0.9.143) exactly as it stands,
+called explicitly over `selectedSnapshotResolutionResult` — the RESOLVER's
+own already-verified bytes, never the candidate's own self-declared
+metadata. This connects the seam 0.9.152/0.9.153 deliberately left open:
+
+```text
+selectedSnapshotResolutionResult   (0.9.152, unchanged)
+        │
+        │ click "Attribute Selected Snapshot"
+        ▼
+attributeSelectedSnapshot()   (ui/components/OwnPublicationPanel.js, NEW)
+        │
+        ▼
+resolveSnapshotPublicationAttribution(publication, selectedSnapshotResolutionResult)
+        (application/SnapshotPublicationAttribution.js, 0.9.143, UNMODIFIED)
+        │
+        ▼
+selectedSnapshotAttributionResult   (NEW field)
+```
+
+**No new attribution implementation, and no new application command.**
+`resolveSnapshotPublicationAttribution()` is pure and needs no collaborator
+to inject, so `OwnPublicationPanel.js` calls it directly — the identical
+restraint `discoverOwnSnapshot()`'s own 0.9.144 addition already holds for
+the OTHER (already-known-contentHash) attribution path. The two paths now
+converge on the exact same comparison function while keeping fully
+independent UI state:
+
+```text
+Path 1: Check Snapshot Match  → resolve(contentHash)   → snapshotAttributionResult
+Path 2: Browse → Select → resolveCandidate(candidate) → selectedSnapshotAttributionResult
+```
+
+**The critical invariant this milestone holds:** attribution is performed
+against the bytes the RESOLVER actually verified, never against a
+candidate's own declared `contentHash`. A candidate that CLAIMS the
+Publication's own hash but whose real locator serves different bytes fails
+resolution (`CONTENT_HASH_MISMATCH`) before attribution is ever reached —
+`attributeSelectedSnapshot()` reads `selectedSnapshotResolutionResult`,
+never `selectedSnapshotCandidate.contentHash`. Attribution can therefore
+never fabricate `MATCH` from `candidate.contentHash ===
+publication.contentReference.hash` alone.
+
+**Explicit, never automatic**, at every step this milestone touches:
+
+- Selecting a candidate never resolves it (unchanged, 0.9.151).
+- Resolving a candidate never attributes it (unchanged, 0.9.152/0.9.153).
+- A successful resolution never automatically attributes — only a
+  separate click on the new "Attribute Selected Snapshot" button does.
+
+**Staleness is invalidated exactly where the resolution result it depends
+on already is**, never with a second, independent mechanism:
+`selectSnapshotCandidate()` (a different selection) and
+`resolveSelectedSnapshot()` (a fresh resolution attempt for the CURRENT
+selection) both already clear `selectedSnapshotResolutionResult` — this
+milestone clears `selectedSnapshotAttributionResult` at those same two
+sites, and the existing Publication-change watcher now resets it too.
+
+`tests/SelectedSnapshotAttribution.test.js` — ten sections: **A** (flagship
+MATCH), **B** (NO_MATCH for a genuinely different, verified Snapshot),
+**C** (the critical invariant — a lying candidate's declared-hash
+collision is refused at resolution, never fabricating MATCH), **D**
+(attribution reads the resolver's recomputed bytes, never the candidate's
+own declared `contentHash` field), **E** (a new selection clears stale
+attribution; the candidate list is untouched), **F** (re-resolving the
+current selection clears stale attribution), **G** (a Publication change
+resets selection, resolution, and attribution together), **H** (guard
+clauses: no publication / no `contentReference` / no resolution result
+each make the action a safe no-op), **I** (resolution never automatically
+attributes), **J** (structural sweep: exactly one call site, no new
+command file, no new outcome vocabulary).
+
+Deliberately excluded, per the milestone's own narrow scope: automatic
+attribution/resolution on selection, ranking, candidate recommendation,
+trust scores, "best snapshot," provider reputation, ownership/authenticity
+claims, persistence of selection, caching, retry/failover, and any new
+resolution or attribution outcome vocabulary.
+
+```text
+0.9.150  Snapshot Candidate Discovery Command                      ✓
+0.9.151  World View Snapshot Candidate Browser                     ✓
+0.9.152  Selected Snapshot Candidate Resolution                    ✓
+0.9.153  Selected Snapshot Resolution End-to-End Audit              ✓
+0.9.154  Selected Snapshot Attribution                              ✓
+```
+
+### Recommendation
+
+I would make **0.9.155** another test-only, end-to-end audit — the
+identical shape 0.9.153 already gave the resolution seam, one layer up:
+`tests/SelectedSnapshotAttributionEndToEndAudit.test.js`, exercising the
+real composed runtime (a real `ArweaveContentStore`, a real
+`NostrSnapshotDiscoveryPublisher`/`NostrSnapshotDiscoveryQueryService`
+pair) with three genuinely distinct candidates announced under one shared
+`discoveryTag` — one matching the current Publication, one a genuinely
+different valid Snapshot, and one a false/mismatched announcement —
+proving `select A → MATCH`, `select B → NO_MATCH`,
+`select C → CONTENT_HASH_MISMATCH` all through the real UI action, not
+merely through hand-constructed fixtures the way this milestone's own
+unit-level suite necessarily does. After that, I would pause and reassess
+the Snapshot subsystem as a whole — at that point the discover → select
+→ resolve → verify → attribute pipeline is complete and independently
+proven at every seam, and the right next step is likely a different part
+of the system entirely rather than a further layer on this one.

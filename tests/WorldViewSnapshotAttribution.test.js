@@ -516,8 +516,21 @@ async function runTests() {
             assert(!canvasCode.includes(term), `27. WorldEncounterCanvas.js never references '${term}' either`);
         }
 
-        assert((panelCode.match(/resolveSnapshotPublicationAttribution\(/g) || []).length === 1,
-            '28. OwnPublicationPanel.js calls resolveSnapshotPublicationAttribution() from exactly one place');
+        // 0.9.154 — Selected Snapshot Attribution deliberately adds a
+        // SECOND, independent call site over a genuinely different input
+        // (selectedSnapshotResolutionResult, the browsed-and-selected
+        // path) alongside this milestone's own original call site
+        // (snapshotDiscoveryResult, the already-known-contentHash path).
+        // Both converge on the SAME imported function — never a second,
+        // parallel comparison implementation — so the invariant this
+        // section actually protects is "exactly one call per path,"
+        // never "exactly one call in the whole file."
+        assert((panelCode.match(/resolveSnapshotPublicationAttribution\(/g) || []).length === 2,
+            '28. OwnPublicationPanel.js calls resolveSnapshotPublicationAttribution() from exactly two places — discoverOwnSnapshot()\'s own (0.9.144) and attributeSelectedSnapshot()\'s own (0.9.154), never a third');
+        assert((panelCode.match(/discoverOwnSnapshot\(\)\s*\{[\s\S]*?\n\s{8}\},/) || [''])[0].includes('resolveSnapshotPublicationAttribution('),
+            '28b. discoverOwnSnapshot() still contains its own original call site, unchanged by this milestone');
+        assert((panelCode.match(/attributeSelectedSnapshot\(\)\s*\{[\s\S]*?\n\s{8}\}/) || [''])[0].includes('resolveSnapshotPublicationAttribution('),
+            '28c. attributeSelectedSnapshot() (0.9.154) contains its own, independent call site');
         assert((canvasCode.match(/resolveSnapshotPublicationAttribution\(/g) || []).length === 1,
             '29. WorldEncounterCanvas.js calls resolveSnapshotPublicationAttribution() from exactly one place');
         assert(panelCode.includes("from '../../application/SnapshotPublicationAttribution.js'") && canvasCode.includes("from '../../application/SnapshotPublicationAttribution.js'"),
