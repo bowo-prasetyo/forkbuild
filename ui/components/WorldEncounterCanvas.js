@@ -9,6 +9,7 @@ import { describeDecentralizedWorldEncounterLeadSelectionOutcomeFromRegistry, De
 import { describePublicationMaterialProvenanceFromInspection } from '../../application/PublicationMaterialProvenance.js';
 import { resolveSnapshotPublicationAttribution } from '../../application/SnapshotPublicationAttribution.js';
 import { describeWorldEncounterPresentation } from '../../application/WorldEncounterPresentation.js';
+import { describeWorldSnapshotInspection } from '../../application/WorldSnapshotInspection.js';
 
 // 0.9.3 — World View UI / Wanderer Presence.
 //
@@ -2021,6 +2022,21 @@ export default {
             if (sourceFamily === 'SNAPSHOT') return 'Snapshot';
             return 'Unresolved';
         },
+        // 0.9.177 — World Snapshot Inspection Detail. A pure join of
+        // `selectedEncounterPresentation` (0.9.176, immediately above) and
+        // `resolvedEncounterSelection` (0.9.20), both already computed.
+        // `null` for anything other than a resolved, SNAPSHOT-sourced
+        // PUBLICATION encounter — see `application/WorldSnapshotInspection.js`'s
+        // own header for exactly which facts this reports and, just as
+        // deliberately, which it does not (a publisher's claimed position
+        // and a Snapshot's own locator/storage do not survive to this
+        // boundary today).
+        selectedEncounterSnapshotInspection() {
+            return describeWorldSnapshotInspection({
+                presentation: this.selectedEncounterPresentation,
+                resolvedSelection: this.resolvedEncounterSelection
+            });
+        },
         // 0.9.40 — the one resolved decentralized lead, if any, this
         // component ever forwards to `inspectWorldEncounterMaterial()`.
         // Mirrors `resolvedEncounterSelection` immediately above, exactly,
@@ -2681,6 +2697,10 @@ export default {
                     <dd>{{ selectedEncounterInspection.anchorCount }}</dd>
                     <dt>Placements</dt>
                     <dd>{{ selectedEncounterInspection.placementCount }}</dd>
+                    <template v-if="selectedEncounterSnapshotInspection">
+                        <dt>Content Hash</dt>
+                        <dd class="world-encounter-inspection-content-hash">{{ selectedEncounterSnapshotInspection.contentHash || 'Unknown' }}</dd>
+                    </template>
                 </dl>
 
                 <dl v-else-if="selectedEncounterInspection && selectedEncounterInspection.kind === 'AVATAR'" class="world-encounter-inspection-detail">

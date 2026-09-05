@@ -5690,6 +5690,14 @@ html, body {
     font-style: italic;
 }
 
+/* 0.9.177 — World Snapshot Inspection Detail. contentHash is an opaque
+   identifier, never a rank/trust cue — a plain monospace rendering, no
+   color coding of its own. */
+.world-encounter-inspection-content-hash {
+    font-family: monospace;
+    word-break: break-all;
+}
+
 /* ===================================================================
    0.9.20 — World Encounter Selection Resolution
    ===================================================================

@@ -71516,3 +71516,220 @@ further (a fourth family, a per-service breakout) without a concrete
 product reason driving it; the three-family, origin-string-derived
 design here is deliberately as small as the existing origin vocabulary
 allows.
+
+## 0.9.177 — World Snapshot Inspection Detail
+
+0.9.176 answered "does this encounter come from a Snapshot" — a coarse,
+one-word presentation fact. It deliberately stopped there, naming
+"Snapshot inspection/comparison detail — contentHash, locator, discovery
+tag" as its own explicit Recommendation for what comes next. This
+milestone is that next step, but narrower than its own brief first
+suggested: before writing a descriptor, this milestone **audited which
+Snapshot facts are honestly reachable at the exact boundary
+`WorldEncounterCanvas` already inspects from** — without adding a new
+lookup, a new registry field, or a new mechanism carried through the
+existing DISCOVER -> ... -> REGISTER pipeline.
+
+**THE AUDIT'S FINDING — NARROWER THAN THE ORIGINAL BRIEF, ON PURPOSE.**
+Three of the six facts the brief sketched (`contentHash`, `publicationId`,
+`position`) are already, safely reachable; three (`claimedPosition`,
+`locator`, `storage`) are not, and reaching them would mean plumbing a
+brand-new field through registration — a new operational mechanism, not a
+join over existing facts:
+
+```text
+REACHABLE TODAY, NO NEW PLUMBING:
+  contentHash    — encoded directly in resolvedEncounterSelection's own
+                    origin string, "snapshot:<contentHash>:<publicationId>"
+                    (application/MaterializedSnapshotWorldDiscoveryBridge.js,
+                    0.9.160/0.9.163) — the SAME string
+                    describeWorldEncounterPresentationSourceFamily()
+                    already pattern-matches, one layer further.
+  publicationId  — presentation.objectId IS the Publication's own id
+                    (core/WorldEncounter.js's own "objectId: publication.id",
+                    and the registration bridge's own identity invariant).
+  position       — presentation.x/y/z, 0.9.176's own forwarded copy of the
+                    World's own current placement.
+
+NOT REACHABLE TODAY — NOT MERELY DEFERRED FOR TASTE:
+  claimedPosition — application/SnapshotWorldPositionClaim.js's own
+                     (0.9.172) publisher claim lives only inside
+                     OwnPublicationPanel.js's own ephemeral interaction
+                     state; once consumed it is folded into a SYNTHETIC
+                     placementInfo and, from there, into
+                     resolveSnapshotWorldPlacement()'s own `position` —
+                     but registerMaterializedSnapshotWorldSource()'s own
+                     registered source carries only `{ publicationId,
+                     position }`, never `placementId` or claim
+                     provenance. By registration, whether the World's
+                     current position came from a consumed claim or this
+                     replica's own pre-existing local placement is
+                     already unrecoverable.
+  locator/storage — core/PublicationSnapshotPlacement.js's own retrieval
+                     identity is never included in the registered
+                     WorldDiscoverySource at all.
+```
+
+A future milestone that wants either excluded fact inspectable would need
+to carry it further UP the pipeline first (through registration, or
+through placement) — a separate, larger, and NOT YET NEEDED seam. This
+milestone reports exactly what is already true today, and nothing it
+would have to guess, synthesize, or newly wire to make true — the
+identical restraint every milestone in this arc already holds, applied
+here to what belongs on a descriptor rather than to what an algorithm may
+compute.
+
+```text
+selectedEncounterPresentation (0.9.176)      resolvedEncounterSelection (0.9.20)
+    { kind, objectId, title/                     { kind, objectId, origin }
+      displayName, x, y, z, sourceFamily }
+                    │                                       │
+                    └───────────────────┬───────────────────┘
+                                         ▼
+                application/WorldSnapshotInspection.js   ★ (THIS milestone)
+                      describeWorldSnapshotInspection()
+                                         │
+                                         ▼
+                { kind, objectId, publicationId, contentHash, position }
+                     (SNAPSHOT-sourced PUBLICATION encounters only)
+                                         │
+                                         ▼
+                ui/components/WorldEncounterCanvas.js's own inspection
+                panel — one new "Content Hash" row (Position/Publisher/
+                Signed/etc. were already shown)
+```
+
+**Production change — one new pure module, plus the smallest possible
+UI wiring:**
+
+- `application/WorldSnapshotInspection.js` — new. Exports
+  `describeWorldSnapshotInspection({ presentation, resolvedSelection })`
+  — a pure join of `describeWorldEncounterPresentation()`'s own 0.9.176
+  output and the same `resolvedEncounterSelection` 0.9.20 already
+  computes, mirroring that function's own two-already-computed-facts
+  shape one layer up. Returns `null` for anything other than a resolved,
+  `SNAPSHOT`-sourced `PUBLICATION` encounter (never for `AVATAR` — an
+  avatar's own presence never arrives through a materialized Snapshot;
+  never while `sourceFamily` is `LOCAL`/`PEER`/`null`) — never guesses
+  among an `AMBIGUOUS` selection's own candidates, and never throws for
+  malformed/mismatched input. `contentHash` is recovered by
+  RE-DERIVING `materializedSnapshotWorldOrigin(contentHash, publicationId)`
+  for the already-known `publicationId` and comparing it to
+  `resolvedSelection.origin` — never a naive colon-split, which could
+  misparse a `contentHash` that itself happens to contain a colon — and
+  degrades to `null`, never a guess, when the origin does not
+  reconstruct exactly.
+- `ui/components/WorldEncounterCanvas.js` — one new import, one new
+  computed property (`selectedEncounterSnapshotInspection`), and one new
+  "Content Hash" row in the PUBLICATION branch of the existing
+  inspection `<dl>` (the avatar branch is untouched — this descriptor
+  never applies to it). `Position`/`Publisher`/`Signed`/etc. rows are
+  unchanged; this milestone adds exactly the one fact 0.9.176 did not
+  already surface.
+- `css/main.css` — one small `.world-encounter-inspection-content-hash`
+  rule (monospace, word-break) — an opaque identifier, never a rank/trust
+  color cue.
+
+**`tests/WorldSnapshotInspection.test.js` — eleven sections** covering the
+new pure module directly: the basic descriptor shape (A); Publication
+identity as the World identity, always equal to `objectId` and never
+confused with `contentHash`, including the 0.9.163 shared-contentHash
+collision case still telling two Publications apart (B); colon-safe
+content-identity extraction, recovered by reconstruction rather than a
+naive split (C); storage/locator identity's deliberate absence (D);
+position as the World's own already-established placement (E); claim
+vocabulary's deliberate absence — no `claimedPosition`/`positionRelation`
+field of any kind (F); an `AMBIGUOUS`/unresolved selection producing
+nothing (G); `LOCAL`/`PEER`/`AVATAR` encounters continuing through
+unaffected (H); malformed/mismatched input degrading to `null`, or to
+individual `null` fields, never a guess (I); purity — frozen,
+deterministic, no mutation (J); and a structural sweep for I/O, registry
+access, re-invocation of upstream resolution/placement/registration,
+hashing, and rank/trust vocabulary (K).
+
+**`tests/SnapshotWorldInspectionDetail.test.js` — five sections, the
+flagship end-to-end scenario:**
+
+- **A** — FLAGSHIP: a real Nostr-discovered, resolved, materialized,
+  decentralized-position-claim-CONSUMED, PLACED, and REGISTERED Snapshot,
+  observed through a real, mounted `WorldEncounterCanvas` sharing the
+  same registry `OwnPublicationPanel` registered into. Selecting the
+  rendered marker resolves a Snapshot inspection descriptor naming the
+  correct `contentHash`/`publicationId`, and a `position` equal to the
+  CONSUMED CLAIM's own coordinates (proving `position` really does track
+  the World's own current placement, whatever produced it) — while the
+  descriptor itself stays silent about the claim, exactly as designed:
+  building the flagship around a genuinely consumed claim, rather than
+  an ordinary local placement, is what proves the exclusion is a real
+  architectural fact and not merely an untested assumption.
+- **B** — an ordinary LOCAL Publication reports no Snapshot inspection
+  detail at all.
+- **C** — an ordinary PEER-discovered Publication reports no Snapshot
+  inspection detail at all.
+- **D** — an `AMBIGUOUS` selection, before and after resolving to a
+  non-Snapshot origin, reports no Snapshot inspection detail.
+- **E** — structural sweep: the registration bridge and
+  `ui/components/WorldEncounterMarker.js` remain completely untouched,
+  and the new inspection module performs no I/O and carries no
+  rank/trust vocabulary anywhere in its own executable code.
+
+`tests/WorldEncounterCanvasUI.test.js`'s own Section J (the
+`WorldEncounterCanvas.js` import-boundary sweep) and the equivalent
+sweeps in `tests/WorldViewDecentralizedPublicationRetrievalIntegration.test.js`
+and `tests/WorldViewDiscoveredPublicationSelectionIntegration.test.js`
+are updated from nine to ten `application/` imports, naming
+`WorldSnapshotInspection.js` as the tenth — the same "update the counting
+sweep, never relax it" discipline every prior import-adding milestone in
+this file already followed.
+
+Deliberately excluded, per this milestone's own narrowed brief:
+- **`claimedPosition`, `positionRelation`, or any comparison between a
+  publisher's claim and the World's own current position.** See "the
+  audit's finding," above — the fact does not survive to this boundary
+  today, and this milestone declines to invent the plumbing needed to
+  make it true rather than reachable.
+- **`locator`/`storage`, or any other Snapshot retrieval-identity
+  field.** Same reason.
+- **Trust, verified, freshness, ranking, "best," or any comparison
+  vocabulary of any kind.** Inherited unchanged from every file in this
+  chain.
+- **Snapshot comparison, replacement, refresh, automatic discovery, or
+  automatic materialization.** This remains a read-only inspection
+  descriptor over already-established World facts, never an action
+  layer.
+- **A new World Encounter kind, a new registry identity, or a new
+  Snapshot lifecycle state.**
+
+```text
+0.9.174  World Source Lifecycle & Staleness Audit                    ✓
+0.9.175  World Source Selection Consistency Audit                    ✓
+0.9.176  World Snapshot Presentation                                 ✓
+0.9.177  World Snapshot Inspection Detail                            ✓
+```
+
+### Recommendation
+
+With 0.9.177, a Wanderer who has already noticed an encounter is
+Snapshot-sourced can now see WHICH Snapshot (`contentHash`) and WHERE it
+sits (`position`) — the two facts this replica can vouch for without any
+new plumbing. The audit also produced a durable, documented answer to a
+question the next milestone would otherwise have to re-derive: a
+publisher's claimed position and a Snapshot's own locator/storage are
+NOT currently inspectable, and will not become so without first choosing
+to carry them through registration — a decision with its own tradeoffs
+(a synthetic `placementId` already exists as a structural hint that a
+position came from a claim; making it a first-class, carried field is a
+small, separate, and NOT YET NEEDED seam).
+
+I would NOT chase that plumbing without a concrete reason a Wanderer
+needs it — the three-fact descriptor here is deliberately as small as
+what is safely, already true. The more interesting next question this
+milestone's own audit surfaces is a genuine UX one, not an architectural
+one: now that a Wanderer can identify a specific Snapshot by content and
+position, is there value in letting them SEE two Snapshots for the same
+`objectId` side by side — the actual "Snapshot comparison/viewing
+interaction" named as future direction one milestone ago? That would be
+a materially larger seam (multiple Snapshots for one `objectId`
+observable at once, a browsing UI, not merely an inspection panel) and
+deserves its own deliberate scoping rather than growing out of this
+milestone's own narrow descriptor.
