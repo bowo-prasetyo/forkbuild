@@ -67663,3 +67663,148 @@ relay data under the running application, the same "prove it, don't just
 wire it" posture 0.9.111/0.9.145 already held for their own subsystems —
 before scheduling any further discovery-facing feature work, exactly as
 this milestone's own brief already asked for.
+
+## 0.9.148 — End-to-End Decentralized Discovery Runtime Audit
+
+0.9.147's own "Recommendation" named this milestone directly: prove that a
+real relay-query transport actually activates both previously-dormant
+discovery seams — World Material discovery (0.9.110/0.9.111) and Snapshot
+discovery (0.9.133/0.9.134/0.9.142) — under the running application, rather
+than merely in the transport's own isolated test suite. This is that audit.
+Test-only. Zero production changes — `nostr/NostrRelayQueryClient.js` and
+every discovery/resolution/attribution file downstream of it are read only,
+never edited.
+
+```text
+                    Nostr Relay
+                        │
+                        ▼
+              NostrRelayQueryClient   (0.9.147, unmodified)
+                        │
+              ┌─────────┴─────────┐
+              │                   │
+              ▼                   ▼
+    World Material Discovery   Snapshot Discovery
+    (0.9.31/0.9.110/0.9.111)   (0.9.133/0.9.134/0.9.142)
+              │                   │
+              ▼                   ▼
+       existing lead         Snapshot locator
+         resolution             resolution
+              │                   │
+              ▼                   ▼
+        VERIFIED material   retrieval → verification
+                                   │
+                                   ▼
+                          Snapshot–Publication Attribution
+```
+
+`tests/DecentralizedDiscoveryRuntimeAudit.test.js` — nine sections, built
+around a genuinely stateful, in-process NIP-01 relay (`makeInMemoryRelayNetwork()`)
+rather than a single canned `queryImpl` response: `publishImpl` appends a
+real event to that relay's own accumulated log, and its `RelayWebSocket`
+answers a `REQ` by scanning that whole log for matches, in the order events
+were ever published, then `EOSE` — the identical relay/`EOSE` contract
+`nostr/NostrRelayQueryClient.js`'s own header documents, exercised against
+real accumulated state so that both discovery families can genuinely share
+ONE relay instance, exactly this milestone's own diagram:
+
+```text
+Section A: real World Material discovery — a genuine, stateful relay,
+           queried through the real NostrRelayQueryClient, feeding the
+           real, unmodified NostrDiscoveryQueryService → composition root
+           → WorldEncounterCanvas's own discoverPublication() action —
+           ending in RESOLVED + VERIFIED
+Section B: real Snapshot discovery — the same kind of real relay/client,
+           feeding NostrSnapshotDiscoveryQueryService →
+           DecentralizedSnapshotResolver → ArweaveContentStore → hash
+           verification → SnapshotPublicationAttribution — ending in MATCH
+Section C: shared transport, separate semantics — the IDENTICAL
+           discoveryTag, on the IDENTICAL relay, queried through the
+           IDENTICAL client, resolves to two disjoint result sets, because
+           each family's own envelope parser accepts only its own shape
+Section D: candidate preservation — relay-insertion order survives
+           NostrDiscoveryQueryService, the lead registry,
+           NostrSnapshotDiscoveryQueryService, and
+           DecentralizedSnapshotResolver's own deterministic first-match
+           selection — no ranking or deduplication introduced above the
+           transport layer
+Section E: failure distinction across layers — no matching events, a
+           genuine connection error, a timeout, and a malformed frame stay
+           the four distinct transport-level facts nostr/NostrRelayQueryClient.js's
+           own header describes; each caller above it re-collapses only
+           according to its own, already-documented contract
+Section F: discovery ≠ verification — a false Snapshot announcement,
+           discovered over the real relay transport, is refused at
+           resolve()'s own verification step; a genuinely discovered and
+           resolved World Material lead whose bytes were tampered with
+           after signing is still actively rejected
+Section G: discovery ≠ attribution — a bare discovery candidate cannot be
+           handed to attribution at all (it carries no `outcome`), and an
+           announcement with no genuinely retrievable bytes never
+           resolves, let alone attributes — the relay event itself never
+           manufactures MATCH
+Section H: identity separation — Publication id, Snapshot content hash,
+           Arweave transaction id, Nostr event id, Snapshot locator, and
+           — new, now that the relay is real — Relay URL, all stay
+           pairwise distinct through one real, MATCHing scenario
+Section I: World View runtime activation — a repository sweep proving
+           ui/main.js constructs the relay client exactly once and hands
+           the SAME instance to both composition roots, plus a live
+           reproduction proving one real client instance genuinely drives
+           both independently-composed services to real results over one
+           shared relay
+```
+
+### What this audit confirms, and the one thing it deliberately does not
+touch
+
+Every collaborator this file exercises is real and unmodified — the only
+things ever faked are the Nostr wire (a plain-object `WebSocket`
+substitute, the identical technique `tests/NostrRelayQueryClient.test.js`
+already established) and the Arweave gateway HTTP boundary (`fetchImpl`),
+exactly as every prior audit in this family (0.9.122, 0.9.135, 0.9.139,
+0.9.141, 0.9.145) already does for its own substrate boundary. Section C is
+this milestone's own centerpiece: the same discoveryTag, the same relay,
+the same client, produces two genuinely disjoint result sets, because
+`application/NostrDiscoveryQueryService.js` and `application/
+NostrSnapshotDiscoveryQueryService.js` each parse only their own envelope
+shape — confirmed structurally (neither file imports the other's envelope
+module) as well as behaviorally. Section G closes the one gap this
+milestone's own brief flagged as deserving the closest scrutiny: a bare
+`{ contentHash, locator, storage }` candidate — exactly what `queryService.search()`
+itself returns — has no `outcome` field, so `resolveSnapshotPublicationAttribution()`
+refuses it as a caller contract violation rather than ever silently
+treating a discovered rumor as a verdict.
+
+This milestone does not add multi-relay support, relay pools, health
+scoring, retry, quorum, ranking, deduplication, subscription persistence,
+relay reputation, or caching. `nostr/NostrRelayQueryClient.js`'s own
+"one relay, one subscription, per call" seam is exactly as minimal after
+this audit as before it — Section D's own flagship claim is that nothing
+above the transport layer has quietly started ranking or deduplicating
+candidates, not that a ranking/dedup layer should now be added.
+
+### Recommendation
+
+```text
+0.9.142  World View Snapshot Discovery Command                     ✓
+0.9.143  Snapshot–Publication Attribution                          ✓
+0.9.144  World View Snapshot Attribution Integration                ✓
+0.9.145  End-to-End Snapshot Attribution Audit                     ✓
+0.9.146  Snapshot & World Architecture Roadmap Reassessment        ✓
+0.9.147  Decentralized Discovery Relay Query Client                ✓
+0.9.148  End-to-End Decentralized Discovery Runtime Audit          ✓
+```
+
+With this audit passing, decentralized discovery — transport, both
+consuming families, resolution, retrieval, verification, and (for
+Snapshots) attribution — is a complete, proven, end-to-end capability in
+the running application. I would NOT make 0.9.149 "more Nostr": no
+requirement yet demands multi-relay fan-out, relay health, or any of the
+deliberately-excluded items named above. The more substantial open
+candidate is the other major gap 0.9.146's own reassessment already named
+and set aside — Vehicle Reachability: MOTORCYCLE/CAR/DRONE exist as
+types/capability vocabulary, but their actual world reachability and
+placement semantics are not yet established. That looks like a more
+substantial next application capability than deepening decentralized
+discovery infrastructure further.
