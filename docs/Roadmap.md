@@ -69978,3 +69978,167 @@ fix, not an occasion to also add caching, fallback, or a fourth
 still perform the broader roadmap reassessment 0.9.164 already
 recommended: this audit gives no reason to keep naming Snapshot- or
 World-discovery-specific milestones past it.
+
+## 0.9.166 — Snapshot World Encounter Material Loading
+
+0.9.165's own Section F named the one genuine gap it found and stopped,
+per its own narrow scope: `application/WorldEncounterMaterialLoading.js`'s
+own `materialSourceFor()` recognized exactly two origin families —
+`origin === 'local'` and `origin.startsWith('peer:')` — written (0.9.21)
+well before Snapshot existed as a World source family (0.9.150+), so a
+registered Snapshot's own `"snapshot:<contentHash>:<publicationId>"`
+origin (0.9.160, updated 0.9.163) matched neither branch and
+`loadWorldEncounterMaterial()` reported `UNAVAILABLE` unconditionally for
+it. This milestone closes exactly that one gap, and nothing else.
+
+**THE ARCHITECTURAL RULE THIS MILESTONE HELD TO:** never teach
+`application/WorldEncounterMaterialLoading.js` about Nostr, Arweave,
+candidate selection, verification, or Snapshot resolution. By the time a
+Snapshot's own origin is ever selectable in the World, it has already
+travelled DISCOVER -> SELECT -> RESOLVE -> VERIFY -> MATERIALIZE -> PLACE
+-> REGISTER — Nostr and Arweave are already behind that point, and the
+Publication a registration carries is always
+`ui/components/OwnPublicationPanel.js`'s own already-local `publication`
+prop, the SAME Publication `discovery/LocalDiscoveryProvider.js` already
+finds by `id` for `origin === 'local'`. So the fix answers a narrower
+question than "how do we resolve a Snapshot" — it answers "given a
+Snapshot-origin World encounter, what already-materialized/local material
+source should the World loader use?" — and the answer is: the exact same
+one `origin === 'local'` already uses.
+
+**Production change — one file, one new branch, mirroring the existing
+`'peer:'` branch exactly:**
+
+```text
+snapshot:<contentHash>:<publicationId>
+              │
+              ▼
+       materialSourceFor()   (application/WorldEncounterMaterialLoading.js)
+              │
+              ▼
+       materialSources.local   (the SAME slot 'local'-origin selections
+                                 already use — never a new
+                                 materialSources.snapshot slot, never a
+                                 new SnapshotMaterialSource class)
+```
+
+No new `SnapshotMaterialSource` class was added. No new `materialSources`
+slot naming convention was added. No change was made to
+`application/LocalWorldEncounterMaterialSource.js`,
+`application/MaterializedSnapshotWorldDiscoveryBridge.js`, or
+`ui/components/WorldEncounterCanvas.js` — closing this gap needed exactly
+one new `if` branch, in one existing function, in one existing file.
+
+**`tests/SnapshotWorldEncounterMaterialLoading.test.js` — nine sections:**
+
+- **A** — existing local (`origin === 'local'`) loading is byte-for-byte
+  unchanged.
+- **B** — existing peer (`origin.startsWith('peer:')`) loading is
+  byte-for-byte unchanged, including "no cross-slot fallback."
+- **C** — a `snapshot:<contentHash>:<publicationId>` origin is now
+  recognized: no longer an immediate `UNAVAILABLE` when a valid
+  `materialSources.local` exists — proven against 0.9.165's own exact gap
+  scenario, including a material source registered under a guessed
+  `materialSources.snapshot` key that is never called.
+- **D** — correct material identity: `publicationId` (the resolved
+  selection's own `objectId`) decides which Publication loads, never
+  `contentHash` — two different Publications load their own, distinct
+  material, and the SAME `publicationId` under two DIFFERENT `contentHash`
+  values still loads the one, correct Publication.
+- **E** — no network rediscovery: Nostr-/Arweave-/candidate-search-shaped
+  collaborators registered under every plausible key (`peer`,
+  `decentralized`, a guessed `snapshot`) are proven never invoked (each one
+  throws if reached), and `application/WorldEncounterMaterialLoading.js`
+  itself is swept for any reference to Nostr/Arweave/
+  `DecentralizedSnapshotResolver`/discovery-query infrastructure — none
+  exists.
+- **F** — no re-materialization: loading a Snapshot-origin World Encounter
+  Material never writes to storage (a wrapped `storageProvider.save()` is
+  never called), and neither the fix's own file nor the local material
+  source it routes to ever references `StoreSnapshotContentUseCase` or
+  calls a `ContentStore`'s own `.put()` — MATERIALIZE stays strictly
+  upstream of LOAD, never `LOAD -> secretly MATERIALIZE`.
+- **G** — failure behavior is unchanged: a `snapshot:*` selection whose
+  local source genuinely lacks the content, or with no
+  `materialSources.local` registered at all, still degrades to the
+  existing `UNAVAILABLE` vocabulary — `WorldEncounterMaterialLoadStatus`
+  still holds exactly `UNAVAILABLE`/`AVAILABLE`, no third status was
+  invented.
+- **H** — rendering regression: through the real, entirely unmodified
+  `WorldEncounterCanvas` machinery (`selectEncounter()` ->
+  `refreshSelectionOutcome()` -> `refreshMaterialInspection()` ->
+  `inspectWorldEncounterMaterial()`), selecting a registered Snapshot's own
+  marker now progresses `materialInspection.loading.status` to
+  `AVAILABLE`, carrying the real Publication — "World Encounter" becomes
+  "World Encounter Material," the UX change this milestone exists to
+  produce.
+- **I** — FLAGSHIP: the complete, real pipeline — a real (fake-backed)
+  `ArweaveContentStore` placement, a real (fake-backed) Nostr announcement
+  and candidate discovery
+  (`application/DiscoverSnapshotCandidatesCommand.js`), an explicit
+  selection, real resolution and verification
+  (`application/ResolveSelectedSnapshotCommand.js` over
+  `application/DecentralizedSnapshotResolver.js`), real materialization
+  (`application/MaterializeSelectedSnapshotCommand.js` over
+  `application/StoreSnapshotContentUseCase.js`, writing into the SAME
+  `storageProvider` the Publication already lives in), real placement
+  (`application/SnapshotWorldPlacement.js` against a genuine
+  pre-existing `WorldPlacement`), real registration
+  (`application/MaterializedSnapshotWorldDiscoveryBridge.js`), a real,
+  mounted `WorldEncounterCanvas` observing the registry, a real selection,
+  and — through this milestone's own one-branch fix — real material
+  loading, ending in the exact, real Publication the pipeline started
+  from. Confirms exactly one `materialSources` slot (`local`) was ever
+  needed anywhere in the pipeline.
+
+**0.9.165's own `tests/WorldDiscoveryParticipationAudit.test.js` Section F
+is UPDATED, post-0.9.166, to confirm the fix directly against the same
+real function** — the identical "characterize, then a later milestone
+fixes it, then the characterizing audit is updated to confirm the fix"
+discipline `tests/SnapshotWorldConvergenceAudit.test.js`'s own Section B
+already held for 0.9.163's fix over 0.9.162's own audit.
+
+Deliberately excluded, per this milestone's own narrow scope — see
+`application/WorldEncounterMaterialLoading.js`'s own 0.9.166 header for
+the complete list:
+- **A new `SnapshotMaterialSource` class, or a `materialSources.snapshot`
+  slot.** The existing `materialSources.local` slot already serves both
+  `'local'`-origin and `snapshot:*`-origin selections.
+- **Querying Nostr, contacting Arweave, re-resolving a candidate, or
+  re-materializing bytes from inside the World material loader.** All of
+  that stays strictly upstream, behind DISCOVER -> ... -> REGISTER.
+- **A new failure/status vocabulary for a Snapshot-origin miss.** Degrades
+  to the existing `UNAVAILABLE`, exactly like every other origin family.
+- **Automatic discovery, automatic materialization, automatic placement,
+  source ranking, or duplicate reconciliation of any kind.**
+- **Any change to `application/LocalWorldEncounterMaterialSource.js`,
+  `application/MaterializedSnapshotWorldDiscoveryBridge.js`, or
+  `ui/components/WorldEncounterCanvas.js`.**
+
+```text
+0.9.160  Selected Snapshot World Runtime Registration                ✓
+0.9.161  Snapshot World Rendering                                    ✓
+0.9.162  Snapshot World Convergence Audit                            ✓
+0.9.163  Snapshot World Origin Collision Fix                         ✓
+0.9.164  Snapshot World Source Identity Audit                        ✓
+0.9.165  World Discovery Participation Audit                         ✓
+0.9.166  Snapshot World Encounter Material Loading                   ✓
+```
+
+### Recommendation
+
+With 0.9.166, Snapshot participation in the World is no longer merely
+discoverable and renderable — a registered Snapshot's own marker can now
+actually load its material through the ordinary World material loading
+path, the same path local and peer material already use. The natural next
+milestone is the one 0.9.165's own recommendation already implied:
+**0.9.167 — World Encounter Material Loading E2E Audit**, verifying that
+all three source families (local, peer, Snapshot) now support the complete
+`DISCOVERY -> ENCOUNTER -> MATERIAL -> RENDER` experience, with Snapshot's
+own full `discover -> select -> resolve -> verify -> materialize -> place
+-> register -> encounter -> select -> load material -> render` chain
+audited end to end against the real, unmodified production composition —
+distinct from this milestone's own dedicated fix contract
+(`tests/SnapshotWorldEncounterMaterialLoading.test.js`) in the same way
+0.9.165's own audit was always distinct from any one vertical milestone's
+own tests.

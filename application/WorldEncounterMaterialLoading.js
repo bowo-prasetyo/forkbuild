@@ -181,6 +181,77 @@ import { LOCAL_WORLD_DISCOVERY_ORIGIN } from './WorldEncounterIntegration.js';
 //   is untouched," above.
 // - **Mutating `resolvedSelection` in any way.** See "resolvedSelection
 //   is forwarded verbatim," above.
+//
+// 0.9.166 — Snapshot World Encounter Material Loading.
+//
+// 0.9.165's own World Discovery Participation Audit (Section F) proved a
+// genuine, previously invisible gap in `materialSourceFor()`, below: a
+// registered Snapshot's own `"snapshot:<contentHash>:<publicationId>"`
+// origin (application/MaterializedSnapshotWorldDiscoveryBridge.js, 0.9.160,
+// updated 0.9.163) matched neither the `origin === 'local'` branch nor the
+// `origin.startsWith('peer:')` branch — both written well before Snapshot
+// existed as a World source family — so `loadWorldEncounterMaterial()`
+// reported `UNAVAILABLE` unconditionally for it, no matter what a caller
+// supplied. This milestone closes exactly that one branch, and nothing
+// else.
+//
+//   snapshot:<contentHash>:<publicationId>
+//                  │
+//                  ▼
+//   materialSourceFor()   ★ (THIS milestone's own one new branch)
+//                  │
+//                  ▼
+//   materialSources.local   (the SAME slot `origin === 'local'` already
+//                             uses — see below for why)
+//
+// ROUTES TO THE EXISTING `materialSources.local` SLOT, NEVER A NEW
+// `materialSources.snapshot` SLOT. By the time a Snapshot's own origin is
+// ever selectable here, it has already travelled DISCOVER -> SELECT ->
+// RESOLVE -> VERIFY -> MATERIALIZE -> PLACE -> REGISTER
+// (`application/MaterializedSnapshotWorldDiscoveryBridge.js`'s own
+// `registerMaterializedSnapshotWorldSource()`) — and the Publication that
+// registration carries is always `ui/components/OwnPublicationPanel.js`'s
+// own already-local `publication` prop, the SAME Publication
+// `discovery/LocalDiscoveryProvider.js` already finds by `id` for
+// `origin === 'local'`. There is nothing Snapshot-specific left to
+// retrieve by the time World material loading runs — Nostr, Arweave,
+// candidate selection, and verification are all already behind this
+// point, exactly per this milestone's own brief — so this file reuses
+// whatever concrete source a caller already registers under
+// `materialSources.local` (0.9.22's own local-origin implementation,
+// unmodified — this file still never names or imports it, exactly as
+// before this milestone), rather than adding a new `SnapshotMaterialSource`
+// class or a third `materialSources` slot naming convention. A caller
+// wires `materialSources.local` once, and it already serves `local`-origin
+// AND `snapshot:*`-origin selections alike.
+//
+// NEVER TEACHES THIS FILE ABOUT NOSTR, ARWEAVE, OR SNAPSHOT RESOLUTION.
+// `materialSourceFor()` only ever pattern-matches the `origin` STRING —
+// `origin.startsWith('snapshot:')`, mirroring the existing
+// `origin.startsWith('peer:')` check immediately above it — and never
+// parses out `contentHash`/`publicationId`, never imports anything from
+// the Snapshot distribution/discovery family, and never decides whether a
+// Snapshot was ever actually verified. That question was already answered,
+// upstream, by the pipeline that produced this origin in the first place.
+//
+// DELIBERATELY EXCLUDED — NOT THIS MILESTONE.
+// - **A new `SnapshotMaterialSource` class, or a `materialSources.snapshot`
+//   slot.** See "routes to the existing `materialSources.local` slot,"
+//   above.
+// - **Any change to the concrete local-origin material source registered
+//   under `materialSources.local`, to
+//   `application/MaterializedSnapshotWorldDiscoveryBridge.js`, or to
+//   `ui/components/WorldEncounterCanvas.js`.** This milestone touches
+//   exactly one function, in this one file.
+// - **Querying Nostr, contacting Arweave, re-resolving a candidate, or
+//   re-materializing bytes.** See "never teaches this file about Nostr,
+//   Arweave, or Snapshot resolution," above — by design, none of that
+//   infrastructure is ever imported here.
+// - **A new failure/status vocabulary for a Snapshot-origin miss.** A
+//   `snapshot:*` origin with no `materialSources.local` registered, or one
+//   whose `load()` itself resolves to nothing, degrades to the same
+//   `UNAVAILABLE` every other origin family already reports for the
+//   identical reasons — see "two statuses, never a third," above.
 
 export const WorldEncounterMaterialLoadStatus = Object.freeze({
     UNAVAILABLE: 'UNAVAILABLE',
@@ -213,6 +284,16 @@ function materialSourceFor(origin, materialSources) {
     }
     if (typeof origin === 'string' && origin.startsWith('peer:')) {
         return materialSources.peer || null;
+    }
+    // 0.9.166 — a "snapshot:<contentHash>:<publicationId>" origin (application/
+    // MaterializedSnapshotWorldDiscoveryBridge.js, 0.9.160/0.9.163) names a
+    // Publication this replica already possesses LOCALLY by the time it is
+    // ever selectable here — see this file's own header, "0.9.166," for why
+    // that routes to the SAME `materialSources.local` slot `origin ===
+    // LOCAL_WORLD_DISCOVERY_ORIGIN` already uses, never a third slot of its
+    // own.
+    if (typeof origin === 'string' && origin.startsWith('snapshot:')) {
+        return materialSources.local || null;
     }
     return null;
 }
