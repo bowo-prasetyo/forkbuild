@@ -67935,3 +67935,129 @@ need it to. Only once that seam exists should World View decide whether,
 and how, to expose candidate browsing to a user — a UI decision this
 milestone deliberately leaves open, the same restraint 0.9.142's own
 header already held for the attribution-oriented command it introduced.
+
+## 0.9.150 — Snapshot Candidate Discovery Command
+
+0.9.149's own audit proved `application/NostrSnapshotDiscoveryQueryService.js#search()`
+(0.9.133) already answers a browsing-oriented question —
+"what has been announced under this discoveryTag, at all?" — completely
+separate from `application/DecentralizedSnapshotResolver.js#resolve()`'s
+(0.9.134) attribution-oriented "can THIS ONE contentHash be retrieved and
+verified?" — and that exposing `search()` directly is already safe: it
+returns every candidate, unranked, unfiltered by contentHash, untouched
+by retrieval. This milestone is that exposure: the one production file
+0.9.149's own "Recommendation" named by its intended shape before it
+existed.
+
+```text
+World View
+    │  { discoveryTag }
+    ▼
+application/DiscoverSnapshotCandidatesCommand.js   (0.9.150, NEW)
+    │
+    ▼
+discoveryQueryService.search(discoveryTag)
+    (application/NostrSnapshotDiscoveryQueryService.js, 0.9.133, unmodified)
+    │
+    ▼
+[ { contentHash, locator, storage }, ... ]
+```
+
+`application/DiscoverSnapshotCandidatesCommand.js` — a plain,
+non-`async` function, `executeDiscoverSnapshotCandidatesCommand({
+discoveryTag, discoveryQueryService })`, mirroring
+`application/DiscoverSnapshotCommand.js`'s (0.9.142) own shape exactly:
+validates `discoveryQueryService` synchronously (a non-null value
+exposing a `search` function, duck-typed, never an `instanceof` check),
+throws synchronously for a missing/malformed one, and otherwise forwards
+`discoveryTag` to `discoveryQueryService.search()` verbatim, returning its
+own result unchanged — no wrapping envelope, no sorting, no
+deduplication, no filtering by contentHash. This is a genuinely different
+operation from `DiscoverSnapshotCommand.js`, not a second way to spell
+the same one — see 0.9.149's own
+ATTRIBUTION-ORIENTED-RESOLUTION-vs-BROWSING-ORIENTED-DISCOVERY diagram —
+and this file never imports `executeDiscoverSnapshotCommand`,
+`DecentralizedSnapshotResolver`, `ContentStore`, or
+`SnapshotPublicationAttribution`.
+
+`tests/DiscoverSnapshotCandidatesCommand.test.js` — nine sections:
+
+```text
+Section A: a missing/malformed discoveryQueryService throws
+           synchronously, before search() is ever called
+Section B: FLAGSHIP — discoveryTag is forwarded to search() verbatim,
+           and its own candidate array is returned unchanged, in the
+           same order, across heterogeneous candidates (different
+           contentHash/locator/storage combinations)
+Section C: relay/discovery arrival order is preserved exactly — no
+           ranking or sorting is introduced by this command
+Section D: an empty discovery result ([]) is a valid, unmodified result
+Section E: the command works with only a discovery query service — no
+           ContentStore argument exists in its contract
+Section F: the command never invokes retrieval or verification of any
+           kind — search() alone is called
+Section G: no MATCH/NO_MATCH/attribution/trust/ranking vocabulary exists
+           in this file
+Section H: a genuine rejection from the query service propagates
+           unchanged — no invented failure taxonomy, following this
+           family's own existing command conventions
+Section I: architectural regression — no imports of ContentStore,
+           DecentralizedSnapshotResolver, SnapshotPublicationAttribution,
+           or the separate resolution command; search() called from
+           exactly one place; no sort/filter/dedup of the returned
+           collection
+```
+
+### What this milestone establishes
+
+`discoveryTag → candidate collection` is now a real, independently
+callable, independently tested application seam — the identical
+assembly-boundary discipline `application/DiscoverSnapshotCommand.js`
+already holds for resolution, held here for browsing-oriented discovery
+instead. A caller (eventually World View) can now ask "what exists under
+this tag" without being forced through retrieval, verification, or
+attribution to get an answer — closing exactly the gap 0.9.149's own
+audit named: "the underlying mechanism can discover multiple candidates,
+but World View cannot expose them." Runtime composition deliberately
+reuses whichever `discoveryQueryService` a caller already composed (e.g.
+`application/DiscoverSnapshotRuntimeComposition.js`'s own query service,
+or a future shared composition) — this milestone builds no second Nostr
+relay client and no second composition path.
+
+### Deliberately excluded — not this milestone
+
+- **No UI candidate browser.** This file has no idea `ui/` exists — a
+  separate, later, unscheduled milestone (0.9.149's own "Recommendation"
+  already named this split).
+- **No ranking, deduplication, filtering by contentHash, or provider
+  preference.** `search()` performs none of these today, and this file
+  adds none on top.
+- **No retrieval, verification, or attribution.** Resolving one specific
+  discovered candidate stays `application/DiscoverSnapshotCommand.js`'s
+  own, entirely separate, already-existing job.
+- **No new outcome/status vocabulary.** A candidate array either exists
+  (possibly empty) or the call throws for a caller-contract violation —
+  nothing else.
+- **No composition-root wiring or new Nostr transport of any kind.** A
+  caller supplies an already-composed `discoveryQueryService`.
+
+```text
+0.9.146  Snapshot & World Architecture Roadmap Reassessment        ✓
+0.9.147  Decentralized Discovery Relay Query Client                ✓
+0.9.148  End-to-End Decentralized Discovery Runtime Audit          ✓
+0.9.149  Snapshot Discovery Semantics Audit & API Boundary         ✓
+0.9.150  Snapshot Candidate Discovery Command                      ✓
+```
+
+### Recommendation
+
+With `discoveryTag → candidate collection` now a real, tested application
+seam, I would make **0.9.151 the World View Snapshot Candidate Browser**:
+a UI milestone, entirely separate from this one, that wires
+`executeDiscoverSnapshotCandidatesCommand()` into a World View control and
+designs the actual candidate-list presentation — including, at that
+point, whether/how a user selects one candidate to hand to the existing,
+unmodified `executeDiscoverSnapshotCommand()`/attribution chain. This
+milestone deliberately leaves that UI decision open, the same restraint
+0.9.142's own header already held for the resolution-oriented command it
+introduced.
