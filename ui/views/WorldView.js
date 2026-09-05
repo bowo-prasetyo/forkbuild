@@ -514,6 +514,18 @@ export default {
         // own header for how "which publication" becomes "which
         // contentHash."
         const discoverSnapshotCommand = inject('discoverSnapshotCommand', null);
+        // 0.9.151 — World View Snapshot Candidate Browser. The SAME
+        // app-wide `discoverSnapshotCandidatesCommand` `ui/main.js` now
+        // composes (reusing the SAME `NostrSnapshotDiscoveryQueryService`
+        // instance `discoverSnapshotCommand`'s own resolver already
+        // wraps) — a thin `() -> Promise<[{ contentHash, locator,
+        // storage }, ...]>` capability. Unlike `discoverSnapshotCommand`,
+        // this capability needs no `publication`-derived argument at all
+        // — browsing what has been announced under the campaign
+        // discoveryTag is not "which Publication," so this is handed
+        // straight through to `OwnPublicationPanel`, with no wrapper
+        // function of this view's own.
+        const discoverSnapshotCandidatesCommand = inject('discoverSnapshotCandidatesCommand', null);
         // 0.9.110 — Decentralized Material Retrieval Runtime Composition.
         // The SAME app-wide `DecentralizedWorldDiscoveryLeadRegistry`
         // `ui/main.js` now composes, handed straight through as
@@ -3240,7 +3252,8 @@ export default {
             publishActiveDocument,
             distributeWorldEncounterPublication,
             distributeWorldEncounterSnapshot,
-            discoverOwnSnapshot
+            discoverOwnSnapshot,
+            discoverSnapshotCandidatesCommand
         };
     },
     template: `
@@ -3305,6 +3318,7 @@ export default {
                     :publication="ownPublication"
                     :snapshotDistributionCommand="distributeWorldEncounterSnapshot"
                     :discoverSnapshotCommand="discoverOwnSnapshot"
+                    :discoverSnapshotCandidatesCommand="discoverSnapshotCandidatesCommand"
                 />
             <!-- 0.5.7 — World View UX & Progressive Exploration. Home
                  and Locations stay plain navigation utilities; Explore /

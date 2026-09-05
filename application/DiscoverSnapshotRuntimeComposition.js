@@ -182,12 +182,32 @@ function canAttemptArweaveRetrieval({ signer } = {}) {
 
 // composeDiscoverSnapshotRuntime({ arweaveContentStoreOptions,
 //   nostrSnapshotDiscoveryQueryServiceOptions }) -> { resolver,
-//   contentStore }. See this file's own header for the full contract:
-//   each field is either a real, working collaborator or `null` — never a
-//   throw for an absent capability, never a fabricated stand-in, and
-//   never a summary boolean over the two. A genuinely malformed PRESENT
-//   capability still throws, exactly as calling the underlying
-//   constructor directly already would.
+//   contentStore, queryService }. See this file's own header for the full
+//   contract: each field is either a real, working collaborator or `null`
+//   — never a throw for an absent capability, never a fabricated
+//   stand-in, and never a summary boolean over the two. A genuinely
+//   malformed PRESENT capability still throws, exactly as calling the
+//   underlying constructor directly already would.
+//
+// 0.9.151 — `queryService` IS NOW RETURNED ALONGSIDE `resolver`/
+// `contentStore`, NOT JUST CONSUMED INTERNALLY. This file already built a
+// `NostrSnapshotDiscoveryQueryService` instance to hand `resolver` — the
+// attribution-oriented resolution seam (`application/
+// DiscoverSnapshotCommand.js`) only ever needed the `resolver` it wraps.
+// The browsing-oriented candidate seam (`application/
+// DiscoverSnapshotCandidatesCommand.js`, 0.9.150) needs the query service
+// ITSELF — its own `search()` is the whole operation, with no resolver
+// involved — so a caller composing this runtime for World View (see
+// `ui/main.js`) can now hand the SAME instance to both
+// `executeDiscoverSnapshotCommand()` (via `resolver`) and
+// `executeDiscoverSnapshotCandidatesCommand()` (via `queryService`
+// directly), exactly the "one relay client, two independent application
+// seams on top of it" posture `application/
+// DiscoverSnapshotCandidatesCommand.js`'s own header already names —
+// never a second `NostrSnapshotDiscoveryQueryService` construction, and
+// never a second composition path. `queryService` is `null` under the
+// identical "no usable `queryImpl`" condition `resolver` already goes
+// `null` under — the two fields are never independently absent.
 export function composeDiscoverSnapshotRuntime({
     arweaveContentStoreOptions = {},
     nostrSnapshotDiscoveryQueryServiceOptions = {}
@@ -202,5 +222,5 @@ export function composeDiscoverSnapshotRuntime({
 
     const resolver = queryService ? new DecentralizedSnapshotResolver(queryService) : null;
 
-    return Object.freeze({ resolver, contentStore });
+    return Object.freeze({ resolver, contentStore, queryService });
 }
