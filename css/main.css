@@ -5664,6 +5664,32 @@ html, body {
     font-style: italic;
 }
 
+/* 0.9.176 — World Snapshot Presentation. A plain color badge over
+   selectedEncounterPresentationSourceLabel — never a rank, trust, or
+   quality signal, purely a "which family did this come from" cue, one
+   modifier class per WorldEncounterPresentationSourceFamily value plus the
+   unresolved default. */
+.world-encounter-inspection-source {
+    font-weight: 600;
+}
+
+.world-encounter-inspection-source--local {
+    color: #808080;
+}
+
+.world-encounter-inspection-source--peer {
+    color: #5aa9e6;
+}
+
+.world-encounter-inspection-source--snapshot {
+    color: #e6b85a;
+}
+
+.world-encounter-inspection-source--unresolved {
+    color: #808080;
+    font-style: italic;
+}
+
 /* ===================================================================
    0.9.20 — World Encounter Selection Resolution
    ===================================================================

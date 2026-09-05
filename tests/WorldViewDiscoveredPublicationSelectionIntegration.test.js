@@ -366,8 +366,8 @@ async function runTests() {
         const codeOnly = source.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
 
         const applicationImportLines = codeOnly.split('\n').filter((line) => line.includes("from '../../application/"));
-        assert(applicationImportLines.length === 8,
-            '21. WorldEncounterCanvas.js still imports exactly eight application/ modules as of 0.9.144 — 0.9.113 introduced no new application-layer command, per its own "no application-layer command" restraint; the eighth is 0.9.144\'s own SnapshotPublicationAttribution.js');
+        assert(applicationImportLines.length === 9,
+            '21. WorldEncounterCanvas.js still imports exactly nine application/ modules as of 0.9.176 — 0.9.113 introduced no new application-layer command, per its own "no application-layer command" restraint; the eighth is 0.9.144\'s own SnapshotPublicationAttribution.js, the ninth 0.9.176\'s own WorldEncounterPresentation.js');
 
         assert(codeOnly.includes('selectedDiscoveredPublication') && codeOnly.includes('selectDiscoveredPublication') && codeOnly.includes('isDiscoveredPublicationSelectable'),
             '22. the new field/method/computed are actually present');

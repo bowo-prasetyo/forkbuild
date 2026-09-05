@@ -71334,3 +71334,185 @@ Snapshot pipeline entirely, the way 0.9.168's own World View Capability
 Reassessment already did one plateau earlier — never a milestone named
 for the fact that more machinery COULD still be added to Snapshot
 handling, with no actual capability gap driving it.
+
+0.9.174 (World Source Lifecycle & Staleness Audit) and 0.9.175 (World
+Source Selection Consistency Audit) each followed that same restraint —
+two more test-only audits, driving the real, unmodified registry/
+selection/material-loading chain through registration churn and
+multi-family selection consistency, each finding no genuine defect and
+adding no production code. 0.9.175's own negative result is the one worth
+carrying forward explicitly: when a chosen candidate disappears while
+other valid candidates for the identical `objectId` remain,
+`resolvedEncounterSelection` resolves to `null` rather than silently
+substituting a survivor — recovery is always a fresh, explicit choice.
+That is the stable floor this milestone builds on.
+
+## 0.9.176 — World Snapshot Presentation
+
+Five audits in a row (0.9.162, 0.9.164, 0.9.165, 0.9.167, 0.9.170,
+0.9.173, 0.9.174, 0.9.175) confirmed the same underlying machinery sound
+from every angle a test can drive it. None of them, by design, changed
+what a Wanderer actually sees. A materialized, World-placed Snapshot has
+rendered as a marker (0.9.161), loaded its material (0.9.166), and
+survived every selection/lifecycle audit thrown at it (0.9.174, 0.9.175)
+— all while looking, to a Wanderer, exactly like any other Publication.
+Nothing in the entire DISCOVER -> ... -> REGISTER -> WORLD ENCOUNTER ->
+SELECT -> LOAD MATERIAL -> RENDER chain ever named which family of
+`WorldDiscoverySource` actually produced a given encounter. This
+milestone is the first one in this arc that changes what is on screen,
+however narrowly: once a Wanderer selects an encounter, the existing
+inspection panel now says whether it came from `Local`, `Peer`, or
+`Snapshot`.
+
+**THE ARCHITECTURAL RULE THIS MILESTONE HELD TO:** Snapshot/Nostr/Arweave
+concepts never move back into the shared `core/WorldEncounter.js` model.
+`sourceFamily` is derived entirely from a `WorldDiscoverySource`'s own
+`origin` string — the identical three patterns
+`application/WorldEncounterMaterialLoading.js#materialSourceFor()`
+already uses to ROUTE material loading (0.9.21, updated 0.9.166) — read
+here only to LABEL, never to route, rank, or decide anything. A Snapshot
+still reaches the World registry, gets encountered, gets selected, and
+gets its material loaded through machinery this milestone does not touch
+at all.
+
+```text
+selectedEncounterInspection (0.9.16/0.9.18)   resolvedEncounterSelection (0.9.20)
+        { kind, objectId, title/                  { kind, objectId, origin }
+          displayName, x, y, z }
+                    │                                       │
+                    └───────────────────┬───────────────────┘
+                                         ▼
+                application/WorldEncounterPresentation.js   ★ (THIS milestone)
+                      describeWorldEncounterPresentation()
+                                         │
+                                         ▼
+                { kind, objectId, title/displayName, x, y, z, sourceFamily }
+                                         │
+                                         ▼
+                ui/components/WorldEncounterCanvas.js's own inspection
+                panel — a new "Source" row, reading LOCAL/PEER/SNAPSHOT
+                as "Local"/"Peer"/"Snapshot"
+```
+
+**Production change — one new pure module, plus the smallest possible
+UI wiring:**
+
+- `application/WorldEncounterPresentation.js` — new. Exports
+  `WorldEncounterPresentationSourceFamily` (`LOCAL`/`PEER`/`SNAPSHOT`,
+  exactly the three families `materialSourceFor()` already routes on),
+  `describeWorldEncounterPresentationSourceFamily(origin)`, and
+  `describeWorldEncounterPresentation({ inspection, resolvedSelection })`
+  — a pure join of two already-computed facts. No I/O, no registry
+  access, no new `WorldEncounterKind`. `sourceFamily` is `null` whenever
+  `resolvedSelection` is absent or names a different `kind`/`objectId`
+  than `inspection` — presentation never guesses among an `AMBIGUOUS`
+  selection's own candidates.
+- `ui/components/WorldEncounterCanvas.js` — one new import, two new
+  computed properties (`selectedEncounterPresentation`,
+  `selectedEncounterPresentationSourceLabel`), and a new "Source" row in
+  both the PUBLICATION and AVATAR branches of the existing inspection
+  `<dl>`. No new panel, no new component, no change to
+  `projectedPublications`/`projectedAvatars` or to
+  `ui/components/WorldEncounterMarker.js` — a marker's own glyph before
+  selection is completely untouched by this milestone.
+- `css/main.css` — a small `.world-encounter-inspection-source--*`
+  color-coded modifier per family, plus an `--unresolved` default. A
+  color cue, never a rank/trust signal.
+
+**`tests/WorldEncounterPresentation.test.js` — seven sections** covering
+the new pure module directly: source-family classification for all three
+recognized origin patterns plus unrecognized/malformed input (A); the
+publication shape, with every field forwarded verbatim and `sourceFamily`
+correctly derived for LOCAL/PEER/SNAPSHOT (B); the avatar shape, kept
+entirely separate from the publication shape (C); `sourceFamily: null`
+whenever `resolvedSelection` is absent or disagrees with `inspection` on
+`kind`/`objectId` (D); malformed/missing `inspection` degrading to `null`,
+never throwing (E); purity — frozen, deterministic, no mutation (F); and a
+structural sweep for rank/trust/verified/best vocabulary and for a new
+`WorldEncounterKind` (G).
+
+**`tests/SnapshotWorldPresentation.test.js` — five sections, the flagship
+end-to-end scenario:**
+
+- **A** — FLAGSHIP: a real Nostr-discovered, resolved, materialized,
+  PLACED, and REGISTERED Snapshot (the same real composed runtime
+  0.9.160's and 0.9.161's own flagships built), observed through a real,
+  mounted `WorldEncounterCanvas` sharing the same registry
+  `OwnPublicationPanel` registered into. Selecting the rendered marker
+  resolves `sourceFamily` to exactly `SNAPSHOT`, with the Publication's
+  own title/identity/position reaching the presentation descriptor
+  unmodified.
+- **B** — an ordinary LOCAL Publication still presents with `sourceFamily
+  LOCAL` — the pre-existing baseline, unchanged.
+- **C** — an ordinary PEER-discovered Publication still presents with
+  `sourceFamily PEER` — the pre-existing baseline, unchanged.
+- **D** — an `AMBIGUOUS` selection with no explicit choice yet presents
+  with `sourceFamily: null` / label `"Unresolved"`; making the Wanderer's
+  own explicit choice (`chooseSelectionOrigin()`, 0.9.20, unmodified)
+  resolves it exactly like any other resolved selection.
+- **E** — structural sweep: the registration bridge
+  (`application/MaterializedSnapshotWorldDiscoveryBridge.js`) and
+  `ui/components/WorldEncounterMarker.js` remain completely untouched,
+  and the new presentation module performs no I/O and carries no
+  rank/trust vocabulary anywhere in its own executable code.
+
+`tests/WorldEncounterCanvasUI.test.js`'s own Section J (the
+`WorldEncounterCanvas.js` import-boundary sweep) and the equivalent
+sweeps in `tests/WorldViewDecentralizedPublicationRetrievalIntegration.test.js`
+and `tests/WorldViewDiscoveredPublicationSelectionIntegration.test.js`
+are updated from eight to nine `application/` imports, naming
+`WorldEncounterPresentation.js` as the ninth — the same "update the
+counting sweep, never relax it" discipline every prior import-adding
+milestone in this file already followed.
+
+Deliberately excluded, per this milestone's own narrow brief:
+- **Marking a marker's own glyph, color, or shape before it is ever
+  selected.** Distinguishing a Snapshot-origin marker from an ordinary
+  one BEFORE a Wanderer selects it would require joining per-source
+  origin into the whole, still deliberately origin-blind
+  `effectiveView` — a separate, larger seam than "derive presentation
+  information from an existing resolved/selected encounter," left for
+  later, separate, unscheduled work.
+- **Snapshot ranking, "best" Snapshot selection, automatic Snapshot
+  selection, automatic materialization, automatic position-claim
+  consumption, Snapshot deduplication, trust/reputation,
+  freshness/expiration, synchronization, Snapshot lifecycle states, a
+  new registry mechanism, another discovery protocol, Nostr UI, Arweave
+  UI, a second rendering pipeline, or a Snapshot-specific
+  `WorldEncounterKind`.** Per this milestone's own brief, none of these
+  is a presentation concern, and none was added.
+- **Snapshot inspection/comparison detail** — contentHash, locator,
+  discovery tag, or any Nostr/Arweave-specific field on the presentation
+  descriptor. `sourceFamily` is deliberately the one coarse fact; a
+  richer inspection surface is exactly the next milestone's own likely
+  shape (see Recommendation, below).
+
+```text
+0.9.173  Decentralized Snapshot Spatial E2E Audit                    ✓
+0.9.174  World Source Lifecycle & Staleness Audit                    ✓
+0.9.175  World Source Selection Consistency Audit                    ✓
+0.9.176  World Snapshot Presentation                                 ✓
+```
+
+### Recommendation
+
+With 0.9.176, a decentralized Snapshot is no longer merely something the
+infrastructure can discover, verify, materialize, place, and render — it
+is something a Wanderer can recognize, by name, in the World View itself.
+Content identity, retrieval identity, discovery identity, Publication
+identity, spatial identity, registry origin, and now presentation
+identity remain seven separate facts, never merged.
+
+The natural next step is the one this milestone's own brief already
+named: a small **Snapshot inspection/compare capability** — once a
+Wanderer already knows an encounter is `SNAPSHOT`-sourced, what more
+would they actually want to see (contentHash, locator, discovery tag), and
+would it ever be useful to compare two Snapshots for the same
+`objectId`? That is presentation DETAIL, not presentation EXISTENCE
+(this milestone's own question), and it should stay just as narrow and
+additive — read-only, derived from already-resolved facts, never a new
+ranking or trust decision. I would NOT extend `sourceFamily` itself
+further (a fourth family, a per-service breakout) without a concrete
+product reason driving it; the three-family, origin-string-derived
+design here is deliberately as small as the existing origin vocabulary
+allows.
