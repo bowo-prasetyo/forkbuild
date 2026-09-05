@@ -87,16 +87,21 @@ import { StorageProvider } from '../storage/StorageProvider.js';
 //              discovery's registry notification, and Snapshot's own
 //              entirely-manual discovery/materialization pipeline are
 //              confirmed structurally independent of one another. ONE
-//              GENUINE SEAM IS FOUND, NAMED, AND PROVEN, NOT FIXED: any
-//              registry membership change — including one entirely
-//              unrelated to the currently selected encounter — triggers a
-//              fresh, redundant `materialSources.*.load()` call for that
-//              selection, via `refreshSelectionOutcome()`'s own
-//              unconditional tail-call to `refreshMaterialInspection()`.
-//              Correctness is unaffected (0.9.39's own request-id guard
-//              already discards a superseded response), but "registry
-//              membership change != material refresh" does not fully hold
-//              today.
+//              GENUINE SEAM WAS FOUND, NAMED, AND PROVEN HERE, NOT FIXED —
+//              FIXED BY 0.9.169. Any registry membership change —
+//              including one entirely unrelated to the currently selected
+//              encounter — used to trigger a fresh, redundant
+//              `materialSources.*.load()` call for that selection, via
+//              `refreshSelectionOutcome()`'s own unconditional tail-call to
+//              `refreshMaterialInspection()`. Correctness was unaffected
+//              (0.9.39's own request-id guard already discarded a
+//              superseded response), but "registry membership change !=
+//              material refresh" did not fully hold at the time this audit
+//              ran. Section E below is UPDATED, post-0.9.169, to confirm
+//              the fix directly against the same real canvas: an unrelated
+//              registry mutation no longer re-triggers a load — see
+//              `tests/MaterialInspectionRefreshPrecision.test.js` for that
+//              fix's own dedicated test contract.
 //   Section F: structural sweep — this milestone adds no production file,
 //              and the failure/status vocabulary this whole family already
 //              established (`WorldEncounterMaterialLoadStatus.AVAILABLE`/
@@ -468,9 +473,10 @@ async function run() {
     // Section E — temporal independence. Vehicle proximity polling,
     // World discovery's registry notification, and Snapshot's own
     // entirely-manual pipeline are structurally independent. ONE GENUINE
-    // SEAM IS FOUND, NAMED, AND PROVEN, NOT FIXED: an unrelated registry
-    // membership change triggers a redundant material reload for the
-    // currently selected, otherwise-unaffected encounter.
+    // SEAM WAS FOUND, NAMED, AND PROVEN HERE, NOT FIXED — FIXED BY 0.9.169:
+    // an unrelated registry membership change no longer triggers a
+    // redundant material reload for the currently selected,
+    // otherwise-unaffected encounter.
     // ---------------------------------------------------------------
     {
         // E1 — Snapshot's own discovery/materialization/placement/
@@ -499,10 +505,10 @@ async function run() {
         registry.setSource(describeLocalWorldDiscoverySource({ publications: [{ id: 'pub-e2', title: 'E2' }], placements: [] }));
         assert(notifiedSynchronously === true, '31. the registry\'s own subscriber fires synchronously, inside the very same setSource() call, never deferred to a timer');
 
-        // E3 — THE GENUINE SEAM: an entirely unrelated registry mutation
-        // (a new peer joining) while a Publication stays selected
-        // re-triggers material loading for that SAME, otherwise-unaffected
-        // selection.
+        // E3 — THE GENUINE SEAM, FIXED BY 0.9.169: an entirely unrelated
+        // registry mutation (a new peer joining) while a Publication stays
+        // selected no longer re-triggers material loading for that SAME,
+        // otherwise-unaffected selection.
         const storageProvider = new InMemoryStorageProvider();
         const publication = publishOwnPublication(storageProvider, 'Section E Publication');
         const localSource = new LocalWorldEncounterMaterialSource(storageProvider);
@@ -534,11 +540,11 @@ async function run() {
 
         assert(canvas.resolvedEncounterSelection.origin === resolvedSelectionBefore.origin && canvas.resolvedEncounterSelection.objectId === resolvedSelectionBefore.objectId,
             '33. sanity — the currently selected encounter\'s own resolved identity is genuinely unaffected by the unrelated peer joining');
-        assert(loadCounts.local === 2,
-            `34. THE GENUINE SEAM, PROVEN — an entirely unrelated registry mutation re-triggered a fresh materialSources.local.load() call for the SAME, unaffected selection (${loadCounts.local} total calls, expected exactly 2: one from selection, one redundant reload from the unrelated peer joining). This traces to refreshSelectionOutcome()'s own unconditional tail-call to refreshMaterialInspection() (ui/components/WorldEncounterCanvas.js) — every registry notification refreshes material inspection for the current selection, whether or not that selection's own resolved identity actually changed. Correctness is unaffected (0.9.39's own materialInspectionRequestId guard would already discard a stale response), but "World registry changes != material refresh" does not fully hold today. NOT FIXED HERE — this audit proves and names the seam; closing it is separate, later, unscheduled work, exactly as 0.9.163 was separate from 0.9.162.`);
+        assert(loadCounts.local === 1,
+            `34. THE GENUINE SEAM, NOW FIXED (0.9.169) — an entirely unrelated registry mutation no longer re-triggers a fresh materialSources.local.load() call for the SAME, unaffected selection (${loadCounts.local} total call(s), expected exactly 1: the one from the original selection, none redundant from the unrelated peer joining). ui/components/WorldEncounterCanvas.js's own refreshSelectionOutcome() now compares resolvedEncounterSelection against its own previous value before tail-calling refreshMaterialInspection() — see tests/MaterialInspectionRefreshPrecision.test.js for that fix's own dedicated test contract.`);
 
         unmountCanvas(canvas);
-        console.log('✓ Section E: temporal independence — Snapshot\'s own pipeline runs on no timer, and the registry\'s own notification is synchronous, never timer-driven; ONE GENUINE SEAM found and proven (not fixed): an unrelated registry mutation redundantly reloads material for the current, otherwise-unaffected selection');
+        console.log('✓ Section E: temporal independence — Snapshot\'s own pipeline runs on no timer, and the registry\'s own notification is synchronous, never timer-driven; the ONE GENUINE SEAM this audit found is now fixed (0.9.169): an unrelated registry mutation no longer redundantly reloads material for the current, otherwise-unaffected selection');
     }
 
     // ---------------------------------------------------------------
