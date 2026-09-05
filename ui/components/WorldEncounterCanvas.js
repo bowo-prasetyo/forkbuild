@@ -8,6 +8,7 @@ import { PublicationDistributionState } from '../../application/PublicationDistr
 import { describeDecentralizedWorldEncounterLeadSelectionOutcomeFromRegistry, DecentralizedWorldEncounterLeadSelectionOutcomeStatus } from '../../application/DecentralizedWorldEncounterLeadSelection.js';
 import { describePublicationMaterialProvenanceFromInspection } from '../../application/PublicationMaterialProvenance.js';
 import { resolveSnapshotPublicationAttribution } from '../../application/SnapshotPublicationAttribution.js';
+import { describeWorldEncounterPresentation } from '../../application/WorldEncounterPresentation.js';
 
 // 0.9.3 — World View UI / Wanderer Presence.
 //
@@ -1987,6 +1988,39 @@ export default {
             }
             return null;
         },
+        // 0.9.176 — the smallest possible World Snapshot Presentation seam:
+        // a pure join of `selectedEncounterInspection` (0.9.16/0.9.18) and
+        // `resolvedEncounterSelection` (0.9.20, immediately above), both
+        // already computed. Names WHICH source family — `LOCAL`, `PEER`, or
+        // `SNAPSHOT` — currently backs the selected encounter, so a
+        // successfully materialized and World-placed Snapshot becomes
+        // visibly distinguishable in the SAME inspection panel every other
+        // encounter already renders through. See `application/
+        // WorldEncounterPresentation.js`'s own header for the full
+        // rationale. `null` whenever there is nothing selected/inspectable,
+        // exactly like `selectedEncounterInspection` itself.
+        selectedEncounterPresentation() {
+            return describeWorldEncounterPresentation({
+                inspection: this.selectedEncounterInspection,
+                resolvedSelection: this.resolvedEncounterSelection
+            });
+        },
+        // 0.9.176 — a friendly label over `selectedEncounterPresentation.sourceFamily`,
+        // mirroring `selectedEncounterInspectionPublisherIdentityLabel`'s own
+        // "render a friendly derived label, never a raw enum value in the
+        // template" pattern. 'Unresolved' (never a blank cell) whenever
+        // there is no presentation yet, or the current selection has not
+        // settled on one specific source — the SAME 'Choose Source'
+        // ambiguity every other panel in this file already surfaces,
+        // reported here in this file's own vocabulary instead of a second,
+        // competing one.
+        selectedEncounterPresentationSourceLabel() {
+            const sourceFamily = this.selectedEncounterPresentation ? this.selectedEncounterPresentation.sourceFamily : null;
+            if (sourceFamily === 'LOCAL') return 'Local';
+            if (sourceFamily === 'PEER') return 'Peer';
+            if (sourceFamily === 'SNAPSHOT') return 'Snapshot';
+            return 'Unresolved';
+        },
         // 0.9.40 — the one resolved decentralized lead, if any, this
         // component ever forwards to `inspectWorldEncounterMaterial()`.
         // Mirrors `resolvedEncounterSelection` immediately above, exactly,
@@ -2633,6 +2667,8 @@ export default {
                 <dl v-if="selectedEncounterInspection && selectedEncounterInspection.kind === 'PUBLICATION'" class="world-encounter-inspection-detail">
                     <dt>Kind</dt>
                     <dd>Publication</dd>
+                    <dt>Source</dt>
+                    <dd class="world-encounter-inspection-source" :class="'world-encounter-inspection-source--' + selectedEncounterPresentationSourceLabel.toLowerCase()">{{ selectedEncounterPresentationSourceLabel }}</dd>
                     <dt>Title</dt>
                     <dd>{{ selectedEncounterInspection.title }}</dd>
                     <dt>Publisher</dt>
@@ -2650,6 +2686,8 @@ export default {
                 <dl v-else-if="selectedEncounterInspection && selectedEncounterInspection.kind === 'AVATAR'" class="world-encounter-inspection-detail">
                     <dt>Kind</dt>
                     <dd>Avatar</dd>
+                    <dt>Source</dt>
+                    <dd class="world-encounter-inspection-source" :class="'world-encounter-inspection-source--' + selectedEncounterPresentationSourceLabel.toLowerCase()">{{ selectedEncounterPresentationSourceLabel }}</dd>
                     <dt>Name</dt>
                     <dd>{{ selectedEncounterInspection.displayName }}</dd>
                     <dt>Owner</dt>
