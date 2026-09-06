@@ -14,6 +14,7 @@ import { unregisterMaterializedSnapshotWorldSource } from '../../application/Mat
 import { describeWorldEncounterComparisonCandidate } from '../../application/WorldEncounterComparisonCandidate.js';
 import { compareSnapshotWorldPublications } from '../../application/WorldSnapshotComparison.js';
 import { describeWorldSnapshotContentView } from '../../application/WorldSnapshotContentView.js';
+import { describeWorldSnapshotContentComparisonView } from '../../application/WorldSnapshotContentComparisonView.js';
 
 // 0.9.3 — World View UI / Wanderer Presence.
 //
@@ -1729,6 +1730,123 @@ import { describeWorldSnapshotContentView } from '../../application/WorldSnapsho
 //   (SNAPSHOT-sourced only, 0.9.177's own gate, unmodified) — a LOCAL/PEER
 //   selection never produces one, so "View Snapshot" stays unreachable for
 //   both, exactly like "Remove Snapshot from World" already does.
+//
+// 0.9.184 — World Snapshot Content Comparison View.
+//
+// 0.9.183's own "Recommendation" named this milestone directly: combine
+// 0.9.181/0.9.182's own comparison fact with 0.9.183's own Content View —
+// "a side-by-side rendering of two already-open Content Views, alongside
+// the already-computed SAME_CONTENT/DIFFERENT_CONTENT fact." Doing that
+// for real requires something 0.9.182 explicitly declined: a Content View
+// for the COMPARISON TARGET, not only the primary selection. This milestone
+// is the narrowest extension that makes that possible, and nothing more.
+//
+//   selectedSnapshotContentView (0.9.183, unmodified) ── "Publication A"
+//   comparisonSnapshotContentView (★ NEW, mirrors it exactly, one
+//                                    selection over)     ── "Publication B"
+//   worldSnapshotComparisonResult (0.9.181/182, unmodified)
+//        │
+//        ▼
+//   application/WorldSnapshotContentComparisonView.js   (NEW)
+//        describeWorldSnapshotContentComparisonView()
+//        │
+//        ▼
+//   worldSnapshotContentComparisonView   ★ (THIS milestone's own new computed)
+//        { aPublicationId, bPublicationId, contentComparison, aMaterial, bMaterial }
+//        null
+//        │
+//        │  click "View Content Comparison" -> contentComparisonViewOpen = true
+//        ▼
+//   Content Comparison panel
+//
+// EXTENDING MATERIAL LOADING TO THE COMPARISON TARGET IS A DELIBERATE,
+// NARROW REVISION OF 0.9.182'S OWN EXCLUSION — NOT AN OVERSIGHT. 0.9.182's
+// own header excluded "material loading... for the comparison target"
+// because comparison, at the time, was ONLY an identity question
+// (`contentHash` equality), which never needed material at all. This
+// milestone's own purpose — SHOWING both sides' content — cannot be done
+// without it. What is added mirrors the primary selection's own existing
+// `materialInspection`/`refreshMaterialInspection()` pair exactly, one
+// selection over (`comparisonMaterialInspection`/
+// `refreshComparisonMaterialInspection()`), calling the SAME, already-
+// existing `inspectWorldEncounterMaterial()` — never a second loader, never
+// a new `materialSources` slot. Decentralized lead resolution for the
+// comparison target remains excluded, unrevisited (see "deliberately
+// excluded," below): `refreshComparisonMaterialInspection()` never supplies
+// a `resolvedLead`, exactly like the primary selection's own material
+// inspection behaved before 0.9.40 ever existed. A comparison target whose
+// material genuinely requires a resolved decentralized lead to load simply
+// stays `UNAVAILABLE` here — honest degradation, never a silent second
+// resolution pipeline invented to route around that gap.
+//
+// `refreshComparisonMaterialInspection()` IS TRIGGERED THE IDENTICAL WAY
+// `refreshMaterialInspection()` ALREADY IS FOR THE PRIMARY SELECTION —
+// EXPLICITLY, NEVER AUTOMATICALLY, NEVER ON A TIMER. It runs once, from
+// `selectComparisonEncounter()`, mirroring `selectEncounter()`'s own tail
+// call into `refreshSelectionOutcome()` (which itself tail-calls
+// `refreshMaterialInspection()` only on a genuine resolved-selection
+// change); `refreshComparisonSelectionOutcome()` gains the identical
+// "only on a genuine change" guard, using the SAME
+// `resolvedEncounterSelectionsEqual()` helper 0.9.39 already defined, so a
+// registry notification that leaves the comparison target's own resolved
+// identity untouched never redundantly reloads its material.
+//
+// CRITICAL RULE — `application/WorldSnapshotContentComparisonView.js` NEVER
+// RECOMPUTES CONTENT IDENTITY FROM EITHER SIDE'S OWN MATERIAL. It consumes
+// `worldSnapshotComparisonResult` (0.9.181/182, unmodified) for the
+// identity relationship and `selectedSnapshotContentView`/
+// `comparisonSnapshotContentView` (0.9.183's own shape, produced twice) for
+// the actual material — see that file's own header for the full rationale.
+// `worldSnapshotComparisonResult` remains the ONE source of truth for
+// "same or different content"; this milestone never introduces a second
+// one.
+//
+// NO FABRICATED COMPARISON VIEW WHEN EITHER SIDE'S MATERIAL IS UNAVAILABLE.
+// `worldSnapshotContentComparisonView` is `null` whenever
+// `selectedSnapshotContentView` or `comparisonSnapshotContentView` is
+// `null`, OR either one's own `publicationId` no longer matches
+// `worldSnapshotComparisonResult`'s own corresponding side (the same
+// "two arguments captured at different moments" guard 0.9.183 already
+// applies one layer down) — even though `worldSnapshotComparisonResult`
+// itself may still be genuinely available and rendered on its own, in the
+// existing Compare panel, entirely unaffected. This file never retrieves,
+// substitutes, or materializes the missing side to paper over the gap.
+//
+// AN EXPLICIT ACTION, MIRRORING "VIEW SNAPSHOT"/"COMPARE WITH…" EXACTLY,
+// ONE PANEL OVER. `contentComparisonViewOpen` is `false` until the Wanderer
+// clicks "View Content Comparison" — both sides' material becoming
+// AVAILABLE never opens the panel on its own. It resets to `false` on every
+// fresh PRIMARY selection (mirroring `snapshotContentViewOpen`'s own reset)
+// and on every fresh comparison-target selection or `clearComparisonSelection()`
+// call (a NEW pairing never implicitly reopens a panel that described the
+// OLD one).
+//
+// SAME CONTENT DOES NOT MEAN ONE OBJECT — UNCHANGED, ONE LAYER UP.
+// `worldSnapshotContentComparisonView.aMaterial`/`.bMaterial` remain two
+// fully independent `describeWorldSnapshotContentView()` results even when
+// `contentComparison` is `SAME_CONTENT`; `aPublicationId`/`bPublicationId`
+// are never collapsed, and each side's own `position` is rendered
+// independently. Different positions for identical content remain two
+// World objects, exactly as 0.9.181's own header already established.
+//
+// DELIBERATELY EXCLUDED — NOT THIS MILESTONE.
+// - **"Merge identical Snapshots," "replace this Snapshot with the
+//   other," or any deduplication/removal/replacement action offered from
+//   `SAME_CONTENT`.** This panel renders a fact, and two independent
+//   materials, never an action.
+// - **Decentralized lead resolution for the comparison target.** Remains
+//   excluded exactly as 0.9.182 first stated it — only the no-lead loading
+//   path (already sufficient for LOCAL/SNAPSHOT-origin material, per
+//   0.9.183's own header) is mirrored for `comparisonEncounter`.
+// - **A mandatory side-by-side visual layout.** The panel renders two
+//   independent material regions; a strict side-by-side arrangement is
+//   explicitly not assumed — see `application/
+//   WorldSnapshotContentComparisonView.js`'s own header.
+// - **Any new World Encounter kind, registry identity, or lifecycle
+//   state.** This milestone adds no new taxonomy of any kind.
+// - **Rendering arbitrary HTML/media/application content, or decoding
+//   document bytes.** The panel renders the same structured fields
+//   0.9.183's own Content View panel already renders, for each side.
 
 const WORLD_HALF_SPAN = 50;
 const CANVAS_SIZE = 600;
@@ -2128,7 +2246,27 @@ export default {
             // `selectedSnapshotContentView` computed, below — this flag
             // alone never fabricates content that isn't genuinely
             // available.
-            snapshotContentViewOpen: false
+            snapshotContentViewOpen: false,
+            // 0.9.184 — mirrors `materialInspection` (0.9.39) exactly, one
+            // selection over, for `comparisonEncounter` instead of
+            // `selectedEncounter`. `null` until `refreshComparisonMaterialInspection()`
+            // writes it; see this file's own "0.9.184" header, "extending
+            // material loading to the comparison target."
+            comparisonMaterialInspection: null,
+            // 0.9.184 — mirrors `materialInspectionRequestId` (0.9.39)
+            // exactly, one selection over: guards against a stale async
+            // `inspectWorldEncounterMaterial()` response overwriting a newer
+            // one, or writing after this component has since unmounted.
+            comparisonMaterialInspectionRequestId: 0,
+            // 0.9.184 — `true` for as long as the Wanderer has explicitly
+            // clicked "View Content Comparison" for the CURRENT primary
+            // selection/comparison-target pair. Written only by
+            // `openContentComparisonView()`/`closeContentComparisonView()`,
+            // and reset to `false` on every fresh primary selection,
+            // comparison-target selection, or `clearComparisonSelection()`
+            // call — mirrors `snapshotContentViewOpen`'s own reset
+            // discipline, one panel over.
+            contentComparisonViewOpen: false
         };
     },
     computed: {
@@ -2431,6 +2569,42 @@ export default {
                 inspection: this.selectedEncounterSnapshotInspection,
                 materialInspection: this.materialInspection
             });
+        },
+        // 0.9.184 — mirrors `selectedEncounterSnapshotInspection` (0.9.177)
+        // exactly, one selection over, for `comparisonEncounter`.
+        comparisonEncounterSnapshotInspection() {
+            return describeWorldSnapshotInspection({
+                presentation: this.comparisonEncounterPresentation,
+                resolvedSelection: this.comparisonResolvedSelection
+            });
+        },
+        // 0.9.184 — mirrors `selectedSnapshotContentView` (0.9.183)
+        // exactly, one selection over — "Publication B"'s own Content View.
+        // `null` under the identical conditions that collapse
+        // `selectedSnapshotContentView`: not a resolved, Snapshot-sourced
+        // comparison target, or its material isn't currently `AVAILABLE`.
+        comparisonSnapshotContentView() {
+            return describeWorldSnapshotContentView({
+                inspection: this.comparisonEncounterSnapshotInspection,
+                materialInspection: this.comparisonMaterialInspection
+            });
+        },
+        // 0.9.184 — the one new fact this milestone makes user-visible: a
+        // live join of `worldSnapshotComparisonResult` (0.9.181/182) and
+        // both sides' own Content Views, immediately above — see
+        // `application/WorldSnapshotContentComparisonView.js`'s own header
+        // for exactly what is and isn't required. Never cached: a change to
+        // any of the three inputs (a fresh primary or comparison-target
+        // selection, either side's material becoming unavailable) is
+        // reflected on the very next read, exactly like
+        // `worldSnapshotComparisonResult`/`selectedSnapshotContentView`
+        // themselves already are.
+        worldSnapshotContentComparisonView() {
+            return describeWorldSnapshotContentComparisonView({
+                comparisonResult: this.worldSnapshotComparisonResult,
+                contentViewA: this.selectedSnapshotContentView,
+                contentViewB: this.comparisonSnapshotContentView
+            });
         }
     },
     methods: {
@@ -2518,6 +2692,11 @@ export default {
             // own routing above — only an actual change to the PRIMARY
             // selection resets it.
             this.snapshotContentViewOpen = false;
+            // 0.9.184 — mirrors the reset immediately above, exactly, one
+            // panel over: a fresh primary selection never leaves a
+            // previously-opened Content Comparison panel rendering
+            // implicitly for the NEW pairing.
+            this.contentComparisonViewOpen = false;
         },
         // 0.9.13 — the only writer of `worldView`, and the only caller
         // of `describeWorldFromDiscoveryRegistry()` in this file. See
@@ -2887,6 +3066,24 @@ export default {
         closeSnapshotContentView() {
             this.snapshotContentViewOpen = false;
         },
+        // 0.9.184 — mirrors `openSnapshotContentView()` immediately above,
+        // exactly, one panel over: the only writer of
+        // `contentComparisonViewOpen` that ever sets it `true`, guarded on
+        // there being a genuinely available `worldSnapshotContentComparisonView`
+        // for the CURRENT pair. Never touches `registry`, either selection,
+        // or either material inspection.
+        openContentComparisonView() {
+            if (!this.worldSnapshotContentComparisonView) {
+                return;
+            }
+            this.contentComparisonViewOpen = true;
+        },
+        // 0.9.184 — the Wanderer's own explicit way to close an open
+        // Content Comparison panel, mirroring `closeSnapshotContentView()`
+        // exactly, one panel over.
+        closeContentComparisonView() {
+            this.contentComparisonViewOpen = false;
+        },
         // 0.9.182 — the only writer of `armedForComparisonSelection` that
         // ever sets it `true`. Guarded on there being a genuine comparison
         // candidate for the CURRENT primary selection — arming without one
@@ -2910,19 +3107,33 @@ export default {
         selectComparisonEncounter(encounter) {
             this.armedForComparisonSelection = false;
             this.comparisonEncounter = encounter;
+            // 0.9.184 — a fresh comparison target never leaves a
+            // previously-opened Content Comparison panel rendering
+            // implicitly for the NEW pairing; mirrors `selectEncounter()`'s
+            // own `snapshotContentViewOpen` reset, one panel over.
+            this.contentComparisonViewOpen = false;
             this.refreshComparisonSelectionOutcome();
         },
         // 0.9.182 — the only writer of `comparisonSelectionOutcome`, and
         // the only caller of `describeWorldEncounterSelectionOutcomeFromRegistry()`
         // for `comparisonEncounter` in this file — mirrors
-        // `refreshSelectionOutcome()` (0.9.20) exactly, one selection over,
-        // with one deliberate omission: it never tail-calls
-        // `refreshMaterialInspection()` — a comparison target's own material
-        // is never loaded (see this file's own header, "deliberately
-        // excluded... material loading... for the comparison target").
+        // `refreshSelectionOutcome()` (0.9.20) exactly, one selection over.
         // `null` whenever there is no current `comparisonEncounter` or no
         // `registry`.
+        //
+        // 0.9.184 — AS OF THIS MILESTONE, this method's own former
+        // deliberate omission ("never tail-calls `refreshMaterialInspection()`
+        // — a comparison target's own material is never loaded") is
+        // narrowed: it now tail-calls `refreshComparisonMaterialInspection()`,
+        // mirroring `refreshSelectionOutcome()`'s own identical tail call
+        // exactly, one selection over — but ONLY on a genuine change to
+        // `comparisonResolvedSelection` (the same `resolvedEncounterSelectionsEqual()`
+        // guard 0.9.39 already uses), never redundantly on every
+        // notification. See this file's own "0.9.184" header, "extending
+        // material loading to the comparison target."
         refreshComparisonSelectionOutcome() {
+            const previousComparisonResolvedSelection = this.comparisonResolvedSelection;
+
             if (!this.comparisonEncounter || !this.registry) {
                 this.comparisonSelectionOutcome = null;
             } else {
@@ -2931,6 +3142,40 @@ export default {
                     registry: this.registry
                 });
             }
+            if (!resolvedEncounterSelectionsEqual(previousComparisonResolvedSelection, this.comparisonResolvedSelection)) {
+                this.refreshComparisonMaterialInspection();
+            }
+        },
+        // 0.9.184 — mirrors `refreshMaterialInspection()` (0.9.39) exactly,
+        // one selection over, for `comparisonEncounter` instead of
+        // `selectedEncounter`, with one deliberate narrowing: it never
+        // supplies a `resolvedLead` — decentralized lead resolution for the
+        // comparison target remains excluded (see this file's own "0.9.184"
+        // header). A no-op (`comparisonMaterialInspection` cleared to
+        // `null`) whenever there is no current `comparisonResolvedSelection`
+        // or no `materialSources`.
+        refreshComparisonMaterialInspection() {
+            this.comparisonMaterialInspectionRequestId += 1;
+            const requestId = this.comparisonMaterialInspectionRequestId;
+            const resolvedSelection = this.comparisonResolvedSelection;
+
+            if (!resolvedSelection || !this.materialSources) {
+                this.comparisonMaterialInspection = null;
+                return;
+            }
+
+            inspectWorldEncounterMaterial({
+                resolvedSelection,
+                resolvedLead: null,
+                materialSources: this.materialSources,
+                verifier: this.materialVerifier
+            }).then((result) => {
+                // 0.9.184 — mirrors `refreshMaterialInspection()`'s own
+                // stale-response guard exactly, one selection over.
+                if (requestId === this.comparisonMaterialInspectionRequestId) {
+                    this.comparisonMaterialInspection = result;
+                }
+            });
         },
         // 0.9.182 — the Wanderer's own explicit way to start a comparison
         // over: clears `comparisonEncounter`/`comparisonSelectionOutcome`
@@ -2938,10 +3183,18 @@ export default {
         // automatically — see this file's own header, "deliberately
         // excluded... clearing comparisonEncounter automatically when the
         // primary selection changes."
+        //
+        // 0.9.184 — also clears `comparisonMaterialInspection` (invalidating
+        // any still-in-flight request) and closes the Content Comparison
+        // panel, mirroring the primary reset immediately above, one
+        // selection over.
         clearComparisonSelection() {
             this.armedForComparisonSelection = false;
             this.comparisonEncounter = null;
             this.comparisonSelectionOutcome = null;
+            this.comparisonMaterialInspection = null;
+            this.comparisonMaterialInspectionRequestId += 1;
+            this.contentComparisonViewOpen = false;
         },
         // 0.9.111 — the only writer of `discoveryResult`/`discoveryError`/
         // `discovering`, and the only caller of `discoveryCommand` in this
@@ -3071,6 +3324,11 @@ export default {
         // request; see this file's own header, "beforeUnmount() also
         // invalidates any in-flight request."
         this.materialInspectionRequestId += 1;
+        // 0.9.184 — invalidates any still-pending
+        // `inspectWorldEncounterMaterial()` request for the comparison
+        // target too, mirroring the invalidation immediately above exactly,
+        // one selection over.
+        this.comparisonMaterialInspectionRequestId += 1;
         // 0.9.100 — unsubscribes from `distributionLifecycleStore` too,
         // unconditionally and idempotently, mirroring the two blocks above.
         this.stopSubscription('unsubscribeDistributionLifecycle');
@@ -3277,6 +3535,85 @@ export default {
                         class="world-snapshot-comparison-clear"
                         @click="clearComparisonSelection"
                     >Clear comparison</button>
+                </template>
+            </div>
+
+            <!-- 0.9.184 — a SEPARATE panel from the Compare panel
+                 immediately above, mirroring the Snapshot Content panel's
+                 own arm/observe structure exactly, one panel over. Gated on
+                 comparisonEncounter alone (the Compare panel's own
+                 detail-view gate) so it appears alongside the comparison
+                 fact once a target is explicitly chosen — its own action
+                 button independently gates on worldSnapshotContentComparisonView
+                 being genuinely available. See this file's own "0.9.184"
+                 header. -->
+            <div v-if="comparisonEncounter" class="world-snapshot-content-comparison-panel">
+                <h4 class="world-snapshot-content-comparison-title">Content Comparison</h4>
+
+                <template v-if="!contentComparisonViewOpen">
+                    <!-- Actionable only while worldSnapshotContentComparisonView is
+                         genuinely non-null — both sides' material must
+                         already be AVAILABLE. Never discovers, resolves,
+                         materializes, or mutates the registry. -->
+                    <button
+                        type="button"
+                        class="world-snapshot-content-comparison-action"
+                        :disabled="!worldSnapshotContentComparisonView"
+                        @click="openContentComparisonView"
+                    >View Content Comparison</button>
+                </template>
+
+                <template v-else>
+                    <template v-if="worldSnapshotContentComparisonView">
+                        <dl class="world-snapshot-content-comparison-result">
+                            <dt>Content</dt>
+                            <dd>
+                                <template v-if="worldSnapshotContentComparisonView.contentComparison === 'SAME_CONTENT'">Same content</template>
+                                <template v-else-if="worldSnapshotContentComparisonView.contentComparison === 'DIFFERENT_CONTENT'">Different content</template>
+                                <template v-else>Content identity not yet known</template>
+                            </dd>
+                        </dl>
+                        <div class="world-snapshot-content-comparison-materials">
+                            <div class="world-snapshot-content-comparison-material">
+                                <h5>Snapshot A</h5>
+                                <dl>
+                                    <dt>Publication ID</dt>
+                                    <dd>{{ worldSnapshotContentComparisonView.aMaterial.publicationId }}</dd>
+                                    <dt>Title</dt>
+                                    <dd>{{ worldSnapshotContentComparisonView.aMaterial.material.title }}</dd>
+                                    <dt>Author</dt>
+                                    <dd>{{ worldSnapshotContentComparisonView.aMaterial.material.author }}</dd>
+                                    <dt>Position</dt>
+                                    <dd>{{ worldSnapshotContentComparisonView.aMaterial.position.x }}, {{ worldSnapshotContentComparisonView.aMaterial.position.y }}, {{ worldSnapshotContentComparisonView.aMaterial.position.z }}</dd>
+                                </dl>
+                            </div>
+                            <div class="world-snapshot-content-comparison-material">
+                                <h5>Snapshot B</h5>
+                                <dl>
+                                    <dt>Publication ID</dt>
+                                    <dd>{{ worldSnapshotContentComparisonView.bMaterial.publicationId }}</dd>
+                                    <dt>Title</dt>
+                                    <dd>{{ worldSnapshotContentComparisonView.bMaterial.material.title }}</dd>
+                                    <dt>Author</dt>
+                                    <dd>{{ worldSnapshotContentComparisonView.bMaterial.material.author }}</dd>
+                                    <dt>Position</dt>
+                                    <dd>{{ worldSnapshotContentComparisonView.bMaterial.position.x }}, {{ worldSnapshotContentComparisonView.bMaterial.position.y }}, {{ worldSnapshotContentComparisonView.bMaterial.position.z }}</dd>
+                                </dl>
+                            </div>
+                        </div>
+                    </template>
+                    <!-- Mirrors the Snapshot Content panel's own "no longer
+                         available" collapse text exactly, one panel over —
+                         either side's material can stop being AVAILABLE
+                         while this panel stays open. -->
+                    <p v-else class="world-snapshot-content-comparison-unavailable">
+                        This content comparison is no longer available.
+                    </p>
+                    <button
+                        type="button"
+                        class="world-snapshot-content-comparison-close"
+                        @click="closeContentComparisonView"
+                    >Close</button>
                 </template>
             </div>
 

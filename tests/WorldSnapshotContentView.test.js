@@ -427,8 +427,15 @@ async function run() {
         assert(closeMethodMatch, 'sanity — closeSnapshotContentView() body is found');
         assert(!/registry\./.test(closeMethodMatch[0]), '6. closeSnapshotContentView() never touches the registry');
 
+        // 0.9.184 — a second call site was added deliberately:
+        // `comparisonSnapshotContentView` reuses `describeWorldSnapshotContentView()`
+        // verbatim for the comparison target ("Publication B"), exactly
+        // mirroring its own existing use for the primary selection
+        // ("Publication A") immediately above — see tests/
+        // WorldSnapshotContentComparisonView.test.js for that milestone's
+        // own coverage.
         const callSites = strippedCanvas.match(/describeWorldSnapshotContentView\(/g) || [];
-        assert(callSites.length === 1, `7. exactly one call site of describeWorldSnapshotContentView() in WorldEncounterCanvas.js (found ${callSites.length})`);
+        assert(callSites.length === 2, `7. exactly two call sites of describeWorldSnapshotContentView() in WorldEncounterCanvas.js as of 0.9.184 — one per side of a comparison (found ${callSites.length})`);
 
         assert(!/inspectWorldEncounterMaterial|loadWorldEncounterMaterial|WorldDiscoverySourceRegistry|registerMaterializedSnapshotWorldSource/.test(strippedContentView),
             '8. application/WorldSnapshotContentView.js never imports/references any loading or registry mechanism of its own');
