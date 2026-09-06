@@ -74396,3 +74396,110 @@ next step is a broader look across the rest of this codebase (World
 navigation, Publications, presence, discovery outside Snapshot
 altogether) for where architectural attention is actually needed next,
 not a return to a subsystem three consecutive audits have now closed.
+
+## 0.9.196 — Architecture Reassessment / Product Gap Audit
+
+0.9.195's own closing recommendation asked for exactly this: a pause
+before extending Snapshot a fourth time, spent instead on the wider
+question three consecutive whole-system audits (0.9.192, 0.9.194, 0.9.195)
+kept deferring —
+
+> Now that Snapshot is architecturally complete, what actual user-facing
+> capability is still missing from ForkBuild?
+
+TEST-ONLY. No production changes. Deliberately the OPPOSITE shape from
+0.9.150 through 0.9.195: those milestones each proved ONE seam correct in
+great depth; this one sweeps FIVE unrelated product areas shallowly, on
+purpose, looking for the single highest-value gap rather than exhaustively
+re-confirming any one of them — and it stays short, per its own brief,
+rather than becoming another thousand-line audit.
+
+`tests/ArchitectureReassessmentProductGapAudit.test.js` — one section per
+area, each classified **Complete**, **Intentional boundary**, or **Actual
+gap**, never inventing a capability, lifecycle state, or semantic this
+codebase has not already earned through real, existing, working code:
+
+- **A — World interaction/navigation.** COMPLETE at the composition
+  level. `ui/views/WorldView.js` already composes 27 distinct component
+  families — avatar identity, presence, collaborator indicators,
+  geographic places, world search/map, placement info/editing, vehicle
+  interaction, and publication authoring all already reachable. Not
+  re-audited in depth here; each already has its own dedicated test
+  family elsewhere.
+- **B — Vehicle system.** INTENTIONAL BOUNDARY, not a gap. Mount, dismount,
+  steering, braking, and collision are already deeply built and tested
+  (40+ dedicated test files). A structural sweep of `core/VehicleType.js`'s
+  own code (not its header prose, which names the boundary explicitly) and
+  every avatar-vehicle collaborator file confirms no passenger/capacity/
+  fuel/range vocabulary has been introduced anywhere — exactly the
+  restraint 0.9.70's own header committed to: don't invent a
+  movement-capability vocabulary before an actual consumer needs it.
+- **C — World material lifecycle. ACTUAL GAP — the one finding of this
+  milestone.** Acquisition (publish, place) and observation (encounter,
+  select, load, render) are both complete. Removal is not:
+  `application/RemoveWorldPlacementUseCase.js` and
+  `application/UnpublishDocumentUseCase.js` both already exist, are both
+  composed into their own composition roots (the former into all four
+  spatial-index factories), and are both proven CORRECT here directly
+  against the same real collaborators `tests/WorldPlacement.test.js` and
+  `tests/PublicationLifecycle.test.js` already exercise — yet a sweep of
+  every UI file that presents a placement or a publication
+  (`PlacementInfoPanel.js`, `PlacementEditorDialog.js`, `WorldView.js`,
+  `EditorView.js`, `OwnPublicationPanel.js`, `WorldEncounterCanvas.js`)
+  finds not one call site for either class. `getPlacementInfo()`'s own
+  read model carries `movable` (gated on ownership) with no
+  `removable`/`unplaceable` counterpart ever added beside it, and
+  `PlacementInfoPanel.js` emits exactly `focus`/`move`/`view-here` —
+  never `remove`. The only removal reachable anywhere in this area today
+  is `unregisterSelectedSnapshot()` (0.9.179), which is Snapshot-specific
+  and mutates only the in-session World discovery registry — it reaches
+  neither the placement registry/spatial index nor the publication
+  catalog. A Wanderer who places a Publication in the shared World, or a
+  Publisher who wants to retract one, has no path to do either today.
+  This is a genuine, narrow, **already-half-built** product gap — the
+  domain logic is done and tested; only the wiring and one UI action each
+  are missing — not a missing architectural seam.
+- **D — Publication workflow.** Confirms Section C from the authoring
+  side. `OwnPublicationPanel.js` already wires 10 distinct actions
+  (publish, anchor, distribute, Snapshot discover/resolve/materialize/
+  attribute) — the FORWARD path is COMPLETE. No handler on that panel is
+  shaped like `unpublish`/`retract`. The REVERSE path is the same ACTUAL
+  GAP Section C found.
+- **E — Performance.** Deliberately DEFERRED, not assessed. No known
+  bottleneck exists to profile; per this milestone's own brief,
+  performance work belongs after a real functional gap is closed, not
+  before one is even known to exist.
+
+```text
+0.9.192  Automatic World Observation Cadence Audit                   ✓
+0.9.193  Automatic Snapshot Session-Lifetime Guard                   ✓
+0.9.194  Automatic Snapshot Session-Lifetime Guard E2E Audit         ✓
+0.9.195  Automatic Snapshot Subsystem Boundary & Convergence Audit   ✓
+0.9.196  Architecture Reassessment / Product Gap Audit               ✓
+```
+
+### Recommendation
+
+Sections A, B, D, and E confirm what a wide, shallow sweep is supposed to
+confirm: no invented gap, no invented lifecycle state, nothing manufactured
+to keep a milestone counter moving. Section C found exactly one real,
+narrow, already-half-built gap, and it is the clearest kind of "next
+milestone" this project's own discipline can ask for — closing a seam
+that already has correct, tested domain logic on both ends, needing only
+the connection between them. I would recommend **0.9.197 — World
+Placement & Publication Removal**: add a `Remove` action to
+`PlacementInfoPanel.js` (gated on the same `movable`/ownership signal
+already computed for `Move`, wired to the already-correct
+`RemoveWorldPlacementUseCase`) and an `Unpublish` action to
+`OwnPublicationPanel.js` (wired to the already-correct
+`UnpublishDocumentUseCase`) — no new domain class, no new lifecycle
+vocabulary, no new semantics: both use cases already do exactly the right
+thing, proven again directly in this milestone's own Section C. The one
+design question 0.9.197 should answer, and this milestone deliberately
+leaves open, is what happens to a placement whose publication was just
+unpublished out from under it — whether unpublish should cascade into
+`RemoveWorldPlacementUseCase` for every placement referencing it, or
+whether a dangling placement pointing at a gone publication is an
+acceptable, separately-surfaced state — a real product decision, not an
+architectural one, and better made once the two actions individually
+exist to observe.
