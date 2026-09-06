@@ -75200,3 +75200,173 @@ milestone — there is no concrete product gap for it to resolve. The next
 milestone should return to the broader question: what is the next
 concrete thing a Wanderer or Publisher should be able to do that they
 currently cannot?
+
+## 0.9.203 — Post-Lifecycle Product Reassessment
+
+0.9.202's own closing recommendation asked for exactly this: not another
+milestone on the orphan/occupancy thread it had just closed, but a
+return to the broad question 0.9.196 originally asked, now that the
+entire lifecycle-gap arc it opened has run its course —
+
+```text
+0.9.196  Architecture Reassessment / Product Gap Audit               ✓
+0.9.197  World Placement Removal UI Action                          ✓
+0.9.198  Publication Unpublish / Retract UI Action                  ✓
+0.9.199  Removal & Retraction Lifecycle Convergence Audit            ✓
+0.9.200  Orphaned World Placement Lifecycle Audit                   ✓
+0.9.201  Degraded Orphan Row Handling                                ✓
+0.9.202  Unpublished Placement Physical-Occupancy Audit              ✓
+```
+
+> What is the next concrete thing a Wanderer or Publisher should be able
+> to do that they currently cannot?
+
+TEST-ONLY. No production changes. Same shallow, five-area shape as
+0.9.196 — one section per area, never inventing a capability, lifecycle
+state, or semantic this codebase has not already earned through real,
+existing, working code — but with a four-way classification instead of
+three, and one added criterion this milestone's own brief asked for:
+
+```text
+COMPLETE               — fully wired, reachable, tested.
+INTENTIONAL_BOUNDARY   — deliberately not built; a documented restraint.
+ACTUAL_GAP             — no domain/application logic exists at all.
+ROUGH_EDGE             — a cosmetic/UX edge, not a missing capability.
+```
+
+For any candidate finding: **does an existing domain/application use
+case already implement this, with simply no UI caller?** That pattern —
+neither ACTUAL_GAP nor ROUGH_EDGE — is exactly what 0.9.196 found for
+World-placement removal and Publication unpublish, and it is the single
+most valuable thing this kind of sweep can surface.
+
+`tests/PostLifecycleProductReassessmentAudit.test.js`:
+
+- **A — World interaction/navigation.** COMPLETE at the composition
+  level, unchanged since 0.9.196 (`ui/views/WorldView.js` still composes
+  the same 20+ component families). This sweep's one finding: a fully
+  built, fully tested **History Preview & Restore / Operation Timeline**
+  capability (0.1.39-0.1.41) already lives on
+  `application/WorldNavigationSession.js` —
+  `beginHistoryPreview()`/`previewHistoryAt()`/`cancelHistoryPreview()`/
+  `getHistoryPreview()`/`restoreHistoryAt()`/`getTimeline()`/
+  `getRetiredHistories()` — genuinely correct (proven directly against
+  real, unmocked collaborators in this file's own Section A5: a preview
+  never disturbs the live document, a restore correctly rebases it and
+  retires the superseded history) — with **zero callers anywhere under
+  `ui/`**, confirmed by a genuine repo-wide recursive sweep, not a
+  hand-picked file list. It is not `EditorSession.undo()`/`redo()` under
+  another name either: `application/EditorSession.js` has none of these
+  seven identifiers at all — the two are structurally separate
+  mechanisms, one with cursor-scrubbing/preview, one without. Classified
+  **EXISTING CAPABILITY + MISSING UI** — precisely the pattern this
+  milestone's added criterion was designed to catch, one level up the
+  stack from 0.9.196's own Section C.
+- **B — Vehicle system.** INTENTIONAL BOUNDARY, reconfirmed with fresh
+  evidence: the vehicle line has had zero code changes since 0.9.130
+  (66+ subsequent milestones), and `core/VehicleType.js`'s own code
+  still carries no passenger/capacity/fuel/range vocabulary. One new
+  clarification this sweep adds: a vehicle is not merely unreached by
+  0.9.197's "Remove from World" action, it is **structurally outside**
+  that system's domain model — `core/VehiclePresence.js`/
+  `core/VehiclePlacement.js` describe a pure, recomputed-never-stored
+  sampling result (the same discipline `core/NaturalFeatureField.js`
+  uses for trees), with no `placementId`, no `PlacementRecord`, and no
+  entry in the placement registry `RemoveWorldPlacementUseCase` operates
+  over — confirmed by a direct sweep finding neither class referenced
+  anywhere in the Vehicle-named core/application files. No ownership
+  concept exists either, and none is implied by any existing Vehicle
+  behavior. No gap.
+- **C — World material lifecycle.** No new gap beyond the arc 0.9.196-
+  0.9.202 already closed. Editing already-published material is an
+  INTENTIONAL BOUNDARY — fork-on-write (0.2.20): `publisher/Publication.js`
+  still documents "a publication is its own first and only revision,"
+  and `WorldNavigationSession.isDocumentPublished()`/
+  `getEditabilityNotice()` surface the boundary to the UI rather than
+  merely enforcing it silently. Content-addressed material
+  deletion/garbage-collection is also an INTENTIONAL BOUNDARY, not an
+  oversight: `content/ContentStore.js`'s own base class declares no
+  `delete()`/`remove()` method for any concrete store to implement, and
+  `publisher/LocalPublisherProvider.unpublish()` never references
+  `contentStore` at all — content-addressed storage is immutable by
+  construction, the same discipline already governing Publications and
+  `PlacementRecord` revisions. Re-placement (move) remains COMPLETE,
+  unchanged. Every publish is already its own independently addressable,
+  independently placeable entity — no missing "revision" concept for the
+  World-placement layer to grow.
+- **D — Publication workflow.** COMPLETE. `ui/components/OwnPublicationPanel.js`
+  still wires its full action surface (publish, unpublish, anchor,
+  distribute, and the Snapshot discover/resolve/materialize/
+  attribute/register/place/claim chain — 11 distinct handlers as of this
+  audit). The one candidate this sweep specifically checked for a
+  possible gap — re-verify/re-anchor after a failed verification — is
+  already fully reachable: `ui/views/DecentralizedPublicationsView.js`
+  offers "Verify Again," and
+  `application/PublicationAnchorCreationView.js#describeCreationButtonLabel()`
+  offers "Create Another ... Anchor" once one already exists, both
+  consistent with docs/Principles.md's own "A Verification Result ...
+  Does Not Rewrite The Historical Claim Being Verified (0.8.12)" —
+  re-anchoring is modeled as creating a new anchor, never an edit to the
+  old one. No EXISTING-CAPABILITY-MISSING-UI case found in this area.
+- **E — Performance.** INTENTIONAL BOUNDARY, still deferred, unchanged
+  from 0.9.196's own deferral. Existing cadence/retention mechanisms
+  (the 2s presence heartbeat, the 15s profile republish interval, both
+  still in place on `WorldNavigationSession.js`; the automatic Snapshot
+  encounter retention policy from 0.9.189) show performance was already
+  proactively addressed exactly where it was actually needed. The
+  0.9.197-0.9.202 arc added removal/unpublish UI actions and confirmed
+  (0.9.202) that unbounded same-coordinate co-occupancy is an
+  intentional, pre-existing rule (0.2.25), not a newly discovered
+  bottleneck. No performance/load/stress test exists in the suite, and
+  no concrete, currently-reachable slow path was found. Still nothing to
+  profile.
+
+```text
+0.9.199  Removal & Retraction Lifecycle Convergence Audit             ✓
+0.9.200  Orphaned World Placement Lifecycle Audit                    ✓
+0.9.201  Degraded Orphan Row Handling                                 ✓
+0.9.202  Unpublished Placement Physical-Occupancy Audit               ✓
+0.9.203  Post-Lifecycle Product Reassessment                          ✓
+```
+
+### Decision
+
+Four of five areas re-confirm what a shallow sweep is supposed to
+confirm once a functional-gap arc closes: no invented gap, no invented
+lifecycle state, nothing manufactured to keep a milestone counter
+moving. Section A is the exception, and it is the exact shape this
+milestone's own added criterion was built to find: a fully correct,
+already-tested capability — History Preview & Restore / Operation
+Timeline — sitting on `WorldNavigationSession` with no UI anywhere in
+the product able to reach it. Not a missing domain capability, and not
+a cosmetic rough edge: an **existing capability with a missing UI**,
+the identical shape 0.9.196 found for World-placement removal and
+Publication unpublish, one level up the stack.
+
+```text
+Existing capability + missing UI   ->   History Preview & Restore
+Missing domain capability          ->   none found
+Intentional boundary               ->   Vehicle capacity, content
+                                         deletion, fork-on-write,
+                                         performance
+Harmless rough edge                ->   none found
+```
+
+### Recommendation
+
+Per this milestone's own brief, no implementation happens here — only
+identification. I would recommend **0.9.204 — a UI action wiring
+History Preview & Restore into the product**, the same shape as
+0.9.197/0.9.198: one seam, no new domain logic, since
+`beginHistoryPreview()`/`previewHistoryAt()`/`restoreHistoryAt()`/
+`getTimeline()` already do exactly the right thing, proven directly in
+this milestone's own Section A5. The one design question that milestone
+should answer, deliberately left open here: **which view owns this** —
+`EditorView.js` (mutates/builds, per 0.5.9, already home to plain
+`undo()`/`redo()`) or a new dedicated surface — since neither currently
+composes anything History/Timeline-shaped at all. If 0.9.204's own
+investigation instead finds this seam is not worth wiring on its own
+product merits, that is a legitimate outcome too, per this reassessment's
+own brief: the discipline this project has kept since 0.9.196 is to
+close a real, already-half-built seam when one exists, never to
+manufacture a milestone when a sweep comes back clean.
