@@ -12,6 +12,14 @@ import { EditorActionRegistry } from '../../application/EditorActionRegistry.js'
 // unavailable. All search/grouping logic lives on EditorActionRegistry
 // itself, which is what tests/CommandPalette.test.js exercises; this
 // component is the thin visual layer.
+//
+// 0.9.213 — Editor Undo/Redo Label Mirrors. displayLabel() below reads
+// an action's own contextualLabel(ctx) (EditorActionRegistry.js's own
+// display-only field — null for every action except history.undo/
+// history.redo, which mirror CommandHistory's own getUndoLabel()/
+// getRedoLabel()) and falls back to the static action.label. Search
+// still matches on the static label only (EditorActionRegistry.findMatching()
+// is unchanged) — this is a display override, not a second label.
 export default {
     name: 'CommandPalette',
     props: {
@@ -72,6 +80,20 @@ export default {
                 return null;
             }
             return action.disabledReason(this.context);
+        },
+        // 0.9.213 — see this file's own header. action.contextualLabel is
+        // the same "read by the UI, defaults to inert" shape as
+        // disabledReason above: absent on every action except
+        // history.undo/history.redo, and null on those two whenever
+        // nothing is available (matching disabledReason exactly).
+        displayLabel(action) {
+            if (typeof action.contextualLabel === 'function') {
+                const label = action.contextualLabel(this.context);
+                if (label) {
+                    return label;
+                }
+            }
+            return action.label;
         },
         rowStyle(row) {
             if (row.header) {
@@ -195,7 +217,7 @@ export default {
                             @mouseenter="activeIndex = row.index"
                         >
                             <span>
-                                {{ row.action.label }}
+                                {{ displayLabel(row.action) }}
                                 <span
                                     v-if="!actionEnabled(row.action) && reasonFor(row.action)"
                                     :style="{ marginLeft: '8px', fontSize: '11px', color: '#8a6d3b' }"
