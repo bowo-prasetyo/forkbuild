@@ -77754,3 +77754,154 @@ capability-reachability backlog this arc has worked since 0.9.196 is
 finally exhausted, and the next milestone should be chosen from real
 product evolution or a deliberate obsolete-cleanup decision, rather than
 another search for missing UI wiring.
+
+## 0.9.218 — World Presence Membership-Refresh Lifecycle Audit
+
+Test-only milestone (plus one narrowly-scoped correction — see "Production
+change" below). 0.9.217 answered the reachability question — is
+`refreshWorldPresenceActivity(documentId)` wired to anything at all — with
+a single flagship two-replica test over the happy path
+(`tests/WorldPresenceActivityRefreshIntegration.test.js`). This milestone
+asks a different, narrower question: does that new event-driven seam stay
+correct once documents, subscriptions, presence sessions, and membership
+events overlap in time, the way they genuinely do across a WorldView's
+real lifecycle? It does not reinterpret the wiring, add any new semantic
+machinery, a heartbeat, a timer, or a state machine — see
+`tests/WorldPresenceMembershipRefreshLifecycleAudit.test.js`'s own header
+for the full section-by-section scope.
+
+```text
+0.9.217
+   │
+   ▼
+presence capability reachable
+   │
+   ▼
+0.9.218 lifecycle audit  <- this milestone
+   │
+   ▼
+Post-Presence Product Reassessment (0.9.219 candidate)
+```
+
+### What the audit covers
+
+- **Section A** — grant/revoke lifecycle in both starting orders
+  (EXPLORING-first and EDITING-first), with repeated churn cycles: no
+  cached activity survives a membership change.
+- **Section B** — replayed membership records, the STRONGER invariant: a
+  record (grant OR revocation) that does not change effective
+  authorization produces zero presence transitions and zero roster
+  notifications anywhere downstream — not merely no duplicate callback
+  count, which 0.9.217's own Section E already covered.
+- **Section C** — document switching, replaying `ui/views/WorldView.js`'s
+  own `_syncWorldPresence()` shape EXACTLY, including its mutable
+  `presentWorldDocumentId` closure variable: a membership event for a
+  World already switched away from can never resolve to the wrong
+  (current) documentId, in either direction.
+- **Section D** — unmount race: a membership callback invoked AFTER
+  WorldView's own teardown (unsubscribe + leave), replayed directly or as
+  a genuinely late gossiped event, is a safe no-op — defense in depth via
+  `_presentWorldDocumentIds`, not merely "unreachable in the common case."
+- **Section E** — cross-document membership churn: repeated grant/revoke
+  cycles on a World never entered never perturb one that IS entered, and
+  vice versa, under REPEATED churn rather than a single grant.
+- **Section F** — Snapshot/Publication/placement isolation, re-verified
+  against the current, try/catch-wrapped call site.
+- **Section G** — regression: exactly one spatial cadence remains; the
+  failure-isolation fix below did not smuggle in a second timer.
+- **Section H** — FLAGSHIP, and where this milestone found its one real
+  defect (see "Production change" below).
+- **Section I** — idempotent semantic refresh: `onWorldMembershipChanged()`
+  is World-scoped, not subject-scoped, so an unrelated grant on the same
+  World still re-invokes `refreshWorldPresenceActivity()` — but calling
+  the method is never itself evidence that activity changed; the
+  re-derived value stays identical when effective authorization did not
+  change, at either activity value.
+
+### Production change: one narrowly-scoped failure-isolation fix
+
+Section H's own construction — inject a failure into
+`refreshWorldPresenceActivity()` and see what breaks — surfaced a real
+defect this milestone fixes, and fixes ONLY:
+
+```text
+grantEdit() (self-issued, e.g. the granter's OWN WorldView)
+        │
+        ▼
+_applyGrant(record)
+        │
+        ▼
+_publishChange() -> EventBus.publish(GRANT_CHANGED_EVENT)
+        │
+        ▼
+   onWorldMembershipChanged()'s subscriber — ui/views/WorldView.js's
+   own _syncWorldPresence() callback — THROWS inside
+   refreshWorldPresenceActivity()
+        │
+        ▼
+   the exception unwinds straight back through _applyGrant()...
+        │
+        ▼
+   ...and _broadcast() — the very next line in grantEdit() — NEVER RUNS
+```
+
+Neither `core/events/EventBus.js#publish()` nor
+`peer/PeerMessageBus.js`'s own dispatch loop isolates one throwing
+listener from the rest of that call chain — both iterate their listener
+sets with no `try`/`catch` at all. Before this milestone, an internal
+failure inside `refreshWorldPresenceActivity()` (a `worldAuthorizationService`
+or `worldPresenceUseCase` error, for instance) would unwind through
+`WorldMembershipUseCase#_applyGrant()`'s own event publish and skip its
+own subsequent `_broadcast()` — silently stranding a grant or revocation
+on the ISSUING replica alone, applied to local storage but never sent to
+a single peer, while `grantEdit()`/`revokeEdit()` itself throws back to
+whatever UI code called it. This is strictly worse than "this replica's
+own presence looks stale" — it is "the collaborator I just granted never
+finds out."
+
+The fix is exactly as narrow as the seam that broke: `ui/views/WorldView.js`'s
+own `_syncWorldPresence()` now wraps ONLY the 0.9.217 call —
+`session.refreshWorldPresenceActivity(presentWorldDocumentId)` — in its
+own `try`/`catch`, mirroring `application/WorldPresenceUseCase.js#_broadcast()`'s
+own established silent-catch convention (a peer's lifecycle can change
+between a check and a send; this is the same "best-effort, never allowed
+to break its caller" posture, applied to a different call). The
+pre-existing roster refresh beside it (`worldMembers.value = session.listWorldMembers(...)`)
+is untouched and unaffected — it already ran, in source order, before the
+now-isolated call. Nothing in `application/WorldMembershipUseCase.js`,
+`core/events/EventBus.js`, or `peer/PeerMessageBus.js` was touched: the
+general "one throwing listener can still break another subscriber to the
+same shared event" architectural gap those three files have always had
+is a distinct, pre-existing, and much larger question this milestone
+deliberately leaves alone, exactly per its own brief's instruction to fix
+only the exact lifecycle seam a real defect was found in.
+
+Section H proves the fix directly: an injected failure inside
+`refreshWorldPresenceActivity()` no longer stops the granter's own
+network broadcast (verified by asserting the grant is actually received
+on the other replica, not merely that a send was attempted), the
+pre-existing roster refresh beside it, a second, unrelated document's own
+membership wiring on the same session, or a subsequent membership change
+on the same document once the injected failure is lifted.
+
+### What did not change
+
+No new subscription, no new timer, no new state, no reinterpretation of
+`refreshWorldPresenceActivity()`'s own contract. Every other section (A,
+B, C, D, E, F, G, I) found the existing 0.9.217 wiring already correct —
+each locks down already-correct behavior as a regression guard, the same
+posture 0.9.211's own World View Undo/Redo Lifecycle Audit took when it
+found no defects at all.
+
+### Recommendation
+
+The one real defect this arc's lifecycle-audit shape was designed to
+catch has been found and fixed, narrowly. The next milestone should be
+the reassessment 0.9.217's own closing recommendation named: is
+`refreshWorldPresenceActivity()` now genuinely complete end-to-end
+(reachability AND lifecycle-correctness), and are the remaining 0.9.216
+findings exclusively `OBSOLETE`/`OBSOLETE CANDIDATE`? If both hold, the
+capability-reachability backlog this arc has worked since 0.9.196 is
+finally exhausted, and the milestone after that should come from real
+product evolution or a deliberate obsolete-cleanup decision — never
+manufactured just to advance the milestone number.
