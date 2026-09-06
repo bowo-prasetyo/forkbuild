@@ -322,25 +322,23 @@ async function runTests() {
         // B6 — "documents at this location" (getDocumentsAtPosition,
         // the read model behind ui/components/LocationDocumentsDialog.js,
         // reached from PlacementInfoPanel's "View" link once
-        // overlapCount > 0) queries the PlacementRegistry directly and
-        // is NOT filtered by whether each occupant's Publication still
-        // exists. This is the one place in the existing UI where an
-        // orphan is genuinely still observable — degraded, not absent.
+        // overlapCount > 0). AT THE TIME this file was originally
+        // written (0.9.200), this query was NOT filtered by whether
+        // each occupant's Publication still existed, and produced one
+        // degraded row here: documentId null, title falling back to
+        // the raw (dead) publicationId string. 0.9.201 fixed exactly
+        // that seam — getDocumentsAtPosition() now omits an occupant it
+        // cannot resolve to a Publication — so this section now
+        // documents the CURRENT behavior instead: no row at all. See
+        // tests/DegradedOrphanRowHandling.test.js for the full audit of
+        // that fix (including confirming checkPlacementOverlap's own,
+        // separate use of _describeSpatialOccupant() deliberately stays
+        // unfiltered, since that's a collision check, not a document
+        // listing).
         const occupants = session.getDocumentsAtPosition(position);
-        assert(occupants.length === 1, 'B6a. the orphan appears as an occupant at its own position');
-        const occupant = occupants[0];
-        assert(occupant.documentId === null, 'B6b. ...with documentId null — there is nothing left to focus a camera on');
-        assert(occupant.publicationId === publication.id, 'B6c. ...but its (dead) publicationId is preserved verbatim');
-        assert(occupant.title === publication.id, 'B6d. ...and title falls back to the raw publicationId string (_describeSpatialOccupant\'s existing "can\'t resolve discovery" degradation, not a new orphan-specific label) — the ONE place a Wanderer could see something faintly ghost-shaped: a row whose name is an opaque id');
+        assert(occupants.length === 0, 'B6. (0.9.201) the orphan no longer appears as an occupant at its own position at all — "documents at this location" now omits it rather than presenting a degraded, opaque-id row');
 
-        // Confirm the dialog itself already renders this safely: the
-        // "Focus" button is bound to `:disabled="!doc.documentId"`, so
-        // a null documentId already produces an inert, unclickable row
-        // — an EXISTING degradation, not something this milestone adds.
-        const dialogSource = await rawSource('ui/components/LocationDocumentsDialog.js');
-        assert(/:disabled="!doc\.documentId"/.test(dialogSource), 'B6e. LocationDocumentsDialog.js already disables its own "Focus" button whenever documentId is null — the orphan\'s ghost row is inert, never a trap');
-
-        console.log('✓ B — the orphan is invisible to ordinary World streaming (findVisibleDocuments/updateSpatialView), remains fully present in the raw spatial index/registry/DiscoverWorldsUseCase/publicationId bypass, and surfaces exactly ONE degraded (but inert) entry in the existing "documents at this location" dialog');
+        console.log('✓ B — the orphan is invisible to ordinary World streaming (findVisibleDocuments/updateSpatialView), remains fully present in the raw spatial index/registry/DiscoverWorldsUseCase/publicationId bypass, and (as of 0.9.201) produces no row at all in the "documents at this location" dialog either');
     }
 
     // -------------------------------------------------------------
@@ -569,20 +567,31 @@ trap:
   - No hidden coupling and no new lifecycle vocabulary exists anywhere
     in production (Section H).
 
-The one honest exception: getDocumentsAtPosition() — the read model
-behind the existing "Documents Here" dialog — is NOT filtered by
-Publication existence, so an orphan still produces one degraded row
-there: a title that falls back to a raw publicationId string, with an
-already-disabled "Focus" button (Section B6). This is inert, not a
-trap — nothing can be clicked, nothing breaks — but it is a genuine,
-if minor, rough edge: a person could see a meaningless-looking id in
-that list and wonder what it is.
+The one honest exception AT THE TIME THIS AUDIT WAS WRITTEN:
+getDocumentsAtPosition() — the read model behind the existing
+"Documents Here" dialog — was NOT filtered by Publication existence, so
+an orphan produced one degraded row there: a title that falls back to a
+raw publicationId string, with an already-disabled "Focus" button
+(Section B6, as originally written). This was inert, not a trap —
+nothing could be clicked, nothing broke — but it was a genuine, if
+minor, rough edge: a person could see a meaningless-looking id in that
+list and wonder what it is.
 
-Per this milestone's own brief, the decision this audit produces is
-NOT to fix that now. Whether that one row is worth a small future
-polish (e.g. a friendlier fallback label, or filtering unresolved
-occupants from this one dialog) is left as an explicitly optional,
-low-priority follow-up — never a mandated 0.9.201 cleanup feature.
+Per this milestone's own brief, the decision THIS audit produced was
+NOT to fix that itself — whether that one row was worth a small future
+polish was left as an explicitly optional, low-priority follow-up, never
+a mandated cleanup feature.
+
+UPDATE — 0.9.201 took up exactly that optional follow-up:
+getDocumentsAtPosition() now omits an occupant it cannot resolve to a
+Publication, so "Documents Here" produces no row at all for an orphan
+(Section B6 above now asserts that, not the original degraded shape).
+No orphan-lifecycle state or vocabulary was introduced to do it — see
+tests/DegradedOrphanRowHandling.test.js for the full fix and its own
+focused audit, including confirmation that checkPlacementOverlap's
+separate, unfiltered use of the same _describeSpatialOccupant() shape
+(a collision check, not a document listing) was deliberately left
+untouched.
 --------------------------------------------------------------------
 `);
 }
