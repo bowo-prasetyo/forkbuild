@@ -141,18 +141,30 @@ async function runTests() {
         // not-elevated omission; getWorldAccessLevel/canReadDocument are
         // backed by this codebase's own documented edit-only
         // authorization architecture), and the sixth — refreshWorldPresenceActivity —
-        // is a genuine, small ACTUAL_GAP: its own header names its exact
+        // was a genuine, small ACTUAL_GAP: its own header names its exact
         // intended trigger, and WorldView.js's refreshSpatialUI() already
-        // re-reads session.canEditDocument(activeId) on the exact cadence
+        // re-read session.canEditDocument(activeId) on the exact cadence
         // that trigger needs, without ever calling it. See
         // tests/PostSnapshotExportProductReassessment.test.js's own
         // Section L and docs/Roadmap.md's own 0.9.216 entry.
-        for (const method of ['getRecentlyVisitedWorlds', 'getCurrentPlaceName', 'getSelectionCount', 'getWorldAccessLevel', 'canReadDocument', 'refreshWorldPresenceActivity']) {
+        //
+        // UPDATE (0.9.217): that ACTUAL_GAP is now closed. Rather than
+        // the 3-second refreshSpatialUI() cadence 0.9.216 flagged as the
+        // natural call site, 0.9.217 wired refreshWorldPresenceActivity()
+        // to the EVENT this method's own header actually names — a World
+        // edit grant changing — via the pre-existing
+        // onWorldMembershipChanged() subscription in WorldView.js's own
+        // _syncWorldPresence(). See tests/
+        // WorldPresenceActivityRefreshIntegration.test.js and
+        // docs/Roadmap.md's own 0.9.217 entry.
+        for (const method of ['getRecentlyVisitedWorlds', 'getCurrentPlaceName', 'getSelectionCount', 'getWorldAccessLevel', 'canReadDocument']) {
             assert(new RegExp(`^\\s{4}${method}\\(`, 'm').test(navigationSessionSource), `A6a. WorldNavigationSession still declares ${method}(...)`);
-            assert(countReferences(worldView, method) === 0, `A6b. ${method} still has no caller in WorldView.js (five classified COMPLETE/INTENTIONAL_BOUNDARY, one classified ACTUAL_GAP by 0.9.216 — see that milestone's own Section L)`);
+            assert(countReferences(worldView, method) === 0, `A6b. ${method} still has no caller in WorldView.js (five classified COMPLETE/INTENTIONAL_BOUNDARY — see 0.9.216's own Section L)`);
         }
+        assert(new RegExp(`^\\s{4}refreshWorldPresenceActivity\\(`, 'm').test(navigationSessionSource), 'A6c. WorldNavigationSession still declares refreshWorldPresenceActivity(...)');
+        assert(countReferences(worldView, 'refreshWorldPresenceActivity') === 1, 'A6d. refreshWorldPresenceActivity now has exactly one caller in WorldView.js — 0.9.217 closed this ACTUAL_GAP (see tests/WorldPresenceActivityRefreshIntegration.test.js)');
 
-        console.log('✓ Section A: World interaction/navigation — COMPLETE. The entire 0.9.209/0.9.210/0.9.211 Undo/Redo arc is closed and reconfirmed. The six WorldNavigationSession methods this section once left an open boundary note about were individually classified by 0.9.216 (see tests/PostSnapshotExportProductReassessment.test.js\'s own Section L) — five COMPLETE/INTENTIONAL_BOUNDARY, one (refreshWorldPresenceActivity) a genuine small ACTUAL_GAP.');
+        console.log('✓ Section A: World interaction/navigation — COMPLETE. The entire 0.9.209/0.9.210/0.9.211 Undo/Redo arc is closed and reconfirmed. The six WorldNavigationSession methods this section once left an open boundary note about were individually classified by 0.9.216 (see tests/PostSnapshotExportProductReassessment.test.js\'s own Section L) — five COMPLETE/INTENTIONAL_BOUNDARY, and refreshWorldPresenceActivity, the one genuine ACTUAL_GAP, closed by 0.9.217.');
     }
 
     // ---------------------------------------------------------------

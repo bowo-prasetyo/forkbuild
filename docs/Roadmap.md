@@ -77609,3 +77609,148 @@ four held at OBSOLETE CANDIDATE pending an explicit supersession record
 or a human confirming intent) — per this milestone's own brief, that
 cleanup is a distinct, later decision, not something this reassessment
 performs itself.
+
+## 0.9.217 — Wire World Presence Activity Refresh
+
+Small production integration + focused E2E audit. Takes up 0.9.216's
+own Section L5 — the one `ACTUAL_GAP` left standing once every other
+finding in that reassessment closed to `COMPLETE`, `INTENTIONAL_BOUNDARY`,
+or `OBSOLETE`/candidate: `WorldNavigationSession#refreshWorldPresenceActivity(documentId)`
+has been a complete, fully implemented method since 0.2.98 — it re-derives
+this replica's own advertised World-presence activity from a fresh
+`canEditDocument()` read and re-broadcasts it — with genuinely zero
+callers anywhere in the codebase.
+
+This milestone does not reinterpret the method. It is not a new
+heartbeat system, timer, presence state machine, visibility mechanism,
+or generic "user activity" tracker — the method's own header already
+names its exact intended trigger: *"the call a session makes after a
+World edit grant it holds changes (granted or revoked), so its own
+presence stays honest without waiting for a peer to notice on their
+own."* The fix is wiring that already-implemented capability to that
+exact, already-existing event.
+
+```text
+grantWorldEdit()/revokeWorldEdit() (self-issued)
+        or a gossiped grant/revocation arriving over the wire
+                    │
+                    ▼
+   WorldMembershipUseCase's own GRANT_CHANGED_EVENT
+                    │
+                    ▼
+WorldNavigationSession#onWorldMembershipChanged(documentId, cb)
+   (already subscribed by WorldView.js's own _syncWorldPresence(),
+    since 0.2.99, to refresh the Members panel roster)
+                    │
+                    │ NEW — one added line inside that SAME callback
+                    ▼
+   session.refreshWorldPresenceActivity(presentWorldDocumentId)
+                    │
+                    ▼
+   WorldPresenceUseCase#setActivity() — re-derives EDITING/EXPLORING
+   from a fresh canEditDocument() read and re-broadcasts it to every
+   authenticated peer
+```
+
+### Why `onWorldMembershipChanged`, not the 3-second spatial poll
+
+0.9.216's own closing recommendation suggested a different call site:
+`WorldView.js`'s `refreshSpatialUI()`, beside its existing
+`session.canEditDocument(activeId)` read, since that function already
+re-runs on the 3-second `spatialInterval` and already has `activeId` in
+scope. This milestone deliberately does **not** take that path.
+
+`refreshSpatialUI()` is driven by the same cadence
+`WorldSpatialPresenceUseCase`'s own header goes out of its way to keep
+independent from World presence — spatial *observation* (where a camera
+is looking, throttled, many-times-a-minute) and World presence
+*activity* (a coarse, low-frequency "am I an editor or a viewer" fact)
+are two deliberately separate temporal concerns throughout this
+codebase (0.3.0's own flagship). Hanging the second off the first's
+timer merely because the timer already exists would blur that line for
+no reason — the actual event this method needs to react to already has
+its own dedicated, event-driven channel wired in `WorldView.js`, sitting
+one line away from `refreshWorldPresenceActivity()`'s own natural call.
+`onWorldMembershipChanged()` fires exactly once per accepted
+grant/revocation for the active document (self-issued or gossiped),
+never on a timer, and `WorldMembershipUseCase`'s own freshness gate
+already prevents a replayed, not-newer record from firing it twice — so
+no UI-side deduplication was needed either.
+
+### What changed
+
+- **`ui/views/WorldView.js`** — one call added inside the existing
+  `session.onWorldMembershipChanged(presentWorldDocumentId, () => { ... })`
+  callback in `_syncWorldPresence()`:
+  `session.refreshWorldPresenceActivity(presentWorldDocumentId)`,
+  alongside (never replacing) the pre-existing
+  `worldMembers.value = session.listWorldMembers(presentWorldDocumentId)`
+  roster refresh. Same `documentId`, same subscription, same
+  mount/unmount/document-switch teardown `_syncWorldPresence()` already
+  had — no new subscription, no new timer, no new state anywhere.
+- **`application/WorldNavigationSession.js`** — unchanged.
+  `refreshWorldPresenceActivity()` was already a complete implementation;
+  this milestone gives it a caller, nothing more.
+- **`tests/WorldPresenceActivityRefreshIntegration.test.js`** — new
+  flagship. Section A statically proves the production call site exists
+  exactly once, inside the right callback, with the right `documentId`,
+  and is never reachable from the 3-second `spatialInterval`, and that
+  no new `setInterval` was introduced. Section B is a FLAGSHIP over a
+  real authenticated two-replica peer network: replaying WorldView.js's
+  own new callback (nothing more) is proven sufficient for Bob's
+  advertised activity to flip `EXPLORING -> EDITING` the instant Alice
+  grants him edit, and back on revocation — with zero further action
+  from Bob. Section C proves cross-document isolation (a grant on a
+  World Bob never entered never touches his advertised activity for one
+  he did, and the method stays a genuine no-op for a World never
+  entered). Section D proves document-switching hygiene (unsubscribing
+  and leaving presence before a late/stale membership change arrives
+  leaves no resurrected advertisement behind). Section E proves no
+  duplicate broadcast on a replayed, not-newer grant record. Section F
+  statically confirms the new call site references nothing from
+  Snapshot/Publication/placement lifecycle.
+- **`tests/PostSnapshotExportProductReassessment.test.js`** and
+  **`tests/PostUndoRedoProductReassessment.test.js`** — updated in
+  place, per this arc's own established convention (mirroring how
+  0.9.216 amended 0.9.212's own Section A6): Section L5's `ACTUAL_GAP`
+  is recorded as closed, the closure table (Section O) row for
+  `refreshWorldPresenceActivity` moves to `COMPLETE`, and the baseline
+  "still has no caller" sweep is updated to check
+  `refreshWorldPresenceActivity` on its own terms (one genuine caller)
+  rather than lumping it in with the five methods that remain
+  deliberately uncalled.
+
+### What did not change
+
+Per this milestone's own brief, the `OBSOLETE`/`OBSOLETE CANDIDATE`
+cluster 0.9.216 also surfaced (`GroupsPanel.js`,
+`CreatePublicationSnapshotPlacementCatalogUseCase.js`,
+`CreatePublicationAnchorCatalogUseCase.js`,
+`CreatePlacementRegistryUseCase.js`, `CreateSpatialIndexUseCase.js`,
+`CreateSpatialDiscoveryUseCase.js`,
+`CreateDecentralizedSpatialDiscoveryUseCase.js`,
+`CreateWorldViewStreamingUseCase.js`) is deliberately left untouched —
+a distinct, later cleanup decision, not mixed into this reachability
+fix.
+
+```text
+0.9.212  Post-Undo/Redo Product Reassessment                          ✓
+0.9.213  Editor Undo/Redo Label Mirrors                                ✓
+0.9.214  Editor Transform Gesture Feedback                             ✓
+0.9.215  Snapshot Export Capability Integration                       ✓
+0.9.216  Post-Snapshot-Export Product Reassessment                    ✓
+0.9.217  Wire World Presence Activity Refresh                          ✓
+```
+
+### Recommendation
+
+The one `ACTUAL_GAP` this whole capability-reachability arc had left
+(0.9.216's own Section L5) is now closed. Per this milestone's own
+brief, the natural next step is a small, targeted reassessment asking
+exactly two questions: (1) is `refreshWorldPresenceActivity()` now
+genuinely complete, and (2) are the remaining findings from 0.9.216
+exclusively `OBSOLETE`/`OBSOLETE CANDIDATE`? If both hold, the
+capability-reachability backlog this arc has worked since 0.9.196 is
+finally exhausted, and the next milestone should be chosen from real
+product evolution or a deliberate obsolete-cleanup decision, rather than
+another search for missing UI wiring.

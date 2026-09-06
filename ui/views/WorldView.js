@@ -1711,8 +1711,23 @@ export default {
             // moment it arrives — never only on the next 3-second poll.
             // See WorldNavigationSession#onWorldMembershipChanged()/
             // onWorldPresenceChanged()'s own headers.
+            //
+            // 0.9.217 — this is also the exact moment
+            // refreshWorldPresenceActivity()'s own header names as its
+            // trigger: "the call a session makes after a World edit
+            // grant it holds changes (granted or revoked)." A grant or
+            // revocation touching THIS document — self-issued via
+            // grantWorldEdit()/revokeWorldEdit() above, or gossiped in
+            // from the owner — is exactly that event, so this replica's
+            // OWN advertised activity is re-derived and re-broadcast
+            // right here, never waiting on the unrelated 3-second
+            // spatial poll (session.canEditDocument() is already
+            // re-read there for the LOCAL "can I edit" label, but
+            // nothing on that cadence ever told OTHER peers this
+            // replica's activity changed).
             unsubscribeWorldMembership = session.onWorldMembershipChanged(presentWorldDocumentId, () => {
                 worldMembers.value = session.listWorldMembers(presentWorldDocumentId);
+                session.refreshWorldPresenceActivity(presentWorldDocumentId);
             });
             unsubscribeWorldPresence = session.onWorldPresenceChanged(presentWorldDocumentId, (roster) => {
                 worldPresenceRoster.value = roster;

@@ -552,10 +552,14 @@ async function runTests() {
         const navigationSessionSource = await rawSource('application/WorldNavigationSession.js');
         const worldViewSource = await rawSource('ui/views/WorldView.js');
 
-        for (const method of ['getRecentlyVisitedWorlds', 'getCurrentPlaceName', 'getSelectionCount', 'getWorldAccessLevel', 'canReadDocument', 'refreshWorldPresenceActivity']) {
+        // UPDATE (0.9.217): refreshWorldPresenceActivity now HAS a
+        // caller (see Section L5 below) — excluded from this "still has
+        // no caller" baseline loop, checked on its own terms instead.
+        for (const method of ['getRecentlyVisitedWorlds', 'getCurrentPlaceName', 'getSelectionCount', 'getWorldAccessLevel', 'canReadDocument']) {
             assert(new RegExp(`^\\s{4}${method}\\(`, 'm').test(navigationSessionSource), `L0. WorldNavigationSession still declares ${method}(...)`);
             assert(countReferences(worldViewSource, method) === 0, `L0. ${method} still has no caller in WorldView.js`);
         }
+        assert(new RegExp(`^\\s{4}refreshWorldPresenceActivity\\(`, 'm').test(navigationSessionSource), 'L0a. WorldNavigationSession still declares refreshWorldPresenceActivity(...)');
 
         // L1 — getRecentlyVisitedWorlds(): the "Recent Worlds list" its
         // own header names IS built and reachable — ui/views/RecentWorldsView.js
@@ -605,23 +609,33 @@ async function runTests() {
         assert(countReferences(worldViewSource, 'getWorldAccessLevel') === 0 && countReferences(worldViewSource, 'canReadDocument') === 0, 'L4b. neither is called from WorldView.js — consistent with the documented boundary, not an oversight');
         assert(/canEditDocument/.test(worldViewSource), 'L4c. ...while canEditDocument(), the ONE dimension the architecture actually gates UI with, IS called from WorldView.js');
 
-        // L5 — refreshWorldPresenceActivity(documentId): ACTUAL_GAP. The
-        // ONLY one of the six that is a genuine, small, precisely-scoped
-        // integration gap — not a redundant wrapper (L1/L2), not a
-        // cosmetic omission (L3), and not a documented architectural
-        // restraint (L4). Its own header names EXACTLY when it should
-        // fire: "the call a session makes after a World edit grant it
-        // holds changes... so its own presence stays honest." WorldView.js's
-        // own refreshSpatialUI() ALREADY re-reads session.canEditDocument(activeId)
-        // on the exact per-tick cadence this method exists to react to —
-        // the one piece of data it needs is already flowing through the
-        // exact function that should call it.
+        // L5 — refreshWorldPresenceActivity(documentId): ACTUAL_GAP at
+        // the time this milestone (0.9.216) ran — the ONLY one of the six
+        // that was a genuine, small, precisely-scoped integration gap —
+        // not a redundant wrapper (L1/L2), not a cosmetic omission (L3),
+        // and not a documented architectural restraint (L4). Its own
+        // header named EXACTLY when it should fire: "the call a session
+        // makes after a World edit grant it holds changes... so its own
+        // presence stays honest."
+        //
+        // UPDATE (0.9.217): CLOSED. Rather than the refreshSpatialUI()/
+        // 3-second cadence this milestone (L5c below) noted as available,
+        // 0.9.217 wired it to the actual EVENT its own header names — a
+        // World edit grant changing — via the pre-existing
+        // onWorldMembershipChanged() subscription in WorldView.js's own
+        // _syncWorldPresence(), deliberately keeping presence activity
+        // event-driven rather than cadence-driven. See tests/
+        // WorldPresenceActivityRefreshIntegration.test.js and
+        // docs/Roadmap.md's own 0.9.217 entry for the full closure proof;
+        // this section is left in place, reworded, as the historical
+        // record of the finding 0.9.217 closed.
         assert(/the call a session makes after a World/.test(navigationSessionSource), 'L5a. refreshWorldPresenceActivity()\'s own header still names its exact intended trigger');
-        assert(countReferences(navigationSessionSource, 'refreshWorldPresenceActivity') === 1, 'L5b. ...and it has no OTHER caller inside WorldNavigationSession.js itself either — not even internal application-layer wiring, genuinely zero callers anywhere');
+        assert(countReferences(navigationSessionSource, 'refreshWorldPresenceActivity') === 1, 'L5b. ...and it has no OTHER caller inside WorldNavigationSession.js itself either — not even internal application-layer wiring, the method\'s only caller lives in ui/');
         const canEditMatch = worldViewSource.match(/canEditActiveWorld\.value = activeId \? session\.canEditDocument\(activeId\) : false;/);
-        assert(canEditMatch, 'L5c. WorldView.js\'s refreshSpatialUI() still re-reads session.canEditDocument(activeId) fresh, every tick, using the exact `activeId` refreshWorldPresenceActivity(documentId) itself would need');
+        assert(canEditMatch, 'L5c. WorldView.js\'s refreshSpatialUI() still re-reads session.canEditDocument(activeId) fresh, every tick, for the LOCAL "can I edit" label — a separate concern from L5d\'s own broadcast-to-peers wiring');
+        assert(countReferences(worldViewSource, 'refreshWorldPresenceActivity') === 1, 'L5d. ...and, as of 0.9.217, refreshWorldPresenceActivity(presentWorldDocumentId) is genuinely called — from inside the onWorldMembershipChanged() callback, not from refreshSpatialUI()\'s own 3-second cadence');
 
-        console.log('✓ Section L: WorldNavigationSession closure sweep — 0.9.212\'s own Section A6 boundary note, resolved. Five of six methods classified: getRecentlyVisitedWorlds/getSelectionCount (L1/L2) are COMPLETE via a different, deliberately lighter path — the wrapper itself is unreferenced, but the capability it names is delivered; getCurrentPlaceName (L3) is a minor, honestly-recorded, not-elevated omission (an adjacent richer capability already ships); getWorldAccessLevel/canReadDocument (L4) are INTENTIONAL_BOUNDARY, backed by this codebase\'s own documented edit-only authorization architecture. The sixth, refreshWorldPresenceActivity (L5), is this milestone\'s one genuine ACTUAL_GAP — small, precisely scoped, its natural call site already exists and already re-reads the exact data it needs.');
+        console.log('✓ Section L: WorldNavigationSession closure sweep — 0.9.212\'s own Section A6 boundary note, resolved. Five of six methods classified: getRecentlyVisitedWorlds/getSelectionCount (L1/L2) are COMPLETE via a different, deliberately lighter path — the wrapper itself is unreferenced, but the capability it names is delivered; getCurrentPlaceName (L3) is a minor, honestly-recorded, not-elevated omission (an adjacent richer capability already ships); getWorldAccessLevel/canReadDocument (L4) are INTENTIONAL_BOUNDARY, backed by this codebase\'s own documented edit-only authorization architecture. The sixth, refreshWorldPresenceActivity (L5), was this milestone\'s one genuine ACTUAL_GAP — closed by 0.9.217, event-driven via onWorldMembershipChanged(), not the 3-second poll.');
     }
 
     // ---------------------------------------------------------------
@@ -751,6 +765,11 @@ async function runTests() {
         // compositionRoot, ui/internal — for a correctly-terminating
         // INTERNAL capability, `ui` is deliberately marked N/A, never
         // treated as a missing hop).
+        //
+        // UPDATE (0.9.217): the L5 row below is updated from ACTUAL_GAP
+        // to COMPLETE — refreshWorldPresenceActivity() now has a real
+        // UI-layer caller (WorldView.js's onWorldMembershipChanged()
+        // callback). See tests/WorldPresenceActivityRefreshIntegration.test.js.
         const closureFindings = [
             { capability: 'Publication distribution (Section D2)', domain: true, useCase: true, compositionRoot: true, ui: true, classification: 'COMPLETE' },
             { capability: 'Snapshot export/import symmetry (Section G)', domain: true, useCase: true, compositionRoot: true, ui: true, classification: 'COMPLETE' },
@@ -758,7 +777,7 @@ async function runTests() {
             { capability: 'Material verification/attribution (Section I)', domain: true, useCase: true, compositionRoot: true, ui: true, classification: 'COMPLETE' },
             { capability: 'getRecentlyVisitedWorlds/getSelectionCount wrappers (L1/L2)', domain: true, useCase: true, compositionRoot: true, ui: false, classification: 'COMPLETE_VIA_DIFFERENT_PATH' },
             { capability: 'getWorldAccessLevel/canReadDocument (L4)', domain: true, useCase: true, compositionRoot: true, ui: false, classification: 'INTENTIONAL_BOUNDARY' },
-            { capability: 'refreshWorldPresenceActivity (L5)', domain: true, useCase: true, compositionRoot: true, ui: false, classification: 'ACTUAL_GAP' },
+            { capability: 'refreshWorldPresenceActivity (L5, closed by 0.9.217)', domain: true, useCase: true, compositionRoot: true, ui: true, classification: 'COMPLETE' },
             { capability: 'CreatePublicationAnchorCatalogUseCase (M2)', domain: true, useCase: true, compositionRoot: false, ui: false, classification: 'OBSOLETE' },
             { capability: 'CreatePlacementRegistryUseCase (M3)', domain: true, useCase: true, compositionRoot: false, ui: false, classification: 'OBSOLETE' },
             { capability: 'WorldNavigationSession private methods (O1)', domain: true, useCase: true, compositionRoot: true, ui: null, classification: 'INTENTIONAL_INTERNAL_CAPABILITY' }
@@ -819,7 +838,7 @@ Classification summary:
        - getRecentlyVisitedWorlds/getSelectionCount .. COMPLETE (via a different, deliberately lighter path)
        - getCurrentPlaceName ........................... minor, honest, not-elevated omission
        - getWorldAccessLevel/canReadDocument ........... INTENTIONAL_BOUNDARY
-       - refreshWorldPresenceActivity ................... ACTUAL_GAP  <- the one finding
+       - refreshWorldPresenceActivity ................... ACTUAL_GAP at the time — CLOSED by 0.9.217
   M. Obsolete components / superseded application paths:
        - GroupsPanel.js, CreatePublicationSnapshotPlacementCatalogUseCase.js .. OBSOLETE (reconfirmed)
        - CreatePublicationAnchorCatalogUseCase.js, CreatePlacementRegistryUseCase.js .. OBSOLETE (NEW, confirmed superseded)
@@ -830,16 +849,19 @@ Classification summary:
   P. Behavioral proof ........................... holds, no regression
 
 Outcome (per this milestone's own brief's own three named possibilities):
-  Mostly OUTCOME A, with a real OUTCOME B seed. Capability-reachability
-  closure is NOT yet fully reached (Outcome C) — but the "it already
-  works, but nobody can reach it" pattern this whole arc has been closing
-  since 0.9.196 is now down to exactly ONE small, precisely-scoped
-  instance (Section L5), from THREE at the time 0.9.212 ran. Recommended:
-  a tiny integration milestone (0.9.217 candidate) wiring
+  Mostly OUTCOME A, with a real OUTCOME B seed, AT THE TIME THIS
+  MILESTONE RAN. Recommended a tiny integration milestone wiring
   refreshWorldPresenceActivity(activeId) into WorldView.js's own
   refreshSpatialUI(), immediately beside its existing
-  session.canEditDocument(activeId) read (Section L5c) — the smallest
-  possible next step, exactly this arc's own established shape. The
+  session.canEditDocument(activeId) read (Section L5c).
+
+  UPDATE (0.9.217): that milestone ran and closed the finding — but via
+  the pre-existing onWorldMembershipChanged() subscription (the actual
+  EVENT the method's own header names: a World edit grant changing),
+  never the 3-second refreshSpatialUI() cadence this recommendation
+  named, to keep spatial observation and presence activity as separate
+  temporal concerns. See tests/WorldPresenceActivityRefreshIntegration.test.js
+  and docs/Roadmap.md's own 0.9.217 entry. The
   broadened OBSOLETE sweep (Section M) also surfaced real material for a
   FUTURE obsolete-cleanup milestone (six files total: two now confirmed
   OBSOLETE, four held at OBSOLETE CANDIDATE pending explicit supersession
