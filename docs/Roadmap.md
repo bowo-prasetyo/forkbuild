@@ -77347,3 +77347,265 @@ architectural gap — implementation exists, composition exists, tests
 exist, only the UI caller was missing — is now exhausted. If a fresh
 sweep finds nothing new in that shape, the next milestone should be
 driven by a genuine product requirement instead.
+
+## 0.9.216 — Post-Snapshot-Export Product Reassessment
+
+Test-only. No production changes. 0.9.215's own closing recommendation
+asked for exactly this — another sweep, to find out whether "it already
+works, but nobody can reach it" is finally exhausted. Deliberately
+broader than 0.9.212, per this milestone's own brief, in four ways:
+0.9.213/0.9.214/0.9.215 are regression-checked here as CLOSED
+capabilities rather than rediscovered; several areas get a dedicated row
+for the first time (Publication distribution, Decentralized discovery,
+Material verification/attribution, Cross-document isolation as one
+unified cross-cutting audit rather than a scattered footnote); Snapshot
+import/export symmetry gets its own dedicated audit that deliberately
+OBSERVES the boundary 0.9.215 left open rather than extending it (no
+file download, clipboard export, automatic import, drag-and-drop, or
+package versioning); and 0.9.212's own Section A6 — six
+`WorldNavigationSession` methods left an explicit, unclassified boundary
+note on purpose — finally gets the reassessment that note asked for.
+
+This milestone also introduces one new classification, distinct in shape
+from `ACTUAL_GAP`:
+
+```text
+EXISTING CAPABILITY
+        │
+        ├── reachable                  -> COMPLETE
+        ├── deliberately internal      -> INTENTIONAL_BOUNDARY
+        ├── superseded                 -> OBSOLETE
+        └── missing semantic capability -> NEW_PRODUCT_GAP
+```
+
+`NEW_PRODUCT_GAP` is for a capability this codebase has never built,
+under any name, at any layer — as opposed to `ACTUAL_GAP`'s "it already
+works, but nobody can reach it," the only shape this whole arc has found
+since 0.9.196. **Verdict: zero `NEW_PRODUCT_GAP` findings.** Every one of
+the ~17 product areas swept (World interaction/navigation, Vehicle,
+Editor, Autosave/recovery, History/Preview/Restore/Undo/Redo, World
+placement lifecycle, Publication lifecycle, Publication distribution,
+Snapshot import/export, Snapshot discovery, Snapshot materialization,
+Snapshot World participation, Decentralized discovery, Material
+verification/attribution, Cross-document isolation, Performance,
+obsolete components) is COMPLETE, INTENTIONAL_BOUNDARY, OBSOLETE/
+candidate, or the one `ACTUAL_GAP` below.
+
+### Findings
+
+- **World interaction/navigation, Vehicle, World material/document
+  lifecycle (autosave/recovery, history/preview/restore, placement),
+  Publication lifecycle, Editor, Snapshot discovery/materialization/World
+  participation** — all reconfirm COMPLETE/INTENTIONAL_BOUNDARY
+  unchanged. The Editor's three prior ACTUAL_GAP findings (transform
+  gesture feedback, undo/redo label mirrors, Snapshot export) are
+  regression-checked as genuinely CLOSED, not merely assumed closed.
+
+- **Publication distribution** (new dedicated row). COMPLETE — Nostr/
+  Arweave announcement of an already-published Publication (distinct
+  from Snapshot export's byte transfer, and from Snapshot discovery) is
+  composed in `ui/main.js` via `composePublicationDistributionCommand()`,
+  threaded through `WorldView.js`, and reachable from a real "Distribute
+  Publication" action on `WorldEncounterCanvas.js`.
+
+- **Snapshot import/export symmetry** (new dedicated audit). COMPLETE,
+  boundary OBSERVED not extended:
+
+  ```text
+  Snapshot
+     │
+     ├── Export ──→ Transfer Package
+     │
+     └── Import ←── Transfer Package
+  ```
+
+  Both directions share the one package schema (`PublicationSnapshotTransferPackage.js`,
+  `CURRENT_SCHEMA_VERSION` still `1`); export's own code never calls a
+  mutating catalog/store method (`.add`/`.put`/`.save`/`.set`) — it stays
+  a pure read; neither direction's code references Publish/Distribute/
+  Nostr/Arweave/Placement at all; import stays bound to exactly one
+  `@click` handler, no drag-and-drop; `OwnPublicationPanel.js`'s own
+  template comment still documents "no file save, download, or
+  copy-to-clipboard" for export, and its code genuinely contains neither.
+  A real Alice-exports/Bob-imports round trip (real `LocalPublicationCatalog`/
+  `LocalContentStore` pairs, no mocks) confirms Publication identity and
+  content hash survive exactly, with no cataloging side effect on either
+  side — Bob holds byte-identical content but does NOT silently gain a
+  catalog entry for the Publication itself, exactly as
+  `PublicationSnapshotTransferPackage.js`'s own header documents.
+
+- **Decentralized discovery** (new dedicated row). COMPLETE — with one
+  naming correction worth recording so a future sweep does not trip over
+  it: `ui/views/DecentralizedPublicationsView.js` — despite its name —
+  contains zero references to Nostr, Arweave, or
+  `DecentralizedWorldDiscoveryQuery`; that view is entirely Bitcoin/Base
+  anchor evidence and IPFS mirroring, a different decentralization
+  concern. The real Nostr/Arweave discovery and distribution UI lives on
+  `ui/components/WorldEncounterCanvas.js`'s own "Discover Publication"/
+  "Distribute Publication" panels, composed from `ui/main.js` and
+  threaded through `WorldView.js`.
+
+- **Material verification / attribution** (new dedicated row). COMPLETE
+  — the full signature -> identity -> inspection verifier chain is
+  composed app-wide (`composeWorldEncounterMaterialVerifier()`), and its
+  result (plus `resolveSnapshotPublicationAttribution()`'s own outcome)
+  is rendered on two independent surfaces, `WorldEncounterCanvas.js` and
+  `OwnPublicationPanel.js`.
+
+- **Cross-document isolation** (new dedicated cross-cutting audit,
+  previously scattered across five separate lifecycle test files' own
+  footnotes). COMPLETE, unified as one invariant: History preview restore
+  still compares against the previewed document's own `documentId`;
+  `checkPlacementOverlap(documentId, newPosition)` still takes an
+  explicit `documentId`; autosave is still fully stopped (not merely
+  paused) on Editor teardown, and `AutosaveScheduler` still observes
+  `documentManager.onStateChanged()` rather than ignoring a document
+  switch.
+
+- **WorldNavigationSession closure sweep** (resolves 0.9.212's own open
+  Section A6 boundary note). Five of six methods classified COMPLETE-via-
+  a-different-path or INTENTIONAL_BOUNDARY:
+  - `getRecentlyVisitedWorlds()`/`getSelectionCount()` — the CAPABILITIES
+    these name (a "Recent Worlds" list; a selection count) are genuinely
+    delivered, just through a different, deliberately lighter path:
+    `ui/views/RecentWorldsView.js` explicitly documents, in its own
+    header, that it never builds a `WorldNavigationSession` at all (no
+    avatar/presence/peer stack needed to browse a list) and reads
+    `LocalWorldExperienceStore` directly; `WorldView.js` derives its own
+    selection count from the richer `session.getSpatialSelection()` it
+    already calls. The wrapper methods themselves are genuinely
+    uncalled; the product capability is not missing.
+  - `getCurrentPlaceName()` — a minor, honestly-recorded, NOT-elevated
+    omission (a "you are currently in X" breadcrumb that is never
+    rendered), distinct from the two above (which ARE delivered) and
+    from the one below (a documented restraint) — a richer, adjacent,
+    already-shipped capability (`getNearbyGeographicPlaces()`, backing
+    the compass/HUD legend) already answers "where am I" for a Wanderer.
+  - `getWorldAccessLevel()`/`canReadDocument()` — INTENTIONAL_BOUNDARY,
+    backed directly by `WorldAuthorizationService`'s own documented
+    architecture: `canEditDocument()` is "the ONE seam" every mutation
+    chokepoint and UI edit-affordance consults; READ/NONE granularity
+    was built for a closed three-level vocabulary, but this codebase has
+    never promised gating World View RENDERING by read level, only
+    gating EDIT — and `canEditDocument()` itself IS called from
+    `WorldView.js`.
+  - **`refreshWorldPresenceActivity(documentId)` — this milestone's one
+    `ACTUAL_GAP`.** Fully implemented; its own header names its exact
+    intended trigger ("the call a session makes after a World edit grant
+    it holds changes... so its own presence stays honest"); zero callers
+    anywhere, not even internal application-layer wiring. `WorldView.js`'s
+    own `refreshSpatialUI()` already re-reads
+    `session.canEditDocument(activeId)` fresh, every tick, using the
+    exact `activeId` this method itself needs — the one piece of data it
+    needs is already flowing through the exact function that should call
+    it. Small, precisely scoped, the smallest kind of finding this arc
+    makes.
+
+- **Obsolete components / superseded application paths** (broadened
+  repository-wide, per this milestone's own brief — obsolete
+  implementation, not reachability, is now the more interesting source
+  of architectural friction). Nothing is deleted here; everything is
+  classified per the brief's own four-stage pipeline (confirmed
+  superseded -> no production caller -> replacement reachable -> safe
+  removal candidate):
+  - `ui/components/GroupsPanel.js`, `application/CreatePublicationSnapshotPlacementCatalogUseCase.js`
+    — the two already-known OBSOLETE findings, reconfirmed unchanged.
+  - `application/CreatePublicationAnchorCatalogUseCase.js` — **NEW,
+    full OBSOLETE.** `ui/main.js`'s own comment explicitly documents the
+    supersession ("now comes from `CreatePublicationAnchorPeerExchangeUseCase.js`
+    ... instead of `CreatePublicationAnchorCatalogUseCase.js`"); zero
+    instantiations anywhere in `application/`/`ui/`.
+  - `application/CreatePlacementRegistryUseCase.js` — **NEW, full
+    OBSOLETE.** The supersession record sits on the REPLACEMENT's own
+    side this time: `CreateWorldViewUseCase.js`'s own 0.2.23 header
+    documents that `CreatePlacementRegistryUseCase` "already builds this
+    exact set of collaborators for other surfaces"; zero instantiations
+    anywhere, while `CreateWorldViewUseCase` is genuinely composed by
+    `WorldView.js`.
+  - `application/CreateSpatialIndexUseCase.js`,
+    `application/CreateSpatialDiscoveryUseCase.js`,
+    `application/CreateDecentralizedSpatialDiscoveryUseCase.js`,
+    `application/CreateWorldViewStreamingUseCase.js` — **NEW, OBSOLETE
+    CANDIDATE** (four files). Each confirmed real, complete, and
+    instantiated NOWHERE in `application/`/`ui/`; each confirmed to have
+    a reachable replacement (`WorldDiscoveryRuntimeBootstrap.js`/
+    `CreateWorldViewUseCase.js`, both genuinely composed). Held one
+    pipeline stage short of hard OBSOLETE — no explicit in-repo
+    "superseded" statement was found for any of these four, unlike the
+    two findings above — pending a human confirming intent before a
+    future cleanup milestone treats them as safe-removal candidates.
+
+### Architecture closure
+
+The brief's own central invariant, applied as a table across every
+finding above (domain/use-case/composition-root/UI, with an
+`ACTUAL_GAP` stopping exactly one hop short and an `OBSOLETE` finding
+never reached by the composition root at all):
+
+```text
+             PRODUCT CAPABILITY
+                     │
+                     ▼
+             Domain / Core
+                     │
+                     ▼
+              Application
+                     │
+                     ▼
+             Composition Root
+                     │
+                     ▼
+               UI / Caller
+```
+
+Also includes a worked `INTENTIONAL INTERNAL CAPABILITY` example, per
+the brief's own caution against turning this exercise into an endless
+search for missing buttons:
+
+```text
+Infrastructure
+     ↓
+Application
+     ↓
+INTENTIONAL INTERNAL CAPABILITY
+```
+
+`WorldNavigationSession.js` carries dozens of underscore-prefixed
+private methods (`_refreshInspection`, `_refreshEditingContext`,
+`_refreshGizmo`, `_setSpatialSelection`, and many more) — genuinely
+Infrastructure/Application-internal state maintenance, called only by
+other methods on the same class, with zero UI callers anywhere. That
+absence is correct BY DESIGN, not a finding — the exact distinction that
+keeps a capability-reachability sweep from mistaking every internal
+method for a missing product capability.
+
+`tests/PostSnapshotExportProductReassessment.test.js` is the new
+flagship, and updates `tests/PostUndoRedoProductReassessment.test.js`'s
+own Section A6 in place to record this milestone's resolution of that
+section's open boundary note.
+
+```text
+0.9.212  Post-Undo/Redo Product Reassessment                         ✓
+0.9.213  Editor Undo/Redo Label Mirrors                               ✓
+0.9.214  Editor Transform Gesture Feedback                            ✓
+0.9.215  Snapshot Export Capability Integration                      ✓
+0.9.216  Post-Snapshot-Export Product Reassessment                   ✓
+```
+
+### Recommendation
+
+Mostly **Outcome A**, with a real **Outcome B** seed — not Outcome C.
+Capability-reachability closure is not yet fully reached, but the
+pattern this whole arc has been closing since 0.9.196 is now down to
+exactly ONE small, precisely-scoped instance (from three at the time
+0.9.212 ran): a tiny integration milestone wiring
+`refreshWorldPresenceActivity(activeId)` into `WorldView.js`'s own
+`refreshSpatialUI()`, immediately beside its existing
+`session.canEditDocument(activeId)` read — the smallest possible next
+step, exactly this arc's own established shape. Separately, the
+broadened OBSOLETE sweep surfaced real material for a FUTURE
+obsolete-cleanup milestone (six files total: two now confirmed OBSOLETE,
+four held at OBSOLETE CANDIDATE pending an explicit supersession record
+or a human confirming intent) — per this milestone's own brief, that
+cleanup is a distinct, later decision, not something this reassessment
+performs itself.

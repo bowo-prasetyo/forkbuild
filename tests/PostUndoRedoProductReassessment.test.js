@@ -131,12 +131,28 @@ async function runTests() {
         // brief warns against. Recorded here as an explicit boundary
         // note for whichever future reassessment DOES scope that
         // territory in, not silently absorbed into this one's count.
+        //
+        // UPDATE (0.9.216): that future reassessment ran. "Post-
+        // Snapshot-Export Product Reassessment" classified all six,
+        // individually, with evidence — five are COMPLETE-via-a-
+        // different-path or INTENTIONAL_BOUNDARY (getRecentlyVisitedWorlds/
+        // getSelectionCount are delivered through a different,
+        // deliberately lighter accessor; getCurrentPlaceName is a minor,
+        // not-elevated omission; getWorldAccessLevel/canReadDocument are
+        // backed by this codebase's own documented edit-only
+        // authorization architecture), and the sixth — refreshWorldPresenceActivity —
+        // is a genuine, small ACTUAL_GAP: its own header names its exact
+        // intended trigger, and WorldView.js's refreshSpatialUI() already
+        // re-reads session.canEditDocument(activeId) on the exact cadence
+        // that trigger needs, without ever calling it. See
+        // tests/PostSnapshotExportProductReassessment.test.js's own
+        // Section L and docs/Roadmap.md's own 0.9.216 entry.
         for (const method of ['getRecentlyVisitedWorlds', 'getCurrentPlaceName', 'getSelectionCount', 'getWorldAccessLevel', 'canReadDocument', 'refreshWorldPresenceActivity']) {
             assert(new RegExp(`^\\s{4}${method}\\(`, 'm').test(navigationSessionSource), `A6a. WorldNavigationSession still declares ${method}(...)`);
-            assert(countReferences(worldView, method) === 0, `A6b. ${method} still has no caller in WorldView.js (out-of-scope boundary note, not a new finding)`);
+            assert(countReferences(worldView, method) === 0, `A6b. ${method} still has no caller in WorldView.js (five classified COMPLETE/INTENTIONAL_BOUNDARY, one classified ACTUAL_GAP by 0.9.216 — see that milestone's own Section L)`);
         }
 
-        console.log('✓ Section A: World interaction/navigation — COMPLETE. The entire 0.9.209/0.9.210/0.9.211 Undo/Redo arc is closed and reconfirmed. Six WorldNavigationSession methods outside this arc\'s own territory (avatar presence, geographic search, access control) remain uncalled by WorldView.js — noted as an explicit scope boundary for a future reassessment, not adopted as this milestone\'s own finding.');
+        console.log('✓ Section A: World interaction/navigation — COMPLETE. The entire 0.9.209/0.9.210/0.9.211 Undo/Redo arc is closed and reconfirmed. The six WorldNavigationSession methods this section once left an open boundary note about were individually classified by 0.9.216 (see tests/PostSnapshotExportProductReassessment.test.js\'s own Section L) — five COMPLETE/INTENTIONAL_BOUNDARY, one (refreshWorldPresenceActivity) a genuine small ACTUAL_GAP.');
     }
 
     // ---------------------------------------------------------------
