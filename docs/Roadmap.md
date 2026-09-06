@@ -75667,3 +75667,187 @@ brief named (debounce redesign, configurable interval, recovery
 history/versions/TTL, conflict resolution, cloud or cross-device
 recovery, crash-detection machinery, or a new document lifecycle
 state) — none of which this audit's findings motivate.
+
+## 0.9.206 — Post-Recovery Product Reassessment
+
+Test-only. No production changes. 0.9.205's own closing recommendation
+asked for exactly this: a fresh sweep of the same five broad product
+areas 0.9.196/0.9.203 already established, now that the entire
+autosave/recovery arc (0.9.203 through 0.9.205) is closed — plus a
+sixth area this milestone's own brief calls out by name, now that the
+Editor has grown a second composition root worth checking for
+siblings:
+
+```text
+COMPLETE
+INTENTIONAL_BOUNDARY
+ACTUAL_GAP
+ROUGH_EDGE
+```
+
+`tests/PostRecoveryProductReassessment.test.js` sweeps all six areas
+against real (not mocked) collaborators throughout, plus a dedicated
+regression section for 0.9.205's own fix:
+
+- **A — World interaction/navigation. COMPLETE, reconfirmed.**
+  `ui/views/WorldView.js` still composes 27 component families; the
+  0.9.197/0.9.198 removal/unpublish actions remain wired. Also
+  reconfirms `WorldNavigationSession.js` still carries the two
+  mutation-shaped exceptions and the undo/redo + history/replay
+  machinery 0.5.9's own design record named — the fact this milestone's
+  Section C below turns out to matter for.
+- **B — Vehicle system. INTENTIONAL_BOUNDARY, unchanged.** The
+  identical structural sweep 0.9.196/0.9.203 ran finds no new
+  passenger/capacity/fuel/range vocabulary anywhere. Nothing about
+  autosave/recovery could have moved this boundary, and nothing did.
+- **C — World material/document lifecycle. ACTUAL GAP — this
+  milestone's one finding.** 0.9.203's own ACTUAL_GAP (autosave/recovery
+  composed but unreached) is reconfirmed CLOSED first — `EditorView.js`
+  still takes and calls all four recovery-stack fields, `RecoveryBanner`
+  is still in the template — and closing it did not create a new
+  unreachable operation. Continuing the same search in the same area
+  surfaces a second, older, and unrelated capability with the identical
+  shape: `CommandHistory`'s own timeline (`getTimeline()`, unchanged
+  since 0.1.40) plus `ReplayDocumentUseCase` (0.1.40) and
+  `RestoreHistoryStateUseCase` (0.1.41) — exposed today as
+  `WorldNavigationSession#getTimeline()`/`beginHistoryPreview()`/
+  `previewHistoryAt()`/`cancelHistoryPreview()`/`restoreHistoryAt()`.
+  All of it is proven CORRECT here directly: replaying to an earlier
+  cursor reconstructs a real, standalone `World` as it existed at that
+  point without touching the live one, and restoring rebases the live
+  document onto it and correctly leaves the result dirty — the same
+  real collaborators `tests/HistoryRestore.test.js` already exercises.
+  It is composed by exactly one root, `CreateWorldViewUseCase.js`,
+  which hands it into `WorldNavigationSession` — the *same*
+  "correctly composed, zero callers" shape 0.9.203 found for the
+  recovery stack before 0.9.204 gave it one. A repo-wide sweep of every
+  UI entry point (`WorldView.js` included — the only UI that ever
+  constructs this session) confirms none of `getTimeline`/
+  `restoreHistoryAt`/`beginHistoryPreview`/`previewHistoryAt`/
+  `cancelHistoryPreview` is called anywhere. This is not merely "a
+  feature is missing": `docs/Principles.md`'s own 0.5.9 design record
+  states, by name, *why* undo/redo and this exact history/replay
+  machinery were kept when every other `WorldNavigationSession`
+  mutation capability was stripped out — "a viewer's landmark edit
+  needs to be undoable too." That stated requirement has no caller:
+  `WorldView.js` never calls `session.undo()`/`session.redo()` either,
+  so today a landmark rename or region deletion has no way to be
+  undone at all, despite the capability existing specifically to make
+  that possible.
+- **D — Publication workflow. COMPLETE, reconfirmed.** 11 wired actions
+  on `OwnPublicationPanel.js`; exactly one unpublish/retract handler;
+  the Bitcoin anchor wallet-signing `INTENTIONAL_BOUNDARY` unchanged.
+  Also confirms the Document → Publication → Placement → Material →
+  Distribution → Recovery survival chain holds: none of
+  `PublishDocumentUseCase`/`UnpublishDocumentUseCase`/
+  `RemoveWorldPlacementUseCase` carry any coupling to the recovery
+  subsystem — Recovery stays scoped to the open, unpublished editing
+  session, exactly as every 0.9.203–0.9.205 header already documented.
+- **E — Editor/document workflow. COMPLETE**, the newly added area.
+  Every editor-scoped use case `EditorView.js`/`EditorSession.js`
+  compose — fork, copy/paste/repeat selection, document metadata,
+  structure preview/composition, blueprint export/import — is checked
+  directly for both construction AND an actual call site, not merely
+  presence by name. One dead file surfaced:
+  `ui/components/GroupsPanel.js`, a fully correct, fully self-contained
+  Groups panel (create/select/rename/duplicate/delete/±Sel, live-
+  refreshing off `documentManager.onStateChanged()`) that predates
+  `EditingSidebar.js`'s own consolidated Groups section (0.6.2).
+  It is imported nowhere, registered as a component nowhere, and its
+  own `renameGroup()` is explicitly flagged "(unused)" in `EditorView.js`'s
+  own comments. This is the *other* leaf of the reachability matrix
+  Section G below draws: implemented-and-unreachable that is
+  **OBSOLETE**, not a candidate gap — `EditingSidebar.js` already covers
+  all six of its operations through the identical `group.*` action-
+  registry entries every other Editor mutation goes through.
+- **F — the 0.9.205 recovery boundary. CONFIRMED CLOSED, as a
+  regression, not a new fix.** `RecoveryObserver._checkCurrentDocument()`
+  still wraps `CheckRecoveryUseCase.execute()` in the exact try/catch
+  0.9.205 added, still failing safe; `EditorView.js`'s
+  `recoverDocument()`/`discardRecovery()` stay symmetric. A direct
+  regression test reproduces 0.9.205's own audit scenario against the
+  real `RecoveryObserver`/`DocumentManager` pair: a throwing
+  `CheckRecoveryUseCase` neither propagates out of
+  `DocumentManager.load()`'s synchronous `onStateChanged` publish nor
+  corrupts `DocumentManager`, and — the specific failure 0.9.205 found —
+  a later, unrelated document operation (opening a second document,
+  marking it dirty) still succeeds cleanly afterward.
+
+Also found, while running the full sweep (per this file's own housekeeping
+convention — see 0.9.205's own tests.html registration fix): `tests/
+PostLifecycleProductReassessment.test.js` (0.9.203's own flagship) has
+been failing since 0.9.204 shipped — its C3d/C4/C5 assertions asserted
+the recovery stack was NOT taken by `EditorView.js`, which 0.9.204 made
+false. Updated those assertions in place to describe the closure
+0.9.204/0.9.205 actually made (with an inline note on what changed and
+why), rather than leave a permanently-failing historical test in the
+suite; the file's own C1/C2 proof that the stack was already correct
+before it had a caller is untouched, since that part of the finding
+never stopped being true.
+
+### G — the capability reachability matrix
+
+The pattern repeating across 0.9.196 (placement removal), 0.9.198
+(unpublish), 0.9.203 (autosave/recovery), and now this milestone
+(history timeline/replay/restore) is the same shape every time:
+
+```text
+                 Domain/Application capability
+                              │
+                 ┌────────────┴────────────┐
+                 │                         │
+             reachable                 unreachable
+                 │                         │
+              COMPLETE             inspect individually
+                                           │
+                              ┌────────────┼────────────┐
+                              ▼            ▼            ▼
+                           UI gap      internal      obsolete/
+                        (Section C's   by design    unnecessary
+                         history/      (0.9.203's   (this
+                         replay/       kept 0.5.9   milestone's
+                         restore)      exceptions)  GroupsPanel.js)
+```
+
+Section C's finding and Section E's finding land on two *different*
+leaves of the same tree, deliberately: both are "implemented,
+composed, tested, unreachable," but one is a live product gap with a
+documented, unmet reason to exist, and the other is superseded code
+whose entire job now lives somewhere else. Treating both the same —
+either as "gaps" or as "dead code to ignore" — would have been the
+mistake this matrix exists to prevent.
+
+```text
+0.9.202  Unpublished Placement Physical-Occupancy Audit              ✓
+0.9.203  Post-Lifecycle Product Reassessment                         ✓
+0.9.204  Editor Autosave & Recovery UI Integration                   ✓
+0.9.205  Editor Autosave & Recovery Lifecycle Audit                  ✓
+0.9.206  Post-Recovery Product Reassessment                          ✓
+```
+
+### Decision
+
+**Outcome: one genuine ACTUAL_GAP, classified as a small integration —
+not the one this milestone went looking for.** Sections A, B, D, and F
+confirm what a shallow, honest sweep plus a regression check are
+supposed to confirm: nothing invented, no manufactured milestone
+filler, two already-known boundaries reconfirmed unchanged, one fix
+reconfirmed still closed. Section E, the area this milestone's own
+brief expected to find something in, turned up only an obsolete file
+with a full replacement already in place — not a gap. Section C, the
+area 0.9.203 had already closed once, is where the real finding was:
+a second "existing, correct, tested domain logic with no caller"
+subsystem, older than the one 0.9.204 wired up, sitting one layer away
+from where this milestone's brief pointed.
+
+### Recommendation
+
+Per this milestone's own brief, **no next milestone is prescribed
+here.** 0.9.206 stops at classification. If a future milestone takes
+up Section C's finding, it already names the shape the work would
+take — SOME UI surface (a timeline/scrubber panel, or as narrow as a
+plain undo/redo affordance in World View) calling the already-correct
+`WorldNavigationSession#getTimeline()`/`restoreHistoryAt()`/
+`beginHistoryPreview()`/`previewHistoryAt()`/`cancelHistoryPreview()` —
+but whether, and which of those shapes, is a product decision this
+test-only milestone deliberately leaves open rather than assumes.
