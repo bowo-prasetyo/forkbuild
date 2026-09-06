@@ -6,6 +6,8 @@ import { CreateDiscoveryUseCase } from '../../application/CreateDiscoveryUseCase
 import { InputRouter } from '../../application/InputRouter.js';
 import { WorldSpatialContextService } from '../../application/WorldSpatialContextService.js';
 import { AutomaticSnapshotEncounterCascade } from '../../application/AutomaticSnapshotEncounterCascade.js';
+import { AutomaticSnapshotEncounterRetentionReconciliation } from '../../application/AutomaticSnapshotEncounterRetentionReconciliation.js';
+import { SnapshotWorldRegistrationOutcome } from '../../application/SnapshotWorldRegistrationOutcome.js';
 import ActionFeedback from '../components/ActionFeedback.js';
 import DocumentInfoPanel from '../components/DocumentInfoPanel.js';
 import MetadataEditorDialog from '../components/MetadataEditorDialog.js';
@@ -606,6 +608,21 @@ export default {
                 ? session.findPublicationById(publicationId)
                 : null)
         });
+        // 0.9.190 — Automatic Snapshot Encounter Retention Integration.
+        // Scoped to this WorldView's own mount, exactly like `session` and
+        // `automaticSnapshotEncounterCascade` immediately above — a fresh
+        // reconciliation instance (and therefore a fresh, empty watch list,
+        // see that file's own header) accompanies each fresh session. Never
+        // imports or modifies the cascade itself; the two are wired
+        // together only through `refreshSpatialUI()`, below — the cascade's
+        // own `SnapshotWorldRegistrationOutcome.REGISTERED` outcomes feed
+        // `noteAutomaticRegistration()`, and this view's own already-
+        // recomputed `spatialContext.value.position` feeds `reconcile()`,
+        // on the SAME observation tick that already drives both
+        // `worldSnapshotDiscoveryMonitor` and the cascade.
+        const automaticSnapshotEncounterRetentionReconciliation = new AutomaticSnapshotEncounterRetentionReconciliation({
+            worldDiscoverySourceRegistry
+        });
         // 0.3.6 — World Discovery & Exploration. Spatial context service
         // derives location descriptions, nearby structures, and collaborator
         // positions from the viewer's current position and deterministic
@@ -1143,10 +1160,36 @@ export default {
                 worldSnapshotDiscoveryMonitor.observe(spatialContext.value).then(() => {
                     const candidates = worldSnapshotDiscoveryMonitor.lastResult;
                     if (automaticSnapshotEncounterCascade && Array.isArray(candidates)) {
-                        candidates.forEach((candidate) => automaticSnapshotEncounterCascade.processCandidate(candidate));
+                        candidates.forEach((candidate) => automaticSnapshotEncounterCascade.processCandidate(candidate).then((result) => {
+                            // 0.9.190 — Automatic Snapshot Encounter Retention
+                            // Integration. The ONLY place a subject ever becomes
+                            // watched for retention — see
+                            // AutomaticSnapshotEncounterRetentionReconciliation.js's
+                            // own header, "Provenance, without a new persistent
+                            // flag." A manually-registered Snapshot never passes
+                            // through this callback at all.
+                            if (result && result.outcome === SnapshotWorldRegistrationOutcome.REGISTERED) {
+                                automaticSnapshotEncounterRetentionReconciliation.noteAutomaticRegistration({
+                                    publicationId: result.publicationId,
+                                    contentHash: result.contentHash
+                                });
+                            }
+                        }));
                     }
                 });
             }
+
+            // 0.9.190 — Automatic Snapshot Encounter Retention Integration.
+            // Reconciled on the SAME cadence as spatialContext itself, above
+            // — every refreshSpatialUI() tick, not gated behind the
+            // discovery monitor's own refresh threshold, so an already-
+            // watched Snapshot is evaluated against the Wanderer's own
+            // CURRENT position every tick, exactly as
+            // application/AutomaticSnapshotEncounterRetentionPolicy.js's own
+            // header specifies. A no-op when nothing is currently watched.
+            automaticSnapshotEncounterRetentionReconciliation.reconcile(
+                spatialContext.value ? spatialContext.value.position : null
+            );
 
             // 0.5.1 — World Maps & Geographic Navigation. Re-read on the
             // exact same cadence as spatialContext above — see

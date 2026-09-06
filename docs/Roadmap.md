@@ -73668,3 +73668,147 @@ it deserved to be audited in isolation before anything could act on it.
 Only after 0.9.190 lands would I revisit 0.9.188's own two deferred
 findings, or consider any refresh/re-discovery behavior — and only if
 that later integration's own audit demonstrates a real need.
+
+## 0.9.190 — Automatic Snapshot Encounter Retention Integration
+
+0.9.189's own recommendation named this exact seam: wiring
+`shouldRetainAutomaticSnapshotEncounter()` into the SAME Wanderer-movement
+observation cadence `application/WorldSnapshotDiscoveryMonitor.js`
+(0.9.186) already runs on, so an already-registered automatic Snapshot
+whose own placement now fails retention is unregistered through the SAME
+existing `unregisterMaterializedSnapshotWorldSource()` bridge a manual
+removal already uses. This milestone is exactly that connection, and
+nothing more — the cascade (0.9.187) and the pure policy (0.9.189) are
+both entirely unmodified.
+
+`application/AutomaticSnapshotEncounterRetentionReconciliation.js` — one
+new class, `AutomaticSnapshotEncounterRetentionReconciliation`, holding
+exactly two operations: `noteAutomaticRegistration({ publicationId,
+contentHash })` marks one subject as automatically managed, and
+`reconcile(wandererPosition)` evaluates every currently-watched subject's
+own CURRENT registered position (read live from `registry.listSources()`
+on every call, never cached at note-time) against
+`shouldRetainAutomaticSnapshotEncounter()`, unregistering — through the
+existing bridge — whichever subjects the policy says to REMOVE, then
+forgetting them.
+
+Before writing any code, this milestone first had to answer the
+provenance question its own mission text raised: can the existing
+registration identity already distinguish an automatically-cascaded
+Snapshot from a manually-registered one? It cannot —
+`AutomaticSnapshotEncounterCascade#_run()` and
+`OwnPublicationPanel.js`'s own explicit "Register" button both call the
+IDENTICAL `registerMaterializedSnapshotWorldSource()`, producing an
+IDENTICAL `"snapshot:<contentHash>:<publicationId>"` origin either way —
+so the registry itself has no way to tell them apart, by design (see its
+own header, "no trust vocabulary"). Rather than adding a persistent
+`automatic: true` flag to `WorldDiscoverySource` or the registration
+bridge, provenance instead lives ENTIRELY in this new class's own instance
+state: a subject becomes watched only when `ui/views/WorldView.js`'s own
+composition calls `noteAutomaticRegistration()`, which it does in exactly
+one place — immediately after
+`automaticSnapshotEncounterCascade.processCandidate()` itself settles to
+`SnapshotWorldRegistrationOutcome.REGISTERED`. A manually-registered
+Snapshot is therefore never watched, and `reconcile()` structurally cannot
+touch it — not a check against a flag, but simply never being a member of
+the one Map this class ever iterates.
+
+`ui/views/WorldView.js` — a fresh
+`AutomaticSnapshotEncounterRetentionReconciliation` instance is
+constructed alongside `automaticSnapshotEncounterCascade`, scoped
+identically (one per WorldView mount). `refreshSpatialUI()`'s own existing
+observation tick now does two additional things, on the SAME cadence
+everything else on that tick already runs on: (1) once a cascaded
+candidate's own promise settles, a `REGISTERED` outcome feeds
+`noteAutomaticRegistration()`; (2) every tick, regardless of whether a
+fresh discovery call happened, `spatialContext.value.position` (the SAME
+position already fed to `worldSnapshotDiscoveryMonitor.observe()`) feeds
+`reconcile()`. No new polling loop, no new timer.
+
+Two deliberate integration choices, both load-bearing:
+- **A missing source is forgotten, never left as a dead watch entry.**
+  Whether removed by a previous `reconcile()` call or by any other caller
+  of `registry.removeSource()`/`clear()`, a watched subject whose origin
+  no longer resolves to a live source is dropped with no further effect —
+  this is what makes repeated `reconcile()` calls idempotent.
+- **No re-registration, ever, once a subject is forgotten.** A Snapshot
+  removed because the Wanderer walked away is NEVER automatically
+  re-registered by a later `reconcile()` call because the Wanderer walked
+  back — 0.9.189's own header named this explicitly ("don't immediately
+  rediscover"). Reviving it requires `AutomaticSnapshotEncounterCascade`
+  to independently rediscover and re-cascade it, exactly as for any
+  Snapshot this reconciliation had never touched.
+
+`tests/AutomaticSnapshotEncounterRetentionReconciliation.test.js` —
+thirteen sections, forty-two assertions, exercised against a REAL
+`WorldDiscoverySourceRegistry` and the REAL, unmodified
+`registerMaterializedSnapshotWorldSource()`/
+`unregisterMaterializedSnapshotWorldSource()` bridge (never a fake
+registry): (A) retain inside the radius; (B) remove outside the radius,
+through the existing bridge; (C) exactly on the radius remains registered
+(the same inclusive boundary 0.9.189 itself holds); (D) four Snapshots
+across two Publications, only the two distant ones removed; (E) identical
+content across two Publications, reconciled independently; (F) two content
+revisions of one Publication, reconciled independently; (G) a
+manually-registered Snapshot, never noted, is never removed however far it
+sits — proving provenance-by-construction rather than by inspection; (H)
+removal touches only the registry slot — the Publication object itself is
+never mutated; (I) a structural sweep confirms no import of
+`AutomaticSnapshotEncounterCascade`, `WorldSnapshotDiscoveryMonitor`, or
+any resolve/materialize/discover collaborator, and no call to the
+REGISTERING half of the bridge (only its symmetric unregister undo); (J)
+reconciling twice removes exactly once, confirmed by spying on
+`registry.removeSource()`'s own call count; (K) unrelated LOCAL/PEER
+sources are untouched, and registry size afterward is exactly as expected;
+(L) a near/far/near/far movement sequence proves retention never
+rediscovers a forgotten subject; (M) a missing registry, malformed
+`noteAutomaticRegistration()` input, and an unknown Wanderer position all
+degrade gracefully, inheriting 0.9.189's own "graceful non-removal" all
+the way through the integration.
+
+Deliberately excluded — not this milestone:
+- **A new Snapshot lifecycle vocabulary, TTL, timestamps, retry, or
+  backoff.** `reconcile()` holds no history and no notion of elapsed
+  time — every call re-evaluates every watched subject fresh.
+- **Automatic rediscovery or re-materialization once a Snapshot moves back
+  inside the retention radius.** See "No re-registration, ever," above.
+- **A new persistent provenance flag on `WorldDiscoverySource` or the
+  registration bridge.** See the provenance discussion, above.
+- **Any modification to `application/AutomaticSnapshotEncounterCascade.js`
+  or `application/AutomaticSnapshotEncounterRetentionPolicy.js`.** Both
+  files are imported nowhere by, and unchanged by, this milestone.
+- **Visibility, viewport, camera, or rendering logic of any kind.**
+  Inherited unchanged from 0.9.189 — retention is never visibility.
+
+```text
+0.9.186  World Snapshot Background Discovery                         ✓
+0.9.187  Automatic Snapshot Encounter Cascade                        ✓
+0.9.188  Automatic Snapshot Encounter Lifecycle Audit                ✓
+0.9.189  Automatic Snapshot Encounter Retention Policy               ✓
+0.9.190  Automatic Snapshot Encounter Retention Integration          ✓
+```
+
+### Recommendation
+
+The Wanderer's movement now closes a complete, autonomous loop:
+discover → cascade → register, and register → reconcile → unregister,
+sharing the identical observation cadence throughout, with the existing
+World source registry as the one shared source of truth both directions
+mutate through. This is exactly the point 0.9.189's own recommendation
+flagged in advance: the policy is no longer merely an implementation
+detail — it is now an active architectural authority over what stays in
+the World, running unattended on every 3-second tick (plus movement
+events) for as long as a World View stays mounted. I would not extend its
+behavior any further without first watching it operate under the SAME
+kind of combined, concurrent, real-world load 0.9.188 already put the
+cascade through — the next genuinely necessary milestone is therefore an
+audit, not a policy: 0.9.191 — Comprehensive Automatic Snapshot Retention
+Lifecycle Audit, with its flagship scenario being the full loop (discover
+→ cascade → register → move away → reconcile → unregister → move
+elsewhere → registry stays clean), and its most interesting single
+question being what happens when discovery and retention reconciliation
+land on the exact same observation tick — a concurrency interaction
+0.9.190's own thirteen sections deliberately did not attempt to
+reconstruct, since it required both new machinery at once and deserves to
+be audited in the same isolation 0.9.188 already modeled for the cascade
+alone.
