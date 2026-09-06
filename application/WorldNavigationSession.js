@@ -5903,8 +5903,24 @@ export class WorldNavigationSession {
 	    this._retiredHistories.get(doc.world.id).push(history);
 	
 	    // 5. Update Renderer
+	    //
+	    // 0.9.208 — a preview is only "the thing occupying this document's
+	    // render slot" when it belongs to THIS documentId. Previewing
+	    // document A and then restoring an unrelated document B used to
+	    // check only `this._historyPreview.active` — true regardless of
+	    // which document it belonged to — so restoring B wiped A's
+	    // preview out from under it (`_historyPreview = null`, no render
+	    // call to bring A's live world back) while B's own live world was
+	    // never removed before the restored one was added on top of it.
+	    // Scoping the check to documentId means a preview for a different
+	    // document is left completely untouched: it keeps its own
+	    // `replay:${otherDocId}` slot and its own hidden live world,
+	    // exactly as it was before this restore.
 	    if (this._session) {
-	        if (this._historyPreview && this._historyPreview.active) {
+	        const previewingThisDocument = this._historyPreview
+	            && this._historyPreview.active
+	            && this._historyPreview.documentId === docId;
+	        if (previewingThisDocument) {
 	            this._session.removeWorld(this._historyPreview.world, `replay:${docId}`);
 	            this._historyPreview = null;
 	        } else {
@@ -6441,9 +6457,25 @@ export class WorldNavigationSession {
 	    if (!history) throw new Error('no history');
 	    
 	    const replayWorld = this._replayDocumentUseCase.execute(history, { endCursor: cursor });
+	    // 0.9.208 — captured BEFORE this._historyPreview is overwritten
+	    // below. A second previewHistoryAt() call (selecting a different
+	    // entry while already previewing, without calling
+	    // beginHistoryPreview() again — see WorldView.js's own
+	    // previewSelectedHistoryEntry()) used to unconditionally
+	    // "removeWorld(doc.world, docId)" here, exactly like the FIRST
+	    // call: harmless in that the live world was already removed and
+	    // this is a no-op, but it means the PREVIOUS preview world — the
+	    // one actually rendered under `replay:${docId}` right now — was
+	    // never removed before the new one landed on the very same
+	    // render slot. Tracking it here lets the branch below tell
+	    // "first preview" (nothing previewed yet, hide the live world)
+	    // from "switching the previewed entry" (swap out the previous
+	    // preview world instead).
+	    const previousPreviewWorld = this._historyPreview.world;
+	    const previousPreviewDocumentId = this._historyPreview.documentId;
 	    this._historyPreview.cursor = cursor;
 	    this._historyPreview.world = replayWorld;
-	
+
 	    // Renderer integration: hide live world, show replay world.
 	    // Must resolve the SAME document _getActiveCommandHistory() just
 	    // built `history` from above — otherwise the replay could swap
@@ -6458,13 +6490,17 @@ export class WorldNavigationSession {
 	    if (this._session && docId) {
 	        const doc = this.getDocument(docId);
 	        if (doc) {
-	            this._session.removeWorld(doc.world, docId);
+	            if (previousPreviewWorld) {
+	                this._session.removeWorld(previousPreviewWorld, `replay:${previousPreviewDocumentId}`);
+	            } else {
+	                this._session.removeWorld(doc.world, docId);
+	            }
 	            this._session.addWorld(replayWorld, `replay:${docId}`, this._worldLayoutProvider.getPosition(docId));
 	        }
 	    }
 	    return true;
 	}
-	
+
 	cancelHistoryPreview() {
 	    if (!this._historyPreview || !this._historyPreview.active) return false;
 	    
@@ -6603,6 +6639,20 @@ export class WorldNavigationSession {
         this._spatialEditingContext = SpatialEditingContext.empty();
         this._focusedDocumentId = null;
         this._activeDocumentId = null;
+        // 0.9.208 — every other piece of history-adjacent state above
+        // (commandHistories, loadedDocuments, selection) is reset here so
+        // a fresh start() after this dispose() behaves like a genuinely
+        // new session (see the 0.9.116 comment on this same method for
+        // that standing rule). _historyPreview was missed: left set, an
+        // active preview's `active: true` flag survives dispose() and
+        // permanently blocks undo()/redo() on whatever session state
+        // comes next (they refuse to run while any historyPreview looks
+        // active — see undo()/redo() above), even though the render
+        // session that ever showed that preview world is gone. Retired
+        // histories are session-local bookkeeping for the disposed
+        // session's own documents and don't outlive it either.
+        this._historyPreview = null;
+        this._retiredHistories = null;
         this._eventBus = null;
     }
 }
