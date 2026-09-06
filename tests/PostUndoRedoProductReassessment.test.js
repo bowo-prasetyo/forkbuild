@@ -224,28 +224,31 @@ async function runTests() {
         assert(/importSnapshotContent\(/.test(decentralizedViewSource), 'E1f. DecentralizedPublicationsView.js still wires an explicit "Import Snapshot" action');
         console.log('✓ Section E1: Snapshot discovery/resolution/materialization/World-participation — COMPLETE. Manual (button) and automatic (timer-driven) discovery both feed real materialization, and a materialized Snapshot is visible, viewable, and removable in World View — not a dead end.');
 
-        // E2 — ACTUAL_GAP. application/BuildPublicationSnapshotTransferPackageUseCase.js
-        // is the export-side counterpart of application/
+        // E2 — CLOSED by 0.9.215 (Snapshot Export Capability Integration).
+        // application/BuildPublicationSnapshotTransferPackageUseCase.js is
+        // the export-side counterpart of application/
         // ImportPublicationSnapshotTransferPackageUseCase.js — by its own
         // header's own words — fully implemented, throws the correct
         // errors for an uncataloged or unpossessed publication, and is
-        // exercised directly by SEVEN test files. Import is composed in
-        // ui/main.js and has a real "Import Snapshot" button
-        // (E1f above). Export has neither: no composition in ui/main.js,
-        // no coordinator method (SnapshotContentMaterializationCoordinator
-        // only ever grew an import(), never an export()), and no
-        // "Export Snapshot" text anywhere in the UI.
+        // exercised directly by SEVEN test files, unchanged since 0.8.32.
+        // As of 0.9.215 it is also composed in ui/main.js,
+        // SnapshotContentMaterializationCoordinator grew a matching
+        // export(publicationId) method, and ui/components/
+        // OwnPublicationPanel.js carries a real "Export Snapshot" action
+        // — see tests/SnapshotExportUIIntegration.test.js for the full
+        // E2E audit of that new path.
         const buildUseCaseSource = await rawSource('application/BuildPublicationSnapshotTransferPackageUseCase.js');
         assert(/export-side counterpart/i.test(buildUseCaseSource), 'E2a. BuildPublicationSnapshotTransferPackageUseCase.js still documents itself as the export-side counterpart of the Import use case');
         assert(/class BuildPublicationSnapshotTransferPackageUseCase/.test(buildUseCaseSource), 'E2b. BuildPublicationSnapshotTransferPackageUseCase still exists, fully implemented');
         const mainSource = await rawSource('ui/main.js');
         assert(/new ImportPublicationSnapshotTransferPackageUseCase\(/.test(mainSource), 'E2c. ui/main.js still composes ImportPublicationSnapshotTransferPackageUseCase (the wired half)');
-        assert(!/BuildPublicationSnapshotTransferPackageUseCase/.test(mainSource), 'E2d. ui/main.js still never imports/composes BuildPublicationSnapshotTransferPackageUseCase — the ACTUAL_GAP, confirmed unchanged');
+        assert(/new BuildPublicationSnapshotTransferPackageUseCase\(/.test(mainSource), 'E2d. ui/main.js now also composes BuildPublicationSnapshotTransferPackageUseCase — 0.9.215 closes the ACTUAL_GAP this section originally found');
         const coordinatorSource = await rawSource('application/SnapshotContentMaterializationCoordinator.js');
         assert(/async import\(pkg\)/.test(coordinatorSource), 'E2e. SnapshotContentMaterializationCoordinator still has an import(pkg) method');
-        assert(!/BuildPublicationSnapshotTransferPackageUseCase/.test(coordinatorSource), 'E2f. ...but still no export()-shaped counterpart or reference to the Build use case');
-        assert(!/[Ee]xport [Ss]napshot/.test(decentralizedViewSource), 'E2g. DecentralizedPublicationsView.js still has no "Export Snapshot" UI text — the asymmetry is confirmed at the UI layer too');
-        console.log('✓ Section E2: ACTUAL_GAP — application/BuildPublicationSnapshotTransferPackageUseCase.js is a correct, fully tested, explicitly-documented export-side counterpart of the wired Import Snapshot flow, but is composed nowhere and has no UI action. Import and Export are not symmetric today.');
+        assert(/async export\(publicationId\)/.test(coordinatorSource), 'E2f. ...and now also has a matching export(publicationId) method, forwarding to the Build use case');
+        const ownPublicationPanelSourceForExport = await rawSource('ui/components/OwnPublicationPanel.js');
+        assert(/[Ee]xport [Ss]napshot/.test(ownPublicationPanelSourceForExport), 'E2g. OwnPublicationPanel.js now carries "Export Snapshot" UI text — the asymmetry E2 originally found is closed at the UI layer too');
+        console.log('✓ Section E2: CLOSED by 0.9.215 — application/BuildPublicationSnapshotTransferPackageUseCase.js, already correct and fully tested, is now composed in ui/main.js, reachable through SnapshotContentMaterializationCoordinator\'s own new export() method, and has a real "Export Snapshot" action on OwnPublicationPanel.js. Import and Export are symmetric.');
 
         // E3 — OBSOLETE. application/CreatePublicationSnapshotPlacementCatalogUseCase.js
         // (0.8.18) is a real, complete composition-root class — but its own
@@ -428,7 +431,14 @@ async function runTests() {
         // before the last hop. Recorded here as a table so the closure
         // model is explicit, not just implied by prose.
         const closureFindings = [
-            { capability: 'Snapshot export (Build...UseCase)', domain: true, useCase: true, compositionRoot: false, ui: false, classification: 'ACTUAL_GAP' },
+            // Snapshot export (Build...UseCase): ACTUAL_GAP when THIS
+            // milestone (0.9.212) ran — CLOSED by 0.9.215 ("Snapshot
+            // Export Capability Integration"), which gave the last two
+            // hops (compositionRoot, ui) their terminal nodes. Recorded
+            // here as COMPLETE, not rewritten out of the table, for the
+            // same historical-record reason the two Editor rows below
+            // already are.
+            { capability: 'Snapshot export (Build...UseCase)', domain: true, useCase: true, compositionRoot: true, ui: true, classification: 'COMPLETE' },
             { capability: 'Snapshot placement catalog (Create...CatalogUseCase)', domain: true, useCase: true, compositionRoot: false, ui: false, classification: 'OBSOLETE' },
             // Transform gesture feedback overlay: ACTUAL_GAP when THIS
             // milestone (0.9.212) ran — CLOSED by 0.9.214 ("Editor
@@ -455,7 +465,7 @@ async function runTests() {
             }
         }
 
-        console.log('✓ Section H: Cross-cutting capability reachability closure — the five lifecycle systems remain separate authorities; every finding above fits the brief\'s own closure model exactly (an unexplained terminal node for the remaining Snapshot-export ACTUAL_GAP reaching a composition root, no composition-root path at all for the OBSOLETE finding, and completed terminal nodes for both the transform gesture feedback overlay (0.9.214) and Editor undo/redo label mirrors (0.9.213), closed since this milestone ran), with none of it mistaken for an intentional boundary.');
+        console.log('✓ Section H: Cross-cutting capability reachability closure — the five lifecycle systems remain separate authorities; every finding above fits the brief\'s own closure model exactly (no composition-root path at all for the OBSOLETE finding, and completed terminal nodes for the Snapshot export capability (0.9.215), the transform gesture feedback overlay (0.9.214), and Editor undo/redo label mirrors (0.9.213), all three closed since this milestone ran), with none of it mistaken for an intentional boundary.');
     }
 
     // ---------------------------------------------------------------
@@ -521,7 +531,7 @@ Classification summary:
   C. World material/document lifecycle ..... COMPLETE
   D. Publication workflow .................. COMPLETE
   E. Snapshot ............................... COMPLETE, except:
-       - Snapshot export (Build...UseCase) ... ACTUAL_GAP
+       - Snapshot export (Build...UseCase) ... ACTUAL GAP AT THE TIME -> CLOSED BY 0.9.215
        - Snapshot placement catalog wrapper ... OBSOLETE
   F. History ................................ COMPLETE (one authority, two separate projections)
   G. Editor .................................. COMPLETE, except:
@@ -534,7 +544,7 @@ Classification summary:
 Capability reachability matrix (new findings only — see 0.9.209's own
 matrix for everything this arc already closed):
   Capability                              Domain  UseCase  Composed  UI reachable  Classification
-  Snapshot export (transfer package)        ✓       ✓         —          —        ACTUAL_GAP
+  Snapshot export (transfer package)        ✓       ✓         ✓          ✓        COMPLETE  <- closed by 0.9.215
   Snapshot placement catalog (Create...)    ✓       ✓         —          —        OBSOLETE (superseded)
   Transform gesture feedback overlay        ✓       ✓         ✓          ✓        COMPLETE  <- closed by 0.9.214
   Editor undo/redo label mirrors            ✓       ✓         ✓          ✓        COMPLETE  <- closed by 0.9.213
@@ -595,6 +605,25 @@ by scope, smallest first:
                                      (or direct wiring), and a new UI action plus a way to hand the
                                      user the resulting package (a file save, a copyable blob, etc.) —
                                      a real design decision, not just a wire-up
+     - UPDATE (0.9.215): closed. ui/main.js now composes
+       BuildPublicationSnapshotTransferPackageUseCase over the SAME
+       publicationCatalog/publicationContentStore every other Snapshot
+       action already shares; SnapshotContentMaterializationCoordinator
+       gained a matching export(publicationId) method, a deliberately
+       thin pass-through mirroring import(pkg) one direction over;
+       ui/components/OwnPublicationPanel.js gained an "Export Snapshot"
+       action (mirroring distributeOwnSnapshot()/discoverOwnSnapshot()'s
+       own ephemeral-state/reset/gating shape exactly), reachable via a
+       new ui/views/WorldView.js#exportOwnSnapshot() wrapper. The
+       resulting package's own content field (the actual bytes) is
+       deliberately never rendered, copied, or offered as a download —
+       0.9.212's own "a real design decision, not just a wire-up" note
+       above was answered by NOT deciding it: this milestone exposes the
+       existing capability and its result's identity facts
+       (publicationId, contentHash) only, leaving how the exported
+       package is consumed as an explicit, unscheduled follow-on. See
+       tests/SnapshotExportUIIntegration.test.js and docs/Roadmap.md's
+       own 0.9.215 entry.
 
 At the time this milestone (0.9.212) ran, its own brief said no next
 milestone was prescribed here — three ACTUAL_GAP candidates existed (the
@@ -608,11 +637,19 @@ tests/EditorUndoRedoLabelMirrors.test.js for that milestone's full record.
 0.9.214 ("Editor Transform Gesture Feedback") then took up candidate 2 and
 closed it — see this file's own Section G1/H updates and
 tests/EditorTransformGestureFeedback.test.js for that milestone's full
-record. Candidate 3 (Snapshot export) remains open, unchanged, along with
-the one OBSOLETE finding. Whichever is taken up next stays the same
-narrowly-scoped "wire an existing, correct capability to its own already-
-built UI" shape this whole arc has followed
-since 0.9.203 — not a new feature invented for the milestone.
+record. 0.9.215 ("Snapshot Export Capability Integration") then took up
+candidate 3 and closed it too — see this file's own Section E2/H updates
+and tests/SnapshotExportUIIntegration.test.js for that milestone's full
+record. All three ACTUAL_GAP candidates this reassessment found are now
+closed; the one OBSOLETE finding
+(CreatePublicationSnapshotPlacementCatalogUseCase.js) remains recorded,
+not removed, exactly as 0.9.212 left it — per its own brief, a real,
+complete-but-superseded file is a candidate for a future cleanup
+decision, not something a capability-reachability milestone deletes on
+its own. Per 0.9.214's own closing recommendation, the natural next step
+is another reassessment sweep, to check whether ForkBuild still has
+existing-but-unreachable capabilities at all, or whether this class of
+gap is finally exhausted.
 `);
 }
 

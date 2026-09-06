@@ -77126,3 +77126,224 @@ rather than assume Snapshot export is still the whole remaining
 territory — this transform-feedback work may have exposed a more
 fundamental Editor seam that a fresh sweep should surface before
 Snapshot export is taken up.
+
+## 0.9.215 — Snapshot Export Capability Integration
+
+Small production integration + focused E2E audit. Takes up 0.9.212's
+last remaining finding — Snapshot export (Section E2), the larger of the
+three candidates that reassessment left open, now that both Editor-scoped
+findings are closed (0.9.213, 0.9.214).
+
+`application/BuildPublicationSnapshotTransferPackageUseCase.js` (0.8.32)
+has been a fully implemented, fully tested export-side counterpart of
+`application/ImportPublicationSnapshotTransferPackageUseCase.js` since the
+same milestone that built import — exercised directly by seven separate
+test files, throwing the correct errors for an uncataloged or unpossessed
+publication. Import has been composed in `ui/main.js` since 0.8.34, with
+a real "Import Snapshot" button on `ui/views/DecentralizedPublicationsView.js`.
+Export was composed nowhere: no coordinator method
+(`SnapshotContentMaterializationCoordinator` had grown an `import(pkg)`
+but never an `export()`), and no UI action existed at all. This milestone
+closes exactly that missing edge:
+
+```text
+BuildPublicationSnapshotTransferPackageUseCase.execute() (existing, unchanged, 0.8.32)
+      │
+      │ NEW — SnapshotContentMaterializationCoordinator#export(publicationId)
+      ▼
+{ kind, schemaVersion, publicationId, contentHash, content } (existing shape, unchanged)
+      │
+      │ NEW — ui/main.js composes the use case over the SAME
+      │       publicationCatalog/publicationContentStore every other
+      │       Snapshot action already shares, and provides a thin
+      │       exportSnapshotCommand(publicationId) capability app-wide
+      ▼
+      │ NEW — ui/views/WorldView.js#exportOwnSnapshot(publication),
+      │       mirroring discoverOwnSnapshot()'s own shape one action over
+      ▼
+ui/components/OwnPublicationPanel.js's own new "Export Snapshot" action
+      │
+      ▼
+user explicitly clicks "Export Snapshot"
+```
+
+### What was added
+
+- **`SnapshotContentMaterializationCoordinator#export(publicationId)`.**
+  A deliberately thin pass-through, the identical restraint `import()`
+  already holds for its own use case: it forwards to
+  `BuildPublicationSnapshotTransferPackageUseCase#execute()` completely
+  unchanged and returns the resulting Publication Snapshot Transfer
+  Package exactly as built — never reinterpreted, never caught here. The
+  constructor's second argument (the build use case) is deliberately
+  optional, so every pre-existing caller that only ever imports —
+  `tests/SnapshotContentMaterialization.test.js`'s own suite included —
+  keeps constructing this coordinator with one argument; `export()`
+  simply throws its own distinct "not available" error on such an
+  instance, rather than this class inventing a default build use case of
+  its own.
+- **`ui/main.js` composes `BuildPublicationSnapshotTransferPackageUseCase`**
+  over the SAME `publicationCatalog`/`publicationContentStore` every
+  other local Snapshot read/write already goes through — never a second,
+  disconnected catalog or store — threads it into
+  `SnapshotContentMaterializationCoordinator` alongside the existing
+  import use case, and provides a thin
+  `exportSnapshotCommand(publicationId) -> Promise<pkg>` capability
+  app-wide, the identical shape `discoverSnapshotCommand`/
+  `materializeSelectedSnapshotCommand` already are.
+- **`ui/views/WorldView.js#exportOwnSnapshot(publication)`** — a new
+  function, injecting the app-wide `exportSnapshotCommand` and turning
+  "which publication" into "which publicationId" (`publication.id`, the
+  SAME field `unpublishOwnPublication()` already reads off the identical
+  prop), mirroring `discoverOwnSnapshot()`'s own shape one action over.
+  Unlike discovery/distribution, export never reads
+  `publication.contentReference` itself — the use case resolves the
+  contentReference from its own publication catalog lookup.
+- **`ui/components/OwnPublicationPanel.js` gained a new "Export Snapshot"
+  action** — a new `exportSnapshotCommand` prop, a dedicated
+  `snapshotExportExecuting`/`snapshotExportError`/`snapshotExportResult`/
+  `snapshotExportRequestId` ephemeral state family (never shared with
+  Distribute/Discover's own), and a new `exportOwnSnapshot()` method,
+  mirroring `distributeOwnSnapshot()`/`discoverOwnSnapshot()` exactly:
+  reset on the identical `publication` change, invalidated on unmount the
+  identical way, gated the identical way (button renders only when a
+  caller supplied `exportSnapshotCommand`, disabled whenever there is no
+  `publication` or a call is already in flight). The result display shows
+  identity facts only — `publicationId` and `contentHash` — never the
+  package's own `content` field: this milestone deliberately does not
+  decide whether an exported package becomes a downloadable file, a
+  copyable blob, a re-importable artifact, or something else. That is
+  explicit product semantics 0.9.212's own brief already named as a later
+  question; this milestone's only job was making the existing capability
+  reachable.
+
+### What stays exactly as it was
+
+`application/BuildPublicationSnapshotTransferPackageUseCase.js`,
+`application/PublicationSnapshotTransferPackage.js`, and
+`application/ImportPublicationSnapshotTransferPackageUseCase.js` are all
+byte-for-byte unchanged — every value this milestone exposes already
+existed and was already correct; the only gap was that nothing in the UI
+layer ever called it. No new Snapshot serialization format, no new
+transfer package shape, no new failure vocabulary: export either resolves
+to the SAME `{ kind, schemaVersion, publicationId, contentHash, content }`
+shape `import()` already accepts, or throws one of that use case's own
+two pre-existing failure messages (uncataloged publication; publication
+known but bytes not held). Exporting a Snapshot never touches its
+Publication's identity, never unpublishes it, never removes a World
+placement, never unregisters a World source, and never alters Snapshot
+discovery, Nostr announcements, or Arweave material — the use case
+performs a read and nothing else, exactly as it always has.
+
+`tests/SnapshotExportUIIntegration.test.js` is the flagship E2E audit —
+nine sections (A through I), run against real collaborators throughout
+(a real `LocalPublicationCatalog`/`LocalContentStore` pair, a real
+`BuildPublicationSnapshotTransferPackageUseCase`, and the REAL
+`OwnPublicationPanel.methods.exportOwnSnapshot`, driven the same
+"call methods.name.call(ctx)" way `tests/DecentralizedSnapshotSpatialE2EAudit.test.js`'s
+own `panelCtx()` already establishes for this file's sibling actions,
+since `ui/views/WorldView.js` itself imports `vue` and stays outside this
+repo's plain `node tests/*.test.js` sweep):
+
+- **A — existing capability reachability.** `coordinator.export()`
+  returns exactly what the use case's own `execute()` returns, both
+  structurally (source-level checks of `ui/main.js`'s composition and
+  `ui/views/WorldView.js`'s/`ui/components/OwnPublicationPanel.js`'s own
+  wrapper shapes) and by a real, composed, end-to-end export driven
+  entirely through `OwnPublicationPanel`'s own action.
+- **B — correct Snapshot identity.** Two independently published
+  Snapshots, exported in the same test: each package names its own
+  `publicationId`/`contentHash`/`content`, never the other's; an
+  uncataloged `publicationId` never falls back to a different
+  publication's bytes.
+- **C — explicit action only.** `this.exportSnapshotCommand(` appears
+  exactly once in `OwnPublicationPanel.js`, wired to a real `@click`
+  handler; a repository-wide sweep of every automatic/background/
+  discovery/comparison/retention file confirms none of them reference
+  export, the build use case, or the export command.
+- **D — failure propagation.** An uncataloged publication, a cataloged
+  publication whose bytes were never actually stored (knowing vs.
+  possessing, the identical distinction 0.8.32 draws for import), and a
+  coordinator built with no build use case at all each fail with their
+  own distinct message; a failure reaching the real UI action lands only
+  in `snapshotExportError`, never mutating `snapshotDistributionResult`/
+  `snapshotDiscoveryResult` or inventing a new generic FAILED state.
+- **E — repeated export.** `BuildPublicationSnapshotTransferPackageUseCase`
+  is a pure read with no stored idempotency of its own — two exports of
+  the identical publication produce two byte-identical packages, proven
+  both directly against the use case and through two real clicks of the
+  UI action; neither the coordinator nor the UI invents dedup/idempotency
+  machinery of its own.
+- **F — Snapshot/Publication independence.** The publication catalog
+  entry and the content store's own bytes are provably byte-for-byte
+  unchanged after exporting (even twice); the use case and coordinator
+  source reference none of Publish/Unpublish/Placement/World/Nostr/
+  Arweave/verification.
+- **G — manual vs. automatic Snapshot paths.** The automatic discovery/
+  cascade block inside `WorldView.js#refreshSpatialUI()` never references
+  export; `exportOwnSnapshot()` itself never references the automatic
+  cascade, the discovery monitor, or retention reconciliation — no hidden
+  feedback loop in either direction.
+- **H — structural boundary.** `OwnPublicationPanel.js`'s and
+  `WorldView.js`'s own import blocks never reference
+  `BuildPublicationSnapshotTransferPackageUseCase`,
+  `SnapshotContentMaterializationCoordinator`, or a `ContentStore`/
+  `PublicationCatalog` directly; a repository-wide grep confirms
+  `ui/main.js` is the only file under `ui/` that constructs the use case.
+- **I — FLAGSHIP.** Alice's real, explicit "Export Snapshot" click
+  produces a package that validates cleanly against Import's own
+  structural validator; a fresh, independent Bob replica genuinely
+  imports that exact package through its own real "Import Snapshot"
+  action and ends up holding byte-identical content, then a second
+  import of the same package reports `ALREADY_STORED` unchanged — proving
+  Export and Import are now symmetric end to end, through real UI actions
+  on both sides, not merely two independently-tested halves.
+
+`tests/PostUndoRedoProductReassessment.test.js` (0.9.212's own flagship)
+asserted, by name, that `ui/main.js` never imported/composed
+`BuildPublicationSnapshotTransferPackageUseCase`, that
+`SnapshotContentMaterializationCoordinator` carried no `export()`-shaped
+method, and that no "Export Snapshot" UI text existed anywhere (Section
+E2) — this milestone makes those assertions false. Updated Section E2 in
+place (the same "update in place, keep the still-true parts, note what
+changed" convention 0.9.207/0.9.210/0.9.213/0.9.214 established), the
+Section H closure-findings table (Snapshot export: `ACTUAL_GAP` →
+`COMPLETE`), and the classification summary/capability matrix/candidate-
+gap block at the bottom to record the closure. A stale test-only comment
+in `tests/SnapshotContentMaterialization.test.js` — "`import()` is the
+coordinator's one public action," no longer true now that `export()`
+exists — was also corrected in place; that file's own behavior is
+otherwise completely unchanged.
+
+```text
+0.9.209  Post-History Product Reassessment                           ✓
+0.9.210  World View Undo/Redo UI Integration                         ✓
+0.9.211  World View Undo/Redo Lifecycle Audit                        ✓
+0.9.212  Post-Undo/Redo Product Reassessment                         ✓
+0.9.213  Editor Undo/Redo Label Mirrors                               ✓
+0.9.214  Editor Transform Gesture Feedback                            ✓
+0.9.215  Snapshot Export Capability Integration                      ✓
+```
+
+### Recommendation
+
+All three ACTUAL_GAP candidates 0.9.212's own reassessment found are now
+closed (0.9.213 and 0.9.214 for the two Editor-scoped findings, this
+milestone for Snapshot export) — the first time this arc has closed every
+candidate a single reassessment surfaced. One OBSOLETE finding from that
+same reassessment remains recorded, not removed:
+`application/CreatePublicationSnapshotPlacementCatalogUseCase.js`, a
+real, complete, but superseded-in-place composition root — a candidate
+for a future cleanup decision, not something a capability-reachability
+milestone deletes on its own.
+
+Per this milestone's own brief, the next step is another reassessment
+sweep — the same "fresh sweep of the same broad product areas" 0.9.196/
+0.9.203/0.9.206/0.9.209/0.9.212 already established — rather than
+automatically choosing the next feature. The genuinely open question at
+that point is whether ForkBuild still has existing-but-unreachable
+capabilities of this shape at all, or whether this particular class of
+architectural gap — implementation exists, composition exists, tests
+exist, only the UI caller was missing — is now exhausted. If a fresh
+sweep finds nothing new in that shape, the next milestone should be
+driven by a genuine product requirement instead.

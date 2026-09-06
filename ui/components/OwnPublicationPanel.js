@@ -880,6 +880,91 @@ import { SnapshotWorldPositionClaimOutcome } from '../../application/SnapshotWor
 //   returns `UnpublishDocumentUseCase.execute()`'s own plain boolean,
 //   never rendered as a result block — the panel's own disappearance
 //   IS the observable outcome.
+//
+// 0.9.215 — Snapshot Export Capability Integration.
+//
+// 0.9.212's own reassessment named the one Snapshot capability this
+// codebase had built and tested but never wired to any UI: application/
+// BuildPublicationSnapshotTransferPackageUseCase.js (0.8.32), "the
+// export-side counterpart of application/
+// ImportPublicationSnapshotTransferPackageUseCase.js" by its own header's
+// own words — fully implemented, exercised by seven separate test files,
+// composed nowhere. This is that wiring, and nothing more:
+//
+//   publication   (unchanged prop, ★ above)
+//           │
+//           │ click "Export Snapshot"
+//           ▼
+//   exportOwnSnapshot()   (THIS FILE, NEW)
+//           │
+//           ▼
+//   exportSnapshotCommand(publication)   (injected — a thin
+//                                          WorldView.js wrapper,
+//                                          exportOwnSnapshot(), around
+//                                          the app-wide
+//                                          exportSnapshotCommand
+//                                          ui/main.js composes, itself a
+//                                          thin `(publicationId) ->
+//                                          Promise<pkg>` wrap of
+//                                          snapshotContentMaterializationCoordinator.export() —
+//                                          this component never imports
+//                                          BuildPublicationSnapshotTransferPackageUseCase.js
+//                                          or SnapshotContentMaterializationCoordinator.js
+//                                          itself, mirroring
+//                                          distributeOwnSnapshot()'s own
+//                                          restraint one action over)
+//           │
+//           ▼
+//   Publication Snapshot Transfer Package
+//   { kind, schemaVersion, publicationId, contentHash, content }
+//           │
+//           ▼
+//   this panel's own result display (publicationId + contentHash only —
+//   see below)
+//
+// NO NEW EXPORT PIPELINE, NO NEW SERIALIZATION FORMAT. The use case
+// composed here (`ui/main.js`) is the SAME
+// BuildPublicationSnapshotTransferPackageUseCase.js 0.8.32 already built
+// and 0.8.34's own `ImportPublicationSnapshotTransferPackageUseCase`
+// wiring already treats as import's own counterpart — this milestone
+// adds a coordinator method and a UI action, never a second way to
+// assemble a Snapshot Transfer Package.
+//
+// MIRRORS distributeOwnSnapshot()/discoverOwnSnapshot() EXACTLY — a
+// dedicated `snapshotExportExecuting`/`snapshotExportError`/
+// `snapshotExportResult`/`snapshotExportRequestId` ephemeral family
+// (never shared with either sibling's own), reset on the identical
+// `publication` change and invalidated on unmount the identical way.
+// Gated the identical way every sibling action in this file already is:
+// the button only renders when a caller supplied `exportSnapshotCommand`
+// at all, disabled whenever there is no `publication` or a call is
+// already in flight.
+//
+// NEVER READS `publication.contentReference` ITSELF. Unlike
+// `discoverOwnSnapshot()` (which needs `publication.contentReference.hash`
+// as an explicit input to ask "does this contentHash resolve
+// externally?"), export asks a different question — "does THIS REPLICA
+// already hold the bytes this Publication's own catalog entry claims?" —
+// answerable from `publication.id` alone; `BuildPublicationSnapshotTransferPackageUseCase.js`
+// itself re-reads the contentReference from its own publication catalog
+// lookup, never trusting a value this component could hand it stale.
+//
+// THE RESULT DISPLAY SHOWS IDENTITY FACTS ONLY, NEVER THE BYTES
+// THEMSELVES. `snapshotExportResult.content` (the actual Snapshot bytes)
+// is deliberately never rendered, copied, or offered as a download here
+// — see this milestone's own docs/Roadmap.md entry, "one thing not
+// decided yet": whether an exported package becomes a downloadable file,
+// a copyable blob, or something else is a later, unscheduled product
+// decision. This milestone's only job is making the existing capability
+// REACHABLE, not deciding how its output is consumed.
+//
+// NEVER MUTATES publication, distribution, discovery, placement, or
+// registration state. `BuildPublicationSnapshotTransferPackageUseCase.js`
+// itself performs no hash verification and no write of any kind (see its
+// own header) — this action reads a Publication's own already-stored
+// bytes and returns them, the identical read-only restraint
+// `distributeOwnSnapshot()` already holds for its own resolved bytes,
+// never re-publishing, re-placing, or re-registering anything.
 export default {
     name: 'OwnPublicationPanel',
     props: {
@@ -916,6 +1001,20 @@ export default {
         // `null` when the capability is unavailable — see this file's
         // own header, "0.9.142 — World View Snapshot Discovery Command."
         discoverSnapshotCommand: {
+            type: Function,
+            default: null
+        },
+        // 0.9.215 — optional. A `(publication) -> Promise<Publication
+        // SnapshotTransferPackage>` function, or `null` when the
+        // capability is unavailable — see this file's own header,
+        // "0.9.215 — Snapshot Export Capability Integration." Mirrors
+        // `snapshotDistributionCommand`/`discoverSnapshotCommand` exactly:
+        // this component forwards the whole `publication` object,
+        // unread, to whatever wrapper the host view bound here
+        // (`ui/views/WorldView.js`'s own `exportOwnSnapshot()`, which
+        // resolves `publication.id` before calling the app-wide
+        // `exportSnapshotCommand`).
+        exportSnapshotCommand: {
             type: Function,
             default: null
         },
@@ -987,6 +1086,16 @@ export default {
             snapshotDiscoveryError: null,
             snapshotDiscoveryResult: null,
             snapshotDiscoveryRequestId: 0,
+            // 0.9.215 — see this file's own header, "0.9.215 — Snapshot
+            // Export Capability Integration." A separate ephemeral state,
+            // never shared with distribution's or discovery's own —
+            // mirrors `snapshotDistributionExecuting`/
+            // `snapshotDistributionError`/`snapshotDistributionResult`/
+            // `snapshotDistributionRequestId` exactly, one action over.
+            snapshotExportExecuting: false,
+            snapshotExportError: null,
+            snapshotExportResult: null,
+            snapshotExportRequestId: 0,
             // 0.9.144 — see this file's own header, "a separate field,
             // never a replacement of snapshotDiscoveryResult." `null` until
             // a discovery call resolves; never written by anything but
@@ -1075,6 +1184,14 @@ export default {
             this.snapshotDiscoveryError = null;
             this.snapshotDiscoveryResult = null;
             this.snapshotDiscoveryRequestId += 1;
+            // 0.9.215 — reset for the identical lifecycle-safety reason,
+            // one action over — see this file's own header, "a separate
+            // ephemeral state... reset on the identical publication
+            // change."
+            this.snapshotExportExecuting = false;
+            this.snapshotExportError = null;
+            this.snapshotExportResult = null;
+            this.snapshotExportRequestId += 1;
             // 0.9.144 — a different (or cleared) Publication invalidates
             // any prior attribution verdict the same way it already
             // invalidates the discovery result it was computed from.
@@ -1133,6 +1250,7 @@ export default {
         // `snapshotDistributionRequestId`.
         this.snapshotDistributionRequestId += 1;
         this.snapshotDiscoveryRequestId += 1;
+        this.snapshotExportRequestId += 1;
         this.snapshotCandidateDiscoveryRequestId += 1;
         this.selectedSnapshotResolutionRequestId += 1;
         this.selectedSnapshotMaterializationRequestId += 1;
@@ -1230,6 +1348,45 @@ export default {
                 .then(() => {
                     if (requestId === this.snapshotDiscoveryRequestId) {
                         this.snapshotDiscoveryExecuting = false;
+                    }
+                });
+        },
+        // 0.9.215 — the only writer of `snapshotExportExecuting`/
+        // `snapshotExportError`/`snapshotExportResult`, and the only
+        // caller of `exportSnapshotCommand` in this file — mirrors
+        // `distributeOwnSnapshot()` exactly, one action over. A no-op
+        // whenever there is no `publication`, no `exportSnapshotCommand`,
+        // or a call is already in flight. Never reads
+        // `publication.contentReference` itself — see this file's own
+        // header, "0.9.215 — Snapshot Export Capability Integration,"
+        // export names WHICH PUBLICATION, resolved entirely by the
+        // injected command and the use case behind it.
+        exportOwnSnapshot() {
+            const publication = this.publication;
+            if (!publication || !this.exportSnapshotCommand || this.snapshotExportExecuting) {
+                return;
+            }
+
+            this.snapshotExportExecuting = true;
+            this.snapshotExportError = null;
+            this.snapshotExportRequestId += 1;
+            const requestId = this.snapshotExportRequestId;
+
+            Promise.resolve()
+                .then(() => this.exportSnapshotCommand(publication))
+                .then((result) => {
+                    if (requestId === this.snapshotExportRequestId) {
+                        this.snapshotExportResult = result;
+                    }
+                })
+                .catch(() => {
+                    if (requestId === this.snapshotExportRequestId) {
+                        this.snapshotExportError = 'Snapshot export could not be completed.';
+                    }
+                })
+                .then(() => {
+                    if (requestId === this.snapshotExportRequestId) {
+                        this.snapshotExportExecuting = false;
                     }
                 });
         },
@@ -1593,6 +1750,34 @@ export default {
                 <dd>{{ snapshotDistributionResult.contentReference.uri }}</dd>
                 <dt>Announcement</dt>
                 <dd>{{ snapshotDistributionResult.announcement ? snapshotDistributionResult.announcement.id : 'No announcement' }}</dd>
+            </dl>
+
+            <!-- 0.9.215 — Snapshot Export Capability Integration.
+                 Reachable with zero connected peers and an empty World
+                 Encounters panel, the identical restraint Distribute
+                 Snapshot above already holds — see this file's own
+                 header. Rendered only when a caller supplied an
+                 exportSnapshotCommand. Disabled whenever there is no
+                 local Publication yet, or a call is already in flight.
+                 Deliberately no file save, download, or copy-to-clipboard
+                 here: this milestone exposes the existing export
+                 capability and its result's own identity facts, not a
+                 product decision about how the exported package reaches
+                 the user — see docs/Roadmap.md's own 0.9.215 entry. -->
+            <button
+                v-if="exportSnapshotCommand"
+                type="button"
+                class="action-btn own-publication-export-action"
+                :disabled="!publication || snapshotExportExecuting"
+                @click="exportOwnSnapshot"
+            >{{ snapshotExportExecuting ? 'Exporting…' : 'Export Snapshot' }}</button>
+
+            <p v-if="snapshotExportError" class="own-publication-export-error">{{ snapshotExportError }}</p>
+            <dl v-else-if="snapshotExportResult" class="own-publication-export-detail">
+                <dt>Publication</dt>
+                <dd>{{ snapshotExportResult.publicationId }}</dd>
+                <dt>Content hash</dt>
+                <dd>{{ snapshotExportResult.contentHash }}</dd>
             </dl>
 
             <!-- 0.9.142 — reachable with zero connected peers and an

@@ -153,7 +153,10 @@ async function run() {
         const { materializationCoordinator } = makeReplica();
         assert(typeof materializationCoordinator.availableSources === 'undefined',
             '3. INVARIANT: no availableSources() method exists on this first version of the coordinator');
-        assert(typeof materializationCoordinator.import === 'function', '4. import() is the coordinator\'s one public action');
+        // 0.9.215 — no longer the coordinator's ONE public action:
+        // export() now exists too (see tests/SnapshotExportUIIntegration.test.js),
+        // but import() itself is completely unchanged by that addition.
+        assert(typeof materializationCoordinator.import === 'function', '4. import() remains a real action on the coordinator');
 
         // import() forwards to the underlying use case's own execute(),
         // returning its result completely unchanged.
