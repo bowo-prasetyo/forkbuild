@@ -366,8 +366,8 @@ async function runTests() {
         const codeOnly = source.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
 
         const applicationImportLines = codeOnly.split('\n').filter((line) => line.includes("from '../../application/"));
-        assert(applicationImportLines.length === 13,
-            '21. WorldEncounterCanvas.js still imports exactly thirteen application/ modules as of 0.9.182 — 0.9.113 introduced no new application-layer command, per its own "no application-layer command" restraint; the eighth is 0.9.144\'s own SnapshotPublicationAttribution.js, the ninth 0.9.176\'s own WorldEncounterPresentation.js, the tenth 0.9.177\'s own WorldSnapshotInspection.js, the eleventh 0.9.179\'s own MaterializedSnapshotWorldDiscoveryBridge.js (unregisterMaterializedSnapshotWorldSource() alone), the twelfth and thirteenth 0.9.182\'s own WorldEncounterComparisonCandidate.js/WorldSnapshotComparison.js');
+        assert(applicationImportLines.length === 14,
+            '21. WorldEncounterCanvas.js still imports exactly fourteen application/ modules as of 0.9.183 — 0.9.113 introduced no new application-layer command, per its own "no application-layer command" restraint; the eighth is 0.9.144\'s own SnapshotPublicationAttribution.js, the ninth 0.9.176\'s own WorldEncounterPresentation.js, the tenth 0.9.177\'s own WorldSnapshotInspection.js, the eleventh 0.9.179\'s own MaterializedSnapshotWorldDiscoveryBridge.js (unregisterMaterializedSnapshotWorldSource() alone), the twelfth and thirteenth 0.9.182\'s own WorldEncounterComparisonCandidate.js/WorldSnapshotComparison.js, and the fourteenth 0.9.183\'s own WorldSnapshotContentView.js');
 
         assert(codeOnly.includes('selectedDiscoveredPublication') && codeOnly.includes('selectDiscoveredPublication') && codeOnly.includes('isDiscoveredPublicationSelectable'),
             '22. the new field/method/computed are actually present');

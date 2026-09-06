@@ -72662,3 +72662,136 @@ Publications themselves, side by side — is now a real, answerable product
 question rather than a speculative one; this milestone deliberately stops
 short of deciding it in advance. 0.9.180's own Vehicle Reachability
 recommendation remains entirely open and unweakened.
+
+## 0.9.183 — World Snapshot Content View
+
+0.9.182's own recommendation named the exact next question without
+deciding it: whether the comparison fact alone justifies rendering a
+Snapshot's own material. This milestone answers the OTHER half of that
+question first, deliberately narrower than a side-by-side viewer:
+
+> Allow the Wanderer to explicitly open the content of a selected Snapshot
+> that has already been resolved, verified, and materialized.
+
+```text
+selectedEncounterSnapshotInspection (0.9.177, unchanged)
+materialInspection                  (0.9.39, unchanged)
+     │
+     ▼
+application/WorldSnapshotContentView.js   (NEW)
+     describeWorldSnapshotContentView()
+     │
+     ▼
+selectedSnapshotContentView   (NEW computed)
+{ publicationId, contentHash, material, position }
+null
+     │
+     │  click "View Snapshot" -> snapshotContentViewOpen = true
+     ▼
+Snapshot Content panel
+```
+
+**Comparison answers "are these two Publications the same content?";
+Content View answers "what is this Snapshot's content?"** — the same
+framing the brief itself used. The two stay entirely independent:
+`compareSnapshotWorldPublications()` is untouched, this milestone never
+imports it, and `describeWorldSnapshotContentView()` has no knowledge that
+comparison exists at all.
+
+**A join over two already-existing computeds, never a second material
+loader.** `application/WorldSnapshotContentView.js` performs no I/O, no
+registry access, and no retrieval of its own — it reads exactly
+`selectedEncounterSnapshotInspection` (0.9.177) and `materialInspection`
+(0.9.39, the SAME material `distributablePublication`, "Distribute
+Publication," and "Distribute Snapshot" already consume) and reports a
+Content View only once both agree on the same encounter AND
+`materialInspection.loading.status` is genuinely `AVAILABLE` — the
+identical gate `distributablePublication` (0.9.104) already uses for the
+same material. No new `materialSources` slot, no new loading boundary, no
+verification requirement beyond "is it here" (verification stays its own,
+already-rendered, independent fact).
+
+**An explicit action, mirroring "Compare with…" exactly, one panel over.**
+`ui/components/WorldEncounterCanvas.js` gains one new page-local flag,
+`snapshotContentViewOpen`, written only by `openSnapshotContentView()`/
+`closeSnapshotContentView()`. Merely having a viewable Snapshot selected
+never opens the panel — the Wanderer must click "View Snapshot," rendered
+in a new, separate `world-snapshot-content-view-panel` (mirroring the
+Compare panel's own arm/observe structure, and deliberately NOT inside the
+existing `world-encounter-inspection-actions` row, so 0.9.178's own frozen
+"exactly one action" audit of that row stays meaningful and unmodified).
+`snapshotContentViewOpen` resets to `false` on every fresh PRIMARY
+selection (mirroring `resolvedSelectionChoice`/`resolvedLeadChoice`'s own
+reset in `selectEncounter()`) — selecting a new Publication right after
+viewing a previous one's content never renders the new selection's content
+implicitly.
+
+**`selectedSnapshotContentView` collapses to `null` the instant material
+stops being available — never left describing stale or fabricated
+content.** It is a live computed, recomputed on every read; unregistering
+the selected Snapshot already changes `resolvedEncounterSelection`, which
+`refreshSelectionOutcome()` already reacts to by tail-calling
+`refreshMaterialInspection()` (both 0.9.39, unmodified) — no new listener
+was added anywhere for this to work. Two Publications sharing an identical
+`contentHash` still each produce their OWN, independent Content View,
+carrying their OWN `material` — `describeWorldSnapshotContentView()` has
+no pairwise knowledge at all, so deduplication is structurally
+unreachable, not merely undesired.
+
+**`tests/WorldSnapshotContentView.test.js` — nine sections**, covering
+explicit viewing (selecting alone never opens the panel), exact identity
+preservation, same-content/different-Publication independence (no
+deduplication), differently-contented Publications, material unavailable
+(no fabrication from `contentHash`/position alone, and the action stays
+non-actionable), registry removal collapsing an already-open view, a fresh
+primary selection resetting the open flag, cross-family isolation (LOCAL/
+PEER never produce a Content View even with material `AVAILABLE`), and a
+structural audit (`openSnapshotContentView()`/`closeSnapshotContentView()`
+never touch the registry or trigger a new load, discovery, materialization,
+or distribution; exactly one call site of
+`describeWorldSnapshotContentView()`).
+`tests/WorldEncounterCanvasUI.test.js`'s own Section J import-boundary
+count is updated (thirteen -> fourteen application/ imports, sixteen
+imports overall); `tests/WorldViewDecentralizedPublicationRetrievalIntegration.test.js`
+and `tests/WorldViewDiscoveredPublicationSelectionIntegration.test.js`
+update the same frozen count. `tests.html` gains one new entry.
+
+Deliberately excluded, per this milestone's own narrow brief:
+- **A side-by-side Snapshot comparison viewer.** This milestone renders
+  exactly one Publication's own content at a time; combining it with
+  0.9.181/0.9.182's own comparison fact is explicitly later, unscheduled
+  work (see "Recommendation," below).
+- **Any discovery, resolution, materialization, or distribution triggered
+  by "View Snapshot."** The action only observes material the existing
+  pipeline already loaded.
+- **Rendering arbitrary HTML/media/application content, or decoding
+  document bytes.** The panel renders the same structured `Publication`
+  fields (title, author, published date, content reference) this codebase
+  already knows how to display elsewhere.
+- **A generic content viewer for LOCAL/PEER encounters.** `describeWorldSnapshotContentView()`
+  requires a genuine, SNAPSHOT-sourced `selectedEncounterSnapshotInspection`
+  (0.9.177's own gate, unmodified) — "View Snapshot" stays unreachable for
+  both, exactly like "Remove Snapshot from World" already does.
+- **Deduplication, ranking, or any removal/replacement action.** Two
+  Publications sharing identical content still each produce their own,
+  fully independent Content View.
+
+```text
+0.9.179  Snapshot World Source Unregistration                        ✓
+0.9.180  World Snapshot Completion & Boundary Audit                  ✓
+0.9.181  World Snapshot Comparison                                   ✓
+0.9.182  World Snapshot Comparison UI                                ✓
+0.9.183  World Snapshot Content View                                 ✓
+```
+
+### Recommendation
+
+Both halves of 0.9.182's own open question are now answered independently:
+"are these the same?" (0.9.181/0.9.182) and "what is this one's content?"
+(this milestone). The natural next step — **0.9.184, World Snapshot
+Content Comparison View** — would combine them: a side-by-side rendering
+of two already-open Content Views, alongside the already-computed
+`SAME_CONTENT`/`DIFFERENT_CONTENT` fact, still shown as an observation
+rather than a deduplication command. This milestone deliberately stops
+short of building that combination in advance. 0.9.180's own Vehicle
+Reachability recommendation remains entirely open and unweakened.
