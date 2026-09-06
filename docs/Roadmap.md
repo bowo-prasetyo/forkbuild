@@ -73220,3 +73220,192 @@ would build it as its own deliberately scoped milestone, not as a
 follow-on extension of this one's own `WorldSnapshotDiscoveryMonitor`,
 for the identical reason this milestone itself stayed narrow: composing
 proven seams is a different kind of work than proving them.
+
+## 0.9.187 — Automatic Snapshot Encounter Cascade
+
+0.9.186 named this gap in its own "Recommendation" before ever building
+it: automatic candidate DISCOVERY existed, but every downstream boundary —
+resolution, verification, materialization, placement, registration — still
+required its own explicit click on `OwnPublicationPanel.js`. This
+milestone is the composition 0.9.186 deliberately deferred: one new
+orchestration seam, `application/AutomaticSnapshotEncounterCascade.js`,
+that drives an already-discovered candidate through the ENTIRE
+already-proven chain automatically, with its own idempotency and
+concurrency handling — never a new discovery algorithm, never a new
+resolver/materializer/placement/registration implementation, and never a
+replacement for the existing explicit controls.
+
+```text
+                 Wanderer movement
+                       │
+                       ▼
+   ui/views/WorldView.js's own refreshSpatialUI() tick   (UNCHANGED cadence)
+                       │
+                       ▼
+   WorldSnapshotDiscoveryMonitor#observe(spatialContext)   (0.9.186, UNMODIFIED)
+                       │
+                       ▼
+   monitor.lastResult   (a candidate array — unchanged, [], or freshly
+                          discovered; this view never distinguishes which)
+                       │
+                       ▼
+   AutomaticSnapshotEncounterCascade#processCandidate(candidate)   ★ NEW,
+   called once per candidate, in the SAME order lastResult reports them
+                       │
+                       ▼
+   resolveSelectedSnapshotCommand(candidate)        (0.9.152, UNMODIFIED)
+                       │  DecentralizedSnapshotResolutionOutcome.RESOLVED only
+                       ▼
+   materializeSelectedSnapshotCommand(resolution)   (0.9.158, UNMODIFIED)
+                       │  StoreSnapshotContentOutcome.STORED/.ALREADY_AVAILABLE only
+                       ▼
+   resolveSnapshotWorldPlacement(materialization, placementInfo)
+   (0.9.159, UNMODIFIED — placementInfo from the injected
+    resolvePlacementInfo(publicationId), NEVER candidate.claimedPosition)
+                       │  SnapshotWorldPlacementOutcome.PLACED only
+                       ▼
+   registerMaterializedSnapshotWorldSource(registry, placement, publication)
+   (0.9.160, UNMODIFIED)
+```
+
+**ONE NEW APPLICATION FILE, TWO NEW OUTCOME/LOOKUP HELPERS, NO NEW
+OPERATION OF ITS OWN.**
+
+- `application/AutomaticSnapshotEncounterCascade.js` — the orchestration
+  seam. `processCandidate(candidate)` composes the five existing calls
+  above, in order, stopping at whichever stage's own existing outcome
+  vocabulary reports anything other than its own success value —
+  `DecentralizedSnapshotResolutionOutcome.RESOLVED`,
+  `StoreSnapshotContentOutcome.STORED`/`.ALREADY_AVAILABLE`,
+  `SnapshotWorldPlacementOutcome.PLACED` — and forwarding that stage's own
+  outcome/reason verbatim. Idempotent by construction: a single
+  `Map<publicationId:contentHash, Promise<result>>` stores each subject's
+  own (never-rejecting) result the FIRST time it is seen, so every later
+  call for the identical key — concurrent or long after the first
+  settled — receives the exact same promise back, never triggering a
+  second resolve/materialize/place/register attempt. `publicationId +
+  contentHash`, never a Nostr event id, is the processing identity — see
+  this file's own header, "a publicationId is the processing subject, not
+  just a placement optimization."
+- `application/AutomaticSnapshotEncounterCascadeOutcome.js` — exactly ONE
+  new value, `INELIGIBLE` ("no contentHash, no publicationId, or no
+  resolve/materialize command configured — nothing was even attempted").
+  Every other outcome the cascade can produce already belonged to an
+  existing, independently-tested vocabulary before this milestone.
+- `application/WorldNavigationSession.js` gains two small, additive public
+  methods: `getPlacementInfoForPublication(publicationId)` (the minimal
+  `{ placementId, publicationId, position }` `resolveSnapshotWorldPlacement()`
+  itself requires, resolved directly from a publicationId — no documentId,
+  no owner/movable/overlap enrichment) and `findPublicationById(publicationId)`
+  (the existing private `_discoveryProvider.findById()` lookup
+  `_describeSpatialOccupant()` already performed internally, exposed
+  publicly). Both answer questions this class already knew how to answer
+  for a documentId-anchored, person-facing panel — this milestone asks the
+  identical questions starting from a publicationId instead, because
+  automatic background processing has no open document to anchor to at
+  all.
+
+**WIRING — `ui/views/WorldView.js` ALONE.** `ui/main.js` is UNCHANGED —
+`resolveSelectedSnapshotCommand`/`materializeSelectedSnapshotCommand`/
+`worldDiscoverySourceRegistry` are already app-wide provisions this view
+already injects. `WorldView.js`'s own `setup()` constructs ONE
+`AutomaticSnapshotEncounterCascade`, alongside its own `session`, wiring
+`resolvePlacementInfo`/`findPublicationById` to that SAME session's two
+new methods above; `refreshSpatialUI()`'s own existing
+`worldSnapshotDiscoveryMonitor.observe(spatialContext.value)` call gains a
+`.then()` that feeds `monitor.lastResult`, one candidate at a time, to
+`cascade.processCandidate()`. No new polling loop; the cascade rides the
+exact same 3-second observation cadence 0.9.186 already established.
+Scoped to this view's own mount — a fresh cascade (and idempotency map)
+accompanies each fresh `session`, exactly as long-lived as it.
+
+**A PUBLISHER'S OWN CLAIM IS STILL NEVER A COMMITMENT TO PLACE.** 0.9.172
+gave discovery candidates an optional `publicationId`/`claimedPosition`
+and explicitly excluded automatic consumption of the latter — this
+milestone holds that exclusion, not just inherits it: the cascade never
+imports `application/SnapshotWorldPositionClaim.js` and never reads
+`candidate.claimedPosition` anywhere. `resolvePlacementInfo` only ever
+answers "does an ALREADY-AUTHORITATIVE WorldPlacement exist for this
+publicationId" — a candidate whose own claimed position disagrees with
+(or whose Publication has no) authoritative placement stops at
+`SnapshotWorldPlacementOutcome.UNPLACED`, bytes materialized locally or
+not.
+
+**`tests/WorldSnapshotAutomaticEncounterCascade.test.js` — eighteen
+sections**: (A) automatic start, no explicit clicks; (B) FLAGSHIP — a real
+Nostr/Arweave/local-materialization/real-WorldPlacement/real-registry
+happy path, ending in a genuine World Encounter, with a claimed position
+proven never promoted over the authoritative one; (C) verification failure
+stops before materialization; (D) resolution failure stops before
+materialization; (E) materialization failure stops before placement; (F)
+placement failure (UNPLACED) — material exists, nothing registers; (G)
+sequential duplicate discovery, one effective operation; (H) concurrent
+duplicate discovery, one cascade run, same promise handed to both callers;
+(I) two Publications sharing content, never deduplicated; (J) shared
+content at two independent positions; (K) discovery-event identity is
+irrelevant — publicationId+contentHash alone is the processing subject;
+(L) LOCAL/PEER World sources unaffected; (M) existing manual
+Resolve/Materialize/Place/Register commands still work standalone; (N)
+structural sweep — no rendering logic, no `claimedPosition` reads, no
+ranking/dedup-preference vocabulary, exactly one new outcome value; (O)
+many discovery ticks over time for the same candidate remain harmless; (P)
+a publicationId-less candidate is `INELIGIBLE`, never resolved; (Q)
+`processCandidate()` never rejects even when a collaborator throws; (R)
+the cascade wired to `WorldNavigationSession`'s own real new methods,
+exactly as `WorldView.js` now composes it.
+
+`tests.html` gains one new entry, alphabetically adjacent to
+`WorldSnapshotBackgroundDiscovery.test.js`.
+
+Deliberately excluded — not this milestone:
+- **Ranking, trust, provider scoring, or "nearest Snapshot" preference of
+  any kind.** Discovery order is never reinterpreted — the cascade
+  processes candidates in exactly the order `lastResult` reports them.
+- **Automatic consumption of a claimed position.** See "a publisher's own
+  claim is still never a commitment to place," above.
+- **Retry, backoff, or a queue for a failed stage.** A terminal result is
+  terminal for the cascade instance's own lifetime; a NEW discovery of the
+  identical candidate is not a retry of the old one — it is simply
+  memoized identically.
+- **Removing, hiding, or deprecating the existing explicit
+  Resolve/Materialize/Place/Register controls.** They remain the fallback
+  for manual inspection, recovery, and diagnostics — untouched.
+- **Any diagnostic/inspection UI surfacing cascade outcomes to a person.**
+  This milestone wires the automatic pipeline; a "here's what background
+  processing just did" panel is later, unscheduled UI.
+- **A new Snapshot identity, lifecycle store, or persistence of the
+  cascade's own idempotency map across instances/reloads.** Purely
+  ephemeral orchestration state, scoped to one `WorldView` mount.
+
+```text
+0.9.182  World Snapshot Comparison UI                                ✓
+0.9.183  World Snapshot Content View                                 ✓
+0.9.184  World Snapshot Content Comparison View                      ✓
+0.9.185  World Snapshot Content Actionability Audit                  ✓
+0.9.186  World Snapshot Background Discovery                         ✓
+0.9.187  Automatic Snapshot Encounter Cascade                        ✓
+```
+
+### Recommendation
+
+With 0.9.187, ForkBuild's own architecture and the Wanderer's intended
+experience genuinely converge for the first time: a Wanderer can now walk
+through the World and have verified, decentralized Snapshots simply
+appear, with no button ever clicked. Every boundary underneath — Nostr
+discovery, Arweave retrieval, content-hash verification, placement
+authority, World registration — remains exactly as explicit, narrow, and
+independently tested as it always was; only the SEQUENCING of already-
+proven operations is now automatic. I would resist adding more capability
+immediately. The next milestone should be an audit, not a feature: 0.9.188
+— Automatic Snapshot Encounter Lifecycle Audit — exercising the complete
+autonomous path (wander -> discover -> resolve -> verify -> materialize ->
+place -> register -> ordinary World rendering) against the harder
+combined cases no single section of this milestone's own test suite
+combined in one run: duplicate AND concurrent discovery together, movement
+across several observation areas in one continuous session, a mix of
+placed/unplaced/failing candidates discovered in the same tick, and a
+long-running session accumulating many independent cascade subjects over
+time. That audit — not a new capability — will tell us whether the
+existing seams this milestone composed are sufficient, or whether genuine
+automatic Snapshot processing needs a lifecycle mechanism this milestone
+deliberately did not build.

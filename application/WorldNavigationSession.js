@@ -4823,6 +4823,50 @@ export class WorldNavigationSession {
         };
     }
 
+    // 0.9.187 — Automatic Snapshot Encounter Cascade. getPlacementInfo()
+    // above answers "where does THIS DOCUMENT'S publication live," starting
+    // from a documentId — the question a person looking at an open document
+    // already has an answer path for. Automatic, background Snapshot
+    // processing (application/AutomaticSnapshotEncounterCascade.js) has no
+    // open document at all; the only identity it ever has is a discovered
+    // candidate's own claimed `publicationId`. This method answers the
+    // IDENTICAL underlying question — "does an authoritative WorldPlacement
+    // already exist, and where" — starting from a publicationId directly,
+    // skipping the documentId->publication resolution step
+    // _resolvePublicationForPlacement() performs (the caller already knows
+    // the publicationId). Returns ONLY the minimal shape
+    // resolveSnapshotWorldPlacement() (application/SnapshotWorldPlacement.js,
+    // 0.9.159) itself requires — `{ placementId, publicationId, position }`
+    // — never the fuller owner/movable/overlap enrichment getPlacementInfo()
+    // computes for a person-facing panel, which this caller never renders.
+    // `null` when there is no placementRegistry wired, or no placement
+    // record exists for this publicationId — the same "null when the
+    // question doesn't apply" rule getPlacementInfo() already follows.
+    getPlacementInfoForPublication(publicationId) {
+        if (!this._placementRegistry || typeof publicationId !== 'string' || publicationId.length === 0) return null;
+        const records = this._placementRegistry.findByPublicationId(publicationId);
+        if (records.length === 0) return null;
+        const record = records.reduce((latest, r) => (!latest || r.updatedAt > latest.updatedAt) ? r : latest, null);
+        return {
+            placementId: record.placementId,
+            publicationId: record.publicationId,
+            position: { x: record.position.x, y: record.position.y, z: record.position.z }
+        };
+    }
+
+    // 0.9.187 — the SAME `_discoveryProvider.findById()` lookup
+    // _describeSpatialOccupant() already performs privately, exposed
+    // publicly for application/AutomaticSnapshotEncounterCascade.js's own
+    // `findPublicationById` collaborator — the actual Publication instance
+    // `registerMaterializedSnapshotWorldSource()` requires alongside
+    // `getPlacementInfoForPublication()`'s own placementInfo, never just an
+    // id. `null` when there is no discoveryProvider wired, or the
+    // publication is not locally known — never throws.
+    findPublicationById(publicationId) {
+        if (!this._discoveryProvider || typeof publicationId !== 'string' || publicationId.length === 0) return null;
+        return this._discoveryProvider.findById(publicationId) || null;
+    }
+
     // Pre-flight query for an EXPLICIT placement request — "if I moved
     // this placement to newPosition right now, what would I find
     // there, and does my configured policy require confirming first?"
