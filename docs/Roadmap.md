@@ -74503,3 +74503,117 @@ whether a dangling placement pointing at a gone publication is an
 acceptable, separately-surfaced state — a real product decision, not an
 architectural one, and better made once the two actions individually
 exist to observe.
+
+## 0.9.197 — World Placement Removal UI Action
+
+0.9.196's own recommendation, taken half at a time rather than both halves
+at once — World placement removal and Publication unpublish are different
+authorities over different things (spatial state vs. a Publication's own
+catalog entry) and are kept as two separate milestones rather than one
+combined one, so each gets its own precise E2E audit instead of a blurrier
+combined one.
+
+**One seam, no new domain logic.** `application/RemoveWorldPlacementUseCase.js`
+was already correct and already composed into every spatial-index
+composition root (0.9.196 proved this directly) — the ONLY thing missing
+was a UI path that reaches it. This milestone adds exactly that path and
+nothing else:
+
+- `application/WorldNavigationSession.js` — `getPlacementInfo()` now
+  returns `removable`, gated on the exact same `ownedByCurrentUser` signal
+  `movable` already uses (no new ownership rule invented). A new
+  `removePlacement(documentId, expectedPlacementId)` method mirrors
+  `movePlacement()`: it resolves WHICH placement the document currently
+  has (never trusting a raw id from the caller alone) and delegates the
+  actual removal to `RemoveWorldPlacementUseCase`, completely unmodified.
+  `expectedPlacementId` is an optional compare-and-swap guard — when the
+  freshly resolved placement no longer matches the id a caller's own
+  (possibly stale) `PlacementInfoPanel` read, this refuses to remove
+  whatever now occupies that document's placement rather than silently
+  deleting a replacement out from under whoever placed it.
+- `application/CreateWorldViewUseCase.js` — wires a
+  `RemoveWorldPlacementUseCase(spatialIndexProvider, placementRegistry)`
+  into the real World View composition root, the same
+  `(spatialIndexProvider, placementRegistry)` pair
+  `MoveWorldPlacementUseCase` already receives there.
+- `ui/components/PlacementInfoPanel.js` — one new "Remove from World"
+  button, disabled unless `info.removable`, emitting `remove` alongside
+  the existing `focus`/`move`/`view-here`. Still a pure presentation
+  component: zero imports, same as before.
+- `ui/views/WorldView.js` — `removePlacementFromPanel()` forwards the
+  panel's own captured `placementId` into `session.removePlacement()`
+  inside the same `guarded()` wrapper every other mutation in this file
+  already uses, then calls `refreshSpatialUI()`. No new "removed" UI
+  state: `placementInfo` is entirely derived from `getPlacementInfo()`
+  every refresh, so once the registry has no record left, the panel
+  disappears through the exact same `null` path a never-placed document
+  already takes.
+
+**Removal is not unpublish, and the tests prove it structurally, not just
+by assertion.** `tests/WorldPlacementRemovalUIAction.test.js` runs a real
+publish → place → render → select → Remove from World → verify-gone
+flagship against the same real collaborators `tests/PlacementWorldView.test.js`
+and `tests/WorldPlacement.test.js` already use, then spends most of its
+length on the negative space:
+
+- Removing placement A never touches placement B (different position,
+  different `PlacementRecord`, different Publication, all independently
+  verified after A's removal).
+- A nonexistent placement id is a safe no-op at `RemoveWorldPlacementUseCase`
+  itself (unchanged from 0.9.196), while `removePlacement()` throws a clear
+  error when a document has no placement to resolve at all — the same
+  "throw at the resolution layer, no-op at the storage layer" split
+  `movePlacement()` already established.
+- The compare-and-swap guard is exercised directly: a placement is removed
+  and the same Publication re-placed elsewhere (a genuinely new
+  `placementId`), and a caller still holding the OLD id is refused rather
+  than silently deleting the replacement — then the identical call
+  succeeds once given the current id.
+- A structural sweep confirms `RemoveWorldPlacementUseCase.js`'s own CODE
+  (not its header prose, which names "unpublish" only to disclaim it —
+  the same "prose vs. code" restraint 0.9.196's own Section B already
+  applied to `VehicleType.js`) carries no Snapshot/Nostr/Arweave/Anchor/
+  distribution/unpublish vocabulary at all, and that neither
+  `PlacementInfoPanel.js` nor `WorldView.js` ever names a spatial-index or
+  placement-registry class directly — `WorldNavigationSession` remains the
+  only thing either file talks to.
+
+`tests/ArchitectureReassessmentProductGapAudit.test.js` (0.9.196) is
+updated in place rather than left to fail: its Section C assertions that
+`removable`/`remove` do NOT exist are flipped to confirm they now DO,
+with commentary marking exactly what 0.9.197 closed and what it
+deliberately left open (`UnpublishDocumentUseCase` — still unwired, still
+Section C5/D's finding, still real).
+
+**Deliberately excluded**, matching 0.9.196's own "no new semantics"
+framing: Publication unpublish/retract, any Snapshot unregister change,
+confirmation dialogs (no other mutation in `WorldView.js` uses one),
+undo, material deletion, decentralized withdrawal, and any new placement
+lifecycle state — `removable` reuses `movable`'s own ownership rule
+rather than inventing one.
+
+```text
+0.9.193  Automatic Snapshot Session-Lifetime Guard                   ✓
+0.9.194  Automatic Snapshot Session-Lifetime Guard E2E Audit         ✓
+0.9.195  Automatic Snapshot Subsystem Boundary & Convergence Audit   ✓
+0.9.196  Architecture Reassessment / Product Gap Audit               ✓
+0.9.197  World Placement Removal UI Action                          ✓
+```
+
+### Recommendation
+
+The World-placement half of 0.9.196's Section C gap is closed. The
+Publication half is not: `UnpublishDocumentUseCase` remains correct,
+composed, and completely unreachable from `OwnPublicationPanel.js` — the
+exact finding Section D of 0.9.196 already confirmed from the authoring
+side. I would recommend **0.9.198 — Publication Unpublish/Retract UI
+Action**: the same shape of milestone as this one, aimed at the other
+half — an `Unpublish`/`Retract` action on `OwnPublicationPanel.js`, wired
+to the already-correct `UnpublishDocumentUseCase`, with its own dedicated
+E2E audit proving a retracted Publication's placements, material, and
+Snapshot/Nostr distribution behave exactly as `UnpublishDocumentUseCase`'s
+own header already documents — no cascade invented here either unless
+that use case already performs one. Once both actions exist independently,
+0.9.199 is the natural place to ask the one question this milestone
+deliberately still leaves open: what a placement pointing at an unpublished
+Publication should look like to a Wanderer who encounters it.

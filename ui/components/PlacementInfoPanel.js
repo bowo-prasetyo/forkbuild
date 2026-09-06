@@ -19,6 +19,16 @@
 // (WorldNavigationSession.getDocumentsAtPosition), turning "3
 // documents overlap at this location" into an actual list a person can
 // pick from and focus.
+//
+// 0.9.197 — World Placement Removal UI Action. "Remove from World"
+// emits 'remove' for the host to call
+// WorldNavigationSession.removePlacement() — the mirror of 'move',
+// gated the same way on `info.removable`. Deliberately NOT
+// "Unpublish"/"Delete": this panel describes WHERE a Publication sits
+// (see this file's own 0.2.23 header), and removing a placement never
+// touches the Publication, the Document, or its material — it just
+// takes this specific location back. See docs/Principles.md, "A
+// Publication Is What; A Placement Is Where."
 export default {
     name: 'PlacementInfoPanel',
     props: {
@@ -27,7 +37,7 @@ export default {
             default: null
         }
     },
-    emits: ['focus', 'move', 'view-here'],
+    emits: ['focus', 'move', 'remove', 'view-here'],
     template: `
         <div v-if="info" class="placement-info-panel">
             <h4>Placement</h4>
@@ -55,6 +65,7 @@ export default {
             <div class="info-actions">
                 <button class="action-btn" @click="$emit('focus')">Focus</button>
                 <button class="action-btn" :disabled="!info.movable" @click="$emit('move')">Move</button>
+                <button class="action-btn action-btn--danger" :disabled="!info.removable" @click="$emit('remove')">Remove from World</button>
             </div>
         </div>
     `

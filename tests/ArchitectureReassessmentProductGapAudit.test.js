@@ -156,6 +156,12 @@ async function runTests() {
     // the one question the rest of this arc never asked: can a Wanderer or
     // Publisher take a material BACK OUT of the World, once it is out
     // there? It answers with real, running code, not supposition.
+    //
+    // UPDATED by 0.9.197 (World Placement Removal UI Action): the
+    // World-placement half of this gap is now CLOSED — see C3/C4 below,
+    // and tests/WorldPlacementRemovalUIAction.test.js for the dedicated
+    // E2E audit. The Publication-unpublish half (C5/Section D) is
+    // deliberately still open, left for 0.9.198.
     // ---------------------------------------------------------------
     {
         // C1 — RemoveWorldPlacementUseCase is composed into every one of
@@ -171,10 +177,25 @@ async function runTests() {
             assert(countReferences(source, 'RemoveWorldPlacementUseCase') >= 1, `C1. ${file} constructs a RemoveWorldPlacementUseCase — the capability is already wired into this composition root`);
         }
 
-        // ...yet a sweep of every UI file that actually presents a
-        // placement or a publication to a person finds no further
-        // reference to it at all — not the class name, not the
-        // conventional `removeWorldPlacementUseCase` instance name.
+        // ...at the time of THIS audit, a sweep of every UI file that
+        // actually presents a placement or a publication to a person
+        // found no further reference to it at all — not the class
+        // name, not the conventional `removeWorldPlacementUseCase`
+        // instance name — meaning literally nothing reached it.
+        //
+        // 0.9.197 (World Placement Removal UI Action) closed that half
+        // of the gap WITHOUT any UI file ever naming the raw use case
+        // or its conventional instance name directly — the same
+        // boundary movePlacement()/MoveWorldPlacementUseCase already
+        // established: a UI component talks to
+        // WorldNavigationSession.removePlacement(), never to
+        // RemoveWorldPlacementUseCase itself. So this sweep still finds
+        // zero direct references in PlacementInfoPanel.js/WorldView.js
+        // post-0.9.197 too — not because the capability is still
+        // unreachable (it now is, via "Remove from World"), but because
+        // the use case's own authority was never meant to be reachable
+        // from more than one composition root away. See
+        // WorldNavigationSession.removePlacement()'s own header.
         const placementUiFiles = [
             'ui/components/PlacementInfoPanel.js',
             'ui/components/PlacementEditorDialog.js',
@@ -186,25 +207,34 @@ async function runTests() {
         for (const file of placementUiFiles) {
             const source = await rawSource(file);
             assert(countReferences(source, 'RemoveWorldPlacementUseCase') === 0 && countReferences(source, 'removeWorldPlacementUseCase') === 0,
-                `C2. ${file} never references RemoveWorldPlacementUseCase — no button, action, or command reaches this already-composed use case`);
+                `C2. ${file} never references the raw RemoveWorldPlacementUseCase (by class or conventional instance name) directly — even after 0.9.197, WorldNavigationSession remains the sole authority a UI file talks to`);
         }
 
-        // C3 — the read model a Wanderer actually sees names Move but
-        // never Remove: getPlacementInfo()'s own returned shape (the
+        // C3 — UPDATED by 0.9.197 (World Placement Removal UI Action),
+        // which closed exactly this half of the gap. At the time of THIS
+        // audit (0.9.196), the read model a Wanderer saw named Move but
+        // never Remove; getPlacementInfo()'s own returned shape (the
         // single place in application/WorldNavigationSession.js that
-        // shape is assembled) carries `movable`, gated on ownership, with
-        // no `removable`/`unplaceable` counterpart ever added alongside it.
+        // shape is assembled) carried `movable`, gated on ownership, with
+        // no `removable` counterpart. 0.9.197 added exactly that
+        // counterpart — gated on the SAME ownership signal, no new
+        // lifecycle state invented — which is what this assertion now
+        // confirms instead of its absence.
         const navigationSessionSource = await rawSource('application/WorldNavigationSession.js');
         assert(/movable:\s*ownedByCurrentUser/.test(navigationSessionSource), 'C3a. getPlacementInfo() still returns a `movable` field gated on ownership');
-        assert(!/removable\s*:/.test(navigationSessionSource) && !/unplaceable\s*:/.test(navigationSessionSource), 'C3b. getPlacementInfo() has no removable/unplaceable counterpart to `movable` — the read model was never extended to describe a remove action, because no remove action exists to describe');
+        assert(/removable:\s*ownedByCurrentUser/.test(navigationSessionSource), 'C3b. getPlacementInfo() now returns a `removable` field, gated on the exact same ownership signal as `movable` — 0.9.197 closed the World-placement half of this audit\'s Section C gap');
 
-        // C4 — the one panel that presents this read model to a person
-        // (PlacementInfoPanel.js) emits exactly focus/move/view-here —
-        // never remove.
+        // C4 — UPDATED by 0.9.197. At the time of THIS audit, the one
+        // panel that presents this read model to a person
+        // (PlacementInfoPanel.js) emitted exactly focus/move/view-here —
+        // never remove. 0.9.197 added a "Remove from World" action that
+        // emits 'remove', gated on `info.removable` the same way "Move"
+        // is gated on `info.movable`.
         const placementInfoPanelSource = await rawSource('ui/components/PlacementInfoPanel.js');
         const emitsMatch = placementInfoPanelSource.match(/emits:\s*\[([^\]]*)\]/);
         assert(emitsMatch, 'C4a. PlacementInfoPanel.js declares its emits array');
-        assert(!/remove|unpublish|delete/i.test(emitsMatch[1]), `C4b. PlacementInfoPanel.js emits only [${emitsMatch[1].trim()}] — no remove-shaped event exists for a host view to even listen for`);
+        assert(/\bremove\b/i.test(emitsMatch[1]), `C4b. PlacementInfoPanel.js now emits 'remove' (found [${emitsMatch[1].trim()}]) — a reachable remove-shaped event a host view can listen for, per 0.9.197`);
+        assert(!/unpublish|delete/i.test(emitsMatch[1]), 'C4c. ...but still no unpublish/delete-shaped event — 0.9.197 deliberately excluded Publication retraction and material deletion; see Section C5/D below');
 
         // C5 — UnpublishDocumentUseCase is the mirror capability at the
         // Publication layer, composed nowhere either. A sweep of every UI
@@ -246,7 +276,7 @@ async function runTests() {
 
             assert(discoverUseCase.execute(new Position(50, 0, 50), 100).length === 1, 'sanity: the placement is genuinely present before removal');
             removeUseCase.execute(placement.id);
-            assert(discoverUseCase.execute(new Position(50, 0, 50), 100).length === 0, 'C6a. RemoveWorldPlacementUseCase genuinely removes the placement from the spatial index — the capability works correctly, it is simply never invoked in production');
+            assert(discoverUseCase.execute(new Position(50, 0, 50), 100).length === 0, 'C6a. RemoveWorldPlacementUseCase genuinely removes the placement from the spatial index — as of 0.9.197 it is also reachable from World View\'s own "Remove from World" action (see tests/WorldPlacementRemovalUIAction.test.js), not merely correct-but-unwired');
             assert(discovery.findById(publication.id) !== null, 'C6b. ...and, exactly as its own header documents, the Publication itself survives the removal untouched');
         }
         {
@@ -266,7 +296,7 @@ async function runTests() {
             assert(!recordsAfter.some((r) => r.id === publication.id), 'C6d. ...and the publication is genuinely gone from the catalog — this capability also works correctly, it is simply never invoked in production');
         }
 
-        console.log('✓ Section C: World material lifecycle — ACTUAL GAP. Acquisition and observation are complete; removal is not. RemoveWorldPlacementUseCase and UnpublishDocumentUseCase both exist, are both correct (proven directly above against the same real collaborators tests/WorldPlacement.test.js and tests/PublicationLifecycle.test.js already exercise), and are both composed at their own composition roots — but neither has a single reachable call site in any UI component, view, or command. A Wanderer who places a Publication in the shared World, or a Publisher who wants to retract one, has no path to do either today. This is a genuine, narrow, already-half-built product gap, not a missing architectural seam.');
+        console.log('✓ Section C: World material lifecycle — PARTIALLY CLOSED as of 0.9.197. RemoveWorldPlacementUseCase and UnpublishDocumentUseCase both exist and are both correct (proven directly above against the same real collaborators tests/WorldPlacement.test.js and tests/PublicationLifecycle.test.js already exercise). 0.9.197 (World Placement Removal UI Action) gave RemoveWorldPlacementUseCase a reachable call site — WorldNavigationSession.removePlacement(), wired to a "Remove from World" action on PlacementInfoPanel (see tests/WorldPlacementRemovalUIAction.test.js). UnpublishDocumentUseCase remains unwired: a Publisher who wants to retract a Publication still has no path to do so today — left for 0.9.198 by this milestone\'s own design.');
     }
 
     // ---------------------------------------------------------------

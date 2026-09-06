@@ -11,6 +11,7 @@ import { StructureDocumentResolver } from './StructureDocumentResolver.js';
 import { PublishDocumentUseCase } from './PublishDocumentUseCase.js';
 import { PlacePublicationUseCase } from './PlacePublicationUseCase.js';
 import { MoveWorldPlacementUseCase } from './MoveWorldPlacementUseCase.js';
+import { RemoveWorldPlacementUseCase } from './RemoveWorldPlacementUseCase.js';
 import { GridPlacementStrategy } from './InitialPlacementStrategy.js';
 import { CreateCommandRegistryUseCase } from './CreateCommandRegistryUseCase.js';
 import { CreateBrickRegistryUseCase } from './CreateBrickRegistryUseCase.js';
@@ -130,6 +131,15 @@ export class CreateWorldViewUseCase {
             placementRegistry,
             null,
             identityProvider
+        );
+        // 0.9.197 — World Placement Removal UI Action. The mirror
+        // capability to moveWorldPlacementUseCase above: takes a
+        // placement OUT of the spatial index and placement registry
+        // without touching the Publication, the Document, or its
+        // material — see RemoveWorldPlacementUseCase's own header.
+        const removeWorldPlacementUseCase = new RemoveWorldPlacementUseCase(
+            spatialIndexProvider,
+            placementRegistry
         );
         const initialPlacementStrategy = new GridPlacementStrategy();
 
@@ -503,6 +513,9 @@ export class CreateWorldViewUseCase {
                     // movePlacement.
                     placementRegistry,
                     moveWorldPlacementUseCase,
+                    // 0.9.197: the removal counterpart — see
+                    // getPlacementInfo/removePlacement.
+                    removeWorldPlacementUseCase,
                     // 0.2.26: search/navigation — see searchWorld/
                     // getDocumentsAtPosition.
                     searchWorldUseCase,

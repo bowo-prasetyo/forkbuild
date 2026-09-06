@@ -1089,6 +1089,35 @@ export default {
             refreshSpatialUI();
         }
 
+        // 0.9.197 — World Placement Removal UI Action. The mirror of
+        // onMovePlacement above, and just as thin: this view only
+        // resolves WHICH placement the panel was showing (via the
+        // `info` PlacementInfoPanel already emitted 'remove' for) and
+        // hands it to WorldNavigationSession.removePlacement() —
+        // RemoveWorldPlacementUseCase remains the sole authority for
+        // actually removing it. `info.placementId` is passed through as
+        // the compare-and-swap guard (see removePlacement()'s own
+        // header) rather than just `info.documentId`, so a placement
+        // that changed underneath this stale panel since it was
+        // rendered is never silently removed in place of whatever
+        // replaced it.
+        //
+        // No local "it's gone" state to set here: placementInfo is
+        // ENTIRELY derived from session.getPlacementInfo() inside
+        // refreshSpatialUI() (see its own comment there), so once the
+        // placement registry no longer has a record for this document,
+        // the next refresh already makes placementInfo null and the
+        // panel disappears on its own — the same collapse a document
+        // that was never placed at all already produces.
+        function removePlacementFromPanel(info) {
+            if (!info) return;
+            guarded(() => {
+                session.removePlacement(info.documentId, info.placementId);
+                feedback.show('Placement removed from World');
+            });
+            refreshSpatialUI();
+        }
+
         // Tool switching (Select/Place) — REMOVED (0.5.9). World View
         // only ever has one "mode" left: look around and pick/hover for
         // focus and inspection. See docs/Principles.md, "World View
@@ -3267,6 +3296,7 @@ export default {
             openPlacementEditor,
             closePlacementEditor,
             onMovePlacement,
+            removePlacementFromPanel,
             searchResults,
             catalogEmpty,
             performSearch,
@@ -4021,6 +4051,7 @@ export default {
                     :info="placementInfo"
                     @focus="focusWorld(placementInfo.documentId)"
                     @move="openPlacementEditor(placementInfo)"
+                    @remove="removePlacementFromPanel(placementInfo)"
                     @view-here="openLocationDocuments(placementInfo.position)"
                 />
                 <AvatarInfoPanel
