@@ -75521,3 +75521,149 @@ recovery be offered anywhere other than at document-open time (for
 example, mid-session if a second tab autosaves the same document) —
 deliberately out of scope here, per this milestone's own exclusion
 list, and not assumed into existence now either.
+
+## 0.9.205 — Editor Autosave & Recovery Lifecycle Audit
+
+Test-only architectural/E2E audit, exactly what 0.9.204's own
+integration work asked for next: not another recovery feature, but
+proof that autosave/recovery stays correct once the Editor lifecycle,
+document identity, edits, saves, recovery actions, and mounting/
+unmounting all interact with each other, not just individually.
+
+`tests/EditorAutosaveRecoveryLifecycleAudit.test.js` drives the same
+real, framework-agnostic collaborators
+`tests/EditorAutosaveRecoveryUIIntegration.test.js` already exercises
+(`EditorView.js` still cannot be mounted in this repo's plain
+`node tests/*.test.js` sweep — see that file's own header), but under
+lifecycle pressure 0.9.204's own flagship didn't reach:
+
+- **A — autosave temporal correctness**, including two angles 0.9.204
+  didn't cover: `stop()` cancelling a timer already in flight (not
+  just pre-empting future scheduling), and a second, independent
+  "mount" of the SAME document over the SAME underlying storage (what
+  two `EditorView` instances each building their own
+  `CreatePersistenceUseCase` produce, since `LocalStorageProvider`
+  wraps the one shared `window.localStorage`) never duplicating an
+  autosave write.
+- **B — recovery observer identity** through a full dirty → clean →
+  dirty → undo → redo cycle on one document, including an actual
+  explicit Save in the middle: exactly one recovery probe for the
+  whole sequence, proving the identity gate holds up against every
+  kind of state churn, not just `markDirty()` called directly.
+- **C — recover/discard are synchronous**, and each produces exactly
+  its own resulting state (never the other's) from an identical
+  starting position — no manufactured async race machinery, per this
+  audit's own brief, since the real use cases have none.
+- **D — recovery becomes ordinary editing again.** Recover → mark
+  dirty → a live `AutosaveScheduler` picks up a further edit and
+  writes a NEW checkpoint with a higher revision than the one just
+  recovered — proving recovered content is not a special case
+  anywhere, and confirming (a genuinely subtle point) that
+  `RecoverDocumentUseCase` itself never retires the checkpoint it
+  reads: only a later Save or Discard does, so a crash between
+  Recover and Save still leaves something to recover.
+- **E — save-after-recovery closure**, run once with the scheduler
+  and observer both live for the ENTIRE sequence (0.9.204's own
+  flagship stopped the scheduler partway through) — no stale
+  checkpoint, and the still-running observer agrees nothing more is
+  offered.
+- **F — failure boundaries at all four collaborator seams**: the
+  recovery check, Recover, Discard, and autosave. This is where the
+  audit found a real defect (below); F2–F4 confirm the other three
+  seams were already properly isolated — a failed Recover, a failed
+  Discard, and a failed autosave write each leave `DocumentManager`
+  state and the still-running scheduler/observer completely
+  unaffected.
+- **G — the observer feedback-loop question** this milestone's own
+  brief raised by name: instrumented call counts prove document
+  IDENTITY change is the only thing that ever triggers a recovery
+  probe, and document CONTENT/dirty change is the only thing that
+  ever triggers autosave scheduling — an autosave firing never
+  publishes a `DocumentManager` state change at all (it deliberately
+  never calls `markDirty`/`markSaved`/`load`), so it structurally
+  cannot re-trigger `RecoveryObserver`. No feedback loop exists.
+- **H — Document A / Document B non-contamination** with a pending
+  autosave timer actually in flight at the moment of the switch (the
+  one angle 0.9.204's own multi-document section didn't cover):
+  switching documents cancels the in-flight timer outright, so a
+  debounced autosave can never fire against the wrong document.
+
+### The real defect this audit found
+
+`RecoveryObserver._checkCurrentDocument()` called
+`CheckRecoveryUseCase.execute()` with no failure isolation of its own,
+unlike every other place this codebase's recovery code touches
+something that can fail (`CheckRecoveryUseCase` itself catches a
+hash-mismatch and discards the bad checkpoint rather than throwing to
+its caller; `EditorView.js#recoverDocument()` wraps
+`RecoverDocumentUseCase.execute()` in try/catch). That probe runs
+**synchronously inside `DocumentManager`'s own `onStateChanged`
+publish** (`core/events/EventBus.js#publish()` has no per-listener
+isolation — one throwing listener stops its `for` loop dead, taking
+every listener registered after it down with it). A corrupted or
+momentarily unreadable checkpoint therefore didn't just fail to offer
+recovery — it threw straight out of whatever ordinary,
+recovery-unrelated operation happened to change the open document's
+identity: `EditorView.js`'s own `onMounted()` opening the initial
+document (aborting the rest of mount — the pointer/keyboard listeners
+below it would never attach), a fork, a Load, or, as this audit
+reproduced directly against `RecoveryObserver`/`DocumentManager`, an
+ordinary edit command executed immediately after a failed probe on a
+different document.
+
+Fixed with the smallest change that restores the isolation this
+codebase's own conventions already establish elsewhere: `application/
+RecoveryObserver.js#_checkCurrentDocument()` now wraps the
+`CheckRecoveryUseCase.execute()` call in a try/catch, failing safe
+(offers nothing, exactly like "no checkpoint exists") rather than
+propagating. `RecoveryObserver.js` gained no new import and no new
+architectural seam — see this milestone's own structural section (I).
+
+While tracing this, `EditorView.js#discardRecovery()` turned up with
+the matching gap `recoverDocument()` right above it didn't have: no
+try/catch around `DiscardRecoveryUseCase.execute()`. A failed discard
+there wouldn't corrupt `DocumentManager` (it never touches it), but it
+would go uncaught out of a UI click handler and skip
+`recoveryObserver.clear()`/user feedback for no reason — fixed the
+same way, mirroring `recoverDocument()`'s own existing shape exactly.
+
+Also found, while confirming the new test file would actually run:
+0.9.204's own flagship, `tests/EditorAutosaveRecoveryUIIntegration.test.js`,
+was never added to `tests.html`'s test list — every other milestone in
+this codebase's history registers its new test file there. Fixed
+alongside this milestone's own new file.
+
+```text
+0.9.201  Degraded Orphan Row Handling                               ✓
+0.9.202  Unpublished Placement Physical-Occupancy Audit              ✓
+0.9.203  Post-Lifecycle Product Reassessment                         ✓
+0.9.204  Editor Autosave & Recovery UI Integration                   ✓
+0.9.205  Editor Autosave & Recovery Lifecycle Audit                  ✓
+```
+
+### Decision
+
+The audit's own answer to "does autosave/recovery remain correct
+under lifecycle pressure" is: yes, with one real gap, now closed. The
+scheduler/observer split, the identity-gating design, and the
+Save/Autosave/Recover/Discard boundaries 0.2.6 and 0.9.204 established
+all held up under dirty/clean churn, repeated mounting, multi-document
+switching (including an in-flight timer at the moment of a switch),
+and recovered content re-entering ordinary editing. The one place that
+didn't hold up — an unguarded recovery-check failure breaking whatever
+ordinary operation triggered it — is now a two-line try/catch, in
+keeping with the isolation posture every other recovery collaborator
+in this codebase already followed.
+
+### Recommendation
+
+Per this milestone's own brief, the next milestone is deliberately
+left undecided rather than invented: no defect of any size remains
+open in this area, so there is nothing narrow left to fix here. A
+future 0.9.206 should be a fresh product reassessment (mirroring
+0.9.203's own role after 0.9.202), not another audit of the same seam
+and not one of the explicitly excluded features this milestone's own
+brief named (debounce redesign, configurable interval, recovery
+history/versions/TTL, conflict resolution, cloud or cross-device
+recovery, crash-detection machinery, or a new document lifecycle
+state) — none of which this audit's findings motivate.

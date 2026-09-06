@@ -77,8 +77,24 @@ export class RecoveryObserver {
             this._setStatus(null);
             return;
         }
-        const result = this._checkRecoveryUseCase.execute(documentId);
-        this._setStatus(result.available ? result : null);
+        // The probe runs synchronously inside DocumentManager's own
+        // onStateChanged publish (see core/events/EventBus.js#publish() —
+        // one throwing listener stops the for-loop dead, so an
+        // unguarded throw here would propagate out through whatever
+        // ordinary operation happened to change the document's identity
+        // (mount's own openDocument()/loadDocument(), a fork, a Load) and
+        // abort it midway — this milestone's own audit (0.9.205) caught
+        // exactly that with a corrupted/unreadable checkpoint. Recovery
+        // is a courtesy on top of editing, never a gate in front of it:
+        // a failed probe offers nothing (fail-safe, same as "no
+        // checkpoint") rather than taking the rest of that operation
+        // down with it.
+        try {
+            const result = this._checkRecoveryUseCase.execute(documentId);
+            this._setStatus(result.available ? result : null);
+        } catch (e) {
+            this._setStatus(null);
+        }
     }
 
     _setStatus(status) {

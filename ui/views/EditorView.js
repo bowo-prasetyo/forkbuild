@@ -1228,14 +1228,24 @@ export default {
         // "throw away the autosaved work." Straight through
         // DiscardRecoveryUseCase; the currently open document (saved or
         // not) is never touched.
+        //
+        // 0.9.205 — wrapped in the SAME try/catch shape recoverDocument()
+        // above already uses: a discard failure (e.g. the checkpoint's
+        // own storage entry is unreadable) must not leave the banner
+        // showing a stale offer with no explanation, and must not go
+        // uncaught out of a UI click handler.
         function discardRecovery() {
             if (!recoveryStatus.value) {
                 return;
             }
             const documentId = recoveryStatus.value.documentId;
-            discardRecoveryUseCase.execute(documentId);
-            recoveryObserver.clear();
-            feedback.show('Discarded the recovered checkpoint');
+            try {
+                discardRecoveryUseCase.execute(documentId);
+                recoveryObserver.clear();
+                feedback.show('Discarded the recovered checkpoint');
+            } catch (e) {
+                feedback.show(`Discard failed: ${e.message}`);
+            }
         }
 
         // Toolbar's own "← Back to World"/"Save & Return to World" —
