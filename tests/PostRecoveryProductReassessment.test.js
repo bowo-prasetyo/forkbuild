@@ -222,40 +222,55 @@ async function runTests() {
             assert(navigationSessionSource.includes(method), `C3d. WorldNavigationSession.js still declares ${method}`);
         }
 
-        // C4 — and, unlike the 0.9.203 recovery finding (which at least had
-        // ONE consumer, CreatePersistenceUseCase, correctly composed with no
-        // caller), this capability has NO UI caller anywhere in the app:
-        // not WorldView.js (the only UI that constructs a WorldNavigationSession
-        // via CreateWorldViewUseCase), not EditorView.js, not any component.
+        // C4 — UPDATE (0.9.207): at the time THIS milestone (0.9.206) ran,
+        // no UI anywhere called any of this stack. 0.9.207 ("World View
+        // History Timeline UI Integration") gave it exactly one caller —
+        // ui/views/WorldView.js, the same single composition root C3
+        // above already named — through a new dumb presentation
+        // component, ui/components/HistoryTimelinePanel.js. Every OTHER
+        // UI file this section originally swept remains untouched, so
+        // the "zero references" proof stays valid everywhere except the
+        // one file 0.9.207 changed.
         const uiFiles = [
-            'ui/views/EditorView.js', 'ui/views/WorldView.js', 'ui/views/LiveWorldView.js',
+            'ui/views/EditorView.js', 'ui/views/LiveWorldView.js',
             'ui/views/HomeView.js', 'ui/views/RecentWorldsView.js', 'ui/views/RepositoryView.js', 'ui/main.js'
         ];
         for (const identifier of ['getTimeline', 'restoreHistoryAt', 'beginHistoryPreview', 'previewHistoryAt', 'cancelHistoryPreview', 'getHistoryPreview']) {
             for (const file of uiFiles) {
                 const source = await rawSource(file);
-                assert(countReferences(source, identifier) === 0, `C4. ${file} never references ${identifier}`);
+                assert(countReferences(source, identifier) === 0, `C4. ${file} still never references ${identifier}`);
             }
         }
+        const worldViewSource = await rawSource('ui/views/WorldView.js');
+        for (const identifier of ['getTimeline', 'restoreHistoryAt', 'beginHistoryPreview', 'previewHistoryAt', 'cancelHistoryPreview']) {
+            assert(countReferences(worldViewSource, identifier) > 0, `C4a. (post-0.9.207) WorldView.js now references ${identifier}`);
+        }
+        // getHistoryPreview() specifically stays uncalled: WorldView.js
+        // mirrors the previewed cursor in its own local ref the instant
+        // previewHistoryAt() returns, rather than re-querying the
+        // session for it — session._historyPreview remains the single
+        // source of truth either way (see WorldView.js's own
+        // historyPreviewCursor comment), so this is not a gap 0.9.207
+        // left half-closed.
+        assert(countReferences(worldViewSource, 'getHistoryPreview') === 0, 'C4b. (post-0.9.207) WorldView.js still never calls getHistoryPreview() — it mirrors the cursor locally instead');
 
-        // C5 — this is not merely "one convenience feature is missing." A
-        // specific, load-bearing design rationale documents WHY undo/redo
-        // and this exact history/replay machinery were deliberately kept in
-        // WorldNavigationSession when 0.5.9 stripped every other mutation
-        // capability out of it: "a viewer's landmark edit needs to be
-        // undoable too" (docs/Principles.md, "World View Observes and
-        // Navigates; Editor Mutates and Builds (0.5.9)"). That stated
-        // requirement is not met in practice: WorldView.js never calls
-        // session.undo()/redo() either, so a landmark rename or region
-        // deletion has no way to be undone today, despite the very
-        // capability being kept specifically to make that possible.
+        // C5 — UPDATE (0.9.207): the design rationale (C5a) and the
+        // literal absence of session.undo()/session.redo() calls (C5b)
+        // are BOTH still exactly true — 0.9.207 deliberately did not wire
+        // plain undo/redo, only the timeline/preview/restore surface (see
+        // docs/Roadmap.md, 0.9.207). What changed is the CONCLUSION this
+        // section originally drew from C5b: "a landmark rename or region
+        // deletion has no way to be undone today" is no longer accurate.
+        // Undo now has a real, if less direct, path — open History,
+        // select the entry immediately before the unwanted one, Restore —
+        // even though the plain undo()/redo() keyboard-shortcut-shaped
+        // affordance C5b checks for still has no caller of its own.
         assert(/a viewer's landmark edit needs to be undoable too/.test(await rawSource('docs/Principles.md')), 'C5a. 0.5.9\'s own documented rationale for keeping undo/redo + history/replay is still on record');
         for (const identifier of ['undo', 'redo']) {
-            const source = await rawSource('ui/views/WorldView.js');
-            assert(!new RegExp(`session\\.${identifier}\\(`).test(source), `C5b. WorldView.js still never calls session.${identifier}() — the documented rationale has no caller`);
+            assert(!new RegExp(`session\\.${identifier}\\(`).test(worldViewSource), `C5b. (post-0.9.207) WorldView.js still never calls session.${identifier}() — 0.9.207 wired History Timeline UI Integration, not plain undo/redo`);
         }
 
-        console.log('✓ Section C: World material/document lifecycle — ACTUAL GAP. 0.9.203\'s autosave/recovery finding is closed (reconfirmed above) and did not create a new unreachable operation. A separate, older capability — CommandHistory\'s timeline plus ReplayDocumentUseCase/RestoreHistoryStateUseCase, exposed as WorldNavigationSession#getTimeline()/beginHistoryPreview()/previewHistoryAt()/cancelHistoryPreview()/restoreHistoryAt() — is correct (proven directly above), composed by CreateWorldViewUseCase, and kept alive on purpose by 0.5.9\'s own design record specifically so a viewer\'s landmark edit stays undoable. No UI anywhere calls any of it: not a history/timeline panel, not even a plain undo keyboard shortcut in World View. Existing capability, missing UI reachability — a small integration, not a new domain feature.');
+        console.log('✓ Section C: World material/document lifecycle — ACTUAL GAP AT THE TIME, CLOSED BY 0.9.207. CommandHistory\'s timeline plus ReplayDocumentUseCase/RestoreHistoryStateUseCase, exposed as WorldNavigationSession#getTimeline()/beginHistoryPreview()/previewHistoryAt()/cancelHistoryPreview()/restoreHistoryAt(), were all correct (proven directly above) and composed by CreateWorldViewUseCase, but nothing in the UI tree called any of it at the time this milestone ran. 0.9.207 (\'World View History Timeline UI Integration\') gave WorldView.js a History panel wired straight to that existing machinery — no new history semantics, no new document lifecycle states. Plain session.undo()/redo() still has no caller (C5b, unchanged), but a viewer can now undo a landmark/region edit by restoring to the entry before it, which is the concrete need 0.5.9\'s own design record named.');
     }
 
     // ---------------------------------------------------------------
@@ -441,12 +456,12 @@ async function runTests() {
 Classification summary:
   A. World interaction/navigation ....... COMPLETE
   B. Vehicle system ...................... INTENTIONAL_BOUNDARY
-  C. World material/document lifecycle ... ACTUAL_GAP (Document history timeline/replay/restore: existing capability + missing UI -> small integration)
+  C. World material/document lifecycle ... ACTUAL_GAP AT THE TIME -> CLOSED BY 0.9.207 (Document history timeline/replay/restore: existing capability + missing UI -> small integration)
   D. Publication workflow ................ COMPLETE
   E. Editor/document workflow ............ COMPLETE (one obsolete, fully-superseded file: ui/components/GroupsPanel.js)
   F. 0.9.205 recovery boundary ............ CONFIRMED CLOSED (regression only)
 
-Candidate gaps:
+Candidate gaps (as they stood when THIS milestone, 0.9.206, ran):
   1. Document History Timeline — View & Restore
      - existing capability?         yes (CommandHistory.getTimeline/replay(), unchanged since 0.1.40/0.1.41)
      - existing use case?           yes (ReplayDocumentUseCase, RestoreHistoryStateUseCase)
@@ -456,12 +471,17 @@ Candidate gaps:
      - intentional boundary?        no — 0.5.9's own design record states the OPPOSITE intent: this
                                      machinery was deliberately KEPT so a viewer's landmark edit stays
                                      undoable, but nothing was ever built to call it
+     - UPDATE (0.9.207): closed. ui/views/WorldView.js now composes a
+       History panel (ui/components/HistoryTimelinePanel.js) wired
+       straight to getTimeline()/beginHistoryPreview()/previewHistoryAt()/
+       cancelHistoryPreview()/restoreHistoryAt() — see Section C above.
+       Plain session.undo()/redo() still has no caller; that was never
+       what this candidate gap named.
 
-Per this milestone's own brief, no next milestone is prescribed here —
-this reassessment stops at classification. Whether and how to surface a
-history/timeline UI (a full scrubber panel vs. a minimal undo keyboard
-shortcut vs. leaving it as documented-but-manual) is a product decision,
-not one this test-only milestone makes on its own.
+At the time this milestone (0.9.206) ran, its own brief said no next
+milestone was prescribed — this reassessment stopped at classification.
+0.9.207 subsequently took up the candidate gap above; see
+docs/Roadmap.md's own 0.9.207 entry for that milestone's record.
 `);
 }
 

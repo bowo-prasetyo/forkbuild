@@ -5809,3 +5809,43 @@ html, body {
     font-size: 12px;
     color: #808080;
 }
+
+/* 0.9.207 — World View History Timeline UI Integration.
+   ui/components/HistoryTimelinePanel.js reuses the same .modal-overlay/
+   .modal-panel/.locations-panel-item language every other list-style
+   panel here already uses (see 0.5.5's own note on
+   GeographicPlaceDirectoryPanel above) — rows are clickable exactly like
+   that panel's, plus three state modifiers unique to a history entry:
+   selected (this milestone's own explicit-selection affordance),
+   future (an undone, redo-branch entry — CommandHistory.getTimeline()'s
+   own `applied: false`, not a new concept), and previewing (mirrors
+   WorldNavigationSession#getHistoryPreview()'s own cursor). */
+.history-timeline-panel {
+    width: 460px;
+}
+
+.history-timeline-list .locations-panel-item {
+    cursor: pointer;
+}
+
+.history-timeline-list .locations-panel-item:hover {
+    border-color: #4caf7d;
+}
+
+.history-timeline-item--selected {
+    border-color: #4caf7d;
+}
+
+.history-timeline-item--future {
+    opacity: 0.6;
+}
+
+.history-timeline-item--previewing .locations-panel-item-title {
+    color: #4caf7d;
+}
+
+.history-timeline-actions {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
