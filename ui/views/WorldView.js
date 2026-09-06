@@ -5,6 +5,7 @@ import { CreateWorldViewUseCase } from '../../application/CreateWorldViewUseCase
 import { CreateDiscoveryUseCase } from '../../application/CreateDiscoveryUseCase.js';
 import { InputRouter } from '../../application/InputRouter.js';
 import { WorldSpatialContextService } from '../../application/WorldSpatialContextService.js';
+import { AutomaticSnapshotEncounterCascade } from '../../application/AutomaticSnapshotEncounterCascade.js';
 import ActionFeedback from '../components/ActionFeedback.js';
 import DocumentInfoPanel from '../components/DocumentInfoPanel.js';
 import MetadataEditorDialog from '../components/MetadataEditorDialog.js';
@@ -579,6 +580,32 @@ export default {
             deviceAuthorizationPropagationUseCase: deviceAuthorizationUseCase
         });
         const session = worldViewFactory.createSession(registry);
+        // 0.9.187 — Automatic Snapshot Encounter Cascade. Composes the SAME
+        // `resolveSelectedSnapshotCommand`/`materializeSelectedSnapshotCommand`/
+        // `worldDiscoverySourceRegistry` already injected above (and already
+        // handed to `OwnPublicationPanel`'s own explicit
+        // Resolve/Materialize/Register buttons, untouched by this
+        // milestone) with two small new lookups this SAME `session` now
+        // exposes (`getPlacementInfoForPublication`/`findPublicationById`,
+        // 0.9.187) — never a second resolver, materializer, or registry.
+        // Scoped to this WorldView's own mount, exactly like `session`
+        // itself: a fresh cascade (and therefore a fresh idempotency map,
+        // see that file's own header) accompanies each fresh session,
+        // rather than persisting across an unrelated later visit to a
+        // World route. See `refreshSpatialUI()`, below, for the one call
+        // site that feeds it `worldSnapshotDiscoveryMonitor`'s own
+        // just-produced `lastResult`.
+        const automaticSnapshotEncounterCascade = new AutomaticSnapshotEncounterCascade({
+            resolveSelectedSnapshotCommand,
+            materializeSelectedSnapshotCommand,
+            worldDiscoverySourceRegistry,
+            resolvePlacementInfo: (publicationId) => (typeof session.getPlacementInfoForPublication === 'function'
+                ? session.getPlacementInfoForPublication(publicationId)
+                : null),
+            findPublicationById: (publicationId) => (typeof session.findPublicationById === 'function'
+                ? session.findPublicationById(publicationId)
+                : null)
+        });
         // 0.3.6 — World Discovery & Exploration. Spatial context service
         // derives location descriptions, nearby structures, and collaborator
         // positions from the viewer's current position and deterministic
@@ -1092,13 +1119,33 @@ export default {
             // its own. The monitor's own shouldRefreshSnapshotDiscovery()
             // decision boundary silently no-ops most of these calls — only
             // a meaningful World-area change ever results in an actual
-            // discovery call. Its returned promise is intentionally never
-            // awaited here: a background discovery call's own result is
-            // for later, explicit, unscheduled UI (see docs/Roadmap.md's
-            // own 0.9.186 entry) to act on — never anything this tick
-            // itself waits on or renders.
+            // discovery call.
+            //
+            // 0.9.187 — Automatic Snapshot Encounter Cascade. Once that
+            // observation has settled, whatever the monitor's own
+            // `lastResult` now holds (unchanged, `[]`, or a freshly
+            // discovered candidate array — this view never distinguishes
+            // which) is handed, one candidate at a time, IN THE SAME ORDER,
+            // to `automaticSnapshotEncounterCascade.processCandidate()`.
+            // Re-feeding an UNCHANGED `lastResult` on a tick that triggered
+            // no fresh discovery call is harmless and deliberate — the
+            // cascade's own idempotency (keyed on
+            // `publicationId:contentHash`, never on this call site) is what
+            // makes every one of these repeats a no-op past the first, not
+            // any dedup this view performs. This promise, too, is
+            // intentionally never awaited: driving a discovered candidate
+            // to resolution/materialization/placement/registration is a
+            // background concern this tick never blocks on or renders
+            // directly — a successful registration becomes visible only
+            // through the ordinary, unmodified WorldEncounterCanvas
+            // rendering pipeline once it re-reads worldDiscoverySourceRegistry.
             if (worldSnapshotDiscoveryMonitor && spatialContext.value) {
-                worldSnapshotDiscoveryMonitor.observe(spatialContext.value);
+                worldSnapshotDiscoveryMonitor.observe(spatialContext.value).then(() => {
+                    const candidates = worldSnapshotDiscoveryMonitor.lastResult;
+                    if (automaticSnapshotEncounterCascade && Array.isArray(candidates)) {
+                        candidates.forEach((candidate) => automaticSnapshotEncounterCascade.processCandidate(candidate));
+                    }
+                });
             }
 
             // 0.5.1 — World Maps & Geographic Navigation. Re-read on the
