@@ -1118,6 +1118,44 @@ export default {
             refreshSpatialUI();
         }
 
+        // 0.9.198 — Publication Unpublish/Retract UI Action. The mirror
+        // of removePlacementFromPanel above, one authority up: this view
+        // only resolves WHICH document/publication OwnPublicationPanel
+        // was showing (via the `publication` object it already received
+        // as a prop) and hands it to
+        // WorldNavigationSession.unpublishDocument() —
+        // UnpublishDocumentUseCase remains the sole authority for
+        // actually retracting it. `publication.id` is passed through as
+        // the SAME compare-and-swap guard `info.placementId` already is
+        // above, so a Publication that changed underneath this stale
+        // panel since it was rendered is never silently unpublished in
+        // place of whatever replaced it.
+        //
+        // No local "it's unpublished" state to set here: ownPublication,
+        // like activePlacementInfo, is ENTIRELY derived from
+        // session.getPublicationForDocument() inside refreshSpatialUI()
+        // (see its own comment there), so once the catalog no longer
+        // has a record for this document, the next refresh already
+        // makes ownPublication null and OwnPublicationPanel's own
+        // publication detail collapses on its own — the same "null when
+        // the question doesn't apply" rule activePlacementInfo already
+        // follows. This deliberately never touches activePlacementInfo
+        // or the placement registry itself — see
+        // WorldNavigationSession.unpublishDocument()'s own header for
+        // the documented (not invented) consequence of a placement
+        // becoming unresolvable through the document-keyed path once
+        // its governing Publication is gone.
+        function unpublishOwnPublication(publication) {
+            if (!publication) return;
+            guarded(() => {
+                const removed = session.unpublishDocument(publication.documentId, publication.id);
+                if (removed) {
+                    feedback.show('Publication unpublished');
+                }
+            });
+            refreshSpatialUI();
+        }
+
         // Tool switching (Select/Place) — REMOVED (0.5.9). World View
         // only ever has one "mode" left: look around and pick/hover for
         // focus and inspection. See docs/Principles.md, "World View
@@ -3297,6 +3335,7 @@ export default {
             closePlacementEditor,
             onMovePlacement,
             removePlacementFromPanel,
+            unpublishOwnPublication,
             searchResults,
             catalogEmpty,
             performSearch,
@@ -3521,10 +3560,17 @@ export default {
                      handed to OwnPublicationPanel too, unchanged, so
                      "Register Placed Snapshot" mutates the EXACT registry
                      WorldEncounterCanvas is already subscribed to,
-                     never a second, disconnected one. -->
+                     never a second, disconnected one.
+
+                     0.9.198 — unpublishCommand is unpublishOwnPublication,
+                     below: a thin wrapper around
+                     session.unpublishDocument(), mirroring
+                     removePlacementFromPanel's own wrap of
+                     session.removePlacement() one authority up. -->
                 <OwnPublicationPanel
                     v-if="cameraPosition"
                     :publication="ownPublication"
+                    :unpublishCommand="unpublishOwnPublication"
                     :snapshotDistributionCommand="distributeWorldEncounterSnapshot"
                     :discoverSnapshotCommand="discoverOwnSnapshot"
                     :discoverSnapshotCandidatesCommand="discoverSnapshotCandidatesCommand"

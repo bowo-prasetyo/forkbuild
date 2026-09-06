@@ -74617,3 +74617,145 @@ that use case already performs one. Once both actions exist independently,
 0.9.199 is the natural place to ask the one question this milestone
 deliberately still leaves open: what a placement pointing at an unpublished
 Publication should look like to a Wanderer who encounters it.
+
+## 0.9.198 — Publication Unpublish / Retract UI Action
+
+0.9.197's own recommendation, taken directly: the other half of 0.9.196's
+Section C gap, closed the same shape as 0.9.197 — one seam, no new domain
+logic, at the layer directly above.
+
+**One seam, no new domain logic.** `application/UnpublishDocumentUseCase.js`
+was already correct (`tests/PublicationLifecycle.test.js`'s own invariants
+5/6 and flagship already proved it) — the ONLY thing missing was a UI path
+that reaches it. This milestone adds exactly that path and nothing else:
+
+- `application/WorldNavigationSession.js` — a new
+  `unpublishDocument(documentId, expectedPublicationId)` method mirrors
+  `removePlacement()` one authority up: it resolves WHICH Publication the
+  document currently has (via the SAME `_resolvePublicationForPlacement()`
+  `getPublicationForDocument()` already uses — never trusting a raw id
+  from the caller alone) and delegates the actual retraction to
+  `UnpublishDocumentUseCase`, completely unmodified.
+  `expectedPublicationId` is the identical optional compare-and-swap guard
+  `removePlacement()`'s own `expectedPlacementId` already established —
+  when the freshly resolved Publication no longer matches the id a
+  caller's own (possibly stale) `OwnPublicationPanel` read, this refuses
+  to retract whatever now governs that document rather than silently
+  unpublishing a replacement out from under whoever republished it.
+- `application/CreateWorldViewUseCase.js` — wires an
+  `UnpublishDocumentUseCase(publisherProvider)` into the real World View
+  composition root, the SAME `publisherProvider` `publishDocumentUseCase`
+  already writes through.
+- `ui/components/OwnPublicationPanel.js` — one new "Unpublish" button,
+  disabled unless a `publication` exists, calling an injected
+  `unpublishCommand(publication)` prop — the SAME "command prop, never a
+  raw use case import" shape every other real-I/O action in this file
+  (Distribute/Discover/Materialize/Register) already uses. Synchronous,
+  with no executing/error state of its own: `UnpublishDocumentUseCase`
+  performs no network I/O, the same reason `placeMaterializedSnapshot()`/
+  `registerMaterializedSnapshot()` (0.9.159/0.9.160) hold none either.
+- `ui/views/WorldView.js` — `unpublishOwnPublication()` forwards the
+  panel's own `publication` object into `session.unpublishDocument()`
+  inside the same `guarded()` wrapper `removePlacementFromPanel()`
+  already uses, then calls `refreshSpatialUI()`. No new "unpublished" UI
+  state: `ownPublication` is entirely derived from
+  `getPublicationForDocument()` every refresh, so once the catalog has no
+  record left, the panel's own publication detail disappears through the
+  exact same `v-if="publication"` path a never-published document
+  already takes.
+
+**No new ownership rule.** `UnpublishDocumentUseCase`/
+`LocalPublisherProvider.unpublish()` enforce no ownership check today, so
+`unpublishDocument()` invents no UI-only one either — it performs exactly
+the resolution `removePlacement()` performs (which document, which
+current id) and nothing more. Documented directly, not just assumed:
+Section G of `tests/PublicationUnpublishUIAction.test.js` proves a session
+authenticated as a different identity can still retract someone else's
+Publication, matching the raw use case's own already-permissive behavior
+exactly — a pre-existing gap this milestone does not attempt to close
+either, per its own "no new ownership semantics" exclusion.
+
+**A genuine, documented (not invented) discovery.** Because
+`getPlacementInfo()`/`movePlacement()`/`removePlacement()` all resolve a
+placement BY WAY OF the document's current Publication, unpublishing a
+document immediately orphans any EXISTING placement from that SAME
+document-keyed lookup — even though the raw `PlacementRecord` is never
+touched, and remains directly reachable via
+`getPlacementInfoForPublication(publicationId)`, which bypasses
+`discoveryProvider` entirely. This is a pre-existing consequence of how
+placement resolution already worked, surfaced (never fixed or papered
+over) by this milestone's own Section D — see the Recommendation below.
+
+**Unpublish is not removal, and the tests prove it structurally, not just
+by assertion.** `tests/PublicationUnpublishUIAction.test.js` runs a real
+publish → place → render → Unpublish → verify-gone flagship against the
+same real collaborators `tests/PublicationLifecycle.test.js` and
+`tests/WorldPlacementRemovalUIAction.test.js` already use, with pre/post
+state captured separately exactly as this milestone's own safety
+invariant required, then spends most of its length on the negative space:
+
+- Unpublishing document A never touches document B (Section B).
+- An already-unpublished document, or one never published at all, makes
+  `unpublishDocument()` throw a clear error at the resolution layer —
+  the same "throw at resolution, no-op at the storage layer" split
+  `removePlacement()` already established — never a fabricated
+  "already unpublished" status (Section C).
+- The orphaned-placement discovery above is exercised directly: the raw
+  `PlacementRecord`, the spatial index, and the publicationId-keyed
+  lookup all survive byte-identical; only the document-keyed lookup goes
+  null (Section D).
+- Content-addressed material survives untouched, and
+  `UnpublishDocumentUseCase.js`'s own CODE (never its header prose, which
+  names Snapshot/Nostr/Arweave/Placement only to disclaim them) carries
+  none of that vocabulary at all (Section E).
+- No `isUnpublished`/`publicationRemoved` field exists anywhere in
+  production; the existing `getPublicationForDocument()` read model is
+  the sole source of truth (Section F).
+- No ownership check was invented (Section G, above).
+- A structural sweep confirms neither `OwnPublicationPanel.js` nor
+  `WorldView.js` ever names the raw `UnpublishDocumentUseCase` directly —
+  `WorldNavigationSession` remains the only thing either file talks to
+  (Section H).
+
+`tests/ArchitectureReassessmentProductGapAudit.test.js` (0.9.196) is
+updated in place rather than left to fail: Section C's finding is now
+FULLY CLOSED (both halves), and Section D's assertion that no
+unpublish-shaped handler exists is flipped to confirm exactly one now
+does.
+
+**Deliberately excluded**, matching 0.9.197's own "no new semantics"
+framing: automatic placement removal, Snapshot unregistration, Nostr
+withdrawal, Arweave deletion, material deletion, new Publication
+lifecycle enums, confirmation/undo workflows, automatic Snapshot changes,
+new Publication discovery semantics, and any new ownership rule beyond
+what `UnpublishDocumentUseCase` already (does not) enforce.
+
+```text
+0.9.194  Automatic Snapshot Session-Lifetime Guard E2E Audit         ✓
+0.9.195  Automatic Snapshot Subsystem Boundary & Convergence Audit   ✓
+0.9.196  Architecture Reassessment / Product Gap Audit               ✓
+0.9.197  World Placement Removal UI Action                          ✓
+0.9.198  Publication Unpublish / Retract UI Action                  ✓
+```
+
+### Recommendation
+
+Both halves of 0.9.196's Section C gap are now closed, each with its own
+independent, dedicated E2E audit. What remains is the exact question
+0.9.197's own recommendation named and 0.9.198's own Section D just
+proved is real, not speculative: a placement can now point at a
+Publication that no longer exists in the catalog, reachable today only
+through `getPlacementInfoForPublication()`'s own bypass path, invisible
+through the ordinary document-keyed one. I would recommend **0.9.199 — a
+small Removal/Retraction Lifecycle Convergence Audit**: confirm, with
+real running code (never speculation), that "Remove from World" and
+"Unpublish" are genuinely two independent mutations over two independent
+domains that happen to share one World-observation surface — never one
+disguised as two, and never quietly coupled to each other going forward
+— and decide, deliberately, what (if anything) a Wanderer should be told
+when they encounter an orphaned placement. This should stay a small,
+targeted audit, not another full subsystem sweep: the two mutations are
+already proven correct and independently reachable; only their
+convergence at the observation layer is still an open question. After
+that, per 0.9.196's own original framing, it is worth pausing and
+reassessing the product again before opening a new subsystem.
