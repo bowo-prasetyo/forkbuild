@@ -1725,9 +1725,29 @@ export default {
             // re-read there for the LOCAL "can I edit" label, but
             // nothing on that cadence ever told OTHER peers this
             // replica's activity changed).
+            //
+            // 0.9.218 — refreshWorldPresenceActivity() is wrapped in its
+            // own try/catch, isolated from the pre-existing roster
+            // refresh beside it. onWorldMembershipChanged() is a SHARED
+            // callback invoked SYNCHRONOUSLY from inside
+            // application/WorldMembershipUseCase.js's own
+            // grantEdit()/_applyGrant() — an uncaught throw here does not
+            // merely fail silently in this view, it unwinds back through
+            // that use case's own event publish and skips its OWN
+            // subsequent network broadcast, breaking a grant/revocation
+            // for every peer, not just this replica's presence. See
+            // tests/WorldPresenceMembershipRefreshLifecycleAudit.test.js's
+            // own Section H for the failing case this closes.
             unsubscribeWorldMembership = session.onWorldMembershipChanged(presentWorldDocumentId, () => {
                 worldMembers.value = session.listWorldMembers(presentWorldDocumentId);
-                session.refreshWorldPresenceActivity(presentWorldDocumentId);
+                try {
+                    session.refreshWorldPresenceActivity(presentWorldDocumentId);
+                } catch {
+                    // Best-effort, exactly like WorldPresenceUseCase's own
+                    // _broadcast() catch — a failure re-deriving this
+                    // replica's OWN advertised activity is never allowed
+                    // to break the membership event that triggered it.
+                }
             });
             unsubscribeWorldPresence = session.onWorldPresenceChanged(presentWorldDocumentId, (roster) => {
                 worldPresenceRoster.value = roster;
