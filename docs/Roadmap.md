@@ -76647,3 +76647,143 @@ pressure. The natural next step is another product reassessment sweep
 genuine unreached capability still remains in this lifecycle, or whether
 the next milestone worth taking up lies outside it entirely — not another
 incremental UI feature assumed by default.
+
+## 0.9.212 — Post-Undo/Redo Product Reassessment
+
+Test-only. No production changes. 0.9.211's own closing recommendation
+asked for exactly this, in the shape 0.9.196/0.9.203/0.9.206/0.9.209
+already established: a fresh sweep of the same broad product areas, now
+that the entire World View Undo/Redo arc (0.9.209 candidate, 0.9.210 UI,
+0.9.211 lifecycle audit) is closed. Two disciplines are added this time,
+per this milestone's own brief: Snapshot gets its own row for the first
+time (previously only touched inside "cross-cutting lifecycle
+integrity"), and a repository-wide sweep is run explicitly for OTHER
+"composed but UI-unreachable" application-level capabilities and OTHER
+superseded-but-undeleted files beyond the already-known
+`ui/components/GroupsPanel.js` — the brief's own worked example was
+`WorldNavigationSession`'s `undo()`/`redo()`/`canUndo()`/`canRedo()`/
+`getUndoLabel()`/`getRedoLabel()`, all six of which now have real UI
+callers in `WorldView.js` and reconfirm COMPLETE here.
+
+Unlike every prior sweep in this arc, which each found at most one
+finding, this one finds **four** — two ACTUAL_GAPs in the Editor, one
+ACTUAL_GAP and one OBSOLETE finding in Snapshot:
+
+- **World interaction/navigation, Vehicle, World material/document
+  lifecycle, Publication, History** — all reconfirm COMPLETE/
+  INTENTIONAL_BOUNDARY unchanged. A repository-wide spot-check of
+  `WorldNavigationSession`'s full public surface turns up six methods
+  (`getRecentlyVisitedWorlds`, `getCurrentPlaceName`, `getSelectionCount`,
+  `getWorldAccessLevel`, `canReadDocument`, `refreshWorldPresenceActivity`)
+  with no caller in `WorldView.js` — but these sit in avatar-presence/
+  geographic-search/access-control territory this milestone's own brief
+  does not name, and are recorded as an explicit scope boundary for
+  whichever future reassessment scopes that territory in, not adopted as
+  a finding here (classifying them would be exactly the "invent a
+  feature" mistake the brief warns against). `CommandHistory` remains
+  the sole history authority for both `WorldNavigationSession` and
+  `EditorSession`; the Undo/Redo buttons and `HistoryTimelinePanel`
+  remain two genuinely separate, non-overlapping projections over it.
+
+- **Snapshot** (new dedicated row). Manual discovery (`OwnPublicationPanel.js`'s
+  `discoverOwnSnapshot`/`discoverSnapshotCandidates`), automatic discovery
+  (`WorldView.js`'s own refresh tick driving
+  `worldSnapshotDiscoveryMonitor.observe()` into
+  `automaticSnapshotEncounterCascade.processCandidate()`), materialization
+  (placement/peer/selected-candidate, all composed in `ui/main.js`), and
+  World participation (`WorldEncounterCanvas.js`'s view/remove actions) are
+  all COMPLETE. Two findings:
+  - **ACTUAL_GAP** — `application/BuildPublicationSnapshotTransferPackageUseCase.js`
+    is, by its own header's own words, "the export-side counterpart of
+    application/ImportPublicationSnapshotTransferPackageUseCase.js" —
+    fully implemented, throwing the correct errors for an uncataloged or
+    unpossessed publication, exercised directly by seven separate test
+    files. Import is composed in `ui/main.js` and has a real "Import
+    Snapshot" button; Export is composed nowhere, has no coordinator
+    method (`SnapshotContentMaterializationCoordinator` grew an
+    `import(pkg)` but never an `export()`), and has no UI action at all.
+    Import and Export are not symmetric today.
+  - **OBSOLETE** — `application/CreatePublicationSnapshotPlacementCatalogUseCase.js`
+    (0.8.18) is real and complete, but its own sibling,
+    `CreatePublicationSnapshotPlacementPeerExchangeUseCase.js` (0.8.19),
+    explicitly documents in its own header that it builds an equivalent
+    catalog itself rather than reusing this one, and `ui/main.js` composes
+    only the sibling. The first OBSOLETE finding this arc has found in the
+    application layer rather than the UI layer — the same "superseded in
+    place, never deleted" shape `GroupsPanel.js` already has, one layer
+    down.
+
+- **Editor** (two ACTUAL_GAPs, both new):
+  - **Transform gesture feedback overlay.** `SpatialEditingService.getGestureFeedback()`
+    is rebuilt correctly every gesture frame; `TransformGizmoController`
+    reads it and returns it as `.feedback` on its pointer-event results;
+    `EditorSession.onPointerMove()`/`onPointerUp()` forward the whole
+    result (feedback included) once the gizmo consumes the event. A
+    dedicated, complete, purpose-built presentational component
+    (`ui/components/TransformFeedback.js`, built in 0.1.47 specifically
+    for this blob shape) already exists. But `EditorView.js`'s own
+    pointer handlers call `editorSession.onPointerDown()`/
+    `onPointerMove()`/`onPointerUp()` and discard the return value
+    outright — never captured into reactive state, never rendered, the
+    component never imported. `ui/components/NumericTransformPanel.js`
+    is a different, non-live "one Apply = one intent" surface (confirmed
+    by its own "not a live property editor" header) and does not
+    supersede it, so this is filed as ACTUAL_GAP, not OBSOLETE.
+  - **Undo/redo label mirrors.** This milestone's own brief named
+    `getUndoLabel()`/`getRedoLabel()` by name as the read-only mirrors to
+    check for UI consumers. `WorldView.js`'s own pair (Section A) already
+    back a real tooltip. The Editor's `EditorSession.getUndoLabel()`/
+    `getRedoLabel()` ARE called — via `EditorActionContext`'s own
+    `historyCall()` helper, on every `capture()` — but the resulting
+    `ctx.undoLabel`/`ctx.redoLabel` are read by nothing:
+    `EditorActionRegistry`'s `history.undo`/`history.redo` actions use
+    static `'Undo'`/`'Redo'` labels and generic `'Nothing to undo'`/
+    `'Nothing to redo'` `disabledReason` text. `CommandPalette.js`
+    genuinely renders `action.label`/`action.disabledReason(ctx)` on
+    screen, so this is a real, visible product gap — the Command Palette
+    shows generic text where World View already shows the specific
+    command name for the identical capability.
+
+A cross-cutting "capability reachability closure" section (the brief's
+own new invariant: Domain -> Application/use-case -> Composition root ->
+UI/intentional internal caller, with no unexplained terminal node) is
+applied directly to all four findings above, plus a direct behavioral
+proof (the same discipline 0.9.209's own Section A8 used) that
+`CommandHistory` already produces a real, correct undo label right now —
+the exact value the Editor's own `getUndoLabel()` would surface if
+`EditorActionRegistry` read it.
+
+`tests/PostUndoRedoProductReassessment.test.js` is the new flagship.
+
+```text
+0.9.209  Post-History Product Reassessment                           ✓
+0.9.210  World View Undo/Redo UI Integration                         ✓
+0.9.211  World View Undo/Redo Lifecycle Audit                        ✓
+0.9.212  Post-Undo/Redo Product Reassessment                         ✓
+```
+
+### Recommendation
+
+Per the brief, no next milestone is prescribed here — this is the first
+sweep in the arc to surface more than one candidate at once. Three
+ACTUAL_GAP candidates now exist, ranked smallest-scope first:
+
+1. **Editor undo/redo label mirrors** — smallest: a label/disabledReason
+   edit inside two existing `EditorActionRegistry` action definitions, no
+   new template or component, with `WorldView.js`'s own tooltip as direct
+   product precedent.
+2. **Transform gesture feedback overlay** — small: capture an already-
+   forwarded return value into reactive state and mount an already-built
+   component, touching `EditorView.js`'s pointer handlers.
+3. **Snapshot export** — larger, and in a different area (Publication/
+   Snapshot rather than Editor): needs composition in `ui/main.js`, a
+   coordinator method, a new UI action, and a real design decision about
+   how the user receives the exported package (file save vs. copyable
+   text) — not just a wire-up.
+
+Plus one OBSOLETE application-layer finding
+(`CreatePublicationSnapshotPlacementCatalogUseCase.js`) recorded, not
+removed. Whichever candidate above is taken up next keeps the same
+narrowly-scoped "wire an existing, correct capability to its own already-
+built UI" shape this arc has followed since 0.9.203 — not a new feature
+invented for the milestone.
