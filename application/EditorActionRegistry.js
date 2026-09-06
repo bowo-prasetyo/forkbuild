@@ -182,6 +182,18 @@ export function createStandardActions({ session, feedback, ui = {} }) {
         tier: 'common', // 0.6.2 — see this file's own header
         enabled: () => true,
         disabledReason: () => null,
+        // 0.9.213 — Editor Undo/Redo Label Mirrors. Display-only, exactly
+        // like disabledReason: (ctx) => string|null above — a null means
+        // "show the static label instead." Every action gets the inert
+        // default; only history.undo/history.redo override it, and only
+        // with a straight passthrough of ctx.undoLabel/ctx.redoLabel
+        // (EditorActionContext.capture()'s own mirror of CommandHistory's
+        // getUndoLabel()/getRedoLabel() — see that file). This is never a
+        // second label generator: it reconstructs nothing from commands
+        // itself, it only surfaces the string the history authority
+        // already produced, the same value WorldView.js's own tooltip
+        // already shows for the identical capability.
+        contextualLabel: () => null,
         ...partial
     });
 
@@ -598,6 +610,12 @@ export function createStandardActions({ session, feedback, ui = {} }) {
             description: 'Undo the last operation',
             enabled: (ctx) => ctx.canUndo && !ctx.gestureActive,
             disabledReason: (ctx) => (ctx.canUndo ? null : 'Nothing to undo'),
+            // 0.9.213 — ctx.undoLabel IS CommandHistory's own
+            // getUndoLabel() ("Undo Create Landmark", already prefixed),
+            // mirrored through EditorActionContext.capture()'s historyCall()
+            // helper. Null whenever ctx.canUndo is false, so this never
+            // disagrees with disabledReason above.
+            contextualLabel: (ctx) => ctx.undoLabel,
             execute: () => surfaceCall('undo', 'Undo is not available on this surface', (undo) => {
                 undo();
                 feedback.show('Undone');
@@ -612,6 +630,9 @@ export function createStandardActions({ session, feedback, ui = {} }) {
             description: 'Redo the last undone operation',
             enabled: (ctx) => ctx.canRedo && !ctx.gestureActive,
             disabledReason: (ctx) => (ctx.canRedo ? null : 'Nothing to redo'),
+            // 0.9.213 — see history.undo's own contextualLabel above;
+            // ctx.redoLabel is CommandHistory's own getRedoLabel().
+            contextualLabel: (ctx) => ctx.redoLabel,
             execute: () => surfaceCall('redo', 'Redo is not available on this surface', (redo) => {
                 redo();
                 feedback.show('Redone');

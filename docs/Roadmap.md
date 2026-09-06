@@ -76787,3 +76787,157 @@ removed. Whichever candidate above is taken up next keeps the same
 narrowly-scoped "wire an existing, correct capability to its own already-
 built UI" shape this arc has followed since 0.9.203 — not a new feature
 invented for the milestone.
+
+## 0.9.213 — Editor Undo/Redo Label Mirrors
+
+Small production integration + focused E2E audit. Takes up 0.9.212's
+smallest-scope finding: `EditorActionContext.capture()` already computed
+real `ctx.undoLabel`/`ctx.redoLabel` — a direct mirror of
+`CommandHistory`'s own `getUndoLabel()`/`getRedoLabel()`, via its own
+`historyCall()` helper, unchanged since before this milestone — but
+`EditorActionRegistry`'s `history.undo`/`history.redo` actions never
+read them, so the Command Palette showed generic "Undo"/"Redo" and
+"Nothing to undo"/"Nothing to redo" where `WorldView.js`'s own identical
+pair already backs a real tooltip. No new domain logic: no new undo/redo
+engine, no second history stack, no Editor-specific command metadata, no
+new history events, no new persistence, no new label-generation logic.
+
+```text
+CommandHistory (existing, unchanged)
+      │
+      │ getUndoLabel() / getRedoLabel()
+      ▼
+EditorSession (existing, unchanged)
+      │
+      │ EditorActionContext.capture()'s historyCall() (existing, unchanged)
+      ▼
+ctx.undoLabel / ctx.redoLabel (existing, unchanged)
+      │
+      │ NEW — contextualLabel(ctx), a bare passthrough
+      ▼
+EditorActionRegistry's history.undo / history.redo actions
+      │
+      │ NEW — displayLabel(action)
+      ▼
+CommandPalette.js
+      ├── Undo ─────────────────► "Undo Delete Brick"
+      └── Redo ─────────────────► "Redo Delete Brick"
+```
+
+### What was added
+
+- **`contextualLabel(ctx)` — one new display-only field on
+  `EditorActionRegistry`'s action shape.** `define()`'s own defaults gain
+  `contextualLabel: () => null` — the same "every action gets the inert
+  default, only what needs it overrides it" shape `disabledReason`
+  already established. Only the two `history.undo`/`history.redo`
+  actions override it, each with a bare expression —
+  `(ctx) => ctx.undoLabel` / `(ctx) => ctx.redoLabel` — nothing
+  reconstructed, nothing concatenated from a command or a `describe()`
+  call the registry has no access to in the first place.
+- **`CommandPalette.js`'s `displayLabel(action)`.** Reads
+  `action.contextualLabel(this.context)` when present and non-null,
+  falling back to the static `action.label` otherwise — the same
+  fallback shape `reasonFor()` already uses for `disabledReason`. The
+  static `label` field itself is untouched: search
+  (`EditorActionRegistry.findMatching()`) and
+  `ui/components/KeyboardShortcutsOverlay.js`'s context-free shortcut
+  listing both keep reading the stable, context-independent "Undo"/
+  "Redo" they always did.
+- **`disabledReason` is unchanged.** `ctx.undoLabel`/`ctx.redoLabel` are
+  already `null` whenever `ctx.canUndo`/`ctx.canRedo` is `false` (see
+  `CommandHistory.getUndoLabel()`/`getRedoLabel()`'s own null-when-
+  unavailable contract), so the generic "Nothing to undo"/"Nothing to
+  redo" text was never missing information — there was nothing more
+  specific to say in the disabled case.
+
+### What stays exactly as it was
+
+`EditorSession.js`, `EditorActionContext.js`, and `CommandHistory.js`
+are all byte-for-byte unchanged — every value this milestone displays
+already existed and was already computed correctly; the only gap was
+that nothing downstream of `EditorActionContext.capture()` read it.
+`ui/components/EditingSidebar.js` gained no History section of its own
+(the Editor's only reachable Undo/Redo controls remain the Command
+Palette entry and the Ctrl+Z/Ctrl+Shift+Z/Ctrl+Y keyboard shortcut) —
+per this milestone's own brief, a missing sidebar affordance would be a
+second, larger 0.9.210-style UI integration, not what 0.9.212's finding
+actually named.
+
+`tests/EditorUndoRedoLabelMirrors.test.js` is the flagship E2E audit.
+Unlike `ui/views/WorldView.js`/`ui/views/EditorView.js` (which import
+`vue` and stay outside this repo's plain `node tests/*.test.js` sweep),
+`ui/components/CommandPalette.js` imports no Vue-external runtime, so
+Section A instantiates the real component class and calls its own
+`displayLabel()` directly — not a regex proxy for it:
+
+- **A — domain-to-Editor label convergence.** A real `EditorSession`/
+  `CommandHistory` pair produces "Undo Delete Brick"; the value is
+  checked identical at every hop (`CommandHistory.getUndoLabel()` →
+  `EditorSession.getUndoLabel()` → `ctx.undoLabel` →
+  `history.undo.contextualLabel(ctx)` → `CommandPalette.displayLabel()`)
+  and the static `action.label` is confirmed untouched.
+- **B — Undo transition.** Delete a brick ("Undo Delete Brick" mirror
+  appears) → Undo → the mirror flips to "Redo Delete Brick".
+- **C — Redo transition.** Two deletes, undo the second, redo it — the
+  undo mirror always tracks the true top of `CommandHistory`'s own
+  stack, never a stale or reconstructed value.
+- **D — branch invalidation.** Undo, then a fresh command wipes the
+  redo branch (`CommandHistory`'s own linear-history invariant) — the
+  mirrored redo label disappears with it, permanently, and
+  `disabledReason` still carries the generic text once there is nothing
+  to name.
+- **E — empty history.** Both mirrors read `null`, both actions
+  disabled, neither `contextualLabel()` nor `disabledReason()` throws.
+- **F — document-switch isolation.** Swapping the active
+  `CommandHistory` (what `EditorSession#loadDocument()`'s own
+  `_rebuild()` does internally when opening a different document)
+  replaces the mirrored labels immediately — nothing from the old
+  document's history leaks into the new one's.
+- **G — scope note.** `EditorSession` has no history preview/restore
+  surface at all (`beginHistoryPreview()`/`previewHistoryAt()` are
+  `WorldNavigationSession`-only, from the 0.9.207/0.9.208 arc) —
+  recorded explicitly rather than checking isolation against a feature
+  this surface was never given.
+- **H — structural audit.** `EditorActionRegistry.js`/
+  `CommandPalette.js` import no `CommandHistory`; `contextualLabel` is
+  the bare expression `(ctx) => ctx.undoLabel`/`(ctx) => ctx.redoLabel`
+  with no `describe()` call anywhere in the registry; exactly one inert
+  default and exactly two overrides exist; `EditorActionContext.js` is
+  unchanged; `EditorSession.getUndoLabel()`/`getRedoLabel()` are still
+  the exact pre-existing one-line `CommandHistory` delegations; no
+  Recovery/Autosave/Publication/Snapshot reference was introduced in
+  either changed file.
+
+`tests/PostUndoRedoProductReassessment.test.js` (0.9.212's own flagship)
+asserted, by name, that `EditorActionRegistry.js` read `ctx.undoLabel`/
+`ctx.redoLabel` nowhere at all, that `history.undo` carried no
+`contextualLabel`, and that `CommandPalette.js` rendered the static
+`row.action.label` directly (G2e-G2k) — this milestone makes those
+assertions false. Updated Section G2 in place (the same "update in
+place, keep the still-true parts, note what changed" convention 0.9.207/
+0.9.210 established), the Section H closure-findings table (Editor
+undo/redo label mirrors: `ACTUAL_GAP` → `COMPLETE`), Section K's closing
+note, and the classification summary/capability matrix/candidate-gap
+block at the bottom to record the closure.
+
+```text
+0.9.209  Post-History Product Reassessment                           ✓
+0.9.210  World View Undo/Redo UI Integration                         ✓
+0.9.211  World View Undo/Redo Lifecycle Audit                        ✓
+0.9.212  Post-Undo/Redo Product Reassessment                         ✓
+0.9.213  Editor Undo/Redo Label Mirrors                               ✓
+```
+
+### Recommendation
+
+Per 0.9.212's own brief, this milestone closes only the smallest-scope
+candidate it left open; two remain: the Transform gesture feedback
+overlay (Section G1 — capture an already-forwarded return value into
+reactive state and mount the already-built
+`ui/components/TransformFeedback.js`) and Snapshot export (Section E2 —
+larger, and in a different area, needing composition in `ui/main.js`, a
+coordinator method, a new UI action, and a real design decision about
+how the user receives the exported package). No next milestone is
+prescribed here beyond noting those two remain exactly as 0.9.212 left
+them.

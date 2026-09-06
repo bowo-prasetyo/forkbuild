@@ -340,18 +340,34 @@ async function runTests() {
         assert(onPointerUpBody !== null && /editorSession\.onPointerUp\(event\);/.test(onPointerUpBody) && !/=\s*editorSession\.onPointerUp\(event\)/.test(onPointerUpBody), 'G1k. onPointerUp shows the identical discard');
         console.log('✓ Section G1: ACTUAL_GAP — live transform-gesture feedback (snap increment, axis, delta, precision, collision) is built correctly every frame and forwarded correctly up through EditorSession, but EditorView.js discards it and never mounts the ready-made TransformFeedback.js component built for exactly this purpose.');
 
-        // G2 — ACTUAL_GAP. The read-only undo/redo LABEL mirrors — this
-        // milestone's own brief names getUndoLabel()/getRedoLabel()
-        // specifically. WorldView.js's OWN pair (Section A5c) is wired to
-        // a real tooltip. The Editor's own EditorSession.getUndoLabel()/
-        // getRedoLabel() ARE called — via EditorActionContext's own
-        // historyCall() helper — but the resulting ctx.undoLabel/
-        // ctx.redoLabel are read by NOTHING: EditorActionRegistry's own
-        // history.undo/history.redo actions use static 'Undo'/'Redo'
-        // labels and generic 'Nothing to undo'/'Nothing to redo'
-        // disabledReason text, both of which CommandPalette.js genuinely
-        // renders on screen (action.label / action.disabledReason(ctx)) —
-        // so this is a real, visible product gap, not unread plumbing.
+        // G2 — ACTUAL_GAP AT THE TIME this milestone (0.9.212) ran. The
+        // read-only undo/redo LABEL mirrors — this milestone's own brief
+        // named getUndoLabel()/getRedoLabel() specifically. WorldView.js's
+        // OWN pair (Section A5c) is wired to a real tooltip. The Editor's
+        // own EditorSession.getUndoLabel()/getRedoLabel() ARE called — via
+        // EditorActionContext's own historyCall() helper — but the
+        // resulting ctx.undoLabel/ctx.redoLabel were read by NOTHING:
+        // EditorActionRegistry's own history.undo/history.redo actions
+        // used static 'Undo'/'Redo' labels and generic 'Nothing to
+        // undo'/'Nothing to redo' disabledReason text, both of which
+        // CommandPalette.js genuinely renders on screen (action.label /
+        // action.disabledReason(ctx)) — a real, visible product gap, not
+        // unread plumbing.
+        //
+        // UPDATE (0.9.213): closed. "Editor Undo/Redo Label Mirrors" gave
+        // EditorActionRegistry's history.undo/history.redo actions a
+        // contextualLabel(ctx) field — a bare passthrough of
+        // ctx.undoLabel/ctx.redoLabel, never a reconstruction — and
+        // ui/components/CommandPalette.js's new displayLabel() reads it in
+        // place of the static label whenever it is non-null. The static
+        // label itself is untouched (search, and
+        // ui/components/KeyboardShortcutsOverlay.js's context-free
+        // listing, still see a stable 'Undo'/'Redo'), and disabledReason
+        // stays exactly the generic text it always was — ctx.undoLabel is
+        // already null whenever ctx.canUndo is false, so there was never
+        // anything more specific to say there. See
+        // tests/EditorUndoRedoLabelMirrors.test.js for the full
+        // integration proof and docs/Roadmap.md's own 0.9.213 entry.
         const editorSessionMethods = editorSessionSource;
         assert(/getUndoLabel\(\)\s*\{/.test(editorSessionMethods) && /getRedoLabel\(\)\s*\{/.test(editorSessionMethods), 'G2a. EditorSession still declares getUndoLabel()/getRedoLabel()');
 
@@ -361,19 +377,20 @@ async function runTests() {
         assert(/redoLabel:\s*historyCall\('getRedoLabel',\s*null\)/.test(actionContextSource), 'G2d. ...same for ctx.redoLabel');
 
         const actionRegistrySource = await rawSource('application/EditorActionRegistry.js');
-        const undoActionMatch = actionRegistrySource.match(/id:\s*'history\.undo',[\s\S]{0,500}?execute:/);
+        const undoActionMatch = actionRegistrySource.match(/id:\s*'history\.undo',[\s\S]{0,1000}?execute:/);
         assert(undoActionMatch, 'G2e. EditorActionRegistry still declares the history.undo action in the expected shape');
-        assert(/label:\s*'Undo'/.test(undoActionMatch[0]), 'G2f. ...with a still-static label: \'Undo\'...');
-        assert(!/ctx\.undoLabel/.test(undoActionMatch[0]), 'G2g. ...that still never reads ctx.undoLabel anywhere in its own definition');
-        assert(/disabledReason:\s*\(ctx\)\s*=>\s*\(ctx\.canUndo \? null : 'Nothing to undo'\)/.test(undoActionMatch[0]), 'G2h. disabledReason is still the generic, static string, not ctx.undoLabel-derived text');
+        assert(/label:\s*'Undo'/.test(undoActionMatch[0]), 'G2f. ...with the static label: \'Undo\' still present (unchanged — search/KeyboardShortcutsOverlay still need it)...');
+        assert(/contextualLabel:\s*\(ctx\)\s*=>\s*ctx\.undoLabel/.test(undoActionMatch[0]), 'G2g. (post-0.9.213) ...and now ALSO carries contextualLabel: (ctx) => ctx.undoLabel — a bare passthrough, not a reconstruction');
+        assert(/disabledReason:\s*\(ctx\)\s*=>\s*\(ctx\.canUndo \? null : 'Nothing to undo'\)/.test(undoActionMatch[0]), 'G2h. disabledReason is still the generic, static string — ctx.undoLabel is already null whenever disabled, so there is nothing more specific to say here');
 
-        assert(!/\.undoLabel\b/.test(codeOnlyLines(actionRegistrySource).join('\n')) && !/\.redoLabel\b/.test(codeOnlyLines(actionRegistrySource).join('\n')), 'G2i. EditorActionRegistry.js still reads ctx.undoLabel/ctx.redoLabel nowhere at all');
+        assert(/\.undoLabel\b/.test(codeOnlyLines(actionRegistrySource).join('\n')) && /\.redoLabel\b/.test(codeOnlyLines(actionRegistrySource).join('\n')), 'G2i. (post-0.9.213) EditorActionRegistry.js now reads ctx.undoLabel/ctx.redoLabel');
 
         const commandPaletteSource = await rawSource('ui/components/CommandPalette.js');
-        assert(/row\.action\.label/.test(commandPaletteSource), 'G2j. CommandPalette.js still genuinely renders action.label on screen');
-        assert(/action\.disabledReason\(this\.context\)/.test(commandPaletteSource), 'G2k. ...and still genuinely renders action.disabledReason(ctx) — confirming this is a visible product gap, not unread internal plumbing');
+        assert(!/row\.action\.label/.test(commandPaletteSource), 'G2j. (post-0.9.213) CommandPalette.js no longer renders the static row.action.label directly...');
+        assert(/displayLabel\(row\.action\)/.test(commandPaletteSource), '...it renders displayLabel(row.action) instead, which falls back to the static label when contextualLabel is absent/null');
+        assert(/action\.disabledReason\(this\.context\)/.test(commandPaletteSource), 'G2k. ...and still genuinely renders action.disabledReason(ctx) unchanged');
 
-        console.log('✓ Section G2: ACTUAL_GAP — EditorActionContext computes real undoLabel/redoLabel (mirroring WorldView.js\'s own, which IS shown in a tooltip), but EditorActionRegistry\'s history.undo/history.redo actions never read them: the Command Palette shows generic "Undo"/"Redo" and "Nothing to undo"/"Nothing to redo" instead of the specific command name WorldView.js already shows for the identical capability.');
+        console.log('✓ Section G2: ACTUAL GAP AT THE TIME, CLOSED BY 0.9.213 — EditorActionContext computed real undoLabel/redoLabel (mirroring WorldView.js\'s own, which IS shown in a tooltip), but EditorActionRegistry\'s history.undo/history.redo actions never read them. 0.9.213 gave both actions a contextualLabel(ctx) passthrough and CommandPalette.js a displayLabel() that renders it — the Command Palette now shows the same specific command name WorldView.js already showed for the identical capability.');
     }
 
     // ---------------------------------------------------------------
@@ -401,7 +418,13 @@ async function runTests() {
             { capability: 'Snapshot export (Build...UseCase)', domain: true, useCase: true, compositionRoot: false, ui: false, classification: 'ACTUAL_GAP' },
             { capability: 'Snapshot placement catalog (Create...CatalogUseCase)', domain: true, useCase: true, compositionRoot: false, ui: false, classification: 'OBSOLETE' },
             { capability: 'Transform gesture feedback overlay', domain: true, useCase: true, compositionRoot: true, ui: false, classification: 'ACTUAL_GAP' },
-            { capability: 'Editor undo/redo label mirrors', domain: true, useCase: true, compositionRoot: true, ui: false, classification: 'ACTUAL_GAP' }
+            // Editor undo/redo label mirrors: ACTUAL_GAP when THIS
+            // milestone (0.9.212) ran — CLOSED by 0.9.213 ("Editor
+            // Undo/Redo Label Mirrors"), which gave the last hop (ui)
+            // its terminal node. Recorded here as COMPLETE, not rewritten
+            // out of the table, so this closure model stays a true
+            // historical record of every finding this arc has made.
+            { capability: 'Editor undo/redo label mirrors', domain: true, useCase: true, compositionRoot: true, ui: true, classification: 'COMPLETE' }
         ];
         for (const finding of closureFindings) {
             assert(finding.domain && finding.useCase, `H2a. ${finding.capability}: domain/use-case layer confirmed correct`);
@@ -413,7 +436,7 @@ async function runTests() {
             }
         }
 
-        console.log('✓ Section H: Cross-cutting capability reachability closure — the five lifecycle systems remain separate authorities; all four new findings above fit the brief\'s own closure model exactly (an unexplained terminal node for the two ACTUAL_GAPs reaching a composition root, or no composition-root path at all for the two OBSOLETE/pre-composition-root findings), with none of it mistaken for an intentional boundary.');
+        console.log('✓ Section H: Cross-cutting capability reachability closure — the five lifecycle systems remain separate authorities; every finding above fits the brief\'s own closure model exactly (an unexplained terminal node for the remaining ACTUAL_GAPs reaching a composition root, no composition-root path at all for the OBSOLETE finding, and a completed terminal node for Editor undo/redo label mirrors, closed by 0.9.213 since this milestone ran), with none of it mistaken for an intentional boundary.');
     }
 
     // ---------------------------------------------------------------
@@ -464,11 +487,11 @@ async function runTests() {
         history.execute(new CreateWorldLandmarkCommand({
             worldId: doc.world.id, authorIdentityId: 'tester', title: 'Reassessment Landmark', position: new Position(1, 0, 1)
         }));
-        assert(typeof history.getUndoLabel === 'function' && history.getUndoLabel() !== null, 'K1. CommandHistory produces a real, non-null undo label right now — the exact value the Editor\'s own EditorSession.getUndoLabel() would surface if EditorActionRegistry read it (Section G2)');
+        assert(typeof history.getUndoLabel === 'function' && history.getUndoLabel() !== null, 'K1. CommandHistory produces a real, non-null undo label right now — the exact value the Editor\'s own EditorSession.getUndoLabel() would surface, and which EditorActionRegistry now reads (Section G2, closed by 0.9.213)');
         history.undo();
-        assert(history.canRedo(), 'K2. ...and the round-trip this gap is about already works end-to-end, with no UI caller for its label anywhere in the Editor');
+        assert(history.canRedo(), 'K2. ...and the round-trip this gap was about already worked end-to-end even at the time this milestone ran, before 0.9.213 gave it a UI caller for its label');
 
-        console.log('✓ Section K: direct behavioral proof — the underlying CommandHistory capability behind Section G2\'s finding is proven correct here directly, the same discipline 0.9.209\'s own Section A8 applied to its own World View finding.');
+        console.log('✓ Section K: direct behavioral proof — the underlying CommandHistory capability behind Section G2\'s finding is proven correct here directly, the same discipline 0.9.209\'s own Section A8 applied to its own World View finding. 0.9.213 subsequently closed Section G2 itself; see tests/EditorUndoRedoLabelMirrors.test.js for that closure\'s own full proof.');
     }
 
     console.log('\n✅ All Post-Undo/Redo Product Reassessment tests passed.');
@@ -484,7 +507,7 @@ Classification summary:
   F. History ................................ COMPLETE (one authority, two separate projections)
   G. Editor .................................. COMPLETE, except:
        - Transform gesture feedback overlay .. ACTUAL_GAP
-       - Undo/redo label mirrors (Command Palette) . ACTUAL_GAP
+       - Undo/redo label mirrors (Command Palette) . ACTUAL GAP AT THE TIME -> CLOSED BY 0.9.213
   H. Cross-cutting lifecycle integrity ...... CONFIRMED (five separate authorities; closure model applied)
   I. Repository-wide obsolete-UI sweep ...... GroupsPanel.js unchanged; no third file found
   J. Performance ............................. DEFERRED
@@ -495,9 +518,9 @@ matrix for everything this arc already closed):
   Snapshot export (transfer package)        ✓       ✓         —          —        ACTUAL_GAP
   Snapshot placement catalog (Create...)    ✓       ✓         —          —        OBSOLETE (superseded)
   Transform gesture feedback overlay        ✓       ✓         ✓          —        ACTUAL_GAP
-  Editor undo/redo label mirrors            ✓       ✓         ✓          —        ACTUAL_GAP
+  Editor undo/redo label mirrors            ✓       ✓         ✓          ✓        COMPLETE  <- closed by 0.9.213
 
-Candidate gaps (as they stand when THIS milestone, 0.9.212, ran), ranked
+Candidate gaps (as they stood when THIS milestone, 0.9.212, ran), ranked
 by scope, smallest first:
 
   1. Editor undo/redo label mirrors (Section G2).
@@ -511,6 +534,14 @@ by scope, smallest first:
                                      tooltip for the identical capability
      - scope?                       smallest of the three — a label/disabledReason edit inside two
                                      existing action definitions, no new template, no new component
+     - UPDATE (0.9.213): closed. EditorActionRegistry's history.undo/
+       history.redo actions gained a contextualLabel(ctx) field — a bare
+       passthrough of ctx.undoLabel/ctx.redoLabel — and
+       ui/components/CommandPalette.js's new displayLabel() reads it in
+       place of the static label whenever present. No new label
+       generator, no second history stack. See
+       tests/EditorUndoRedoLabelMirrors.test.js and docs/Roadmap.md's
+       own 0.9.213 entry.
 
   2. Transform gesture feedback overlay (Section G1).
      - existing capability?         yes — SpatialEditingService.getGestureFeedback(), rebuilt every frame
@@ -534,14 +565,20 @@ by scope, smallest first:
                                      user the resulting package (a file save, a copyable blob, etc.) —
                                      a real design decision, not just a wire-up
 
-Per the brief, no next milestone is prescribed here — three ACTUAL_GAP
-candidates now exist (the first time this arc has found more than one at
-once), plus one new OBSOLETE application-layer finding
+At the time this milestone (0.9.212) ran, its own brief said no next
+milestone was prescribed here — three ACTUAL_GAP candidates existed (the
+first time this arc had found more than one at once), plus one new
+OBSOLETE application-layer finding
 (CreatePublicationSnapshotPlacementCatalogUseCase.js, left unremoved).
-Whichever of the three candidates above is taken up, it stays the same
-narrowly-scoped "wire an existing, correct capability to its own
-already-built UI" shape this whole arc has followed since 0.9.203 — not a
-new feature invented for the milestone.
+
+0.9.213 ("Editor Undo/Redo Label Mirrors") subsequently took up candidate
+1 above and closed it — see this file's own Section G2/H/K updates and
+tests/EditorUndoRedoLabelMirrors.test.js for that milestone's full record.
+Candidates 2 (Transform gesture feedback overlay) and 3 (Snapshot export)
+remain open, unchanged, along with the one OBSOLETE finding. Whichever is
+taken up next stays the same narrowly-scoped "wire an existing, correct
+capability to its own already-built UI" shape this whole arc has followed
+since 0.9.203 — not a new feature invented for the milestone.
 `);
 }
 
