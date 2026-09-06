@@ -73949,3 +73949,139 @@ tick with no ordering contract between them beyond "whatever
 `refreshSpatialUI()` happens to call first." If a future milestone adds a
 fourth autonomous process to this same tick, I would revisit this
 question before adding it, rather than after.
+
+## 0.9.192 — Automatic World Observation Cadence Audit
+
+0.9.191 proved that DISCOVER → ... → REGISTER and RETAIN → UNREGISTER
+compose correctly on `ui/views/WorldView.js`'s own shared `refreshSpatialUI()`
+tick — but its own `makeAutomaticSession()` harness always drove ticks
+SEQUENTIALLY (one full tick awaited before the next began) and never tore a
+session down mid-flight. This milestone is test-only: no production file
+changes. It asks the question 0.9.191's own recommendation put in sharp
+relief: with three independent autonomous processes now riding one
+undifferentiated 3-second cadence, is that composition's TEMPORAL shape —
+ordering, overlap, and teardown — still safe, and is there truly only one
+cadence?
+
+`tests/WorldSnapshotAutomaticObservationCadenceAudit.test.js` — eight
+sections, deliberately never repeating 0.9.191's own flagship/boundary/
+return-movement/multi-snapshot/content-revision/material-survival ground:
+(A) the ordering contract, traced directly through an instrumented log
+rather than inferred from outcomes; (B) overlapping ticks — a second tick's
+own discovery call fires before the first tick's own cascade has settled,
+and the cascade's own 0.9.187 per-subject idempotency still collapses both
+into exactly one registration; (C) a tight, un-awaited burst of rapid
+inside/outside movement converges, after settling plus one further tick, to
+exactly the correct state for wherever the Wanderer actually ended up; (D)
+FLAGSHIP — session teardown, below; (E) contrast — the orphan (D) produces
+is not genuine re-entry into the automatic pipeline; only a fresh session's
+own independent discovery/cascade run is; (F) manual/LOCAL/PEER World
+sources remain completely untouched under the combined stress of (B) and
+(D) at once; (G) a structural sweep confirming exactly one cadence exists;
+(H) the temporal contract, held as an assertable data structure rather than
+only prose.
+
+**Findings — one property confirmed exactly as hoped, and one new,
+previously untested interaction found and recorded as OBSERVED rather than
+fixed:**
+- **Section A — the ordering contract is even tighter than 0.9.191 implied.**
+  Tracing calls directly (rather than inferring order from outcomes) shows
+  that `WorldSnapshotDiscoveryMonitor#observe()`'s own command invocation is
+  ITSELF deferred behind a `Promise.resolve().then()` microtask boundary —
+  so `reconcile()` doesn't just run before discovery settles, it runs before
+  discovery's own command has even been INVOKED. One tick's entire
+  synchronous work is exactly two steps: read spatial context, then invoke
+  and return `reconcile()`. Everything else — discovery invocation, its
+  settling, cascade processing, and `noteAutomaticRegistration()` — is
+  strictly later, fire-and-forget microtask continuation.
+- **Section B — overlapping ticks are already safe, with no new
+  synchronization required.** `setInterval(refreshSpatialUI, 3000)` never
+  awaits its own callback, so nothing stops a second tick's own discovery
+  call from firing before the first tick's own cascade has settled. Two
+  independently-triggered discovery calls for the identical candidate still
+  collapse into exactly one `registry.setSource()` call — `Automatic
+  SnapshotEncounterCascade`'s own per-`publicationId:contentHash` map
+  (0.9.187) was already safe under genuine concurrent overlap, not merely
+  under the sequential re-feeding 0.9.187/0.9.188/0.9.191 had each tested
+  until now.
+- **Section D — FLAGSHIP: session teardown can leave an orphaned World
+  registration.** `ui/views/WorldView.js`'s own `onBeforeUnmount` clears
+  `spatialInterval`, but clearing an interval does not cancel a Promise
+  chain already in flight — and none of `WorldSnapshotDiscoveryMonitor`,
+  `AutomaticSnapshotEncounterCascade`, or `AutomaticSnapshotEncounterRetentionReconciliation`
+  expose any destroy/dispose/cancel method (confirmed structurally in
+  Section G). A resolve/materialize round-trip started by a WorldView mount
+  a person has since navigated away from can still complete and register
+  into the SHARED `WorldDiscoverySourceRegistry` — the registry has no
+  notion of "which session" a write came from. The registration is watched
+  only by the now-abandoned OLD reconciliation instance (nobody will ever
+  call `reconcile()` on it again); a FRESH WorldView mount's own
+  reconciliation is completely uncontaminated — session isolation (0.9.191
+  Section M) holds exactly as before, even across an actual teardown
+  boundary. The consequence, not a violation of isolation but a real gap
+  IN it: the registration persists, unreconciled by anyone's retention
+  policy, until SOME session's own discovery/cascade independently
+  rediscovers and re-notes it (Section E) — it will not be automatically
+  removed merely because every live Wanderer is far away, since nobody is
+  watching it.
+- **Section G — exactly one cadence, confirmed structurally, not just by
+  absence of a bug report.** `ui/views/WorldView.js` declares exactly three
+  intervals total (`spatialInterval` at 3000ms, `spatialPresenceSyncInterval`
+  at 100ms, `vehicleInteractionInterval` at 150ms — neither of the latter
+  two touches Snapshot machinery), and only `spatialInterval` calls
+  `refreshSpatialUI()`. None of the three Snapshot application files
+  contains a `setInterval`/`setTimeout`/`.subscribe(`/`requestAnimationFrame(`
+  of its own, and none exposes a cancellation method — the absence that
+  makes Section D's finding possible in the first place.
+
+Every other section passed exactly as 0.9.186 through 0.9.191's own
+architecture predicted: idempotent under genuine concurrency, convergent
+under adversarial rapid movement, and manual/LOCAL/PEER-independent under
+combined overlap-plus-teardown stress.
+
+Deliberately excluded — not this milestone:
+- **Any fix for the orphaned-registration finding.** It never corrupts
+  manual/LOCAL/PEER state and never duplicates a registration beyond the
+  cascade's own existing idempotent replace — only an unretained World
+  source that will sit inert until independently rediscovered. Introducing
+  cancellation tokens, an abandonment/ownership vocabulary, or a
+  session-scoped registry write-guard to close this gap is exactly the
+  "far too much vocabulary for the current need" 0.9.191's own author
+  restraint already named for the phantom re-watch, held here again for a
+  closely related finding.
+- **A shared, cross-session reconciliation registry, or any notion of
+  "session ownership" over a `WorldDiscoverySource`.** The registry remains
+  exactly what 0.9.9 always intended: a flat map of origins, with no
+  concept of which caller wrote to it.
+- **Separating "World observation" from "automatic Snapshot lifecycle
+  reconciliation" into two distinct cadences.** Section G's own structural
+  sweep, plus (B) and (C)'s own convergence results, show the single shared
+  cadence remains safe under concurrency and adversarial movement alike —
+  the orphaned-registration finding is a teardown/cancellation gap, not a
+  cadence-sharing problem, and splitting the cadence would not fix it.
+
+```text
+0.9.188  Automatic Snapshot Encounter Lifecycle Audit                ✓
+0.9.189  Automatic Snapshot Encounter Retention Policy               ✓
+0.9.190  Automatic Snapshot Encounter Retention Integration          ✓
+0.9.191  Comprehensive Automatic Snapshot Retention Lifecycle Audit  ✓
+0.9.192  Automatic World Observation Cadence Audit                   ✓
+```
+
+### Recommendation
+
+Two full audit milestones in a row (0.9.191, 0.9.192) have now proven the
+autonomous discover/cascade/retain/reconcile loop correct under sequential
+composition, genuine concurrency, adversarial rapid movement, and session
+teardown — finding exactly one real, honest gap (orphaned registrations
+surviving teardown) that is bounded, non-corrupting, and not worth new
+lifecycle vocabulary to close on its own. I would not add a third
+Snapshot-specific audit next, and I would not add another Snapshot
+capability either — at this point additional Snapshot-specific work risks
+becoming exactly the "architectural clutter" this milestone's own framing
+warned against. Instead I would step back for a roadmap/architecture
+reassessment: the Snapshot subsystem (discovery → cascade → registration →
+retention → reconciliation, all riding one shared, now twice-audited
+observation cadence) looks complete as an autonomous system. The next
+milestone should ask whether anything OUTSIDE Snapshot needs attention
+before more is added here — not another turn of this same crank.
