@@ -893,6 +893,14 @@ export default {
         // source of truth for whether a preview is actually active.
         const historyPreviewCursor = ref(null);
 
+        // 0.9.210 — see undoAction()/redoAction() below. Re-read every
+        // refreshSpatialUI() tick from session.canUndo()/canRedo()/
+        // getUndoLabel()/getRedoLabel() — never computed locally.
+        const canUndo = ref(false);
+        const canRedo = ref(false);
+        const undoLabel = ref(null);
+        const redoLabel = ref(null);
+
         function openHistoryPanel() {
             const info = activeDocumentInfo.value;
             if (!info) return;
@@ -991,6 +999,35 @@ export default {
             if (!restored) return;
             feedback.show('Restored to an earlier point in history');
             closeHistoryPanel();
+            refreshSpatialUI();
+        }
+
+        // 0.9.210 — World View Undo/Redo UI Integration. Thin wrappers
+        // over the SAME WorldNavigationSession.undo()/redo() the History
+        // panel immediately above already shares one CommandHistory with
+        // (both resolve through _getActiveCommandHistory() — see that
+        // method's own header) — no second undo/redo engine, no
+        // duplicated undoStack/redoStack, no new lifecycle vocabulary.
+        // canUndo/canRedo are refreshed on the same refreshSpatialUI()
+        // cadence every other action-bar affordance already uses, and
+        // already read false while a history preview is active (session.
+        // canUndo()/canRedo() mirror undo()/redo()'s own
+        // _historyPreview.active gate) — Preview and Undo/Redo stay two
+        // separate authorities without this view inventing a rule of its
+        // own for the interaction.
+        function undoAction() {
+            const performed = guarded(() => session.undo());
+            if (performed) {
+                feedback.show('Undone');
+            }
+            refreshSpatialUI();
+        }
+
+        function redoAction() {
+            const performed = guarded(() => session.redo());
+            if (performed) {
+                feedback.show('Redone');
+            }
             refreshSpatialUI();
         }
 
@@ -1532,6 +1569,13 @@ export default {
             activeDocumentInfo.value = (activeId && typeof session.getDocumentInfo === 'function')
                 ? session.getDocumentInfo(activeId)
                 : null;
+            // 0.9.210 — World View Undo/Redo UI Integration. Same cadence
+            // as activeDocumentInfo immediately above, since both track
+            // "what can be done to the currently active document."
+            canUndo.value = typeof session.canUndo === 'function' && session.canUndo();
+            canRedo.value = typeof session.canRedo === 'function' && session.canRedo();
+            undoLabel.value = typeof session.getUndoLabel === 'function' ? session.getUndoLabel() : null;
+            redoLabel.value = typeof session.getRedoLabel === 'function' ? session.getRedoLabel() : null;
             activePlacementInfo.value = (activeId && typeof session.getPlacementInfo === 'function')
                 ? session.getPlacementInfo(activeId)
                 : null;
@@ -3097,7 +3141,26 @@ export default {
                 }
                 return;
             }
-            // 2. Avatar Control Mode (0.2.36) — only ever consumes
+            // 2. Undo/Redo (0.9.210) — Ctrl+Z / Ctrl+Y / Ctrl+Shift+Z,
+            // the same convention application/EditorActionRegistry.js's
+            // history.undo/history.redo actions already use for the
+            // Editor. This is the one shortcut this handler owns
+            // directly (undoAction()/redoAction() call session.undo()/
+            // redo() — no registry, no second keyboard listener).
+            if ((event.ctrlKey || event.metaKey) && !event.altKey) {
+                const key = event.key.toLowerCase();
+                if (key === 'z' && !event.shiftKey) {
+                    event.preventDefault();
+                    undoAction();
+                    return;
+                }
+                if ((key === 'z' && event.shiftKey) || key === 'y') {
+                    event.preventDefault();
+                    redoAction();
+                    return;
+                }
+            }
+            // 3. Avatar Control Mode (0.2.36) — only ever consumes
             // W/A/S/D/Shift/Space, and only while explicitly on (see
             // onAvatarKeyDown above).
             if (onAvatarKeyDown(event)) {
@@ -3510,6 +3573,12 @@ export default {
             previewSelectedHistoryEntry,
             cancelHistoryPreviewAction,
             restoreSelectedHistoryEntry,
+            canUndo,
+            canRedo,
+            undoLabel,
+            redoLabel,
+            undoAction,
+            redoAction,
             showWelcomePanel,
             welcomeContext,
             welcomeIsArrival,
@@ -3665,6 +3734,18 @@ export default {
                     >Save</button>
                     <button class="action-btn action-btn--primary" @click="publishActiveDocument">Publish</button>
                     <button class="action-btn" @click="openMetadataEditor(activeDocumentInfo)">Edit Metadata</button>
+                    <button
+                        class="action-btn"
+                        :disabled="!canUndo"
+                        :title="undoLabel || 'Nothing to undo'"
+                        @click="undoAction"
+                    >Undo</button>
+                    <button
+                        class="action-btn"
+                        :disabled="!canRedo"
+                        :title="redoLabel || 'Nothing to redo'"
+                        @click="redoAction"
+                    >Redo</button>
                     <button
                         class="action-btn"
                         title="Inspect, preview, and restore this document's command history"

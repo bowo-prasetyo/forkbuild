@@ -3935,6 +3935,36 @@ export class WorldNavigationSession {
         return false;
     }
 
+    // 0.9.210 — World View Undo/Redo UI Integration. Read-only mirrors of
+    // undo()/redo()'s own gating (same _historyPreview.active check, same
+    // _getActiveCommandHistory() target) so WorldView.js can disable its
+    // Undo/Redo buttons without ever touching CommandHistory directly or
+    // maintaining a second undoStack/redoStack representation of its own.
+    canUndo() {
+        if (this._historyPreview && this._historyPreview.active) return false;
+        const history = this._getActiveCommandHistory();
+        return !!history && history.canUndo();
+    }
+
+    canRedo() {
+        if (this._historyPreview && this._historyPreview.active) return false;
+        const history = this._getActiveCommandHistory();
+        return !!history && history.canRedo();
+    }
+
+    // Descriptive text straight from CommandHistory's own getUndoLabel()/
+    // getRedoLabel() (e.g. "Undo Create Landmark") — never recomputed or
+    // paraphrased here.
+    getUndoLabel() {
+        const history = this._getActiveCommandHistory();
+        return history ? history.getUndoLabel() : null;
+    }
+
+    getRedoLabel() {
+        const history = this._getActiveCommandHistory();
+        return history ? history.getRedoLabel() : null;
+    }
+
     getSpatialSelection() {
         return this._spatialSelection;
     }

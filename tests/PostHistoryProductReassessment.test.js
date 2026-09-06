@@ -117,19 +117,26 @@ async function runTests() {
             assert(countReferences(worldView, identifier) > 0, `A5. WorldView.js still references ${identifier} — 0.9.207/0.9.208's History panel remains reachable`);
         }
 
-        // A6 — the finding. WorldNavigationSession still declares undo()/
-        // redo() (0.5.9's own two kept exceptions need them), guarding
-        // correctly against an active history preview exactly like
-        // 0.9.208 left them. But nothing in WorldView.js ever calls
-        // session.undo() or session.redo() — not a button, not a
-        // keyboard shortcut, not even inside its own keydown handler,
-        // which exists (onKeyDown, wired for Avatar Control Mode's
-        // WASD) but never branches on ctrl/meta+Z at all.
+        // A6 — the finding AT THE TIME this milestone (0.9.209) ran.
+        // WorldNavigationSession still declares undo()/redo() (0.5.9's own
+        // two kept exceptions need them), guarding correctly against an
+        // active history preview exactly like 0.9.208 left them.
+        //
+        // UPDATE (0.9.210): closed. "World View Undo/Redo UI Integration"
+        // gave WorldView.js an Undo/Redo pair in its existing editable-
+        // document action bar (alongside Save/Publish/History) AND a
+        // Ctrl+Z/Ctrl+Y/Ctrl+Shift+Z branch in its existing onKeyDown
+        // handler — both thin callers of session.undo()/session.redo(),
+        // with canUndo/canRedo re-read on the same refreshSpatialUI()
+        // cadence every other action-bar affordance already uses. See
+        // tests/WorldViewUndoRedoIntegration.test.js for the full
+        // integration proof and docs/Roadmap.md's own 0.9.210 entry.
         const navigationSessionSource = await rawSource('application/WorldNavigationSession.js');
         assert(/undo\(\)\s*\{[\s\S]{0,80}_historyPreview[\s\S]{0,40}active[\s\S]{0,20}return false/.test(navigationSessionSource), 'A6a. WorldNavigationSession.undo() still refuses to run while a history preview is active');
         assert(/redo\(\)\s*\{[\s\S]{0,80}_historyPreview[\s\S]{0,40}active[\s\S]{0,20}return false/.test(navigationSessionSource), 'A6b. WorldNavigationSession.redo() still refuses to run while a history preview is active');
-        assert(!/session\.undo\(\)/.test(worldView) && !/session\.redo\(\)/.test(worldView), 'A6c. WorldView.js still never calls session.undo()/session.redo()');
-        assert(!/(ctrl|meta)Key[\s\S]{0,200}(['"]z['"]|['"]y['"])/i.test(worldView), 'A6d. WorldView.js\'s keydown handling still has no ctrl/meta+Z or +Y branch anywhere');
+        assert(/session\.undo\(\)/.test(worldView) && /session\.redo\(\)/.test(worldView), 'A6c. (post-0.9.210) WorldView.js now calls session.undo()/session.redo()');
+        assert(/(ctrl|meta)Key[\s\S]{0,200}(['"]z['"]|['"]y['"])/i.test(worldView), 'A6d. (post-0.9.210) WorldView.js\'s keydown handling now branches on ctrl/meta+Z (and +Y/+Shift+Z for redo)');
+        assert(/canUndo\(\)/.test(navigationSessionSource) && /canRedo\(\)/.test(navigationSessionSource), 'A6e. (post-0.9.210) WorldNavigationSession also exposes canUndo()/canRedo() — read-only mirrors of CommandHistory\'s own, for the button\'s disabled state');
 
         // A7 — precisely WHICH mutations this leaves without an undo
         // path. 0.5.9's own design record ties undo()/redo() to its two
@@ -176,7 +183,7 @@ async function runTests() {
             assert(history.canRedo(), 'A8c. the undone landmark-creation is redoable — the whole round-trip this gap would expose already works, today, with no UI caller');
         }
 
-        console.log('✓ Section A: World interaction/navigation — ACTUAL_GAP. Every previously-closed thread (removal/unpublish/history panel) reconfirmed reachable. The new finding: WorldNavigationSession.undo()/redo() are correct, tested here directly, and specifically reverse the Region/Landmark naming Commands 0.5.9\'s own design record kept them for — but WorldView.js never calls either one, not as a button and not as a keyboard shortcut, despite its own keydown handler already existing for Avatar Control Mode. movePlacement()/removePlacement() are confirmed OUT of scope for this gap: neither runs through CommandHistory at all, so there is nothing for undo() to reverse there.');
+        console.log('✓ Section A: World interaction/navigation — ACTUAL GAP AT THE TIME, CLOSED BY 0.9.210. Every previously-closed thread (removal/unpublish/history panel) reconfirmed reachable. This milestone\'s own finding — WorldNavigationSession.undo()/redo() were correct, tested here directly, and specifically reverse the Region/Landmark naming Commands 0.5.9\'s own design record kept them for, but WorldView.js never called either one — is now closed: 0.9.210 ("World View Undo/Redo UI Integration") added an Undo/Redo button pair and a Ctrl+Z/Ctrl+Y/Ctrl+Shift+Z shortcut, both thin callers of session.undo()/session.redo(), with canUndo()/canRedo() added alongside for the buttons\' disabled state. movePlacement()/removePlacement() remain confirmed OUT of scope: neither runs through CommandHistory at all, so there is nothing for undo() to reverse there.');
     }
 
     // ---------------------------------------------------------------
@@ -417,7 +424,7 @@ async function runTests() {
     console.log('\n✅ All Post-History Product Reassessment tests passed.');
     console.log(`
 Classification summary:
-  A. World interaction/navigation ........ ACTUAL_GAP (plain undo/redo has no UI caller in World View)
+  A. World interaction/navigation ........ ACTUAL_GAP AT THE TIME -> CLOSED BY 0.9.210 (plain undo/redo now has a button + keyboard shortcut in World View)
   B. Vehicle system ....................... INTENTIONAL_BOUNDARY
   C. World material/document lifecycle .... COMPLETE (0.9.203 + 0.9.206 arcs both closed; no third thread found)
   D. Publication workflow ................. COMPLETE
@@ -431,11 +438,11 @@ Capability reachability matrix:
   Recovery / autosave              ✓       ✓         ✓         COMPLETE
   Placement removal                ✓       ✓         ✓         COMPLETE
   Unpublish                        ✓       ✓         ✓         COMPLETE
-  Region/Landmark undo (session)   ✓       ✓         —         ACTUAL_GAP  <- this milestone
+  Region/Landmark undo (session)   ✓       ✓         ✓         COMPLETE  <- closed by 0.9.210
   movePlacement/removePlacement undo —     —         —         INTENTIONAL (no Command object; nothing to undo by design)
   GroupsPanel.js (Groups CRUD)     ✓       —         —         OBSOLETE (superseded by EditingSidebar)
 
-Candidate gap (as it stands when THIS milestone, 0.9.209, ran):
+Candidate gap (as it stood when THIS milestone, 0.9.209, ran):
   1. World View plain undo/redo (keyboard shortcut and/or button)
      - existing capability?         yes (WorldNavigationSession.undo()/redo(), unchanged since 0.5.9)
      - existing use case?           n/a — operates directly on CommandHistory, same as every other
@@ -457,14 +464,22 @@ Candidate gap (as it stands when THIS milestone, 0.9.209, ran):
      - scope note?                  movePlacement()/removePlacement() are confirmed OUT of scope —
                                      neither runs through CommandHistory, so undo() cannot and should
                                      not reverse them; this gap is about Region/Landmark naming only
+     - UPDATE (0.9.210): closed. ui/views/WorldView.js now has Undo/Redo
+       buttons in its existing editable-document action bar and a
+       Ctrl+Z/Ctrl+Y/Ctrl+Shift+Z branch in its existing onKeyDown
+       handler, both calling session.undo()/session.redo() directly.
+       WorldNavigationSession also gained canUndo()/canRedo()/
+       getUndoLabel()/getRedoLabel() — read-only mirrors of
+       CommandHistory's own, gated by the same _historyPreview.active
+       guard undo()/redo() already carried — so the buttons can disable
+       themselves without a second undo/redo-availability
+       representation. See tests/WorldViewUndoRedoIntegration.test.js
+       and docs/Roadmap.md's own 0.9.210 entry.
 
-Per this milestone's own brief, no next milestone is prescribed here.
-0.9.209 stops at classification. If a future milestone takes up the
-candidate gap above, it already names the shape the work would take —
-wiring WorldView.js's existing keydown handler and/or a small toolbar
-affordance to the already-correct, already-tested
-WorldNavigationSession.undo()/redo() — but whether, and in which shape,
-is a product decision this test-only milestone deliberately leaves open.
+At the time this milestone (0.9.209) ran, its own brief said no next
+milestone was prescribed — this reassessment stopped at classification.
+0.9.210 subsequently took up the candidate gap above; see
+docs/Roadmap.md's own 0.9.210 entry for that milestone's record.
 `);
 }
 
