@@ -76011,4 +76011,161 @@ milestone did not add plain undo/redo) are both reconfirmed, unchanged.
 0.9.205  Editor Autosave & Recovery Lifecycle Audit                  ✓
 0.9.206  Post-Recovery Product Reassessment                          ✓
 0.9.207  World View History Timeline UI Integration                 ✓
+0.9.208  World View History Preview/Restore Lifecycle Audit          ✓
 ```
+
+## 0.9.208 — World View History Preview/Restore Lifecycle Audit
+
+Test-only audit of the seam 0.9.207 exposed for the first time: preview
+and restore now sit side by side, callable from the same panel, against
+the same live document. The question this milestone asks is exactly the
+one 0.9.207's own retrospective anticipated — can temporary historical
+inspection (preview) stay completely separate from permanent restoration
+(restore), ordinary World state, and `WorldView.js`'s own mount/unmount
+lifecycle? — not whether to add anything new on top of either verb.
+
+Unlike 0.9.202/0.9.205's own lifecycle audits, this one did not come back
+clean. `beginHistoryPreview()`/`previewHistoryAt()`/`restoreHistoryAt()`/
+`dispose()` are all pre-0.9.207 code, unreached until 0.9.207 gave them a
+caller — the exact same "correct in isolation, wrong once actually
+exercised" shape 0.9.207's own audit already found once in
+`CommandHistory`'s cursor/index convention. This time the audit found
+three, all in `application/WorldNavigationSession.js`, all narrow scoping
+fixes rather than new mechanism:
+
+- **Preview switching leaked the previous preview world.**
+  `previewHistoryAt(cursor)` called a second time while already
+  previewing — exactly what `WorldView.js`'s
+  `previewSelectedHistoryEntry()` does when a different timeline row is
+  selected without cancelling first, since it only calls
+  `beginHistoryPreview()` once — removed the LIVE world again (a
+  harmless no-op; it was already hidden by the first call) instead of the
+  world actually on screen: the PREVIOUS preview. The previous preview's
+  rendered world was never removed before the new one was added under
+  the exact same `replay:${docId}` render slot. Fixed by remembering the
+  previous preview's world/documentId before overwriting `_historyPreview`,
+  and removing THAT instead of the live world whenever a previous preview
+  existed.
+- **Restoring one document could corrupt an unrelated document's active
+  preview.** `restoreHistoryAt(cursor, documentId)` checked only
+  `this._historyPreview.active` — true regardless of which document the
+  preview actually belonged to. Previewing document A and then restoring
+  an unrelated document B wiped A's preview out from under it
+  (`_historyPreview = null`, with no render call ever bringing A's live
+  world back — it stayed permanently hidden) while B's own live world was
+  never removed before the restored one was added on top of it. Fixed by
+  scoping the check to `this._historyPreview.documentId === docId`: a
+  preview for a different document is now left completely untouched.
+- **`dispose()` didn't reset `_historyPreview`.** Every other piece of
+  history-adjacent session state (`_commandHistories`, `_loadedDocuments`,
+  selection) is reset in `dispose()` so a fresh `start()` behaves like a
+  genuinely new session — `_historyPreview` was missed. A stale
+  `active: true` surviving dispose permanently blocks `undo()`/`redo()`
+  on whatever session state comes next, since both refuse to run while
+  `_historyPreview.active` looks true. `WorldView.js`'s own
+  `onBeforeUnmount` already cancels an active preview defensively before
+  calling `session.dispose()`, which is why this never surfaced through
+  normal use of that one view — but the session's own `dispose()`/`start()`
+  contract ("dispose() should behave like a genuinely fresh session," per
+  0.9.116's own comment on this same method) shouldn't depend on every
+  caller remembering to do that first. Fixed by resetting
+  `_historyPreview`/`_retiredHistories` to `null` in `dispose()` itself,
+  alongside every other field it already resets.
+
+All three were reproduced directly against `WorldNavigationSession`
+before being fixed, and are now locked down as regression tests (Sections
+C, F, and D respectively) in the new audit suite below — deleting any one
+fix reintroduces exactly one section's failure.
+
+Item 9 from this milestone's own brief — "does restoring the entry you're
+currently previewing naturally terminate the preview, or can a preview
+representation remain active after the document underneath it has
+already been restored" — was already correct: `restoreHistoryAt()`'s
+existing `this._historyPreview.documentId === docId` branch (now the
+FIXED version of the same branch that caused the cross-document bug
+above) clears `_historyPreview` whenever the preview belongs to the
+document being restored, same-entry or not. Locked down as Section E,
+no changes needed.
+
+Everything else the brief asked for — preview purity, preview-vs-restore
+divergence, stale id-based selection, recovery/autosave independence,
+cross-subsystem isolation, failure isolation, and the "no second history
+implementation / no new lifecycle vocabulary" structural checks — was
+already correct and is locked down as a test with no production change,
+exactly per the brief's own instruction to fix only what the audit
+actually finds broken.
+
+### What was NOT done
+
+Per the brief's own explicit exclusion list: no branching history, no
+history visualization redesign, no command grouping/search, no history
+persistence redesign, no collaborative history, no undo/redo redesign, no
+snapshot/version management, no World/Publication/Placement rollback, no
+automatic restore, no new document lifecycle states. `CommandHistory`/
+`ReplayDocumentUseCase`/`RestoreHistoryStateUseCase`/
+`HistoryTimelinePanel.js` are byte-for-byte unchanged; only three
+`WorldNavigationSession.js` methods (`previewHistoryAt`, `restoreHistoryAt`,
+`dispose`) gained the scoping/reset fixes above.
+
+`tests/WorldViewHistoryLifecycleAudit.test.js` is the new audit suite,
+run against the real `WorldNavigationSession` for the same reason
+0.9.207's own flagship test is (`ui/views/WorldView.js` cannot be mounted
+under this repo's plain `node tests/*.test.js` sweep — it imports `vue`):
+
+- **A — Preview purity.** Previewing the first, an inner, and the
+  CURRENT/latest entry all leave the live document, live history, and
+  dirty state completely untouched; three full open/preview/cancel
+  cycles leave no renderer residue.
+- **B — Preview ≠ Restore.** Preview creates no command, never advances
+  the cursor, never marks dirty, never installs a new `CommandHistory`;
+  restore does every one of those, through the same ordinary paths any
+  other mutation uses.
+- **C — Preview switching** (regression test for the fix above).
+  Reselecting a different timeline entry while already previewing swaps
+  the render slot instead of stacking an orphaned world underneath the
+  new one.
+- **D — Panel-close/lifecycle cleanup.** Cancel, close, restore, and
+  `dispose()` (regression test for the fix above) all leave no preview
+  alive; a session reused after `dispose()` never finds `undo()`/`redo()`
+  permanently blocked by a stale preview flag. Structural checks confirm
+  `WorldView.js`'s `closeHistoryPanel()` and `onBeforeUnmount()` both
+  still cancel an active preview.
+- **E — Preview immediately followed by Restore of the same entry.**
+  Confirms restore cleanly terminates its own preview — no preview
+  representation survives the restore it fed into.
+- **F — Multiple-document isolation** (regression test for the fix
+  above). Previewing document A survives restoring an unrelated document
+  B completely untouched — same preview object, same cursor, same world
+  — and A's preview can still be cancelled correctly afterward.
+- **G — Stale selection.** Reconfirms 0.9.207's own id-based guard against
+  index substitution, and demonstrates structurally WHY that guard has to
+  live in `WorldView.js`'s re-resolution step rather than in
+  `CommandHistory` itself: a raw, stale numeric cursor is accepted by the
+  session layer with no protest, because cursors carry no entry identity
+  at all.
+- **H — Restore → ordinary dirty/autosave/lifecycle semantics.** A
+  restored document's dirty state clears via the exact same
+  `saveDocument()` any other dirty document uses; no `Autosave`/`Recovery`
+  reference and no `RESTORED`/`HISTORICAL` vocabulary exists anywhere in
+  `WorldNavigationSession.js` or `DocumentLifecycleStatus.js`.
+- **I — Recovery independence.** `RecoveryObserver.js`/
+  `CheckRecoveryUseCase.js` and `RestoreHistoryStateUseCase.js` carry zero
+  references to each other's machinery, in either direction.
+- **J — Failure isolation.** An out-of-range preview cursor throws
+  without corrupting the previously-active (still valid) preview; a
+  subsequent valid preview, undo, and redo all still work normally
+  afterward.
+- **K — Cross-subsystem isolation.** Preview/restore reproduce exactly
+  the command sequence up to the chosen cursor — proven with a landmark
+  command alongside brick placement, not brick-only — and never touch
+  `_publishedDocumentIds` or call storage/publish use cases directly
+  (checked by extracting each method's own body).
+- **L — Structural audit.** Exactly one `CommandHistory` class is used
+  throughout, with no competing history mechanism defined in
+  `WorldNavigationSession.js`; `HistoryTimelinePanel.js` remains a dumb,
+  import-free presentation component.
+
+This closes the boundary 0.9.207 opened. The project's own rhythm from
+0.9.203 onward — audit the newly exposed seam before building the next
+subsystem on top of it — holds again: 0.9.209 is deliberately not
+prescribed here, per this milestone's own brief.
