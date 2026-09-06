@@ -254,23 +254,29 @@ async function runTests() {
         // left half-closed.
         assert(countReferences(worldViewSource, 'getHistoryPreview') === 0, 'C4b. (post-0.9.207) WorldView.js still never calls getHistoryPreview() — it mirrors the cursor locally instead');
 
-        // C5 — UPDATE (0.9.207): the design rationale (C5a) and the
-        // literal absence of session.undo()/session.redo() calls (C5b)
-        // are BOTH still exactly true — 0.9.207 deliberately did not wire
-        // plain undo/redo, only the timeline/preview/restore surface (see
-        // docs/Roadmap.md, 0.9.207). What changed is the CONCLUSION this
-        // section originally drew from C5b: "a landmark rename or region
-        // deletion has no way to be undone today" is no longer accurate.
-        // Undo now has a real, if less direct, path — open History,
-        // select the entry immediately before the unwanted one, Restore —
-        // even though the plain undo()/redo() keyboard-shortcut-shaped
-        // affordance C5b checks for still has no caller of its own.
+        // C5 — UPDATE (0.9.207): the design rationale (C5a) held, and the
+        // literal absence of session.undo()/session.redo() calls (C5b, at
+        // the time) held too — 0.9.207 deliberately did not wire plain
+        // undo/redo, only the timeline/preview/restore surface (see
+        // docs/Roadmap.md, 0.9.207).
+        //
+        // UPDATE (0.9.210): C5b itself is now closed. "World View Undo/
+        // Redo UI Integration" gave WorldView.js an Undo/Redo button pair
+        // plus a Ctrl+Z/Ctrl+Y/Ctrl+Shift+Z shortcut, both calling
+        // session.undo()/session.redo() directly — see
+        // tests/WorldViewUndoRedoIntegration.test.js and
+        // tests/PostHistoryProductReassessment.test.js's own Section A6
+        // for the full closure record. The two paths (History's
+        // preview/restore, and plain Undo/Redo) remain two separate
+        // authorities, exactly as C5a's rationale and 0.9.209's own
+        // classification both anticipated — neither was folded into the
+        // other.
         assert(/a viewer's landmark edit needs to be undoable too/.test(await rawSource('docs/Principles.md')), 'C5a. 0.5.9\'s own documented rationale for keeping undo/redo + history/replay is still on record');
         for (const identifier of ['undo', 'redo']) {
-            assert(!new RegExp(`session\\.${identifier}\\(`).test(worldViewSource), `C5b. (post-0.9.207) WorldView.js still never calls session.${identifier}() — 0.9.207 wired History Timeline UI Integration, not plain undo/redo`);
+            assert(new RegExp(`session\\.${identifier}\\(\\)`).test(worldViewSource), `C5b. (post-0.9.210) WorldView.js now calls session.${identifier}() — 0.9.210 wired plain Undo/Redo UI Integration`);
         }
 
-        console.log('✓ Section C: World material/document lifecycle — ACTUAL GAP AT THE TIME, CLOSED BY 0.9.207. CommandHistory\'s timeline plus ReplayDocumentUseCase/RestoreHistoryStateUseCase, exposed as WorldNavigationSession#getTimeline()/beginHistoryPreview()/previewHistoryAt()/cancelHistoryPreview()/restoreHistoryAt(), were all correct (proven directly above) and composed by CreateWorldViewUseCase, but nothing in the UI tree called any of it at the time this milestone ran. 0.9.207 (\'World View History Timeline UI Integration\') gave WorldView.js a History panel wired straight to that existing machinery — no new history semantics, no new document lifecycle states. Plain session.undo()/redo() still has no caller (C5b, unchanged), but a viewer can now undo a landmark/region edit by restoring to the entry before it, which is the concrete need 0.5.9\'s own design record named.');
+        console.log('✓ Section C: World material/document lifecycle — ACTUAL GAP AT THE TIME, CLOSED BY 0.9.207 (timeline/preview/restore) AND 0.9.210 (plain undo/redo). CommandHistory\'s timeline plus ReplayDocumentUseCase/RestoreHistoryStateUseCase, exposed as WorldNavigationSession#getTimeline()/beginHistoryPreview()/previewHistoryAt()/cancelHistoryPreview()/restoreHistoryAt(), were all correct (proven directly above) and composed by CreateWorldViewUseCase, but nothing in the UI tree called any of it at the time this milestone ran. 0.9.207 (\'World View History Timeline UI Integration\') gave WorldView.js a History panel wired straight to that existing machinery — no new history semantics, no new document lifecycle states. Plain session.undo()/redo() had no caller at the time (C5b) either, until 0.9.210 gave it a button and keyboard shortcut of its own — a viewer can now undo a landmark/region edit either directly, or by restoring to the entry before it through History, which is the concrete need 0.5.9\'s own design record named.');
     }
 
     // ---------------------------------------------------------------
