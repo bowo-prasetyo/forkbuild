@@ -74171,3 +74171,93 @@ without new lifecycle vocabulary. I'd return to 0.9.192's own
 recommendation: the Snapshot subsystem now looks complete AND
 boundary-safe as an autonomous system. The next milestone should look
 outside Snapshot rather than continuing to turn this same crank.
+
+## 0.9.194 — Automatic Snapshot Session-Lifetime Guard E2E Audit
+
+Test-only. No production changes. 0.9.193 proved its guard correct against
+stubbed collaborators; this milestone asks whether that guard composes
+correctly with EVERYTHING 0.9.186-0.9.193 already built — real Nostr
+discovery, real Arweave resolution, real local materialization, real World
+placement/registration, and real retention reconciliation — the way
+`ui/views/WorldView.js`'s own `refreshSpatialUI()` actually wires them
+together, end to end. The central invariant under audit: a cascade belongs
+to the WorldView session that created it; acquisition may outlive that
+session, but World registration may not.
+
+`tests/AutomaticSnapshotSessionLifetimeGuardE2EAudit.test.js` — twelve
+sections, built around `makeGuardedSession()`, a harness that extends
+0.9.191/0.9.192's own `makeAutomaticSession()` composition with exactly the
+one thing neither of their harnesses ever wired in: the cascade's own
+`isSessionActive` collaborator, reading a plain, non-reactive flag
+byte-for-byte like `ui/views/WorldView.js`'s own
+`automaticCascadeSessionActive`, flipped by a `teardown()` call that cancels
+nothing already in flight — the identical restraint that file's own
+`onBeforeUnmount()` holds:
+(A) FLAGSHIP — a real-machinery cascade (real Nostr query, real
+Arweave-hosted content, real local materialization) torn down mid-flight is
+SUPPRESSED with material/Publication/Nostr/Arweave evidence intact and no
+World source, after which a freshly-mounted WorldView's own independent
+cascade run genuinely REGISTERS the identical subject, completely
+unaffected by the late completion; (B) an ordinary live session, full real
+machinery, is entirely unaffected by the guard's presence; (C) teardown
+during discovery's own real network query, during resolution (which itself
+bundles hash verification — the cascade has no separate "verify" await of
+its own, see `application/ResolveSelectedSnapshotCommand.js`), and during
+materialization all converge on SUPPRESSED, with a structural check
+confirming placement itself is synchronous and therefore never its own
+distinct teardown window; (D) acquisition survives a real-machinery
+suppressed run with no material deletion, rollback, Publication deletion,
+discovery withdrawal, or Arweave deletion; (E) FLAGSHIP NEGATIVE — the guard
+is SESSION-scoped, not SUBJECT-scoped: a live session's registration for a
+given publicationId/contentHash stands untouched even after a different,
+torn-down session's own later completion for that IDENTICAL subject arrives
+suppressed; (F) a subject a dead session suppressed is never permanently
+blocked — a fresh session's own independent cascade instance still
+genuinely registers it; (G) across several concurrent candidates in one
+session, only work that reaches the registration checkpoint while genuinely
+active registers, and retention only ever watches that work; (H) a live
+REGISTERED subject still KEEPs/UNREGISTERs by retention radius exactly as
+0.9.190 established, while a dead-session SUPPRESSED subject is simply
+never watched, leaving reconcile() nothing to do for it; (I) manual
+registration remains completely independent of the automatic cascade's
+session predicate; (J) SUPPRESSED alters no identity whatsoever —
+publicationId, contentHash, the Publication object, the Nostr event, the
+Arweave transaction, and the ordinary World origin format a later genuine
+registration produces are all exactly what a never-suppressed run would
+have; (K) a suppressed subject never becomes registered merely by being
+observed again, not even by the same cascade instance whose own
+`isSessionActive` closure is later (pathologically) flipped back to true —
+only a genuinely new cascade instance re-arms; (L) a structural sweep
+reconfirming, against the current source, exactly one `isSessionActive()`
+checkpoint, no `await` gap between it and registration, no cancellation
+machinery, no new timer, exactly two cascade outcome values, and both
+manual registration's own primitive and the shared `WorldDiscoverySourceRegistry`
+itself still carrying no `isSessionActive` concept of any kind.
+
+Every collaborator this file exercises is existing, unmodified application
+code — the same classes 0.9.186 through 0.9.193 already shipped, composed
+exactly as `ui/views/WorldView.js` itself composes them. No finding in this
+audit required a change to any of them.
+
+```text
+0.9.190  Automatic Snapshot Encounter Retention Integration          ✓
+0.9.191  Comprehensive Automatic Snapshot Retention Lifecycle Audit  ✓
+0.9.192  Automatic World Observation Cadence Audit                   ✓
+0.9.193  Automatic Snapshot Session-Lifetime Guard                   ✓
+0.9.194  Automatic Snapshot Session-Lifetime Guard E2E Audit         ✓
+```
+
+### Recommendation
+
+The Snapshot subsystem's autonomous lifecycle — discovery, cascade,
+registration, retention, reconciliation, and now the session boundary all
+riding one shared observation cadence — has now been audited end to end
+with real machinery, not just stubs, and no further defect surfaced. This
+is the point 0.9.192's own recommendation already named: I would not add
+another Snapshot-specific lifecycle feature next. Instead, the next
+milestone should be a roadmap/architecture reassessment asking what
+capability the Wanderer actually lacks now, rather than what additional
+Snapshot lifecycle machinery could still be constructed. If a real
+user-facing gap exists elsewhere, build the smallest seam for it; if not,
+this subsystem is complete enough to leave alone while the next
+architectural need emerges elsewhere.
