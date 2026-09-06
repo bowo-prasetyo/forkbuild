@@ -384,7 +384,10 @@ by itself — it's purely for looking around and picking where to go next.
 
 When a placement's info panel tells you other documents share its exact
 position, click **View** to open **Documents Here** — a plain list of
-everyone at that spot, each with its own **Focus** button.
+everyone at that spot, each with its own **Focus** button. Only documents
+that are still actually published show up here — if one was ever
+unpublished, it's simply left off the list rather than showing up as a
+row you can't do anything with.
 
 ## Inspecting a brick — or a placed structure
 

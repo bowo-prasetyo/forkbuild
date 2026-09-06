@@ -4949,10 +4949,26 @@ export class WorldNavigationSession {
     // placeable would mean giving something that BY DESIGN has no
     // publication yet a position anyway — a bigger question this
     // milestone does not attempt to answer.
+    //
+    // 0.9.201 — a PlacementRecord surviving its own Publication being
+    // unpublished (0.9.200's documented, intentional orphan) is a raw
+    // STORAGE fact, not a user-facing one. _describeSpatialOccupant()
+    // already reports that case with documentId: null (no discovery
+    // resolution) — this is this method's OWN presentation boundary,
+    // so it's the one place that fact is turned into an omission,
+    // exactly like 0.9.200's own recommendation, rather than exposing
+    // a degraded, opaque-id row through "Documents Here". Nothing
+    // upstream changes: the PlacementRecord, the spatial index, and
+    // checkPlacementOverlap's own (unfiltered) collision-detection
+    // occupants are all untouched — this is presentation-only, and it
+    // stays that way deliberately (see _describeSpatialOccupant below
+    // for why the filter lives here and not there).
     getDocumentsAtPosition(position) {
         if (!this._placementRegistry) return [];
         const overlap = detectSpatialOverlap(position, this._placementRegistry.list());
-        return overlap.occupants.map((occupant) => this._describeSpatialOccupant(occupant));
+        return overlap.occupants
+            .map((occupant) => this._describeSpatialOccupant(occupant))
+            .filter((occupant) => occupant.documentId !== null);
     }
 
     // Resolves a placement record into the shape a UI actually wants
@@ -4964,6 +4980,17 @@ export class WorldNavigationSession {
     // Shared by checkPlacementOverlap (0.2.25) and getDocumentsAtPosition
     // (0.2.26) — both are "who else is at this position," just with
     // different self-inclusion rules upstream.
+    //
+    // This method itself stays deliberately ignorant of WHY a
+    // publication fails to resolve (never unpublished, unpublished,
+    // no discoveryProvider wired at all — all look identical from
+    // here: `publication` is falsy). checkPlacementOverlap keeps this
+    // raw, unfiltered shape on purpose — it's a collision pre-flight
+    // check over physical occupancy, not a document listing, so an
+    // unresolvable occupant is still a real thing to not collide with.
+    // getDocumentsAtPosition (0.9.201) is the one caller that turns an
+    // unresolved occupant (documentId: null) into an omission, because
+    // IT is the one presenting occupants as user-facing "documents".
     _describeSpatialOccupant(record) {
         const publication = this._discoveryProvider ? this._discoveryProvider.findById(record.publicationId) : null;
         return {

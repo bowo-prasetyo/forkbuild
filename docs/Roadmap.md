@@ -74990,3 +74990,100 @@ own — the optional dialog polish named above is exactly that, optional —
 so the right next question remains the broad one: what is the next
 concrete thing a Wanderer or Publisher should be able to do that they
 currently cannot?
+
+## 0.9.201 — Degraded Orphan Row Handling
+
+Production + focused E2E test. Takes up the one optional, low-priority
+follow-up 0.9.200 documented and deliberately declined to fix itself:
+`getDocumentsAtPosition()` — the read model behind the existing
+"Documents Here" dialog (`ui/components/LocationDocumentsDialog.js`) —
+was not filtered by Publication existence, so an orphaned placement (a
+`PlacementRecord` surviving its own Publication being unpublished, per
+0.9.200's own intentional-boundary decision) produced one degraded row
+there: a title falling back to a raw `publicationId` string, with an
+already-inert "Focus" button.
+
+The fix stays deliberately narrow, at exactly the seam 0.9.200 pointed
+to — no orphan lifecycle state, no reopening of that decision:
+
+- **`application/WorldNavigationSession.js` — `getDocumentsAtPosition()`.**
+  Now filters out any occupant `_describeSpatialOccupant()` cannot
+  resolve to a Publication (`documentId === null`) before returning it,
+  rather than presenting a degraded, opaque-id row. `_describeSpatialOccupant()`
+  itself is unchanged — it still returns the same best-effort degraded
+  shape it always has, and stays shared, unmodified, with
+  `checkPlacementOverlap()` (the move pre-flight collision check), which
+  is a physical-occupancy question, not a document listing, and
+  deliberately keeps seeing the raw, unfiltered occupant.
+- **`ui/components/LocationDocumentsDialog.js`.** No logic change — it
+  simply never receives an unresolved occupant anymore. Its existing
+  `:disabled="!doc.documentId"` guard is left in place as defense in
+  depth for any future caller of the same component.
+
+`tests/DegradedOrphanRowHandling.test.js` is the flagship E2E audit,
+against the same real (not mocked) collaborators every other file in
+this arc uses:
+
+- **A — flagship.** Publish, place, confirm the row appears fully
+  resolved in "Documents Here"; unpublish; confirm the identical
+  `PlacementRecord` survives underneath while the SAME query now
+  returns zero occupants — no degraded row, no row at all.
+- **B — storage untouched.** The fix is read-only: the `PlacementRecord`
+  is byte-for-byte identical before and after exercising the new
+  filtering read, the Publication is not resurrected, and the material
+  and editable Document both remain exactly as unpublish alone left them.
+- **C — streaming unchanged.** `findVisibleDocuments()`/
+  `updateSpatialView()` behave identically to 0.9.200's own findings —
+  this milestone never touches World streaming at all.
+- **D — recovery still works.** 0.9.200 Section G's unpublish → remove
+  the orphan → publish → place recovery still produces a fully clean,
+  fully actionable state at the new position, with nothing left at the
+  old one.
+- **E — cross-document isolation.** An orphan in document A never
+  affects "Documents Here" for an unrelated, still-published document B.
+- **F — structural audit.** `getDocumentsAtPosition()`'s and
+  `_describeSpatialOccupant()`'s own bodies, and
+  `LocationDocumentsDialog.js` itself, reference none of
+  `UnpublishDocumentUseCase`, `RemoveWorldPlacementUseCase`, placement
+  deletion, Snapshot machinery, or Nostr/Arweave, and introduce no
+  `ORPHANED`/`UNPUBLISHED_PLACEMENT`/`STALE_PUBLICATION` or other new
+  orphan-lifecycle vocabulary of any kind.
+- **G — collision check unaffected.** `checkPlacementOverlap()` still
+  reports the raw, unfiltered occupant at the orphan's position — proof
+  the fix is scoped to the one presentation surface named in the brief,
+  not a change to shared placement plumbing.
+
+0.9.200's own `tests/OrphanedWorldPlacementLifecycleAudit.test.js` is
+updated in place (Section B6, and its closing decision narrative) to
+describe the now-fixed behavior rather than asserting the stale,
+pre-0.9.201 degraded shape as if it were still current.
+
+```text
+0.9.197  World Placement Removal UI Action                          ✓
+0.9.198  Publication Unpublish / Retract UI Action                  ✓
+0.9.199  Removal & Retraction Lifecycle Convergence Audit            ✓
+0.9.200  Orphaned World Placement Lifecycle Audit                   ✓
+0.9.201  Degraded Orphan Row Handling                               ✓
+```
+
+### Decision
+
+The rough edge is closed. The raw `PlacementRecord` remains exactly as
+0.9.200 left it — untouched, unremoved, unreattached — and "Documents
+Here" now simply omits what it cannot present, the same principle
+already governing every other best-effort local lookup in this file
+(`getPublicationForDocument`, `getPlacementInfo`, ordinary World
+streaming). The presentation layer never learns WHY a publication failed
+to resolve; it only ever observes "publication lookup → null → not
+presentable."
+
+### Recommendation
+
+0.9.200 already answered the architectural question — the orphan itself
+is intentional — and this milestone closes the one concrete rough edge
+that decision left behind. I would **not** automatically prescribe
+0.9.202. The sequence (gap → implementation → audit → observed
+consequence → narrowly fix consequence) has run its course for this
+particular thread; the right next question is the broad one again: what
+is the next concrete thing a Wanderer or Publisher should be able to do
+that they currently cannot?

@@ -11,6 +11,15 @@
 // scope boundary, not an oversight: this dialog answers "which
 // published works occupy this coordinate," not "everything currently
 // rendered near this coordinate."
+//
+// 0.9.201 — `occupants` also never contains a placement whose own
+// Publication can no longer be resolved (e.g. unpublished; 0.9.200's
+// documented, intentional orphan). getDocumentsAtPosition() omits
+// those before this component ever renders — this dialog stays exactly
+// as ignorant of WHY an occupant might be missing as it always was; it
+// simply never receives one it can't meaningfully present. The
+// `:disabled="!doc.documentId"` guard below is kept regardless, as
+// defense in depth for any future caller of this same component.
 export default {
     name: 'LocationDocumentsDialog',
     props: {
