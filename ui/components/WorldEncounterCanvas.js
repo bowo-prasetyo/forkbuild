@@ -11,6 +11,8 @@ import { resolveSnapshotPublicationAttribution } from '../../application/Snapsho
 import { describeWorldEncounterPresentation } from '../../application/WorldEncounterPresentation.js';
 import { describeWorldSnapshotInspection } from '../../application/WorldSnapshotInspection.js';
 import { unregisterMaterializedSnapshotWorldSource } from '../../application/MaterializedSnapshotWorldDiscoveryBridge.js';
+import { describeWorldEncounterComparisonCandidate } from '../../application/WorldEncounterComparisonCandidate.js';
+import { compareSnapshotWorldPublications } from '../../application/WorldSnapshotComparison.js';
 
 // 0.9.3 — World View UI / Wanderer Presence.
 //
@@ -1538,6 +1540,107 @@ import { unregisterMaterializedSnapshotWorldSource } from '../../application/Mat
 // - **A new `UNAVAILABLE`-adjacent status, a cache, a TTL, or any
 //   deduplication/ranking/trust vocabulary.** See "no new lifecycle
 //   state," above.
+//
+// 0.9.182 — World Snapshot Comparison UI.
+//
+// 0.9.181 built `compareSnapshotWorldPublications(a, b)` and deliberately
+// stopped short of any UI, naming exactly the gap this milestone closes:
+// "giving a Wanderer a genuine second, independently-held 'compare with'
+// selection... would be a new selection-holding mechanism in its own
+// right." This milestone adds precisely that second, independent selection
+// — never a second copy of the FULL selection-resolution pipeline
+// (ambiguity choice, decentralized leads, material loading, distribution —
+// none of that is needed to compare two already-known facts).
+//
+//   selectedEncounter (0.9.4, primary — "Publication A", unchanged)
+//        │
+//        │  click "Compare with…" -> armedForComparisonSelection = true
+//        │  click a second marker -> comparisonEncounter ("Publication B")
+//        ▼
+//   comparisonSelectionOutcome / comparisonResolvedSelection   ★ (THIS)
+//        (mirrors selectionOutcome/resolvedEncounterSelection, 0.9.20 —
+//         RESOLVED only; an AMBIGUOUS comparison target has no "Choose
+//         Source" panel of its own, see "deliberately excluded," below)
+//        │
+//        ▼
+//   application/WorldEncounterComparisonCandidate.js   (THIS milestone)
+//        describeWorldEncounterComparisonCandidate()   × 2 (A and B)
+//        │
+//        ▼
+//   application/WorldSnapshotComparison.js   (0.9.181, unmodified)
+//        compareSnapshotWorldPublications(a, b)
+//        │
+//        ▼
+//   worldSnapshotComparisonResult
+//        { aPublicationId, bPublicationId, samePublication, contentComparison }
+//        null
+//
+// `armedForComparisonSelection` REUSES THE EXISTING MARKER-CLICK PATH —
+// NEVER A SECOND CLICK HANDLER. Per the brief's own "the exact interaction
+// should follow whatever selection mechanism already exists rather than
+// creating a second selection system": clicking "Compare with…" arms this
+// flag; the very next marker click still emits the SAME `select` event
+// `selectEncounter()` already handles (0.9.4) — the ONLY new branch is at
+// that method's own top, routing to `selectComparisonEncounter()` instead
+// of overwriting the primary selection, then immediately un-arming. No new
+// component, no new emit, no new template click handler on
+// `WorldEncounterMarker` itself.
+//
+// `worldSnapshotComparisonResult` IS A LIVE COMPUTED, NEVER A CACHED FACT —
+// SO IT CAN NEVER DESCRIBE A STALE PAIR. It is `null` whenever
+// `comparisonEncounter` itself is `null` (see "no implicit comparison,"
+// below); otherwise it is recomputed, from scratch, from whatever
+// `selectedEncounter`/`comparisonEncounter` currently resolve to — a
+// change to EITHER side (a fresh primary selection, the registry dropping
+// one side's source entirely) is reflected on the very next read, exactly
+// the same "never a computed cache, always live" discipline
+// `resolvedEncounterSelection` (0.9.20) already holds one layer down.
+//
+// NO IMPLICIT COMPARISON, EVER. Selecting a Publication alone
+// (`selectedEncounter` alone) never sets `comparisonEncounter` — that field
+// is written by exactly one method, `selectComparisonEncounter()`, called
+// only after the Wanderer explicitly clicks "Compare with…" AND then
+// explicitly clicks a second marker. A registry notification never writes
+// `comparisonEncounter` either (only `comparisonSelectionOutcome`, which
+// stays `null` — and therefore contributes nothing — whenever
+// `comparisonEncounter` itself is `null`). Material loading
+// (`refreshMaterialInspection()`) is entirely untouched by this milestone
+// in both directions.
+//
+// THE COMPARISON CANDIDATES ARE SOURCE-FAMILY AGNOSTIC — NEITHER THIS FILE
+// NOR `WorldEncounterComparisonCandidate.js` GATES ON `sourceFamily`. A
+// resolved LOCAL, PEER, or SNAPSHOT selection all become a comparison
+// candidate the same way; only a SNAPSHOT-sourced one carries a genuinely
+// known `contentHash` today (0.9.177's own "not reachable here, yet,
+// honestly," unrevisited), so a LOCAL/PEER-involving comparison honestly
+// reports `contentComparison: null` ("not knowable") rather than being
+// refused outright for crossing families.
+//
+// DELIBERATELY EXCLUDED — NOT THIS MILESTONE.
+// - **An "AMBIGUOUS" resolution UI for the comparison target.**
+//   `comparisonResolvedSelection` mirrors `resolvedEncounterSelection`'s
+//   `RESOLVED` case only; an ambiguous second pick simply does not resolve
+//   (comparison stays unavailable) rather than gaining its own second
+//   "Choose Source" panel — the primary selection already owns that
+//   interaction, and duplicating it for a fact-only comparison would be
+//   exactly the scope growth 0.9.181's own brief already declined.
+// - **Decentralized lead resolution, material loading, verification, or
+//   distribution for the comparison target.** None of those are needed to
+//   state a content-identity fact; `comparisonEncounter` never feeds
+//   `inspectWorldEncounterMaterial()` or any distribution/discovery
+//   command.
+// - **A side-by-side content viewer.** `worldSnapshotComparisonResult` is
+//   rendered as exactly the fact it is — same content / different content
+//   / not yet knowable — never a rendering of either Publication's own
+//   material.
+// - **Deduplication, ranking, or any removal/replacement action offered
+//   from the comparison result.** `SAME_CONTENT` is shown as a fact only;
+//   nothing here offers to remove, merge, or prefer either Publication.
+// - **Clearing `comparisonEncounter` automatically when the primary
+//   selection changes.** A live comparison keeps comparing whatever is
+//   CURRENTLY selected on both sides — see "worldSnapshotComparisonResult
+//   is a live computed," above. `clearComparisonSelection()` remains the
+//   Wanderer's own explicit way to start over.
 
 const WORLD_HALF_SPAN = 50;
 const CANVAS_SIZE = 600;
@@ -1905,7 +2008,27 @@ export default {
             // Deliberately never reset by `selectEncounter()` or a fresh
             // `discoverPublication()` call — see that header's own
             // "selectedDiscoveredPublication never auto-resets."
-            selectedDiscoveredPublication: null
+            selectedDiscoveredPublication: null,
+            // 0.9.182 — `true` for exactly as long as the Wanderer has
+            // clicked "Compare with…" but not yet clicked a second marker.
+            // While `true`, `selectEncounter()` routes the next marker
+            // click to `selectComparisonEncounter()` instead of overwriting
+            // `selectedEncounter` — see this file's own header, "reuses the
+            // existing marker-click path."
+            armedForComparisonSelection: false,
+            // 0.9.182 — page-local only, exactly like `selectedEncounter`
+            // itself: `null` until the Wanderer picks a second Publication
+            // to compare `selectedEncounter` against; thereafter exactly
+            // `{ kind, objectId }`. Written only by
+            // `selectComparisonEncounter()`/`clearComparisonSelection()`.
+            comparisonEncounter: null,
+            // 0.9.182 — page-local, registry-derived classification of the
+            // CURRENT `comparisonEncounter`, mirroring `selectionOutcome`
+            // (0.9.20) exactly, one selection over. `null` until
+            // `refreshComparisonSelectionOutcome()` writes it; stays `null`
+            // for the lifetime of a mount with no `comparisonEncounter` or
+            // no `registry`.
+            comparisonSelectionOutcome: null
         };
     },
     computed: {
@@ -2122,6 +2245,74 @@ export default {
                 this.discoveryResult.inspection &&
                 this.discoveryResult.inspection.verification.status === 'VERIFIED'
             );
+        },
+        // 0.9.182 — mirrors `resolvedEncounterSelection` (0.9.20) exactly,
+        // one selection over, for `comparisonEncounter` instead of
+        // `selectedEncounter` — with one deliberate narrowing: an
+        // `'AMBIGUOUS'` `comparisonSelectionOutcome` never resolves here.
+        // See this file's own header, "deliberately excluded... an
+        // AMBIGUOUS resolution UI for the comparison target."
+        comparisonResolvedSelection() {
+            if (!this.comparisonSelectionOutcome) {
+                return null;
+            }
+            if (this.comparisonSelectionOutcome.status === WorldEncounterSelectionOutcomeStatus.RESOLVED) {
+                return this.comparisonSelectionOutcome.resolvedSelection;
+            }
+            return null;
+        },
+        // 0.9.182 — mirrors `selectedEncounterInspection` exactly, one
+        // selection over, for `comparisonEncounter`.
+        comparisonEncounterInspection() {
+            return describeWorldEncounterInspection({ selectedEncounter: this.comparisonEncounter, view: this.effectiveView });
+        },
+        // 0.9.182 — mirrors `selectedEncounterPresentation` exactly, one
+        // selection over, for `comparisonEncounter`/`comparisonResolvedSelection`.
+        comparisonEncounterPresentation() {
+            return describeWorldEncounterPresentation({
+                inspection: this.comparisonEncounterInspection,
+                resolvedSelection: this.comparisonResolvedSelection
+            });
+        },
+        // 0.9.182 — "Publication A": the primary selection's own comparison
+        // candidate — see `application/WorldEncounterComparisonCandidate.js`'s
+        // own header. `null` whenever `selectedEncounter` is not a resolved
+        // PUBLICATION encounter (nothing selected, an AVATAR selected, or an
+        // unresolved/AMBIGUOUS one).
+        selectedPublicationComparisonCandidate() {
+            return describeWorldEncounterComparisonCandidate({
+                presentation: this.selectedEncounterPresentation,
+                resolvedSelection: this.resolvedEncounterSelection
+            });
+        },
+        // 0.9.182 — "Publication B": the comparison target's own comparison
+        // candidate, mirroring `selectedPublicationComparisonCandidate`
+        // immediately above exactly, one selection over.
+        comparisonPublicationComparisonCandidate() {
+            return describeWorldEncounterComparisonCandidate({
+                presentation: this.comparisonEncounterPresentation,
+                resolvedSelection: this.comparisonResolvedSelection
+            });
+        },
+        // 0.9.182 — the one new fact this milestone makes user-visible.
+        // `null` whenever `comparisonEncounter` itself is `null` — see this
+        // file's own header, "no implicit comparison, ever": merely having
+        // a `selectedEncounter` (Publication A) never produces a
+        // comparison on its own. Once a comparison target IS explicitly
+        // set, this is a live join of both sides' current comparison
+        // candidates through `compareSnapshotWorldPublications()` (0.9.181,
+        // unmodified) — never cached, so a change to either side (a fresh
+        // primary selection, either source leaving the registry) is
+        // reflected on the very next read, never presented as though it
+        // still described a stale pair.
+        worldSnapshotComparisonResult() {
+            if (!this.comparisonEncounter) {
+                return null;
+            }
+            return compareSnapshotWorldPublications(
+                this.selectedPublicationComparisonCandidate,
+                this.comparisonPublicationComparisonCandidate
+            );
         }
     },
     methods: {
@@ -2129,7 +2320,18 @@ export default {
         // WorldEncounterMarker's own `select` emit carries — `{ kind,
         // objectId }` — and stores it verbatim; no lookup, no join back
         // into `view`, no re-derivation of any kind.
+        //
+        // 0.9.182 — while `armedForComparisonSelection` is `true`, this SAME
+        // marker-click path routes to `selectComparisonEncounter()` instead
+        // — see this file's own header, "reuses the existing marker-click
+        // path." The primary `selectedEncounter` (Publication A) is left
+        // completely untouched in that case; none of this method's own
+        // resets below run.
         selectEncounter(encounter) {
+            if (this.armedForComparisonSelection) {
+                this.selectComparisonEncounter(encounter);
+                return;
+            }
             this.selectedEncounter = encounter;
             // 0.9.20 — a fresh selection never carries a stale explicit
             // choice from whatever was previously selected; see this
@@ -2540,6 +2742,62 @@ export default {
             }
             unregisterMaterializedSnapshotWorldSource(this.registry, inspection.contentHash, inspection.publicationId);
         },
+        // 0.9.182 — the only writer of `armedForComparisonSelection` that
+        // ever sets it `true`. Guarded on there being a genuine comparison
+        // candidate for the CURRENT primary selection — arming without one
+        // would let the Wanderer pick a "Publication B" for a Publication A
+        // that isn't actually comparable (nothing selected, an AVATAR, or
+        // an unresolved selection). `selectEncounter()`'s own armed branch,
+        // and `selectComparisonEncounter()` below, are the only two places
+        // that ever set it back to `false`.
+        armComparisonSelection() {
+            if (!this.selectedPublicationComparisonCandidate) {
+                return;
+            }
+            this.armedForComparisonSelection = true;
+        },
+        // 0.9.182 — the only writer of `comparisonEncounter`. Takes exactly
+        // what a marker's own `select` emit carries — `{ kind, objectId }`
+        // — and stores it verbatim, mirroring `selectEncounter()`'s own
+        // restraint (0.9.4) exactly: no lookup, no join back into `view`,
+        // no re-derivation of any kind. Reached only through
+        // `selectEncounter()`'s own armed branch, above.
+        selectComparisonEncounter(encounter) {
+            this.armedForComparisonSelection = false;
+            this.comparisonEncounter = encounter;
+            this.refreshComparisonSelectionOutcome();
+        },
+        // 0.9.182 — the only writer of `comparisonSelectionOutcome`, and
+        // the only caller of `describeWorldEncounterSelectionOutcomeFromRegistry()`
+        // for `comparisonEncounter` in this file — mirrors
+        // `refreshSelectionOutcome()` (0.9.20) exactly, one selection over,
+        // with one deliberate omission: it never tail-calls
+        // `refreshMaterialInspection()` — a comparison target's own material
+        // is never loaded (see this file's own header, "deliberately
+        // excluded... material loading... for the comparison target").
+        // `null` whenever there is no current `comparisonEncounter` or no
+        // `registry`.
+        refreshComparisonSelectionOutcome() {
+            if (!this.comparisonEncounter || !this.registry) {
+                this.comparisonSelectionOutcome = null;
+            } else {
+                this.comparisonSelectionOutcome = describeWorldEncounterSelectionOutcomeFromRegistry({
+                    selectedEncounter: this.comparisonEncounter,
+                    registry: this.registry
+                });
+            }
+        },
+        // 0.9.182 — the Wanderer's own explicit way to start a comparison
+        // over: clears `comparisonEncounter`/`comparisonSelectionOutcome`
+        // and un-arms comparison selection, all in one step. Never called
+        // automatically — see this file's own header, "deliberately
+        // excluded... clearing comparisonEncounter automatically when the
+        // primary selection changes."
+        clearComparisonSelection() {
+            this.armedForComparisonSelection = false;
+            this.comparisonEncounter = null;
+            this.comparisonSelectionOutcome = null;
+        },
         // 0.9.111 — the only writer of `discoveryResult`/`discoveryError`/
         // `discovering`, and the only caller of `discoveryCommand` in this
         // file. A no-op whenever there is no `discoveryCommand`, a call is
@@ -2607,6 +2865,11 @@ export default {
         if (this.registry && typeof this.registry.subscribe === 'function') {
             this.refreshWorldViewFromRegistry();
             this.refreshSelectionOutcome();
+            // 0.9.182 — seeds `comparisonSelectionOutcome` too, mirroring
+            // `refreshSelectionOutcome()` immediately above exactly, one
+            // selection over. A no-op whenever there is no
+            // `comparisonEncounter` yet (the common case at mount time).
+            this.refreshComparisonSelectionOutcome();
             this.unsubscribeWorldRegistry = this.registry.subscribe(() => {
                 this.refreshWorldViewFromRegistry();
                 // 0.9.20 — a source appearing or disappearing while a
@@ -2619,6 +2882,12 @@ export default {
                 // this must be an explicit call here, mirroring
                 // refreshWorldViewFromRegistry() immediately above.
                 this.refreshSelectionOutcome();
+                // 0.9.182 — the SAME reasoning applies to a live comparison
+                // target: if its own source leaves the registry while a
+                // comparison is open, `comparisonSelectionOutcome` must
+                // re-derive too, so `worldSnapshotComparisonResult` collapses
+                // to "no longer actionable" rather than staying stale.
+                this.refreshComparisonSelectionOutcome();
             });
         }
         // 0.9.40 — a second, independent optional registry subscription,
@@ -2766,6 +3035,43 @@ export default {
                         @click="unregisterSelectedSnapshot"
                     >Remove Snapshot from World</button>
                 </div>
+            </div>
+
+            <div v-if="selectedPublicationComparisonCandidate" class="world-snapshot-comparison-panel">
+                <h4 class="world-snapshot-comparison-title">Compare</h4>
+
+                <template v-if="!comparisonEncounter">
+                    <button
+                        type="button"
+                        class="world-snapshot-comparison-arm"
+                        :disabled="armedForComparisonSelection"
+                        @click="armComparisonSelection"
+                    >Compare with…</button>
+                    <p v-if="armedForComparisonSelection" class="world-snapshot-comparison-hint">
+                        Click another Publication marker to compare.
+                    </p>
+                </template>
+
+                <template v-else>
+                    <dl class="world-snapshot-comparison-detail">
+                        <dt>Publication A</dt>
+                        <dd>{{ selectedPublicationComparisonCandidate.publicationId }}</dd>
+                        <dt>Publication B</dt>
+                        <dd>{{ comparisonPublicationComparisonCandidate ? comparisonPublicationComparisonCandidate.publicationId : comparisonEncounter.objectId }}</dd>
+                        <dt>Result</dt>
+                        <dd class="world-snapshot-comparison-result">
+                            <template v-if="!worldSnapshotComparisonResult">This comparison is no longer available.</template>
+                            <template v-else-if="worldSnapshotComparisonResult.contentComparison === 'SAME_CONTENT'">Same content</template>
+                            <template v-else-if="worldSnapshotComparisonResult.contentComparison === 'DIFFERENT_CONTENT'">Different content</template>
+                            <template v-else>Content identity not yet known</template>
+                        </dd>
+                    </dl>
+                    <button
+                        type="button"
+                        class="world-snapshot-comparison-clear"
+                        @click="clearComparisonSelection"
+                    >Clear comparison</button>
+                </template>
             </div>
 
             <div v-if="selectedEncounter && selectionOutcome && selectionOutcome.status !== 'UNAVAILABLE'" class="world-encounter-selection-origin-panel">

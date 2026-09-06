@@ -72511,3 +72511,154 @@ product need" pattern 0.9.180 was written to interrupt. 0.9.180's own
 Vehicle Reachability recommendation also remains entirely open and
 unweakened by this milestone — this was a deliberate, one-off, product-
 directed exception to it, not a reversal of its own underlying judgment.
+
+## 0.9.182 — World Snapshot Comparison UI
+
+0.9.181 itself named the exact gap this milestone closes: "giving a
+Wanderer a genuine second, independently-held 'compare with' selection...
+would be a new selection-holding mechanism in its own right... left for a
+later, separate milestone." This is that milestone — the first one where
+`compareSnapshotWorldPublications()` becomes something a Wanderer can
+actually reach, deliberately kept as narrow as the brief that requested it:
+
+> Allow a Wanderer who has selected one World Publication to explicitly
+> compare it with another selected World Publication and see whether
+> their content is identical.
+
+```text
+selectedEncounter (0.9.4, primary — "Publication A", unchanged)
+     │
+     │  click "Compare with…" -> armedForComparisonSelection = true
+     │  click a second marker -> comparisonEncounter ("Publication B")
+     ▼
+comparisonSelectionOutcome / comparisonResolvedSelection   (NEW)
+     (mirrors selectionOutcome/resolvedEncounterSelection, 0.9.20 —
+      RESOLVED only, deliberately)
+     │
+     ▼
+application/WorldEncounterComparisonCandidate.js   (NEW)
+     describeWorldEncounterComparisonCandidate()   × 2 (A and B)
+     │
+     ▼
+application/WorldSnapshotComparison.js   (0.9.181, unmodified)
+     compareSnapshotWorldPublications(a, b)
+     │
+     ▼
+worldSnapshotComparisonResult
+{ aPublicationId, bPublicationId, samePublication, contentComparison }
+null
+```
+
+**A second, independent selection — never a second copy of the full
+resolution pipeline.** `ui/components/WorldEncounterCanvas.js` gains
+exactly one new page-local selection, `comparisonEncounter`, holding
+"Publication B" alongside the existing `selectedEncounter` ("Publication
+A"). Resolving it reuses `describeWorldEncounterSelectionOutcomeFromRegistry()`
+(0.9.20, unmodified) a second time, but deliberately does NOT reuse
+ambiguity-choice UI, decentralized lead resolution, material loading, or
+distribution/discovery for that second selection — none of those are
+needed to state a content-identity fact, and duplicating them would be
+exactly the scope growth 0.9.181's own brief declined. An ambiguous
+comparison target simply does not resolve (the comparison stays
+unavailable) rather than growing its own "Choose Source" panel.
+
+**The marker-click path is reused, never duplicated.** Per the brief's own
+"the exact interaction should follow whatever selection mechanism already
+exists rather than creating a second selection system": clicking "Compare
+with…" sets one new flag, `armedForComparisonSelection`; the very next
+marker click still emits the SAME `select` event `selectEncounter()`
+already handles (0.9.4). The only new branch is at that method's own top —
+route to `selectComparisonEncounter()` instead of overwriting the primary
+selection, then un-arm. `WorldEncounterMarker.js` itself is completely
+unmodified; there is no second click handler, no second component.
+
+**`application/WorldEncounterComparisonCandidate.js` (new) generalizes
+`describeWorldSnapshotInspection()`'s own gate, on purpose.** 0.9.177's own
+function only ever reports a descriptor for a SNAPSHOT-sourced encounter —
+that restriction is untouched (`tests/WorldSnapshotInspection.test.js`
+still passes unmodified). This new, small, pure file answers a narrower
+question for ANY resolved PUBLICATION encounter, regardless of family:
+`publicationId` is always `presentation.objectId`; `contentHash` reuses
+`describeWorldSnapshotInspection()` when the encounter is SNAPSHOT-sourced,
+and stays honestly `null` for LOCAL/PEER — no new plumbing invents a
+`contentHash` where 0.9.177's own audit already found it unreachable (see
+0.9.181's own "deliberately excluded... populating contentHash for
+LOCAL/PEER descriptors," unrevisited here). This keeps the comparison
+itself exactly as source-family agnostic at the UI layer as
+`compareSnapshotWorldPublications()` already is one layer down: a
+LOCAL/PEER-involving comparison is never refused for crossing families —
+it simply, honestly, reports `contentComparison: null` where neither side's
+content identity is knowable yet.
+
+**`worldSnapshotComparisonResult` is a live computed, never a cached
+fact.** `null` whenever `comparisonEncounter` itself is `null` — merely
+selecting Publication A never produces a comparison on its own, a registry
+notification never sets a comparison target, and material loading is
+entirely untouched in both directions. Once a target IS explicitly set,
+the result recomputes from whatever both sides CURRENTLY resolve to on
+every read — changing the primary selection, or either side's source
+leaving the registry, is reflected immediately, never presented as though
+it still described a stale pair.
+
+**The "particularly important case" from the brief holds exactly as
+described.** Two Publications with an identical `contentHash` at very
+different World positions report `SAME_CONTENT` while continuing to render
+as two fully independent World objects — `publicationId A ≠ publicationId
+B`, `contentHash A = contentHash B`, `World object A ≠ World object B`,
+unchanged from 0.9.181's own invariant.
+
+**`tests/WorldSnapshotComparisonUI.test.js` — ten sections**, covering
+explicit comparison through the UI, same/different content, cross-family
+agnosticism (LOCAL↔SNAPSHOT/PEER↔SNAPSHOT/LOCAL↔PEER/SNAPSHOT↔SNAPSHOT),
+position independence, identity preservation, no implicit comparison
+(selection alone / registry changes / material loading), no stale result
+across a primary-selection change, unavailability on either side's
+removal, and a structural audit (exactly one call site of
+`compareSnapshotWorldPublications()`, no second click handler, no registry
+mutation from any of this milestone's own new methods, no re-derivation of
+`contentHash`). `tests/WorldEncounterCanvasUI.test.js`'s own Section J
+import-boundary count is updated (eleven -> thirteen application/
+imports); `tests/WorldEncounterSelectionResolutionUI.test.js` retires
+`'compare'` from its own forbidden-vocabulary sweep, now that the word
+carries a real, deliberately scoped, product-directed meaning rather than
+an invented ranking synonym. `tests.html` gains one new entry.
+
+Deliberately excluded, per this milestone's own narrow brief:
+- **A side-by-side content viewer.** The result is rendered as exactly the
+  fact it is — same content / different content / not yet knowable —
+  never a rendering of either Publication's own material. Named explicitly
+  as the next, separate, not-yet-justified milestone.
+- **An "AMBIGUOUS" resolution UI for the comparison target, decentralized
+  lead resolution, material loading, verification, or distribution for
+  it.** None of those are needed to state a content-identity fact.
+- **"Duplicate detection," deduplication, ranking, or any removal/
+  replacement action offered from the comparison result.** `SAME_CONTENT`
+  is shown as a fact only.
+- **Clearing `comparisonEncounter` automatically when the primary
+  selection changes.** A live comparison keeps comparing whatever is
+  currently selected on both sides; `clearComparisonSelection()` is the
+  Wanderer's own explicit way to start over.
+- **Populating `contentHash` for LOCAL/PEER descriptors where it is not
+  already known.** Unrevisited from 0.9.181 — see "generalizes
+  describeWorldSnapshotInspection()'s own gate," above.
+
+```text
+0.9.178  World Snapshot Inspection Actionability Audit               ✓
+0.9.179  Snapshot World Source Unregistration                        ✓
+0.9.180  World Snapshot Completion & Boundary Audit                  ✓
+0.9.181  World Snapshot Comparison                                   ✓
+0.9.182  World Snapshot Comparison UI                                ✓
+```
+
+### Recommendation
+
+`compareSnapshotWorldPublications()` is now genuinely user-reachable, and
+the "smallest useful comparison interaction" the original 0.9.182 brief
+asked to discover turned out to be exactly what it guessed: an explicit
+"Compare with…" pick, and a one-line fact. Whether that fact alone proves
+useful enough to justify a **Snapshot Content View/Compare experience** —
+rendering what SAME_CONTENT/DIFFERENT_CONTENT actually mean by showing the
+Publications themselves, side by side — is now a real, answerable product
+question rather than a speculative one; this milestone deliberately stops
+short of deciding it in advance. 0.9.180's own Vehicle Reachability
+recommendation remains entirely open and unweakened.

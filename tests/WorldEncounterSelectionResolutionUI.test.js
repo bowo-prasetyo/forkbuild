@@ -277,10 +277,21 @@ async function run() {
         const source = await readFile(new URL('../ui/components/WorldEncounterCanvas.js', import.meta.url), 'utf8');
         const codeOnly = source.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
 
+        // 0.9.182 note — 'compare' was retired from this list. It was
+        // originally banned here as one more synonym for an invented
+        // ranking/preference between ambiguous candidates (see this file's
+        // own Section G/H, "chooseSelectionOrigin() only ever stores exactly
+        // the candidate handed to it... no invented ranking"). 0.9.181/
+        // 0.9.182 later gave "compare"/"comparison" a real, deliberately
+        // scoped, product-directed meaning of their own — a Wanderer
+        // explicitly comparing two Publications' own content identity,
+        // never a ranking between selection candidates — so banning the
+        // word itself would now flag legitimate, unrelated vocabulary
+        // rather than the ranking concern it was written to catch.
         const forbiddenTerms = [
             'trusted', 'trust(', 'reputation', 'verified', 'verify(', 'authority', 'priority',
             'weight', 'confidence', 'ranking', 'scoring', 'nearest', 'proximity', 'winner',
-            'preferred', 'dedup', 'reconcile', 'compare', 'localstorage', 'sessionstorage', 'fetch('
+            'preferred', 'dedup', 'reconcile', 'localstorage', 'sessionstorage', 'fetch('
         ];
         for (const term of forbiddenTerms) {
             if (term === 'verified') {
