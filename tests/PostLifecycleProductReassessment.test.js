@@ -206,10 +206,21 @@ async function runTests() {
             assert(persistence[field], `C2. CreatePersistenceUseCase().execute() still returns ${field}`);
         }
 
-        // C3 — the ONLY UI surface that composes CreatePersistenceUseCase
-        // is EditorView.js, and it destructures four of its seven fields
-        // — saveDocumentUseCase/loadDocumentUseCase/forkDocumentUseCase/
-        // structureDocumentResolver — never the recovery stack.
+        // C3 — UPDATE (0.9.204): at the time this milestone (0.9.203) ran,
+        // EditorView.js was the only UI surface composing
+        // CreatePersistenceUseCase, and it destructured only four of its
+        // seven fields — saveDocumentUseCase/loadDocumentUseCase/
+        // forkDocumentUseCase/structureDocumentResolver — never the
+        // recovery stack. 0.9.204 ("Editor Autosave & Recovery UI
+        // Integration") closed exactly the gap this section identified by
+        // wiring the remaining four fields in; this assertion is updated
+        // to match, rather than left describing a state that no longer
+        // exists — the ACTUAL_GAP finding itself is unchanged history
+        // (see this file's own C1-C2, still proving the stack was already
+        // correct before 0.9.204 gave it a caller), only the "is it wired
+        // yet" snapshot below is current. See docs/Roadmap.md, 0.9.204,
+        // and tests/PostRecoveryProductReassessment.test.js's own C1 for
+        // the 0.9.206 reconfirmation that this closure holds.
         const editorViewSource = await rawSource('ui/views/EditorView.js');
         assert(/new CreatePersistenceUseCase\(\)\.execute\(\)/.test(editorViewSource), 'C3a. EditorView.js still composes CreatePersistenceUseCase directly');
         const destructureMatch = editorViewSource.match(/const \{([^}]*)\}\s*=\s*new CreatePersistenceUseCase\(\)\.execute\(\)/);
@@ -218,35 +229,36 @@ async function runTests() {
         for (const field of ['saveDocumentUseCase', 'loadDocumentUseCase', 'forkDocumentUseCase', 'structureDocumentResolver']) {
             assert(destructured.includes(field), `C3c. EditorView.js destructures ${field}`);
         }
-        for (const field of ['recoveryStore', 'autosaveDocumentUseCase', 'recoverDocumentUseCase', 'discardRecoveryUseCase', 'checkRecoveryUseCase']) {
-            assert(!destructured.includes(field), `C3d. EditorView.js's destructuring does NOT include ${field} — the recovery stack is composed but never taken`);
+        for (const field of ['autosaveDocumentUseCase', 'recoverDocumentUseCase', 'discardRecoveryUseCase', 'checkRecoveryUseCase']) {
+            assert(destructured.includes(field), `C3d. (post-0.9.204) EditorView.js's destructuring now includes ${field} — the recovery stack this section found dormant is wired in`);
         }
 
-        // C4 — the finding is not "Editor takes it but never calls it" —
-        // it's that literally nothing in the UI tree ever references any
-        // of these five names, and AutosaveScheduler (the debounce
-        // orchestrator that would actually trigger a checkpoint) is
-        // never instantiated anywhere outside a test file either.
-        const uiFiles = [
-            'ui/views/EditorView.js', 'ui/views/WorldView.js', 'ui/views/LiveWorldView.js',
+        // C4 — UPDATE (0.9.204): this section originally proved nothing in
+        // the UI tree referenced any of these names. 0.9.204 made
+        // EditorView.js reference all of them (AutosaveScheduler included,
+        // via `new AutosaveScheduler(...)`); every OTHER UI file remains
+        // untouched, exactly as this file's original finding said they
+        // should be (the integration belongs in the one view that edits
+        // documents, not spread across the app).
+        const otherUiFiles = [
+            'ui/views/WorldView.js', 'ui/views/LiveWorldView.js',
             'ui/views/HomeView.js', 'ui/views/RecentWorldsView.js', 'ui/views/RepositoryView.js', 'ui/main.js'
         ];
         for (const identifier of ['AutosaveScheduler', 'recoverDocumentUseCase', 'discardRecoveryUseCase', 'checkRecoveryUseCase', 'autosaveDocumentUseCase']) {
-            for (const file of uiFiles) {
+            assert(countReferences(editorViewSource, identifier) > 0, `C4a. (post-0.9.204) EditorView.js now references ${identifier}`);
+            for (const file of otherUiFiles) {
                 const source = await rawSource(file);
-                assert(countReferences(source, identifier) === 0, `C4. ${file} never references ${identifier}`);
+                assert(countReferences(source, identifier) === 0, `C4b. ${file} still never references ${identifier} — the integration stayed scoped to EditorView.js`);
             }
         }
 
-        // C5 — and there is no substitute safety net either: EditorView.js
-        // has no beforeunload warning and no other dirty-state guard that
-        // would tell a user their unsaved edits are at risk before they
-        // navigate away or close the tab. This is not "one convenience
-        // feature is missing" — it's "the one subsystem built specifically
-        // to prevent silent loss of in-progress edits is entirely dormant."
-        assert(!/beforeunload/i.test(editorViewSource), 'C5. EditorView.js installs no beforeunload guard — no substitute protection exists');
+        // C5 — UPDATE (0.9.204): a beforeunload guard was never the fix
+        // this section asked for (the live checkpoint/recovery pipeline
+        // being wired up is) and 0.9.204 did not add one — still true,
+        // and no longer the gap now that the actual recovery path works.
+        assert(!/beforeunload/i.test(editorViewSource), 'C5. EditorView.js still installs no beforeunload guard — unneeded now that the recovery pipeline itself is live');
 
-        console.log('✓ Section C: World material lifecycle — ACTUAL GAP. AutosaveDocumentUseCase/CheckRecoveryUseCase/RecoverDocumentUseCase/DiscardRecoveryUseCase/AutosaveScheduler are all correct (proven directly above) and all composed by CreatePersistenceUseCase — but EditorView.js, the only caller of that composition root, takes four of its seven fields and leaves the entire recovery stack untouched. No checkpoint is ever written today (AutosaveScheduler.start() is called nowhere in production code), so a crash or accidental tab close currently loses every edit since the last explicit Save, silently, with a fully-built recovery path sitting unused since 0.2.6.');
+        console.log('✓ Section C: World material lifecycle — ACTUAL GAP AT THE TIME, CLOSED BY 0.9.204. AutosaveDocumentUseCase/CheckRecoveryUseCase/RecoverDocumentUseCase/DiscardRecoveryUseCase/AutosaveScheduler were all correct (proven directly above) and all composed by CreatePersistenceUseCase, but EditorView.js took only four of its seven fields and left the recovery stack untouched at the time this milestone ran. 0.9.204 wired the remaining four fields in and started AutosaveScheduler/RecoveryObserver from EditorView.js\'s own onMounted(); 0.9.205 then audited that integration under lifecycle pressure and closed one real failure-isolation defect it found. See tests/PostRecoveryProductReassessment.test.js (0.9.206) for the current-state reassessment this file\'s own finding fed into.');
     }
 
     // ---------------------------------------------------------------
@@ -286,7 +298,7 @@ async function runTests() {
 Classification summary:
   A. World interaction/navigation ....... COMPLETE
   B. Vehicle system ...................... INTENTIONAL_BOUNDARY
-  C. World material lifecycle ............ ACTUAL_GAP (existing capability + missing UI -> small integration)
+  C. World material lifecycle ............ ACTUAL_GAP AT THE TIME -> CLOSED BY 0.9.204/0.9.205
   D. Publication workflow ................ COMPLETE (+ one unchanged INTENTIONAL_BOUNDARY)
   E. Performance .......................... DEFERRED
 `);
