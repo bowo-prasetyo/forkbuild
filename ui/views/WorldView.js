@@ -36,6 +36,7 @@ import WorldFocusPanel from '../components/WorldFocusPanel.js';
 import WorldEncounterCanvas from '../components/WorldEncounterCanvas.js';
 import OwnPublicationPanel from '../components/OwnPublicationPanel.js';
 import VehicleInteractionPrompt from '../components/VehicleInteractionPrompt.js';
+import HistoryTimelinePanel from '../components/HistoryTimelinePanel.js';
 import { CameraPerspective } from '../../core/CameraPerspective.js';
 import { geographicPlaceLocationId } from '../../core/GeographicPlaceNavigation.js';
 import { WorldFocusKind } from '../../core/WorldFocusContext.js';
@@ -76,7 +77,8 @@ export default {
         WorldMembersPanel, WorldPresenceIndicator, WorldCollaboratorIndicator,
         WorldWelcomePanel, WorldMapPanel, PlaceNamingPanel,
         GeographicPlaceDirectoryPanel, GeographicPlacePanel, CollapsibleSection,
-        WorldFocusPanel, WorldEncounterCanvas, OwnPublicationPanel, VehicleInteractionPrompt
+        WorldFocusPanel, WorldEncounterCanvas, OwnPublicationPanel, VehicleInteractionPrompt,
+        HistoryTimelinePanel
     },
     setup() {
         const route = useRoute();
@@ -864,6 +866,131 @@ export default {
                 const publication = session.publishDocument(info.documentId);
                 feedback.show(`Published "${publication.title}"`);
             });
+            refreshSpatialUI();
+        }
+
+        // 0.9.207 — World View History Timeline UI Integration. Connects
+        // CommandHistory's own timeline/replay/restore machinery — correct,
+        // composed, and unreached since 0.1.40/0.1.41 (see 0.9.206's own
+        // finding) — to an actual caller for the first time, exactly the
+        // way saveActiveDocument()/publishActiveDocument() immediately
+        // above already connect saveDocument()/publishDocument(). Nothing
+        // about CommandHistory/ReplayDocumentUseCase/RestoreHistoryStateUseCase
+        // changes: this is only session.getTimeline()/beginHistoryPreview()/
+        // previewHistoryAt()/cancelHistoryPreview()/restoreHistoryAt(),
+        // called in the sequence docs/Principles.md's own 0.5.9 design
+        // record anticipated ("a viewer's landmark edit needs to be
+        // undoable too") — see docs/Roadmap.md's 0.9.207 entry for the
+        // full record.
+        const showHistoryPanel = ref(false);
+        const historyPanelDocumentId = ref(null);
+        const historyTimeline = ref([]);
+        const selectedHistoryEntryId = ref(null);
+        // The cursor WorldNavigationSession#getHistoryPreview() reports
+        // while a preview is active, or null — mirrored locally only so
+        // the panel can highlight the previewed row and show/hide "Cancel
+        // Preview"; the session's own _historyPreview stays the single
+        // source of truth for whether a preview is actually active.
+        const historyPreviewCursor = ref(null);
+
+        function openHistoryPanel() {
+            const info = activeDocumentInfo.value;
+            if (!info) return;
+            historyPanelDocumentId.value = info.documentId;
+            selectedHistoryEntryId.value = null;
+            historyPreviewCursor.value = null;
+            historyTimeline.value = session.getTimeline(info.documentId);
+            showHistoryPanel.value = true;
+        }
+
+        function closeHistoryPanel() {
+            // A preview left running behind a closed panel would keep the
+            // replay world rendered alongside (or instead of) the live one
+            // with no visible way left to end it — always cancel before
+            // the panel itself disappears.
+            if (historyPreviewCursor.value !== null) {
+                guarded(() => session.cancelHistoryPreview());
+            }
+            showHistoryPanel.value = false;
+            historyPanelDocumentId.value = null;
+            historyTimeline.value = [];
+            selectedHistoryEntryId.value = null;
+            historyPreviewCursor.value = null;
+        }
+
+        function selectHistoryEntry(entryId) {
+            // Selection alone is local UI state — no session call, no
+            // mutation, nothing previewed or restored yet.
+            selectedHistoryEntryId.value = entryId;
+        }
+
+        // Re-reads the timeline fresh and resolves the selected entry's
+        // OWN id back to a cursor — never a remembered index. A landmark
+        // edit, an undo, or another restore made while this panel sat open
+        // can move or remove entirely what used to sit at that index; if
+        // the selected id is no longer present, the stale selection is
+        // cleared and reported instead of silently acting on whatever now
+        // occupies that slot (see ui/components/HistoryTimelinePanel.js's
+        // own header).
+        //
+        // CommandHistory's own cursor means "this many commands applied"
+        // (see application/CommandHistory.js#getCursor()/replay()'s own
+        // endCursor) — entry.index is 0-based, so "restore/preview to the
+        // state with THIS entry's own effect included" is entry.index + 1,
+        // never entry.index itself (that would land one command short —
+        // the state immediately BEFORE this entry ran). Reusing the exact
+        // cursor tests/HistoryRestore.test.js's own flagship already
+        // exercises, not a new convention invented here.
+        function _resolveSelectedHistoryCursor() {
+            const docId = historyPanelDocumentId.value;
+            if (!docId || !selectedHistoryEntryId.value) return null;
+            const fresh = session.getTimeline(docId);
+            historyTimeline.value = fresh;
+            const entry = fresh.find((candidate) => candidate.id === selectedHistoryEntryId.value);
+            if (!entry) {
+                selectedHistoryEntryId.value = null;
+                feedback.show('That history entry no longer exists — the timeline has changed');
+                return null;
+            }
+            return entry.index + 1;
+        }
+
+        function previewSelectedHistoryEntry() {
+            const docId = historyPanelDocumentId.value;
+            if (!docId || docId !== session.getActiveDocumentId()) {
+                feedback.show('The active document changed — reopen History to preview it');
+                return;
+            }
+            const cursor = _resolveSelectedHistoryCursor();
+            if (cursor === null) return;
+            guarded(() => {
+                if (historyPreviewCursor.value === null) {
+                    session.beginHistoryPreview();
+                }
+                session.previewHistoryAt(cursor);
+                historyPreviewCursor.value = cursor;
+            });
+        }
+
+        function cancelHistoryPreviewAction() {
+            guarded(() => session.cancelHistoryPreview());
+            historyPreviewCursor.value = null;
+        }
+
+        function restoreSelectedHistoryEntry() {
+            const docId = historyPanelDocumentId.value;
+            const cursor = _resolveSelectedHistoryCursor();
+            if (cursor === null) return;
+            // restoreHistoryAt() ends any active preview itself (see its
+            // own header) — this just stops mirroring a cursor the
+            // session no longer has active.
+            const restored = guarded(() => {
+                session.restoreHistoryAt(cursor, docId);
+                return true;
+            });
+            if (!restored) return;
+            feedback.show('Restored to an earlier point in history');
+            closeHistoryPanel();
             refreshSpatialUI();
         }
 
@@ -3284,6 +3411,14 @@ export default {
             if (presentExperienceWorldDocumentId) {
                 session.saveWorldExperience(presentExperienceWorldDocumentId);
             }
+            // 0.9.207 — defensive only: session.dispose() immediately below
+            // already tears down the whole render session (and, with it,
+            // any lingering preview world), but ending an active history
+            // preview explicitly first keeps _historyPreview from outliving
+            // the view that opened it even for one tick.
+            if (historyPreviewCursor.value !== null) {
+                guarded(() => session.cancelHistoryPreview());
+            }
             session.dispose();
         });
 
@@ -3365,6 +3500,16 @@ export default {
             compassMarkers,
             showLocationsPanel,
             worldLocations,
+            showHistoryPanel,
+            historyTimeline,
+            selectedHistoryEntryId,
+            historyPreviewCursor,
+            openHistoryPanel,
+            closeHistoryPanel,
+            selectHistoryEntry,
+            previewSelectedHistoryEntry,
+            cancelHistoryPreviewAction,
+            restoreSelectedHistoryEntry,
             showWelcomePanel,
             welcomeContext,
             welcomeIsArrival,
@@ -3520,6 +3665,11 @@ export default {
                     >Save</button>
                     <button class="action-btn action-btn--primary" @click="publishActiveDocument">Publish</button>
                     <button class="action-btn" @click="openMetadataEditor(activeDocumentInfo)">Edit Metadata</button>
+                    <button
+                        class="action-btn"
+                        title="Inspect, preview, and restore this document's command history"
+                        @click="openHistoryPanel"
+                    >History</button>
                 </div>
                 <div v-if="activePlacementInfo" class="world-view-actions">
                     <button
@@ -4161,6 +4311,17 @@ export default {
                 :info="metadataEditTarget"
                 @save="onSaveMetadata"
                 @cancel="showMetadataEditor = false; metadataEditTarget = null"
+            />
+            <HistoryTimelinePanel
+                v-if="showHistoryPanel"
+                :timeline="historyTimeline"
+                :selected-entry-id="selectedHistoryEntryId"
+                :preview-cursor="historyPreviewCursor"
+                @select="selectHistoryEntry"
+                @preview="previewSelectedHistoryEntry"
+                @cancel-preview="cancelHistoryPreviewAction"
+                @restore="restoreSelectedHistoryEntry"
+                @cancel="closeHistoryPanel"
             />
             <PlacementEditorDialog
                 v-if="showPlacementEditor"

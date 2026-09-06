@@ -75851,3 +75851,164 @@ plain undo/redo affordance in World View) calling the already-correct
 `beginHistoryPreview()`/`previewHistoryAt()`/`cancelHistoryPreview()` —
 but whether, and which of those shapes, is a product decision this
 test-only milestone deliberately leaves open rather than assumes.
+
+## 0.9.207 — World View History Timeline UI Integration
+
+Small production integration + E2E audit. Takes up the one candidate gap
+0.9.206 classified and declined to prescribe further than naming:
+connect `CommandHistory`'s own timeline/replay/restore machinery — all
+of it already correct, already tested, already composed by
+`CreateWorldViewUseCase.js` into `WorldNavigationSession` since
+0.1.40/0.1.41 — to `ui/views/WorldView.js`, the one UI surface that
+constructs a `WorldNavigationSession` and the one surface 0.5.9's own
+design record says needs it ("a viewer's landmark edit needs to be
+undoable too" — `docs/Principles.md`, "World View Observes and
+Navigates; Editor Mutates and Builds"). No new domain logic: no new
+history storage, no new command model, no new document lifecycle
+states, no history-specific persistence.
+
+One correction to how this was originally framed: the request that
+prompted this milestone described the target as "the Editor UI"
+composing `CommandHistory` through `WorldNavigationSession`. That
+pairing does not exist in this codebase — `ui/views/EditorView.js` (the
+brick editor) uses its own, separate `EditorSession`/`CommandHistory`
+pair and has no timeline/replay/restore methods at all;
+`WorldNavigationSession` (the class that actually carries
+`getTimeline()`/`restoreHistoryAt()`/etc.) backs `ui/views/WorldView.js`
+instead, per 0.5.9's own design record and 0.9.206's own finding. This
+milestone builds against the real pairing, not the assumed one.
+
+```text
+WorldView.js
+   │
+   ▼
+WorldNavigationSession (existing, unchanged)
+   │
+   ├── getTimeline(documentId)
+   ├── beginHistoryPreview() / previewHistoryAt(cursor) / cancelHistoryPreview()
+   └── restoreHistoryAt(cursor, documentId)
+          │
+          ▼
+   CommandHistory (existing, unchanged) — ReplayDocumentUseCase / RestoreHistoryStateUseCase underneath
+```
+
+### What was added
+
+- **`ui/components/HistoryTimelinePanel.js` — new, dumb, presentation-only.**
+  Exactly `LocationsPanel.js`/`RecoveryBanner.js`'s own posture: zero
+  imports, no use-case call, no mutation. Renders `getTimeline()`'s own
+  return shape verbatim — `entry.description`/`entry.timestamp`/
+  `entry.applied` straight through, no parallel "what happened"
+  representation invented in Vue. Selecting a row (`@click`) only emits
+  `select` — local UI state, not a session call. Preview and Restore are
+  two separate, explicit buttons, both disabled until a selection
+  exists, mirroring "viewing history is observational; replay/restore
+  are mutations."
+- **`ui/views/WorldView.js` — the one caller.** A "History" button joins
+  Save/Publish/Edit Metadata in the existing `activeDocumentInfo &&
+  activeDocumentInfo.editable` action bar — the same authorization line
+  already drawn for every other mutation-shaped action in this view, not
+  a new one. `openHistoryPanel()` calls `session.getTimeline(documentId)`
+  read-only; `previewSelectedHistoryEntry()` calls
+  `beginHistoryPreview()`/`previewHistoryAt(cursor)`;
+  `cancelHistoryPreviewAction()` calls `cancelHistoryPreview()`;
+  `restoreSelectedHistoryEntry()` calls `restoreHistoryAt(cursor,
+  documentId)`. Closing the panel while a preview is active cancels it
+  first — a preview left running behind a closed panel would keep a
+  replay world rendered with no visible way left to end it.
+- **Selection identity — `_resolveSelectedHistoryCursor()`.** A selected
+  entry is tracked by its own `id` (`CommandHistory`'s own command
+  identity, unchanged since 0.1.40), never by array position. Preview and
+  Restore both call this ONE function immediately before acting: it
+  re-reads `getTimeline()` fresh and resolves the selected id back to a
+  cursor. If a landmark edit, an undo, or another restore happened while
+  the panel sat open and the selected entry's id no longer exists (the
+  linear-history invariant wiped the redo branch it lived in — see
+  `application/CommandHistory.js`'s own header), the stale selection is
+  cleared and reported instead of silently acting on whatever now
+  occupies that slot.
+- **The cursor/index distinction.** `CommandHistory`'s own cursor means
+  "this many commands applied" (`getCursor()`/`replay()`'s own
+  `endCursor`); a timeline entry's `index` is 0-based. Resolving entry N
+  to "the state with that entry's own effect included" is `index + 1`,
+  not `index` — the same cursor `tests/HistoryRestore.test.js`'s own
+  flagship already exercises (its "preview cursor 3" is entries 0-2
+  applied, entry 3 not yet). Getting this backwards was the one real bug
+  this milestone's own audit caught before it shipped (see the flagship
+  test below) — restoring "entry N" would otherwise have landed one
+  command short of what a person selecting that row would expect.
+
+### What stays exactly as it was
+
+`CommandHistory`/`ReplayDocumentUseCase`/`RestoreHistoryStateUseCase`/
+`WorldNavigationSession` are byte-for-byte unchanged — every method this
+milestone calls already existed. No plain `session.undo()`/`session.redo()`
+keyboard-shortcut affordance was added; 0.9.206's own candidate gap
+named the timeline/replay/restore machinery specifically, and this
+milestone stops there rather than also picking up undo/redo, which
+remains its own, still-open, smaller candidate. Autosave/recovery are
+untouched and irrelevant here: that subsystem is scoped to
+`EditorView.js`'s own `documentManager` (0.9.203-0.9.205); World View's
+documents have no autosave path to plug into, and a restore's own
+dirty/save semantics (`history.markUnsaved()`, an ordinary `isDocumentDirty()`
+read, the pre-existing "Save" button) are the same ones every other World
+View mutation already goes through — no special history-dirty flag.
+
+`tests/WorldViewHistoryTimelineIntegration.test.js` is the flagship E2E
+audit. `ui/views/WorldView.js` itself cannot be mounted by this repo's
+plain `node tests/*.test.js` sweep — it imports `vue`, the same
+constraint every other View in this suite already works around (see
+`tests/EditorAutosaveRecoveryUIIntegration.test.js`'s own header). The
+audit instead exercises the real `WorldNavigationSession` in the exact
+sequence `WorldView.js`'s new functions run it:
+
+- **A — FLAGSHIP.** open (`getTimeline`) → select → preview
+  (`beginHistoryPreview`/`previewHistoryAt`) → cancel preview → select a
+  DIFFERENT entry → restore. Confirms the live document is untouched
+  during preview, the preview world renders alongside it, cancelling
+  removes it, and restore acts on whichever entry is CURRENTLY selected
+  — not whatever was last previewed.
+- **B — read-only inspection.** Five repeated `getTimeline()` reads
+  create zero commands, touch zero dirty state, and never start a
+  preview on their own.
+- **C — stale selection.** An entry selected, then undone (still
+  resolvable — nothing lost yet), then invalidated for real by a new
+  command clearing the redo branch it lived in: the id no longer
+  resolves to anything, rather than silently resolving to whatever new
+  entry now sits at its old index.
+- **D — Restore needs no prior Preview.** The two are independent
+  explicit actions, not a two-step wizard.
+- **E — multiple documents.** Two documents' timelines never share an
+  id; an id from one resolves to nothing against the other's timeline.
+- **F — failure isolation.** An out-of-range restore throws and leaves
+  the document/history completely untouched; a valid restore afterward
+  still works.
+- **G — structural audit.** `WorldView.js` imports/registers the new
+  panel and calls all five session methods; Preview and Restore both
+  route through the one shared `_resolveSelectedHistoryCursor()`
+  function, which matches by `entry.id`, never by position; the History
+  button lives in the existing editable-document action bar; no
+  `CURRENT`/`HISTORICAL`/`RESTORING`-shaped vocabulary was introduced;
+  `HistoryTimelinePanel.js` has zero imports and declares exactly the
+  five emits it uses.
+
+`tests/PostRecoveryProductReassessment.test.js` (0.9.206's own flagship)
+asserted, by name, that none of `getTimeline`/`restoreHistoryAt`/
+`beginHistoryPreview`/`previewHistoryAt`/`cancelHistoryPreview` was
+referenced anywhere in the UI tree — this milestone makes that
+assertion false for `ui/views/WorldView.js` specifically. Updated
+Section C's C4/C5 in place (the same "update in place, keep the still-true
+parts, note what changed" convention 0.9.204 set for 0.9.203's own C3d/
+C4/C5) to confirm the new references instead of their absence, while
+`getHistoryPreview()` staying uncalled (`WorldView.js` mirrors the
+previewed cursor in its own local ref instead of re-querying the
+session) and `session.undo()`/`session.redo()` staying uncalled (this
+milestone did not add plain undo/redo) are both reconfirmed, unchanged.
+
+```text
+0.9.203  Post-Lifecycle Product Reassessment                         ✓
+0.9.204  Editor Autosave & Recovery UI Integration                   ✓
+0.9.205  Editor Autosave & Recovery Lifecycle Audit                  ✓
+0.9.206  Post-Recovery Product Reassessment                          ✓
+0.9.207  World View History Timeline UI Integration                 ✓
+```
