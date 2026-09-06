@@ -75087,3 +75087,116 @@ consequence → narrowly fix consequence) has run its course for this
 particular thread; the right next question is the broad one again: what
 is the next concrete thing a Wanderer or Publisher should be able to do
 that they currently cannot?
+
+## 0.9.202 — Unpublished Placement Physical-Occupancy Audit
+
+Test-only. No production changes. 0.9.201's own header drew a line
+between two different questions a position can be asked —
+`getDocumentsAtPosition()` ("what can a person be shown here?"), which
+0.9.201 taught to omit an orphan, and `checkPlacementOverlap()` ("what
+physically occupies this coordinate?"), which 0.9.201 deliberately left
+unfiltered, on the stated grounds that an orphan remains a real physical
+occupant for collision purposes. That second half was asserted narrowly
+by 0.9.201 (one occupant, unresolved shape) but never exercised end to
+end. This milestone asks the question directly: does an orphan actually
+change what happens when someone tries to **place** or **move**
+something onto its exact coordinate?
+
+`tests/UnpublishedPlacementPhysicalOccupancyAudit.test.js`, against the
+same real (not mocked) collaborators every other file in this arc uses:
+
+- **A — physical occupancy after unpublish.** The same position, checked
+  with `checkPlacementOverlap()` before and after unpublishing: the
+  occupant COUNT and geometry are unchanged; only the resolved
+  `documentId`/title of that one occupant degrades, exactly as
+  0.9.200/0.9.201 already established for presentation.
+- **B — placement collision.** A fresh publication placed directly at an
+  orphan's position succeeds unconditionally — with two structural
+  findings, not one: `checkPlacementOverlap()` cannot even be asked the
+  question for a not-yet-placed document (it resolves a placement FOR
+  the requester first, and there is none yet), and
+  `PlacePublicationUseCase` itself performs no overlap check of its own
+  at all. Both facts pre-date orphans entirely — see 0.2.23/0.2.25's own
+  "placement never blocks a publish." The two PlacementRecords then
+  genuinely coexist at the same coordinate, and the new arrival resolves
+  normally through every read model.
+- **C — movement collision.** An explicit move onto an orphan's position
+  produces the identical WARN-policy decision (`allowed: true,
+  requiresConfirmation: true`) as moving onto any other occupied
+  position — checked side by side against a still-published occupant in
+  the same section. `MoveWorldPlacementUseCase`, like
+  `PlacePublicationUseCase`, never itself consults the policy decision;
+  enforcement is the caller's (the UI's) responsibility alone, per
+  docs/Principles.md, "Overlap Is A Fact; Collision Is A Policy
+  Decision." An orphan receives no special treatment, worse or better,
+  than a live occupant.
+- **D — document presentation isolation.** At one genuinely co-occupied
+  position (one orphan, one resolvable placement, same coordinate),
+  "Documents Here" presents exactly the resolvable occupant while
+  `checkPlacementOverlap()` reports both — confirming 0.9.201's split
+  holds under real co-occupancy, not merely for an orphan in isolation.
+- **E — recovery.** Unpublish → remove the orphan via the existing raw
+  `RemoveWorldPlacementUseCase` bypass → publish → place again: physical
+  occupancy (not just the document-keyed read models 0.9.200 already
+  checked) is fully clean afterward, with no trace of the original
+  orphan anywhere.
+- **F — cross-document isolation.** An orphan in document A never alters
+  `checkPlacementOverlap()`'s result for an unrelated document B's
+  position.
+- **G — identity.** The occupant `checkPlacementOverlap()` reports for
+  an orphan is read directly off the existing `PlacementRecord`
+  (`placementId`, `publicationId`) — never reconstructed from a
+  `documentId` that doesn't exist for it. `detectSpatialOverlap()`
+  itself (`core/SpatialOverlap.js`) has no `publicationId`- or
+  `documentId`-aware branch of any kind — matching is purely positional.
+- **H — structural boundary.** `core/SpatialOverlap.js`,
+  `core/SpatialAllocationPolicy.js`, `PlacePublicationUseCase.js`, and
+  `MoveWorldPlacementUseCase.js` reference no unpublish/`isPublished`
+  concept, no Snapshot/Nostr/Arweave collaborator, and introduce no
+  orphan-lifecycle vocabulary of any kind.
+
+```text
+0.9.199  Removal & Retraction Lifecycle Convergence Audit            ✓
+0.9.200  Orphaned World Placement Lifecycle Audit                   ✓
+0.9.201  Degraded Orphan Row Handling                               ✓
+0.9.202  Unpublished Placement Physical-Occupancy Audit              ✓
+```
+
+### Decision
+
+**Outcome 1 — intentional physical occupancy, confirmed by evidence, not
+assumption.** An unpublished Publication's surviving `PlacementRecord`
+behaves as an ordinary physical occupant in every respect this audit
+could exercise. It can share a coordinate with a new arrival — but so
+can any two ordinary, still-published placements (0.2.25's own "a shared
+world can legitimately hold more than one publication at the same
+position" already covers this; the orphan case simply falls under that
+existing rule, not an exception to it). Nothing observed blocks a
+legitimate new placement or move, silently corrupts either occupant, or
+leaves a Wanderer/Publisher without an existing, already-proven recovery
+path. The split is coherent and already fully implemented:
+
+```text
+Publication lifecycle
+       │
+       └── controls document-facing visibility
+
+Placement lifecycle
+       │
+       └── controls physical occupancy
+```
+
+### Recommendation
+
+I recommend **stopping this orphan thread here**. The sequence — gap
+audit (0.9.196) → UI actions (0.9.197/0.9.198) → convergence audit
+(0.9.199) → lifecycle audit (0.9.200) → presentation fix (0.9.201) →
+physical-occupancy audit (0.9.202) — has now examined every read model
+and mutation path a Wanderer or Publisher can reach through the existing
+UI, and found exactly one genuine rough edge (0.9.201's fix) plus one
+now-confirmed, coherent, intentional boundary (this file). I would
+**not** prescribe a 0.9.203 "Orphaned Physical Occupancy Resolution"
+milestone — there is no concrete product gap for it to resolve. The next
+milestone should return to the broader question: what is the next
+concrete thing a Wanderer or Publisher should be able to do that they
+currently cannot?
