@@ -74261,3 +74261,153 @@ Snapshot lifecycle machinery could still be constructed. If a real
 user-facing gap exists elsewhere, build the smallest seam for it; if not,
 this subsystem is complete enough to leave alone while the next
 architectural need emerges elsewhere.
+
+
+## 0.9.195 — Automatic Snapshot Subsystem Boundary & Convergence Audit
+
+Test-only. No production changes. 0.9.192's and 0.9.194's own
+"Recommendation" sections both already said the same thing twice: stop
+adding Snapshot-specific lifecycle capability next, and instead ask
+whether the whole assembled autonomous pipeline — discovery, cascade,
+acquisition, placement, registration, retention, and (0.9.193/0.9.194) the
+session-lifetime boundary — has actually stopped where it should. This
+milestone is that question, asked once, directly, across the WHOLE
+subsystem rather than one seam of it: has automatic Snapshot machinery
+stopped exactly where it should, without accidentally becoming a second
+World system?
+
+`tests/AutomaticSnapshotSubsystemBoundaryConvergenceAudit.test.js` —
+twelve sections, deliberately NOT another "does the guard hold under
+load" audit (0.9.188/0.9.191/0.9.192/0.9.194 already proved that, at
+greater adversarial rigor than this file would add) — instead asking
+eleven narrower, structurally different questions plus one closing
+assertion:
+(A) the complete autonomous path, spatial observation through ordinary
+World rendering, with no manual step anywhere in the chain; (B) session
+boundary at the WHOLE-SYSTEM level — two concurrent sessions, two
+different subjects, neither aware the other exists, and no session
+registry anywhere for either to become aware of it through; (C)
+retention's own boundary — `reconcile()` only ever removes an
+already-registered automatic source, never rediscovering, starting or
+cancelling acquisition, touching a Publication, deleting material, or
+affecting a manual registration; (D) failure isolation across all six
+stages (discovery, resolution, verification, materialization, placement,
+registration) — each failure terminates only its own candidate, never a
+sibling candidate sharing the same tick; (E) identity closure —
+contentHash, publicationId, a Nostr event id, a locator, a World origin,
+a World position, and session identity, each confirmed never to silently
+substitute for another; (F) source-family convergence — LOCAL, PEER, and
+SNAPSHOT origins converge on the identical `deriveWorldEncounters()`
+pipeline with field-for-field identical encounter shapes; (G) no hidden
+Snapshot path — ordinary World-rendering components' own current imports,
+checked directly; (H) automatic vs. manual isolation by orchestration
+provenance alone, with no `automatic`/`manual` field anywhere in a
+`WorldDiscoverySource` or the registry, and unregister/material
+deletion/Publication deletion/Nostr withdrawal confirmed as four
+genuinely independent operations; (I) re-entry — two separate dead
+sessions independently suppressing the identical subject carry no
+cumulative weight, and no tombstone/blocklist vocabulary exists anywhere
+in the subsystem; (J) cadence composition, reconfirmed against current
+source — still exactly one spatial cadence; (K) no accidental authority —
+the standing checklist 0.9.159, 0.9.163, 0.9.172, and 0.9.189 each
+separately established, held together as one section; (L) THE POINT — an
+explicit assertion of the subsystem's own stopping point, plus a
+vocabulary sweep proving nothing beyond it has quietly been built.
+
+**Findings — every section held; nothing beyond bookkeeping.**
+- **Sections A through F, and H through L, passed exactly as the
+  0.9.131-0.9.194 lineage predicted**, with two adjustments made along the
+  way that are themselves small confirmations, not defects: the
+  `NostrSnapshotDiscoveryPublisher#publish()` contract (0.9.171) genuinely
+  refuses a `publicationId` supplied without an accompanying
+  `claimedPosition`, resolving to `null` rather than announcing — this
+  file's own harness supplies both together everywhere, exactly as
+  `application/AutomaticSnapshotEncounterCascade.js`'s own header already
+  documents that pairing; and `core/WorldEncounter.js`'s own
+  `snapshotPlacements` parameter (0.9.5, a `PublicationAnchor`/
+  `PublicationSnapshotPlacement` concept entirely unrelated to this
+  subsystem) is a legitimate, pre-existing use of the word "Snapshot" this
+  file's own Section F vocabulary sweep had to name explicitly and exclude
+  — a naming coincidence between two unrelated "Snapshot" concepts in this
+  codebase's history, not a hidden import.
+- **Section G confirmed a real, precise boundary rather than a blanket
+  absence.** `ui/components/WorldEncounterCanvas.js` and
+  `ui/components/OwnPublicationPanel.js` DO import Snapshot-specific
+  code — `resolveSnapshotPublicationAttribution`,
+  `describeWorldSnapshotInspection`, `compareSnapshotWorldPublications`,
+  `describeWorldSnapshotContentView`/`...ContentComparisonView`, and
+  `unregisterMaterializedSnapshotWorldSource` — but never the ACQUISITION
+  half: no Nostr/Arweave client, no `AutomaticSnapshotEncounterCascade`,
+  no `AutomaticSnapshotEncounterRetentionReconciliation`, no
+  `WorldSnapshotDiscoveryMonitor`, no resolver. The correct boundary was
+  never "ordinary World components know nothing about Snapshots" — every
+  registered Snapshot renders, and is inspectable/comparable, as ordinary
+  World content — it is "ordinary World components never import
+  DISCOVERY/RESOLUTION/CASCADE/RETENTION machinery." `ui/views/WorldView.js`
+  remains the one confirmed composition root for the cascade/retention
+  orchestrators, and `ui/views/LiveWorldView.js` — a second, entirely
+  separate World-rendering route — composes none of the automatic
+  pipeline at all: the automatic Snapshot subsystem lives on exactly one
+  route, never implicitly wired into every place a World renders.
+- **Section K's own "registration never implies ownership" and "retention
+  never implies visibility" both held with no code to point to that makes
+  either one true by construction** — there is simply no `owner` field on
+  a `WorldDiscoverySource` to have been misused, and rendering
+  (`deriveWorldEncounters()`) never once consults retention's own watch
+  state. Both are absences, not defenses, which is exactly what "no
+  accidental authority" is supposed to look like four milestones after
+  0.9.159 first drew the line.
+- **Section L's vocabulary sweep found nothing** — no `adopt`, `merge`,
+  `ownership`, `synchroniz[e/ation]`, `conflictResolution`, `withdraw`,
+  `trustLevel`, or `acceptance` vocabulary anywhere across
+  `AutomaticSnapshotEncounterCascade.js`, `...CascadeOutcome.js`,
+  `...RetentionReconciliation.js`, `...RetentionPolicy.js`,
+  `WorldSnapshotDiscoveryMonitor.js`,
+  `MaterializedSnapshotWorldDiscoveryBridge.js`, or
+  `WorldDiscoverySourceRegistry.js`. The subsystem's own stopping point —
+  "maintain eligible Snapshot contributions to the ordinary World source
+  registry during the lifetime of a WorldView session" — is confirmed as
+  the entire responsibility this family of files takes on, with nothing
+  beyond it quietly under construction anywhere in its own vocabulary.
+
+Every collaborator this file exercises is existing, unmodified application
+code, composed exactly as `ui/main.js` and `ui/views/WorldView.js`
+themselves compose it. No finding in this audit required, or produced, a
+change to any of them.
+
+Deliberately excluded — not this milestone:
+- **Any fix, for anything.** This file either confirms an existing
+  invariant or it does not; either way, no production file changes.
+- **Re-running 0.9.188/0.9.191/0.9.192/0.9.194's own concurrency/
+  adversarial-movement/teardown-timing ground.** Already proven, at
+  greater rigor than this file would add, by those four audits
+  specifically.
+- **A new lifecycle vocabulary, a new registry field, a session registry,
+  a tombstone store, or an `automatic` flag of any kind.** Proposing any
+  of those would itself be exactly the "accidental second World system"
+  this milestone exists to rule out, not something it introduces to check
+  for one.
+
+```text
+0.9.191  Comprehensive Automatic Snapshot Retention Lifecycle Audit    ✓
+0.9.192  Automatic World Observation Cadence Audit                    ✓
+0.9.193  Automatic Snapshot Session-Lifetime Guard                    ✓
+0.9.194  Automatic Snapshot Session-Lifetime Guard E2E Audit          ✓
+0.9.195  Automatic Snapshot Subsystem Boundary & Convergence Audit    ✓
+```
+
+### Recommendation
+
+The autonomous Snapshot subsystem has now been audited from every angle
+this codebase's own history has raised: adversarial concurrency (0.9.188),
+temporal composition (0.9.192), the session-lifetime boundary itself
+(0.9.193/0.9.194), and now — this milestone — its own architectural
+stopping point, checked structurally rather than merely argued for in
+prose. Every section held. I would not add another Snapshot-specific
+audit, and I would not add another Snapshot-specific capability either —
+both are exactly the kind of accumulation this milestone exists to guard
+against once a subsystem has already been shown complete. I would pause
+Snapshot development here and reassess the actual product gap: the next
+milestone should be driven by a concrete, user-facing requirement located
+OUTSIDE this subsystem, not by another theoretically possible Snapshot
+lifecycle feature.
