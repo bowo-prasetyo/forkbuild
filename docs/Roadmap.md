@@ -74867,3 +74867,126 @@ or removal do next" but the broader one 0.9.196 originally asked: what is
 the next concrete thing a Wanderer or Publisher should be able to do that
 they currently cannot? If nothing important surfaces, the correct next
 milestone may genuinely be no new feature at all.
+
+## 0.9.200 — Orphaned World Placement Lifecycle Audit
+
+Test-only. No production changes. 0.9.198's own Section D first observed,
+and 0.9.199's Section B reconfirmed without repairing, that a placement
+can survive at the raw `PlacementRecord`/spatial-index level after its
+governing Publication is unpublished — reachable only through
+`getPlacementInfoForPublication()`'s bypass, invisible through the
+ordinary document-keyed one. Both of those files asked that question in
+passing, as one section among several about a different subject (whether
+removal and unpublish stay independent of each other). This milestone
+asks the orphan question as its own subject: what, precisely, can a
+Wanderer or Publisher still do with a surviving orphaned placement, using
+only operations that already exist — and is this an intentional boundary
+or a genuine product gap?
+
+`tests/OrphanedWorldPlacementLifecycleAudit.test.js` answers with real,
+running code, against the same real (not mocked) collaborators every
+other file in this arc already uses:
+
+- **A — flagship orphan creation.** `documentId`, `publicationId`,
+  `placementId`, and `contentHash` captured before and after unpublish.
+  Confirms precisely what disappears (`getPublicationForDocument()`,
+  `getPlacementInfo()`, the discovery catalog entry) and what survives
+  (the raw `PlacementRecord`, its identities, its content, the editable
+  Document).
+- **B — World visibility**, the section neither 0.9.198 nor 0.9.199
+  ever examined: `LocalWorldLayoutProvider.findVisibleDocuments()` — the
+  actual query `WorldNavigationSession.updateSpatialView()` streams
+  worlds with — resolves every spatial-index hit back through
+  `discoveryProvider.findById()` and silently skips a miss, so an orphan
+  is invisible to ordinary World streaming, both for a fresh query (never
+  streams in) and, one ordinary streaming pass later, for an
+  already-loaded copy (unloaded via the SAME "walked out of range" path,
+  no special case). The raw spatial index, `PlacementRegistry`,
+  `DiscoverWorldsUseCase`, and the `getPlacementInfoForPublication()`
+  bypass all still resolve it, exactly as 0.9.199 found. One genuine
+  exception: `getDocumentsAtPosition()` (the read model behind
+  `ui/components/LocationDocumentsDialog.js`'s existing "Documents Here"
+  dialog) is not filtered by Publication existence, so an orphan produces
+  one degraded row there — title falling back to a raw `publicationId`
+  string — with its "Focus" button already inert (`:disabled=
+  "!doc.documentId"` was already there before this milestone).
+- **C — mutation reachability.** Both document-keyed paths
+  (`movePlacement`, `removePlacement`) refuse to resolve an orphan, with
+  the SAME error a never-placed document already produces (0.9.199 proved
+  this for remove; this file adds move). Both raw use cases
+  (`MoveWorldPlacementUseCase`, `RemoveWorldPlacementUseCase`), given the
+  placementId the bypass already exposes, remain fully capable — moving
+  it (a genuine new revision, the same causal machinery any other move
+  gets), then removing it.
+- **D — cross-document isolation.** An orphan in document A never
+  affects document B's Publication, placement, streaming visibility, or
+  "documents at this location" listing.
+- **E — identity preservation.** The surviving `PlacementRecord`'s
+  serialized form is byte-for-byte identical before and after unpublish —
+  every field, not merely the ones 0.9.199 spot-checked.
+- **F — re-publication**, the combined lifecycle 0.9.199's own J2 never
+  actually placed anything into: publish, place, unpublish, re-publish,
+  then observe the EXISTING placement. It does not reattach. The new
+  Publication has zero `PlacementRecord`s of its own; the original orphan
+  remains exactly where it was, its own `publicationId` field still
+  naming the first, still-dead id — now orphaned from both the current
+  Publication AND the catalog simultaneously, reachable only by the OLD
+  id through the bypass.
+- **G — re-placement recovery.** Unpublish, remove the surviving orphan
+  via the raw use case, publish again, place again: the existing
+  operations, used in sequence, already produce a fully clean state — one
+  Publication, one placement, both resolving normally, nothing left at
+  the old position, no `PlacementRecord` anywhere still referencing the
+  dead `publicationId`.
+- **H — structural audit.** Neither `UnpublishDocumentUseCase.js` nor
+  `LocalPublisherProvider.js` (where `unpublish()`/`publish()` actually
+  live) references `RemoveWorldPlacementUseCase`, `PlacementRegistry`, or
+  `SpatialIndexProvider` in any form — confirming Section G's recovery
+  happens because the existing operations already compose that way, not
+  because of any cleanup this milestone found and left in place.
+
+**Deliberately not done**, per this milestone's own brief: no automatic
+placement removal on unpublish, no tombstone, no orphan cleanup or
+reattachment, no new Publication/placement lifecycle state, and — the
+brief's own explicit boundary — no cleanup POLICY decision. This audit
+answers "what can already be done," not "what should be done automatically."
+
+```text
+0.9.196  Architecture Reassessment / Product Gap Audit               ✓
+0.9.197  World Placement Removal UI Action                          ✓
+0.9.198  Publication Unpublish / Retract UI Action                  ✓
+0.9.199  Removal & Retraction Lifecycle Convergence Audit            ✓
+0.9.200  Orphaned World Placement Lifecycle Audit                   ✓
+```
+
+### Decision
+
+**Outcome 1 — intentional boundary, with one documented rough edge.** An
+unpublished Publication may leave an orphaned raw World placement; this
+is an internal storage consequence, not a user-facing lifecycle trap. It
+is invisible to ordinary World streaming (fresh or already-loaded), both
+document-keyed mutation paths already refuse it exactly like a
+never-placed document, and the existing publish/place/remove operations
+already compose into a fully clean recovery with zero manual cleanup. No
+hidden coupling and no new lifecycle vocabulary exists anywhere in
+production.
+
+The one honest exception: an orphan still produces one degraded, but
+inert, row in the existing "Documents Here" dialog (a raw publicationId
+as its title, an already-disabled Focus button). Per this milestone's own
+brief, the decision here is NOT to fix that now — whether that one row is
+worth a small future polish (a friendlier fallback label, or filtering
+unresolved occupants from that one dialog) is left as an explicitly
+optional, low-priority follow-up, never a mandated cleanup feature.
+
+### Recommendation
+
+The lifecycle ambiguity 0.9.198/0.9.199 surfaced in passing is now
+answered directly, with one honest, minor rough edge documented rather
+than silently left unexamined. Per 0.9.196's own original framing: I
+would **stop and reassess the product again** rather than predefine
+0.9.201. Nothing this audit found rises to a genuine product gap on its
+own — the optional dialog polish named above is exactly that, optional —
+so the right next question remains the broad one: what is the next
+concrete thing a Wanderer or Publisher should be able to do that they
+currently cannot?
