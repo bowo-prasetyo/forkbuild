@@ -597,6 +597,22 @@ export default {
         // World route. See `refreshSpatialUI()`, below, for the one call
         // site that feeds it `worldSnapshotDiscoveryMonitor`'s own
         // just-produced `lastResult`.
+        //
+        // 0.9.193 — Automatic Snapshot Session-Lifetime Guard.
+        // `automaticCascadeSessionActive` is the ONE piece of new state this
+        // milestone adds: a plain (non-reactive) flag, exactly like
+        // `spatialInterval` above, true for as long as this WorldView mount
+        // is live and flipped to `false` as the very first statement in
+        // `onBeforeUnmount()`, below — BEFORE `session.dispose()` and before
+        // anything else tears down. `isSessionActive` hands the cascade a
+        // closure reading this flag rather than the flag itself, so the
+        // cascade always observes its CURRENT value, synchronously, no
+        // matter how long its own resolve/materialize/place chain has been
+        // running — see application/AutomaticSnapshotEncounterCascade.js's
+        // own "0.9.193" header section for why this is the ONLY new seam
+        // needed: the cascade never learns WHY the flag changed, only THAT
+        // it did.
+        let automaticCascadeSessionActive = true;
         const automaticSnapshotEncounterCascade = new AutomaticSnapshotEncounterCascade({
             resolveSelectedSnapshotCommand,
             materializeSelectedSnapshotCommand,
@@ -606,7 +622,8 @@ export default {
                 : null),
             findPublicationById: (publicationId) => (typeof session.findPublicationById === 'function'
                 ? session.findPublicationById(publicationId)
-                : null)
+                : null),
+            isSessionActive: () => automaticCascadeSessionActive
         });
         // 0.9.190 — Automatic Snapshot Encounter Retention Integration.
         // Scoped to this WorldView's own mount, exactly like `session` and
@@ -3156,6 +3173,14 @@ export default {
         });
 
         onBeforeUnmount(() => {
+            // 0.9.193 — Automatic Snapshot Session-Lifetime Guard. Flipped
+            // FIRST, before anything else tears down: any
+            // automaticSnapshotEncounterCascade run still in flight (its own
+            // resolve/materialize/place chain is never cancelled — see that
+            // file's own header) now sees a dead session the instant it
+            // reaches its own registration checkpoint, however much later
+            // that turns out to be.
+            automaticCascadeSessionActive = false;
             clearInterval(spatialInterval);
             clearInterval(spatialPresenceSyncInterval);
             clearInterval(vehicleInteractionInterval);

@@ -694,7 +694,12 @@ async function runTests() {
         assert(!/\bretry\b|backoff|setTimeout|setInterval/i.test(source), '5. the cascade performs no retry/backoff/polling of its own — a terminal result is terminal for this instance');
 
         const outcomeKeys = Object.keys(AutomaticSnapshotEncounterCascadeOutcome);
-        assert(outcomeKeys.length === 1 && outcomeKeys.includes('INELIGIBLE'), '6. AutomaticSnapshotEncounterCascadeOutcome carries exactly its own one new value — every other outcome is an existing, already-tested vocabulary forwarded verbatim');
+        // UPDATED 0.9.193 — Automatic Snapshot Session-Lifetime Guard added
+        // its own one new value, SUPPRESSED, alongside 0.9.187's own
+        // INELIGIBLE (see application/AutomaticSnapshotEncounterCascadeOutcome.js's
+        // own header) — every OTHER outcome remains an existing,
+        // already-tested vocabulary forwarded verbatim, exactly as before.
+        assert(outcomeKeys.length === 2 && outcomeKeys.includes('INELIGIBLE') && outcomeKeys.includes('SUPPRESSED'), '6. AutomaticSnapshotEncounterCascadeOutcome carries exactly its own two new values (INELIGIBLE, 0.9.187; SUPPRESSED, 0.9.193) — every other outcome is an existing, already-tested vocabulary forwarded verbatim');
 
         console.log('✓ Section N: structural sweep — no rendering logic, no claimedPosition consumption, no ranking/dedup-preference vocabulary, and exactly one new outcome value');
     }

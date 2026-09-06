@@ -1251,7 +1251,12 @@ async function runTests() {
         assert(!/distance|viewport|proximity/i.test(bridgeSource), '6. no distance-based/viewport-based removal vocabulary in the World registration bridge');
 
         const outcomeKeys = Object.keys(AutomaticSnapshotEncounterCascadeOutcome);
-        assert(outcomeKeys.length === 1 && outcomeKeys.includes('INELIGIBLE'), '7. AutomaticSnapshotEncounterCascadeOutcome still carries exactly its own one new value — no new Snapshot lifecycle enum was introduced');
+        // UPDATED 0.9.193 — Automatic Snapshot Session-Lifetime Guard added
+        // its own one new terminal outcome, SUPPRESSED, alongside 0.9.187's
+        // own INELIGIBLE — still no CANCELLED/ABANDONED/EXPIRED-shaped
+        // Snapshot lifecycle enum of any kind (see this file's own "no
+        // lifecycle enum" invariant, held exactly as before).
+        assert(outcomeKeys.length === 2 && outcomeKeys.includes('INELIGIBLE') && outcomeKeys.includes('SUPPRESSED'), '7. AutomaticSnapshotEncounterCascadeOutcome carries exactly its own two terminal values (INELIGIBLE, SUPPRESSED) — no new Snapshot LIFECYCLE enum (CANCELLED/ABANDONED/EXPIRED/etc.) was introduced');
 
         console.log('✓ Section Q: structural sweep confirms no retry/backoff/persistence/ranking/expiration/distance-based-removal vocabulary exists anywhere in the audited automatic-Snapshot files — the audit found no evidence any of those speculative mechanisms are actually necessary');
     }

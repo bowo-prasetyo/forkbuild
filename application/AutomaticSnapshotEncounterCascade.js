@@ -145,6 +145,64 @@ import { AutomaticSnapshotEncounterCascadeOutcome } from './AutomaticSnapshotEnc
 // background discovery result — the identical caller-hostility a
 // background trigger can never afford.
 //
+// 0.9.193 — AUTOMATIC SNAPSHOT SESSION-LIFETIME GUARD.
+//
+// 0.9.192's own Section D proved a real boundary violation: an in-flight
+// cascade started by a `WorldView` mount that is subsequently torn down
+// still lands its registration in the SHARED `WorldDiscoverySourceRegistry`
+// — work belonging to a dead session mutating the running World after that
+// session has disappeared. This milestone closes exactly that gap, and
+// nothing more.
+//
+// THE CASCADE ITSELF IS NEVER CANCELLED. Resolution, materialization, and
+// placement all run to completion exactly as they did before — see this
+// file's own "deliberately excluded," below, "retry... of any kind," now
+// joined by "cancellation... of any kind." A `WorldView` unmount does not,
+// and still does not, abort an in-flight `resolveSelectedSnapshotCommand`/
+// `materializeSelectedSnapshotCommand` call. Bytes may exist locally for a
+// candidate whose owning session no longer exists — see
+// `application/SnapshotWorldPlacement.js`'s own "material existence is
+// never itself a World-registration guarantee," held here one layer up:
+// material existence is never itself a session guarantee either.
+//
+// ONLY THE FINAL WORLD-SIDE SIDE EFFECT IS SESSION-SENSITIVE. `isSessionActive`
+// (optional, constructor-injected) is consulted exactly ONCE per
+// `processCandidate()` run, synchronously, at the single point placement has
+// already reached `SnapshotWorldPlacementOutcome.PLACED` and this cascade is
+// about to call `registerMaterializedSnapshotWorldSource()` — see `_run()`,
+// below. `typeof isSessionActive() !== 'function'` (the default, `null`)
+// leaves this cascade's behavior byte-for-byte identical to before 0.9.193:
+// every existing caller that never supplies it keeps registering exactly as
+// it always has. A supplied `isSessionActive` that returns falsy at that
+// instant stops the cascade at `AutomaticSnapshotEncounterCascadeOutcome.
+// SUPPRESSED` — `registerMaterializedSnapshotWorldSource()` is never called,
+// `this._worldDiscoverySourceRegistry` is never mutated for this run — and a
+// truthy result changes nothing, proceeding to registration exactly as
+// before.
+//
+// SYNCHRONOUS BY DESIGN — NO NEW ASYNCHRONOUS LIFECYCLE PROTOCOL. `isSessionActive`
+// is called with no arguments and must answer synchronously (`Boolean(...)`
+// coercion of whatever it returns) — never awaited. The check and the
+// registration call it gates sit in the SAME synchronous stretch of `_run()`,
+// with no `await` between them: there is no window in which the predicate
+// could still say "active" and the session then disappear before
+// registration actually runs. The predicate is a synchronous FACT the
+// composition root (`ui/views/WorldView.js`'s own mounted/unmounted state)
+// already owns — this file never asks WHY it is true or false, never reads
+// `WorldView`/Vue lifecycle state itself, and never constructs one of its
+// own.
+//
+// NO NEW LIFECYCLE VOCABULARY. `SUPPRESSED` is one terminal outcome value,
+// exactly like `INELIGIBLE`/`UNPLACED` before it — never a `CANCELLED`/
+// `ABANDONED`/`EXPIRED` state, never a lifecycle registry, and never
+// reachable more than once for a given `publicationId:contentHash` key (the
+// SAME per-key idempotency map already governs it — a SUPPRESSED result is
+// memoized exactly like any other terminal result, see "idempotent and
+// concurrency-safe by construction," above; a caller wanting a fresh
+// attempt once a NEW session starts needs a fresh
+// `AutomaticSnapshotEncounterCascade` instance, exactly as it already does
+// today for any other reason to reprocess).
+//
 // DELIBERATELY EXCLUDED — NOT THIS MILESTONE.
 // - **A UI of any kind.** This file has no idea `ui/` exists beyond the one
 //   composition site that constructs and feeds it
@@ -167,6 +225,26 @@ import { AutomaticSnapshotEncounterCascadeOutcome } from './AutomaticSnapshotEnc
 // - **A new Snapshot identity, a new lifecycle store, or persistence of
 //   `_results` across instances/reloads.** Purely ephemeral orchestration
 //   state, exactly as long-lived as the one instance holding it.
+// - **(0.9.193) Cancelling, aborting, or rolling back an in-flight resolve/
+//   materialize/place call.** See "the cascade itself is never cancelled,"
+//   above — no `AbortController`, no cancellation token, no partial-work
+//   rollback.
+// - **(0.9.193) Deleting or unregistering material a SUPPRESSED run already
+//   materialized.** Bytes already stored via `materializeSelectedSnapshotCommand`
+//   stay exactly where 0.9.158 already left them — this file introduces no
+//   new deletion/rollback semantic for Publication, Nostr, or Arweave state.
+// - **(0.9.193) Retrying a SUPPRESSED result.** Exactly as terminal as any
+//   other outcome this cascade produces — see "no new lifecycle vocabulary,"
+//   above.
+// - **(0.9.193) A `WorldView`/Vue lifecycle dependency of any kind.**
+//   `isSessionActive` is an opaque `() -> boolean` this file calls once per
+//   run — it never imports Vue, never reads `onBeforeUnmount` state, and
+//   never learns HOW its caller decided the answer.
+// - **(0.9.193) Gating any stage before registration.** Resolution,
+//   materialization, and placement are never session-checked — only the one
+//   World-mutating call this file itself makes. See this file's own
+//   "0.9.193" section, above, "only the final World-side side effect is
+//   session-sensitive."
 
 // new AutomaticSnapshotEncounterCascade({ resolveSelectedSnapshotCommand,
 //   materializeSelectedSnapshotCommand, worldDiscoverySourceRegistry,
@@ -202,18 +280,32 @@ import { AutomaticSnapshotEncounterCascadeOutcome } from './AutomaticSnapshotEnc
 //   matching `resolvePlacementInfo` result) to ever reach REGISTERED — see
 //   `registerMaterializedSnapshotWorldSource()`'s own contract, which needs
 //   the real Publication object, never just its id.
+// `isSessionActive()` — (0.9.193, OPTIONAL) a synchronous `() -> boolean`
+//   predicate, owned entirely by the composition root
+//   (`ui/views/WorldView.js`'s own mounted/unmounted state) — see this
+//   file's own "0.9.193 — Automatic Snapshot Session-Lifetime Guard"
+//   section, above. Consulted exactly once per `processCandidate()` run,
+//   synchronously, immediately before this cascade would otherwise call
+//   `registerMaterializedSnapshotWorldSource()`; a falsy result stops the
+//   run at `AutomaticSnapshotEncounterCascadeOutcome.SUPPRESSED` instead.
+//   `null`/absent (the default) — the same graceful-degradation rule every
+//   other collaborator above already follows — means every run behaves
+//   exactly as it did before 0.9.193: no gate, registration proceeds
+//   whenever placement itself reached PLACED.
 export class AutomaticSnapshotEncounterCascade {
     constructor({
         resolveSelectedSnapshotCommand = null,
         materializeSelectedSnapshotCommand = null,
         worldDiscoverySourceRegistry = null,
         resolvePlacementInfo = null,
-        findPublicationById = null
+        findPublicationById = null,
+        isSessionActive = null
     } = {}) {
         this._resolveSelectedSnapshotCommand = resolveSelectedSnapshotCommand;
         this._materializeSelectedSnapshotCommand = materializeSelectedSnapshotCommand;
         this._worldDiscoverySourceRegistry = worldDiscoverySourceRegistry;
         this._resolvePlacementInfo = resolvePlacementInfo;
+        this._isSessionActive = isSessionActive;
         this._findPublicationById = findPublicationById;
         this._results = new Map();
     }
@@ -243,6 +335,11 @@ export class AutomaticSnapshotEncounterCascade {
     //     contentHash, reason: null } — materialized, but no authoritative
     //     World placement is known for this publicationId (or no registry/
     //     publication lookup was configured to register one against).
+    //   { outcome: AutomaticSnapshotEncounterCascadeOutcome.SUPPRESSED,
+    //     publicationId, contentHash, reason: null } — (0.9.193) resolved,
+    //     materialized, and PLACED, but the caller-supplied `isSessionActive()`
+    //     reported false at the instant registration would otherwise have
+    //     run. Unreachable when no `isSessionActive` was supplied.
     //   { outcome: SnapshotWorldRegistrationOutcome.REGISTERED,
     //     publicationId, contentHash, reason: null } — the complete
     //     happy path.
@@ -307,6 +404,18 @@ export class AutomaticSnapshotEncounterCascade {
             : null;
         if (!publication || publication.id !== placement.publicationId) {
             return this._result(SnapshotWorldPlacementOutcome.UNPLACED, publicationId, contentHash, null);
+        }
+
+        // 0.9.193 — Automatic Snapshot Session-Lifetime Guard. The ONE
+        // session-sensitive checkpoint in this entire cascade: everything
+        // above (resolve, materialize, place, find the Publication) has
+        // already run to completion regardless of session state — see this
+        // file's own header, "the cascade itself is never cancelled." This
+        // check and the `registerMaterializedSnapshotWorldSource()` call it
+        // gates are the SAME synchronous stretch of code, with no `await`
+        // between them — see that same header, "synchronous by design."
+        if (typeof this._isSessionActive === 'function' && !this._isSessionActive()) {
+            return this._result(AutomaticSnapshotEncounterCascadeOutcome.SUPPRESSED, publicationId, contentHash, null);
         }
 
         const registration = registerMaterializedSnapshotWorldSource(this._worldDiscoverySourceRegistry, placement, publication);
