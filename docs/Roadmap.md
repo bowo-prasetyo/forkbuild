@@ -78033,3 +78033,123 @@ the four still at `OBSOLETE_CANDIDATE`) — never manufactured just to
 advance the milestone number. That is itself the meaningful architectural
 milestone here: **ForkBuild has reached capability closure for its
 current product surface.**
+
+## 0.9.220 — Identity Event/Error Boundary Characterization Audit
+
+Test-only. No production changes. 0.9.219's own Section C discovered,
+with evidence, that the exact architectural precondition 0.9.218 fixed
+for World Presence — a use case that publishes an event, then performs
+MORE authoritative work in the same synchronous call chain, over an
+`EventBus` with no per-listener isolation — recurs in
+`application/IdentityUseCase.js`. It classified the finding `DEFERRED`:
+real and evidenced, but no current production listener performs the kind
+of fallible, cross-use-case derived work that made World Presence's
+instance a realized defect. That finding was correct but narrow: it
+behaviorally proved only one of five affected publish chains
+(`authenticate()`) and checked only two of six real listener call sites
+directly. This milestone turns it into a complete characterization,
+per the brief that proposed it: map the exact boundary, prove today's
+behavior rather than only observe the code shape, classify every current
+listener, compare explicitly against the 0.9.218 precedent so that fix
+is never misread as a general rule, and produce a failure-isolation
+matrix — without fixing anything. The brief was deliberately
+DEFERRED-or-nothing.
+
+```text
+0.9.218  World Presence Membership-Refresh Lifecycle Audit
+   │      (found and fixed one real failure-isolation defect)
+   ▼
+0.9.219  Post-Presence Product Reassessment
+   │      (Section C: same precondition recurs in IdentityUseCase — DEFERRED)
+   ▼
+0.9.220  Identity Event/Error Boundary Characterization Audit  <- this milestone
+```
+
+Adds `tests/IdentityEventErrorBoundaryAudit.test.js`:
+
+- **Section A** — Exact event boundary map. Five methods share 0.9.219
+  Section C2's precondition — `authenticate()`, `endSession()`,
+  `protectIdentity()`, `changePassphrase()`, and `revokeIdentity()` each
+  call `_publishChange()` (itself two sequential publishes) and THEN
+  `_publishLockChange()` — extending 0.9.219's own proof, which named
+  only the first three, to all five that actually share the shape.
+  `login()`/`logout()`/`declareSuccessor()` publish only
+  `_publishChange()`; `unlock()`/`lock()`/`checkVaultTimeouts()` publish
+  only `_publishLockChange()`; `exportIdentity()`/`importIdentity()`
+  publish nothing — none of the six carries the precondition, confirmed
+  rather than assumed. `EventBus.publish()` still has no per-listener
+  try/catch, and `IdentityUseCase` runs on exactly that bus, not an
+  already-isolated variant.
+- **Section B** — Behavioral reproduction extended from one publish chain
+  to all five. 0.9.219 proved the failure-skips-a-later-broadcast shape
+  only for `authenticate()`; this milestone reproduces the identical
+  shape for `endSession()`, `protectIdentity()`, `changePassphrase()`,
+  and `revokeIdentity()` too, each with an injected-failure listener. It
+  also establishes a fact 0.9.219 never checked: in every case, the
+  authoritative provider-level state change is already durably committed
+  to storage BEFORE the derived listener runs — a throwing listener is a
+  notification-side failure only, never a rollback of the identity
+  operation itself.
+- **Section C** — Full listener classification, all six real production
+  call sites (0.9.219 checked two — `UserWidget.js` and
+  `AvatarSettingsView.js` — directly). This milestone checks the other
+  four directly too: `IdentityManagementView.js` (all three events call
+  one local `refresh()` by reference), `ConversationsView.js` and
+  `ChatView.js` (a local ref read plus, at most, a same-owner
+  `refresh()`), and `PeerConnectionsView.js` — the most complex real
+  callback, touching three OTHER use cases
+  (`peerRelationshipUseCase`/`friendRelationshipUseCase`/
+  `peerBlockUseCase`) on `onSessionChanged`. Verified explicitly, not
+  assumed from shape: every one of those calls is a pure read-only
+  getter (`getRelationships()`/`getBlocked()`/`isUnlocked()`), never a
+  mutation — the same distinction that made World Presence's own
+  `refreshWorldPresenceActivity()` (reaching into
+  `WorldAuthorizationService` AND a network broadcast) a realized defect,
+  and this one not. All six: derived, never authoritative; none fallible;
+  none should or can currently abort the identity operation it derives
+  from.
+- **Section D** — Explicit comparison with the 0.9.218 precedent, so its
+  fix is never misread as a general rule. The 0.9.218 fix is still a
+  local `try`/`catch` around exactly one call site in `WorldView.js`;
+  `EventBus.js` and `PeerMessageBus.js` themselves remain completely
+  unchanged — no per-listener isolation was ever added to the shared bus.
+  The fact that actually distinguished the two cases, stated precisely:
+  World Presence's derived listener reached a collaborator
+  (`WorldPresenceUseCase`) with a fallible, externally-visible side
+  effect — a network broadcast; none of Identity's six current listeners
+  (Section C) do more than a local read. "This is a derived listener"
+  alone was never the trigger for a fix, and this milestone does not
+  treat it as one.
+- **Section E** — Failure isolation matrix, combinations 0.9.219 did not
+  exercise: the happy path is unaffected; a failed AUTHENTICATION (wrong
+  passphrase) never even reaches the event boundary — no listener is
+  invoked at all, a structurally different case from a failed LISTENER;
+  a throwing listener silently drops every SUBSEQUENT listener on the
+  SAME event, proven directly against `EventBus` (insertion-order Set
+  iteration with no try/catch halts the loop); it drops the subsequent
+  `AuthenticationSessionChanged` publish too, not only the downstream
+  lock event 0.9.219 checked; and a single failure leaves no lingering
+  damage — the same bus and the same `IdentityUseCase` instance work
+  normally again on the very next, unrelated call.
+- **Section F** — Verdict: `DEFERRED`, reconfirmed with a materially
+  larger evidence base than 0.9.219 Section C alone, and an explicit
+  non-generalization statement: this does NOT become a blanket "swallow
+  all `IdentityUseCase` listener errors" rule. The actual trigger for a
+  future fix is named precisely — a FUTURE listener on these three
+  events performing fallible, externally-visible derived work the way
+  World Presence's did (a network call, a write into a different use
+  case's mutation surface) is what would warrant wrapping THAT call site
+  in a local `try`/`catch`, mirroring `WorldView.js`'s own 0.9.218 fix —
+  not a change to `EventBus.js`, not a change to every listener
+  uniformly, and not a decision this milestone makes on a future author's
+  behalf.
+
+### Recommendation
+
+The one deferred architectural observation this arc's own final
+reassessment (0.9.219) surfaced is now fully characterized, evidenced,
+and bounded — zero production changes across both milestones. Per
+0.9.219's own recommendation, the next milestone should come from an
+explicit product-evolution decision or the pending obsolete-cleanup
+decision on the four `OBSOLETE_CANDIDATE` files, not from further
+repository archaeology.
