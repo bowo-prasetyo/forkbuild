@@ -558,6 +558,16 @@ export default {
         // wrapper function of this view's own — its own `(resolution) ->
         // Promise<...>` shape already matches that prop exactly.
         const materializeSelectedSnapshotCommand = inject('materializeSelectedSnapshotCommand', null);
+        // 0.9.215 — Snapshot Export Capability Integration. The SAME
+        // app-wide `exportSnapshotCommand` `ui/main.js` now composes
+        // (wrapping `snapshotContentMaterializationCoordinator`'s own new
+        // `export()` method around the SAME `publicationCatalog`/
+        // `publicationContentStore` every other local Snapshot action
+        // already shares) — a thin `(publicationId) -> Promise<Publication
+        // SnapshotTransferPackage>` capability, injected here so
+        // `exportOwnSnapshot()` below can call it. See that function's own
+        // header for how "which publication" becomes "which publicationId."
+        const exportSnapshotCommand = inject('exportSnapshotCommand', null);
         // 0.9.110 — Decentralized Material Retrieval Runtime Composition.
         // The SAME app-wide `DecentralizedWorldDiscoveryLeadRegistry`
         // `ui/main.js` now composes, handed straight through as
@@ -1167,6 +1177,38 @@ export default {
                 return Promise.reject(new Error('Snapshot discovery is not available.'));
             }
             return discoverSnapshotCommand(publication.contentReference.hash);
+        }
+
+        // 0.9.215 — Snapshot Export Capability Integration. Reachable with
+        // zero connected peers and an empty World Encounters panel, the
+        // identical "your own material never depends on World Encounters"
+        // restraint every other action on this SAME `OwnPublicationPanel`
+        // surface already holds (see that component's own 0.9.140 header).
+        // This function turns "which publication" into "which
+        // publicationId" — `publication.id`, the SAME field
+        // `unpublishOwnPublication()` above already reads off the
+        // identical prop — and calls exactly one thing: the already-
+        // composed `exportSnapshotCommand` injected above. It never
+        // constructs a BuildPublicationSnapshotTransferPackageUseCase or a
+        // SnapshotContentMaterializationCoordinator itself, and never
+        // reads `publication.contentReference` — unlike discovery/
+        // distribution, export names WHICH PUBLICATION, never which bytes;
+        // application/BuildPublicationSnapshotTransferPackageUseCase.js
+        // itself resolves the contentReference to export from its own
+        // publicationCatalog lookup.
+        //
+        // Resolves to a Publication Snapshot Transfer Package (application/
+        // PublicationSnapshotTransferPackage.js's own `{ kind,
+        // schemaVersion, publicationId, contentHash, content }` shape) or
+        // rejects — this function never reinterprets either outcome; it is
+        // `OwnPublicationPanel.js`'s own job, as the UI layer, to turn a
+        // rejection into its own display state, exactly as it already does
+        // for `distributeOwnSnapshot()`/`discoverOwnSnapshot()`.
+        function exportOwnSnapshot(publication) {
+            if (!exportSnapshotCommand || !publication) {
+                return Promise.reject(new Error('Snapshot export is not available.'));
+            }
+            return exportSnapshotCommand(publication.id);
         }
 
         // 0.9.111 — World View Decentralized Publication Retrieval.
@@ -3696,6 +3738,7 @@ export default {
             distributeWorldEncounterPublication,
             distributeWorldEncounterSnapshot,
             discoverOwnSnapshot,
+            exportOwnSnapshot,
             discoverSnapshotCandidatesCommand,
             resolveSelectedSnapshotCommand,
             materializeSelectedSnapshotCommand
@@ -3797,13 +3840,20 @@ export default {
                      below: a thin wrapper around
                      session.unpublishDocument(), mirroring
                      removePlacementFromPanel's own wrap of
-                     session.removePlacement() one authority up. -->
+                     session.removePlacement() one authority up.
+
+                     0.9.215 — exportSnapshotCommand is exportOwnSnapshot,
+                     above: a thin wrapper around the app-wide
+                     exportSnapshotCommand injected above, mirroring
+                     distributeWorldEncounterSnapshot's own wrap one
+                     action over. -->
                 <OwnPublicationPanel
                     v-if="cameraPosition"
                     :publication="ownPublication"
                     :unpublishCommand="unpublishOwnPublication"
                     :snapshotDistributionCommand="distributeWorldEncounterSnapshot"
                     :discoverSnapshotCommand="discoverOwnSnapshot"
+                    :exportSnapshotCommand="exportOwnSnapshot"
                     :discoverSnapshotCandidatesCommand="discoverSnapshotCandidatesCommand"
                     :worldDiscoverySourceRegistry="worldDiscoverySourceRegistry"
                     :resolveSelectedSnapshotCommand="resolveSelectedSnapshotCommand"

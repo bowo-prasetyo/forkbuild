@@ -96,6 +96,7 @@ import { PublicationCatalogContentResolver } from '../discovery/PublicationCatal
 import { CheckLocalSnapshotContentAvailabilityUseCase } from '../application/CheckLocalSnapshotContentAvailabilityUseCase.js';
 import { StoreSnapshotContentUseCase } from '../application/StoreSnapshotContentUseCase.js';
 import { ImportPublicationSnapshotTransferPackageUseCase } from '../application/ImportPublicationSnapshotTransferPackageUseCase.js';
+import { BuildPublicationSnapshotTransferPackageUseCase } from '../application/BuildPublicationSnapshotTransferPackageUseCase.js';
 import { SnapshotContentMaterializationCoordinator } from '../application/SnapshotContentMaterializationCoordinator.js';
 import { MaterializeSnapshotFromPlacementUseCase } from '../application/MaterializeSnapshotFromPlacementUseCase.js';
 import { SnapshotPlacementMaterializationCoordinator } from '../application/SnapshotPlacementMaterializationCoordinator.js';
@@ -684,7 +685,36 @@ const storeSnapshotContentUseCase = new StoreSnapshotContentUseCase(publicationC
 // forwards straight to it; see that class's own header on why it adds no
 // source-discovery of its own for this first version.
 const importPublicationSnapshotTransferPackageUseCase = new ImportPublicationSnapshotTransferPackageUseCase(storeSnapshotContentUseCase, publicationCatalog);
-const snapshotContentMaterializationCoordinator = new SnapshotContentMaterializationCoordinator(importPublicationSnapshotTransferPackageUseCase);
+
+// 0.9.215 — Snapshot Export Capability Integration. The export-side
+// counterpart of the import wiring immediately above, over the SAME
+// `publicationCatalog`/`publicationContentStore` every other local
+// read/write in this file already goes through — never a second,
+// disconnected catalog or store. application/
+// BuildPublicationSnapshotTransferPackageUseCase.js (0.8.32) has been
+// fully implemented since the same milestone that built import; only its
+// composition here, and `snapshotContentMaterializationCoordinator`'s own
+// new `export()` method below, were ever missing. See that use case's own
+// header for why it performs no hash verification (that stays the
+// importing side's job) and application/
+// SnapshotContentMaterializationCoordinator.js's own header for why
+// `export()` adds no new orchestration of its own.
+const buildPublicationSnapshotTransferPackageUseCase = new BuildPublicationSnapshotTransferPackageUseCase({
+    publicationCatalog,
+    contentStore: publicationContentStore
+});
+const snapshotContentMaterializationCoordinator = new SnapshotContentMaterializationCoordinator(
+    importPublicationSnapshotTransferPackageUseCase, buildPublicationSnapshotTransferPackageUseCase
+);
+
+// 0.9.215 — a thin `(publicationId) -> Promise<PublicationSnapshotTransferPackage>`
+// capability, injected the identical way `discoverSnapshotCommand`/
+// `materializeSelectedSnapshotCommand` already are, so `ui/views/
+// WorldView.js`'s own `exportOwnSnapshot()` wrapper can call it without
+// this file's UI layer ever importing
+// SnapshotContentMaterializationCoordinator.js, BuildPublicationSnapshotTransferPackageUseCase.js,
+// or publicationContentStore directly.
+const exportSnapshotCommand = (publicationId) => snapshotContentMaterializationCoordinator.export(publicationId);
 
 // 0.8.35 — Explicit Placement-Backed Snapshot Materialization. The
 // placement-backed sibling of the wiring immediately above — it reuses
@@ -1303,6 +1333,12 @@ app.provide('snapshotPlacementCreationCoordinator', snapshotPlacementCreationCoo
 // 0.8.33 — Local Snapshot Content Availability & Integrity UX.
 app.provide('localSnapshotContentAvailabilityUseCase', localSnapshotContentAvailabilityUseCase);
 app.provide('snapshotContentMaterializationCoordinator', snapshotContentMaterializationCoordinator);
+// 0.9.215 — Snapshot Export Capability Integration. Injected under its
+// own name, exactly like `discoverSnapshotCommand`/
+// `materializeSelectedSnapshotCommand` above, rather than requiring
+// `ui/views/WorldView.js` to inject the whole coordinator and call
+// `.export()` itself.
+app.provide('exportSnapshotCommand', exportSnapshotCommand);
 // 0.8.35 — Explicit Placement-Backed Snapshot Materialization.
 app.provide('snapshotPlacementMaterializationCoordinator', snapshotPlacementMaterializationCoordinator);
 // 0.8.37 — Explicit Peer Snapshot Content Transfer.

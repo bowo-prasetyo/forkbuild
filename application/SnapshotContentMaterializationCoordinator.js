@@ -46,12 +46,37 @@
 // placement — it does exactly one thing: hand `pkg` to the SAME import
 // pipeline application/ImportPublicationSnapshotTransferPackageUseCase.js
 // (0.8.32) already validates and verifies content through, unchanged.
+//
+// 0.9.215 — Snapshot Export Capability Integration.
+//
+// Adds the missing symmetric action: application/
+// BuildPublicationSnapshotTransferPackageUseCase.js (0.8.32) has been the
+// fully implemented, fully tested export-side counterpart of
+// application/ImportPublicationSnapshotTransferPackageUseCase.js since
+// the same milestone that built import — composed nowhere, reachable from
+// no coordinator method and no UI action, per 0.9.212's own reassessment
+// finding. `export(publicationId)` is that same deliberately thin
+// pass-through, one direction over: it forwards to
+// buildPublicationSnapshotTransferPackageUseCase#execute() completely
+// unchanged and returns the resulting Publication Snapshot Transfer
+// Package exactly as built — never reinterpreted, never caught here, the
+// identical restraint `import()` already holds for its own use case. The
+// second constructor argument is deliberately optional: every existing
+// caller that only ever imports (this class's own pre-0.9.215 test suite
+// included) keeps constructing this coordinator with one argument, and
+// `export()` simply is not available on that instance — see its own
+// guard clause below — rather than this class inventing a default build
+// use case of its own.
 export class SnapshotContentMaterializationCoordinator {
-    constructor(importPublicationSnapshotTransferPackageUseCase) {
+    constructor(importPublicationSnapshotTransferPackageUseCase, buildPublicationSnapshotTransferPackageUseCase = null) {
         if (!importPublicationSnapshotTransferPackageUseCase || typeof importPublicationSnapshotTransferPackageUseCase.execute !== 'function') {
             throw new Error('SnapshotContentMaterializationCoordinator: an ImportPublicationSnapshotTransferPackageUseCase is required');
         }
+        if (buildPublicationSnapshotTransferPackageUseCase && typeof buildPublicationSnapshotTransferPackageUseCase.execute !== 'function') {
+            throw new Error('SnapshotContentMaterializationCoordinator: buildPublicationSnapshotTransferPackageUseCase, when supplied, must have an execute() method');
+        }
         this._importUseCase = importPublicationSnapshotTransferPackageUseCase;
+        this._buildUseCase = buildPublicationSnapshotTransferPackageUseCase;
     }
 
     // Triggers exactly ONE explicit import attempt for `pkg` — a
@@ -71,5 +96,25 @@ export class SnapshotContentMaterializationCoordinator {
     // application/SnapshotContentMaterializationView.js's own header.
     async import(pkg) {
         return this._importUseCase.execute(pkg);
+    }
+
+    // 0.9.215 — triggers exactly ONE explicit export attempt for
+    // `publicationId`, returning the Publication Snapshot Transfer
+    // Package application/BuildPublicationSnapshotTransferPackageUseCase.js
+    // (0.8.32) builds for it — the same `{ kind, schemaVersion,
+    // publicationId, contentHash, content }` shape `import()` accepts,
+    // unchanged. Throws straight through for an uncataloged publication or
+    // one this replica does not hold the bytes for (that use case's own
+    // two documented failure modes) — a genuine caller contract
+    // violation this class does not catch, exactly as `import()` does not
+    // catch a malformed `pkg`. Throws locally, with no attempt made, when
+    // this instance was never given a build use case at construction —
+    // this deliberately never falls back to a second, disconnected build
+    // path.
+    async export(publicationId) {
+        if (!this._buildUseCase) {
+            throw new Error('SnapshotContentMaterializationCoordinator: export is not available — no BuildPublicationSnapshotTransferPackageUseCase was supplied at construction');
+        }
+        return this._buildUseCase.execute(publicationId);
     }
 }
