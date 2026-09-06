@@ -72795,3 +72795,131 @@ of two already-open Content Views, alongside the already-computed
 rather than a deduplication command. This milestone deliberately stops
 short of building that combination in advance. 0.9.180's own Vehicle
 Reachability recommendation remains entirely open and unweakened.
+
+## 0.9.184 — World Snapshot Content Comparison View
+
+0.9.183's own "Recommendation" named this milestone directly: combine
+0.9.181/0.9.182's own comparison fact with 0.9.183's own Content View —
+
+> a side-by-side rendering of two already-open Content Views, alongside
+> the already-computed SAME_CONTENT/DIFFERENT_CONTENT fact, still shown as
+> an observation rather than a deduplication command.
+
+```text
+selectedSnapshotContentView (0.9.183, unmodified)     — "Publication A"
+comparisonSnapshotContentView (NEW, mirrors it exactly,
+                                one selection over)    — "Publication B"
+worldSnapshotComparisonResult (0.9.181/182, unmodified)
+     │
+     ▼
+application/WorldSnapshotContentComparisonView.js   (NEW)
+     describeWorldSnapshotContentComparisonView()
+     │
+     ▼
+worldSnapshotContentComparisonView   (NEW computed)
+{ aPublicationId, bPublicationId, contentComparison, aMaterial, bMaterial }
+null
+     │
+     │  click "View Content Comparison" -> contentComparisonViewOpen = true
+     ▼
+Content Comparison panel
+```
+
+**The comparison remains the source of truth for identity; the content
+views remain the source of truth for what is displayed — a critical rule,
+never blurred.** `application/WorldSnapshotContentComparisonView.js` never
+recomputes content identity from either side's own material: it forwards
+`compareSnapshotWorldPublications()`'s own `contentComparison` verbatim,
+and reuses `describeWorldSnapshotContentView()`'s own representation
+verbatim for `aMaterial`/`bMaterial` — no new material abstraction, no
+second hash comparison. It produces a descriptor only when BOTH sides have
+genuinely available material, and each side's own Content View genuinely
+names the same Publication the comparison itself already names on that
+side — the identical "two arguments captured at different moments" guard
+0.9.183 already applies one layer down.
+
+**Missing material means no fabricated comparison view.** If Publication
+A's material is `AVAILABLE` and B's is not, the comparison FACT may still
+exist and render on its own (in the already-existing Compare panel,
+entirely unaffected), but the content comparison VIEW is not available —
+never a silent retrieval, substitution, or materialization of the missing
+side.
+
+**Extending material loading to the comparison target is a deliberate,
+narrow revision of 0.9.182's own exclusion — not an oversight.** 0.9.182
+excluded "material loading... for the comparison target" because
+comparison, at the time, was only an identity question. This milestone's
+own purpose — showing both sides' content — cannot be done without it.
+`ui/components/WorldEncounterCanvas.js` gains `comparisonMaterialInspection`/
+`refreshComparisonMaterialInspection()`, mirroring the primary selection's
+own `materialInspection`/`refreshMaterialInspection()` (0.9.39) exactly,
+one selection over, calling the SAME `inspectWorldEncounterMaterial()` —
+never a second loader. Decentralized lead resolution for the comparison
+target remains excluded, unrevisited: `refreshComparisonMaterialInspection()`
+never supplies a `resolvedLead`, so a comparison target whose material
+genuinely requires one simply stays `UNAVAILABLE` — honest degradation,
+never a silent second resolution pipeline. `refreshComparisonSelectionOutcome()`
+now tail-calls it, but only on a genuine `comparisonResolvedSelection`
+change (the same `resolvedEncounterSelectionsEqual()` guard 0.9.39 already
+uses), never redundantly.
+
+**Same content does not mean one object — unchanged, one layer up.**
+`worldSnapshotContentComparisonView.aMaterial`/`.bMaterial` remain two
+fully independent Content Views even when `contentComparison` is
+`SAME_CONTENT`; `aPublicationId`/`bPublicationId` are never collapsed, and
+each side's own `position` renders independently. Different positions for
+identical content remain two World objects.
+
+**An explicit action, mirroring "View Snapshot"/"Compare with…" exactly,
+one panel over.** `contentComparisonViewOpen` is `false` until the
+Wanderer clicks "View Content Comparison" in the new Content Comparison
+panel — both sides' material becoming `AVAILABLE` never opens it on its
+own. It resets to `false` on every fresh primary selection, comparison-
+target selection, or `clearComparisonSelection()` call.
+
+**`tests/WorldSnapshotContentComparisonView.test.js` — fourteen sections**,
+split into the pure descriptor (no comparison result, missing/mismatched
+material, `SAME_CONTENT`/`DIFFERENT_CONTENT`/unknown forwarded verbatim,
+same-content-does-not-mean-one-object, purity, and a structural audit) and
+the UI wiring (the explicit select-A/arm/select-B/open flow, `SAME_CONTENT`,
+`DIFFERENT_CONTENT`, exact material identity with no lookup-by-hash swap,
+position independence, selection changes never leaving a stale combined
+view, removal collapsing it, a comparison target whose material never
+loads never fabricating one, and a structural audit). `tests/
+WorldSnapshotContentView.test.js`'s own frozen "exactly one call site"
+count is updated to two (the comparison target now reuses the same
+function); `tests/WorldEncounterCanvasUI.test.js` and the two decentralized-
+retrieval/discovered-selection integration tests update their own frozen
+import counts (fifteen application/ modules). `tests.html` gains one new
+entry.
+
+Deliberately excluded, per this milestone's own narrow brief:
+- **"Merge identical Snapshots," "replace this Snapshot with the other,"
+  or any deduplication/removal/replacement action offered from
+  `SAME_CONTENT`.** The panel renders a fact and two independent
+  materials, never an action — keeping "same content ≠ same Publication ≠
+  same World object ≠ same position ≠ same source" intact.
+- **Decentralized lead resolution for the comparison target.** Remains
+  excluded exactly as 0.9.182 first stated it.
+- **A mandatory side-by-side visual layout.** The descriptor returns two
+  independent fields; a caller renders them however it chooses.
+- **Content-specific interaction beyond viewing.** Left for a future,
+  unscheduled milestone to discover once this one reveals what's needed.
+
+```text
+0.9.180  World Snapshot Completion & Boundary Audit                  ✓
+0.9.181  World Snapshot Comparison                                   ✓
+0.9.182  World Snapshot Comparison UI                                ✓
+0.9.183  World Snapshot Content View                                 ✓
+0.9.184  World Snapshot Content Comparison View                      ✓
+```
+
+### Recommendation
+
+Comparison and content viewing are now fully combined; 0.9.180's own
+Vehicle Reachability recommendation remains entirely open and unweakened.
+A natural, still-unscheduled next step would be Snapshot Content
+Interaction — moving from viewing to a narrowly-defined interaction with
+viewed content — but what that interaction should actually be is left to
+be discovered from how this milestone's own Content Comparison panel gets
+used, rather than predefined now.
