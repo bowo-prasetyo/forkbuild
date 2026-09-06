@@ -9,6 +9,7 @@ import { SaveDocumentUseCase } from './SaveDocumentUseCase.js';
 import { LoadDocumentUseCase } from './LoadDocumentUseCase.js';
 import { StructureDocumentResolver } from './StructureDocumentResolver.js';
 import { PublishDocumentUseCase } from './PublishDocumentUseCase.js';
+import { UnpublishDocumentUseCase } from './UnpublishDocumentUseCase.js';
 import { PlacePublicationUseCase } from './PlacePublicationUseCase.js';
 import { MoveWorldPlacementUseCase } from './MoveWorldPlacementUseCase.js';
 import { RemoveWorldPlacementUseCase } from './RemoveWorldPlacementUseCase.js';
@@ -145,6 +146,18 @@ export class CreateWorldViewUseCase {
 
         // 0.2.14: Inject the contentStore into the publisher
         const publisherProvider = new LocalPublisherProvider(storageProvider, contentStore);
+        // 0.9.198 — Publication Unpublish/Retract UI Action. The mirror
+        // capability to removeWorldPlacementUseCase above, one authority
+        // up: takes a PUBLICATION out of the publication-facing catalog
+        // rather than a placement out of spatial state. Given the SAME
+        // publisherProvider `publishDocumentUseCase` (below) already
+        // writes through, so unpublishing a Publication this replica
+        // just published is immediately observable via the SAME
+        // discoveryProvider `_findPublications`/`_resolvePublicationForPlacement`
+        // already read (see discovery/LocalDiscoveryProvider.js's own
+        // header — it reads the exact storage key LocalPublisherProvider
+        // writes to).
+        const unpublishDocumentUseCase = new UnpublishDocumentUseCase(publisherProvider);
 
         const loadPublicationDocumentUseCase = new LoadPublicationDocumentUseCase(
             storageProvider
@@ -516,6 +529,9 @@ export class CreateWorldViewUseCase {
                     // 0.9.197: the removal counterpart — see
                     // getPlacementInfo/removePlacement.
                     removeWorldPlacementUseCase,
+                    // 0.9.198: the Publication-layer counterpart, one
+                    // authority up — see unpublishDocument().
+                    unpublishDocumentUseCase,
                     // 0.2.26: search/navigation — see searchWorld/
                     // getDocumentsAtPosition.
                     searchWorldUseCase,

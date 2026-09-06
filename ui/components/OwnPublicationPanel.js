@@ -812,6 +812,74 @@ import { SnapshotWorldPositionClaimOutcome } from '../../application/SnapshotWor
 //   means for a Snapshot.** A candidate's own claimed position remains
 //   untrusted metadata until explicitly consumed; consuming it is not
 //   verifying it.
+//
+// 0.9.198 — Publication Unpublish/Retract UI Action.
+//
+// Every action above (0.9.140 through 0.9.172) reaches FORWARD from a
+// Publication — distribute it, discover its Snapshot, browse/resolve/
+// materialize/place/register some OTHER replica's. Nothing yet lets a
+// Publisher take THEIR OWN Publication back out of the catalog. This
+// adds exactly that, one seam, mirroring `ui/components/
+// PlacementInfoPanel.js`'s own 0.9.197 "Remove from World" addition at
+// the layer above:
+//
+//   publication   (unchanged prop, ★ above)
+//           │
+//           │ click "Unpublish"
+//           ▼
+//   unpublishOwnPublication()   (THIS FILE, NEW)
+//           │
+//           ▼
+//   unpublishCommand(publication)   (injected — a thin WorldView.js
+//                                     wrapper around
+//                                     session.unpublishDocument(),
+//                                     mirroring removePlacementFromPanel()'s
+//                                     own wrap of session.removePlacement()
+//                                     — this component never imports
+//                                     WorldNavigationSession or
+//                                     UnpublishDocumentUseCase itself)
+//
+// NO NEW LIFECYCLE STATE, NO EXECUTING/ERROR FIELD OF ITS OWN. Unlike
+// the Distribute/Discover command families above (real network I/O,
+// genuinely worth an "in flight" indicator), `UnpublishDocumentUseCase`
+// is local and synchronous — the SAME reason `placeMaterializedSnapshot()`/
+// `registerMaterializedSnapshot()` (0.9.159/0.9.160) hold no
+// executing/error state of their own. This component keeps no
+// "unpublished"/"publicationRemoved" result field either: `publication`
+// is supplied by the host view, entirely derived from
+// `session.getPublicationForDocument()` — the SAME "null when the
+// question doesn't apply" read model `getPlacementInfo()` already
+// follows for a placement — so once the catalog no longer has a record
+// for this document, the NEXT prop update already makes `publication`
+// null and this panel's own detail/actions collapse through the exact
+// `v-if="publication"` path an unpublished document already takes.
+//
+// GATED THE SAME WAY EVERY SIBLING ACTION IN THIS FILE ALREADY IS: the
+// button only renders when a caller supplied `unpublishCommand` at all,
+// and is disabled whenever there is no `publication` to unpublish — no
+// second, UI-only ownership rule. `WorldNavigationSession.unpublishDocument()`
+// enforces whatever ownership `UnpublishDocumentUseCase`/
+// `LocalPublisherProvider.unpublish()` themselves do (as of this
+// writing, none — the SAME "own publication" scoping this whole panel
+// already relies on: `publication` is never a foreign Publication found
+// via discovery/search, only ever the ACTIVE document's own, exactly
+// like `distributeOwnSnapshot()`'s own gate above).
+//
+// DELIBERATELY EXCLUDED — NOT THIS MILESTONE.
+// - **Confirmation dialogs or an undo affordance.** No other mutation
+//   in this file (or in `ui/views/WorldView.js`) uses one.
+// - **Clearing `selectedSnapshotCandidate` or any of its own downstream
+//   families.** Unpublishing the ACTIVE Publication does not touch
+//   Snapshot browsing/resolution/materialization/placement/registration
+//   state at all — those stay exactly as `UnpublishDocumentUseCase`
+//   itself leaves them (untouched; see that file's own header), and the
+//   very next `publication` prop change (to `null`) already resets
+//   every one of those families through the EXISTING `publication`
+//   watcher, unmodified by this milestone.
+// - **Any new resolution/outcome vocabulary.** `unpublishCommand`
+//   returns `UnpublishDocumentUseCase.execute()`'s own plain boolean,
+//   never rendered as a result block — the panel's own disappearance
+//   IS the observable outcome.
 export default {
     name: 'OwnPublicationPanel',
     props: {
@@ -821,6 +889,18 @@ export default {
         // component never resolves it itself.
         publication: {
             type: Object,
+            default: null
+        },
+        // 0.9.198 — optional. A `(publication) -> boolean` function, or
+        // `null` when the capability is unavailable — see this file's
+        // own header, "0.9.198 — Publication Unpublish/Retract UI
+        // Action." Synchronous, unlike every OTHER command prop in this
+        // file: `UnpublishDocumentUseCase` performs no network I/O, so
+        // there is nothing to await. Called with the whole `publication`
+        // object, exactly like `snapshotDistributionCommand` above,
+        // never a bare id.
+        unpublishCommand: {
+            type: Function,
             default: null
         },
         // `(publication) -> Promise<{ contentReference, announcement }>`,
@@ -1058,6 +1138,23 @@ export default {
         this.selectedSnapshotMaterializationRequestId += 1;
     },
     methods: {
+        // 0.9.198 — the only call site of `unpublishCommand` in this
+        // file. A no-op whenever there is no `publication` or no
+        // `unpublishCommand` — the identical gate every sibling action's
+        // own guard clause in this file already applies. Synchronous —
+        // no executing/error state to set, see this file's own header,
+        // "no new lifecycle state, no executing/error field of its
+        // own." Never clears any OTHER field in this component: a
+        // successful unpublish is observed entirely through the
+        // `publication` prop itself going `null` on the host view's
+        // next refresh, not through anything this method writes.
+        unpublishOwnPublication() {
+            const publication = this.publication;
+            if (!publication || !this.unpublishCommand) {
+                return;
+            }
+            this.unpublishCommand(publication);
+        },
         // The only writer of `snapshotDistributionExecuting`/
         // `snapshotDistributionError`/`snapshotDistributionResult`, and
         // the only caller of `snapshotDistributionCommand` in this file
@@ -1459,6 +1556,23 @@ export default {
             <p v-else class="own-publication-empty-hint">
                 Publish your current World to distribute its Snapshot.
             </p>
+
+            <!-- 0.9.198 — Publication Unpublish/Retract UI Action.
+                 Retracts THIS Publication from the publication-facing
+                 catalog — never a placement, the Document, or any
+                 Snapshot/Nostr/Arweave material (see this file's own
+                 header). Rendered only when a caller supplied an
+                 unpublishCommand. Disabled whenever there is no
+                 publication to unpublish — no confirmation dialog, no
+                 separate "…ing" label, since retraction is local and
+                 synchronous, unlike Distribute/Discover above. -->
+            <button
+                v-if="unpublishCommand"
+                type="button"
+                class="action-btn own-publication-unpublish-action"
+                :disabled="!publication"
+                @click="unpublishOwnPublication"
+            >Unpublish</button>
 
             <!-- Reachable with zero connected peers and an empty World
                  Encounters panel — this action never depends on either.

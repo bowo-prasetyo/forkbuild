@@ -262,6 +262,22 @@ export class WorldNavigationSession {
 	    // existing test) simply can't remove a placement; see
 	    // removePlacement() below.
 	    removeWorldPlacementUseCase = null,
+	    // 0.9.198 — Publication Unpublish/Retract UI Action. The mirror
+	    // capability one layer UP from moveWorldPlacementUseCase/
+	    // removeWorldPlacementUseCase above — those two take a
+	    // PLACEMENT out of shared space; this takes the PUBLICATION
+	    // itself out of the publication-facing catalog
+	    // (discoveryProvider), a completely different authority over a
+	    // completely different thing (see docs/Principles.md, "A
+	    // Publication Is What; A Placement Is Where"). Same
+	    // "enforce/offer only when actually wired" posture: a session
+	    // built without one (every pre-0.9.198 caller, and every
+	    // existing test) simply can't unpublish anything — see
+	    // unpublishDocument() below. UnpublishDocumentUseCase itself is
+	    // never imported here — this file only ever holds whatever
+	    // instance its caller (application/CreateWorldViewUseCase.js)
+	    // hands it.
+	    unpublishDocumentUseCase = null,
 	    spatialAllocationPolicy = SpatialAllocationPolicy.WARN,
 	    searchWorldUseCase = null,
 	    spatialDiscoveryProvider = null,
@@ -394,6 +410,8 @@ export class WorldNavigationSession {
 	    this._moveWorldPlacementUseCase = moveWorldPlacementUseCase;
 	    // 0.9.197: see removePlacement() below.
 	    this._removeWorldPlacementUseCase = removeWorldPlacementUseCase;
+	    // 0.9.198: see unpublishDocument() below.
+	    this._unpublishDocumentUseCase = unpublishDocumentUseCase;
 	    // 0.2.25: the policy applied to EXPLICIT, interactive placement
 	    // (checkPlacementOverlap/movePlacement) — see
 	    // core/SpatialAllocationPolicy.js. Automatic initial placement
@@ -5260,6 +5278,64 @@ export class WorldNavigationSession {
             throw new Error('WorldNavigationSession: this placement has changed since it was selected — refusing to remove a different placement');
         }
         this._removeWorldPlacementUseCase.execute(record.placementId);
+    }
+
+    // 0.9.198 — Publication Unpublish/Retract UI Action. Retracts the
+    // Publication governing `documentId` — removing it (and its
+    // publisher-internal snapshot copy) from the publication-facing
+    // catalog `_findPublications`/`_resolvePublicationForPlacement`
+    // both read from. This is NOT a placement removal and NOT a
+    // document deletion: `UnpublishDocumentUseCase`'s own header is the
+    // single authority on what actually happens (as of this writing,
+    // the editable Document and its content-addressed material both
+    // survive untouched — see that file's own header and
+    // `publisher/LocalPublisherProvider.js#unpublish()`); this method
+    // never invents additional cleanup beyond what that use case itself
+    // performs, mirroring `removePlacement()`'s own restraint one
+    // authority up.
+    //
+    // A documented, deliberately-left-open side effect of THIS
+    // authority sitting one layer above `removePlacement()`'s own:
+    // because `getPlacementInfo()`/`movePlacement()`/`removePlacement()`
+    // all resolve a placement BY WAY OF the document's current
+    // Publication (`_resolvePublicationForPlacement`), unpublishing
+    // makes any EXISTING placement immediately unresolvable through
+    // this documentId-keyed path too — even though the raw
+    // PlacementRecord itself is never touched, and remains directly
+    // reachable by anyone who already holds its publicationId (see
+    // `getPlacementInfoForPublication()`, above, which bypasses
+    // discoveryProvider entirely). This is an observed CONSEQUENCE of
+    // how placement resolution already worked before this milestone,
+    // not a new cleanup this method performs — see
+    // tests/PublicationUnpublishUIAction.test.js, Section D, and
+    // docs/Roadmap.md's own 0.9.198 entry for why closing that gap
+    // (what a Wanderer should see for a now-orphaned placement) is left
+    // to 0.9.199 rather than answered here.
+    //
+    // `expectedPublicationId` mirrors `removePlacement()`'s own
+    // `expectedPlacementId` exactly: an OPTIONAL compare-and-swap guard
+    // against a stale caller (an `OwnPublicationPanel` that read a
+    // Publication which has, since then, itself already been
+    // unpublished and republished under a new id) silently retracting
+    // whatever NOW governs this document instead of refusing. Omitting
+    // it (like every other guard in this file) unpublishes whatever the
+    // freshest resolution finds.
+    //
+    // Returns `UnpublishDocumentUseCase.execute()`'s own boolean result
+    // unchanged — never re-interpreted into a new outcome vocabulary.
+    unpublishDocument(documentId, expectedPublicationId = null) {
+        const id = documentId || this._activeDocumentId;
+        if (!this._unpublishDocumentUseCase) {
+            throw new Error('WorldNavigationSession: publication cannot be unpublished — no UnpublishDocumentUseCase wired');
+        }
+        const publication = this._resolvePublicationForPlacement(id);
+        if (!publication) {
+            throw new Error(`WorldNavigationSession: "${id}" has no known publication to unpublish`);
+        }
+        if (expectedPublicationId && publication.id !== expectedPublicationId) {
+            throw new Error('WorldNavigationSession: this publication has changed since it was selected — refusing to unpublish a different publication');
+        }
+        return this._unpublishDocumentUseCase.execute(publication.id);
     }
 
     // _ensureEditableSelection() — REMOVED (0.5.9). Was the fork-on-write

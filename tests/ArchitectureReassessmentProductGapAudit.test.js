@@ -158,10 +158,16 @@ async function runTests() {
     // there? It answers with real, running code, not supposition.
     //
     // UPDATED by 0.9.197 (World Placement Removal UI Action): the
-    // World-placement half of this gap is now CLOSED — see C3/C4 below,
+    // World-placement half of this gap was CLOSED — see C3/C4 below,
     // and tests/WorldPlacementRemovalUIAction.test.js for the dedicated
-    // E2E audit. The Publication-unpublish half (C5/Section D) is
-    // deliberately still open, left for 0.9.198.
+    // E2E audit.
+    //
+    // UPDATED AGAIN by 0.9.198 (Publication Unpublish/Retract UI
+    // Action): the Publication-unpublish half (C5/Section D) is now
+    // CLOSED too — see C5/C7 and Section D below, and
+    // tests/PublicationUnpublishUIAction.test.js for its own dedicated
+    // E2E audit. Both halves of this Section's original finding are
+    // closed as of this milestone.
     // ---------------------------------------------------------------
     {
         // C1 — RemoveWorldPlacementUseCase is composed into every one of
@@ -234,11 +240,22 @@ async function runTests() {
         const emitsMatch = placementInfoPanelSource.match(/emits:\s*\[([^\]]*)\]/);
         assert(emitsMatch, 'C4a. PlacementInfoPanel.js declares its emits array');
         assert(/\bremove\b/i.test(emitsMatch[1]), `C4b. PlacementInfoPanel.js now emits 'remove' (found [${emitsMatch[1].trim()}]) — a reachable remove-shaped event a host view can listen for, per 0.9.197`);
-        assert(!/unpublish|delete/i.test(emitsMatch[1]), 'C4c. ...but still no unpublish/delete-shaped event — 0.9.197 deliberately excluded Publication retraction and material deletion; see Section C5/D below');
+        assert(!/unpublish|delete/i.test(emitsMatch[1]), 'C4c. ...still no unpublish/delete-shaped event on PlacementInfoPanel itself — 0.9.198 closed Publication retraction through OwnPublicationPanel/WorldNavigationSession instead (see C7 below), never by teaching the PLACEMENT panel a second, unrelated authority; material deletion remains unaddressed by either');
 
-        // C5 — UnpublishDocumentUseCase is the mirror capability at the
-        // Publication layer, composed nowhere either. A sweep of every UI
-        // file that presents a Publication finds zero call sites.
+        // C5 — UPDATED by 0.9.198 (Publication Unpublish/Retract UI
+        // Action). At the time of THIS audit (0.9.196), UnpublishDocumentUseCase
+        // was the mirror capability at the Publication layer, composed
+        // nowhere. 0.9.198 gave it a reachable call site too — but,
+        // mirroring 0.9.197's OWN restraint one layer up (C2 above), it
+        // did so WITHOUT any UI file ever naming the raw use case or its
+        // conventional instance name directly: a UI component talks to
+        // WorldNavigationSession.unpublishDocument(), never to
+        // UnpublishDocumentUseCase itself. So this sweep still finds
+        // zero direct references post-0.9.198 too — not because the
+        // capability is still unreachable (it now is, via "Unpublish"),
+        // but because, like RemoveWorldPlacementUseCase before it, this
+        // use case's own authority was never meant to be reachable from
+        // more than one composition root away.
         const publicationUiFiles = [
             'ui/components/OwnPublicationPanel.js',
             'ui/views/WorldView.js',
@@ -247,8 +264,21 @@ async function runTests() {
         ];
         for (const file of publicationUiFiles) {
             const source = await rawSource(file);
-            assert(countReferences(source, 'UnpublishDocumentUseCase') === 0, `C5. ${file} never references UnpublishDocumentUseCase — no reachable "retract this publication" action exists anywhere a Publisher can click`);
+            assert(countReferences(source, 'UnpublishDocumentUseCase') === 0, `C5. ${file} never references the raw UnpublishDocumentUseCase (by class or conventional instance name) directly — even after 0.9.198, WorldNavigationSession remains the sole authority a UI file talks to`);
         }
+
+        // C7 — the 0.9.198 counterpart to C3/C4 above: the read model a
+        // Publisher sees (getPublicationForDocument, already existing
+        // since 0.9.140) needed no new field at all — unlike a
+        // placement's movable/removable, "can this be unpublished" was
+        // never gated on anything beyond a Publication existing (see
+        // Section G of tests/PublicationUnpublishUIAction.test.js for
+        // why no ownership rule was invented either). What DID need to
+        // exist, and now does, is the mutation itself.
+        const navigationSessionSourceForUnpublish = await rawSource('application/WorldNavigationSession.js');
+        assert(/unpublishDocument\(documentId/.test(navigationSessionSourceForUnpublish), 'C7a. WorldNavigationSession now exposes unpublishDocument(documentId, expectedPublicationId) — the reachable call site 0.9.198 added, mirroring removePlacement()\'s own compare-and-swap shape one authority up');
+        const ownPublicationPanelSourceForUnpublish = await rawSource('ui/components/OwnPublicationPanel.js');
+        assert(/unpublishCommand/.test(ownPublicationPanelSourceForUnpublish) && /unpublishOwnPublication/.test(ownPublicationPanelSourceForUnpublish), 'C7b. OwnPublicationPanel.js now wires an unpublishCommand prop to an "Unpublish" action, per 0.9.198');
 
         // C6 — both use cases are proven CORRECT here, directly, against
         // the exact same real (not mocked) collaborators and setup
@@ -291,28 +321,35 @@ async function runTests() {
             const records = storage.load('forkbuild-publications') || [];
             assert(records.some((r) => r.id === publication.id), 'sanity: the publication genuinely exists before unpublish');
             const removed = unpublishUseCase.execute(publication.id);
-            assert(removed === true, 'C6c. UnpublishDocumentUseCase genuinely reports success');
+            assert(removed === true, 'C6c. UnpublishDocumentUseCase genuinely reports success — as of 0.9.198 it is also reachable from OwnPublicationPanel\'s own "Unpublish" action (see tests/PublicationUnpublishUIAction.test.js), not merely correct-but-unwired');
             const recordsAfter = storage.load('forkbuild-publications') || [];
-            assert(!recordsAfter.some((r) => r.id === publication.id), 'C6d. ...and the publication is genuinely gone from the catalog — this capability also works correctly, it is simply never invoked in production');
+            assert(!recordsAfter.some((r) => r.id === publication.id), 'C6d. ...and the publication is genuinely gone from the catalog');
         }
 
-        console.log('✓ Section C: World material lifecycle — PARTIALLY CLOSED as of 0.9.197. RemoveWorldPlacementUseCase and UnpublishDocumentUseCase both exist and are both correct (proven directly above against the same real collaborators tests/WorldPlacement.test.js and tests/PublicationLifecycle.test.js already exercise). 0.9.197 (World Placement Removal UI Action) gave RemoveWorldPlacementUseCase a reachable call site — WorldNavigationSession.removePlacement(), wired to a "Remove from World" action on PlacementInfoPanel (see tests/WorldPlacementRemovalUIAction.test.js). UnpublishDocumentUseCase remains unwired: a Publisher who wants to retract a Publication still has no path to do so today — left for 0.9.198 by this milestone\'s own design.');
+        console.log('✓ Section C: World material lifecycle — FULLY CLOSED as of 0.9.198. RemoveWorldPlacementUseCase and UnpublishDocumentUseCase both exist and are both correct (proven directly above against the same real collaborators tests/WorldPlacement.test.js and tests/PublicationLifecycle.test.js already exercise), and BOTH are now reachable: 0.9.197 (World Placement Removal UI Action) gave RemoveWorldPlacementUseCase a "Remove from World" action on PlacementInfoPanel; 0.9.198 (Publication Unpublish/Retract UI Action) gave UnpublishDocumentUseCase an "Unpublish" action on OwnPublicationPanel, via the SAME WorldNavigationSession-mediated shape (see tests/PublicationUnpublishUIAction.test.js). 0.9.198\'s own audit also surfaced a genuine, DOCUMENTED (not invented) consequence of the two authorities sitting at different layers — unpublishing a Publication orphans, but does not remove, any placement that already pointed at it (see that file\'s own Section D) — left as 0.9.199\'s own convergence question, per docs/Roadmap.md.');
     }
 
     // ---------------------------------------------------------------
     // Section D — Publication authoring/publishing workflow.
     //
-    // Confirms Section C's finding from the authoring side: the FORWARD
-    // path (publish → anchor → distribute → Snapshot discover/resolve/
-    // materialize/attribute) is rich; the REVERSE path (retract) is
-    // absent from the same panel.
+    // At the time of THIS audit (0.9.196), this confirmed Section C's
+    // finding from the authoring side: the FORWARD path (publish →
+    // anchor → distribute → Snapshot discover/resolve/materialize/
+    // attribute) was rich; the REVERSE path (retract) was absent from
+    // the same panel.
+    //
+    // UPDATED by 0.9.198 (Publication Unpublish/Retract UI Action):
+    // OwnPublicationPanel.js now wires exactly one unpublish-shaped
+    // handler — closing the REVERSE path this section originally found
+    // missing, from the identical authoring surface.
     // ---------------------------------------------------------------
     {
         const panelSource = await rawSource('ui/components/OwnPublicationPanel.js');
         const clickHandlers = new Set((panelSource.match(/@click="[a-zA-Z]+/g) || []).map((s) => s.replace('@click="', '')));
-        assert(clickHandlers.size >= 8, `D1. OwnPublicationPanel.js already wires at least 8 distinct actions (found ${clickHandlers.size}) — publish/anchor/distribute/Snapshot discovery/resolution/materialization/attribution are all reachable`);
-        assert([...clickHandlers].every((h) => !/^unpublish|^retract/i.test(h)), 'D2. OwnPublicationPanel.js\'s own action surface contains no unpublish/retract-shaped handler — confirming Section C\'s finding from the authoring side, not merely the World-placement side');
-        console.log(`✓ Section D: Publication workflow — the FORWARD path (${clickHandlers.size} distinct wired actions: publish, anchor, distribute, Snapshot discover/resolve/materialize/attribute) is COMPLETE. The REVERSE path — retracting a Publication once it exists — is the same ACTUAL GAP Section C already found, confirmed here from the authoring surface rather than the World-placement surface.`);
+        assert(clickHandlers.size >= 9, `D1. OwnPublicationPanel.js already wires at least 9 distinct actions (found ${clickHandlers.size}) — publish/unpublish/anchor/distribute/Snapshot discovery/resolution/materialization/attribution are all reachable`);
+        const unpublishHandlers = [...clickHandlers].filter((h) => /^unpublish|^retract/i.test(h));
+        assert(unpublishHandlers.length === 1, `D2. OwnPublicationPanel.js's own action surface now contains exactly one unpublish/retract-shaped handler (found [${unpublishHandlers.join(', ')}]) — 0.9.198 closed Section C's finding from the authoring side, not merely the World-placement side`);
+        console.log(`✓ Section D: Publication workflow — BOTH the FORWARD path (${clickHandlers.size} distinct wired actions: publish, anchor, distribute, Snapshot discover/resolve/materialize/attribute) AND the REVERSE path (unpublish, added by 0.9.198) are now reachable from this SAME panel.`);
     }
 
     // ---------------------------------------------------------------
