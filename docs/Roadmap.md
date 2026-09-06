@@ -74759,3 +74759,111 @@ already proven correct and independently reachable; only their
 convergence at the observation layer is still an open question. After
 that, per 0.9.196's own original framing, it is worth pausing and
 reassessing the product again before opening a new subsystem.
+
+## 0.9.199 — Removal & Retraction Lifecycle Convergence Audit
+
+0.9.198's own recommendation, taken directly. Test-only — no production
+changes. `RemoveWorldPlacementUseCase` (0.9.197) and
+`UnpublishDocumentUseCase` (0.9.198) are each independently proven
+correct, and each is reachable from World View. This milestone asks the
+one question neither of their own dedicated E2E files asked: now that a
+Wanderer/Publisher can reach BOTH from the same World-observation surface,
+do they actually stay independent when exercised together, in either
+order, against the same document — or does exposing both at once quietly
+couple them?
+
+`tests/RemovalRetractionLifecycleConvergenceAudit.test.js` answers with
+real, running code, against the same real (not mocked) collaborators
+every other file in this arc already uses:
+
+- **A/B — both flagship orders.** Remove-then-unpublish (A) confirms
+  removing a placement first never disturbs the Publication unpublish
+  subsequently retracts. Unpublish-then-remove (B) confirms the reverse
+  — and, per this milestone's own brief, does NOT repair what it finds:
+  once a Publication is gone, `WorldNavigationSession.removePlacement
+  (documentId)` can no longer resolve a placement to remove at all,
+  because it resolves one BY WAY OF the document's current Publication
+  (the exact "has no known placement to remove" error a never-placed
+  document already produces — never a new orphan-specific error). The
+  raw `RemoveWorldPlacementUseCase`, given the placementId directly
+  (obtainable only through `getPlacementInfoForPublication()`'s own
+  bypass), remains fully capable. This file documents that boundary; it
+  adds no new resolution path across it.
+- **C — independent documents.** Both mutations applied to A, in
+  sequence, never affect an unrelated B — Publication, placement,
+  discovery, and both read models all checked.
+- **D — independent identities.** `documentId`, `publicationId`,
+  `placementId`, and `contentHash` are proven to be four genuinely
+  distinct values for one object, and each compare-and-swap guard is
+  proven to refuse an id from the WRONG identity space (a publicationId
+  offered where a placementId was expected, and vice versa) — never
+  silently coincidentally matching.
+- **E/F — material and decentralized distribution survival.** Content
+  bytes and the editable Document survive both mutations in sequence;
+  neither use case's own code, nor either `WorldNavigationSession`
+  method body, carries any Arweave/Nostr/Snapshot/distribution
+  vocabulary, exercised together rather than in isolation this time.
+- **G — read-model convergence, no new flag.** A structural sweep
+  confirms no `orphaned`/`isOrphaned` field exists anywhere in
+  production code (the word appears only in explanatory comments); the
+  observable UI change remains entirely driven by the SAME
+  `getPlacementInfo()`/`getPublicationForDocument()` read models
+  returning `null`, exactly as before either milestone.
+- **H — both compare-and-swap guards.** `removePlacement()`'s own stale-
+  placementId guard was already proven by 0.9.197; this file discovers
+  and closes a genuine coverage gap — `unpublishDocument()`'s
+  `expectedPublicationId` guard had never actually been exercised with a
+  mismatched id by either 0.9.196 or 0.9.198's own tests (every prior
+  call site happened to pass the current id). Both are now proven to
+  refuse a stale caller and succeed given the current id.
+- **I — structural non-coupling.** `RemoveWorldPlacementUseCase` and
+  `UnpublishDocumentUseCase` never reference each other; neither
+  `WorldNavigationSession` method body calls the other's use case;
+  `PlacementInfoPanel` emits no unpublish-shaped event and
+  `OwnPublicationPanel` wires no remove-shaped handler; `WorldView.js`'s
+  own two handlers each call exactly one session method.
+- **J — reversibility through EXISTING operations, nothing invented.**
+  After removing a placement, `PlacePublicationUseCase` — completely
+  unmodified — can place the SAME surviving Publication again, under a
+  brand-new placementId. After unpublishing, `PublishDocumentUseCase` —
+  completely unmodified — can publish the SAME surviving Document again,
+  under a brand-new publicationId but the SAME documentId and (content
+  unchanged) the SAME contentHash — a documented nuance:
+  `contentHash` identifies content, not a publish event, so it is
+  deliberately not a fourth guaranteed-unique-per-publish identity the
+  way `documentId`/`publicationId`/`placementId` are. Both properties are
+  documented as already existing; no undo feature was added.
+
+**Deliberately not done**, per this milestone's own brief: no automatic
+placement removal on unpublish, no placement tombstone, no orphan
+cleanup or reattachment, no publication-state propagation onto placement
+state, and no new UI lifecycle flag for the orphaned case — confirmed
+absent by Section G's own structural sweep, not merely unmentioned.
+
+```text
+0.9.196  Architecture Reassessment / Product Gap Audit               ✓
+0.9.197  World Placement Removal UI Action                          ✓
+0.9.198  Publication Unpublish / Retract UI Action                  ✓
+0.9.199  Removal & Retraction Lifecycle Convergence Audit            ✓
+```
+
+### Recommendation
+
+Both use cases 0.9.196 found unreachable are now reachable, independently
+proven correct, and — as of this milestone — proven to converge cleanly:
+neither corrupts the other's domain state in either order, both
+compare-and-swap guards hold (one of them newly exercised for the first
+time), and nothing was silently coupled by exposing both from the same
+World-observation surface. The one loose end either could still resolve
+to — what a Wanderer should be TOLD when they encounter a placement whose
+Publication is gone — was deliberately left open again here, exactly as
+0.9.198 first left it: it is a genuine future product decision, not a
+defect this audit uncovered.
+
+Per 0.9.196's own original framing, and this arc's own natural end: I
+would **stop and reassess the product again** rather than predefine
+0.9.200. The right question at that point is not "what should Snapshot
+or removal do next" but the broader one 0.9.196 originally asked: what is
+the next concrete thing a Wanderer or Publisher should be able to do that
+they currently cannot? If nothing important surfaces, the correct next
+milestone may genuinely be no new feature at all.
