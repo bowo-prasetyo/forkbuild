@@ -74085,3 +74085,89 @@ retention → reconciliation, all riding one shared, now twice-audited
 observation cadence) looks complete as an autonomous system. The next
 milestone should ask whether anything OUTSIDE Snapshot needs attention
 before more is added here — not another turn of this same crank.
+
+## 0.9.193 — Automatic Snapshot Session-Lifetime Guard
+
+0.9.192's own Section D recorded one real, honest defect as OBSERVED rather
+than fixed: an in-flight automatic cascade started by a `WorldView` mount
+that is subsequently torn down still lands its registration in the SHARED
+`WorldDiscoverySourceRegistry` — a dead session's own late-completing work
+mutating the running World after that session has disappeared. This
+milestone closes exactly that gap, deliberately narrow: the cascade itself
+is never cancelled — resolution, materialization, and placement all still
+run to completion — only the ONE World-side side effect, registration, is
+now session-sensitive.
+
+`application/AutomaticSnapshotEncounterCascade.js` gains one new,
+optional, constructor-injected collaborator, `isSessionActive()` — a
+synchronous `() -> boolean` predicate, consulted exactly once per
+`processCandidate()` run, at the single instant placement has already
+reached `SnapshotWorldPlacementOutcome.PLACED` and this cascade is about to
+call `registerMaterializedSnapshotWorldSource()`. A falsy result stops the
+run at one new terminal outcome, `AutomaticSnapshotEncounterCascadeOutcome.
+SUPPRESSED` (`application/AutomaticSnapshotEncounterCascadeOutcome.js`) —
+registration is withheld, with no rollback of already-materialized bytes and
+no retry. `null`/absent (the default) leaves every existing caller's
+behavior byte-for-byte identical to before this milestone. The check and the
+registration call it gates sit in the SAME synchronous stretch of code, with
+no `await` between them, so no teardown can race between "session is still
+active" and the mutation it gates.
+
+`ui/views/WorldView.js` is the ONLY composition-site change: a plain,
+non-reactive `automaticCascadeSessionActive` flag, true for the mount's own
+lifetime, flipped to `false` as the very FIRST statement inside
+`onBeforeUnmount()` — before `session.dispose()` and before anything else
+tears down — and handed to the cascade as `isSessionActive: () =>
+automaticCascadeSessionActive`. The cascade never learns WHY the flag
+changed, only THAT it did; the composition root owns the mount/unmount
+relationship entirely on its own.
+
+Deliberately excluded, exactly as scoped: cancellation/`AbortController`/
+cancellation tokens of any kind, rollback or deletion of already-acquired
+material, retry of a SUPPRESSED result, and any new Snapshot LIFECYCLE
+vocabulary (`CANCELLED`/`ABANDONED`/`EXPIRED`/etc.) — `SUPPRESSED` is one
+terminal outcome value, exactly like `INELIGIBLE` before it, never a
+lifecycle registry. Manual registration
+(`registerMaterializedSnapshotWorldSource()`, called directly by
+`OwnPublicationPanel.js`'s own "Register" button) has no `isSessionActive`
+concept at all and is completely unaffected — this guard belongs
+exclusively to the automatic cascade composition.
+
+`tests/AutomaticSnapshotSessionLifetimeGuard.test.js` — twelve sections:
+(A) FLAGSHIP, reproducing 0.9.192's own Section D orphan exactly, now
+SUPPRESSED instead of registered; (B) live-session registration, and a
+caller supplying no `isSessionActive` at all, both unaffected; (C) teardown
+at each of the cascade's own asynchronous collaborator boundaries
+(resolution, materialization) and predating the run entirely, all suppress;
+(D) acquisition survives suppression, with no compensating cleanup; (E)
+new-session independence in both directions; (F) the identical subject a
+dead session suppressed is still genuinely, independently registerable by a
+fresh session; (G) several concurrent candidates in one session — only work
+that reached the registration checkpoint while genuinely active registers;
+(H) manual registration's own complete indifference to session state; (I)
+retention interaction — a SUPPRESSED outcome is never noted watched, a live
+REGISTER still feeds retention exactly as 0.9.190 always has; (J) a
+structural sweep for no new timer/cancellation machinery, and the guard/
+register call as one uninterrupted synchronous stretch; (K) a structural
+sweep for no new Snapshot lifecycle enum; (L) `ui/views/WorldView.js`'s own
+composition, verified directly against its source. The existing
+`WorldSnapshotAutomaticEncounterCascade.test.js`/
+`WorldSnapshotAutomaticEncounterLifecycleAudit.test.js` structural-sweep
+assertions ("exactly one new outcome value") were updated to expect the
+cascade's own now-two values (`INELIGIBLE`, `SUPPRESSED`) — the "no new
+LIFECYCLE enum" invariant itself is unchanged and still holds.
+
+```text
+0.9.190  Automatic Snapshot Encounter Retention Integration          ✓
+0.9.191  Comprehensive Automatic Snapshot Retention Lifecycle Audit  ✓
+0.9.192  Automatic World Observation Cadence Audit                   ✓
+0.9.193  Automatic Snapshot Session-Lifetime Guard                   ✓
+```
+
+### Recommendation
+
+The one concrete defect 0.9.191/0.9.192 found is now closed, narrowly and
+without new lifecycle vocabulary. I'd return to 0.9.192's own
+recommendation: the Snapshot subsystem now looks complete AND
+boundary-safe as an autonomous system. The next milestone should look
+outside Snapshot rather than continuing to turn this same crank.
