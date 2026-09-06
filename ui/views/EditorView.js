@@ -33,6 +33,7 @@ import CommandPalette from '../components/CommandPalette.js';
 import KeyboardShortcutsOverlay from '../components/KeyboardShortcutsOverlay.js';
 import ActionFeedback from '../components/ActionFeedback.js';
 import RecoveryBanner from '../components/RecoveryBanner.js';
+import TransformFeedback from '../components/TransformFeedback.js';
 import { CreatePublisherUseCase } from '../../application/CreatePublisherUseCase.js';
 import { CreateDiscoveryUseCase } from '../../application/CreateDiscoveryUseCase.js';
 import { CreateBlueprintAttributionUseCase } from '../../application/CreateBlueprintAttributionUseCase.js';
@@ -64,7 +65,7 @@ const TOOL_SHORTCUTS = { 1: ToolId.SELECT, 2: ToolId.PLACE };
 
 export default {
     name: 'EditorView',
-    components: { Toolbar, BuildLibraryPanel, EditingSidebar, StructureInstancePanel, SelectionInspector, CommandPalette, KeyboardShortcutsOverlay, ActionFeedback, RecoveryBanner, DocumentInfoPanel, MetadataEditorDialog, CreateBlueprintDialog, StructureInfoPanel },
+    components: { Toolbar, BuildLibraryPanel, EditingSidebar, StructureInstancePanel, SelectionInspector, CommandPalette, KeyboardShortcutsOverlay, ActionFeedback, RecoveryBanner, DocumentInfoPanel, MetadataEditorDialog, CreateBlueprintDialog, StructureInfoPanel, TransformFeedback },
     template: `
         <div class="editor-view">
             <Toolbar
@@ -169,6 +170,7 @@ export default {
                         class="marquee-rect"
                         :style="{ left: marqueeRect.left + 'px', top: marqueeRect.top + 'px', width: marqueeRect.width + 'px', height: marqueeRect.height + 'px' }"
                     ></div>
+                    <TransformFeedback :feedback="transformFeedback" />
                 </div>
             </div>
             <CommandPalette
@@ -1380,6 +1382,20 @@ export default {
             };
         }
 
+        // Transform gesture feedback overlay (0.9.214). Purely a
+        // projection of the return value EditorSession.onPointerMove()/
+        // onPointerUp() already forward (feedback included) once the
+        // interactive gizmo consumes a pointer event — see
+        // application/SpatialEditingService.js#getGestureFeedback() and
+        // ui/components/TransformFeedback.js, both built for exactly this
+        // blob and unchanged by this milestone. Never mutated except by
+        // that forwarded value: no local transform math, no independent
+        // polling of gesture state.
+        const transformFeedback = ref(null);
+        function clearTransformFeedback() {
+            transformFeedback.value = null;
+        }
+
         onMounted(() => {
             editorSession.start(viewport.value);
 
@@ -1392,6 +1408,16 @@ export default {
             unsubSelection = editorContext.eventBus.subscribe(
                 EditorEvent.SELECTION_CHANGED,
                 ({ selection }) => {
+                    // _rebuild() (loadDocument/openDocument/newDocument)
+                    // clears the selection before anything else — so this
+                    // fires on every document switch, the one existing
+                    // signal broad enough to guarantee a gesture overlay
+                    // left over from a previous document can never bleed
+                    // into a new one. An ordinary selection change mid-
+                    // session can't happen while a gizmo drag is in
+                    // flight either, so this never fights the live
+                    // pointermove/pointerup updates above.
+                    clearTransformFeedback();
                     selectionCount.value = selection.items.length;
                     selectionIsStructurePlacement.value = !!selection.isStructurePlacementSelection;
                     selectedPlacementInfo.value = selection.isStructurePlacementSelection
@@ -1490,7 +1516,14 @@ export default {
             };
             viewport.value.addEventListener('pointerdown', onPointerDown);
             onPointerMove = (event) => {
-                editorSession.onPointerMove(event);
+                const result = editorSession.onPointerMove(event);
+                // Only a CONSUMED result (the gizmo mid-drag) ever
+                // carries feedback; an ordinary hover/tool move returns
+                // null here and must leave whatever is already showing
+                // alone, not blank it out between drag frames.
+                if (result) {
+                    transformFeedback.value = result.feedback || null;
+                }
                 updateMarqueeRect();
             };
             viewport.value.addEventListener('pointermove', onPointerMove);
@@ -1504,7 +1537,14 @@ export default {
             // refresh is cheap and a no-op unless a placement is
             // currently selected (see its own definition above).
             onPointerUp = (event) => {
-                editorSession.onPointerUp(event);
+                const result = editorSession.onPointerUp(event);
+                // Gizmo release always reports feedback: null once the
+                // gesture is over (committed or a no-op release) — the
+                // overlay's own idle state, set here rather than
+                // guessed at independently.
+                if (result) {
+                    transformFeedback.value = result.feedback || null;
+                }
                 updateMarqueeRect();
                 refreshSelectedPlacementInfo();
                 refreshSelectionSummary();
@@ -1546,6 +1586,14 @@ export default {
                 //    cancels it inside the session).
                 if (editorSession.isGestureActive()) {
                     editorSession.onKeyDown(event);
+                    // Escape cancels the gesture inside the session
+                    // without ever reaching onPointerUp() above — the
+                    // overlay's own idle state has to be set here
+                    // instead, or a cancelled gesture would leave its
+                    // last preview frame on screen forever.
+                    if (!editorSession.isGestureActive()) {
+                        clearTransformFeedback();
+                    }
                     return;
                 }
                 // 3.5. An in-flight Shift+Drag marquee owns Escape next —
@@ -1671,6 +1719,7 @@ export default {
         return {
             viewport,
             marqueeRect,
+            transformFeedback,
             paletteUseCase,
             documentManager,
             saveDocumentUseCase,

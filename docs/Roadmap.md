@@ -76941,3 +76941,188 @@ coordinator method, a new UI action, and a real design decision about
 how the user receives the exported package). No next milestone is
 prescribed here beyond noting those two remain exactly as 0.9.212 left
 them.
+
+## 0.9.214 — Editor Transform Gesture Feedback
+
+Small production integration + focused E2E audit. Takes up 0.9.212's
+remaining Editor-scoped finding: the interactive transform gizmo's live
+feedback (mode, axis, snap increment, delta, precision, collision) has
+been computed correctly every gesture frame since 0.1.47
+(`application/SpatialEditingService.js#getGestureFeedback()`), and a
+purpose-built presentational component
+(`ui/components/TransformFeedback.js`, also from 0.1.47) has existed the
+whole time to render it — but `ui/views/EditorView.js`'s own pointer
+handlers called `editorSession.onPointerDown()`/`onPointerMove()`/
+`onPointerUp()` and threw the return value away, so the overlay was never
+reachable. No new transform system, no new gesture semantics, no second
+feedback shape: the gesture stays authoritative, the overlay only
+observes it.
+
+```text
+SpatialEditingService.getGestureFeedback() (existing, unchanged)
+      │
+      │ TransformGizmoController._readGestureFeedback() (existing, unchanged)
+      ▼
+{ consumed, hovered/committed, feedback } (existing, unchanged)
+      │
+      │ EditorSession.onPointerMove()/onPointerUp() (existing, unchanged)
+      ▼
+result.feedback (existing, unchanged — 0.9.212's own finding: forwarded but discarded)
+      │
+      │ NEW — const result = editorSession.onPointerMove(event);
+      │       transformFeedback.value = result.feedback || null;
+      ▼
+ui/views/EditorView.js's own transformFeedback ref
+      │
+      │ NEW — <TransformFeedback :feedback="transformFeedback" />
+      ▼
+ui/components/TransformFeedback.js (existing since 0.1.47, unchanged)
+```
+
+### What was added
+
+- **`transformFeedback` — one new local `ref(null)` in `EditorView.js`'s
+  own `setup()`.** Declared beside the pre-existing `marqueeRect` ref it
+  already mirrors the shape of, and returned from `setup()` for the
+  template to bind.
+- **`onPointerMove`/`onPointerUp` now capture their session call's
+  return value.** Both handlers used to call
+  `editorSession.onPointerMove(event)`/`onPointerUp(event)` as a bare
+  statement; both now assign it to `result` and, when `result` is
+  non-null (a gizmo drag actually consumed the event), write
+  `result.feedback || null` into `transformFeedback` — a bare
+  passthrough, never a reconstruction. `onPointerDown` is untouched: the
+  controller's own `onPointerDown()` never carried feedback in the first
+  place (no preview frame exists yet at grab time), so there was nothing
+  to capture there.
+- **Two new places clear the ref, neither of which is the ordinary
+  pointer-up path above.** `onPointerUp()` already clears it on every
+  ordinary release (the controller always reports `feedback: null` once
+  a gesture ends, committed or not), but two other ways a gesture can end
+  needed their own explicit clear:
+  - **Escape-cancel.** The keydown handler's existing "an active gizmo
+    gesture owns the keyboard" branch calls `editorSession.onKeyDown()`,
+    which cancels the gesture internally but returns nothing — so the
+    branch now also calls a new `clearTransformFeedback()` once
+    `editorSession.isGestureActive()` reads false afterward.
+  - **Document-switch isolation.** `EditorSession#_rebuild()` (the
+    shared engine behind `loadDocument()`/`openDocument()`/
+    `newDocument()`, and therefore every document-switching entry point
+    in `EditorView.js` — recovery, a fork, `?load=`, "Edit Source
+    Document") always calls `editorContext.clearSelection()` first,
+    firing `SELECTION_CHANGED`. The view's existing `SELECTION_CHANGED`
+    subscription now also calls `clearTransformFeedback()` — one signal
+    broad enough to guarantee a gesture overlay left over from a
+    previous document can never bleed into a new one, without touching
+    `_rebuild()` itself or adding a new event.
+- **`ui/components/TransformFeedback.js` mounted, unchanged.** Imported
+  and added to `EditorView.js`'s `components: {}`, rendered once in the
+  viewport's own relatively-positioned container next to the pre-existing
+  `.marquee-rect` overlay. The component itself — its `visible`/
+  `precise`/`invalid`/`title`/`lines` computed properties, its inline
+  styling, its collision-red accent — is byte-for-byte the same file
+  0.1.47 built and 0.4.8 later extended for `valid: false`.
+
+### What stays exactly as it was
+
+`application/SpatialEditingService.js`,
+`renderer/TransformGizmoController.js`, `application/EditorSession.js`,
+`application/GizmoGestureRouter.js`, and
+`application/StructurePlacementGestureService.js` are all byte-for-byte
+unchanged — every value this milestone displays already existed and was
+already forwarded correctly; the only gap was that nothing downstream of
+`EditorView.js`'s own pointer handlers read it. No new transform math, no
+new snapping rule, no new collision rule, no numeric-entry change
+(`ui/components/NumericTransformPanel.js`, confirmed by its own "not a
+live property editor" header, remains a distinct, non-live surface this
+milestone does not touch).
+
+`tests/EditorTransformGestureFeedback.test.js` is the flagship E2E audit.
+`ui/components/TransformFeedback.js` imports no Vue-external runtime
+(unlike `ui/views/EditorView.js`, which imports `vue` and stays outside
+this repo's plain `node tests/*.test.js` sweep), so Section A onward
+evaluates its own computed properties directly rather than a regex proxy
+for them, driving a REAL `EditorSession`/`SpatialEditingService`/
+`GizmoGestureRouter` through a lightweight stub standing in for the
+THREE.js-backed render session (`application/RenderWorldUseCase.js`) —
+the same "stub the render session, keep everything else real" technique
+`tests/WorldEditorContinuity.test.js`'s own `stubRenderSession()`
+established. The stub reproduces `TransformGizmoController`'s own
+`{ consumed, hovered/committed, feedback }` result shape by driving the
+real gesture service through `begin`/`preview`/`commit`/
+`cancelTransformGesture` — it never reimplements gesture math (that
+stays `tests/TransformGizmo.test.js`'s own territory) and never touches
+`CommandHistory` directly:
+
+- **A — Gesture start.** A consumed drag frame carries feedback the
+  instant `onPointerMove()` reports it, naming the correct mode and
+  axis; `TransformFeedback.js`'s own `visible`/`title`/`lines` render it
+  correctly.
+- **B — Live update.** A second preview frame with a different value
+  updates the SAME feedback surface; nothing is cached from the first
+  frame.
+- **C — Commit.** The real mutation happens, exactly one history entry
+  exists, and the forwarded result reports `feedback: null` — the
+  overlay's own idle state — which `TransformFeedback.js` renders as
+  invisible. No duplicate history entry is generated by the feedback
+  wiring itself.
+- **D — Cancel.** Escape cancels the gesture inside the session (the
+  identical `isGestureActive()`-gated path `EditorView.js`'s own keydown
+  handler drives); the brick reverts to its pre-gesture position, no
+  history entry is created, and the underlying service's own feedback
+  reads `null` once cancelled.
+- **E — Undo/Redo convergence.** Committing, undoing, and redoing a
+  transform never touches gesture feedback at all — it stays exactly the
+  idle value the commit already left it at, confirming the overlay is
+  purely observational.
+- **F — Multiple gesture types.** Translate and rotate — the Editor's
+  two existing gizmo operations — both surface correctly through the
+  identical begin/preview/commit lifecycle; this milestone introduces no
+  third operation.
+- **G — Structural boundary.** `EditorView.js`'s new lines only ever
+  assign `result.feedback`/`null` into the ref (no `CommandHistory`,
+  `Autosave`, `Snapshot`, `Publication`, or direct World-mutation
+  reference anywhere in either handler); the Escape-cancel branch and the
+  `SELECTION_CHANGED` subscription both genuinely call
+  `clearTransformFeedback()`; `TransformFeedback.js` itself still imports
+  nothing and references none of those systems either.
+- **H — Unmount hygiene.** `transformFeedback` is declared with
+  `ref(null)` inside `setup()`, not module-level state, so an
+  `EditorView` unmount/remount starts with a fresh ref — a stale gesture
+  overlay from a previous mount cannot survive it.
+
+`tests/PostUndoRedoProductReassessment.test.js` (0.9.212's own flagship)
+asserted, by name, that `EditorView.js` never imported or rendered
+`TransformFeedback` and that its `onPointerMove`/`onPointerUp` handlers
+discarded their return value outright (Section G1) — this milestone
+makes those assertions false. Updated Section G1 in place (the same
+"update in place, keep the still-true parts, note what changed"
+convention 0.9.207/0.9.210/0.9.213 established), the Section H
+closure-findings table (Transform gesture feedback overlay: `ACTUAL_GAP`
+→ `COMPLETE`), and the classification summary/capability matrix/
+candidate-gap block at the bottom to record the closure.
+
+```text
+0.9.209  Post-History Product Reassessment                           ✓
+0.9.210  World View Undo/Redo UI Integration                         ✓
+0.9.211  World View Undo/Redo Lifecycle Audit                        ✓
+0.9.212  Post-Undo/Redo Product Reassessment                         ✓
+0.9.213  Editor Undo/Redo Label Mirrors                               ✓
+0.9.214  Editor Transform Gesture Feedback                            ✓
+```
+
+### Recommendation
+
+Both Editor-scoped findings 0.9.212 left open are now closed
+(0.9.213 for undo/redo label mirrors, this milestone for the transform
+gesture feedback overlay). One candidate remains open from that same
+reassessment: Snapshot export (Section E2) — larger, and in a different
+area (Publication/Snapshot, not Editor), needing composition in
+`ui/main.js`, a coordinator method, a new UI action, and a real design
+decision about how the user receives the exported package (a file save,
+a copyable blob, etc.), not just a wire-up. Per the milestone's own
+brief, the natural next step is to run the audit/reassessment sweep again
+rather than assume Snapshot export is still the whole remaining
+territory — this transform-feedback work may have exposed a more
+fundamental Editor seam that a fresh sweep should surface before
+Snapshot export is taken up.

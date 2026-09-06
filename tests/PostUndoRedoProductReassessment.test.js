@@ -330,15 +330,28 @@ async function runTests() {
         const transformFeedbackSource = await rawSource('ui/components/TransformFeedback.js');
         assert(/name:\s*'TransformFeedback'/.test(transformFeedbackSource), 'G1f. ui/components/TransformFeedback.js still exists, fully implemented, purpose-built for this exact feedback blob');
 
+        // UPDATE (0.9.214): closed. "Editor Transform Gesture Feedback"
+        // captures the return value EditorSession.onPointerMove()/
+        // onPointerUp() already forwarded into a `transformFeedback` ref
+        // and mounts the already-built TransformFeedback.js — no new
+        // transform math, no second feedback shape, no change to
+        // SpatialEditingService/TransformGizmoController/EditorSession at
+        // all (G1a-G1e above stay true, unchanged). See
+        // tests/EditorTransformGestureFeedback.test.js for the full
+        // lifecycle proof and docs/Roadmap.md's own 0.9.214 entry.
         const editorViewSource = await rawSource('ui/views/EditorView.js');
-        assert(!/TransformFeedback/.test(editorViewSource), 'G1g. EditorView.js still never imports or renders TransformFeedback');
+        assert(/import TransformFeedback from '..\/components\/TransformFeedback\.js';/.test(editorViewSource), 'G1g. (post-0.9.214) EditorView.js now imports TransformFeedback');
+        assert(/<TransformFeedback :feedback="transformFeedback" \/>/.test(editorViewSource), '...and mounts it, bound to a local transformFeedback ref');
         const onPointerMoveBody = extractArrowBody(editorViewSource, 'onPointerMove');
         assert(onPointerMoveBody !== null, 'G1h. EditorView.js still defines its onPointerMove handler in the expected shape');
-        assert(/editorSession\.onPointerMove\(event\);/.test(onPointerMoveBody), 'G1i. ...which still calls editorSession.onPointerMove(event) as a bare statement...');
-        assert(!/=\s*editorSession\.onPointerMove\(event\)/.test(onPointerMoveBody), 'G1j. ...and still never captures its return value — the feedback (when present) is silently discarded');
+        assert(/const result = editorSession\.onPointerMove\(event\);/.test(onPointerMoveBody), 'G1i. (post-0.9.214) ...which now captures editorSession.onPointerMove(event)\'s return value...');
+        assert(/transformFeedback\.value = result\.feedback \|\| null;/.test(onPointerMoveBody), '...and assigns its feedback (or null) into the reactive ref — no reconstruction, a bare passthrough');
         const onPointerUpBody = extractArrowBody(editorViewSource, 'onPointerUp');
-        assert(onPointerUpBody !== null && /editorSession\.onPointerUp\(event\);/.test(onPointerUpBody) && !/=\s*editorSession\.onPointerUp\(event\)/.test(onPointerUpBody), 'G1k. onPointerUp shows the identical discard');
-        console.log('✓ Section G1: ACTUAL_GAP — live transform-gesture feedback (snap increment, axis, delta, precision, collision) is built correctly every frame and forwarded correctly up through EditorSession, but EditorView.js discards it and never mounts the ready-made TransformFeedback.js component built for exactly this purpose.');
+        assert(onPointerUpBody !== null
+            && /const result = editorSession\.onPointerUp\(event\);/.test(onPointerUpBody)
+            && /transformFeedback\.value = result\.feedback \|\| null;/.test(onPointerUpBody), 'G1j. onPointerUp shows the identical capture — clearing the overlay once the gesture forwards feedback: null');
+        assert(!/=\s*editorSession\.onPointerDown\(event\)/.test(extractArrowBody(editorViewSource, 'onPointerDown') || ''), 'G1k. onPointerDown is untouched — it never carried feedback (no preview exists yet at grab time) and still does not capture a return value');
+        console.log('✓ Section G1: ACTUAL GAP AT THE TIME, CLOSED BY 0.9.214 — live transform-gesture feedback (snap increment, axis, delta, precision, collision) is built correctly every frame and forwarded correctly up through EditorSession; EditorView.js now captures it into reactive state and mounts the ready-made TransformFeedback.js component built for exactly this purpose.');
 
         // G2 — ACTUAL_GAP AT THE TIME this milestone (0.9.212) ran. The
         // read-only undo/redo LABEL mirrors — this milestone's own brief
@@ -417,7 +430,13 @@ async function runTests() {
         const closureFindings = [
             { capability: 'Snapshot export (Build...UseCase)', domain: true, useCase: true, compositionRoot: false, ui: false, classification: 'ACTUAL_GAP' },
             { capability: 'Snapshot placement catalog (Create...CatalogUseCase)', domain: true, useCase: true, compositionRoot: false, ui: false, classification: 'OBSOLETE' },
-            { capability: 'Transform gesture feedback overlay', domain: true, useCase: true, compositionRoot: true, ui: false, classification: 'ACTUAL_GAP' },
+            // Transform gesture feedback overlay: ACTUAL_GAP when THIS
+            // milestone (0.9.212) ran — CLOSED by 0.9.214 ("Editor
+            // Transform Gesture Feedback"), which gave the last hop (ui)
+            // its terminal node. Recorded here as COMPLETE, not rewritten
+            // out of the table, for the same historical-record reason
+            // the Editor undo/redo label mirrors row below already is.
+            { capability: 'Transform gesture feedback overlay', domain: true, useCase: true, compositionRoot: true, ui: true, classification: 'COMPLETE' },
             // Editor undo/redo label mirrors: ACTUAL_GAP when THIS
             // milestone (0.9.212) ran — CLOSED by 0.9.213 ("Editor
             // Undo/Redo Label Mirrors"), which gave the last hop (ui)
@@ -436,7 +455,7 @@ async function runTests() {
             }
         }
 
-        console.log('✓ Section H: Cross-cutting capability reachability closure — the five lifecycle systems remain separate authorities; every finding above fits the brief\'s own closure model exactly (an unexplained terminal node for the remaining ACTUAL_GAPs reaching a composition root, no composition-root path at all for the OBSOLETE finding, and a completed terminal node for Editor undo/redo label mirrors, closed by 0.9.213 since this milestone ran), with none of it mistaken for an intentional boundary.');
+        console.log('✓ Section H: Cross-cutting capability reachability closure — the five lifecycle systems remain separate authorities; every finding above fits the brief\'s own closure model exactly (an unexplained terminal node for the remaining Snapshot-export ACTUAL_GAP reaching a composition root, no composition-root path at all for the OBSOLETE finding, and completed terminal nodes for both the transform gesture feedback overlay (0.9.214) and Editor undo/redo label mirrors (0.9.213), closed since this milestone ran), with none of it mistaken for an intentional boundary.');
     }
 
     // ---------------------------------------------------------------
@@ -506,7 +525,7 @@ Classification summary:
        - Snapshot placement catalog wrapper ... OBSOLETE
   F. History ................................ COMPLETE (one authority, two separate projections)
   G. Editor .................................. COMPLETE, except:
-       - Transform gesture feedback overlay .. ACTUAL_GAP
+       - Transform gesture feedback overlay .. ACTUAL GAP AT THE TIME -> CLOSED BY 0.9.214
        - Undo/redo label mirrors (Command Palette) . ACTUAL GAP AT THE TIME -> CLOSED BY 0.9.213
   H. Cross-cutting lifecycle integrity ...... CONFIRMED (five separate authorities; closure model applied)
   I. Repository-wide obsolete-UI sweep ...... GroupsPanel.js unchanged; no third file found
@@ -517,7 +536,7 @@ matrix for everything this arc already closed):
   Capability                              Domain  UseCase  Composed  UI reachable  Classification
   Snapshot export (transfer package)        ✓       ✓         —          —        ACTUAL_GAP
   Snapshot placement catalog (Create...)    ✓       ✓         —          —        OBSOLETE (superseded)
-  Transform gesture feedback overlay        ✓       ✓         ✓          —        ACTUAL_GAP
+  Transform gesture feedback overlay        ✓       ✓         ✓          ✓        COMPLETE  <- closed by 0.9.214
   Editor undo/redo label mirrors            ✓       ✓         ✓          ✓        COMPLETE  <- closed by 0.9.213
 
 Candidate gaps (as they stood when THIS milestone, 0.9.212, ran), ranked
@@ -552,6 +571,18 @@ by scope, smallest first:
      - product precedent?           yes — the component was built (0.1.47) specifically for this data
      - scope?                       small — capture the return value into reactive state, mount one
                                      existing component; touches EditorView.js's onPointerMove/onPointerUp
+     - UPDATE (0.9.214): closed. EditorView.js now captures the return
+       value of onPointerMove()/onPointerUp() into a local
+       transformFeedback ref (result.feedback, a bare passthrough) and
+       mounts ui/components/TransformFeedback.js, bound to that ref. The
+       ref is also cleared on Escape-cancel and on SELECTION_CHANGED
+       (which every document rebuild fires via clearSelection(), the one
+       existing signal broad enough to keep a document switch from
+       leaving stale feedback on screen). No new transform math, no
+       second feedback shape, SpatialEditingService/
+       TransformGizmoController/EditorSession all byte-for-byte
+       unchanged. See tests/EditorTransformGestureFeedback.test.js and
+       docs/Roadmap.md's own 0.9.214 entry.
 
   3. Snapshot export (Section E2) — a separate, larger candidate in a
      different area (Publication/Snapshot, not Editor):
@@ -572,12 +603,15 @@ OBSOLETE application-layer finding
 (CreatePublicationSnapshotPlacementCatalogUseCase.js, left unremoved).
 
 0.9.213 ("Editor Undo/Redo Label Mirrors") subsequently took up candidate
-1 above and closed it — see this file's own Section G2/H/K updates and
+1 above and closed it — see this file's own Section G2/H updates and
 tests/EditorUndoRedoLabelMirrors.test.js for that milestone's full record.
-Candidates 2 (Transform gesture feedback overlay) and 3 (Snapshot export)
-remain open, unchanged, along with the one OBSOLETE finding. Whichever is
-taken up next stays the same narrowly-scoped "wire an existing, correct
-capability to its own already-built UI" shape this whole arc has followed
+0.9.214 ("Editor Transform Gesture Feedback") then took up candidate 2 and
+closed it — see this file's own Section G1/H updates and
+tests/EditorTransformGestureFeedback.test.js for that milestone's full
+record. Candidate 3 (Snapshot export) remains open, unchanged, along with
+the one OBSOLETE finding. Whichever is taken up next stays the same
+narrowly-scoped "wire an existing, correct capability to its own already-
+built UI" shape this whole arc has followed
 since 0.9.203 — not a new feature invented for the milestone.
 `);
 }
