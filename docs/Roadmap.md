@@ -73409,3 +73409,128 @@ time. That audit — not a new capability — will tell us whether the
 existing seams this milestone composed are sufficient, or whether genuine
 automatic Snapshot processing needs a lifecycle mechanism this milestone
 deliberately did not build.
+
+## 0.9.188 — Automatic Snapshot Encounter Lifecycle Audit
+
+0.9.187 answered "can the autonomous pipeline reach REGISTERED at all" —
+its own eighteen sections proved every stage in isolation, one candidate,
+one cascade instance, one scenario at a time. This milestone is test-only:
+no production file changes. It asks the harder question the mission
+itself named: does the pipeline behave correctly when discovery,
+movement, asynchronous operations, duplicates, failures, and World-
+lifecycle changes happen AT THE SAME TIME, and across MULTIPLE
+independent cascade instances the way `ui/views/WorldView.js` actually
+constructs them — freshly, one per mounted session?
+
+`tests/WorldSnapshotAutomaticEncounterLifecycleAudit.test.js` — seventeen
+sections: (A) zero-click complete cascade, real Nostr/Arweave/local
+machinery end-to-end, the rendered object is the ordinary Publication
+World object; (B) ten sequential duplicate discoveries, one effective
+cascade run; (C) five concurrent duplicate discoveries, one effective
+cascade run, the candidate preserved unchanged; (D) same content, two
+Publications, never deduplicated; (E) same Publication, changed content —
+two independent processing subjects, AND the resulting World-registry
+consequence (two co-existing origins for one Publication) recorded
+explicitly rather than silently accepted; (F) discovery-event identity is
+irrelevant to convergence, in both directions; (G) failure closure at
+every one of RESOLVE/VERIFY/MATERIALIZE/PLACEMENT/REGISTER, each
+verified to leave World state at exactly that boundary (PLACEMENT
+failure specifically re-verified via a real local content store, so
+"material exists, World source does not" is a directly observed fact,
+not an inference); (H) no accidental retry — a terminal failure stays
+terminal across three further ordinary rediscovery ticks; (I) movement/
+discovery races — a stale monitor response never corrupts a fresher one
+(I.1), and the audit records, rather than assumes, that a stale
+response's own UNIQUE candidate is (today) simply never fed to the
+cascade once a fresher response has already won (I.2); (J) an unrelated
+mid-flight removal of the cascade's own eventual World origin never
+cancels an in-flight run — its own later completion re-registers,
+confirming unregistration is a World-contribution operation, never a
+cancellation command; (K) two independent cascade instances, mirroring
+two independent WorldView mounts, never share processing state — a
+second session legitimately reprocessing the identical
+publicationId+contentHash pair a first session already started is a NEW
+SESSION, not a duplicate-processing bug, and a "torn-down" session's own
+in-flight work completes safely with nothing left to mutate; (L) an
+adversarial `claimedPosition` of (999999,999999,999999) has zero effect on
+the registered position; (M) a cascade-registered Snapshot produces a
+structurally ordinary World Encounter, field-for-field identical in shape
+to a LOCAL-origin one; (N) LOCAL/PEER sources survive six live automatic-
+discovery ticks running alongside them; (O) a manual
+Resolve/Materialize/Place/Register chain and a concurrently-running
+cascade for an unrelated candidate never interfere; (P) unrelated LOCAL/
+PEER/Snapshot registry churn never perturbs an unrelated in-flight
+cascade run; (Q) structural sweep confirming no retry/backoff/
+persistence/ranking/expiration/distance-based-removal vocabulary exists
+anywhere in the audited files.
+
+**Findings — nothing broke, two behaviors recorded rather than fixed:**
+- Section E: because a registration's own World-registry origin is keyed
+  on `contentHash` AND `publicationId` together (0.9.163's own fix for an
+  unrelated collision), a Publication whose Snapshot content changes
+  across two independently-discovered revisions ends up registered
+  TWICE, simultaneously, both anchored at the identical authoritative
+  placement. Nothing decides which revision should win or supersede the
+  other — that is a genuine gap a future, separate milestone would need
+  to close, not a bug in 0.9.187 itself.
+- Section I.2: `ui/views/WorldView.js`'s own "read `monitor.lastResult`
+  after `observe()` resolves" pattern means a stale, slower discovery
+  response's own candidates — if they are ever unique to it, never also
+  reported by whatever fresher response won the race first — are simply
+  never fed to the cascade at all. In production this is low-risk today
+  because `discoverSnapshotCandidatesCommand()` queries by discovery tag
+  globally, never scoped by position, so the identical candidate reliably
+  reappears on the next successful tick regardless of which position
+  triggered it — but the audit records the boundary explicitly rather
+  than assuming it away.
+
+Every other section passed exactly as the mission's own architecture
+predicted: idempotent, race-safe, session-safe, failure-contained,
+position-safe, and convergent with ordinary World rendering.
+
+Deliberately excluded — not this milestone:
+- **Any fix for the two recorded findings above.** Recording a behavior
+  is not the same decision as changing it — both are exactly the kind of
+  lifecycle policy question 0.9.187's own "Deliberately excluded" list,
+  and this milestone's own mission, defer to a later, unscheduled
+  milestone.
+- **Retry/backoff, a persistent processing history, an "already seen
+  forever" cache, automatic expiration, distance-based automatic
+  removal, ranking, nearest-provider selection, trust scoring, automatic
+  position acceptance, notification spam, a new Snapshot lifecycle enum,
+  or a new Snapshot World Encounter type.** Section Q's own structural
+  sweep confirms none of these crept in as a side effect of writing this
+  audit; the audit's own job was to determine whether any is actually
+  necessary, not to build one preemptively.
+
+```text
+0.9.183  World Snapshot Content View                                 ✓
+0.9.184  World Snapshot Content Comparison View                      ✓
+0.9.185  World Snapshot Content Actionability Audit                  ✓
+0.9.186  World Snapshot Background Discovery                         ✓
+0.9.187  Automatic Snapshot Encounter Cascade                        ✓
+0.9.188  Automatic Snapshot Encounter Lifecycle Audit                ✓
+```
+
+### Recommendation
+
+0.9.188 found no correctness defect in 0.9.187's own cascade — every
+race, duplicate, failure, and session-teardown scenario resolved exactly
+as its architecture predicted. It surfaced exactly two genuine, narrow
+findings (Section E's co-existing content-revision origins; Section I.2's
+stale-response boundary), both explicitly deferred rather than patched
+in-place, per the mission's own instruction to treat this as an audit,
+not a feature. I would not chase either finding immediately: Section E's
+consequence requires a Publication to actually re-announce changed
+content before it matters, and Section I.2's risk is already mitigated by
+discovery being a global, non-positional query. Now that the autonomous
+path is proven idempotent, race-safe, and session-safe under combined
+load, I think the next genuinely necessary milestone is a diagnostic
+one, not a policy one: surfacing what the automatic cascade is doing —
+its own last outcome per candidate, e.g. in `OwnPublicationPanel.js` or a
+small dedicated panel — so a person can observe automatic processing
+happening, rather than only inferring it from a Snapshot's eventual
+appearance in the World. Only after that visibility exists would I
+revisit whether either of this audit's two recorded findings, or any of
+the explicitly-excluded lifecycle policies, has actually become
+necessary in practice.
