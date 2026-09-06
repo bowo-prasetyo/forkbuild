@@ -76169,3 +76169,164 @@ This closes the boundary 0.9.207 opened. The project's own rhythm from
 0.9.203 onward — audit the newly exposed seam before building the next
 subsystem on top of it — holds again: 0.9.209 is deliberately not
 prescribed here, per this milestone's own brief.
+
+## 0.9.209 — Post-History Product Reassessment
+
+Test-only. No production changes. 0.9.208's own closing recommendation
+asked for exactly this: a fresh sweep of the same broad product areas
+0.9.196/0.9.203/0.9.206 already established, now that the entire World
+View history arc (0.9.206 found the candidate, 0.9.207 built the UI,
+0.9.208 audited and fixed the seam it exposed) is closed. This
+milestone's own brief adds two disciplines on top of 0.9.203's original
+one:
+
+1. Every unreachable capability found is sorted into exactly one of
+   three leaves, not two — the distinction 0.9.206's own Section G
+   reachability-matrix diagram first drew between `GroupsPanel.js`
+   (obsolete, superseded) and the history stack (a real gap, at the
+   time):
+
+   ```text
+   missing UI               -> candidate gap
+   internal API             -> intentional
+   obsolete implementation  -> cleanup candidate (never deleted here)
+   ```
+
+2. A new sixth area, F (cross-cutting lifecycle integrity): now that
+   autosave/recovery, history/replay/restore, placement, publication,
+   and Snapshot materialization are all independently correct and all
+   user-reachable, does anything reach across the seams between them?
+
+`tests/PostHistoryProductReassessment.test.js` sweeps six areas plus a
+repository-level obsolete-UI check, against real (not mocked)
+collaborators throughout:
+
+- **A — World interaction/navigation. ACTUAL_GAP — this milestone's one
+  finding.** Every previously-closed thread reconfirms first: 27+
+  component families still compose in `ui/views/WorldView.js`, including
+  the 0.9.197/0.9.198 removal/unpublish actions and the 0.9.207/0.9.208
+  History panel. The new finding sits right next to that panel's own
+  machinery, in the same class: `WorldNavigationSession.undo()`/`redo()`
+  are correct — proven directly here by executing a real
+  `CreateWorldLandmarkCommand` through a real `CommandHistory` and
+  confirming `undo()`/redo() round-trip cleanly — and correctly refuse
+  to run while a history preview is active, exactly as 0.9.208 left
+  them. But nothing in `ui/views/WorldView.js` ever calls
+  `session.undo()` or `session.redo()`: not a button, not a keyboard
+  shortcut, and not inside its own `onKeyDown` handler, which already
+  exists (for Avatar Control Mode's WASD) but never branches on
+  ctrl/meta+Z or +Y at all. This is precisely scoped, not "there is
+  another method": checked directly against source, `createLandmarkHere`/
+  `updateLandmark`/`removeLandmark`/`createRegionHere`/`updateRegion`/
+  `removeRegion` — 0.5.9's own two kept mutation-shaped exceptions —
+  all route through `this._commandHistories.get(worldId).execute(cmd)`
+  with a real, undo-able `Command`; `movePlacement()`/`removePlacement()`
+  do not — both call their use cases directly, with no `Command` object
+  and no history entry, confirming the OTHER of 0.5.9's two exceptions is
+  correctly OUT of scope for this gap (there is nothing for `undo()` to
+  reverse there, by design). `docs/Principles.md`'s own 0.5.9 record
+  states, by name, why `undo()`/`redo()` were kept: "a viewer's landmark
+  edit needs to be undoable too" — a stated requirement, not a
+  hypothetical. 0.9.207's retrospective had already flagged this as "its
+  own, still-open, smaller candidate" when it built the History panel
+  instead; this milestone is where it gets formally classified.
+- **B — Vehicle system. INTENTIONAL_BOUNDARY, unchanged.** Nothing in
+  the history arc touches vehicles. Same structural sweep 0.9.196/0.9.203/
+  0.9.206 already ran finds no new passenger/capacity/fuel/range
+  vocabulary anywhere.
+- **C — World material/document lifecycle. COMPLETE.** 0.9.203's own
+  finding (autosave/recovery) and 0.9.206's own finding (history/replay/
+  restore) both reconfirm closed, checked directly against the
+  `WorldNavigationSession` constructor call in `CreateWorldViewUseCase.js`
+  rather than by mere identifier presence, including 0.9.208's three
+  narrow scoping/reset fixes. A narrower sweep of the surrounding
+  placement/publication/naming methods (deliberately avoiding a blind
+  "every `UseCase` construction must reach `WorldNavigationSession`"
+  assumption — `placePublicationUseCase` is a counter-example: it
+  correctly feeds `publishDocumentUseCase` instead and never touches the
+  session at all) finds no fourth orphaned thread. Section A's undo/redo
+  finding is filed there, not here: it is a missing UI caller for a
+  capability that was never uncomposed, not a missing composition.
+- **D — Publication workflow. COMPLETE, reconfirmed.** 11 wired actions
+  on `OwnPublicationPanel.js`; exactly one unpublish/retract handler.
+  Unpublish ≠ Remove placement holds in both directions, checked
+  directly against both use cases' own source. The Document →
+  Publication → Placement → Distribution survival chain now also
+  excludes History, not just Recovery: neither
+  `ReplayDocumentUseCase`/`RestoreHistoryStateUseCase` nor
+  `RecoveryStore`/`AutosaveScheduler` is referenced by
+  `PublishDocumentUseCase`/`UnpublishDocumentUseCase`/
+  `RemoveWorldPlacementUseCase`.
+- **E — Editor/document workflow. COMPLETE, reconfirmed.** Fork/copy/
+  paste/repeat, metadata, structure preview/composition, and blueprint
+  export/import all still both composed and called. Also newly checked
+  here, for contrast: the Editor's OWN undo/redo — `Ctrl+Z`/
+  `Ctrl+Shift+Z` wired through `EditorActionRegistry.js`, gated on
+  `ctx.canUndo`/`ctx.canRedo` with its own disabled-reason text — is the
+  product precedent Section A's finding is measured against. The
+  identical capability shape (a `CommandHistory` plus
+  `canUndo`/`canRedo` plus `undo()`/`redo()`) has a first-class keyboard
+  affordance everywhere else it exists in this product; World View is
+  the one place it doesn't.
+- **F — Cross-cutting lifecycle integrity. CONFIRMED, new category.**
+  Checked directly against source, in both directions: `CommandHistory.js`
+  and `RestoreHistoryStateUseCase.js` carry no Recovery/Autosave
+  reference; `RecoveryObserver.js` carries no History/replay reference.
+  `UnpublishDocumentUseCase.js`/`RemoveWorldPlacementUseCase.js` carry no
+  Distribution reference. `MaterializeSnapshotFromPlacementUseCase.js`
+  carries no Recovery/Autosave/History reference. `WorldNavigationSession.js`
+  imports exactly one `CommandHistory`-shaped class and defines no
+  competing history mechanism of its own, despite now hosting both
+  undo/redo and the history/replay/restore stack side by side. Five
+  independently-correct lifecycle systems remain five separate
+  authorities.
+- **G — repository-level obsolete-UI sweep.** `ui/components/GroupsPanel.js`
+  reconfirms unchanged since 0.9.206: unregistered anywhere, its six
+  Groups operations fully superseded by `EditingSidebar.js`'s own
+  `group.*` actions. No new obsolete file surfaced. Per the brief, it is
+  named again here, once, at the repository level — not deleted — so a
+  future reassessment doesn't rediscover it as a "product gap."
+
+### The capability reachability matrix
+
+| Capability                     | Exists | Composed | UI reachable | Classification |
+| ------------------------------- | :----: | :------: | :-----------: | --------------- |
+| History timeline/preview        |   ✓    |    ✓     |      ✓        | COMPLETE |
+| History restore                 |   ✓    |    ✓     |      ✓        | COMPLETE |
+| Recovery / autosave              |   ✓    |    ✓     |      ✓        | COMPLETE |
+| Placement removal                |   ✓    |    ✓     |      ✓        | COMPLETE |
+| Unpublish                        |   ✓    |    ✓     |      ✓        | COMPLETE |
+| Region/Landmark undo (session)   |   ✓    |    ✓     |      —        | **ACTUAL_GAP** |
+| movePlacement/removePlacement undo |  —   |    —     |      —        | INTENTIONAL (no Command object; nothing to undo by design) |
+| GroupsPanel.js (Groups CRUD)     |   ✓    |    —     |      —        | OBSOLETE (superseded by EditingSidebar) |
+
+### Decision
+
+**Outcome: one genuine ACTUAL_GAP, classified as a small integration —
+the same shape 0.9.203/0.9.206 each closed once already.** Sections B,
+D, E, and F confirm what a shallow, honest sweep is supposed to confirm:
+nothing invented, the Vehicle boundary unchanged, Publication's
+separations intact, five lifecycle systems still independent. Section C,
+the area both prior ACTUAL_GAPs came from, is now fully closed — a
+narrower, less error-prone sweep (learning from a false positive this
+milestone's own first draft produced by assuming every `UseCase`
+construction must reach `WorldNavigationSession`) finds no fourth
+thread there. The one finding is in Section A: `WorldNavigationSession`'s
+`undo()`/`redo()`, present specifically because 0.5.9's own design
+record wanted a viewer's landmark edit to stay undoable, still has no UI
+caller — the same "correctly composed, zero callers" shape 0.9.203 found
+for autosave/recovery and 0.9.206 found for the history/replay/restore
+stack, both now closed, sitting one method away from the very machinery
+0.9.207 just wired up.
+
+### Recommendation
+
+Per this milestone's own brief, **no next milestone is prescribed
+here.** 0.9.209 stops at classification. If a future milestone takes up
+this finding, it already names the shape the work would take — wiring
+`WorldView.js`'s existing `onKeyDown` handler and/or a small toolbar
+affordance to the already-correct, already-tested
+`WorldNavigationSession.undo()`/`redo()`, scoped to the Region/Landmark
+naming commands that are the only undo-able mutations left in that
+session — but whether, and in which shape, is a product decision this
+test-only milestone deliberately leaves open rather than assumes.
