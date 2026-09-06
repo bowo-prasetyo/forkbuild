@@ -76494,3 +76494,156 @@ milestone is prescribed here either — a future reassessment sweep (in
 the shape 0.9.196/0.9.203/0.9.206/0.9.209 already established) is the
 natural next step whenever one is due, not assumed as an immediate
 follow-up.
+
+## 0.9.211 — World View Undo/Redo Lifecycle Audit
+
+Test-only, per this milestone's own brief. 0.9.210 gave World View's
+Undo/Redo its first real UI callers (two buttons + a keyboard shortcut)
+and its own flagship test proved the straight-line sequence. This
+milestone stress-tests the SEAM that exposed for the first time — mount/
+unmount lifecycle now that a keyboard shortcut is live, and the boundary
+between Undo/Redo and the Preview/Restore surface 0.9.207/0.9.208 already
+audited — exactly the shape 0.9.205 stress-tested for Autosave/Recovery
+and 0.9.208 stress-tested for History Preview/Restore.
+
+**This audit found no new defects.** Every section below locks down
+existing, already-correct behavior; none required a source change.
+
+```text
+                    ┌──────────────────────┐
+                    │     WorldView         │
+                    │                       │
+                    │ Undo button           │
+                    │ Redo button           │
+                    │ Ctrl+Z / Ctrl+Y       │
+                    └──────────┬────────────┘
+                               │
+                               ▼
+                    ┌───────────────────────┐
+                    │ WorldNavigationSession │
+                    │                       │
+                    │ undo() / redo()       │
+                    │ canUndo() / canRedo() │
+                    │ labels                │
+                    └──────────┬────────────┘
+                               │
+                               ▼
+                    ┌──────────────────────┐
+                    │    CommandHistory     │
+                    │                       │
+                    │ sole history authority│
+                    └──────────────────────┘
+```
+
+`tests/WorldViewUndoRedoLifecycleAudit.test.js` is the new flagship. It
+does not re-derive `tests/WorldViewUndoRedoIntegration.test.js`'s own
+coverage (sections A, B, D, G, H, J below say explicitly what is new
+relative to that file); sections C, E, F, and I are wholly new ground:
+
+- **A — mixed command types.** The same linear-history invariant 0.9.210
+  proved for landmark commands alone holds across a history mixing
+  `CreateWorldLandmarkCommand` (via `session.createLandmarkHere()`) and
+  `PlaceBrickCommand` (via direct `history.execute()`) — undo()/redo()
+  never special-case by command type or by which code path pushed the
+  command.
+- **B — no second UI-side representation.** `canUndo`/`canRedo`/
+  `undoLabel`/`redoLabel` are each assigned exactly once in the whole
+  file, inside `refreshSpatialUI()` — structurally confirmed, the one
+  thing no purely behavioral test could prove by itself.
+- **C — keyboard/button equivalence, behaviorally proven.** Extracts the
+  REAL `undoAction()`/`redoAction()`/`onKeyDown()`/`guarded()` source
+  from `ui/views/WorldView.js` byte-for-byte (via brace matching, never
+  retyped) and executes it against spy sessions and real
+  `WorldNavigationSession` fixtures: the button path and the keyboard
+  path (Ctrl+Z, Ctrl+Y, Ctrl+Shift+Z) produce identical
+  document/history results, and Ctrl+Z calls `preventDefault()`.
+- **D — the four explicit Preview/Undo/Redo/Restore distinctions.**
+  Preview creates no history entry and moves no cursor; an ordinary
+  `undo()`/`redo()` never leaves `_historyPreview` active;
+  `restoreHistoryAt()` never calls the retiring history's own
+  `undo()`/`redo()` (verified by spying on them directly); Undo/Redo
+  availability is restored once a preview is cancelled.
+- **E — Restore → Undo/Redo convergence (new).** A → B → C, preview,
+  restore B: the new `CommandHistory` starts empty (nothing to undo/redo
+  immediately after restore — A and B are baked into the restored
+  *world*, not replayed as undoable commands), and a subsequent Create →
+  Undo → Redo cycle runs entirely through the ordinary mechanism.
+  Undoing after a restore never resurrects C, and the retired pre-restore
+  history (kept only in `getRetiredHistories()` for inspection) is never
+  consulted by `undo()`/`redo()` — no "restored history" special case
+  exists anywhere.
+- **F — Autosave/Recovery (new).** `ui/views/WorldView.js` and
+  `application/WorldNavigationSession.js` contain zero autosave/recovery
+  references — World View's own Undo/Redo has no such surface to
+  interact with at all. The only place Undo/Redo and Autosave/Recovery
+  coexist today is the Editor (`DocumentManager` + `CommandHistory` +
+  `AutosaveScheduler` + `RecoveryObserver`, already fully audited by
+  0.9.204/0.9.205 including undo/redo). This section proves the
+  invariant — "Undo/Redo are ordinary document mutations" — at that real
+  integration point, in the literal sequence this milestone's brief
+  asked for: edit → autosave → undo → dirty → autosave → restart →
+  recovery, plus the corresponding redo path.
+- **G — Publication/World isolation, as a strong negative test.**
+  `undo()`/`redo()`/`canUndo()`/`canRedo()`'s own method bodies contain
+  no reference to Arweave/Nostr/Snapshot/placement/material/publish
+  machinery at all — structurally incapable of touching any of it,
+  reconfirmed behaviorally by publishing a document and diffing its
+  Publication record byte-for-byte across repeated undo/redo cycles.
+- **H — label isolation across a document switch (new angle).**
+  `getUndoLabel()`/`getRedoLabel()` never leak a previous document's
+  label text once the active document switches — 0.9.210's own
+  multi-document section never exercised the labels specifically.
+- **I — mount/unmount lifecycle (this milestone's own centerpiece).**
+  `ui/views/WorldView.js` cannot be mounted under this repo's plain
+  `node tests/*.test.js` sweep (it imports `vue`), so 0.9.210's own
+  structural audit could only read the mount/unmount wiring as text.
+  This section reuses Section C's extracted real source against a fake
+  `window` event target to behaviorally prove: mount → keydown → correct
+  action; unmount → keydown → no action; mount → unmount → remount →
+  exactly one effective handler, with the old instance's session never
+  touched again; two simultaneously-mounted instances each react only to
+  their own session; and no stale session is ever captured by an old
+  handler. A structural check confirms the real file backs this up:
+  exactly one `addEventListener('keydown', onKeyDown)` /
+  `removeEventListener('keydown', onKeyDown)` pair, one `onMounted()`,
+  one `onBeforeUnmount()`, and one `setup()` — so every mounted instance
+  genuinely gets its own independent closure.
+- **J — empty-history no-ops, fully characterized.** Empty-history
+  `undo()`/`redo()` return `false`, both labels stay `null`, no dirty
+  transition occurs, and no unrelated navigation state changes — in both
+  the never-had-anything case and the preview-active case.
+
+**Structural audit** (repository-level, per the brief): no
+`CommandHistory` import in `WorldView.js`; no second history class
+anywhere; exactly one `keydown` listener in the file; the Undo/Redo
+buttons call `undoAction()`/`redoAction()` only, never `history.undo()`/
+`history.redo()` directly, and the file has no `commandHistory`
+identifier at all; `undoAction()`/`redoAction()` reference no
+Publication/Arweave/Nostr/Snapshot/placement/material machinery; exactly
+the four expected read-only mirror refs exist (no additional
+history-shaped state); no autosave/recovery reference anywhere in either
+file; and `HistoryTimelinePanel.js` still has no undo/redo affordance
+while `undoAction()`/`redoAction()` touch no History-panel state either
+— Preview/Restore and Undo/Redo remain two mutually silent surfaces
+sharing only the underlying `WorldNavigationSession`/`CommandHistory`.
+
+```text
+0.9.207  World View History Timeline UI Integration                 ✓
+0.9.208  World View History Preview/Restore Lifecycle Audit          ✓
+0.9.209  Post-History Product Reassessment                           ✓
+0.9.210  World View Undo/Redo UI Integration                         ✓
+0.9.211  World View Undo/Redo Lifecycle Audit                        ✓
+```
+
+### Recommendation
+
+By design, this milestone does not prescribe 0.9.212. Between 0.9.203/
+0.9.205 (Autosave/Recovery), 0.9.206/0.9.208 (History Timeline/Preview/
+Restore), and 0.9.209/0.9.211 (Undo/Redo) — the World/Document/
+Publication lifecycle has now had every UI-reachability gap it turned up
+closed, and every seam each closure exposed audited under lifecycle
+pressure. The natural next step is another product reassessment sweep
+(0.9.196/0.9.203/0.9.206/0.9.209's own shape) to say plainly whether a
+genuine unreached capability still remains in this lifecycle, or whether
+the next milestone worth taking up lies outside it entirely — not another
+incremental UI feature assumed by default.
