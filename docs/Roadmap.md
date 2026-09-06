@@ -77905,3 +77905,131 @@ capability-reachability backlog this arc has worked since 0.9.196 is
 finally exhausted, and the milestone after that should come from real
 product evolution or a deliberate obsolete-cleanup decision — never
 manufactured just to advance the milestone number.
+
+## 0.9.219 — Post-Presence Product Reassessment
+
+Test-only. No production changes. This is the reassessment both 0.9.217's
+and 0.9.218's own closing recommendations asked for, but deliberately
+different in posture from every reassessment since 0.9.196: no
+preconceived feature target, and an explicit rule against treating an
+uncalled method as a gap until its user-facing behavior is demonstrated
+to be missing — 0.9.216's own Section L already showed this codebase
+repeatedly surfaces methods that are deliberately internal, redundant
+wrappers, or minor honest omissions, not gaps.
+
+```text
+0.9.217  Wire World Presence Activity Refresh
+   │
+   ▼
+0.9.218  World Presence Membership-Refresh Lifecycle Audit
+   │      (found and fixed one real failure-isolation defect)
+   ▼
+0.9.219  Post-Presence Product Reassessment  <- this milestone
+```
+
+Adds `tests/PostPresenceProductReassessment.test.js`, structured exactly
+as the brief asked:
+
+- **Section A** — World Presence regression CLOSURE, not another full
+  0.9.218 audit. Each invariant the brief named is proven ONCE, directly,
+  against real collaborators, rather than re-running the 828-line
+  lifecycle audit: grant → EDITING, revoke → EXPLORING (A1/A2); a
+  replayed record produces no extra callback and the direct-call/
+  callback-triggered refresh channels stay independent (A3);
+  cross-document isolation under repeated churn (A4); unmount safety,
+  with a positive control proving the no-op is meaningful rather than
+  vacuous (A5); refresh-failure isolation re-proven as a FLAGSHIP over a
+  real two-replica authenticated network — an injected failure inside
+  `refreshWorldPresenceActivity()` still lets `grantEdit()` broadcast
+  successfully to the other replica, the exact defect 0.9.218 fixed (A6);
+  exactly one spatial cadence and one `refreshWorldPresenceActivity()`
+  call site, still inside the membership callback (A7); no duplicate
+  WorldView presence state (A8); and the deep 0.9.218 audit file itself
+  still stands, unmodified, as the authoritative record (A9).
+- **Section B** — Capability reachability matrix across all thirteen
+  areas the brief named, World Presence promoted to its own first-class
+  `COMPLETE` row for the first time (B7) — every other row is a direct
+  regression reconfirmation of facts 0.9.203-0.9.216 already established,
+  not a rediscovery.
+- **Section C** — The repository-wide event/error boundary check the
+  brief specifically asked for: does the exact shape 0.9.218 fixed (an
+  optional/derived UI-side operation capable of aborting an authoritative
+  event-processing path) recur elsewhere? Answer: yes, structurally.
+  `core/events/EventBus.js#publish()` and `peer/PeerMessageBus.js`'s own
+  dispatch loop are both reconfirmed unchanged — still no per-listener
+  isolation (C1), exactly as 0.9.218 deliberately left them. The SAME
+  precondition 0.9.218's defect needed — a use case that publishes an
+  event, then performs MORE authoritative work in the same synchronous
+  call chain — recurs in `application/IdentityUseCase.js`:
+  `authenticate()`/`endSession()`/`protectIdentity()` each call
+  `_publishChange()` (which itself fires `IdentityChanged` then
+  `AuthenticationSessionChanged` in sequence) and THEN
+  `_publishLockChange()` (C2). A direct, behavioral, injected-failure
+  test — the identical construction as 0.9.218's own Section H —
+  confirms it: a throwing `onUserChanged()` listener today still unwinds
+  all the way back through `authenticate()` to its own caller, and
+  `_publishLockChange()`'s own `VaultLockChanged` broadcast never runs
+  (C3). This is a REPEATED architectural pattern, not isolated to World
+  Presence. It is, per the brief, deliberately NOT fixed here: unlike
+  World Presence at the time 0.9.218 ran, every CURRENT production
+  listener on `onUserChanged`/`onSessionChanged`/`onVaultLockChanged`
+  (`UserWidget.js`, `AvatarSettingsView.js`, `IdentityManagementView.js`,
+  `ConversationsView.js`, `ChatView.js`, `PeerConnectionsView.js`) does
+  only local ref assignment or a read of already-validated local state —
+  never a cross-use-case re-entrant call the way
+  `refreshWorldPresenceActivity()` genuinely was (C4). Classified
+  `DEFERRED`: a real, evidenced architectural observation, named
+  precisely for a future decision, without expanding this milestone into
+  an EventBus redesign or a global error-handling project.
+- **Section D** — Obsolete-candidate reassessment. All six files 0.9.216
+  surfaced are reclassified with fresh evidence: `GroupsPanel.js` and
+  `CreatePublicationSnapshotPlacementCatalogUseCase.js` remain confirmed
+  `OBSOLETE`; `CreatePublicationAnchorCatalogUseCase.js` and
+  `CreatePlacementRegistryUseCase.js` remain confirmed `OBSOLETE`, their
+  supersession records unchanged; `CreateSpatialIndexUseCase.js`,
+  `CreateSpatialDiscoveryUseCase.js`,
+  `CreateDecentralizedSpatialDiscoveryUseCase.js`, and
+  `CreateWorldViewStreamingUseCase.js` all remain `OBSOLETE_CANDIDATE` —
+  a repository-wide search for an explicit "supersedes/instead of/
+  replaces" record naming any of them still finds none, and none is a
+  top-level exported class shaped like deliberately-internal
+  infrastructure. Nothing escalated without new evidence; nothing
+  deleted.
+- **Section E** — Product-gap discovery, explicit verdict: `NONE FOUND`.
+  Every previously-uncalled `WorldNavigationSession` method stays exactly
+  as 0.9.216's own Section L last classified it; the one `ACTUAL_GAP`
+  that arc ever produced is closed; the Section C finding is an
+  architectural observation, not a product gap; the Section D findings
+  are excess implementation, never missing implementation.
+- **Section F** — Architecture closure table applied to every finding,
+  plus the arc's own closing recommendation.
+
+### Test-suite registration housekeeping
+
+While auditing which lifecycle/audit test files this reassessment should
+treat as the "authoritative deep proof" (Section A9's own reference),
+three existing, already-merged test files were found missing from
+`tests.html`'s own runner list — a bookkeeping gap, not a product one:
+`tests/WorldViewUndoRedoLifecycleAudit.test.js` (0.9.211),
+`tests/WorldPresenceActivityRefreshIntegration.test.js` (0.9.217), and
+`tests/WorldPresenceMembershipRefreshLifecycleAudit.test.js` (0.9.218).
+All three are added, alongside this milestone's own new file.
+
+### Recommendation
+
+The capability-reachability arc this codebase has worked since 0.9.196
+is, as of this milestone, **exhausted**. Every area named in this
+milestone's own brief is `COMPLETE`, `INTENTIONAL_BOUNDARY`, `DEFERRED`
+(the one named Section C architectural observation), or
+`OBSOLETE`/`OBSOLETE_CANDIDATE` (classification only, nothing deleted).
+No `ACTUAL_GAP` and no `NEW_PRODUCT_GAP` were found anywhere in this
+sweep.
+
+Per the brief: the next milestone should not be chosen by searching this
+codebase for one more uncalled method. It should come from an explicit
+product-evolution decision, or a deliberate obsolete-cleanup decision
+(six files now sit ready for one, pending a human confirming intent on
+the four still at `OBSOLETE_CANDIDATE`) — never manufactured just to
+advance the milestone number. That is itself the meaningful architectural
+milestone here: **ForkBuild has reached capability closure for its
+current product surface.**
