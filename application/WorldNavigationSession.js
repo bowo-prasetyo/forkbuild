@@ -255,6 +255,13 @@ export class WorldNavigationSession {
     	discoveryProvider = null, // <-- Fixed: Added missing parameter
 	    placementRegistry = null,
 	    moveWorldPlacementUseCase = null,
+	    // 0.9.197 — World Placement Removal UI Action. The mirror
+	    // optional collaborator to moveWorldPlacementUseCase, same
+	    // "enforce/offer only when actually wired" posture — a session
+	    // built without one (every pre-0.9.197 caller, and every
+	    // existing test) simply can't remove a placement; see
+	    // removePlacement() below.
+	    removeWorldPlacementUseCase = null,
 	    spatialAllocationPolicy = SpatialAllocationPolicy.WARN,
 	    searchWorldUseCase = null,
 	    spatialDiscoveryProvider = null,
@@ -385,6 +392,8 @@ export class WorldNavigationSession {
 	    // actually wired" pattern discoveryProvider already follows.
 	    this._placementRegistry = placementRegistry;
 	    this._moveWorldPlacementUseCase = moveWorldPlacementUseCase;
+	    // 0.9.197: see removePlacement() below.
+	    this._removeWorldPlacementUseCase = removeWorldPlacementUseCase;
 	    // 0.2.25: the policy applied to EXPLICIT, interactive placement
 	    // (checkPlacementOverlap/movePlacement) — see
 	    // core/SpatialAllocationPolicy.js. Automatic initial placement
@@ -4819,6 +4828,14 @@ export class WorldNavigationSession {
             revision: record.revision,
             owner: ownerName,
             movable: ownedByCurrentUser,
+            // 0.9.197 — World Placement Removal UI Action. Gated on the
+            // exact same local, best-effort ownership signal as
+            // `movable` above — removing a placement is, like moving
+            // one, an act of authorization over WHERE a publication
+            // sits, never over the publication or document itself. No
+            // new lifecycle state: this reuses `ownedByCurrentUser`
+            // rather than inventing a separate removability rule.
+            removable: ownedByCurrentUser,
             overlapCount: overlap ? overlap.count : 0
         };
     }
@@ -5204,6 +5221,45 @@ export class WorldNavigationSession {
             throw new Error(`WorldNavigationSession: "${id}" has no known placement to move`);
         }
         return this._moveWorldPlacementUseCase.execute(record.placementId, newPosition);
+    }
+
+    // 0.9.197 — World Placement Removal UI Action. The mirror
+    // capability to movePlacement() above, and just as narrow: this
+    // takes the placement OUT of shared space. It is NOT unpublish —
+    // the Publication, the Document, and its material are all
+    // untouched (see RemoveWorldPlacementUseCase's own header); a
+    // Wanderer who removes a placement here can still find the same
+    // Publication through discovery/search and place it again. The
+    // rendering/selection machinery that shows PlacementInfoPanel
+    // collapses on its own on the next refresh — getPlacementInfo()
+    // (above) returns null once the placement registry no longer has a
+    // record for this document, exactly the same "null when the
+    // question doesn't apply" rule it already follows for a document
+    // that was never placed at all.
+    //
+    // `expectedPlacementId` — normally the `placementId` the caller's
+    // own PlacementInfoPanel read the "Remove" action from — is an
+    // OPTIONAL compare-and-swap guard: when given, and the freshly
+    // resolved placement for this document no longer matches it (this
+    // placement was moved, replaced, or already removed by someone
+    // else since the panel was rendered), this refuses to remove
+    // whatever placement now sits there instead of silently deleting a
+    // different one out from under the person who never saw it.
+    // Omitting it (like movePlacement() above, which has no such
+    // guard) removes whatever the freshest resolution finds.
+    removePlacement(documentId, expectedPlacementId = null) {
+        const id = documentId || this._activeDocumentId;
+        if (!this._removeWorldPlacementUseCase) {
+            throw new Error('WorldNavigationSession: placement cannot be removed — no RemoveWorldPlacementUseCase wired');
+        }
+        const record = this._resolvePlacementRecord(id);
+        if (!record) {
+            throw new Error(`WorldNavigationSession: "${id}" has no known placement to remove`);
+        }
+        if (expectedPlacementId && record.placementId !== expectedPlacementId) {
+            throw new Error('WorldNavigationSession: this placement has changed since it was selected — refusing to remove a different placement');
+        }
+        this._removeWorldPlacementUseCase.execute(record.placementId);
     }
 
     // _ensureEditableSelection() — REMOVED (0.5.9). Was the fork-on-write
