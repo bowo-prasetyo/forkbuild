@@ -72923,3 +72923,138 @@ Interaction — moving from viewing to a narrowly-defined interaction with
 viewed content — but what that interaction should actually be is left to
 be discovered from how this milestone's own Content Comparison panel gets
 used, rather than predefined now.
+
+## 0.9.185 — World Snapshot Content Actionability Audit
+
+0.9.184's own "Recommendation" named Snapshot Content Interaction as the
+natural next step, and deliberately declined to predefine what that
+interaction should be. This milestone is the audit that question calls
+for — exactly the shape 0.9.178 (World Snapshot Inspection Actionability
+Audit) already established for a different pipeline stage: before
+building a new action, first find out what a Wanderer can ALREADY,
+LEGITIMATELY do with viewed Snapshot content, using only what the running
+application offers today.
+
+TEST-ONLY, EXACTLY LIKE 0.9.178 BEFORE IT. No production file changed;
+every collaborator this audit drives (`WorldEncounterCanvas.js`,
+`WorldSnapshotContentView.js`, `WorldSnapshotContentComparisonView.js`,
+`WorldSnapshotInspection.js`, `MaterializedSnapshotWorldDiscoveryBridge.js`)
+is read, real, and unmodified.
+
+**THE AUDIT'S FINDING — VIEWING STAYS PURE OBSERVATION, AND NO CANDIDATE
+ACTION WAS QUIETLY ADDED.**
+
+```text
+                                    reachable?
+open/close Snapshot Content panel       ✓   (observation only)
+open/close Content Comparison panel     ✓   (observation only)
+distribute / discover / unregister      ✓   (0.9.178's own actions,
+                                              unaffected by either panel)
+accept / merge / adopt / replace        ✗   (no such method exists)
+reposition / relocate from either panel ✗   (no such method exists)
+act on the comparison target (B)        ✗   (every mutating action reads
+                                              the primary selection alone)
+```
+
+The two open/close pairs 0.9.183/0.9.184 added
+(`openSnapshotContentView()`/`closeSnapshotContentView()`,
+`openContentComparisonView()`/`closeContentComparisonView()`) remain the
+ONLY Content-View-shaped methods on `WorldEncounterCanvas.js`. None of the
+four ever touches `registry`, triggers a new material load, materializes,
+distributes, or discovers — confirmed directly against each method's own
+body, not inferred. Distribute/discover/unregister read exactly the same
+already-existing facts (`distributablePublication`,
+`selectedEncounterSnapshotInspection`) whether either panel is open or
+closed — viewing neither gates nor ungates anything. And critically, the
+comparison target (Publication B) is never itself actionable: every
+mutating action is confirmed, by reading its own extracted body, to
+reference the primary selection alone — never `comparisonEncounter`,
+`comparisonMaterialInspection`, or `comparisonSnapshotContentView` — even
+while that side's own Content View renders right alongside it.
+
+**Also confirmed, empirically, against the real production files:**
+
+- **What is viewed and what would be acted on are provably the same
+  Publication.** `selectedSnapshotContentView.publicationId` is always
+  exactly `distributablePublication.id`; the Content Comparison view's own
+  `aPublicationId` is that same actionable Publication, and its own
+  `bPublicationId` (Publication B, the comparison target) never is — even
+  when both sides share byte-identical content.
+- **Position stays display-only, unchanged from 0.9.178.** No
+  move/reposition/relocate/setPosition/updatePosition method exists;
+  neither the Snapshot Content panel nor the Content Comparison panel
+  carries a `v-model`, and each one's template contains exactly its own
+  open/close `@click` pair and nothing else.
+- **No premature action semantics exist anywhere.** A structural sweep
+  across both descriptor modules (`WorldSnapshotContentView.js`,
+  `WorldSnapshotContentComparisonView.js`) and both rendered panels finds
+  no accept/merge/adopt/replace/deduplicate vocabulary of any kind — this
+  milestone's own audit re-confirms, rather than assumes, that nothing was
+  quietly added alongside 0.9.183/0.9.184.
+
+**`tests/WorldSnapshotContentActionabilityAudit.test.js` — ten sections**,
+entirely against real, mounted `WorldEncounterCanvas` instances and real
+registration bridges: (A) the existing action inventory — exactly four
+Content-View-shaped methods, no accept/merge/adopt/apply/download/export/
+reposition-shaped action anywhere; (B) observation vs. action — opening/
+closing either panel, five times over, never mutates the registry; (C)
+viewing never gates or ungates distribute/discover/unregister; (D) the
+comparison target is never itself actionable, proven both behaviorally
+(distribute calls always carry Publication A) and structurally (no action
+method's own body references any comparison-target field); (E) opening/
+closing either panel triggers zero additional material-source load calls;
+(F) Publication identity preservation between viewed and actionable
+content; (G) position actionability, unchanged; (H) a structural sweep of
+all four panel actions for registry/material/distribution/discovery
+access; (I) the LOCAL/PEER/SNAPSHOT actionability row is unaffected by
+whether the Content View panel is open; (J) a structural sweep for
+accept/merge/adopt/replace/deduplicate vocabulary across both descriptor
+modules and both rendered panels.
+
+`tests.html` gains one new entry, alphabetically adjacent to
+`WorldSnapshotContentComparisonView.test.js`.
+
+Deliberately excluded, per this milestone's own audit-first brief:
+- **Building any new action.** The audit's own job is to report what is
+  and isn't already there — not to close the gap it finds. Unlike 0.9.178
+  (which found one unwired capability, `unregisterMaterializedSnapshotWorldSource()`,
+  later closed by 0.9.179), this audit found no unwired application-layer
+  capability waiting to be surfaced: nothing resembling "use this
+  Snapshot," "accept this content," or "merge these two" exists anywhere
+  in the codebase today, wired or not. A genuine next action, if one is
+  wanted, is new authority this application does not yet grant — not a
+  seam merely waiting to be connected.
+- **Any new field on either Content-View descriptor, or any new World
+  Encounter kind.** This milestone confirmed the EXISTING descriptors are
+  already sufficient for every action already reachable; it adds none of
+  its own.
+- **Ranking, fallback, deduplication, trust, freshness, or lifecycle
+  vocabulary of any kind.** Inherited unchanged from every file in this
+  chain.
+
+```text
+0.9.181  World Snapshot Comparison                                   ✓
+0.9.182  World Snapshot Comparison UI                                ✓
+0.9.183  World Snapshot Content View                                 ✓
+0.9.184  World Snapshot Content Comparison View                      ✓
+0.9.185  World Snapshot Content Actionability Audit                  ✓
+```
+
+### Recommendation
+
+With 0.9.185, the honest answer to "what can a Wanderer do with viewed
+Snapshot content" is: exactly what they could already do with the
+underlying Publication (inspect, select, distribute, discover, be
+attributed against, unregister) — content viewing itself added no new
+actionability, and none was quietly smuggled in alongside it. Unlike
+0.9.178, this audit did not surface an existing-but-unwired capability to
+close next; it confirmed a genuine absence. Any concrete Snapshot Content
+Interaction — an "accept," a "use," a "materialize from comparison," or
+anything else — would be a wholly NEW capability requiring its own
+deliberately scoped authority (what does it mean for a Wanderer to act on
+content they merely viewed? does it touch the Publication, the World
+position, or neither?), not a connection this audit found waiting. I
+would not schedule that milestone until a concrete, narrow answer to that
+question is worth building — 0.9.180's own Vehicle Reachability
+recommendation remains, as it has since 0.9.180, entirely open and
+unweakened.
