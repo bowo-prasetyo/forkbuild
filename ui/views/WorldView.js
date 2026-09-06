@@ -526,6 +526,13 @@ export default {
         // straight through to `OwnPublicationPanel`, with no wrapper
         // function of this view's own.
         const discoverSnapshotCandidatesCommand = inject('discoverSnapshotCandidatesCommand', null);
+        // 0.9.186 — World Snapshot Background Discovery. The SAME app-wide
+        // `WorldSnapshotDiscoveryMonitor` instance `ui/main.js` composes
+        // around the exact `discoverSnapshotCandidatesCommand` above —
+        // never a second campaign, never a second query service. See
+        // `refreshSpatialUI()`, below, for the one call site that feeds it
+        // this view's own already-computed `spatialContext`.
+        const worldSnapshotDiscoveryMonitor = inject('worldSnapshotDiscoveryMonitor', null);
         // 0.9.152 — Selected Snapshot Candidate Resolution. The SAME
         // app-wide `resolveSelectedSnapshotCommand` `ui/main.js` now
         // composes (reusing the SAME resolver/content store
@@ -1075,6 +1082,24 @@ export default {
             // (terrain zone, hydrology feature, nearby structures, collaborators)
             // from current camera position for contextual location descriptions.
             spatialContext.value = spatialContextService.getCurrentContext();
+
+            // 0.9.186 — World Snapshot Background Discovery. Feeds this
+            // view's own just-recomputed spatialContext to the app-wide
+            // WorldSnapshotDiscoveryMonitor on every refreshSpatialUI()
+            // tick — the SAME cadence (a 3-second interval, plus assorted
+            // movement/session events) every other field on this line
+            // already refreshes on; this milestone adds no polling loop of
+            // its own. The monitor's own shouldRefreshSnapshotDiscovery()
+            // decision boundary silently no-ops most of these calls — only
+            // a meaningful World-area change ever results in an actual
+            // discovery call. Its returned promise is intentionally never
+            // awaited here: a background discovery call's own result is
+            // for later, explicit, unscheduled UI (see docs/Roadmap.md's
+            // own 0.9.186 entry) to act on — never anything this tick
+            // itself waits on or renders.
+            if (worldSnapshotDiscoveryMonitor && spatialContext.value) {
+                worldSnapshotDiscoveryMonitor.observe(spatialContext.value);
+            }
 
             // 0.5.1 — World Maps & Geographic Navigation. Re-read on the
             // exact same cadence as spatialContext above — see

@@ -73058,3 +73058,165 @@ would not schedule that milestone until a concrete, narrow answer to that
 question is worth building — 0.9.180's own Vehicle Reachability
 recommendation remains, as it has since 0.9.180, entirely open and
 unweakened.
+
+## 0.9.186 — World Snapshot Background Discovery
+
+Every Snapshot discovery/resolution/materialization/placement/registration
+capability built since 0.9.142 has been reachable only through its own
+explicit click on `OwnPublicationPanel.js` — a manual, nine-step chain
+(DISCOVER -> SELECT -> RESOLVE -> VERIFY -> MATERIALIZE -> CONSUME POSITION
+CLAIM -> PLACE -> REGISTER -> RENDER) a Wanderer has had to operate one
+boundary at a time. `application/DiscoverSnapshotCandidatesCommand.js`
+(0.9.150) named this gap in its own "Deliberately excluded" section:
+"Caching, retries, or automatic/background discovery of any kind... this
+file is called once per invocation, by a caller who decides entirely for
+itself when to call it." This milestone is that caller — narrowly, exactly
+one seam, per its own brief: automatic Snapshot candidate DISCOVERY, driven
+by the Wanderer's own movement through the World, with every downstream
+boundary (resolution, verification, materialization, placement,
+registration, rendering) left exactly where it already was, reachable only
+by its own existing explicit action.
+
+```text
+                 Wanderer movement
+                       │
+                       ▼
+   ui/views/WorldView.js's own refreshSpatialUI() tick
+   (UNCHANGED cadence — a 3-second interval, plus assorted
+   movement/session events; no new polling loop)
+                       │
+                       ▼
+   spatialContext = spatialContextService.getCurrentContext()
+   (application/WorldSpatialContextService.js, 0.3.6, UNMODIFIED)
+                       │
+                       ▼
+   WorldSnapshotDiscoveryMonitor#observe(spatialContext)   ★ NEW
+                       │
+                       ▼
+   shouldRefreshSnapshotDiscovery(previousContext, spatialContext)
+   (application/ShouldRefreshSnapshotDiscovery.js, NEW — a pure,
+   zero-I/O decision boundary)
+                       │  true only on a meaningful World-area change
+                       ▼
+   discoverSnapshotCandidatesCommand()
+   (application/DiscoverSnapshotCandidatesCommand.js, 0.9.150/0.9.151,
+   UNMODIFIED — the SAME app-wide command "Discover Snapshots" already
+   calls)
+                       │
+                       ▼
+   monitor.lastResult / monitor.lastError
+```
+
+**TWO NEW FILES, BOTH PURE OR NEARLY SO — NO NEW DISCOVERY ALGORITHM AND NO
+CASCADE.**
+
+- `application/ShouldRefreshSnapshotDiscovery.js` — `shouldRefreshSnapshotDiscovery(previousContext, currentContext, radius)`,
+  a pure function with no I/O. Refreshes on the very first observation
+  (`previousContext === null`), never refreshes with no current position,
+  and otherwise refreshes only once the Euclidean distance between the two
+  positions reaches `radius`. The threshold reuses
+  `core/WorldSpatialContext.js#deriveSpatialContext()`'s own existing
+  `streamingRadius` default (100) rather than inventing a new arbitrary
+  number — see that file's own header for why: it already names the area a
+  Wanderer's current position is treated as "nearby," so moving farther
+  than that means the previously-observed area is genuinely behind them.
+- `application/WorldSnapshotDiscoveryMonitor.js` — a small stateful
+  coordinator, `WorldSnapshotDiscoveryMonitor#observe(context)`. Calls
+  `shouldRefreshSnapshotDiscovery()`; when it says no, does nothing. When
+  it says yes, calls the injected `discoverSnapshotCandidatesCommand()`
+  (the SAME command `ui/main.js` already composes for the explicit
+  "Discover Snapshots" button) and records `lastResult`/`lastError`,
+  guarded by an internal request id so a late response from a superseded,
+  earlier context can never overwrite a newer context's own discovery
+  state — mirroring `OwnPublicationPanel.js`'s own `requestId` guard for
+  its candidate-discovery family. A rejected discovery call is caught
+  internally; `observe()` itself never throws, and a failure never mutates
+  `lastResult` or touches any World/registry state.
+
+**WIRING — TWO SMALL EDITS, NO NEW POLLING LOOP.** `ui/main.js` composes
+`new WorldSnapshotDiscoveryMonitor({ discoverSnapshotCandidatesCommand })`
+around the exact same command/query service the explicit path already
+uses, and provides it app-wide as `worldSnapshotDiscoveryMonitor`.
+`ui/views/WorldView.js` injects it and, inside its own pre-existing
+`refreshSpatialUI()` — immediately after the line that already recomputes
+`spatialContext.value` on every tick — calls
+`worldSnapshotDiscoveryMonitor.observe(spatialContext.value)`. No new
+`setInterval`, no new event listener: background discovery rides the exact
+observation cadence every other spatial UI field already refreshes on.
+
+**NEVER A CASCADE.** `observe()` never resolves a candidate, retrieves
+bytes, verifies a hash, materializes, places, registers, or renders
+anything. Discovering a candidate in the background produces exactly one
+new fact — `monitor.lastResult` — and nothing downstream of it moves on
+its own; every existing boundary from 0.9.150 through 0.9.172 stays
+reachable only through `OwnPublicationPanel.js`'s own existing explicit
+actions, byte-for-byte unmodified by this milestone.
+
+**`tests/WorldSnapshotBackgroundDiscovery.test.js` — twelve sections**:
+(A) observation alone, with no click, triggers discovery; (B) the SAME
+injected `discoverSnapshotCandidatesCommand` is reused — no second Nostr
+protocol or query service; (C) `observe()` never cascades into resolution/
+materialization/placement/registration; (D) an unchanged context never
+re-triggers; (E) a context change past the refresh radius triggers a fresh
+call; (F) movement inside the radius never triggers one; (G) a rejected
+discovery call never mutates `lastResult` and never throws; (H) the
+existing explicit `discoverSnapshotCandidatesCommand` still works,
+unmodified, called directly, independent of the monitor; (I) race
+protection — a late result from a stale, superseded context never
+overwrites a newer context's own state; (J) a structural sweep of
+`WorldSnapshotDiscoveryMonitor.js` for resolve/materialize/register/place/
+distribution vocabulary; (K) `shouldRefreshSnapshotDiscovery()` verified
+directly as a pure, standalone decision boundary; (L) architectural
+regression — `ui/main.js`/`ui/views/WorldView.js` wire the monitor through
+the existing composition/injection seam alone, with no additional
+`setInterval` polling loop introduced.
+
+`tests.html` gains one new entry, alphabetically adjacent to
+`WorldSnapshotComparison.test.js`.
+
+Deliberately excluded — not this milestone:
+- **Resolution, verification, materialization, placement, registration, or
+  rendering of a discovered candidate — automatic or otherwise.** See
+  "never a cascade," above. That composition is 0.9.187's own named seam.
+- **A position-acceptance policy for a claimed position.** Untouched —
+  0.9.172's own explicit `useClaimedSnapshotPosition()` remains the only
+  way a claimed position is ever consumed.
+- **Any diagnostic/inspection UI surfacing `monitor.lastResult`.** This
+  milestone wires the trigger; a person-visible "background discovery
+  found N candidates" panel is later, unscheduled UI.
+- **Ranking, deduplication, filtering, or any candidate-preference
+  vocabulary.** Inherited unchanged from `discoverSnapshotCandidatesCommand()`
+  itself.
+- **A second discoveryTag, a second campaign, or any new Nostr/Arweave
+  composition.** One query service, two independent callers (the explicit
+  button and this monitor) — the identical posture
+  `DiscoverSnapshotCandidatesCommand.js`'s own header already describes for
+  its two sibling commands.
+
+```text
+0.9.181  World Snapshot Comparison                                   ✓
+0.9.182  World Snapshot Comparison UI                                ✓
+0.9.183  World Snapshot Content View                                 ✓
+0.9.184  World Snapshot Content Comparison View                      ✓
+0.9.185  World Snapshot Content Actionability Audit                  ✓
+0.9.186  World Snapshot Background Discovery                         ✓
+```
+
+### Recommendation
+
+With 0.9.186, Snapshot candidate discovery is no longer something a
+Wanderer has to remember to click — it now happens on its own, from the
+World's own existing observation of where they are, at exactly the
+cadence every other spatial UI fact already refreshes on. Nothing
+downstream moved: a discovered candidate still requires the same explicit
+select/resolve/verify/materialize/place/register chain 0.9.151 through
+0.9.172 already built, now simply fed by a background trigger instead of
+an explicit "Discover Snapshots" click. The next natural milestone is the
+one this one's own header named in advance — 0.9.187, composing that
+proven chain into an automatic cascade with its own idempotency/
+concurrency handling (so one Nostr candidate discovered many times over
+never produces many materializations/placements/registrations) — but I
+would build it as its own deliberately scoped milestone, not as a
+follow-on extension of this one's own `WorldSnapshotDiscoveryMonitor`,
+for the identical reason this milestone itself stayed narrow: composing
+proven seams is a different kind of work than proving them.

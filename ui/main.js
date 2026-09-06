@@ -128,6 +128,7 @@ import { executeSnapshotDistributionCommand } from '../application/SnapshotDistr
 import { composeDiscoverSnapshotRuntime } from '../application/DiscoverSnapshotRuntimeComposition.js';
 import { executeDiscoverSnapshotCommand } from '../application/DiscoverSnapshotCommand.js';
 import { executeDiscoverSnapshotCandidatesCommand } from '../application/DiscoverSnapshotCandidatesCommand.js';
+import { WorldSnapshotDiscoveryMonitor } from '../application/WorldSnapshotDiscoveryMonitor.js';
 import { executeResolveSelectedSnapshotCommand } from '../application/ResolveSelectedSnapshotCommand.js';
 import { MaterializeSnapshotFromSelectedCandidateUseCase } from '../application/MaterializeSnapshotFromSelectedCandidateUseCase.js';
 import { executeMaterializeSelectedSnapshotCommand } from '../application/MaterializeSelectedSnapshotCommand.js';
@@ -1784,6 +1785,20 @@ const discoverSnapshotCandidatesCommand = () => executeDiscoverSnapshotCandidate
     discoveryQueryService: snapshotDiscoveryQueryService
 });
 app.provide('discoverSnapshotCandidatesCommand', discoverSnapshotCandidatesCommand);
+
+// 0.9.186 — World Snapshot Background Discovery.
+//
+// `WorldSnapshotDiscoveryMonitor` (application/WorldSnapshotDiscoveryMonitor.js,
+// NEW) wraps the SAME `discoverSnapshotCandidatesCommand` immediately
+// above — never a second query service, never a second campaign
+// discoveryTag — so `ui/views/WorldView.js` can call `.observe(spatialContext)`
+// from its own existing refreshSpatialUI() tick instead of requiring a
+// person to click "Discover Snapshots" themselves. See that file's own
+// header for why this is an additional trigger, never a replacement: the
+// explicit command above stays wired to OwnPublicationPanel exactly as it
+// already was.
+const worldSnapshotDiscoveryMonitor = new WorldSnapshotDiscoveryMonitor({ discoverSnapshotCandidatesCommand });
+app.provide('worldSnapshotDiscoveryMonitor', worldSnapshotDiscoveryMonitor);
 
 // 0.9.152 — Selected Snapshot Candidate Resolution.
 //
