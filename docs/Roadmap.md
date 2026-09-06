@@ -73812,3 +73812,140 @@ land on the exact same observation tick — a concurrency interaction
 reconstruct, since it required both new machinery at once and deserves to
 be audited in the same isolation 0.9.188 already modeled for the cascade
 alone.
+
+## 0.9.191 — Comprehensive Automatic Snapshot Retention Lifecycle Audit
+
+0.9.186 through 0.9.190 built two independently-correct autonomous
+processes sharing the identical Wanderer-movement observation cadence:
+`WorldSnapshotDiscoveryMonitor` + `AutomaticSnapshotEncounterCascade`
+(DISCOVER → ... → REGISTER) and
+`AutomaticSnapshotEncounterRetentionReconciliation` (RETAIN → UNREGISTER).
+Each was proven correct in isolation — 0.9.187/0.9.188 for the cascade
+alone, 0.9.189/0.9.190 for reconciliation alone. Neither prior test file
+ever constructs both together, feeding the SAME `ui/views/WorldView.js`
+observation tick the way that file's own `refreshSpatialUI()` actually
+does. This milestone is test-only: no production file changes. It asks
+exactly the question 0.9.190's own recommendation named: do these two
+processes compose correctly, and what happens when discovery and
+retention reconciliation land on the exact same observation tick?
+
+`tests/WorldSnapshotAutomaticEncounterRetentionLifecycleAudit.test.js` —
+fifteen sections, built around `makeAutomaticSession()`, a harness that
+reproduces `ui/views/WorldView.js`'s own `refreshSpatialUI()` composition
+line for line (monitor → cascade → `noteAutomaticRegistration()` →
+`reconcile()`, including that the middle chain is fired WITHOUT being
+awaited before `reconcile()` runs synchronously — never a new
+orchestration approach of its own): (A) FLAGSHIP — the complete
+automatic lifecycle with real Nostr discovery, real Arweave resolution,
+and real local materialization: DISCOVER → RESOLVE → VERIFY → MATERIALIZE
+→ PLACE → REGISTER → ordinary World View rendering → RETAIN → move away →
+UNREGISTER → vanish from rendering, with material/Publication/discovery
+evidence surviving; (B) boundary movement — inside → boundary → outside
+yields KEEP → KEEP → REMOVE, the inclusive 0.9.189 boundary preserved
+through the full composition; (C) moving back inside never resurrects a
+forgotten Snapshot on its own — only a genuinely fresh discovery/cascade
+(a new session) does, running the full chain again; (D) the one-tick
+lag, below; (E) a candidate whose cascade completes while the Wanderer is
+already outside the retention region registers exactly once and
+unregisters exactly once, deterministically, on the very next tick; (F)
+four independent Snapshots, only the two distant ones removed; (G) same
+content, two Publications, only the distant one removed; (H) two content
+revisions of one Publication, retained/removed strictly by their own
+position, including a later swap of which one is near; (I) FLAGSHIP
+NEGATIVE — a manually-registered Snapshot remains completely untouched
+through sustained, concurrently-churning automatic discovery/cascade/
+retention traffic; (J) unrelated LOCAL/PEER/manual registry churn
+occurring mid-stream never perturbs reconciliation, nor is any of it
+itself disturbed; (K) material/Publication/Nostr announcement/Arweave
+content all survive automatic removal, and moving back inside the radius
+for many further REAL discovery ticks triggers zero additional resolve/
+materialize/register calls; (L) the phantom re-watch, below; (M) two
+independent WorldView-shaped sessions, sharing one registry, never share
+watched-subject state, not even for the identical publicationId+
+contentHash pair; (N) the ordinary `deriveWorldEncounters()` pipeline
+picks up an automatic Snapshot with no special shape after REGISTER, and
+it collapses back out through that exact same, unmodified pipeline after
+automatic UNREGISTER; (O) a structural sweep confirming no new lifecycle
+vocabulary was needed to make discovery and retention compose.
+
+**Findings — nothing broke; two properties confirmed by construction
+rather than assumed:**
+- **Section D — the one-tick lag.** `reconcile()` runs SYNCHRONOUSLY,
+  immediately after `ui/views/WorldView.js`'s own `refreshSpatialUI()`
+  fires (without awaiting) the discover → cascade → `noteAutomaticRegistration()`
+  chain. Because JS resolves the current synchronous stack before any
+  microtask, a subject that cascades to `REGISTERED` during tick N is
+  structurally invisible to tick N's OWN `reconcile()` call — it is first
+  evaluated starting at tick N+1. This is exactly why 0.9.190's own
+  recommendation worried about "the exact same observation tick": the
+  answer is that discovery and retention can never actually contend
+  within one tick, because reconciliation always runs one full tick
+  behind a same-tick registration. No oscillation (register → remove →
+  register → remove) is possible as a result.
+- **Section L — the phantom re-watch.** If a caller keeps re-feeding an
+  already-terminal cascade's own cached `REGISTERED` result forward every
+  tick (exactly what `ui/views/WorldView.js` does — it never distinguishes
+  a fresh result from a cache hit before calling `noteAutomaticRegistration()`),
+  a subject `reconcile()` already removed and forgot becomes watched
+  again one tick later, purely from that cache hit's own settled
+  `.then()`. The VERY NEXT `reconcile()` call finds no source at that
+  origin (genuinely gone) and silently re-forgets it — the "a missing
+  source is forgotten" branch, never a second `unregisterMaterializedSnapshotWorldSource()`
+  call, and never a World resurrection. Confirmed across four further
+  ticks: the World registration stays permanently gone, and neither
+  `setSource()` nor `removeSource()` is ever called again. This is a
+  real, honest consequence of "forgets removed subjects" once a caller
+  behaves the way `WorldView.js` actually does — a purely internal
+  bookkeeping artifact (`watchedAutomaticSubjects()` briefly reports an
+  entry with no corresponding World source), never a functional defect.
+
+Every other section passed exactly as 0.9.186 through 0.9.190's own
+architecture predicted: idempotent, session-safe, position-safe, manual-
+automatic independent, and convergent with ordinary World rendering.
+
+Deliberately excluded — not this milestone:
+- **Any fix for the phantom re-watch.** It never resurrects a World
+  registration and never calls unregister twice — there is nothing
+  functionally broken to fix, only an internal bookkeeping nuance now
+  recorded rather than assumed.
+- **A persistent Snapshot encounter cache, TTL, time-based expiration,
+  background Nostr subscriptions, automatic priority/ranking, popularity
+  or trust scoring, automatic position acceptance, material/Publication
+  deletion, automatic retry/backoff, speculative prefetching, viewport-
+  driven retention, or a new Snapshot lifecycle enum.** Section O's own
+  structural sweep confirms none of these crept in as a side effect of
+  composing discovery and retention together.
+- **`WATCHED`/`FORGOTTEN` as public lifecycle states.** They remain
+  exactly what 0.9.190 always intended — implementation concepts internal
+  to `AutomaticSnapshotEncounterRetentionReconciliation`'s own instance
+  state, never an exported enum.
+
+```text
+0.9.187  Automatic Snapshot Encounter Cascade                        ✓
+0.9.188  Automatic Snapshot Encounter Lifecycle Audit                ✓
+0.9.189  Automatic Snapshot Encounter Retention Policy               ✓
+0.9.190  Automatic Snapshot Encounter Retention Integration          ✓
+0.9.191  Comprehensive Automatic Snapshot Retention Lifecycle Audit  ✓
+```
+
+### Recommendation
+
+The autonomous discover → cascade → register / register → reconcile →
+unregister loop is now proven to compose correctly — including under the
+exact same-tick pressure 0.9.190's own recommendation singled out as the
+most interesting open question. I would not add another Snapshot-specific
+mechanism next. Instead I would step back and answer the architectural
+question this audit's own Section D put in sharp relief: is the current
+3-second spatial observation cadence (shared, undifferentiated, by
+discovery, cascade, AND retention alike) still sufficient, or is there a
+real semantic need to separate "World observation" from "automatic
+Snapshot lifecycle reconciliation" as the number of autonomous processes
+riding that one cadence keeps growing? Nothing in this audit's findings
+demands that separation today — the one-tick lag is benign, and the
+phantom re-watch never touches World state — but both findings exist
+BECAUSE three independent concerns (discovery refresh, cascade
+processing, retention reconciliation) currently share one undifferentiated
+tick with no ordering contract between them beyond "whatever
+`refreshSpatialUI()` happens to call first." If a future milestone adds a
+fourth autonomous process to this same tick, I would revisit this
+question before adding it, rather than after.
