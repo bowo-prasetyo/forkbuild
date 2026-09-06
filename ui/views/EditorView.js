@@ -10,6 +10,8 @@ import { CreateEditorContextUseCase } from '../../application/CreateEditorContex
 import { CreateToolRegistryUseCase } from '../../application/CreateToolRegistryUseCase.js';
 import { CreateDocumentManagerUseCase } from '../../application/CreateDocumentManagerUseCase.js';
 import { CreatePersistenceUseCase } from '../../application/CreatePersistenceUseCase.js';
+import { AutosaveScheduler } from '../../application/AutosaveScheduler.js';
+import { RecoveryObserver } from '../../application/RecoveryObserver.js';
 import { SelectionUseCase } from '../../application/SelectionUseCase.js';
 import { PaletteUseCase } from '../../application/PaletteUseCase.js';
 import { PreviewUseCase } from '../../application/PreviewUseCase.js';
@@ -30,6 +32,7 @@ import SelectionInspector from '../components/SelectionInspector.js';
 import CommandPalette from '../components/CommandPalette.js';
 import KeyboardShortcutsOverlay from '../components/KeyboardShortcutsOverlay.js';
 import ActionFeedback from '../components/ActionFeedback.js';
+import RecoveryBanner from '../components/RecoveryBanner.js';
 import { CreatePublisherUseCase } from '../../application/CreatePublisherUseCase.js';
 import { CreateDiscoveryUseCase } from '../../application/CreateDiscoveryUseCase.js';
 import { CreateBlueprintAttributionUseCase } from '../../application/CreateBlueprintAttributionUseCase.js';
@@ -61,7 +64,7 @@ const TOOL_SHORTCUTS = { 1: ToolId.SELECT, 2: ToolId.PLACE };
 
 export default {
     name: 'EditorView',
-    components: { Toolbar, BuildLibraryPanel, EditingSidebar, StructureInstancePanel, SelectionInspector, CommandPalette, KeyboardShortcutsOverlay, ActionFeedback, DocumentInfoPanel, MetadataEditorDialog, CreateBlueprintDialog, StructureInfoPanel },
+    components: { Toolbar, BuildLibraryPanel, EditingSidebar, StructureInstancePanel, SelectionInspector, CommandPalette, KeyboardShortcutsOverlay, ActionFeedback, RecoveryBanner, DocumentInfoPanel, MetadataEditorDialog, CreateBlueprintDialog, StructureInfoPanel },
     template: `
         <div class="editor-view">
             <Toolbar
@@ -74,6 +77,11 @@ export default {
                 :entry-context="entryContext"
                 @back-to-world="backToWorld"
                 @open-shortcuts="shortcutsOpen = true"
+            />
+            <RecoveryBanner
+                :status="recoveryStatus"
+                @recover="recoverDocument"
+                @discard="discardRecovery"
             />
             <div class="editor-body">
                 <div class="sidebar">
@@ -231,7 +239,30 @@ export default {
         const { libraryPreviewService } = new CreateLibraryPreviewUseCase().execute(registry);
         const toolRegistry = new CreateToolRegistryUseCase().execute();
         const documentManager = new CreateDocumentManagerUseCase().execute();
-        const { saveDocumentUseCase, loadDocumentUseCase, forkDocumentUseCase, structureDocumentResolver } = new CreatePersistenceUseCase().execute();
+        const {
+            saveDocumentUseCase, loadDocumentUseCase, forkDocumentUseCase, structureDocumentResolver,
+            // 0.9.204 — Editor Autosave & Recovery UI Integration.
+            // CreatePersistenceUseCase has composed these since 0.2.6;
+            // this view simply never reached for them before. See
+            // docs/Roadmap.md, 0.9.203/0.9.204.
+            autosaveDocumentUseCase, recoverDocumentUseCase, discardRecoveryUseCase, checkRecoveryUseCase
+        } = new CreatePersistenceUseCase().execute();
+
+        // 0.9.204 — the existing AutosaveScheduler, watching THIS view's
+        // own documentManager. start()/stop() are called from
+        // onMounted()/onBeforeUnmount() below, exactly like
+        // editorSession.start()/dispose() already are, so an unmounted
+        // Editor cannot go on producing autosaves — see
+        // application/AutosaveScheduler.js's own stop(), unchanged.
+        const autosaveScheduler = new AutosaveScheduler(autosaveDocumentUseCase, documentManager);
+        // The recovery counterpart: probes CheckRecoveryUseCase once per
+        // open document (never on every edit — see
+        // application/RecoveryObserver.js's own header) and drives
+        // recoveryStatus, which RecoveryBanner renders.
+        const recoveryStatus = ref(null);
+        const recoveryObserver = new RecoveryObserver(checkRecoveryUseCase, documentManager, {
+            onChange: (status) => { recoveryStatus.value = status; }
+        });
 
         const identityUseCase = inject('identityUseCase');
         const identityProvider = identityUseCase.provider;
@@ -1160,6 +1191,53 @@ export default {
             };
         }
 
+        // 0.9.204 — Editor Autosave & Recovery UI Integration.
+        // RecoveryBanner's own 'recover' handler. Goes through the SAME
+        // existing use-case boundary the milestone's own architectural
+        // invariant requires (EditorView -> use case -> recovery
+        // subsystem -> storage, never EditorView -> storage): loads the
+        // checkpoint via RecoverDocumentUseCase, opens it through the
+        // SAME openDocument() path a fork or a published-world fork
+        // already uses (preserves the document's own world.id — see
+        // core/World.js#toJSON()/fromJSON()), then marks the manager
+        // dirty, mirroring exactly what tests/PersistenceRecovery.test.js's
+        // own flagship does by hand (load recovered doc, markDirty(),
+        // ready for an explicit Save) — recovered content is NOT the
+        // same as the last saved state, so it must not read as clean.
+        function recoverDocument() {
+            if (!recoveryStatus.value) {
+                return;
+            }
+            const documentId = recoveryStatus.value.documentId;
+            try {
+                const { document: recovered } = recoverDocumentUseCase.execute(documentId);
+                editorSession.openDocument(recovered);
+                documentManager.markDirty();
+                recoveryObserver.clear();
+                feedback.show('Recovered unsaved changes from a previous session');
+            } catch (e) {
+                // Recovery failure (corrupt/tampered checkpoint) never
+                // takes down the Editor or the still-open document — see
+                // application/RecoverDocumentUseCase.js's own integrity
+                // check, unchanged by this milestone.
+                feedback.show(`Recovery failed: ${e.message}`);
+            }
+        }
+
+        // RecoveryBanner's own 'discard' handler — the user saying
+        // "throw away the autosaved work." Straight through
+        // DiscardRecoveryUseCase; the currently open document (saved or
+        // not) is never touched.
+        function discardRecovery() {
+            if (!recoveryStatus.value) {
+                return;
+            }
+            const documentId = recoveryStatus.value.documentId;
+            discardRecoveryUseCase.execute(documentId);
+            recoveryObserver.clear();
+            feedback.show('Discarded the recovered checkpoint');
+        }
+
         // Toolbar's own "← Back to World"/"Save & Return to World" —
         // see core/EditorEntryContext.js's own 0.6.1 header for why
         // `returnWorldId` is never `route.query.fork`/`sourceDocumentId`,
@@ -1329,6 +1407,14 @@ export default {
 
             refreshDocumentInfo();
             unsubDocumentState = documentManager.onStateChanged(refreshDocumentInfo);
+
+            // 0.9.204 — Editor Autosave & Recovery UI Integration.
+            // Started AFTER editorSession.start() (above) has already
+            // populated the real document, so the very first recovery
+            // probe checks that document's own id rather than
+            // DocumentManager's throwaway construction-time default.
+            autosaveScheduler.start();
+            recoveryObserver.start();
 
             if (route.query.fork) {
                 try {
@@ -1555,6 +1641,13 @@ export default {
             if (unsubDocumentState) {
                 unsubDocumentState();
             }
+            // 0.9.204 — the negative test this milestone's own brief
+            // names as the important one: an unmounted Editor must not
+            // go on producing autosaves or recovery probes. Both stop()
+            // calls unsubscribe from documentManager.onStateChanged();
+            // see application/AutosaveScheduler.js/RecoveryObserver.js.
+            autosaveScheduler.stop();
+            recoveryObserver.stop();
             if (feedbackTimer) {
                 clearTimeout(feedbackTimer);
             }
@@ -1575,6 +1668,9 @@ export default {
             editorSession,
             publishDocumentUseCase,
             entryContext,
+            recoveryStatus,
+            recoverDocument,
+            discardRecovery,
             backToWorld,
             structureGroups,
             personalStructureGroups,

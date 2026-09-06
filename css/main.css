@@ -2760,6 +2760,32 @@ html, body {
 }
 /* ... existing styles ... */
 
+/* 0.9.204 — Editor Autosave & Recovery UI Integration
+   (ui/components/RecoveryBanner.js). The amber accent .toolbar-dirty/
+   .world-item-dirty already use for "unsaved" — a recovery offer is
+   exactly that condition, discovered at open time rather than during
+   editing. */
+.recovery-banner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.6rem 1rem;
+    background: rgba(224, 163, 76, 0.12);
+    border-bottom: 1px solid rgba(224, 163, 76, 0.4);
+}
+
+.recovery-banner-message {
+    color: #e0a34c;
+    font-size: 0.85rem;
+}
+
+.recovery-banner-actions {
+    display: flex;
+    gap: 0.5rem;
+    flex-shrink: 0;
+}
+
 /* 0.2.21: Document Info panel — shared by EditorView's sidebar and
    WorldView's inspection column (ui/components/DocumentInfoPanel.js).
    Reuses the .spatial-panel palette (dark card, green accent) so it
