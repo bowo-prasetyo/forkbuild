@@ -75200,3 +75200,145 @@ milestone — there is no concrete product gap for it to resolve. The next
 milestone should return to the broader question: what is the next
 concrete thing a Wanderer or Publisher should be able to do that they
 currently cannot?
+
+## 0.9.203 — Post-Lifecycle Product Reassessment
+
+Test-only. No production changes. 0.9.202's own closing recommendation
+asked for exactly this, in the same shape 0.9.196 first established: a
+shallow sweep of five broad product areas, looking for the next real
+user-facing gap now that the entire orphan-placement/unpublish thread
+(0.9.196 through 0.9.202) is closed. Unlike 0.9.196, this reassessment
+classifies every candidate finding into exactly one of four buckets,
+never blended:
+
+```text
+COMPLETE
+INTENTIONAL_BOUNDARY
+ACTUAL_GAP
+ROUGH_EDGE
+```
+
+And adds one criterion 0.9.196 was, in hindsight, already applying
+without naming it: for anything that looks like a gap, ask first whether
+an existing domain/application operation can already do it.
+
+```text
+Existing capability + missing UI
+             ↓
+       small integration
+
+Missing domain capability
+             ↓
+       genuine feature
+
+Intentional boundary
+             ↓
+          leave it
+
+Harmless rough edge
+             ↓
+       only fix if worthwhile
+```
+
+`tests/PostLifecycleProductReassessment.test.js` sweeps the same five
+areas 0.9.196 did, against real (not mocked) collaborators throughout:
+
+- **A — World interaction/navigation. COMPLETE.** `ui/views/WorldView.js`
+  still composes 27 distinct component families (up from 0.9.196's own
+  20+), and this section reconfirms the two actions the 0.9.196 arc
+  itself added are still reachable from that same surface:
+  `PlacementInfoPanel.js` still emits `remove` (0.9.197) and
+  `OwnPublicationPanel.js` still wires an `unpublishCommand` (0.9.198).
+- **B — Vehicle system. INTENTIONAL_BOUNDARY, unchanged.** The identical
+  structural sweep 0.9.196 ran — `VehicleType.js`'s own code (not its
+  header prose) and every avatar-vehicle collaborator file — still finds
+  no passenger/capacity/fuel/range vocabulary anywhere. Nothing about
+  this boundary has moved.
+- **C — World material lifecycle. ACTUAL GAP — this milestone's one
+  finding.** 0.9.196 through 0.9.202 exhaustively examined the
+  *published* half of a Document's life (publish, place, unpublish,
+  remove, orphan presentation, physical occupancy) and closed every gap
+  they found there. This section asks the question none of those six
+  milestones asked: what protects the *edited-but-not-yet-saved* half of
+  a Document's life? The answer is a fully built, fully tested, entirely
+  unreachable subsystem dating to 0.2.6 (`Persistence, Recovery &
+  Autosave`) —
+  `AutosaveScheduler`/`AutosaveDocumentUseCase`/`CheckRecoveryUseCase`/
+  `RecoverDocumentUseCase`/`DiscardRecoveryUseCase`. All five are proven
+  CORRECT here directly (autosave checkpoints without cleaning or
+  publishing; check detects a newer checkpoint; recover deserializes it
+  through the full migrate→validate→deserialize pipeline; discard
+  removes it without touching the saved document — the same real
+  collaborators `tests/PersistenceRecovery.test.js` already exercises).
+  All five are composed together by `CreatePersistenceUseCase` — but
+  `ui/views/EditorView.js`, the *only* UI file that calls it, destructures
+  exactly `saveDocumentUseCase`/`loadDocumentUseCase`/
+  `forkDocumentUseCase`/`structureDocumentResolver` from its return value
+  and never touches `recoveryStore`/`autosaveDocumentUseCase`/
+  `recoverDocumentUseCase`/`discardRecoveryUseCase`/`checkRecoveryUseCase`.
+  A repo-wide sweep of every UI entry point confirms `AutosaveScheduler`
+  is instantiated nowhere outside a test file, meaning no checkpoint is
+  ever written today at all — this is not "the recovery UI is missing
+  on top of live autosave," it is "the entire pipeline, trigger
+  included, is dormant." `EditorView.js` also installs no
+  `beforeunload` guard and no other substitute safety net. Concretely: a
+  crash or an accidental tab close today silently loses every edit since
+  the last explicit Save, with a working, tested recovery path sitting
+  unused since 0.2.6 — hundreds of milestones ago.
+- **D — Publication workflow. COMPLETE**, for both the forward and
+  reverse paths — `OwnPublicationPanel.js` still wires 11 distinct
+  actions (up from 0.9.196's 10), including exactly one unpublish/retract
+  handler. The Bitcoin anchor wallet-signing family remains an
+  **INTENTIONAL_BOUNDARY**, unchanged: `CreateBitcoinAnchorWalletSignerUseCase`
+  still requires the caller to supply a real `wallet`, constructing none
+  of its own — the same restraint already documented for Arweave/Nostr
+  signer and relay configuration in Snapshot distribution.
+- **E — Performance.** Deliberately DEFERRED again, per this arc's own
+  established restraint: no known bottleneck exists to profile, and
+  Section C found a genuine functional gap, which is higher value to
+  close first.
+
+Applying this milestone's own added criterion to Section C: the
+recovery subsystem is an **existing capability with missing UI**, not a
+missing domain capability. All five collaborators involved are already
+correct and already tested. What's missing is small and specific: start
+`AutosaveScheduler` when an editing session begins, call
+`CheckRecoveryUseCase` when a document loads, and — only when a
+checkpoint is actually offered — present the user a choice bound to the
+already-correct `RecoverDocumentUseCase`/`DiscardRecoveryUseCase`. No new
+domain class, no new lifecycle vocabulary, no new persistence key space:
+every piece already exists and is already proven, exactly the shape
+0.9.196 found for placement removal and publication unpublish before it.
+
+```text
+0.9.199  Removal & Retraction Lifecycle Convergence Audit            ✓
+0.9.200  Orphaned World Placement Lifecycle Audit                   ✓
+0.9.201  Degraded Orphan Row Handling                               ✓
+0.9.202  Unpublished Placement Physical-Occupancy Audit              ✓
+0.9.203  Post-Lifecycle Product Reassessment                         ✓
+```
+
+### Decision
+
+**Outcome: one genuine ACTUAL_GAP, classified as a small integration.**
+Sections A, B, D, and E confirm what a shallow, honest sweep is supposed
+to confirm — nothing invented, no manufactured milestone filler, one
+already-known boundary reconfirmed unchanged, one area still explicitly
+deferred. Section C found a real, narrow, already-half-built gap of
+exactly the kind 0.9.196 taught this project to look for: existing,
+correct, tested domain logic with no caller. Unlike Vehicle capacity or
+Bitcoin wallet signing, this is not a deliberate boundary — nothing in
+this codebase's history documents a decision to leave editing sessions
+unprotected; the recovery stack was built in 0.2.6 specifically to solve
+this problem and was simply never wired to the one view that edits
+documents.
+
+### Recommendation
+
+Per this milestone's own brief, and the explicit change from this arc's
+prior rhythm: **no next milestone is prescribed here.** 0.9.203 stops at
+classification. If the next milestone is taken up, Section C already
+names the one seam it would need to close — wiring the existing,
+already-correct Autosave/Recovery stack into `EditorView.js` — and
+nothing else found in this sweep would justify a milestone of its own.
+That decision, and its numbering, is left open rather than assumed.
