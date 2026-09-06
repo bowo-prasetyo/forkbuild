@@ -73534,3 +73534,137 @@ appearance in the World. Only after that visibility exists would I
 revisit whether either of this audit's two recorded findings, or any of
 the explicitly-excluded lifecycle policies, has actually become
 necessary in practice.
+
+## 0.9.189 — Automatic Snapshot Encounter Retention Policy
+
+0.9.188's own recommendation named a diagnostic panel as the next
+genuinely necessary milestone; a separate architectural review instead
+named the seam its own mission text had already left open one milestone
+earlier: 0.9.187 taught the Wanderer's own movement to CASCADE a
+discovered candidate all the way to REGISTERED, and 0.9.188 deliberately
+did not ask what happens to that registration once the Wanderer moves
+away. This milestone answers exactly that question, and only its policy
+half — a pure spatial decision, never the runtime change that would act
+on it.
+
+`application/AutomaticSnapshotEncounterRetentionPolicy.js` — one new
+function, `shouldRetainAutomaticSnapshotEncounter({ wandererPosition,
+snapshotPosition, retentionRadius })`, returning a plain boolean (KEEP/
+REMOVE, never a new lifecycle enum). It reuses `core/SpatialQuery.js`'s
+own existing `isWithinRadius()` for the Euclidean geometry itself —
+exactly the same inclusive (`<=`) boundary every other radius-membership
+test in this codebase already holds — and declares its own
+`DEFAULT_AUTOMATIC_SNAPSHOT_RETENTION_RADIUS` (100), matching the same
+`streamingRadius`-derived order of magnitude
+`application/ShouldRefreshSnapshotDiscovery.js` (0.9.186) already
+established for "nearby," as an independent constant that happens to
+agree today rather than a shared reference. The function reads exactly
+two positions and one radius — no `contentHash`, `publicationId`,
+locator, storage backend, or Nostr event id ever reaches it, so it
+cannot be influenced by Snapshot identity even when a caller's own
+object happens to carry those fields alongside the ones it actually
+reads.
+
+Two deliberate policy choices, both load-bearing:
+- **Retention is never visibility.** The function asks only whether an
+  already-registered automatic Snapshot's own authoritative position is
+  still within the retention region drawn around the Wanderer's current
+  position — never whether it is currently on screen, in the camera
+  frustum, or within rendering/streaming distance. Those remain
+  `core/WorldEncounter.js`'s and the renderer's own entirely untouched,
+  downstream questions.
+- **Graceful non-removal under uncertainty.** A missing/malformed
+  `wandererPosition` or `snapshotPosition` (not an object, or any of
+  `x`/`y`/`z` not a finite number) or a malformed `retentionRadius` (not
+  a finite number, or negative) makes the spatial question itself
+  unanswerable, and this function treats "cannot be evaluated" as KEEP,
+  never REMOVE — an automatically registered Snapshot is comparatively
+  expensive to have reached (the entire 0.9.150-0.9.187 chain), and
+  losing one to a transient malformed reading would be a strictly worse
+  failure mode than leaving one registered a little longer than ideal.
+  `retentionRadius` of exactly `0` is NOT malformed — it is a legitimate,
+  maximally strict policy ("retain only an exact position match") and is
+  evaluated normally.
+
+`tests/AutomaticSnapshotEncounterRetentionPolicy.test.js` — seven
+sections, forty assertions: (A) basic retention — same position, inside
+the radius, exactly on the radius (retained, the same inclusive boundary
+as `isWithinRadius()`), and outside the radius; (B) geometry — negative
+and mixed-sign coordinates, a 3-4-5 diagonal distance computed correctly
+in both directions, a purely vertical (y-axis) separation actually
+measured rather than ignored, a zero radius behaving as a legitimate
+"exact match only" policy rather than as malformed input, and both a
+very large and an infinite radius; (C) identity independence —
+`contentHash`/`publicationId`/`locator`/`storage`/a Nostr event id,
+present with arbitrary or adversarially different values, never change
+the decision; (D) position independence — two different Publications
+sharing byte-identical content, evaluated purely on their own distinct
+position, one retained and one removed in the same scenario; (E)
+revision independence — 0.9.188's own Section E finding (two co-existing
+content revisions of one Publication) held again here as a positive
+requirement: two revisions of the same Publication at two different
+positions remain two entirely independent retention subjects, never
+merged or compared against each other; (F) purity — the function returns
+a plain boolean (never a `Promise`), the identical frozen input produces
+the identical result on a second call, and a structural source sweep
+confirms no reference to the World source registry, any register/
+unregister bridge, Nostr, Arweave, a content store, `async`/`await`/
+`.then(`, or any timer of any kind; (G) boundary behavior — a missing,
+type-wrong, or partially-shaped position, non-finite (`NaN`/`Infinity`)
+coordinates, and a negative/`NaN`/non-numeric `retentionRadius` all
+gracefully retain, while an OMITTED `retentionRadius` correctly falls
+back to the documented default rather than being treated as malformed.
+
+Deliberately excluded — not this milestone:
+- **Actually unregistering anything.** This file is never imported by
+  `application/AutomaticSnapshotEncounterCascade.js`, never calls
+  `application/MaterializedSnapshotWorldDiscoveryBridge.js#
+  unregisterMaterializedSnapshotWorldSource()`, and never touches
+  `application/WorldDiscoverySourceRegistry.js`. Connecting this policy
+  to that existing unregister bridge is the "Runtime integration" seam
+  this milestone's own recommendation, below, names as separate, later,
+  unscheduled work.
+- **A new Snapshot lifecycle vocabulary.** No `ACTIVE`/`STALE`/
+  `EXPIRED`/`RETIRED`/`LOST`/`REMOVED` enum — the existing World source
+  registry's own "registered -> unregistered" is treated as a sufficient
+  primitive; this function returns a plain boolean, not a new state.
+- **TTL, timestamps, retry, popularity/ranking, trust, automatic
+  rediscovery, automatic re-materialization, or deduplication across
+  Publications/content revisions.** Section F's own structural sweep and
+  Sections D/E's own independence assertions confirm none of these crept
+  in as a side effect of writing this policy.
+- **0.9.188's own recorded findings.** Neither Section E's co-existing
+  content-revision origins nor Section I.2's stale-response boundary is
+  touched here — this milestone answers a different, narrower question
+  than either finding raised.
+
+```text
+0.9.185  World Snapshot Content Actionability Audit                  ✓
+0.9.186  World Snapshot Background Discovery                         ✓
+0.9.187  Automatic Snapshot Encounter Cascade                        ✓
+0.9.188  Automatic Snapshot Encounter Lifecycle Audit                ✓
+0.9.189  Automatic Snapshot Encounter Retention Policy               ✓
+```
+
+### Recommendation
+
+0.9.189 deliberately stopped at a pure decision boundary, exactly as its
+own mission specified — no registry mutation, no new lifecycle
+vocabulary, no side effect of any kind. The next genuinely necessary
+milestone is the one this file's own "Deliberately excluded" list names
+first: 0.9.190 — Automatic Snapshot Encounter Retention Integration,
+wiring `shouldRetainAutomaticSnapshotEncounter()` into the SAME
+Wanderer-movement observation cadence `application/
+WorldSnapshotDiscoveryMonitor.js` (0.9.186) already runs on, so that an
+already-registered automatic Snapshot source whose own placement now
+fails retention is unregistered through the SAME existing
+`unregisterMaterializedSnapshotWorldSource()` bridge a manual removal
+already uses — never a new removal path, and never anything beyond
+"World source -> unregistered." I would not skip straight to that
+integration without this seam existing first: the moment automatic
+removal exists, this policy becomes an architectural authority over
+what stays in the World, not merely another implementation detail, and
+it deserved to be audited in isolation before anything could act on it.
+Only after 0.9.190 lands would I revisit 0.9.188's own two deferred
+findings, or consider any refresh/re-discovery behavior — and only if
+that later integration's own audit demonstrates a real need.
