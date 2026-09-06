@@ -75342,3 +75342,182 @@ names the one seam it would need to close — wiring the existing,
 already-correct Autosave/Recovery stack into `EditorView.js` — and
 nothing else found in this sweep would justify a milestone of its own.
 That decision, and its numbering, is left open rather than assumed.
+
+## 0.9.204 — Editor Autosave & Recovery UI Integration
+
+Small production integration + E2E audit. Takes up the one seam
+0.9.203 named and declined to prescribe further than naming: connect
+`AutosaveScheduler`/`AutosaveDocumentUseCase`/`CheckRecoveryUseCase`/
+`RecoverDocumentUseCase`/`DiscardRecoveryUseCase` — all five already
+correct, all five already tested, all five composed together by
+`CreatePersistenceUseCase` since 0.2.6 — to `ui/views/EditorView.js`,
+the one view that edits documents and the one view that never reached
+for them. Per 0.9.203's own classification, this is an existing
+capability with missing UI, not a missing domain capability: no new
+recovery architecture, no new persistence key space, no new document
+lifecycle vocabulary.
+
+```text
+EditorView.js
+    │
+    ├── documentManager            (unchanged — owns dirty/loadedFrom/lastSaved)
+    ├── autosaveScheduler           (new instance; existing AutosaveScheduler class)
+    │       start()/stop()  ←── onMounted()/onBeforeUnmount()
+    │       watches documentManager.onStateChanged() for dirty  ──▶ AutosaveDocumentUseCase
+    └── recoveryObserver            (new class, application/RecoveryObserver.js)
+            start()/stop()  ←── onMounted()/onBeforeUnmount()
+            watches documentManager.onStateChanged() for document IDENTITY  ──▶ CheckRecoveryUseCase
+                    │
+                    ▼
+            recoveryStatus (Vue ref)  ──▶  RecoveryBanner.js  ──▶  Recover / Discard
+                                                                        │        │
+                                                              RecoverDocumentUseCase  DiscardRecoveryUseCase
+```
+
+### The two pieces added
+
+- **`application/AutosaveScheduler.js` — unchanged.** This milestone's
+  entire fix for autosave reachability is two method calls:
+  `EditorView.js` constructs one with the SAME `documentManager` it
+  already owns and the `autosaveDocumentUseCase`
+  `CreatePersistenceUseCase` already builds, then calls `.start()` in
+  `onMounted()` and `.stop()` in `onBeforeUnmount()` — exactly parallel
+  to `editorSession.start()`/`editorSession.dispose()` immediately
+  beside them. No new lifecycle mechanism: `AutosaveScheduler` already
+  had `start()`/`stop()` since 0.2.6; nobody had called them from a UI
+  surface before.
+- **`application/RecoveryObserver.js` — new, small, and the one actual
+  design decision this milestone makes.** `CheckRecoveryUseCase.execute()`
+  has a real side effect (it deletes an obsolete or corrupted
+  checkpoint), so it must run exactly once per opened document, never
+  once per keystroke. `DocumentManager.onStateChanged()` is the only
+  signal `EditorView.js` has for "something about the document
+  changed," and it fires on every dirty/clean transition too — an
+  edit, an undo, an explicit Save — not just on Load/New/Fork/Recover.
+  `RecoveryObserver` wraps that single event source and gates on
+  `document.world.id` actually changing before re-probing, which is
+  the one piece of logic in this milestone that didn't already exist
+  anywhere. It has zero imports of its own (see
+  `tests/EditorAutosaveRecoveryUIIntegration.test.js` Section J) —
+  it depends only on whatever `CheckRecoveryUseCase`-shaped object and
+  `DocumentManager` its constructor is given, the identical posture
+  `AutosaveScheduler` already holds toward
+  `AutosaveDocumentUseCase`/`DocumentManager`. A `clear()` method
+  resolves the offered status immediately after Recover/Discard run,
+  since neither changes the document's own identity and so neither
+  would otherwise trigger a re-probe on its own.
+- **`ui/components/RecoveryBanner.js` — new, dumb, presentation-only.**
+  Exactly `ActionFeedback.js`/`DocumentInfoPanel.js`'s own posture: no
+  use-case import, no storage import, no mutation. Renders whatever
+  `RecoveryObserver` last offered and emits `recover`/`discard` for
+  `EditorView.js` to run through the existing use cases — never
+  "reads recovery storage, reconstructs a document, deletes a
+  recovery file" itself, the anti-pattern this milestone's own brief
+  named explicitly.
+- **`ui/views/EditorView.js#recoverDocument()`/`discardRecovery()`.**
+  `recoverDocument()` calls `RecoverDocumentUseCase.execute()`, opens
+  the result through the SAME `editorSession.openDocument()` path a
+  fork already uses (preserves `document.world.id` — see
+  `core/World.js#toJSON()`/`fromJSON()`), then calls
+  `documentManager.markDirty()` — recovered content is NEWER than the
+  last save, so it must not read as clean — mirroring exactly what
+  `tests/PersistenceRecovery.test.js`'s own flagship already does by
+  hand. `discardRecovery()` is a single call to
+  `DiscardRecoveryUseCase.execute()`. Both wrap their use case in
+  try/catch and call `recoveryObserver.clear()`; neither ever touches
+  `storageProvider`/`recoveryStore` directly.
+
+### What stays exactly as it was
+
+Save, autosave, and publish remain three distinct operations — nothing
+in `SaveDocumentUseCase`/`AutosaveDocumentUseCase`/`PublishDocumentUseCase`
+changed. `CheckRecoveryUseCase`/`RecoverDocumentUseCase`/
+`DiscardRecoveryUseCase` are byte-for-byte unchanged from 0.2.6.
+`DocumentManager` gained no new state (no `RECOVERABLE`/`RECOVERED`
+enum value, no second dirty-like flag) — a recovered document is
+simply dirty, the same as any other unsaved edit. `LocalRecoveryStore`
+is untouched.
+
+`tests/EditorAutosaveRecoveryUIIntegration.test.js` is the flagship
+E2E audit. `ui/views/EditorView.js` itself cannot be mounted by this
+repo's plain `node tests/*.test.js` sweep — it imports `vue`, which
+only resolves through the browser/CDN importmap `index.html` declares,
+never as an npm dependency — the identical constraint every other View
+in this codebase's test suite already works around (see
+`tests/ContextPreservingFork.test.js`/`tests/PersistenceRecovery.test.js`'s
+own harnesses). The audit instead exercises the real, framework-agnostic
+collaborators `EditorView.js` composes, in the exact sequence its new
+code now runs them:
+
+- **A — composition-root coherence.** `CreatePersistenceUseCase`'s
+  returned `autosaveDocumentUseCase`/`checkRecoveryUseCase`/
+  `recoverDocumentUseCase`/`discardRecoveryUseCase` share one
+  `recoveryStore` instance by reference, not by coincidence.
+- **B — FLAGSHIP.** open → edit → autosave (via a real
+  `AutosaveScheduler`, fake timers) → simulated app restart (a fresh
+  `DocumentManager` reloading the CANONICAL SAVED bytes, not the live
+  mutated object) → a fresh `RecoveryObserver` offers the checkpoint →
+  Recover → the restored document carries the autosaved edit and
+  stays dirty → an explicit Save clears the offer for good.
+- **C — no autosave, no recovery artifact, without edits.** Open and
+  close with no edit: zero scheduled autosaves, zero checkpoints,
+  zero recovery offers.
+- **D — Discard removes the checkpoint; the saved document is
+  byte-for-byte untouched.**
+- **E — multiple documents isolated** under one `RecoveryObserver`
+  instance switching between two open documents: each document's own
+  checkpoint is offered only while THAT document is open, and
+  checking one never discards or alters the other's.
+- **F — repeated "mounting" is idempotent.** `start()` called three
+  times on the same instance still schedules exactly one autosave per
+  edit and probes recovery exactly once per opened document — no
+  duplicate subscriptions, no duplicate scheduler, no second
+  persistence path.
+- **G — unmount cleanup.** `stop()` on both means a stale
+  scheduler/observer reference cannot go on producing autosaves or
+  recovery notifications even as the same `DocumentManager` keeps
+  changing underneath them afterward.
+- **H — recovery failure isolation.** A checkpoint corrupted after
+  being offered (but before Recover actually runs) throws from
+  `RecoverDocumentUseCase.execute()` exactly as before, and leaves the
+  currently open document and manager state completely untouched.
+- **I — existing editor Save behavior is unchanged** with the
+  scheduler and observer both attached and actively running alongside
+  it.
+- **J — structural audit.** `RecoveryBanner.js` and
+  `RecoveryObserver.js` import nothing from `storage/` or
+  `persistence/`; `RecoveryObserver.js` has zero imports at all;
+  `EditorView.js` still never imports `storage/` directly.
+
+```text
+0.9.200  Orphaned World Placement Lifecycle Audit                   ✓
+0.9.201  Degraded Orphan Row Handling                               ✓
+0.9.202  Unpublished Placement Physical-Occupancy Audit              ✓
+0.9.203  Post-Lifecycle Product Reassessment                         ✓
+0.9.204  Editor Autosave & Recovery UI Integration                   ✓
+```
+
+### Decision
+
+The gap 0.9.203 classified — "an existing capability with missing UI,"
+not a missing domain capability — is closed exactly at the seam it
+named: two method calls onto an unchanged `AutosaveScheduler`, one
+small new observer gating an unchanged `CheckRecoveryUseCase` on
+document identity, and a dumb banner wired to the two unchanged
+use cases a Recover/Discard choice was always going to need. A crash
+or an accidental tab close no longer silently loses every edit since
+the last explicit Save.
+
+### Recommendation
+
+No further milestone is prescribed here. 0.9.203's own brief left
+0.9.205 open, contingent on 0.9.204 exposing an actual architectural
+deficiency in the scheduler's own lifecycle — it did not: `stop()`
+already existed and already worked, and `RecoveryObserver`'s own
+identity-gating fully resolved the one new problem this integration
+raised. If a future milestone wants to revisit this area, the next
+open question is a product one, not an architectural one: should
+recovery be offered anywhere other than at document-open time (for
+example, mid-session if a second tab autosaves the same document) —
+deliberately out of scope here, per this milestone's own exclusion
+list, and not assumed into existence now either.
