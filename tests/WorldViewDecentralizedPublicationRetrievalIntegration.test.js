@@ -372,8 +372,8 @@ async function runTests() {
         const codeOnly = source.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
 
         const applicationImportLines = codeOnly.split('\n').filter((line) => line.includes("from '../../application/"));
-        assert(applicationImportLines.length === 13,
-            '23. WorldEncounterCanvas.js still imports exactly thirteen application/ modules — discoveryCommand is a plain injected function, never a new algorithm import; the seventh is 0.9.112\'s own PublicationMaterialProvenance.js, the eighth 0.9.144\'s own SnapshotPublicationAttribution.js, the ninth 0.9.176\'s own WorldEncounterPresentation.js, the tenth 0.9.177\'s own WorldSnapshotInspection.js, the eleventh 0.9.179\'s own MaterializedSnapshotWorldDiscoveryBridge.js (unregisterMaterializedSnapshotWorldSource() alone), the twelfth and thirteenth 0.9.182\'s own WorldEncounterComparisonCandidate.js/WorldSnapshotComparison.js');
+        assert(applicationImportLines.length === 14,
+            '23. WorldEncounterCanvas.js still imports exactly fourteen application/ modules — discoveryCommand is a plain injected function, never a new algorithm import; the seventh is 0.9.112\'s own PublicationMaterialProvenance.js, the eighth 0.9.144\'s own SnapshotPublicationAttribution.js, the ninth 0.9.176\'s own WorldEncounterPresentation.js, the tenth 0.9.177\'s own WorldSnapshotInspection.js, the eleventh 0.9.179\'s own MaterializedSnapshotWorldDiscoveryBridge.js (unregisterMaterializedSnapshotWorldSource() alone), the twelfth and thirteenth 0.9.182\'s own WorldEncounterComparisonCandidate.js/WorldSnapshotComparison.js, and the fourteenth 0.9.183\'s own WorldSnapshotContentView.js');
 
         assert(codeOnly.includes('discoveryCommand') && codeOnly.includes('discoverPublication'),
             '24. the new prop/method are actually present');

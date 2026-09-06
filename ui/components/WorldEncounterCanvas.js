@@ -13,6 +13,7 @@ import { describeWorldSnapshotInspection } from '../../application/WorldSnapshot
 import { unregisterMaterializedSnapshotWorldSource } from '../../application/MaterializedSnapshotWorldDiscoveryBridge.js';
 import { describeWorldEncounterComparisonCandidate } from '../../application/WorldEncounterComparisonCandidate.js';
 import { compareSnapshotWorldPublications } from '../../application/WorldSnapshotComparison.js';
+import { describeWorldSnapshotContentView } from '../../application/WorldSnapshotContentView.js';
 
 // 0.9.3 — World View UI / Wanderer Presence.
 //
@@ -1641,6 +1642,93 @@ import { compareSnapshotWorldPublications } from '../../application/WorldSnapsho
 //   CURRENTLY selected on both sides — see "worldSnapshotComparisonResult
 //   is a live computed," above. `clearComparisonSelection()` remains the
 //   Wanderer's own explicit way to start over.
+//
+// 0.9.183 — World Snapshot Content View.
+//
+// Comparison (0.9.181/0.9.182) answers "are these two Publications the
+// same content?" without ever rendering either one's own material — that
+// restraint was deliberate, and stays. This milestone answers the other,
+// still-unaddressed question for a single selected Snapshot: "what IS this
+// Snapshot's content?" — by consuming material this component ALREADY
+// loads (`materialInspection`, 0.9.39) rather than adding a second loader.
+//
+//   selectedEncounterSnapshotInspection (0.9.177, unchanged)
+//   materialInspection                  (0.9.39, unchanged)
+//        │
+//        ▼
+//   application/WorldSnapshotContentView.js   (THIS milestone)
+//        describeWorldSnapshotContentView()
+//        │
+//        ▼
+//   selectedSnapshotContentView   ★ (THIS milestone's own new computed)
+//        { publicationId, contentHash, material, position }
+//        null
+//        │
+//        │  click "View Snapshot" -> snapshotContentViewOpen = true
+//        ▼
+//   Content View panel (rendered only while BOTH `snapshotContentViewOpen`
+//   AND `selectedSnapshotContentView` are truthy)
+//
+// AN EXPLICIT ACTION, MIRRORING "COMPARE WITH…" EXACTLY, ONE PANEL OVER.
+// `snapshotContentViewOpen` is `false` until the Wanderer clicks "View
+// Snapshot" — merely having a viewable Snapshot selected never opens the
+// panel on its own, exactly like merely selecting Publication A never
+// arms/starts a comparison (0.9.182's own "no implicit comparison, ever").
+//
+// NO NEW MATERIAL LOADING, EVER. `openSnapshotContentView()` never calls
+// `refreshMaterialInspection()`, `inspectWorldEncounterMaterial()`, or
+// anything upstream of them — it only flips a boolean, and only when
+// `selectedSnapshotContentView` (a value already computed from data this
+// component already holds) is genuinely non-null. "View Snapshot" observes
+// material the World's own existing pipeline already made available; it
+// never triggers fetching it.
+//
+// `snapshotContentViewOpen` IS RESET ON EVERY FRESH PRIMARY SELECTION —
+// MIRRORING `resolvedSelectionChoice`/`resolvedLeadChoice`'s OWN RESET IN
+// `selectEncounter()` EXACTLY. Without this, selecting a new Publication
+// right after viewing a previous one's content would render the NEW
+// selection's Content View immediately, with no fresh explicit click — an
+// implicit view, exactly the thing this milestone's own brief rules out.
+// `selectComparisonEncounter()`'s own branch of `selectEncounter()` never
+// runs this reset — a click that only sets the SEPARATE comparison target
+// leaves the primary selection's own open Content View exactly as it was.
+//
+// `selectedSnapshotContentView` COLLAPSES TO `null` THE INSTANT MATERIAL
+// STOPS BEING AVAILABLE — NEVER LEFT DESCRIBING STALE MATERIAL. It is a
+// live computed, recomputed on every read from `selectedEncounterSnapshotInspection`/
+// `materialInspection` — the SAME two already-live computeds/data this
+// component already maintains. Unregistering the selected Snapshot
+// (`unregisterSelectedSnapshot()`, 0.9.179) changes `resolvedEncounterSelection`,
+// which `refreshSelectionOutcome()` already reacts to by tail-calling
+// `refreshMaterialInspection()` (0.9.39, unmodified) — `materialInspection`
+// collapses to `null`, and on the very next read so does
+// `selectedSnapshotContentView`, so the Content View panel simply stops
+// rendering (its own `v-if` already gates on it) without this milestone
+// adding a single new listener anywhere.
+//
+// DELIBERATELY EXCLUDED — NOT THIS MILESTONE.
+// - **Any discovery, resolution, materialization, or distribution
+//   triggered by "View Snapshot."** See "no new material loading, ever,"
+//   above — the action only observes already-loaded material.
+// - **Changing World position, or mutating the registry.** `openSnapshotContentView()`/
+//   `closeSnapshotContentView()` write exactly one page-local boolean each;
+//   neither ever touches `registry` or `selectedEncounter`.
+//   `unregisterSelectedSnapshot()` remains the only registry-mutating
+//   action reachable from this panel, unchanged since 0.9.179.
+// - **A side-by-side content comparison viewer.** This milestone renders
+//   exactly one Publication's own content at a time; combining it with
+//   0.9.181/0.9.182's own comparison fact is explicitly later, unscheduled
+//   work.
+// - **Rendering arbitrary HTML/media/application content, or decoding
+//   document bytes.** The Content View panel renders the SAME structured
+//   `Publication` fields (title, author, published date, content
+//   reference) this codebase already knows how to display elsewhere —
+//   never fetched bytes, never parsed markup.
+// - **A generic content viewer for LOCAL/PEER encounters.** `application/
+//   WorldSnapshotContentView.js` requires a genuine `selectedEncounterSnapshotInspection`
+//   (SNAPSHOT-sourced only, 0.9.177's own gate, unmodified) — a LOCAL/PEER
+//   selection never produces one, so "View Snapshot" stays unreachable for
+//   both, exactly like "Remove Snapshot from World" already does.
 
 const WORLD_HALF_SPAN = 50;
 const CANVAS_SIZE = 600;
@@ -2028,7 +2116,19 @@ export default {
             // `refreshComparisonSelectionOutcome()` writes it; stays `null`
             // for the lifetime of a mount with no `comparisonEncounter` or
             // no `registry`.
-            comparisonSelectionOutcome: null
+            comparisonSelectionOutcome: null,
+            // 0.9.183 — `true` for as long as the Wanderer has explicitly
+            // clicked "View Snapshot" for the CURRENT primary selection.
+            // Written only by `openSnapshotContentView()`/
+            // `closeSnapshotContentView()`, and reset to `false` on every
+            // fresh `selectEncounter()` call — see this file's own
+            // "0.9.183" header, "snapshotContentViewOpen is reset on every
+            // fresh primary selection." Whether the Content View panel
+            // actually renders also depends on the LIVE
+            // `selectedSnapshotContentView` computed, below — this flag
+            // alone never fabricates content that isn't genuinely
+            // available.
+            snapshotContentViewOpen: false
         };
     },
     computed: {
@@ -2313,6 +2413,24 @@ export default {
                 this.selectedPublicationComparisonCandidate,
                 this.comparisonPublicationComparisonCandidate
             );
+        },
+        // 0.9.183 — the one new fact this milestone makes user-visible: a
+        // live join of `selectedEncounterSnapshotInspection` (0.9.177) and
+        // `materialInspection` (0.9.39), both already-existing computeds/
+        // data this component already maintains for entirely different
+        // purposes. `null` whenever the current selection isn't a
+        // Snapshot-sourced Publication, or its material isn't currently
+        // `AVAILABLE` — see `application/WorldSnapshotContentView.js`'s own
+        // header for exactly what is and isn't required. Never cached: a
+        // change to either input (a fresh selection, material becoming
+        // unavailable after `unregisterSelectedSnapshot()`) is reflected on
+        // the very next read, exactly like `worldSnapshotComparisonResult`
+        // immediately above.
+        selectedSnapshotContentView() {
+            return describeWorldSnapshotContentView({
+                inspection: this.selectedEncounterSnapshotInspection,
+                materialInspection: this.materialInspection
+            });
         }
     },
     methods: {
@@ -2392,6 +2510,14 @@ export default {
             this.snapshotDiscoveryResult = null;
             this.snapshotAttributionResult = null;
             this.snapshotDiscoveryRequestId += 1;
+            // 0.9.183 — a fresh primary selection never leaves a
+            // previously-opened Content View rendering implicitly for the
+            // NEW selection; see this file's own "0.9.183" header,
+            // "snapshotContentViewOpen is reset on every fresh primary
+            // selection." This branch never runs for `selectComparisonEncounter()`'s
+            // own routing above — only an actual change to the PRIMARY
+            // selection resets it.
+            this.snapshotContentViewOpen = false;
         },
         // 0.9.13 — the only writer of `worldView`, and the only caller
         // of `describeWorldFromDiscoveryRegistry()` in this file. See
@@ -2742,6 +2868,25 @@ export default {
             }
             unregisterMaterializedSnapshotWorldSource(this.registry, inspection.contentHash, inspection.publicationId);
         },
+        // 0.9.183 — the only writer of `snapshotContentViewOpen` that ever
+        // sets it `true`. Guarded on there being a genuinely viewable
+        // Content View for the CURRENT selection — opening without one
+        // would be indistinguishable from a fabricated view for material
+        // that was never actually loaded. Never touches `registry`,
+        // `selectedEncounter`, or `materialInspection` — see this file's
+        // own "0.9.183" header, "no new material loading, ever."
+        openSnapshotContentView() {
+            if (!this.selectedSnapshotContentView) {
+                return;
+            }
+            this.snapshotContentViewOpen = true;
+        },
+        // 0.9.183 — the Wanderer's own explicit way to close an open
+        // Content View, mirroring `clearComparisonSelection()` (0.9.182)
+        // exactly, one panel over.
+        closeSnapshotContentView() {
+            this.snapshotContentViewOpen = false;
+        },
         // 0.9.182 — the only writer of `armedForComparisonSelection` that
         // ever sets it `true`. Guarded on there being a genuine comparison
         // candidate for the CURRENT primary selection — arming without one
@@ -3035,6 +3180,67 @@ export default {
                         @click="unregisterSelectedSnapshot"
                     >Remove Snapshot from World</button>
                 </div>
+            </div>
+
+            <!-- 0.9.183 — a SEPARATE panel from the inspection actions row
+                 immediately above, mirroring the Compare panel's own
+                 structure exactly, one panel over: an "arm" button while
+                 closed, the actual observation while open. Gated on
+                 selectedEncounterSnapshotInspection — the same gate
+                 "Remove Snapshot from World" already uses — so "View
+                 Snapshot" stays unreachable for a non-Snapshot, or
+                 unresolved, selection exactly like that action already
+                 does. See this file's own "0.9.183" header. -->
+            <div v-if="selectedEncounterSnapshotInspection" class="world-snapshot-content-view-panel">
+                <h4 class="world-snapshot-content-view-title">Snapshot Content</h4>
+
+                <template v-if="!snapshotContentViewOpen">
+                    <!-- Actionable only while selectedSnapshotContentView is
+                         genuinely non-null — see application/
+                         WorldSnapshotContentView.js's own header for
+                         exactly what that requires. Never discovers,
+                         resolves, materializes, or mutates the registry —
+                         it only opens the detail below. -->
+                    <button
+                        type="button"
+                        class="world-snapshot-content-view-action"
+                        :disabled="!selectedSnapshotContentView"
+                        @click="openSnapshotContentView"
+                    >View Snapshot</button>
+                </template>
+
+                <template v-else>
+                    <dl v-if="selectedSnapshotContentView" class="world-snapshot-content-view-detail">
+                        <dt>Publication ID</dt>
+                        <dd>{{ selectedSnapshotContentView.publicationId }}</dd>
+                        <dt>Content Hash</dt>
+                        <dd>{{ selectedSnapshotContentView.contentHash || 'Unknown' }}</dd>
+                        <dt>Title</dt>
+                        <dd>{{ selectedSnapshotContentView.material.title }}</dd>
+                        <dt>Author</dt>
+                        <dd>{{ selectedSnapshotContentView.material.author }}</dd>
+                        <dt>Published</dt>
+                        <dd>{{ selectedSnapshotContentView.material.publishedAt ? selectedSnapshotContentView.material.publishedAt.toLocaleDateString() : 'Unknown' }}</dd>
+                        <template v-if="selectedSnapshotContentView.material.contentReference">
+                            <dt>Content Reference</dt>
+                            <dd>{{ selectedSnapshotContentView.material.contentReference.hash }}</dd>
+                        </template>
+                        <dt>Position</dt>
+                        <dd>{{ selectedSnapshotContentView.position.x }}, {{ selectedSnapshotContentView.position.y }}, {{ selectedSnapshotContentView.position.z }}</dd>
+                    </dl>
+                    <!-- Mirrors the Compare panel's own "This comparison is
+                         no longer available" collapse text exactly, one
+                         panel over — material can stop being AVAILABLE
+                         while this panel stays open. -->
+                    <p v-else class="world-snapshot-content-view-unavailable">
+                        This Snapshot's content is no longer available.
+                    </p>
+                    <button
+                        type="button"
+                        class="world-snapshot-content-view-close"
+                        @click="closeSnapshotContentView"
+                    >Close</button>
+                </template>
             </div>
 
             <div v-if="selectedPublicationComparisonCandidate" class="world-snapshot-comparison-panel">
