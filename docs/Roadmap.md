@@ -74261,3 +74261,138 @@ Snapshot lifecycle machinery could still be constructed. If a real
 user-facing gap exists elsewhere, build the smallest seam for it; if not,
 this subsystem is complete enough to leave alone while the next
 architectural need emerges elsewhere.
+
+## 0.9.195 — Automatic Snapshot Subsystem Boundary & Convergence Audit
+
+Test-only. No production changes. 0.9.131 through 0.9.194 built the entire
+autonomous Snapshot pipeline — discovery, cascade, resolution,
+materialization, placement, registration, retention, and now the session
+boundary — one proven seam at a time, each with its own dedicated,
+passing audit. Every one of those audits answered a NARROW question about
+ONE seam. This milestone deliberately asks the opposite kind of question,
+at whole-system scope, for the first time in this arc:
+
+  "Has Snapshot automation stopped exactly where it should, without
+   accidentally becoming a second World system?"
+
+`tests/AutomaticSnapshotSubsystemBoundaryConvergenceAudit.test.js` —
+twelve sections, each a distinct boundary or convergence claim, chosen to
+combine, cross-cut, or structurally re-confirm what a single-seam audit
+could never see, never to re-run ground 0.9.153/0.9.156/0.9.162/0.9.188/
+0.9.191/0.9.192/0.9.194 already closed:
+(A) the complete autonomous path, real Nostr/Arweave/local machinery, one
+spatial observation to a rendered World encounter, with a structural
+confirmation that no file in the automatic path references
+`OwnPublicationPanel.js` at all; (B) the session boundary at WHOLE-SYSTEM
+scale — a torn-down session's late completion is SUPPRESSED without
+perturbing a live session's own registration for the identical subject,
+and pre-existing LOCAL/PEER World contributions (present in the SAME
+registry throughout) are never touched by either session, at any point;
+(C) the retention boundary proven twice — BY CONSTRUCTION (a
+structural sweep confirms `AutomaticSnapshotEncounterRetentionReconciliation.js`
+never references any discovery/cascade collaborator by name, so
+`reconcile()` cannot rediscover or cascade because it holds no path to
+either) and BY BEHAVIOR (LOCAL, PEER, and a manually-registered Snapshot
+all survive a reconciliation pass untouched, even moved far outside the
+retention radius, alongside the one automatically-watched subject that IS
+removed); (D) six candidates processed together in one
+`Promise.all()` batch — a discovery/resolution failure, a verification
+failure (bundled in resolution), a materialization failure, a placement
+failure, a synchronously-thrown collaborator, and one genuine success —
+each terminates at exactly its own stage's own existing outcome value,
+none propagates an exception, and none affects any other candidate's own
+independent result (session-guard suppression is necessarily
+session-wide, never per-candidate, so it stays scoped to (B) and (I)
+rather than forced into this batch); (E) identity closure — contentHash,
+publicationId, locator, storage, the Nostr event id, the World origin,
+the World position, and a session-identity label are all, by
+construction, pairwise distinct values, a discovered candidate is
+confirmed to never carry the Nostr event id under any field name at all,
+the origin is confirmed to be a pure function of contentHash+publicationId
+alone, and the registered World position is confirmed to be the
+authoritative placement rather than the candidate's own conflicting
+claimed position; (F) source-family convergence — LOCAL, PEER, and
+SNAPSHOT origins registered into ONE registry converge, past
+`assembleWorldDiscoveryInputs()`/`deriveWorldEncounters()`, into three
+IDENTICALLY-shaped World encounters carrying no origin/source/family
+field of any kind; (G) a repository-wide structural import sweep — never
+a pairwise spot check — proving ordinary World rendering/geometry
+(`world/`, `world-layout/`, `renderer/`) and the World source boundary
+itself (`core/WorldEncounter.js`, `core/WorldDiscoverySource*.js`,
+`application/WorldDiscoverySourceRegistry.js`) never import Nostr,
+Arweave, or any Snapshot ACQUISITION module, that
+`ui/components/WorldEncounterCanvas.js` imports only the already-
+established Snapshot PRESENTATION family (0.9.16x) and the registration
+bridge (never acquisition), and that the acquisition files themselves
+never reach back upward into rendering; (H) automatic vs. manual
+isolation — no `automatic` field exists anywhere in the World source
+shape, the registry, or the bridge; exactly two system-wide call sites
+each for `registerMaterializedSnapshotWorldSource()`/
+`unregisterMaterializedSnapshotWorldSource()` (one automatic, one
+manual), confirmed by an exhaustive sweep of `application/`, `ui/`,
+`world/`, and `world-layout/`; a manual and an automatic registration
+produce byte-for-byte identical `WorldDiscoverySource` shapes; and
+material deletion, Publication deletion, and Nostr withdrawal are
+confirmed to not exist as CAPABILITIES anywhere in this pipeline at all,
+not merely as distinct vocabulary from unregistration; (I) re-entry — A
+discovers/acquires X and dies, X is SUPPRESSED for A alone; B
+independently discovers/reuses X and REGISTERS it; a structural
+vocabulary sweep confirms no tombstone/blocklist/denylist/
+"permanentlySuppress" language exists anywhere in the automatic
+pipeline's own source; (J) cadence composition — `ui/views/WorldView.js`
+still declares exactly three intervals total, discovery observation and
+retention reconciliation both fire from inside the SAME
+`refreshSpatialUI()` function body, no Snapshot orchestration file owns a
+timer/subscription/animation-frame loop of its own, and the two
+lower-level Nostr transport files' own pre-existing per-call
+`setTimeout()` network-timeout guards are confirmed to be exactly that —
+one bounded guard each, never a second, cadence-shaped timer; (K) no
+accidental authority — a claimed position is never promoted to World
+position even in direct conflict with the authoritative placement,
+discovery order never becomes ranking (processing two subjects in either
+order converges on the identical final World state), identical content
+under two different Publications never becomes deduplication, and no
+trust/ownership vocabulary or field exists in the files this pipeline
+actually mutates; (L) the explicit architectural stopping-point
+assertion — held on record as a literal string in the test itself,
+"maintain eligible Snapshot contributions to the ordinary World source
+registry during the lifetime of a WorldView session" — backed by a
+vocabulary sweep across the complete automatic pipeline (discovery,
+cascade, retention policy, retention reconciliation, registration bridge)
+confirming acceptance, ownership, merge/adopt, trust, synchronization,
+conflict resolution, and withdrawal semantics exist nowhere in its own
+source.
+
+Every collaborator this file exercises is existing, unmodified
+application code — the same classes 0.9.131 through 0.9.194 already
+shipped, composed exactly as `ui/views/WorldView.js` itself composes
+them. No finding in this audit required a change to any of them; every
+one of the twelve sections confirmed the boundary already held.
+
+```text
+0.9.191  Comprehensive Automatic Snapshot Retention Lifecycle Audit  ✓
+0.9.192  Automatic World Observation Cadence Audit                   ✓
+0.9.193  Automatic Snapshot Session-Lifetime Guard                   ✓
+0.9.194  Automatic Snapshot Session-Lifetime Guard E2E Audit         ✓
+0.9.195  Automatic Snapshot Subsystem Boundary & Convergence Audit   ✓
+```
+
+### Recommendation
+
+This is the "prove we are done" milestone its own name promised, not
+another turn of the "add one more Snapshot capability" crank — and it
+passed cleanly on the first architecture, with no defect requiring a
+production change. Three consecutive whole-system audits (0.9.191/0.9.192
+sequential and concurrent composition, 0.9.194 end-to-end with real
+machinery, and now 0.9.195's own boundary/convergence sweep) have found
+the autonomous Snapshot pipeline sound from every angle this codebase
+knows how to test it from. Consistent with 0.9.192's original
+recommendation, restated at 0.9.194 and now confirmed a third time: I
+would pause Snapshot-specific development here. The next milestone should
+be driven by a concrete, user-facing product gap — something a Wanderer
+actually cannot do today — rather than by another theoretically possible
+Snapshot lifecycle refinement. If no such gap is in view yet, the right
+next step is a broader look across the rest of this codebase (World
+navigation, Publications, presence, discovery outside Snapshot
+altogether) for where architectural attention is actually needed next,
+not a return to a subsystem three consecutive audits have now closed.
