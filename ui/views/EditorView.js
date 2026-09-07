@@ -38,6 +38,8 @@ import { CreatePublisherUseCase } from '../../application/CreatePublisherUseCase
 import { CreateDiscoveryUseCase } from '../../application/CreateDiscoveryUseCase.js';
 import { CreateBlueprintAttributionUseCase } from '../../application/CreateBlueprintAttributionUseCase.js';
 import { CreateBlueprintLineageUseCase } from '../../application/CreateBlueprintLineageUseCase.js';
+import { CreateCommandRegistryUseCase } from '../../application/CreateCommandRegistryUseCase.js';
+import { DocumentCommandPropagationUseCase } from '../../application/DocumentCommandPropagationUseCase.js';
 import { CopySelectionUseCase } from '../../application/CopySelectionUseCase.js';
 import { RepeatSelectionUseCase } from '../../application/RepeatSelectionUseCase.js';
 import { PasteClipboardUseCase } from '../../application/PasteClipboardUseCase.js';
@@ -286,6 +288,49 @@ export default {
         const publicationCatalog = inject('publicationCatalog');
         const publicationPeerExchange = inject('publicationPeerExchange');
 
+        // 0.9.224 — Runtime Composition / Editor Integration. The SAME
+        // app-wide peerMessageBus/peerSessionManager.registry/
+        // deviceAuthorizationUseCase/peerBlockUseCase ui/views/WorldView.js
+        // already reuses for application/WorldCommandPropagationUseCase.js
+        // — never a second, disconnected peer stack constructed here.
+        // Gated on the identical "is there actually a peer stack to ride"
+        // condition CreateWorldViewUseCase.js's own worldCommandPropagation
+        // uses: a caller without one (headless use, most existing tests)
+        // gets `documentCommandPropagation: null`, and EditorSession
+        // degrades to exactly its own pre-0.9.224 behavior — purely local
+        // editing, nothing ever broadcast or applied. commandRegistry is
+        // constructed fresh here (this view never needed one before) via
+        // the SAME CreateCommandRegistryUseCase every other command-
+        // serializing surface in this codebase already uses.
+        const peerMessageBus = inject('peerMessageBus', null);
+        const peerSessionManager = inject('peerSessionManager', null);
+        const deviceAuthorizationUseCase = inject('deviceAuthorizationUseCase', null);
+        const peerBlockUseCase = inject('peerBlockUseCase', null);
+        const commandRegistry = new CreateCommandRegistryUseCase().execute();
+        const isBlocked = peerBlockUseCase
+            ? (peerIdentityId) => peerBlockUseCase.isBlocked(peerIdentityId)
+            : null;
+        const documentCommandPropagation = (identityProvider && peerMessageBus && peerSessionManager && deviceAuthorizationUseCase)
+            ? new DocumentCommandPropagationUseCase({
+                peerMessageBus,
+                connectedPeerRegistry: peerSessionManager.registry,
+                deviceAuthorization: deviceAuthorizationUseCase,
+                identityProvider,
+                commandRegistry,
+                // The Editor has exactly ONE document open at a time
+                // (documentManager.document) — unlike World View's own
+                // resolveWorldDocument, which resolves any of SEVERAL
+                // concurrently open Documents by id, this only ever
+                // needs to ask "is that the one I currently have open."
+                resolveDocument: (documentId) => (
+                    documentManager.document && documentManager.document.world.id === documentId
+                        ? documentManager.document
+                        : null
+                ),
+                isBlocked
+            })
+            : null;
+
 		const copySelectionUseCase = new CopySelectionUseCase(registry);
 		const pasteClipboardUseCase = new PasteClipboardUseCase();
 		const repeatSelectionUseCase = new RepeatSelectionUseCase(registry);
@@ -315,7 +360,9 @@ export default {
 		    // 0.6.6 — Decentralized Blueprint Exchange.
 		    blueprintAttributionExchange,
 		    // 0.6.8 — Blueprint Lineage & Revision Discovery.
-		    blueprintLineageExchange
+		    blueprintLineageExchange,
+		    // 0.9.224 — Runtime Composition / Editor Integration.
+		    documentCommandPropagation
 		});
 
 		// 0.2.81 — Forkable Structure Library, grouped per 0.2.84
@@ -1714,6 +1761,14 @@ export default {
             viewport.value.removeEventListener('pointermove', onPointerMove);
             viewport.value.removeEventListener('pointerdown', onPointerDown);
             editorSession.dispose();
+            // 0.9.224 — this view's own documentCommandPropagation is
+            // constructed fresh per mount (never the app-wide shared
+            // peerMessageBus/registry themselves) — disposed here so an
+            // unmounted Editor's peer/bus subscriptions don't leak into
+            // the next mount, mirroring editorSession.dispose() just above.
+            if (documentCommandPropagation) {
+                documentCommandPropagation.dispose();
+            }
         });
 
         return {

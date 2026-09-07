@@ -78648,3 +78648,155 @@ logical clocks, causal metadata, operation sequencing, or conflict
 detection first — a choice this milestone deliberately leaves open
 rather than committing to on no evidence, the same restraint 0.9.222's
 own recommendation already modeled.
+
+## 0.9.224 — Wire Remote Document Operation Application into the Editor Runtime
+
+0.9.223 deliberately named its own last remaining gap: "No composition-
+root wiring — `ui/views/EditorView.js` is untouched — deferring the
+question of WHEN a running Editor session should call `apply()` to
+whichever future milestone actually wires a live Editor view to this
+protocol." This milestone is that wiring, and only that wiring — neither
+`DocumentCommandPropagationUseCase` (0.9.222) nor
+`RemoteDocumentOperationApplicationUseCase` (0.9.223) is reopened; both
+stay exactly as those milestones left them.
+
+```text
+Alice's EditorSession                    Bob's EditorSession
+     |                                          |
+     v                                          v
+CommandHistory#execute()               constructor: attachToPropagation()
+     |                                     (once, session-lifetime)
+     v                                          |
+_rebuild(): attachCommandHistory()              v
+     |                                  onOperationReceived fires
+     v                                          |
+DocumentCommandPropagationUseCase  ------------>+
+     |                                          v
+     |                                  RemoteDocumentOperationApplicationUseCase
+     |                                     #apply(operation, resolveTarget())
+     |                                          |
+     |                                          v
+     |                                  Bob's own CommandHistory#execute()
+     |                                          |
+     v                                          v
+   (broadcast)                          Bob's Document/Editor state changes
+```
+
+### What this milestone adds
+
+- `application/EditorSession.js` — the composition root that connects
+  BOTH halves of the seam 0.9.222/0.9.223 built, gated on a new optional
+  constructor collaborator, `documentCommandPropagation` (default `null`
+  — every existing call site and every existing test is unaffected).
+  - **Incoming**, wired ONCE, in the constructor: `attachToPropagation()`
+    is not tied to any one document/CommandHistory, so it is wired for
+    the session's whole lifetime, with a `resolveTarget()` closure that
+    reads `this._documentManager.document`/`this._commandHistory` LIVE —
+    re-evaluated by `attachToPropagation()` fresh for every single
+    observed operation, so it always answers "what is this Editor
+    looking at right now," through every subsequent load/fork/new/
+    document-switch, without the constructor ever re-wiring anything.
+  - **Outgoing**, wired in `_rebuild()`, alongside the fresh
+    `CommandHistory` every load/fork/new/document-switch already
+    creates: `attachCommandHistory()` is called for that SPECIFIC
+    instance and torn down in `_teardown()` before the next one replaces
+    it — mirroring `application/WorldNavigationSession.js`'s own
+    `_registerCommandHistory()`/`_unregisterCommandHistory()` one level
+    up, for the identical reason: a CommandHistory that no longer backs
+    the currently open document must stop broadcasting immediately.
+  - `dispose()` additionally unsubscribes the incoming wiring.
+- `ui/views/EditorView.js` — the actual composition root instance,
+  mirroring `application/CreateWorldViewUseCase.js`'s own
+  `worldCommandPropagation` wiring: the SAME app-wide
+  `peerMessageBus`/`peerSessionManager.registry`/
+  `deviceAuthorizationUseCase`/`peerBlockUseCase`
+  `ui/views/WorldView.js` already injects, never a second, disconnected
+  peer stack. `commandRegistry` is constructed fresh here via the SAME
+  `CreateCommandRegistryUseCase` every other command-serializing surface
+  already uses (this view never needed one before). `resolveDocument`
+  is deliberately simpler than World's own `resolveWorldDocument`: the
+  Editor has exactly ONE document open at a time
+  (`documentManager.document`), so it only ever answers "is that the
+  one I currently have open" — never a second document holder, per
+  this milestone's own brief. `documentCommandPropagation` is disposed
+  in `onBeforeUnmount()`, alongside `editorSession.dispose()`.
+- A named characterization, not a bug: because the Editor's
+  `resolveDocument` can only ever answer for the currently open
+  document, a remote operation for a document the Editor ISN'T looking
+  at right now is refused at `DocumentCommandPropagationUseCase`'s own
+  trust boundary (`UNKNOWN_DOCUMENT`) rather than reaching
+  `RemoteDocumentOperationApplicationUseCase#apply()`'s own
+  `NOT_APPLIED` outcome. This differs from 0.9.223's own test harness,
+  which kept every seen Document in a Map so its trust boundary could
+  authorize an operation for a document that wasn't the current one —
+  a shape this milestone deliberately did not adopt for the real Editor
+  (see "no second document holder" above). The user-observable
+  guarantee is identical either way: the non-current document stays
+  untouched, and nothing refused is ever queued or replayed.
+- `tests/EditorRuntimeCollaboration.test.js` — proves the wiring against
+  real authenticated peer connections, composing TWO real
+  `EditorSession` instances (never calling `RemoteDocumentOperationApplicationUseCase`
+  or `attachToPropagation()`/`apply()` directly anywhere in the file —
+  the whole point is that those calls now happen entirely inside
+  `EditorSession`'s own code):
+  - Section A FLAGSHIP: Alice performs a normal local edit through her
+    own `EditorSession.commandHistory`; Bob's own `EditorSession`, wired
+    to the same trust boundary, ends up with the edit applied to his
+    own document/CommandHistory, undoable through his own public
+    `canUndo()`.
+  - Section B: document-switch isolation survives the full composed
+    runtime exactly as 0.9.223 established — Document X stays untouched
+    while Bob is looking at Document Y (refused at the trust boundary,
+    per the characterization above), and the refused operation is never
+    queued or replayed when Bob switches back (proven by exact position
+    arithmetic: 3 + 2, never 3 + 1 + 2).
+  - Section C: execution-path convergence — the remotely-applied
+    operation produces the IDENTICAL state transition (delta x=4) the
+    same command produces when executed through the local
+    `CommandHistory` chokepoint, because both paths end at the same
+    `CommandHistory#execute()`. This is a claim about execution-path
+    convergence only (local and remote commands use the same Editor
+    machinery) — never about replica convergence under concurrent or
+    out-of-order edits, which stays a separate, unproven question.
+
+Each `EditorSession`-level test in this file bypasses the real
+three.js Renderer/WebGL pipeline entirely, the SAME "real logic, fake
+low-level renderer" convention `tests/WorldEditorContinuity.test.js`
+and `tests/AvatarMovement.test.js` already establish — no test in this
+codebase's entire suite constructs a real DOM container or calls
+`EditorSession#start()`/`loadDocument()`/`openDocument()` for real, and
+this file does not become the first.
+
+### Deliberately excluded
+
+Unchanged from 0.9.222/0.9.223's own lists: CRDT, OT, merge algorithms,
+logical/Lamport clocks, ordering metadata, causal ordering, conflict
+detection, conflict resolution, queues, retries, offline replay,
+synchronized undo/redo semantics, operation persistence, collaborative
+cursors, presence integration, UI conflict indicators. In particular,
+`core/DocumentOperationEnvelope.js` still carries no `logicalClock` —
+that boundary stays exactly where 0.9.222 drew it.
+
+- **No redesign of either use case.** `DocumentCommandPropagationUseCase`
+  and `RemoteDocumentOperationApplicationUseCase` are used exactly as
+  0.9.222/0.9.223 left them — this milestone is composition only.
+- **No second execution path.** The composition root connects the
+  existing collaboration and Editor boundaries; it does not create a
+  new way for a command to reach a World.
+- **No ordering/concurrency decision.** Both a local edit and a remote
+  operation can now reach the SAME `CommandHistory#execute()` — what
+  happens when both arrive close together, or out of causal order, is
+  now a real, observable product question rather than a speculative
+  one, and is deliberately left for the next milestone to actually
+  audit rather than prescribed here on no evidence.
+
+### Recommendation
+
+With this wiring real, `application/CommandHistory.js` is now a genuine
+convergence point for two independently-arriving mutation sources —
+local input and a remote peer. That was always going to be the moment
+ordering/concurrency stopped being speculative; the next milestone
+should audit ACTUAL behavior under concurrent/out-of-order edits against
+this real runtime before deciding whether to reach for logical clocks,
+conflict detection, or something simpler — the same "evidence before
+commitment" restraint 0.9.222 and 0.9.223 each already modeled.

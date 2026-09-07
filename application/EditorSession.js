@@ -13,6 +13,7 @@ import { InputDispatcher } from './InputDispatcher.js';
 import { ToolManager } from './ToolManager.js';
 import { CommandHistory } from './CommandHistory.js';
 import { CommandHistoryEvent } from './events/CommandHistoryEvent.js';
+import { RemoteDocumentOperationApplicationUseCase } from './RemoteDocumentOperationApplicationUseCase.js';
 import { SpatialEditingService } from './SpatialEditingService.js';
 import { TransformGizmoUseCase } from './TransformGizmoUseCase.js';
 import { TransformSettings } from './TransformSettings.js';
@@ -149,7 +150,23 @@ export class EditorSession {
         // simply never offers beginStructureComposition() —
         // copyStructureIntoDocument() (0.4.0, unchanged) keeps working
         // either way.
-        compositionPreviewUseCase = null
+        compositionPreviewUseCase = null,
+        // 0.9.224 — Runtime Composition / Editor Integration. Optional,
+        // same graceful-degradation posture as every other optional
+        // collaborator here — an EditorSession built without one (older
+        // call sites, every existing test) simply never broadcasts a
+        // local edit or applies a remote one; nothing else changes. When
+        // supplied, THIS class is the composition root that connects
+        // application/DocumentCommandPropagationUseCase.js's own trust
+        // boundary to the running Editor: outgoing (attachCommandHistory,
+        // wired fresh in _rebuild() below, since a new CommandHistory
+        // replaces the old one on every load/fork/new/document-switch)
+        // and incoming (attachToPropagation, wired once below, in this
+        // constructor — see its own comment for why). Never reopens
+        // DocumentCommandPropagationUseCase or
+        // RemoteDocumentOperationApplicationUseCase to add anything;
+        // both stay exactly as 0.9.222/0.9.223 left them.
+        documentCommandPropagation = null
     }) {
         this._registry = registry;
         this._editorContext = editorContext;
@@ -174,6 +191,8 @@ export class EditorSession {
         this._structureResolver = structureResolver;
         this._structurePreviewUseCase = structurePreviewUseCase;
         this._compositionPreviewUseCase = compositionPreviewUseCase;
+        this._documentCommandPropagation = documentCommandPropagation;
+        this._remoteDocumentOperationApplication = new RemoteDocumentOperationApplicationUseCase();
 
         this._container = null;
         this._session = null;
@@ -181,6 +200,7 @@ export class EditorSession {
         this._toolManager = null;
         this._inputDispatcher = null;
         this._untrackDirtyState = null;
+        this._unattachCommandHistoryPropagation = null;
         this._editorCommandHistories = new Map();
         this._transformSettings = new TransformSettings();
         this._gestureService = new SpatialEditingService(
@@ -224,6 +244,33 @@ export class EditorSession {
         this._marqueeState = null;
 
         this._pasteCount = 0;
+
+        // 0.9.224 — the ONE place a received remote operation ever
+        // becomes an actual apply() call. Wired here, in the
+        // constructor, rather than in _rebuild() below: unlike outgoing
+        // broadcast (tied to a SPECIFIC CommandHistory instance, torn
+        // down and rebuilt every document switch), the INCOMING seam is
+        // a single, session-lifetime subscription to
+        // documentCommandPropagation's own onOperationReceived() feed —
+        // see application/RemoteDocumentOperationApplicationUseCase.js's
+        // own attachToPropagation() header. `resolveTarget()` is
+        // re-invoked by that method fresh for EVERY observed operation,
+        // never cached — reading this._documentManager.document/
+        // this._commandHistory LIVE means it always answers "what is
+        // this Editor looking at right now," through every subsequent
+        // load/fork/new/document-switch, without this constructor
+        // needing to re-wire anything when that happens. A remote
+        // operation for a document this session isn't currently looking
+        // at is NOT_APPLIED and forgotten, never queued — see that
+        // method's own header on why.
+        this._unattachRemoteApplication = this._documentCommandPropagation
+            ? this._remoteDocumentOperationApplication.attachToPropagation(
+                this._documentCommandPropagation,
+                () => (this._documentManager.document && this._commandHistory
+                    ? { documentId: this._documentManager.document.world.id, commandHistory: this._commandHistory }
+                    : null)
+            )
+            : null;
     }
 
     get commandHistory() {
@@ -1546,6 +1593,10 @@ export class EditorSession {
 
     dispose() {
         this._teardown();
+        if (this._unattachRemoteApplication) {
+            this._unattachRemoteApplication();
+            this._unattachRemoteApplication = null;
+        }
     }
 
     _rebuild(populateWorldFn) {
@@ -1573,6 +1624,20 @@ export class EditorSession {
         this._commandHistory = new CommandHistory({ world });
         this._editorCommandHistories.set(world.id, this._commandHistory);
         this._untrackDirtyState = this._documentManager.trackCommandHistory(this._commandHistory);
+        // 0.9.224 — outgoing half of the SAME seam attachToPropagation()
+        // wires in the constructor above: every command THIS fresh
+        // CommandHistory executes now broadcasts through
+        // documentCommandPropagation#attachCommandHistory() (0.9.222,
+        // unchanged), exactly like WorldNavigationSession's own
+        // _registerCommandHistory() already does one level up. Torn
+        // down in _teardown() below before the next rebuild replaces
+        // this._commandHistory.
+        this._unattachCommandHistoryPropagation = this._documentCommandPropagation
+            ? this._documentCommandPropagation.attachCommandHistory({
+                documentId: world.id,
+                commandHistory: this._commandHistory
+            })
+            : null;
         const toolContext = {
             world,
             registry: this._registry,
@@ -1614,6 +1679,10 @@ export class EditorSession {
         }
         this._gizmoSubscriptions = [];
         this._editorCommandHistories.clear();
+        if (this._unattachCommandHistoryPropagation) {
+            this._unattachCommandHistoryPropagation();
+            this._unattachCommandHistoryPropagation = null;
+        }
         if (this._untrackDirtyState) {
             this._untrackDirtyState();
             this._untrackDirtyState = null;
