@@ -18957,3 +18957,63 @@ willing to hand back for a `discoveryTag`; whatever spatial relevance
 filtering happens next is entirely a later, separate caller's concern.
 
 See `docs/Roadmap.md`, 0.9.253, for the full milestone entry.
+
+### Proximity Filtering Is Not Ranking, Is Not Conflict Resolution (0.9.255)
+
+0.9.253 drew the line between discovery ("what exists") and selection
+("which of those are relevant to the Wanderer's current position"),
+promising the two would stay "answered by three separate layers." 0.9.255
+(Place Naming Proximity Selection) is that middle layer arriving, and
+this principle names the exact temptation it must refuse: now that
+`core/PlaceNamingProximitySelection.js` can see BOTH a set of discovered
+claims AND the Wanderer's own position, it would be easy — almost
+convenient — to let it also decide which of several nearby claims
+"wins."
+
+**Nearness is not merit.** Suppose Alice, Bob, and Carol have each
+published an independent `PlaceNamingClaim` for the same patch of
+ground — "Old Oak," "Ancient Tree," "Oak Crossing" — and a Wanderer
+stands within `radius` of all three. `selectNearbyPlaceNamingClaims()`
+returns all three, in the exact order discovery handed them in. It does
+not compute which is closest, which was signed most recently, which
+author has published the most claims elsewhere, or which name a
+majority of nearby claims might agree on. Any of those would be a
+plausible-sounding heuristic for "the right name" — and every one of
+them would silently convert a spatial filter into a naming authority
+nobody asked this file to become.
+
+**Surviving the filter is not surviving a vote.** It would be equally
+easy to reach for `core/PlaceNamingView.js#rankClaimsByName()` — the
+one place this codebase already counts "how many DISTINCT identities
+independently asserted the same name" — and fold that ranking into
+proximity selection's own output, on the theory that a Wanderer only
+wants to see "the" name for a place they're standing in. 0.9.255
+deliberately does not do this. `rankClaimsByName()` answers a question
+about a SINGLE region's own claim history; proximity selection answers
+a question about a Wanderer's CURRENT SURROUNDINGS, which may span many
+regions carrying many independent naming histories at once. Conflating
+them here would mean a future "how should conflicting names be shown"
+product decision gets made by default, inside a spatial filter, instead
+of deliberately, in its own milestone.
+
+**A nearby claim is still just a claim.** 0.9.253 already established
+that discovery changes nothing about a claim's truth. This principle
+extends that guarantee across the proximity boundary too: a claim that
+survives `selectNearbyPlaceNamingClaims()` is not thereby more true,
+more official, or more likely to be adopted than one that was filtered
+out for being too far away — it is simply the same unverified assertion,
+now known to be about somewhere close by. "Someone has published this
+naming claim for this location" is the entire, honest meaning of a name
+appearing near the Wanderer; it must never silently become "ForkBuild
+has determined this is the official name of this place."
+
+**Discovery order survives selection unchanged.** Because a spatial
+filter operates on an ordered list, it is tempting to treat "the first
+survivor" as somehow privileged. `selectNearbyPlaceNamingClaims()`
+refuses even that: it preserves whatever order
+`application/PlaceNamingDiscoveryQueryService.js#search()` already
+produced, exactly as given, so no caller can mistake array position for
+relevance, and no future refactor of discovery's own internal ordering
+can silently change what a Wanderer sees "first" today.
+
+See `docs/Roadmap.md`, 0.9.255, for the full milestone entry.
