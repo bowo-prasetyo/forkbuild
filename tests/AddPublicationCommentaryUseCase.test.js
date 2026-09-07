@@ -5,12 +5,24 @@ import {
     PublicationCommentaryConflictError
 } from '../storage/PublicationCommentaryStore.js';
 import { AddPublicationCommentaryUseCase } from '../application/AddPublicationCommentaryUseCase.js';
+import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 
 // 0.9.244 — Publication Commentary Application Command Boundary. Covers
 // application/AddPublicationCommentaryUseCase.js — the one place user
-// intent turns into a persisted PublicationCommentary. No UI, no
-// networking, no authorization system exists yet for this milestone to
-// test.
+// intent turns into a persisted PublicationCommentary.
+//
+// 0.9.245 gave this use case an authorship boundary: authorIdentityId is
+// no longer caller-supplied input, it is resolved from an injected
+// identityProvider's own authenticated signing identity. This file's
+// own tests are updated to construct the use case with a real,
+// authenticated identityProvider (the identical LocalIdentityProvider
+// pattern tests/PublicationAnchorCreation.test.js already uses), so the
+// original, still-relevant assertions here — content/publicationId
+// validation, storage failure propagation, duplicate-identity handling,
+// store isolation, duck-typed store dependency — keep exercising this
+// use case's OWN behavior rather than the authorship boundary itself.
+// The authorship boundary's own dedicated coverage lives in
+// tests/PublicationCommentaryAuthorship.test.js.
 
 // ---------------------------------------------------------------------
 // Helpers
@@ -37,10 +49,21 @@ class WriteFailingStorageProvider extends StorageProvider {
     list() { return []; }
 }
 
+// A real, authenticated LocalIdentityProvider — the same
+// makeIdentity(label) pattern tests/PublicationAnchorCreation.test.js
+// already uses, so this file's own coverage exercises the real
+// identity/ infrastructure this use case now depends on, never a
+// hand-rolled stand-in for it.
+function makeIdentity(label) {
+    const provider = new LocalIdentityProvider(new InMemoryStorageProvider());
+    const identity = provider.createLocalIdentity(label);
+    provider.authenticate(identity.identityId);
+    return provider;
+}
+
 function validInput(overrides = {}) {
     return {
         publicationId: 'pub-1',
-        authorIdentityId: 'alice',
         content: 'hello world',
         ...overrides
     };
@@ -56,7 +79,7 @@ async function runTests() {
     // -------------------------------------------------------------
     {
         const store = new PublicationCommentaryStore(new InMemoryStorageProvider());
-        const useCase = new AddPublicationCommentaryUseCase(store);
+        const useCase = new AddPublicationCommentaryUseCase(store, makeIdentity('Alice'));
 
         const { commentary, isNew } = useCase.execute(validInput({ content: 'Great work on this piece.' }));
 
@@ -75,7 +98,7 @@ async function runTests() {
     // -------------------------------------------------------------
     {
         const store = new PublicationCommentaryStore(new InMemoryStorageProvider());
-        const useCase = new AddPublicationCommentaryUseCase(store);
+        const useCase = new AddPublicationCommentaryUseCase(store, makeIdentity('Alice'));
 
         // The same underlying Document produced this Publication, and
         // this Publication's own contentReference carries a content
@@ -95,18 +118,21 @@ async function runTests() {
     }
 
     // -------------------------------------------------------------
-    // Section C — Author identity
+    // Section C — Author identity comes from the injected provider
     // -------------------------------------------------------------
     {
         const store = new PublicationCommentaryStore(new InMemoryStorageProvider());
-        const useCase = new AddPublicationCommentaryUseCase(store);
+        const aliceProvider = makeIdentity('Alice');
+        const bobProvider = makeIdentity('Bob');
+        const aliceIdentityId = aliceProvider.getSigningIdentity().id;
+        const bobIdentityId = bobProvider.getSigningIdentity().id;
 
-        const { commentary: aliceComment } = useCase.execute(validInput({ authorIdentityId: 'alice' }));
-        const { commentary: bobComment } = useCase.execute(validInput({ authorIdentityId: 'bob' }));
+        const { commentary: aliceComment } = new AddPublicationCommentaryUseCase(store, aliceProvider).execute(validInput());
+        const { commentary: bobComment } = new AddPublicationCommentaryUseCase(store, bobProvider).execute(validInput());
 
-        assert(aliceComment.authorIdentityId === 'alice', 'C1. the supplied author identity is preserved exactly');
-        assert(bobComment.authorIdentityId === 'bob', 'C2. a different supplied author identity is preserved exactly, independently');
-        assert(store.getById(aliceComment.commentaryId).authorIdentityId === 'alice', 'C3. author identity survives the round trip through the real store');
+        assert(aliceComment.authorIdentityId === aliceIdentityId, 'C1. the author identity comes from the injected identityProvider');
+        assert(bobComment.authorIdentityId === bobIdentityId, 'C2. a different injected identityProvider yields a different author identity');
+        assert(store.getById(aliceComment.commentaryId).authorIdentityId === aliceIdentityId, 'C3. author identity survives the round trip through the real store');
     }
 
     // -------------------------------------------------------------
@@ -114,7 +140,7 @@ async function runTests() {
     // -------------------------------------------------------------
     {
         const store = new PublicationCommentaryStore(new InMemoryStorageProvider());
-        const useCase = new AddPublicationCommentaryUseCase(store);
+        const useCase = new AddPublicationCommentaryUseCase(store, makeIdentity('Alice'));
 
         let threw = false;
         try { useCase.execute(validInput({ content: '' })); } catch (e) { threw = true; }
@@ -128,11 +154,7 @@ async function runTests() {
         try { useCase.execute(validInput({ publicationId: undefined })); } catch (e) { threw = true; }
         assert(threw, 'D3. a missing publicationId is rejected');
 
-        threw = false;
-        try { useCase.execute(validInput({ authorIdentityId: undefined })); } catch (e) { threw = true; }
-        assert(threw, 'D4. a missing authorIdentityId is rejected');
-
-        assert(store.loadAll().length === 0, 'D5. none of the rejected attempts ever reached persistence');
+        assert(store.loadAll().length === 0, 'D4. none of the rejected attempts ever reached persistence');
     }
 
     // -------------------------------------------------------------
@@ -140,7 +162,7 @@ async function runTests() {
     // -------------------------------------------------------------
     {
         const store = new PublicationCommentaryStore(new WriteFailingStorageProvider());
-        const useCase = new AddPublicationCommentaryUseCase(store);
+        const useCase = new AddPublicationCommentaryUseCase(store, makeIdentity('Alice'));
 
         let threw = false;
         let result;
@@ -158,7 +180,7 @@ async function runTests() {
     // -------------------------------------------------------------
     {
         const store = new PublicationCommentaryStore(new InMemoryStorageProvider());
-        const useCase = new AddPublicationCommentaryUseCase(store);
+        const useCase = new AddPublicationCommentaryUseCase(store, makeIdentity('Alice'));
 
         const fixedInput = validInput({
             commentaryId: 'fixed-commentary-id',
@@ -194,8 +216,8 @@ async function runTests() {
     {
         const storeOne = new PublicationCommentaryStore(new InMemoryStorageProvider());
         const storeTwo = new PublicationCommentaryStore(new InMemoryStorageProvider());
-        const useCaseOne = new AddPublicationCommentaryUseCase(storeOne);
-        const useCaseTwo = new AddPublicationCommentaryUseCase(storeTwo);
+        const useCaseOne = new AddPublicationCommentaryUseCase(storeOne, makeIdentity('Alice'));
+        const useCaseTwo = new AddPublicationCommentaryUseCase(storeTwo, makeIdentity('Bob'));
 
         const { commentary: c1 } = useCaseOne.execute(validInput({ content: 'only in store one' }));
         const { commentary: c2 } = useCaseTwo.execute(validInput({ content: 'only in store two' }));
@@ -222,7 +244,7 @@ async function runTests() {
                 return true;
             }
         };
-        const useCase = new AddPublicationCommentaryUseCase(fakeStore);
+        const useCase = new AddPublicationCommentaryUseCase(fakeStore, makeIdentity('Alice'));
 
         const { commentary, isNew } = useCase.execute(validInput({ content: 'via a fake store' }));
 
@@ -230,8 +252,12 @@ async function runTests() {
         assert(isNew === true, 'H2. the use case trusts the injected store\'s own return value rather than deriving its own');
 
         let threw = false;
-        try { new AddPublicationCommentaryUseCase(null); } catch (e) { threw = true; }
+        try { new AddPublicationCommentaryUseCase(null, makeIdentity('Alice')); } catch (e) { threw = true; }
         assert(threw, 'H3. a missing store is rejected at construction, not at first use');
+
+        threw = false;
+        try { new AddPublicationCommentaryUseCase(fakeStore, null); } catch (e) { threw = true; }
+        assert(threw, 'H4. a missing identityProvider is rejected at construction, not at first use');
     }
 
     console.log('\n✅ All AddPublicationCommentaryUseCase tests passed.');

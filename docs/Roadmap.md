@@ -81784,3 +81784,128 @@ boundary answers by default. This milestone's job is only to make sure
 that whichever one comes next, no future UI code ever constructs or
 persists a `PublicationCommentary` directly — it goes through this use
 case instead.
+
+## 0.9.245 — Publication Commentary Authorship Boundary
+
+0.9.244's own header named a gap deliberately, rather than hid it:
+`authorIdentityId` was "supplied by the caller, not derived or
+authenticated" — the right restraint while no UI existed to abuse it,
+and the wrong one the moment a real Editor/Publication UI can call
+`AddPublicationCommentaryUseCase` with attacker-controlled input,
+creating an obvious authorship-spoofing path. This milestone closes
+exactly that gap, and only that gap:
+
+```text
+{ publicationId, content, createdAt?, commentaryId? }
+     │
+     │  AddPublicationCommentaryUseCase.execute()   ◄── no
+     │                                                  authorIdentityId
+     │                                                  accepted at all
+     ▼
+resolveSigningIdentityId(identityProvider)   (identity/
+     │                                        resolveSigningIdentityId.js,
+     │                                        0.2.95 — unmodified, reused
+     │                                        exactly as
+     │                                        CreateDocumentManagerUseCase,
+     │                                        ForkDocumentUseCase,
+     │                                        ForkPublishedWorldUseCase
+     │                                        and ForkStructureUseCase
+     │                                        already reuse it for
+     │                                        DocumentMetadata authorship)
+     ▼
+authorIdentityId
+     ▼
+PublicationCommentary                  (0.9.242, unmodified)
+     ▼
+PublicationCommentaryStore.save()      (0.9.243, unmodified)
+```
+
+### What this milestone changes
+
+* `application/AddPublicationCommentaryUseCase.js` — the constructor now
+  requires an `identityProvider` alongside the `store`; `execute()` no
+  longer accepts `authorIdentityId` as input at all. Not merely unused —
+  the destructured input never names it, so a caller's
+  `authorIdentityId` field, however it got there, is silently inert,
+  exactly like any other unrecognized property on a destructured
+  argument. `authorIdentityId` is instead resolved from the injected
+  `identityProvider`'s own currently-authenticated signing identity, via
+  `resolveSigningIdentityId()` — no new identity system, no new session
+  concept, just the same 0.2.95 tolerant lookup four other use cases
+  already share. Throws before constructing or persisting anything when
+  no identity is authenticated ("sign in to comment on a publication"),
+  mirroring `CreatePublicationAnchorUseCase`'s own refusal for the
+  identical reason.
+* **No new authorization system**, per the milestone's own brief. This
+  boundary answers only "who is the caller, really" — never "is this
+  identity allowed to comment on this Publication." That remains a
+  fully separate, later, deliberately deferred decision, exactly as
+  0.9.244 already deferred it. Authentication and authorization stay two
+  different questions.
+* Every other 0.9.244 behavior is unchanged: no separate envelope-
+  validation step (`PublicationCommentary`'s own constructor is still
+  the only content/publicationId validation that runs); `commentaryId`
+  is still an optional passthrough for caller-side retry idempotency;
+  the `{ commentary, isNew }` result shape is unchanged; write failures
+  still propagate unmodified out of `PublicationCommentaryStore.save()`.
+* `tests/AddPublicationCommentaryUseCase.test.js` (updated) — its own
+  eight sections now construct the use case with a real, authenticated
+  `LocalIdentityProvider` (the same pattern
+  `tests/PublicationAnchorCreation.test.js` already uses) in place of a
+  caller-supplied `authorIdentityId`, keeping its original coverage
+  (content/publicationId validation, storage-failure propagation,
+  duplicate-identity handling, store isolation, the duck-typed-store
+  dependency) exercising this use case's own behavior rather than the
+  authorship boundary.
+* `tests/PublicationCommentaryAuthorship.test.js` (new), eight sections:
+  the authenticated identity becomes the author; a caller-supplied
+  `authorIdentityId` — even one naming a different, real identity — is
+  never read; creation without an authenticated identity fails cleanly,
+  before any commentary is constructed or persisted; switching which
+  identity is authenticated changes only new commentary, never
+  previously-saved records; `publicationId` stays independent of which
+  identity authored a comment; the use case still depends only on a
+  duck-typed store's own `save()` contract; the authenticated author
+  survives a full round trip through the real store; and identity-
+  resolution failure never reaches the store at all, while a genuine
+  storage failure still propagates exactly as 0.9.244 established.
+
+Also registers `tests/PublicationCommentaryAuthorship.test.js` in
+`tests.html`'s own runner list.
+
+### Explicitly deferred
+
+Still not part of this milestone, on purpose: publication visibility
+authorization, "who may comment" policy, comment editing,
+deletion/retraction, replies, threading, reactions, moderation,
+notifications, UI, Nostr/peer propagation, decentralized commentary
+discovery, real-time synchronization, collaboration operation
+envelopes, and causal metadata. `PublicationCommentary` itself is
+untouched — this milestone never makes the domain responsible for
+authentication; authentication is an application concern, and the
+domain only ever sees the resulting `authorIdentityId`, exactly as it
+always has.
+
+### The emerging architecture
+
+```text
+Publication commentary
+    ────────────────► PublicationCommentary          (0.9.242)
+                       authored immutable fact
+                            │
+                            ▼
+                       AddPublicationCommentaryUseCase (0.9.244)
+                            │
+                            ▼
+                       authenticated authorship        (0.9.245, this
+                                                         milestone)
+```
+
+The caller now provides only the publication and the commentary
+content; the application determines the author. That leaves 0.9.246 a
+natural candidate for the first Publication Commentary UI integration:
+the UI can stay extremely thin — `publicationId` + `content` in,
+`AddPublicationCommentaryUseCase` handles authenticated authorship,
+domain construction, and persistence — never a UI that determines its
+own author, constructs its own domain object, or writes its own
+storage.
