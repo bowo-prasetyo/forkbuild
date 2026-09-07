@@ -391,14 +391,18 @@ async function runTests() {
             'D2. ui/components/OwnPublicationPanel.js still renders {{ commentary.authorIdentityId }} for every commentary entry — identity display already exists, as the raw authenticated identity id (no profile-name resolution).');
         seamRegister.push(['identity display', 'COMPLETE (raw authorIdentityId shown per entry; no display-name resolution)']);
 
-        // D3. Commentary count. publicationCommentaries.length is read
-        // exactly once, only as a boolean empty-state gate — never
-        // rendered as a number anywhere.
-        assert((panel.match(/publicationCommentaries\.length/g) || []).length === 1,
-            'D3a. ui/components/OwnPublicationPanel.js still reads publicationCommentaries.length exactly once.');
-        assert(!/\{\{\s*publicationCommentaries\.length\s*\}\}/.test(panel),
-            'D3b. ui/components/OwnPublicationPanel.js still never renders publicationCommentaries.length as a visible number — the data already sits in component state, but no count is displayed.');
-        seamRegister.push(['count', 'MISSING_UI — length already in component state, never rendered as a number']);
+        // D3. Commentary count. This milestone's own MISSING_UI finding —
+        // publicationCommentaries.length read only as a boolean
+        // empty-state gate, never rendered as a number — was closed by
+        // 0.9.251 (see ui/components/OwnPublicationPanel.js's own
+        // "0.9.251" header): the SAME array's own .length is now also
+        // read directly by the section title's template interpolation,
+        // with no new state, method, or use case added to compute it.
+        assert(/\{\{\s*publicationCommentaries\.length\s*\}\}/.test(panel),
+            'D3a. ui/components/OwnPublicationPanel.js now renders publicationCommentaries.length as a visible number (0.9.251).');
+        assert(!codeOnlyLines(panel).includes('GetPublicationCommentaryCountUseCase') && !/computed\s*:/.test(codeOnlyLines(panel)),
+            'D3b. The count is still derived directly from the existing publicationCommentaries array — no dedicated count use case or computed property was introduced.');
+        seamRegister.push(['count', 'COMPLETE (0.9.251) — rendered from the existing publicationCommentaries.length, no new state']);
 
         // D4. Commentary navigation (e.g. a deep link or scroll-to a
         // specific commentaryId). No route, anchor, or scroll-target
@@ -467,7 +471,7 @@ async function runTests() {
         assert(seamRegister.length === 9,
             'D10. All nine seams this milestone\'s own brief names were tested individually.');
 
-        console.log('✓ D: Commentary\'s own remaining seams, tested individually rather than assumed. One real REACHABLE_BUT_INTERNAL finding — single-commentary detail/inspection (getById()) is fully built at the domain and storage layers with zero application/UI callers. One COMPLETE finding already in production — identity display (raw authorIdentityId, per entry). One MISSING_UI finding — count (data already in component state, never rendered as a number). Six MISSING_DOMAIN_CAPABILITY findings, each deliberate per its own layer\'s header, reconfirmed against real code rather than restated: navigation, notifications, discovery, persistence management, moderation/removal, and synchronization.');
+        console.log('✓ D: Commentary\'s own remaining seams, tested individually rather than assumed. One real REACHABLE_BUT_INTERNAL finding — single-commentary detail/inspection (getById()) is fully built at the domain and storage layers with zero application/UI callers. Two COMPLETE findings already in production — identity display (raw authorIdentityId, per entry) and count (rendered from publicationCommentaries.length, closed by 0.9.251, re-verified here). Six MISSING_DOMAIN_CAPABILITY findings, each deliberate per its own layer\'s header, reconfirmed against real code rather than restated: navigation, notifications, discovery, persistence management, moderation/removal, and synchronization.');
 
         console.log('\nCommentary seam register:');
         for (const [name, status] of seamRegister) {
@@ -576,7 +580,7 @@ async function runTests() {
 'COMMENTARY SEAMS (Section D)\n' +
 '    detail/inspection        REACHABLE_BUT_INTERNAL (getById(), zero real callers)\n' +
 '    identity display          COMPLETE (raw id, no profile-name resolution)\n' +
-'    count                      MISSING_UI\n' +
+'    count                      COMPLETE (0.9.251 — rendered from publicationCommentaries.length)\n' +
 '    navigation                 MISSING_DOMAIN_CAPABILITY\n' +
 '    notifications               MISSING_DOMAIN_CAPABILITY (absent codebase-wide)\n' +
 '    discovery                   MISSING_DOMAIN_CAPABILITY\n' +
@@ -595,10 +599,11 @@ async function runTests() {
 '       question, so still not to be built speculatively — but Commentary\n' +
 '       shipping is the precondition 0.9.241 said was missing, and that\n' +
 '       precondition is now satisfied.\n' +
-'    2. Commentary UI enhancement (count display, identity-to-profile-name\n' +
-'       resolution, surfacing detail/inspection via the already-built\n' +
-'       getById()) — low-risk, MISSING_UI/REACHABLE_BUT_INTERNAL, not\n' +
-'       urgent, addressable independently of every other candidate here.\n' +
+'    2. Commentary UI enhancement (identity-to-profile-name resolution,\n' +
+'       surfacing detail/inspection via the already-built getById()) —\n' +
+'       count display itself was closed by 0.9.251; the remaining items\n' +
+'       are low-risk, REACHABLE_BUT_INTERNAL/MISSING_UI, not urgent,\n' +
+'       addressable independently of every other candidate here.\n' +
 '    3. Commentary moderation/removal — MISSING_DOMAIN_CAPABILITY, deliberately\n' +
 '       deferred pending real evidence of a retraction/abuse need; would\n' +
 '       require PublicationCommentary\'s first-ever mutation method, a\n' +
