@@ -80505,3 +80505,175 @@ every command. Two directions remain, and they are no longer symmetric:
 Choosing between them — or scoping 0.9.236A to exactly the command classes
 that need it, without inventing a general commutativity framework nobody
 has asked for yet — is the next milestone's own decision, not this one's.
+
+## 0.9.236 — Recovered Operation Replay Boundary
+
+0.9.235 named the prerequisite either 0.9.236A or 0.9.236B would need
+before it could exist at all: a way to turn a recovered operation
+(KNOWN, never EXECUTED) into an actually executed one, without weakening
+`ReplayGuard` and without collapsing recovery's own "never automatically
+apply" boundary (0.9.230's own header). This milestone builds exactly
+that seam, and only that seam. It does not choose between 0.9.236A and
+0.9.236B — that choice remains open, now on a sound foundation instead of
+none.
+
+```text
+DocumentOperationRecoveryUseCase
+              |
+              v
+       verified RECOVERED
+              |
+              v
+   RecoveredOperationReplayUseCase
+              |
+              v
+       CommandHistory#execute()
+              |
+              v
+          EXECUTED
+```
+
+### What this milestone adds
+
+`application/RecoveredOperationReplayUseCase.js` (new). Two small, additive
+pieces of surface area:
+
+* `attachToRecovery(recovery)` — subscribes to a
+  `DocumentOperationRecoveryUseCase`'s own `onOperationReceived()` feed and
+  records every operation whose `provenance` is exactly
+  `DocumentOperationProvenance.RECOVERED`, keyed by
+  `${documentId}::${operationId}`. Recording only — never a call to
+  `replay()`.
+* `replay({ documentId, operationId }, target)` — the ONE explicit,
+  caller-invoked act that can turn a recorded, recovered operation into an
+  actually executed one. `target` is `{ documentId, commandHistory }`, the
+  identical shape `RemoteDocumentOperationApplicationUseCase#apply()`
+  already requires. Returns `DocumentOperationReplayOutcome.REPLAYED` or
+  `.NOT_REPLAYED` — mirroring `DocumentOperationApplicationOutcome`'s own
+  two-value shape — and never throws for an unknown operation, a
+  document mismatch, or an already-executed operation; only for a
+  malformed `(documentId, operationId)` pair.
+
+`application/EditorSession.js` wires this exactly once more than the
+minimum: a session-lifetime `RecoveredOperationReplayUseCase` records
+every operation the session's own `documentOperationRecovery` recovers
+(same optional, graceful-degradation posture as every other collaborator
+here), and a new `replayRecoveredOperation(documentId, operationId)`
+method resolves the session's own currently-open document as `target` and
+calls `replay()`. Nothing in `EditorSession` ever calls that method
+itself — it exists so a future caller (a UI affordance, or a future
+0.9.237 deferral mechanism) has something concrete to call.
+
+### The central invariant
+
+> A recovered operation never changes document state merely because it
+> was recovered; it changes state only through an explicit call to
+> `replay()`.
+
+```text
+A recovered
+B depends on A
+
+Before replay:
+  A -> RECOVERED
+  B -> NOT_READY
+
+After explicit replay(A):
+  A -> EXECUTED
+  B -> READY
+```
+
+### Why this is safe: composition, not a new trust path
+
+`replay()` performs no independent verification. It trusts exactly what
+`DocumentOperationRecoveryUseCase#onOperationReceived()` already handed
+it — itself gated by `DocumentCommandPropagationUseCase#verifyEnvelope()`,
+the same five-step chain an ordinarily-arrived operation survives. There
+is no way to hand `replay()` a raw command payload; its only inputs are
+`(documentId, operationId)`, so an operationId that never passed
+recovery's own verification simply cannot be replayed, no matter how it
+is spelled (Section D).
+
+`replay()` executes the SAME `Command` instance recovery itself
+deserialized — reference-identical, never a re-parse or a substitute
+(Section B, asserted by `===`).
+
+Document isolation is enforced twice over, the same guard
+`RemoteDocumentOperationApplicationUseCase#apply()` already applies: the
+recorded entry is keyed by the document it was recovered FOR, and
+`replay()` additionally requires `target.documentId === documentId`. A
+recovered operation for Document A can never be replayed into Document B,
+whether by naming the wrong `documentId` or by handing a `target` whose
+own `documentId` doesn't match (Section C).
+
+Idempotency is answered by `CommandHistory#getExecutedCommands()` itself
+— the one real source of truth for what actually executed — never by a
+second "already replayed" flag this class would have to keep in sync.
+This is deliberately NOT `ReplayGuard`: that guard already answered "was
+this envelope ever accepted off the wire," a question recovery itself
+settled once; `replay()`'s own question — "has this replica's document
+already executed this operation" — is a different one, and conflating
+them would leave no way to tell the two apart if they ever disagreed
+(Section E: replaying the same operation twice executes it exactly once).
+
+### No new provenance value
+
+Deliberately conservative, on purpose: this milestone does NOT add a
+third `DocumentOperationProvenance` value (no `REPLAYED`). The semantic
+fact after a successful `replay()` is simply that the operation is now
+EXECUTED — indistinguishable, in `CommandHistory#getExecutedCommands()`,
+from any other executed operation. That it originally arrived through
+recovery is provenance `RecoveredOperationReplayUseCase` remembers
+privately (so a repeat `replay()` call can still find it and answer
+`NOT_REPLAYED` via the already-executed check), never new public
+vocabulary. A future genuine need to distinguish "locally authored
+execution" from "execution of a recovered operation" deserves its own
+seam later, the same restraint 0.9.231 already applied to KNOWN vs
+EXECUTED.
+
+### Tests
+
+`tests/RecoveredOperationReplayUseCase.test.js` (new), against the real
+recovery + propagation chain, never a synthetic stand-in:
+
+A/F. Recovering `A` leaves the document unchanged; only an explicit
+   `replay(A)` call changes it — recovery's own non-applying boundary
+   holds, proven alongside the new seam rather than merely re-asserted.
+B. The `Command` instance `CommandHistory` executes is
+   reference-identical to the one recovery itself verified and
+   deserialized.
+C. A recovered operation for Document A cannot be replayed into Document
+   B — neither by naming the wrong `documentId` nor by handing a `target`
+   for the wrong document.
+D. An operationId that never passed recovery's own verification cannot be
+   replayed.
+E. Replaying the same operation twice executes it exactly once.
+G. After explicit `replay(A)`, re-querying `B`'s own readiness
+   (`evaluateApplicationReadiness()`, 0.9.234) transitions from
+   `NOT_READY` to `READY`, without `B` itself ever being re-applied or
+   re-executed.
+
+### Deliberately excluded, on purpose
+
+No pending queue, no automatic replay, no application of recovered
+operations without an explicit call, no causal reordering, no conflict
+resolution, no CRDT, no OT, no convergence guarantee, no command
+commutativity classification, no change to `ARRIVAL_ORDER`, no
+`ReplayGuard` change, no change to `DocumentOperationRecoveryUseCase`'s
+own "never automatically apply" boundary, no change to `CommandHistory`,
+no new `DocumentOperationProvenance` value. The user/application must
+explicitly invoke `replay()` — nothing in this codebase, before or after
+this milestone, ever calls it on its own.
+
+### Recommendation
+
+The seam 0.9.235's own "Recommendation" required now exists. 0.9.237
+(whichever of 0.9.236A/0.9.236B — or a scoped hybrid — is chosen) can be
+built directly on `RecoveredOperationReplayUseCase#replay()`: a deferred
+`NOT_READY` operation's missing predecessor, once recovered, has a
+principled, verified, idempotent, document-scoped path to becoming part
+of actual document history, rather than a mechanism that would otherwise
+have nowhere safe to route "the predecessor is now available" evidence
+into real execution. That choice — and whether all operations should be
+deferred or only non-commutative ones — remains exactly as open as
+0.9.235 left it.
