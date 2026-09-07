@@ -82492,3 +82492,176 @@ later, evidence-driven decision (a "Post-Publication-Commentary Product
 Reassessment," in the same spirit as 0.9.241's own post-collaboration
 reassessment), the same pattern this whole commentary arc has already
 followed at every step.
+
+## 0.9.250 — Post-Publication-Commentary Product Reassessment
+
+0.9.242-0.9.249 closed the Publication Commentary arc: a domain
+boundary that ties commentary to an immutable Publication rather than a
+mutable Document, durable append-only storage, an authenticated/
+authorized write command, an unauthenticated read/query command, real
+UI integration through `WorldNavigationSession` into
+`OwnPublicationPanel`, and a ten-section lifecycle/isolation audit that
+found the implementation already correct on every property it tested.
+
+This milestone is **test-only**, in the same posture 0.9.221 took after
+the first product-evolution baseline arc and 0.9.241 took after the
+collaboration arc: step back and ask what the repository's own evidence
+says comes next, rather than assuming Commentary itself must be
+extended.
+
+```text
+Publication
+    │
+    ▼
+PublicationCommentary
+    │
+    ├── persistent storage
+    ├── authenticated authorship
+    ├── authorization
+    ├── read command
+    └── write command
+          │
+          ▼
+WorldNavigationSession
+          │
+          ▼
+WorldView
+          │
+          ▼
+OwnPublicationPanel
+```
+
+### What this milestone adds
+
+`tests/PostPublicationCommentaryProductReassessment.test.js` (new), in
+six sections:
+
+* **Section A — Commentary capability closure.** One representative
+  wiring signal per stage of the pipeline above, read fresh from the
+  real, unmodified source: `PublicationCommentary` keys on
+  `publicationId`, never `documentId`; `PublicationCommentaryStore`
+  exposes `save()`/`getById()`/`getForPublication()` and, checked
+  against its own code rather than its header's claim, no
+  `remove()`/`update()`/`clear()`; `AddPublicationCommentaryUseCase`
+  resolves authorship via `resolveSigningIdentityId()` and never reads
+  an `authorIdentityId` off its input; authorization
+  (`CanCommentOnPublicationUseCase.execute()`) runs strictly before
+  `PublicationCommentary` is ever constructed; the read command takes
+  no `identityProvider` at all; `WorldNavigationSession`'s two
+  commentary methods are pure delegation; `CreateWorldViewUseCase`
+  composes the whole chain from the exact same `storageProvider`/
+  `discoveryProvider`/`identityProvider` every other local collaborator
+  already shares; and `OwnPublicationPanel` still imports none of the
+  five commentary domain/storage/use-case classes.
+* **Section B — Lifecycle closure, reused rather than reproduced.**
+  Rather than re-running 0.9.249's own 755 lines, this section
+  re-verifies a handful of the cheapest, most durable structural facts
+  those ten sections depend on — the storage key is unchanged, no
+  authorship identity is cached on the use case instance, the UI still
+  re-queries instead of appending on a successful submission, and read/
+  write failures still surface through `publicationCommentaryError` —
+  then states the verdict: **Publication Commentary baseline COMPLETE.**
+* **Section C — Repository-wide capability/reachability sweep.** All
+  twelve areas this milestone's brief named — Editor, World Navigation,
+  World Presence, Vehicles, Publication, Snapshot, Commentary,
+  Collaboration, Discovery, Distribution, Recovery, History — each
+  reconfirmed reachable from a real product entry point on one fresh,
+  concrete, grep-verifiable composition-root signal (e.g.
+  `ui/views/EditorView.js` still constructs a real `EditorSession`;
+  `ui/views/WorldView.js` still mounts a real `HistoryTimelinePanel`).
+  All twelve classify COMPLETE; the only sub-finding is the legacy
+  0.2.7-0.2.9 collaboration protocol 0.9.241 already classified
+  OBSOLETE_CANDIDATE, reconfirmed still zero-caller and still
+  undeleted. Nothing new is stranded at this macro level.
+* **Section D — Commentary's own remaining seams**, tested individually
+  rather than assumed present or absent, per this milestone's own
+  brief: detail/inspection, identity display, count, navigation,
+  notifications, discovery, persistence management, moderation/
+  removal, synchronization. The one genuine finding:
+  `core/PublicationCommentaryCollection.js#getPublicationCommentaryById()`
+  and `storage/PublicationCommentaryStore.js#getById()` — single-
+  commentary detail/inspection — are already fully built at the domain
+  and storage layers, with **zero** callers anywhere in `application/`
+  or `ui/` outside their own files. Classified
+  **REACHABLE_BUT_INTERNAL**. Identity display is already **COMPLETE**
+  in production (the template renders `{{ commentary.authorIdentityId
+  }}` per entry, as a raw id, with no profile-name resolution). Count
+  is **MISSING_UI** — `publicationCommentaries.length` already sits in
+  component state and is read exactly once, only as the empty-state
+  boolean gate, never rendered as a visible number. The remaining six —
+  navigation, notifications, discovery, persistence management,
+  moderation/removal, synchronization — are each **MISSING_DOMAIN_
+  CAPABILITY**, reconfirmed absent against real code (not merely
+  restated from a header's own claim) in every layer that would carry
+  them. The milestone's own requested distinction is drawn explicitly
+  and grounded in where this evidence actually lives: a commentary UI
+  enhancement would touch only `OwnPublicationPanel`'s own template;
+  synchronization would need an observer/transport layer neither the
+  domain nor storage boundary has ever carried; collaboration would
+  mean importing the entire 0.9.222-0.9.240 causal chain; moderation
+  would require `PublicationCommentary`'s first-ever mutation method —
+  four different architectural layers, not four flavors of the same
+  feature.
+* **Section E — Collaboration boundary, reconfirmed.** No
+  collaboration-arc vocabulary (causal predecessors, logical clocks,
+  operation ids, `DocumentOperationEnvelope`, `ReplayGuard`,
+  `CommandHistory`, readiness/eligibility/deferral, CRDT/OT) exists in
+  any of the six commentary files' own code;
+  `WorldNavigationSession`'s two commentary methods reference none of
+  it; `PublicationCommentary`'s own constructor still accepts exactly
+  five fields, no causal identity of any kind. The reason stays
+  architectural, not merely observed: a comment is a single authored
+  fact about an already-published, immutable Publication — there is no
+  shared mutable state here for causal ordering, gap detection, or
+  recovery to do anything with, because nothing in commentary is ever
+  merged with anything else.
+* **Section F — Verdict.** Publication Commentary baseline COMPLETE; all
+  twelve repository areas remain reachable with no new macro-level gap;
+  Commentary's own seams individually classified (one
+  REACHABLE_BUT_INTERNAL, one COMPLETE, one MISSING_UI, six deliberate
+  MISSING_DOMAIN_CAPABILITY); the collaboration boundary holds. Four
+  candidates for the next product seam are ranked, with reasoning, but
+  none selected: **(1) notifications** — still genuinely absent
+  codebase-wide, and now has the concrete first cross-user event
+  0.9.241 Section C4 predicted it would need ("someone commented on
+  your Publication"), satisfying the precondition that milestone said
+  was missing, though still a delivery-guarantee question and so still
+  not built speculatively; **(2) commentary UI enhancement** (count
+  display, identity-to-profile-name resolution, surfacing the
+  already-built `getById()`) — low-risk, addressable independently of
+  everything else here; **(3) commentary moderation/removal** —
+  deliberately deferred pending real evidence of need; **(4) commentary
+  synchronization** — deliberately deferred for the same delivery-
+  guarantee caution 0.9.225/0.9.240/0.9.241 already established.
+
+Registers the new test in `tests.html`.
+
+### Findings
+
+Every property this milestone tested held on the first run, against the
+real, unmodified source — no production file changed. The one
+noteworthy discovery is Section D's `getById()` finding: a capability
+this codebase already built (single-commentary lookup, at both the
+domain and storage layers) has never been wired above the storage
+boundary — a smaller-scale echo of the pattern 0.9.241 and its own
+predecessors kept finding at larger scale, that the best next feature
+is sometimes already implemented but unreachable.
+
+### What this milestone deliberately excludes
+
+Per its own brief and per its own restraint: no replies, threading,
+editing, deletion, moderation, notifications, live synchronization, or
+decentralized commentary distribution is added, exercised, or assumed
+anywhere in the new test file. No production source file changed.
+Commentary itself is deliberately **not** automatically selected as the
+next development area — the milestone ranks candidates and stops.
+
+### What comes after
+
+No 0.9.251 is preselected. Per this milestone's own Section F: the
+repository and existing architecture name four ranked candidates
+(notifications; commentary UI enhancement; commentary moderation/
+removal; commentary synchronization) without choosing among them.
+Selecting and building one is a separate, later, evidence-driven
+decision — the same restraint 0.9.221, 0.9.241, and now 0.9.250 have
+each held in turn.
