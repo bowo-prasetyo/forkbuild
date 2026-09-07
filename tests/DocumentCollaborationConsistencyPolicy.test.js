@@ -21,10 +21,7 @@ import {
     DocumentCommandPropagationUseCase,
     DocumentOperationRejectionReason
 } from '../application/DocumentCommandPropagationUseCase.js';
-import {
-    RemoteDocumentOperationApplicationUseCase,
-    DocumentOperationApplicationOutcome
-} from '../application/RemoteDocumentOperationApplicationUseCase.js';
+import { RemoteDocumentOperationApplicationUseCase } from '../application/RemoteDocumentOperationApplicationUseCase.js';
 import {
     DOCUMENT_COLLABORATION_CONSISTENCY_POLICY,
     DeliveryOrderGuarantee,
@@ -38,6 +35,11 @@ import {
     DocumentIsolationGuarantee,
     ReplicaConvergenceGuarantee
 } from '../core/DocumentCollaborationConsistencyPolicy.js';
+import {
+    DocumentOperationDeferralUseCase,
+    DocumentOperationDeferralOutcome
+} from '../application/DocumentOperationDeferralUseCase.js';
+import { DocumentOperationCausalGapDetector } from '../core/DocumentOperationCausalGapDetector.js';
 
 // 0.9.226 — Document Collaboration Consistency Policy Boundary.
 //
@@ -228,25 +230,58 @@ let docCounter = 0;
 function nextWorldId(label) { docCounter += 1; return `doc-${label}-${docCounter}`; }
 
 // ===================================================================
-// Section 2 — application.remote is IMMEDIATE: apply() executes
-// synchronously, with no queue, the instant it is called — proven with
-// no transport and no `await` at all, directly against
-// RemoteDocumentOperationApplicationUseCase#apply().
+// Section 2 — application.remote is CAUSAL_READINESS (0.9.238, updated
+// from 0.9.226's own IMMEDIATE): a READY operation (no causal
+// predecessors, or predecessors already executed) still applies
+// synchronously — the same fact 0.9.226 named IMMEDIATE remains true of
+// RemoteDocumentOperationApplicationUseCase#apply() itself (see
+// RemoteApplicationTiming.IMMEDIATE's own, now-superseded, comment). But
+// a NOT_READY operation — one naming a causal predecessor this replica
+// has not yet recorded as executed — is retained instead of applied, and
+// released automatically, through the SAME apply() chokepoint, only once
+// that predecessor actually executes. Proven directly against
+// DocumentOperationDeferralUseCase, 0.9.237's own mechanism for this
+// guarantee, with no transport and no `await` at all: the release itself
+// is a synchronous CommandHistory#execute() -> COMMAND_EXECUTED cascade.
 // ===================================================================
 {
-    const worldId = nextWorldId('immediate');
+    const worldId = nextWorldId('causal-readiness');
     const document = buildBaseDocument({ worldId, authorIdentityId: aliceLaptop.identity.identityId, title: 'Section 2' });
-    const target = { documentId: worldId, commandHistory: new CommandHistory({ world: document.world }) };
-    const application = new RemoteDocumentOperationApplicationUseCase();
-    const command = new MoveBrickCommand({ worldId, buildingId: 'building-x', brickId: 'brick-a', delta: { x: 9, y: 0, z: 0 } });
+    const commandHistory = new CommandHistory({ world: document.world });
+    const causalGapDetector = new DocumentOperationCausalGapDetector();
+    const deferral = new DocumentOperationDeferralUseCase({ causalGapDetector });
+    deferral.attachCommandHistory({ documentId: worldId, commandHistory });
+    const target = { documentId: worldId, commandHistory };
+    // Mirrors application/EditorSession.js's own wiring: a
+    // DocumentOperationCausalGapObservationUseCase always records an
+    // arriving operation's causal identity BEFORE readiness is evaluated
+    // for anything naming it as a predecessor (see
+    // tests/DocumentOperationDeferralUseCase.test.js's own
+    // `receiveOperation()` helper for the identical ordering).
+    function receive(command, causalPredecessors) {
+        causalGapDetector.record(worldId, command.id, causalPredecessors);
+        return deferral.receive({ documentId: worldId, command, authorIdentityId: 'irrelevant', causalPredecessors }, target);
+    }
 
-    const outcome = application.apply({ documentId: worldId, command, authorIdentityId: 'irrelevant' }, target);
+    const opA = new MoveBrickCommand({ worldId, buildingId: 'building-x', brickId: 'brick-a', delta: { x: 9, y: 0, z: 0 } });
+    const outcomeA = receive(opA, []);
+    assert(outcomeA === DocumentOperationDeferralOutcome.APPLIED, '6. a READY (genesis) operation still applies synchronously — apply() reports APPLIED');
+    assert(brickX(document) === 9, '7. the effect is visible immediately on return — no microtask, no queue, no deferred window, for a READY operation');
 
-    assert(outcome === DocumentOperationApplicationOutcome.APPLIED, '6. apply() reports APPLIED synchronously');
-    assert(brickX(document) === 9, '7. the effect is visible immediately on return — no microtask, no queue, no deferred window');
-    assert(RemoteApplicationTiming.IMMEDIATE === DOCUMENT_COLLABORATION_CONSISTENCY_POLICY.application.remote,
-        '8. matches the declared policy: application.remote === IMMEDIATE');
-    console.log('✓ Section 2: application.remote = IMMEDIATE — apply() is a synchronous call onto CommandHistory#execute(), never queued');
+    const opB = new MoveBrickCommand({ worldId, buildingId: 'building-x', brickId: 'brick-a', delta: { x: 1, y: 0, z: 0 } });
+    const opPredecessor = new MoveBrickCommand({ worldId, buildingId: 'building-x', brickId: 'brick-a', delta: { x: 0, y: 0, z: 0 } });
+    const outcomeB = receive(opB, [opPredecessor.id]);
+    assert(outcomeB === DocumentOperationDeferralOutcome.DEFERRED, '8. a NOT_READY operation (its own named predecessor not yet executed) is retained, not applied');
+    assert(brickX(document) === 9, '9. Bs effect is not visible — deferral never mutates document state for a retained operation');
+    assert(deferral.getDeferredOperationIds(worldId).includes(opB.id), '10. B sits in the deferral boundarys own retained set');
+
+    receive(opPredecessor, []);
+    assert(brickX(document) === 10, '11. once the named predecessor actually executes, B is automatically released through the SAME apply() chokepoint');
+    assert(deferral.getDeferredOperationIds(worldId).length === 0, '12. nothing left retained once B is released');
+
+    assert(RemoteApplicationTiming.CAUSAL_READINESS === DOCUMENT_COLLABORATION_CONSISTENCY_POLICY.application.remote,
+        '13. matches the declared policy: application.remote === CAUSAL_READINESS');
+    console.log('✓ Section 2: application.remote = CAUSAL_READINESS — a READY operation still applies synchronously; a NOT_READY operation is retained and released only once its causal predecessors actually execute (see 0.9.237 for the full evidence, and 0.9.238\'s own audit for the stronger regression form of this same proof)');
 }
 
 // ===================================================================

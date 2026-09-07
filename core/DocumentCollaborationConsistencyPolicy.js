@@ -1,4 +1,5 @@
 // 0.9.226 — Document Collaboration Consistency Policy Boundary.
+// 0.9.238 — Causal-Readiness Policy Descriptor Transition.
 //
 // 0.9.222 built the trust boundary, 0.9.223 built the explicit
 // application seam, 0.9.224 wired both into the real EditorSession
@@ -31,6 +32,67 @@
 //   ordering     — what determines a replica's own CommandHistory order?
 //   conflict     — what happens when two operations don't commute?
 //   convergence  — do independent replicas end up in the same state?
+//
+// 0.9.238 update — `application.remote` was the one field this file's own
+// evidence outran. 0.9.226 named it `IMMEDIATE` because that was, at the
+// time, a true and complete description of
+// `RemoteDocumentOperationApplicationUseCase#apply()`: no queue, no
+// buffering, no deferred-application window, called synchronously the
+// instant an authorized, non-replayed operation was observed. 0.9.234
+// then named a real gap in that description (Q4 — "have this operation's
+// causal predecessors actually been EXECUTED, not merely KNOWN"), 0.9.235
+// audited it against the real runtime and found it live (a
+// `NOT_READY` operation applied immediately could silently and
+// permanently diverge a replica the moment a missing predecessor later
+// executed out of order), and 0.9.237 closed it in actual behavior:
+// `application/DocumentOperationDeferralUseCase.js` now retains a
+// `NOT_READY` operation instead of applying it, and releases it — through
+// the SAME `apply()` chokepoint, still called synchronously — only once
+// its named causal predecessors have genuinely executed. `IMMEDIATE` was
+// never a lie about that chokepoint; it was silent about a GATE in front
+// of it that now exists. See `RemoteApplicationTiming.CAUSAL_READINESS`
+// below for the field's own reassignment, and this field's own point:
+// deferral is 0.9.237's IMPLEMENTATION MECHANISM, never this policy's
+// vocabulary — the policy names the SEMANTIC guarantee ("applied only
+// once causal prerequisites are satisfied"), so a future milestone that
+// enforces the identical guarantee some other way (a different retention
+// structure, a scheduler, anything) is still describable by this same
+// enum member, without this file changing again.
+//
+// This update deliberately touches exactly one field.
+// `history.orderingBasis` stays `ARRIVAL_ORDER` — see that enum's own
+// comment, expanded below, for why causal deferral does not change what
+// determines a replica's own `CommandHistory` SEQUENCE among the
+// operations it has actually executed; it only changes WHEN a `NOT_READY`
+// operation is permitted to join that sequence at all.
+// `conflict.nonCommutingOperations` stays `UNDEFINED`, `missingOperations.
+// detection` stays `NONE`, `convergence.guaranteed` stays `NOT_GUARANTEED`
+// — 0.9.237's own header says this explicitly ("Ordering and conflict
+// resolution stay exactly as undecided as before"), and every one of
+// those fields is graded against evidence this milestone did not
+// generate and does not touch. Delivery order, causal dependency,
+// history execution order, and conflict resolution remain four distinct
+// questions this file answers separately, on purpose:
+//
+//   delivery order      — did operations ARRIVE in a guaranteed order?
+//                          (`delivery.order`, still NOT_GUARANTEED)
+//   causal dependency    — may a NOT_READY operation apply yet?
+//                          (`application.remote`, now CAUSAL_READINESS)
+//   history exec order   — once applied, what SEQUENCE does a replica's
+//                          own CommandHistory record them in?
+//                          (`history.orderingBasis`, still ARRIVAL_ORDER —
+//                          of RELEASE/application, not of original wire
+//                          delivery, for a formerly-deferred operation)
+//   conflict resolution  — when two applied operations don't commute,
+//                          which one wins? (`conflict.nonCommutingOperations`,
+//                          still UNDEFINED)
+//
+// Causal readiness answers only the second of those. An operation that
+// depends on nothing, or whose predecessors already executed, is exactly
+// as subject to `ARRIVAL_ORDER`/`UNDEFINED`/`NOT_GUARANTEED` as it always
+// was — 0.9.237's own deferral boundary never reorders, resolves, or
+// synchronizes anything; it only withholds application of operations this
+// policy's OWN `application.remote` field now says must wait.
 //
 // Two of those — missing-operation detection and duplicate suppression —
 // are named as their own fields below because 0.9.225 showed they are NOT
@@ -84,13 +146,36 @@ export const DeliveryOrderGuarantee = Object.freeze({
 });
 
 export const RemoteApplicationTiming = Object.freeze({
-    // `RemoteDocumentOperationApplicationUseCase#apply()` calls
-    // `target.commandHistory.execute(command)` synchronously, the instant
-    // an authorized, non-replayed operation is observed — no queue, no
-    // buffering, no deferred-application window (0.9.223's own header;
-    // reaffirmed by 0.9.225 Sections A/G/I, every one of which observes
-    // the effect immediately after delivery).
-    IMMEDIATE: 'immediate'
+    // SUPERSEDED as of 0.9.238 — kept as a named vocabulary member, never
+    // deleted, because it remains a true description of one real thing:
+    // `RemoteDocumentOperationApplicationUseCase#apply()` itself still
+    // calls `target.commandHistory.execute(command)` synchronously, with
+    // no queue and no buffering internal to that one call (0.9.223's own
+    // header; reaffirmed by 0.9.225 Sections A/G/I). What this value
+    // never described, and 0.9.226 had no evidence yet to name, is
+    // whether `apply()` is reached AT ALL for an operation whose causal
+    // predecessors have not themselves executed — 0.9.234's Q4, proven
+    // live by 0.9.235's own audit. Retained so a reader of old commits or
+    // old test evidence can see exactly what changed and why, never
+    // reassigned onto `application.remote` again.
+    IMMEDIATE: 'immediate',
+    // 0.9.238's own value, and `application.remote`'s current one. Names
+    // the SEMANTIC guarantee 0.9.237 built, not its implementation: a
+    // remote operation is applied only once every causal predecessor it
+    // names has actually EXECUTED on this replica (not merely been
+    // RECEIVED, RECORDED, or — 0.9.231's own distinction — RECOVERED).
+    // `application/DocumentOperationDeferralUseCase.js` is 0.9.237's own
+    // mechanism for this guarantee (retain-and-release through the same
+    // `apply()` chokepoint, gated by `core/DocumentOperationApplicationReadiness.js
+    // #evaluateApplicationReadiness()`), but this enum member names the
+    // GUARANTEE, not that mechanism — see this file's own top-of-file
+    // 0.9.238 comment for why that distinction is deliberate. An
+    // operation with no causal predecessors, or whose predecessors are
+    // already executed, is READY and still applies exactly as
+    // synchronously as `IMMEDIATE` above ever described — this value
+    // narrows WHEN `apply()` may be reached, it does not slow down what
+    // happens once it is.
+    CAUSAL_READINESS: 'causal_readiness'
 });
 
 export const HistoryOrderingBasis = Object.freeze({
@@ -100,6 +185,18 @@ export const HistoryOrderingBasis = Object.freeze({
     // has no concept of causal time, send time, or logical clock — it
     // only ever knows "what was executed on THIS replica, and in what
     // sequence."
+    //
+    // Unchanged by 0.9.237/0.9.238, on purpose — see this file's own
+    // top-of-file 0.9.238 comment for the full "four distinct questions"
+    // argument. Causal deferral changes ELIGIBILITY to enter this
+    // sequence (a `NOT_READY` operation cannot join it yet), never the
+    // BASIS for its order once an operation does join: a deferred
+    // operation, once released, lands in `CommandHistory` at the moment
+    // it is actually executed (its RELEASE order), same as any other
+    // operation always has — this enum still names arrival as the only
+    // ordering principle at play, it just now means "arrival at
+    // execution," which for a READY operation is the same instant as
+    // wire arrival, exactly as before.
     ARRIVAL_ORDER: 'arrival_order'
 });
 
@@ -201,7 +298,7 @@ export const DOCUMENT_COLLABORATION_CONSISTENCY_POLICY = Object.freeze({
         order: DeliveryOrderGuarantee.NOT_GUARANTEED
     }),
     application: Object.freeze({
-        remote: RemoteApplicationTiming.IMMEDIATE
+        remote: RemoteApplicationTiming.CAUSAL_READINESS
     }),
     history: Object.freeze({
         orderingBasis: HistoryOrderingBasis.ARRIVAL_ORDER
