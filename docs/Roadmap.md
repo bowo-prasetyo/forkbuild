@@ -80149,3 +80149,93 @@ if that observation period demonstrates a real need should a following
 milestone introduce the smallest possible buffering mechanism, with its
 own explicit semantic contract — never inventing that policy inside this
 file, and never inside `application/CommandHistory.js` by surprise.
+
+## 0.9.233 — Causal Application Eligibility Policy Audit
+
+Test-only. 0.9.232 named a fact — `ELIGIBLE`/`NOT_ELIGIBLE` — that nothing
+before it had a word for, but that fact was only ever exercised through
+`evaluateApplicationEligibility()` called directly, in isolation. This
+milestone answers one specific question, on the REAL receive path, not a
+synthetic one:
+
+```text
+when an operation is NOT_ELIGIBLE, what does this codebase actually do
+about it, today?
+```
+
+### What this milestone adds
+
+`tests/CausalApplicationEligibilityPolicyAudit.test.js` (new). No
+production code changes at all. The suite wires the real chain —
+
+```text
+DocumentOperationEnvelope -> DocumentCommandPropagationUseCase
+    -> DocumentOperationCausalGapObservationUseCase
+    -> DocumentOperationCausalGapDetector
+    -> DocumentOperationApplicationEligibility
+```
+
+— with a THIRD, independent subscriber on the same `onOperationReceived()`
+feed `DocumentOperationCausalGapObservationUseCase` and
+`RemoteDocumentOperationApplicationUseCase` already attach to
+independently of each other. This third subscriber (test code only) calls
+`evaluateApplicationEligibility()` against the SAME
+`DocumentOperationCausalGapDetector` instance gap observation itself
+records into, so its answer reflects the replica's real, cumulative
+causal knowledge. It only ever observes — it never calls `apply()` and
+never withholds a call to it.
+
+### Scenarios audited
+
+1. Genesis operation (no predecessors) -> `ELIGIBLE`.
+2. Normal successor, predecessor already received -> `ELIGIBLE`.
+3. Causal gap: predecessor never arrives -> `NOT_ELIGIBLE`, and the
+   operation STILL applies immediately — the flagship coexistence proof.
+4. Gap later repaired: the original `NOT_ELIGIBLE` observation is
+   untouched; re-evaluating is a deliberate, explicit query (never an
+   automatic replay), and answers `ELIGIBLE` once the predecessor is
+   known, without CommandHistory ever being touched.
+5. A predecessor known only through `DocumentOperationRecoveryUseCase`
+   (never executed) still satisfies a dependent's eligibility — causally
+   known != executed, 0.9.231's own distinction, now proven to be what
+   eligibility itself reads.
+6. Concurrent operations (`A -> {B, C}`) are independently `ELIGIBLE`;
+   neither's answer depends on the other's existence or arrival order.
+7. Two causally-eligible but semantically conflicting operations (e.g.
+   competing renames) are BOTH `ELIGIBLE` — eligibility never arbitrates a
+   winner; that stays a future conflict-resolution policy's job.
+8. A genuine causal gap (`B` depending on an operation that never
+   arrives) and mere concurrency (`C`, sharing no causal relationship
+   with anything) never collapse into the same eligibility answer.
+9. Subscriber registration order (eligibility observer registered before
+   gap observation, between it and application, or after both) never
+   changes either the eligibility answer or the application outcome —
+   eligibility is a read of shared causal state, not a participant in the
+   propagation feed's own dispatch order.
+
+### The flagship assertion
+
+```text
+received -> causal observation -> causal knowledge -> eligibility
+evaluation -> { ELIGIBLE | NOT_ELIGIBLE } -> existing application
+behavior, completely unchanged
+```
+
+Eligibility is now proven, against the real receive path rather than a
+synthetic call, to be OBSERVABLE but not CONTROLLING. `CommandHistory`,
+`RemoteDocumentOperationApplicationUseCase`, and `ReplayGuard` remain
+exactly as they were; recovery remains non-applying; no queue, buffering,
+retry, reordering, or conflict resolution exists anywhere in this
+codebase as of this milestone.
+
+### Recommendation
+
+Whether `NOT_ELIGIBLE` should ever come to mean "defer application" is
+now an explicit, isolated product decision, not an implementation detail
+to be discovered mid-refactor. A following milestone should choose
+between causal deferral (buffer `NOT_ELIGIBLE` operations until their
+prerequisites become known) and deliberate arrival-order collaboration
+(keep immediate application; eligibility stays diagnostic/recovery
+information only) — and only once that choice is made, design the
+smallest possible seam for it, kept separate from recovery, ordering, and
+conflict resolution.
