@@ -80880,3 +80880,144 @@ UNDEFINED`), a real ordering guarantee among mutually-concurrent
 operations, and automatic recovery/replay. Those stay separate, future
 decisions, on a foundation that no longer silently diverges while they
 remain undecided.
+
+## 0.9.238 — Causal-Readiness Policy Descriptor Transition
+
+0.9.237 changed runtime behavior; 0.9.226's own policy descriptor did
+not follow it. `core/DocumentCollaborationConsistencyPolicy.js#application.
+remote` still named `RemoteApplicationTiming.IMMEDIATE` — true of
+`RemoteDocumentOperationApplicationUseCase#apply()` itself, and never
+false, but silent about the gate 0.9.237 put in front of it: a
+`NOT_READY` operation no longer reaches that call at all until its named
+causal predecessors have actually executed. This milestone is
+declarative only — it changes what the policy SAYS to match what the
+runtime has done since 0.9.237, and proves the match with a real
+regression suite. No production code changes.
+
+```text
+0.9.226:  application.remote = IMMEDIATE
+              (true of apply() itself; silent about whether apply()
+               is ever REACHED for a NOT_READY operation)
+
+0.9.237:  runtime behavior changes — NOT_READY is deferred, not applied
+
+0.9.238:  application.remote = CAUSAL_READINESS
+              (names the guarantee 0.9.237 built: applied only once
+               causal prerequisites are satisfied — IMPLEMENTATION-
+               agnostic, so a future mechanism satisfying the identical
+               guarantee some other way needs no further policy change)
+```
+
+### What this milestone adds
+
+`core/DocumentCollaborationConsistencyPolicy.js` — one new enum member,
+one reassigned field, and comments that make the reasoning checkable
+in place rather than only in this Roadmap entry:
+
+* `RemoteApplicationTiming.CAUSAL_READINESS` (new). Names the semantic
+  guarantee 0.9.237 built — "applied only once every named causal
+  predecessor has actually EXECUTED" — deliberately as a description of
+  the GUARANTEE, never of `DocumentOperationDeferralUseCase`'s own
+  retain-and-release MECHANISM, so a future milestone that satisfies the
+  identical guarantee some other way does not need to touch this file
+  again. `RemoteApplicationTiming.IMMEDIATE` is kept, not deleted — it
+  remains a true, narrower statement (apply() itself is still a
+  synchronous call once reached) — and its own comment is updated to say
+  plainly that it is superseded and never reassigned onto `application.
+  remote` again, the same "add a member, reassign the field" discipline
+  this file's own header has called for since 0.9.226.
+* `application.remote` is reassigned from `IMMEDIATE` to
+  `CAUSAL_READINESS` — the only field this milestone changes.
+* `HistoryOrderingBasis.ARRIVAL_ORDER`'s own comment is expanded, not
+  changed in value: causal deferral changes ELIGIBILITY to enter a
+  replica's own `CommandHistory` sequence, never the BASIS for that
+  sequence's order once an operation does join it. A released,
+  formerly-deferred operation still lands at the moment it actually
+  executes — arrival-at-execution, exactly as every operation always has.
+* A new top-of-file section spells out four distinct questions this
+  policy answers separately — delivery order, causal dependency, history
+  execution order, conflict resolution — and states explicitly that
+  `conflict.nonCommutingOperations`, `missingOperations.detection`, and
+  `convergence.guaranteed` are untouched, with the same reasoning 0.9.237's
+  own header already gave ("Ordering and conflict resolution stay exactly
+  as undecided as before").
+
+`tests/DocumentCollaborationConsistencyPolicy.test.js` Section 2 is
+rewritten (its assertion of `IMMEDIATE` would now simply be false) to
+prove both halves of `CAUSAL_READINESS` directly against
+`DocumentOperationDeferralUseCase`: a READY (genesis) operation still
+applies synchronously — the fact `IMMEDIATE` always named, still true —
+and a `NOT_READY` operation is retained and released only once its named
+predecessor actually executes, through the identical `apply()` chokepoint.
+
+### Tests
+
+`tests/CollaborationConsistencyPolicyCausalReadinessAudit.test.js` (new).
+The flagship assertion this milestone exists to make: policy says
+`CAUSAL_READINESS` -> runtime defers `NOT_READY` -> runtime applies
+`READY`, proven against `DOCUMENT_COLLABORATION_CONSISTENCY_POLICY.
+application.remote` itself (never a hardcoded assumption of what the
+policy claims), on the real propagation chain (Section 2). The remaining
+six sections prove `CAUSAL_READINESS` does NOT mean:
+
+* total ordering among operations that merely share a successor — `A ->
+  C`, `B -> C` gates C on both, but never orders A relative to B; both
+  execution orders converge identically (Section 3);
+* conflict resolution — two CONCURRENT (no causal link named) absolute-set
+  writes, opposite delivery order, still diverge permanently, exactly as
+  0.9.226 Section 3 / 0.9.225 Section D1 already found, re-proven here
+  with the deferral boundary actually attached (Section 4);
+* replica convergence in general — a replica never told about an
+  operation at all (no causal relationship named, not a readiness gap)
+  still diverges permanently; deferral only ever withholds an operation
+  THIS replica actually received (Section 5);
+* synchronized undo — undoing a RELEASED, formerly-deferred operation
+  still reverts only the undoing replica's own state (Section 6);
+* automatic recovery — a merely RECOVERED (known, unexecuted) predecessor
+  never releases a deferred dependent; only an explicit
+  `RecoveredOperationReplayUseCase#replay()` call does, re-proven against
+  the real recovery + replay chain as this policy's own boundary
+  (Section 7);
+* automatic retransmission/retry — a dependent whose predecessor never
+  arrives by any means stays retained indefinitely; the deferral boundary
+  exposes no send/broadcast/request call anywhere in its own API, and
+  never times out or applies anyway (Section 8).
+
+Section 1 checks the policy shape itself: `CAUSAL_READINESS` is current,
+`IMMEDIATE` survives as a named-but-superseded member, and every
+neighboring field is unchanged.
+
+### Deliberately excluded, on purpose
+
+No new mechanism of any kind — this milestone is a vocabulary and
+documentation change plus regression tests, nothing else. No change to
+`DocumentOperationDeferralUseCase`, `CommandHistory`, `ReplayGuard`,
+`RemoteDocumentOperationApplicationUseCase`, or
+`RecoveredOperationReplayUseCase`. No change to `delivery.order`,
+`history.orderingBasis`'s own VALUE, `conflict.nonCommutingOperations`,
+`missingOperations.detection`, `duplicateOperations.suppression`,
+`undo.scope`, `undo.propagation`, `isolation.acrossDocuments`, or
+`convergence.guaranteed` — every one of those stays exactly what 0.9.226
+already named, for exactly the reasons 0.9.226 and 0.9.237 already gave.
+No commutativity classification, no total ordering, no conflict
+resolution, no CRDT, no OT, no convergence guarantee, no synchronized
+undo, no automatic recovery, no retransmission — this milestone proves
+those remain absent, it does not add any of them.
+
+### Recommendation
+
+The policy descriptor and the running system now agree again. What
+remains open is unchanged from 0.9.237's own recommendation: concurrent
+conflicting writes, a real ordering guarantee among mutually-concurrent
+operations, and automatic recovery/replay are still separate, undecided
+questions — this milestone's own Sections 3-8 exist specifically to keep
+that boundary sharp, so that a future reader of `RemoteApplicationTiming.
+CAUSAL_READINESS` never mistakes "applied only once causal prerequisites
+are satisfied" for a stronger claim this codebase has not earned. A
+natural next step — not committed to here — is the comprehensive causal
+deferral lifecycle audit this policy update makes it possible to state
+precisely: diamonds, chains, concurrent operations, recovered
+predecessors, and shuffled arrival/replay order, stress-testing the exact
+invariant this policy now names — every operation executes only after
+all explicitly named causal predecessors have actually executed, while
+unrelated concurrent operations remain independent.
