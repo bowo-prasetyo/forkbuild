@@ -81348,3 +81348,124 @@ way — `ConcurrentConflictResolution.UNDEFINED` and
 and untouched. Whichever way the product decision goes, this milestone's
 own evidence matrix is the reference point a future CRDT/OT/ordering
 milestone would need to justify itself against.
+
+## 0.9.241 — Post-Collaboration Product Reassessment
+
+0.9.222-0.9.240 closed one continuous arc: a shared-editing trust
+boundary, wired into the real Editor runtime, given real causal
+identity, gap detection, recovery, eligibility, readiness, deferral,
+and a lifecycle-wide proof, ending with an explicit, deliberate
+non-answer on conflict semantics — concurrent, non-commutative,
+causally-ready edits are allowed to diverge, on purpose. That is a
+complete architectural arc, not a stopping point mid-problem. This
+milestone is the reassessment 0.9.240's own closing paragraph implied
+was next: not another collaboration mechanism, but the same
+step-back-and-choose posture 0.9.221 used one arc earlier.
+
+Test/document-only. No production changes.
+
+### What this milestone adds
+
+`tests/PostCollaborationProductReassessment.test.js` (new), four
+sections:
+
+* **Section A — Collaboration closure.** A1 freezes the eleven-stage
+  pipeline (authentication → identity/authorization → operation
+  verification → ReplayGuard → causal-gap observation → recovery →
+  causal eligibility → execution readiness → causal deferral →
+  CommandHistory → Document mutation) as one representative wiring
+  signal per stage, read directly off `application/EditorSession.js`'s
+  own real composition method. A2 reads the full closure matrix off the
+  real, frozen `DOCUMENT_COLLABORATION_CONSISTENCY_POLICY` object:
+  **GUARANTEED** — causal deferral (`application.remote =
+  CAUSAL_READINESS`), duplicate suppression, document isolation;
+  **NOT GUARANTEED** — delivery order, convergence; **UNDEFINED** —
+  conflict resolution; **NEVER** — undo propagation. It also corrects
+  one imprecision in this milestone's own originating brief against the
+  real code: causal-gap *recovery* is triggered automatically
+  (`attachToGapObservation()` wires it directly onto the gap-observation
+  feed), but *retry* of a recovery request is not — one request per gap,
+  confirmed by the structural absence of any `setTimeout`/`setInterval`
+  in `application/DocumentOperationRecoveryUseCase.js`'s own code, not
+  merely its header's claim.
+* **Section B — Capability reachability audit.** B1 confirms the
+  shipped 0.9.222-0.9.240 chain is fully reachable: every class this
+  milestone's own brief named has at least one real
+  `new ClassName(...)` caller outside its own file, computed by grep,
+  not assumed — nothing in the newly completed stack is dead code. B2
+  asks the same question in the direction this reassessment lineage had
+  never asked before — what does the *new* chain leave *stranded*? — and
+  finds one real answer: the entire 0.2.7-0.2.9 **authority-based**
+  collaboration protocol (`collaboration/CollaborationSession.js`,
+  `DocumentAuthority.js`, `AuthorityCollaborationTransport.js`,
+  `LocalCollaborationTransport.js`, `core/CollaborationEnvelope.js`,
+  `application/CreateCollaborationUseCase.js` — six files) has zero
+  callers anywhere in `application/` or `ui/` outside its own one wiring
+  file, and is documented only under its own unedited historical
+  `docs/Architecture.md` section headers. It is architecturally
+  superseded, not merely unused: the old model is a single ordering
+  authority that *rejects* conflicting operations; the shipped model is
+  a peer-to-peer causal graph that *allows* divergence and names that
+  divergence explicitly. Classified **OBSOLETE_CANDIDATE**, consistent
+  with 0.9.216/0.9.219/0.9.221's own register — nothing deleted;
+  deletion is a deliberate, later, human decision.
+* **Section C — Revisit the 0.9.221 candidates.** 0.9.221 named three
+  candidate product seams without choosing among them. Live
+  multi-editor collaboration is now **CLOSED**. Commentary/annotation on
+  a Publication and notifications are both re-confirmed genuinely
+  absent with fresh evidence (extended to `ui/` this time, which 0.9.221
+  did not check) — and, for the first time, explicitly **ranked**:
+  commentary/annotation first, because it has a concrete shipped
+  architectural analog (`application/PublicationObservationArchive.js`
+  — a local, append-only record attached to an immutable Publication,
+  no peer-online-state or delivery-guarantee question involved) and
+  directly serves the already-complete Publication discovery/
+  consumption flow; notifications second, because they are fundamentally
+  a *delivery-guarantee* question — the exact family this arc spent 19
+  milestones being careful to name as `NOT_GUARANTEED`/`NONE`/
+  `UNDEFINED` rather than assume — and are better motivated by a first
+  concrete cross-user event (a comment) than built speculatively ahead
+  of one.
+* **Section D — Explicitly reject premature conflict resolution.**
+  Re-verifies, fresh, that `ConcurrentConflictResolution.UNDEFINED` and
+  `ReplicaConvergenceGuarantee.NOT_GUARANTEED` still hold, and confirms
+  no CRDT/OT/vector-clock/total-order/merge-rule vocabulary exists
+  anywhere in the real collaboration chain's own *code* (comments
+  excluded — every file's own header prose discusses these terms by
+  name only to say they are absent). No CRDT requirement, no OT
+  requirement, no total-order requirement, no conflict-UI requirement,
+  and no merge mechanism is discovered. A known limitation is not
+  automatically a product gap.
+
+Also registers `tests/PostCollaborationProductReassessment.test.js` in
+`tests.html`'s own runner list.
+
+### Recommendation
+
+```text
+COLLABORATION CAPABILITY         COMPLETE
+CAUSAL CONSISTENCY               COMPLETE
+CONCURRENT CONFLICT RESOLUTION   INTENTIONALLY UNDEFINED
+
+REACHABILITY
+  Shipped 0.9.222-0.9.240 chain    fully reachable, zero dead code
+  Legacy 0.2.7-0.2.9 authority     zero product callers, OBSOLETE_CANDIDATE
+
+PRODUCT GAPS
+  1. Publication commentary/annotation   absent, adjacent, no delivery-guarantee dependency
+  2. Notifications                        absent, adjacent, IS a delivery-guarantee question
+
+NEXT PRODUCT SEAM
+  Publication commentary/annotation (named, not built here)
+```
+
+The dangerous move after a complete collaboration arc is building
+another synchronization primitive because the tooling for one now
+exists. This milestone declines that move a second time: no CRDT/OT
+requirement was discovered (Section D), and the one reachability gap
+this audit did find (Section B2) is a *legacy* subsystem to eventually
+retire, not a live one to extend. The next milestone is an explicit
+product decision — asynchronous commentary/annotation on a Publication
+— named here, with its architectural adjacency and its independence
+from every delivery-guarantee question this arc was careful about, but
+deliberately not designed or built in this one.
