@@ -15,6 +15,8 @@ import { CommandHistory } from './CommandHistory.js';
 import { CommandHistoryEvent } from './events/CommandHistoryEvent.js';
 import { RemoteDocumentOperationApplicationUseCase } from './RemoteDocumentOperationApplicationUseCase.js';
 import { DocumentOperationCausalGapObservationUseCase } from './DocumentOperationCausalGapObservationUseCase.js';
+import { DocumentOperationCausalGapDetector } from '../core/DocumentOperationCausalGapDetector.js';
+import { DocumentOperationDeferralUseCase } from './DocumentOperationDeferralUseCase.js';
 import { DocumentOperationRecoveryUseCase } from './DocumentOperationRecoveryUseCase.js';
 import { RecoveredOperationReplayUseCase } from './RecoveredOperationReplayUseCase.js';
 import { SpatialEditingService } from './SpatialEditingService.js';
@@ -211,7 +213,28 @@ export class EditorSession {
         // (see core/DocumentOperationCausality.js's own header), so it
         // tracks causal knowledge across every document this session ever
         // opens without needing to know which one is "current."
-        this._documentOperationCausalGapObservation = new DocumentOperationCausalGapObservationUseCase();
+        // 0.9.237 — the SAME detector instance is also handed to
+        // _documentOperationDeferral below, so readiness (Q4) is always
+        // evaluated against this session's real, cumulative causal
+        // knowledge, never a private, detached copy of it.
+        this._causalGapDetector = new DocumentOperationCausalGapDetector();
+        this._documentOperationCausalGapObservation = new DocumentOperationCausalGapObservationUseCase({
+            causalGapDetector: this._causalGapDetector
+        });
+        // 0.9.237 — Causal Application Deferral Boundary. Session-lifetime,
+        // exactly like _documentOperationCausalGapObservation above.
+        // Replaces _remoteDocumentOperationApplication as the direct
+        // subscriber to documentCommandPropagation's own
+        // onOperationReceived() feed (wired below) — READY operations
+        // still flow straight through to _remoteDocumentOperationApplication
+        // #apply(), unchanged; NOT_READY operations are retained here
+        // instead of applied immediately. See
+        // DocumentOperationDeferralUseCase's own header for the full
+        // reasoning.
+        this._documentOperationDeferral = new DocumentOperationDeferralUseCase({
+            applicationUseCase: this._remoteDocumentOperationApplication,
+            causalGapDetector: this._causalGapDetector
+        });
         this._documentOperationRecovery = documentOperationRecovery;
         // 0.9.236 — Recovered Operation Replay Boundary. Session-lifetime,
         // exactly like _remoteDocumentOperationApplication above — records
@@ -230,6 +253,7 @@ export class EditorSession {
         this._untrackDirtyState = null;
         this._unattachCommandHistoryPropagation = null;
         this._unattachRecoveryCommandHistory = null;
+        this._unattachDeferralCommandHistory = null;
         this._editorCommandHistories = new Map();
         this._transformSettings = new TransformSettings();
         this._gestureService = new SpatialEditingService(
@@ -303,8 +327,16 @@ export class EditorSession {
         this._unattachCausalGapObservation = this._documentCommandPropagation
             ? this._documentOperationCausalGapObservation.attachToPropagation(this._documentCommandPropagation)
             : null;
+        // 0.9.237 — the deferral boundary now sits where
+        // _remoteDocumentOperationApplication#attachToPropagation() used
+        // to be wired directly: every received operation is still
+        // resolved against "what is this Editor looking at right now,"
+        // live, exactly as before, but READY/NOT_READY (0.9.234) decides
+        // whether it reaches _remoteDocumentOperationApplication#apply()
+        // immediately or is retained instead. See
+        // DocumentOperationDeferralUseCase's own header.
         this._unattachRemoteApplication = this._documentCommandPropagation
-            ? this._remoteDocumentOperationApplication.attachToPropagation(
+            ? this._documentOperationDeferral.attachToPropagation(
                 this._documentCommandPropagation,
                 () => (this._documentManager.document && this._commandHistory
                     ? { documentId: this._documentManager.document.world.id, commandHistory: this._commandHistory }
@@ -365,6 +397,15 @@ export class EditorSession {
                 ? { documentId: this._documentManager.document.world.id, commandHistory: this._commandHistory }
                 : null
         );
+    }
+
+    // 0.9.237 — Causal Application Deferral Boundary. Lets a caller (a
+    // future UI affordance, a test) see which operationIds this session
+    // currently has retained for `documentId` — NOT_READY when received,
+    // never applied yet — without reaching into a private field. Never
+    // mutates; see DocumentOperationDeferralUseCase's own header.
+    getDeferredOperationIds(documentId) {
+        return this._documentOperationDeferral.getDeferredOperationIds(documentId);
     }
 
     // 0.9.230 — lets a caller observe an operation this session recovered
@@ -1782,6 +1823,22 @@ export class EditorSession {
                 commandHistory: this._commandHistory
             })
             : null;
+        // 0.9.237 — rewired per-document exactly like the two attachments
+        // just above: lets the deferral boundary answer Q4
+        // (`executionHistory.isExecuted()`, 0.9.234) against THIS
+        // document's real execution history, and lets a local edit, a
+        // normal remote apply, or an explicit
+        // `RecoveredOperationReplayUseCase#replay()` call — anything
+        // reaching `CommandHistory#execute()` for this document — release
+        // any retained operation it just made READY. Unconditional
+        // (unlike the two attachments above, never gated behind an
+        // optional collaborator): _documentOperationDeferral always
+        // exists, and attaching it costs nothing when nothing is ever
+        // deferred.
+        this._unattachDeferralCommandHistory = this._documentOperationDeferral.attachCommandHistory({
+            documentId: world.id,
+            commandHistory: this._commandHistory
+        });
         const toolContext = {
             world,
             registry: this._registry,
@@ -1830,6 +1887,10 @@ export class EditorSession {
         if (this._unattachRecoveryCommandHistory) {
             this._unattachRecoveryCommandHistory();
             this._unattachRecoveryCommandHistory = null;
+        }
+        if (this._unattachDeferralCommandHistory) {
+            this._unattachDeferralCommandHistory();
+            this._unattachDeferralCommandHistory = null;
         }
         if (this._untrackDirtyState) {
             this._untrackDirtyState();
