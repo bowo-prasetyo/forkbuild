@@ -78800,3 +78800,191 @@ should audit ACTUAL behavior under concurrent/out-of-order edits against
 this real runtime before deciding whether to reach for logical clocks,
 conflict detection, or something simpler — the same "evidence before
 commitment" restraint 0.9.222 and 0.9.223 each already modeled.
+
+## 0.9.225 — Concurrent Document Operation Behavior Audit
+
+0.9.224 named the moment `application/CommandHistory.js` became a real
+convergence point for two independently-arriving mutation sources —
+local input and a remote peer — and deliberately deferred the question
+of what happens when both arrive close together, or out of order, to
+"the next milestone to actually audit rather than prescribed here on no
+evidence." This milestone is that audit, and ONLY that audit:
+**TEST-ONLY**. Nothing in `application/`, `core/`, `peer/`, or
+`replication/` changes. No CRDT, OT, Lamport/vector clocks, sequence
+numbers, server authority, locking, conflict UI, merge algorithm,
+operation queue, or offline-sync mechanism is added — the goal was
+never to choose a synchronization algorithm, only to discover exactly
+what this codebase's EXISTING execution machinery already does when
+operations arrive in different orders, using it exactly as
+0.9.222/0.9.223/0.9.224 left it.
+
+```text
+Local Editor command
+        |
+        v
+   CommandHistory
+        |
+        +--> local state
+        |
+        +--> DocumentCommandPropagationUseCase (0.9.222 — unmodified)
+                    |
+                    v
+             remote replica
+                    |
+                    v
+          RemoteDocumentOperationApplicationUseCase (0.9.223 — unmodified)
+                    |
+                    v
+              CommandHistory (0.9.224's own composition — unmodified)
+                    |
+                    v
+              remote state
+```
+
+`tests/ConcurrentDocumentOperationBehaviorAudit.test.js` exercises this
+exact, real chain end to end for every scenario below — never a
+hand-rolled substitute for `broadcastCommand()`/`onOperationReceived()`/
+`apply()`/`attachToPropagation()`, and never a second ReplayGuard-shaped
+idempotency layer next to `replication/ReplayGuard.js`. The only thing
+under this file's control that a real running Editor wouldn't let a
+user control directly is WHEN and IN WHAT ORDER `broadcastCommand()` is
+called — the one deliberate knob needed to observe both delivery orders
+of the same operation pair against otherwise-identical fresh replicas.
+
+Topology: one owner identity, Alice, with two authorized devices
+(Alice-Laptop, Alice-Phone) — per 0.9.222's own header, an Editor
+document with no membership-grant model authorizes EDIT by ownership
+only, so "multiple authorized editors" of one Document, TODAY, means
+one owner's own several devices, never a second, independent identity.
+This is itself a finding, not a simplification the test invented: a
+genuinely different identity (a Bob or a Charlie who is not Alice, and
+holds no device grant from her) can never be authorized to co-edit an
+Editor document at all under the current trust boundary, unlike World
+View's own Documents (`application/WorldMembershipUseCase.js`'s signed
+membership grants). Bob and Charlie in this file are, accordingly, pure
+RECEIVING replicas — exactly the same role every prior milestone's own
+test file already gave them — never authors.
+
+### Findings
+
+| Scenario | Delivery order | Result |
+| --- | --- | --- |
+| A — sequential baseline (`MoveBrickCommand` x2 on one brick) | O1, O2 | x=5; history=[O1,O2] |
+| B — reversed delivery, same pair as A | O2, O1 | x=5 (same value as A); history=[O2,O1] (reversed vs A) |
+| C — independent objects (disjoint bricks) | A,B vs B,A | both replicas converge (x_a=4, x_b=15) |
+| D1 — conflicting renames of the SAME group (absolute-set) | Laptop,Phone vs Phone,Laptop | **DIVERGENT**: Bob="Renamed-By-Phone", Charlie="Renamed-By-Laptop" |
+| D2 — same-brick relative moves (contrast with D1) | Laptop,Phone vs Phone,Laptop | convergent: both x=2 |
+| E — identical operation to two replicas | simultaneous | both converge (x=7) |
+| F — different operation sets per replica | (O1,O2) vs (O1,O3) | **DIVERGENT by construction**; no gap-detection exists |
+| G — local edit interleaved with remote | local→remote vs remote→local | both converge (x=11); stack order == execution order |
+| H — undo/redo of an applied remote operation | apply then local undo() | undo is local-only and origin-blind; never propagates |
+| I — document isolation under interleaved (not merely sequential) concurrency | X,Y,X,Y interleaved | isolation holds; refused ops are forgotten, never queued |
+| J — operation identity / ReplayGuard | O1,O1,O2,O1 | exactly [O1,O2] applied once each |
+| Transport observation | P1,P2 sent back-to-back, no explicit reordering | arrived in send order — an ACCIDENT of `LocalPeerConnectionProvider`'s own `queueMicrotask()`-per-send FIFO, never a protocol guarantee |
+
+The full evidence table is also emitted at runtime by the test file
+itself (`console.table`), reproduced above for the record.
+
+### What the evidence actually shows
+
+- **CommandHistory orders by arrival, never by causal or send-time
+  order.** Section B's reversed delivery lands in the reverse stack
+  position from Section A's forward delivery, even though both reach
+  the same final value for that particular pair (Section A/B). Value
+  convergence and undo-stack-order convergence are two different
+  claims; this codebase currently only ever gives the first one, and
+  only for pairs whose command semantics happen to commute.
+- **A shared target is not the same thing as a conflict.** Section D
+  is this milestone's most important result: an ABSOLUTE-SET command
+  (`RenameGroupCommand`, "set this property to X") on a shared property
+  genuinely diverges by delivery order — two replicas that see the
+  identical two operations end up with permanently different names,
+  and nothing detects or reports this. A RELATIVE-DELTA command
+  (`MoveBrickCommand`, "add this delta") on the very same brick still
+  commutes. Whether an operation pair converges is a property of the
+  COMMAND's own semantics (delta vs. absolute set), never merely of
+  whether two operations touch the same object — the audit's own
+  instruction not to generalize from one pair turned out to matter:
+  the two D sub-scenarios, same target, same devices, same delivery
+  orders, land on opposite conclusions.
+- **Missing operations are a silent, permanent divergence, not merely
+  an ordering question.** Section F is the sharpest evidence in the
+  whole file: two replicas that simply never received the same SET of
+  operations (not merely the same operations in different order)
+  diverge with zero indication anything is wrong — no error, no gap
+  counter, no retry. Today, "collaboration" in this codebase means
+  propagation of whatever a replica happens to receive, never eventual
+  consistency.
+- **Undo is local-only and origin-blind**, on purpose (Section G/H):
+  `CommandHistory#undo()`/`redo()` never distinguish a local command
+  from an applied remote one (they sit on one stack, ordered by
+  execution time only), and `CommandHistory`'s own `COMMAND_UNDONE`
+  event is never subscribed to by `DocumentCommandPropagationUseCase`
+  — undoing an applied remote operation reverts only the undoing
+  replica's own state and is never communicated anywhere. Two replicas
+  that just converged can silently re-diverge the instant either one
+  undoes locally.
+- **Document isolation (0.9.223/0.9.224) holds under genuine
+  interleaving**, not merely a sequential switch-away/switch-back
+  (Section I) — the same guarantee, now with stronger evidence.
+- **The existing `replication/ReplayGuard.js` is already sufficient**
+  for operation-identity idempotency (Section J): a retransmitted
+  operationId, or an "O1, O2, O1" sequence, both collapse to the
+  intended result with the guard exactly as 0.9.222 already wired it.
+  No second idempotency layer was needed, or added.
+- **Order preservation observed today is a transport accident, not a
+  protocol guarantee.** `LocalPeerConnectionProvider#send()` queues
+  each message via its own `queueMicrotask()` call, and microtasks run
+  FIFO — so two sends issued back-to-back happen to arrive in send
+  order under this ONE in-memory transport. `core/DocumentOperationEnvelope.js`
+  still carries no `logicalClock`/sequence number (unchanged since
+  0.9.222), so nothing above this transport is entitled to assume a
+  different one (real WebRTC data channels, a relay, anything not a
+  single in-order byte stream) preserves it too.
+
+### Deliberately excluded
+
+Unchanged from 0.9.222/0.9.223/0.9.224's own lists — CRDT, OT,
+logical/Lamport/vector clocks, sequence numbers, server authority,
+locking, conflict UI, merge algorithms, operation queues, retries,
+offline replay, synchronized undo/redo, operation persistence,
+collaborative cursors, presence integration. `core/DocumentOperationEnvelope.js`
+still carries no `logicalClock` — this milestone did not move that
+boundary; it only produced evidence about what sits on either side of
+it today.
+
+- **No redesign, no reopening.** `DocumentCommandPropagationUseCase`,
+  `RemoteDocumentOperationApplicationUseCase`, `CommandHistory`, and
+  `replication/ReplayGuard.js` are all used exactly as prior milestones
+  left them. This milestone adds one test file and this section; it
+  changes no production code.
+- **No verdict on whether the observed divergence (Section D, F) is
+  acceptable.** That is explicitly the NEXT question, not this one —
+  see Recommendation.
+- **No generalization beyond the pairs actually tested.** Section D's
+  own contrast (D1 diverges, D2 converges) is itself the argument for
+  why a broader claim ("all same-target operations conflict," or
+  "nothing ever conflicts") would already be wrong on this codebase's
+  own evidence.
+
+### Recommendation
+
+The evidence divides cleanly into two buckets. Operations whose command
+semantics are relative/delta-based already commute under plain
+last-applied-wins execution — no ordering mechanism is needed for that
+bucket, and adding one would be solving an already-solved problem.
+Operations whose command semantics are absolute-set (Section D1, and by
+the same reasoning `PlaceStructureCommand`'s sibling
+`SetStructurePlacementTransformCommand`, or any future "rename," "set
+color," "set title" command) diverge silently by delivery order, and
+missing operations (Section F) diverge permanently with no detection at
+all. Both buckets currently look identical to a user — nothing surfaces
+that divergence happened. The next milestone should treat THOSE two
+findings, specifically, as the smallest real problem to solve — not by
+reaching for a general-purpose CRDT/OT layer on the strength of Section
+D/F alone, but by first asking whether a much smaller mechanism (e.g.,
+detecting that a replica is missing an operation another replica has —
+Section F's own gap — or making divergence at least OBSERVABLE before
+deciding it must be RECONCILED) already closes the gap this evidence
+actually describes. That is the same "evidence before commitment"
+discipline 0.9.222 through 0.9.225 have each now applied in turn.
