@@ -83157,3 +83157,109 @@ position — the World View's own spatial decision, never the discovery
 layer's — followed by World View presentation and an end-to-end audit.
 As with every roadmap arc recorded here, only the immediate next
 milestone is treated as committed.
+
+## 0.9.255 — Place Naming Proximity Selection
+
+0.9.253/0.9.254 built genuine discovery — deliberately blind to the
+Wanderer's own position. This milestone asks the next, separate
+question: "of the claims discovery already found, which ones are
+spatially relevant to where the Wanderer actually stands?"
+
+```
+Nostr relay(s)
+     │
+     ▼
+application/NostrPlaceNamingDiscoverySource.js   (0.9.254)
+     │
+     ▼
+application/PlaceNamingDiscoveryQueryService.js  (0.9.253)
+     │
+     ▼
+application/DiscoverPlaceNamingClaimsCommand.js  (0.9.253)
+     │
+     ▼
+discovered PlaceNamingClaims
+     │
+     ▼
+core/PlaceNamingProximitySelection.js   (0.9.255) ★
+     selectNearbyPlaceNamingClaims(claims, currentPosition, radius)
+     │
+     ▼
+relevant claims — future World View presentation (unscheduled)
+```
+
+One new core file, `core/PlaceNamingProximitySelection.js`, exporting
+one small function: `selectNearbyPlaceNamingClaims(claims,
+currentPosition, radius)`. It reuses `core/WorldSpatialAnchor.js#
+distanceXZ()` and the exact `<= radius` inclusive boundary
+`core/WorldRegion.js#contains()` already established, rather than
+inventing a fourth X/Z distance formula in this codebase. No new
+candidate object was introduced — a "claim" here is whatever entry a
+caller hands in, as long as it carries its own `.position`; this file
+never resolves a `regionId` into one itself (see the file's own header
+for why that stays a caller-side concern, the same restraint
+`core/GeographicPlaceNavigation.js#deriveNearbyGeographicPlaces()`
+already holds for geographic places).
+
+Deliberately NOT ranking. Multiple distinct claims relevant to the same
+vicinity (Alice's "Old Oak", Bob's "Ancient Tree", Charlie's "Oak
+Crossing") are ALL returned, in the exact order discovery produced
+them — never sorted by distance, never deduplicated beyond whatever
+`PlaceNamingDiscoveryQueryService.search()` already did, never reduced
+to a single "winner." Proximity filtering answers "is this near me?"
+only; "which of several nearby names should a Wanderer actually see
+first?" is a separate, later, unscheduled product question.
+
+Malformed input degrades gracefully rather than throwing: a non-array
+`claims`, an invalid `currentPosition`, or an invalid `radius` (non-
+finite or negative; `0` is explicitly valid) returns `[]` for the whole
+call; a single malformed claim (missing/non-finite `.position`) is
+excluded on its own, without discarding any other, otherwise-valid
+claim in the same array — the same "one bad entry never poisons its
+neighbors" restraint `PlaceNamingDiscoveryQueryService.search()`
+already holds for a failing source.
+
+One new test file, `tests/PlaceNamingProximitySelection.test.js`
+(eleven sections): basic selection; claims outside the radius excluded;
+the inclusive boundary (`distance === radius` retained, a fraction
+beyond it excluded); multiple simultaneously-relevant claims surviving
+together with no winner picked; discovery-order preservation; empty/
+no-match inputs; malformed spatial data excluded individually without
+affecting unrelated valid claims; invalid `currentPosition`/`radius`
+handling (including the `radius === 0` edge case); immutability of both
+the input array and its entries; duplicate claims passing through
+unchanged (deduplication stays discovery's own job); and a final section
+demonstrating the function needs no discovery, storage, identity, or
+World View collaborator to operate. Registered in `tests.html`.
+
+A nearby claim is still just a claim — see docs/Principles.md,
+"Proximity Filtering Is Not Ranking, Is Not Conflict Resolution
+(0.9.255)," which extends 0.9.253's own "A Discovered Naming Claim Is
+Still Just A Claim" rather than weakening it: discovered + nearby is
+still never verified, authoritative, or adopted.
+
+### What this milestone deliberately excludes
+
+Resolving a claim's `regionId` into an actual position — a caller
+(a future orchestration milestone) is expected to attach `.position`
+to each discovered claim before calling `selectNearbyPlaceNamingClaims()`,
+exactly the resolution split `core/GeographicPlaceNavigation.js` already
+holds for geographic places. Also excluded: any automatic refresh or
+"the Wanderer moved, re-run this" orchestration; wiring this selector
+into `application/WorldSnapshotDiscoveryMonitor.js`'s cadence machinery
+or into any other Snapshot-shaped monitor (a different feature with
+different temporal semantics — reusing its cadence infrastructure may
+eventually be appropriate, reusing its semantic monitor would blur two
+features); ranking, deduplication beyond what discovery already
+performs, or trust scoring; and any World View/UI presentation of a
+relevant claim.
+
+### What comes after
+
+Per the product-direction conversation's own proposed arc: `0.9.256 —
+Automatic Place Naming Discovery Orchestration` (a refresh seam that
+calls discovery, then this selector, as the Wanderer moves), followed by
+`0.9.257 — World View Place Naming Presentation`, `0.9.258 —
+Comprehensive Place Naming E2E Audit`, and `0.9.259 — Post-Place-Naming
+Product Reassessment`. As with every roadmap arc recorded here, only the
+immediate next milestone is treated as committed.
