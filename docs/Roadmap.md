@@ -83924,3 +83924,138 @@ top of it. `0.9.262 — Post-Navigation Product Reassessment` would follow;
 adoption remains the leading candidate from 0.9.259's own ranking, but
 only if that reassessment still says so. As with every roadmap arc
 recorded here, only the immediate next milestone is treated as committed.
+
+## 0.9.261 — Nearby Place Naming Navigation Lifecycle Audit
+
+0.9.260 opened the one genuinely new boundary Place Naming has crossed
+since its own discovery pipeline shipped: a decentralized, unverified,
+unranked claim becoming an input to World navigation
+(`WorldNavigationSession#focusLocation()`), while remaining structurally
+incapable of reaching World naming authority
+(docs/Principles.md, "Navigation Is Not Adoption"). 0.9.258 already
+proved the DISCOVERY pipeline holds under races, staleness, failure,
+World-switching, and unmount; 0.9.260 itself already proved navigation's
+own semantics in isolation, one call at a time. Neither file proves what
+happens when both meet — this milestone does, mirroring 0.9.258's own
+"audit after a build milestone" shape one navigation boundary later.
+
+This milestone adds **no new capability**. It is a **test-only audit**.
+
+### What this milestone adds
+
+`tests/PlaceNamingNearbyNavigationLifecycleAudit.test.js` (new) —
+sixteen sections, driven through the real production chain exactly as
+`tests/PlaceNamingEndToEndLifecycleAudit.test.js` already established
+(a real `NostrPlaceNamingDiscoverySource`, a real
+`composePlaceNamingDiscoveryRuntime()`, the real
+`executeDiscoverPlaceNamingClaimsCommand()`, a real
+`PlaceNamingDiscoveryMonitor`), extended here with a real, full
+`WorldNavigationSession` in place of that file's own deliberately
+discovery-only session Proxy — this audit's own question ("does
+navigation reach adoption/verification") needs the real
+`getRegions()`/`focusLocation()` navigation itself calls, which a
+restricted stand-in could never exercise honestly.
+
+- **A. Discovery → presentation → navigation** — the complete real
+  chain, end to end, with the exact `session.focusLocation(regionId)`
+  call spied and confirmed.
+- **B. Multiple nearby claims** — each retains its own regionId/worldId
+  and navigates independently; one navigation never disables or
+  consumes another.
+- **C. Same region, different claims** — two independently authored
+  claims for identical ground both navigate to the one real region,
+  with the region's own ranked display name untouched by either.
+- **D. FLAGSHIP — World identity protection ("Riverside"/"Old River")**
+  — two sub-cases, probed from both directions, and reported honestly
+  rather than assumed clean. **D1 (temporal):** only world-A is loaded;
+  a row captured while it was still loaded can never be honored once
+  the session has moved on to world-B alone, even though the colliding
+  `regionId` resolves there too — the `worldId` cross-check closes this,
+  the realistic shape the boundary actually takes. **D2 (simultaneous):**
+  both Worlds are genuinely loaded together (a "broader discovery
+  scope"); both claims are discovered and correctly labeled, but
+  `session.focusLocation(regionId)` itself
+  (`application/WorldLocationDirectory.js#find()`) takes no `worldId`
+  parameter — a plain id lookup. So when two SIMULTANEOUSLY loaded
+  Worlds genuinely share one `regionId`, navigating either claim's row
+  resolves to the SAME single location, decided by loaded-document
+  order, never by which claim's own `worldId` was checked. This is a
+  discovered boundary, not a regression this milestone introduces or is
+  scoped to fix (test-only, no production change) — a pre-existing
+  property of `focusLocation()`'s own plain-id API, and D1 remains the
+  realistic case (a stale claim from a World that is NOT currently
+  loaded) the cross-check fully covers. The audit states its guarantee's
+  exact edge rather than overclaiming a safety no version of
+  `focusLocation()` in this codebase has actually provided.
+- **E. Stale region** — a region removed from the World after discovery
+  fails navigation gracefully, with zero fallback to any other region.
+- **F. World switching** — a row captured under the previously-loaded
+  World can no longer navigate at all once that World has unloaded; a
+  fresh observation under the newly-loaded World navigates normally.
+- **G. Claim refresh** — a movement-triggered refresh replaces which
+  claims are PRESENTED (a superseded claim's own row is genuinely gone,
+  leaving no lingering clickable button), while navigation itself stays
+  keyed to region identity, never claim identity: a row snapshotted
+  before the refresh still navigates correctly, because its own region
+  never moved — the same "precision guard on the destination, never a
+  freshness gate on the claim" restraint 0.9.260 already documents,
+  observed here to hold under an actual refresh rather than merely
+  asserted from the function's own text.
+- **H. Discovery failure** — a failed refresh cycle preserves the
+  previously displayed claim AND its navigation; failure never clears
+  actionable state.
+- **I. Out-of-order discovery** — two overlapping requests resolved in
+  reverse order leave only the newest result presented; the stale
+  claim's own row never becomes active, so no navigation handler exists
+  for it either.
+- **J. Unmount** — a discovery settling after disposal never mutates the
+  presented claims, sets no error, and leaves no stale row behind; a
+  stray post-unmount tick never even reaches the relay again.
+- **K. Navigation isolation** — a lightweight regression tripwire (not a
+  re-audit — `tests/PlaceNamingNearbyNavigation.test.js`'s own Section P
+  already proved the reproduction this file reuses matches
+  `ui/views/WorldView.js` byte for byte) confirming navigation still
+  carries no Publication/Snapshot/Commentary/Place-Naming-persistence
+  vocabulary of its own.
+- **L. Authority negative test** — WorldRegion naming stays
+  byte-identical after navigation regardless of the claim's own name,
+  and the claim navigated to is never stored.
+- **M. Adoption isolation** — `PlaceNamingClaimExchange#importClaim()`
+  armed to throw is never consulted.
+- **N. Verification isolation** — signature verification armed to throw
+  is never consulted, even for a claim carrying an obviously fabricated
+  signature.
+- **O. Session isolation** — two independent World View sessions,
+  ticking under interleaved discovery, never navigate using each other's
+  own row.
+- **P. Manual workflow regression** — `ui/components/PlaceNamingPanel.js`
+  is confirmed untouched; its five existing interaction verbs remain
+  exactly as they were.
+
+Registered in `tests.html`.
+
+### What this milestone deliberately excludes
+
+Any new capability, and any production-code change whatsoever — Section
+D2's own discovered boundary is recorded, not fixed; fixing a
+same-`regionId`-across-simultaneously-loaded-Worlds ambiguity in
+`application/WorldLocationDirectory.js#find()` (were it ever worth
+fixing at all — the realistic shape of the collision, a claim from an
+unloaded World, is already fully closed by the existing `worldId`
+cross-check) is a decision for a future, non-test-only milestone to make
+deliberately, never a side effect of an audit. No verification, ranking,
+adoption, persistence, notifications, or moderation is added or tested
+for its own sake beyond confirming its continued absence — see
+docs/Roadmap.md, "0.9.260 — Nearby Place Naming Claim Interaction,"
+"what this milestone deliberately excludes," which this audit confirms
+rather than revisits.
+
+### What comes after
+
+Per the product-direction conversation's own proposed arc:
+`0.9.262 — Post-Navigation Product Reassessment`, a test-only milestone
+reassessing Place Naming's remaining candidates now that navigation has
+been built and proven under lifecycle churn. Adoption remains the
+leading candidate from 0.9.259's own ranking, but only if that
+reassessment still says so. As with every roadmap arc recorded here,
+only the immediate next milestone is treated as committed.
