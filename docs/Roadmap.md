@@ -78153,3 +78153,162 @@ and bounded — zero production changes across both milestones. Per
 explicit product-evolution decision or the pending obsolete-cleanup
 decision on the four `OBSOLETE_CANDIDATE` files, not from further
 repository archaeology.
+
+## 0.9.221 — Product Evolution Selection / Architecture Baseline
+
+Test/document-only. No production changes. Both 0.9.219's own
+Recommendation and 0.9.220's own Recommendation say the same thing: the
+capability-reachability arc this codebase has worked since 0.9.196 is
+exhausted, and the next milestone should come from an explicit
+product-evolution decision, never from searching this codebase for one
+more uncalled method. This milestone turns that conclusion into an
+explicit boundary rather than leaving it implicit across two different
+files' own closing paragraphs — the deliberately lightweight milestone
+both recommendations asked for before any new feature work begins.
+
+```text
+0.9.196 ── … ── 0.9.219   Capability-reachability closure
+                    │
+                    ▼
+0.9.220             Event/error boundary characterization (DEFERRED)
+                    │
+                    ▼
+0.9.221             Product Evolution Selection / Architecture Baseline  <- this milestone
+                    │
+                    ▼
+             deliberate product choice
+                    │
+                    ├── new capability
+                    ├── technical debt
+                    └── intentional stop
+```
+
+This is not a seventh sweep of the existing product surface — 0.9.196
+through 0.9.219 already ran that methodology to exhaustion, and 0.9.216/
+0.9.219 both already returned an explicit `NONE FOUND`/`ZERO
+NEW_PRODUCT_GAP` verdict across roughly seventeen areas. Repeating it
+would find nothing new. Instead, `tests/ProductEvolutionBaseline.test.js`
+does three narrower things, exactly as its own brief asked:
+
+- **Section A — Freeze the closure findings.** Not a re-derivation:
+  each of eleven areas already has its own, much deeper proof on
+  record from a named prior milestone (0.9.196 through 0.9.220). This
+  section checks one concrete, still-true source signal per area — a
+  compact fingerprint that catches a future regression without
+  re-running a thousand-line audit every time. World interaction/
+  navigation, Vehicle (intentional boundary), Document lifecycle,
+  Autosave/recovery, History, Undo/redo, Publication workflow, Snapshot
+  distribution/discovery/materialization/export, and World Presence all
+  still hold; the Identity event boundary and the "no current
+  `ACTUAL_GAP` anywhere this arc swept" verdict are carried forward by
+  citation and verified in Section B.
+- **Section B — The technical-debt register**, gathered into one place
+  instead of scattered across six different reassessment files.
+  `DEFERRED`: the Identity event/error boundary 0.9.220 characterized —
+  reconfirmed here still resting on its exact five-method precondition
+  (`authenticate`/`endSession`/`protectIdentity`/`changePassphrase`/
+  `revokeIdentity`, each still calling `_publishChange()` then
+  `_publishLockChange()`) and `EventBus.publish()`'s still-unisolated
+  listener loop. `OBSOLETE`/`OBSOLETE_CANDIDATE`: all eight files this
+  arc has named since 0.9.216 (`GroupsPanel.js`,
+  `CreatePublicationSnapshotPlacementCatalogUseCase.js`,
+  `CreatePublicationAnchorCatalogUseCase.js`,
+  `CreatePlacementRegistryUseCase.js` confirmed `OBSOLETE`;
+  `CreateSpatialIndexUseCase.js`, `CreateSpatialDiscoveryUseCase.js`,
+  `CreateDecentralizedSpatialDiscoveryUseCase.js`,
+  `CreateWorldViewStreamingUseCase.js` still `OBSOLETE_CANDIDATE`) still
+  exist, untouched, with zero live instantiations outside their own
+  file. Nothing escalated, nothing deleted, nothing newly discovered —
+  the register is reconfirmed, not extended.
+- **Section C — The next product seam, deliberately NOT selected.**
+  This is the one place this milestone deviates from pure freeze-and-
+  reconfirm, per its own brief's explicit instruction not to choose on
+  a future author's behalf. Three candidate directions are named, each
+  independently verified genuinely absent from this codebase (not
+  merely unaudited), each sitting immediately adjacent to an
+  already-shipped capability so a future reader can see why it is a
+  real seam and not a rediscovery:
+  - **Live multi-editor co-editing of one Document.** Adjacent, already
+    built: `WorldEditAuthority`/`WorldMembershipUseCase` (0.2.98)
+    already let an owner grant a second identity real, signed EDIT
+    capability for a World. Absent: nothing in
+    `application/SaveDocumentUseCase.js` names a session-lock, merge,
+    or CRDT/OT concept — the Editor's only multi-party path remains
+    fork-then-diverge into a NEW Document lineage (0.5.9's own "Edit a
+    Copy"), never shared live editing of the SAME Document by two
+    identities at once.
+  - **Asynchronous commentary/annotation on a Publication.** Adjacent,
+    already built: `ChatView.js`/`ConversationsView.js`
+    (docs/user/08-ChatAndConversations.md) already deliver real-time,
+    peer-scoped messaging. Absent: no `class ...Comment`/`class
+    ...Annotation` exists anywhere in `application/` or `core/` — there
+    is no way to leave feedback ON a Publication itself, for a future
+    visitor to read.
+  - **Notifications.** Adjacent, already built: World Presence and
+    `FriendRelationships` already track who is online and who is
+    connected. Absent: no `Notification` class, use case, or service
+    exists anywhere — a Wanderer who forks or visits (or, per the
+    candidate above, would comment on) someone's Publication has no way
+    to inform the original Publisher.
+
+  Confirming genuine absence, deliberately, is different work from the
+  `ACTUAL_GAP`/`NEW_PRODUCT_GAP` sweep methodology 0.9.196-0.9.219 ran
+  to exhaustion: that methodology asks "does an existing, already-built
+  area of this codebase have a reachable capability nobody wired up?"
+  and has already returned `NONE FOUND` as of 0.9.219. This section
+  asks a different, forward-looking question instead — "what could
+  ForkBuild do that no area already swept promises at all?" — and
+  answers it with evidence, not invention, while leaving the choice
+  among the three (or any other direction) to an explicit human/product
+  decision.
+
+### Housekeeping
+
+While auditing which test files this baseline should treat as its own
+citation targets, a repo-wide sweep of `tests/*.test.js` against
+`tests.html`'s own runner list found six already-merged files missing
+registration — a bookkeeping gap, not a product one, of the same shape
+0.9.219 already found and fixed for three other files:
+`tests/AutomaticSnapshotEncounterRetentionReconciliation.test.js`,
+`tests/EditorTransformGestureFeedback.test.js`, `tests/EditorUX.test.js`,
+`tests/FriendAwareVisibility.test.js`,
+`tests/MultiDeviceConversationSync.test.js`, and
+`tests/WorldViewUndoRedoIntegration.test.js`. All six are added, alongside
+this milestone's own new file.
+
+### Decision
+
+**Outcome: baseline recorded, register reconfirmed, no capability
+chosen.** Sections A and B confirm there is nothing left to rediscover
+in the existing product surface — every fact this arc established since
+0.9.196 still holds, and the technical-debt register is exactly as large
+as 0.9.216/0.9.219/0.9.220 left it, no larger. Section C names three
+real, evidenced candidate directions without picking one, exactly as
+its own brief asked: `Live multi-editor co-editing`, `Asynchronous
+commentary/annotation`, and `Notifications` are none of them a
+continuation of this arc's own audit loop — each would be a genuinely
+new user-facing capability, not a reachability fix for one that already
+exists.
+
+### Recommendation
+
+The next milestone is the first genuinely new product capability this
+codebase adds since the 0.9.196 arc began — not another audit, not
+another reassessment, not an obsolete-file deletion mixed in for
+convenience. It should pick exactly ONE of Section C's three candidates
+(or a different, equally well-evidenced direction, if one emerges before
+that milestone starts) as an explicit, deliberate product decision, and
+scope its own first step the same disciplined way this arc always has:
+name the smallest real slice, build it against real collaborators, and
+prove it — never redesigning `EventBus`, never touching
+`IdentityUseCase`'s DEFERRED finding without a new, concrete trigger
+(Section B, and 0.9.220 Section D's own non-generalization statement),
+and never bundling the pending `OBSOLETE_CANDIDATE` cleanup decision
+into a feature milestone by default. That is the clean architectural
+break this baseline exists to mark:
+
+```text
+0.9.196–0.9.220   Closure, reachability, and boundary validation
+0.9.221           Transition point (this milestone)
+0.9.222+          Deliberate product evolution
+```
