@@ -82360,3 +82360,135 @@ need — live updates, comment editing, replies/threading, wider
 decentralized distribution, or no gap at all — is a separate, later,
 evidence-driven decision, the same pattern this whole commentary arc
 (0.9.242-0.9.248) has already followed at every step.
+
+## 0.9.249 — Publication Commentary Lifecycle & Isolation Audit
+
+0.9.248 closed the first product-facing Commentary vertical slice:
+
+```text
+Publication → commentary read/write use cases →
+WorldNavigationSession → WorldView → OwnPublicationPanel
+```
+
+This milestone adds no new capability. It is a **test-only audit** of
+the complete lifecycle now that commentary has crossed the
+application/UI boundary — mirroring the posture 0.9.208 ("World View
+History Preview/Restore Lifecycle Audit") and 0.9.239 ("Comprehensive
+Causal Deferral Lifecycle Audit") already took for their own
+subsystems, one seam over: enough surface area now exists (domain →
+storage → write command → authorship → authorization → read command →
+UI) for lifecycle bugs invisible when each layer was tested in
+isolation, and the milestone gives a clean decision point before
+choosing what (if anything) comes next.
+
+```text
+OwnPublicationPanel
+      │
+      ▼
+WorldView command wrappers
+      │
+      ▼
+WorldNavigationSession
+      │
+      ├── GetPublicationCommentariesUseCase → PublicationCommentaryStore
+      │
+      └── AddPublicationCommentaryUseCase
+                 ├── authenticated identity
+                 ├── CanCommentOnPublicationUseCase
+                 └── PublicationCommentaryStore
+```
+
+### What this milestone adds
+
+* `tests/PublicationCommentaryLifecycleAudit.test.js` (new), against
+  the real application stack end to end — `LocalIdentityProvider`,
+  `LocalDiscoveryProvider`, `LocalPublisherProvider`,
+  `PublicationCommentaryStore`, `CanCommentOnPublicationUseCase`,
+  `GetPublicationCommentariesUseCase`, `AddPublicationCommentaryUseCase`,
+  and a real `WorldNavigationSession` — never a mock of the application
+  layer, with `OwnPublicationPanel.js`'s own methods invoked the same
+  way every sibling test file already does (bound to a plain ctx object
+  mirroring a Vue instance; `ui/views/WorldView.js` itself cannot be
+  mounted under plain `node tests/*.test.js`, since it imports `vue`).
+  Ten sections, named after this milestone's own brief:
+  - **A. Initial loading** — through the real `mounted()` lifecycle
+    hook itself (not merely a directly-invoked refresh method, closing
+    a gap no prior test exercised), an empty-state Publication, and
+    store ordering reaching the UI byte-for-byte unchanged.
+  - **B. Submission lifecycle** — entry, exactly one persisted
+    Commentary per submission, authenticated authorship, and a draft
+    cleared only on success/preserved only on failure.
+  - **C. Re-query authority** — one fresh read per submission; a
+    destructive proof that a stale locally-held array is fully replaced
+    (never merged) on re-query; and a comment written by a completely
+    separate actor directly to the store becomes visible on the next
+    re-query, proving the store is the one source of truth.
+  - **D. Publication switching** — A never leaks into B; rapid
+    A→B→C switching settles on exactly C; and a structural proof
+    (source inspection for `await`/`.then()`, plus an order-tracking
+    read spy) that the synchronous read path cannot suffer the
+    stale-response race every asynchronous sibling family in
+    `OwnPublicationPanel.js` guards with its own `...RequestId` counter.
+  - **E. Authorship isolation** — Alice → C1, Bob → C2, Alice → C3
+    against one shared `identityProvider`/session, persisting exactly
+    the identity authenticated at each submission.
+  - **F. Authorization isolation** — the existing policy kept intact:
+    authenticated+real Publication allowed; unauthenticated and
+    nonexistent-Publication rejected (driven directly at the
+    application boundary, not merely via the UI's own sign-in hint);
+    neither denial persists a partial record.
+  - **G. Read/write failure isolation** — read, write, authorization,
+    and authentication failures run in sequence on one shared ctx,
+    each proven not to corrupt the others' state, with a final real
+    submission proving the panel is never left permanently stuck.
+  - **H. Persistence/reload** — a second, fully independent
+    `identityProvider`/`WorldNavigationSession`/use-case/ctx
+    composition, built from nothing but the same durable storage the
+    first composition wrote to (the in-memory stand-in for a real page
+    reload against `window.localStorage`), still finds the exact same
+    commentary — proving it is genuine persisted application data, not
+    component state.
+  - **I. Publication identity boundary** — two Publications from the
+    same Document, kept open in two *simultaneously live* panel
+    objects (not one panel switching), never cross-contaminate at
+    either the panel or the store.
+  - **J. Architecture boundary** — `OwnPublicationPanel.js` imports
+    none of `PublicationCommentary`, `PublicationCommentaryStore`,
+    `GetPublicationCommentariesUseCase`, `AddPublicationCommentaryUseCase`,
+    or `CanCommentOnPublicationUseCase`, never assigns an
+    `authorIdentityId` of its own, and calls each injected command from
+    exactly one place; `WorldNavigationSession` remains pure
+    delegation; and neither file carries any vocabulary from the
+    0.9.222-0.9.240 causal collaboration arc — `AddPublicationCommentaryUseCase`
+    never even reads a `documentId`, only `publicationId`.
+* Registers the new test file in `tests.html`.
+
+### Findings
+
+The audit found the 0.9.242-0.9.248 implementation already correct on
+every property named above — no source file required a change. Section
+D is the one place worth calling out explicitly: because
+`GetPublicationCommentariesUseCase` performs no I/O,
+`refreshPublicationCommentaries()` reads and assigns synchronously, so
+the "rapid publication switch racing a delayed read" scenario this
+milestone's own brief asked to probe is not merely untested — it is
+structurally impossible for commentary's read path, and that absence
+is now proven rather than assumed.
+
+### What this milestone deliberately excludes
+
+Per its own brief: no replies, editing, deletion, notifications, or
+decentralized commentary synchronization — none of it added, exercised,
+or assumed anywhere in the new test file. No live commentary
+subscriptions. No change to any production source file: this is a
+test-only milestone.
+
+### What comes after
+
+No 0.9.250 is preselected. With the lifecycle now audited clean, the
+next genuine need — replies/threading, editing/deletion, notifications,
+wider decentralized distribution, or no gap at all — is a separate,
+later, evidence-driven decision (a "Post-Publication-Commentary Product
+Reassessment," in the same spirit as 0.9.241's own post-collaboration
+reassessment), the same pattern this whole commentary arc has already
+followed at every step.
