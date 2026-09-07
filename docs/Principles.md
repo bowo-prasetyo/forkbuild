@@ -19192,3 +19192,76 @@ a navigation opinion this milestone was never asked to hold; failing
 honestly costs nothing a fallback would have been worth pretending to add.
 
 See `docs/Roadmap.md`, 0.9.260, for the full milestone entry.
+
+### Discovery Makes Adoption Available; It Never Makes Adoption Automatic (0.9.263)
+
+0.9.260 drew the boundary for ACTING on a displayed claim by moving a
+camera to it. 0.9.263 (Nearby Place Naming Claim Adoption UI) draws the
+symmetric boundary for the one action that genuinely does change this
+replica's own state: adopting the claim into its local store. The
+question is the same shape as 0.9.260's own — does building the missing
+seam between discovery and the existing adoption boundary quietly widen
+what adoption MEANS? It does not, for the identical reason: the seam is
+built entirely OUT of existing, unmodified pieces, wired together for the
+first time rather than reproduced or strengthened.
+
+**Adopt reshapes; it never re-verifies, re-signs, or re-authors.**
+`adoptNearbyPlaceNamingClaim()` does exactly one substantive thing:
+rehydrate a `PlaceNamingClaim` from the row's own fields and hand it to
+`application/PlaceNamingClaimPublication.js#buildPlaceNamingClaimPublication()`
+— the SAME pure builder `session.exportPlaceNamingClaim()` already calls
+for the manual export path — before calling the SAME
+`session.importPlaceNamingClaim()` the manual `PlaceNamingPanel`'s own
+Import Claim button has called, unmodified, since 0.5.3. Every substantive
+question — is this well-formed? does it verify? — is asked exactly once,
+entirely inside `PlaceNamingClaimExchange#importClaim()`'s own existing
+validate → construct → verify → persist order. The World View layer never
+imports a verifier, a claim store, or `Signature` itself (see this
+milestone's own architectural regression test, `tests/
+PlaceNamingNearbyAdoption.test.js` Section Q) — it has no vocabulary to
+invent a second, weaker notion of "verified" even by accident.
+
+**The row must carry the WHOLE claim, because a partial claim is not a
+claim a receiver's own validator could ever accept.** 0.9.257's own
+`nearbyPlaceNamingClaimRows` kept only what DISPLAY needed — `claimId`,
+`name`, `authorDisplayName`, `position` — deliberately discarding
+`authorIdentityId`, `createdAt`, and `signature` because nothing yet read
+them. The instant an action needs to reconstruct a real claim from the row
+alone, "discarded because unused" becomes "missing and required." This
+milestone restores exactly those three fields and no others — the same
+"restore what was dropped, invent nothing new" discipline 0.9.260 already
+used restoring `regionId`/`worldId` for Navigate.
+
+**Adopting one claim is never conflict resolution for another.** Two
+independently-authored claims can name the same region two different
+things — "Riverside" and "Old River" for the identical ground is not a
+malformed state; it is the ordinary, expected shape of a decentralized
+naming system 0.5.2 built for exactly this reason. Adopting "Riverside"
+touches `application/LocalPlaceNamingClaimStore.js#save()` for that one
+claim's own `id` and nothing else — it never reads, ranks, or removes any
+OTHER claim for the same region. "Old River" remains exactly as
+discoverable, exactly as displayed, and exactly as independently adoptable
+after "Riverside" is adopted as before — proven live, not merely asserted,
+in `tests/PlaceNamingNearbyAdoption.test.js` Section H, the one negative
+test this milestone's own brief named directly by example.
+
+**Adoption never manufactures authorship, mirroring commentary's own
+established discipline one domain over.** The claim's own
+`authorIdentityId` — Alice's, say — travels unchanged into the stored
+claim regardless of which Wanderer, Bob, happened to click Adopt.
+`adoptNearbyPlaceNamingClaim()` never reads `session.getSigningIdentity()`,
+never resolves "the current identity," and has no parameter through which
+one could arrive. The claim a replica ends up holding after adoption is
+byte-for-byte the claim its original author signed — adoption relays; it
+never re-attributes.
+
+**A failed adoption leaves no trace, exactly like a failed navigation
+leaves no fallback.** A row whose signature has been tampered with —
+forged, corrupted in transit, or hand-edited — is refused by the exact
+same `verifyPlaceNamingClaim()` call every OTHER import already goes
+through; `importClaim()` throws, `guarded()` surfaces one clear message,
+and nothing is written to `WorldRegion`, to the claim store, or to the row
+itself. The discovered claim remains exactly as adoptable afterward as
+before the failed attempt — a rejected forgery poisons nothing else.
+
+See `docs/Roadmap.md`, 0.9.263, for the full milestone entry.
