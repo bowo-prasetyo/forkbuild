@@ -80677,3 +80677,206 @@ have nowhere safe to route "the predecessor is now available" evidence
 into real execution. That choice — and whether all operations should be
 deferred or only non-commutative ones — remains exactly as open as
 0.9.235 left it.
+
+## 0.9.237 — Causal Application Deferral Boundary
+
+The first milestone in this lineage that changes runtime behavior, for
+exactly one narrowly-scoped case:
+
+> A received operation that is `NOT_READY` must not be applied
+> immediately.
+
+This resolves 0.9.235's own choice between 0.9.236A (defer only
+non-commutative command classes) and 0.9.236B (never defer, only
+observe) with a third, deliberately simpler answer: defer every
+`NOT_READY` operation, unconditionally, regardless of command class.
+0.9.235's own audit never showed deferral was UNSAFE for a commutative
+command — only unnecessary for one. Scoping deferral to "commands proven
+unsafe to reorder" would require a commutativity-classification framework
+that does not exist anywhere in this codebase and that nobody has asked
+for yet; applying it uniformly needs nothing new beyond what 0.9.234
+already computes. The smallest change that closes 0.9.235's own Section H
+finding is the one this milestone makes.
+
+```text
+receive verified operation
+      |
+      v
+   verify (0.9.222, unchanged)
+      |
+      v
+observe / record causal knowledge (0.9.229, unchanged)
+      |
+      v
+ evaluate readiness (0.9.234, unchanged)
+      |
+  READY ------------------------> apply (existing path, unchanged)
+      |
+  NOT_READY
+      |
+      v
+ retain the EXACT verified Command instance
+      |
+      | (later) a causal predecessor actually executes
+      v
+ re-evaluate every retained operation for this document
+      |
+      v
+ newly-READY ones apply, through the SAME existing path
+```
+
+### What this milestone adds
+
+`application/DocumentOperationDeferralUseCase.js` (new). Deliberately
+boring, on purpose — a small, document-scoped map of exact `Command`
+instances awaiting a readiness condition, never a new operation lifecycle
+state (no `PENDING`, `BLOCKED`, or `WAITING` — see this class's own
+header):
+
+* `receive({ documentId, command, authorIdentityId, causalPredecessors },
+  target)` — the receiving seam, the identical shape
+  `DocumentCommandPropagationUseCase#onOperationReceived()` fires.
+  Evaluates readiness (`evaluateApplicationReadiness()`, 0.9.234);
+  `READY` is handed straight to the existing
+  `RemoteDocumentOperationApplicationUseCase#apply()` path, unmodified;
+  `NOT_READY` retains the exact `command` instance and returns
+  `DEFERRED`. Document state is untouched either way for a deferred
+  operation.
+* `attachCommandHistory({ documentId, commandHistory })` — mirrors
+  `DocumentCommandPropagationUseCase`/`DocumentOperationRecoveryUseCase`'s
+  own per-document rewiring shape exactly. Two jobs in one registration:
+  lets readiness read this replica's REAL execution history for Q4
+  (`CommandHistory#getExecutedCommands()`, never a new query method added
+  to that class), and subscribes to that CommandHistory's own
+  `COMMAND_EXECUTED` event so a local edit, a normal remote apply, or an
+  explicit `RecoveredOperationReplayUseCase#replay()` call — anything
+  reaching `CommandHistory#execute()` for this document — triggers a
+  release check.
+* `onOperationExecuted(documentId, operationId)` — the narrow release
+  trigger this milestone's own design calls for. Re-evaluates every
+  currently-retained operation for `documentId` and applies (through the
+  same existing `apply()` path) whichever are now `READY`. Wired
+  automatically by `attachCommandHistory()` above; a chain `A -> B -> C`
+  releases in one call when `A` executes, because applying `B` itself
+  fires `COMMAND_EXECUTED` again and re-enters this same method — the
+  cascade is the SAME mechanism that released `B`, applied recursively,
+  never a second pass or a poll.
+* `attachToPropagation(propagation, resolveTarget)` — wires this boundary
+  directly to `DocumentCommandPropagationUseCase#onOperationReceived()`,
+  mirroring `RemoteDocumentOperationApplicationUseCase#attachToPropagation()`
+  exactly (including re-resolving `target` fresh for every observed
+  operation). Deliberately never attached to
+  `DocumentOperationRecoveryUseCase`'s own feed — see "Recovery sits
+  beside this boundary" below.
+* `getDeferredOperationIds(documentId)` — introspection only, for a test
+  or a future UI affordance.
+
+`application/EditorSession.js` now constructs one shared
+`DocumentOperationCausalGapDetector` for the whole session (previously
+private inside `DocumentOperationCausalGapObservationUseCase`'s own
+default) and hands it to both that class and a new session-lifetime
+`DocumentOperationDeferralUseCase`, so readiness is always evaluated
+against this session's real, cumulative causal knowledge. The deferral
+boundary now sits exactly where
+`RemoteDocumentOperationApplicationUseCase#attachToPropagation()` used to
+be wired directly to `documentCommandPropagation`'s own feed — READY
+operations still flow straight through to `apply()`, unchanged;
+NOT_READY operations are retained instead. `attachCommandHistory()` is
+rewired per-document in `_rebuild()`/`_teardown()`, exactly like the two
+sibling attachments (`documentCommandPropagation`,
+`documentOperationRecovery`) already sitting beside it.
+
+### Why this is safe: composition, not a new mutation path
+
+`receive()` and the release loop both delegate every actual application
+to the injected, UNMODIFIED `RemoteDocumentOperationApplicationUseCase
+#apply()` — which is what reaches `CommandHistory#execute()`. This
+milestone adds no second chokepoint, no change to `CommandHistory`, no
+change to `ReplayGuard`, no change to
+`RecoveredOperationReplayUseCase`'s own "never automatically apply"
+boundary. The retained item is the actual `Command` instance
+`onOperationReceived()` handed the caller — never a re-parse, a re-fetch,
+or a reconstruction (Section E, asserted by `===`).
+
+### Recovery sits beside this boundary, never inside it
+
+`DocumentOperationDeferralUseCase` is wired ONLY to
+`DocumentCommandPropagationUseCase`'s own feed — never to
+`DocumentOperationRecoveryUseCase`'s. A merely `RECOVERED` predecessor
+(0.9.231) stays `NOT_READY`-causing for every dependent naming it, for as
+long as it remains unexecuted; this class never calls
+`RecoveredOperationReplayUseCase#replay()` itself, the same restraint
+that class's own header already demands of every caller (Sections C/D):
+
+```text
+A recovered, B deferred:
+  A -> RECOVERED   B -> NOT_READY (retained)
+
+recovering A alone changes nothing:
+  A -> RECOVERED   B -> NOT_READY (still retained)
+
+only an explicit replay(A) call changes anything:
+  A -> EXECUTED    B -> READY -> applied
+```
+
+### Ordering and conflict resolution stay exactly as undecided as before
+
+Concurrent operations sharing one predecessor are released independently
+of each other, in whatever order this class happens to iterate its own
+retained set (Section H) — the causal graph already enforces every
+dependency that actually exists; this milestone enforces those
+dependencies, never a stronger total order nobody asked for. Two READY
+operations that conflict with each other (0.9.235's own Section F) both
+still apply, in `ARRIVAL_ORDER`, same as today —
+`ConcurrentConflictResolution = UNDEFINED` (0.9.226) is untouched.
+
+### Tests
+
+`tests/DocumentOperationDeferralUseCase.test.js` (new). Section A runs
+the flagship scenario on the REAL propagation chain (real authenticated
+peers): `B` names `A`, `B` arrives first, applies nothing, is retained;
+`A` then arrives, applies immediately, and its own execution
+automatically releases `B` — in true causal order, despite arriving in
+the opposite order. Sections C/D run on the REAL recovery + replay chain,
+proving the exact interaction 0.9.236's own header calls out: a
+recovered-but-unexecuted predecessor never releases a deferred dependent;
+only an explicit `replay()` call does. Every other section exercises the
+class directly against real `CommandHistory` instances: the exact
+retained `Command` instance is what executes (E); duplicate delivery of
+the same `NOT_READY` operation collapses to one retained instance,
+executed exactly once, the FIRST verified instance surviving (F); an
+operation naming multiple predecessors stays deferred until every one of
+them has executed (G); concurrent operations sharing a predecessor are
+released independently, and an unrelated genesis operation is never
+blocked by a sibling's own deferral (H); one deferral boundary serving
+two documents never lets either interfere with the other, even across an
+identical operationId (I); a retained operation whose `Command` throws
+when finally applied is dropped without preventing release of any other
+retained operation (J); and the outcome vocabulary
+(`APPLIED`/`DEFERRED`/`NOT_APPLIED`) stays closed (K).
+
+### Deliberately excluded, on purpose
+
+No `PENDING`/`BLOCKED`/`WAITING` lifecycle, no operation queue beyond this
+class's own small per-document retained map, no timer, no polling, no
+retry/backoff, no automatic recovery, no automatic replay, no causal
+total ordering, no conflict resolution, no CRDT, no OT, no
+vector/logical clocks, no offline synchronization, no synchronized undo,
+no convergence guarantee, no commutativity classification, no change to
+`CommandHistory`, no change to `ReplayGuard`, no change to
+`RemoteDocumentOperationApplicationUseCase`, no change to
+`RecoveredOperationReplayUseCase`'s own "never automatically apply"
+boundary.
+
+### Recommendation
+
+0.9.235's own silent-divergence finding (Section H) is now structurally
+eliminated for every command class, not merely the non-commutative ones
+that actually needed it: a `NOT_READY` operation cannot mutate document
+state until its causal predecessors genuinely have. What remains open is
+everything this lineage has consistently left open — concurrent
+conflicting writes (0.9.226's own `ConcurrentConflictResolution =
+UNDEFINED`), a real ordering guarantee among mutually-concurrent
+operations, and automatic recovery/replay. Those stay separate, future
+decisions, on a foundation that no longer silently diverges while they
+remain undecided.
