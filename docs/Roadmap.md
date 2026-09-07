@@ -84059,3 +84059,110 @@ been built and proven under lifecycle churn. Adoption remains the
 leading candidate from 0.9.259's own ranking, but only if that
 reassessment still says so. As with every roadmap arc recorded here,
 only the immediate next milestone is treated as committed.
+
+## 0.9.262 — Post-Navigation Place Naming Product Reassessment
+
+0.9.260 built Navigate; 0.9.261 proved it holds under concurrency,
+staleness, world-switching, and the simultaneous-`worldId`-collision
+edge case, honestly recording rather than fixing the one narrow boundary
+it found (`WorldLocationDirectory#find()`'s own plain-id lookup). Per
+that milestone's own "what comes after," and the product-direction
+conversation that opened this one, this is the reassessment one
+navigation boundary later — the exact recurring shape 0.9.221/0.9.241/
+0.9.250/0.9.252/0.9.259 already established for this milestone family.
+
+This milestone adds **no new capability**. It is a **test-only
+reassessment**.
+
+### What this milestone adds
+
+`tests/PostNavigationPlaceNamingProductReassessment.test.js` (new) —
+eight sections:
+
+- **A. Navigation closure** — reconfirms 0.9.260/0.9.261 against real,
+  current source (the `worldId` cross-check, "Navigation Is Not
+  Adoption" in `docs/Principles.md`), and confirms the one narrow D2
+  boundary 0.9.261 chose to record rather than fix
+  (`WorldLocationDirectory#find()`'s plain-id lookup) remains honestly
+  unpatched — never reproducing either prior file's own exhaustive
+  proof.
+- **B. Claim interaction matrix** — Display/Navigate COMPLETE, Adopt
+  REACHABLE_BUT_INTERNAL, Verify/Moderate/Notify MISSING_DOMAIN_
+  CAPABILITY, Prefer/Export MISSING_UI, each classified against the
+  evidence the sections below gather.
+- **C. Adoption semantics** — traces `PlaceNamingClaimExchange#
+  importClaim()`'s exact validate → construct → verify → persist order
+  from real source, confirms no "official"/"trusted"/"adopted"
+  vocabulary exists anywhere for a stronger meaning to attach to, and
+  proves live that adoption's entire real effect is narrow: the claim
+  joins this replica's own `namingView()` ranking for its region;
+  `WorldRegion` is never touched; the stored claim is indistinguishable
+  from a self-published one. The existing, narrower meaning
+  (0.9.259 Section F) is preserved exactly, never strengthened.
+- **D. Automatic vs. manual adoption** — confirms the manual
+  `PlaceNamingPanel` can adopt today (unchanged since 0.5.3) while the
+  Nearby Place Names presentation still cannot, and sharpens the gap
+  beyond 0.9.259's own finding: `nearbyPlaceNamingClaimRows` (the row
+  the template actually renders) carries only `claimId`/`name`/
+  `authorDisplayName`/`position`/`regionId`/`worldId` — never the raw
+  `authorIdentityId`, `createdAt`, or `signature` a publication package
+  requires. The full claim already exists one level up, in
+  `nearbyPlaceNamingClaims.value` (the monitor's own `lastResult`,
+  never pared down) — proven live by adopting from there, keyed by
+  `claimId`, exactly the same "restore what was dropped" shape 0.9.260
+  already used restoring `regionId`/`worldId` to the row itself.
+- **E. World identity boundary for adoption** — determines whether
+  `importClaim()` already has sufficient World/region identity
+  safeguards, independent of navigation's own D2 boundary. Proven yes:
+  `worldId`/`regionId` are bound into the claim's own signed payload
+  (`getPlaceNamingClaimSigningDescriptor()`), every storage/query method
+  on `LocalPlaceNamingClaimStore` takes `worldId` explicitly rather than
+  inferring "the current World," and — under the identical simultaneous-
+  collision shape 0.9.261's own Section D2 used for navigation (two
+  Worlds sharing one `regionId`, both claims imported into one replica)
+  — adoption produces zero ambiguity, where navigation's own
+  `WorldLocationDirectory#find()` produces exactly one. No separate
+  domain/security seam is required before exposing adoption at the UI
+  layer, and none is added here.
+- **F. Export-before-adopt kept separate** — confirms, statically and
+  live, that `importClaim()` never calls or depends on `exportClaim()`
+  having run first for the same claim; export-before-adopt (0.9.259
+  Section I, finding 3) remains its own, independently-ranked,
+  lower-priority candidate, never silently bundled into adoption.
+- **G. Product-gap verdict** — six candidates reranked from this
+  milestone's own fresh evidence (Navigate is retired from the ranking —
+  it is COMPLETE, not a candidate). Adopt is reconfirmed #1, now backed
+  by two previously-unrecorded findings: World-identity safety is
+  already sufficient (Section E), and the one real remaining
+  implementation detail is precisely named — row widening, or a future
+  action reading the underlying discovery entries by `claimId` instead
+  (Section D) — never merely "wire a button."
+- **H. Verdict** — summarizes all of the above; no candidate is selected
+  or built here.
+
+Registered in `tests.html`.
+
+### What this milestone deliberately excludes
+
+Any new capability, and any production-code change whatsoever —
+including the row-widening `nearbyPlaceNamingClaimRows` itself would
+need before a future Adopt action could use it directly (Section D's
+own finding is recorded, not fixed, exactly as 0.9.261 chose for
+navigation's own D2 boundary), and including any fix to
+`WorldLocationDirectory#find()`'s own plain-id lookup — reconfirmed
+still open, never opportunistically patched as a side effect of this
+reassessment (Section A5). No verification, competing-name resolution,
+moderation, or notifications are added or tested for their own sake
+beyond confirming their continued absence (Section B).
+
+### What comes after
+
+Per the product-direction conversation's own proposed arc:
+`0.9.263 — Nearby Place Naming Claim Adoption UI`, wiring an Adopt
+action on the Nearby Place Names row through the existing, unmodified
+`PlaceNamingClaimExchange#importClaim()` — the same "call the existing
+boundary, never reproduce its logic" restraint Navigate (0.9.260) itself
+already followed. This is the immediate next candidate this
+reassessment's own evidence points to; as with every roadmap arc
+recorded here, only the immediate next milestone is treated as
+committed.
