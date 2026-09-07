@@ -83538,3 +83538,169 @@ resolution → proximity → automatic refresh → World View → session
 lifecycle → failure/race behavior), followed by `0.9.259 —
 Post-Place-Naming Product Reassessment`. As with every roadmap arc
 recorded here, only the immediate next milestone is treated as committed.
+
+## 0.9.258 — Comprehensive Place Naming E2E & Lifecycle Audit
+
+0.9.253 through 0.9.257 built the complete Place Naming discovery
+pipeline, one seam at a time:
+
+```text
+Nostr relay
+     │
+     ▼
+NostrPlaceNamingDiscoverySource        (0.9.254)
+     │
+     ▼
+PlaceNamingDiscoveryQueryService        (0.9.253)
+     │
+     ▼
+DiscoverPlaceNamingClaimsCommand        (0.9.253)
+     │
+     ▼
+PlaceNamingDiscoveryMonitor              (0.9.256)
+     ├── resolveClaimPosition
+     └── selectNearbyPlaceNamingClaims   (0.9.255)
+     │
+     ▼
+WorldView "Nearby Place Names"            (0.9.257)
+```
+
+This milestone adds **no new capability**. It is a **test-only audit**
+of the complete lifecycle now that Place Naming has crossed every seam
+from a Nostr wire event to an automatically-refreshing World View
+presentation — mirroring the posture 0.9.208, 0.9.239, and 0.9.249 each
+already took for their own subsystems, one feature over: enough surface
+area now exists across all six files for lifecycle bugs invisible when
+each layer was tested alone (a race, a stale response, an unmount, a
+World switch mid-flight, a failing sibling source) — and the milestone
+gives a clean decision point before choosing what comes next.
+
+### What this milestone adds
+
+`tests/PlaceNamingEndToEndLifecycleAudit.test.js` (new) — fifteen
+sections, driven through the REAL production chain (a real
+`NostrPlaceNamingDiscoverySource`, a real `PlaceNamingDiscoveryQueryService`
+via the real `composePlaceNamingDiscoveryRuntime()`, the real
+`executeDiscoverPlaceNamingClaimsCommand()`, and a real
+`PlaceNamingDiscoveryMonitor` — never a fake, hand-rolled stand-in for
+any of the five) with only the relay/network boundary controlled by an
+in-memory `makeRelay()` fixture:
+
+- **A. Initial encounter** — a nearby claim appears with no explicit
+  user action, end to end through the real chain.
+- **B. Movement threshold precision** — a movement of 50 or 99 (below
+  the 100 refresh radius) never contacts the relay at all; a movement of
+  exactly 100 refreshes (the inclusive boundary); a movement well beyond
+  100 refreshes again — and the UI reflects the newest successful result
+  at every step, never a stale one held over from a no-op tick.
+- **C. Multiple claims** — three regions (deliberately listed in an
+  order uncorrelated with distance) and four claims across them all
+  survive simultaneously, in exact discovery order — never sorted by
+  distance, never deduplicated beyond `claim.id` (two independently
+  authored, similarly-named claims for the same region both survive),
+  and never carrying a primary/official/winner field of any kind.
+- **D. Spatial transition** — moving from area A to area B changes the
+  presentation from area A's own claim to area B's own claim, with
+  area A's claim no longer presented once out of range.
+- **E. Claims becoming distant** — a previously visible claim
+  disappears once a genuinely SUCCESSFUL discovery places it outside the
+  proximity radius, with no error indicator — honestly distinguished
+  from a FAILED discovery (Section F), which instead preserves the
+  previous result.
+- **F. Failure and recovery** — success → failure (claims remain, error
+  set) → success (claims replaced, error cleared), through a real
+  rejection of the monitor's own command. This section deliberately
+  triggers the failure via the session-supplied region lookup rather
+  than the relay — the audit's own investigation confirmed that the
+  real `PlaceNamingDiscoveryQueryService.search()` is documented to
+  never reject (a failing source is isolated into an honest empty
+  result, per Section L), so a relay-level failure alone can never
+  reach `PlaceNamingDiscoveryMonitor` as `lastError` in the real chain;
+  the session-provided region lookup is the one collaborator that
+  genuinely can, and is exactly as real and exactly as un-mocked as
+  every other collaborator in this file.
+- **G. Out-of-order discovery** — two overlapping requests resolved in
+  reverse order (the newer settles first) leave only the newer result
+  displayed; the older request's later-arriving response is discarded
+  entirely once it finally settles.
+- **H. Malformed claims** — three flavors (unparseable JSON, a claim
+  missing a required field, a claim with a malformed signature object)
+  mixed in among two well-formed claims never suppress the well-formed
+  ones.
+- **I. World/session switching** — switching World mid-flight (a first
+  request is still pending when the switch happens and a second request
+  for the new World is issued) never lets the abandoned World's later
+  response contaminate the new World's already-displayed presentation.
+- **J. Unmount** — disposing the monitor and flipping the
+  presentation-active guard, mirroring `ui/views/WorldView.js`'s own
+  `onBeforeUnmount()` ordering exactly, prevents a still-pending
+  discovery's response from ever mutating a torn-down view.
+- **K. Identity isolation** — two independent monitors/sessions/relays
+  never share nearby claims, errors, or request-id race outcomes, even
+  when one instance's request is deliberately left pending while the
+  other's resolves and later interleaves with it.
+- **L. Discovery-source failure isolation** — proved twice: directly
+  against a `PlaceNamingDiscoveryQueryService` built from one failing
+  and one succeeding `NostrPlaceNamingDiscoverySource`, and again end to
+  end through the full monitor pipeline — a failing sibling source
+  never suppresses a succeeding one's own claim, and the isolation never
+  surfaces as a monitor-level error.
+- **M. Position-resolution isolation** — a claim naming a region this
+  replica does not know about, and a claim whose region lookup itself
+  throws, both disappear from presentation without poisoning a
+  genuinely resolvable neighbor claim discovered in the very same cycle.
+- **N. Semantic negative tests** — a claim carrying an obviously
+  fabricated signature is still discovered and presented (this pipeline
+  never verifies signature authenticity); the automatic cycle never
+  renames the World location it describes; and a static scan of every
+  file in the pipeline (`PlaceNamingDiscoveryMonitor.js`,
+  `PlaceNamingDiscoveryQueryService.js`, `DiscoverPlaceNamingClaimsCommand.js`,
+  `NostrPlaceNamingDiscoverySource.js`, `PlaceNamingDiscoveryRuntimeComposition.js`,
+  `PlaceNamingProximitySelection.js`, `PlaceNamingDiscoveryEnvelope.js`)
+  confirms none of them import a verification/adoption/persistence/
+  registration collaborator or contain ranking/authority vocabulary of
+  their own.
+- **FLAGSHIP — "Riverside" and "Old River"** — two independently
+  authored claims for the exact same ground both display simultaneously,
+  in discovery order, with neither name preferred and no claim ever
+  carrying an authority flag — the one test the product-direction
+  conversation that opened this milestone asked for by name, protecting
+  the architecture against the most tempting future regression: silently
+  turning proximity into authority.
+
+Every harness in this file reuses the same dynamic guard
+`tests/PlaceNamingWorldViewPresentation.test.js` already established: a
+`makeSession()` Proxy that throws on any access beyond `getRegions()`,
+so a test in this file that somehow reached `session.publishPlaceNamingClaim()`,
+`session.getPlaceNamingView()`, or any other session method would fail
+immediately and loudly — proof by construction, not merely by
+inspection, that this audit's own harness could never adopt, persist,
+verify, or register a discovered claim even by accident. Registered in
+`tests.html`.
+
+**An audit proves a pipeline's seams hold together under real
+conditions; it grants the pipeline no new authority.** Every principle
+0.9.253 through 0.9.257 already established — "A Discovered Naming
+Claim Is Still Just A Claim," "Proximity Filtering Is Not Ranking, Is
+Not Conflict Resolution," "Presentation Is Not Adoption" — holds exactly
+as before; this milestone only demonstrates that it holds under
+concurrency, failure, and lifecycle churn too.
+
+### What this milestone deliberately excludes
+
+Any new capability whatsoever. No verification, ranking, adoption,
+persistence, editing, notifications, or moderation is added, tested for
+its own sake beyond confirming its continued absence, or scheduled by
+this milestone — see docs/Roadmap.md, "0.9.257 — World View Place
+Naming Presentation," "what this milestone deliberately excludes," which
+this audit confirms rather than revisits.
+
+### What comes after
+
+Per the product-direction conversation's own proposed arc: `0.9.259 —
+Post-Place-Naming Product Reassessment`, a test-only milestone asking
+what product capability is now genuinely missing (verification,
+authoritative naming, claim interaction/inspection/navigation,
+publication, moderation, notifications — deliberately not preselected).
+As with every roadmap arc recorded here, only the immediate next
+milestone is treated as committed.
