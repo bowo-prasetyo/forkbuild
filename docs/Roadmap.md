@@ -83704,3 +83704,120 @@ authoritative naming, claim interaction/inspection/navigation,
 publication, moderation, notifications — deliberately not preselected).
 As with every roadmap arc recorded here, only the immediate next
 milestone is treated as committed.
+
+## 0.9.259 — Post-Place-Naming Product Reassessment
+
+Test/document-only, no production changes. 0.9.253 through 0.9.257 built
+the complete automatic Place Naming discovery/presentation pipeline;
+0.9.258 proved it holds together end to end under concurrency, failure,
+and lifecycle churn. Per that milestone's own "what comes after," and the
+product-direction conversation that opened this one, this is the
+reassessment — deliberately NOT another pipeline extension, but a fresh
+look at what the now-complete capability actually reveals as the next
+meaningful product seam, following the exact restraint 0.9.221, 0.9.241,
+0.9.250, and 0.9.252 already established for this recurring milestone
+shape.
+
+Adds `tests/PostPlaceNamingProductReassessment.test.js`, thirteen sections:
+
+* **Section A — Freeze.** Reuses `tests/PlaceNamingEndToEndLifecycleAudit.test.js`
+  (0.9.258) as the authoritative pipeline-closure record rather than
+  reproducing its 43 assertions; re-verifies one signal per architectural
+  layer fresh against real source.
+* **Section B — Capability/reachability matrix**, swept across the eight
+  areas this milestone's own brief names: core, application, storage,
+  identity, World View, Editor, peer exchange, and import/export. Seven
+  are `COMPLETE` outright; peer exchange is `DEFERRED` (file exchange and
+  Nostr discovery remain the only two actual transports — a live peer
+  transport was named as future work at 0.5.3 and never scheduled since,
+  never a newly discovered gap). One sub-finding carries forward into
+  later sections: World View's two Place Naming surfaces (manual panel,
+  automatic presentation) are each individually complete but mutually
+  disconnected.
+* **Section C — Claim interaction**, tested against real source:
+  display/inspect/navigate/select/copy-share. The manual
+  `PlaceNamingPanel` supports five of six (all but navigate, unneeded
+  since it opens already scoped to its region). The automatic "Nearby
+  Place Names" row supports display ONLY — proven by extracting its own
+  template block and confirming zero `<button>`/`@click` of any kind,
+  while every sibling Nearby section (Places/Landmarks/People) renders at
+  least one button per row.
+* **Section D — Claim identity/provenance boundary.** Claim identity,
+  place/region identity, author identity, discovery-source identity, and
+  spatial position are five structurally distinct concepts — envelope-
+  level `worldId`/`regionId` are cross-validated against the embedded
+  claim's own copies; `application/NostrPlaceNamingDiscoverySource.js`
+  reads only `event.content`, never `event.pubkey`/`event.sig`, so Nostr's
+  own transport identity never enters the pipeline at all.
+* **Section E — Existing infrastructure sweep.** Three independent,
+  already-wired entry points (Locations panel, Geographic Place panel,
+  Focus panel) all fall through to the exact same `openNamingPanel()`.
+  The Nearby Place Names row is the one surface with zero such wiring,
+  and `nearbyPlaceNamingClaimRows`' own mapping drops `regionId`/`worldId`
+  even though a freshly-parsed discovery envelope genuinely carries both
+  one layer below — a reachability gap, not a missing capability.
+* **Section F — Manual vs. automatic comparison, PROVEN rather than
+  asserted.** A claim is built, signed under a real identity, and turned
+  into a discovery envelope through the real, unmodified
+  `buildPlaceNamingDiscoveryEnvelope()`/`parsePlaceNamingDiscoveryEnvelope()`
+  — the exact shape genuine Nostr discovery produces. That envelope's own
+  `.claim` is then reshaped into the existing publication-package format
+  and handed to a totally independent replica's real, unmodified
+  `PlaceNamingClaimExchange#importClaim()` — the same method the manual
+  "Import Claim" button already calls. It verifies, imports, and persists
+  correctly (name/author fidelity intact), and the same path still
+  rejects a forged discovered claim through the identical verifier a
+  manual import already uses. Zero production code changed to prove this.
+  Adoption of a discovered claim is `REACHABLE_BUT_INTERNAL`, not
+  `MISSING_DOMAIN_CAPABILITY`.
+* **Section G — World-location naming boundary.** Already frozen
+  (`docs/Principles.md`, "A Name Is A Claim, Not A Fact," 0.5.2) —
+  reconfirmed structurally: `core/PlaceNamingClaim.js` imports neither
+  `World.js` nor `WorldRegion.js`, and
+  `application/WorldCommandPropagationUseCase.js` carries zero Place
+  Naming vocabulary.
+* **Section H — The negative audit this milestone's brief asked for by
+  name.** No path exists, statically (every pipeline file scanned for
+  rename vocabulary) or behaviorally (the real `PlaceNamingDiscoveryMonitor`
+  run against a region whose own `.name` getter/setter is observed across
+  a full discover-select cycle), from a nearby claim to a `WorldRegion`'s
+  own current name.
+* **Section I — Four `MISSING_UI` gaps**, each itemized with the exact
+  existing, unmodified collaborator it would reuse: navigate (
+  `session.focusLocation`/`openNamingPanel`), adopt (proven in Section F),
+  set-preference (`setPreferredPlaceName`), and export-before-adopt
+  (smaller, needs one extra construction step).
+* **Section J — Four `MISSING_DOMAIN_CAPABILITY` candidates**
+  reconfirmed unchanged: a standalone verification-trigger UI (every real
+  call site of `verifyPlaceNamingClaim()` is part of a mutating publish/
+  import operation, never a check-only path), competing-name handling
+  beyond ranking (deliberate), moderation/reporting, and notifications
+  (the standing gap named since 0.9.221).
+* **Section K — Obsolete/duplicate check.** None found: the two
+  transports are complementary by design, the two discovery monitors
+  remain deliberately non-reusing, and exactly one naming panel component
+  exists.
+* **Section L — Candidate ranking.** Seven candidates ranked by evidence
+  strength and size, nothing selected.
+* **Section M — Verdict.**
+
+Registers the new test in `tests.html`.
+
+### What this milestone deliberately excludes
+
+Building any of the seven ranked candidates. No new UI wiring, no new use
+case, no change to `ui/views/WorldView.js`, `ui/components/PlaceNamingPanel.js`,
+or any Place Naming production file — this milestone is evidence-gathering
+and classification only, per its own brief's explicit instruction not to
+preselect a next milestone.
+
+### What comes after
+
+No 0.9.260 is preselected. Section L's seven ranked candidates stand,
+most direct and evidence-backed first: navigating to a discovered claim's
+region; adopting a discovered claim (proven viable end to end in Section
+F); setting a local preference for one; exporting/sharing one before
+adoption; a standalone verification-trigger UI; notifications; and
+competing-name handling/moderation. Selecting one is a separate, later,
+evidence-driven decision — the same restraint 0.9.221, 0.9.241, 0.9.250,
+0.9.252, and now 0.9.259 have all held.
