@@ -83402,3 +83402,139 @@ World View Place Naming Presentation`, `0.9.258 — Comprehensive Place
 Naming E2E Audit`, and `0.9.259 — Post-Place-Naming Product Reassessment`.
 As with every roadmap arc recorded here, only the immediate next milestone
 is treated as committed.
+
+## 0.9.257 — World View Place Naming Presentation
+
+0.9.256 made nearby Place Naming claims automatically DISCOVERABLE; per
+that milestone's own closing "deliberately excluded," it never rendered
+anything — `application/PlaceNamingDiscoveryMonitor.js` "has no idea `ui/`
+exists." This milestone closes exactly that gap, and only that gap: wire
+the monitor into `ui/main.js`/`ui/views/WorldView.js`, and present its
+already-filtered `lastResult` in World View.
+
+```
+Wanderer movement
+     │
+     ▼
+PlaceNamingDiscoveryMonitor   (0.9.256, UNMODIFIED)
+     ├── discovery
+     ├── position resolution
+     └── proximity filtering
+     │
+     ▼
+nearby PlaceNamingClaims
+     │
+     ▼
+World View presentation   (0.9.257) ★
+     │
+     ▼
+"These names have been published for nearby places"
+```
+
+**`WorldView` observes/presents the monitor's result; it never reproduces
+its logic.** `ui/main.js` composes only the transport-level half —
+`NostrPlaceNamingDiscoverySource` wrapped in `composePlaceNamingDiscoveryRuntime()`
+(both 0.9.253/0.9.254, unmodified), reusing the SAME `nostrRelayQueryClient`
+instance already constructed for Snapshot discovery — and provides the
+resulting `placeNamingDiscoveryQueryService` app-wide. `ui/views/WorldView.js`
+is where the REST of the pipeline is composed, because
+`application/WorldNavigationSession.js` — the one collaborator that
+actually holds the current World layout — lives only there, never in
+`ui/main.js`: a `PlaceNamingDiscoveryMonitor` is constructed per mount
+(scoped exactly like `automaticSnapshotEncounterCascade` already is) with
+two small closures, both reaching `session` through `getRegions()` alone —
+
+- `discoverPlaceNamingClaimsCommand`: fans `executeDiscoverPlaceNamingClaimsCommand()`
+  (0.9.253) out across every currently-known region's own
+  `derivePlaceNamingDiscoveryTag(worldId, regionId)` (0.9.253's own
+  envelope module), flattening the results — the SAME "a caller composes
+  multi-region discovery over the unmodified command/aggregator" pattern
+  `tests/PlaceNamingDiscoveryOrchestration.test.js`'s own flagship section
+  already proved out.
+- `resolveClaimPosition`: matches a discovered envelope's own
+  `worldId`/`regionId` against `session.getRegions()`'s own
+  already-computed, shared-layout-space `position` — the SAME read
+  `nearbyGeographicPlaces`/`mapContent` already perform every tick. An
+  unknown region resolves to `null`, the monitor's own documented
+  fail-closed default.
+
+Neither closure ranks, verifies, or adopts anything — they answer only the
+two questions 0.9.256's own header named as requiring a session ("which
+regions does this replica currently know about" and "where does a
+discovered claim's own region actually sit"), then hand the real answer to
+the monitor, which does everything else itself, unmodified.
+
+`refreshSpatialUI()` calls `placeNamingDiscoveryMonitor.observe(spatialContext.value.position)`
+on the exact same cadence every other field on that tick already refreshes
+on — a RAW `{x,z}` position, never the whole `spatialContext` object,
+since `application/ShouldRefreshPlaceNamingDiscovery.js` (unlike Snapshot
+discovery's own context-shaped threshold) compares positions directly.
+Once settled, this view copies EXACTLY `monitor.lastResult`/`.lastError`
+into two new refs — `nearbyPlaceNamingClaims`/`placeNamingDiscoveryError`,
+the two state atoms the product-direction conversation that opened this
+milestone named by name — no filtering, reordering, deduplication, or
+"primary name" selection of any kind happens in this view. A failed cycle
+therefore leaves the previous claims exactly as they were, with only
+`placeNamingDiscoveryError` changing; a `placeNamingDiscoveryPresentationActive`
+guard (flipped `false` as the very first statement in `onBeforeUnmount()`,
+mirroring `automaticCascadeSessionActive`) stops a still-settling
+`observe()` from writing to either ref after this view has already torn
+down, on top of `dispose()` already stopping the monitor itself from
+applying a late result to its own `lastResult`/`lastError`.
+
+A new "Nearby Place Names" `CollapsibleSection`, alongside the existing
+Nearby Places/Landmarks/People sections, presents a pure mapping over
+`nearbyPlaceNamingClaims` (`nearbyPlaceNamingClaimRows`): place name, a
+resolved position, and the claiming author's display name via the SAME
+`resolveIdentityDisplayName()` every other identity-bearing row in this
+file already calls — never a second, bespoke truncation, and never a
+"primary"/"official" name field. Two claims naming the same place both
+appear as two independent rows; the empty state reads "No nearby place
+naming claims were discovered," deliberately never "this place has no
+name" — an important distinction for a decentralized naming system, where
+the absence of a discovered claim says nothing about whether one exists
+somewhere this replica simply hasn't reached yet.
+
+One new test file, `tests/PlaceNamingWorldViewPresentation.test.js`
+(seventeen sections, one flagship, one negative): nearby claims appearing
+automatically; multiple simultaneous claims; discovery-order preservation;
+distant claims excluded; the correct empty state; failure preserving the
+previous observation and a later success replacing it; a stale response
+never overwriting a newer one; discovery/transport identity (a Nostr
+pubkey) never confused with Place Naming identity (`claim.authorIdentityId`);
+a structural scan proving the new wiring performs no verification,
+ranking, adoption, registration, or persistence, and touches `session`
+only through `getRegions()`; two World View instances remaining isolated;
+a document/World switch never leaking a previous World's claims; monitor
+disposal preventing a post-unmount update; and a negative section proving
+a claim whose position exactly matches the Wanderer's own current position
+still carries no authority flag of any kind, and never renames the World
+location it describes. The flagship section drives the REAL
+`NostrPlaceNamingDiscoverySource`/`composePlaceNamingDiscoveryRuntime`/
+`executeDiscoverPlaceNamingClaimsCommand`/`PlaceNamingDiscoveryMonitor`
+through the EXACT reproduction of `ui/views/WorldView.js`'s own wiring, and
+a final architectural-regression section proves that reproduction against
+`ui/main.js`/`ui/views/WorldView.js`'s own raw source. Registered in
+`tests.html`.
+
+**Presentation makes a claim visible; it does not make it true.** See
+docs/Principles.md, "Presentation Is Not Adoption (0.9.257)."
+
+### What this milestone deliberately excludes
+
+Verification, signature checking, trust indicators, ranking, closest-name
+selection, deduplication beyond what discovery already performs, automatic
+adoption, renaming the World location, persistence of any kind, editing
+claims, notifications, moderation, conflict resolution, automatic
+publication, and World registry registration. In particular: displaying a
+Place Naming claim never mutates the World location's existing name — that
+remains a completely separate, unscheduled semantic operation.
+
+### What comes after
+
+Per the product-direction conversation's own proposed arc: `0.9.258 —
+Comprehensive Place Naming E2E Audit` (Nostr → discovery → position
+resolution → proximity → automatic refresh → World View → session
+lifecycle → failure/race behavior), followed by `0.9.259 —
+Post-Place-Naming Product Reassessment`. As with every roadmap arc
+recorded here, only the immediate next milestone is treated as committed.

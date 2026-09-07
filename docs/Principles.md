@@ -19084,3 +19084,53 @@ same fail-closed instinct `application/PlaceNamingDiscoveryQueryService.js`'s
 own "an honest empty roster" already models for zero discovery sources.
 
 See `docs/Roadmap.md`, 0.9.256, for the full milestone entry.
+
+### Presentation Is Not Adoption (0.9.257)
+
+0.9.256 made nearby Place Naming claims automatically discoverable but
+never rendered anything. 0.9.257 (World View Place Naming Presentation) is
+the moment a Wanderer can actually SEE a claim without opening a debug
+console — the second moment, after "automatic," that this feature's own
+history warns is tempting to overreach in: it is a very small step from
+"show the claim" to "show the claim as THE name."
+
+**A claim shown is still just a claim.** Rendering
+`PlaceNamingDiscoveryMonitor#lastResult` in World View changes nothing
+about what a claim IS. A claim that happens to describe the Wanderer's own
+exact current position is exactly as unverified, exactly as unofficial,
+and exactly as un-adopted as one describing somewhere far away —
+`tests/PlaceNamingWorldViewPresentation.test.js`'s own negative section
+proves this directly, by checking that no "primary"/"official"/"adopted"
+flag of any kind ever attaches to a row no matter how exact that spatial
+coincidence is. Two claims naming the same ground both stay visible, as
+two independent rows — 0.9.255's own "Proximity Filtering Is Not Ranking"
+principle, redrawn one layer up in the UI itself.
+
+**An empty list means "nothing discovered," never "nothing named."** In a
+centralized system, an empty name field would mean "no name exists." In a
+decentralized one, it can only honestly mean "no claim reached this
+replica" — a fundamentally weaker, more honest statement. World View's own
+empty state reads "No nearby place naming claims were discovered," never
+"this place has no name," on purpose: the wording itself is part of this
+principle, not an incidental copy choice.
+
+**A view composes wiring; it does not compose policy.** `ui/views/WorldView.js`
+builds two small closures (a discovery command that fans out over known
+regions' own discovery tags, and a position resolver reading
+`session.getRegions()`) and hands them to an unmodified
+`PlaceNamingDiscoveryMonitor` — every decision about cadence, staleness,
+failure isolation, and proximity remains entirely that class's own, exactly
+as it was before this milestone. The two new refs this milestone adds
+(`nearbyPlaceNamingClaims`/`placeNamingDiscoveryError`) are copied straight
+from `monitor.lastResult`/`.lastError`, never filtered, reordered, or
+reduced to "the" name for a place a second time in the UI layer.
+
+**Failure degrades gracefully, never destructively.** A discovery cycle
+that fails leaves whatever claims were already on screen exactly as they
+were — the identical "a failure never mutates the previous good state"
+posture `PlaceNamingDiscoveryMonitor` itself already holds, now visible to
+a person as "the display doesn't flicker to empty just because one relay
+round-trip failed," with only a small, optional, non-authoritative error
+indicator changing.
+
+See `docs/Roadmap.md`, 0.9.257, for the full milestone entry.

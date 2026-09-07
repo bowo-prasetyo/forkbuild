@@ -42,6 +42,9 @@ import { geographicPlaceLocationId } from '../../core/GeographicPlaceNavigation.
 import { WorldFocusKind } from '../../core/WorldFocusContext.js';
 import { EditorEntryContext, EditorEntryReason, editorEntryContextToQuery, withReturnWorld } from '../../core/EditorEntryContext.js';
 import { WorldViewNavigationState, WorldViewPrimaryMode } from '../../application/WorldViewNavigationState.js';
+import { PlaceNamingDiscoveryMonitor } from '../../application/PlaceNamingDiscoveryMonitor.js';
+import { executeDiscoverPlaceNamingClaimsCommand } from '../../application/DiscoverPlaceNamingClaimsCommand.js';
+import { derivePlaceNamingDiscoveryTag } from '../../core/PlaceNamingDiscoveryEnvelope.js';
 
 const DRAG_THRESHOLD_PX = 6;
 
@@ -354,6 +357,23 @@ export default {
         // "Nearby Places" section is populated from it too when the
         // panel opens (see openGeographicPlaceDirectory() below).
         const nearbyGeographicPlaces = ref([]);
+        // 0.9.257 — World View Place Naming Presentation. The two state
+        // atoms this milestone's own brief names by name: `nearbyPlaceNamingClaims`
+        // is exactly `placeNamingDiscoveryMonitor.lastResult` (see
+        // `refreshSpatialUI()`, below) — one discovery envelope with its own
+        // resolved `.position` attached per entry, UNTOUCHED, never re-ranked,
+        // deduplicated, or reduced to "the" name for a place; two claims
+        // naming the same ground both appear, exactly as `application/
+        // PlaceNamingDiscoveryMonitor.js`'s own `lastResult` already holds
+        // them. `placeNamingDiscoveryError` mirrors the monitor's own
+        // `lastError` — a small, optional, non-authoritative indicator, never
+        // a reason to clear `nearbyPlaceNamingClaims`. Neither ref is ever
+        // written from anywhere but that one `.then()` callback — this view
+        // performs no discovery, position resolution, or proximity filtering
+        // of its own; see `placeNamingDiscoveryMonitor`'s own construction
+        // comment, below, for where those responsibilities actually live.
+        const nearbyPlaceNamingClaims = ref([]);
+        const placeNamingDiscoveryError = ref(null);
         // 0.5.8 — World View Contextual Focus & Information Hierarchy.
         // `focusContext` is a core/WorldFocusContext.js#WorldFocusContext.toJSON()
         // shape (or null), rebuilt fresh every time something is
@@ -538,6 +558,16 @@ export default {
         // `refreshSpatialUI()`, below, for the one call site that feeds it
         // this view's own already-computed `spatialContext`.
         const worldSnapshotDiscoveryMonitor = inject('worldSnapshotDiscoveryMonitor', null);
+        // 0.9.257 — World View Place Naming Presentation. The SAME
+        // app-wide `PlaceNamingDiscoveryQueryService` `ui/main.js` composes
+        // around whatever Nostr transport is available — never a second
+        // relay client, never a second query service. Only the
+        // TRANSPORT-level half; see `placeNamingDiscoveryMonitor`'s own
+        // construction comment, below, for why the command and position
+        // resolver built around it are this view's own to compose, not
+        // `ui/main.js`'s: only this session actually holds the current
+        // World layout `resolveClaimPosition` needs.
+        const placeNamingDiscoveryQueryService = inject('placeNamingDiscoveryQueryService', null);
         // 0.9.152 — Selected Snapshot Candidate Resolution. The SAME
         // app-wide `resolveSelectedSnapshotCommand` `ui/main.js` now
         // composes (reusing the SAME resolver/content store
@@ -652,6 +682,63 @@ export default {
         const automaticSnapshotEncounterRetentionReconciliation = new AutomaticSnapshotEncounterRetentionReconciliation({
             worldDiscoverySourceRegistry
         });
+        // 0.9.257 — World View Place Naming Presentation.
+        //
+        // `application/PlaceNamingDiscoveryMonitor.js` (0.9.256) is the
+        // authority for "which claims are currently nearby" — this view's
+        // whole job is to observe/present its result, never to reproduce
+        // discovery, position resolution, or proximity filtering itself.
+        // Scoped to this WorldView's own mount, the same "fresh instance
+        // accompanies each fresh session" posture `automaticSnapshotEncounterCascade`
+        // above already holds — two mounted WorldViews (or a document
+        // switch mid-session) never share a monitor's own request id or
+        // last-observed position.
+        //
+        // Both closures below exist ONLY because `application/
+        // WorldNavigationSession.js` — the one collaborator that actually
+        // holds the current World layout — lives here, in this view, never
+        // in `ui/main.js`. Neither closure ranks, verifies, or adopts
+        // anything; they answer exactly the two questions the monitor's own
+        // header says only a session can answer ("which regions does this
+        // replica currently know about, so their own discovery tags can be
+        // queried" and "where, in THIS Wanderer's current layout, does a
+        // discovered claim's own regionId sit"), then hand the real answer
+        // straight to the monitor, which does everything else itself.
+        //
+        // `resolveClaimPosition` reads `session.getRegions()` — the SAME
+        // shared-layout-space read `nearbyGeographicPlaces`/`mapContent`
+        // already use every tick — matching a discovered envelope's own
+        // `worldId`/`regionId` against a currently-known region's own
+        // `position`. A region this replica does not (or no longer) know
+        // about resolves to `null`, the monitor's own documented
+        // fail-closed default: an unresolvable claim is excluded by
+        // proximity selection, never guessed at.
+        const placeNamingDiscoveryMonitor = placeNamingDiscoveryQueryService
+            ? new PlaceNamingDiscoveryMonitor({
+                discoverPlaceNamingClaimsCommand: () => {
+                    const regions = session.getRegions();
+                    return Promise.all(regions.map((region) => executeDiscoverPlaceNamingClaimsCommand({
+                        discoveryTag: derivePlaceNamingDiscoveryTag(region.worldId, region.id),
+                        discoveryQueryService: placeNamingDiscoveryQueryService
+                    }))).then((perRegionResults) => perRegionResults.flat());
+                },
+                resolveClaimPosition: (envelope) => {
+                    const region = session.getRegions().find((r) => r.worldId === envelope.worldId && r.id === envelope.regionId);
+                    return region ? region.position : null;
+                }
+            })
+            : null;
+        // 0.9.257 — the identical `automaticCascadeSessionActive` guard
+        // pattern immediately above, its own separate flag: flipped to
+        // `false` as the very first statement in `onBeforeUnmount()`, below,
+        // so a `placeNamingDiscoveryMonitor.observe()` promise still
+        // settling after this view has already torn down never writes to
+        // `nearbyPlaceNamingClaims`/`placeNamingDiscoveryError` — disposing
+        // the monitor itself already stops IT from applying a late result to
+        // its own `lastResult`/`lastError`, but says nothing about whether
+        // this view's own `.then()` callback still runs; this flag is what
+        // stops that callback from touching a torn-down view's own refs.
+        let placeNamingDiscoveryPresentationActive = true;
         // 0.3.6 — World Discovery & Exploration. Spatial context service
         // derives location descriptions, nearby structures, and collaborator
         // positions from the viewer's current position and deterministic
@@ -1484,6 +1571,47 @@ export default {
                             }
                         }));
                     }
+                });
+            }
+
+            // 0.9.257 — World View Place Naming Presentation. The SAME
+            // cadence every other field on this tick already refreshes on —
+            // this milestone adds no polling loop, timer, or subscription of
+            // its own; see `placeNamingDiscoveryMonitor`'s own construction
+            // comment, above. Unlike `worldSnapshotDiscoveryMonitor` above,
+            // `observe()` is handed `spatialContext.value.position` —a raw
+            // `{x,z}` — never the whole spatialContext object:
+            // `application/ShouldRefreshPlaceNamingDiscovery.js` compares
+            // raw positions directly, unlike Snapshot discovery's own
+            // context-shaped threshold.
+            //
+            // Once the observation settles, this view reads EXACTLY
+            // `placeNamingDiscoveryMonitor.lastResult`/`.lastError` into its
+            // own `nearbyPlaceNamingClaims`/`placeNamingDiscoveryError` refs
+            // — no filtering, reordering, deduplication, or "primary name"
+            // selection of any kind happens here. A discovery cycle that
+            // fails leaves `lastResult` (and therefore this view's own
+            // `nearbyPlaceNamingClaims`) exactly as it was — see
+            // `PlaceNamingDiscoveryMonitor`'s own header, "a discovery
+            // failure never mutates lastResult" — so the previously
+            // displayed claims simply remain on screen, with
+            // `placeNamingDiscoveryError` the only thing that changes.
+            //
+            // `placeNamingDiscoveryPresentationActive` (flipped `false` as
+            // the very first statement in `onBeforeUnmount()`, below) guards
+            // against this callback still running after this view has torn
+            // down — a real possibility since `observe()`'s own returned
+            // promise is intentionally never awaited by this tick, the same
+            // "background concern this tick never blocks on" restraint
+            // `worldSnapshotDiscoveryMonitor`'s own call above already
+            // holds.
+            if (placeNamingDiscoveryMonitor && spatialContext.value) {
+                placeNamingDiscoveryMonitor.observe(spatialContext.value.position).then(() => {
+                    if (!placeNamingDiscoveryPresentationActive) {
+                        return;
+                    }
+                    nearbyPlaceNamingClaims.value = placeNamingDiscoveryMonitor.lastResult || [];
+                    placeNamingDiscoveryError.value = placeNamingDiscoveryMonitor.lastError;
                 });
             }
 
@@ -2483,11 +2611,19 @@ export default {
         // separate `/live-world` destination — is this milestone's own
         // point.
         const WORLD_ENCOUNTERS_SECTION = 'explore:world-encounters';
+        // 0.9.257 — a fifth Explore-mode CollapsibleSection, the SAME
+        // "pure module, mirrored into a ref" pattern every Nearby section
+        // above already uses. Defaults collapsed (true), the same default
+        // "Nearby Landmarks"/"Nearby People" already get: a discovered,
+        // unverified claim is exactly the kind of new, unfamiliar surface
+        // that shouldn't demand attention by default.
+        const NEARBY_PLACE_NAMING_SECTION = 'explore:nearby-place-naming';
         const nearbySectionsCollapsed = ref({
             places: worldViewNav.isSectionCollapsed(NEARBY_PLACES_SECTION, false),
             landmarks: worldViewNav.isSectionCollapsed(NEARBY_LANDMARKS_SECTION, true),
             people: worldViewNav.isSectionCollapsed(NEARBY_PEOPLE_SECTION, true),
-            worldEncounters: worldViewNav.isSectionCollapsed(WORLD_ENCOUNTERS_SECTION, false)
+            worldEncounters: worldViewNav.isSectionCollapsed(WORLD_ENCOUNTERS_SECTION, false),
+            placeNaming: worldViewNav.isSectionCollapsed(NEARBY_PLACE_NAMING_SECTION, true)
         });
 
         // CollapsibleSection already computes the intended NEXT
@@ -2522,6 +2658,30 @@ export default {
                 deviceId: deviceByIdentity.get(c.identityId) || null
             }));
         });
+
+        // 0.9.257 — World View Place Naming Presentation. A pure
+        // presentation mapping over `nearbyPlaceNamingClaims` — NOT a second
+        // selection/ranking pass: every entry `placeNamingDiscoveryMonitor.lastResult`
+        // holds is represented here exactly once, in the SAME order, whether
+        // or not two entries happen to name the same place (see this
+        // milestone's own brief, "if two different claims name essentially
+        // the same location, both remain visible"). `authorDisplayName`
+        // reuses the SAME `resolveIdentityDisplayName()` every other
+        // identity-bearing row in this file already calls — never a second,
+        // bespoke truncation. `position` is read straight off the entry the
+        // monitor itself already attached (see that file's own
+        // `_attachPositions()`) — no distance/direction is computed here,
+        // deliberately: this view has no established authority for "how far
+        // is a Place Naming claim," unlike `nearbyGeographicPlaces`'s own
+        // already-established `session.getNearbyGeographicPlaces()` read.
+        const nearbyPlaceNamingClaimRows = computed(() => (
+            nearbyPlaceNamingClaims.value.map((entry) => ({
+                claimId: entry.claim.id,
+                name: entry.claim.name,
+                authorDisplayName: resolveIdentityDisplayName(entry.claim.authorIdentityId),
+                position: entry.position
+            }))
+        ));
 
         function goToNearbyCollaborator(deviceId) {
             if (deviceId) {
@@ -3533,6 +3693,14 @@ export default {
             // reaches its own registration checkpoint, however much later
             // that turns out to be.
             automaticCascadeSessionActive = false;
+            // 0.9.257 — World View Place Naming Presentation. Flipped
+            // immediately after the identical Snapshot-cascade guard above,
+            // before `placeNamingDiscoveryMonitor.dispose()` even runs — see
+            // that flag's own declaration comment for why both are needed.
+            placeNamingDiscoveryPresentationActive = false;
+            if (placeNamingDiscoveryMonitor) {
+                placeNamingDiscoveryMonitor.dispose();
+            }
             clearInterval(spatialInterval);
             clearInterval(spatialPresenceSyncInterval);
             clearInterval(vehicleInteractionInterval);
@@ -3731,6 +3899,11 @@ export default {
             NEARBY_LANDMARKS_SECTION,
             NEARBY_PEOPLE_SECTION,
             WORLD_ENCOUNTERS_SECTION,
+            // 0.9.257 — World View Place Naming Presentation.
+            NEARBY_PLACE_NAMING_SECTION,
+            nearbyPlaceNamingClaims,
+            nearbyPlaceNamingClaimRows,
+            placeNamingDiscoveryError,
             worldDiscoverySourceRegistry,
             worldEncounterMaterialSources,
             worldEncounterMaterialVerifier,
@@ -4005,6 +4178,39 @@ export default {
                             class="action-btn world-view-nearby-row-go"
                             @click="goToNearbyCollaborator(person.deviceId)"
                         >Go</button>
+                    </div>
+                </CollapsibleSection>
+                <!-- 0.9.257 — World View Place Naming Presentation. Presents
+                     nearbyPlaceNamingClaimRows — a pure mapping over
+                     placeNamingDiscoveryMonitor.lastResult, see that
+                     computed's own comment — never a "primary"/"official"
+                     name for a place, and never a reason to rename anything
+                     this view actually navigates by. An empty list here
+                     means "no nearby claims were DISCOVERED," never "this
+                     place has no name" — the wording below is deliberate.
+                     placeNamingDiscoveryError is a small, optional,
+                     non-authoritative indicator; it is never a reason to
+                     hide whatever nearbyPlaceNamingClaimRows still holds
+                     from the last successful discovery. -->
+                <CollapsibleSection
+                    title="Nearby Place Names"
+                    :count="nearbyPlaceNamingClaimRows.length"
+                    :collapsed="nearbySectionsCollapsed.placeNaming"
+                    @toggle="setNearbySectionCollapsed('placeNaming', NEARBY_PLACE_NAMING_SECTION, $event)"
+                >
+                    <p v-if="placeNamingDiscoveryError" class="world-view-nearby-empty world-view-place-naming-error">
+                        Place naming discovery is temporarily unavailable — showing the last known claims, if any.
+                    </p>
+                    <p v-if="nearbyPlaceNamingClaimRows.length === 0" class="world-view-nearby-empty">No nearby place naming claims were discovered.</p>
+                    <div
+                        v-for="claim in nearbyPlaceNamingClaimRows"
+                        :key="claim.claimId"
+                        class="world-view-nearby-row world-view-place-naming-row"
+                        :title="claim.claimId"
+                    >
+                        <span class="world-view-nearby-row-label">✎ {{ claim.name }}</span>
+                        <span class="world-view-nearby-row-distance" v-if="claim.position">at ({{ Math.round(claim.position.x) }}, {{ Math.round(claim.position.z) }})</span>
+                        <span class="world-view-place-naming-author">claimed by {{ claim.authorDisplayName }}</span>
                     </div>
                 </CollapsibleSection>
                 <!-- 0.9.17 — Integrate World Encounters into the Existing
