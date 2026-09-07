@@ -1049,6 +1049,68 @@ import { SnapshotWorldPositionClaimOutcome } from '../../application/SnapshotWor
 // search. This milestone's own scope is "inspect existing commentary,
 // create new commentary through the authoritative application path" —
 // nothing more.
+//
+// 0.9.251 — Publication Commentary Count UI.
+//
+// 0.9.250's own Section D named the one remaining Commentary seam
+// classified MISSING_UI, plainly: "`publicationCommentaries.length`
+// already sits in component state and is read exactly once, only as the
+// empty-state boolean gate, never rendered as a visible number." This
+// closes exactly that gap, and nothing else:
+//
+//   publicationCommentaries   (0.9.248, unchanged — the array already
+//        │                     populated by refreshPublicationCommentaries()
+//        │                     through GetPublicationCommentariesUseCase)
+//        ▼
+//   publicationCommentaries.length   (read directly in the template,
+//        │                            below — no new field, no computed
+//        │                            property, no second state)
+//        ▼
+//   "Commentary (3)" / "Commentary (0)"   (the section's own <h5> title)
+//
+// NO NEW STATE, NO NEW METHOD, NO NEW USE CASE. `publicationCommentaries.length`
+// is read directly by the template's own `<h5>` interpolation — this
+// milestone adds no `publicationCommentaryCount` data field, no
+// `computed` block (this component has never had one), and no
+// `GetPublicationCommentaryCountUseCase`. `GetPublicationCommentariesUseCase`
+// (0.9.247) already returns the authoritative, complete collection every
+// time; a second, count-specific query would answer the identical
+// question through a second path for no reason — see this file's own
+// "one source of truth" restraint, held throughout 0.9.248-0.9.250.
+//
+// THE COUNT IS ALWAYS DERIVED, NEVER MANUALLY INCREMENTED. There is no
+// `commentCount++` anywhere in this file. Because the displayed number is
+// `publicationCommentaries.length` itself — not a copy of it — every
+// existing site that already sets `publicationCommentaries` (the
+// Publication-change watcher's reset to `[]`, `refreshPublicationCommentaries()`'s
+// own success/failure paths, and `submitPublicationCommentary()`'s own
+// re-query on success) already keeps the rendered count correct with no
+// change to any of those methods. A failed submission
+// (`submitPublicationCommentary()`'s own `catch` block, unchanged) never
+// touches `publicationCommentaries` at all, so the displayed count never
+// moves for a rejected attempt — the identical invariant this file's own
+// 0.9.248 header already established for the list itself, extended for
+// free to the number describing it.
+//
+// NO IDENTITY OR AUTHORIZATION DEPENDENCY OF ITS OWN. The count describes
+// the SAME `publicationCommentaries` array every viewer's
+// `getPublicationCommentariesCommand` call already returns — unauthenticated,
+// per 0.9.247's own header ("no authenticated-caller step, no
+// authorization check"). Rendering a number derived from that array
+// introduces no new read path and therefore no new dependency on
+// `viewerIdentityId`, unlike the compose form immediately below it (which
+// already, separately, gates on sign-in).
+//
+// DELIBERATELY EXCLUDED — NOT THIS MILESTONE. A dedicated count use case
+// or store method; a separately fetched/cached count; live updates via
+// polling or subscription (count changes exactly when
+// `publicationCommentaries` itself already does, per 0.9.247/0.9.248's
+// own existing "read once, on mount and on Publication change, plus a
+// re-query after a successful submission" cadence); any of the six
+// MISSING_DOMAIN_CAPABILITY seams 0.9.250 named (notifications,
+// discovery, moderation/removal, synchronization, navigation, persistence
+// management) or the REACHABLE_BUT_INTERNAL `getById()` finding — none of
+// those seams are touched by, or required for, rendering a count.
 export default {
     name: 'OwnPublicationPanel',
     props: {
@@ -2373,7 +2435,7 @@ export default {
                  being the local user's own; only the surface this panel
                  already happens to be is scoped to "my own." -->
             <div v-if="getPublicationCommentariesCommand" class="own-publication-commentary">
-                <h5 class="own-publication-commentary-title">Commentary</h5>
+                <h5 class="own-publication-commentary-title">Commentary ({{ publicationCommentaries.length }})</h5>
 
                 <p v-if="publicationCommentaryError" class="own-publication-commentary-error">{{ publicationCommentaryError }}</p>
 

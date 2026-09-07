@@ -82665,3 +82665,137 @@ removal; commentary synchronization) without choosing among them.
 Selecting and building one is a separate, later, evidence-driven
 decision — the same restraint 0.9.221, 0.9.241, and now 0.9.250 have
 each held in turn.
+
+## 0.9.251 — Publication Commentary Count UI
+
+0.9.250's own Section D classified exactly one Commentary seam
+**MISSING_UI**: `publicationCommentaries.length` already sat in
+`OwnPublicationPanel`'s own component state, read exactly once as a
+boolean empty-state gate, and never rendered as a visible number. Of
+that milestone's four ranked-but-unselected candidates, this is the
+smallest — a product-facing integration gap over an existing,
+already-authoritative read path, not a new domain capability. No new
+persistence, no new command, no new use case, no asynchronous or
+decentralized concern, no identity or authorization dependency.
+
+```text
+Own Publication
+      │
+      ▼
+GetPublicationCommentariesUseCase   (0.9.247, unmodified)
+      │
+      ▼
+PublicationCommentaryStore          (unmodified)
+      │
+      ▼
+publicationCommentaries[]           (0.9.248, unmodified — the SAME
+      │                               array every existing read/write
+      │                               path already populates)
+      │
+      ▼
+publicationCommentaries.length      (read directly by the template)
+      │
+      ▼
+OwnPublicationPanel's own Commentary section title:
+"Commentary (3)" / "Commentary (0)"
+```
+
+### What this milestone adds
+
+One line changed in `ui/components/OwnPublicationPanel.js`'s own
+template: the Commentary section's `<h5>` title interpolates
+`publicationCommentaries.length` directly —
+`Commentary ({{ publicationCommentaries.length }})`. No data field, no
+`computed` property (this component has never had one), and no
+`GetPublicationCommentaryCountUseCase` were added — the existing read
+use case already returns the authoritative collection every time,
+and a second, count-specific query would answer the identical question
+through a second path for no reason. This is the exact restraint the
+milestone's own brief asked for: "I would not create a
+`GetPublicationCommentaryCountUseCase` yet... The UI can derive
+`count = publicationCommentaries.length`... That keeps the store as the
+source of truth and avoids another semantic surface."
+
+Because the rendered count is `publicationCommentaries.length` itself —
+never a copy, never a separately incremented counter — every existing
+site that already sets `publicationCommentaries` keeps the displayed
+number correct with no change to any of those methods:
+
+* The Publication-change watcher's reset to `[]` (0.9.248) already makes
+  the count `0` the instant a different or cleared Publication becomes
+  current — Publication-scoped count switching (`P1 → 3`, `P2 → 1`, back
+  to `P1 → 3`) falls out of existing behavior, verified fresh.
+* `refreshPublicationCommentaries()`'s success path already assigns the
+  freshly queried array; its failure path already leaves
+  `publicationCommentaries` untouched — a failed read still shows the
+  last-known count, never a blank or fabricated one.
+* `submitPublicationCommentary()`'s success path already re-queries
+  through `refreshPublicationCommentaries()` rather than appending —
+  submission convergence (`2 → submit → 3`) comes from the re-queried
+  collection, never a local `count++`. Its failure path never touches
+  `publicationCommentaries` at all, so a rejected submission
+  (`2 → failed submit → 2`) leaves the displayed count exactly where it
+  was, with the compose draft retained — the identical invariant 0.9.248
+  already held for the list itself, extended for free to the number
+  describing it.
+
+`tests/PublicationCommentaryCountUI.test.js` (new), six focused
+sections against the real collaborator stack
+(`tests/PublicationCommentaryUIIntegration.test.js`'s own
+`makeBackend()`/`makeDocument()`/`panelCtx()` pattern, reused rather
+than reproduced):
+
+* **Section A — Count rendering.** Three persisted comments produce a
+  rendered count of 3; the template's own
+  `Commentary ({{ publicationCommentaries.length }})` interpolation is
+  confirmed present in source.
+* **Section B — Empty state.** A freshly published Publication with no
+  commentary yet renders a count of 0, never an error.
+* **Section C — Publication switching.** `P1 → 3`, `P2 → 1`, back to
+  `P1 → 3` — no leakage across switches, reusing the existing
+  Publication-change watcher unmodified.
+* **Section D — Submission convergence.** The count advances from 1 to
+  2 via exactly one fresh read after a successful submission, never a
+  local increment.
+* **Section E — Failed submission.** A rejected write leaves the count
+  at its prior value and the compose draft intact — nothing
+  optimistically incremented.
+* **Section F — Architecture.** No `publicationCommentaryCount` field,
+  no `computed` block, no `GetPublicationCommentaryCountUseCase`, and no
+  count-specific command prop exist anywhere in
+  `OwnPublicationPanel.js`'s own code; the panel still imports none of
+  the five commentary domain/storage/use-case classes, per 0.9.248's own
+  standing restraint.
+
+`tests/PostPublicationCommentaryProductReassessment.test.js`'s own D3
+finding (`count` classified `MISSING_UI`) is updated in place to
+`COMPLETE (0.9.251)`, re-verified against the current source rather than
+left asserting a gap this milestone just closed — the same "reconfirmed
+against real code" discipline that test's own Sections A-E already hold
+throughout.
+
+Registers the new test in `tests.html`.
+
+### What this milestone deliberately excludes
+
+Per its own scope and the reassessment's own explicit warning against
+scope creep: notifications (a temporal/observer model Commentary has
+never had), commentary synchronization (remote authorship, ordering,
+delivery guarantees — deliberately deferred per 0.9.225/0.9.240/0.9.241/
+0.9.250), moderation/deletion (conflicts with Commentary's deliberately
+append-only semantics — no `remove()`/`update()` exists on
+`PublicationCommentaryStore`, unchanged), commentary discovery (would
+turn Commentary from a Publication-attached local read into a discovery
+protocol), and any UI over `getById()` — `REACHABLE_BUT_INTERNAL` since
+0.9.250, but no product action yet needs single-commentary identity, and
+none is manufactured here just to make the method reachable.
+
+### What comes after
+
+No 0.9.252 is preselected. The next candidates remain exactly the three
+0.9.250 ranked and did not select — notifications (now with Commentary's
+own first cross-user event as precedent), commentary moderation/removal,
+and commentary synchronization — plus 0.9.250's own remaining
+commentary UI items (identity-to-profile-name resolution, surfacing
+`getById()`), unaffected by this milestone. Selecting one is a separate,
+later, evidence-driven decision.
