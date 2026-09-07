@@ -4868,6 +4868,15 @@ html, body {
     color: #b08050;
 }
 
+/* 0.9.263 — Nearby Place Naming Claim Adoption UI. Same compact sizing as
+   .world-view-nearby-row-go — Adopt sits beside Navigate as an equally
+   ordinary row action, never visually promoted above it. */
+.world-view-nearby-row-adopt {
+    flex-shrink: 0;
+    padding: 0.15rem 0.5rem;
+    font-size: 0.72rem;
+}
+
 /* ui/components/PlaceNamingPanel.js: the "More — other descriptions,
    claim history, import/export" disclosure gating everything past
    Community Names/Publish A Name — same full-width, caret-led button

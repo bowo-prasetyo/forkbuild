@@ -45,6 +45,8 @@ import { WorldViewNavigationState, WorldViewPrimaryMode } from '../../applicatio
 import { PlaceNamingDiscoveryMonitor } from '../../application/PlaceNamingDiscoveryMonitor.js';
 import { executeDiscoverPlaceNamingClaimsCommand } from '../../application/DiscoverPlaceNamingClaimsCommand.js';
 import { derivePlaceNamingDiscoveryTag } from '../../core/PlaceNamingDiscoveryEnvelope.js';
+import { buildPlaceNamingClaimPublication } from '../../application/PlaceNamingClaimPublication.js';
+import { PlaceNamingClaim } from '../../core/PlaceNamingClaim.js';
 
 const DRAG_THRESHOLD_PX = 6;
 
@@ -2680,6 +2682,22 @@ export default {
         // required claim fields) but previously dropped by this mapping
         // — so navigateToNearbyPlaceNamingClaim() below can target the
         // claim's own region without reconstructing it from `position`.
+        //
+        // 0.9.263 — Nearby Place Naming Claim Adoption UI. The post-
+        // navigation reassessment (0.9.262, Section D4) found this exact
+        // row shape already dropped `authorIdentityId`/`createdAt`/
+        // `signature` — the three fields application/
+        // PlaceNamingClaimPublicationValidator.js requires alongside
+        // `id`/`worldId`/`regionId`/`name` before a publication package
+        // can even be well-formed. All three already exist, untouched,
+        // on `entry.claim` (the discovered envelope's own claim — see
+        // core/PlaceNamingDiscoveryEnvelope.js#describeClaim()); restoring
+        // them here is the ONLY change this mapping needed for
+        // adoptNearbyPlaceNamingClaim() below to build a complete,
+        // valid package straight from a row, exactly as 0.9.260 already
+        // did for regionId/worldId. Still never a second, adoption-shaped
+        // representation of a claim — the row simply stops discarding
+        // fields the claim already carries.
         const nearbyPlaceNamingClaimRows = computed(() => (
             nearbyPlaceNamingClaims.value.map((entry) => ({
                 claimId: entry.claim.id,
@@ -2687,7 +2705,10 @@ export default {
                 authorDisplayName: resolveIdentityDisplayName(entry.claim.authorIdentityId),
                 position: entry.position,
                 regionId: entry.claim.regionId,
-                worldId: entry.claim.worldId
+                worldId: entry.claim.worldId,
+                authorIdentityId: entry.claim.authorIdentityId,
+                createdAt: entry.claim.createdAt,
+                signature: entry.claim.signature
             }))
         ));
 
@@ -2735,6 +2756,63 @@ export default {
             session.focusLocation(row.regionId);
             refreshSpatialUI();
             return true;
+        }
+
+        // 0.9.263 — Nearby Place Naming Claim Adoption UI. Adopt is the
+        // explicit action the 0.9.262 reassessment recommended going
+        // straight to: not a new adoption use case, just the missing
+        // seam between a nearby, DISCOVERED claim and the existing,
+        // unmodified session.importPlaceNamingClaim() — the exact same
+        // validate/construct/verify/persist boundary
+        // application/PlaceNamingClaimExchange.js#importClaim() already
+        // runs for the manual PlaceNamingPanel import path (see
+        // importNamingClaim() above). The row already carries every
+        // field application/PlaceNamingClaimPublicationValidator.js
+        // requires (see nearbyPlaceNamingClaimRows's own comment) — this
+        // function's only job is to rehydrate those fields into a
+        // PlaceNamingClaim and hand it to the SAME
+        // buildPlaceNamingClaimPublication() session.exportPlaceNamingClaim()
+        // already calls for the manual export path, so importClaim() sees
+        // a package indistinguishable from one that actually crossed a
+        // file boundary.
+        //
+        // Deliberately builds `claim` from the row's OWN fields, never
+        // from a freshly-resolved "current identity" — the claim's own
+        // authorIdentityId/createdAt/signature travel unchanged, exactly
+        // like this file already refuses to manufacture authorship
+        // anywhere else (see e.g. publishNamingClaim() below, which
+        // never accepts an authorIdentityId argument either). Adoption
+        // performs no verification of its own here — that stays
+        // entirely inside the existing importClaim() boundary this
+        // function calls into, unmodified.
+        //
+        // Never invoked by discovery, proximity selection, navigation, or
+        // rendering — only ever by this exact user click, mirroring
+        // navigateToNearbyPlaceNamingClaim()'s own "Navigate is
+        // deliberately NOT adopt" restraint in the other direction: this
+        // is adopt, and it is deliberately NOT automatic. A duplicate
+        // (a claim this replica already has) is not an error — see
+        // importNamingClaim()'s own comment on why re-adopting the same
+        // signed claim is an entirely ordinary, non-alarming outcome.
+        function adoptNearbyPlaceNamingClaim(row) {
+            const rowClaim = PlaceNamingClaim.fromJSON({
+                id: row.claimId,
+                worldId: row.worldId,
+                regionId: row.regionId,
+                name: row.name,
+                authorIdentityId: row.authorIdentityId,
+                createdAt: row.createdAt,
+                signature: row.signature
+            });
+            const pkg = buildPlaceNamingClaimPublication(rowClaim);
+            const result = guarded(() => session.importPlaceNamingClaim(pkg));
+            if (!result) return;
+            const { claim, isNew } = result;
+            if (!isNew) {
+                feedback.show(`"${claim.name}" was already known — nothing changed`);
+                return;
+            }
+            feedback.show(`Adopted "${claim.name}"`);
         }
 
         // -----------------------------------------------------------------
@@ -3952,6 +4030,7 @@ export default {
             nearbyPeopleRows,
             goToNearbyCollaborator,
             navigateToNearbyPlaceNamingClaim,
+            adoptNearbyPlaceNamingClaim,
             goHome,
             openLocationsPanel,
             closeLocationsPanel,
@@ -4260,6 +4339,19 @@ export default {
                             class="action-btn world-view-nearby-row-go"
                             @click="navigateToNearbyPlaceNamingClaim(claim)"
                         >Navigate</button>
+                        <!-- 0.9.263 — Nearby Place Naming Claim Adoption UI.
+                             Adopt is the one explicit action that reaches
+                             the existing, unmodified
+                             session.importPlaceNamingClaim() boundary —
+                             see adoptNearbyPlaceNamingClaim()'s own
+                             comment. Discovery, proximity, presentation,
+                             and Navigate above never trigger this
+                             themselves; it only ever runs from this
+                             click. -->
+                        <button
+                            class="action-btn world-view-nearby-row-adopt"
+                            @click="adoptNearbyPlaceNamingClaim(claim)"
+                        >Adopt</button>
                     </div>
                 </CollapsibleSection>
                 <!-- 0.9.17 — Integrate World Encounters into the Existing

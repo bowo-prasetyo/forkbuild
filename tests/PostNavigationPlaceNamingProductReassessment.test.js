@@ -47,6 +47,11 @@ import { namingView as deriveNamingView } from '../core/PlaceNamingView.js';
 //               authorIdentityId, createdAt, signature) a future Adopt
 //               action would need, exactly the same shape of gap
 //               regionId/worldId were in before 0.9.260 restored them.
+//               UPDATED BY 0.9.263 — Nearby Place Naming Claim Adoption
+//               UI: both parts of this gap are now closed; see this
+//               section's own in-place updates, and
+//               tests/PlaceNamingNearbyAdoption.test.js for the milestone
+//               that built it.
 //   Section E — World identity boundary for adoption: does importClaim()
 //               already have suffient World/region identity safeguards,
 //               independent of navigation's own D2 boundary? Proven yes,
@@ -188,7 +193,11 @@ async function runTests() {
         matrix.set('Display', 'COMPLETE');
         assert(/navigateToNearbyPlaceNamingClaim/.test(nearbyBlock), 'B1. Navigate button present on the Nearby row (basis for classifying Navigate COMPLETE).');
         matrix.set('Navigate', 'COMPLETE');
-        matrix.set('Adopt', 'REACHABLE_BUT_INTERNAL');
+        // UPDATED BY 0.9.263 — Nearby Place Naming Claim Adoption UI:
+        // Adopt was REACHABLE_BUT_INTERNAL when this reassessment was
+        // written; it is now wired to a real Adopt button (Section D).
+        assert(/adoptNearbyPlaceNamingClaim/.test(nearbyBlock), 'B1b. UPDATED BY 0.9.263 — Adopt button present on the Nearby row (basis for reclassifying Adopt COMPLETE).');
+        matrix.set('Adopt', 'COMPLETE');
         matrix.set('Verify', 'MISSING_DOMAIN_CAPABILITY');
         matrix.set('Prefer', 'MISSING_UI');
         matrix.set('Export', 'MISSING_UI');
@@ -266,53 +275,56 @@ async function runTests() {
         assert(worldView.includes('function importNamingClaim(rawText)') && worldView.includes('session.importPlaceNamingClaim(parsed)'),
             'D2. ui/views/WorldView.js still wires that Import Claim action through to the real session.importPlaceNamingClaim() — the manual adoption path is real, complete, and unmodified.');
 
+        // D3. UPDATED BY 0.9.263 — Nearby Place Naming Claim Adoption UI.
+        // At the time this reassessment was written, the Nearby Place
+        // Names block contained no adopt-shaped wiring at all — no call
+        // to session.importPlaceNamingClaim(), no reshaping into a
+        // publication package, no Adopt button. 0.9.263 closed exactly
+        // that gap, reusing the existing, unmodified importPlaceNamingClaim()
+        // boundary (Section C's own three-step discipline, untouched).
         const nearbyBlock = worldView.match(/<!-- 0\.9\.257 — World View Place Naming Presentation\.[\s\S]*?<\/CollapsibleSection>/)[0];
-        assert(!/importPlaceNamingClaim|importNamingClaim/.test(nearbyBlock) && !/>\s*Adopt\s*</i.test(nearbyBlock),
-            'D3. THE GAP. The Nearby Place Names block contains no adopt-shaped wiring at all — no call to session.importPlaceNamingClaim(), no reshaping into a publication package, no Adopt button (its own comment even states, in prose, that Navigate "never adopts" — restraint stated, not yet built).');
+        assert(/adoptNearbyPlaceNamingClaim/.test(nearbyBlock) && />\s*Adopt\s*</i.test(nearbyBlock),
+            'D3. UPDATED BY 0.9.263 — the Nearby Place Names block now carries a real Adopt button, wired to adoptNearbyPlaceNamingClaim(), which reshapes the row into a publication package and calls the existing session.importPlaceNamingClaim() — closing the gap this section originally found.');
 
-        // D4. NEW SUB-FINDING — the row shape itself, not merely the
-        // missing button. nearbyPlaceNamingClaimRows (the object the
-        // template actually renders from) carries only claimId/name/
-        // authorDisplayName/position/regionId/worldId — never the raw
-        // authorIdentityId, createdAt, or signature a publication package
-        // requires (application/PlaceNamingClaimPublicationValidator.js's
-        // own required fields). Exactly the same shape of gap regionId/
-        // worldId themselves were in before 0.9.260 restored them (see
-        // that milestone's own docs/Roadmap.md entry) — the underlying
-        // data exists one level up, but the presentation row currently
-        // discards what a future action would need.
+        // D4. UPDATED BY 0.9.263 — the row-shape sub-finding this section
+        // originally recorded (nearbyPlaceNamingClaimRows dropping the raw
+        // authorIdentityId/createdAt/signature a publication package
+        // requires) is now closed: the row carries all three, restored
+        // the exact same way 0.9.260 already restored regionId/worldId.
         const rowMapping = worldView.match(/const nearbyPlaceNamingClaimRows = computed\(\(\) => \([\s\S]*?\)\);/)[0];
         assert(rowMapping.includes('claimId:') && rowMapping.includes('authorDisplayName:') && rowMapping.includes('regionId:') && rowMapping.includes('worldId:'),
-            'D4a. sanity: nearbyPlaceNamingClaimRows carries claimId/authorDisplayName/regionId/worldId, matching current (0.9.260) source.');
-        assert(!/\bsignature\b/.test(rowMapping) && !rowMapping.includes('authorIdentityId:') && !rowMapping.includes('createdAt:'),
-            'D4b. nearbyPlaceNamingClaimRows does NOT carry claim.signature, raw claim.authorIdentityId, or claim.createdAt — a publication package built from a row alone would fail application/PlaceNamingClaimPublicationValidator.js\'s own required-field check. A future Adopt action needs the FULL claim, not the display row.');
+            'D4a. sanity: nearbyPlaceNamingClaimRows still carries claimId/authorDisplayName/regionId/worldId, matching prior (0.9.260) source.');
+        assert(rowMapping.includes('signature:') && rowMapping.includes('authorIdentityId:') && rowMapping.includes('createdAt:'),
+            'D4b. UPDATED BY 0.9.263 — nearbyPlaceNamingClaimRows now ALSO carries claim.signature, raw claim.authorIdentityId, and claim.createdAt — a publication package built from a row alone now satisfies application/PlaceNamingClaimPublicationValidator.js\'s own required-field check. The row, not a second underlying-entries lookup, is what Adopt actually reads from.');
 
         // D5. The full claim DOES already exist one level up, in
         // nearbyPlaceNamingClaims.value (the monitor's own lastResult,
-        // never pared down) — so the missing piece is precisely
-        // reachability/wiring, never missing data. Proven structurally:
-        // a real envelope, parsed exactly as the monitor's own source
-        // parses one, retains every field a publication package needs.
+        // never pared down) — reconfirmed unchanged; 0.9.263 built on
+        // this, never around it.
         const aliceD = makeIdentity('alice-d');
         const claimD = signedClaim(aliceD, { worldId: 'world-d', regionId: 'region-d', name: 'Fern Hollow' });
         const envelopeD = discoverAsEnvelope(claimD);
         assert(envelopeD.claim.signature && envelopeD.claim.authorIdentityId && envelopeD.claim.createdAt,
             'D5a. sanity: a real discovery envelope\'s own .claim (the shape nearbyPlaceNamingClaims.value entries actually carry) DOES retain signature/authorIdentityId/createdAt — nothing upstream of the row mapping ever drops them.');
 
-        // D6. LIVE PROOF, keyed the way a future adopt handler naturally
-        // would be — by claimId against the underlying entries, exactly
-        // mirroring how navigateToNearbyPlaceNamingClaim() itself already
-        // reads a second, separate source (session.getRegions()) rather
-        // than trusting the row alone (0.9.260's own worldId cross-check).
+        // D6. LIVE PROOF, keyed the way the real adoptNearbyPlaceNamingClaim()
+        // now actually is — reshaping a row's own fields (not a second,
+        // separate entries lookup) into a publication package.
         const bobD = makeReplica();
-        const entries = [{ claim: envelopeD.claim, position: { x: 1, z: 2 } }];
-        const targetClaimId = envelopeD.claim.id;
-        const sourceEntry = entries.find((e) => e.claim.id === targetClaimId);
-        const { claim: importedD, isNew: isNewD } = bobD.exchange.importClaim(toPublicationPackage(sourceEntry.claim));
+        const row = {
+            claimId: envelopeD.claim.id, name: envelopeD.claim.name, worldId: envelopeD.claim.worldId,
+            regionId: envelopeD.claim.regionId, authorIdentityId: envelopeD.claim.authorIdentityId,
+            createdAt: envelopeD.claim.createdAt, signature: envelopeD.claim.signature
+        };
+        const pkgFromRow = {
+            kind: PLACE_NAMING_CLAIM_PUBLICATION_KIND, schemaVersion: CURRENT_SCHEMA_VERSION,
+            claim: { id: row.claimId, worldId: row.worldId, regionId: row.regionId, name: row.name, authorIdentityId: row.authorIdentityId, createdAt: row.createdAt, signature: row.signature }
+        };
+        const { claim: importedD, isNew: isNewD } = bobD.exchange.importClaim(pkgFromRow);
         assert(isNewD === true && importedD.name === 'Fern Hollow',
-            'D6. A future Adopt action reading from the underlying entries (never the pared-down row) by claimId already works end to end through the real, unmodified importClaim() — zero new production code, exactly the reuse-only shape Section D3\'s own gap needs closed.');
+            'D6. UPDATED BY 0.9.263 — Adopt, reshaping the WIDENED row\'s own fields into a publication package, already works end to end through the real, unmodified importClaim() — exactly the real adoptNearbyPlaceNamingClaim() implementation this milestone shipped.');
 
-        console.log('✓ D: The manual PlaceNamingPanel can adopt (D1/D2, unchanged); the Nearby Place Names presentation still cannot (D3) — and the gap is now precisely two-part: no adopt-shaped wiring exists (D3), AND the presentation ROW itself would need widening (or a future action would need to read the underlying entries by claimId rather than the row alone) before an Adopt button could reshape a full, valid publication package (D4-D6) — exactly the same "restore what was dropped" shape 0.9.260 already used for regionId/worldId, not a new kind of gap.');
+        console.log('✓ D: UPDATED BY 0.9.263 — The manual PlaceNamingPanel can adopt (D1/D2, unchanged); the Nearby Place Names presentation now can too (D3) — nearbyPlaceNamingClaimRows was widened to carry authorIdentityId/createdAt/signature (D4), and a real Adopt button reshapes those fields into a publication package for the existing, unmodified importClaim() (D5-D6) — exactly the same "restore what was dropped" shape 0.9.260 already used for regionId/worldId.');
     }
 
     // ---------------------------------------------------------------
@@ -421,18 +433,26 @@ async function runTests() {
     // own prior ranking alone.
     // ---------------------------------------------------------------
     {
+        // UPDATED BY 0.9.263 — Nearby Place Naming Claim Adoption UI:
+        // candidate 1 (Adopt) named here has since been BUILT — see
+        // Section D, above. The ranking below is kept as the historical
+        // record this milestone (0.9.262) actually produced; only
+        // candidate 1's own line and the length/shape assertions are
+        // annotated to acknowledge its resolution, mirroring exactly how
+        // 0.9.260 itself was annotated into 0.9.259's own Section L.
         const ranked = [
-            '1. Adopt a discovered claim — REACHABLE_BUT_INTERNAL (Section B). PROVEN reachable end to end with zero new production code (Section D6), World/region identity already fully safeguarded at the storage layer (Section E), and adoption\'s own narrow existing meaning precisely characterized and preserved (Section C). The one concrete implementation prerequisite: the presentation row itself needs widening to carry the full claim, or the future action reads the underlying discovery entries by claimId instead (Section D4-D6) — the exact same "restore what was dropped" shape 0.9.260 already used for regionId/worldId.',
-            '2. Set a local preference for a discovered claim\'s name — unchanged from 0.9.259\'s own ranking; shares candidate 1\'s own row-widening prerequisite (raw authorIdentityId/createdAt/signature are not needed for Prefer, but the same "row is a pared-down projection" pattern applies).',
+            '1. Adopt a discovered claim — REACHABLE_BUT_INTERNAL (Section B). PROVEN reachable end to end with zero new production code (Section D6), World/region identity already fully safeguarded at the storage layer (Section E), and adoption\'s own narrow existing meaning precisely characterized and preserved (Section C). The one concrete implementation prerequisite: the presentation row itself needs widening to carry the full claim, or the future action reads the underlying discovery entries by claimId instead (Section D4-D6) — the exact same "restore what was dropped" shape 0.9.260 already used for regionId/worldId. BUILT at 0.9.263.',
+            '2. Set a local preference for a discovered claim\'s name — unchanged from 0.9.259\'s own ranking; candidate 1\'s own row-widening prerequisite is now satisfied as of 0.9.263, though Prefer itself still has no button.',
             '3. Export/share a discovered claim before adopting — confirmed independent of adoption (Section F), still smaller and lower-priority.',
             '4. Verification-trigger UI (check without adopting) — MISSING_DOMAIN_CAPABILITY, unchanged.',
             '5. Notifications — the standing gap named at 0.9.221/0.9.241/0.9.250/0.9.252/0.9.259, unchanged, genuinely absent codebase-wide.',
             '6. Competing-name handling beyond ranking, and moderation/reporting — both MISSING_DOMAIN_CAPABILITY, both deliberately deferred per existing docs/Principles.md entries.'
         ];
-        assert(ranked.length === 6, 'G1. Six candidates reranked; Navigate (0.9.259/0.9.260\'s own candidate 1) is no longer listed here — it is COMPLETE (Section B), not a candidate.');
-        assert(ranked[0].startsWith('1. Adopt'), 'G2. Adopt is reconfirmed the #1 candidate — the product-direction conversation\'s own expectation holds, on this milestone\'s own fresh evidence, not by assumption.');
+        assert(ranked.length === 6, 'G1. Six candidates were reranked at 0.9.262; Navigate (0.9.259/0.9.260\'s own candidate 1) was already absent (COMPLETE, Section B) — candidate 1 here (Adopt) has since been built at 0.9.263, the other five stand exactly as ranked.');
+        assert(ranked[0].startsWith('1. Adopt') && ranked[0].includes('BUILT at 0.9.263'),
+            'G2. Adopt is reconfirmed as having been the #1 candidate, and the ranking record itself is annotated, not silently rewritten, to reflect it now being built.');
 
-        console.log('✓ G: Six candidates reranked from evidence gathered in this milestone. Adopt remains #1 — now with two ADDITIONAL, previously-unrecorded findings backing it: World/region identity is already fully safe at the storage layer (Section E, so no security seam blocks it), and the one real remaining implementation detail is precisely named (Section D\'s row-widening prerequisite), not merely "wire a button."');
+        console.log('✓ G: Six candidates were reranked from evidence gathered at 0.9.262. Adopt was #1 — with two findings backing it (World/region identity already fully safe at the storage layer, Section E; the one real remaining implementation detail precisely named, Section D\'s row-widening prerequisite) — and has since been BUILT at 0.9.263.');
 
         console.log('\nRanked candidates:');
         ranked.forEach((line) => console.log(`    ${line}`));
@@ -451,10 +471,11 @@ async function runTests() {
 '    place, "Navigation Is Not Adoption" still stands, and the one narrow\n' +
 '    D2 boundary 0.9.261 recorded remains honestly unpatched (Section A)\n' +
 '\n' +
-'CLAIM INTERACTION MATRIX\n' +
-'    Display COMPLETE · Navigate COMPLETE · Adopt REACHABLE_BUT_INTERNAL ·\n' +
-'    Verify MISSING_DOMAIN_CAPABILITY · Prefer MISSING_UI ·\n' +
-'    Export MISSING_UI · Moderate MISSING_DOMAIN_CAPABILITY ·\n' +
+'CLAIM INTERACTION MATRIX (as of 0.9.262; Adopt since BUILT at 0.9.263)\n' +
+'    Display COMPLETE · Navigate COMPLETE · Adopt COMPLETE (was\n' +
+'    REACHABLE_BUT_INTERNAL) · Verify MISSING_DOMAIN_CAPABILITY ·\n' +
+'    Prefer MISSING_UI · Export MISSING_UI ·\n' +
+'    Moderate MISSING_DOMAIN_CAPABILITY ·\n' +
 '    Notify MISSING_DOMAIN_CAPABILITY (Section B)\n' +
 '\n' +
 'ADOPTION SEMANTICS\n' +
@@ -464,14 +485,14 @@ async function runTests() {
 '    "trusted"/"adopted" vocabulary exists anywhere to strengthen. The\n' +
 '    existing, narrower meaning is preserved exactly (Section C)\n' +
 '\n' +
-'AUTOMATIC vs. MANUAL ADOPTION\n' +
-'    The manual PlaceNamingPanel can adopt today, unchanged. The Nearby\n' +
-'    Place Names presentation still cannot — a precise, two-part gap: no\n' +
-'    adopt-shaped wiring exists, AND the presentation row itself would\n' +
-'    need widening (or a future handler reads the underlying discovery\n' +
-'    entries by claimId instead) before a full, valid publication package\n' +
-'    could be built — proven reachable end to end either way, with zero\n' +
-'    new production code (Section D)\n' +
+'AUTOMATIC vs. MANUAL ADOPTION (UPDATED BY 0.9.263)\n' +
+'    The manual PlaceNamingPanel can adopt today, unchanged. As of 0.9.262\n' +
+'    the Nearby Place Names presentation still could not — a precise,\n' +
+'    two-part gap: no adopt-shaped wiring, AND a row too narrow to build a\n' +
+'    valid publication package from. 0.9.263 closed both parts: the row\n' +
+'    now carries authorIdentityId/createdAt/signature, and a real Adopt\n' +
+'    button reshapes it into a package for the existing importClaim()\n' +
+'    (Section D)\n' +
 '\n' +
 'WORLD IDENTITY BOUNDARY FOR ADOPTION\n' +
 '    Already fully sufficient — worldId/regionId are bound into the\n' +
@@ -486,10 +507,9 @@ async function runTests() {
 '    own, separately-ranked, lower-priority candidate, never bundled\n' +
 '    (Section F)\n' +
 '\n' +
-'RANKED CANDIDATES (reranked from this milestone\'s own fresh evidence)\n' +
-'    1. Adopt a discovered claim — REACHABLE_BUT_INTERNAL, strongest\n' +
-'       evidence, World-identity-safe, one precise implementation detail\n' +
-'       (row widening or entry lookup by claimId) remaining\n' +
+'RANKED CANDIDATES (as reranked at 0.9.262; candidate 1 built at 0.9.263)\n' +
+'    1. Adopt a discovered claim — BUILT (0.9.263). Was\n' +
+'       REACHABLE_BUT_INTERNAL, strongest evidence, World-identity-safe\n' +
 '    2. Set a local preference for a discovered claim\'s name\n' +
 '    3. Export/share a discovered claim before adopting\n' +
 '    4. Verification-trigger UI\n' +
@@ -497,12 +517,12 @@ async function runTests() {
 '    6. Competing-name handling / moderation\n' +
 '\n' +
 'NEXT PRODUCT SEAM\n' +
-'    Not selected here — per this milestone\'s own brief, the evidence is\n' +
-'    gathered, adoption\'s exact semantics and safeguards are precisely\n' +
-'    characterized (never invented or strengthened), and the one candidate\n' +
-'    the product-direction conversation expected to win (Adopt) is\n' +
+'    Not selected in THIS milestone (0.9.262) — per its own brief, the\n' +
+'    evidence was gathered, adoption\'s exact semantics and safeguards\n' +
+'    precisely characterized (never invented or strengthened), and the one\n' +
+'    candidate the product-direction conversation expected to win (Adopt)\n' +
 '    confirmed the strongest by fresh evidence rather than assumed to be.\n' +
-'    Building it (a future 0.9.263) is a separate, later decision.\n');
+'    It was then built at 0.9.263 — see tests/PlaceNamingNearbyAdoption.test.js.\n');
 
         console.log('✓ Section H: Verdict recorded. No production changes were made in this milestone (0.9.262). Navigation remains closed and unchanged (Section A); the claim interaction matrix is complete and evidenced (Section B); adoption\'s existing, narrower semantics are precisely traced and preserved, never strengthened (Section C); the automatic/manual adoption gap is now precisely two-part rather than a single missing button (Section D); adoption\'s World identity boundary is proven already sufficient, with no opportunistic patch made to navigation\'s own separate D2 boundary either (Section E); export-before-adopt is confirmed independent and kept separately ranked (Section F); and the candidate ranking is reproduced fresh from this milestone\'s own evidence, confirming rather than assuming Adopt as the strongest remaining candidate (Section G).');
     }

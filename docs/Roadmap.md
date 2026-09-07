@@ -84166,3 +84166,96 @@ already followed. This is the immediate next candidate this
 reassessment's own evidence points to; as with every roadmap arc
 recorded here, only the immediate next milestone is treated as
 committed.
+
+## 0.9.263 — Nearby Place Naming Claim Adoption UI
+
+0.9.262's own reassessment (Section D) found the one remaining
+evidence-backed gap in the Place Naming interaction surface: the Nearby
+Place Names row could Navigate but not Adopt, and the presentation row
+itself was too narrow — missing `authorIdentityId`/`createdAt`/
+`signature` — to build a valid publication package from even if a button
+existed. This milestone closes both parts of that gap, reusing the
+existing, UNMODIFIED adoption boundary end to end:
+
+```
+nearby claim (row widened) -> World View row -> [Adopt]
+     -> existing WorldNavigationSession#importPlaceNamingClaim()
+     -> existing PlaceNamingClaimExchange#importClaim()
+        (validate -> construct -> verify -> persist, unchanged)
+```
+
+### What this milestone adds
+
+- **`nearbyPlaceNamingClaimRows` widened** (`ui/views/WorldView.js`) — the
+  row descriptor now also carries `authorIdentityId`, `createdAt`, and
+  `signature`, restored from `entry.claim` exactly like `regionId`/
+  `worldId` were restored at 0.9.260. Every other field is unchanged.
+- **`adoptNearbyPlaceNamingClaim(row)`** (`ui/views/WorldView.js`) —
+  rehydrates a `core/PlaceNamingClaim.js` instance from the row's own
+  fields and hands it to `application/PlaceNamingClaimPublication.js#
+  buildPlaceNamingClaimPublication()` — the SAME pure builder
+  `session.exportPlaceNamingClaim()` already calls for the manual export
+  path — then calls the existing `session.importPlaceNamingClaim()`,
+  exactly as `importNamingClaim()` already does for the manual
+  `PlaceNamingPanel`'s own Import Claim button. A duplicate (a claim this
+  replica already knows) surfaces the same non-alarming feedback message
+  `importNamingClaim()` already uses; a genuinely new claim surfaces
+  "Adopted "<name>"". Never touches `focusLocation()`,
+  `LocalAuthorizationVerifier`, `LocalPlaceNamingClaimStore`, or
+  `WorldRegion` directly — every one of those stays inside the existing,
+  unmodified exchange boundary.
+- **An "Adopt" button** on every Nearby Place Names row
+  (`ui/views/WorldView.js` template), alongside the existing Navigate
+  button, wired to `adoptNearbyPlaceNamingClaim(claim)`.
+  `.world-view-nearby-row-adopt` (`css/main.css`) mirrors
+  `.world-view-nearby-row-go`'s own compact sizing — Adopt is visually as
+  ordinary as Navigate, never promoted above it.
+
+`tests/PlaceNamingNearbyAdoption.test.js` (new) — 17 sections: row
+completeness (A), the Adopt button's existence and wiring (B), the exact
+claim reaching adoption (C), `authorIdentityId` preserved and never the
+viewer's own (D), `createdAt` preserved (E), `signature` preserved and
+genuinely re-verified against a real, unmocked verifier — including a
+tampered-signature negative case (F), two competing claims ("Riverside"/
+"Old River") adopting independently (G), adoption never ranking or
+preferring either claim — the one negative test this milestone's own
+brief named directly (H), Navigate/Adopt remaining fully independent, live
+and structurally (I), discovery never invoking adoption on its own (J), a
+failed adoption never mutating the World (K) or the discovered claim/row
+(L), a stale claim from an unloaded World adopting strictly under its own
+`worldId` rather than whichever World is currently active (M), the manual
+`PlaceNamingPanel` staying byte-for-byte unaffected (N), a genuinely real
+(never mocked) verify/persist path (O), a FLAGSHIP real Nostr → discovery
+→ proximity → World View → Adopt round trip (P), and an architectural
+regression test confirming `adoptNearbyPlaceNamingClaim()` implements no
+verification or persistence of its own (Q).
+
+`tests/PostNavigationPlaceNamingProductReassessment.test.js` (0.9.262) is
+updated in place, mirroring exactly how 0.9.260 updated 0.9.259's own
+reassessment: Section D's "THE GAP" assertions now assert the gap is
+closed, the claim interaction matrix reclassifies Adopt `COMPLETE`
+(previously `REACHABLE_BUT_INTERNAL`), and the ranked-candidates register
+annotates candidate 1 as `BUILT at 0.9.263` rather than being silently
+rewritten.
+
+Registered in `tests.html`.
+
+### What this milestone deliberately excludes
+
+Per this milestone's own brief and 0.9.262's own explicit scope list: no
+new adoption use case, state machine, or verification mechanism; no
+ranking or preferred-name semantics; no automatic adoption of any kind; no
+`WorldRegion` name mutation; no notifications, moderation, or
+competing-name resolution; no export-before-adopt bundling (0.9.262
+Section F already confirmed, and this milestone reconfirms, that the two
+remain independent); and no change to
+`PlaceNamingClaimExchange#importClaim()` itself — the integration audit
+this milestone performed found no prerequisite defect requiring one.
+
+### What comes after
+
+Per the recommended sequence this milestone's own brief laid out:
+`0.9.264 — Adoption Lifecycle Audit` (mirroring 0.9.261's own audit of
+Navigate, one milestone later, for Adopt instead), then
+`0.9.265 — Post-Adoption Product Reassessment`. As with every roadmap arc
+recorded here, only the immediate next milestone is treated as committed.
