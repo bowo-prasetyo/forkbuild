@@ -79311,3 +79311,173 @@ by real `CausalRelationship` answers (a genuinely CONCURRENT pair is a
 candidate conflict; a BEFORE/AFTER pair never is), is what should decide
 whether 0.9.229+ needs a conflict policy, a CRDT-shaped merge, or
 neither — not a default reached for because a causal graph now exists.
+
+## 0.9.228 — Document Operation Causal Gap Detection Boundary
+
+0.9.227 made causal dependency representable and queryable, but
+`DocumentOperationCausalGraph#compare()` only ever reasons about two
+operations it was already told about — an operation naming a predecessor
+the graph never recorded compares as UNKNOWN, a deliberately weak answer
+that does not, on its own, distinguish two very different situations:
+
+```text
+Replica has: A
+Receives:    B { causalPredecessors: [A] }     -> no gap, A is known
+
+Replica has: A
+Receives:    C { causalPredecessors: [B] }     -> B is unknown — is this
+                                                   a gap, or is C simply
+                                                   unrelated to anything
+                                                   this replica has?
+```
+
+`core/DocumentOperationCausality.js`'s own UNKNOWN answer is correct but
+uninformative for exactly this case: it does not name WHICH predecessor
+is missing, and it is not, by itself, a usable signal for anything. This
+milestone turns that observation into an explicit, narrow, pure answer,
+scoped to one operation at a time.
+
+### What this milestone adds
+
+`core/DocumentOperationCausalGapDetector.js` (new):
+
+```text
+CausalGapStatus = { NO_GAP, GAP }
+
+DocumentOperationCausalGapDetector
+    detect(documentId, { operationId, causalPredecessors })
+        -> { status, missingCausalPredecessorIds }
+    record(documentId, operationId, causalPredecessors)
+    isKnown(documentId, operationId)
+```
+
+`detect()` is a pure query, built on the same
+`DocumentOperationCausalGraph#isKnown()` 0.9.227 already exposes: every
+predecessor the given operation names is checked against what THIS
+detector currently knows, and every one that is not known is named in
+`missingCausalPredecessorIds` — not merely the first, so a diamond-shaped
+operation depending on two siblings, with only one of them known, reports
+exactly the one still missing (`tests/DocumentOperationCausalGapDetector.test.js`
+Section D). `record()` delegates entirely to
+`DocumentOperationCausalGraph#record()`, unchanged idempotency and
+contract-violation rules included — this class adds no second
+deduplication mechanism next to `replication/ReplayGuard.js`, and no
+caching of its own past verdicts: a gap detected now stops being detected
+on a LATER `detect()` call, for the identical operation and predecessor
+list, purely because the underlying graph's knowledge changed in between
+(Section E) — this class never replays, re-applies, or re-checks
+anything on its own; a caller has to ask again.
+
+Two outcomes, not three. Unlike `compare()`, `detect()` is never asked to
+relate two POSSIBLY-unknown operations to each other — it is handed one
+operation's own predecessor list directly, so there is nothing left
+ambiguous: every named predecessor either is or is not known, right now.
+An UNKNOWN third status would not describe any real state this method
+could actually be in — introducing it anyway would be exactly the kind
+of unused vocabulary this milestone's own "detection only" restraint
+argues against manufacturing.
+
+Deliberately, `missingCausalPredecessorIds` is evidence, not a lifecycle
+claim: it proves only that THIS replica does not currently know the
+named operation — never that the operation was lost, never that it
+should be requested, never that the gapped operation is itself invalid.
+"Causal gap detected," not `MISSING_OPERATION` — the same restraint
+`core/DocumentOperationCausality.js`'s own header already applied to its
+own UNKNOWN answer.
+
+No production file changes this milestone. `application/
+DocumentCommandPropagationUseCase.js` already relays `causalPredecessors`
+completely unmodified (0.9.227); this detector is a new, additive
+capability a caller attaches to that existing feed, not a change to it.
+`application/RemoteDocumentOperationApplicationUseCase.js` and
+`application/CommandHistory.js` are both untouched —
+`tests/DocumentOperationCausalGapDetector.test.js` Section H proves, end
+to end against the real broadcast/receive/apply chain, that a GAPPED
+operation applies exactly like an ungapped one: detection is wired
+alongside application, never in front of it.
+
+```text
+receive operation
+      |
+      v
+   verify (0.9.222's own five-step trust chain — unchanged)
+      |
+      v
+   detect causal gap (THIS milestone — observation only)
+      |
+      v
+   apply exactly as 0.9.223/0.9.224 already do — unconditionally
+```
+
+`RemoteApplicationTiming = IMMEDIATE` and `HistoryOrderingBasis =
+ARRIVAL_ORDER` (0.9.226) are unchanged.
+
+### Tests (`tests/DocumentOperationCausalGapDetector.test.js`)
+
+1. Complete predecessor — a known predecessor produces NO_GAP, including
+   the trivial genesis case (no predecessors at all).
+2. Direct gap — an unrecorded predecessor produces GAP, naming it
+   exactly; `detect()` never records the operation it was asked about.
+3. Transitive gap — a missing MIDDLE operation in a causal chain (A known,
+   B absent, C names B) is detected even though C's true root, A, is
+   known — the gap is about the direct predecessor, not the whole
+   ancestry.
+4. Multiple predecessors — a diamond shape (`{B, C} -> D`) correctly
+   names ONLY the missing sibling when one of two is known, and BOTH when
+   neither is, never just the first found.
+5. Later arrival — a detected gap disappears on re-query once the
+   missing predecessor is itself recorded, with no automatic replay;
+   recording an operation and it having a gap are independent facts.
+6. Duplicate delivery — repeated `record()`/`detect()` calls for the same
+   operation are idempotent and stable, never a second deduplication
+   mechanism next to `replication/ReplayGuard.js`.
+7. Document isolation — an operationId recorded under one document never
+   satisfies a predecessor reference in a different document, even on an
+   exact id collision.
+8. Input validation — the same closed-vocabulary "throw on malformed,
+   never coerce" discipline `core/DocumentOperationEnvelope.js` and
+   `core/DocumentOperationCausality.js` already apply.
+9. Integration with propagation — against the REAL, unmodified
+   `broadcastCommand()` -> `DocumentOperationEnvelope` ->
+   `onOperationReceived()` -> `RemoteDocumentOperationApplicationUseCase
+   #apply()` chain (0.9.222-0.9.227): two consecutive real local commands
+   arrive gap-free once their predecessor is recorded in arrival order,
+   AND a genuinely gapped, fabricated operation is proven to apply
+   exactly like an ungapped one — the central rule this milestone exists
+   to prove, not merely assert.
+
+### Deliberately excluded, on purpose
+
+No operation buffering, no delayed application, no retransmission
+requests, no operation queues, no retry, no synchronization protocol, no
+automatic predecessor retrieval, no rollback, no reordering, no CRDT, no
+OT, no vector clocks, no conflict resolution, no convergence guarantees,
+no synchronized undo. `application/CommandHistory.js` and
+`application/RemoteDocumentOperationApplicationUseCase.js` are both
+untouched. This milestone makes ONE new fact observable — "does this
+operation's own predecessor list name something this replica does not
+currently know" — and stops there.
+
+### Recommendation
+
+0.9.228 completes the trio 0.9.226's own three-directions section first
+named: causal ORDER (0.9.227), causal COMPLETENESS (this milestone), and
+CONCURRENCY (0.9.225's own audit, now sharpened by real
+`CausalRelationship` answers). Three independently observable facts now
+exist:
+
+1. What happened first, causally? (`DocumentOperationCausalGraph#compare()`)
+2. Is this replica missing something causally required?
+   (`DocumentOperationCausalGapDetector#detect()`)
+3. What happens when two operations are genuinely concurrent?
+   (0.9.225's own audit, `CausalRelationship.CONCURRENT`)
+
+0.9.229 should not be predetermined by the mere existence of these three
+seams. A genuinely gapped operation and a genuinely concurrent pair are
+DIFFERENT problems with different honest answers — gap recovery
+(fetching or waiting for a specific missing operationId), causal
+buffering (deferring application until a gap closes), and conflict
+resolution (deciding what a concurrent pair means for the document) are
+three different mechanisms, and this codebase's own actual product
+requirements — not the fact that a detector now exists — should decide
+which one, if any, comes next.
