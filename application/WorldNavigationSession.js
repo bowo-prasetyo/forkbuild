@@ -278,6 +278,20 @@ export class WorldNavigationSession {
 	    // instance its caller (application/CreateWorldViewUseCase.js)
 	    // hands it.
 	    unpublishDocumentUseCase = null,
+	    // 0.9.248 — Publication Commentary UI Integration. The
+	    // application-layer read/write pair 0.9.244-0.9.247 already
+	    // built, threaded through so `getPublicationCommentaries()`/
+	    // `addPublicationCommentary()` below have something to delegate
+	    // to. Same "enforce/offer only when the collaborator is actually
+	    // wired" posture as `unpublishDocumentUseCase` above: a session
+	    // built without either (every pre-0.9.248 caller, and every
+	    // existing test) simply reports empty commentary and refuses to
+	    // create any. Neither use case's own construction (identity
+	    // resolution, authorization, storage) is reproduced here — this
+	    // file only ever holds whatever instances its caller
+	    // (application/CreateWorldViewUseCase.js) hands it.
+	    getPublicationCommentariesUseCase = null,
+	    addPublicationCommentaryUseCase = null,
 	    spatialAllocationPolicy = SpatialAllocationPolicy.WARN,
 	    searchWorldUseCase = null,
 	    spatialDiscoveryProvider = null,
@@ -412,6 +426,9 @@ export class WorldNavigationSession {
 	    this._removeWorldPlacementUseCase = removeWorldPlacementUseCase;
 	    // 0.9.198: see unpublishDocument() below.
 	    this._unpublishDocumentUseCase = unpublishDocumentUseCase;
+	    // 0.9.248: see getPublicationCommentaries()/addPublicationCommentary() below.
+	    this._getPublicationCommentariesUseCase = getPublicationCommentariesUseCase;
+	    this._addPublicationCommentaryUseCase = addPublicationCommentaryUseCase;
 	    // 0.2.25: the policy applied to EXPLICIT, interactive placement
 	    // (checkPlacementOverlap/movePlacement) — see
 	    // core/SpatialAllocationPolicy.js. Automatic initial placement
@@ -5393,6 +5410,40 @@ export class WorldNavigationSession {
             throw new Error('WorldNavigationSession: this publication has changed since it was selected — refusing to unpublish a different publication');
         }
         return this._unpublishDocumentUseCase.execute(publication.id);
+    }
+
+    // 0.9.248 — Publication Commentary UI Integration. The read half of
+    // the application-layer boundary 0.9.247 named
+    // (GetPublicationCommentariesUseCase) — this method never touches
+    // PublicationCommentaryStore itself. A session built without one
+    // wired (every pre-0.9.248 caller) answers `[]`, never a throw —
+    // "no capability wired" degrades to "nothing to show," exactly the
+    // posture `getPlacementInfo()` already holds for a Publication with
+    // no placement. Ordering is whatever the use case itself returns —
+    // this method performs no sort of its own.
+    getPublicationCommentaries(publicationId) {
+        if (!this._getPublicationCommentariesUseCase || !publicationId) {
+            return [];
+        }
+        return this._getPublicationCommentariesUseCase.execute({ publicationId });
+    }
+
+    // 0.9.248 — the write half. Delegates entirely to
+    // AddPublicationCommentaryUseCase (0.9.244-0.9.246, unmodified) —
+    // this method resolves no identity, checks no authorization, and
+    // constructs no PublicationCommentary itself. Unlike the read side
+    // above, a session built without one wired throws rather than
+    // silently no-opping: creating commentary is an explicit user
+    // action with an outcome the caller must observe, the same reason
+    // `unpublishDocument()` throws instead of returning false when its
+    // own use case is missing. `authorIdentityId` is deliberately not a
+    // parameter here — see AddPublicationCommentaryUseCase's own 0.9.245
+    // header for why the caller can't even attempt to supply one.
+    addPublicationCommentary({ publicationId, content }) {
+        if (!this._addPublicationCommentaryUseCase) {
+            throw new Error('WorldNavigationSession: publication commentary cannot be created — no AddPublicationCommentaryUseCase wired');
+        }
+        return this._addPublicationCommentaryUseCase.execute({ publicationId, content });
     }
 
     // _ensureEditableSelection() — REMOVED (0.5.9). Was the fork-on-write
