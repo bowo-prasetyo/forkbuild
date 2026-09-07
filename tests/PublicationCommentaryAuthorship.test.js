@@ -2,6 +2,7 @@ import { StorageProvider } from '../storage/StorageProvider.js';
 import { PublicationCommentary } from '../core/PublicationCommentary.js';
 import { PublicationCommentaryStore } from '../storage/PublicationCommentaryStore.js';
 import { AddPublicationCommentaryUseCase } from '../application/AddPublicationCommentaryUseCase.js';
+import { CanCommentOnPublicationUseCase } from '../application/CanCommentOnPublicationUseCase.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 
 // 0.9.245 — Publication Commentary Authorship Boundary.
@@ -43,9 +44,13 @@ import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 //
 // AUTHENTICATION ONLY, NOT AUTHORIZATION — this file never asks whether
 // the resolved identity is ALLOWED to comment on the given
-// publicationId. That remains a separate, later, deliberately deferred
-// milestone; see application/AddPublicationCommentaryUseCase.js's own
-// header.
+// publicationId. Every scenario below constructs
+// AddPublicationCommentaryUseCase with alwaysAuthorized() (a permissive
+// CanCommentOnPublicationUseCase that resolves any publicationId), so
+// this file keeps exercising ONLY the authorship boundary. That
+// authorization question — and its own dedicated coverage — lives in
+// tests/PublicationCommentaryAuthorization.test.js, per
+// application/CanCommentOnPublicationUseCase.js's own header.
 
 // ---------------------------------------------------------------------
 // Helpers
@@ -78,6 +83,14 @@ function makeIdentity(label) {
     return provider;
 }
 
+// A permissive CanCommentOnPublicationUseCase — this file is about
+// authorship, not authorization, so every scenario below is authorized
+// unconditionally. See tests/PublicationCommentaryAuthorization.test.js
+// for the dedicated authorization coverage.
+function alwaysAuthorized() {
+    return new CanCommentOnPublicationUseCase({ findById: (id) => ({ id }) });
+}
+
 function validInput(overrides = {}) {
     return {
         publicationId: 'pub-1',
@@ -98,7 +111,7 @@ async function runTests() {
         const alice = makeIdentity('Alice');
         const aliceIdentityId = alice.getSigningIdentity().id;
         const store = new PublicationCommentaryStore(new InMemoryStorageProvider());
-        const useCase = new AddPublicationCommentaryUseCase(store, alice);
+        const useCase = new AddPublicationCommentaryUseCase(store, alice, alwaysAuthorized());
 
         const { commentary } = useCase.execute(validInput());
 
@@ -115,7 +128,7 @@ async function runTests() {
         const aliceIdentityId = alice.getSigningIdentity().id;
         const bobIdentityId = bob.getSigningIdentity().id;
         const store = new PublicationCommentaryStore(new InMemoryStorageProvider());
-        const useCase = new AddPublicationCommentaryUseCase(store, alice);
+        const useCase = new AddPublicationCommentaryUseCase(store, alice, alwaysAuthorized());
 
         // Alice is authenticated, but her input names Bob's real,
         // resolvable identity as the requested author.
@@ -139,7 +152,7 @@ async function runTests() {
         // onto it — distinct from having no identityProvider at all.
         const unauthenticated = new LocalIdentityProvider(new InMemoryStorageProvider());
         const store = new PublicationCommentaryStore(new InMemoryStorageProvider());
-        const useCase = new AddPublicationCommentaryUseCase(store, unauthenticated);
+        const useCase = new AddPublicationCommentaryUseCase(store, unauthenticated, alwaysAuthorized());
 
         let threw = false;
         try {
@@ -159,11 +172,11 @@ async function runTests() {
 
         const alice = makeIdentity('Alice');
         const aliceIdentityId = alice.getSigningIdentity().id;
-        const { commentary: c1 } = new AddPublicationCommentaryUseCase(store, alice).execute(validInput({ content: 'first comment' }));
+        const { commentary: c1 } = new AddPublicationCommentaryUseCase(store, alice, alwaysAuthorized()).execute(validInput({ content: 'first comment' }));
 
         const bob = makeIdentity('Bob');
         const bobIdentityId = bob.getSigningIdentity().id;
-        const { commentary: c2 } = new AddPublicationCommentaryUseCase(store, bob).execute(validInput({ content: 'second comment' }));
+        const { commentary: c2 } = new AddPublicationCommentaryUseCase(store, bob, alwaysAuthorized()).execute(validInput({ content: 'second comment' }));
 
         assert(c1.authorIdentityId === aliceIdentityId, 'D1. the first commentary is attributed to the first authenticated identity');
         assert(c2.authorIdentityId === bobIdentityId, 'D2. the second commentary is attributed to the second authenticated identity');
@@ -183,10 +196,10 @@ async function runTests() {
         const publicationId = 'pub-independent';
 
         const alice = makeIdentity('Alice');
-        const { commentary: c1 } = new AddPublicationCommentaryUseCase(store, alice).execute(validInput({ publicationId, content: 'from Alice' }));
+        const { commentary: c1 } = new AddPublicationCommentaryUseCase(store, alice, alwaysAuthorized()).execute(validInput({ publicationId, content: 'from Alice' }));
 
         const bob = makeIdentity('Bob');
-        const { commentary: c2 } = new AddPublicationCommentaryUseCase(store, bob).execute(validInput({ publicationId, content: 'from Bob' }));
+        const { commentary: c2 } = new AddPublicationCommentaryUseCase(store, bob, alwaysAuthorized()).execute(validInput({ publicationId, content: 'from Bob' }));
 
         assert(c1.publicationId === publicationId, 'E1. publicationId is preserved regardless of author');
         assert(c2.publicationId === publicationId, 'E2. the same publicationId is preserved for a different author');
@@ -213,7 +226,7 @@ async function runTests() {
         };
         const alice = makeIdentity('Alice');
         const aliceIdentityId = alice.getSigningIdentity().id;
-        const useCase = new AddPublicationCommentaryUseCase(fakeStore, alice);
+        const useCase = new AddPublicationCommentaryUseCase(fakeStore, alice, alwaysAuthorized());
 
         const { commentary, isNew } = useCase.execute(validInput({ content: 'via a fake store' }));
 
@@ -229,7 +242,7 @@ async function runTests() {
         const alice = makeIdentity('Alice');
         const aliceIdentityId = alice.getSigningIdentity().id;
         const store = new PublicationCommentaryStore(new InMemoryStorageProvider());
-        const useCase = new AddPublicationCommentaryUseCase(store, alice);
+        const useCase = new AddPublicationCommentaryUseCase(store, alice, alwaysAuthorized());
 
         const { commentary } = useCase.execute(validInput({ content: 'a durable comment' }));
 
@@ -254,7 +267,7 @@ async function runTests() {
             }
         };
         const unauthenticated = new LocalIdentityProvider(new InMemoryStorageProvider());
-        const useCaseWithoutIdentity = new AddPublicationCommentaryUseCase(spyStore, unauthenticated);
+        const useCaseWithoutIdentity = new AddPublicationCommentaryUseCase(spyStore, unauthenticated, alwaysAuthorized());
 
         let threw = false;
         try {
@@ -270,7 +283,7 @@ async function runTests() {
         // about that behavior.
         const alice = makeIdentity('Alice');
         const failingStore = new PublicationCommentaryStore(new WriteFailingStorageProvider());
-        const useCaseWithFailingStore = new AddPublicationCommentaryUseCase(failingStore, alice);
+        const useCaseWithFailingStore = new AddPublicationCommentaryUseCase(failingStore, alice, alwaysAuthorized());
 
         threw = false;
         try {
