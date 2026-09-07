@@ -40,6 +40,7 @@ import { CreateBlueprintAttributionUseCase } from '../../application/CreateBluep
 import { CreateBlueprintLineageUseCase } from '../../application/CreateBlueprintLineageUseCase.js';
 import { CreateCommandRegistryUseCase } from '../../application/CreateCommandRegistryUseCase.js';
 import { DocumentCommandPropagationUseCase } from '../../application/DocumentCommandPropagationUseCase.js';
+import { DocumentOperationRecoveryUseCase } from '../../application/DocumentOperationRecoveryUseCase.js';
 import { CopySelectionUseCase } from '../../application/CopySelectionUseCase.js';
 import { RepeatSelectionUseCase } from '../../application/RepeatSelectionUseCase.js';
 import { PasteClipboardUseCase } from '../../application/PasteClipboardUseCase.js';
@@ -330,6 +331,24 @@ export default {
                 isBlocked
             })
             : null;
+        // 0.9.230 — Causal Gap Recovery Request Boundary. The SAME
+        // peerMessageBus/peerSessionManager.registry/identityProvider
+        // documentCommandPropagation just above already rides — never a
+        // second, disconnected peer stack — gated on the identical
+        // condition, plus documentCommandPropagation itself existing
+        // (verifyEnvelope()/resolveEditAccessFor() are its own reused
+        // trust chain, see DocumentOperationRecoveryUseCase.js's own
+        // header). A caller without one degrades to exactly its own
+        // pre-0.9.230 behavior — a causal gap is still observed, but
+        // never requested.
+        const documentOperationRecovery = (documentCommandPropagation && identityProvider && peerMessageBus && peerSessionManager)
+            ? new DocumentOperationRecoveryUseCase({
+                peerMessageBus,
+                connectedPeerRegistry: peerSessionManager.registry,
+                documentCommandPropagation,
+                identityProvider
+            })
+            : null;
 
 		const copySelectionUseCase = new CopySelectionUseCase(registry);
 		const pasteClipboardUseCase = new PasteClipboardUseCase();
@@ -362,7 +381,9 @@ export default {
 		    // 0.6.8 — Blueprint Lineage & Revision Discovery.
 		    blueprintLineageExchange,
 		    // 0.9.224 — Runtime Composition / Editor Integration.
-		    documentCommandPropagation
+		    documentCommandPropagation,
+		    // 0.9.230 — Causal Gap Recovery Request Boundary.
+		    documentOperationRecovery
 		});
 
 		// 0.2.81 — Forkable Structure Library, grouped per 0.2.84
@@ -1768,6 +1789,14 @@ export default {
             // the next mount, mirroring editorSession.dispose() just above.
             if (documentCommandPropagation) {
                 documentCommandPropagation.dispose();
+            }
+            // 0.9.230 — this view's own documentOperationRecovery is
+            // constructed fresh per mount, exactly like
+            // documentCommandPropagation just above — disposed here so
+            // an unmounted Editor's peer/bus subscriptions don't leak
+            // into the next mount.
+            if (documentOperationRecovery) {
+                documentOperationRecovery.dispose();
             }
         });
 

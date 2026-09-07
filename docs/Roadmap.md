@@ -79651,3 +79651,215 @@ only (if the product does not actually require reliable convergence) are
 four different directions — this codebase's own actual product
 requirements, not the mere existence of an observable feed, should decide
 which one, if any, comes next.
+
+## 0.9.230 — Causal Gap Recovery Request Boundary
+
+0.9.229's own "Recommendation" named the first of the four directions it
+declined to pick, and this milestone takes exactly that one: gap
+recovery. A replica could already KNOW it was missing a causal
+predecessor — every accepted operation produces a `CausalGapStatus` result
+naming exactly what's absent — but nothing could ever ask a peer for it.
+This milestone closes that seam, and only that seam:
+
+```text
+B arrives -> GAP(A) observed (0.9.228/0.9.229, unmodified)
+          -> REQUEST A from every currently authenticated peer
+          -> the peer that authored A answers with A's real envelope
+          -> verifyEnvelope() — the SAME five-step trust chain an
+             ordinarily-received operation already survives
+          -> A becomes KNOWN to the causal graph
+          -> A is NEVER handed to RemoteDocumentOperationApplicationUseCase
+```
+
+The boundary this milestone draws, deliberately: detection produces a
+request for evidence; it does not decide how — or whether — the missing
+operation is ever applied.
+
+### What this milestone adds
+
+`core/DocumentOperationRecoveryProtocol.js` (new) — the wire vocabulary
+for a new, separate protocol (`forkbuild:document-operation-recovery`),
+mirroring `application/PeerContentProtocol.js`'s own "keep the protocol
+tiny" discipline:
+
+```text
+DocumentOperationRecoveryMessageKind { REQUEST, RESPONSE }
+toDocumentOperationRecoveryRequestMessage({ documentId, operationIds })
+toDocumentOperationRecoveryResponseMessage({ documentId, operations })
+isValidDocumentOperationRecoveryMessage(value)
+```
+
+`operationIds` is explicit — a REQUEST names specific missing
+predecessors (`CausalGapDetector#detect()`'s own
+`missingCausalPredecessorIds`), never "send me whatever I'm missing." A
+RESPONSE's `operations` are real, complete `DocumentOperationEnvelope`
+objects — operationId, documentId, authorIdentityId, command,
+causalPredecessors — never a bare command, never reconstructed. There is
+no `NOT_FOUND` kind and no `requestId`/`requestingIdentityId`: a peer with
+nothing to offer simply never replies (an absent operationId across every
+RESPONSE this replica ever receives for it IS the explicit negative
+result), and a REQUEST's own operationIds are already their own
+correlation key — the identical restraint `application/
+PeerContentProtocol.js` already applies for content bytes.
+
+`application/DocumentOperationRecoveryUseCase.js` (new):
+
+```text
+DocumentOperationRecoveryUseCase
+    attachCommandHistory({ documentId, commandHistory }) -> unsubscribe
+    attachToGapObservation(gapObservation) -> unsubscribe
+    onOperationReceived(callback) -> unsubscribe
+    dispose()
+```
+
+`attachCommandHistory()` mirrors `DocumentCommandPropagationUseCase#
+attachCommandHistory()`'s own causal-predecessor computation exactly — a
+second, independent subscriber to the SAME `CommandHistoryEvent.
+COMMAND_EXECUTED` event, never a change to that method — recording every
+operation this replica itself authors into a small in-memory map, so a
+later REQUEST for one of them can be answered. `attachToGapObservation()`
+subscribes to `DocumentOperationCausalGapObservationUseCase#
+onGapObserved()` — a second, independent subscriber to an already-
+published feed, never a change to that class either — and for every GAP
+result, requests exactly its named missing predecessors from every
+currently AUTHENTICATED connected peer (a specific peer cannot be
+targeted: the gap descriptor deliberately carries no source-connection
+information — see 0.9.229's own header). `onOperationReceived()` fires the
+IDENTICAL shape `DocumentCommandPropagationUseCase#onOperationReceived()`
+fires, on purpose: it lets `DocumentOperationCausalGapObservationUseCase#
+attachToPropagation()` attach to THIS feed too, completely unmodified,
+recording a recovered operation into the SAME causal graph a normally-
+received one would — without ever being applied.
+
+```text
+DocumentCommandPropagationUseCase
+        |
+        +--> RemoteDocumentOperationApplicationUseCase   (0.9.223/0.9.224, unmodified)
+        |
+        +--> DocumentOperationCausalGapObservationUseCase  --attachToPropagation-->  DocumentOperationRecoveryUseCase
+        |         ^                                                                          |
+        |         |                                              attachToGapObservation       | attachToPropagation
+        |         +----------------------------------------------------------------------------+
+        |                                    (recovered operation -> known, never applied)
+```
+
+`application/EditorSession.js` wires both directions once, in its
+constructor, alongside its existing 0.9.229 wiring — never wiring
+`documentOperationRecovery` to `remoteDocumentOperationApplication`. The
+outgoing half (`attachCommandHistory()`) is rewired per-document in
+`_rebuild()`/`_teardown()`, exactly like `documentCommandPropagation`'s
+own. `ui/views/EditorView.js` constructs it alongside
+`documentCommandPropagation`, gated on the identical "is there actually a
+peer stack" condition, and disposes it on unmount.
+
+### Why only self-authored operations are ever served
+
+This codebase's operation trust model is CONNECTION-level, not
+message-level: an operation is authentic because the connection that
+carried it proved, during peer authentication, that it belongs to
+`authorIdentityId` (`DocumentCommandPropagationUseCase`'s own step 2).
+There is no independent, per-operation cryptographic signature that would
+let a THIRD peer safely relay someone else's already-authored operation —
+if Bob relayed an operation Alice authored, Carol's own `verifyEnvelope()`
+call would compare the envelope's claimed authorship against Carol's OWN
+connection identity for Bob, a correct IDENTITY_MISMATCH. So this
+milestone scopes recovery to exactly what the existing trust model can
+make safe: recovering an operation directly from a still-connected peer
+authenticated AS that operation's own author. `attachCommandHistory()`
+therefore only ever records SELF-authored operations — serving anything
+else would be answered but never successfully verified on the other end,
+so it is never attempted. Multi-hop relay/gossip recovery would need real
+per-operation signatures first — a different, future milestone, not a
+silent weakening of the existing boundary.
+
+### The security boundary — reused, not duplicated
+
+`DocumentCommandPropagationUseCase#_handleIncoming()` is refactored
+(behavior unchanged, proven by every pre-existing propagation test passing
+untouched) into `_verify()` — the same five-step chain, extracted — plus
+two new, additive public methods:
+
+```text
+verifyEnvelope(envelope, connectedPeer)
+    -> the SAME _verify() chain, for an envelope arriving over a
+       DIFFERENT channel — deliberately does NOT publish
+       onOperationReceived()/onOperationRejected(), so a recovered
+       envelope can never reach the feed
+       RemoteDocumentOperationApplicationUseCase automatically applies
+       from merely by passing verification
+resolveEditAccessFor(connectedPeer, documentId)
+    -> steps 3-4 of the SAME chain, reused to authorize an incoming
+       recovery REQUEST the identical way an operation FROM that peer
+       would already be authorized
+```
+
+`DocumentOperationRecoveryUseCase#_handleResponse()` calls
+`verifyEnvelope()` for every envelope in a RESPONSE independently; one
+rejected envelope never affects the others. `_handleRequest()` calls
+`resolveEditAccessFor()` before ever answering, so a recovery request can
+never become a way to read operation contents out of a document the
+requester couldn't otherwise submit edits to.
+
+### Failure isolation
+
+`DocumentOperationRecoveryUseCase#_handleIncoming()` and the gap-
+observation-triggered request are both wrapped in try/catch and never
+rethrow — a malformed/garbage recovery message, or a peer that disconnects
+mid-exchange, never becomes an operation rejection, an Editor failure, a
+CommandHistory failure, or a failure of the unrelated
+`DocumentCommandPropagationUseCase` channel sharing the same connection —
+proven by `tests/DocumentOperationRecovery.test.js` Section I, which sends
+a structurally-garbage recovery message over a real shared connection and
+then proves an unrelated, well-formed operation still arrives and applies
+normally afterward.
+
+### Tests (`tests/DocumentOperationRecovery.test.js`)
+
+1. A GAP produces a precise request; the missing operation is recovered
+   from the peer that authored it, verified, made known to the causal
+   graph, and never automatically applied.
+2. NO_GAP produces no request and no recovered operation.
+3. Multiple missing predecessors are requested and recovered as exactly
+   that set — no invented or unrelated ids.
+4. Duplicate GAP observations never produce a duplicated recovery —
+   ReplayGuard remains the one deduplication mechanism, end to end.
+5. Document isolation — an operationId known under one document never
+   answers a recovery request naming it under another.
+6. A recovery response preserves operationId, documentId,
+   authorIdentityId, command, and causalPredecessors exactly — no
+   reconstruction or rewriting.
+7. An unknown requested operation produces no recovered operation and no
+   placeholder — silence is the explicit negative result.
+8. Security — a forged envelope, claiming an author's identity while
+   arriving over a different, unauthorized peer's own connection, is
+   rejected by the SAME identity chain a live operation already survives.
+9. Failure isolation — a malformed recovery message never escapes as an
+   exception, never affects the unrelated propagation channel sharing the
+   same connection, and never blocks a subsequent well-formed operation.
+10. Direct-caller discipline — construction and wiring mistakes throw,
+    matching this lineage's own closed-vocabulary posture.
+
+### Deliberately excluded, on purpose
+
+No operation buffering, no delayed or automatic application, no causal
+reordering, no retry/backoff, no offline queue, no persistence of pending
+requests, no CRDT, no OT, no conflict resolution, no synchronized undo, no
+convergence guarantee, and no second deduplication mechanism next to
+ReplayGuard. `application/CommandHistory.js` and
+`application/RemoteDocumentOperationApplicationUseCase.js` are both
+untouched.
+
+### Recommendation
+
+Recovery answers Problem 2 from 0.9.225's own audit (a missing operation
+causing permanent divergence) without pretending to answer Problem 1
+(different delivery order causing a different result). A replica that was
+missing an operation can now genuinely have it — verified, known to its
+own causal graph — while never having decided what that means for
+application. The sharper question this milestone leaves, deliberately
+unanswered: when an operation arrives after its causal predecessor was
+recovered rather than normally received, should it be buffered, reordered,
+merely recorded (as it is today), or applied immediately? That is the
+point where changing `RemoteDocumentOperationApplicationUseCase` becomes
+justified — if this codebase's own actual product requirements turn out
+to need causal consistency, not merely causal awareness.
