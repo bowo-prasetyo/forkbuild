@@ -82915,3 +82915,150 @@ inspection/detail surface; notifications; commentary moderation/removal
 and synchronization. Selecting one is a separate, later, evidence-driven
 decision — the same restraint 0.9.221, 0.9.241, 0.9.250, and now 0.9.252
 have all held.
+
+## 0.9.253 — Place Naming Discovery Boundary
+
+0.9.252's own reassessment closed out Commentary without preselecting a
+next milestone; the product-direction conversation that followed named
+one directly: `PlaceNamingClaim` (0.5.2) already carries the semantic
+ingredients — a signed `{ worldId, regionId, name, authorIdentityId }`
+assertion — for the eventual "as I walk around, other people's place
+names appear" experience the Snapshot discovery family (0.9.133 onward)
+already built for Publication content. What Place Naming has never had is
+a discovery substrate: 0.5.3's own `application/PlaceNamingClaimExchange.js`
+is manual, file-based, and — by its own header's explicit design —
+protocol-independent, waiting for "every future transport... to plug into
+THIS class's importClaim()/exportClaim()." No peer or decentralized
+transport for a naming claim exists anywhere in this codebase yet.
+
+This milestone draws that boundary, deliberately narrow, and
+deliberately NOT a reuse of the Snapshot discovery protocol. A
+Snapshot's discoverable fact is "where can bytes matching this hash be
+retrieved from" (`contentHash`/`locator`/`storage`, `core/
+SnapshotDiscoveryEnvelope.js`); a `PlaceNamingClaim` has no bytes to
+fetch separately — it is already a small, complete, signed JSON record.
+So the new envelope carries the claim itself, inline, rather than
+inventing a locator/retrieval split with nothing on the other end of it:
+
+```
+PlaceNamingClaim (0.5.2, signed, unmodified)
+        │
+        ▼
+core/PlaceNamingDiscoveryEnvelope.js   (0.9.253)
+     buildPlaceNamingDiscoveryEnvelope() / describePlaceNamingDiscoveryEnvelope()
+     parsePlaceNamingDiscoveryEnvelope() / derivePlaceNamingDiscoveryTag()
+        │
+        ▼
+application/PlaceNamingDiscoveryQueryService.js   (0.9.253)
+     aggregates N source.search(discoveryTag) results, isolating a
+     failing source, deduplicating by claim.id, never ranking
+        │
+        ▼
+application/DiscoverPlaceNamingClaimsCommand.js   (0.9.253)
+     executeDiscoverPlaceNamingClaimsCommand({ discoveryTag, discoveryQueryService })
+        │
+        ▼
+application/PlaceNamingDiscoveryRuntimeComposition.js   (0.9.253)
+     composePlaceNamingDiscoveryRuntime({ sources }) -> { queryService }
+```
+
+Four new files, source-independent by construction:
+
+* **`core/PlaceNamingDiscoveryEnvelope.js`** — the wire shape:
+  `{ protocol: 'forkbuild-place-naming-discovery', version: 1, worldId,
+  regionId, claim }`. `worldId`/`regionId` are carried at the envelope's
+  own top level even though they also appear inside `claim` —
+  deliberately redundant, so a source can route/filter by region without
+  first trusting an unparsed claim body — and `describe()` cross-validates
+  the two copies agree, exactly the "travel together, or not at all"
+  discipline `core/SnapshotDiscoveryEnvelope.js`'s own 0.9.171 addition
+  already established for a bare position claim. Validates SHAPE only,
+  including the embedded claim's own signature shape — never
+  cryptographic authenticity, which stays `identity/
+  LocalAuthorizationVerifier.js#verifyPlaceNamingClaim()`'s job, entirely
+  downstream of this file. Malformed input degrades to `null`, never
+  throws; the one inverse builder,
+  `buildPlaceNamingDiscoveryEnvelope(claim)`, throws for an unsigned or
+  non-instance claim, mirroring `application/
+  PlaceNamingClaimPublication.js#buildPlaceNamingClaimPublication()`
+  exactly.
+* **`application/PlaceNamingDiscoveryQueryService.js`** — the
+  source-independent aggregator the product-direction conversation asked
+  for by name: "if the existing import/peer paths already expose the
+  claim cleanly, the new discovery layer should compose them rather than
+  replace them." Each source is duck-typed as `{ search(discoveryTag) ->
+  Promise<rawPayload[]> }` — a future Nostr adapter, a future peer
+  adapter, or a future file-import bridge would all satisfy the identical
+  shape. A failing or rejecting source is isolated via
+  `Promise.allSettled()` and never fails the whole call; deduplication is
+  by `claim.id` alone, keeping whichever source's own result arrived
+  first — the same identity `application/LocalPlaceNamingClaimStore.js#
+  has()` already uses.
+* **`application/DiscoverPlaceNamingClaimsCommand.js`** — the thin
+  command boundary, byte-for-byte the same shape `application/
+  DiscoverSnapshotCandidatesCommand.js` (0.9.150) already established: a
+  synchronous collaborator check, then a verbatim, unmodified pass-through
+  of `discoveryQueryService.search()`'s own result.
+* **`application/PlaceNamingDiscoveryRuntimeComposition.js`** — the
+  composition-root factory, with one deliberate departure from `application/
+  DiscoverSnapshotRuntimeComposition.js`'s own `null`-on-absent-capability
+  pattern: `sources` is a LIST, not a single capability, and an empty list
+  is this milestone's own honest starting state — no source exists yet to
+  wire in at all — rather than an error condition. So
+  `composePlaceNamingDiscoveryRuntime()` always returns a real, usable
+  `queryService`, whose own `search()` already, honestly, resolves to `[]`
+  over zero sources; a caller never needs a `queryService || fallback`
+  branch the way an absent Snapshot `resolver` would require.
+
+The important separation this milestone holds throughout, and the reason
+it stops exactly here: **discovery finds candidates; it never adopts,
+ranks, or places them.** A returned envelope is exactly as unverified as
+every claim this codebase has ever called a claim — see docs/
+Principles.md, "A Discovered Naming Claim Is Still Just A Claim
+(0.9.253)." Nothing in this milestone imports `application/
+LocalPlaceNamingClaimStore.js`, `core/PlaceNamingView.js`, `identity/
+LocalAuthorizationVerifier.js`, or `application/WorldNavigationSession.js`
+— proven structurally in `tests/PlaceNamingDiscoveryBoundary.test.js`'s
+own CAPSTONE section, which never imports any of them either. A caller
+who wants to ADOPT a discovered candidate hands its own `claim` to
+`application/PlaceNamingClaimExchange.js#importClaim()` as a publication
+package — the exact three-step validate/construct/verify discipline
+0.5.3 already built, reused unchanged rather than duplicated.
+
+Two new test files: `tests/PlaceNamingDiscoveryEnvelope.test.js` (wire
+shape — describe/parse/build round-tripping, protocol/version namespace
+gate, worldId/regionId cross-validation, every malformed-field case, and
+a direct proof the Snapshot Discovery Envelope's own validator rejects a
+well-formed Place Naming envelope and vice versa) and
+`tests/PlaceNamingDiscoveryBoundary.test.js` (the aggregator, command,
+and composition — source isolation, dedup, the honest empty roster, and
+a CAPSTONE proving a claim flows end to end from a source through to an
+unranked, unverified, unadopted candidate). Registers both in
+`tests.html`.
+
+### What this milestone deliberately excludes
+
+Per the product-direction conversation's own explicit scope: Arweave
+publishing; Nostr publishing; any other concrete discovery source
+(WebRTC peer exchange, a file-import bridge re-exposed as a source);
+automatic/background proximity polling of any kind; distance/radius
+selection policy; any UI or `ui/main.js` wiring; trust/ranking across
+returned candidates; automatic World registration or automatic renaming
+of a `WorldRegion`; and replacing the existing file import/export
+(`application/PlaceNamingClaimExchange.js`) or peer-to-peer exchange
+pattern — this milestone adds a new, additive seam those transports can
+plug into later, and changes nothing about how naming claims move today.
+
+### What comes after
+
+The product-direction conversation's own proposed arc named
+`0.9.254 — Place Naming Discovery Source` next: wiring a first real
+`source` (most plausibly a Nostr publisher/query-service pair mirroring
+`application/NostrSnapshotDiscoveryPublisher.js`/`NostrSnapshotDiscoveryQueryService.js`,
+or a peer adapter reusing `application/PlaceNamingClaimExchange.js#importClaim()`
+under the hood) into `application/PlaceNamingDiscoveryRuntimeComposition.js`'s
+now-empty `sources` roster — followed, per that same conversation, by
+automatic proximity selection, World View presentation, and an end-to-end
+audit. As with every roadmap arc recorded here, only the immediate next
+milestone is treated as committed; whether each later step remains
+necessary, in that order, is a question for the seam audit at each one.
