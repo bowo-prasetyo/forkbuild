@@ -81909,3 +81909,188 @@ the UI can stay extremely thin — `publicationId` + `content` in,
 domain construction, and persistence — never a UI that determines its
 own author, constructs its own domain object, or writes its own
 storage.
+
+## 0.9.246 — Publication Commentary Authorization Boundary
+
+0.9.245's own header drew the line deliberately, and left it drawn:
+"this use case still does not ask, let alone answer, 'is Alice allowed
+to comment on this Publication.'" This milestone answers exactly that
+one question, and only that question:
+
+```text
+Caller
+  │
+  ▼
+Authenticated identity                 (0.9.245, unmodified)
+  │
+  ▼
+Authorization decision                 (NEW — this milestone)
+  │
+  ├── allowed ──────► PublicationCommentary   (0.9.242, unmodified)
+  │                         │
+  │                         ▼
+  │                    PublicationCommentaryStore   (0.9.243, unmodified)
+  │
+  └── denied ───────► no commentary constructed, nothing persisted
+```
+
+### Discover before implementing
+
+Before writing any policy, this milestone audited ForkBuild's existing
+Publication/identity authorization surface for a rule the shipped
+system already implies, rather than inventing a new one. The audit
+findings, in full, live in `application/CanCommentOnPublicationUseCase.js`'s
+own header; summarized:
+
+* `publisher/Publication.js` carries no visibility, ownership-gated
+  access, or viewer-permission field — only `publisherIdentity`, a
+  provenance fact about who signed the publication, never an access
+  grant over it.
+* Every discovery provider (`discovery/LocalDiscoveryProvider.js`,
+  `discovery/PublicationCatalogDiscoveryProvider.js`) and every use
+  case that lists or resolves Publications (`ListPublicationsUseCase`,
+  `SearchPublicationsUseCase`, `FindPublicationUseCase`,
+  `ResolvePublicationUseCase`) takes no viewer-identity parameter at
+  all — anyone who can reach a `discoveryProvider` can already see
+  every Publication on it.
+* `identity/AuthorizationVerifier.js` / `LocalAuthorizationVerifier.js`
+  answer a different question — is a Publication's own signature
+  authentic — never "may identity X interact with Publication Y."
+* `application/WorldAuthorizationService.js` answers a different
+  question again — Document EDITING authority for the collaboration
+  arc (0.2.95-0.9.240). Deliberately NOT reused here: editing a
+  Document and commenting on a published, immutable Publication are
+  different propositions, and coupling them would make commentary
+  authorization silently depend on collaboration state that has
+  nothing to do with it.
+* `identity/TrustPolicy.js`'s own `AuthorityMode.DISCOVERED` is the
+  closest existing precedent for this milestone's own shape: "no
+  external trust source exists yet... accept any signer... the
+  fallback when no authority is pinned" — a real, enforced decision
+  point whose current answer is permissive because ForkBuild has not
+  yet defined a narrower one, not a step that was skipped.
+
+**Conclusion:** ForkBuild has no existing identity-vs-Publication
+permission relationship. The Publication/discovery stack is, by
+design, openly readable — the entire point of publishing, anchoring,
+and decentralized distribution is public reachability, not access
+restriction. So this boundary's policy, mirroring `TrustPolicy`'s
+`DISCOVERED` default: **any authenticated identity may comment on any
+Publication that actually exists** (resolves through the existing
+Publication discovery infrastructure); a `publicationId` that does not
+resolve is denied. This is a real, enforced, testable decision — not a
+no-op — and it comes from reusing the exact `discoveryProvider.findById(
+publicationId)` dependency `ResolvePublicationUseCase`,
+`PlacePublicationUseCase`, `CreatePublicationSnapshotPlacementUseCase`
+and `CreateExternalSnapshotPlacementUseCase` already share, never a new,
+duplicated permission table living inside commentary code.
+
+### What this milestone changes
+
+* `application/CanCommentOnPublicationUseCase.js` (new) — the
+  authorization boundary itself. Constructor takes a `discoveryProvider`
+  (duck-typed: only `findById(id)` is ever called). `execute({
+  identityId, publicationId })` returns a plain boolean: `true` when
+  `publicationId` resolves to a real Publication, `false` when it does
+  not. Throws only for a malformed call (no `identityId` — i.e. called
+  before authentication ever ran); a normal "not allowed" outcome is
+  always a returned `false`, never a thrown error.
+* `application/AddPublicationCommentaryUseCase.js` — the constructor now
+  additionally requires a `canCommentOnPublicationUseCase` collaborator.
+  `execute()` calls it, with the identity 0.9.245's own
+  `resolveSigningIdentityId()` resolved, immediately after authentication
+  succeeds and strictly before constructing a `PublicationCommentary` or
+  calling `store.save()`. A denied request throws a plain Error; no
+  commentary object is ever constructed for it, so there is nothing
+  partially-built to clean up.
+* `tests/CanCommentOnPublicationUseCase` behavior is exercised through
+  its consumer — see `tests/PublicationCommentaryAuthorization.test.js`
+  below — rather than a separate unit-only file, matching how this
+  codebase already tests other small, single-purpose collaborators
+  (e.g. `resolveSigningIdentityId()` has no dedicated test file of its
+  own either; its behavior is proven through every use case that
+  depends on it).
+* `tests/AddPublicationCommentaryUseCase.test.js` and `tests/
+  PublicationCommentaryAuthorship.test.js` (both updated) — every
+  scenario now constructs `AddPublicationCommentaryUseCase` with a
+  third, permissive `CanCommentOnPublicationUseCase` (backed by a fake
+  discoveryProvider that resolves any publicationId), so their own,
+  unrelated coverage — content validation, conflicts, storage failure,
+  store isolation, authorship — keeps exercising exactly what each file
+  already exercised, never the new authorization policy.
+* `tests/PublicationCommentaryAuthorization.test.js` (new), eight
+  sections: an authorized request succeeds (existing Publication); an
+  unauthorized request is denied and leaves the store untouched (unknown
+  Publication); a caller-supplied `authorIdentityId` still has no
+  effect, now that a second gate sits in front of 0.9.245's own
+  authorship resolution; authorization for one Publication never
+  authorizes a different, unregistered one; a sequence mixing
+  identities and Publications (authorized, denied, authorized again)
+  proves no stale authorization state leaks between calls; a denied
+  request mutates nothing — not the store, not another Publication's
+  commentary, not another identity's; an authorized request still
+  propagates a genuine storage write failure exactly as 0.9.244
+  established; and the authorization decision is proven to come from
+  the injected discoveryProvider itself — a spy records exactly what it
+  was asked, and the decision is shown to track that same provider's
+  own live registration state rather than any table duplicated inside
+  commentary code.
+
+Also registers `tests/PublicationCommentaryAuthorization.test.js` in
+`tests.html`'s own runner list.
+
+### What this milestone deliberately does not add
+
+Per its own brief, and because the audit above found no existing
+semantic reason for any of them:
+
+* No `PublicationCommentaryPermission` ALLOW/DENY descriptor.
+* No `canComment`, `ownerId`, trust score, friendship/participant
+  requirement, moderation state, visibility state, role, or persisted
+  ACL anywhere on `PublicationCommentary` or in the commentary domain.
+  `core/PublicationCommentary.js` is untouched by this milestone —
+  authorization, like authentication before it, is an application
+  concern the domain never sees.
+* No coupling to `application/WorldAuthorizationService.js` or any
+  other document-collaboration authority. A user being authorized to
+  edit a Document and a user being authorized to comment on a
+  Publication remain two entirely separate propositions.
+* No commentary UI, editing, deletion/retraction, replies/threading,
+  reactions, moderation, notifications, decentralized distribution,
+  Nostr, WebRTC, commentary discovery, real-time synchronization,
+  collaboration operation envelopes, causal metadata, or CRDT/OT.
+
+If a later milestone decides commentary needs a narrower policy than
+"the Publication exists" — an owner/participant relationship, a
+moderation gate, anything else — that is a separate, deliberate product
+decision, made the same way 0.9.216/0.9.219/0.9.221 already made
+comparable calls for other domains. `CanCommentOnPublicationUseCase`'s
+own `execute()` is the one place it would be implemented; every current
+caller (today, only `AddPublicationCommentaryUseCase`) would pick up
+the stricter rule automatically, without a redesign.
+
+### The resulting creation pipeline
+
+```text
+commentary intent
+       │
+       ▼
+authenticated identity              (0.9.245)
+       │
+       ▼
+authorization                       (0.9.246, this milestone)
+       │
+       ├── DENIED ──► stop, nothing constructed or persisted
+       │
+       ▼
+PublicationCommentary                (0.9.242)
+       │
+       ▼
+PublicationCommentaryStore           (0.9.243)
+```
+
+Every subsequent UI entry point can now use this identical path — an
+authorization check is no longer something a future caller could
+accidentally skip by calling the domain or storage layer directly, the
+same structural guarantee 0.9.244 already established for construction
+and persistence.
