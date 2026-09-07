@@ -15,6 +15,7 @@ import { CommandHistory } from './CommandHistory.js';
 import { CommandHistoryEvent } from './events/CommandHistoryEvent.js';
 import { RemoteDocumentOperationApplicationUseCase } from './RemoteDocumentOperationApplicationUseCase.js';
 import { DocumentOperationCausalGapObservationUseCase } from './DocumentOperationCausalGapObservationUseCase.js';
+import { DocumentOperationRecoveryUseCase } from './DocumentOperationRecoveryUseCase.js';
 import { SpatialEditingService } from './SpatialEditingService.js';
 import { TransformGizmoUseCase } from './TransformGizmoUseCase.js';
 import { TransformSettings } from './TransformSettings.js';
@@ -167,7 +168,16 @@ export class EditorSession {
         // DocumentCommandPropagationUseCase or
         // RemoteDocumentOperationApplicationUseCase to add anything;
         // both stay exactly as 0.9.222/0.9.223 left them.
-        documentCommandPropagation = null
+        documentCommandPropagation = null,
+        // 0.9.230 — Causal Gap Recovery Request Boundary. Optional, same
+        // graceful-degradation posture as documentCommandPropagation
+        // above — an EditorSession built without one (older call sites,
+        // every existing test) simply never requests or answers a
+        // recovery exchange; nothing else changes. Already fully
+        // constructed by the caller (see ui/views/EditorView.js), exactly
+        // like documentCommandPropagation — this class never builds one
+        // itself.
+        documentOperationRecovery = null
     }) {
         this._registry = registry;
         this._editorContext = editorContext;
@@ -201,6 +211,7 @@ export class EditorSession {
         // tracks causal knowledge across every document this session ever
         // opens without needing to know which one is "current."
         this._documentOperationCausalGapObservation = new DocumentOperationCausalGapObservationUseCase();
+        this._documentOperationRecovery = documentOperationRecovery;
 
         this._container = null;
         this._session = null;
@@ -209,6 +220,7 @@ export class EditorSession {
         this._inputDispatcher = null;
         this._untrackDirtyState = null;
         this._unattachCommandHistoryPropagation = null;
+        this._unattachRecoveryCommandHistory = null;
         this._editorCommandHistories = new Map();
         this._transformSettings = new TransformSettings();
         this._gestureService = new SpatialEditingService(
@@ -290,6 +302,43 @@ export class EditorSession {
                     : null)
             )
             : null;
+        // 0.9.230 — Causal Gap Recovery Request Boundary. Two independent,
+        // session-lifetime wirings, symmetric to each other:
+        //
+        //   1. gap observed (GAP)  -> documentOperationRecovery sends a
+        //      REQUEST for the missing operationIds.
+        //   2. a recovered operation arrives (a verified RESPONSE)
+        //      -> documentOperationCausalGapObservation records it into
+        //      the SAME causal graph a normally-received operation would,
+        //      via attachToPropagation() reused completely unmodified —
+        //      documentOperationRecovery's own onOperationReceived() is
+        //      shaped identically to DocumentCommandPropagationUseCase's.
+        //
+        // Deliberately NEVER wired to
+        // this._remoteDocumentOperationApplication — see
+        // DocumentOperationRecoveryUseCase.js's own header, "Do not
+        // automatically apply." A recovered operation becomes KNOWN to
+        // this session's causal graph; whether/how it is ever applied is
+        // the open question 0.9.229's own "Recommendation" left for a
+        // later milestone.
+        this._unattachGapToRecoveryRequest = this._documentOperationRecovery
+            ? this._documentOperationRecovery.attachToGapObservation(this._documentOperationCausalGapObservation)
+            : null;
+        this._unattachRecoveryToGapObservation = this._documentOperationRecovery
+            ? this._documentOperationCausalGapObservation.attachToPropagation(this._documentOperationRecovery)
+            : null;
+    }
+
+    // 0.9.230 — lets a caller observe an operation this session recovered
+    // (verified, but never applied) without reaching into a private
+    // field. Returns an unsubscribe function. When this session was built
+    // without a documentOperationRecovery, nothing is ever wired to
+    // publish a result, so the callback simply never fires — the same
+    // graceful-degradation posture onCausalGapObserved() already takes.
+    onDocumentOperationRecovered(callback) {
+        return this._documentOperationRecovery
+            ? this._documentOperationRecovery.onOperationReceived(callback)
+            : () => {};
     }
 
     // 0.9.229 — lets a caller observe this session's own causal-gap
@@ -1631,6 +1680,14 @@ export class EditorSession {
             this._unattachCausalGapObservation();
             this._unattachCausalGapObservation = null;
         }
+        if (this._unattachGapToRecoveryRequest) {
+            this._unattachGapToRecoveryRequest();
+            this._unattachGapToRecoveryRequest = null;
+        }
+        if (this._unattachRecoveryToGapObservation) {
+            this._unattachRecoveryToGapObservation();
+            this._unattachRecoveryToGapObservation = null;
+        }
     }
 
     _rebuild(populateWorldFn) {
@@ -1668,6 +1725,17 @@ export class EditorSession {
         // this._commandHistory.
         this._unattachCommandHistoryPropagation = this._documentCommandPropagation
             ? this._documentCommandPropagation.attachCommandHistory({
+                documentId: world.id,
+                commandHistory: this._commandHistory
+            })
+            : null;
+        // 0.9.230 — the outgoing half of documentOperationRecovery's own
+        // seam, rewired per-document exactly like
+        // documentCommandPropagation's own attachCommandHistory() just
+        // above: records this replica's own locally-authored operations
+        // so a later recovery REQUEST for one of them can be answered.
+        this._unattachRecoveryCommandHistory = this._documentOperationRecovery
+            ? this._documentOperationRecovery.attachCommandHistory({
                 documentId: world.id,
                 commandHistory: this._commandHistory
             })
@@ -1716,6 +1784,10 @@ export class EditorSession {
         if (this._unattachCommandHistoryPropagation) {
             this._unattachCommandHistoryPropagation();
             this._unattachCommandHistoryPropagation = null;
+        }
+        if (this._unattachRecoveryCommandHistory) {
+            this._unattachRecoveryCommandHistory();
+            this._unattachRecoveryCommandHistory = null;
         }
         if (this._untrackDirtyState) {
             this._untrackDirtyState();

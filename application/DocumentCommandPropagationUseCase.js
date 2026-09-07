@@ -316,81 +316,148 @@ export class DocumentCommandPropagationUseCase {
         this._eventBus.publish(OPERATION_REJECTED_EVENT, { reason, envelope });
     }
 
-    // The receiving-side trust boundary — see this file's own header for
-    // the full ordered chain. Every step re-derived fresh; nothing about
-    // a prior envelope from the same connection is ever remembered or
-    // assumed here.
-    _handleIncoming(payload, meta) {
+    // 0.9.230 — Causal Gap Recovery Request Boundary. The receiving-side
+    // trust chain itself is UNCHANGED — every step below is exactly what
+    // `_handleIncoming()` already did before this refactor — it is only
+    // extracted into its own method so `application/
+    // DocumentOperationRecoveryUseCase.js` can run a recovered envelope
+    // (one carried by ITS OWN, separate protocol, never this class's own)
+    // through the identical identity/authorization/ReplayGuard/
+    // CommandRegistry chain, rather than becoming a second, drifting copy
+    // of this class's own security boundary. `_verify()` deliberately
+    // NEVER publishes onOperationReceived()/onOperationRejected() itself
+    // — `_handleIncoming()` below still does that, unchanged, for
+    // envelopes arriving over THIS class's own protocol. That split
+    // matters: a recovered envelope must NOT reach onOperationReceived()
+    // — the feed `RemoteDocumentOperationApplicationUseCase` is wired to
+    // for automatic application — merely because it happened to pass the
+    // SAME verification a normally-arrived one would. See
+    // DocumentOperationRecoveryUseCase.js's own header, "Do not
+    // automatically apply," for why that boundary is the whole point of
+    // this milestone.
+    _verify(payload, meta) {
         if (!isValidDocumentOperationEnvelope(payload)) {
-            this._reject(DocumentOperationRejectionReason.INVALID_ENVELOPE, payload);
-            return;
+            return { accepted: false, reason: DocumentOperationRejectionReason.INVALID_ENVELOPE };
         }
         const connectedPeer = meta && meta.connectedPeer;
         if (!connectedPeer || connectedPeer.getLifecycleState() !== PeerLifecycleState.AUTHENTICATED || !connectedPeer.remoteIdentity) {
-            this._reject(DocumentOperationRejectionReason.IDENTITY_MISMATCH, payload);
-            return;
+            return { accepted: false, reason: DocumentOperationRejectionReason.IDENTITY_MISMATCH };
         }
         // Step 2 — the claimed authorIdentityId must be exactly the raw
         // key THIS connection proved during authentication.
         if (payload.authorIdentityId !== connectedPeer.remoteIdentity.identityId) {
-            this._reject(DocumentOperationRejectionReason.IDENTITY_MISMATCH, payload);
-            return;
+            return { accepted: false, reason: DocumentOperationRejectionReason.IDENTITY_MISMATCH };
         }
         // Step 3 — social identity, device-aware.
         const social = this._deviceAuth.resolveConnectionIdentity(connectedPeer);
         if (!social || !social.identityId) {
-            this._reject(DocumentOperationRejectionReason.IDENTITY_MISMATCH, payload);
-            return;
+            return { accepted: false, reason: DocumentOperationRejectionReason.IDENTITY_MISMATCH };
         }
         // Step 4 — Document EDIT access. No `resolveWorldEditGrant` — see
         // this file's own header on why that degrades to ownership only.
         const document = this._resolveDocument(payload.documentId);
         if (!document) {
-            this._reject(DocumentOperationRejectionReason.UNKNOWN_DOCUMENT, payload);
-            return;
+            return { accepted: false, reason: DocumentOperationRejectionReason.UNKNOWN_DOCUMENT };
         }
-        const authorization = new WorldAuthorizationService({
-            resolveSocialIdentity: () => social,
-            isBlocked: this._isBlocked
-        });
-        const access = authorization.resolveAccess(document);
+        const access = this._resolveAccessFor(social, document);
         if (access !== WorldAccessLevel.EDIT) {
-            this._reject(
-                access === WorldAccessLevel.NONE ? DocumentOperationRejectionReason.BLOCKED : DocumentOperationRejectionReason.NOT_AUTHORIZED,
-                payload
-            );
-            return;
+            return {
+                accepted: false,
+                reason: access === WorldAccessLevel.NONE ? DocumentOperationRejectionReason.BLOCKED : DocumentOperationRejectionReason.NOT_AUTHORIZED
+            };
         }
         // Step 5 — verify the operation itself.
         if (typeof payload.command.worldId === 'string' && payload.command.worldId !== payload.documentId) {
-            this._reject(DocumentOperationRejectionReason.DOCUMENT_MISMATCH, payload);
-            return;
+            return { accepted: false, reason: DocumentOperationRejectionReason.DOCUMENT_MISMATCH };
         }
         if (this._replayGuard.hasAccepted(payload.operationId, payload.documentId)) {
-            this._reject(DocumentOperationRejectionReason.DUPLICATE, payload);
-            return;
+            return { accepted: false, reason: DocumentOperationRejectionReason.DUPLICATE };
         }
         let command;
         try {
             command = this._commandRegistry.fromJSON(payload.command);
         } catch {
-            this._reject(DocumentOperationRejectionReason.UNKNOWN_COMMAND, payload);
-            return;
+            return { accepted: false, reason: DocumentOperationRejectionReason.UNKNOWN_COMMAND };
         }
-        // Recorded so a retransmit of the SAME operationId is recognized
-        // even though nothing here ever executes it.
+        // Recorded so a retransmit of the SAME operationId — over EITHER
+        // this class's own protocol, or a recovery response naming it
+        // (0.9.230) — is recognized as a duplicate by the ONE ReplayGuard
+        // both channels now share.
         this._replayGuard.recordAccepted(payload.operationId, payload.documentId);
-        // Deliberately NEVER applied — see this file's own header. The
-        // receiver is only ever told an authorized operation arrived.
-        // `causalPredecessors` (0.9.227) is relayed exactly as validated
-        // by `isValidDocumentOperationEnvelope()` — `[]` for a pre-0.9.227
-        // sender that never set it, otherwise the sender's own list,
-        // untouched.
-        this._eventBus.publish(OPERATION_RECEIVED_EVENT, {
+        return {
+            accepted: true,
             documentId: payload.documentId,
             command,
             authorIdentityId: social.identityId,
+            // `causalPredecessors` (0.9.227) is relayed exactly as
+            // validated by `isValidDocumentOperationEnvelope()` — `[]`
+            // for a pre-0.9.227 sender that never set it, otherwise the
+            // sender's own list, untouched.
             causalPredecessors: payload.causalPredecessors || []
+        };
+    }
+
+    _resolveAccessFor(social, document) {
+        const authorization = new WorldAuthorizationService({
+            resolveSocialIdentity: () => social,
+            isBlocked: this._isBlocked
+        });
+        return authorization.resolveAccess(document);
+    }
+
+    // 0.9.230 — lets a caller other than this class's own protocol
+    // handler (currently only `DocumentOperationRecoveryUseCase`, to
+    // authorize an incoming recovery REQUEST) reuse steps 3-4 of the
+    // SAME chain above to ask: is `connectedPeer` currently authorized to
+    // RECEIVE operations for `documentId` — the identical condition that
+    // already gates whether this class would accept an operation FROM
+    // that peer. Never throws; an unauthenticated, unresolvable, or
+    // unknown-document `connectedPeer` simply resolves to
+    // `WorldAccessLevel.NONE`, exactly like `_verify()` would reject it.
+    resolveEditAccessFor(connectedPeer, documentId) {
+        if (!connectedPeer || connectedPeer.getLifecycleState() !== PeerLifecycleState.AUTHENTICATED || !connectedPeer.remoteIdentity) {
+            return WorldAccessLevel.NONE;
+        }
+        const social = this._deviceAuth.resolveConnectionIdentity(connectedPeer);
+        if (!social || !social.identityId) {
+            return WorldAccessLevel.NONE;
+        }
+        const document = this._resolveDocument(documentId);
+        if (!document) {
+            return WorldAccessLevel.NONE;
+        }
+        return this._resolveAccessFor(social, document);
+    }
+
+    // 0.9.230 — verifies an envelope that arrived through a DIFFERENT
+    // channel than this class's own protocol (a recovery RESPONSE) using
+    // the IDENTICAL `_verify()` chain `_handleIncoming()` below uses.
+    // Deliberately returns its result rather than publishing
+    // onOperationReceived()/onOperationRejected() — see `_verify()`'s own
+    // header above for why a recovered envelope must never reach the
+    // feed `RemoteDocumentOperationApplicationUseCase` automatically
+    // applies from merely by being verified.
+    verifyEnvelope(envelope, connectedPeer) {
+        return this._verify(envelope, { connectedPeer });
+    }
+
+    // The receiving-side trust boundary for THIS class's own protocol —
+    // see this file's own header for the full ordered chain, now
+    // performed by `_verify()` above (extracted, 0.9.230); nothing about
+    // its observable behavior changed by that extraction.
+    _handleIncoming(payload, meta) {
+        const result = this._verify(payload, meta);
+        if (!result.accepted) {
+            this._reject(result.reason, payload);
+            return;
+        }
+        // Deliberately NEVER applied — see this file's own header. The
+        // receiver is only ever told an authorized operation arrived.
+        this._eventBus.publish(OPERATION_RECEIVED_EVENT, {
+            documentId: result.documentId,
+            command: result.command,
+            authorIdentityId: result.authorIdentityId,
+            causalPredecessors: result.causalPredecessors
         });
     }
 }
