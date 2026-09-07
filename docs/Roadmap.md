@@ -78485,3 +78485,166 @@ unwired; or (2) ordering/conflict-resolution/membership for Structure
 Documents, mirroring 0.2.97/0.2.98's own additive layering over 0.2.96's
 identical boundary. Either is real, new product surface; neither should
 be bundled into the other by default.
+
+## 0.9.223 — Explicit Remote Document Operation Application Boundary
+
+0.9.222's own flagship made its single most load-bearing assertion this:
+after Bob observes Alice's authorized operation, his own World is
+BYTE-IDENTICAL to before it arrived, and his own CommandHistory is still
+completely empty. That was a deliberate, named restraint, not an
+oversight — `onOperationReceived()` fires with a real, deserialized
+`Command`, and nothing in `DocumentCommandPropagationUseCase` ever calls
+`command.execute()`. This milestone crosses exactly the ONE next boundary
+that restraint left open, and no further:
+
+```text
+0.9.222                                0.9.223
+LOCAL EDIT                             OBSERVED REMOTE COMMAND
+   |                                          |
+   v                                          v
+serialize command                      explicit application
+   |                                          |
+   v                                          v
+authenticated peer                     target Editor
+   |
+   v
+authorize + verify + ReplayGuard
+   |
+   v
+OBSERVE remote command  ---------------------^
+```
+
+The semantics are deliberately weaker than "the system guarantees
+convergence":
+
+> An authorized, verified, non-replayed remote operation may be
+> explicitly handed to the receiving Editor for application.
+
+That is not the same claim as automatic, ordered, conflict-free
+collaboration — see "Deliberately excluded" below.
+
+### What this milestone adds
+
+- `application/RemoteDocumentOperationApplicationUseCase.js` — a new,
+  separate class sitting one layer downstream of
+  `DocumentCommandPropagationUseCase#onOperationReceived()`, never a
+  reopening of that class. `apply({ documentId, command,
+  authorIdentityId }, target)` takes exactly the triple
+  `onOperationReceived()` already hands a caller, plus `target =
+  { documentId, commandHistory }` — the document identity the RECEIVING
+  Editor says it is currently looking at, resolved fresh by the caller
+  every single time, never cached or inferred by this class. Document
+  identity stays authoritative: applying requires `target.documentId ===
+  documentId`, checked explicitly, every call — a remote operation for
+  Document A can never mutate Document B merely because something
+  happens to be open. Applying means `target.commandHistory.execute(command)`
+  — the SAME chokepoint (`application/CommandHistory.js#execute()`) every
+  local edit already goes through, never a second mutation path invented
+  for remote operations. Returns one of two outcomes
+  (`DocumentOperationApplicationOutcome.APPLIED` / `NOT_APPLIED`) —
+  deliberately not a larger lifecycle enum; refusing to apply (no target,
+  wrong document, no real CommandHistory) is this method's ordinary,
+  expected result, not an error, and it is never queued for later —
+  a queue would immediately raise its own ordering/lifetime/replay/
+  persistence/conflict-resolution questions that belong to a later
+  milestone, not this one. `attachToPropagation(propagation,
+  resolveTarget)` wires this directly to a real
+  `DocumentCommandPropagationUseCase`'s own feed, mirroring that class's
+  own `attachCommandHistory()` one layer over: `attachCommandHistory()`
+  is the OUTBOUND half (a local execution becomes a broadcast);
+  `attachToPropagation()` is this milestone's INBOUND half (an observed
+  operation becomes an explicit application attempt). `resolveTarget()`
+  takes no arguments and is re-invoked fresh for every single observed
+  operation, so a mid-session document switch is seen immediately.
+- The one deliberate characterization this milestone names once, rather
+  than leaving implicit: applying a remote operation calls the SAME
+  `CommandHistory.execute()` a local edit already calls, which means a
+  remote operation genuinely enters the receiving replica's own local
+  undo/redo stack. Pressing Undo afterward undoes whatever is now on top
+  of that stack — which may be the remote operation, or may not be,
+  depending on what the local user did in between. This milestone takes
+  NO position on whether that is the right long-term collaborative undo
+  model (see 0.9.222's own design conversation on exactly this question)
+  — it only guarantees this is what applying a remote operation through
+  this codebase's EXISTING execution mechanism actually does today,
+  characterized rather than silently declared the desired collaboration
+  model.
+- `tests/RemoteDocumentOperationApplication.test.js` — three sections,
+  the same shape 0.9.222's own test file established:
+  - Section A: `apply()` against a real `CommandHistory` in isolation —
+    matching-document application, no-target/wrong-document/missing-
+    CommandHistory all resolving to `NOT_APPLIED` without touching
+    anything, and malformed-operation rejection.
+  - Section B: `attachToPropagation()`'s own collaborator requirements
+    and live wiring/unsubscribe, against a minimal fake propagation
+    object.
+  - Section C FLAGSHIP, against real authenticated peer connections
+    (`peer/LocalPeerConnectionProvider.js`), the full loop in one
+    continuous scenario: Alice's LOCAL `CommandHistory.execute()`
+    broadcasts (0.9.222's own `attachCommandHistory()`); Bob's
+    `DocumentCommandPropagationUseCase` observes it (0.9.222); Bob's
+    `attachToPropagation()` explicitly applies it into Bob's own
+    `CommandHistory` for Document X, which now genuinely reflects
+    Alice's edit and is genuinely undoable. Bob then switches his
+    current target to Document Y mid-session: the next operation for
+    Document X is still OBSERVED (propagation is unaffected) but is
+    NOT applied to either Document X (wrong target) or Document Y
+    (never redirected onto whatever happens to be open); switching back
+    to Document X, the FOLLOWING operation applies normally and the
+    refused one is never queued or replayed — proven by an exact
+    position arithmetic check (3 + 2, never 3 + 1 + 2). With nothing
+    open at all, an observed operation is safely `NOT_APPLIED` — no
+    crash, no partial state. An unauthorized operation (Charlie, an
+    uninvolved identity) is rejected at 0.9.222's own trust boundary
+    and never becomes a candidate for application at all. Retransmitting
+    an already-accepted operation is rejected DUPLICATE by 0.9.222's own
+    `ReplayGuard` — never a second, application-layer deduplication
+    mechanism — and produces no second application. Alice's authorized
+    Phone produces a legitimate operation too, applied identically,
+    `authorIdentityId` still the proven social identity throughout.
+
+### Deliberately excluded
+
+Unchanged from 0.9.222's own list, still true here: CRDT, OT, merge
+algorithms, automatic concurrent application, vector/Lamport clocks,
+offline synchronization, persistence of received operations, operation
+history, presence synchronization, cursor sharing, locking, conflict UI,
+Publication changes, and Snapshot changes. Specifically, named once more
+because this milestone sits closer to the line than 0.9.222 did:
+
+- **No ordering or conflict resolution.** Two operations arriving for
+  the SAME document, each individually authorized and non-replayed, are
+  each independently offered to `apply()` in arrival order — there is no
+  concept of "these two conflict" or "these two must commute." That is
+  0.9.224 territory, explicitly deferred (see "Suggested milestone
+  sequence" in this design's own recommendation).
+- **No synchronized undo/redo.** A remote operation enters the local
+  undo stack through the ordinary `CommandHistory.execute()` path — see
+  "the one deliberate characterization" above. There is no cross-replica
+  undo protocol, no "undo Alice's operation specifically," and no
+  attempt to make Bob's Undo button do anything other than exactly what
+  it already does to the top of his own stack.
+- **No queue.** A `NOT_APPLIED` operation is not retried, buffered, or
+  replayed later when the receiving Editor happens to switch back to the
+  right document — see `apply()`'s own header.
+- **No composition-root wiring.** `ui/views/EditorView.js`/
+  `application/CreateEditorContextUseCase.js` are untouched — this class
+  is proven here in complete isolation against real authenticated peer
+  connections, exactly the restraint 0.9.222 itself took, deferring the
+  question of WHEN a running Editor session should call `apply()`
+  (every observed operation immediately? only ones for the currently
+  open document, silently? behind a per-operation user prompt?) to
+  whichever future milestone actually wires a live Editor view to this
+  protocol — a real product decision this milestone does not make on
+  that milestone's behalf.
+
+### Recommendation
+
+The next milestone now has concrete evidence to work from: a remote
+operation, once applied, behaves EXACTLY like a local one from
+CommandHistory's point of view — same undo stack, same dirty tracking,
+same replay path. That evidence should decide whether 0.9.224 wants
+logical clocks, causal metadata, operation sequencing, or conflict
+detection first — a choice this milestone deliberately leaves open
+rather than committing to on no evidence, the same restraint 0.9.222's
+own recommendation already modeled.
