@@ -35,6 +35,10 @@ import { WorldPresenceUseCase } from './WorldPresenceUseCase.js';
 import { WorldSpatialPresenceUseCase } from './WorldSpatialPresenceUseCase.js';
 import { LocalWorldExperienceStore } from './LocalWorldExperienceStore.js';
 import { CreateWorldPlaceNamingUseCase } from './CreateWorldPlaceNamingUseCase.js';
+import { PublicationCommentaryStore } from '../storage/PublicationCommentaryStore.js';
+import { CanCommentOnPublicationUseCase } from './CanCommentOnPublicationUseCase.js';
+import { GetPublicationCommentariesUseCase } from './GetPublicationCommentariesUseCase.js';
+import { AddPublicationCommentaryUseCase } from './AddPublicationCommentaryUseCase.js';
 
 // Builds the world exploration backend and returns a session factory, so
 // ui/ never imports storage/, publisher/, or discovery/ directly.
@@ -158,6 +162,22 @@ export class CreateWorldViewUseCase {
         // header — it reads the exact storage key LocalPublisherProvider
         // writes to).
         const unpublishDocumentUseCase = new UnpublishDocumentUseCase(publisherProvider);
+
+        // 0.9.248 — Publication Commentary UI Integration. The SAME
+        // storageProvider/discoveryProvider/identityProvider this method
+        // already builds/receives — no second storage key, no second
+        // discovery or identity mechanism. CanCommentOnPublicationUseCase
+        // (0.9.246) reuses this method's own discoveryProvider exactly
+        // the way placePublicationUseCase already does; the two commentary
+        // use cases below (0.9.244-0.9.247) are otherwise unmodified.
+        const publicationCommentaryStore = new PublicationCommentaryStore(storageProvider);
+        const canCommentOnPublicationUseCase = new CanCommentOnPublicationUseCase(discoveryProvider);
+        const getPublicationCommentariesUseCase = new GetPublicationCommentariesUseCase(publicationCommentaryStore);
+        const addPublicationCommentaryUseCase = new AddPublicationCommentaryUseCase(
+            publicationCommentaryStore,
+            identityProvider,
+            canCommentOnPublicationUseCase
+        );
 
         const loadPublicationDocumentUseCase = new LoadPublicationDocumentUseCase(
             storageProvider
@@ -532,6 +552,10 @@ export class CreateWorldViewUseCase {
                     // 0.9.198: the Publication-layer counterpart, one
                     // authority up — see unpublishDocument().
                     unpublishDocumentUseCase,
+                    // 0.9.248: see getPublicationCommentaries()/
+                    // addPublicationCommentary().
+                    getPublicationCommentariesUseCase,
+                    addPublicationCommentaryUseCase,
                     // 0.2.26: search/navigation — see searchWorld/
                     // getDocumentsAtPosition.
                     searchWorldUseCase,

@@ -82229,3 +82229,134 @@ while keeping every decision in the application layer rather than the
 UI. Live updates, distribution, notifications, and threading remain
 open questions for whenever the product is shown to actually need
 them.
+
+## 0.9.248 — Publication Commentary UI Integration
+
+0.9.242-0.9.247 built a complete, authoritative application-layer
+read/write pair for Publication commentary — reachable from precisely
+nowhere a person could click. This milestone is the first product-facing
+UI over that boundary, and deliberately only that: a small integration
+milestone, not a new commentary subsystem.
+
+```text
+Publication UI (ui/components/OwnPublicationPanel.js)
+      │
+      ├── display publication
+      │
+      ├── getPublicationCommentariesCommand(publicationId)
+      │          ↓                (wraps WorldNavigationSession
+      │          ↓                 .getPublicationCommentaries(),
+      │      commentary list        which wraps GetPublicationCommentariesUseCase,
+      │                             unmodified, 0.9.247)
+      │
+      └── addPublicationCommentaryCommand({ publicationId, content })
+                 │                (wraps WorldNavigationSession
+                 │                 .addPublicationCommentary(), which
+                 │                 wraps AddPublicationCommentaryUseCase,
+                 │                 unmodified, 0.9.244-0.9.246)
+                 ├── authenticated identity
+                 ├── authorization
+                 ├── domain construction
+                 └── persistence
+```
+
+### Where it was integrated
+
+`ui/components/OwnPublicationPanel.js` — the existing Publication
+inspection surface `ui/views/WorldView.js` already mounts, showing
+Publication identity (title/author) and distribution/discovery actions
+(0.9.140-0.9.215). Commentary is attached to the **Publication**, never
+the underlying Document — the same 0.9.242 boundary decision, reinforced
+here rather than reopened: two Publications produced from the same
+Document keep fully independent commentary (see Section C of this
+milestone's own test file).
+
+### What this milestone adds
+
+* Two new optional props on `OwnPublicationPanel`:
+  `getPublicationCommentariesCommand` (`(publicationId) ->
+  PublicationCommentary[]`) and `addPublicationCommentaryCommand`
+  (`({ publicationId, content }) -> { commentary, isNew }`) — both
+  synchronous (neither use case performs network I/O), mirroring every
+  other optional command prop in this file. A third new prop,
+  `viewerIdentityId`, is the CURRENT viewer's own identityId or `null`
+  — the same already-computed `session.getMyIdentityId()` fact
+  `ui/views/WorldView.js`'s own `myIdentityId` already exposes
+  elsewhere, reused rather than re-derived.
+* Four new ephemeral data fields, scoped to this panel alone:
+  `publicationCommentaries`, `newCommentaryText`,
+  `publicationCommentarySubmitting`, `publicationCommentaryError`. None
+  of it lives on `Publication`, `Document`, or any global collaboration
+  state.
+* `refreshPublicationCommentaries()` — the one call site of
+  `getPublicationCommentariesCommand`. Runs on mount and on every
+  Publication change (never on a timer). A failed read leaves a
+  previously-loaded list untouched and only sets
+  `publicationCommentaryError` — a read failure is surfaced without
+  corrupting what was already on screen.
+* `submitPublicationCommentary()` — the one call site of
+  `addPublicationCommentaryCommand`. Sends exactly `{ publicationId,
+  content }`; there is no field through which the UI could name a
+  different author, matching `AddPublicationCommentaryUseCase`'s own
+  0.9.245 boundary. **On success, re-queries through
+  `refreshPublicationCommentaries()` rather than appending the returned
+  `commentary` into local state** — one source of truth for what
+  exists, never a second, UI-maintained interpretation of the stored
+  collection. On failure, the compose draft is left untouched (a
+  rejected attempt never discards what was typed) and no partial state
+  is left behind, matching `AddPublicationCommentaryUseCase`'s own
+  "authentication/authorization run before construction" guarantee.
+* No authenticated `viewerIdentityId` renders a "sign in to add
+  commentary" hint instead of the compose form — this component never
+  re-derives or authenticates an identity itself; it only reads the
+  same fact `WorldView.js` already computes.
+* `WorldNavigationSession.getPublicationCommentaries(publicationId)`
+  and `.addPublicationCommentary({ publicationId, content })` (new) —
+  thin delegations to the two injected use cases, mirroring
+  `unpublishDocument()`'s own "enforce/offer only when the collaborator
+  is actually wired" posture: a session built without either simply
+  reports empty commentary (read) or throws (write), never silently
+  invents behavior.
+* `application/CreateWorldViewUseCase.js` composes
+  `PublicationCommentaryStore`, `CanCommentOnPublicationUseCase`,
+  `GetPublicationCommentariesUseCase`, and
+  `AddPublicationCommentaryUseCase` from the SAME `storageProvider`,
+  `discoveryProvider`, and `identityProvider` every other local
+  collaborator in that method already shares — no second storage key,
+  no second discovery or identity mechanism.
+* `tests/PublicationCommentaryUIIntegration.test.js` (new), against
+  real collaborators end to end (not mocks): existing commentary
+  rendered through the real query use case; Publication isolation
+  across two Publications; commentary staying attached to the exact
+  Publication across two Publications produced from the same Document;
+  creation reaching only the injected command (never storage or the
+  domain class directly, verified structurally); authorship always
+  resolving to the authenticated identity rather than anything
+  UI-supplied; an unauthorized/unknown Publication producing no
+  persisted commentary; read/write failures never corrupting existing
+  UI state; an intentional empty state for a Publication with no
+  commentary; a Publication switch never leaving a prior Publication's
+  commentary on screen; a successful submission re-querying rather than
+  appending; and a composition/wiring regression proving the UI reaches
+  the application layer through one path — `WorldNavigationSession` —
+  never a duplicate one.
+
+### What this milestone deliberately excludes
+
+Per its own brief: live commentary subscriptions, polling,
+WebSocket/Nostr propagation or any decentralized commentary
+distribution, replies, threading, editing, deletion/retraction,
+moderation, reactions, notifications, unread/read tracking, pagination,
+a sorting policy (storage order is rendered verbatim, per 0.9.247's own
+guarantee), and search. A user creating a commentary and another user
+seeing it after refreshing is already a complete, useful product
+capability — the first UI integration does not imply real-time
+collaboration.
+
+### What comes after
+
+No 0.9.249 is preselected. Once the UI is in real use, the next genuine
+need — live updates, comment editing, replies/threading, wider
+decentralized distribution, or no gap at all — is a separate, later,
+evidence-driven decision, the same pattern this whole commentary arc
+(0.9.242-0.9.248) has already followed at every step.

@@ -1362,6 +1362,24 @@ export default {
             refreshSpatialUI();
         }
 
+        // 0.9.248 — Publication Commentary UI Integration. Thin wrappers
+        // around session.getPublicationCommentaries()/
+        // addPublicationCommentary(), mirroring distributeWorldEncounterSnapshot()'s
+        // own restraint above: this view resolves nothing and decides
+        // nothing itself, it only forwards to the session. A thrown
+        // error from addPublicationCommentaryCommand (missing identity,
+        // authorization denial, a storage conflict) is deliberately NOT
+        // caught here or routed through guarded() — OwnPublicationPanel
+        // catches it itself and renders it as its own commentary error
+        // state, never a transient global feedback toast.
+        function getPublicationCommentariesCommand(publicationId) {
+            return session.getPublicationCommentaries(publicationId);
+        }
+
+        function addPublicationCommentaryCommand({ publicationId, content }) {
+            return session.addPublicationCommentary({ publicationId, content });
+        }
+
         // Tool switching (Select/Place) — REMOVED (0.5.9). World View
         // only ever has one "mode" left: look around and pick/hover for
         // focus and inspection. See docs/Principles.md, "World View
@@ -3611,6 +3629,8 @@ export default {
             onMovePlacement,
             removePlacementFromPanel,
             unpublishOwnPublication,
+            getPublicationCommentariesCommand,
+            addPublicationCommentaryCommand,
             searchResults,
             catalogEmpty,
             performSearch,
@@ -3894,6 +3914,9 @@ export default {
                     :resolveSelectedSnapshotCommand="resolveSelectedSnapshotCommand"
                     :materializeSelectedSnapshotCommand="materializeSelectedSnapshotCommand"
                     :placementInfo="activePlacementInfo"
+                    :getPublicationCommentariesCommand="getPublicationCommentariesCommand"
+                    :addPublicationCommentaryCommand="addPublicationCommentaryCommand"
+                    :viewerIdentityId="myIdentityId"
                 />
             <!-- 0.5.7 — World View UX & Progressive Exploration. Home
                  and Locations stay plain navigation utilities; Explore /

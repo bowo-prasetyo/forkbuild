@@ -965,6 +965,90 @@ import { SnapshotWorldPositionClaimOutcome } from '../../application/SnapshotWor
 // bytes and returns them, the identical read-only restraint
 // `distributeOwnSnapshot()` already holds for its own resolved bytes,
 // never re-publishing, re-placing, or re-registering anything.
+//
+// 0.9.248 — Publication Commentary UI Integration.
+//
+// 0.9.242-0.9.247 built a complete, authoritative application-layer
+// read/write pair for Publication commentary — GetPublicationCommentariesUseCase
+// (0.9.247) and AddPublicationCommentaryUseCase (0.9.244, with authorship
+// closed by 0.9.245 and authorization by 0.9.246) — reachable from
+// precisely nowhere a person could click. This is that wiring, and
+// deliberately only that: the first product-facing UI over an existing
+// application boundary, mirroring 0.9.215's own "makes the existing
+// capability REACHABLE, not a new capability" restraint one section
+// above.
+//
+//   OwnPublicationPanel (THIS FILE)
+//        │
+//        ├── getPublicationCommentariesCommand(publicationId)   (NEW —
+//        │        a thin (publicationId) -> PublicationCommentary[]
+//        │        function, injected by ui/views/WorldView.js, wrapping
+//        │        WorldNavigationSession.getPublicationCommentaries(),
+//        │        which itself wraps GetPublicationCommentariesUseCase
+//        │        unmodified)
+//        │
+//        └── addPublicationCommentaryCommand({ publicationId, content })
+//                 (NEW — a thin ({publicationId, content}) -> {commentary,
+//                 isNew} function, the identical injection shape,
+//                 wrapping WorldNavigationSession.addPublicationCommentary(),
+//                 which itself wraps AddPublicationCommentaryUseCase
+//                 unmodified)
+//
+// THIS COMPONENT NEVER IMPORTS PublicationCommentary, PublicationCommentaryStore,
+// GetPublicationCommentariesUseCase, or AddPublicationCommentaryUseCase —
+// it only ever calls the two injected command functions above, mirroring
+// the EXACT command-injection boundary `distributeOwnSnapshot()`/
+// `discoverOwnSnapshot()` already hold for Arweave/Nostr. The UI never
+// constructs a PublicationCommentary object and never touches
+// PublicationCommentaryStore, directly or indirectly.
+//
+// EXISTING COMMENTARY IS LOADED ON MOUNT AND ON EVERY PUBLICATION CHANGE
+// — never on a timer, an interval, or a subscription of any kind (see
+// "deliberately excluded," below). Rendered in WHATEVER order
+// getPublicationCommentariesCommand returns, verbatim — this file adds
+// no sort of its own, deferring entirely to
+// GetPublicationCommentariesUseCase's own "never re-sorted here."
+//
+// SUCCESSFUL CREATION RE-QUERIES RATHER THAN APPENDING. On a successful
+// `addPublicationCommentaryCommand()` call, `submitPublicationCommentary()`
+// (below) calls `refreshPublicationCommentaries()` again rather than
+// pushing the returned `commentary` into `publicationCommentaries`
+// itself — one source of truth (the store, read through the SAME query
+// use case every other read goes through), never a second, UI-maintained
+// interpretation of the stored collection that could drift from it.
+//
+// AUTHORSHIP IS NEVER UI-SUPPLIED. `submitPublicationCommentary()` sends
+// `addPublicationCommentaryCommand` exactly `{ publicationId, content }`
+// — no `authorIdentityId` field exists on that call, matching
+// AddPublicationCommentaryUseCase's own 0.9.245 boundary: this file
+// cannot even ATTEMPT to name a different author.
+//
+// SIGN-IN IS OBSERVED, NEVER RE-IMPLEMENTED. `viewerIdentityId` (a new
+// prop, below) is the SAME already-computed `session.getMyIdentityId()`
+// fact `ui/views/WorldView.js`'s own `myIdentityId` already exposes to
+// other panels — this component reads it only to decide whether to show
+// the compose form or a "sign in" hint, and never resolves, derives, or
+// authenticates an identity of its own. The actual authentication
+// decision for a submitted comment is still made entirely inside
+// AddPublicationCommentaryUseCase, which this component never second-
+// guesses: an authenticated `viewerIdentityId` whose session has since
+// expired still gets a real, authoritative rejection from the use case
+// itself, surfaced as `publicationCommentaryError`.
+//
+// A FAILED READ NEVER WIPES AN ALREADY-DISPLAYED LIST; A FAILED WRITE
+// NEVER PERSISTS OR CORRUPTS ONE. See refreshPublicationCommentaries()/
+// submitPublicationCommentary()'s own comments, below, for the exact
+// behavior tests/PublicationCommentaryUIIntegration.test.js Sections
+// F/G exercise.
+//
+// DELIBERATELY EXCLUDED — NOT THIS MILESTONE, per this milestone's own
+// brief: live commentary subscriptions, polling, WebSocket/Nostr
+// propagation or any decentralized commentary distribution, replies,
+// threading, editing, deletion/retraction, moderation, reactions,
+// notifications, unread/read tracking, pagination, a sorting policy, and
+// search. This milestone's own scope is "inspect existing commentary,
+// create new commentary through the authoritative application path" —
+// nothing more.
 export default {
     name: 'OwnPublicationPanel',
     props: {
@@ -1074,6 +1158,44 @@ export default {
         worldDiscoverySourceRegistry: {
             type: Object,
             default: null
+        },
+        // 0.9.248 — Publication Commentary UI Integration. See this
+        // file's own header, "0.9.248." A `(publicationId) ->
+        // PublicationCommentary[]` function, or `null` when the
+        // capability is unavailable — mirrors every other optional
+        // command prop in this file (`null` default, feature hidden
+        // when absent). Unlike the Promise-returning Distribute/
+        // Discover/Export commands above, this one is SYNCHRONOUS —
+        // GetPublicationCommentariesUseCase performs no network I/O —
+        // so this component awaits nothing and shows no "loading"
+        // state for it.
+        getPublicationCommentariesCommand: {
+            type: Function,
+            default: null
+        },
+        // 0.9.248 — a `({ publicationId, content }) -> { commentary,
+        // isNew }` function, or `null` when the capability is
+        // unavailable. Also synchronous. Deliberately takes ONLY
+        // `publicationId`/`content` — never `authorIdentityId` — see
+        // this file's own header for why the UI cannot even attempt to
+        // supply one.
+        addPublicationCommentaryCommand: {
+            type: Function,
+            default: null
+        },
+        // 0.9.248 — the CURRENT viewer's own identityId, or `null` when
+        // nobody is signed in. The SAME already-computed session fact
+        // `ui/views/WorldView.js`'s own `myIdentityId` already exposes
+        // elsewhere (`session.getMyIdentityId()`) — this component reads
+        // it only to decide whether to show the compose form or a
+        // sign-in hint; it never derives, resolves, or authenticates an
+        // identity itself, and never sends this value to
+        // addPublicationCommentaryCommand (the use case resolves the
+        // real author on its own — see this file's own header, "the
+        // application use case remains authoritative").
+        viewerIdentityId: {
+            type: String,
+            default: null
         }
     },
     data() {
@@ -1162,7 +1284,41 @@ export default {
             // explicitly clicked; never written by anything else. No
             // executing/error state of its own — see this file's own
             // header, "synchronous."
-            selectedSnapshotWorldPositionClaimResult: null
+            selectedSnapshotWorldPositionClaimResult: null,
+            // 0.9.248 — Publication Commentary UI Integration. The four
+            // fields named in this milestone's own brief, kept ephemeral
+            // and local to this panel — see this file's own header. Never
+            // written by anything but refreshPublicationCommentaries()/
+            // submitPublicationCommentary(), below, and the publication
+            // watcher's own reset.
+            //
+            // `publicationCommentaries` — every PublicationCommentary
+            // GetPublicationCommentariesUseCase returned for the CURRENT
+            // publication, in the EXACT order it returned them (no sort
+            // of any kind performed here — see this file's own header,
+            // "preserve the returned order"). `[]` is a legitimate,
+            // distinct value (no commentary yet, or the capability is
+            // unavailable), never an error.
+            publicationCommentaries: [],
+            // `newCommentaryText` — the compose textarea's own v-model
+            // target. Cleared only on a SUCCESSFUL submission; left
+            // exactly as typed after a failed one, so a rejected attempt
+            // never discards what the person wrote.
+            newCommentaryText: '',
+            // `publicationCommentarySubmitting` — guards against a
+            // double-submit from a second click before the first
+            // synchronous call has updated this flag back to false. No
+            // separate "loading" flag for the read side: a synchronous
+            // getForPublication() read has nothing to show a spinner for.
+            publicationCommentarySubmitting: false,
+            // `publicationCommentaryError` — the most recent read OR
+            // write failure's message, or `null`. A FAILED refresh never
+            // clears `publicationCommentaries` itself (see
+            // refreshPublicationCommentaries() below) — this field is the
+            // only thing a failure ever changes, so previously-loaded
+            // commentary stays on screen instead of being replaced by an
+            // empty list.
+            publicationCommentaryError: null
         };
     },
     watch: {
@@ -1242,7 +1398,41 @@ export default {
             // argument) — any prior consumed claim was checked against the
             // OLD Publication's own id.
             this.selectedSnapshotWorldPositionClaimResult = null;
+            // 0.9.248 — a different (or cleared) Publication means any
+            // prior commentary list, compose draft, in-flight submit
+            // guard, and error all belong to a Publication that is no
+            // longer this panel's own — the identical lifecycle-safety
+            // reason every OTHER family in this watcher already resets
+            // on. This is also the ONLY place a Publication SWITCH is
+            // handled: switching from P1 to P2 must never leave P1's
+            // commentary on screen (see tests/
+            // PublicationCommentaryUIIntegration.test.js, Section I).
+            this.publicationCommentaries = [];
+            this.newCommentaryText = '';
+            this.publicationCommentarySubmitting = false;
+            this.publicationCommentaryError = null;
+            // Guarded the same way `guarded()`'s own `session.consumeForkNotice`
+            // check is in ui/views/WorldView.js — every OTHER sibling
+            // watcher/test in this codebase's own pre-0.9.248 suite calls
+            // this exact watcher directly via `OwnPublicationPanel.watch.publication.call(ctx, ...)`
+            // against a minimal ctx built for ITS OWN family alone, with
+            // no reason to know this milestone's method exists. A real
+            // Vue instance always has this method; only a hand-built test
+            // ctx from an unrelated milestone's own test file does not.
+            if (typeof this.refreshPublicationCommentaries === 'function') {
+                this.refreshPublicationCommentaries();
+            }
         }
+    },
+    mounted() {
+        // 0.9.248 — a `watch()` handler only fires on a SUBSEQUENT
+        // change, never for the value a prop already held when this
+        // component was created — so a panel mounted with a publication
+        // already current (the common case: World View already has an
+        // `ownPublication` by the time this panel first renders) needs
+        // its own initial load here. Mirrors PublicationPreview.js's own
+        // `mounted()` restraint: read once, on mount, nothing recurring.
+        this.refreshPublicationCommentaries();
     },
     beforeUnmount() {
         // Invalidates any still-in-flight call, mirroring
@@ -1698,6 +1888,81 @@ export default {
                 return;
             }
             this.selectedSnapshotWorldRegistrationResult = registerMaterializedSnapshotWorldSource(this.worldDiscoverySourceRegistry, placement, this.publication);
+        },
+        // 0.9.248 — the only writer of `publicationCommentaries`, and the
+        // only call site of `getPublicationCommentariesCommand` in this
+        // file. Called on mount, whenever `publication` changes (see the
+        // watcher above), and again after a successful submission below
+        // — never on a timer, an interval, or any other implicit trigger
+        // (see this file's own header, "no live commentary subscriptions,
+        // no polling"). A no-op — `publicationCommentaries` reset to `[]`
+        // — whenever there is no `publication` or no
+        // `getPublicationCommentariesCommand`. A FAILED read leaves
+        // `publicationCommentaries` exactly as it was (never wiped to
+        // `[]`) and only sets `publicationCommentaryError` — see this
+        // file's own header on `publicationCommentaryError`. Rendered in
+        // WHATEVER order the command returns, verbatim — this method
+        // performs no `sort()` of its own, mirroring
+        // GetPublicationCommentariesUseCase's own "never re-sorted here."
+        refreshPublicationCommentaries() {
+            const publication = this.publication;
+            if (!publication || !this.getPublicationCommentariesCommand) {
+                this.publicationCommentaries = [];
+                this.publicationCommentaryError = null;
+                return;
+            }
+            try {
+                const commentaries = this.getPublicationCommentariesCommand(publication.id);
+                this.publicationCommentaries = Array.isArray(commentaries) ? commentaries : [];
+                this.publicationCommentaryError = null;
+            } catch (error) {
+                this.publicationCommentaryError = 'Commentary could not be loaded.';
+            }
+        },
+        // 0.9.248 — the only writer of `publicationCommentarySubmitting`,
+        // and the only call site of `addPublicationCommentaryCommand` in
+        // this file. A no-op whenever there is no `publication`, no
+        // `addPublicationCommentaryCommand`, blank/whitespace-only
+        // `newCommentaryText`, or a submission is already in flight —
+        // the identical guard-clause shape every other action in this
+        // file already uses. Sends ONLY `{ publicationId, content }` —
+        // never `authorIdentityId` — see this file's own header,
+        // "the UI should never construct PublicationCommentary directly."
+        //
+        // ON SUCCESS: clears the compose draft and RE-QUERIES through
+        // refreshPublicationCommentaries() rather than appending the
+        // returned `commentary` into `publicationCommentaries` itself —
+        // see this file's own header for why re-querying is preferred:
+        // one source of truth for "what commentary exists," never a
+        // second, UI-maintained interpretation of the store's own
+        // collection.
+        //
+        // ON FAILURE (no signed-in identity, authorization denied, a
+        // storage conflict): `publicationCommentaryError` is set to the
+        // thrown error's own message, `newCommentaryText` is left
+        // UNCHANGED (a rejected attempt never discards what was typed),
+        // and `publicationCommentaries` is left UNCHANGED — a failed
+        // creation never corrupts the already-displayed list, and never
+        // persists anything (AddPublicationCommentaryUseCase's own
+        // header: authentication/authorization run BEFORE construction,
+        // so a denied call leaves no partially-built record behind).
+        submitPublicationCommentary() {
+            const publication = this.publication;
+            const content = this.newCommentaryText.trim();
+            if (!publication || !this.addPublicationCommentaryCommand || !content || this.publicationCommentarySubmitting) {
+                return;
+            }
+            this.publicationCommentarySubmitting = true;
+            try {
+                this.addPublicationCommentaryCommand({ publicationId: publication.id, content });
+                this.newCommentaryText = '';
+                this.publicationCommentaryError = null;
+                this.refreshPublicationCommentaries();
+            } catch (error) {
+                this.publicationCommentaryError = (error && error.message) ? error.message : 'Commentary could not be created.';
+            } finally {
+                this.publicationCommentarySubmitting = false;
+            }
         }
     },
     template: `
@@ -2097,6 +2362,71 @@ export default {
                     <dd>{{ selectedSnapshotWorldRegistrationResult.reason }}</dd>
                 </template>
             </dl>
+
+            <!-- 0.9.248 — Publication Commentary UI Integration.
+                 Rendered only when a caller supplied
+                 getPublicationCommentariesCommand, mirroring every other
+                 optional capability section in this file. Existing
+                 commentary is shown for ANY publication (own or not —
+                 CanCommentOnPublicationUseCase permits commenting on any
+                 Publication that exists), never gated on 'publication'
+                 being the local user's own; only the surface this panel
+                 already happens to be is scoped to "my own." -->
+            <div v-if="getPublicationCommentariesCommand" class="own-publication-commentary">
+                <h5 class="own-publication-commentary-title">Commentary</h5>
+
+                <p v-if="publicationCommentaryError" class="own-publication-commentary-error">{{ publicationCommentaryError }}</p>
+
+                <!-- H — Empty state: an intentional message, never an
+                     error, never indistinguishable from a genuine read
+                     failure above (which sets publicationCommentaryError,
+                     not this branch). -->
+                <p v-if="!publicationCommentaries.length" class="own-publication-commentary-empty">No commentary yet.</p>
+                <ul v-else class="own-publication-commentary-list">
+                    <!-- Rendered in EXACTLY the order
+                         publicationCommentaries already holds — see
+                         refreshPublicationCommentaries()'s own header,
+                         "never re-sorted here." commentaryId is a stable,
+                         unique key regardless of display order. -->
+                    <li
+                        v-for="commentary in publicationCommentaries"
+                        :key="commentary.commentaryId"
+                        class="own-publication-commentary-entry"
+                    >
+                        <span class="own-publication-commentary-author">{{ commentary.authorIdentityId }}</span>
+                        <p class="own-publication-commentary-content">{{ commentary.content }}</p>
+                    </li>
+                </ul>
+
+                <!-- Sign-in-required state: shown instead of the compose
+                     form whenever there is no viewerIdentityId — this
+                     component never attempts creation, and never
+                     reproduces AddPublicationCommentaryUseCase's own
+                     identity resolution, to reach this decision; it only
+                     reads the SAME already-computed session fact
+                     ui/views/WorldView.js's own myIdentityId already is
+                     — see this file's own header. -->
+                <p v-if="addPublicationCommentaryCommand && !viewerIdentityId" class="own-publication-commentary-signin-hint">
+                    Sign in to add commentary.
+                </p>
+                <form
+                    v-else-if="addPublicationCommentaryCommand"
+                    class="own-publication-commentary-form"
+                    @submit.prevent="submitPublicationCommentary"
+                >
+                    <textarea
+                        v-model="newCommentaryText"
+                        class="own-publication-commentary-input"
+                        :disabled="!publication || publicationCommentarySubmitting"
+                        placeholder="Add a comment…"
+                    ></textarea>
+                    <button
+                        type="submit"
+                        class="action-btn own-publication-commentary-submit-action"
+                        :disabled="!publication || !newCommentaryText.trim() || publicationCommentarySubmitting"
+                    >{{ publicationCommentarySubmitting ? 'Posting…' : 'Post Comment' }}</button>
+                </form>
+            </div>
         </div>
     `
 };
