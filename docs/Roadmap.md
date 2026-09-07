@@ -78312,3 +78312,176 @@ break this baseline exists to mark:
 0.9.221           Transition point (this milestone)
 0.9.222+          Deliberate product evolution
 ```
+
+## 0.9.222 — Shared Document Edit Operation Boundary
+
+0.9.221 Section C named "live multi-editor co-editing of one Document" as
+a candidate direction, evidenced by: `WorldEditAuthority`/
+`WorldMembershipUseCase` (0.2.98) already let an owner grant a second
+identity real, signed EDIT capability for a World; and "nothing in
+`application/SaveDocumentUseCase.js` names a session-lock, merge, or
+CRDT/OT concept." Before writing a single line, this milestone re-audited
+that claim against the actual running codebase rather than against its
+own prior text — and found it only half true.
+
+`application/WorldCommandPropagationUseCase.js` (0.2.96), `replication/
+WorldOperationOrdering.js`/`replication/WorldConflictResolver.js` (0.2.97),
+`application/WorldMembershipUseCase.js` (0.2.98), and their own UI
+(`ui/components/WorldMembersPanel.js`, 0.2.99/0.3.5) already give World
+View's own Documents full live propagation, deterministic ordering,
+conflict resolution, signed non-owner membership, and presence — real,
+shipped code, live-wired into `application/CreateWorldViewUseCase.js`
+today (`tests/WorldCommandPropagation.test.js`, `tests/
+SharedWorldConflictResolution.test.js`, `tests/CollaborativeBuildingSession.test.js`
+all exercise it against real authenticated peer connections). 0.9.221's
+own citation of `SaveDocumentUseCase.js` was pointing somewhere real,
+though: that file is reachable from `ui/views/EditorView.js`, a
+COMPLETELY SEPARATE composition root from `ui/views/WorldView.js`, editing
+a different kind of Document — the Editor's own Structure/blueprint
+Documents (personal library structures, blueprints later placed into a
+World). A repo-wide check of `ui/views/EditorView.js` and `application/
+CreateEditorContextUseCase.js` found zero `Peer`/`Collab`/`Propagation`/
+`Membership` imports anywhere — no `peerMessageBus`, no
+`connectedPeerRegistry`, no `deviceAuthorizationPropagationUseCase`
+injected at all. The Editor's only multi-party path really is
+`application/ForkStructureUseCase.js` — fork, then diverge into a new
+Document lineage — exactly as 0.9.221 said, just about a narrower target
+than its own prose suggested.
+
+```text
+ui/views/WorldView.js            ui/views/EditorView.js
+        │                                 │
+        ▼                                 ▼
+ WorldCommandPropagationUseCase    (nothing — zero peer imports)
+ WorldOperationOrdering                    │
+ WorldConflictResolver                     ▼
+ WorldMembershipUseCase          only multi-party path:
+        │                        ForkStructureUseCase
+        ▼                        (fork, then diverge)
+ live, ordered, conflict-
+ resolved, membership-aware
+ collaboration (0.2.96-0.3.5)
+```
+
+This milestone closes the gap actually found — never a re-implementation
+of World's own already-shipped answer, which stays completely untouched.
+Following this exact design conversation's own explicit request, it
+deliberately re-runs 0.2.96's OWN original, narrower scope (the boundary,
+before 0.2.97 layered ordering/conflict-resolution on top of it, before
+0.2.98 layered membership on top of THAT) rather than porting the full
+0.3.5-era answer in one step:
+
+```text
+0.2.96  Shared World Command Propagation      (boundary, no ordering)
+0.2.97  + Ordering & Conflict Resolution
+0.2.98  + Membership (non-owner grants)
+0.2.99  + UX (WorldMembersPanel)
+
+0.9.222 Shared Document Edit Operation Boundary   <- this milestone
+        (ordering/conflict-resolution, membership, and UI wiring are
+        each a later, separate, additive milestone — never bundled in
+        by default; see "Deliberately excluded" below)
+```
+
+### What this milestone adds
+
+- `core/DocumentOperationEnvelope.js` — a closed wire shape for exactly
+  one already-executed `application/commands/Command.js` instance,
+  addressed at a specific Document (`operationId`, `documentId`,
+  `authorIdentityId`, `command`). A deliberately separate file from
+  `core/WorldOperationEnvelope.js`, never a widening of it — the same
+  "own file per subsystem, even when nearly identical in shape to a
+  sibling" discipline `core/WorldEditAuthorizationEnvelope.js` already
+  holds next to `core/DeviceAuthorizationEnvelope.js`. Carries no
+  `logicalClock` — see this file's own header on why ordering is
+  deliberately deferred, exactly as it was for World's own 0.2.96.
+- `application/DocumentCommandPropagationUseCase.js` — the five-step
+  trust boundary `application/WorldCommandPropagationUseCase.js` already
+  established (authenticated connection, claimed-vs-proven identity,
+  device-aware social resolution, Document EDIT access, operation
+  verification/idempotency), reusing `application/
+  WorldAuthorizationService.js` COMPLETELY UNMODIFIED — that class was
+  already Document-generic (see its own header: "given who is looking
+  right now, what WorldAccessLevel do they hold" for "exactly one
+  Document," never World-specific) and needed no change at all to answer
+  this same question for a Structure Document. Called with no
+  `resolveWorldEditGrant`, which degrades exactly the way that class's
+  own header documents: ownership only. "Multiple authorized editors" in
+  this milestone's own flagship therefore means one owner identity's own
+  several AUTHORIZED DEVICES (0.2.78's composition, inherited for free) —
+  the identical case 0.2.96 itself proved before 0.2.98 later added a
+  second, independent identity via signed membership grants. A genuinely
+  independent second identity editing a Structure Document is real future
+  work, deliberately not invented here on no evidence beyond "World has
+  one" — see "Deliberately excluded" below.
+- The one deliberate behavioral departure from World's own answer, named
+  once here rather than only in the code: `onOperationReceived()` fires
+  with the deserialized `Command`, and NOTHING in this class ever calls
+  `command.execute()`. World's own `WorldCommandPropagationUseCase`
+  applies an accepted remote operation directly against
+  `document.world`, bypassing the receiver's own CommandHistory — but it
+  only earned that after 0.2.97 built real ordering/conflict resolution
+  to make concurrent application safe. This milestone builds no such
+  thing, so it applies nothing; receiving an authorized operation is
+  observation, never automatic application, exactly as this design
+  conversation asked. `tests/DocumentCollaborationBoundary.test.js`'s own
+  flagship makes this the single most load-bearing assertion in the
+  file: after Bob observes Alice's authorized operation, his own World
+  is BYTE-IDENTICAL to before it arrived, and his own CommandHistory is
+  still completely empty.
+- `tests/DocumentCollaborationBoundary.test.js` — mirrors `tests/
+  WorldCommandPropagation.test.js`'s own three-section shape exactly
+  (envelope in isolation, constructor requirements, FLAGSHIP against real
+  authenticated peer connections over `peer/LocalPeerConnectionProvider.js`).
+  The flagship proves, in one continuous scenario: an authorized
+  operation is observed with its full identity (`documentId`,
+  `operationId`, `authorIdentityId`) intact and is NEVER applied;
+  retransmitting it produces no second observation (idempotent);
+  Alice's authorized Phone inherits her authority and, once revoked, is
+  refused the ordinary way, with zero code aware a revocation happened;
+  Bob's own attempt to edit Alice's Document is refused NOT_AUTHORIZED;
+  an operation for a Document Bob has open but does not own is refused
+  the identical way (per-Document, never "authorized somewhere,
+  therefore authorized everywhere"); an operation for a Document Bob has
+  never opened at all is refused UNKNOWN_DOCUMENT, never silently
+  creates one; an envelope whose own claimed Document disagrees with its
+  serialized command's target is refused DOCUMENT_MISMATCH; Charlie
+  cannot claim to be Alice merely by asserting it in the payload; and two
+  independently authored operations — identical Document, eventual
+  author, and command type — still carry two distinct operation
+  identities.
+
+### Deliberately excluded
+
+Following this design conversation's own explicit list, unchanged:
+CRDT, OT, merge algorithms, automatic concurrent application, vector/
+Lamport clocks, offline synchronization, persistence of received
+operations, operation history, undo/redo synchronization, presence
+synchronization, cursor sharing, locking, conflict UI, Publication
+changes, and Snapshot changes. Also, specifically for THIS milestone's
+own narrower boundary-first scope: a membership-grant model for non-World
+Documents (a second, independent identity editing a Structure Document —
+real future work, structurally identical to how 0.2.98 added it for
+World, but invented on evidence, not by default), and composition-root
+wiring into `ui/main.js`/`ui/views/EditorView.js` — proven here in
+complete isolation against real authenticated peer connections, exactly
+the way 0.2.96 itself shipped and was validated three milestones before
+0.3.5 ever wired World's own equivalent into a running view. A future
+milestone may wire `DocumentCommandPropagationUseCase` into EditorView's
+own `documentManager`/`commandHistory` (`application/EditorSession.js`)
+the same way `application/CreateWorldViewUseCase.js` already wires its
+World-side sibling — deliberately not attempted here alongside the
+boundary itself.
+
+### Recommendation
+
+Two independent next steps, either of which is a legitimate, well-
+evidenced follow-up, neither of which this milestone chooses on a future
+author's behalf: (1) `application/EditorSession.js`/`ui/views/EditorView.js`
+composition-root wiring, so a real Structure-editing session actually
+constructs and observes this boundary — the identical gap 0.3.5 closed
+for World's own equivalent, three milestones after 0.2.96 shipped it
+unwired; or (2) ordering/conflict-resolution/membership for Structure
+Documents, mirroring 0.2.97/0.2.98's own additive layering over 0.2.96's
+identical boundary. Either is real, new product surface; neither should
+be bundled into the other by default.
