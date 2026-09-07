@@ -130,6 +130,25 @@ export const DocumentOperationRejectionReason = Object.freeze({
 // mutation chokepoint; what a connected peer accepts is entirely its own
 // decision, made fresh by the SAME chain above, symmetric on every
 // replica.
+//
+// 0.9.227 — Document Operation Identity & Causal Predecessor Boundary.
+// `broadcastCommand()` now accepts an optional `causalPredecessors` list
+// (see `core/DocumentOperationEnvelope.js`'s own header for the field's
+// exact semantics) and `attachCommandHistory()` derives it automatically
+// for every LOCALLY-authored command: whatever was on top of this
+// replica's own `commandHistory` immediately before the new command —
+// this replica's own single most-recent known operation in this
+// document, or `[]` for the very first command it ever executes here.
+// This is the one production behavior this milestone adds; everything
+// else about this class — the trust chain, ReplayGuard, "never applies
+// what it receives" — is unchanged. `_handleIncoming()` forwards a
+// received envelope's own `causalPredecessors` (defaulting to `[]` for a
+// pre-0.9.227 sender) through `onOperationReceived()` UNCHANGED — never
+// interpreted, reordered, or used to decide acceptance — so a caller
+// that wants to reason about causal relationships (via
+// `core/DocumentOperationCausality.js#DocumentOperationCausalGraph`) has
+// the real data to do it with. Nothing in this class ever constructs or
+// consults a causal graph itself; see that file's own header for why.
 export class DocumentCommandPropagationUseCase {
     constructor({
         peerMessageBus,
@@ -190,8 +209,10 @@ export class DocumentCommandPropagationUseCase {
     // AUTHENTICATED connected peer. `command` is a real `Command`
     // instance (never pre-serialized) — this method calls `toJSON()`
     // itself, exactly once, so every peer receives an identical envelope.
-    // Returns the operationId (== command.id) it sent.
-    broadcastCommand({ documentId, command }) {
+    // `causalPredecessors` (0.9.227) is optional and defaults to `[]` —
+    // see `core/DocumentOperationEnvelope.js`'s own header. Returns the
+    // operationId (== command.id) it sent.
+    broadcastCommand({ documentId, command, causalPredecessors = [] }) {
         if (!documentId || typeof documentId !== 'string') {
             throw new Error('DocumentCommandPropagationUseCase.broadcastCommand(): documentId is required');
         }
@@ -206,7 +227,8 @@ export class DocumentCommandPropagationUseCase {
             operationId: command.id,
             documentId,
             authorIdentityId,
-            command: command.toJSON()
+            command: command.toJSON(),
+            causalPredecessors
         });
         for (const peer of this._authenticatedPeers()) {
             this._bus.send(peer, this._protocol, envelope);
@@ -230,18 +252,34 @@ export class DocumentCommandPropagationUseCase {
             throw new Error('DocumentCommandPropagationUseCase.attachCommandHistory(): a real CommandHistory is required');
         }
         const subscription = commandHistory.eventBus.subscribe(CommandHistoryEvent.COMMAND_EXECUTED, ({ command }) => {
-            this.broadcastCommand({ documentId, command });
+            // 0.9.227 — this replica's own single most-recent known
+            // operation in this document becomes the new command's
+            // causal predecessor. `commandHistory.execute()` has already
+            // pushed `command` onto the undo stack by the time this
+            // event fires (see `application/CommandHistory.js#execute()`),
+            // so the entry immediately before it — if any — is exactly
+            // "what this replica had already applied when it authored
+            // this one." The very first command in a fresh history has
+            // none: `[]`, a genesis operation.
+            const executed = commandHistory.getExecutedCommands();
+            const precedingCommand = executed.length >= 2 ? executed[executed.length - 2] : null;
+            const causalPredecessors = precedingCommand ? [precedingCommand.id] : [];
+            this.broadcastCommand({ documentId, command, causalPredecessors });
         });
         return () => subscription.unsubscribe();
     }
 
     // Returns an unsubscribe function. Fires `(documentId, command,
-    // authorIdentityId)` — the RESOLVED social identityId, never the raw
-    // device key — for every remote operation this replica accepted.
-    // Never fires for a duplicate or a rejected operation. Deliberately
-    // never applies `command` itself — see this file's own header.
+    // authorIdentityId, causalPredecessors)` — the RESOLVED social
+    // identityId, never the raw device key — for every remote operation
+    // this replica accepted. Never fires for a duplicate or a rejected
+    // operation. Deliberately never applies `command` itself — see this
+    // file's own header. `causalPredecessors` (0.9.227) is the sending
+    // replica's own operationId list, UNCHANGED from the envelope that
+    // arrived — this class never interprets it, only relays it (see this
+    // file's own header for why).
     onOperationReceived(callback) {
-        const subscription = this._eventBus.subscribe(OPERATION_RECEIVED_EVENT, ({ documentId, command, authorIdentityId }) => callback(documentId, command, authorIdentityId));
+        const subscription = this._eventBus.subscribe(OPERATION_RECEIVED_EVENT, ({ documentId, command, authorIdentityId, causalPredecessors }) => callback(documentId, command, authorIdentityId, causalPredecessors));
         return () => subscription.unsubscribe();
     }
 
@@ -344,10 +382,15 @@ export class DocumentCommandPropagationUseCase {
         this._replayGuard.recordAccepted(payload.operationId, payload.documentId);
         // Deliberately NEVER applied — see this file's own header. The
         // receiver is only ever told an authorized operation arrived.
+        // `causalPredecessors` (0.9.227) is relayed exactly as validated
+        // by `isValidDocumentOperationEnvelope()` — `[]` for a pre-0.9.227
+        // sender that never set it, otherwise the sender's own list,
+        // untouched.
         this._eventBus.publish(OPERATION_RECEIVED_EVENT, {
             documentId: payload.documentId,
             command,
-            authorIdentityId: social.identityId
+            authorIdentityId: social.identityId,
+            causalPredecessors: payload.causalPredecessors || []
         });
     }
 }

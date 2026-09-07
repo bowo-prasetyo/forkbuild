@@ -60,6 +60,33 @@
 // yet ask for Editor documents — a later milestone may add it here the
 // exact same way 0.2.97 added it to World's own envelope, as optional,
 // additive metadata, never a breaking reshape.
+//
+// 0.9.227 — Document Operation Identity & Causal Predecessor Boundary
+// makes exactly that later addition, following the SAME "optional,
+// additive, degrades to a documented default on read" discipline
+// core/WorldOperationEnvelope.js's own 0.2.97 `logicalClock` field
+// established:
+//
+//   causalPredecessors — the operationIds this operation's AUTHOR had
+//                        already applied, in THIS document, at the
+//                        moment it authored this one — never a second
+//                        identifier for the operation itself, and never
+//                        wall-clock or send-time order (see
+//                        core/DocumentOperationCausality.js's own header
+//                        for the full semantics and the deliberate
+//                        boundary against a synchronization mechanism).
+//                        OPTIONAL for validation purposes: absent
+//                        (undefined) is a valid, pre-0.9.227-shaped
+//                        envelope and degrades to `[]` on read — a
+//                        genesis operation with no known causal
+//                        history — the same "graceful degrade" way
+//                        `core/WorldOperationEnvelope.js#logicalClock`
+//                        degrades to 0. A value that IS present must be
+//                        an array of non-empty operationId strings, each
+//                        within `MAX_DOCUMENT_SYNC_ID_LENGTH`, with no
+//                        duplicates and never containing this same
+//                        operation's own `operationId` (an operation is
+//                        never its own causal predecessor).
 export const DocumentOperationKind = Object.freeze({
     OPERATION: 'OPERATION'
 });
@@ -70,7 +97,7 @@ export function isValidDocumentOperationKind(value) {
 
 export const MAX_DOCUMENT_SYNC_ID_LENGTH = 512;
 
-export function toDocumentOperationEnvelope({ operationId, documentId, authorIdentityId, command }) {
+export function toDocumentOperationEnvelope({ operationId, documentId, authorIdentityId, command, causalPredecessors }) {
     if (!operationId || typeof operationId !== 'string') {
         throw new Error('toDocumentOperationEnvelope: operationId is required');
     }
@@ -83,12 +110,23 @@ export function toDocumentOperationEnvelope({ operationId, documentId, authorIde
     if (!command || typeof command !== 'object' || Array.isArray(command) || !command.type) {
         throw new Error('toDocumentOperationEnvelope: command must be a serialized Command with a type');
     }
+    // 0.9.227 — see this file's own header. Absent input degrades to
+    // `[]` (a genesis operation) rather than throwing: causal metadata is
+    // layered onto an otherwise-unchanged 0.9.226 envelope, never a
+    // second required field a pre-0.9.227 caller must learn about. A
+    // PRESENT-but-malformed value is a caller error, not something to
+    // silently coerce.
+    const resolvedPredecessors = causalPredecessors === undefined ? [] : causalPredecessors;
+    if (!isValidCausalPredecessorList(resolvedPredecessors, operationId)) {
+        throw new Error('toDocumentOperationEnvelope: causalPredecessors must be an array of distinct, non-empty operationId strings that does not include this operation\'s own operationId');
+    }
     return {
         kind: DocumentOperationKind.OPERATION,
         operationId,
         documentId,
         authorIdentityId,
-        command
+        command,
+        causalPredecessors: [...resolvedPredecessors]
     };
 }
 
@@ -103,5 +141,35 @@ export function isValidDocumentOperationEnvelope(value) {
         && Boolean(value.command)
         && typeof value.command === 'object'
         && !Array.isArray(value.command)
-        && typeof value.command.type === 'string' && value.command.type.length > 0;
+        && typeof value.command.type === 'string' && value.command.type.length > 0
+        // 0.9.227 — OPTIONAL: absent (undefined) is a valid, pre-0.9.227-
+        // shaped envelope; a value that IS present must be a well-formed
+        // causal predecessor list (see this file's own header).
+        && (value.causalPredecessors === undefined || isValidCausalPredecessorList(value.causalPredecessors, value.operationId));
+}
+
+// A well-formed causal predecessor list: an array of non-empty,
+// bounded-length operationId strings, no duplicates, and never
+// containing `ownOperationId` itself. Exported so
+// `core/DocumentOperationCausality.js` — which builds the causal GRAPH
+// out of these lists — validates against this exact same rule rather
+// than a second, possibly-drifting copy of it.
+export function isValidCausalPredecessorList(value, ownOperationId) {
+    if (!Array.isArray(value)) {
+        return false;
+    }
+    const seen = new Set();
+    for (const predecessorId of value) {
+        if (typeof predecessorId !== 'string' || predecessorId.length === 0 || predecessorId.length > MAX_DOCUMENT_SYNC_ID_LENGTH) {
+            return false;
+        }
+        if (predecessorId === ownOperationId) {
+            return false;
+        }
+        if (seen.has(predecessorId)) {
+            return false;
+        }
+        seen.add(predecessorId);
+    }
+    return true;
 }

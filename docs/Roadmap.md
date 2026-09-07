@@ -79161,3 +79161,153 @@ new enum member, a reassigned field — never by reshaping its contract.
 That is the whole point of writing the policy down before choosing: the
 next milestone's diff against `core/DocumentCollaborationConsistencyPolicy.js`
 becomes the precise, checkable record of what actually changed.
+
+## 0.9.227 — Document Operation Identity & Causal Predecessor Boundary
+
+0.9.226 named three internally-consistent directions and deliberately
+picked none of them. This milestone takes the first — "causal
+delivery" — but scoped to only its metadata seam, exactly as that
+section proposed: add causal predecessor metadata to
+`core/DocumentOperationEnvelope.js`, additive, the same way 0.2.97 added
+`logicalClock` to `core/WorldOperationEnvelope.js` without reshaping it.
+It deliberately does NOT build the rest of "causal delivery" — no
+ordering, no buffering, no missing-operation request — because a
+predecessor set is answerable and useful on its own, independent of
+whatever mechanism a later milestone chooses to build on top of it.
+
+The problem this closes: `core/DocumentOperationEnvelope.js` (0.9.222)
+carries `operationId`, `documentId`, `authorIdentityId`, and `command` —
+identity and destination, but no notion of what an operation's author
+already knew when authoring it. Given
+
+```text
+Replica 1: A, then B
+Replica 2: B, then A
+```
+
+nothing in this codebase could previously say whether B was authored
+*because of* A, or merely *arrived after* A — 0.9.226's own
+`delivery.order = NOT_GUARANTEED` and `history.orderingBasis =
+ARRIVAL_ORDER` describe exactly this blind spot. A scalar clock cannot
+close it either: a single number gives every pair of operations a
+total order, which manufactures a relationship between operations that
+never knew about each other — precisely the false signal 0.9.226's own
+`conflict.nonCommutingOperations = UNDEFINED` finding warns against.
+
+### What this milestone adds
+
+`core/DocumentOperationEnvelope.js` gains one optional, additive field:
+
+```text
+causalPredecessors — the operationIds this operation's author had
+                      already applied, in this document, at the moment
+                      it authored this one.
+```
+
+`core/DocumentOperationCausality.js` (new) is the pure vocabulary and
+comparator built on top of that field:
+
+```text
+CausalRelationship = { BEFORE, AFTER, CONCURRENT, SAME, UNKNOWN }
+
+DocumentOperationCausalGraph
+    record(documentId, operationId, predecessorOperationIds)
+    isKnown(documentId, operationId)
+    compare(documentId, operationIdA, operationIdB) -> CausalRelationship
+```
+
+`compare()` walks the recorded predecessor edges transitively (a diamond
+— `A -> B`, `A -> C`, `{B, C} -> D` — resolves correctly: A precedes
+everything, B and C are concurrent siblings, D follows both, and A
+precedes D even though D never names it directly) and is strictly
+document-scoped: every key it stores or looks up is `(documentId,
+operationId)`, so an operationId collision across two unrelated
+documents can never make one document's operation a causal predecessor
+of another's — the same isolation guarantee 0.9.223/0.9.224/0.9.225
+already proved for the execution path, now proved for the metadata too.
+
+`application/DocumentCommandPropagationUseCase.js` is the one piece of
+PRODUCTION code this milestone changes, in two small ways:
+
+- `broadcastCommand()` accepts an optional `causalPredecessors` list,
+  passed straight through to the envelope.
+- `attachCommandHistory()` now derives it automatically for every
+  locally-authored command: whatever was immediately before the new
+  command in this replica's own `CommandHistory` (or `[]` for the very
+  first command) — this replica's own single most-recent known
+  operation in this document. Because `CommandHistory` is a linear
+  stack, one predecessor per command is sufficient to encode the FULL
+  causal chain transitively; nothing here needs a replica to track a
+  multi-operation frontier.
+- `_handleIncoming()` relays a received envelope's own
+  `causalPredecessors` through `onOperationReceived()` completely
+  unmodified — `[]` for a pre-0.9.227 sender, otherwise the sender's own
+  list, untouched — so a caller that wants to reason about causal
+  relationships has the real data, without this class ever
+  interpreting, reordering, or rejecting anything based on it.
+
+`RemoteDocumentOperationApplicationUseCase` and
+`application/CommandHistory.js` are UNCHANGED — `history.orderingBasis
+= ARRIVAL_ORDER` and `application.remote = IMMEDIATE`
+(`core/DocumentCollaborationConsistencyPolicy.js`) are not reassigned by
+this milestone. Receiving an operation whose causal predecessor was
+never itself received is explicitly NOT an error: `compare()` answers
+UNKNOWN, never CONCURRENT (which would falsely claim independence) and
+never a rejection. This is deliberate — see
+`tests/DocumentOperationCausality.test.js` Section 9 — and is the exact
+boundary this milestone draws against `missingOperations.detection =
+NONE`: causal metadata answers "does B depend on A," never "please go
+retrieve A."
+
+### Tests (`tests/DocumentOperationCausality.test.js`)
+
+Ten sections, the first nine pure (no peers, no network):
+
+1. Envelope validation — `causalPredecessors` is optional and additive,
+   the identical "absent is valid, present-and-malformed is refused"
+   discipline 0.2.97's own `logicalClock` established.
+2. Genesis operation — no predecessors is valid.
+3. Causal successor — A -> B recognized as a real dependency, in both
+   comparison directions.
+4. Independent operations — two operations naming neither each other
+   are CONCURRENT, not merely "unordered."
+5. Multiple predecessors — a diamond graph preserves its exact shape.
+6. Transitivity — A -> B -> C places A BEFORE C with no direct edge.
+7. Identity preservation — two operations with IDENTICAL command
+   content but distinct operationIds are compared by identity, never by
+   content equality, the same discipline `replication/ReplayGuard.js`
+   already applies.
+8. Document isolation — an operationId collision across two documents
+   cannot cross the causal boundary.
+9. Missing-predecessor tolerance — an operation whose predecessor was
+   never itself recorded is still representable (UNKNOWN, never an
+   error, never CONCURRENT), plus `record()`'s own idempotency/
+   contract-violation rules.
+10. Propagation preservation — against the REAL, unmodified
+    `broadcastCommand()`/`onOperationReceived()` chain (0.9.222-0.9.226):
+    causal metadata survives end to end unmodified, and
+    `attachCommandHistory()`'s automatic derivation is proven against
+    two consecutive real local commands.
+
+### Deliberately excluded, on purpose
+
+No operation queue, no waiting for predecessors, no retransmission, no
+missing-operation detection or request, no logical/Lamport/vector clock,
+no CRDT, no OT, no conflict resolution, no automatic reordering, no
+rollback, no synchronized undo, no offline synchronization, no
+convergence guarantee. `application/CommandHistory.js` is untouched —
+`history.orderingBasis` stays `ARRIVAL_ORDER`. This milestone makes
+causal dependency REPRESENTABLE and QUERYABLE; it does not yet make
+anything ACT on the answer.
+
+### Recommendation
+
+With causal identity now representable and proven to survive the real
+propagation chain, 0.9.228 can finally ask the question 0.9.225's own
+D1/D2 distinction already pointed at directly: which Editor commands
+commute (`MoveBrickCommand`'s relative delta) and which don't
+(`RenameGroupCommand`'s absolute set)? That characterization, informed
+by real `CausalRelationship` answers (a genuinely CONCURRENT pair is a
+candidate conflict; a BEFORE/AFTER pair never is), is what should decide
+whether 0.9.229+ needs a conflict policy, a CRDT-shaped merge, or
+neither — not a default reached for because a causal graph now exists.
