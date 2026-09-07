@@ -19017,3 +19017,70 @@ relevance, and no future refactor of discovery's own internal ordering
 can silently change what a Wanderer sees "first" today.
 
 See `docs/Roadmap.md`, 0.9.255, for the full milestone entry.
+
+### Automatic Discovery Is Not Automatic Adoption (0.9.256)
+
+0.9.253 through 0.9.255 built three genuine capabilities — discovery,
+transport, and proximity selection — but left all three reachable only by
+a caller who explicitly decided to invoke them. 0.9.256 (Automatic Place
+Naming Discovery Orchestration) is the moment Place Naming becomes
+genuinely automatic: a Wanderer who does nothing but walk around now
+causes discovery and proximity selection to run on their behalf. That is
+exactly the moment this codebase's own history warns is most tempting to
+overreach in — see `application/WorldSnapshotDiscoveryMonitor.js`'s own
+0.9.186 precedent, and the still-separate, still-unscheduled "0.9.187 —
+Automatic Snapshot Encounter Cascade" it deliberately left for later. This
+principle names the identical boundary, redrawn for Place Naming's own
+pipeline.
+
+**Observable is not authoritative.** Before this milestone, a Wanderer saw
+a nearby Place Naming claim only if something explicitly fetched and
+filtered one for them. After it, `PlaceNamingDiscoveryMonitor` does that
+automatically, on a movement cadence. Nothing about WHAT a claim means
+changes because of who or what triggered its discovery — a claim
+`PlaceNamingDiscoveryMonitor#observe()` surfaces automatically is exactly
+as unverified, exactly as unofficial, and exactly as un-adopted as one a
+person fetched by hand. Automaticity is a delivery mechanism, never a
+credibility upgrade.
+
+**A monitor is a pipe, not a decision-maker.** `PlaceNamingDiscoveryMonitor`
+was built to know exactly three things: when to call discovery again (a
+movement threshold), how to attach a position to what discovery returns
+(an injected resolver, never computed itself), and how to filter by
+distance (0.9.255's own, unmodified, function). It was deliberately built
+to know nothing else — not which of several nearby names is "right," not
+whether a claim's signature checks out, not whether a claim should ever
+become a region's own name, not how (or whether) a claim should be
+rendered. Every one of those questions has its own, separate, deliberately
+later home; folding any of them into this milestone under the banner of
+"while we're in here" would have made "automatic" quietly mean "automatic
+AND authoritative" by accident, exactly the drift 0.9.255's own "Proximity
+Filtering Is Not Ranking, Is Not Conflict Resolution" principle already
+refused one layer down.
+
+**Two monitors, two feature boundaries, on purpose.** It would have been
+easy to generalize `WorldSnapshotDiscoveryMonitor.js` into something both
+features could share — same request-id race guard, same "position changed,
+maybe call a command" shape. 0.9.256 reimplements that ONE generic shape
+independently rather than sharing the class, because the two features'
+own semantics diverge sharply past that point: Snapshot discovery's own
+monitor sits upstream of resolve/verify/materialize/register/retain/render;
+Place Naming's own monitor sits upstream of nothing but proximity
+selection, today. Sharing the class would have meant either dragging
+Snapshot's own heavier semantics into Place Naming's much smaller pipeline,
+or hollowing Snapshot's own monitor out to the lowest common denominator —
+either way, blurring a boundary this codebase's own roadmap already drew
+deliberately, one milestone at a time.
+
+**A safe default is "nothing," never "assume nearby."** This milestone's
+own monitor has no real way yet to resolve a discovered claim's `regionId`
+into a position — that requires a World-layout-aware resolver (a future
+`application/WorldNavigationSession.js` wiring) this milestone deliberately
+does not build. Rather than guess, or treat an unresolvable claim as
+"probably fine to show," a missing or failing resolver degrades every such
+claim to `null`, which `selectNearbyPlaceNamingClaims()` already excludes.
+An absent capability produces less automatic behavior, never more — the
+same fail-closed instinct `application/PlaceNamingDiscoveryQueryService.js`'s
+own "an honest empty roster" already models for zero discovery sources.
+
+See `docs/Roadmap.md`, 0.9.256, for the full milestone entry.

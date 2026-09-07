@@ -83263,3 +83263,142 @@ calls discovery, then this selector, as the Wanderer moves), followed by
 Comprehensive Place Naming E2E Audit`, and `0.9.259 — Post-Place-Naming
 Product Reassessment`. As with every roadmap arc recorded here, only the
 immediate next milestone is treated as committed.
+
+## 0.9.256 — Automatic Place Naming Discovery Orchestration
+
+0.9.253/0.9.254 answered "what claims exist?" and 0.9.255 answered "which
+of those are near the Wanderer?" — but nothing yet called either one
+automatically as the Wanderer actually moves; both remained pure
+functions/commands a caller had to invoke by hand. This milestone adds
+exactly that missing caller, and nothing else:
+
+```
+Wanderer position
+     │
+     ▼
+application/PlaceNamingDiscoveryMonitor.js#observe(position)   (0.9.256) ★
+     │
+     ▼
+shouldRefreshPlaceNamingDiscovery(previousPosition, position, refreshRadius)
+     (application/ShouldRefreshPlaceNamingDiscovery.js, 0.9.256, sibling) ★
+     │  true
+     ▼
+discoverPlaceNamingClaimsCommand()   (a caller-bound closure over
+     executeDiscoverPlaceNamingClaimsCommand() [0.9.253] / a
+     PlaceNamingDiscoveryQueryService [0.9.253] / one or more
+     NostrPlaceNamingDiscoverySource instances [0.9.254], all unmodified)
+     │
+     ▼
+discovered envelopes
+     │  resolveClaimPosition(envelope) -> {x,z}|null   (caller-supplied)
+     ▼
+envelopes with a resolved .position attached
+     │
+     ▼
+selectNearbyPlaceNamingClaims(claimsWithPosition, position, proximityRadius)
+     (core/PlaceNamingProximitySelection.js, 0.9.255, UNMODIFIED)
+     │
+     ▼
+{ position, claims } -> monitor.lastResult, and (optionally) onObservation()
+```
+
+Two new files. `application/ShouldRefreshPlaceNamingDiscovery.js` is a
+pure decision boundary — `shouldRefreshPlaceNamingDiscovery(previousPosition,
+currentPosition, radius)` — comparing raw `{x,z}` positions with
+`core/WorldSpatialAnchor.js#distanceXZ()` and an inclusive `>=` boundary,
+deliberately its OWN file rather than a reuse of
+`application/ShouldRefreshSnapshotDiscovery.js` (0.9.186): that file
+compares `WorldSpatialContext`-shaped objects and uses 3D distance, a
+different shape for a different feature's own cadence, and reusing it
+would force Place Naming to either adopt a Snapshot-named vocabulary or
+wrap every raw Wanderer position in a fake "context" object. The default
+radius (100) happens to match that file's own default — an independent
+constant that agrees today, not a shared reference, the same relationship
+`ShouldRefreshSnapshotDiscovery.js`'s own header already documents for its
+own copy of the same number.
+
+`application/PlaceNamingDiscoveryMonitor.js` is the orchestrator itself —
+`observe(position)`, `dispose()`, plus `lastResult`/`lastError`/
+`executing` — reimplementing (never importing)
+`application/WorldSnapshotDiscoveryMonitor.js`'s own request-id race-guard
+pattern: a response only ever mutates `lastResult`/`lastError`, and only
+ever reaches an optional `onObservation({ position, claims })` callback,
+if its own request id is still the most recently issued one and the
+monitor has not been disposed. A rejected/throwing discovery command never
+mutates `lastResult` and never propagates as a thrown/rejected error from
+`observe()` — the previous successful observation stands. Concurrent
+requests are never cancelled; a losing request's own late response is
+simply discarded on arrival.
+
+Per this milestone's own recommendation, proximity filtering happens HERE,
+after discovery, never pushed down into a source — a discovery source only
+ever needs to answer "what claims exist for this tag," never "what claims
+are near this position," so a future source implementation (Arweave, a
+peer exchange) never needs to understand ForkBuild's own spatial-selection
+policy.
+
+Resolving a discovered envelope's `regionId` into an actual position is
+injected, never performed by this file — `resolveClaimPosition(envelope)
+-> {x,z}|null`, a caller-supplied, duck-typed function, exactly the
+"caller-side, layout-aware resolution" seam 0.9.255's own header already
+named as a future orchestration milestone's job. A missing resolver
+resolves every envelope to `null` (fail-closed: nothing is treated as
+nearby without a real way to place it); a resolver that throws for one
+envelope is caught and treated as `null` for that envelope alone, without
+affecting any other.
+
+One new test file, `tests/PlaceNamingDiscoveryOrchestration.test.js`
+(sixteen sections): the initial-observation/threshold/inclusive-boundary/
+beyond-threshold refresh cadence; distant discovered claims removed by
+proximity selection while multiple simultaneously-nearby claims all
+survive, unranked; discovery order surviving into the final observation;
+failure isolation (a rejected discovery call never destroys the previous
+successful observation, and never throws to the caller); race protection
+(a stale response never overwrites a newer one, including under rapid,
+out-of-order-resolving movement); empty results; a malformed/unresolvable
+claim excluded individually without poisoning its neighbors; a structural
+scan proving the monitor's own source never imports or references
+verification/ranking/adoption/storage/persistence vocabulary or
+`WorldSnapshotDiscoveryMonitor.js`/`WorldNavigationSession.js`/
+`WorldLocationDirectory.js`; multiple independent monitor instances never
+sharing state; and disposal preventing both new observations and the late
+application of an already-in-flight one. The flagship section drives the
+REAL, unmodified `NostrPlaceNamingDiscoverySource` (0.9.254), the REAL
+`PlaceNamingDiscoveryQueryService`/`executeDiscoverPlaceNamingClaimsCommand`
+(0.9.253), and the REAL `selectNearbyPlaceNamingClaims()` (0.9.255) through
+this monitor end-to-end across two discovery tags/regions, with only the
+relay's own `queryImpl` (transport) and the region→position resolver (a
+stand-in for a not-yet-built World-layout-aware resolver) controlled by
+the test — including a garbage relay event on the near channel, proving
+the real 0.9.253 envelope parser, not a stub, is what silently drops it.
+Registered in `tests.html`.
+
+**Automatic discovery makes nearby claims observable; it does not make
+them authoritative.** See docs/Principles.md, "Automatic Discovery Is Not
+Automatic Adoption (0.9.256)."
+
+### What this milestone deliberately excludes
+
+Verification, signature validation, conflict resolution, ranking or
+closest-name selection, deduplication beyond what discovery already
+performs, automatic adoption, World registry registration, rendering of
+any kind, persistence changes, notifications, retention/removal of a
+previously-observed claim, claimed-position authority, user preference for
+a preferred name, any new lifecycle state, and reuse of
+`WorldSnapshotDiscoveryMonitor.js` at the semantic level (its request-id
+race-guard SHAPE is reimplemented independently; its resolve/verify/
+materialize/register/retain/render semantics are not reused at all — see
+this file's own header, "an own semantic monitor"). Also excluded: wiring
+this monitor into `ui/main.js` or any World View component, and composing
+a real `resolveClaimPosition` against `application/WorldNavigationSession.js`
+— both remain `0.9.257 — World View Place Naming Presentation`'s own,
+deliberately tiny, job: take this monitor's already-filtered observation
+and expose it in World View.
+
+### What comes after
+
+Per the product-direction conversation's own proposed arc: `0.9.257 —
+World View Place Naming Presentation`, `0.9.258 — Comprehensive Place
+Naming E2E Audit`, and `0.9.259 — Post-Place-Naming Product Reassessment`.
+As with every roadmap arc recorded here, only the immediate next milestone
+is treated as committed.
