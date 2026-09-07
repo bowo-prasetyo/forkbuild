@@ -81681,3 +81681,106 @@ The most likely next question is whether commentary needs to become
 visible to another user or device — networking/distribution, a
 separate milestone rather than something this storage boundary
 prematurely answers.
+
+## 0.9.244 — Publication Commentary Application Command Boundary
+
+0.9.242 drew the domain seam and 0.9.243 drew the storage seam, but
+neither named a single place where user intent — "I want to comment on
+this Publication" — becomes a persisted `PublicationCommentary`. This
+milestone is that one authoritative creation path, and only that: no
+UI, no editing, no authorization system.
+
+```text
+{ publicationId, authorIdentityId, content, createdAt?, commentaryId? }
+     │
+     │  AddPublicationCommentaryUseCase.execute()
+     ▼
+PublicationCommentary                  (0.9.242, unmodified)
+     ▼
+PublicationCommentaryStore.save()      (0.9.243, unmodified)
+```
+
+### What this milestone adds
+
+* `application/AddPublicationCommentaryUseCase.js` (new) — a thin,
+  one-step command: construct a `PublicationCommentary` from the input
+  and persist it through an injected `PublicationCommentaryStore`.
+  Unlike `application/AddPublicationAnchorUseCase.js` and
+  `application/AddPublicationSnapshotPlacementUseCase.js`, there is no
+  separate envelope-validation step — a commentary has no untrusted
+  JSON envelope to pre-validate, so `PublicationCommentary`'s own
+  constructor is the only validation that runs. ID generation stays
+  inside `PublicationCommentary`, exactly as 0.9.242 established;
+  `commentaryId` is accepted only as an optional passthrough for a
+  caller that needs its own retry to be idempotent.
+* **Result shape**: `{ commentary, isNew }`, mirroring
+  `AddPublicationAnchorUseCase`'s own `{ anchor, isNew }`. No
+  CREATED/ALREADY_EXISTS/CONFLICT/INVALID result vocabulary — an
+  invalid input and a genuine conflict are already distinct, thrown
+  errors (a plain `Error` from `PublicationCommentary`'s constructor,
+  `PublicationCommentaryConflictError` from the store), and `isNew`
+  already distinguishes the one remaining non-error case.
+* **Authorship without authorization.** `authorIdentityId` is supplied
+  by the caller, not derived or authenticated by this use case — the
+  distinction between "the identity a commentary is attributed to" and
+  "the identity actually making this call" is drawn, but no
+  authorization rule is implemented. Whether a given identity is even
+  allowed to comment on a given Publication is an explicit product
+  decision deferred to a later milestone.
+* **Write-failure audit.** Confirmed `storage/PublicationCommentaryStore.js#save()`
+  already propagates a storage provider's own write failure unmodified
+  (no surrounding `try`/`catch` on that path), unlike its read path
+  (`_loadCollection()`), which deliberately degrades a corrupted or
+  throwing provider to an empty collection. This asymmetry is correct —
+  graceful degradation belongs to reads, never to a write a caller
+  relies on having actually happened — and required no code change to
+  the store itself; this use case adds no `try`/`catch` of its own
+  around `save()` for the same reason.
+* `tests/AddPublicationCommentaryUseCase.test.js` (new), eight
+  sections: successful creation reaching the real store; exact
+  Publication identity (never substituted with a Document id or content
+  hash); author identity preserved exactly; content validation failing
+  before persistence; a genuine storage write failure propagating
+  rather than reporting false success; duplicate-identity handling
+  (idempotent resave vs. rejected conflict) through the use case;
+  isolation between two use case instances backed by separate stores;
+  and the use case working against a plain duck-typed fake store,
+  confirming it depends on the store boundary rather than importing a
+  concrete storage provider.
+
+Also registers `tests/AddPublicationCommentaryUseCase.test.js` in
+`tests.html`'s own runner list.
+
+### Explicitly deferred
+
+Not part of this milestone, on purpose, not merely unbuilt yet: no
+commentary UI, no editing, no deletion/retraction, no replies/
+threading, no reactions, no moderation, no notifications, no Nostr/
+WebRTC/peer propagation, no Arweave, no decentralized discovery, no
+collaboration operation envelopes, no causal predecessors, no CRDT/OT,
+no conflict resolution, and no new authorization system. A commentary
+is never a `DocumentOperationEnvelope` — see this milestone's own
+architecture note below.
+
+### The emerging architecture
+
+```text
+Document collaboration
+    ────────────────► DocumentOperationEnvelope
+                       causal execution
+
+Publication commentary
+    ────────────────► PublicationCommentary
+                       authored immutable fact
+                            │
+                            ▼
+                       AddPublicationCommentaryUseCase (0.9.244, this milestone)
+```
+
+The natural next questions — commentary UI, an authorization boundary,
+or an observation/query boundary for reading commentary back — are
+each a separate, deliberate seam rather than something this command
+boundary answers by default. This milestone's job is only to make sure
+that whichever one comes next, no future UI code ever constructs or
+persists a `PublicationCommentary` directly — it goes through this use
+case instead.
