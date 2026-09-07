@@ -81021,3 +81021,204 @@ predecessors, and shuffled arrival/replay order, stress-testing the exact
 invariant this policy now names — every operation executes only after
 all explicitly named causal predecessors have actually executed, while
 unrelated concurrent operations remain independent.
+
+## 0.9.239 — Comprehensive Causal Deferral Lifecycle Audit
+
+0.9.238's own "Recommendation" named this milestone precisely: 0.9.237
+built the fix and 0.9.238 brought the policy descriptor back in sync, both
+proven only on the simplest possible topology, `A -> B`. This milestone is
+the stress test — the identical invariant, against collaboration graphs
+substantially more complicated than one edge. Test-only; no production
+code changed except one pre-existing test file the audit found had
+quietly fallen out of sync with 0.9.237's own wiring (see "A genuine
+defect found" below).
+
+The flagship invariant every section stresses:
+
+```text
+An operation is applied only after every explicitly named causal
+predecessor has actually EXECUTED, while causally independent
+operations remain independently applicable.
+```
+
+### What this milestone adds
+
+`tests/CausalDeferralLifecycleAudit.test.js` (new), against the real,
+unmodified 0.9.222-0.9.238 chain throughout — real
+`DocumentOperationDeferralUseCase`, real propagation/recovery/replay
+stacks, real `CommandHistory` instances, and a real `EditorSession` for
+the lifecycle sections, the same "never a synthetic stand-in" discipline
+this whole lineage already applies to itself:
+
+* **Section 1 — Linear chain.** `A -> B -> C -> D`, delivered in complete
+  reverse order (`D, C, B, A`). A single genesis arrival (`A`) cascades
+  the release through `B`, `C`, and `D` in true causal order, despite
+  arriving in the exact opposite order.
+* **Section 2 — Diamond.** `A -> {B, C} -> D`, delivered in reverse, with
+  `B` and `C` deliberately depending on two DIFFERENT predecessors so
+  they can be released at genuinely different times — a real temporal
+  gap, not merely "eventually all three land." `D` stays deferred through
+  that gap, releasing only once BOTH have executed. A second,
+  simultaneous-release variant proves `B` and `C` never acquire an
+  artificial order relative to each other when they DO become ready
+  together.
+* **Section 3 — Independent branches.** `A -> B` and `X -> Y` in the SAME
+  document; `A` missing, `X` genesis and executed. `B` stays deferred
+  while `Y` (depending on the already-executed `X`) applies immediately —
+  proving deferral is never an accidental document-wide execution lock.
+* **Section 4 — Recovery/replay matrix.** 4a restates the base case (`A`
+  recovered, `B` deferred, explicit `replay(A)` releases `B`) as this
+  milestone's own foundation. 4b is a longer recovered chain — `A` and
+  `B` both recovered (never broadcast individually), `C` depends on `B`,
+  `D` depends on `C` — with DELIBERATELY INVALID replay attempts:
+  `replay(C)`/`replay(D)` against operations that were never themselves
+  recovered (they arrived ordinarily and are simply deferred) fail
+  cleanly, `NOT_REPLAYED`, never throwing, never mutating anything. The
+  one VALID `replay(B)` then cascades through the ordinary deferral
+  release chain, releasing `C` then `D` from that single call, in true
+  causal order, despite `C` and `D` having arrived (and been deferred)
+  before `B` was ever recovered, let alone replayed. `replay(A)`,
+  called afterward, succeeds independently — `replay()` imposes no order
+  of its own between independently recovered operations. The system
+  never infers execution from recovery.
+* **Section 5 — Duplicate and replay stress.** 5a: four duplicate
+  deliveries of the same deferred operation collapse to one retained
+  instance, executed exactly once. 5b: two independent dependents naming
+  the SAME missing predecessor may each trigger their own recovery
+  request; ReplayGuard still collapses redelivery of the identical
+  operationId to exactly one accepted recovery, and a duplicate
+  `replay()` attempt on an already-executed operation is a safe no-op.
+  5c: a predecessor redelivered AFTER it already executed is rejected at
+  ReplayGuard, `DocumentCommandPropagationUseCase`'s own trust boundary —
+  never reaching the deferral boundary at all, which only ever protects
+  its own DEFERRED map. ReplayGuard, execution history
+  (`CommandHistory#getExecutedCommands()`), and the deferral boundary's
+  own retained-map idempotency are three complementary guards, each
+  covering a different stage of an operation's lifecycle, proven never to
+  overlap or leave a gap between them.
+* **Section 6 — Local/remote interleaving.** Local edits (executed
+  directly through `CommandHistory#execute()`, exactly like every
+  EditorSession action) and remote arrivals share the SAME CommandHistory
+  and the SAME `COMMAND_EXECUTED` event the release cascade listens on.
+  Proves local execution is never an implicit causal predecessor for an
+  operation that never named it — a local `COMMAND_EXECUTED` event never
+  turns "something changed" into "my prerequisite changed." Goes one
+  level deeper: an operation that explicitly names a purely local
+  operationId as its own predecessor stays deferred even AFTER that local
+  operation executes, because it was never separately recorded as
+  causally KNOWN (`DocumentOperationCausalGapDetector#record()` is only
+  ever called for REMOTELY-observed arrivals in production) — KNOWN (Q2)
+  and EXECUTED (Q4) remain genuinely independent gates, neither alone
+  sufficient, exactly as 0.9.234 defined them, now proven under real
+  local/remote interleaving on one shared history rather than in
+  isolation.
+* **Section 7 — Failure isolation under cascading release.** `A -> {B,
+  C}`, `B` poisoned (`RenameGroupCommand` naming a nonexistent group); `D`
+  depends on `[B, C]`. `C`, the healthy sibling, releases and executes
+  despite `B` failing. `D`, the diamond successor, stays deferred FOREVER
+  — not corrupted, not silently dropped, not released on `C`'s partial
+  success alone — proven to remain inert across further unrelated
+  activity, not merely "not yet." A second, independent
+  `COMMAND_EXECUTED` subscriber proves the poisoned failure never breaks
+  `CommandHistory`'s own fan-out for anyone else, including through the
+  cascade's own internal re-entrancy.
+* **Section 8 — Session/document lifecycle, on a real `EditorSession`.**
+  8a: a deferred operation for a document a session switches away from
+  survives the detour through an unrelated document, correctly scoped —
+  never leaking into, and never disturbed by, the document visited in
+  between — and releases normally against the FRESH `CommandHistory`
+  built when the session returns. 8b: session teardown leaves no deferred
+  operation able to mutate a dead target — a stray `onOperationExecuted()`
+  signal for a torn-down document releases nothing, and even the actual
+  predecessor, broadcast after `dispose()`, changes nothing because the
+  whole incoming seam was unwired too.
+* **Section 9 — Policy Conformance Matrix.** The table this milestone
+  exists to prove, row by row, against real code — never a static claim:
+  Genesis, Complete chain, Missing predecessor, Recovered predecessor,
+  Replayed predecessor, Concurrent operation, Diamond successor, and
+  Duplicate operation each checked against `evaluateApplicationReadiness()`
+  (0.9.234) itself for eligibility/readiness AND against
+  `DocumentOperationDeferralUseCase#receive()` for the matching runtime
+  outcome (Apply/Defer/Release/Execute-once) — proving runtime behavior
+  corresponds exactly to what `RemoteApplicationTiming.CAUSAL_READINESS`
+  itself claims.
+
+### A genuine defect found, and fixed
+
+The audit's own regression pass (running every existing test file
+touching this lineage together) found `tests/EditorRuntimeCollaboration.test.js`
+(0.9.224) had gone stale: its own `openDocumentInSession()` test helper
+never wired the 0.9.237 deferral boundary's per-document
+`attachCommandHistory()`, and its Section B still asserted the PRE-0.9.237
+behavior (an operation applies unconditionally in arrival order). Once
+0.9.237 shipped, Section B's own move3 — Alice's next local edit, which
+`DocumentCommandPropagationUseCase`'s outgoing wiring automatically named
+as causally depending on the very move2 Bob had just been refused while
+looking at a different document — was actually being correctly DEFERRED
+by the real, composed EditorSession runtime, not applied as the test's
+three-milestone-old assertion still claimed. This is a defect in an
+existing TEST file, not production code (`application/EditorSession.js`'s
+own real `_rebuild()`/`_teardown()` already wire the deferral attachment
+correctly — only this one test's own hand-rolled equivalent had drifted).
+Fixed: the helper now mirrors real `_rebuild()`/`_teardown()` exactly,
+Section B's own assertions now prove the CORRECT, current behavior (move3
+deferred, not applied — the same 0.9.237 boundary, now proven wired
+through this older composition test too), and Section C reopens Document
+X fresh on both replicas before its own execution-path-convergence
+comparison, so it is never confused by Section B's own, separately-proven
+finding. No other production or test file needed a change.
+
+### Deliberately excluded, on purpose
+
+No new policy vocabulary, no new provenance, no new recovery mechanism,
+no retry, no retransmission, no queue redesign, no ordering protocol, no
+conflict resolution, no CRDT/OT, no synchronized undo, no convergence
+guarantee, no commutativity classification. No change to
+`DocumentOperationDeferralUseCase`, `CommandHistory`, `ReplayGuard`,
+`RemoteDocumentOperationApplicationUseCase`,
+`RecoveredOperationReplayUseCase`, `DocumentOperationCausalGapDetector`,
+`DocumentOperationApplicationReadiness`, or
+`DocumentCollaborationConsistencyPolicy`. The one fix described above
+touches only an existing test file's own helper and assertions, never
+production code.
+
+### Tests
+
+`tests/CausalDeferralLifecycleAudit.test.js` (new) — nine sections, 122
+assertions, described above. `tests/EditorRuntimeCollaboration.test.js`
+(updated) — Section B and Section C brought back in sync with 0.9.237,
+described above.
+
+### Recommendation
+
+The comprehensive audit passes cleanly: 0.9.237's causal deferral
+boundary and 0.9.238's policy descriptor both hold under chains, diamonds,
+independent branches, a longer recovered chain with deliberately invalid
+replay attempts, duplicate/replay stress, real local/remote interleaving,
+failure isolation under cascading release, and full session/document
+lifecycle — not merely the simplest `A -> B` case. As 0.9.238's own
+"Recommendation" anticipated, the remaining open question is no longer a
+missing prerequisite or a recovery problem — this system now guarantees
+causal correctness. It is a genuinely narrower, product-semantics
+question:
+
+```text
+CAUSAL_READINESS
+       |
+       +-- solved: causal dependency enforcement
+       |
+       +-- unresolved:
+             concurrent non-commutative operations
+             |
+        do we actually need
+        conflict resolution?
+```
+
+Two operations that are both causally READY and concurrent (0.9.226's own
+`ConcurrentConflictResolution = UNDEFINED`, re-proven untouched by this
+milestone) may still produce different results depending on
+arrival/execution order — not a missing prerequisite, not a recovery gap,
+a genuine conflict-resolution/product-semantics question. The next
+milestone should be a product/architecture reassessment of that question,
+rather than automatically implementing CRDT/OT or another large
+collaboration mechanism.
