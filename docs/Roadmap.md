@@ -79481,3 +79481,173 @@ resolution (deciding what a concurrent pair means for the document) are
 three different mechanisms, and this codebase's own actual product
 requirements — not the fact that a detector now exists — should decide
 which one, if any, comes next.
+
+## 0.9.229 — Causal Gap Observation at the Propagation Boundary
+
+0.9.228 built `DocumentOperationCausalGapDetector` as an isolated
+capability — genuinely useful, but only ever exercised directly, by a
+caller that already has both an operation and a detector in hand. Nothing
+outside that detector's own test suite ever knew an operation arrived,
+what it named as its causal predecessors, or whether this replica had a
+gap. This milestone closes exactly that seam, and only that seam: the
+detector is now connected to the REAL receive path,
+`DocumentCommandPropagationUseCase#onOperationReceived()`, so every
+operation this replica actually accepts over the network produces one
+observable causal-gap result.
+
+This milestone still does not recover or delay anything. It is the
+missing link between:
+
+```text
+0.9.227  causal information exists
+0.9.228  causal gaps can be queried
+0.9.229  received operations expose their gap status   <- THIS milestone
+future   something may act on GAP
+```
+
+### What this milestone adds
+
+`application/DocumentOperationCausalGapObservationUseCase.js` (new):
+
+```text
+DocumentOperationCausalGapObservationUseCase
+    observe({ documentId, operationId, causalPredecessors })
+        -> { operationId, documentId, causalPredecessors, causalGap }
+    onGapObserved(callback) -> unsubscribe
+    attachToPropagation(propagation) -> unsubscribe
+```
+
+Wired the SAME way `RemoteDocumentOperationApplicationUseCase#
+attachToPropagation()` already attaches to that identical feed — a second,
+completely independent subscriber to `onOperationReceived()`, never a
+change to `DocumentCommandPropagationUseCase` itself:
+
+```text
+network -> envelope -> identity/auth -> ReplayGuard -> accepted operation
+                                                             |
+                            +--------------------------------+--------------------------------+
+                            |                                                                  |
+                 DocumentOperationCausalGapObservationUseCase          RemoteDocumentOperationApplicationUseCase
+                     detect(), then record(), then notify                  apply() — 0.9.223/0.9.224, unmodified
+```
+
+`observe()` always calls `detect()` BEFORE `record()`, for every call —
+never the reverse. For an incoming operation B, this means B's own gap is
+always evaluated against exactly what this replica knew immediately
+BEFORE B arrived, never against a graph B has already been folded into
+itself. This is the one ordering guarantee this milestone adds on top of
+0.9.228's own detector, and it changes nothing about that detector's own
+contract — `record()` still delegates entirely to
+`DocumentOperationCausalGraph#record()`, unchanged.
+
+The result descriptor is deliberately small and flat — `{ operationId,
+documentId, causalPredecessors, causalGap }`, where `causalGap` is exactly
+`DocumentOperationCausalGapDetector#detect()`'s own return value, never
+reshaped or wrapped in a second status enum. No `WAITING`, no `BLOCKED`,
+no `PENDING`, no `RECOVERING` — those would claim a lifecycle this
+milestone does not build. A causal gap remains an observation, not an
+application decision.
+
+`application/EditorSession.js` wires this once, in its constructor,
+alongside its existing (0.9.224) `RemoteDocumentOperationApplicationUseCase`
+wiring — registered first, so a received operation's causal gap is always
+observed ahead of application, matching this milestone's own receive
+sequence. That ordering is documented, not load-bearing: because
+`attachToPropagation()` isolates every failure inside its own try/catch
+(see below), the application subscription runs identically regardless of
+which of the two is wired first. `onCausalGapObserved(callback)` exposes
+the feed to any future caller without reaching into a private field. One
+detector for the whole session's lifetime, never rebuilt on document
+switch — its own graph is already document-scoped, so it tracks causal
+knowledge across every document a session ever opens.
+
+No changes to `application/DocumentCommandPropagationUseCase.js`,
+`application/RemoteDocumentOperationApplicationUseCase.js`, or
+`application/CommandHistory.js`. `tests/DocumentOperationCausalGapObservation.test.js`
+Sections A-C prove, end to end against the real broadcast/receive/apply
+chain, that a GAPPED operation applies exactly like an ungapped one.
+
+### Failure isolation
+
+`DocumentOperationCausalGraph#record()` throws for a genuine contract
+violation (the same operationId recorded twice with a different
+predecessor set) — something ReplayGuard should already make unreachable
+for a well-behaved sender, but this class does not get to assume a
+well-behaved sender, a bug-free detector, or a caller-supplied detector it
+does not control. `observe()` itself throws for a contract violation, the
+same "throw on malformed input" discipline every sibling file in this
+lineage already applies to a direct caller. `attachToPropagation()` is
+different: it sits ON the real receive path, where a caller cannot
+un-receive an operation just because observing it went wrong, so it
+isolates every call to `observe()` in its own try/catch and never
+rethrows. A broken detector must never become a network failure, an
+operation rejection (that decision was already made, upstream, before
+this class ever sees the operation), or an application failure — proven
+by `tests/DocumentOperationCausalGapObservation.test.js` Section H against
+a detector engineered to throw on every call, registered ahead of the
+real application subscription on the identical feed.
+
+### Tests (`tests/DocumentOperationCausalGapObservation.test.js`)
+
+1. Ungapped receive — once a predecessor has actually been accepted, a
+   later operation naming it is observed as NO_GAP, and applies normally.
+2. Gapped receive — an operation naming a never-received predecessor is
+   observed as GAP, naming exactly that predecessor, and still applies.
+3. Regression — GAP and application are proven independent as an explicit
+   assertion, not merely implied by the other sections.
+4. Later arrival — a gap disappears only when a caller deliberately
+   re-queries via `observe()` again; the missing predecessor's own,
+   separate arrival never triggers an automatic re-check or replay.
+5. Multiple missing predecessors — a diamond-shaped dependency correctly
+   names only the specific predecessor this replica never received.
+6. Duplicate delivery — a retransmitted operation, suppressed by
+   ReplayGuard before `onOperationReceived()` ever fires, is never
+   observed twice; causal gap observation adds no second deduplication
+   mechanism.
+7. Document isolation — the same operationId, referenced as a causal
+   predecessor under two different documents, resolves independently in
+   each.
+8. Failure isolation — a detector engineered to throw on every call never
+   surfaces as an unhandled exception, an operation rejection, or a
+   skipped application; a subsequent, unrelated operation still arrives
+   and applies normally afterward.
+9. Input validation — `observe()`/`attachToPropagation()`/the constructor
+   enforce the same closed-vocabulary "throw on malformed input, isolate
+   failure only at the production boundary" discipline this milestone's
+   own lineage already established.
+
+### Deliberately excluded, on purpose
+
+No operation buffering, no delayed application, no retransmission
+requests, no operation queues, no retry, no synchronization protocol, no
+automatic predecessor retrieval, no rollback, no reordering, no CRDT, no
+OT, no vector clocks, no conflict resolution, no convergence guarantees,
+no synchronized undo, and — specific to this milestone — no reaction to a
+GAP result of any kind. `application/CommandHistory.js` and
+`application/RemoteDocumentOperationApplicationUseCase.js` are both
+untouched; `application/DocumentCommandPropagationUseCase.js` is untouched
+except in the sense that a second, independent subscriber now also
+listens to its already-existing `onOperationReceived()` feed.
+
+### Recommendation
+
+0.9.230 stays deliberately undecided, exactly as 0.9.228's own
+"Recommendation" already named. Three independently observable facts now
+exist, and — as of this milestone — the third is wired all the way to
+production:
+
+1. What happened first, causally? (`DocumentOperationCausalGraph#compare()`)
+2. Is this replica missing something causally required, for every
+   operation it actually receives? (THIS milestone, in production)
+3. What happens when two operations are genuinely concurrent?
+   (0.9.225's own audit, `CausalRelationship.CONCURRENT`)
+
+A genuinely gapped operation and a genuinely concurrent pair remain
+different problems with different honest answers. Gap recovery (fetching
+or waiting for a specific missing operationId), causal buffering
+(deferring application until a gap closes), conflict resolution (deciding
+what a concurrent pair means for the document), and remaining observation-
+only (if the product does not actually require reliable convergence) are
+four different directions — this codebase's own actual product
+requirements, not the mere existence of an observable feed, should decide
+which one, if any, comes next.

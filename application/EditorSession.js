@@ -14,6 +14,7 @@ import { ToolManager } from './ToolManager.js';
 import { CommandHistory } from './CommandHistory.js';
 import { CommandHistoryEvent } from './events/CommandHistoryEvent.js';
 import { RemoteDocumentOperationApplicationUseCase } from './RemoteDocumentOperationApplicationUseCase.js';
+import { DocumentOperationCausalGapObservationUseCase } from './DocumentOperationCausalGapObservationUseCase.js';
 import { SpatialEditingService } from './SpatialEditingService.js';
 import { TransformGizmoUseCase } from './TransformGizmoUseCase.js';
 import { TransformSettings } from './TransformSettings.js';
@@ -193,6 +194,13 @@ export class EditorSession {
         this._compositionPreviewUseCase = compositionPreviewUseCase;
         this._documentCommandPropagation = documentCommandPropagation;
         this._remoteDocumentOperationApplication = new RemoteDocumentOperationApplicationUseCase();
+        // 0.9.229 — Causal Gap Observation at the Propagation Boundary.
+        // One detector for the whole session's lifetime, never rebuilt in
+        // _rebuild() below — its own graph is already document-scoped
+        // (see core/DocumentOperationCausality.js's own header), so it
+        // tracks causal knowledge across every document this session ever
+        // opens without needing to know which one is "current."
+        this._documentOperationCausalGapObservation = new DocumentOperationCausalGapObservationUseCase();
 
         this._container = null;
         this._session = null;
@@ -263,6 +271,17 @@ export class EditorSession {
         // operation for a document this session isn't currently looking
         // at is NOT_APPLIED and forgotten, never queued — see that
         // method's own header on why.
+        // 0.9.229 — registered BEFORE the application subscription just
+        // below, so a received operation's causal gap is always observed
+        // ahead of `RemoteDocumentOperationApplicationUseCase#apply()` —
+        // matching docs/Roadmap.md, 0.9.229's own receive sequence. This
+        // ordering is a documented invariant, not a correctness
+        // requirement: `attachToPropagation()`'s own failure isolation
+        // (see that method's header) means the application subscription
+        // below runs identically whichever order these two are wired in.
+        this._unattachCausalGapObservation = this._documentCommandPropagation
+            ? this._documentOperationCausalGapObservation.attachToPropagation(this._documentCommandPropagation)
+            : null;
         this._unattachRemoteApplication = this._documentCommandPropagation
             ? this._remoteDocumentOperationApplication.attachToPropagation(
                 this._documentCommandPropagation,
@@ -271,6 +290,17 @@ export class EditorSession {
                     : null)
             )
             : null;
+    }
+
+    // 0.9.229 — lets a caller observe this session's own causal-gap
+    // results without reaching into a private field. Returns an
+    // unsubscribe function. When this session was built without a
+    // documentCommandPropagation, nothing is ever wired to publish a
+    // result, so the callback simply never fires — the same graceful-
+    // degradation posture every other optional collaborator here already
+    // takes.
+    onCausalGapObserved(callback) {
+        return this._documentOperationCausalGapObservation.onGapObserved(callback);
     }
 
     get commandHistory() {
@@ -1596,6 +1626,10 @@ export class EditorSession {
         if (this._unattachRemoteApplication) {
             this._unattachRemoteApplication();
             this._unattachRemoteApplication = null;
+        }
+        if (this._unattachCausalGapObservation) {
+            this._unattachCausalGapObservation();
+            this._unattachCausalGapObservation = null;
         }
     }
 
