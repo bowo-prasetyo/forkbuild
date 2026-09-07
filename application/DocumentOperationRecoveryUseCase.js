@@ -5,6 +5,7 @@ import { resolveSigningIdentityId } from '../identity/resolveSigningIdentityId.j
 import { CommandHistoryEvent } from './events/CommandHistoryEvent.js';
 import { toDocumentOperationEnvelope } from '../core/DocumentOperationEnvelope.js';
 import { CausalGapStatus } from '../core/DocumentOperationCausalGapDetector.js';
+import { DocumentOperationProvenance } from '../core/DocumentOperationProvenance.js';
 import {
     DocumentOperationRecoveryMessageKind,
     toDocumentOperationRecoveryRequestMessage,
@@ -106,6 +107,25 @@ const OPERATION_RECEIVED_EVENT = 'DocumentOperationRecoveryOperationReceived';
 // exists" is exactly the open question 0.9.229's own "Recommendation"
 // left for a later milestone — this one stops at making the evidence
 // available.
+//
+// 0.9.231 — RECOVERED provenance, named explicitly. `onOperationReceived()`
+// now fires a fifth argument, `provenance`, always
+// `DocumentOperationProvenance.RECOVERED` (`core/DocumentOperationProvenance.js`)
+// — additive only, every pre-0.9.231 subscriber (reading just the first
+// four arguments) is unaffected. This exists to keep a subtle confusion
+// from ever creeping in: `DocumentOperationCausalGraph#isKnown()` becomes
+// true for a recovered operation the MOMENT `DocumentOperationCausalGapObservationUseCase`
+// observes it (via its own `attachToPropagation()`, wired to THIS class's
+// feed) — but that is causal KNOWLEDGE, never document EXECUTION.
+// `application/CommandHistory.js#getExecutedCommands()` remains the only
+// source of truth for what actually changed this replica's own document
+// state, and this class never adds an entry to it. See
+// `core/DocumentOperationProvenance.js`'s own header for the full
+// KNOWN/EXECUTED/RECOVERED vocabulary, and
+// `tests/DocumentOperationProvenance.test.js` for the observable-behavior
+// proof that recovering an operation never mutates document state, never
+// reorders already-applied history, and remains a fully distinct act from
+// applying it.
 //
 // THE SECURITY BOUNDARY — recovery must never become an alternative trust
 // path. A RESPONSE's envelopes are re-verified through
@@ -233,14 +253,20 @@ export class DocumentOperationRecoveryUseCase {
         });
     }
 
-    // Fires `(documentId, command, authorIdentityId, causalPredecessors)`
-    // — the IDENTICAL shape `DocumentCommandPropagationUseCase#
-    // onOperationReceived()` fires, on purpose: see this file's own
-    // header, "Do not automatically apply," for why. Returns an
-    // unsubscribe function, mirroring every other subscription method in
-    // this codebase.
+    // Fires `(documentId, command, authorIdentityId, causalPredecessors,
+    // provenance)` — the first four exactly the IDENTICAL shape
+    // `DocumentCommandPropagationUseCase#onOperationReceived()` fires, on
+    // purpose: see this file's own header, "Do not automatically apply,"
+    // for why. `provenance` is the one addition, 0.9.231
+    // (`core/DocumentOperationProvenance.js`) — always
+    // `DocumentOperationProvenance.RECOVERED`, since every operation this
+    // feed ever fires for arrived through recovery, never execution. A
+    // caller that only reads the first four arguments (every subscriber
+    // wired before 0.9.231) is unaffected — the fifth argument is purely
+    // additive. Returns an unsubscribe function, mirroring every other
+    // subscription method in this codebase.
     onOperationReceived(callback) {
-        const subscription = this._eventBus.subscribe(OPERATION_RECEIVED_EVENT, ({ documentId, command, authorIdentityId, causalPredecessors }) => callback(documentId, command, authorIdentityId, causalPredecessors));
+        const subscription = this._eventBus.subscribe(OPERATION_RECEIVED_EVENT, ({ documentId, command, authorIdentityId, causalPredecessors, provenance }) => callback(documentId, command, authorIdentityId, causalPredecessors, provenance));
         return () => subscription.unsubscribe();
     }
 
@@ -353,7 +379,8 @@ export class DocumentOperationRecoveryUseCase {
                 documentId: result.documentId,
                 command: result.command,
                 authorIdentityId: result.authorIdentityId,
-                causalPredecessors: result.causalPredecessors
+                causalPredecessors: result.causalPredecessors,
+                provenance: DocumentOperationProvenance.RECOVERED
             });
         }
     }

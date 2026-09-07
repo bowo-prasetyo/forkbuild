@@ -79863,3 +79863,146 @@ merely recorded (as it is today), or applied immediately? That is the
 point where changing `RemoteDocumentOperationApplicationUseCase` becomes
 justified — if this codebase's own actual product requirements turn out
 to need causal consistency, not merely causal awareness.
+
+## 0.9.231 — Recovered Operation Provenance Boundary
+
+0.9.230 built the recovery seam without ever naming the one distinction
+that makes it safe to build on: a recovered operation and an executed one
+are not the same kind of fact. `DocumentOperationCausalGraph#isKnown()`
+becomes true for BOTH — 0.9.230 wires
+`DocumentOperationCausalGapObservationUseCase#attachToPropagation()` to
+`DocumentOperationRecoveryUseCase`'s own `onOperationReceived()` feed
+completely unmodified, on purpose, so a recovered operation becomes known
+to the causal graph exactly like a normally-received one would. Left
+unnamed, that is exactly the kind of fact a future component could
+accidentally treat as "already applied." This milestone names it before
+anything gets built on top of it:
+
+```text
+KNOWN     = DocumentOperationCausalGraph#isKnown() — this replica has
+            recorded the operation's causal identity. True for an
+            EXECUTED operation and a merely RECOVERED one alike.
+EXECUTED  = present in CommandHistory#getExecutedCommands() — the
+            operation actually changed this replica's own document state.
+RECOVERED = arrived via DocumentOperationRecoveryUseCase#onOperationReceived()
+            — verified causal evidence, never applied.
+```
+
+KNOWN does not imply EXECUTED. EXECUTED implies KNOWN. The reverse never
+holds, and this milestone's whole job is making sure nothing downstream
+ever assumes it does.
+
+### What this milestone adds
+
+`core/DocumentOperationProvenance.js` (new) — pure vocabulary, no state:
+
+```text
+DocumentOperationProvenance { EXECUTED, RECOVERED }
+isDocumentOperationProvenance(value)
+```
+
+No tracker, no map, no new query method on `CommandHistory` or
+`DocumentOperationCausalGraph`. In particular, `CommandHistory` gains no
+`containsApplied()` — its own pre-existing `getExecutedCommands()`/
+`getCommands()` already are the unambiguous record of every EXECUTED
+operation; this file names what that record already means rather than
+duplicating it into a second, trackable piece of state that could itself
+drift out of sync with the real source of truth.
+`application/CommandHistory.js` is UNTOUCHED by this milestone.
+
+`application/DocumentOperationRecoveryUseCase.js#onOperationReceived()`
+now fires a fifth argument:
+
+```text
+onOperationReceived(callback)
+    -> callback(documentId, command, authorIdentityId, causalPredecessors, provenance)
+       // provenance is always DocumentOperationProvenance.RECOVERED
+```
+
+Purely additive — every pre-0.9.231 subscriber, reading only the first
+four arguments (the identical shape
+`DocumentCommandPropagationUseCase#onOperationReceived()` fires), is
+unaffected. This is the one place the new vocabulary is actually threaded
+onto a real, running event: a caller reading this feed no longer has to
+infer provenance from "which feed am I subscribed to" — it is inline in
+the payload. There is no equivalent tag on the EXECUTED side: EXECUTED
+provenance is what `CommandHistory#execute()` — the one chokepoint every
+local edit and every `RemoteDocumentOperationApplicationUseCase#apply()`
+call already goes through — already, unambiguously, means.
+
+### Why the separation matters
+
+```text
+Alice: A -> B
+Bob receives B first: B -> GAP(A)
+Bob requests A. A arrives through recovery.
+
+Bob now knows:  A exists, A precedes B
+Bob's document state is still: state after B
+                         NOT:   state after A -> B
+```
+
+`causalGraph.isKnown(A) === true` must never be read as
+"`CommandHistory` has executed A." Those are different questions, and
+conflating them is exactly the mistake a future buffering/reordering
+milestone (0.9.229's own "Recommendation," still open) could make if this
+distinction stayed implicit.
+
+### Tests (`tests/DocumentOperationProvenance.test.js`)
+
+Every assertion reads state through public, pre-existing observation
+points — `CommandHistory#getExecutedCommands()`,
+`DocumentOperationCausalGapObservationUseCase#observe()`, and the new
+`provenance` argument — never a new piece of tracked state:
+
+1. Recovery does not mutate document state — recovering an operation never
+   touches `CommandHistory`; only the causal graph learns anything.
+2. Recovery preserves complete envelope identity — operationId,
+   documentId, authorIdentityId, command, and causalPredecessors all
+   survive unchanged, alongside the new provenance tag.
+3. Recovery vs application — recovering an operation never applies it;
+   explicitly handing that same recovered operation to
+   `RemoteDocumentOperationApplicationUseCase#apply()` DOES apply it,
+   proving the two are genuinely distinct acts with distinct,
+   independently-observable effects.
+4. Recovery followed by a normal duplicate delivery of the same operation
+   — ReplayGuard rejects the retransmission; the operation is neither
+   re-recovered nor silently applied through the duplicate.
+5. Recovery followed by a dependent operation — once a predecessor is
+   recovered, an operation naming it observes NO_GAP and applies through
+   the ordinary path completely normally; the recovered predecessor itself
+   remains unapplied throughout.
+6. Recovery does not reorder existing history — an operation already
+   applied before its own predecessor is recovered stays exactly where it
+   was; `CommandHistory` is byte-for-byte unchanged by the later recovery.
+7. Document isolation — a recovered operation, and the document state its
+   recovery deliberately never touches, both stay strictly scoped to the
+   document it was recovered for.
+8. Security preservation — a forged envelope is rejected by the same
+   verification chain 0.9.230 established and never reaches the
+   RECOVERED-provenance feed at all.
+
+### Deliberately excluded, on purpose
+
+No operation buffering, no delayed or automatic application, no causal
+reordering, no automatic replay, no rollback, no history rewriting, no
+conflict resolution, no CRDT, no OT, no synchronized undo, no offline
+queue, no retry, no convergence guarantee. `application/CommandHistory.js`
+is untouched, and no `containsApplied()` (or equivalent) is added to it.
+
+### Recommendation
+
+The provenance boundary is now explicit, not merely observed by
+convention. The genuinely hard question 0.9.229's own "Recommendation"
+first raised, and 0.9.230's own "Recommendation" restated, is still open
+and still deliberately unanswered here: when an operation arrives after
+its causal predecessor was recovered rather than normally received,
+should the predecessor now be applied? There are only a few coherent
+answers — stay arrival-ordered (do nothing further), causal buffering
+(don't apply a dependent until its predecessors are available),
+transformation/merge (a document-operation conflict model), or
+rebase/rollback (substantially more invasive). Choosing among them is a
+product decision this milestone deliberately declines to make; what it
+guarantees is that whichever answer comes next, it will be built on an
+architecture that already knows the difference between "I have evidence
+this operation exists" and "this operation changed my document."
