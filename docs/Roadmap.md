@@ -81578,3 +81578,106 @@ more than a validated domain object. Keeping those two apart from the
 start, rather than reaching for the collaboration machinery just
 because it now exists, is the same discipline this arc's own 0.9.241
 reassessment named as the danger to avoid.
+
+## 0.9.243 — Publication Commentary Storage Boundary
+
+0.9.242 drew the pure domain seam and deliberately stopped there. This
+milestone takes the next, and still deliberately narrow, step: how
+does a `PublicationCommentary` survive beyond the lifetime of the
+current JavaScript process? No UI, no networking, and no command/
+use-case layer.
+
+```text
+PublicationCommentary                  (0.9.242, unmodified)
+     │  toJSON() / fromJSON()
+     ▼
+PublicationCommentaryCollection        (0.9.242, unmodified)
+     ▼
+PublicationCommentaryStore             (this milestone)
+     │  save() / getById() / getForPublication() / loadAll()
+     ▼
+storage/StorageProvider.js             (generic, JSON-safe, injected)
+```
+
+### What this milestone adds
+
+* `storage/PublicationCommentaryStore.js` (new) — a narrow
+  application/storage boundary, in the same family as
+  `storage/LocalStoragePublicationObservationArchive.js` (0.8.75):
+  `save(commentary)`, `getById(commentaryId)`,
+  `getForPublication(publicationId)`, and `loadAll()`. No generic
+  `Repository<T>` abstraction — only the operations the immutable
+  0.9.242 model actually justifies. Takes an injected
+  `storage/StorageProvider.js`, defaulting to
+  `storage/LocalStorageProvider.js`, so a real caller needs to pass
+  nothing while a test injects an in-memory fake. The domain
+  (`core/PublicationCommentary.js`, `core/PublicationCommentaryCollection.js`)
+  stays completely unaware this file exists — no import of either core
+  file points here, and this file duplicates none of
+  `PublicationCommentary`'s own construction-time validation, relying
+  entirely on its `toJSON()`/`fromJSON()`.
+* **Append-only identity semantics for `commentaryId`.** Saving the
+  same id with an identical record is an idempotent no-op (`save()`
+  returns `false`, nothing is written); saving the same id with a
+  different record — different content, different `publicationId`, or
+  a different `createdAt` — throws the new
+  `PublicationCommentaryConflictError`, leaving the original record on
+  file untouched. There is no silent overwrite, no `update()`, and no
+  `remove()`.
+* **Corrupted storage degrades to an empty collection, never a thrown
+  error or a partially valid instance** — a non-array payload, an
+  individual malformed array entry, and a storage provider whose own
+  `load()` throws are all handled without letting an invalid record
+  escape as a domain object.
+* `tests/PublicationCommentaryStorage.test.js` (new), eight sections
+  mirroring the milestone's own brief: save-and-reload; querying
+  commentary scoped to one Publication; two Publications from the same
+  Document remaining disjoint storage scopes; all five fields
+  surviving a round trip; corrupted/malformed persisted records never
+  becoming valid commentary; duplicate-identity handling (identical
+  resave is idempotent, a differing resave is rejected, a
+  differing-`publicationId` resave is rejected rather than treated as
+  a re-target); append-only behavior (an existing record is
+  byte-for-byte unchanged after later saves); and restart semantics (a
+  fresh store instance over the same underlying storage sees every
+  previously saved record).
+
+Also registers `tests/PublicationCommentaryStorage.test.js` in
+`tests.html`'s own runner list.
+
+### Explicitly deferred
+
+Not part of this milestone, on purpose, not merely unbuilt yet: no
+commentary UI, no Publication editing, no deletion/retraction, no
+replies/threading, no likes/reactions, no moderation, no unread state,
+no notifications, no Nostr/Arweave/peer propagation, no real-time
+synchronization, no CRDT/OT, no collaboration `operationId` or causal
+metadata, no trust/ranking, no author-ownership semantics, and no
+generic repository abstraction. Most importantly: this milestone never
+routes commentary through the document collaboration propagation
+machinery (0.9.222-0.9.240) — a commentary is an authored record
+*about* a Publication, never an operation *on* one.
+
+### The emerging architecture
+
+```text
+Mutable Document
+      │  publish
+      ▼
+Immutable Publication
+      │
+      ├── distribution / discovery / World placement
+      │
+      └── Commentary
+            │
+            ▼
+      Commentary domain        (0.9.242)
+            │
+            ▼
+      Commentary storage       (0.9.243, this milestone)
+```
+
+The most likely next question is whether commentary needs to become
+visible to another user or device — networking/distribution, a
+separate milestone rather than something this storage boundary
+prematurely answers.
