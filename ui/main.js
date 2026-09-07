@@ -130,6 +130,8 @@ import { composeDiscoverSnapshotRuntime } from '../application/DiscoverSnapshotR
 import { executeDiscoverSnapshotCommand } from '../application/DiscoverSnapshotCommand.js';
 import { executeDiscoverSnapshotCandidatesCommand } from '../application/DiscoverSnapshotCandidatesCommand.js';
 import { WorldSnapshotDiscoveryMonitor } from '../application/WorldSnapshotDiscoveryMonitor.js';
+import { NostrPlaceNamingDiscoverySource } from '../application/NostrPlaceNamingDiscoverySource.js';
+import { composePlaceNamingDiscoveryRuntime } from '../application/PlaceNamingDiscoveryRuntimeComposition.js';
 import { executeResolveSelectedSnapshotCommand } from '../application/ResolveSelectedSnapshotCommand.js';
 import { MaterializeSnapshotFromSelectedCandidateUseCase } from '../application/MaterializeSnapshotFromSelectedCandidateUseCase.js';
 import { executeMaterializeSelectedSnapshotCommand } from '../application/MaterializeSelectedSnapshotCommand.js';
@@ -1835,6 +1837,34 @@ app.provide('discoverSnapshotCandidatesCommand', discoverSnapshotCandidatesComma
 // already was.
 const worldSnapshotDiscoveryMonitor = new WorldSnapshotDiscoveryMonitor({ discoverSnapshotCandidatesCommand });
 app.provide('worldSnapshotDiscoveryMonitor', worldSnapshotDiscoveryMonitor);
+
+// 0.9.257 — World View Place Naming Presentation.
+//
+// Composes the discovery query service Place Naming claims are searched
+// through — the transport-level half only. `NostrPlaceNamingDiscoverySource`
+// reuses the SAME `nostrRelayQueryClient` instance already constructed above
+// for Snapshot discovery — never a second relay client. Mirrors
+// `composeDiscoverSnapshotRuntime()`'s own graceful degradation one section
+// above: `nostrRelayQueryClient` MAY STILL RESOLVE `undefined` (see that
+// constant's own comment), in which case `sources` is an honest empty
+// roster rather than a synchronous construction throw —
+// `composePlaceNamingDiscoveryRuntime()`'s own header already documents an
+// empty `sources` array as a real, fully-usable `queryService`, never a
+// `null` degradation a caller would need to branch around.
+//
+// `ui/views/WorldView.js` — the only place `application/
+// WorldNavigationSession.js` actually lives — composes the REST of the
+// pipeline itself (which regions to query, and how to resolve a discovered
+// claim's own region back into a position), since only that session ever
+// holds the current World layout. This file hands it nothing more than the
+// query service a discovery command can be built against, exactly the same
+// restraint already drawn between `discoverSnapshotCandidatesCommand` above
+// and the view that actually calls it.
+const placeNamingDiscoverySources = nostrRelayQueryClient
+    ? [new NostrPlaceNamingDiscoverySource({ queryImpl: nostrRelayQueryClient })]
+    : [];
+const { queryService: placeNamingDiscoveryQueryService } = composePlaceNamingDiscoveryRuntime({ sources: placeNamingDiscoverySources });
+app.provide('placeNamingDiscoveryQueryService', placeNamingDiscoveryQueryService);
 
 // 0.9.152 — Selected Snapshot Candidate Resolution.
 //

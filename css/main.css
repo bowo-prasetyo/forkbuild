@@ -4850,6 +4850,24 @@ html, body {
     font-style: italic;
 }
 
+/* 0.9.257 — World View Place Naming Presentation. A "Nearby Place Names"
+   row wraps to a second line for its author label — unlike the single-line
+   rows above, a claim's own name and its claimant are both worth reading
+   in full, never truncated behind an ellipsis. */
+.world-view-place-naming-row {
+    flex-wrap: wrap;
+}
+
+.world-view-place-naming-author {
+    flex-basis: 100%;
+    font-size: 0.7rem;
+    color: #808080;
+}
+
+.world-view-place-naming-error {
+    color: #b08050;
+}
+
 /* ui/components/PlaceNamingPanel.js: the "More — other descriptions,
    claim history, import/export" disclosure gating everything past
    Community Names/Publish A Name — same full-width, caret-led button
