@@ -18894,3 +18894,66 @@ reused unchanged a third time — `type` plus whichever of
 invented for grouping's own sake.
 
 See `docs/Roadmap.md`, 0.8.154, for the full milestone entry.
+
+### A Discovered Naming Claim Is Still Just A Claim (0.9.253)
+
+0.5.2 already drew the line "A Name Is A Claim, Not A Fact" for a
+`PlaceNamingClaim` a replica already possesses. 0.9.253 (Place Naming
+Discovery Boundary) asks the identical question one hop earlier: does
+FINDING a claim — via a source this replica never explicitly asked, a
+relay, a peer, a future decentralized transport — change what that claim
+is worth? The product-direction conversation that requested this
+milestone named the risk directly: "discovery should not become
+placement." This principle names why that risk is real, and how this
+codebase refuses it structurally.
+
+**Discovery answers "what exists"; it never answers "what is true."**
+`application/PlaceNamingDiscoveryQueryService.js#search()` returns
+`core/PlaceNamingDiscoveryEnvelope.js`'s own validated shape — a claim
+that parses, carrying a signature that LOOKS like a signature. Nothing
+about having been discovered, rather than imported from a file
+(0.5.3) or read from local storage (0.5.2), makes that claim any more
+verified, any more authoritative, or any more likely to be adopted. A
+caller holding a freshly discovered envelope and a caller holding a
+freshly hand-typed JSON object are holding equally unverified data, and
+this codebase's own APIs make no distinction between them: both must
+pass through `identity/LocalAuthorizationVerifier.js#verifyPlaceNamingClaim()`
+— today reached via `application/PlaceNamingClaimExchange.js#importClaim()`,
+unchanged by this milestone — before either is worth anything more than
+"something, somewhere, claims this."
+
+**A wider reach is not a stronger claim.** It would be easy to reason
+that a claim ECHOED BY SEVERAL discovery sources, or DISCOVERED NEAR the
+Wanderer's own position, deserves more trust than one an author had to
+hand-carry as a file. Nothing in `core/PlaceNamingDiscoveryEnvelope.js`
+or `application/PlaceNamingDiscoveryQueryService.js` computes reach,
+counts sources, or ranks by proximity — `search()`'s own deduplication
+by `claim.id` exists only to avoid describing the SAME claim twice, never
+to accumulate corroborating "votes" for it. `core/PlaceNamingView.js#
+rankClaimsByName()` already answers the only question this codebase asks
+about multiple claims for one region — how many DISTINCT identities
+independently asserted the same name — and 0.9.253 changes nothing about
+how a discovered claim enters that count: it enters it, if at all, the
+same way an imported one always has, by first being adopted through
+`PlaceNamingClaimExchange#importClaim()`.
+
+**Discovery, selection, and presentation are three separate questions,
+answered by three separate layers.** "What Place Naming claims exist
+near here" (discovery — this milestone), "which of those are relevant to
+the Wanderer's current position" (selection — spatial relevance,
+computed entirely from the RECEIVER's own position, never encoded into
+the discovery protocol itself), and "what should World View actually
+show" (presentation) are kept structurally distinct, the identical
+three-layer separation `core/SnapshotWorldPlacement.js`'s own 0.9.159
+header already drew for a Snapshot's spatial meaning ("a materialized
+Snapshot is placed only by borrowing the RECEIVER's own, already-existing
+WorldPlacement... the PUBLISHER's own placement is never consulted at
+all"). A relay or peer answering a Place Naming discovery query is never
+asked "what is within 100 meters of the Wanderer" — that would smuggle
+the Wanderer's own live position into a wire protocol every future
+source must then also handle correctly. `application/
+PlaceNamingDiscoveryQueryService.js` returns everything a source is
+willing to hand back for a `discoveryTag`; whatever spatial relevance
+filtering happens next is entirely a later, separate caller's concern.
+
+See `docs/Roadmap.md`, 0.9.253, for the full milestone entry.
