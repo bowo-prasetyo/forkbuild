@@ -78988,3 +78988,176 @@ Section F's own gap — or making divergence at least OBSERVABLE before
 deciding it must be RECONCILED) already closes the gap this evidence
 actually describes. That is the same "evidence before commitment"
 discipline 0.9.222 through 0.9.225 have each now applied in turn.
+
+## 0.9.226 — Document Collaboration Consistency Policy Boundary
+
+0.9.225's own audit produced two kinds of result, and it is worth being
+precise about which is which before choosing what comes next. It proved
+**execution-path convergence**: local edits and applied remote operations
+share one chokepoint (`CommandHistory#execute()`), one undo stack, and
+one document-isolation boundary, all behaving exactly as 0.9.223/0.9.224
+designed. It did NOT prove, and in Sections D and F actively disproved,
+**replica convergence**: two authorized, honest replicas that both
+correctly apply everything they are individually told can still end up
+in permanently different states, with nothing anywhere that notices.
+Those are different claims, and the audit's own recommendation was
+explicit that closing that gap should not start with an algorithm —
+Lamport clocks, CRDTs, OT — chosen on the strength of two sections of
+evidence, but with the smaller question underneath all of them: *when
+two authorized replicas receive the same operations in different
+histories, what state are they supposed to converge to?* Nothing in
+`CommandHistory`, `DocumentCommandPropagationUseCase`, or the transport
+layer answers that today — not incorrectly, just not at all. This
+milestone answers it, in the only way that is honest before a
+synchronization mechanism has been chosen: by naming, explicitly, what
+the current answer already is.
+
+The audit's own findings split cleanly along five questions that had
+been getting silently collapsed into one word — "synchronization" — for
+four milestones running:
+
+```text
+Delivery      — did the operation arrive, and in what order?
+Application   — once arrived and authorized, when is it executed?
+Ordering      — what determines a replica's own CommandHistory order?
+Conflict      — what happens when two operations don't commute?
+Convergence   — do independent replicas end up in the same state?
+```
+
+Two further questions that sound adjacent to these — but are answered by
+different mechanisms, one of which does not exist — are named separately
+rather than folded into "delivery" or "conflict": whether a *duplicate*
+of an already-accepted operation is suppressed (it is, by the existing
+`replication/ReplayGuard.js`, unmodified since 0.9.222), and whether a
+*missing* operation another replica has is ever detected (it is not, by
+anything, anywhere — 0.9.225 Section F). Conflating those two is exactly
+how a system that handles replay correctly ends up looking, wrongly,
+like it also handles gaps.
+
+### What this milestone adds
+
+- `core/DocumentCollaborationConsistencyPolicy.js` — a pure descriptor,
+  never a decision engine. One frozen singleton,
+  `DOCUMENT_COLLABORATION_CONSISTENCY_POLICY`, with one field per
+  question above (`delivery`, `application`, `history`, `conflict`,
+  `missingOperations`, `duplicateOperations`, `undo`, `isolation`,
+  `convergence`), each valued from its own small, closed, frozen enum —
+  the identical single-current-value vocabulary shape
+  `core/DocumentOperationEnvelope.js#DocumentOperationKind` already uses
+  for `kind`. Every enum member's own comment cites the specific
+  0.9.225 section it is graded against, so this file can never quietly
+  drift from being a description of the running code into being a wish
+  about it. Consulted by nothing in `application/`, `peer/`, or
+  `replication/` — this milestone changes no production behavior, and
+  this file has no method that DOES anything. Its only job is to make
+  nine previously test-only, previously scattered-across-four-milestones
+  facts readable in one place, in one sitting:
+
+  ```text
+  delivery.order                       = NOT_GUARANTEED
+  application.remote                   = IMMEDIATE
+  history.orderingBasis                = ARRIVAL_ORDER
+  conflict.nonCommutingOperations      = UNDEFINED
+  missingOperations.detection          = NONE
+  duplicateOperations.suppression      = GUARANTEED
+  undo.scope                           = LOCAL_ONLY
+  undo.propagation                     = NEVER
+  isolation.acrossDocuments            = GUARANTEED
+  convergence.guaranteed               = NOT_GUARANTEED
+  ```
+
+- `tests/DocumentCollaborationConsistencyPolicy.test.js` — deliberately
+  much smaller than 0.9.225's own 742-line audit, because it is not a
+  second audit: it exercises the SAME real, unmodified chain
+  (`broadcastCommand()`/`onOperationReceived()`/`apply()`/
+  `attachToPropagation()`, the real `ReplayGuard`, the real
+  `CommandHistory`) just enough to demonstrate each policy field once,
+  and points back at 0.9.225's own section letters for the exhaustive
+  evidence rather than re-deriving it. Section 1 checks the policy's own
+  shape (frozen at every level, a closed vocabulary, not a mutable
+  config object someone could quietly reassign at runtime). Section 2
+  proves `application.remote = IMMEDIATE` directly against
+  `RemoteDocumentOperationApplicationUseCase#apply()` with no transport
+  and no `await` at all — the cleanest possible demonstration that
+  applying is a synchronous call onto `CommandHistory#execute()`, never
+  a queue. Sections 3-4 reproduce 0.9.225 Section D's own two-sided
+  result (an absolute-set rename diverges by delivery order; the
+  identical devices' relative-delta move on the identical brick still
+  commutes) to keep this file honest about the same thing 0.9.225 was
+  honest about: `conflict.nonCommutingOperations = UNDEFINED` describes
+  an absence of a designed rule, never a claim that every concurrent
+  pair necessarily diverges. Section 5 reproduces Section F's silent,
+  permanent divergence from a missing operation. Section 6 reproduces
+  Section J's ReplayGuard-suffices result, framed explicitly against
+  Section 5's opposite finding — "already seen this operation" and
+  "missing an operation someone else has" are different questions
+  answered by different (in one case, absent) mechanisms, and it would
+  be easy to misread one as evidence for the other. Sections 7-8
+  reproduce Sections H and I's own local-undo and cross-document
+  isolation findings in minimal form.
+
+### Deliberately excluded
+
+Everything 0.9.222 through 0.9.225 already excluded, unchanged, and for
+the identical reason each of those milestones gave: naming a boundary is
+not evidence that a specific mechanism on the other side of it is
+correct. Explicitly, none of the following exist anywhere in this
+diff: Lamport clocks, vector clocks, CRDTs, OT, sequence numbers, server
+authority, operation queues, buffering, retry, offline replay,
+missing-operation requests, automatic conflict resolution,
+last-writer-wins as a DESIGNED rule (as distinct from the emergent,
+undesigned side effect of arrival order this milestone's own
+`conflict.nonCommutingOperations` field names), synchronized undo,
+locking, conflict UI, operation transformation, and operation rebasing.
+Adding a logical clock merely because `delivery.order` currently reads
+NOT_GUARANTEED would be exactly the premature move this design
+conversation warned against: a clock establishes an ordering relation,
+but it answers neither what to do about a missing operation
+(`missingOperations.detection = NONE`) nor what a conflicting concurrent
+rename should resolve to (`conflict.nonCommutingOperations = UNDEFINED`)
+— both are still open questions after a clock exists, not questions a
+clock closes.
+
+Also excluded, on purpose: any verdict on whether the CURRENT policy
+values are acceptable product behavior. This milestone freezes what they
+ARE; it does not argue for or against any of them. That is explicitly
+the next decision, not this one.
+
+### Recommendation
+
+With the current semantics now frozen and named rather than merely
+demonstrated, the next milestone should be chosen by an actual product
+requirement, not by which distributed-systems algorithm is best known.
+Three directions are each internally consistent, and this milestone
+deliberately picks none of them:
+
+- **Causal delivery.** If the desired semantics are "operations should
+  be applied in causal order, and a missing operation must be
+  detected," the next milestone adds sequencing/causal metadata to
+  `core/DocumentOperationEnvelope.js` (additive, the same way 0.2.97
+  added ordering metadata to `core/WorldOperationEnvelope.js` without
+  reshaping it) and, eventually, a pending-operation mechanism —
+  changing `delivery.order` and `missingOperations.detection` first,
+  leaving `conflict.nonCommutingOperations` for later.
+- **Deterministic convergence.** If the desired semantics are "any two
+  replicas that receive the same operation set must eventually produce
+  the same document, regardless of order," the next milestone needs a
+  real conflict/convergence mechanism — CRDT- or OT-shaped, depending on
+  what the existing `application/commands/Command.js` model can actually
+  support — changing `conflict.nonCommutingOperations` and
+  `convergence.guaranteed` directly.
+- **Explicitly limited collaboration.** If the desired semantics are
+  "multiple authorized devices may edit, but conflicting concurrent
+  edits are not yet a supported scenario," the right next step may be no
+  synchronization mechanism at all — instead, surfacing this policy's
+  own current values to a caller (a warning, a "last edited by" marker,
+  a documented limitation) so the existing, honest behavior is at least
+  OBSERVABLE by whoever is editing, without any claim that it has been
+  RECONCILED.
+
+Each direction changes a different, now-named subset of this policy's
+own fields, and does so by editing this file's existing structure — a
+new enum member, a reassigned field — never by reshaping its contract.
+That is the whole point of writing the policy down before choosing: the
+next milestone's diff against `core/DocumentCollaborationConsistencyPolicy.js`
+becomes the precise, checkable record of what actually changed.
