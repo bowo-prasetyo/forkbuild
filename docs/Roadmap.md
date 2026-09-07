@@ -80239,3 +80239,137 @@ prerequisites become known) and deliberate arrival-order collaboration
 information only) — and only once that choice is made, design the
 smallest possible seam for it, kept separate from recovery, ordering, and
 conflict resolution.
+
+## 0.9.234 — Causal Application Readiness Boundary
+
+0.9.232 named Q3 ("is this operation causally eligible") purely in terms
+of `DocumentOperationCausalGraph#isKnown()` — true for an EXECUTED
+predecessor and a merely RECOVERED one alike (0.9.231's own distinction).
+That was the correct scope for 0.9.232 itself, but it leaves a fourth
+question unnamed:
+
+```text
+Q1  Did we receive it?              -> yes, by construction.
+Q2  Do we know its causal
+    predecessors?                   -> DocumentOperationCausalGapDetector
+                                        #detect() (0.9.228).
+Q3  Is it causally eligible?        -> DocumentOperationApplicationEligibility
+                                        (0.9.232) — reads KNOWN only.
+Q4  Have its causal predecessors
+    ACTUALLY been applied?          -> DocumentOperationApplicationReadiness
+                                        (this milestone) — reads EXECUTED.
+```
+
+Causally known does not mean causally applied:
+
+```text
+A -> B
+
+A = RECOVERED (verified causal evidence, never applied)
+B = RECEIVED
+
+causal graph knows A, so eligibility(B) = ELIGIBLE, but A never went
+through CommandHistory#execute(). If B is applied on the strength of
+ELIGIBLE alone, this replica executes B without ever having executed
+A -> B — the receiving replica's document state can genuinely diverge
+from what the author's own device actually produced.
+```
+
+### What this milestone adds
+
+`core/DocumentOperationApplicationReadiness.js` (new) — a pure decision
+boundary, no state, no queue, built directly on top of 0.9.232's own file:
+
+```text
+DocumentOperationApplicationReadiness { READY, NOT_READY }
+isDocumentOperationApplicationReadiness(value)
+
+evaluateApplicationReadiness(documentId, { operationId, causalPredecessors }, { causalGapDetector, executionHistory })
+    -> {
+           operationId,
+           documentId,
+           readiness: READY | NOT_READY,
+           eligibility: ELIGIBLE | NOT_ELIGIBLE,
+           missingCausalPredecessorIds: [...],
+           unexecutedCausalPredecessorIds: [...]
+       }
+```
+
+Composition, not duplication, twice over: `evaluateApplicationReadiness()`
+delegates Q2/Q3 entirely to `evaluateApplicationEligibility()` (which
+itself delegates to `DocumentOperationCausalGapDetector#detect()`) — it
+never re-walks `DocumentOperationCausalGraph` itself. Q4 is answered by
+delegating to an INJECTED `executionHistory` dependency — shaped simply as
+`{ isExecuted(documentId, operationId) }` — never by reaching into
+`application/CommandHistory.js` directly. `CommandHistory` gains no new
+method (no `containsApplied()`): the same restraint 0.9.231's own header
+already applied, so this boundary can never itself drift out of sync with
+`CommandHistory#getExecutedCommands()`, the one real source of truth for
+"was this actually applied." `executionHistory` has no default — unlike
+`causalGapDetector`, silently defaulting Q4 to "nothing is ever executed"
+would produce NOT_READY everywhere by construction, indistinguishable from
+a caller's own genuine empty history; callers must say explicitly what
+this replica's execution history is.
+
+`readiness` is `READY` only when BOTH gates clear: `eligibility` is
+`ELIGIBLE` (every predecessor KNOWN) AND every predecessor is also
+EXECUTED. `unexecutedCausalPredecessorIds` names every predecessor for
+which `executionHistory.isExecuted()` answers false — this includes
+predecessors that are not even known, since an unknown predecessor was,
+by construction, never executed either.
+
+### Tests (`tests/DocumentOperationApplicationReadiness.test.js`)
+
+Sections A-H exercise `evaluateApplicationReadiness()` directly, pure, no
+peers, no network, against the exact matrix this milestone set out to
+prove:
+
+1. Genesis (no predecessors) is unconditionally READY.
+2. A known AND executed predecessor makes an operation READY.
+3. A missing (entirely unknown) predecessor makes an operation NOT_READY,
+   named in both the missing and unexecuted lists.
+4. **The central case.** A predecessor known only through recovery
+   (KNOWN, never EXECUTED) makes a dependent ELIGIBLE yet NOT_READY —
+   the proof that eligibility and readiness are genuinely different
+   boundaries.
+5. A recovered predecessor that subsequently actually executes flips a
+   dependent from NOT_READY to READY, only on deliberate re-query, never
+   automatically.
+6. Multiple predecessors: one executed, one merely known, is enough to
+   make the dependent NOT_READY, naming exactly the unexecuted one.
+7. An operation concurrent with an unrelated, unexecuted one is READY on
+   its own merits — readiness never becomes a total-order mechanism.
+8. Document isolation — execution state recorded for one document never
+   makes an operation in a different document READY, even on an
+   identical operationId collision.
+
+Sections I-K wire real `application/CommandHistory.js` instances behind a
+small, TEST-ONLY adapter (`executionHistoryFromCommandHistories()` — not a
+change to `CommandHistory` itself) to prove the same distinction against
+actual execution history, that evaluating readiness never itself executes
+or reorders anything, and that the required-`executionHistory`/defaulted-
+`causalGapDetector` input discipline mirrors 0.9.232's own.
+
+### Deliberately excluded, on purpose
+
+No operation queue, no buffering, no pending-operation collection, no
+delayed application, no automatic replay, no reordering, no recovery
+changes, no `CommandHistory` changes, no conflict resolution, no CRDT, no
+OT, no synchronized undo, no convergence guarantee, no change to
+`ARRIVAL_ORDER`, no production enforcement. In particular, `NOT_READY`
+does not become a queue — nothing here gates, delays, or otherwise alters
+any existing call to
+`application/RemoteDocumentOperationApplicationUseCase.js#apply()`.
+
+### Recommendation
+
+Three independent facts about a received operation are now explicit and
+testable: received, causally eligible (known), and causally ready
+(applied). The next milestone is the real product decision this whole
+lineage has been building toward: choose between causal deferral
+(`NOT_READY` -> defer application until predecessors actually execute) and
+deliberate arrival-order collaboration (keep immediate application;
+readiness stays diagnostic/recovery information only, exactly like
+eligibility before it) — and design the smallest possible seam for
+whichever is chosen, kept separate from recovery, eligibility, and
+conflict resolution.
