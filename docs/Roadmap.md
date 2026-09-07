@@ -81222,3 +81222,129 @@ a genuine conflict-resolution/product-semantics question. The next
 milestone should be a product/architecture reassessment of that question,
 rather than automatically implementing CRDT/OT or another large
 collaboration mechanism.
+
+## 0.9.240 — Concurrent Document Conflict Semantics Reassessment
+
+0.9.239's own "Recommendation" named this milestone precisely: the causal
+arc (0.9.237-0.9.239) is closed — an operation is now applied only after
+every named causal predecessor has actually EXECUTED — and the remaining
+open question is a genuinely different one, first named by 0.9.226's own
+`ConcurrentConflictResolution = UNDEFINED`:
+
+```text
+What happens when two operations are causally READY, genuinely
+CONCURRENT (neither is a causal predecessor of the other), and cannot
+safely commute?
+```
+
+Test-only, architecture-audit work, exactly as 0.9.239's own
+"Recommendation" specified. This milestone implements NO new mechanism —
+no CRDT, no OT, no Lamport/vector clocks, no total ordering, no server
+arbitration, no last-write-wins rule, no deterministic tie-breaking, no
+merge commands, no conflict UI, no automatic conflict resolution, no
+synchronized undo, no rollback, no operation transformation, no new
+collaboration state machine. It gathers evidence, against the real,
+unmodified 0.9.222-0.9.239 chain, for one question this codebase had
+never directly asked its own running code: is divergent state under
+concurrent, non-commutative, causally-ready edits an ACCEPTED property
+of this collaboration model, or an undiscovered bug?
+
+### What this milestone adds
+
+`tests/ConcurrentDocumentConflictSemanticsAudit.test.js` (new), 68
+assertions across 8 sections, against real
+`DocumentOperationCausalGraph#compare()`, real
+`DocumentOperationDeferralUseCase`, real propagation/recovery/replay
+stacks, and real `CommandHistory` instances throughout:
+
+* **Section 1 — Commutative concurrent operations.** Two genuinely
+  concurrent `MoveBrickCommand` deltas, delivered in opposite order to
+  two independent replicas, converge to the identical final value — the
+  existing system already handles this shape of concurrency correctly,
+  with no conflict machinery involved.
+* **Section 2 — Non-commutative concurrent operations.** The identical
+  shape, with two `RenameGroupCommand` absolute-sets. `compare()` proves
+  the pair genuinely CONCURRENT on both replicas, and the two replicas
+  end up permanently different (`"Bob"` vs `"Alice"`) — an explicit,
+  expected, already-named property (`ConcurrentConflictResolution.
+  UNDEFINED`), not a defect this audit is reporting.
+* **Section 3 — Causal versus concurrent.** An explicit predecessor edge
+  (`A -> B`) and a genuinely unrelated pair delivered in the identical
+  wall-clock order never compare the same way — arrival order is never
+  silently promoted to a causal edge, in either direction, and the
+  CONCURRENT verdict is symmetric and independent of which operationId is
+  asked about first.
+* **Section 4 — Three-way concurrency.** A diamond, `A -> {B, C} -> D`,
+  with `B` and `C` two mutually CONCURRENT, non-commuting renames. `D`
+  always executes last, with an identical, deterministic result,
+  regardless of which of `B`/`C` happened to release first — proving
+  causal correctness (0.9.237) and conflict semantics (this milestone)
+  are genuinely orthogonal: the divergence risk lives entirely in the
+  CONCURRENT sibling pair, never in their causally-gated successor.
+* **Section 5 — Local/remote concurrency.** Real local edits interleaved
+  with real remote arrivals over an authenticated two-device network.
+  Neither replica's own local operations are ever recorded as causally
+  KNOWN to itself — not even to the authoring replica — while the
+  identical operations are ordinarily KNOWN, and correctly related, on
+  the RECEIVING replica. Local wall-clock timing never manufactures a
+  causal fact a replica has no actual basis for.
+* **Section 6 — Undo/redo remains local.** Across a genuinely diverged,
+  concurrent-conflict document, `CommandHistory#undo()`/`redo()` act
+  purely on the acting replica's own stack — undo can even revert a
+  REMOTE peer's own operation locally, but that reversal (and its redo)
+  never propagates, never implies synchronized undo, remote undo,
+  inverse-operation broadcast, or rollback of anyone else's state, and
+  never rewrites the causal record.
+* **Section 7 — Recovery interaction.** `A || B`, with `A` initially
+  missing and later recovered. Recovery establishes `A` as KNOWN without
+  ever retroactively imposing an ordering relationship with `B` —
+  CONCURRENT before recovery, CONCURRENT after recovery, and still
+  CONCURRENT after the recovered operation is actually executed via
+  `replay()`. Only the DOCUMENT VALUE (arrival-order-basis) moves; the
+  causal verdict never does — KNOWN, EXECUTED, and the causal
+  relationship between two operations are three independent facts.
+* **Section 8 — Policy contradiction search, and the evidence matrix.**
+  Every relevant `DOCUMENT_COLLABORATION_CONSISTENCY_POLICY` field is
+  re-verified against fresh, live evidence generated inside this section
+  (not merely inherited from earlier sections), plus an explicit
+  contradiction check: `ConcurrentConflictResolution.UNDEFINED` paired
+  with `ReplicaConvergenceGuarantee.NOT_GUARANTEED` is the one mutually
+  consistent pairing this suite's own evidence supports. The section logs
+  a conflict-semantics evidence matrix (situation / causal relation /
+  applies / order guaranteed / convergence guaranteed) — the artifact
+  this milestone exists to hand to the next product decision.
+
+### Recommendation
+
+The audit confirms what 0.9.226 and 0.9.239 already named, now with
+direct, reproduced evidence rather than inference: divergence under
+concurrent, non-commutative, causally-ready edits is a genuine,
+currently-accepted property of ForkBuild's collaboration model, not a
+bug nobody noticed. Causal correctness (0.9.237-0.9.239) and conflict
+semantics (this milestone) are proven orthogonal — Section 4 in
+particular shows a causally well-formed graph tolerates a genuinely
+unresolved conflict at one of its own joints without corrupting its own
+causal guarantee.
+
+The next milestone is a genuine product decision, not an automatic
+next step:
+
+```text
+                 0.9.240
+                    |
+          +---------+---------+
+          |                   |
+   divergence acceptable   convergence required
+          |                   |
+   retain current model    investigate mechanism
+                              |
+                        CRDT / OT / ordering /
+                        arbitration / etc.
+```
+
+Nothing in this codebase's own architecture demands an answer either
+way — `ConcurrentConflictResolution.UNDEFINED` and
+`ReplicaConvergenceGuarantee.NOT_GUARANTEED` remain honest, accurate,
+and untouched. Whichever way the product decision goes, this milestone's
+own evidence matrix is the reference point a future CRDT/OT/ordering
+milestone would need to justify itself against.
