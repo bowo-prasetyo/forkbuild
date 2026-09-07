@@ -2674,12 +2674,20 @@ export default {
         // deliberately: this view has no established authority for "how far
         // is a Place Naming claim," unlike `nearbyGeographicPlaces`'s own
         // already-established `session.getNearbyGeographicPlaces()` read.
+        // 0.9.260 — Nearby Place Naming Claim Interaction. `regionId`/
+        // `worldId` are added here — both already carried on
+        // `entry.claim` (core/PlaceNamingDiscoveryEnvelope.js's own
+        // required claim fields) but previously dropped by this mapping
+        // — so navigateToNearbyPlaceNamingClaim() below can target the
+        // claim's own region without reconstructing it from `position`.
         const nearbyPlaceNamingClaimRows = computed(() => (
             nearbyPlaceNamingClaims.value.map((entry) => ({
                 claimId: entry.claim.id,
                 name: entry.claim.name,
                 authorDisplayName: resolveIdentityDisplayName(entry.claim.authorIdentityId),
-                position: entry.position
+                position: entry.position,
+                regionId: entry.claim.regionId,
+                worldId: entry.claim.worldId
             }))
         ));
 
@@ -2697,6 +2705,36 @@ export default {
         function focusCollaboratorFromMap(deviceId) {
             session.focusCollaborator(deviceId);
             refreshSpatialUI();
+        }
+
+        // 0.9.260 — Nearby Place Naming Claim Interaction. Navigates the
+        // camera to the EXACT region a nearby claim names, reusing
+        // focusLocation() — the SAME navigation machinery
+        // focusLocationFromMap()/focusCollaboratorFromMap() above already
+        // call — rather than inventing a Place Naming-specific navigation
+        // system. Navigate is deliberately NOT adopt, verify, trust, or a
+        // preference: this function never touches WorldRegion naming,
+        // LocalPlaceNamingClaimStore, LocalNamePreferenceStore, or
+        // PlaceNamingClaimExchange — see this milestone's own
+        // docs/Roadmap.md entry.
+        //
+        // Cross-checks the claim's own worldId against session.getRegions()
+        // (each entry already carries both `id` and `worldId`) before
+        // navigating, so a stale claim can never be misdirected onto a
+        // different World's region that happens to reuse the same
+        // regionId. Fails gracefully with a feedback message — never a
+        // fallback to another region — when the claimed region no longer
+        // exists in a currently loaded World.
+        function navigateToNearbyPlaceNamingClaim(row) {
+            const regionStillExists = session.getRegions()
+                .some((region) => region.id === row.regionId && region.worldId === row.worldId);
+            if (!regionStillExists) {
+                feedback.show('That place no longer exists in this World');
+                return false;
+            }
+            session.focusLocation(row.regionId);
+            refreshSpatialUI();
+            return true;
         }
 
         // -----------------------------------------------------------------
@@ -3913,6 +3951,7 @@ export default {
             nearbyLandmarkRows,
             nearbyPeopleRows,
             goToNearbyCollaborator,
+            navigateToNearbyPlaceNamingClaim,
             goHome,
             openLocationsPanel,
             closeLocationsPanel,
@@ -4211,6 +4250,16 @@ export default {
                         <span class="world-view-nearby-row-label">✎ {{ claim.name }}</span>
                         <span class="world-view-nearby-row-distance" v-if="claim.position">at ({{ Math.round(claim.position.x) }}, {{ Math.round(claim.position.z) }})</span>
                         <span class="world-view-place-naming-author">claimed by {{ claim.authorDisplayName }}</span>
+                        <!-- 0.9.260 — Nearby Place Naming Claim Interaction.
+                             Navigate only ever moves the camera to the
+                             claim's own region via the existing World
+                             navigation machinery — it never adopts,
+                             verifies, or ranks this claim, and never
+                             renames the WorldRegion it points at. -->
+                        <button
+                            class="action-btn world-view-nearby-row-go"
+                            @click="navigateToNearbyPlaceNamingClaim(claim)"
+                        >Navigate</button>
                     </div>
                 </CollapsibleSection>
                 <!-- 0.9.17 — Integrate World Encounters into the Existing
