@@ -54,12 +54,22 @@ import { EditorSession } from '../application/EditorSession.js';
 //   Section B: document-switch behavior is preserved exactly as 0.9.223
 //              left it — Bob viewing a different document when an
 //              operation arrives means NOT_APPLIED, and it is never
-//              queued or replayed when Bob comes back.
+//              queued or replayed when Bob comes back. Updated by the
+//              0.9.239 audit: the NEXT operation, since it causally
+//              depends on the one refused while Bob was away, is now
+//              (0.9.237) correctly DEFERRED rather than applied on top of
+//              a predecessor Bob never received — this section's own
+//              openDocumentInSession() helper had quietly fallen out of
+//              sync with EditorSession#_rebuild()'s own 0.9.237 deferral
+//              attachment, which the audit found and fixed.
 //   Section C: execution-path convergence — the remote operation Bob's
 //              runtime applied produces the IDENTICAL state transition
 //              (same before -> after brick position) the same command
 //              produces when executed locally, because both paths end at
-//              the same CommandHistory#execute() chokepoint.
+//              the same CommandHistory#execute() chokepoint. Updated by
+//              the 0.9.239 audit to reopen Document X fresh on both
+//              replicas first, so this section's own comparison is never
+//              confused by Section B's now-permanently-deferred operation.
 class InMemoryStorageProvider extends StorageProvider {
     constructor() { super(); this._data = new Map(); }
     save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
@@ -180,12 +190,16 @@ function makeEditorRuntimeStack(device) {
     return { device, peerMessageBus, connectedPeerRegistry, documentManager, documentCommandPropagation, editorSession, rejected };
 }
 
-// Reproduces ONLY the two lines of EditorSession#_rebuild() this milestone
-// actually added (see application/EditorSession.js's own comment there) —
-// never the renderer/toolManager/input-dispatcher construction around
-// them, which needs a real browser and proves nothing about THIS
-// milestone. Calls the SAME real DocumentManager#newDocument() and
-// DocumentCommandPropagationUseCase#attachCommandHistory() a genuine
+// Reproduces the two lines of EditorSession#_rebuild() 0.9.224 actually
+// added (see application/EditorSession.js's own comment there), PLUS
+// 0.9.237's own per-document deferral attachment (added by the 0.9.239
+// audit, which found this helper had quietly fallen out of sync with
+// real _rebuild()/_teardown() — see Section B below) — never the
+// renderer/toolManager/input-dispatcher construction around them, which
+// needs a real browser and proves nothing about either milestone. Calls
+// the SAME real DocumentManager#newDocument(),
+// DocumentCommandPropagationUseCase#attachCommandHistory(), and
+// DocumentOperationDeferralUseCase#attachCommandHistory() a genuine
 // openDocument()/loadDocument() call would.
 function openDocumentInSession(session, document) {
     session._documentManager.newDocument(document);
@@ -196,6 +210,13 @@ function openDocumentInSession(session, document) {
             commandHistory: session._commandHistory
         })
         : null;
+    if (session._unattachDeferralCommandHistory) {
+        session._unattachDeferralCommandHistory();
+    }
+    session._unattachDeferralCommandHistory = session._documentOperationDeferral.attachCommandHistory({
+        documentId: document.world.id,
+        commandHistory: session._commandHistory
+    });
     return session._commandHistory;
 }
 
@@ -304,18 +325,33 @@ bobStack.connectedPeerRegistry.add(bobFromAlice);
         '8. Bob: refused at the trust boundary as UNKNOWN_DOCUMENT — the Editor\'s single-current-document resolveDocument has no record of X while Y is open, so this never even reaches RemoteDocumentOperationApplicationUseCase');
 
     // Bob switches BACK to Document X: the refused move2 is never queued
-    // or replayed — the next operation applies against 3 (never 3+1).
+    // or replayed on Bobs own behalf.
+    //
+    // 0.9.239 update: move3, Alice's own very next local edit, causally
+    // depends on move2 — DocumentCommandPropagationUseCase's own outgoing
+    // wiring always names a local operation's own immediately preceding
+    // local command as its causal predecessor (see that method's own
+    // header). Before 0.9.237 this applied unconditionally (ARRIVAL_ORDER
+    // never consulted causal predecessors at all); as of 0.9.237, Bob
+    // correctly recognizes move2 is genuinely missing — never received,
+    // never resent — and DEFERS move3 rather than silently stacking it on
+    // top of a predecessor he never actually got. This is the SAME
+    // boundary tests/DocumentOperationDeferralUseCase.test.js proves
+    // directly, now proven wired all the way through the real, composed
+    // EditorSession runtime this file exists to exercise.
     openDocumentInSession(bobStack.editorSession, bobDocX);
     const move3 = new MoveBrickCommand({ worldId: docXId, buildingId: buildingXId, brickId: brickXId, delta: { x: 2, y: 0, z: 0 } });
     aliceStack.editorSession.commandHistory.execute(move3);
     await wait(20);
 
-    assert(brickPosition(bobDocX, buildingXId, brickXId).x === 5,
-        '9. Bob: back on Document X, the next operation applies as 3 + 2 (never 3 + 1 + 2) — move2 was genuinely forgotten, never queued for replay');
-    assert(bobStack.editorSession.commandHistory.getExecutedCommands().length === 1,
-        '10. Bob: this fresh CommandHistory (from the second openDocumentInSession() call on Document X) grew by exactly the one operation that arrived while it was live');
+    assert(brickPosition(bobDocX, buildingXId, brickXId).x === 3,
+        '9. Bob: back on Document X, still exactly 3 — move3 names the forgotten move2 as its own causal predecessor, so the 0.9.237 deferral boundary retains it rather than applying it out of causal order');
+    assert(bobStack.editorSession.getDeferredOperationIds(docXId).includes(move3.id),
+        '10. Bob: move3 sits DEFERRED on his fresh CommandHistory for Document X, waiting on a predecessor that will never arrive — never silently applied, and never lost either');
+    assert(bobStack.editorSession.commandHistory.getExecutedCommands().length === 0,
+        '11. Bob: this fresh CommandHistory (from the second openDocumentInSession() call on Document X) has NOT grown — move2 was genuinely forgotten, never queued or replayed, and move3 is deferred rather than silently applied on top of it');
 
-    console.log('✓ Section B: document-switch isolation survives the full composed runtime — a refused operation is forgotten, never queued, never replayed on return');
+    console.log('✓ Section B: document-switch isolation survives the full composed runtime — a refused operation is forgotten, never queued or replayed, and an operation that causally depends on it is correctly deferred (0.9.237) rather than silently applied out of order');
 }
 
 // ---------------------------------------------------------------------
@@ -335,7 +371,21 @@ bobStack.connectedPeerRegistry.add(bobFromAlice);
     localHistory.execute(localCommand);
     const localAfter = brickPosition({ world: localWorld }, buildingXId, brickXId);
 
-    // Bob is currently on Document X at x=5 (Section B). The REMOTE path:
+    // The REMOTE path. 0.9.239 update: Document X's own causal chain, on
+    // BOTH replicas, still carries move3 sitting DEFERRED on Bobs side
+    // behind the permanently-missing move2 (Section B) — genuinely
+    // unresolved, exactly as 0.9.237 intends, not a bug this section
+    // should route around by pretending it never happened. So this
+    // section reopens Document X FRESH on both replicas first (a real
+    // document reload, through the SAME openDocumentInSession() every
+    // other section already uses) — a clean causal chain on both sides,
+    // exactly like a genuine new editing session, so the comparison below
+    // is never confused by an unrelated, already-proven finding from
+    // Section B.
+    openDocumentInSession(aliceStack.editorSession, buildOneBrickDocument({ worldId: docXId, buildingId: buildingXId, brickId: brickXId, authorIdentityId: alice.identity.identityId, title: "Alice's Structure" }));
+    const bobDocXFresh = buildOneBrickDocument({ worldId: docXId, buildingId: buildingXId, brickId: brickXId, authorIdentityId: alice.identity.identityId, title: "Alice's Structure" });
+    openDocumentInSession(bobStack.editorSession, bobDocXFresh);
+
     // Alice executes the SAME SHAPE of command (a +4 move) locally; Bob's
     // composed runtime applies it without this test calling apply().
     const remoteBefore = brickPosition(bobStack.documentManager.document, buildingXId, brickXId);
@@ -345,9 +395,9 @@ bobStack.connectedPeerRegistry.add(bobFromAlice);
     const remoteAfter = brickPosition(bobStack.documentManager.document, buildingXId, brickXId);
 
     assert(remoteAfter.x - remoteBefore.x === localAfter.x - localBefore.x,
-        '11. execution-path convergence: the remote-applied operation produced the IDENTICAL state transition (delta x=4) the same command produces when executed through the local CommandHistory chokepoint');
-    assert(bobStack.editorSession.commandHistory.getExecutedCommands().length === 2,
-        '12. Bob: the remotely-applied command sits on the SAME CommandHistory a local command would, right after the one already there');
+        '12. execution-path convergence: the remote-applied operation produced the IDENTICAL state transition (delta x=4) the same command produces when executed through the local CommandHistory chokepoint');
+    assert(bobStack.editorSession.commandHistory.getExecutedCommands().length === 1,
+        '13. Bob: the remotely-applied command sits on this fresh CommandHistory for Document X — move4 is a genesis operation on the reopened chain, so this is the only entry');
 
     console.log('✓ Section C: local and remote commands converge on the SAME execution path (CommandHistory#execute()) — a claim about execution-path convergence only, never about replica convergence under concurrent/ordered edits');
 }
