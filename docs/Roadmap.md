@@ -83062,3 +83062,98 @@ automatic proximity selection, World View presentation, and an end-to-end
 audit. As with every roadmap arc recorded here, only the immediate next
 milestone is treated as committed; whether each later step remains
 necessary, in that order, is a question for the seam audit at each one.
+
+## 0.9.254 — Nostr Place Naming Discovery Source
+
+0.9.253 named the discovery contract every source must satisfy —
+`{ search(discoveryTag) -> Promise<rawPayload[]> }` — and deliberately
+left `sources` an honest empty roster, since no concrete transport existed
+yet. This milestone wires the first one: `application/
+NostrPlaceNamingDiscoverySource.js`, a Nostr relay reading counterpart
+built against the SAME shared NIP-01 transport (`nostr/
+NostrRelayQueryClient.js`, 0.9.147) `application/
+NostrSnapshotDiscoveryQueryService.js` (0.9.133) already uses for
+Snapshot discovery, applied to Place Naming's own discovery tag instead.
+
+```
+Nostr relay
+     │
+     │   REQ { kinds, "#t": [discoveryTag], limit }
+     ▼
+application/NostrPlaceNamingDiscoverySource.js   (0.9.254)
+     .search(discoveryTag) -> raw event.content strings, unparsed
+     │
+     ▼
+application/PlaceNamingDiscoveryQueryService.js   (0.9.253, unmodified)
+     parses each raw payload, isolates a failing source, dedups by claim.id
+```
+
+One new file, and one deliberate departure from the pattern its nearest
+Snapshot sibling already established:
+
+* **A transport shim, never a second parser.** `application/
+  NostrSnapshotDiscoveryQueryService.js` parses `parseSnapshotDiscoveryEnvelope()`
+  itself and returns already-validated candidates, because nothing else in
+  the Snapshot family was ever going to re-parse an event's content a
+  second time. Place Naming's own aggregator already does — `
+  PlaceNamingDiscoveryQueryService.search()` was built, unmodified, to
+  accept exactly `rawPayload[]` and run `parsePlaceNamingDiscoveryEnvelope()`
+  over every one itself. So `NostrPlaceNamingDiscoverySource` does the one
+  thing only it can do — run the relay exchange and hand back each
+  matching event's own `.content`, unparsed, in order, never deduplicated
+  — and imports nothing from `core/PlaceNamingDiscoveryEnvelope.js` at
+  all. `tests/NostrPlaceNamingDiscoverySource.test.js`'s own Section J
+  proves this structurally: the file has zero import statements.
+* **A relay/transport failure rejects `search()`**, never degrading to
+  `[]` the way `NostrSnapshotDiscoveryQueryService.search()` does. Its
+  only caller — `PlaceNamingDiscoveryQueryService.search()` — already
+  isolates a rejecting source via `Promise.allSettled()` (0.9.253);
+  swallowing the error here a second time would only discard information
+  the layer above already handles correctly. A malformed or content-less
+  individual event is still silently skipped, never a reason to reject the
+  whole query — only a genuine transport failure (a rejecting `queryImpl`,
+  a timeout, a non-array resolution) rejects.
+* **No deduplication of its own.** Two events announcing the same
+  `claim.id` both come through as two independent raw payloads —
+  `PlaceNamingDiscoveryQueryService`'s own first-occurrence dedup (0.9.253)
+  still collapses them one layer up, proven directly in the new test file's
+  own Section H rather than merely asserted.
+
+One new test file, `tests/NostrPlaceNamingDiscoverySource.test.js`
+(eleven sections): correct NIP-01 filter construction; event-to-payload
+decoding, in order; malformed/content-less events silently skipped;
+relay failure/timeout/non-array-resolution all reject `search()`;
+duplicate announcements remain independently observable at the source
+level while the existing aggregator still dedups them; a constructor
+throw with no `queryImpl`; a structural, zero-import proof of "no
+semantic leakage"; and a FLAGSHIP section driving the real, unmodified
+`NostrRelayQueryClient` and the real, unmodified
+`PlaceNamingDiscoveryQueryService` through the new source end-to-end via
+a fake WebSocket — one shared Nostr transport now serving three
+independent discovery families (`NostrDiscoveryQueryService`,
+`NostrSnapshotDiscoveryQueryService`, and this one). Registered in
+`tests.html`.
+
+### What this milestone deliberately excludes
+
+Per the product-direction conversation's own explicit scope: publishing a
+Nostr Place Naming announcement (a future `NostrPlaceNamingDiscoveryPublisher`,
+never built here); wiring this source into `application/
+PlaceNamingDiscoveryRuntimeComposition.js`'s `sources` roster or into
+`ui/main.js`; any other concrete source (Arweave, WebRTC peer exchange, a
+file-import bridge); any signature/NIP verification; and — held over
+unchanged from 0.9.253 — proximity/radius selection, ranking, trust
+scoring, automatic adoption, automatic World registration or renaming,
+and any UI or World View presentation. This milestone only makes a
+candidate discoverable through one more transport; it changes nothing
+about what happens to a candidate once discovered.
+
+### What comes after
+
+Per the product-direction conversation's own proposed arc: `0.9.255 —
+Place Naming Proximity Selection`, a pure function computing which
+discovered claims are spatially relevant to the Wanderer's current
+position — the World View's own spatial decision, never the discovery
+layer's — followed by World View presentation and an end-to-end audit.
+As with every roadmap arc recorded here, only the immediate next
+milestone is treated as committed.
