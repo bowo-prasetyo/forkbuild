@@ -80006,3 +80006,146 @@ product decision this milestone deliberately declines to make; what it
 guarantees is that whichever answer comes next, it will be built on an
 architecture that already knows the difference between "I have evidence
 this operation exists" and "this operation changed my document."
+
+## 0.9.232 — Causal Application Eligibility Boundary
+
+0.9.228-0.9.231 answered two separate questions about an operation this
+replica has received:
+
+```text
+Q1: Did we receive it?            -> yes, by construction.
+Q2: Do we know its causal
+    predecessors?                 -> DocumentOperationCausalGapDetector
+                                      #detect() (0.9.228), refined by
+                                      0.9.231 into KNOWN != EXECUTED.
+```
+
+Nothing before this milestone named the third question, or drew a line
+between it and Q2:
+
+```text
+Q3: Should we apply it?           -> PRODUCT POLICY.
+```
+
+Today's actual policy
+(`core/DocumentCollaborationConsistencyPolicy.js`, 0.9.226) already answers
+Q3 unconditionally: `remoteApplication = IMMEDIATE`,
+`history.orderingBasis = ARRIVAL_ORDER`. 0.9.228's own Section H already
+proves a GAPPED operation is applied exactly like an ungapped one. This
+milestone does not change that policy. It gives the Q2/Q3 boundary its own
+name and its own descriptor — separate from `CausalGapStatus`, separate
+from `application/CommandHistory.js` — so a future milestone that ever
+makes Q3 depend on something other than Q2's own answer has a seam to
+extend, instead of overloading `CausalGapStatus` (which must keep meaning
+exactly what 0.9.228 defined) or reaching into `CommandHistory` itself.
+
+### What this milestone adds
+
+`core/DocumentOperationApplicationEligibility.js` (new) — a pure decision
+boundary, no state, no queue:
+
+```text
+DocumentOperationApplicationEligibility { ELIGIBLE, NOT_ELIGIBLE }
+isDocumentOperationApplicationEligibility(value)
+
+evaluateApplicationEligibility(documentId, { operationId, causalPredecessors }, { causalGapDetector })
+    -> {
+           operationId,
+           documentId,
+           eligibility: ELIGIBLE | NOT_ELIGIBLE,
+           missingCausalPredecessorIds: [...]
+       }
+```
+
+Deliberately two values, not three — no `BLOCKED`, `WAITING`, `PENDING`.
+Those describe lifecycle behavior a future buffering mechanism would own;
+this milestone computes a fact about the present moment only.
+
+Composition, not duplication: `evaluateApplicationEligibility()` delegates
+to a `DocumentOperationCausalGapDetector`'s own `detect()` rather than
+re-walking `DocumentOperationCausalGraph` itself, and never calls
+`record()`. Today, ELIGIBLE/NOT_ELIGIBLE and NO_GAP/GAP happen to coincide
+for every operation, because current Q3 policy never looks past Q2's own
+answer — that coincidence is not a reason to collapse the two
+vocabularies. `CausalGapStatus` answers "what does this replica currently
+know"; eligibility answers "can this operation safely enter the
+application path." A later milestone that wants Q3 to consider something
+Q2 never did extends this file, without reopening
+`core/DocumentOperationCausalGapDetector.js`'s own, already-settled
+contract.
+
+A pure, stateless query, exactly like `detect()` itself: never mutates the
+detector it is given, never records the operation it was asked about,
+produces the identical answer for the identical inputs regardless of call
+order. `application/CommandHistory.js` is UNCHANGED, and nothing here is
+wired to gate, delay, or otherwise alter any existing call to
+`application/RemoteDocumentOperationApplicationUseCase.js#apply()`.
+
+### Why this is the right next seam
+
+```text
+A -> B, Bob receives B first.
+
+Before: B -> GAP -> apply B                 (0.9.228, unconditional)
+Now:    B -> causal observation -> eligibility -> { ELIGIBLE | NOT_ELIGIBLE }
+                                        |
+                                        existing apply() machinery,
+                                        completely untouched, either way
+```
+
+An operation can be causally ineligible for application even though it has
+been successfully received and verified — that is now an explicit,
+testable fact, independent of how (or whether) this codebase eventually
+acts on it.
+
+### Tests (`tests/DocumentOperationApplicationEligibility.test.js`)
+
+Every section exercises `evaluateApplicationEligibility()` directly, pure,
+no peers, no network:
+
+1. A genesis operation (no predecessors) is unconditionally eligible.
+2. A complete predecessor makes an operation eligible.
+3. A causal gap makes an operation not eligible, naming the missing
+   predecessor exactly.
+4. A diamond-shaped dependency with only one sibling known is not
+   eligible, naming exactly the missing one.
+5. A gap resolves to eligible on re-query once the missing predecessor is
+   recorded, with nothing automatic in between.
+6. A predecessor made known purely through recovery (never executed)
+   still satisfies eligibility — causal knowledge, not execution history,
+   is what eligibility reads.
+7. An operation being known/recovered does not, by itself, make THAT
+   operation eligible — eligibility depends on its own predecessor list,
+   never on its own presence in the causal graph.
+8. Document isolation — causal knowledge from one document can never make
+   an operation in a different document eligible, even on an identical
+   operationId collision.
+9. Eligibility evaluation is not history repair — an operation already
+   applied under today's ARRIVAL_ORDER policy, before its own predecessor
+   was known, stays exactly where it was after that predecessor becomes
+   known and eligibility is re-evaluated (repeatedly); `CommandHistory` is
+   byte-for-byte unchanged.
+10. Input validation and defaults mirror the same closed-vocabulary
+    discipline every sibling file in this lineage already applies.
+
+### Deliberately excluded, on purpose
+
+No operation queue, no buffering, no delayed execution, no automatic
+replay, no causal reordering, no rollback, no history rewriting, no
+retransmission, no retry, no CRDT, no OT, no conflict resolution, no
+synchronized undo, no convergence guarantee. `application/CommandHistory.js`
+is unchanged by this milestone.
+
+### Recommendation
+
+The Q2/Q3 boundary is now explicit and independently testable, but
+observing it changes nothing about running behavior yet — every operation
+this codebase actually applies today still applies immediately, eligible
+or not. The next milestone should spend some time simply OBSERVING real
+eligibility results (wiring `evaluateApplicationEligibility()` alongside
+the existing gap-observation feed, without acting on its answer) before
+deciding whether the product genuinely needs "not eligible -> wait." Only
+if that observation period demonstrates a real need should a following
+milestone introduce the smallest possible buffering mechanism, with its
+own explicit semantic contract — never inventing that policy inside this
+file, and never inside `application/CommandHistory.js` by surprise.
