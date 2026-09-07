@@ -19134,3 +19134,61 @@ round-trip failed," with only a small, optional, non-authoritative error
 indicator changing.
 
 See `docs/Roadmap.md`, 0.9.257, for the full milestone entry.
+
+### Navigation Is Not Adoption (0.9.260)
+
+0.9.257 drew the line for merely DISPLAYING a nearby claim ("Presentation
+Is Not Adoption"). 0.9.260 (Nearby Place Naming Claim Interaction) asks
+the identical question one step further in: does letting a person ACT on
+a displayed claim — moving the camera to the place it names — cross that
+line either? It does not, and this milestone draws the boundary
+structurally, not just by restraint:
+
+**Navigate moves a camera; it never moves a name.** `WorldNavigationSession
+#focusLocation(regionId)` — the exact function every other "go to X"
+action in `ui/views/WorldView.js` already calls — reads a `WorldRegion`'s
+own current position and nothing else. It has no parameter for a name, no
+path back into `WorldRegion#rename()` or any command that could reach one,
+and no awareness that the id it was handed came from a Place Naming claim
+rather than a landmark, a structure, or a plain "Places" row. The claim
+supplies a coordinate to travel to; it supplies nothing else, and could
+not, because `focusLocation()` was never built to accept anything else.
+
+**Navigate is not Adopt, Verify, Trust, or Prefer — because it never asks
+any of their questions.** Adopting a claim means calling
+`PlaceNamingClaimExchange#importClaim()`, which asks "is this claim
+well-formed and validly signed?" before storing it. Verifying means asking
+`identity/LocalAuthorizationVerifier.js#verifyPlaceNamingClaim()` that same
+question in isolation. Preferring means calling
+`LocalNamePreferenceStore#setPreferredName()`, which asks "should THIS
+name win locally?" `navigateToNearbyPlaceNamingClaim()` asks none of these
+— its own one substantive question is "does a region matching this
+claim's own `regionId`/`worldId` still exist in a currently loaded World?",
+answered by reading `session.getRegions()`, a plain positional index that
+has no concept of a claim's validity, trustworthiness, or rank at all. A
+claim that fails every one of those other three questions — forged,
+unverifiable, universally distrusted — is navigated to exactly as readily
+as one that would pass them, because navigation was never evaluating any
+of that in the first place.
+
+**The `worldId` cross-check exists to keep navigation honest about WHERE,
+never about WHETHER.** Plain `focusLocation(regionId)` alone resolves by
+id only; two different Worlds' regions that happen to share an id would
+let a stale claim's `regionId` resolve onto the wrong World's ground.
+Checking the claim's own `worldId` against `session.getRegions()` before
+navigating closes that misdirection — but it is a precision guard on the
+DESTINATION, not a trust gate on the CLAIM: a claim naming a real,
+correctly-scoped region is navigated to unconditionally, with no
+verification step interposed. Tightening precision is not the same
+capability as adding authority, and this milestone adds only the former.
+
+**A failed navigation has no fallback, because a fallback would be a
+second opinion this milestone has no authority to offer.** When a claimed
+region no longer resolves, `navigateToNearbyPlaceNamingClaim()` shows one
+graceful message and stops — it never guesses a "close enough" destination
+from the claim's own stale position, and never suggests the geographically
+nearest surviving region instead. Either action would quietly manufacture
+a navigation opinion this milestone was never asked to hold; failing
+honestly costs nothing a fallback would have been worth pretending to add.
+
+See `docs/Roadmap.md`, 0.9.260, for the full milestone entry.

@@ -83821,3 +83821,106 @@ adoption; a standalone verification-trigger UI; notifications; and
 competing-name handling/moderation. Selecting one is a separate, later,
 evidence-driven decision — the same restraint 0.9.221, 0.9.241, 0.9.250,
 0.9.252, and now 0.9.259 have all held.
+
+## 0.9.260 — Nearby Place Naming Claim Interaction
+
+0.9.259's reassessment ranked candidate 1 the most direct, evidence-backed
+seam of the seven it found: "navigate to a discovered claim's region" is a
+pure reachability gap, not a missing capability —
+`application/WorldNavigationSession.js#focusLocation(regionId)` already
+exists, unmodified, and the only reason nothing could call it was that
+`ui/views/WorldView.js`'s own `nearbyPlaceNamingClaimRows` mapping dropped
+`regionId`/`worldId` before they ever reached the template, even though a
+discovery envelope (`core/PlaceNamingDiscoveryEnvelope.js`) genuinely
+carries both. This milestone closes exactly that seam, and nothing else:
+
+```
+Nostr claim -> automatic discovery -> nearby claim -> World View row
+    -> [Navigate] -> existing WorldNavigationSession#focusLocation(regionId)
+```
+
+Per this milestone's own authority boundary: Navigate is never Adopt,
+never Verify, never Trust, and never "set preferred name." A claim
+navigated to remains exactly as independent and unranked as it was before
+— only the camera moves.
+
+Production changes, both in `ui/views/WorldView.js`:
+
+* `nearbyPlaceNamingClaimRows` now maps `entry.claim.regionId`/
+  `entry.claim.worldId` through into each row, alongside the fields it
+  already carried (`claimId`/`name`/`authorDisplayName`/`position`).
+* A new `navigateToNearbyPlaceNamingClaim(row)` function, wired to a new
+  "Navigate" button on each Nearby Place Names row (matching the
+  Info/Go-button pattern every sibling Nearby section — Places, Landmarks,
+  People — already uses). It cross-checks the claim's own `worldId`
+  against `session.getRegions()` (which already carries both `id` and
+  `worldId` per entry) before calling `session.focusLocation(row.regionId)`
+  — the SAME navigation boundary `focusLocationFromMap()`/
+  `focusCollaboratorFromMap()` already call, never a new,
+  Place-Naming-specific navigation mechanism. A region that no longer
+  resolves (removed, or belonging to a World that is no longer loaded)
+  fails gracefully with a feedback message and no fallback to any other
+  region; a `worldId` mismatch (a stale claim whose `regionId` happens to
+  collide with an unrelated region in a different World) is refused the
+  same way, even though plain `focusLocation(regionId)` alone — with no
+  such cross-check — would have resolved it onto the wrong World's region.
+
+Adds `tests/PlaceNamingNearbyNavigation.test.js`, sixteen sections: nearby
+claim rows now carry `regionId`/`worldId` (A); Navigate invokes the
+existing `focusLocation()` boundary, proven via a call-count spy (B); the
+exact claimed region is targeted, never a different, merely-nearby one in
+the same World (C); two claims navigate independently (D); navigation
+never modifies `WorldRegion` naming (E), never adopts (imports/stores) the
+claim (F), never calls into signature verification — proven against a
+verifier armed to throw on any use (G), and never ranks or re-ranks
+competing claims, both behaviorally (`getDisplayPlaceName` unchanged) and
+structurally (the function's own source carries no ranking vocabulary)
+(H); a missing region fails without fallback (I); a stale claim can never
+be misdirected onto an unrelated region that happens to reuse the same
+`regionId` in a different World — with a direct proof that plain
+`focusLocation()` alone would have gotten it wrong (J); two World View
+sessions stay fully isolated (K); once a World unloads, a stale captured
+row can no longer trigger navigation (L); the manual `PlaceNamingPanel` is
+untouched — still never calling `focusLocation()` itself, still carrying
+exactly its own five pre-existing verbs (M); the discovery/proximity
+pipeline (0.9.253-0.9.256) received zero changes (N); a FLAGSHIP driving a
+real Nostr event through real discovery, real proximity selection, a real
+presentation row, and a real `focusLocation()` navigation end to end (O);
+and an architectural regression confirming every reproduction above
+genuinely matches `ui/views/WorldView.js`'s own real source, including a
+forbidden-vocabulary sweep of the new function itself (P).
+
+Updates `tests/PostPlaceNamingProductReassessment.test.js` (0.9.259) in
+place to reflect the gap it found being closed here: Sections C/E now
+assert the row carries `regionId`/`worldId` and the automatic section
+renders a Navigate button (previously asserted absent); Sections I/L/M are
+annotated, not silently rewritten, to show candidate 1 as `BUILT (0.9.260)`
+while the remaining three `MISSING_UI` findings and the ranking of the
+other six candidates stand exactly as 0.9.259 recorded them. Registers the
+new test in `tests.html`.
+
+### What this milestone deliberately excludes
+
+Every other candidate 0.9.259 ranked: adopting a discovered claim, setting
+a local preference for one, exporting/sharing one before adoption, a
+standalone verification-trigger UI, notifications, and competing-name
+handling/moderation. No verification, moderation, notification, or
+competing-name-resolution capability is added. No generic
+`PlaceNamingNavigationUseCase` or other new abstraction is introduced —
+the existing `WorldNavigationSession#focusLocation()` boundary already
+covered exactly what this milestone needed, so the milestone connects two
+existing systems rather than inventing a name for a small change.
+
+### What comes after
+
+Per the product-direction conversation's own proposed arc: `0.9.261 —
+Navigation Lifecycle Audit`, a small audit immediately following this one
+(mirroring 0.9.258's own audit-after-a-build-milestone shape) rather than
+proceeding straight to adoption — Navigate introduces a genuinely new
+boundary (a decentralized claim becoming an input to World navigation
+while remaining completely outside World naming authority) worth proving
+holds under concurrency, failure, and lifecycle churn before building on
+top of it. `0.9.262 — Post-Navigation Product Reassessment` would follow;
+adoption remains the leading candidate from 0.9.259's own ranking, but
+only if that reassessment still says so. As with every roadmap arc
+recorded here, only the immediate next milestone is treated as committed.

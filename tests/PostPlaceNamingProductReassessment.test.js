@@ -276,7 +276,12 @@ async function runTests() {
         }
 
         // C2. The automatic "Nearby Place Names" row — extracted verbatim
-        // from ui/views/WorldView.js's own template block.
+        // from ui/views/WorldView.js's own template block. UPDATED BY
+        // 0.9.260 — Nearby Place Naming Claim Interaction: a "Navigate"
+        // button now exists on this row, closing exactly the one verb
+        // (navigate) this section originally found missing. select
+        // (prefer) and copy/share (export) remain deliberately unbuilt —
+        // this milestone's own brief drew the line at navigation alone.
         const nearbyBlock = worldView.match(/<!-- 0\.9\.257 — World View Place Naming Presentation\.[\s\S]*?<\/CollapsibleSection>/)[0];
         assert(nearbyBlock.includes('world-view-place-naming-row'), 'C2a. the discovered-claim row block was located.');
 
@@ -284,15 +289,15 @@ async function runTests() {
             ['display (name)', /\{\{\s*claim\.name\s*\}\}/.test(nearbyBlock)],
             ['display (author)', /claim\.authorDisplayName/.test(nearbyBlock)],
             ['display (position)', /claim\.position/.test(nearbyBlock)],
-            ['inspect (beyond the row itself)', /@click/.test(nearbyBlock)],
-            ['navigate (Info/Go, matching every sibling Nearby section)', /<button/.test(nearbyBlock)],
+            ['navigate (button, matching every sibling Nearby section)', /<button/.test(nearbyBlock) && /navigateToNearbyPlaceNamingClaim/.test(nearbyBlock)],
             ['select (prefer)', /prefer/i.test(nearbyBlock)],
             ['copy/share (export)', /export/i.test(nearbyBlock)]
         ];
         assert(automaticRow[0][1] && automaticRow[1][1] && automaticRow[2][1],
             'C2b. the discovered-claim row DOES display name, author, and position — display is real.');
-        assert(!automaticRow[3][1] && !automaticRow[4][1] && !automaticRow[5][1] && !automaticRow[6][1],
-            'C2c. the discovered-claim row carries NO click handler, NO button of any kind (Info/Go/Prefer/Export) — every OTHER Nearby section (Places, Landmarks, People) renders at least one <button> per row; Place Naming\'s own row renders none. Display exists; inspect/navigate/select/copy-share do not.');
+        assert(automaticRow[3][1], 'C2c. UPDATED BY 0.9.260 — the discovered-claim row now carries a real Navigate button, calling navigateToNearbyPlaceNamingClaim(), matching every OTHER Nearby section\'s (Places, Landmarks, People) own at-least-one-<button>-per-row pattern.');
+        assert(!automaticRow[4][1] && !automaticRow[5][1],
+            'C2d. select (prefer) and copy/share (export) remain absent from the automatic row — 0.9.260 deliberately scoped itself to navigation only; see this milestone\'s own docs/Roadmap.md entry.');
 
         // C3. Confirm the sibling sections' own buttons, so C2c's claim
         // ("every OTHER section has one") is proven, not merely asserted.
@@ -301,10 +306,10 @@ async function runTests() {
         const peopleBlock = worldView.match(/<CollapsibleSection\s+title="Nearby People"[\s\S]*?<\/CollapsibleSection>/)[0];
         for (const [name, block] of [['Places', placesBlock], ['Landmarks', landmarksBlock], ['People', peopleBlock]]) {
             const buttonCount = (block.match(/<button/g) || []).length;
-            assert(buttonCount >= 1, `C3. "Nearby ${name}" renders at least one <button> per row (found ${buttonCount} in its own block) — Place Naming\'s own row (C2c) is the one Nearby section with none.`);
+            assert(buttonCount >= 1, `C3. "Nearby ${name}" renders at least one <button> per row (found ${buttonCount} in its own block) — Place Naming\'s own row (C2c) now matches this pattern too, as of 0.9.260.`);
         }
 
-        console.log('✓ C: Manual PlaceNamingPanel supports display, inspect, select (prefer), and copy/share (export/import) — five of six interaction verbs, missing only "navigate" because it is opened already scoped to its region. The automatic Nearby Place Names row supports ONLY display — no inspect, navigate, select, or copy/share of any kind — the one Nearby section (of four) with zero interactive buttons, confirmed against real source, not merely against a header comment.');
+        console.log('✓ C: Manual PlaceNamingPanel supports display, inspect, select (prefer), and copy/share (export/import) — five of six interaction verbs, missing only "navigate" because it is opened already scoped to its region. The automatic Nearby Place Names row now supports display AND navigate (0.9.260) — select (prefer) and copy/share (export) remain deliberately unbuilt, confirmed against real source, not merely against a header comment.');
     }
 
     // ---------------------------------------------------------------
@@ -383,21 +388,31 @@ async function runTests() {
         const openNamingPanelCallers = await grepCount('openNamingPanel(', ['ui/views/WorldView.js']);
         assert(openNamingPanelCallers === 1, `E1d. openNamingPanel() is defined/called within exactly one file (ui/views/WorldView.js, found in ${openNamingPanelCallers} file) — every entry point funnels into the SAME function, never a duplicate.`);
 
-        // E2. The one thing this sweep was built to find: zero of those
-        // entry points, and zero NEW code, connects a discovered claim's
-        // own regionId to openNamingPanel() at all.
+        // E2. UPDATED BY 0.9.260 — Nearby Place Naming Claim Interaction.
+        // At the time this reassessment was written, zero entry points and
+        // zero new code connected a discovered claim's own regionId to
+        // ANY navigation or naming-panel action; regionId/worldId were
+        // dropped by nearbyPlaceNamingClaimRows before ever reaching the
+        // template (see the original finding preserved in Section I's own
+        // history). 0.9.260 closed exactly that gap — restoring
+        // regionId/worldId to the row and wiring a Navigate action through
+        // the existing session.focusLocation() — while leaving
+        // openNamingPanel() itself untouched: Navigate still never opens
+        // the manual naming surface, and still never adopts/verifies/
+        // prefers a name, so E2a's own boundary continues to hold exactly
+        // as written.
         const nearbyBlock = worldView.match(/<!-- 0\.9\.257 — World View Place Naming Presentation\.[\s\S]*?<\/CollapsibleSection>/)[0];
         assert(!nearbyBlock.includes('openNamingPanel') && !nearbyBlock.includes('openNames'),
-            'E2a. The Nearby Place Names block itself never calls openNamingPanel()/openNames* — it is not wired to the existing manual surface.');
+            'E2a. The Nearby Place Names block still never calls openNamingPanel()/openNames* — Navigate (0.9.260) reuses session.focusLocation(), never the manual naming surface.');
         const rowMapping = worldView.match(/const nearbyPlaceNamingClaimRows = computed\(\(\) => \([\s\S]*?\)\);/)[0];
-        assert(!rowMapping.includes('regionId') && !rowMapping.includes('worldId'),
-            'E2b. nearbyPlaceNamingClaimRows itself drops regionId/worldId when mapping from the monitor\'s own entries — even though core/PlaceNamingProximitySelection.js\'s own header confirms each entry carries them (envelope-level worldId/regionId, attached position) — so the one piece of data a "go to this claim\'s region" action would need is discarded before it ever reaches the template.');
+        assert(rowMapping.includes('regionId') && rowMapping.includes('worldId'),
+            'E2b. UPDATED BY 0.9.260 — nearbyPlaceNamingClaimRows now carries regionId/worldId through from the monitor\'s own entries, closing the gap this section originally found: the one piece of data a "go to this claim\'s region" action needed is no longer discarded before it reaches the template.');
 
-        // E3. Confirm the data IS actually there to be dropped — the real
-        // monitor's own envelope shape genuinely carries regionId/worldId
-        // at the point nearbyPlaceNamingClaimRows reads from
-        // (nearbyPlaceNamingClaims.value), so E2b is a mapping choice, not
-        // a genuine data-availability limitation.
+        // E3. Confirm the data genuinely originates one layer down — the
+        // real monitor's own envelope shape carries regionId/worldId at
+        // the point nearbyPlaceNamingClaimRows reads from
+        // (nearbyPlaceNamingClaims.value) — the same source 0.9.260's own
+        // row mapping now forwards rather than discards.
         const parsed = parsePlaceNamingDiscoveryEnvelope(JSON.stringify({
             protocol: 'forkbuild-place-naming-discovery', version: 1, worldId: 'w1', regionId: 'r1',
             claim: {
@@ -406,9 +421,9 @@ async function runTests() {
             }
         }));
         assert(parsed && parsed.regionId === 'r1' && parsed.worldId === 'w1',
-            'E3. A real, freshly-parsed discovery envelope genuinely carries regionId/worldId at its own top level — the exact fields E2b found missing from the presentation row are present one layer down, confirming this is a reachability gap, not a missing capability.');
+            'E3. A real, freshly-parsed discovery envelope genuinely carries regionId/worldId at its own top level — the exact fields E2b originally found missing from the presentation row, and which 0.9.260 now forwards through.');
 
-        console.log('✓ E: Three independent, already-wired entry points (Locations panel, Geographic Place panel, Focus panel) all reach the SAME openNamingPanel() function, never a duplicate. The Nearby Place Names row is the one surface with zero such wiring — and the data a "go to this claim" action would need (regionId/worldId) is present on the real envelope one layer below the presentation mapping, dropped only at the point WorldView.js builds its own display rows.');
+        console.log('✓ E: Three independent, already-wired entry points (Locations panel, Geographic Place panel, Focus panel) all reach the SAME openNamingPanel() function, never a duplicate. The Nearby Place Names row still never wires into that manual surface — but as of 0.9.260 it no longer discards regionId/worldId, and now reuses session.focusLocation() directly for Navigate instead.');
     }
 
     // ---------------------------------------------------------------
@@ -583,14 +598,16 @@ async function runTests() {
 
     // ---------------------------------------------------------------
     // Section I — Missing UI gaps found, itemized and classified.
+    //
+    // UPDATED BY 0.9.260 — Nearby Place Naming Claim Interaction: the
+    // "navigate" gap this section originally itemized here (restoring
+    // regionId/worldId to nearbyPlaceNamingClaimRows plus a Go/Info
+    // button) has since been built — see Sections C/E, above. It is
+    // removed from this register rather than left asserting a gap that
+    // no longer exists; the three remaining findings are unchanged.
     // ---------------------------------------------------------------
     {
         const gaps = [];
-        gaps.push({
-            name: 'navigate to a discovered claim\'s region',
-            classification: 'MISSING_UI',
-            evidence: 'Section C2c/C3, Section E2. Every sibling Nearby section (Places/Landmarks/People) renders an Info/Go button; Place Naming\'s own row renders none. session.focusLocation(regionId) (existing, unmodified) and openNamingPanel(regionId) (existing, unmodified) already provide everything a Go/Info pair would need. Requires restoring regionId to nearbyPlaceNamingClaimRows (currently dropped, Section E2b) plus two buttons.'
-        });
         gaps.push({
             name: 'adopt (import) a discovered claim',
             classification: 'MISSING_UI',
@@ -599,7 +616,7 @@ async function runTests() {
         gaps.push({
             name: 'set a local preference for a discovered claim\'s name',
             classification: 'MISSING_UI',
-            evidence: 'application/LocalNamePreferenceStore.js#setPreferredName(worldId, regionId, name) (existing, unmodified) takes a plain name string and needs no prior adoption — it already works today for any regionId this replica knows a WorldRegion for. Blocked only by regionId being dropped from the row (same root cause as the navigate gap).'
+            evidence: 'application/LocalNamePreferenceStore.js#setPreferredName(worldId, regionId, name) (existing, unmodified) takes a plain name string and needs no prior adoption — it already works today for any regionId this replica knows a WorldRegion for. regionId is no longer dropped from the row as of 0.9.260 (the same fix that closed the navigate gap); only a "Prefer" button and its click handler remain unbuilt.'
         });
         gaps.push({
             name: 'export/share a discovered claim before adopting it',
@@ -610,9 +627,9 @@ async function runTests() {
         for (const gap of gaps) {
             assert(gap.classification.startsWith('MISSING_UI'), `I1. "${gap.name}" is classified MISSING_UI, never MISSING_DOMAIN_CAPABILITY — every collaborator it would need already exists, exported, unmodified.`);
         }
-        assert(gaps.length === 4, 'I2. Four concrete MISSING_UI gaps were itemized, each independently evidenced above.');
+        assert(gaps.length === 3, 'I2. Three concrete MISSING_UI gaps remain itemized, each independently evidenced above — navigate (originally a fourth) was closed by 0.9.260.');
 
-        console.log('✓ I: Four MISSING_UI gaps found, each independently evidenced against real code, each requiring zero new domain capability — navigate, adopt, set-preference, and (lower priority) export-before-adopt.');
+        console.log('✓ I: Three MISSING_UI gaps remain, each independently evidenced against real code, each requiring zero new domain capability — adopt, set-preference, and (lower priority) export-before-adopt. (navigate, originally itemized here, was closed by 0.9.260.)');
         console.log('\nMissing-UI register:');
         for (const gap of gaps) {
             console.log(`    ${gap.name.padEnd(46)} ${gap.classification}`);
@@ -722,20 +739,28 @@ async function runTests() {
     }
 
     // ---------------------------------------------------------------
-    // Section L — Candidate ranking. Nothing built.
+    // Section L — Candidate ranking, as reassessed at 0.9.259.
+    //
+    // UPDATED BY 0.9.260: candidate 1 (navigate) named here has since
+    // been BUILT — see Sections C/E/I, above. The register below is kept
+    // as the historical ranking this milestone actually produced (nothing
+    // else was selected or built at 0.9.259); only the length assertion
+    // is relaxed to acknowledge candidate 1's resolution rather than
+    // asserting a stale "nothing built yet" over it.
     // ---------------------------------------------------------------
     {
         const ranked = [
-            '1. Navigate to a discovered claim\'s region — restore regionId to nearbyPlaceNamingClaimRows and add Info/Go buttons, matching the exact pattern every sibling Nearby section already uses. Zero new domain capability (Section I).',
+            '1. Navigate to a discovered claim\'s region — restore regionId to nearbyPlaceNamingClaimRows and add Info/Go buttons, matching the exact pattern every sibling Nearby section already uses. Zero new domain capability (Section I). BUILT at 0.9.260.',
             '2. Adopt a discovered claim — an "Adopt" button reshaping entry.claim into a publication package and calling the existing session.importPlaceNamingClaim(). PROVEN end to end with zero production changes (Section F). The most evidence-backed candidate this milestone found.',
-            '3. Set a local preference for a discovered claim\'s name — reuses setPreferredPlaceName(regionId, name) once regionId is restored (candidate 1\'s own prerequisite).',
+            '3. Set a local preference for a discovered claim\'s name — reuses setPreferredPlaceName(regionId, name) once regionId is restored (candidate 1\'s own prerequisite, satisfied as of 0.9.260).',
             '4. Export/share a discovered claim before adopting — smaller, lower-priority; needs one extra construction step (PlaceNamingClaim.fromJSON) that candidates 1-3 do not.',
             '5. Verification-trigger UI (check without adopting) — MISSING_DOMAIN_CAPABILITY, would need a new, narrower entry point into verifyPlaceNamingClaim() that does not also import.',
             '6. Notifications — the standing gap named at 0.9.221/0.9.241/0.9.250/0.9.252, unchanged, genuinely absent codebase-wide.',
             '7. Competing-name handling beyond ranking, and moderation/reporting — both MISSING_DOMAIN_CAPABILITY, both deliberately deferred per existing docs/Principles.md entries.'
         ];
-        assert(ranked.length === 7, 'L1. Seven candidates ranked, spanning both this milestone\'s own MISSING_UI findings and its reconfirmed MISSING_DOMAIN_CAPABILITY findings.');
-        console.log('✓ L: Seven candidates ranked by evidence strength and implementation size, nothing selected or built — per this milestone\'s own brief, and the exact restraint 0.9.221/0.9.241/0.9.250/0.9.252 already established for this recurring milestone shape.');
+        assert(ranked.length === 7, 'L1. Seven candidates were ranked at 0.9.259, spanning both this milestone\'s own MISSING_UI findings and its reconfirmed MISSING_DOMAIN_CAPABILITY findings — candidate 1 has since been built (0.9.260), the other six stand exactly as ranked.');
+        assert(ranked[0].includes('BUILT at 0.9.260'), 'L2. The ranking record itself is annotated, not silently rewritten, to reflect candidate 1\'s resolution.');
+        console.log('✓ L: Seven candidates were ranked by evidence strength and implementation size at 0.9.259; candidate 1 (navigate) has since been built at 0.9.260 — per the exact restraint 0.9.221/0.9.241/0.9.250/0.9.252 already established for this recurring milestone shape, nothing else was selected or built here.');
     }
 
     // ---------------------------------------------------------------
@@ -757,8 +782,8 @@ async function runTests() {
 'CLAIM INTERACTION (display/inspect/navigate/select/copy-share)\n' +
 '    Manual PlaceNamingPanel: five of six verbs present (all but\n' +
 '    navigate, which its own entry pattern makes unnecessary).\n' +
-'    Automatic Nearby Place Names row: DISPLAY ONLY — the one Nearby\n' +
-'    section (of four) with zero interactive buttons (Section C)\n' +
+'    Automatic Nearby Place Names row: DISPLAY + NAVIGATE as of 0.9.260 —\n' +
+'    select (prefer) and copy/share (export) remain unbuilt (Section C)\n' +
 '\n' +
 'CLAIM IDENTITY/PROVENANCE BOUNDARY\n' +
 '    Claim identity, place identity, author identity, discovery-source\n' +
@@ -784,11 +809,11 @@ async function runTests() {
 '    behaviorally (a live region.name observed across a full discover-\n' +
 '    select-present cycle) (Section H)\n' +
 '\n' +
-'MISSING_UI (four, each requiring zero new domain capability)\n' +
-'    1. navigate to a discovered claim\'s region\n' +
-'    2. adopt (import) a discovered claim — PROVEN end to end\n' +
-'    3. set a local preference for a discovered claim\'s name\n' +
-'    4. export/share a discovered claim before adopting (smaller)\n' +
+'MISSING_UI (three remain, each requiring zero new domain capability;\n' +
+'a fourth — navigate — was closed by 0.9.260)\n' +
+'    1. adopt (import) a discovered claim — PROVEN end to end\n' +
+'    2. set a local preference for a discovered claim\'s name\n' +
+'    3. export/share a discovered claim before adopting (smaller)\n' +
 '\n' +
 'MISSING_DOMAIN_CAPABILITY (four, reconfirmed, unchanged)\n' +
 '    verification-trigger UI (check without adopting)\n' +
@@ -799,8 +824,8 @@ async function runTests() {
 'OBSOLETE/DUPLICATE CANDIDATES\n' +
 '    None found (Section K)\n' +
 '\n' +
-'RANKED CANDIDATES (named, not built)\n' +
-'    1. Navigate to a discovered claim\'s region\n' +
+'RANKED CANDIDATES (as ranked at 0.9.259; candidate 1 built at 0.9.260)\n' +
+'    1. Navigate to a discovered claim\'s region — BUILT (0.9.260)\n' +
 '    2. Adopt a discovered claim — most evidence-backed, proven viable\n' +
 '    3. Set a local preference for a discovered claim\'s name\n' +
 '    4. Export/share a discovered claim before adopting\n' +
@@ -818,7 +843,7 @@ async function runTests() {
 '    domain itself (Section J\'s four candidates are real, but none of\n' +
 '    them is where the strongest evidence points).\n');
 
-        console.log('✓ Section M: Verdict recorded. The Place Naming pipeline remains COMPLETE and unchanged (Section A); repository-wide reachability holds across seven of eight named areas, with peer exchange deliberately deferred (Section B); claim interaction is asymmetric — five of six verbs on the manual surface, display-only on the automatic one (Section C); the identity/provenance boundary remains structurally enforced (Section D); the manual/automatic comparison this milestone\'s own brief asked for produced a PROVEN, not merely asserted, central finding — adoption of a discovered claim already works end to end through existing, unmodified code (Section F); the World-location-naming boundary is confirmed frozen (Section G); the explicitly-requested negative audit found no path from a nearby claim to a WorldRegion\'s own name, anywhere (Section H). Four MISSING_UI and four MISSING_DOMAIN_CAPABILITY findings are itemized and ranked (Sections I, J, L), with no obsolete/duplicate implementation found (Section K). No implementation happens in this milestone.');
+        console.log('✓ Section M: Verdict recorded. The Place Naming pipeline remains COMPLETE and unchanged (Section A); repository-wide reachability holds across seven of eight named areas, with peer exchange deliberately deferred (Section B); claim interaction was asymmetric at 0.9.259 — five of six verbs on the manual surface, display-only on the automatic one — and, as of 0.9.260, the automatic row also carries Navigate (Section C); the identity/provenance boundary remains structurally enforced (Section D); the manual/automatic comparison this milestone\'s own brief asked for produced a PROVEN, not merely asserted, central finding — adoption of a discovered claim already works end to end through existing, unmodified code (Section F); the World-location-naming boundary is confirmed frozen (Section G); the explicitly-requested negative audit found no path from a nearby claim to a WorldRegion\'s own name, anywhere (Section H). Four MISSING_UI and four MISSING_DOMAIN_CAPABILITY findings were itemized and ranked at 0.9.259 (Sections I, J, L); one MISSING_UI finding (navigate) has since been built at 0.9.260, leaving three, with no obsolete/duplicate implementation found (Section K). No implementation happened in this milestone (0.9.259) itself.');
     }
 
     console.log('\n✅ All PostPlaceNamingProductReassessment tests passed.');
