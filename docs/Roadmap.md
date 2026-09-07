@@ -82799,3 +82799,119 @@ and commentary synchronization — plus 0.9.250's own remaining
 commentary UI items (identity-to-profile-name resolution, surfacing
 `getById()`), unaffected by this milestone. Selecting one is a separate,
 later, evidence-driven decision.
+
+## 0.9.252 — Post-Commentary-UI Product Reassessment
+
+Test/document-only, no production changes. 0.9.250 froze the Publication
+Commentary baseline and swept the repository for reachability; 0.9.251
+closed the one concrete UI gap that sweep found (commentary count)
+without opening a new state or application seam. Per 0.9.250's own
+Section F ("Not selected here... choosing and building one is a
+separate, later, evidence-driven decision"), this milestone is that
+reassessment — deliberately NOT another Commentary extension, but a
+fresh look at whether the repository holds another small, already-built
+capability that is merely unreachable, or whether a new product
+direction should be chosen instead.
+
+Adds `tests/PostCommentaryUIProductReassessment.test.js`, five sections:
+
+* **Section A — Freeze.** Reuses `tests/PostPublicationCommentaryProductReassessment.test.js`
+  (0.9.250) and `tests/PublicationCommentaryCountUI.test.js` (0.9.251) as
+  the authoritative record rather than reproducing them; re-verifies a
+  representative sample of the pipeline (domain, storage, authenticated
+  write, read, session delegation, and 0.9.251's own count closure)
+  fresh against the real source.
+* **Section B — Capability/reachability matrix, re-run for newly
+  exposed consequences.** All twelve areas (Editor, World Navigation,
+  World Presence, Vehicles, Publication, Snapshot, Collaboration,
+  Discovery, Distribution, Recovery, History, Commentary) remain
+  COMPLETE at the composition-root level — no new macro gap. But a
+  genuine newly-exposed consequence surfaces on closer inspection:
+  `CanCommentOnPublicationUseCase`'s own 0.9.246 policy was always
+  ownership-agnostic ("any Publication that resolves," never "any
+  Publication I own"), and `WorldNavigationSession#getPublicationCommentaries()`
+  carries no ownership check either — yet `getPublicationCommentariesCommand`/
+  `addPublicationCommentaryCommand` are wired to exactly one UI binding
+  (`OwnPublicationPanel` inside `ui/views/WorldView.js`), and every
+  Discovery-facing component that actually renders OTHER users'
+  Publications (`PublicationCard`, `PublicationCatalog`,
+  `PublicationPreview`, `PublicationList`, `DecentralizedPublicationsView`,
+  `WorldEncounterCanvas`) carries zero commentary vocabulary. Commentary
+  on a non-own Publication is fully permitted two layers down and
+  reachable from nowhere a person could actually click —
+  `REACHABLE_BUT_INTERNAL` at the UI-wiring layer, a finding 0.9.250's
+  own sweep (which only examined Commentary's own seams) did not surface
+  because Commentary was not yet complete enough to make it concrete.
+* **Section C — Reassess the six domain-level candidates.** Navigation,
+  notifications, discovery (commentary-aware search/ranking),
+  persistence management, moderation/removal, and synchronization are
+  each individually re-verified `MISSING_DOMAIN_CAPABILITY` against real
+  code, unchanged since 0.9.250. `getById()` is explicitly reconfirmed
+  `REACHABLE_BUT_INTERNAL` and deliberately left untouched — no
+  demonstrated user action requires individual Commentary identity, so
+  no caller is manufactured here just to exercise it.
+* **Section D — The architectural investigation this milestone's own
+  brief asked for by name.** Does a genuine Publication inspection/
+  detail surface already exist, now that Publications carry both
+  Snapshot and Commentary? Tested fact by fact against real source:
+  `OwnPublicationPanel`'s own `own-publication-detail` block renders only
+  2 of `publisher/Publication.js`'s 10 constructor fields (title,
+  author) — `id`, `publishedAt`, `license`, `contentHash`,
+  `publisherIdentity`, `signature`, `documentId`, and `contentReference`
+  all already sit on the same prop, unrendered. The missing display
+  pattern already exists elsewhere in this exact codebase:
+  `ui/components/PublicationCard.js` — the Discovery-catalog card for
+  OTHER users' Publications — already renders `publishedAt` and
+  `license`. Snapshot relationship is shown only as three separate
+  ephemeral per-click action results (distribute/discover/export), never
+  a persistent summary. World placement has a real, working, but
+  *structurally separate* component (`PlacementInfoPanel`, mounted
+  independently in `WorldView`) — `OwnPublicationPanel` already receives
+  `placementInfo` as a prop but only to compute a claimed-position
+  placement, never to display it. Distribution lifecycle
+  (`application/PublicationDistributionLifecycle.js`) is likewise real
+  and rendered, but only inside `WorldEncounterCanvas`, never inside
+  `OwnPublicationPanel`. Commentary is the one fact genuinely integrated
+  into this same surface. Verdict: `OwnPublicationPanel` is an **action
+  console** assembled action-by-action across ten milestones
+  (0.9.140-0.9.251), not yet a coherent **inspection/detail surface** —
+  two of the six facts are small, additive, reuse-only integration gaps
+  (identity field completeness; unifying two already-built panels); a
+  true unified surface is recorded as a larger product candidate, per
+  this milestone's own brief, rather than prematurely built.
+* **Section E — Verdict.** Five candidates ranked, none selected: (1)
+  wire Commentary's existing two command props into a Discovery-facing
+  component — no new use case, domain method, or storage change, the
+  most direct and evidence-backed finding this milestone made; (2)
+  Publication identity field completeness in `OwnPublicationPanel`,
+  reusing `PublicationCard`'s own already-proven pattern; (3) a unified
+  Publication inspection/detail surface integrating the two already-built
+  but separate placement/distribution-lifecycle panels — a real
+  information-architecture decision, recorded rather than built; (4)
+  notifications, the standing gap 0.9.221/0.9.241/0.9.250 all already
+  named; (5) commentary moderation/removal and synchronization, both
+  deliberately deferred, unchanged. The important negative result: the
+  evidence does not point back at Commentary's own domain — every
+  genuine gap this milestone found is about reaching or unifying
+  already-built capability, never about extending Commentary itself.
+
+Registers the new test in `tests.html`.
+
+### What this milestone deliberately excludes
+
+Building any of the five ranked candidates. No new UI wiring, no new
+use case, no new component, no change to `OwnPublicationPanel.js`,
+`PublicationCard.js`, `PlacementInfoPanel.js`, or `WorldEncounterCanvas.js`
+— this milestone is evidence-gathering and classification only, per its
+own brief's explicit instruction not to implement any of the six
+Commentary candidates and not to jump directly into a new surface.
+
+### What comes after
+
+No 0.9.253 is preselected. Section E's five ranked candidates stand,
+most direct first: wiring Commentary into a Discovery-facing surface;
+Publication identity field completeness; a unified Publication
+inspection/detail surface; notifications; commentary moderation/removal
+and synchronization. Selecting one is a separate, later, evidence-driven
+decision — the same restraint 0.9.221, 0.9.241, 0.9.250, and now 0.9.252
+have all held.
