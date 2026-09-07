@@ -80373,3 +80373,135 @@ readiness stays diagnostic/recovery information only, exactly like
 eligibility before it) — and design the smallest possible seam for
 whichever is chosen, kept separate from recovery, eligibility, and
 conflict resolution.
+
+## 0.9.235 — Causal Readiness Enforcement Decision Audit
+
+Test-only, same lineage as 0.9.233. 0.9.234 named Q4 — READY/NOT_READY —
+purely in isolation, `evaluateApplicationReadiness()` exercised directly
+against a synthetic detector/execution-history pair. This milestone is
+0.9.233's own move, repeated one boundary later: wire the REAL
+recovery + propagation + application chain and ask, on the real
+collaboration runtime rather than a synthetic one:
+
+```text
+what would actually break, and what would actually improve, if
+NOT_READY operations were prevented from immediate application?
+```
+
+### What this milestone adds
+
+`tests/CausalReadinessEnforcementDecisionAudit.test.js` (new). No
+production code changes. A FOURTH, independent subscriber joins the same
+`onOperationReceived()` feed gap observation, eligibility observation
+(0.9.233's own instrument), and application already attach to — this one
+computing `evaluateApplicationReadiness()` against the SAME shared
+`DocumentOperationCausalGapDetector` and a REAL `executionHistory` backed
+by the receiving replica's own `application/CommandHistory.js`, never a
+detached copy of either. It only ever observes.
+
+### Scenarios audited
+
+A. Fully ready (`A` executed, `B` names `A`) — READY, current behavior
+   unchanged.
+B. Causal gap (`A` never arrives) — NOT_ELIGIBLE and NOT_READY coincide;
+   `B` still applies immediately, confirming ARRIVAL_ORDER is untouched.
+C. **The central case.** `A` recovered (KNOWN, never EXECUTED) through
+   `DocumentOperationRecoveryUseCase`, `B` names it — ELIGIBLE yet
+   NOT_READY, on the real chain this time, and `B` still applies.
+D. `A` subsequently actually executes — re-querying `B` now answers
+   READY, strictly on deliberate re-query, never automatically. For this
+   delta-based command class (`MoveBrickCommand`), the replica that
+   applied `B` before `A` reconverges to the IDENTICAL final position the
+   replica that applied them in true causal order reached.
+E. Concurrent operations (`A -> {B, C}`) — both independently READY;
+   neither's readiness depends on the other.
+F. Conflicting concurrent operations (two `RenameGroupCommand`s naming the
+   same sole predecessor) — both READY; readiness never decides a winner.
+G. Command-class sensitivity — a commutative dependent
+   (`MoveBrickCommand`) and a non-commutative one (`RenameGroupCommand`)
+   produce the IDENTICAL readiness shape once their shared predecessor
+   executes: `readiness(A/B) != conflict resolution(A/B)`, proven, not
+   asserted.
+H. **The finding this audit exists to surface.** The SAME "recovered,
+   applied while NOT_READY, predecessor catches up later" shape as
+   Sections C/D, run against `RenameGroupCommand` instead of
+   `MoveBrickCommand`: the predecessor's belated, out-of-causal-order
+   execution SILENTLY OVERWRITES the dependent's already-applied edit.
+   Two replicas that received and applied the identical two operations
+   permanently diverge, and neither `ELIGIBLE` nor today's ARRIVAL_ORDER
+   policy ever surfaces it.
+
+A discovery Section D and H both had to route around, and worth recording
+as evidence in its own right: once `DocumentOperationRecoveryUseCase` has
+verified an operation's envelope, `ReplayGuard` — shared between the
+recovery channel and `DocumentCommandPropagationUseCase`'s own protocol,
+by 0.9.230's own design — permanently refuses to accept that operationId
+again. A recovered-but-unexecuted predecessor can therefore NEVER become
+EXECUTED by simply waiting for its author to resend it; the only path is
+applying the ALREADY-RECOVERED `Command` instance directly. Any future
+causal-deferral mechanism (0.9.236A, if chosen) must be built on that
+shape — draining recovery's own feed — not on hoping for redelivery.
+
+### The behavioral matrix
+
+Assembled from this suite's own recorded observations, not hand-typed:
+
+| Causal state | Eligibility | Readiness | Current behavior |
+| --- | --- | --- | --- |
+| All predecessors executed | ELIGIBLE | READY | Apply (unchanged) |
+| Missing predecessor | NOT_ELIGIBLE | NOT_READY | Apply (unchanged) |
+| Recovered predecessor (known, not executed) | ELIGIBLE | NOT_READY | Apply (unchanged) — see Section H |
+| Recovered predecessor, later actually executed | ELIGIBLE | READY | Apply (unchanged) — readiness transitions only on explicit re-query |
+| Concurrent operations (shared predecessor only) | ELIGIBLE | READY (independently) | Apply (unchanged) |
+| Conflicting concurrent operations (same predecessor) | ELIGIBLE (both) | READY (both) | Apply both — last write wins, unrelated to readiness |
+| Absolute-write command, applied while NOT_READY, predecessor later catches up | ELIGIBLE | NOT_READY -> READY | Applied — SILENT DIVERGENCE |
+
+Q4 does not, by itself, imply a requirement for causal buffering — Rows
+1-6 show `NOT_READY` staying exactly as diagnostic as `NOT_ELIGIBLE`
+already was. Row 7 is the one row that changes the shape of the decision:
+whether leaving `NOT_READY` unenforced is *safe* depends on the command
+class, not on readiness itself. Readiness is command-agnostic by design
+(Section G); the risk it exposes is not.
+
+### Deliberately excluded, on purpose
+
+No pending queue, no buffering, no delayed execution, no automatic retry,
+no reordering, no rollback, no CRDT, no OT, no synchronized undo, no
+conflict resolution, no convergence guarantee, no modification to
+`CommandHistory`, no change to `ARRIVAL_ORDER`. This milestone does not
+implement the answer — it produces the evidence a real answer needs.
+
+### Recommendation
+
+Section H settles the question 0.9.234's own "Recommendation" left open,
+but not uniformly. `NOT_READY` is safe to leave purely diagnostic for a
+command class whose `execute()` is a relative, commutative update
+(`MoveBrickCommand`'s `position += delta`) — Section D shows the affected
+replicas reconverge on their own the moment the missing predecessor
+actually executes, with no coordination required. It is NOT safe for a
+command class whose `execute()` is an absolute overwrite
+(`RenameGroupCommand`'s `name = value`) — Section H shows a silent,
+permanent, currently-undetected divergence between replicas that received
+and applied the exact same two operations.
+
+That rules out a single, uniform 0.9.236 choice applied identically to
+every command. Two directions remain, and they are no longer symmetric:
+
+* **0.9.236A — Causal deferral, scoped to non-commutative commands.**
+  Defer application of a `NOT_READY` operation only when its own command
+  class cannot be shown to reconverge under reordering — everything else
+  keeps applying immediately, exactly as today. This requires a way to
+  ask "is this command class safe to apply out of causal order," which
+  does not exist anywhere in this codebase yet, and Section D/H's own
+  ReplayGuard discovery means any deferred operation must be applied from
+  a retained `Command` instance, never by waiting for redelivery.
+* **0.9.236B — Deliberate arrival-order collaboration, with the risk
+  named.** Keep immediate application for every command class,
+  unconditionally, and instead give an Editor a way to OBSERVE Section
+  H's own failure mode when it happens (e.g. surfacing `NOT_READY` on an
+  applied operation as a visible "may not reflect the author's intended
+  order" signal) rather than preventing it.
+
+Choosing between them — or scoping 0.9.236A to exactly the command classes
+that need it, without inventing a general commutativity framework nobody
+has asked for yet — is the next milestone's own decision, not this one's.
