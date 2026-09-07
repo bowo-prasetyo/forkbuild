@@ -81469,3 +81469,112 @@ product decision — asynchronous commentary/annotation on a Publication
 — named here, with its architectural adjacency and its independence
 from every delivery-guarantee question this arc was careful about, but
 deliberately not designed or built in this one.
+
+## 0.9.242 — Publication Commentary Domain Boundary
+
+0.9.241 named the next product seam — commentary/annotation on a
+Publication — but deliberately built nothing. This milestone takes the
+first, and deliberately only, step of that seam: a pure domain
+boundary. No UI, no networking, no persistence adapter, and no
+real-time synchronization.
+
+The one question this milestone exists to answer: what exactly is a
+commentary, and what does it belong to?
+
+```text
+Document
+   │
+   │  publish
+   ▼
+Publication            contentReference / distribution / discovery /
+   │                    World placement
+   │
+   └── PublicationCommentary
+          │
+          ├── commentaryId
+          ├── publicationId
+          ├── authorIdentityId
+          ├── content
+          └── createdAt
+```
+
+The single architectural decision this milestone makes: commentary
+references a `publicationId`, never a `documentId`. A Publication is
+the already-published, immutable artifact a comment discusses; a
+Document is the mutable working draft that produced it —
+core/DecentralizedPublication.js and publisher/Publication.js already
+drew that exact line between the two; this milestone extends it to
+commentary. A commentary attached to one Publication stays attached to
+that Publication forever:
+
+```text
+Document A
+    │
+    ├── Publication P1 ──── Commentary C1
+    │
+    └── later edit
+           │
+           └── Publication P2 ──── Commentary C2
+```
+
+C1 never silently follows the Document to P2 — commentary discusses a
+published artifact, not an evolving one.
+
+### What this milestone adds
+
+* `core/PublicationCommentary.js` (new) — a small, immutable domain
+  class: `commentaryId`, `publicationId`, `authorIdentityId`,
+  `content`, `createdAt`, each strictly validated at construction
+  (non-empty identifiers, non-empty string content, a valid
+  `createdAt`), plus `toJSON()`/`fromJSON()`. No `withX()` method
+  exists at all — an explicit product decision to treat a commentary
+  as an immutable authored record for now, leaving whether authors may
+  later edit or retract one to a separate, deliberate lifecycle
+  decision. Carries none of the causal-execution vocabulary the
+  just-closed 0.9.222-0.9.240 collaboration arc owns — no
+  `causalPredecessors`, `logicalClock`, or `operationId` — because a
+  commentary is a single authored fact about an already-published,
+  immutable artifact, never an operation applied to mutable shared
+  state.
+* `core/PublicationCommentaryCollection.js` (new) — three plain
+  functions over an ordinary array (`addPublicationCommentary`,
+  `getPublicationCommentaryById`,
+  `getPublicationCommentariesForPublication`), append-only, in the
+  same style application/IpfsPublicationRecordHistory.js's own 0.8.71
+  discipline already established. No repository class: an in-memory
+  collection is enough to prove the domain seam, and this milestone's
+  own brief was explicit that a repository is not warranted yet.
+* `tests/PublicationCommentary.test.js` (new), eight sections:
+  construction; validation (missing/invalid id, author, content,
+  timestamp); two commentaries sharing one Publication while staying
+  distinct objects; two Publications' commentary never
+  cross-contaminating; two Publications from the same Document keeping
+  their commentary attached to the exact Publication each belongs to;
+  a later re-publish never re-targeting an existing commentary's
+  `publicationId`; different authors commenting on the same
+  Publication without changing that Publication's identity; and an
+  explicit check that no collaboration vocabulary
+  (`causalPredecessors`/`logicalClock`/`operationId`/threading/
+  reactions/edited-at/tombstone) has leaked into the new domain.
+
+Also registers `tests/PublicationCommentary.test.js` in `tests.html`'s
+own runner list.
+
+### Explicitly deferred
+
+Not part of this milestone, on purpose, not merely unbuilt yet:
+edited-at, deleted/tombstone state, threading, replies, reactions,
+likes, mentions, moderation state, trust score, ownership, visibility
+state, unread/read state, synchronization metadata, logical clocks,
+causal predecessors. Storage, a command/use-case layer, and any UI are
+all later, separate seams this milestone does not choose the order of.
+
+### Why this is the right first step
+
+Document collaboration (0.9.222-0.9.240) is mutable state plus
+operations under causal execution semantics. Publication commentary is
+annotations about an already-published artifact — initially nothing
+more than a validated domain object. Keeping those two apart from the
+start, rather than reaching for the collaboration machinery just
+because it now exists, is the same discipline this arc's own 0.9.241
+reassessment named as the danger to avoid.
