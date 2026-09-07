@@ -82094,3 +82094,138 @@ authorization check is no longer something a future caller could
 accidentally skip by calling the domain or storage layer directly, the
 same structural guarantee 0.9.244 already established for construction
 and persistence.
+
+## 0.9.247 — Publication Commentary Query / Observation Boundary
+
+0.9.244-0.9.246 built the one authoritative path from user intent to a
+persisted `PublicationCommentary`. Nothing yet named the corresponding
+READ path — the thing a future Publication UI actually calls to display
+what already exists. Without it, the only way to read commentary back
+is `PublicationCommentaryStore.getForPublication()` directly, exposing
+storage to UI the same way 0.9.244's own header refused to let UI
+construct or persist a `PublicationCommentary` directly. This milestone
+is that one thin query boundary, and only that:
+
+```text
+publicationId
+     │
+     │  GetPublicationCommentariesUseCase.execute()
+     ▼
+PublicationCommentaryStore.getForPublication()   (0.9.243, unmodified)
+     ▼
+PublicationCommentary[]
+```
+
+### What this milestone adds
+
+* `application/GetPublicationCommentariesUseCase.js` (new) — a
+  one-method query: given `{ publicationId }`, return every
+  `PublicationCommentary` on file for it, in whatever order the
+  injected store returns them. Constructor takes a duck-typed `store`
+  (only `getForPublication(publicationId)` is ever called) — no
+  concrete `PublicationCommentaryStore`, `StorageProvider`, or
+  `LocalStorageProvider` import of its own, mirroring
+  `AddPublicationCommentaryUseCase`'s own store dependency shape.
+* **No identity, no authorization.** Unlike the write side, this file
+  has no `identityProvider` and no `canCommentOnPublicationUseCase`
+  collaborator. 0.9.246's own audit already established that
+  ForkBuild's Publication/discovery stack is openly readable by
+  design; that finding applies even more directly to commentary
+  already sitting in an injected store. Reading commentary requires no
+  authenticated caller.
+* **No discovery-provider call.** Deliberately does not ask a
+  `discoveryProvider` whether `publicationId` names a real Publication
+  before querying the store — that would make a pure storage-backed
+  query own an existence check that belongs to Publication resolution
+  (`ResolvePublicationUseCase`, `CanCommentOnPublicationUseCase`), not
+  commentary retrieval. An unrecognized `publicationId` and a real
+  Publication with zero commentary are answered identically: `[]`.
+* **No sorting.** `PublicationCommentaryStore.getForPublication()`'s
+  own header already guarantees insertion order; this file adds no
+  `sort()`, no newest-first flip, no `createdAt` comparison. A
+  presentation-layer ordering, if the eventual UI wants one, is a
+  separate, later decision.
+* **Structural validation only.** A missing or non-string
+  `publicationId` throws before the store is ever called — the same
+  "malformed call, rejected before reaching the collaborator" pattern
+  `CanCommentOnPublicationUseCase` already uses for a missing
+  `identityId`. A well-formed `publicationId` that resolves to no
+  commentary, known or unknown, returns `[]`, never an error. A
+  genuine store read failure is never caught here — it propagates
+  unmodified, the same asymmetry `AddPublicationCommentaryUseCase`
+  already holds for a genuine store *write* failure. (The real
+  `PublicationCommentaryStore`'s own read path degrades a corrupted or
+  throwing storage provider to `[]` — that graceful-degradation
+  decision belongs to the store, per its own 0.9.243 header, and is
+  unchanged and untouched by this milestone; this file's own "store
+  failure propagates" behavior is provable only against a duck-typed
+  fake whose `getForPublication()` itself throws.)
+* `tests/GetPublicationCommentariesUseCase.test.js` (new), eight
+  sections: a single stored commentary retrieved through the use case;
+  multiple commentaries for one Publication returned in save order;
+  Publication isolation (querying P1 never returns P2's commentary);
+  two Publications produced from the same underlying Document keeping
+  fully separate commentary, queried strictly by `publicationId` —
+  the same distinction 0.9.242 made foundational; commentary from
+  multiple authors coexisting in one result; an empty result for both
+  a Publication with no commentary and a wholly unrecognized
+  `publicationId`; a genuine store read failure propagating rather
+  than silently becoming a successful empty result; and the use case
+  working against a plain duck-typed fake store, confirming no
+  dependency on `LocalStorageProvider`, any discovery implementation,
+  UI, or a concrete storage class, plus construction-time rejection of
+  a missing or incomplete store and a missing or blank `publicationId`.
+
+Also registers `tests/GetPublicationCommentariesUseCase.test.js` in
+`tests.html`'s own runner list.
+
+### What this milestone deliberately does not add
+
+Per its own brief:
+
+* No `PublicationCommentaryObserver`, subscription, live update, or
+  polling of any kind. A query answers "what exists right now"; a
+  subscription answers "tell me when it changes" — this milestone is
+  only the former. Whether the product ever needs the latter is a
+  separate, later decision.
+* No pagination, deduplication, author ranking, relevance ordering, or
+  trust ordering.
+* No sorting of any kind — storage/insertion order is preserved
+  exactly as `PublicationCommentaryStore.getForPublication()` already
+  returns it.
+* No commentary UI. `GetPublicationCommentariesUseCase` is a
+  read boundary for a future UI to call, not the UI itself.
+* No changes to `core/PublicationCommentary.js`,
+  `core/PublicationCommentaryCollection.js`, or
+  `storage/PublicationCommentaryStore.js` — this milestone composes
+  the existing `getForPublication()` method unchanged, exactly as
+  0.9.244 composed `save()` unchanged.
+
+### The resulting read/write symmetry
+
+```text
+WRITE                                      READ
+
+authenticated identity                    publicationId
+      │                                          │
+      ▼                                          ▼
+authorization                             GetPublicationCommentariesUseCase
+      │                    (0.9.247, this milestone)
+      ▼                                          │
+PublicationCommentary                            ▼
+      │                                   PublicationCommentaryStore
+      ▼                                          │
+PublicationCommentaryStore                       ▼
+                                           PublicationCommentary[]
+```
+
+Every future UI entry point can now read commentary back through this
+identical path, never `PublicationCommentaryStore` directly — the same
+structural guarantee 0.9.244-0.9.246 already established for the write
+side. With both a write and a read boundary now in place, the natural
+next milestone is the first real product-facing commentary surface:
+display existing comments and provide a create-comment interaction,
+while keeping every decision in the application layer rather than the
+UI. Live updates, distribution, notifications, and threading remain
+open questions for whenever the product is shown to actually need
+them.
