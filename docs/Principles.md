@@ -19474,3 +19474,54 @@ not resolve the retry-duplication question — the fix, if the product ever need
 milestone has an actual durability requirement in hand, not to the audit that merely mapped the decision space.
 
 See `docs/Roadmap.md`, 0.9.277, for the full milestone entry.
+
+## A Dedup Identity Is Chosen From Outside The Fact It Names; The Fact Never Chooses For Itself (0.9.278)
+
+0.9.277 left a question open rather than answering it: if `NotificationEvent`s become durable, what exactly is being
+persisted, and what identity would make two representations of it "the same"? 0.9.278 does not answer that question
+either — it makes the space of possible answers visible enough that a future milestone can choose among them with
+evidence instead of by accident.
+
+**Five candidates, characterized, not selected.** `notificationId`, `commentaryId`, `commentaryId +
+recipientIdentityId`, `commentaryId + eventType + recipientIdentityId`, and `producer invocation` are each defined as
+a plain function outside `core/NotificationEvent.js`, then run against six scenarios: an exact retry, two recipients
+of the same Commentary, two event types about the same Commentary, two genuinely different Commentaries, an original
+against its own reconstruction, and two independent reconstructions against each other. No candidate is adopted. The
+value of the exercise is in where the candidates disagree, and where they don't.
+
+**Two disagreements are not preferences; they are bugs waiting to happen.** `commentaryId` alone collapses two
+different recipients' notifications into one merely because they share a Commentary — proven directly by
+hand-constructing the exact fan-out pair 0.9.277 Section D already showed `NotificationEvent` is CAPABLE of
+representing. `producer invocation` fails the same test for a different, call-scoped reason: if a future producer
+ever emits more than one event from a single `execute()` call (the fan-out 0.9.277 found capable but not yet
+reachable), an invocation-keyed identity would merge them the moment it happened. Separately, `commentaryId` alone
+and `commentaryId + recipientIdentityId` both collapse two DIFFERENT kinds of fact about the same Commentary — proven
+before a second `eventType` even exists in this codebase, by hand-constructing a hypothetical `publication.updated`
+alongside the real `publication.commented`. These are not product taste; a persisted notification that silently
+merges two different truths, or drops a real person's copy because it shares a Commentary with someone else's, is
+wrong regardless of what the product otherwise decides. Both are recorded `REQUIRED`, not `OPEN`.
+
+**One disagreement is genuinely a decision, not a defect.** `notificationId` and `commentaryId + eventType +
+recipientIdentityId` both pass every structural soundness check — and then diverge completely on the one question
+0.9.276 first raised: does a retry collapse? `notificationId` never collapses anything, by construction; the compound
+candidate collapses an exact retry into one logical notification, by construction. Both are internally consistent.
+Neither is more "correct" than the other without a product answer to "should Bob be told once or twice." 0.9.278
+proves the fork exists and exactly where it forks; it does not walk through it.
+
+**Reconstruction identity is the same fork, one layer removed.** Rebuilding a lost `NotificationEvent` from durable
+Commentary + Publication facts always yields a fresh `notificationId` — 0.9.277 already proved that. What 0.9.278
+adds: under a content-based candidate, a reconstruction automatically counts as "the same notification" as the
+original it replaces, AND as the same notification as a second, independent reconstruction of the identical facts.
+Under an instance-based candidate, neither is ever true, and under the invocation-scoped candidate the question
+cannot even be asked, because reconstruction never happens through a producer invocation at all. "Domain fact
+identity" and "`NotificationEvent` instance identity" are not two names for the same thing — they are two different,
+independently defensible answers to "what does this notification durably represent," and this milestone deliberately
+introduces no deterministic ID to force them into agreement.
+
+**The value object still does not decide.** `core/NotificationEvent.js` gains no `dedupKey`, no `equals`, no
+`identityKey` — proven directly, by property-name absence, not merely by restraint in this file's own header.
+Deduplication identity is chosen from outside the fact it names, by whatever future persistence/application layer
+actually needs an answer; the fact itself — "this notification-worthy thing happened, addressed to this identity" —
+stays exactly as small as 0.9.273 first made it.
+
+See `docs/Roadmap.md`, 0.9.278, for the full milestone entry.
