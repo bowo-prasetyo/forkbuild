@@ -19327,3 +19327,36 @@ such new capability — a `Date` was always either parseable or it wasn't.
 A signature needed one this milestone deliberately declines to build.
 
 See `docs/Roadmap.md`, 0.9.266, for the full milestone entry.
+
+## A NotificationEvent Represents An Awareness-Worthy Fact; It Is Not A Delivery, A Read State, Or A Chat Message (0.9.273)
+
+0.9.272's reassessment found several domains capable of producing a meaningful, user-directed event, and one real
+architectural precedent for durable delivery, `application/ChatOutbox.js` — but no domain-neutral representation of
+the fact itself, independent of who will eventually deliver it or how. `core/NotificationEvent.js` is that missing
+seam: five fields — `notificationId`, `eventType`, `recipientIdentityId`, `createdAt`, `payload` — and nothing else.
+
+**A fact about the past is not a job in flight.** `core/ChatOutboxEntry.js` exists to track ONE message's progress
+toward a confirmed delivery to a peer connection: it has a `state`, a `queuedAt`/`sentAt`/`deliveredAt`, and an
+`expiresAt` because that progress is exactly what it is for. A `NotificationEvent` records that something already
+happened, addressed to a recipient IDENTITY — it has no state field and no TTL, because introducing one here would
+be inventing lifecycle semantics (`PENDING`/`DELIVERED`/`READ`/`DISMISSED`/`EXPIRED`) for a delivery mechanism that
+does not exist yet. A future `NotificationDelivery` layer may need exactly that vocabulary; bolting it onto the fact
+itself, ahead of a real producer or consumer, would be guessing at a shape no evidence yet justifies — the same
+discipline `core/ChatDeliveryState.js`'s own header already states about a state nothing in the codebase actually
+reaches: it has no business existing just because a richer design could imagine it.
+
+**An open `eventType` is not an oversight; a closed one would be a guess.** `core/ChatMessageKind.js` is a closed,
+one-value vocabulary because 0.2.61 shipped exactly one kind of chat message and could enumerate it completely.
+0.9.273 ships zero producers. `isValidEventType()` therefore checks only that `eventType` looks like a stable,
+namespaced identifier — the same shape `docs/BrickIDs.md` already established for a type identifier like
+`core:cube` — never a list of recognized values. Inventing `COMMENT_POSTED`/`CLAIM_ADOPTED`/`EDIT_APPLIED` now, before
+any domain actually constructs one, would be exactly the mistake 0.9.272 named: designing a subsystem around an
+assumption rather than the evidence a real producer would supply.
+
+**The seam has no producers yet, on purpose.** No domain — Commentary, Place Naming, Collaboration, Presence —
+constructs a `NotificationEvent` as of this milestone, and `core/NotificationEvent.js` imports nothing but
+`core/createId.js`, provably: `tests/NotificationEvent.test.js` Section 12 constructs one with no Chat, Publication,
+Place Naming, Collaboration, or Presence machinery anywhere in scope. Deciding which domain becomes the first real
+producer is 0.9.274's question, not this milestone's to answer by fiat.
+
+See `docs/Roadmap.md`, 0.9.273, for the full milestone entry.
