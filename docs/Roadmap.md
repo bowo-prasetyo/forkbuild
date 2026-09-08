@@ -85865,3 +85865,100 @@ genuinely complete: Commentary happens → the publisher gets a durable notifica
 it in Notification History. Only if that complete path exposes a concrete product gap should the next milestone move
 toward delivery, read/unread semantics, additional producers, or another notification capability — the same
 evidence-driven discipline 0.9.282's own reassessment already established for this arc.
+
+## 0.9.286 — Notification End-to-End Lifecycle Audit
+
+0.9.285 closed the notification write/read vertical path — a genuinely usable first notification product rather
+than a collection of disconnected capabilities. Per this milestone's own brief, the right next step is not another
+feature but a full lifecycle audit of the path just closed, test-only, in the same lineage as 0.9.276's producer
+lifecycle audit, 0.9.277's persistence semantics audit, 0.9.278/0.9.279's dedup audits, and 0.9.282's own
+post-persistence reassessment.
+
+### What this milestone adds
+
+`tests/NotificationEndToEndLifecycleAudit.test.js` (new, registered in `tests.html`) — fifteen sections, all
+exercised against real infrastructure (no mocks of any collaborator in the chain). The central proof this file
+exists to establish, stated in its own header exactly as the reviewer's brief posed it: a Publication Commentary
+created through the real application path produces exactly one durable notification for the Publication publisher,
+retrievable through the real recipient query and Notification History UI. Section A re-derives composition closure
+directly from `application/CreateWorldViewUseCase.js`'s own source — exactly one producer construction site, one
+shared `NotificationEventStore` backing both directions, the decorated capability (never the raw use case) reaching
+`WorldNavigationSession`, and the UI hop reachable with no test-only wiring. Section B is the flagship: a Commentary
+submitted through the real command walks all six stages of the diagram — producer, `NotificationEvent`, the
+(implicit, inside `save()`) dedup policy, `NotificationEventStore`, `GetRecipientNotificationEventsUseCase`,
+`NotificationHistoryPanel` — with every field named in the brief checked explicitly (`eventType`, publisher
+recipient, Commentary/Publication identity). Section C reconfirms recipient isolation. Section D is a new proof this
+arc had not yet made explicit: four separate producer invocations for the identical `commentaryId` each construct a
+genuinely distinct `NotificationEvent` object (a fresh `notificationId` every time — the producer performs no
+deduplication of its own), and `NotificationEventStore` alone collapses them to one durable row (`NEW` once,
+`EXISTING` three times) — the store, not the producer, is the deduplication authority, demonstrated rather than
+merely asserted. Section E closes the restart path across the *full read stack* — a fresh store, a fresh
+`GetRecipientNotificationEventsUseCase`, and a fresh panel ctx, sharing no in-memory state with the objects that
+wrote the data — going further than 0.9.281 Section M's store-only reconstruction. Section F proves a shared
+`publicationId` never accidentally becomes a deduplication identity, both by construction (several real Commentaries
+on one Publication) and directly (two hand-constructed events differing only in `commentaryId` still resolve to
+different identities). Section G confirms `eventType` remains a real identity dimension using hand-constructed
+events, exactly as the brief allows. Section H is this audit's most load-bearing new finding: it first reconfirms,
+through the real Commentary path itself, that a notification `CONFLICT` still cannot be organically reached — a
+retried `commentaryId` with different content is intercepted one full layer earlier, by
+`PublicationCommentaryStore`'s own conflict guard (0.9.243), reconfirming 0.9.282 Section G — and then reproduces
+`CONFLICT` the one legitimate way, by handing the real, already-populated production `NotificationEventStore` a
+hand-constructed event sharing the original's identity but disagreeing on `authorIdentityId`, proving `CONFLICT` is
+surfaced, the original notification is left untouched, the conflicting event is never persisted, and Notification
+History — the real panel, over the same store — reflects only the true original record throughout. Sections I and J
+reconfirm the two failure boundaries 0.9.285 already established (Publication lookup miss; notification persistence
+failure, non-atomic, undocumented as anything but honest). Section K exercises the full UI lifecycle — create, open,
+load, refresh (repeated), close, reopen — proving persistence is unaffected by the panel's own mount/unmount cycle,
+and that a Commentary created between panel sessions is correctly picked up on the next open. Section L is an
+explicit identity-closure sweep across all six identifiers this arc has ever named
+(`commentaryId`/`publicationId`/`authorIdentityId`/`publisherIdentityId`/`recipientIdentityId`/`notificationId`),
+confirming exactly one deliberate equality (`recipientIdentityId === publisherIdentityId`) and no accidental
+conflation, with the self-comment case verified as the one legitimate author-equals-recipient scenario. Section M
+checks failure isolation across five distinct boundaries — Commentary persistence, Publication lookup, notification
+persistence, recipient-query authentication, and UI-layer rendering — confirming none ever silently masquerades as a
+successful notification. Section N is a fresh architecture-regression sweep (no lifecycle/delivery/read-state
+vocabulary, no polling, no producer-side dedup cache, no UI access to storage, no `NotificationEvent` mutation
+method) — verified both textually and, for the "no mark/deliver/acknowledge method exists anywhere in the chain"
+claim, by public-surface enumeration rather than only source grep.
+
+Section O is the one test the reviewer's brief asked for by name: an explicit, executable proof that PERSISTED,
+DELIVERED, SEEN, and READ are four different claims, and this system can only honestly make the first one. A
+notification persists durably with no recipient query ever run (O1); reading it twice is provably side-effect-free,
+byte-for-byte (O2); the durable record carries exactly five factual fields and nothing state-shaped (O3); no method
+anywhere in the notification chain's own classes is even named for a delivery/seen/read/acknowledge concept,
+verified by prototype enumeration (O4); and a notification for a recipient whose session was never even constructed
+is still fully, durably persisted (O5). This distinction is recorded as a permanent architectural invariant in
+`docs/Principles.md`, not an incidental omission this milestone happened to notice.
+
+While validating Section N's own approach against a sibling file, this audit found one genuine pre-existing defect —
+in a test, not in production code: `tests/NotificationHistoryUILifecycle.test.js`'s own Section K4 (0.9.284, merged
+and unmodified since) has been asserting no read/unread vocabulary exists in
+`ui/components/NotificationHistoryPanel.js`'s own code without excluding the panel's own rendered template, whose
+one hint sentence ("not an inbox... there is no read/unread state here") deliberately *disclaims* exactly the
+vocabulary the check forbids — the opposite of implementing it. This has caused that check to fail deterministically
+since the moment 0.9.284 introduced both the panel and the test in the same commit; nothing about the panel or the
+check's intent was ever wrong, only the check's scope. Fixed minimally, mirroring the same template-exclusion this
+milestone's own Section N1 needed for the identical reason — `ui/components/NotificationHistoryPanel.js` itself is
+untouched.
+
+### What this milestone deliberately excludes
+
+Per the reviewer's own brief: no delivery, no push/WebSocket notifications, no read/unread, no seen state, no
+acknowledgment, no notification lifecycle, no TTL, no queues/retries, no notification deletion, no additional
+producers, no prioritization, no notification preferences, no store indexing, and no transactional Commentary +
+Notification persistence. None of Sections A-O required a change to any production file this arc has ever built —
+`NotificationEvent`, `NotificationDeduplicationPolicy`, `NotificationEventStore`,
+`PublicationCommentaryNotificationProducer`, `GetRecipientNotificationEventsUseCase`, `NotificationHistoryPanel`, and
+`application/CreateWorldViewUseCase.js` are all completely unmodified by this milestone; the one fix this milestone
+made was to a test's own over-broad check, not to anything it was checking.
+
+### What comes after
+
+Not selected here. Per this milestone's own brief, the natural next step is 0.9.287 — Post-Notification Product
+Reassessment — now that the entire first notification arc (0.9.273-0.9.286) is complete: `NotificationEvent`,
+producer, producer audits, persistence semantics, dedup identity, dedup collision, dedup policy, persistence,
+post-persistence reassessment, recipient query, Notification History UI, producer composition, and this end-to-end
+lifecycle audit. That reassessment should not assume delivery is next — it should determine whether the completed
+product (durable, recipient-specific notification history) is sufficient on its own, or whether the repository
+contains concrete evidence for a genuinely separate delivery capability, the same evidence-driven discipline this
+arc has used at every prior branch point.
