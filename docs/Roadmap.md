@@ -87579,3 +87579,86 @@ audit** — does real usage confirm the CONTENT preference concept is a stable p
 a semantic problem worth fixing before extending the pattern? Only after that should Discovery or Proof &
 Anchoring be assessed for their own legitimate, role-specific selection seam — never a generic three-role
 provider-settings framework built ahead of any of them actually needing one.
+
+## 0.9.303 — Content Provider Preference Lifecycle Audit
+
+Test-only, as 0.9.302's own "What comes after" recommended. Zero production changes. 0.9.293-0.9.302 built the
+CONTENT provider preference arc one seam at a time, each milestone proving its own seam against the one
+immediately below it. This milestone asks the question none of those was built to answer alone: taken together,
+does the whole arc — Settings, through persistence and resolution, to a real placement, surviving replacement,
+restart, and failure — behave as one coherent product capability, and does the codebase still show any
+architectural drift now that two milestones (0.9.301, 0.9.302) have touched real UI on both ends of it?
+
+```text
+Settings UI  →  SetRoleProviderPreferenceUseCase  →  RoleProviderPreferenceStore
+                                                              │
+                                    ResolvePreferredRoleProviderUseCase
+                                                              │
+"Use Preferred Provider"  →  PreferredSnapshotPlacementCreationCoordinator  →  CONTENT provider  →  Snapshot Placement
+```
+
+### What this milestone builds
+
+- **`tests/ContentProviderPreferenceLifecycleAudit.test.js`** — one suite, ten sections, run against real
+  production classes composed exactly the way `ui/main.js` composes them (never mocks, except the same
+  fake-network IPFS/Arweave stand-ins this arc's own earlier suites already established):
+  - **A — full user journey**: an empty preference refuses correctly, a Settings-shaped save through
+    `SetRoleProviderPreferenceUseCase` is immediately what "Use Preferred Provider" consumes, and real bytes land
+    on a real (fake-network) provider.
+  - **B — replacement**: Ipfs/Ar cycled twice over, each "Use Preferred Provider" call proven to follow the
+    *current* preference, never a stale one, with no duplicate entry ever left on file.
+  - **C — restart, genuinely new coverage**: a completely fresh application composition — new store, resolver,
+    resolve-use-case, coordinator, content stores, catalogs — built twice over against only a shared persistent
+    backing, each time not just observing the surviving preference but immediately placing real content with it.
+    0.9.302's own restart section proved the preference is *readable* after a fresh store is constructed; this
+    proves it is *usable*.
+  - **D — explicit vs. preferred**: the three-way table (Explicit A / Explicit B / Preferred) proven together in
+    one place, including that changing the preference never retroactively touches an explicit result already
+    returned.
+  - **E — missing preference**: reconfirms the pre-existing refusal — never a silent Local or IPFS default.
+  - **F — unresolvable preference**: `PROVIDER_NOT_FOUND` all the way out to the exact UI-state shape (reusing
+    `describeCreationAttempt()` — the real view-model function, not a re-implementation) a person would actually
+    see, with zero content writes.
+  - **G — provider-role isolation**: Discovery and Proof & Anchoring preferences saved and changed alongside
+    Content, proven never to affect which provider a Content placement actually uses.
+  - **H — storage identity convergence**: object identity in `ui/main.js`'s own real wiring, plus an independent
+    proof that two separately constructed stores over the same backing storage converge — so convergence is a
+    property of persisted state, not merely a wiring convenience that could silently drift.
+  - **I — one source of truth, freshly re-swept**: never trusting an earlier audit's cached numbers, this section
+    re-derives, against the CURRENT source tree, that `RoleProviderPreferenceStore.save()` has exactly one caller,
+    the store itself has exactly one construction site, exactly the same closed 14-file set references the
+    preference vocabulary, no production file hardcodes a provider outside one documented presentation-only label
+    map, and exactly two `ui/` views ever touch the preferred-provider seam.
+  - **J — capability/reachability matrix**, assembled from Sections A-I's own evidence, plus a regression guard
+    that actually greps production source to confirm every deliberately excluded capability (fallback, ranking,
+    health checks, a Discovery/Proof settings UI, preference deletion, a generic multi-role framework) is still
+    genuinely absent — not merely undiscussed.
+
+### Verdict
+
+The CONTENT provider preference arc is a complete, coherent, source-verified product capability from
+establishment through consumption, replacement, restart, and failure. No architectural drift was found: the
+14-file reference set, the single write boundary, and the single store-construction site are all exactly what
+0.9.298-0.9.302 already established, unchanged.
+
+Discovery and Proof & Anchoring remain deliberately unintegrated. This milestone re-confirmed, with a fresh
+directory read of `discovery/` and `anchoring/` alongside 0.9.298's own Sections A/C, that neither role has a
+real, uniform, multi-provider registry a person actually chooses between in production today — Discovery has
+three non-interchangeable query shapes and no keyed registry at all; Proof & Anchoring ships Bitcoin only. Adding
+a provider-preference UI for either role now would be building configuration for a choice that does not yet
+exist, not closing a gap this audit found.
+
+### Deliberately excluded
+
+Discovery preference UI; Proof & Anchoring preference UI; provider fallback, ranking, or health checks; automatic
+migration of existing placements when a preference changes; deleting a stored preference; a generic multi-role
+settings framework; provider availability indicators; new provider implementations.
+
+### What comes after
+
+Per this milestone's own verdict, the next step is **not** "integrate Discovery and Proof" by default. It is a
+deliberate, evidence-based product question, to be asked on its own terms whenever either role's real usage
+raises it: does a person actually choose among multiple Discovery mechanisms, or among multiple places a proof/
+anchor can be created, the way they already choose among Content stores today? If real usage never raises that
+choice, stopping the provider-preference arc at CONTENT is itself a complete, legitimate product outcome — not an
+abandoned extension.
