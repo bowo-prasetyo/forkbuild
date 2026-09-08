@@ -87291,3 +87291,88 @@ natural next UI step is a second, explicit trigger in `ui/views/DecentralizedPub
 `preferredSnapshotPlacementCreationCoordinator.create(publicationId)` with no storage; that remains unbuilt
 here, on purpose, so a settings UI and its first real consumer-facing trigger can be reviewed as one coherent
 product surface rather than two independent guesses at its shape.
+
+## 0.9.300 — Content Provider Preference Reachability Audit
+
+**Type:** Test-only reachability audit. **Scope:** zero production changes — one new evidence-gathering test
+file answering the question 0.9.299's own header left open: can any real user action reach
+`PreferredSnapshotPlacementCreationCoordinator`, and if not, what is the smallest legitimate change that would
+let it?
+
+This is a different question from 0.9.298's own product audit, which asked which *application-layer seam*
+could legitimately consume a role provider preference at all. 0.9.299 answered that question by building and
+proving the seam end-to-end. This milestone asks whether the *product*, not just the code, has a real route to
+it — traced from `ui/main.js`'s own composition, through `ui/views/DecentralizedPublicationsView.js`'s own
+click handler, down to the coordinator itself.
+
+### What this milestone found
+
+Every claim below is a real `source()` read or a real repo-wide sweep (excluding `tests/`), never carried over
+from 0.9.299's own prose:
+
+- **Zero production callers.** `ui/main.js` provides `preferredSnapshotPlacementCreationCoordinator` under its
+  own injection key, but a repo-wide sweep finds that identifier in exactly one production file — the file that
+  defines and provides it. `ui/views/DecentralizedPublicationsView.js`, the one real view that ever creates a
+  placement, injects the pre-existing (0.8.25) coordinator and contains the string
+  `preferredSnapshotPlacementCreationCoordinator` nowhere at all. The preference-aware coordinator's own class
+  file is imported by exactly its own composition root — no `ui/` view imports it directly either.
+- **The existing storage-selection UI is a genuine, intentional per-action choice — category (1), not (2) or
+  (3).** One dedicated card and button renders per real registered storage type (`v-for="storage in
+  availableStorageTypes"`), each button's own label naming that specific storage; there is no `<select>`, no
+  shared "pick then confirm" control, and `humanizeContentKind()` — the function that turns `local`/`ipfs` into
+  their on-screen labels — carries no per-provider special case and no dev/prod framing. This choice must stay
+  authoritative, exactly as `PreferredSnapshotPlacementCreationCoordinator`'s own header already guarantees.
+- **"No explicit choice" is not a state today's UI can produce.** `createPlacement(entry, storage)` is invoked
+  from exactly one template expression, always with a loop-bound, always-present `storage` — never absent,
+  empty, or null in any real user flow. This is the correct consequence of the previous finding, not a gap: a
+  "use my preferred provider" state does not exist in today's UI vocabulary and would need to be *added*, never
+  merely uncovered.
+- **`local` and `ipfs` are genuine, distinct product semantics, confirmed from each class's own source.**
+  `LocalContentStore` never performs a network call; `IpfsContentStore`'s own header states it talks to a real
+  external Kubo node and that a CID is a locator, never an identity. Neither file frames either provider as a
+  "development" or "production" mode anywhere — the distinction is real, and no accidental dev/prod framing
+  exists to correct.
+- **A real, previously undocumented display gap.** `RoleProviderResolutionStatus.PROVIDER_NOT_FOUND` is not one
+  of `SnapshotPlacementCreationOutcome`'s two values (`CREATED` / `PLACEMENT_UNAVAILABLE`), and
+  `describeCreationAttempt()`'s own `switch` has a `default` branch that silently collapses any unrecognized
+  outcome to `IDLE` — no label, no message, no reason. Reusing today's view-model unmodified against a
+  preference-aware result would make a `PROVIDER_NOT_FOUND` outcome display as if nothing had ever been
+  attempted, a genuinely new failure mode this audit surfaces rather than a repeat of 0.9.299's own "never a
+  fallback" guarantee (which holds one layer down, at the coordinator itself).
+- **Publication and Snapshot placement are the same fact at the UI entry-point level, not just an
+  application-layer inference.** A repo-wide sweep of `ui/` finds exactly one file referencing a
+  placement-creation coordinator at all, operating on one `entries` list, with one click handler — never a
+  second, separately-rendered "Snapshot placement" surface.
+- **Nothing in production ever calls `RoleProviderPreferenceStore.save()` either.** Independent of whether
+  anything reads a CONTENT preference, nothing in this codebase's real wiring today lets a person *set* one —
+  only this sequence's own tests ever call `save()`.
+- **Decision: consumer-first (B), not settings-first (A).** A settings UI published today would control a
+  preference nothing reads, has no natural UI state to attach its meaning to, and would ship ahead of the
+  `PROVIDER_NOT_FOUND` display fix its own output would immediately need.
+
+### What this milestone adds
+
+- **`tests/ContentProviderPreferenceReachabilityAudit.test.js`** (new, registered in `tests.html`) — nine
+  lettered sections (A-I) proving, from real source and repo-wide sweeps, exactly where the reachability chain
+  described in this milestone's own brief stops, and naming — without building — the narrowest legitimate
+  UI change that would extend it.
+
+### What this milestone deliberately excludes
+
+Per the task's own request:
+
+- **No settings UI, provider dropdown, "preferred" checkbox, or any `ui/` change.** This audit inspects `ui/`;
+  it builds nothing there.
+- **No removal of explicit provider selection.**
+- **No Discovery or Proof & Anchoring preference integration.**
+- **No fallback, provider health checks, provider ranking, or automatic provider switching.**
+- **No change to any concrete store, the resolver, or `RoleProviderPreferenceStore`.**
+
+### What comes after
+
+The recommended next milestone, per this audit's own Outcome-2 verdict, is **0.9.301 — Content Provider
+Preference UI Integration**: add exactly one new trigger next to today's per-storage buttons (e.g. "Use My
+Preferred Provider") calling `preferredSnapshotPlacementCreationCoordinator.create(entry.publication.id)` with
+no storage argument, under its own non-colliding attempt-state key; extend `describeCreationAttempt()` so
+`PROVIDER_NOT_FOUND` renders an honest, visible message instead of silently collapsing to `IDLE`; and only
+then does a settings UI for reading and writing a CONTENT preference have something legitimate to control.
