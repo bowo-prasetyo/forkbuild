@@ -30,8 +30,13 @@ them), an [**Achievements**](#achievements) system that quietly badges a
 publication identity's own milestones, and a [**Publisher
 Identity**](#publisher-identity) layer that lets you explicitly associate
 a self-declared publisher label with your publications and see that
-publisher's own achievements and stats. None of these are required by
-any other, and none are required to use the rest of ForkBuild.
+publisher's own achievements and stats; and, orthogonal to all of it, an
+open [**Commentary**](#commentary) system letting any signed-in identity
+leave a short comment on any publication, which notifies that
+publication's own publisher through World View's
+[Notification History](03-WorldView.md#orientation-and-locations). None of
+these are required by any other, and none are required to use the rest of
+ForkBuild.
 
 None of this is required to use ForkBuild. Skip this guide entirely if you
 just want to build, publish Documents, and explore — everything in
@@ -59,6 +64,12 @@ word.
 You never create a publication directly from the Publications page itself —
 it's a read-only catalog of claims that reached this device some other way.
 There are two kinds today:
+
+(A signed authorship or place-name claim can also arrive without a peer at
+all, discovered directly from a decentralized network — see
+[Discover Publication](03-WorldView.md#discover-publication--searching-decentralized-networks-directly)
+and [Nearby Place Names](03-WorldView.md#nearby-place-names--discovering-claims-from-anyone)
+in World View.)
 
 ### Claiming authorship of a structure
 
@@ -166,6 +177,37 @@ Each card shows:
 None of these is a claim about whether the underlying *design or name is
 good* — only about whether the signed record and its content check out
 mechanically.
+
+## Commentary
+
+Any signed-in identity can leave a short comment on any publication that
+exists — an authorship attribution or a place name claim, either kind —
+the same open, readable-by-anyone posture the rest of the Publications
+system already has. There's no ownership check, no friendship or
+peer-connection requirement, and no moderation: if a publication resolves
+at all (see [Where a publication comes from](#where-a-publication-comes-from)),
+you can comment on it.
+
+Today, Commentary is reachable from one place: World View's
+[**My Publication**](03-WorldView.md#my-publication--distributing-your-own-snapshot-no-peers-required)
+panel, always about *your own* currently open, published world. Scroll
+below the Distribute Snapshot button and you'll find a **Commentary**
+section with a running count, the existing comments (each showing its
+author's identity and text, oldest first, never re-sorted or ranked), and
+— once you're signed in — a text box and **Post Comment** button. Not
+signed in? The box is replaced with a note to sign in first.
+
+A comment is permanent once posted: there's no edit or delete, and no
+replies or threading — just a flat, append-only list of what people said,
+in the order they said it.
+
+The moment someone comments on a publication you published, a
+**Publication commented** entry appears in your
+[Notification History](03-WorldView.md#orientation-and-locations) — a
+durable, cross-session record you can revisit any time from the
+**Notifications** button in World View's toolbar, even long after the
+comment itself scrolled out of view. It's the only kind of notification
+ForkBuild produces today.
 
 ## Local Snapshot
 

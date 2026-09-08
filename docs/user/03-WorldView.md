@@ -43,8 +43,8 @@ who's looking at it or when.
 ## Orientation and Locations
 
 Next to your camera coordinates, a small **compass** shows which way you're
-facing (it's read-only — it never moves the camera). Two buttons sit beside
-it:
+facing (it's read-only — it never moves the camera). Three buttons sit
+beside it:
 
 - **Home** resets the camera to the default view.
 - **Locations** opens a list of every place this session currently knows
@@ -52,6 +52,17 @@ it:
   with one **Focus** button. Like Search and Explore Here/What's Here?,
   Focus only ever moves the camera; it never loads, selects, or edits
   anything.
+- **Notifications** opens your **Notification History** — a durable record
+  of notification facts addressed to your identity, most recent activity
+  first. Today the only thing that produces one is someone commenting on a
+  publication you published (see
+  [Commentary](09-PublicationsAndEvidence.md#commentary) below) — each
+  entry shows what happened and when. It's a plain read-only log, not an
+  inbox: there's no read/unread state, no dismissing an entry, and no
+  count badge on the button itself. It loads once when you open it and
+  again only if you click **Refresh**; it never updates live in the
+  background. Unlike Locations, it's tied to your signed-in identity, not
+  to whatever World or document you currently have open.
 
 The compass shows cardinal directions (N, E, S, W) and your current heading
 in degrees, plus small dots for nearby structures, collaborators, and
@@ -71,14 +82,16 @@ same time.
 
 - **Explore** is the default. It shows the arrival/welcome panel (who's
   here, and a few suggested destinations) plus a **Nearby** section with
-  four collapsible groups — **Nearby Places**, **Nearby Landmarks**,
-  **Nearby People**, and **World Encounters** (see
+  five collapsible groups — **Nearby Places**, **Nearby Landmarks**,
+  **Nearby People**, **World Encounters** (see
   [World Encounters](#world-encounters--publications-and-avatars-your-peers-are-sharing)
+  below), and **Nearby Place Names** (see
+  [Nearby Place Names](#nearby-place-names--discovering-claims-from-anyone)
   below) — each just a name, a distance, and a compact **Go** button
-  (World Encounters instead shows its own small map and inspection panel,
-  described below). Click a group's title to expand it — World View
-  remembers which groups you left open even after you switch to Map or
-  Places and come back.
+  (World Encounters and Nearby Place Names instead show their own,
+  differently-shaped content, described below). Click a group's title to
+  expand it — World View remembers which groups you left open even after
+  you switch to Map or Places and come back.
 - **Map** opens the same flat, top-down World Map described below.
 - **Places** opens the geographic place directory described in
   [Geographic places](#geographic-places) below.
@@ -184,6 +197,37 @@ Discover Publication is the one exception — it works even with no
 connected peer at all, since it queries a decentralized network
 directly. See [Peer Connections & Friends](07-PeerConnectionsAndFriends.md)
 for connecting to someone.
+
+### Nearby Place Names — discovering claims from anyone
+
+**Nearby Place Names**, the fifth Nearby group, shows signed place-naming
+claims for the World Regions currently around you — without needing a
+connected peer at all. Like Discover Publication above, it searches a
+decentralized network (Nostr) directly for claims tagged to a region you're
+near; unlike anything else in Nearby, it starts collapsed by default, since
+a discovered, unverified claim is a new and unfamiliar kind of thing to see
+on this page.
+
+Each row shows the claimed name, roughly where it sits, who claimed it, and
+when. Two buttons are offered:
+
+- **Navigate** moves your camera to the claim's own region — exactly like
+  **Go** elsewhere in Nearby. It never adopts, verifies, or acts on the
+  claim in any way, and it never renames anything.
+- **Adopt** saves the claim to your own device, running it through the
+  same signature check a claim arriving from a connected peer already
+  goes through (see [Receiving one from a peer](09-PublicationsAndEvidence.md#receiving-one-from-a-peer)).
+  Once adopted it's simply a known claim, same as any other — the row's
+  Adopt button is replaced with **✓ Already saved**, and adopting the
+  same claim again just confirms nothing changed.
+
+Two claims naming the same ground both show up here — this list never
+picks a "winner," and adopting one is never a statement that it's more
+correct than another. If discovery itself fails (no relay connection, or a
+query error), a small notice says so, but whatever claims you already saw
+stay on screen; it's never treated as "there are no nearby claims." See
+[Naming a place](09-PublicationsAndEvidence.md#naming-a-place) for how a
+claim gets published in the first place.
 
 ### Info — what am I looking at?
 
@@ -525,6 +569,13 @@ own material at all. My Publication needs none of that: it's always here
 whenever you have a world open, whether or not anyone else is nearby, and
 whether or not it's currently published (until you publish it, the button
 is simply disabled, with a note that there's nothing to distribute yet).
+
+Below all of that sits a **Commentary** section, same as everything else
+on this panel scoped to your current world — see
+[Commentary](09-PublicationsAndEvidence.md#commentary) for the full
+picture of who can comment and what happens when they do. Like Distribute
+Snapshot, actually posting a comment needs your world published first;
+until then the compose box stays disabled.
 
 ## The Operation Timeline
 
