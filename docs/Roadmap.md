@@ -84584,3 +84584,101 @@ arc was built to enable — asking whether Place Naming's remaining
 candidates (preferred-name semantics, retraction, moderation,
 synchronization) are genuine product decisions or missing capabilities,
 rather than assuming the next field to add.
+
+## 0.9.268 — Post-Metadata Place Naming Product Reassessment
+
+The reassessment 0.9.267's own "what comes after" pointed to directly.
+This milestone adds **no new capability**. It is a **test-only
+reassessment**, the same recurring shape 0.9.221/0.9.241/0.9.250/0.9.252/
+0.9.259/0.9.262/0.9.265 already established, applied one milestone after
+0.9.266/0.9.267 built and proved `createdAtLabel`.
+
+### What this milestone adds
+
+`tests/PostMetadataPlaceNamingProductReassessment.test.js` (new) —
+structured around capability reachability and semantic evidence rather
+than another end-to-end reproduction:
+
+- **Section A** reconfirms the full discover -> proximity -> present (now
+  with author/createdAt) -> Navigate/Adopt -> verify -> persist ->
+  inspect/export pipeline is COMPLETE, with no duplicate implementation of
+  any stage, live.
+- **Section B** asks the interesting remaining metadata question directly:
+  does the existing verifier expose a stable semantic result appropriate
+  for UI consumption? FINDING: yes in shape —
+  `identity/LocalAuthorizationVerifier.js#verifyPlaceNamingClaim()` already
+  returns a structured `{ valid, signed, reason }` result, live-proven to
+  distinguish tampering from impersonation from validity with distinct,
+  truthful reasons — genuinely "signature -> existing verification
+  boundary -> meaningful result," never "signature bytes -> display." But
+  every real call site remains bound to a mutating operation (publish/
+  kind-registry-verify/import), and no non-mutating path from any session
+  or UI boundary to that result exists anywhere. Signature presentation is
+  therefore classified a **new verification/UI capability**, not a missing
+  metadata field — the exact distinction this milestone's own brief drew,
+  reconfirming and sharpening 0.9.266's own "Displaying Metadata Is Not
+  Verifying It" principle with fresh, adversarial live evidence rather
+  than restating it.
+- **Section C** reassesses adopted-claim removal: `retract()` remains
+  author-gated; none of five structurally different candidate meanings
+  ("remove from local store" / "stop displaying" / "withdraw my adoption"
+  / "invalidate the claim" / "delete the author's claim") has been
+  implemented anywhere. NEW FINDING this milestone contributes:
+  `LocalPlaceNamingClaimStore#retract()` itself carries no authorship
+  check at all — the gate lives entirely at the use-case layer — so this
+  is a **product policy decision waiting one layer up**, not a technical
+  blocker. Not resolved here.
+- **Section D** reconfirms the metadata presentation introduces none of
+  six named ranking behaviors (newest/oldest-wins, author-preference,
+  adoption-count, proximity, signature-based), live, with a deliberately
+  adversarial 6-year `createdAt` gap between two competing claims that
+  remain perfectly equal in standing.
+- **Section E** reconfirms adoption remains local-only, with no
+  publish/broadcast/gossip call on either the discovery or import side,
+  and — checked directly against `docs/Roadmap.md`/`docs/Principles.md`
+  rather than assumed — no product requirement anywhere demanding
+  adoption become observable to others.
+- **Section F** looks for actual user-journey friction rather than
+  another missing field. Two of the brief's four example frictions are
+  already resolved by pre-existing, unmodified surfaces ("why do two
+  names coexist" — `PlaceNamingPanel.js`'s own existing copy; "can an
+  adopted claim be inspected later" — the pre-existing "All Claims" list).
+  One survives scrutiny, unchanged since 0.9.265: a viewer cannot tell
+  "already retained" from "newly discovered" AT THE POINT OF ENCOUNTER,
+  before Adopt is clicked — `LocalPlaceNamingClaimStore#has()` already
+  answers the exact boolean needed, live-proven correct one layer below
+  the session. No domain capability becomes unreachable after adoption
+  (export, preference-setting, and adopting a second competing claim all
+  remain live-proven reachable).
+- **Section G** derives an 18-row capability/reachability matrix from
+  Sections A-F's own evidence, never hard-coded.
+- **Section H** ranks candidates without selecting one, explicitly
+  including a "0. Nothing further is evidenced" candidate.
+- **Section I** records the verdict.
+
+Registered in `tests.html`.
+
+### What this milestone deliberately excludes
+
+No production-code change whatsoever — matching this milestone's own
+brief precisely: no signature UI implementation, no adoption removal, no
+preferred/official-name semantics, no ranking, no moderation, no
+synchronization, no notifications, no automatic adoption, no
+`WorldRegion` mutation, and no new metadata field added merely for
+symmetry.
+
+### What comes after
+
+Not selected here, per this milestone's own brief. The evidence gathered
+supports a genuine possibility worth naming plainly: Place Naming, under
+its current semantic model (a claim is a signed opinion, never an
+authority; adoption is local retention, never propagation; competing
+names coexist, never rank against each other), may be product-complete.
+The one remaining concrete, evidence-backed, low-risk seam is an
+"already known" indicator on the Nearby row (Section F/H candidate 1) —
+everything else is either a product-design fork this reassessment
+lineage has now declined to resolve by fiat across three consecutive
+milestones (0.9.265, 0.9.267 by omission, 0.9.268), or a capability class
+with no evidenced requirement. A genuinely new product arc, rather than
+another Place Naming enhancement, is a legitimate, evidence-supported
+candidate for `0.9.269`.
