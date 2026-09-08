@@ -4864,6 +4864,16 @@ html, body {
     color: #808080;
 }
 
+/* 0.9.266 — Nearby Place Naming Claim Metadata Presentation. Same
+   full-width, secondary-line treatment as .world-view-place-naming-author
+   just above — createdAt is exactly as ordinary a fact as the author, never
+   visually promoted above it. */
+.world-view-place-naming-created {
+    flex-basis: 100%;
+    font-size: 0.7rem;
+    color: #808080;
+}
+
 .world-view-place-naming-error {
     color: #b08050;
 }
