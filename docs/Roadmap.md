@@ -84771,3 +84771,59 @@ resolution, a non-mutating signature/verification surface, cross-region claim ma
 product-design forks those reassessments each declined to resolve by fiat. A future lifecycle audit
 (`0.9.270`) and post-status reassessment (`0.9.271`) would follow the same one-milestone-later shape this arc has
 used throughout, per the sequence 0.9.268 itself proposed.
+
+## 0.9.270 — Place Naming Adoption Status Lifecycle Audit
+
+0.9.269 built `alreadySaved`; this milestone proves it holds under a lifecycle, the same one-milestone-later audit
+shape 0.9.261/0.9.264/0.9.267 already ran for Navigate, adoption, and metadata presentation in turn. This milestone
+adds **no new capability**. It is a **test-only lifecycle audit**.
+
+### What this milestone adds
+
+`tests/PlaceNamingNearbyAdoptionStatusLifecycleAudit.test.js` (new, registered in `tests.html`) — fifteen sections,
+all driving the real `NostrPlaceNamingDiscoverySource`, the real composed discovery runtime, a real
+`PlaceNamingDiscoveryMonitor`, and a real `WorldNavigationSession`: the self-published/adopted semantic identity
+reconfirmed across repeated live observation cycles rather than a single static call (A); the three cases this
+milestone's own brief named — not in store, adopted, self-published — proved side by side in one live pipeline (B);
+exact claim-id matching (different ids, authors, and a colliding id across Worlds) holding across every tick of a
+repeated live sequence, not just once (C); the full discovered -> not saved -> Adopt -> persist -> Already saved
+lifecycle, closed by re-deriving the identical status from a **brand-new session/monitor instance sharing only the
+underlying storage** — proving the status is reconstructed from persistence, never remembered by any in-memory
+UI/session state (D); both a verification failure (tampered signature) and, newly, a genuine **persistence-layer**
+failure (a storage provider that throws on `save()`) each leaving the indicator at `[Adopt]` across every subsequent
+observation cycle, with a later genuine retry still succeeding normally (E); a self-published claim rediscovered
+through a real, live Nostr relay reporting "Already saved" indistinguishably from an imported claim, including the
+idempotent no-op of clicking Adopt on one's own claim (F); competing claims ("Riverside"/Alice, "Old River"/Bob)
+independently, correctly split when only one is persisted and independently "Already saved" once both are, stable
+across repeated ticks (G); atomic discovery-refresh recomputation surviving a full disappear-and-reappear cycle, not
+just a single content swap (H); World switching (A -> B -> A) proven against a claim id **deliberately forced to
+collide** across the two Worlds (I); navigation independence, live and structural, including a row with a corrupted
+`alreadySaved` value (J); persistence independence proved in **both directions** — a claim vanishing from discovery
+never touches its persisted status, and a direct store change (retraction) is correctly picked up on the next
+discovery refresh (K); the manual `PlaceNamingPanel` file-import path converging onto the identical "Already saved"
+status the moment the same claim is subsequently encountered via Nearby discovery (L); two independent replicas
+observing the identical claim with independently correct, differing statuses, because the status is explicitly local
+(M); a FLAGSHIP continuous lifecycle threading self-publishing, a failed adoption attempt, competing claims, and a
+World switch through the full real discover -> present -> adopt -> verify -> persist -> recompute chain (N); and an
+architectural-freeze regression confirming `alreadySaved` is derived from nothing but
+`hasPlaceNamingClaim(worldId, claimId)` — never the current viewer's own identity, discovery source, claim text,
+signature presence, navigation state, or previous button clicks — with no second source of truth introduced anywhere
+since 0.9.269 (O).
+
+The invariant this file exists to freeze, verbatim from this milestone's own brief: **"Already saved" is a read-only
+observation of the current local claim store; it is not an adoption state, ownership state, preference, or authority
+signal.**
+
+### What this milestone deliberately excludes
+
+No new capability, and no production-code change whatsoever — every section either reconfirms 0.9.269's own boundary
+under a lifecycle it had not yet been exercised against, or records (never patches) product-design forks earlier
+reassessments already declined to resolve. Per this milestone's own brief: no `ADOPTED` domain state, no
+`SELF_PUBLISHED`/`IMPORTED` UI distinction, no preference/ranking, no automatic adoption, no synchronization, no
+notifications, no moderation, no claim deletion/retraction semantics, no signature UI, no `WorldRegion` mutation, and
+no changes to adoption semantics.
+
+### What comes after
+
+Per 0.9.269's own "what comes after": `0.9.271 — Post-Adoption-Status Product Reassessment`, which should reassess
+whether Place Naming has reached its natural product boundary rather than automatically adding another UI capability.
