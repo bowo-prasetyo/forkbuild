@@ -41,6 +41,7 @@ import { GetPublicationCommentariesUseCase } from './GetPublicationCommentariesU
 import { AddPublicationCommentaryUseCase } from './AddPublicationCommentaryUseCase.js';
 import { NotificationEventStore } from '../storage/NotificationEventStore.js';
 import { GetRecipientNotificationEventsUseCase } from './GetRecipientNotificationEventsUseCase.js';
+import { PublicationCommentaryNotificationProducer } from './PublicationCommentaryNotificationProducer.js';
 
 // Builds the world exploration backend and returns a session factory, so
 // ui/ never imports storage/, publisher/, or discovery/ directly.
@@ -197,6 +198,49 @@ export class CreateWorldViewUseCase {
         const getRecipientNotificationEventsUseCase = identityProvider
             ? new GetRecipientNotificationEventsUseCase(notificationEventStore, identityProvider)
             : null;
+
+        // 0.9.285 — Wire Publication Commentary Notification Producer.
+        // PublicationCommentaryNotificationProducer (0.9.275) has existed
+        // since 0.9.275 as a real, tested decorator — 0.9.276/0.9.282's
+        // own audits exercised it against real infrastructure, but always
+        // constructed it themselves, inside a test. This is the first
+        // place production code ever builds one: it wraps the SAME
+        // addPublicationCommentaryUseCase just built above (unmodified —
+        // this file never adds a fourth constructor argument to it),
+        // reuses the SAME discoveryProvider this method already built for
+        // placePublicationUseCase/worldLayoutProvider/searchWorldUseCase
+        // (no second discovery mechanism), and hands it a notificationSink
+        // that does exactly one thing — `notificationEventStore.save()`,
+        // the SAME store getRecipientNotificationEventsUseCase above
+        // already reads back through `loadAll()`.
+        //
+        // ONLY COMPOSITION CHANGES WHICH IMPLEMENTATION IS EXPOSED. Below,
+        // this decorated capability — never the raw addPublicationCommentaryUseCase
+        // — is what gets handed to WorldNavigationSession as its own
+        // `addPublicationCommentaryUseCase` collaborator. WorldNavigationSession
+        // itself is unmodified: it already only ever calls `.execute()` on
+        // whatever it is given, so it has no idea, and no need to know,
+        // that the object it holds now also produces a notification.
+        // AddPublicationCommentaryUseCase.js itself never becomes
+        // notification-aware — this preserves the exact decorator
+        // boundary 0.9.275 established.
+        //
+        // A notificationSink failure (a genuine storage-provider error out
+        // of `notificationEventStore.save()`) propagates unmodified out of
+        // this capability's own `execute()`, exactly as
+        // PublicationCommentaryNotificationProducer's own header documents
+        // — the Commentary itself is already durably persisted by the time
+        // the sink runs, and this composition introduces no transaction or
+        // rollback to undo that write over a notification failure. No
+        // producer-side deduplication is added here either — every retry
+        // still constructs a fresh NotificationEvent, and it is
+        // NotificationEventStore.save() (0.9.281, unmodified) that
+        // collapses it, exactly as 0.9.282 Section F already proved.
+        const publicationCommentaryCapability = new PublicationCommentaryNotificationProducer(
+            addPublicationCommentaryUseCase,
+            discoveryProvider,
+            (notificationEvent) => notificationEventStore.save(notificationEvent)
+        );
 
         const loadPublicationDocumentUseCase = new LoadPublicationDocumentUseCase(
             storageProvider
@@ -572,9 +616,17 @@ export class CreateWorldViewUseCase {
                     // authority up — see unpublishDocument().
                     unpublishDocumentUseCase,
                     // 0.9.248: see getPublicationCommentaries()/
-                    // addPublicationCommentary().
+                    // addPublicationCommentary(). 0.9.285: the collaborator
+                    // handed here is now publicationCommentaryCapability —
+                    // addPublicationCommentaryUseCase decorated with a real
+                    // NotificationEventStore-backed notification producer
+                    // (see this method's own 0.9.285 comment above) — never
+                    // the raw addPublicationCommentaryUseCase instance.
+                    // WorldNavigationSession itself is unaware of the
+                    // difference: it only ever calls `.execute()` on
+                    // whatever it is given.
                     getPublicationCommentariesUseCase,
-                    addPublicationCommentaryUseCase,
+                    addPublicationCommentaryUseCase: publicationCommentaryCapability,
                     // 0.9.284: see getRecipientNotificationEvents().
                     getRecipientNotificationEventsUseCase,
                     // 0.2.26: search/navigation — see searchWorld/

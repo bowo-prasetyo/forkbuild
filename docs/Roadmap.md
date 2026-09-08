@@ -85761,3 +85761,107 @@ sufficient as the notification product, or is there evidence for a separate deli
 already-built `PublicationCommentaryNotificationProducer` into a real composition root (so the History panel this
 milestone built actually has something to show) remains a separate, ranked, evidence-driven decision — not
 automatically bundled into this milestone just because the read side now exists.
+
+## 0.9.285 — Wire Publication Commentary Notification Producer
+
+0.9.284 completed the first end-to-end notification READ path — a signed-in identity can honestly ask "what
+notifications exist for me" — but left the one conspicuous gap its own "what comes after" named explicitly: the
+producer exists (0.9.275), is fully audited (0.9.276-0.9.282), and is fully unwired from any real composition root.
+This milestone closes exactly that gap, and only that gap — composition, not delivery semantics:
+
+```
+User adds Commentary
+        │
+        ▼
+AddPublicationCommentaryUseCase          (0.9.246, unmodified)
+        │
+        ▼
+PublicationCommentaryNotificationProducer (0.9.275, unmodified)
+        │
+        ├── Commentary persisted
+        ├── Publication publisher resolved
+        ├── NotificationEvent constructed
+        ▼
+NotificationEventStore                    (0.9.281, unmodified)
+        │
+        ▼
+Notification History                      (0.9.284, now showing REAL events)
+```
+
+### What this milestone adds
+
+`application/CreateWorldViewUseCase.js` is the only production file touched. Immediately after building
+`notificationEventStore` (0.9.284, unmodified — the SAME instance backs both directions), it now also constructs:
+
+```js
+const publicationCommentaryCapability = new PublicationCommentaryNotificationProducer(
+    addPublicationCommentaryUseCase,
+    discoveryProvider,
+    (notificationEvent) => notificationEventStore.save(notificationEvent)
+);
+```
+
+— wrapping the exact `addPublicationCommentaryUseCase`/`discoveryProvider` this method already built (never a second
+instance of either), with a `notificationSink` that does exactly one thing: `notificationEventStore.save()`, the SAME
+store `GetRecipientNotificationEventsUseCase` already reads from. `WorldNavigationSession` is then constructed with
+`addPublicationCommentaryUseCase: publicationCommentaryCapability` — the DECORATED capability, never the raw use
+case — as its own `addPublicationCommentaryUseCase` collaborator.
+
+That one substitution is the entire milestone. `AddPublicationCommentaryUseCase.js`, `PublicationCommentaryNotificationProducer.js`,
+`NotificationEvent.js`, `NotificationDeduplicationPolicy.js`, `NotificationEventStore.js`, `GetRecipientNotificationEventsUseCase.js`,
+`WorldNavigationSession.js`, `ui/views/WorldView.js`, and `ui/components/OwnPublicationPanel.js`/`NotificationHistoryPanel.js` are
+all completely unmodified. `WorldNavigationSession#addPublicationCommentary()` still only ever calls `.execute()` on whatever
+single object it was constructed with — it has no idea, and no need to know, that object now also produces a notification. The
+dependency direction stays exactly what it always was: `core`/`storage` ← `application` ← composition root ← UI, never the
+reverse — the producer is connected AT the composition root, never inside the Commentary domain code itself.
+
+Adds `tests/PublicationCommentaryNotificationRuntimeIntegration.test.js` (registered in `tests.html`), the flagship
+integration test for the notification arc, twelve sections: real composition (the production composition root itself
+constructs the decorated capability, plus the architectural boundary check this milestone's own brief asked for
+explicitly — `AddPublicationCommentaryUseCase`/`NotificationEvent`/`NotificationEventStore`/`WorldNavigationSession`/`WorldView`
+all remain unaware the producer exists); Commentary submitted through the real application command produces exactly
+one Commentary, one `NotificationEvent`, and one durable notification; correct recipient (the publisher, never the
+commenter merely for authoring); recipient isolation across two Publications/publishers with multiple Commentaries;
+Notification History visibility through the complete real chain (`WorldView` → Notification History →
+`GetRecipientNotificationEventsUseCase` → `NotificationEventStore`) — the first true vertical end-to-end notification
+test in this arc; retry/deduplication continuing to resolve entirely through the store's own established semantics,
+with no producer-side deduplication added; event-type/deduplication-identity continuity with the existing, unmodified
+policy; self-comment still producing a notification with no new suppression rule; a Publication-lookup miss leaving
+Commentary creation successful with notification absence preserved; a genuine notification storage failure
+propagating unmodified with the Commentary already durably on file and no rollback/transaction vocabulary anywhere in
+the composition root; a full UI lifecycle (create Commentary via `OwnPublicationPanel` → open Notifications via
+`NotificationHistoryPanel` → refresh → see the event) through the two real, unmodified panels this codebase already
+ships; and — the section this milestone's own brief asked to test explicitly — no duplicate wiring: exactly one
+`PublicationCommentaryNotificationProducer` construction site anywhere in `application`/`ui`, `WorldNavigationSession#addPublicationCommentary()`
+calling `.execute()` exactly once per invocation, exactly one `NotificationEventStore` instance backing both
+directions, and a deliberately constructed double-wiring negative case proving store-side deduplication would never
+conceal an accidental second producer with a different logical identity — only ever a genuine retry of the identical
+one.
+
+Also updates `tests/PostNotificationPersistenceProductReassessment.test.js` (0.9.282) in the same place 0.9.283/0.9.284
+each updated it after closing their own finding: Section J's "the producer has zero callers anywhere" is re-verified
+to exactly one caller (`application/CreateWorldViewUseCase.js`); Section J3's "the composition root that would need to
+change has not been touched" is re-verified to confirm it now has, decorating rather than modifying; Section M's rank
+2 ("wire the existing producer") moves from PARTIALLY-narrowed to CLOSED; and Section N's verdict text is updated to
+match. No other finding in that file (recipient isolation remaining field-level, `CONFLICT` remaining unreachable from
+the one real producer) is touched — neither was affected by this milestone.
+
+### What this milestone deliberately excludes
+
+Per the reviewer's own brief: no read/unread, no seen state, no delivery state, no push/WebSocket delivery, no
+notification subscriptions, no polling, no retry queues, no notification lifecycle, no TTL, no notification deletion,
+no notification preferences, no additional notification producers, no producer-side deduplication, no
+transactions/rollback between Commentary and `NotificationEventStore`, and no changes to `NotificationEvent`,
+`NotificationDeduplicationPolicy`, or `NotificationEventStore`. A notification storage failure propagates unmodified,
+exactly as `PublicationCommentaryNotificationProducer.js`'s own header already documented — "Commentary persisted +
+notification persistence failed" is the honest, non-atomic outcome this milestone leaves in place, not something it
+resolves.
+
+### What comes after
+
+Not selected here. Per this milestone's own brief, the natural next step is a Notification End-to-End Lifecycle
+Audit — rather than immediately adding another feature — to establish whether the first notification product is now
+genuinely complete: Commentary happens → the publisher gets a durable notification fact → the publisher can inspect
+it in Notification History. Only if that complete path exposes a concrete product gap should the next milestone move
+toward delivery, read/unread semantics, additional producers, or another notification capability — the same
+evidence-driven discipline 0.9.282's own reassessment already established for this arc.

@@ -824,12 +824,16 @@ async function runTests() {
     // into the product benefit from durable notification history today?
     // ===============================================================
     {
-        // J1. The producer itself — still completely unwired from any
-        // real composition root, exactly as 0.9.281's own "what comes
-        // after" left it.
+        // J1. The producer itself — at the time this milestone shipped,
+        // still completely unwired from any real composition root,
+        // exactly as 0.9.281's own "what comes after" left it. CLOSED by
+        // 0.9.285 (application/CreateWorldViewUseCase.js now constructs
+        // one real PublicationCommentaryNotificationProducer, backing
+        // WorldNavigationSession's own addPublicationCommentary()) —
+        // re-verified here as exactly one caller, never re-derived.
         const producerCallers = await grepCount('new PublicationCommentaryNotificationProducer(', ['application', 'ui'], { excludeSuffix: 'PublicationCommentaryNotificationProducer\\.js' });
-        assert(producerCallers === 0,
-            `J1. application/PublicationCommentaryNotificationProducer.js still has zero "new PublicationCommentaryNotificationProducer(" callers in application/ or ui/ (found ${producerCallers}) — no live code path constructs it.`);
+        assert(producerCallers === 1,
+            `J1. application/PublicationCommentaryNotificationProducer.js now has exactly one "new PublicationCommentaryNotificationProducer(" caller in application/ or ui/ (found ${producerCallers}) — application/CreateWorldViewUseCase.js (0.9.285).`);
 
         // J2. The store itself — CLOSED (for reads) by 0.9.284, which
         // wires a REAL NotificationEventStore into
@@ -849,13 +853,22 @@ async function runTests() {
             'J2b. The one real NotificationEventStore construction backs GetRecipientNotificationEventsUseCase specifically (0.9.284) — never a write path.');
 
         // J3. The one place a producer WOULD be wired in — WorldView's
-        // composition root — still constructs AddPublicationCommentaryUseCase
-        // directly, never wrapped by the notification producer. 0.9.284
-        // added a store/use-case pair for READS alongside this, but left
-        // the write side completely untouched — unaffected by J2's own
-        // update above.
-        assert(createWorldView.includes('new AddPublicationCommentaryUseCase(') && !createWorldView.includes('PublicationCommentaryNotificationProducer'),
-            'J3. application/CreateWorldViewUseCase.js still constructs a bare AddPublicationCommentaryUseCase — the composition root that would need to change to wire notification WRITES in has not been touched.');
+        // composition root — at the time this milestone shipped, still
+        // constructed AddPublicationCommentaryUseCase directly, never
+        // wrapped by the notification producer. 0.9.284 added a
+        // store/use-case pair for READS alongside this, but left the
+        // write side completely untouched. CLOSED by 0.9.285: the
+        // composition root still constructs the bare
+        // AddPublicationCommentaryUseCase (unmodified — see A1/O2's own
+        // "AddPublicationCommentaryUseCase never becomes notification-
+        // aware" finding, still true), but now wraps that exact instance
+        // in a PublicationCommentaryNotificationProducer and hands the
+        // WRAPPED capability — never the raw use case — to
+        // WorldNavigationSession.
+        assert(createWorldView.includes('new AddPublicationCommentaryUseCase(') && createWorldView.includes('new PublicationCommentaryNotificationProducer('),
+            'J3. application/CreateWorldViewUseCase.js still constructs a bare AddPublicationCommentaryUseCase, and now (0.9.285) also constructs a PublicationCommentaryNotificationProducer wrapping it — the composition root that needed to change to wire notification WRITES in now has.');
+        assert(/addPublicationCommentaryUseCase\s*:\s*publicationCommentaryCapability/.test(createWorldView),
+            'J3b. The decorated capability — never the raw addPublicationCommentaryUseCase — is what WorldNavigationSession actually receives as its own addPublicationCommentaryUseCase collaborator (0.9.285).');
 
         // J4. Candidate consumer #1 — a hypothetical "your Publication got
         // a comment" indicator somewhere Alice, as a publisher, would
@@ -880,7 +893,7 @@ async function runTests() {
         assert(!/markRead|isRead|\breadAt\b|delivered|acknowledg/i.test(codeOnlyLines(navSession)),
             'J5b. The new method introduces no lifecycle/delivery vocabulary of its own — still a plain read-only delegate, same restraint every other getX() method on this file already holds to.');
 
-        console.log('✓ J: Re-verified rather than re-derived. The producer (J1) still has zero callers anywhere — nothing in the live product WRITES a notification today. The store (J2) now has exactly one caller, added by 0.9.284 to back reads only, so the honest picture is "queryable, never yet populated," not "still fully unwired." The composition root that would wire WRITES in remains untouched (J3). Of the two natural existing homes this finding named, OwnPublicationPanel still carries no notification vocabulary at all (J4, unaffected by 0.9.284 — the History panel is a separate surface), while WorldNavigationSession now does, through one thin read-only delegate with no lifecycle vocabulary of its own (J5).');
+        console.log('✓ J: Re-verified rather than re-derived. The producer (J1) now has exactly one caller — application/CreateWorldViewUseCase.js (0.9.285) — so the live product now WRITES a notification on every successfully persisted Commentary. The store (J2) has had exactly one caller since 0.9.284 (reads); 0.9.285 adds no second store construction — the SAME notificationEventStore instance now backs both the read path (GetRecipientNotificationEventsUseCase) and the producer\'s own notificationSink. The composition root that would wire WRITES in has now been touched, decorating rather than modifying (J3). Of the two natural existing homes this finding named, OwnPublicationPanel still carries no notification vocabulary at all (J4, unaffected by 0.9.284 or 0.9.285 — the History panel is a separate surface), while WorldNavigationSession still exposes only the one thin read-only delegate 0.9.284 added, with no lifecycle vocabulary of its own (J5) — 0.9.285 gave it a notification-producing WRITE path without adding any read-side vocabulary here either.');
     }
 
     // ===============================================================
@@ -1000,8 +1013,8 @@ async function runTests() {
             },
             {
                 rank: 2,
-                name: 'Wire the existing producer into a real composition root — PARTIALLY narrowed by 0.9.284 (reads only)',
-                evidence: 'Section J found the producer and the store both fully built and fully unwired — zero constructors called outside their own files. 0.9.284 wired the STORE (for reads, backing GetRecipientNotificationEventsUseCase) but deliberately left the PRODUCER exactly as unwired as this section found it (Section J1/J3, reconfirmed) — a signed-in identity can now query notification history honestly, but nothing yet writes one. This rank\'s own remaining scope narrows to "wire the producer," not "wire the store," but is not itself closed.'
+                name: 'Wire the existing producer into a real composition root — CLOSED by 0.9.285 (application/CreateWorldViewUseCase.js)',
+                evidence: 'Section J found the producer and the store both fully built and fully unwired — zero constructors called outside their own files. 0.9.284 wired the STORE (for reads, backing GetRecipientNotificationEventsUseCase). 0.9.285 closed the remaining half: application/CreateWorldViewUseCase.js now constructs a real PublicationCommentaryNotificationProducer wrapping the SAME AddPublicationCommentaryUseCase instance it already built, sinking into the SAME NotificationEventStore instance the read side already reads from, and hands the decorated capability — never the raw use case — to WorldNavigationSession (Section J1/J3, re-verified). AddPublicationCommentaryUseCase.js itself remains completely unmodified — only composition changed which implementation is exposed.'
             },
             {
                 rank: 3,
@@ -1077,27 +1090,36 @@ async function runTests() {
 '    is exactly why that question is live now. Still not merged.\n' +
 '\n' +
 'EXISTING CONSUMERS (Section J)\n' +
-'    Narrowed by 0.9.284. The store now has exactly one real caller\n' +
-'    (application/CreateWorldViewUseCase.js, backing GetRecipientNotificationEventsUseCase\n' +
-'    for READS), and WorldNavigationSession now exposes\n' +
-'    getRecipientNotificationEvents(). The producer remains fully built and\n' +
-'    fully unwired — nothing yet WRITES a notification in the live product.\n' +
+'    Narrowed by 0.9.284, then closed for writes by 0.9.285. The store has\n' +
+'    exactly one real caller (application/CreateWorldViewUseCase.js), now\n' +
+'    backing BOTH GetRecipientNotificationEventsUseCase (reads, 0.9.284) and\n' +
+'    PublicationCommentaryNotificationProducer\'s own notificationSink\n' +
+'    (writes, 0.9.285) — the SAME NotificationEventStore instance, not two.\n' +
+'    WorldNavigationSession still exposes only the one read method 0.9.284\n' +
+'    added; its own addPublicationCommentary() now delegates to the\n' +
+'    decorated, notification-producing capability without WorldNavigationSession\n' +
+'    itself changing at all.\n' +
 '\n' +
-'RANKED CANDIDATES FOR THE NEXT PRODUCT SEAM (as ranked here; ranks 1 and 4 since built)\n' +
+'RANKED CANDIDATES FOR THE NEXT PRODUCT SEAM (as ranked here; ranks 1, 2 and 4 since built)\n' +
 '    1. Recipient query capability — CLOSED by 0.9.283\n' +
 '       (application/GetRecipientNotificationEventsUseCase.js). Built exactly\n' +
 '       as safely derivable (Section C), resolving Section D6\'s own open\n' +
 '       design question by hard-scoping to the authenticated identity, never\n' +
 '       a caller-supplied id.\n' +
-'    2. Wire the existing producer into a real composition root — PARTIALLY\n' +
-'       narrowed by 0.9.284 (the store is now wired for reads; the producer\n' +
-'       that would WRITE a notification remains completely unwired).\n' +
+'    2. Wire the existing producer into a real composition root — CLOSED by\n' +
+'       0.9.285 (application/CreateWorldViewUseCase.js). The store was\n' +
+'       already wired for reads (0.9.284); 0.9.285 wired the producer that\n' +
+'       WRITES a notification, wrapping the SAME AddPublicationCommentaryUseCase\n' +
+'       instance rather than modifying it.\n' +
 '    3. A second producer (Friend Relationship REQUEST) — the one other\n' +
 '       structurally sound candidate 0.9.274 already found, ranked below\n' +
 '       recipient querying so it does not compound Section J\'s own\n' +
-'       fully-built/fully-unreachable finding.\n' +
+'       fully-built/fully-unreachable finding. 0.9.285 deliberately adds no\n' +
+'       second producer.\n' +
 '    4. Notification UI — CLOSED by 0.9.284 (ui/components/NotificationHistoryPanel.js),\n' +
-'       built strictly on top of rank 1, never a reimplementation of it.\n' +
+'       built strictly on top of rank 1, never a reimplementation of it. Now\n' +
+'       capable of showing REAL notifications end to end, since rank 2\'s own\n' +
+'       closure (0.9.285) is what finally populates the store it reads from.\n' +
 '    5. Delivery / read state / lifecycle — still the largest, still\n' +
 '       genuinely deferred.\n' +
 '\n' +
@@ -1106,15 +1128,17 @@ async function runTests() {
 '    build. Per this milestone\'s own brief: durable notification history is\n' +
 '    real, recipient querying was provably safe to derive and was later built\n' +
 '    exactly that way (0.9.283), a Notification History UI was built directly\n' +
-'    on top of it (0.9.284), and the honest gaps this reassessment found\n' +
-'    (Section D6\'s field-level-only isolation, Section G\'s unreachable\n' +
-'    CONFLICT path, and the still-fully-unwired producer) remain recorded,\n' +
-'    not resolved by either later build.\n' +
-'    Choosing and building the next seam after 0.9.283 is a separate, later,\n' +
+'    on top of it (0.9.284), and the producer that WRITES a notification was\n' +
+'    wired into the same composition root by 0.9.285 — completing the first\n' +
+'    end-to-end notification read path. The honest gaps this reassessment\n' +
+'    found that neither later build resolved (Section D6\'s field-level-only\n' +
+'    isolation, Section G\'s unreachable CONFLICT path) remain recorded, not\n' +
+'    resolved.\n' +
+'    Choosing and building the next seam after 0.9.285 is a separate, later,\n' +
 '    evidence-driven decision — this milestone answered "what was true then,"\n' +
 '    never "what to build next."\n');
 
-        console.log('✓ Section N: Verdict recorded. The notification pipeline is closed end to end with no layer having become a delivery system (Section A); the capability matrix classifies all thirteen named rows with concrete evidence (Section B), two of them (recipient query, notification UI) re-verified here as COMPLETE via later milestones rather than re-derived; recipient querying was proven safely derivable and — re-verified here — was subsequently built exactly that way by 0.9.283, one layer up from the store (Section C); recipient isolation holds at the field level with an honestly-recorded storage-partition gap (Section D); restart/reconstruction and deduplication both hold through the full real pipeline, including a genuine closure of 0.9.276\'s own open retry-duplication finding (Sections E/F); conflict detection is reconfirmed but found structurally unreachable from the one real producer (Section G); the persistence/delivery boundary and the ChatOutbox boundary both hold, the latter on sharper grounds than before (Sections H/I); existing consumers were re-verified as narrowed, not zero, now that 0.9.284 wired the store for reads and gave WorldNavigationSession a real read method, though the producer remains fully unwired (Section J); MISSING_DOMAIN_CAPABILITY and MISSING_UI are shown to have been ordered, not independent, and 0.9.283/0.9.284 closed them in that exact order (Section K); all four deferred candidates are revisited with the UI-only one (L2) now closed by 0.9.284 (Section L); and five candidates are ranked with reasoning grounded in specific sections (Section M) — ranks 1 and 4 now built, in dependency order, and this milestone\'s own no-implementation scope is unaffected by either later build.');
+        console.log('✓ Section N: Verdict recorded. The notification pipeline is closed end to end with no layer having become a delivery system (Section A); the capability matrix classifies all thirteen named rows with concrete evidence (Section B), two of them (recipient query, notification UI) re-verified here as COMPLETE via later milestones rather than re-derived; recipient querying was proven safely derivable and — re-verified here — was subsequently built exactly that way by 0.9.283, one layer up from the store (Section C); recipient isolation holds at the field level with an honestly-recorded storage-partition gap (Section D); restart/reconstruction and deduplication both hold through the full real pipeline, including a genuine closure of 0.9.276\'s own open retry-duplication finding (Sections E/F); conflict detection is reconfirmed but found structurally unreachable from the one real producer (Section G); the persistence/delivery boundary and the ChatOutbox boundary both hold, the latter on sharper grounds than before (Sections H/I); existing consumers were re-verified as narrowed, not zero, now that 0.9.284 wired the store for reads and gave WorldNavigationSession a real read method, and 0.9.285 wired the producer that WRITES a notification into the same composition root, sinking into the same store instance (Section J); MISSING_DOMAIN_CAPABILITY and MISSING_UI are shown to have been ordered, not independent, and 0.9.283/0.9.284 closed them in that exact order (Section K); all four deferred candidates are revisited with the UI-only one (L2) now closed by 0.9.284 (Section L); and five candidates are ranked with reasoning grounded in specific sections (Section M) — ranks 1, 2 and 4 now built, in dependency order, and this milestone\'s own no-implementation scope is unaffected by any later build.');
     }
 
     console.log('\n✅ All PostNotificationPersistenceProductReassessment tests passed.');
