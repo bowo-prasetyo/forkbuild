@@ -85097,6 +85097,74 @@ evidenced durability requirement (a recipient inbox UI with something to read on
 named in Section H), and only then choose among the persistence identity, de-duplication, and recipient-fan-out
 semantics this audit deliberately left frozen rather than decided.
 
+## 0.9.278 — Notification Deduplication Identity Audit
+
+0.9.277's own overall verdict named a question without answering it: persistence alone does not resolve the
+retry-duplication question, because "persist it" presupposes an answer to a prior, unstated question — what exactly
+is being persisted, and under what identity would two representations of it count as "the same"? Building a
+`NotificationEventStore` now, keyed by whichever field seems obvious, would silently pick a dedup identity by
+accident, exactly the mistake 0.9.277 itself avoided for persistence models in general. This milestone is that
+identity decision's own audit. Test-only, per this milestone's own brief: no `NotificationEventStore`, no
+deterministic notification IDs, no de-duplication implementation, no inbox, no delivery, no read/unread state, no
+retry queues, no notification lifecycle, no notification UI, no `ChatOutbox` changes, no fan-out producer, no
+additional notification producers.
+
+### What this milestone adds
+
+`tests/NotificationDeduplicationIdentityAudit.test.js` (new, registered in `tests.html`) — eleven sections. Section A
+restates the one-event-per-call baseline fresh. Section B defines five candidate dedup identities as plain,
+standalone functions — `notificationId`, `commentaryId`, `commentaryId + recipientIdentityId`,
+`commentaryId + eventType + recipientIdentityId`, and `producer invocation` — and proves the first four are
+computable purely from a `NotificationEvent` instance while the fifth structurally is not, because no
+`NotificationEvent` field records which producer call constructed it. Section C evaluates all five candidates against
+an exact caller retry (the 0.9.276/0.9.277 flagship scenario): three candidates are mechanically capable of collapsing
+the retry into one notification, two are not, and the acceptability question stays explicitly `OPEN_DEDUP_DECISION`.
+Section D proves two candidates (`commentaryId` alone, and `producer invocation`) are UNSOUND for recipient
+fan-out — each would wrongly collapse two distinct recipients' notifications into one, for two structurally different
+reasons (fact-scoped vs. call-scoped), simulating the one scenario 0.9.277 Section D proved is capable at the
+`NotificationEvent` layer but not yet reachable from the real producer. Section E proves two different candidates
+(`commentaryId` alone, and `commentaryId + recipientIdentityId`) are UNSOUND across event types, the exact case this
+milestone's own brief named (`publication.commented` must not collide with a future `publication.updated`) — proven
+before a second event type actually exists in production. Section F is the sanity direction: no candidate ever
+collapses two genuinely different Commentaries. Section G asks the reconstruction-identity question directly:
+content-based candidates automatically treat a rebuilt event as the same notification as the original it replaces,
+and even as the same notification as an independent second reconstruction of the identical facts; instance/
+invocation-based candidates never do, or cannot even resolve an identity for a reconstruction at all — naming the
+"domain fact identity vs. `NotificationEvent` instance identity" distinction directly, without introducing a
+deterministic ID. Section H proves the self-comment case (0.9.275) is untouched: every candidate computes a normal,
+unspecialized key for a self-authored Commentary, and a self-comment retries exactly like any other. Section I
+aggregates a five-row candidate comparison table from Sections B-G's own recorded findings and shows exactly two
+candidates satisfy both structural soundness requirements (`notificationId`, trivially, and
+`commentaryId + eventType + recipientIdentityId`) — differing only on whether a retry collapses, which is exactly the
+open question this audit does not resolve. Section J records the six-row product-decision classification table this
+milestone's own brief specified. Section K is a structural regression confirming zero production files this audit
+examines were modified, and confirms `NotificationEvent` itself exposes no `dedupKey`/`identityKey`/`equals`/-shaped
+method anywhere on its prototype chain.
+
+### What this milestone deliberately excludes
+
+Per this milestone's own brief: no `NotificationEventStore`, no deterministic notification IDs, no de-duplication
+implementation, no inbox, no delivery, no read/unread state, no retry queues, no notification lifecycle, no
+notification UI, no `ChatOutbox` changes, no fan-out producer, no additional notification producers. No candidate
+identity is selected as correct — each is characterized, not adopted. Two questions this audit sharpens remain
+explicitly open: whether an exact retry should collapse into one notification, and whether a reconstructed event
+should share its original's logical identity. Two structural requirements — recipient separation and event-type
+separation — are established as `REQUIRED`, not left open, because Sections D and E prove violating either produces
+observably wrong behavior (a real person told about a real, different fact, silently merged away) regardless of any
+future product preference.
+
+### What comes after
+
+`NotificationEvent` itself was deliberately never given a dedup responsibility in this milestone (Section K) — all
+five candidate identities remain external, test-only functions, exactly as this milestone's own architecture note
+intends: whether two representations of a fact should collapse is an application/persistence policy question, not an
+intrinsic property of the value object. A future `0.9.279` should not default to building a `NotificationEventStore`
+merely because this audit named its candidate identities — it should first close the two `OPEN` rows this audit left
+(retry-collapse acceptability, reconstruction-identity semantics) with actual product evidence, honor the two
+`REQUIRED` structural constraints this audit proved (recipient separation, event-type separation) as a floor any
+chosen identity must satisfy, and only then — if durable notification history or reliable delivery is actually
+justified, per 0.9.277's own unresolved conditional — become the `NotificationEvent` persistence boundary.
+
 ## 0.9.270 — Place Naming Adoption Status Lifecycle Audit
 
 0.9.269 built `alreadySaved`; this milestone proves it holds under a lifecycle, the same one-milestone-later audit
