@@ -19525,3 +19525,55 @@ actually needs an answer; the fact itself — "this notification-worthy thing ha
 stays exactly as small as 0.9.273 first made it.
 
 See `docs/Roadmap.md`, 0.9.278, for the full milestone entry.
+
+## A Key Collision Is Necessary, Never Sufficient, Evidence Of Sameness (0.9.279)
+
+0.9.278 asked whether two events compute the same dedup key. It never asked what happens once they do. 0.9.279 fixes
+0.9.278's own strongest surviving candidate — `commentaryId + eventType + recipientIdentityId` — as a stable
+collision detector, used only to run scenarios, never adopted as policy, and spends its entire budget on the
+question a real store would actually face the moment a collision occurs.
+
+**A collision is a relation between keys, not between instances.** Every colliding pair in this milestone remains
+two distinct `NotificationEvent` objects with two distinct `notificationId` values — collision is proven as a
+property of `auditCandidateKey(a) === auditCandidateKey(b)`, never confused with object identity. This sounds
+obvious until Section G: a reconstruction of a lost event and a fresh live retry produce collision profiles that are
+byte-for-byte identical in shape. Nothing on a `NotificationEvent` — no `origin`, no `reconstructedFrom`, no
+provenance field of any kind — records how it came to exist. A future policy that wants to trust a reconstruction
+more than a retry, or vice versa, cannot do it from the event alone; that trust would require tracking this
+codebase does not have.
+
+**Payload-identical collisions narrow the choice; they do not remove it.** When two colliding events agree on every
+observable field, "first wins" and "latest wins" are proven observationally equivalent — a consumer could never
+tell which one a store kept. That narrows Section B's own open question to a question about non-observable
+bookkeeping alone (which physical row id survives), not about what a user would see. It is progress, but it is not
+an answer: some choice is still required, and 0.9.279 declines to make it, the same restraint 0.9.276 through 0.9.278
+already established as this project's own house style for audits.
+
+**Benign disagreement and contradiction are different problems wearing the same collision.** Section C's colliding
+pair disagrees by addition — one payload is a strict superset of the other, and all four resolution strategies this
+milestone's own brief named (first wins, latest wins, conflicting representation, a new notification despite the
+shared key) are mechanically buildable with nothing to prefer one. Section I's colliding pair disagrees by
+contradiction — two different claimed authors for one immutable Commentary, a fact the candidate key never
+inspects. Both pairs collide identically under the same key. Only one of them could ever be resolved safely by a
+blind "first/latest wins" rule; applied to the other, that same rule would silently pick one of two incompatible
+truths and destroy the record that a contradiction ever existed. The collision-integrity boundary this milestone
+names is exactly this: **detecting** the contradiction before any collapse policy runs is `REQUIRED` regardless of
+product preference, even though **what to do** once detected — reject, flag, log and keep both — is left `OPEN`,
+because this milestone's own brief never asked for that answer either.
+
+**Not everything stays open, and that is the point.** 0.9.279's own decision matrix classifies nine scenarios: six
+carry a `REQUIRED` structural constraint a future persistence layer cannot skip regardless of taste (event-type and
+recipient separation, reconfirmed from 0.9.278; `createdAt` excluded from identity; self-comment gets no special
+case; reconstruction must be treated exactly like a live retry; incompatible-fact detection), one is `NARROWED` to a
+non-observable bookkeeping choice, and only two remain genuinely `OPEN` product decisions — whether a benign
+collision collapses at all, and what corrective action an incompatible-facts collision should trigger. An audit that
+answered "OPEN" nine times would have added evidence without adding clarity; naming which questions the architecture
+has already answered, even when this milestone did not set out to answer them, is the actual deliverable.
+
+**The value object still does not decide, and still does not need to.** `core/NotificationEvent.js` gains no
+`collidesWith`, `isCompatibleWith`, `supersedes`, or `merge` — collision detection and collision resolution both stay
+external, application-level policy, exactly where 0.9.278 already drew that boundary for dedup identity itself. A
+`NotificationEvent` remains exactly the small, immutable fact 0.9.273 first made it; every question this milestone
+raises is a question about what happens BETWEEN two of them, asked and answered entirely from outside.
+
+See `docs/Roadmap.md`, 0.9.279, for the full milestone entry.
