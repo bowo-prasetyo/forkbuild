@@ -54,6 +54,7 @@ selection, or edit anything. See
 | Compass indicator | Read-only heading with contextual markers for nearby structures and terrain features |
 | **Home** | Reset the camera to the default view |
 | **Locations** | Open a list of Home plus every structure known this session, each with a **Focus** button |
+| **Notifications** | Open your **Notification History** — a read-only log, not a camera action; see [World View](03-WorldView.md#orientation-and-locations) |
 
 ### Contextual location descriptions
 

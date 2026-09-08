@@ -27,10 +27,19 @@ top-level [docs/](..) folder.
    came from, its distribution status and a **Distribute Publication**
    action, a separate, independent **Snapshot Distribution** panel with
    its own **Distribute Snapshot** action for that publication's Snapshot
-   protocol, and a separate **Discover Publication** search that queries
+   protocol, a separate **Discover Publication** search that queries
    Arweave/Nostr directly by publication id and tag — independent of any
    marker or connected peer — letting you inspect and explicitly select a
-   verified result found that way.
+   verified result found that way, a **Nearby Place Names** group that
+   discovers signed place-naming claims from a decentralized network for
+   regions around you (again with no connected peer required), lets you
+   **Navigate** to one or **Adopt** it onto your own device, and never
+   picks a winner when two claims name the same ground, an open
+   **Commentary** thread on your own published world reachable from **My
+   Publication**, letting any signed-in identity leave a permanent,
+   unremovable comment, and a **Notifications** button opening a durable,
+   cross-session **Notification History** of who commented on what and
+   when.
 4. **[Publishing & Forking](04-PublishingAndForking.md)** — sharing
    your work, licenses, how forking works (including the automatic
    fork that happens the moment you edit a published creation), and
@@ -94,7 +103,12 @@ top-level [docs/](..) folder.
    documents against each other across three independent Source-only/
    Shared/Target-only tables with per-record and per-field identity
    inspection, plus an **Explicit Record Pairing** tool for hand-picking
-   two records and seeing exactly which named fields differ between them.
+   two records and seeing exactly which named fields differ between them,
+   and, orthogonal to all of it, an open **[Commentary](09-PublicationsAndEvidence.md#commentary)**
+   system letting any signed-in identity comment on any publication —
+   reached from World View's own **My Publication** panel — which
+   notifies that publication's publisher through a durable **Notification
+   History**.
 
 ## Reference
 
