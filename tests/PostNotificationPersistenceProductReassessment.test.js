@@ -354,14 +354,25 @@ async function runTests() {
         assert(deliveryHits === 0, 'B12. No delivery/dispatch class is actually defined anywhere for notifications — the producer\'s own header only NAMES these to explain their absence.');
         capabilityRegister.push(['Deliver notification', 'MISSING_DOMAIN_CAPABILITY']);
 
-        // B13. Notification UI.
+        // B13. Notification UI — CLOSED by 0.9.284
+        // (ui/components/NotificationHistoryPanel.js). Re-verified here
+        // rather than re-derived, the exact same restraint 0.9.283's own
+        // update to B10 already used: this row's finding was MISSING_UI
+        // at the time this milestone shipped; a LATER milestone closed
+        // it, and this section is updated to say so rather than left to
+        // assert something now false.
+        assert(!/NotificationInbox|NotificationCenter/.test(await rawSource('ui/components/NotificationHistoryPanel.js').catch(() => '')),
+            'B13a. The real panel that closed this row is still named "Notification History," never "Notification Inbox"/"Notification Center" — see docs/Roadmap.md\'s own 0.9.284 entry for why.');
         const uiHits = await grepCount('NotificationEvent\\|NotificationEventStore\\|NotificationInbox\\|NotificationCenter', ['ui'], { ignoreCase: false });
-        assert(uiHits === 0, 'B13. No file under ui/ references NotificationEvent, NotificationEventStore, or any notification-presentation vocabulary at all.');
-        capabilityRegister.push(['Notification UI', 'MISSING_UI']);
+        assert(uiHits >= 1,
+            'B13b. At least one file under ui/ now references notification vocabulary (0.9.284) — the MISSING_UI finding this row named at the time this milestone shipped is no longer an accurate description of the current source.');
+        assert(await sourceExists('ui/components/NotificationHistoryPanel.js'),
+            'B13c. ui/components/NotificationHistoryPanel.js now exists (0.9.284) — the capability this row named is built.');
+        capabilityRegister.push(['Notification UI', 'COMPLETE (0.9.284) — ui/components/NotificationHistoryPanel.js, read-only, no lifecycle state']);
 
         assert(capabilityRegister.length === 13, 'B14. All thirteen capability rows this milestone\'s own brief names were classified.');
 
-        console.log('✓ B: Capability/reachability matrix complete — nine rows COMPLETE (create, determine recipient, deduplicate, persist, reconstruct, retrieve-by-id, retrieve-by-identity, detect conflicts at the storage layer, enumerate history at the storage layer), one row this milestone\'s own brief specifically asked about now COMPLETE via 0.9.283 (retrieve-for-recipient — re-verified above, not re-derived), two further MISSING_DOMAIN_CAPABILITY rows (mark read, deliver), and one MISSING_UI row. Each row cites a concrete signal, never asserted from category alone.');
+        console.log('✓ B: Capability/reachability matrix complete — nine rows COMPLETE (create, determine recipient, deduplicate, persist, reconstruct, retrieve-by-id, retrieve-by-identity, detect conflicts at the storage layer, enumerate history at the storage layer), two further rows this milestone\'s own brief specifically asked about now COMPLETE via LATER milestones (retrieve-for-recipient via 0.9.283, notification UI via 0.9.284 — both re-verified above, not re-derived), and two remaining MISSING_DOMAIN_CAPABILITY rows (mark read, deliver). Each row cites a concrete signal, never asserted from category alone.');
         console.log('\nCapability register:');
         for (const [name, status] of capabilityRegister) {
             console.log(`    ${name.padEnd(38)} ${status}`);
@@ -820,36 +831,56 @@ async function runTests() {
         assert(producerCallers === 0,
             `J1. application/PublicationCommentaryNotificationProducer.js still has zero "new PublicationCommentaryNotificationProducer(" callers in application/ or ui/ (found ${producerCallers}) — no live code path constructs it.`);
 
-        // J2. The store itself — same finding, reconfirmed for
-        // NotificationEventStore specifically.
+        // J2. The store itself — CLOSED (for reads) by 0.9.284, which
+        // wires a REAL NotificationEventStore into
+        // application/CreateWorldViewUseCase.js to back
+        // GetRecipientNotificationEventsUseCase's own read path. This is
+        // deliberately NOT the same finding as J1 resolving: the
+        // producer that would ever WRITE a NotificationEvent (J1, still
+        // zero callers) remains completely unwired, so a signed-in
+        // identity can now honestly ask "what notifications exist for
+        // me" through a store that will, correctly, always answer
+        // "none" until a producer is separately wired to write into it.
         const storeCallers = await grepCount('new NotificationEventStore(', ['application', 'ui'], { excludeSuffix: 'NotificationEventStore\\.js' });
-        assert(storeCallers === 0,
-            `J2. storage/NotificationEventStore.js still has zero "new NotificationEventStore(" callers in application/ or ui/ (found ${storeCallers}) — nothing in the live product persists a notification today.`);
+        assert(storeCallers === 1,
+            `J2. storage/NotificationEventStore.js now has exactly one "new NotificationEventStore(" caller in application/ or ui/ (found ${storeCallers}) — application/CreateWorldViewUseCase.js (0.9.284), wired for reads only.`);
+        const createWorldView = await rawSource('application/CreateWorldViewUseCase.js');
+        assert(createWorldView.includes('new GetRecipientNotificationEventsUseCase(notificationEventStore, identityProvider)'),
+            'J2b. The one real NotificationEventStore construction backs GetRecipientNotificationEventsUseCase specifically (0.9.284) — never a write path.');
 
         // J3. The one place a producer WOULD be wired in — WorldView's
         // composition root — still constructs AddPublicationCommentaryUseCase
-        // directly, never wrapped by the notification producer.
-        const createWorldView = await rawSource('application/CreateWorldViewUseCase.js');
+        // directly, never wrapped by the notification producer. 0.9.284
+        // added a store/use-case pair for READS alongside this, but left
+        // the write side completely untouched — unaffected by J2's own
+        // update above.
         assert(createWorldView.includes('new AddPublicationCommentaryUseCase(') && !createWorldView.includes('PublicationCommentaryNotificationProducer'),
-            'J3. application/CreateWorldViewUseCase.js still constructs a bare AddPublicationCommentaryUseCase — the composition root that would need to change to wire notifications in has not been touched.');
+            'J3. application/CreateWorldViewUseCase.js still constructs a bare AddPublicationCommentaryUseCase — the composition root that would need to change to wire notification WRITES in has not been touched.');
 
         // J4. Candidate consumer #1 — a hypothetical "your Publication got
         // a comment" indicator somewhere Alice, as a publisher, would
         // already be looking. OwnPublicationPanel (where Alice manages
-        // her own Publications) references no notification vocabulary at
-        // all.
+        // her own Publications) still references no notification
+        // vocabulary at all — 0.9.284 deliberately built a SEPARATE
+        // Notification History surface (see J5) rather than folding
+        // notification vocabulary into this one.
         const panel = await rawSource('ui/components/OwnPublicationPanel.js');
         assert(!/Notification/.test(panel),
-            'J4. ui/components/OwnPublicationPanel.js — the one existing UI surface a publisher already visits to manage their own Publications, the single most natural home for a future notification indicator — still contains zero Notification vocabulary of any kind.');
+            'J4. ui/components/OwnPublicationPanel.js — the one existing UI surface a publisher already visits to manage their own Publications — still contains zero Notification vocabulary of any kind, even after 0.9.284.');
 
-        // J5. Candidate consumer #2 — WorldNavigationSession, the
-        // orchestration layer Commentary's own read/write commands
-        // already live on, has no notification-reading method either.
+        // J5. Candidate consumer #2 — WorldNavigationSession now DOES
+        // carry a notification-reading method (0.9.284's own
+        // getRecipientNotificationEvents()), closing the exact gap this
+        // finding originally named. The honest scope check: it is a
+        // thin, read-only delegate to GetRecipientNotificationEventsUseCase
+        // — no lifecycle/delivery vocabulary was introduced alongside it.
         const navSession = await rawSource('application/WorldNavigationSession.js');
-        assert(!/[Nn]otification/.test(navSession),
-            'J5. application/WorldNavigationSession.js still contains zero notification vocabulary — the orchestration layer already carrying Commentary\'s own use cases has not been asked to carry notification retrieval too.');
+        assert(navSession.includes('getRecipientNotificationEvents()'),
+            'J5. application/WorldNavigationSession.js now exposes getRecipientNotificationEvents() (0.9.284) — the orchestration layer already carrying Commentary\'s own use cases now carries notification retrieval too.');
+        assert(!/markRead|isRead|\breadAt\b|delivered|acknowledg/i.test(codeOnlyLines(navSession)),
+            'J5b. The new method introduces no lifecycle/delivery vocabulary of its own — still a plain read-only delegate, same restraint every other getX() method on this file already holds to.');
 
-        console.log('✓ J: No existing consumer benefits from durable notification history today. The producer (J1) and the store (J2) both remain completely unconstructed outside their own files and tests; the one composition root that would wire them in has not been touched (J3); and neither of the two most natural existing UI/orchestration homes for a future notification indicator — OwnPublicationPanel, WorldNavigationSession — references notification vocabulary at all (J4/J5). This is not evidence the arc stalled; it is the deliberate, test-only boundary 0.9.275 and 0.9.281 each drew on purpose, reconfirmed here rather than assumed.');
+        console.log('✓ J: Re-verified rather than re-derived. The producer (J1) still has zero callers anywhere — nothing in the live product WRITES a notification today. The store (J2) now has exactly one caller, added by 0.9.284 to back reads only, so the honest picture is "queryable, never yet populated," not "still fully unwired." The composition root that would wire WRITES in remains untouched (J3). Of the two natural existing homes this finding named, OwnPublicationPanel still carries no notification vocabulary at all (J4, unaffected by 0.9.284 — the History panel is a separate surface), while WorldNavigationSession now does, through one thin read-only delegate with no lifecycle vocabulary of its own (J5).');
     }
 
     // ===============================================================
@@ -864,14 +895,16 @@ async function runTests() {
         // NotificationEvent (Section B13), and the one capability that
         // would answer "which events belong to me" did not exist yet
         // (Section B10/C3, pre-0.9.283). 0.9.283 closed the domain-
-        // capability half of that dependency (GetRecipientNotificationEventsUseCase);
-        // this section's own zero-UI-references finding still holds
-        // unchanged, so MISSING_UI is now the ONE remaining gap in this
-        // dependency chain, no longer blocked behind a missing domain
-        // capability too.
+        // capability half of that dependency; 0.9.284 closed the second
+        // half — the UI itself now exists and calls exactly that
+        // capability, through WorldNavigationSession, never a
+        // reimplementation of Section C's own filter.
         const uiNotificationRefs = await grepCount('NotificationEvent', ['ui']);
-        assert(uiNotificationRefs === 0,
-            'K1. Zero ui/ files reference NotificationEvent in any form — a "your notifications" UI still has no wiring to read from today, even though the domain capability it would call (GetRecipientNotificationEventsUseCase, 0.9.283) now exists.');
+        assert(uiNotificationRefs >= 1,
+            'K1. ui/ now references NotificationEvent-shaped vocabulary (0.9.284) — a "your notifications" UI now exists, reading through the domain capability 0.9.283 built (GetRecipientNotificationEventsUseCase) rather than reimplementing it.');
+        const panelSource = codeOnlyLines(await rawSource('ui/components/NotificationHistoryPanel.js'));
+        assert(!/loadAll\(|NotificationEventStore|notificationDeduplicationIdentity|classifyNotificationCollision|new NotificationEvent\(/.test(panelSource),
+            'K1b. The panel that closes this gap performs no storage access, no deduplication, and constructs no NotificationEvent of its own — it only calls the injected command, exactly the dependency order K3 below describes.');
 
         // K2. The distinction is not merely conceptual — it is a real
         // dependency order. Building UI before the query capability would
@@ -881,22 +914,23 @@ async function runTests() {
         // the same "don't let a UI become a second source of truth"
         // discipline tests/PostPublicationCommentaryProductReassessment.test.js
         // Section B5 already proved for OwnPublicationPanel's own
-        // re-query-not-append behavior — restated here as a forward-
-        // looking dependency-order argument rather than a backward-
-        // looking regression check.
+        // re-query-not-append behavior — reconfirmed here now that a real
+        // notification UI exists and can be checked directly rather than
+        // only argued forward.
         assert(await sourceExists('tests/PostPublicationCommentaryProductReassessment.test.js'),
             'K2. tests/PostPublicationCommentaryProductReassessment.test.js still exists as the precedent for "UI state is not a second source of truth" this section extends forward.');
 
-        // K3. Ranked dependency order, stated once: getForRecipient()
-        // (MISSING_DOMAIN_CAPABILITY, safely derivable per Section C) is
-        // a strict prerequisite for any honest notification UI
-        // (MISSING_UI, Section B13/K1) — never the reverse, and never
+        // K3. Ranked dependency order, stated once and now CLOSED
+        // end to end: getForRecipient() (0.9.283's own
+        // GetRecipientNotificationEventsUseCase) was a strict
+        // prerequisite for any honest notification UI, and 0.9.284 built
+        // the UI strictly on top of it — never the reverse, and never
         // parallel work.
-        const dependencyOrder = ['getForRecipient() (domain capability)', 'notification UI'];
-        assert(dependencyOrder[0] === 'getForRecipient() (domain capability)' && dependencyOrder[1] === 'notification UI',
-            'K3. The dependency order is fixed: a domain/application query capability must exist before a UI can honestly claim to show "your notifications" — confirmed by K1\'s own zero-references finding, not merely asserted by convention.');
+        const dependencyOrder = ['getForRecipient() (domain capability, 0.9.283)', 'notification UI (0.9.284)'];
+        assert(dependencyOrder[0].startsWith('getForRecipient()') && dependencyOrder[1].startsWith('notification UI'),
+            'K3. The dependency order was fixed, and was honored in practice: the domain/application query capability shipped (0.9.283) before the UI that depends on it (0.9.284) — confirmed by K1\'s own reference finding, not merely asserted by convention.');
 
-        console.log('✓ K: MISSING_DOMAIN_CAPABILITY and MISSING_UI were not two independent gaps here — they were ordered, and 0.9.283 closed them in that order. A notification UI still has no wiring to read from today (K1), but the domain capability that would define "which events belong to me" now exists (Section B10/C2, 0.9.283\'s GetRecipientNotificationEventsUseCase) rather than being absent. Building UI on top of it can call that use case directly instead of inlining Section C\'s own derivation logic, avoiding the exact UI-as-second-source-of-truth mistake this codebase\'s own Commentary UI already avoided (K2). The dependency order proved itself correct (K3): the domain capability shipped first.');
+        console.log('✓ K: MISSING_DOMAIN_CAPABILITY and MISSING_UI were not two independent gaps here — they were ordered, and 0.9.283/0.9.284 closed them in that exact order. A notification UI now exists (K1) and reads through the domain capability that predates it, never reimplementing it (K1b) — avoiding the exact UI-as-second-source-of-truth mistake this codebase\'s own Commentary UI already avoided (K2). The dependency order proved itself correct (K3): the domain capability shipped first, the UI second.');
     }
 
     // ===============================================================
@@ -919,9 +953,11 @@ async function runTests() {
             }
         }
 
-        // L2. Notification UI only — blocked on the missing query
-        // capability, per Section K's own dependency order. Not
-        // reachable as a standalone candidate today.
+        // L2. Notification UI only — was blocked on the missing query
+        // capability, per Section K's own dependency order, at the time
+        // this milestone shipped. 0.9.284 later built it, strictly on
+        // top of that capability (Section K1/K1b) — see rank 4's own
+        // updated evidence in Section M.
 
         // L3. More producers — 0.9.274's own boundary audit is still on
         // file and still names its findings; reconfirmed fresh rather
@@ -964,8 +1000,8 @@ async function runTests() {
             },
             {
                 rank: 2,
-                name: 'Wire the existing producer into a real composition root',
-                evidence: 'Section J found the producer and the store both fully built and fully unwired — zero constructors called outside their own files. This is pure composition, no new capability, and would make Section B\'s "COMPLETE (storage layer)" rows actually reachable end to end for the first time.'
+                name: 'Wire the existing producer into a real composition root — PARTIALLY narrowed by 0.9.284 (reads only)',
+                evidence: 'Section J found the producer and the store both fully built and fully unwired — zero constructors called outside their own files. 0.9.284 wired the STORE (for reads, backing GetRecipientNotificationEventsUseCase) but deliberately left the PRODUCER exactly as unwired as this section found it (Section J1/J3, reconfirmed) — a signed-in identity can now query notification history honestly, but nothing yet writes one. This rank\'s own remaining scope narrows to "wire the producer," not "wire the store," but is not itself closed.'
             },
             {
                 rank: 3,
@@ -974,8 +1010,8 @@ async function runTests() {
             },
             {
                 rank: 4,
-                name: 'Notification UI',
-                evidence: 'Section K\'s own dependency order: strictly blocked on rank 1. Not independently actionable.'
+                name: 'Notification UI — CLOSED by 0.9.284 (NotificationHistoryPanel.js)',
+                evidence: 'Section K\'s own dependency order: strictly blocked on rank 1 until 0.9.283 closed it, then built directly on top of it by 0.9.284 (WorldNavigationSession#getRecipientNotificationEvents() -> GetRecipientNotificationEventsUseCase, never a reimplementation of Section C\'s own filter). Read-only, no lifecycle/read-state vocabulary introduced (Section K1b) — this rank shipped exactly as scoped here, no larger than named.'
             },
             {
                 rank: 5,
@@ -1020,7 +1056,7 @@ async function runTests() {
 '    Retrieve notifications for recipient      COMPLETE (0.9.283 — GetRecipientNotificationEventsUseCase, no store change)\n' +
 '    Mark notification read                    MISSING_DOMAIN_CAPABILITY\n' +
 '    Deliver notification                      MISSING_DOMAIN_CAPABILITY\n' +
-'    Notification UI                           MISSING_UI (Section K — no longer blocked on a missing domain capability)\n' +
+'    Notification UI                           COMPLETE (0.9.284 — NotificationHistoryPanel.js, read-only)\n' +
 '\n' +
 'RECIPIENT ISOLATION (Section D)\n' +
 '    Holds at the FIELD level (recipientIdentityId), proven against two real\n' +
@@ -1041,22 +1077,27 @@ async function runTests() {
 '    is exactly why that question is live now. Still not merged.\n' +
 '\n' +
 'EXISTING CONSUMERS (Section J)\n' +
-'    None. Producer and store both remain fully built and fully unwired from\n' +
-'    any real composition root or UI surface.\n' +
+'    Narrowed by 0.9.284. The store now has exactly one real caller\n' +
+'    (application/CreateWorldViewUseCase.js, backing GetRecipientNotificationEventsUseCase\n' +
+'    for READS), and WorldNavigationSession now exposes\n' +
+'    getRecipientNotificationEvents(). The producer remains fully built and\n' +
+'    fully unwired — nothing yet WRITES a notification in the live product.\n' +
 '\n' +
-'RANKED CANDIDATES FOR THE NEXT PRODUCT SEAM (as ranked here; rank 1 since built)\n' +
+'RANKED CANDIDATES FOR THE NEXT PRODUCT SEAM (as ranked here; ranks 1 and 4 since built)\n' +
 '    1. Recipient query capability — CLOSED by 0.9.283\n' +
 '       (application/GetRecipientNotificationEventsUseCase.js). Built exactly\n' +
 '       as safely derivable (Section C), resolving Section D6\'s own open\n' +
 '       design question by hard-scoping to the authenticated identity, never\n' +
 '       a caller-supplied id.\n' +
-'    2. Wire the existing, fully-built producer and store into a real\n' +
-'       composition root — pure composition, zero new capability.\n' +
+'    2. Wire the existing producer into a real composition root — PARTIALLY\n' +
+'       narrowed by 0.9.284 (the store is now wired for reads; the producer\n' +
+'       that would WRITE a notification remains completely unwired).\n' +
 '    3. A second producer (Friend Relationship REQUEST) — the one other\n' +
 '       structurally sound candidate 0.9.274 already found, ranked below\n' +
 '       recipient querying so it does not compound Section J\'s own\n' +
 '       fully-built/fully-unreachable finding.\n' +
-'    4. Notification UI — strictly blocked on rank 1.\n' +
+'    4. Notification UI — CLOSED by 0.9.284 (ui/components/NotificationHistoryPanel.js),\n' +
+'       built strictly on top of rank 1, never a reimplementation of it.\n' +
 '    5. Delivery / read state / lifecycle — still the largest, still\n' +
 '       genuinely deferred.\n' +
 '\n' +
@@ -1064,14 +1105,16 @@ async function runTests() {
 '    Not selected here — this milestone\'s own scope was reassessment only, no\n' +
 '    build. Per this milestone\'s own brief: durable notification history is\n' +
 '    real, recipient querying was provably safe to derive and was later built\n' +
-'    exactly that way (0.9.283), and the honest gaps this reassessment found\n' +
+'    exactly that way (0.9.283), a Notification History UI was built directly\n' +
+'    on top of it (0.9.284), and the honest gaps this reassessment found\n' +
 '    (Section D6\'s field-level-only isolation, Section G\'s unreachable\n' +
-'    CONFLICT path) remain recorded, not resolved by that later build.\n' +
+'    CONFLICT path, and the still-fully-unwired producer) remain recorded,\n' +
+'    not resolved by either later build.\n' +
 '    Choosing and building the next seam after 0.9.283 is a separate, later,\n' +
 '    evidence-driven decision — this milestone answered "what was true then,"\n' +
 '    never "what to build next."\n');
 
-        console.log('✓ Section N: Verdict recorded. The notification pipeline is closed end to end with no layer having become a delivery system (Section A); the capability matrix classifies all thirteen named rows with concrete evidence (Section B); recipient querying was proven safely derivable and — re-verified here — was subsequently built exactly that way by 0.9.283, one layer up from the store (Section C); recipient isolation holds at the field level with an honestly-recorded storage-partition gap (Section D); restart/reconstruction and deduplication both hold through the full real pipeline, including a genuine closure of 0.9.276\'s own open retry-duplication finding (Sections E/F); conflict detection is reconfirmed but found structurally unreachable from the one real producer (Section G); the persistence/delivery boundary and the ChatOutbox boundary both hold, the latter on sharper grounds than before (Sections H/I); zero existing consumers benefited from any of this at the time this milestone shipped (Section J); MISSING_DOMAIN_CAPABILITY and MISSING_UI are shown to have been ordered, not independent, and 0.9.283 closed them in that order (Section K); all four deferred candidates are revisited with none built (Section L); and five candidates are ranked with reasoning grounded in specific sections (Section M) — recipient querying ranked first, and this milestone\'s own no-implementation scope is unaffected by 0.9.283\'s later build.');
+        console.log('✓ Section N: Verdict recorded. The notification pipeline is closed end to end with no layer having become a delivery system (Section A); the capability matrix classifies all thirteen named rows with concrete evidence (Section B), two of them (recipient query, notification UI) re-verified here as COMPLETE via later milestones rather than re-derived; recipient querying was proven safely derivable and — re-verified here — was subsequently built exactly that way by 0.9.283, one layer up from the store (Section C); recipient isolation holds at the field level with an honestly-recorded storage-partition gap (Section D); restart/reconstruction and deduplication both hold through the full real pipeline, including a genuine closure of 0.9.276\'s own open retry-duplication finding (Sections E/F); conflict detection is reconfirmed but found structurally unreachable from the one real producer (Section G); the persistence/delivery boundary and the ChatOutbox boundary both hold, the latter on sharper grounds than before (Sections H/I); existing consumers were re-verified as narrowed, not zero, now that 0.9.284 wired the store for reads and gave WorldNavigationSession a real read method, though the producer remains fully unwired (Section J); MISSING_DOMAIN_CAPABILITY and MISSING_UI are shown to have been ordered, not independent, and 0.9.283/0.9.284 closed them in that exact order (Section K); all four deferred candidates are revisited with the UI-only one (L2) now closed by 0.9.284 (Section L); and five candidates are ranked with reasoning grounded in specific sections (Section M) — ranks 1 and 4 now built, in dependency order, and this milestone\'s own no-implementation scope is unaffected by either later build.');
     }
 
     console.log('\n✅ All PostNotificationPersistenceProductReassessment tests passed.');

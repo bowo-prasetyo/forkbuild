@@ -5898,3 +5898,33 @@ html, body {
     gap: 0.5rem;
     flex-wrap: wrap;
 }
+
+/* 0.9.284 — Notification History UI Boundary.
+   ui/components/NotificationHistoryPanel.js reuses the same
+   .modal-overlay/.modal-panel/.locations-panel-item language every
+   other list-style panel here already uses (see HistoryTimelinePanel's
+   own note above) — rows are read-only, never clickable, so no hover/
+   selection state is added. .notification-history-panel-error reuses
+   .world-view-error's own red-error color, scoped to this panel so a
+   failed read is never visually confused with the plain empty state. */
+.notification-history-panel {
+    width: 420px;
+}
+
+.notification-history-panel-error {
+    color: #e74c3c;
+    font-size: 0.9rem;
+    margin: 0.5rem 0;
+}
+
+.notification-history-item-detail {
+    display: block;
+    color: #707070;
+    font-size: 0.8rem;
+}
+
+.notification-history-actions {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}

@@ -85640,3 +85640,124 @@ Not selected here. The newly reachable recipient history is not yet consumed any
 references it. A follow-up reassessment can determine whether that wiring, a notification UI, or something else is
 the next smallest real gap, the same "let the next product gap, not architectural momentum, choose what comes next"
 discipline this arc has followed since 0.9.273.
+
+
+## 0.9.284 — Notification History UI Boundary
+
+0.9.283 built `GetRecipientNotificationEventsUseCase` — a real, authenticated query boundary answering "what notification
+facts are on file for the current identity" — but wired it to no UI at all: no composition root constructed a real
+`NotificationEventStore`/`GetRecipientNotificationEventsUseCase` pair, and no UI referenced either. This milestone
+closes exactly that last hop, and only that hop:
+
+```
+Publication Commentary
+        │
+        ▼
+NotificationEvent                       (0.9.273, unmodified)
+        │
+        ▼
+Deduplication Policy                    (0.9.280, unmodified)
+        │
+        ▼
+NotificationEventStore                  (0.9.281, unmodified)
+        │
+        ▼
+GetRecipientNotificationEventsUseCase   (0.9.283, unmodified)
+        │
+        ▼
+Notification History UI                 (THIS MILESTONE)
+```
+
+### What this milestone adds
+
+`ui/components/NotificationHistoryPanel.js` (new) — a read-only view of durable notification facts, never an inbox.
+For each notification it renders exactly what already lives on the `NotificationEvent`: `eventType` (humanized
+generically — `"publication.commented"` → `"Publication commented"`, with no per-producer knowledge hardcoded in),
+`createdAt`, and every `payload` field, rendered as generic, humanized label/value pairs (`publicationId` →
+`"Publication Id"`, `commentaryId` → `"Commentary Id"`, `authorIdentityId` → `"Author Identity Id"`). The panel
+imports nothing at all — no `NotificationEventStore`, no `NotificationEvent`, no `GetRecipientNotificationEventsUseCase`
+— it only calls an injected `getRecipientNotificationEventsCommand` function prop, the identical boundary 0.9.248
+already established for `OwnPublicationPanel`'s own `getPublicationCommentariesCommand`. It performs no sort of its
+own (ordering is whatever the command returns), no deduplication, and constructs no `NotificationEvent`. Refresh is
+explicit only — once on mount (the surface "opening") and again only via an explicit Refresh button; there is no
+timer, polling, or live subscription of any kind.
+
+A missing capability degrades gracefully (no command wired → the empty state, the same posture
+`getPublicationCommentaries()` already holds), but a genuine failure does not: a thrown error (no authenticated
+identity, or a real storage failure) is caught and rendered as a distinct `notificationHistoryError`, while
+`notifications` is left exactly as it was rather than reset to `[]` — "no notifications" and "notifications could
+not be loaded" are never the same rendered state.
+
+`application/WorldNavigationSession.js` gains one new optional collaborator, `getRecipientNotificationEventsUseCase`,
+and one new method:
+
+```js
+getRecipientNotificationEvents() {
+    if (!this._getRecipientNotificationEventsUseCase) {
+        return [];
+    }
+    return this._getRecipientNotificationEventsUseCase.execute();
+}
+```
+
+Same "enforce/offer only when the collaborator is actually wired" posture as `getPublicationCommentaries()`: a
+session built without one (every pre-0.9.284 caller) answers `[]`, never a throw. Once wired, this method performs
+no try/catch of its own — an authentication failure or a genuine storage failure both propagate unmodified, exactly
+as `unpublishDocument()` lets `UnpublishDocumentUseCase`'s own errors propagate.
+
+`application/CreateWorldViewUseCase.js` wires a real `NotificationEventStore` (reusing the SAME `storageProvider`
+every other local store already uses) and, when a real `identityProvider` was supplied, a real
+`GetRecipientNotificationEventsUseCase` against it — passed into `WorldNavigationSession` the same way
+`getPublicationCommentariesUseCase` already is.
+
+`ui/views/WorldView.js` mounts `NotificationHistoryPanel` behind a new "Notifications" button in the same
+always-visible-once-a-World-is-loaded toolbar row Home/Locations already live in — gated on `cameraPosition` alone,
+never on `activeDocumentInfo`, since notification history is scoped to the signed-in identity, not to whichever
+document happens to be open for editing. A thin `getRecipientNotificationEventsCommand()` wrapper forwards to
+`session.getRecipientNotificationEvents()`, mirroring `getPublicationCommentariesCommand()` exactly; a thrown error
+is deliberately not caught here or routed through `guarded()` — the panel renders its own error state.
+
+Adds `tests/NotificationHistoryUILifecycle.test.js` (registered in `tests.html`), eleven sections: authenticated
+loading through the real query boundary; recipient isolation; the empty state; multiple notifications across
+multiple event types (including one this panel has no built-in knowledge of, proving the generic rendering);
+ordering preserved with no UI-side sort; a producer-retry pair the store already collapsed to one row, surfacing as
+exactly one entry; restart/reconstruction through a fresh UI/session pair against the same underlying storage;
+`notificationId`/`commentaryId`/`publicationId` never confused, each rendered under its own distinct, correctly
+sourced label; a storage/authentication failure rendered as a distinct error state rather than converted into an
+empty inbox; opening/refreshing/reopening the surface never mutating the underlying persisted history; and an
+architectural boundary check (no imports, no storage access, no deduplication, no recipient determination, no
+lifecycle vocabulary, no polling/timer machinery, plus the composition wiring itself, and confirmation that no
+pre-existing production file this milestone depends on was modified).
+
+Also updates `tests/PostNotificationPersistenceProductReassessment.test.js` (0.9.282) in the same place 0.9.283
+updated it after closing that milestone's own MISSING_DOMAIN_CAPABILITY finding: Section B13's "Notification UI" row
+is re-verified from MISSING_UI to COMPLETE (0.9.284); Section J's existing-consumer search is re-verified — the
+store now has exactly one real caller (backing reads only; the producer remains completely unwired, so nothing yet
+WRITES a notification), and `WorldNavigationSession` now carries one real, lifecycle-vocabulary-free read method;
+Section K's dependency-order narrative is updated to record that both halves of the domain-capability/UI dependency
+chain are now closed, in the order Section K itself predicted; and Section M/N's ranking and verdict text are
+updated to record rank 4 (Notification UI) as built, alongside rank 1. No other finding in that file (recipient
+isolation remaining field-level, `CONFLICT` remaining unreachable from the one real producer, the producer itself
+remaining fully unwired, etc.) is touched — none of them were affected by this milestone.
+
+### What this milestone deliberately excludes
+
+Per the reviewer's own brief: no read/unread, no seen/unseen, no delivered/undelivered, no important/unimportant, no
+priority, no trusted/untrusted, no acknowledgment, no pending/failed, no notification preferences, no
+`NotificationInbox`/`NotificationCenter` naming or semantics, no polling timer, no push notifications, no WebSocket
+notification subscription, no retry/queue, no TTL, no deletion, no prioritization, no new notification producers, no
+`ChatOutbox` changes, no storage indexing, and no deduplication changes. `GetRecipientNotificationEventsUseCase`,
+`NotificationEventStore`, `NotificationEvent`, `NotificationDeduplicationPolicy`, and
+`PublicationCommentaryNotificationProducer` are all unmodified. The producer itself is still not wired into any
+composition root — a signed-in identity can now honestly ask "what notifications exist for me," through a store
+that will, correctly, always answer "none" until a producer is separately wired to write into it.
+
+### What comes after
+
+Not selected here, per the reviewer's own explicit instruction. A Post-Notification-History Product Reassessment is
+the natural next seam — the same disciplined, no-build reassessment format 0.9.282 already ran — to ask the genuinely
+open product question this milestone leaves on the table: is durable, recipient-specific notification history
+sufficient as the notification product, or is there evidence for a separate delivery capability? Wiring the
+already-built `PublicationCommentaryNotificationProducer` into a real composition root (so the History panel this
+milestone built actually has something to show) remains a separate, ranked, evidence-driven decision — not
+automatically bundled into this milestone just because the read side now exists.

@@ -39,6 +39,8 @@ import { PublicationCommentaryStore } from '../storage/PublicationCommentaryStor
 import { CanCommentOnPublicationUseCase } from './CanCommentOnPublicationUseCase.js';
 import { GetPublicationCommentariesUseCase } from './GetPublicationCommentariesUseCase.js';
 import { AddPublicationCommentaryUseCase } from './AddPublicationCommentaryUseCase.js';
+import { NotificationEventStore } from '../storage/NotificationEventStore.js';
+import { GetRecipientNotificationEventsUseCase } from './GetRecipientNotificationEventsUseCase.js';
 
 // Builds the world exploration backend and returns a session factory, so
 // ui/ never imports storage/, publisher/, or discovery/ directly.
@@ -178,6 +180,23 @@ export class CreateWorldViewUseCase {
             identityProvider,
             canCommentOnPublicationUseCase
         );
+
+        // 0.9.284 — Notification History UI Boundary. The SAME
+        // storageProvider/identityProvider this method already builds/
+        // receives — no second storage key, no second identity
+        // mechanism. GetRecipientNotificationEventsUseCase (0.9.283)
+        // requires a real identityProvider at construction (there is no
+        // anonymous recipient to query for), so — like
+        // placeNamingClaimUseCase below — this is only built when one
+        // was actually supplied; a caller without one (every pre-0.9.284
+        // caller, and every existing test) gets `null`, which
+        // WorldNavigationSession#getRecipientNotificationEvents()
+        // already degrades to reporting no notification history rather
+        // than throwing.
+        const notificationEventStore = new NotificationEventStore(storageProvider);
+        const getRecipientNotificationEventsUseCase = identityProvider
+            ? new GetRecipientNotificationEventsUseCase(notificationEventStore, identityProvider)
+            : null;
 
         const loadPublicationDocumentUseCase = new LoadPublicationDocumentUseCase(
             storageProvider
@@ -556,6 +575,8 @@ export class CreateWorldViewUseCase {
                     // addPublicationCommentary().
                     getPublicationCommentariesUseCase,
                     addPublicationCommentaryUseCase,
+                    // 0.9.284: see getRecipientNotificationEvents().
+                    getRecipientNotificationEventsUseCase,
                     // 0.2.26: search/navigation — see searchWorld/
                     // getDocumentsAtPosition.
                     searchWorldUseCase,
