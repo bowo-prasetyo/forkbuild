@@ -412,30 +412,43 @@ async function runTests() {
         assert(nearbyBlock.includes('claim.createdAtLabel') && !nearbyBlock.includes('claim.signature'),
             'D1b. The Nearby Place Names template now renders claim.createdAtLabel (BUILT at 0.9.266) but still never renders claim.signature — the createdAt half of this gap is closed; the signature/verification half remains an open, deliberate boundary (Section C5).');
 
-        // D2. No "already adopted" indicator exists on the row, and no
-        // session method exists to answer "is this claim already known"
-        // without attempting a real import — the one precise
-        // implementation prerequisite an "Adopted" badge would need,
-        // exactly the shape 0.9.262/0.9.263 already used for row-widening.
-        assert(!nearbyBlock.includes('already') && !/isKnown|isAdopted|alreadyAdopted/.test(nearbyBlock),
-            'D2a. The Nearby row has no "already adopted" indicator of any kind — clicking Adopt is the only way to learn a claim was already known (via the "already known" feedback message), never known in advance.');
+        // D2. UPDATED at 0.9.269: the "already adopted" indicator this
+        // section originally found MISSING was BUILT — this reassessment
+        // is updated in place to reconfirm the built shape, mirroring
+        // exactly how 0.9.266 updated 0.9.263's own D1 above for
+        // createdAtLabel. Worded "Already saved" rather than "Already
+        // adopted" — see this milestone's own docs/Roadmap.md entry and
+        // Section A of tests/PlaceNamingNearbyAdoptionStatus.test.js on
+        // why: the store this reads also holds self-published claims,
+        // not only ones reached via Adopt.
+        assert(/alreadySaved/.test(nearbyBlock) && /Already saved/i.test(nearbyBlock),
+            'D2a. UPDATED at 0.9.269 — BUILT: the Nearby row template now renders a passive "Already saved" status in place of Adopt once claim.alreadySaved is true.');
         const sessionSource = codeOnlyLines(await rawSource('application/WorldNavigationSession.js'));
-        assert(!/hasPlaceNamingClaim|isClaimKnown|isClaimAdopted/.test(sessionSource),
-            'D2b. WorldNavigationSession exposes no read-only query for "is this exact claim id already in my store" — LocalPlaceNamingClaimStore#has(worldId, claimId) already exists one layer down (Section C1a\'s own store) but is never surfaced through the session boundary the UI actually talks to.');
+        assert(sessionSource.includes('hasPlaceNamingClaim(worldId, claimId) {'),
+            'D2b. UPDATED at 0.9.269 — BUILT: WorldNavigationSession now exposes hasPlaceNamingClaim(worldId, claimId), a thin pass-through onto PlaceNamingClaimUseCase#hasClaim() -> the exact, unmodified LocalPlaceNamingClaimStore#has(worldId, claimId) this section\'s own D3 below already proved correct — no new domain concept, exactly the precisely-scoped seam this reassessment named.');
 
         // D3. LIVE PROOF that the underlying data for such a badge is
         // already trivially available, requiring no new domain logic —
-        // only a new, thin, read-only pass-through.
+        // only a new, thin, read-only pass-through. Reconfirmed at
+        // 0.9.269 through the actual PlaceNamingClaimUseCase#hasClaim()
+        // door session.hasPlaceNamingClaim() itself forwards to (this
+        // file's own makeReplica() builds the use case/store/exchange
+        // directly, never a full WorldNavigationSession — see
+        // tests/PlaceNamingNearbyAdoptionStatus.test.js Sections H/P for
+        // the same proof through the real session).
         const alice = makeIdentity('Alice');
         const bob = makeIdentity('Bob');
         const bobReplica = makeReplica(bob);
         const claim = signedClaim(alice, { worldId: 'world-1', regionId: 'region-1', name: 'Willowmere' });
         assert(bobReplica.store.has('world-1', claim.id) === false, 'D3a. before adoption, has() reports false.');
+        assert(bobReplica.useCase.hasClaim('world-1', claim.id) === false, 'D3a2. UPDATED at 0.9.269 — BUILT: the same reports false through the new PlaceNamingClaimUseCase#hasClaim() door.');
         adoptNearbyPlaceNamingClaim(bobReplica, rowFromEnvelope(discoverAsEnvelope(claim).claim));
         assert(bobReplica.store.has('world-1', claim.id) === true,
-            'D3b. LIVE PROOF: after adoption, LocalPlaceNamingClaimStore#has() already reports true — the exact boolean an "Adopted" badge on the Nearby row would read, already computed correctly, already reachable one layer below the session — a precisely-scoped, low-risk UI seam if this candidate is ever chosen, never a new domain concept.');
+            'D3b. after adoption, LocalPlaceNamingClaimStore#has() reports true — the exact boolean the Nearby row\'s "Already saved" indicator reads.');
+        assert(bobReplica.useCase.hasClaim('world-1', claim.id) === true,
+            'D3b2. UPDATED at 0.9.269 — BUILT: PlaceNamingClaimUseCase#hasClaim() reports the same true — the exact door session.hasPlaceNamingClaim() forwards to.');
 
-        console.log('✓ D: the Nearby row displays name/author/distance/createdAt (createdAt rendering BUILT at 0.9.266) — signature still reaches the row (restored at 0.9.263) but remains deliberately unrendered (D1); no "already adopted" indicator exists, and the one missing piece to build it is a thin session pass-through over LocalPlaceNamingClaimStore#has(), which already answers correctly today (D2-D3).');
+        console.log('✓ D: UPDATED at 0.9.269 — the Nearby row displays name/author/distance/createdAt (createdAt rendering BUILT at 0.9.266) — signature still reaches the row (restored at 0.9.263) but remains deliberately unrendered (D1); the "already adopted" indicator this section once found missing is now BUILT, worded "Already saved" (D2), backed by the exact thin session pass-through over LocalPlaceNamingClaimStore#has() this section itself already proved correct (D3).');
     }
 
     // ---------------------------------------------------------------
@@ -570,7 +583,7 @@ async function runTests() {
     {
         const ranked = [
             '1. Enable removing a claim a viewer only ADOPTED (never authored) — MISSING_DOMAIN_CAPABILITY (Section E). retract() is deliberately author-gated; live proof shows no path anywhere removes an adopted, non-authored claim. The clearest genuine product-design fork this reassessment found: a local "dismiss/hide" versus a true remove are both plausible, and neither is assumed here.',
-            '2. An "Adopted" indicator on the Nearby row — REACHABLE, thin UI seam (Section D). LocalPlaceNamingClaimStore#has() already answers the exact boolean needed, live-proven correct; the one precise prerequisite is a thin, read-only session pass-through, never a new domain concept.',
+            '2. An "Adopted" indicator on the Nearby row — REACHABLE, thin UI seam (Section D). LocalPlaceNamingClaimStore#has() already answers the exact boolean needed, live-proven correct; the one precise prerequisite is a thin, read-only session pass-through, never a new domain concept. BUILT at 0.9.269, worded "Already saved" (see tests/PlaceNamingNearbyAdoptionStatus.test.js).',
             '3. Surface verification/signature status in the existing "All Claims" list and/or the Nearby row — MISSING_UI, not MISSING_CAPABILITY (Section C5/D1). The claim was already verified before being persisted; only DISPLAYING that fact is missing, on data every relevant row/entry already carries. createdAt\'s own display half was BUILT at 0.9.266 (tests/PlaceNamingNearbyMetadataPresentation.test.js); the signature/verification half remains deliberately open — 0.9.266\'s own brief reconfirmed no existing verification machinery exposes a non-mutating result a Nearby row could truthfully display.',
             '4. Wire "Prefer this" onto the Nearby row (unchanged from 0.9.262\'s own ranking) — MISSING_UI. The manual PlaceNamingPanel has had it since 0.5.2; Nearby still lacks it. Structurally independent of adoption, unaffected by anything this milestone found.',
             '5. A cross-region "My Adopted Claims" management view — MISSING_UI/MISSING_DOMAIN_CAPABILITY, explicitly NOT assumed necessary. Per-region inspection is already COMPLETE (Section C); a global view is a genuinely larger, separate product decision this reassessment does not resolve.',

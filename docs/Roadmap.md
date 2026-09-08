@@ -84682,3 +84682,92 @@ milestones (0.9.265, 0.9.267 by omission, 0.9.268), or a capability class
 with no evidenced requirement. A genuinely new product arc, rather than
 another Place Naming enhancement, is a legitimate, evidence-supported
 candidate for `0.9.269`.
+
+## 0.9.269 — Nearby Place Naming Claim Adoption Status Indicator
+
+0.9.268's own reassessment named the one concrete, evidence-backed friction still standing after three consecutive
+milestones of metadata work: a Wanderer looking at a Nearby Place Names row cannot tell "I already have this" from
+"genuinely new" before clicking Adopt — the only way to find out was to click it and read the resulting "already
+known" feedback message. That same reassessment (Section F), and 0.9.265's own reassessment (Section D) before it,
+also identified the exact fix already sitting one layer down: `LocalPlaceNamingClaimStore#has(worldId, claimId)`
+already answers the right boolean, correctly, today — the only missing piece was a thin session-level door to reach
+it from presentation. This milestone builds exactly that door, and nothing else.
+
+### What this milestone adds
+
+A three-hop chain of thin, read-only pass-throughs, each doing nothing but forwarding to the layer beneath it:
+
+```
+Nearby row (worldId, claimId)
+    -> session.hasPlaceNamingClaim(worldId, claimId)          (application/WorldNavigationSession.js, new)
+    -> PlaceNamingClaimUseCase#hasClaim(worldId, claimId)      (application/PlaceNamingClaimUseCase.js, new)
+    -> LocalPlaceNamingClaimStore#has(worldId, claimId)        (application/LocalPlaceNamingClaimStore.js, UNCHANGED)
+```
+
+- `PlaceNamingClaimUseCase#hasClaim()` — a one-line forward to the store's own existing `has()`, mirroring
+  `claimsForRegion()`'s own shape exactly.
+- `WorldNavigationSession#hasPlaceNamingClaim()` — a one-line forward to the use case, returning `false` (never
+  throwing) when naming claims aren't wired, the same "nothing wired, nothing known" posture
+  `getPlaceNamingClaims()`/`getPlaceNamingView()` already hold. Deliberately takes `worldId` directly rather than
+  resolving it from a `regionId` via `_resolveRegionOwner()` — a nearby, merely-discovered claim may name a World
+  this replica isn't currently viewing at all, exactly like `importPlaceNamingClaim()` itself already tolerates.
+- `ui/views/WorldView.js` — `nearbyPlaceNamingClaimRows` now computes one additional field, `alreadySaved`, straight
+  off `session.hasPlaceNamingClaim(entry.claim.worldId, entry.claim.id)` per row — never a second, UI-maintained
+  `adoptedClaimIds` list. The Nearby Place Names row template renders `[Adopt]` when `alreadySaved` is false, or a
+  passive `✓ Already saved` status line in its place when true — never a disabled button, since nothing needs to be
+  clicked to learn a claim is already known. `adoptNearbyPlaceNamingClaim()` reassigns `nearbyPlaceNamingClaims.value`
+  to a new array (never mutating the existing one) after a successful (or idempotently-duplicate) import, which is
+  what makes `nearbyPlaceNamingClaimRows` recompute `alreadySaved` for every row atomically — the same "recomputed as
+  a whole, never incrementally patched" discipline a genuine discovery tick already applies. A failed/refused import
+  never reaches that reassignment, so a rejected adoption attempt leaves the indicator exactly as it was.
+
+### The semantic decision this milestone made explicit
+
+Worded **"Already saved,"** never "Already adopted." `LocalPlaceNamingClaimStore#has()` answers "is a claim with this
+id on file," not "did I reach this via the Nearby Adopt button" — the same store also holds every claim this identity
+published itself through the ordinary manual `PlaceNamingPanel`. `tests/PlaceNamingNearbyAdoptionStatus.test.js`
+Section A proves this directly and live: `hasPlaceNamingClaim()` reports `true` for a self-published claim exactly as
+readily as an adopted one. "Already saved" is the term that matches what the store actually establishes without
+overstating it into a stronger claim about provenance the data doesn't carry.
+
+### What this milestone adds (tests)
+
+`tests/PlaceNamingNearbyAdoptionStatus.test.js` (new, registered in `tests.html`) — eighteen sections covering: the
+semantic check above (A); unknown-claim/known-claim classification (B, C); exact claim-id matching, with
+same-name/different-author and colliding-id-across-Worlds negative checks (D, E, F, G); status changing only after
+genuine persistence, never on a failed attempt (H, I); idempotent re-adoption (J); atomic recomputation on a
+simulated discovery refresh (K); World-switching isolation (L); independence from Navigate, ranking, preference, and
+WorldRegion mutation (M, N); the untouched manual `PlaceNamingPanel` (O); a real, unmocked verifier/store path (P); a
+FLAGSHIP real Nostr → discovery → proximity → status → adoption run end to end (Q); and a source-level regression
+proving the entire chain is thin pass-throughs onto the pre-existing `has()`, with no second source of truth anywhere
+(R).
+
+The two prior reassessments that named this exact gap —
+`tests/PostAdoptionPlaceNamingProductReassessment.test.js` (0.9.265, Section D) and
+`tests/PostMetadataPlaceNamingProductReassessment.test.js` (0.9.268, Section F) — are updated in place, mirroring
+exactly how 0.9.266 updated 0.9.263's own metadata-rendering assertions: their negative findings ("no indicator
+exists," "no session method exists") now read "BUILT at 0.9.269" and reconfirm the built shape live, rather than
+being left to fail. `tests/PostPlaceNamingProductReassessment.test.js` (0.9.259) — whose Section H2 asserted
+`nearbyPlaceNamingClaimRows` never contains any `session.` reference at all, as a proxy for "no path from a nearby
+claim to a WorldRegion rename" — is likewise updated to exempt this milestone's own audited, read-only
+`session.hasPlaceNamingClaim()` call by name, while continuing to forbid `worldLocations` and any other session
+access; the real invariant that section is named for is unaffected, since a boolean existence query has no path to a
+WorldRegion mutation.
+
+### What this milestone deliberately excludes
+
+Per this milestone's own brief:
+
+- No `ADOPTED` domain state, no new adoption store, no new adoption use case, no synchronization.
+- No preferred-name semantics, no ranking, no moderation, no removal/retraction.
+- No signature UI, no notifications, no `WorldRegion` mutation, no automatic adoption.
+- No new storage-layer lookup capability — `LocalPlaceNamingClaimStore.js` gains no `getById()`/`findById()`/
+  `getClaim()` of any kind; `has()` already answered the question, unmodified.
+
+### What comes after
+
+Not selected here. The candidates 0.9.265/0.9.268 ranked below this one — non-authored claim removal, competing-name
+resolution, a non-mutating signature/verification surface, cross-region claim management — remain exactly the
+product-design forks those reassessments each declined to resolve by fiat. A future lifecycle audit
+(`0.9.270`) and post-status reassessment (`0.9.271`) would follow the same one-milestone-later shape this arc has
+used throughout, per the sequence 0.9.268 itself proposed.

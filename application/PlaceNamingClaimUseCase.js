@@ -104,4 +104,20 @@ export class PlaceNamingClaimUseCase {
     namingView(worldId, regionId) {
         return deriveNamingView(regionId, this._store.list(worldId));
     }
+
+    // 0.9.269 — Nearby Place Naming Claim Adoption Status Indicator. A
+    // thin pass-through to LocalPlaceNamingClaimStore#has() — the exact
+    // capability the 0.9.265/0.9.268 reassessments both found already
+    // answers "is this claim already on file" correctly, just with no
+    // session-level door to reach it. Deliberately NOT a new lookup on
+    // the store itself (see that store's own has() header on why `id`
+    // alone is sufficient identity) and deliberately NOT scoped through
+    // _resolveRegionOwner() the way publish()/retract() are: a nearby,
+    // merely-discovered claim's own worldId may belong to a World this
+    // replica isn't currently viewing at all — exactly the same "never
+    // reinterpreted as the active World" restraint importPlaceNamingClaim()
+    // already documents for adoption itself.
+    hasClaim(worldId, claimId) {
+        return this._store.has(worldId, claimId);
+    }
 }

@@ -6401,6 +6401,27 @@ export class WorldNavigationSession {
 	    return this._placeNamingClaimUseCase.namingView(owner.world.id, regionId);
 	}
 
+	// 0.9.269 — Nearby Place Naming Claim Adoption Status Indicator. Is a
+	// claim with this exact `claimId`, for this exact `worldId`, already
+	// on this replica's own store — whether because this identity
+	// published it, or because it (or an identical duplicate) was
+	// already adopted/imported before? A thin pass-through to
+	// PlaceNamingClaimUseCase#hasClaim() — see that method's own header
+	// on why `worldId` is taken directly rather than resolved via
+	// _resolveRegionOwner(): a nearby, merely-discovered claim may name
+	// a World this replica isn't currently viewing at all, exactly like
+	// importPlaceNamingClaim() itself already tolerates. false whenever
+	// naming claims aren't wired, never an error — the same "nothing
+	// wired, nothing known" posture getPlaceNamingClaims()/
+	// getPlaceNamingView() already hold, since this is a read, never a
+	// mutation.
+	hasPlaceNamingClaim(worldId, claimId) {
+	    if (!this._placeNamingClaimUseCase) {
+	        return false;
+	    }
+	    return this._placeNamingClaimUseCase.hasClaim(worldId, claimId);
+	}
+
 	// -----------------------------------------------------------------
 	// Decentralized Place Name Exchange (0.5.3) — the missing piece
 	// 0.5.2 deliberately left for this milestone: HOW a claim this

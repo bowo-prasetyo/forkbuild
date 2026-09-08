@@ -561,9 +561,27 @@ async function runTests() {
         // own computed never reads or writes worldLocations/session state
         // that could feed a region's own name — it is a pure, one-way
         // map FROM the monitor's own lastResult, nothing else.
+        //
+        // UPDATED at 0.9.269 — Nearby Place Naming Claim Adoption Status
+        // Indicator: this computed now ALSO reads
+        // session.hasPlaceNamingClaim(worldId, claimId) per row, a
+        // deliberate, read-only existence query (see that method's own
+        // header) with no path to a WorldRegion rename whatsoever — it
+        // never touches worldLocations, never calls any WorldRegion
+        // mutator, and returns only a boolean. The regex below is
+        // narrowed to still forbid worldLocations and any OTHER session
+        // access, so the real invariant this section is named for ("no
+        // path from a nearby claim to a WorldRegion's own current name")
+        // remains exactly as strictly enforced as before — only the one
+        // specific, audited, read-only call this milestone added is
+        // exempted by name, never session access in general.
         const worldView = await rawSource('ui/views/WorldView.js');
         const rowMapping = worldView.match(/const nearbyPlaceNamingClaimRows = computed\(\(\) => \([\s\S]*?\)\);/)[0];
-        assert(!/worldLocations|session\./.test(rowMapping), 'H2. nearbyPlaceNamingClaimRows reads only nearbyPlaceNamingClaims.value — never worldLocations, never the session directly.');
+        const rowMappingWithoutStatusCheck = rowMapping.replace(/session\.hasPlaceNamingClaim\(entry\.claim\.worldId,\s*entry\.claim\.id\)/, '');
+        assert(!/worldLocations|session\./.test(rowMappingWithoutStatusCheck),
+            'H2. UPDATED at 0.9.269 — nearbyPlaceNamingClaimRows reads only nearbyPlaceNamingClaims.value, plus the one audited, read-only session.hasPlaceNamingClaim() existence query this milestone added — never worldLocations, and no OTHER session access of any kind.');
+        assert(rowMapping.includes('session.hasPlaceNamingClaim(entry.claim.worldId, entry.claim.id)'),
+            'H2b. sanity: the exempted call is genuinely present, exactly as named — this is not a vacuously-passing regex.');
 
         // H3. Live, behavioral proof (not merely static grep): running
         // the real monitor against a real region whose OWN `.name`
