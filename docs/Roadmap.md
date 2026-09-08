@@ -84416,3 +84416,99 @@ enabling removal of a claim a viewer only adopted, never authored — but,
 exactly as this reassessment's own brief asked for competing names, this
 names a genuine product-design fork (a local dismissal versus a true
 removal) rather than resolving one, so it is not treated as committed.
+
+## 0.9.266 — Nearby Place Naming Claim Metadata Presentation
+
+0.9.265's own ranking named removing an adopted claim as its strongest
+evidence-backed candidate — but named it a genuine product-design fork
+(local dismissal vs. true removal), not a build-ready one. Per the
+product-direction conversation that opened this milestone, candidate 2
+was chosen instead: the smaller, evidence-backed, no-new-domain-concept
+seam Section D already named precisely — the Nearby Place Names row
+already carries `createdAt`/`signature` (restored at 0.9.263 purely so
+Adopt could rehydrate a complete claim) but the template renders
+neither. This milestone closes the `createdAt` half of that gap only:
+
+```
+nearby claim (createdAt already on the row) -> a new, pure
+     formatNearbyPlaceNamingCreatedAt() -> a new, purely additive
+     createdAtLabel row field -> rendered as "Created: <date>"
+```
+
+`signature` deliberately gets no display counterpart — see this
+milestone's own new `docs/Principles.md` entry, "Displaying Metadata Is
+Not Verifying It," for why a field reaching a row is not, by itself,
+permission to render it.
+
+### What this milestone adds
+
+- **`formatNearbyPlaceNamingCreatedAt(createdAt)`** (`ui/views/WorldView.js`)
+  — a new, pure date formatter, mirroring `ui/components/
+  PlaceNamingPanel.js`'s own pre-existing `formatWhen()` exactly: an
+  unparseable or missing `createdAt` degrades to `''` rather than
+  throwing or rendering "Invalid Date."
+- **`nearbyPlaceNamingClaimRows` widened again** (`ui/views/WorldView.js`)
+  — the row descriptor now also carries `createdAtLabel`, added
+  ALONGSIDE — never in place of — the row's existing raw `createdAt`,
+  which Adopt still reads completely unchanged.
+- **A "Created: `<date>`" line** on every Nearby Place Names row
+  (`ui/views/WorldView.js` template), alongside the existing author
+  line, rendered only when `createdAtLabel` is non-empty.
+  `.world-view-place-naming-created` (`css/main.css`) mirrors
+  `.world-view-place-naming-author`'s own full-width, secondary-line
+  treatment — createdAt is exactly as ordinary a fact as the author,
+  never visually promoted above it.
+
+`tests/PlaceNamingNearbyMetadataPresentation.test.js` (new) — 14
+sections: author and timestamp both rendering (A), every pre-existing
+row field surviving unchanged, with `createdAtLabel` purely additive (B),
+multiple authors formatted independently with no cross-contamination
+(C), the exact negative test this milestone's own brief named directly —
+"Riverside"/"Old River" remaining equally, fully presented despite
+different authors and timestamps (D), malformed/missing `createdAt`
+degrading gracefully without ever throwing or corrupting the rest of the
+row (E), World switching never leaking a previous World's metadata (F),
+a refreshed discovery observation replacing a row's metadata atomically,
+never a stale mix of old and new fields (G), Navigate remaining fully
+independent of the new field (H), Adopt continuing to rehydrate strictly
+from the row's own raw `createdAt`/`signature`/`authorIdentityId` —
+never `createdAtLabel` — with a live re-verification proof (I), no
+ranking or preference introduced by rendering metadata, reconfirmed
+against `core/PlaceNamingView.js`'s own real ranking logic (J), no World
+mutation from rendering metadata (K), the existing verification boundary
+preserved — no signature rendered, no new verification vocabulary
+introduced (L), a FLAGSHIP real Nostr -> discovery -> proximity ->
+presentation round trip with metadata derived end to end (M), and an
+architectural regression test confirming the reproduction above
+genuinely matches `ui/views/WorldView.js`'s own real wiring (N).
+
+`tests/PostAdoptionPlaceNamingProductReassessment.test.js` (0.9.265) is
+updated in place, mirroring exactly how 0.9.263 updated 0.9.262's own
+reassessment: Section D1's assertions now confirm `createdAtLabel` is
+rendered while `signature` still is not, Section D's own closing summary
+and Section H's ranked-candidate #3 are annotated with "createdAt's own
+half BUILT at 0.9.266," and Section I's verdict text is updated to
+match.
+
+Registered in `tests.html`.
+
+### What this milestone deliberately excludes
+
+Per this milestone's own brief and 0.9.265's own Section C5/D1: no
+signature rendering, and no new "Verified"/"Unverified" UI state or
+verification use case of any kind — this codebase's only real
+verification runs strictly inside a mutating boundary (import/publish/
+kind-registry-verify), and exposes no non-mutating result a NOT-YET-
+adopted Nearby row could read and display truthfully. Also excluded, per
+this milestone's own brief: any "already adopted" indicator (0.9.265
+Section D's own separate candidate), any preferred-name/ranking
+semantics, moderation, claim removal/retraction, automatic adoption,
+`WorldRegion` mutation, synchronization, a notification system, and any
+change to `PlaceNamingClaimExchange`.
+
+### What comes after
+
+Per this milestone's own brief: another test-only reassessment, one
+metadata-presentation boundary later, asking whether Place Naming is
+genuinely finished as a product arc or whether a new, evidence-backed
+capability has emerged — rather than assuming the next feature.

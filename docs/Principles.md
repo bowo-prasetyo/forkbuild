@@ -19265,3 +19265,65 @@ itself. The discovered claim remains exactly as adoptable afterward as
 before the failed attempt — a rejected forgery poisons nothing else.
 
 See `docs/Roadmap.md`, 0.9.263, for the full milestone entry.
+
+### Displaying Metadata Is Not Verifying It (0.9.266)
+
+0.9.265's own reassessment (Section D) found the Nearby Place Names row
+already carries `createdAt` and `signature` — restored at 0.9.263 purely
+so Adopt could rehydrate a complete claim — but the template never
+rendered either. 0.9.266 (Nearby Place Naming Claim Metadata
+Presentation) closes exactly the `createdAt` half of that gap, and, in
+doing so, draws a boundary worth naming on its own: a field reaching a
+row is not, by itself, permission to render it.
+
+**A pure data-availability argument is not a design argument.** "The
+signature is already right there, one property access away" is true and
+was true since 0.9.263 — and is exactly why it would be tempting to
+render it alongside the newly-added `createdAtLabel`. This milestone
+refuses that temptation on purpose. `createdAt` is safe to render as
+plain fact: a claim's own stated creation time, true or false, harms no
+one to display. A raw signature is different in kind — rendering it
+invites a viewer to read meaning into it ("this looks legitimate") that
+this codebase has no machinery to actually back at the point the row is
+shown.
+
+**This codebase's only real verification lives inside a mutating
+boundary, not a query one.**
+`identity/LocalAuthorizationVerifier.js`'s own place-naming-claim
+verifier is called from exactly three places — `PlaceNamingClaimUseCase#
+publish()`, `PlaceNamingClaimPublicationKind`'s own registry verify, and
+`PlaceNamingClaimExchange#importClaim()` — and every one of them also
+persists as part of the same call. 0.9.259's own reassessment (Section
+J) already found this precisely: "a check-only UI action would need a
+new use case, not merely new wiring, since every existing caller also
+mutates state." A Nearby row shows a claim BEFORE Adopt runs — there is
+no existing, non-mutating call this milestone could make that returns a
+truthful verified/unverified answer for that not-yet-adopted claim
+without silently importing it as a side effect of merely looking.
+
+**Inventing a lightweight check-only verification path to feed a badge
+would be a bigger change wearing a small change's clothes.** It is easy
+to imagine one: export `LocalAuthorizationVerifier#verifyPlaceNamingClaim()`
+through the session boundary read-only, call it once per row, and paint
+a checkmark. But that is a NEW capability — a new session method, a new
+UI vocabulary ("Verified"), and a new claim about what that vocabulary
+means to a viewer — not a rendering of a fact this domain already
+established. `docs/Principles.md`'s own recurring discipline throughout
+this arc (0.9.257 through 0.9.265) has been: build the seam between
+EXISTING pieces, invent nothing new. A "Verified" badge with no
+verification use case behind it would invent the appearance of
+assurance without the substance of it — worse than showing nothing at
+all, because it would look like more than a raw signature dump would.
+
+**The right amount of restraint is milestone-sized, not permanent.** This
+principle does not say a verification-status indicator can never exist —
+0.9.265's own Section H already ranks it as a real, evidenced
+`MISSING_UI` candidate (its true prerequisite is `MISSING_UI` layered
+on a genuinely new, narrow, check-only use case, not wiring alone). It
+says only that reaching for it here, as a free side effect of "the field
+happens to already be on the row," would be building a real capability
+under the cover of a purely cosmetic-sounding one. `createdAt` needed no
+such new capability — a `Date` was always either parseable or it wasn't.
+A signature needed one this milestone deliberately declines to build.
+
+See `docs/Roadmap.md`, 0.9.266, for the full milestone entry.

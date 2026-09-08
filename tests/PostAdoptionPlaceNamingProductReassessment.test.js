@@ -402,11 +402,15 @@ async function runTests() {
         // 0.9.263 for Adopt's own sake) but the TEMPLATE never renders
         // either — the data reaching the row and what the row displays
         // are two different questions, and only the second is still a
-        // gap.
+        // gap. UPDATED at 0.9.266: createdAt's own display half of this
+        // gap was BUILT (a new, purely additive `createdAtLabel` field —
+        // see that milestone's own tests/PlaceNamingNearbyMetadataPresentation.test.js).
+        // signature stays deliberately unrendered — 0.9.266's own brief
+        // reconfirmed Section C5's finding below is still the reason why.
         assert(rowMapping.includes('createdAt:') && rowMapping.includes('signature:'),
-            'D1a. sanity: nearbyPlaceNamingClaimRows still carries createdAt/signature (restored at 0.9.263).');
-        assert(!nearbyBlock.includes('claim.createdAt') && !nearbyBlock.includes('claim.signature'),
-            'D1b. The Nearby Place Names template never renders claim.createdAt or claim.signature — the data is already one property-access away, but nothing displays it.');
+            'D1a. sanity: nearbyPlaceNamingClaimRows still carries the RAW createdAt/signature (restored at 0.9.263), unremoved by 0.9.266\'s own additive createdAtLabel field.');
+        assert(nearbyBlock.includes('claim.createdAtLabel') && !nearbyBlock.includes('claim.signature'),
+            'D1b. The Nearby Place Names template now renders claim.createdAtLabel (BUILT at 0.9.266) but still never renders claim.signature — the createdAt half of this gap is closed; the signature/verification half remains an open, deliberate boundary (Section C5).');
 
         // D2. No "already adopted" indicator exists on the row, and no
         // session method exists to answer "is this claim already known"
@@ -431,7 +435,7 @@ async function runTests() {
         assert(bobReplica.store.has('world-1', claim.id) === true,
             'D3b. LIVE PROOF: after adoption, LocalPlaceNamingClaimStore#has() already reports true — the exact boolean an "Adopted" badge on the Nearby row would read, already computed correctly, already reachable one layer below the session — a precisely-scoped, low-risk UI seam if this candidate is ever chosen, never a new domain concept.');
 
-        console.log('✓ D: the Nearby row displays name/author/distance only — createdAt and signature already reach the row (restored at 0.9.263) but are never rendered (D1); no "already adopted" indicator exists, and the one missing piece to build it is a thin session pass-through over LocalPlaceNamingClaimStore#has(), which already answers correctly today (D2-D3).');
+        console.log('✓ D: the Nearby row displays name/author/distance/createdAt (createdAt rendering BUILT at 0.9.266) — signature still reaches the row (restored at 0.9.263) but remains deliberately unrendered (D1); no "already adopted" indicator exists, and the one missing piece to build it is a thin session pass-through over LocalPlaceNamingClaimStore#has(), which already answers correctly today (D2-D3).');
     }
 
     // ---------------------------------------------------------------
@@ -567,7 +571,7 @@ async function runTests() {
         const ranked = [
             '1. Enable removing a claim a viewer only ADOPTED (never authored) — MISSING_DOMAIN_CAPABILITY (Section E). retract() is deliberately author-gated; live proof shows no path anywhere removes an adopted, non-authored claim. The clearest genuine product-design fork this reassessment found: a local "dismiss/hide" versus a true remove are both plausible, and neither is assumed here.',
             '2. An "Adopted" indicator on the Nearby row — REACHABLE, thin UI seam (Section D). LocalPlaceNamingClaimStore#has() already answers the exact boolean needed, live-proven correct; the one precise prerequisite is a thin, read-only session pass-through, never a new domain concept.',
-            '3. Surface verification/signature status in the existing "All Claims" list and/or the Nearby row — MISSING_UI, not MISSING_CAPABILITY (Section C5/D1). The claim was already verified before being persisted; only DISPLAYING that fact is missing, on data every relevant row/entry already carries.',
+            '3. Surface verification/signature status in the existing "All Claims" list and/or the Nearby row — MISSING_UI, not MISSING_CAPABILITY (Section C5/D1). The claim was already verified before being persisted; only DISPLAYING that fact is missing, on data every relevant row/entry already carries. createdAt\'s own display half was BUILT at 0.9.266 (tests/PlaceNamingNearbyMetadataPresentation.test.js); the signature/verification half remains deliberately open — 0.9.266\'s own brief reconfirmed no existing verification machinery exposes a non-mutating result a Nearby row could truthfully display.',
             '4. Wire "Prefer this" onto the Nearby row (unchanged from 0.9.262\'s own ranking) — MISSING_UI. The manual PlaceNamingPanel has had it since 0.5.2; Nearby still lacks it. Structurally independent of adoption, unaffected by anything this milestone found.',
             '5. A cross-region "My Adopted Claims" management view — MISSING_UI/MISSING_DOMAIN_CAPABILITY, explicitly NOT assumed necessary. Per-region inspection is already COMPLETE (Section C); a global view is a genuinely larger, separate product decision this reassessment does not resolve.',
             '6. Export directly from the Nearby row, before adopting — MISSING_UI, low value. Export-after-adopt already fully works today via the existing "All Claims" surface (Section C4); this candidate only shaves one click for a narrow use case.',
@@ -614,8 +618,9 @@ async function runTests() {
 '    indicator (Section C)\n' +
 '\n' +
 'NEARBY UI\n' +
-'    createdAt/signature already reach the row but are never rendered;\n' +
-'    no "already adopted" indicator exists, and the one prerequisite a\n' +
+'    createdAt/signature already reach the row; createdAt rendering was\n' +
+'    BUILT at 0.9.266, signature/verification remains deliberately\n' +
+'    unrendered; no "already adopted" indicator exists, and the one prerequisite a\n' +
 '    future one would need — a thin session read over\n' +
 '    LocalPlaceNamingClaimStore#has() — already answers correctly today,\n' +
 '    live-proven (Section D)\n' +
@@ -642,7 +647,8 @@ async function runTests() {
 '       overturning this milestone\'s own opening speculation that\n' +
 '       inspection would be the top gap\n' +
 '    2. An "Adopted" indicator on the Nearby row — thin, low-risk seam\n' +
-'    3. Verification/signature status display — MISSING_UI only\n' +
+'    3. Verification/signature status display — MISSING_UI only;\n' +
+'       createdAt\'s own half BUILT at 0.9.266\n' +
 '    4. Prefer wiring on the Nearby row (carried over from 0.9.262)\n' +
 '    5. Cross-region "My Adopted Claims" management view\n' +
 '    6. Export directly from the Nearby row before adopting\n' +

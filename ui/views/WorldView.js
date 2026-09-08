@@ -2698,11 +2698,53 @@ export default {
         // did for regionId/worldId. Still never a second, adoption-shaped
         // representation of a claim — the row simply stops discarding
         // fields the claim already carries.
+        // 0.9.266 — Nearby Place Naming Claim Metadata Presentation. Pure
+        // display formatting only, mirroring ui/components/PlaceNamingPanel.js's
+        // own formatWhen() exactly: an unparseable/missing `createdAt`
+        // degrades to '' rather than throwing or rendering "Invalid Date" —
+        // the same graceful-degradation discipline this file already holds
+        // everywhere else a discovered, self-declared value reaches the
+        // UI (see e.g. core/PlaceNamingDiscoveryEnvelope.js's own "degrades
+        // to null, never throws"). Never touches `createdAt` itself, which
+        // the row below still carries raw and unmodified — the exact value
+        // adoptNearbyPlaceNamingClaim() rehydrates into a PlaceNamingClaim.
+        function formatNearbyPlaceNamingCreatedAt(createdAt) {
+            const date = createdAt instanceof Date ? createdAt : new Date(createdAt);
+            return Number.isNaN(date.getTime()) ? '' : date.toLocaleDateString();
+        }
+
+        // 0.9.263 — Nearby Place Naming Claim Adoption UI restored
+        // authorIdentityId/createdAt/signature onto this row so adoption
+        // could build a complete package (see this block's own 0.9.263
+        // comment above). The 0.9.265 reassessment (Section D) found the
+        // one remaining gap in this same row: createdAt and signature
+        // both reach it but neither is ever RENDERED.
+        //
+        // 0.9.266 — Nearby Place Naming Claim Metadata Presentation closes
+        // half of that gap: `createdAtLabel` is a pure presentation field,
+        // added alongside — never in place of — the raw `createdAt` the
+        // row already carried, so adoption keeps reading the exact same
+        // unformatted value it always has. `signature` deliberately gets
+        // NO display counterpart here. The 0.9.265 reassessment (Section
+        // C5) was explicit that a signature reaching a row is not, by
+        // itself, a reason to invent a new "Verified"/"Unverified" UI
+        // state: this codebase's only real verification — identity/
+        // LocalAuthorizationVerifier.js's own place-naming-claim verifier
+        // — runs strictly inside a MUTATING boundary
+        // (PlaceNamingClaimExchange#importClaim(), PlaceNamingClaimUseCase#
+        // publish(), PlaceNamingClaimPublicationKind's own verify) and
+        // exposes no semantic, non-mutating result a NOT-YET-adopted
+        // Nearby row could read and display truthfully. Rendering the raw
+        // signature bytes would only manufacture a false sense of
+        // cryptographic assurance no existing machinery actually backs at
+        // this boundary — so this milestone renders createdAt and leaves
+        // signature/verification exactly as unrendered as 0.9.265 found it.
         const nearbyPlaceNamingClaimRows = computed(() => (
             nearbyPlaceNamingClaims.value.map((entry) => ({
                 claimId: entry.claim.id,
                 name: entry.claim.name,
                 authorDisplayName: resolveIdentityDisplayName(entry.claim.authorIdentityId),
+                createdAtLabel: formatNearbyPlaceNamingCreatedAt(entry.claim.createdAt),
                 position: entry.position,
                 regionId: entry.claim.regionId,
                 worldId: entry.claim.worldId,
@@ -4329,6 +4371,17 @@ export default {
                         <span class="world-view-nearby-row-label">✎ {{ claim.name }}</span>
                         <span class="world-view-nearby-row-distance" v-if="claim.position">at ({{ Math.round(claim.position.x) }}, {{ Math.round(claim.position.z) }})</span>
                         <span class="world-view-place-naming-author">claimed by {{ claim.authorDisplayName }}</span>
+                        <!-- 0.9.266 — Nearby Place Naming Claim Metadata
+                             Presentation. createdAtLabel is a pure display
+                             string (see nearbyPlaceNamingClaimRows's own
+                             0.9.266 comment) — empty for a malformed/missing
+                             createdAt, in which case this line simply does
+                             not render, exactly like claim.position above.
+                             Deliberately no signature/verification
+                             indicator sits beside it — see that same
+                             comment for why this milestone draws that
+                             boundary here. -->
+                        <span v-if="claim.createdAtLabel" class="world-view-place-naming-created">Created: {{ claim.createdAtLabel }}</span>
                         <!-- 0.9.260 — Nearby Place Naming Claim Interaction.
                              Navigate only ever moves the camera to the
                              claim's own region via the existing World
