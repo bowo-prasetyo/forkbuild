@@ -51,9 +51,10 @@ import { composeDecentralizedWorldEncounterMaterialDiscoveryServices } from '../
 // Section L: no UI — the resolver's own source imports nothing beyond its
 //            two named collaborators
 // Section M: existing runtime regression — nothing outside this resolver,
-//            its one legitimate 0.9.297 application-boundary consumer,
-//            and this test file references it; an unknown role still
-//            throws (a programming error, never a resolution outcome)
+//            its 0.9.297 application-boundary consumer, and the 0.9.299
+//            Content creation seam that consumer now feeds references it;
+//            an unknown role still throws (a programming error, never a
+//            resolution outcome)
 
 function assert(condition, message) {
     if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
@@ -463,22 +464,36 @@ async function run() {
 
     // ===============================================================
     // Section M — existing runtime regression: nothing outside this
-    // resolver, its one legitimate 0.9.297 application-boundary consumer,
-    // and this test file references it yet, and an unknown role is a
-    // programming error, never a resolution outcome.
+    // resolver, its 0.9.297 application-boundary consumer, and the 0.9.299
+    // Content creation seam that consumer now feeds references it, and an
+    // unknown role is a programming error, never a resolution outcome.
     //
     // UPDATED by 0.9.297 — Role Provider Preference Application Boundary
     // — application/ResolvePreferredRoleProviderUseCase.js is now a
     // second, legitimate reference: it reads a RoleProviderPreference
     // directly from the store AND delegates resolution to THIS resolver's
-    // own resolve(), but is itself still not imported by any composition
-    // root (see that file's own tests, Section K). This section is
-    // UPDATED, not deleted, following the exact precedent 0.9.293/0.9.294
-    // each already set for the sweep before them.
+    // own resolve(). UPDATED AGAIN by 0.9.299 — Content Creation Provider
+    // Preference Integration — application/
+    // PreferredSnapshotPlacementCreationCoordinator.js and its own
+    // composition root, application/
+    // CreatePreferredSnapshotPlacementCreationCoordinatorUseCase.js, are
+    // the first production callers that actually reach this resolver at
+    // runtime (through ResolvePreferredRoleProviderUseCase, never
+    // directly), so existing publication distribution, Snapshot
+    // distribution, discovery, material loading, and anchoring paths
+    // stay exactly as before this milestone — only Content placement
+    // CREATION now has a real, live path to this resolver. This section
+    // is UPDATED, not deleted, following the exact precedent 0.9.293-
+    // 0.9.297 each already set for the sweep before them.
     // ===============================================================
     {
         const allProductionFiles = await repoWideProductionFiles();
-        const KNOWN_RESOLVER_FILES = new Set(['application/RoleAwareProviderResolver.js', 'application/ResolvePreferredRoleProviderUseCase.js']);
+        const KNOWN_RESOLVER_FILES = new Set([
+            'application/RoleAwareProviderResolver.js',
+            'application/ResolvePreferredRoleProviderUseCase.js',
+            'application/PreferredSnapshotPlacementCreationCoordinator.js',
+            'application/CreatePreferredSnapshotPlacementCreationCoordinatorUseCase.js'
+        ]);
         let hits = 0;
         const hitFiles = [];
         for (const file of allProductionFiles) {
@@ -488,7 +503,7 @@ async function run() {
                 hitFiles.push(file);
             }
         }
-        assert(hits === KNOWN_RESOLVER_FILES.size, `M1. only application/RoleAwareProviderResolver.js and its 0.9.297 application-boundary consumer mention RoleAwareProviderResolver in production source (found ${hits}: ${hitFiles.join(', ')}) — no composition root wires it in yet, so existing publication distribution, Snapshot distribution, discovery, material loading, and anchoring paths behave exactly as before this milestone`);
+        assert(hits === KNOWN_RESOLVER_FILES.size, `M1. only application/RoleAwareProviderResolver.js, its 0.9.297 application-boundary consumer, and the 0.9.299 Content creation seam mention RoleAwareProviderResolver in production source (found ${hits}: ${hitFiles.join(', ')}) — no OTHER composition root wires it in, so existing publication distribution, Snapshot distribution, discovery, material loading, and anchoring paths behave exactly as before this milestone`);
         for (const file of hitFiles) {
             assert(KNOWN_RESOLVER_FILES.has(file), `M1b. "${file}" is not one of the known legitimate references to RoleAwareProviderResolver`);
         }
@@ -502,7 +517,7 @@ async function run() {
         });
         expectThrows(() => resolver.resolve('NETWORK'), 'M2. an unknown role throws — a programming error, never a NO_PREFERENCE/PROVIDER_NOT_FOUND outcome');
         expectThrows(() => resolver.resolve('content'), 'M3. lowercase is not a role either — the vocabulary stays case-sensitive');
-        console.log('✓ Section M: the resolver is a real, tested, unconsumed capability — no production runtime path changed by this milestone');
+        console.log('✓ Section M: the resolver is a real, tested capability, reached at runtime only through the one 0.9.299 Content creation integration — every other production runtime path is unchanged by this milestone');
     }
 
     console.log('\n✅ All Role-Aware Provider Resolution tests passed.');

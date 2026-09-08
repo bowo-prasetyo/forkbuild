@@ -27,8 +27,10 @@ import { RoleProviderPreference, isValidRoleProviderKey } from '../core/RoleProv
 // Section K: no UI dependency — usable with zero browser/DOM globals
 // Section L: independent role configuration — a full Discovery/Content/
 //            Proof set never collapses into one flat selection
-// Section M: nothing in production consumes this yet — the boundary is
-//            deliberately unwired, exactly like the milestone brief asks
+// Section M: the boundary's consumers, repo-wide — as of 0.9.299 this
+//            includes the one real Content creation integration
+//            (application/PreferredSnapshotPlacementCreationCoordinator.js,
+//            its own composition root, and ui/main.js's own wiring of it)
 
 function assert(condition, message) {
     if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
@@ -227,8 +229,8 @@ async function run() {
     }
 
     // ===============================================================
-    // Section M — nothing beyond the named boundary files consumes this
-    // yet, beyond the three milestones that were BUILT to consume it.
+    // Section M — nothing beyond the named boundary files consumes this,
+    // beyond the milestones that were BUILT to consume it.
     // 0.9.294 — Decentralized Role Provider Preference Persistence
     // Boundary — gave this boundary its first real consumer, storage/
     // RoleProviderPreferenceStore.js: it saves/loads a RoleProviderPreference
@@ -246,10 +248,18 @@ async function run() {
     // actual resolution decision to 0.9.295's own resolver, packaging both
     // into one frozen decision, but still never constructs a provider,
     // still never falls back, and still never writes back to the store
-    // either (see that file's own header). This section is UPDATED, not
+    // either (see that file's own header). 0.9.299 — Content Creation
+    // Provider Preference Integration — is the first milestone to
+    // actually WIRE that chain into a running production workflow: it
+    // adds application/PreferredSnapshotPlacementCreationCoordinator.js
+    // (reads a CONTENT-role preference through 0.9.297's own use case) and
+    // its own composition root, application/
+    // CreatePreferredSnapshotPlacementCreationCoordinatorUseCase.js, and
+    // ui/main.js itself now composes and provides that coordinator (see
+    // that file's own 0.9.299 comment). This section is UPDATED, not
     // deleted, by each milestone in turn — it still holds the line that
     // matters: the ONLY production files allowed to reference this
-    // boundary are those three named consumers, a repo-wide sweep, never a
+    // boundary are those six named consumers, a repo-wide sweep, never a
     // guess from this file's own prose.
     // ===============================================================
     {
@@ -276,7 +286,14 @@ async function run() {
         const dirs = ['core', 'application', 'content', 'discovery', 'anchoring', 'base', 'arweave', 'nostr', 'publisher', 'ui', 'identity', 'storage', 'peer', 'replication', 'placement', 'spatial', 'serializer', 'presence', 'collaboration', 'world', 'world-layout', 'persistence', 'server', 'renderer'];
         const allFiles = [];
         for (const dir of dirs) await listJsFiles(dir, allFiles);
-        const KNOWN_CONSUMER_FILES = new Set(['storage/RoleProviderPreferenceStore.js', 'application/RoleAwareProviderResolver.js', 'application/ResolvePreferredRoleProviderUseCase.js']);
+        const KNOWN_CONSUMER_FILES = new Set([
+            'storage/RoleProviderPreferenceStore.js',
+            'application/RoleAwareProviderResolver.js',
+            'application/ResolvePreferredRoleProviderUseCase.js',
+            'application/PreferredSnapshotPlacementCreationCoordinator.js',
+            'application/CreatePreferredSnapshotPlacementCreationCoordinatorUseCase.js',
+            'ui/main.js'
+        ]);
         let consumerCount = 0;
         const consumerFiles = [];
         for (const file of allFiles) {
@@ -286,11 +303,11 @@ async function run() {
                 consumerFiles.push(file);
             }
         }
-        assert(consumerCount === KNOWN_CONSUMER_FILES.size, `M1. exactly the 0.9.294 persistence store, the 0.9.295 resolver, and the 0.9.297 application boundary reference RoleProviderPreference or RoleProviderRole (found ${consumerCount}: ${consumerFiles.join(', ')}) — this boundary is consumed ONLY by those three named layers; wiring any of them into a production composition root is separate, unscheduled future work`);
+        assert(consumerCount === KNOWN_CONSUMER_FILES.size, `M1. exactly the 0.9.294 persistence store, the 0.9.295 resolver, the 0.9.297 application boundary, and the 0.9.299 Content creation integration (plus its ui/main.js wiring) reference RoleProviderPreference or RoleProviderRole (found ${consumerCount}: ${consumerFiles.join(', ')}) — this boundary is consumed ONLY by those six named layers; wiring it into any OTHER production composition root is separate, unscheduled future work`);
         for (const file of consumerFiles) {
-            assert(KNOWN_CONSUMER_FILES.has(file), `M2. the only files allowed to consume this boundary are storage/RoleProviderPreferenceStore.js, application/RoleAwareProviderResolver.js, and application/ResolvePreferredRoleProviderUseCase.js — "${file}" is not one of them`);
+            assert(KNOWN_CONSUMER_FILES.has(file), `M2. "${file}" is not one of the known legitimate consumers of this boundary`);
         }
-        console.log('✓ Section M: repo-wide sweep confirms the only production consumers of this boundary are storage/RoleProviderPreferenceStore.js (0.9.294), application/RoleAwareProviderResolver.js (0.9.295), and application/ResolvePreferredRoleProviderUseCase.js (0.9.297) — a preference is durable, resolvable, and now reachable through one application seam, still without being wired into any production runtime path');
+        console.log('✓ Section M: repo-wide sweep confirms the only production consumers of this boundary are storage/RoleProviderPreferenceStore.js (0.9.294), application/RoleAwareProviderResolver.js (0.9.295), application/ResolvePreferredRoleProviderUseCase.js (0.9.297), and the 0.9.299 Content creation integration (application/PreferredSnapshotPlacementCreationCoordinator.js, its composition root, and ui/main.js) — a preference is durable, resolvable, and now actually wired into one real production workflow');
     }
 
     console.log('\n✅ All Decentralized Role Provider Preference Boundary tests passed.');

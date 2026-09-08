@@ -433,19 +433,30 @@ async function run() {
 
     // ===============================================================
     // Section H — UI sequencing: consumer-first vs settings-first.
+    //
+    // UPDATED by 0.9.299 — Content Creation Provider Preference
+    // Integration, which is exactly this section's own DECISION (below)
+    // carried out: the CONTENT-creation consumer got built and wired
+    // BEFORE any settings UI. ui/main.js is now the one legitimate `ui/`
+    // file mentioning the concept — it composes application/
+    // PreferredSnapshotPlacementCreationCoordinator.js's own composition
+    // root, never a settings control (`ui/views/AvatarSettingsView.js`
+    // still mentions nothing here — see H2 below, unchanged). This
+    // section is UPDATED, not deleted, following the exact precedent
+    // every other repo-wide sweep in this sequence already set.
     // ===============================================================
     {
-        // Re-confirm 0.9.296's own finding still holds, independently —
-        // zero ui/ files mention a provider preference of any shape.
         const allProductionFiles = await repoWideProductionFiles();
         const uiFiles = allProductionFiles.filter((f) => f.startsWith('ui/'));
         const preferenceLikeUiPattern = /providerPreference|networkPreference|preferredProvider|substratePreference|RoleProviderPreference/i;
         let uiPreferenceHits = 0;
+        const uiPreferenceHitFiles = [];
         for (const file of uiFiles) {
             const text = await source(file);
-            if (preferenceLikeUiPattern.test(text)) uiPreferenceHits += 1;
+            if (preferenceLikeUiPattern.test(text)) { uiPreferenceHits += 1; uiPreferenceHitFiles.push(file); }
         }
-        assert(uiPreferenceHits === 0, `H1. zero ui/ files mention a provider preference of any shape today (found ${uiPreferenceHits})`);
+        assert(uiPreferenceHits === 1 && uiPreferenceHitFiles[0] === 'ui/main.js',
+            `H1. exactly ui/main.js mentions a provider preference today, via its 0.9.299 Content creation composition — never a settings view (found ${uiPreferenceHits}: ${uiPreferenceHitFiles.join(', ')})`);
 
         // The settings-UI template this codebase already establishes.
         const avatarSettingsSource = await source('ui/views/AvatarSettingsView.js');
