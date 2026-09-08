@@ -45,8 +45,10 @@ import { composeDecentralizedWorldEncounterMaterialDiscoveryServices } from '../
 // Section J: no construction — this file never imports or instantiates a
 //            concrete provider, content/anchoring/discovery module, or
 //            ui/ module
-// Section K: no runtime integration yet — no existing composition root
-//            imports this class; an unknown role still throws
+// Section K: runtime integration, as of 0.9.299 — application/
+//            PreferredSnapshotPlacementCreationCoordinator.js and its own
+//            composition root are the first and only production
+//            consumers of this class; an unknown role still throws
 
 function assert(condition, message) {
     if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
@@ -385,13 +387,22 @@ async function run() {
     }
 
     // ===============================================================
-    // Section K — no runtime integration yet: no existing composition
-    // root imports this class, and an unknown role is a programming
-    // error, never a decision outcome.
+    // Section K — runtime integration, as of 0.9.299 (Content Creation
+    // Provider Preference Integration): exactly the two files that
+    // integration adds — application/
+    // PreferredSnapshotPlacementCreationCoordinator.js and its own
+    // composition root, application/
+    // CreatePreferredSnapshotPlacementCreationCoordinatorUseCase.js — now
+    // mention this class, and no other production file does. An unknown
+    // role is still a programming error, never a decision outcome.
     // ===============================================================
     {
         const allProductionFiles = await repoWideProductionFiles();
-        const KNOWN_FILES = new Set(['application/ResolvePreferredRoleProviderUseCase.js']);
+        const KNOWN_FILES = new Set([
+            'application/ResolvePreferredRoleProviderUseCase.js',
+            'application/PreferredSnapshotPlacementCreationCoordinator.js',
+            'application/CreatePreferredSnapshotPlacementCreationCoordinatorUseCase.js'
+        ]);
         let hits = 0;
         const hitFiles = [];
         for (const file of allProductionFiles) {
@@ -401,13 +412,14 @@ async function run() {
                 hitFiles.push(file);
             }
         }
-        assert(hits === KNOWN_FILES.size, `K1. only application/ResolvePreferredRoleProviderUseCase.js itself mentions this class in production source (found ${hits}: ${hitFiles.join(', ')}) — no composition root, use case, or ui/ view wires it in yet`);
+        assert(hits === KNOWN_FILES.size && hitFiles.every((file) => KNOWN_FILES.has(file)),
+            `K1. only the 0.9.299 Content creation seam and this class's own file mention it in production source (found ${hits}: ${hitFiles.join(', ')}) — no OTHER composition root, use case, or ui/ view wires it in`);
 
         const store = makePreferenceStore();
         const { useCase } = makeUseCase({ preferenceStore: store });
         expectThrows(() => useCase.execute({ role: 'NETWORK' }), 'K2. an unknown role throws — a programming error, never a resolution outcome');
         expectThrows(() => useCase.execute({}), 'K3. a missing role throws too');
-        console.log('✓ Section K: this class is a real, tested, unconsumed capability — no production runtime path changed by this milestone');
+        console.log('✓ Section K: this class is a real, tested capability, consumed today by exactly the one 0.9.299 Content creation integration — every other production runtime path is unchanged by this milestone');
     }
 
     console.log('\n✅ All Role Provider Preference Application Boundary tests passed.');

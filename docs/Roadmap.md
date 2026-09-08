@@ -87181,3 +87181,113 @@ DEFAULT suggestion layered onto the existing `availableStorageTypes()` button li
 auto-submitting on a person's behalf — consumed through `ResolvePreferredRoleProviderUseCase` exactly as this
 milestone's own Section F already proved it resolves. Only once that first real consumer exists does a
 settings UI (0.9.300, per the originally recommended sequence) have anything real to control.
+
+## 0.9.299 — Content Creation Provider Preference Integration
+
+**Type:** Production runtime integration. **Scope:** one existing workflow — Content placement CREATION
+(`application/CreateExternalSnapshotPlacementUseCase.js`, via `application/
+SnapshotPlacementCreationCoordinator.js`) — wrapped so an absent explicit `storage` resolves through the
+stored CONTENT role preference, never overriding one that is present.
+
+0.9.298's own audit named this seam the strongest candidate and recommended, as its own "what comes after," a
+DEFAULT *suggestion* layered onto the existing button list rather than an actual resolution path. This
+milestone was commissioned directly by a person who reviewed that finding and decided otherwise: rather than a
+UI hint with no effect on `create()`'s own behavior, the preference should actually decide which provider an
+action with no explicit choice places onto — while preserving, unconditionally, the one invariant every prior
+milestone in this sequence already held: **an explicit per-action choice always wins, and an unresolvable
+preference never falls back to anything.** This is a deliberate, named divergence from 0.9.298's own
+recommendation, not an oversight — recorded here so the reasoning is traceable.
+
+### The model
+
+```text
+createPlacement(entry, storage)        (ui/views/DecentralizedPublicationsView.js — UNCHANGED,
+     │                                   still always passes an explicit storage today)
+     ▼
+PreferredSnapshotPlacementCreationCoordinator.create(publicationId, storage)   ★ (THIS)
+     │
+     ├── storage present  ─────────────────────────► SnapshotPlacementCreationCoordinator.create()  (0.8.25, unmodified)
+     │
+     └── storage absent
+              │
+              ▼
+     ResolvePreferredRoleProviderUseCase.execute({ role: CONTENT })   (0.9.297, unmodified)
+              │
+              ├── RESOLVED            ──► SnapshotPlacementCreationCoordinator.create(publicationId, providerKey)
+              ├── NO_PREFERENCE       ──► SnapshotPlacementCreationCoordinator.create(publicationId, storage)
+              │                           (still absent — the SAME pre-existing "storage is required" refusal)
+              └── PROVIDER_NOT_FOUND  ──► an explicit failure result — never a fallback, never CREATED
+```
+
+The wrapper never calls `contentStore.put()`, never signs anything, and never catalogs a placement itself —
+every real operation still happens exactly once, inside the unmodified 0.8.18/0.8.25 pipeline. `storage` is the
+one contract change from the class it wraps: optional, where the class underneath still requires it.
+
+### What this milestone adds
+
+- **`application/PreferredSnapshotPlacementCreationCoordinator.js`** — wraps an existing
+  `SnapshotPlacementCreationCoordinator` (0.8.25) and `ResolvePreferredRoleProviderUseCase` (0.9.297).
+  `availableStorageTypes()` passes straight through, unchanged. `create(publicationId, storage = null)`
+  forwards an explicit storage untouched; an absent one resolves the CONTENT preference and forwards the
+  result, or returns `{ outcome: RoleProviderResolutionStatus.PROVIDER_NOT_FOUND, placement: null, reason,
+  preference }` when the configured preference names no registered store.
+- **`application/CreatePreferredSnapshotPlacementCreationCoordinatorUseCase.js`** — the composition root: wires
+  the SAME `snapshotPlacementCreationCoordinator`/`storeRegistry` a caller already built into a real
+  `RoleAwareProviderResolver` + `ResolvePreferredRoleProviderUseCase` pair. Discovery/Proof registries are
+  structurally required by `RoleAwareProviderResolver`'s own constructor but never operationally consulted by
+  this seam — satisfied with a minimal, inert `{ get: () => null }` stand-in for each, never a real Discovery
+  or Proof integration.
+- **`ui/main.js`** now composes this coordinator from the SAME production `snapshotPlacementCreationCoordinator`/
+  `snapshotPlacementStoreRegistry` it already built, and provides it (`preferredSnapshotPlacementCreationCoordinator`)
+  alongside the coordinator it wraps. `ui/views/DecentralizedPublicationsView.js`'s own `createPlacement(entry,
+  storage)` click handler is unmodified and still always passes an explicit storage — this milestone composes
+  the seam with real production wiring without yet adding a second UI trigger for it, the same "composable,
+  proven end-to-end, not yet UI-triggered" posture this codebase's own `SnapshotDistributionRuntimeComposition.js`
+  already held for an entire milestone.
+- **`tests/ContentCreationProviderPreferenceIntegration.test.js`** (new, registered in `tests.html`) — ten
+  sections (A-J) against production-shaped composition (the same classes `ui/main.js` wires): an explicit
+  choice always wins; an absent choice resolves through a real preference to a real, executing provider;
+  `NO_PREFERENCE` reproduces the literal pre-existing refusal; an unresolvable preference reports
+  `PROVIDER_NOT_FOUND` explicitly with nothing placed; Discovery/Proof preferences never leak into Content
+  resolution, including under a shared providerKey string; the real store operation actually runs; the
+  composition root wires the same instances passed to it; Publication and Snapshot placement are documented as
+  the one real shared seam (per 0.9.298's own evidence) rather than duplicated into a second suite; and every
+  existing explicit-selection workflow is unchanged end to end.
+- Small, necessary updates to five existing repo-wide sweeps, following the exact precedent each earlier
+  milestone in this sequence already set when updating the sweep before it: `tests/
+  RoleProviderPreferenceApplicationBoundary.test.js` Section K, `tests/RoleAwareProviderResolution.test.js`
+  Section M, `tests/DecentralizedRoleProviderPreferenceBoundary.test.js` Section M, `tests/
+  DecentralizedSubstrateCapabilityMatrixAudit.test.js` Section G, `tests/
+  RoleProviderPreferenceProductIntegrationAudit.test.js` Section H, and `tests/
+  RoleProviderResolutionIntegrationReadinessAudit.test.js` Section H — each now allows exactly the new files
+  this milestone adds (and, for the first time in this sequence, `ui/main.js` itself) as legitimate references,
+  and no others.
+
+### What this milestone deliberately excludes
+
+Per the task's own request:
+
+- **No settings UI.** Nothing in `ui/views/` changes; a person still cannot set a CONTENT preference through
+  any control in this codebase.
+- **No Discovery or Proof & Anchoring integration.** `discoveryRegistry`/`proofRegistry` inside the composition
+  root are inert stand-ins satisfying `RoleAwareProviderResolver`'s own constructor shape, never queried by
+  anything this milestone returns.
+- **No fallback, provider ranking, or provider health checks.** `PROVIDER_NOT_FOUND` is reported, never
+  substituted.
+- **No change to `ContentStore`, any concrete provider implementation, or historical provider metadata.**
+- **No migration of `createPlacement()`'s own call site, or of any other `create()` caller.** `ui/views/
+  DecentralizedPublicationsView.js` is untouched; every existing explicit-storage call behaves identically
+  (this milestone's own tests, Section J).
+- **No generic preference-aware infrastructure for every role.** Only the one Content creation seam is
+  integrated; Publication and Snapshot placement share it because they are the same production pipeline today
+  (0.9.298's own evidence), not because this milestone built a second, general-purpose mechanism.
+
+### What comes after
+
+A settings UI (0.9.300) now has something real to control: a stored CONTENT preference changes which provider
+an action with no explicit choice places onto, proven end-to-end against production-shaped composition. The
+natural next UI step is a second, explicit trigger in `ui/views/DecentralizedPublicationsView.js` — e.g. a
+"Place Using My Preferred Provider" action alongside the existing per-storage buttons — calling
+`preferredSnapshotPlacementCreationCoordinator.create(publicationId)` with no storage; that remains unbuilt
+here, on purpose, so a settings UI and its first real consumer-facing trigger can be reviewed as one coherent
+product surface rather than two independent guesses at its shape.

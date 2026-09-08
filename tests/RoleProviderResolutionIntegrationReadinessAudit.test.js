@@ -492,20 +492,26 @@ async function run() {
         assert(/inject\('identityUseCase'\)/.test(avatarSettingsSource), 'H1. AvatarSettingsView.js injects a use case, the same shape a future RoleProviderPreference control belongs to');
         assert(!/new\s+(Arweave|Nostr|Ipfs|Bitcoin|Base)\w*\(/.test(avatarSettingsSource), 'H2. AvatarSettingsView.js never constructs a concrete provider itself — settings views in this codebase already operate through an injected use case, never raw capability construction');
 
-        // No ui/ file today manipulates DiscoveryProvider/ContentStore/
+        // UPDATED by 0.9.299 — Content Creation Provider Preference
+        // Integration: ui/main.js now composes application/
+        // PreferredSnapshotPlacementCreationCoordinator.js's own
+        // composition root — the ONE production `ui/` file allowed to
+        // mention the concept, and still never a settings screen. No
+        // OTHER ui/ file manipulates DiscoveryProvider/ContentStore/
         // ProofVerifier through anything resembling a stored preference —
-        // the only existing "choice" UI is the explicit per-action button
-        // list Section A2 already found (availableStorageTypes()/
-        // availableAnchorTypes()), never a settings screen.
+        // the explicit per-action button list Section A2 already found
+        // (availableStorageTypes()/availableAnchorTypes()) is untouched.
         const allProductionFiles = await repoWideProductionFiles();
         const uiFiles = allProductionFiles.filter((f) => f.startsWith('ui/'));
         const preferenceLikeUiPattern = /providerPreference|networkPreference|preferredProvider|substratePreference|RoleProviderPreference/i;
         let uiPreferenceHits = 0;
+        const uiPreferenceHitFiles = [];
         for (const file of uiFiles) {
             const text = await source(file);
-            if (preferenceLikeUiPattern.test(text)) uiPreferenceHits += 1;
+            if (preferenceLikeUiPattern.test(text)) { uiPreferenceHits += 1; uiPreferenceHitFiles.push(file); }
         }
-        assert(uiPreferenceHits === 0, `H3. zero ui/ files mention a provider preference of any shape today (found ${uiPreferenceHits}) — confirming 0.9.295 Section L's own "no UI import" finding still holds, and that this audit itself changes nothing about it`);
+        assert(uiPreferenceHits === 1 && uiPreferenceHitFiles[0] === 'ui/main.js',
+            `H3. exactly ui/main.js mentions a provider preference today, via its 0.9.299 Content creation composition (found ${uiPreferenceHits}: ${uiPreferenceHitFiles.join(', ')}) — no settings screen exists, and no OTHER ui/ file references the concept`);
 
         // The explicit per-action pattern (real today) is the boundary a
         // future preference control must respect, never silently replace.
