@@ -86861,3 +86861,137 @@ own boundary holds under review, THEN build a UI that only ever manipulates `Rol
 understand for itself whether Arweave, Nostr, IPFS, Bitcoin, or Base actually supports a given role. Closing
 0.9.292's own remaining capability gaps (a Base `ProofVerifier`, an Arweave discovery write-side publisher, a
 Discovery-role keyed registry) remains real, unscheduled, and independent of this sequence.
+
+## 0.9.296 — Role Provider Resolution Integration Readiness Audit
+
+**Type:** Test-only architecture audit. **Scope:** answer one question, from real source only — is the
+existing production architecture actually ready to consume role-aware provider preferences without
+introducing a second source of truth or accidentally changing current provider behavior? Zero production
+changes.
+
+0.9.295's own "What comes after" named exactly this checkpoint: pause before wiring `RoleAwareProviderResolver`
+into any composition root, and confirm the resolver's boundary holds under review first. This milestone is
+that review — eight lettered audits (A-H), each backed by a real `source()` read, a real `instanceof`/
+construction check, or a real registry round-trip, never this file's own prose, following the identical bar
+`tests/DecentralizedSubstrateCapabilityMatrixAudit.test.js` (0.9.292) already set for itself.
+
+### The finding
+
+The 0.9.295 Discovery/Content/Proof registry asymmetry the task's own brief worried about is real, but a
+repo-wide trace of every real provider-selection point in this codebase (Audit A) found it is **not** what
+stands between the resolver and production use. Eleven real seams were traced and classified:
+
+```text
+STATUS                  | COUNT | WHY
+READY                   |   1   | Publication discovery's read path — 0.9.295 already proved a caller-built
+                        |       | adapter resolves against it with no keyed registry; still carries an open
+                        |       | "query every configured provider" vs "query only the preferred one" policy
+                        |       | question the resolver's own no-fallback design does not itself answer
+BLOCKED                 |   5   | 2 creation-time seams (Content/Proof) — the coordinating classes' own
+                        |       | headers state, in their own words, availableStorageTypes()/
+                        |       | availableAnchorTypes() are "never ranked, never narrowed to a 'preferred'
+                        |       | or 'default' one" — a real, named, explicit principle that would need to be
+                        |       | deliberately revisited, not a technical gap; 3 write/read composition roots
+                        |       | (Publication distribution, Snapshot distribution, Snapshot discovery) each
+                        |       | hardcode exactly one Content and one Discovery collaborator apiece, with no
+                        |       | second implementation anywhere in this codebase to resolve to
+NOT_A_SELECTION_SEAM    |   3   | Content/Proof RESOLUTION (SnapshotPlacementResolver, ExternalAnchorVerifier)
+                        |       | dispatch on an already-created record's own historical storage/anchorType
+                        |       | field, never a live choice — a preference has no legitimate business there;
+                        |       | discovery/DiscoveryProvider.js is this replica's own singular local index,
+                        |       | never a substrate choice at all
+INTENTIONALLY_INTERNAL  |   2   | the three existing keyed registries themselves, and the ~60 single-
+                        |       | collaborator Create*UseCase construction factories (Bitcoin/Base wallet,
+                        |       | signing, broadcast machinery) — legitimate composition infrastructure, none
+                        |       | of it a selection among alternatives (Audit D's own repo-wide sweep for
+                        |       | `new Arweave.../Nostr.../Ipfs.../Bitcoin.../Base...(` found construction
+                        |       | everywhere and zero `providerKey === "..."`-shaped branches anywhere)
+```
+
+### Audits performed
+
+- **Audit A — every existing provider-selection point**, traced and classified by kind (registry lookup keyed
+  by a record's own historical field; explicit per-action caller choice; composition-time hardcoded
+  collaborator; implicit query-everything). Nine real seams found; none of them is a stored, cross-session
+  preference of the kind `RoleProviderPreferenceStore` now persists.
+- **Audit B — role → runtime consumer matrix**, evidence-backed. Discovery alone still carries the
+  three-shape asymmetry 0.9.292/0.9.295 both already named (Publication discovery, Snapshot discovery,
+  local/catalog listing) — `RoleAwareProviderResolver`, as designed, can only ever answer for ONE shape per
+  instance, since it treats Discovery as one role with one registry.
+- **Audit C — composition-root insertion points**, identified, never built. All four real candidates carry a
+  named reason the resolver cannot simply be dropped in today: a data-provenance conflict at resolution
+  seams, an explicit documented "never preferred/default" principle at creation seams, an existing
+  query-everything behavior to reconcile at Publication discovery's read path, or a missing second provider
+  at every hardcoded write-path seam.
+- **Audit D — hard-coded provider construction**, swept repo-wide (`new Arweave.../Nostr.../Ipfs.../
+  Bitcoin.../Base...(`) and classified. 49 files construct a concrete provider unconditionally (composition
+  construction, legitimate); zero do so inside a branch keyed by a providerKey/substrate string (there is
+  nothing resembling `providerKey === "arweave"` anywhere in production source to migrate).
+- **Audit E — `NO_PREFERENCE` absence semantics.** Verified at the resolver itself (unchanged since 0.9.295)
+  and at every registry-backed candidate: an unregistered/absent key always returns `null`/an empty list,
+  never a fabricated default or the one entry that happens to be registered.
+- **Audit F — `PROVIDER_NOT_FOUND` semantics.** Verified the resolver never substitutes a different
+  already-available provider, and explicitly distinguished `ExternalAnchorVerifier`'s own pre-existing,
+  independent `VALID_PROOF_UNVERIFIED` outcome (an honest "not verified," never "verified by a substitute")
+  from any future role-preference fallback policy — the two must never be conflated.
+- **Audit G — the Discovery-registry decision point.** Verdict: **NOT_BLOCKING.** The one Discovery shape
+  that is genuinely multi-provider already resolves through a minimal caller-built adapter with no registry
+  class (proven against real composition); the other two shapes have at most one production option each, so
+  a registry would have nothing to disambiguate. Recommendation: leave the architecture alone — a
+  "Discovery Provider Registry Boundary" milestone is **not** warranted by this audit's own evidence.
+- **Audit H — UI readiness.** `ui/views/AvatarSettingsView.js` already establishes the template a future
+  preference control should follow (inject a use case, never construct a concrete capability directly). Zero
+  `ui/` files mention a provider preference of any shape today. The real, existing per-action controls
+  (`createPlacement(entry, storage)`, `createAnchor(entry, anchorType)`) are the boundary a future preference
+  UI must layer a default suggestion onto, never silently replace.
+
+### What this milestone adds
+
+- **`tests/RoleProviderResolutionIntegrationReadinessAudit.test.js`** (new, registered in `tests.html`) —
+  nine sections (A-I): the eight lettered audits above, plus a final Section I that classifies all eleven
+  traced seams (`READY`/`BLOCKED`/`INTENTIONALLY_INTERNAL`/`NOT_A_SELECTION_SEAM`) and states this
+  milestone's own verdict.
+- **This `docs/Roadmap.md` entry.**
+
+No other file changes. This milestone imports `core/RoleProviderRole.js`, `core/RoleProviderPreference.js`,
+`storage/RoleProviderPreferenceStore.js`, and `application/RoleAwareProviderResolver.js` exactly as their own
+existing test files already do — read-only, never modified — plus a set of already-shipped, unmodified
+production collaborators (`SnapshotPlacementStoreRegistry`, `ExternalProofVerifierRegistry`,
+`ExternalAnchorPublisherRegistry`, `LocalContentStore`, `ArweaveContentStore`, `IpfsContentStore`,
+`BitcoinOpReturnProofVerifier`, `BitcoinAnchorPublisher`,
+`composeDecentralizedWorldEncounterMaterialDiscoveryServices`), constructed only to observe their own
+already-shipped behavior, the identical `neverCalled`-collaborator restraint every audit test file in this
+codebase already holds.
+
+### What this milestone deliberately excludes
+
+Per the task's own request:
+
+- **No production changes of any kind.** Every existing test suite this milestone touches (`tests/
+  DecentralizedSubstrateCapabilityMatrixAudit.test.js`, `tests/DecentralizedRoleProviderPreferenceBoundary
+  .test.js`, `tests/DecentralizedRoleProviderPreferencePersistence.test.js`, `tests/
+  RoleAwareProviderResolution.test.js`) was re-run, unmodified, and still passes exactly as it did before
+  this milestone — this audit needed no update to either existing repo-wide "who mentions a provider
+  preference" sweep, because it adds no production file for either sweep to find.
+- **No settings UI, provider-selection control, or resolver wiring.** Audit C identifies candidate
+  composition-root insertion points; it performs no insertion.
+- **No Discovery provider registry.** Audit G is a decision, not a build — see its own `NOT_BLOCKING` verdict.
+- **No fallback, provider health checks, or automatic switching.** Nothing in this milestone changes
+  `RoleAwareProviderResolver`'s own "no fallback, ever" design (0.9.295, unmodified) — Audit F only verifies
+  that design still holds, and that it stays distinct from `ExternalAnchorVerifier`'s own separate,
+  pre-existing policy.
+- **No change to Arweave/Nostr/IPFS/Bitcoin/Base implementations, or to existing distribution/placement/
+  anchoring behavior.** Confirmed by re-running every existing suite those implementations already have.
+
+### What comes after
+
+This audit deliberately does not commit to either of the two milestones its own brief offered in advance
+(a Discovery registry, or the Preference UI) — Audit G's own verdict rules out the first, and Audit C/Section
+I's own finding (only one of eleven seams is `READY`, and even that one carries an open policy question) rules
+out treating the second as the obvious next step either. The real next decision belongs to a person, not this
+codebase: whether to deliberately revisit `SnapshotPlacementCreationCoordinator`'s and
+`PublicationAnchorCreationCoordinator`'s own "never preferred or default" principle, and whether Publication
+discovery's existing "query every configured provider" behavior should ever become preference-driven. Until
+one of those is decided, wiring `RoleAwareProviderResolver` into any composition root would be either inert
+(resolving into an empty choice set) or a silent behavior change (Discovery) — both worse than leaving it
+exactly where 0.9.295 left it: real, tested, and unconsumed.
