@@ -493,14 +493,18 @@ async function runTests() {
         }
 
         // Exactly one of the six other-Publication surfaces 0.9.288
-        // Section E named is wired — the other five stay byte-for-byte
-        // untouched by this milestone.
+        // Section E named is wired BY THIS milestone — the other five stay
+        // byte-for-byte untouched by 0.9.289. (WorldEncounterCanvas.js was
+        // later wired by 0.9.291, its own separate milestone — see
+        // tests/CrossArcProductEvolutionReassessment.test.js's own Section
+        // E5 for that later transition; it is deliberately excluded from
+        // this list so this file continues to describe exactly what
+        // 0.9.289 itself did, not what is true of the codebase today.)
         const untouchedSurfaces = [
             'ui/components/PublicationCatalog.js',
             'ui/components/PublicationPreview.js',
             'ui/components/PublicationList.js',
-            'ui/views/DecentralizedPublicationsView.js',
-            'ui/components/WorldEncounterCanvas.js'
+            'ui/views/DecentralizedPublicationsView.js'
         ];
         for (const file of untouchedSurfaces) {
             const code = await codeOnlySource(file);

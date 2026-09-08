@@ -334,7 +334,28 @@ async function run() {
         assert(!codeOnly.includes('assembleWorldDiscoveryInputs'), '25. WorldEncounterCanvas.js never calls assembleWorldDiscoveryInputs() directly');
         assert(!codeOnly.includes('describeWorldFromDiscoverySources'), '26. WorldEncounterCanvas.js never calls describeWorldFromDiscoverySources() directly — only describeWorldFromDiscoveryRegistry()');
         assert(!codeOnly.includes('WorldDiscoverySourceRegistry'), '27. WorldEncounterCanvas.js never imports or references the WorldDiscoverySourceRegistry class itself — it only ever receives an already-constructed instance as a prop');
-        assert(!/identityId|remoteIdentity|peerId/i.test(codeOnly), '28. WorldEncounterCanvas.js never references any peer-identity vocabulary');
+        // 0.9.291 note: this assertion originally banned every
+        // `identityId`/`remoteIdentity`/`peerId` occurrence outright,
+        // because the only conceivable reason this component would ever
+        // reference identity vocabulary was to distinguish a raw
+        // WorldDiscoverySource's own peer/origin — exactly what this
+        // Section exists to forbid. 0.9.291 introduced a second,
+        // unrelated reason: rendering Publication Commentary
+        // (`commentary.authorIdentityId`, the AUTHENTICATED commenter who
+        // wrote a persisted comment) and gating its compose form
+        // (`viewerIdentityId`, the current signed-in viewer) — see
+        // WorldEncounterCanvas.js's own "0.9.291" header. Neither reads a
+        // peer/source's own connection identity, subscribes to anything
+        // peer-shaped, or branches World rendering by which peer
+        // contributed a row — the original protection this Section
+        // exists to hold. The check below keeps banning every OTHER
+        // identity-vocabulary occurrence while allowing exactly these two,
+        // already-reviewed identifiers — mirroring the `.origin`
+        // allowlist's own narrowing immediately above, one concept over.
+        const identityVocabularyMatches = Array.from(codeOnly.matchAll(/[A-Za-z_$][\w$]*(?:identityId|remoteIdentity|peerId)[\w$]*/gi)).map((match) => match[0]);
+        const allowedIdentityVocabulary = new Set(['authorIdentityId', 'viewerIdentityId', 'commentary.authorIdentityId', 'this.viewerIdentityId']);
+        assert(identityVocabularyMatches.every((identifier) => allowedIdentityVocabulary.has(identifier)),
+            `28. WorldEncounterCanvas.js references no peer-identity vocabulary beyond 0.9.291's own reviewed Commentary authorship/viewer identifiers, found: ${JSON.stringify(identityVocabularyMatches)}`);
         assert(!codeOnly.includes('fetch('), '29. WorldEncounterCanvas.js never fetches peer data itself');
         assert(!/localStorage|sessionStorage|StorageProvider/.test(codeOnly), '30. WorldEncounterCanvas.js never persists anything');
         assert(!codeOnly.includes('.sort('), '31. WorldEncounterCanvas.js still performs no sorting of its own, unchanged from 0.9.3');

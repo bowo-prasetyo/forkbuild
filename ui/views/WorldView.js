@@ -1467,6 +1467,15 @@ export default {
         // caught here or routed through guarded() — OwnPublicationPanel
         // catches it itself and renders it as its own commentary error
         // state, never a transient global feedback toast.
+        //
+        // 0.9.291 — these SAME two functions are now ALSO bound to
+        // WorldEncounterCanvas's own identically-named props, below (see
+        // that file's own "0.9.291" header for why reusing this
+        // already-in-scope composition, rather than the app-wide one
+        // ui/main.js composes, was preferred). WorldEncounterCanvas
+        // catches its own thrown errors exactly the same restraint
+        // OwnPublicationPanel already holds — this function still resolves
+        // and decides nothing.
         function getPublicationCommentariesCommand(publicationId) {
             return session.getPublicationCommentaries(publicationId);
         }
@@ -4582,7 +4591,22 @@ export default {
                      now owns the entire Snapshot Discovery/Attribution
                      trigger and result panel for a selected World Encounter,
                      exactly the way it already owns Snapshot Distribution's
-                     own. -->
+                     own.
+
+                     0.9.291 — getPublicationCommentariesCommand/
+                     addPublicationCommentaryCommand, two new
+                     WorldEncounterCanvas props, bound to the EXACT SAME
+                     function instances already bound to OwnPublicationPanel's
+                     own identically-named props, immediately below (0.9.248)
+                     — no wrapper, no second composition. See this file's
+                     own setup()-level getPublicationCommentariesCommand()/
+                     addPublicationCommentaryCommand() comment, above, and
+                     WorldEncounterCanvas.js's own "0.9.291" header for why
+                     reusing THESE, rather than the app-wide ones
+                     application/CreatePublicationCommentaryUseCase.js
+                     (0.9.289) composes, was preferred. viewerIdentityId is
+                     the SAME myIdentityId already bound to OwnPublicationPanel's
+                     own identical prop, one section below. -->
                 <CollapsibleSection
                     title="World Encounters"
                     :collapsed="nearbySectionsCollapsed.worldEncounters"
@@ -4598,6 +4622,9 @@ export default {
                         :snapshotDistributionCommand="distributeWorldEncounterSnapshot"
                         :discoverSnapshotCommand="discoverOwnSnapshot"
                         :worldDiscoveryLeadRegistry="worldDiscoveryLeadRegistry"
+                        :getPublicationCommentariesCommand="getPublicationCommentariesCommand"
+                        :addPublicationCommentaryCommand="addPublicationCommentaryCommand"
+                        :viewerIdentityId="myIdentityId"
                     />
                 </CollapsibleSection>
             </div>

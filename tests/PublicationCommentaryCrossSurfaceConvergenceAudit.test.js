@@ -833,10 +833,17 @@ async function runTests() {
     }
 
     // ---------------------------------------------------------------
-    // Section K — Remaining five surfaces, classified rather than
-    // wired. This section makes no production change; it records, with
-    // concrete evidence from each file's own current source, why each
-    // of the five 0.9.288 named stays unwired for now.
+    // Section K — Remaining four surfaces, classified rather than
+    // wired; the fifth this section originally classified,
+    // WorldEncounterCanvas.js, was picked up by 0.9.291 exactly as this
+    // Section's own original rationale anticipated ("a real 0.9.291
+    // candidate") — see the trailing block below this one for that
+    // transition, checked fresh against current source rather than
+    // asserted from this milestone's own frozen header. This section
+    // makes no production change of its own; it records, with concrete
+    // evidence from each remaining file's own current source, why each
+    // of the four still-unwired surfaces 0.9.288 named stays unwired for
+    // now.
     // ---------------------------------------------------------------
     {
         const classifications = {
@@ -855,10 +862,6 @@ async function runTests() {
             'ui/views/DecentralizedPublicationsView.js': {
                 label: 'genuinely awkward, different domain concern',
                 reason: 'a verification/anchoring surface (Bitcoin/Base anchor proofs, IPFS content verification, snapshot placement convergence) — its own job is proving a Publication\'s decentralized existence claims, not social discussion about it; folding commentary in would blur two unrelated concerns the same way this milestone\'s own Section H insists eager/lazy loading must not blur domain behavior.'
-            },
-            'ui/components/WorldEncounterCanvas.js': {
-                label: 'genuinely appropriate — a real 0.9.291 candidate',
-                reason: 'renders encountered Publications as live, selectable World markers with their own inspection/distribution actions already — a Wanderer who has just encountered and inspected someone else\'s Publication in-World is a plausible, motivated commenter; unlike the other four, this one clears the same "already holds a real Publication object with a meaningful selection moment" bar PublicationCard itself cleared in 0.9.289 — but it was deliberately left out of 0.9.289\'s own one-surface-at-a-time scope, and stays out of THIS audit-only milestone for the same reason.'
             }
         };
 
@@ -868,9 +871,19 @@ async function runTests() {
                 `68. ${file} still carries no commentary wiring — classified '${label}', not implemented`);
             assert(reason.length > 0, `69. ${file} has a recorded, evidence-based rationale`);
         }
-        assert(Object.keys(classifications).length === 5, '70. all five surfaces 0.9.288 Section E named are accounted for — none silently dropped, none silently added');
+        assert(Object.keys(classifications).length === 4, '70. all four surfaces still unwired since 0.9.288 are accounted for — none silently dropped, none silently added');
 
-        console.log('✓ Section K: the five remaining surfaces are classified — one genuinely appropriate future candidate (WorldEncounterCanvas), two where PublicationCard/its own host already cover the use case, one semantically awkward, one a different domain concern entirely. Nothing implemented.');
+        // K1. WorldEncounterCanvas.js, this Section's own original fifth
+        // entry, now carries commentary wiring — 0.9.291 picked up
+        // exactly the candidate this Section's own reasoning named,
+        // reusing WorldView.js's own existing session-backed commands
+        // (see WorldEncounterCanvas.js's own "0.9.291" header) rather
+        // than a third composition root.
+        const worldEncounterCode = await codeOnlySource('ui/components/WorldEncounterCanvas.js');
+        assert(worldEncounterCode.includes('getPublicationCommentariesCommand') && worldEncounterCode.includes('addPublicationCommentaryCommand'),
+            '70b. ui/components/WorldEncounterCanvas.js now carries commentary wiring — 0.9.291 closed this Section\'s own named candidate');
+
+        console.log('✓ Section K: the four remaining surfaces stay classified and unwired (one host, one preview tile, one alternate list view, one unrelated verification surface). The fifth this Section named as a genuine future candidate, WorldEncounterCanvas, was picked up by 0.9.291.');
     }
 
     // ---------------------------------------------------------------
@@ -915,14 +928,16 @@ async function runTests() {
             assert(!code.includes('OtherPublicationCommentaryUseCase') && !code.includes('AddCommentToOtherPublicationUseCase'),
                 `82. ${file} introduces neither forbidden Commentary use case name`);
         }
-        // 12. Only ONE new UI surface, still.
+        // 12. Only the two DELIBERATE UI surfaces (0.9.289's
+        // PublicationCard.js, 0.9.291's WorldEncounterCanvas.js) — the
+        // remaining four stay untouched.
         for (const file of [
             'ui/components/PublicationCatalog.js', 'ui/components/PublicationPreview.js', 'ui/components/PublicationList.js',
-            'ui/views/DecentralizedPublicationsView.js', 'ui/components/WorldEncounterCanvas.js'
+            'ui/views/DecentralizedPublicationsView.js'
         ]) {
             const code = await codeOnlySource(file);
             assert(!code.includes('getPublicationCommentariesCommand') && !code.includes('addPublicationCommentaryCommand'),
-                `83. ${file} still carries no commentary wiring — the reachability surface has not grown since 0.9.289`);
+                `83. ${file} still carries no commentary wiring — the reachability surface has grown only through 0.9.289/0.9.291's own deliberate, named surfaces`);
         }
         assert(mainCode.includes("new CreatePublicationCommentaryUseCase().execute(identityProvider)"),
             '84. ui/main.js still composes commentary through exactly one, app-wide instance of the new composition root — not one per card, not one per render');
