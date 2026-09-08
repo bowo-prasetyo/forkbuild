@@ -86134,3 +86134,75 @@ posture), nothing is wired here. **0.9.289** should bind `getPublicationCommenta
 `addPublicationCommentaryCommand` into at least one Discovery-facing Publication view, using the exact pattern
 `OwnPublicationPanel` already establishes (0.9.248), with no change to the domain/application layer this
 candidate's own Section I already confirms is unnecessary.
+
+## 0.9.289 — Other-Publication Commentary Entry Point
+
+0.9.288's own Section E finding, implemented: Publication Commentary's application layer was already
+ownership-agnostic and already composed, but exactly one UI surface — `OwnPublicationPanel` — ever bound it. This
+milestone reaches a second surface, deliberately just one of the six 0.9.288 named, and wires nothing new at the
+domain or application layer.
+
+### What changed
+
+`ui/components/PublicationCard.js` — the card `PublicationCatalog.js` renders for every Publication under both
+`RepositoryView` (a user's own) and `AuthorView` (a named author's — typically another Wanderer's own), and one of
+the six surfaces 0.9.288 Section E named as already holding the full `Publication` object at render time with zero
+commentary vocabulary. It now `inject`s `getPublicationCommentariesCommand`/`addPublicationCommentaryCommand`
+(optional, `null` default — the same "feature hidden when its collaborator is absent" gate every other optional
+capability in this codebase's UI layer already follows) exactly the way `ui/components/PublicationPreview.js`'s own
+`previewService` already is, rather than threading them through as props `PublicationCatalog.js`/`PublicationList.js`
+would otherwise have to carry. A "Comment" action, collapsed by default and loaded only on first expansion (this
+component renders inside a paginated, many-per-page list — unlike `OwnPublicationPanel`'s own single-Publication,
+eager-load posture), reveals the existing commentary and, for a signed-in viewer, a compose form. Authorship is
+never UI-supplied: `submitCommentary()` sends only `{ publicationId, content }`, identically to
+`OwnPublicationPanel`'s own 0.9.248 restraint.
+
+`application/CreatePublicationCommentaryUseCase.js` (new) — a second, independent composition of the exact same,
+unmodified application layer `application/CreateWorldViewUseCase.js` already composes for `OwnPublicationPanel`:
+`CanCommentOnPublicationUseCase`, `GetPublicationCommentariesUseCase`, `AddPublicationCommentaryUseCase`, and
+`PublicationCommentaryNotificationProducer`, in the identical constructor order, wrapped into the identical
+`(publicationId) -> PublicationCommentary[]` / `({publicationId,content}) -> {commentary,isNew}` command shape
+`ui/views/WorldView.js`'s own thin wrappers already are. This exists because `PublicationCard.js` has no
+`WorldNavigationSession` to ask, and building one just to reach commentary would drag in avatars, placement, and
+presence — none of it relevant here. No `OtherPublicationCommentaryUseCase`, no
+`AddCommentToOtherPublicationUseCase`, and no ownership check anywhere: the SAME classes, a second time, backed by
+the SAME `window.localStorage` keys (a fresh `LocalStorageProvider`, exactly like `CreateDiscoveryUseCase.js`'s own),
+so a Commentary created through this composition is immediately visible to `OwnPublicationPanel`'s own, and vice
+versa.
+
+`ui/main.js` composes this once, sharing the app's one `identityProvider`, and `app.provide()`s both commands
+app-wide — the same pattern every other cross-view capability here already uses.
+
+### What stayed unchanged
+
+The domain and application layers — `PublicationCommentary`, `PublicationCommentaryStore`,
+`CanCommentOnPublicationUseCase`, `GetPublicationCommentariesUseCase`, `AddPublicationCommentaryUseCase`,
+`PublicationCommentaryNotificationProducer` — are byte-for-byte untouched. `OwnPublicationPanel.js`,
+`WorldView.js`'s own commentary wiring, and `CreateWorldViewUseCase.js`'s own commentary composition are
+byte-for-byte untouched. The other five surfaces 0.9.288 Section E named — `PublicationCatalog`,
+`PublicationPreview`, `PublicationList`, `DecentralizedPublicationsView`, `WorldEncounterCanvas` — carry no
+commentary wiring at all; wiring all six at once was explicitly out of scope, per this milestone's own brief.
+Authorization is unchanged: `CanCommentOnPublicationUseCase`'s existing "the Publication exists" policy is the only
+thing this surface ever consults, proven live (Section F: a third, unrelated identity comments successfully; Section
+G: an unauthenticated attempt is rejected by the existing use case, unmodified). Comment counts, editing, deletion,
+threading, pagination, sorting, moderation, and ranking are all still absent — no new UI vocabulary beyond "show the
+existing thread, let a signed-in viewer add to it" was introduced.
+
+### What this milestone adds
+
+`tests/OtherPublicationCommentaryEntryPoint.test.js` (new, registered in `tests.html`) — eleven sections, A-K, run
+against real collaborators (`LocalIdentityProvider`, `LocalDiscoveryProvider`, `LocalPublisherProvider`,
+`PublicationCommentaryStore`, `NotificationEventStore`, and all four commentary use cases, unmodified), never a mock
+of the application layer. Section A proves the surface carries no ownership concept. Section B proves the action is
+reachable exactly when the capability is wired. Section C proves creation reaches only the injected command, with
+the two forbidden class names from this milestone's own brief absent from the file. Section D proves the exact
+rendered `publicationId` is what gets submitted and queried back, isolated per card. Section E proves authorship is
+the authenticated commenter, never the Publication's own publisher. Section F proves a third, unrelated identity can
+comment — ownership never gates reachability. Section G proves an unauthenticated attempt is rejected by the
+existing, unmodified use case. Section H proves a successful Commentary through this surface still produces the
+existing `publication.commented` NotificationEvent, addressed to the publisher. Section I proves three failure modes
+stay distinguishable: a missing capability degrades to a silent no-op, a read failure never wipes already-displayed
+commentary, and a notification-sink failure surfaces as its own UI error while the Commentary itself stays durably
+persisted. Section J is a regression pass over `OwnPublicationPanel`/`WorldView.js`/`CreateWorldViewUseCase.js`,
+confirming all three are untouched. Section K confirms the wiring shape itself: exactly one new surface, a second
+composition of the identical application layer, and the other five named surfaces left byte-for-byte untouched.
