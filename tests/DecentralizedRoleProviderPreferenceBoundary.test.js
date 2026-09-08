@@ -227,9 +227,16 @@ async function run() {
     }
 
     // ===============================================================
-    // Section M — nothing in production consumes this yet: the
-    // boundary is deliberately unwired, a repo-wide sweep, never a
-    // guess from this file's own prose.
+    // Section M — nothing beyond the named persistence boundary consumes
+    // this yet. 0.9.294 — Decentralized Role Provider Preference
+    // Persistence Boundary — gave this boundary its first real consumer,
+    // storage/RoleProviderPreferenceStore.js: it saves/loads a
+    // RoleProviderPreference by role, but never resolves, validates
+    // capability for, or falls back on one (see that file's own header).
+    // This section is UPDATED, not deleted, by 0.9.294 — it still holds
+    // the line that matters: the ONLY production file allowed to
+    // reference this boundary is that one named persistence store, a
+    // repo-wide sweep, never a guess from this file's own prose.
     // ===============================================================
     {
         const { readdir } = await import('node:fs/promises');
@@ -255,15 +262,21 @@ async function run() {
         const dirs = ['core', 'application', 'content', 'discovery', 'anchoring', 'base', 'arweave', 'nostr', 'publisher', 'ui', 'identity', 'storage', 'peer', 'replication', 'placement', 'spatial', 'serializer', 'presence', 'collaboration', 'world', 'world-layout', 'persistence', 'server', 'renderer'];
         const allFiles = [];
         for (const dir of dirs) await listJsFiles(dir, allFiles);
+        const KNOWN_CONSUMER_FILES = new Set(['storage/RoleProviderPreferenceStore.js']);
         let consumerCount = 0;
+        const consumerFiles = [];
         for (const file of allFiles) {
             const text = await source(file);
             if (/RoleProviderPreference|RoleProviderRole/.test(text)) {
                 consumerCount += 1;
+                consumerFiles.push(file);
             }
         }
-        assert(consumerCount === 0, `M1. zero other production files reference RoleProviderPreference or RoleProviderRole yet (found ${consumerCount}) — this boundary is deliberately unconsumed; wiring it to a resolver, a registry, or persistence is separate, unscheduled future work`);
-        console.log('✓ Section M: repo-wide sweep confirms nothing else in production imports or mentions this boundary yet — 0.9.293 defines what a preference means without making any preference operational');
+        assert(consumerCount === KNOWN_CONSUMER_FILES.size, `M1. exactly the 0.9.294 persistence store references RoleProviderPreference or RoleProviderRole (found ${consumerCount}: ${consumerFiles.join(', ')}) — this boundary is consumed ONLY by its own named persistence layer; wiring it to a resolver or a registry is separate, unscheduled future work`);
+        for (const file of consumerFiles) {
+            assert(KNOWN_CONSUMER_FILES.has(file), `M2. the only file allowed to consume this boundary is storage/RoleProviderPreferenceStore.js — "${file}" is not it`);
+        }
+        console.log('✓ Section M: repo-wide sweep confirms the only production consumer of this boundary is storage/RoleProviderPreferenceStore.js (0.9.294) — a preference is now durable without being operational; nothing resolves, validates, or falls back on one yet');
     }
 
     console.log('\n✅ All Decentralized Role Provider Preference Boundary tests passed.');

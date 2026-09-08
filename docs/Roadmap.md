@@ -86667,3 +86667,90 @@ semantics and resolution path are proven) → a fresh audit. Closing 0.9.292's o
 (Base's verify half, Arweave's discovery write half, a Discovery-role registry) remains real, unscheduled,
 and independent of this sequence — none of them block this boundary, and this boundary does not block
 starting any of them first.
+
+## 0.9.294 — Decentralized Role Provider Preference Persistence Boundary
+
+**Type:** Production storage boundary. **Scope:** one seam — a durable home for the immutable
+`RoleProviderPreference` value 0.9.293 defined, keyed by role, still with zero path to provider
+resolution.
+
+0.9.293's own "What comes after" named Preference Persistence as the first conditional step past the pure
+domain boundary — "a storage key, only once an actual settings workflow needs one." This milestone is
+that step, taken narrowly: a `RoleProviderPreference` can now survive an application restart, and nothing
+more. It does not build the settings workflow that would eventually write one; it builds the seam that
+workflow would write through, so that when it exists it has somewhere real to land.
+
+### The model
+
+```text
+RoleProviderRole            (0.9.293, unmodified)
+       │
+       ▼
+RoleProviderPreference       (0.9.293, unmodified)
+       │
+       │   toJSON() / fromJSON()
+       ▼
+RoleProviderPreferenceStore   ★ (THIS)
+       │   save(preference) / get(role) / loadAll()
+       ▼
+StorageProvider               (existing, injected — defaults to LocalStorageProvider)
+```
+
+Persistence is scoped BY ROLE, never by provider: storage holds one flat `{ [role]: providerKey }`
+object, so "at most one persisted preference per role" is a structural property of the storage shape
+itself, not a rule the store has to separately enforce. Saving `CONTENT → arweave` after `CONTENT → ipfs`
+replaces the one Content entry outright and never touches Discovery's or Proof's own entries — replacement
+semantics, not an append-only history, because a role provider preference is current user configuration,
+not a historical fact (contrast `storage/PublicationCommentaryStore.js`'s own append-only,
+conflict-on-collision design, which persists exactly the opposite kind of thing).
+
+### What this milestone adds
+
+- **`storage/RoleProviderPreferenceStore.js`** — `save(preference)` / `get(role)` / `loadAll()`, over an
+  injected `StorageProvider` (defaulting to `LocalStorageProvider`, the same seam
+  `storage/PublicationCommentaryStore.js` already established). Never imports a provider implementation,
+  never consults a registry, never validates capability, never resolves, never falls back, and imports
+  nothing from `ui/`.
+- Malformed persisted data (a non-object payload, an unrecognized role key, a `providerKey` that fails
+  `core/RoleProviderPreference.js`'s own shape validation) degrades to absence — `get()` returns `null`,
+  `loadAll()` omits the entry — never a thrown error and never an invalid `RoleProviderPreference`. A
+  GENUINE storage failure (the injected provider's own `load()`/`save()` throwing) is deliberately NOT
+  caught here and propagates to the caller instead — the one place this store departs from
+  `storage/PublicationCommentaryStore.js`'s own precedent of swallowing every provider error alike, because
+  this milestone's own brief asks "no preference configured" and "storage is broken" to stay
+  distinguishable facts.
+- **`tests/DecentralizedRoleProviderPreferencePersistence.test.js`** (new, registered in `tests.html`) —
+  eleven sections (A-K) covering round-trip, role isolation, replacement, cross-role preservation, restart
+  semantics, malformed-data degradation, genuine-storage-failure propagation, provider opacity (a Base/Proof
+  preference persists despite 0.9.292's own known capability gap), absence-never-implies-fallback, zero
+  resolution path, and an architecture sweep of the real source file.
+- Small, necessary updates to two existing repo-wide sweeps, each following the exact precedent 0.9.293 set
+  when it first updated 0.9.292's own Section G: `tests/DecentralizedRoleProviderPreferenceBoundary.test.js`
+  Section M (0.9.293's "nothing consumes this yet" sweep now allows exactly one legitimate consumer, this
+  milestone's own store) and `tests/DecentralizedSubstrateCapabilityMatrixAudit.test.js` Section G (0.9.292's
+  "no provider-preference concept exists" sweep now allows exactly three files, not two).
+
+### What this milestone deliberately excludes
+
+Per the task's own request:
+
+- **No provider registry lookup, capability checks, or availability checks.** This store never asks
+  whether a `providerKey` can actually satisfy its `role` — it happily persists `PROOF_AND_ANCHORING →
+  base` even though 0.9.292 Section B found Base's own verify half incomplete (Section H of this
+  milestone's own tests is the regression guard).
+- **No automatic fallback or "best provider" selection.** `get()` on an unconfigured role returns `null` —
+  never another role's own value, never an invented default. "No preference configured" stays
+  semantically distinct from "prefer provider X," exactly as the task's own brief names it.
+- **No network connectivity checks, UI, settings panel, distribution/discovery/content/proof changes, or
+  migration of existing configuration.** Nothing outside `storage/RoleProviderPreferenceStore.js` and its
+  own test file changed to build this milestone, beyond the two named sweep updates above.
+- **No generic `UserPreferenceStore`.** The semantics here (role-keyed, replace-on-save, three-member
+  closed vocabulary) are specific enough to justify their own store; a generic abstraction would be
+  speculative today, with exactly one real caller-shaped use case to generalize from.
+
+### What comes after
+
+Role-Aware Provider Resolution (translating a preference this store now hands back, plus a THEN-existing
+per-role registry, into a concrete provider — still with no fallback unless separately justified) →
+Provider Preference UI (only once resolution is proven) → a fresh architecture audit. Closing 0.9.292's own
+remaining capability gaps remains real, unscheduled, and independent of this sequence.
