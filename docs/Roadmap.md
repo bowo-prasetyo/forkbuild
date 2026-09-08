@@ -85031,6 +85031,72 @@ milestone should also weigh in the retry-duplication finding this audit named: a
 producer itself needing to track `isNew` — but that remains an option to evaluate then, not a conclusion reached
 here.
 
+## 0.9.277 — Notification Persistence Semantics Audit
+
+0.9.276's own retry finding was not, on its own, a defect report: a caller retry of an already-persisted
+`commentaryId` (`isNew === false`) still produces a second, distinct `NotificationEvent` for the same Commentary,
+unbounded across repeated retries. Putting a `NotificationEventStore` underneath the current producer with no other
+decision made first would silently freeze "one notification per successful call" as `NotificationEvent`'s permanent
+persistence identity — not because it is the right model, but because it is the one the current producer happens to
+implement. This milestone is the audit that has to happen before that choice gets made by accident. Test-only, per
+this milestone's own brief: no `NotificationEventStore`, no inbox, no delivery, no de-duplication implementation, no
+notification lifecycle, no `ChatOutbox` changes, no notification UI, no push notifications, no synchronization, no
+notification preferences.
+
+### What this milestone adds
+
+`tests/NotificationPersistenceSemanticsAudit.test.js` (new, registered in `tests.html`) — nine sections. Section A
+names three candidate persistence models — one event per successful creation attempt (Model 1), one event per
+unique Commentary (Model 2), and a recipient-specific durable event allowing one fact to legitimately produce many
+rows (Model 3) — then proves by live construction that the shipped producer implements Model 1 and Model 1 only,
+never Model 2, and never yet exercises Model 3. Section B restates the flagship retry scenario with fresh evidence
+of its own (not borrowed from 0.9.276's own run), proves `A !== B` on every field that could plausibly make them
+"the same durable row" while also proving what genuinely stays identical between them (eventType, recipient,
+commentaryId, publicationId, authorIdentityId, even `createdAt`), and records the acceptability question explicitly
+as `OPEN_DEDUP_DECISION` rather than answering it. Section C proves five identities — `commentaryId`,
+`publicationId`, `authorIdentityId`, `publisherIdentityId`, `notificationId` — pairwise independent across all ten
+pairs in the general case, then names the one structural exception (self-commentary, where author/publisher/
+recipient legitimately coincide) explicitly rather than treating it as a violation. Section D proves
+`core/NotificationEvent.js` already CAPABLE of recipient-specific fan-out (two hand-constructed events, same
+`commentaryId`, two different recipients, both construct without error) while the actual producer never reaches
+that capability today, because no on-file relationship exists yet to fan out to — a capability/reachability finding,
+not a defect, with the explicit implication that any future persistence key must not be `commentaryId` alone.
+Section E classifies the four persistence-failure questions this milestone's own brief posed — Commentary remains
+successful (yes, proven byte-for-byte against a reference run), the notification is lost (yes, under the current
+contract), whether it can be reconstructed (deferred to Section F), and whether persistence needs a stronger
+guarantee (not demonstrated today, remains a future option) — using nothing but the real producer and a simulated
+sink failure, no storage of this milestone's own. Section F proves reconstruction live: a `NotificationEvent`
+rebuilt from nothing but the persisted Commentary and a re-resolved Publication matches the original event on every
+factual field, but carries its own fresh `notificationId`, is not equal to a SECOND reconstruction from the
+identical inputs, and remains bounded by the same discovery dependency original production has — establishing that
+reconstructible, safe-to-regenerate, deduplicated, and exactly-once are four separate properties, not one wearing
+different names. Section G runs a structural property-set diff between a real `ChatOutboxEntry` and a real
+`NotificationEvent`, proving all nine ChatOutbox-specific properties/behaviors this milestone's own brief named
+(`state`, `queuedAt`, `expiresAt`, `sentAt`, `deliveredAt`, `withState()`, `isExpired()`, message typing, sender
+anchoring) are structurally absent from `NotificationEvent` today. Section H records the six-row product-decision
+classification table this milestone's own brief specified, each row backed by rationale citing a specific section
+above. Section I is a structural regression confirming zero production files this audit examines were modified.
+
+### What this milestone deliberately excludes
+
+Per this milestone's own brief: no `NotificationEventStore`, no inbox, no read/unread state, no delivery mechanism,
+no retry queue, no de-duplication implementation, no notification lifecycle state, no `ChatOutbox` changes, no
+notification UI, no push notifications, no synchronization, no notification preferences. Neither open question this
+audit sharpened — whether duplicate retry events are acceptable, and whether recipient fan-out is ever needed — is
+resolved here; both are named explicitly as open, with the evidence a future milestone would need to resolve them
+rather than a resolution itself.
+
+### What comes after
+
+Per this milestone's own overall verdict: `NotificationEvent` persistence is justified only if ForkBuild needs
+durable user-awareness history or reliable delivery, and persistence alone does not resolve the retry-duplication
+question (Section F's own reconstruction finding proves a naive "persist on read" strategy would reproduce the
+identical duplication one layer later). A future `0.9.278` should not default to building a
+`NotificationEventStore` merely because storage is technically easy — it should first establish a concrete,
+evidenced durability requirement (a recipient inbox UI with something to read on reload is the most likely candidate
+named in Section H), and only then choose among the persistence identity, de-duplication, and recipient-fan-out
+semantics this audit deliberately left frozen rather than decided.
+
 ## 0.9.270 — Place Naming Adoption Status Lifecycle Audit
 
 0.9.269 built `alreadySaved`; this milestone proves it holds under a lifecycle, the same one-milestone-later audit
