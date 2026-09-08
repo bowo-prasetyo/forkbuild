@@ -493,9 +493,23 @@ async function runTests() {
         assert(/getRecipientNotificationEventsCommand\(\)/.test(panelCode), '35. the injected command is called with zero arguments, exactly as GetRecipientNotificationEventsUseCase#execute() itself takes none.');
 
         // K4. No lifecycle/read-state vocabulary anywhere in the panel's
-        // own code.
-        assert(!/\b(read|unread|seen|delivered|undelivered|acknowledg|pending|priority|trusted|preferred)\b/i.test(panelCode),
-            '36. NotificationHistoryPanel.js\'s own code contains no read/unread/seen/delivered/acknowledged/pending/priority/trusted/preferred vocabulary.');
+        // own code. The rendered template carries ONE deliberate
+        // exception — user-facing prose that explicitly DISCLAIMS these
+        // very states ("not an inbox... there is no read/unread state
+        // here") — the opposite of implementing them; excluded from this
+        // logic-vocabulary sweep the same way comments already are (0.9.286
+        // audit finding: this check previously false-positived on that
+        // exact disclaiming sentence, undetected since 0.9.284's own
+        // commit — see docs/Roadmap.md, 0.9.286).
+        const panelCodeWithoutTemplate = (() => {
+            const templateStart = panelCode.indexOf('template: `');
+            const templateEnd = panelCode.lastIndexOf('`');
+            return (templateStart !== -1 && templateEnd > templateStart)
+                ? panelCode.slice(0, templateStart) + panelCode.slice(templateEnd + 1)
+                : panelCode;
+        })();
+        assert(!/\b(read|unread|seen|delivered|undelivered|acknowledg|pending|priority|trusted|preferred)\b/i.test(panelCodeWithoutTemplate),
+            '36. NotificationHistoryPanel.js\'s own code (its rendered template\'s disclaiming prose excluded) contains no read/unread/seen/delivered/acknowledged/pending/priority/trusted/preferred vocabulary.');
 
         // K5. No polling/timer/live-channel machinery — load-on-open plus
         // an explicit refresh only.

@@ -19664,3 +19664,52 @@ exactly as unresolved as it was before this file existed. Building the boundary 
 different questions, and 0.9.281 only answers the first.
 
 See `docs/Roadmap.md`, 0.9.281, for the full milestone entry.
+
+## Persisted, Delivered, Seen, And Read Are Four Different Claims — This System Makes Only The First One (0.9.286)
+
+0.9.273-0.9.285 built and finally wired a complete notification vertical slice: a Publication Commentary produces a
+`NotificationEvent`, `NotificationEventStore` durably persists it, and `GetRecipientNotificationEventsUseCase`/
+`NotificationHistoryPanel` let the recipient read it back. 0.9.286's own end-to-end audit closes that arc by making
+explicit, and permanent, exactly what that completed chain can and cannot honestly claim: it can say "the publisher
+has a durable notification record." It cannot say "the publisher was notified" — and this codebase must never
+quietly start implying otherwise merely because the read path finally works.
+
+**Persistence never depends on delivery.** Section O1 constructs a real notification and proves it is durably on
+file with no recipient query of any kind ever having run — no session for the recipient, no panel, no fetch. A real
+delivery mechanism would have to actively push the fact to someone; this system does none of that, and the fact is
+still true regardless. Section O5 sharpens this further: a notification for a recipient whose session was never even
+CONSTRUCTED is still fully, durably persisted. "Persisted" is a fact about storage alone.
+
+**Reading is provably side-effect-free — there is no hidden SEEN flag anywhere to flip.** Section O2 reads the same
+notification twice through the real, authenticated query and compares the exact serialized bytes: byte-identical,
+both times. A system that actually tracked SEEN would have to mutate something on the first read; this one has
+nothing to mutate, because nothing here was ever built to track it.
+
+**The durable record's own shape is the discipline, checked structurally, not merely by intent.** Section O3 asserts
+the persisted `NotificationEvent`'s JSON carries exactly five fields — `notificationId`, `eventType`,
+`recipientIdentityId`, `createdAt`, `payload` — the identical five 0.9.273's own header named at the very start of
+this arc, and nothing named delivered/seen/read/acknowledged/dismissed. Section O4 goes one step further than a text
+search: it enumerates every public method on every class in the chain (`NotificationEventStore`,
+`GetRecipientNotificationEventsUseCase`, `PublicationCommentaryNotificationProducer`,
+`NotificationHistoryPanel.methods`) and confirms none is even NAMED for a delivery/seen/read/acknowledge concept —
+the absence is a property of the actual running surface, not merely of this file's prose.
+
+**The three latter states were never introduced merely to make an audit pass.** This is the one invariant in this
+arc that is a promise about what NEVER gets added casually, not a description of what already exists — see
+`tests/NotificationEndToEndLifecycleAudit.test.js` Section N for the accompanying architecture-regression sweep
+(still no lifecycle vocabulary, still no polling, still no producer-side deduplication, still no UI access to
+storage). A future milestone MAY deliberately add delivery, read/unread, or seen state — but only as a genuinely
+new, evidence-driven product decision that says so explicitly, exactly the discipline 0.9.282's own reassessment
+already modeled for this arc, never as an incidental side effect of making a test like this one green.
+
+```
+PERSISTED
+   ≠
+DELIVERED
+   ≠
+SEEN
+   ≠
+READ
+```
+
+See `docs/Roadmap.md`, 0.9.286, for the full milestone entry.
