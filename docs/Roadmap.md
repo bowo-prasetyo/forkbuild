@@ -86206,3 +86206,114 @@ commentary, and a notification-sink failure surfaces as its own UI error while t
 persisted. Section J is a regression pass over `OwnPublicationPanel`/`WorldView.js`/`CreateWorldViewUseCase.js`,
 confirming all three are untouched. Section K confirms the wiring shape itself: exactly one new surface, a second
 composition of the identical application layer, and the other five named surfaces left byte-for-byte untouched.
+
+## 0.9.290 — Publication Commentary Cross-Surface Convergence Audit
+
+0.9.289 gave Publication Commentary a SECOND, independent composition root
+(`application/CreatePublicationCommentaryUseCase.js`) alongside the original one
+(`application/CreateWorldViewUseCase.js`), reachable from two UI contexts —
+`OwnPublicationPanel.js` (eager-load, through `WorldNavigationSession`) and `PublicationCard.js`
+(lazy-load-on-expansion, through the new app-wide composition) — with two independently constructed
+sets of application-layer objects behind them. Before wiring any more consumers, this milestone audits
+whether the two roots still add up to ONE Commentary capability, or whether a second, quietly divergent
+one has begun to form. Per its own brief, this milestone is **test-only**: no production file changes
+unless the audit finds a real defect. It finds none.
+
+### What this milestone adds
+
+`tests/PublicationCommentaryCrossSurfaceConvergenceAudit.test.js` (new, registered in `tests.html`) —
+twelve sections, lettered A-L, run against real collaborators (`LocalIdentityProvider`,
+`LocalPublisherProvider`, `LocalDiscoveryProvider`, `PublicationCommentaryStore`, `NotificationEventStore`,
+and all four commentary use cases, unmodified) — never a mock of the application layer, and never an
+import of `ui/views/WorldView.js` itself (which drags in the renderer stack this Node-run suite cannot
+load) — the same restraint `tests/OtherPublicationCommentaryEntryPoint.test.js` already established.
+
+Sections A/B prove the two entry points are one capability rather than two: own-Publication commentary
+(mirroring `OwnPublicationPanel`) and other-Publication commentary (mirroring `PublicationCard`) both
+persist into, and are both readable back from, the identical durable data, with correct per-path
+authorship and notification, and both composition roots expose the byte-identical
+`(publicationId) -> PublicationCommentary[]` / `({publicationId, content}) -> {commentary, isNew}`
+contract — with the forbidden `addOwnPublicationCommentary`/`addOtherPublicationCommentary`-shaped
+vocabulary confirmed absent everywhere in the chain.
+
+Section C is the composition-root audit the milestone's own brief asked for by name: it identifies,
+from real source, exactly which classes each root independently constructs — `CreateWorldViewUseCase.js`
+reuses a storageProvider/discoveryProvider it already built for other capabilities and constructs six
+commentary-specific collaborators; `CreatePublicationCommentaryUseCase.js`, with no bigger composition to
+borrow from, additionally constructs its own `LocalStorageProvider`/`LocalDiscoveryProvider` — a full
+second composition. It then proves, from every one of those eight collaborator classes' own source
+(never from prose), that each assigns only bare pass-through references to its injected constructor
+arguments, that no method outside the constructor ever assigns further instance state, and that none of
+the eight ever fabricates its own `Map`/`Set`/timer/cache. This is the **safe duplication** case the
+milestone's own brief distinguishes from the dangerous one: two objects with no state of their own beyond
+a reference to whichever storage they were handed.
+
+Section D proves storage identity convergence directly: two genuinely different `StorageProvider` object
+identities sharing one backing namespace (the honest Node analog of two real `LocalStorageProvider`
+instances, which are never given a namespace of their own — both always proxy the one `window.localStorage`)
+observe byte-identical Commentary data; the same object shapes over two genuinely separate namespaces do
+not, isolating the cause. Section E confirms the notification pipeline stays singular: across every file
+in `application/` and the entire `ui/` tree, exactly one production call site ever constructs a
+`NotificationEvent` — `PublicationCommentaryNotificationProducer.js` — with no second notification
+mechanism anywhere.
+
+Section F is the cross-root deduplication test the brief calls out as "particularly valuable": the same
+logical Commentary, submitted through two independently constructed application paths sharing storage,
+still gets the established `NEW -> EXISTING` treatment at both the `PublicationCommentaryStore` and
+`NotificationEventStore` layers — the EXISTING result returning the original, other-root's own on-file
+record rather than fabricating a second one — and the same retry sequence over genuinely unshared storage
+produces `NEW` twice, proving deduplication authority is storage/policy-based, never
+composition-instance-based, and never a hidden global registry either.
+
+Section G proves authorization convergence: an identity unrelated to a Publication succeeds identically
+through both roots, and an unauthenticated attempt is rejected by both roots with the exact same
+underlying error message — never a root-specific rejection — with neither `PublicationCard.js` nor
+`OwnPublicationPanel.js` containing any comparison of the Publication's own author against the viewer.
+Section H documents, and tests, that the eager-vs-lazy loading difference between the two UI surfaces is
+real and deliberate — `OwnPublicationPanel` loads on `mounted()` and reacts to a Publication-change
+watcher; `PublicationCard` defines no `mounted()` hook at all and loads only from its own explicit
+expansion action — while both ultimately call the identical injected command contract, and Vue's own
+`data()` factory returns a genuinely distinct object per component instance. Section I proves
+`PublicationCard`'s own local commentary state (expansion, draft text, loaded commentaries) stays
+per-card and per-Publication across three simultaneously-mounted cards, with no cross-card leakage of any
+kind.
+
+Section J is a regression pass, rechecked fresh rather than inherited: `OwnPublicationPanel.js`,
+`WorldView.js`'s own commentary wiring, and `CreateWorldViewUseCase.js`'s own commentary composition
+remain byte-for-byte as before, `NotificationHistoryPanel.js` stays wired through the original recipient
+query and never through the new composition root, and a full real pass over the original
+`OwnPublicationPanel`-shaped path (a Commentary created, a real `GetRecipientNotificationEventsUseCase`
+query) still produces and retrieves a notification correctly. Section K classifies, without implementing,
+the five surfaces 0.9.288 Section E originally named and 0.9.289 deliberately left unwired:
+`PublicationCatalog`/`PublicationList` are surfaces where `PublicationCard` (or its own host) already
+covers the use case; `PublicationPreview` is semantically awkward for a comment thread;
+`DecentralizedPublicationsView` is a different domain concern entirely (anchor/verification, not
+discussion); `WorldEncounterCanvas` is named as a genuinely appropriate candidate for a future,
+single-surface milestone, on the same evidence bar `PublicationCard` itself cleared in 0.9.289, but is not
+implemented here. Section L is the twelve-point architecture-regression checklist the brief named
+verbatim (no ownership into `PublicationCard`, no second Commentary domain concept, no second store, no
+second authorization model, no producer-side deduplication, no notification delivery, no UI-level
+persistence, no global Commentary state, no eager loading on paginated cards, no lifecycle coupling
+between cards, no new Commentary vocabulary, and still exactly one new UI surface wired) — all twelve
+holding, checked fresh against current source.
+
+### What this milestone deliberately excludes
+
+Per its own test-only brief: no change to `PublicationCommentary`, `PublicationCommentaryStore`,
+`CanCommentOnPublicationUseCase`, `GetPublicationCommentariesUseCase`, `AddPublicationCommentaryUseCase`,
+`PublicationCommentaryNotificationProducer`, `NotificationEventStore`,
+`NotificationDeduplicationPolicy`, `CreateWorldViewUseCase.js`, `CreatePublicationCommentaryUseCase.js`,
+`OwnPublicationPanel.js`, `PublicationCard.js`, or `ui/main.js`. No consolidation of the two composition
+roots into a shared service — Section C's own finding is that today's duplication is the safe kind, so
+introducing a shared service now would solve a problem the evidence does not show exists. None of the
+five remaining surfaces named in Section K are wired.
+
+### What comes after
+
+The audit is clean: every claim in this milestone's own brief holds, with no defect found and no erosion
+since 0.9.289. Per the two outcomes the brief itself named, this selects the first: Commentary reachability
+may continue to expand, one surface at a time, exactly as 0.9.289 already did — never a composition
+convergence milestone, since Section C found nothing today for one to fix. The one concrete candidate this
+audit's own Section K surfaces for that next step is `WorldEncounterCanvas.js`, on the identical
+"already holds a real Publication object at a meaningful selection moment" evidence bar `PublicationCard`
+itself cleared — left unstarted here, for whoever picks up Commentary reachability next.
