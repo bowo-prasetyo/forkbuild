@@ -86428,3 +86428,147 @@ a natural point to ask, as 0.9.290 did after the first, whether a fresh converge
 before any more surfaces are wired, or whether `WorldEncounterCanvas.js` turns out close enough to `PublicationCard.js`
 that the remaining four surfaces (`PublicationCatalog`, `PublicationPreview`, `PublicationList`,
 `DecentralizedPublicationsView`) are worth reassessing together instead, per this milestone's own brief.
+
+## 0.9.292 — Decentralized Substrate Capability Matrix Audit
+
+**Type:** Test-only architecture audit. **Production changes:** None.
+
+A user, reviewing the Publication Distribution work 0.9.44 through 0.9.105 shipped, proposed letting a
+person choose which substrate satisfies each of three roles — Announcement & Discovery, Content, and
+Proof & Anchoring — rather than exposing Nostr/IPFS/Bitcoin/Base/Arweave as one flat "network" list. The
+proposal's own caution was that Arweave alone already participates in more than one role, so a flat list
+would either collapse those roles together or mislead a user into thinking they're choosing "a network"
+rather than "a capability provider." Before building any of that, the user asked for exactly the audit
+their own proposal implied was missing: does this codebase currently have enough real, uniform,
+production capability per role for a preference to mean anything, or would a preference UI built today
+just be configuration for capability that does not yet exist? This milestone is that audit, answered from
+real source — `tests/DecentralizedSubstrateCapabilityMatrixAudit.test.js` — never from prose about what a
+substrate could theoretically do.
+
+### What the audit found
+
+**Section A** froze the three roles as audit-local constants (never promoted to a new `core/`/`application/`
+export — see "What this milestone deliberately excludes," below) and proved, from real source, why
+"network" would have been the wrong noun in the first place: the Announcement & Discovery role alone
+already has THREE non-interchangeable production shapes. `discovery/DiscoveryProvider.js` answers "list/
+find a Publication already known to this replica" — local/catalog discovery, implemented only by
+`LocalDiscoveryProvider` and `PublicationCatalogDiscoveryProvider`, neither substrate-specific.
+`application/DecentralizedWorldDiscoveryQuery.js`'s own `DecentralizedDiscoveryQueryService` answers a
+different question — "search an external substrate, by discoveryTag, for a rumor of where a Publication's
+material claims to live" — the shape `NostrDiscoveryQueryService` and `ArweaveGraphqlDiscoveryQueryService`
+both satisfy. `NostrSnapshotDiscoveryQueryService` is a real, production, THIRD shape — used by
+`DecentralizedSnapshotResolver` — that extends neither of the other two, duck-compatible by `search()`/
+`origin` alone. Three genuinely different discovery contracts already coexist; unifying them into one
+"network" abstraction would have been a regression this audit's own Section A now guards against with a
+real `instanceof` check in both directions.
+
+**Section B** built the matrix itself, entirely from `instanceof` checks, real construction, and real
+registry round-trips — never a guess:
+
+| Provider | Discovery | Content | Proof & Anchoring |
+| -------- | --------: | ------: | -----------------: |
+| Nostr    | ✓ (full round trip — query AND publish, for both Publication and Snapshot leads) | — | — |
+| IPFS     | — | ✓ (three concrete `ContentStore`s: `IpfsContentStore`, `IpfsGatewayContentStore`, `IpfsRemotePinningContentStore`) | — |
+| Bitcoin  | — | — | ✓ (the ONLY class anywhere that extends `ProofVerifier` — `BitcoinOpReturnProofVerifier`, genuinely retrievable through `ExternalProofVerifierRegistry`) |
+| Base     | — | — | ◐ — real create/broadcast/inclusion-observation (`base/BasePublicationTransactionPlanner.js`, `base/BaseTransactionBroadcaster.js`, `base/BaseTransactionInclusionObserver.js`), but NO verify half: no class anywhere extends `ProofVerifier` for Base, and none is ever registered |
+| Arweave  | ◐ — `ArweaveGraphqlDiscoveryQueryService` genuinely reads a discovery tag, but its own header states outright that it "never writes a transaction or a tag of any kind"; a repo-wide sweep confirms zero `application/Arweave*Publisher.js` file exists to write one | ✓ — but as THREE mutually-unimporting seams, not one: `ArweaveContentStore` (Snapshot put/get), `ArweavePublicationMaterialUploader` (Publication material, write-only), `ArweaveWorldEncounterMaterialResolver` (World Encounter material, read-only) | — (zero classes anywhere, confirmed by the same repo-wide `extends ProofVerifier` sweep that found Bitcoin's) |
+
+Every ✓/◐ cell names its exact class in Section C. Every — cell is a confirmed, repo-wide source sweep,
+never an assumption from the files this audit happened to already know about.
+
+**Section D** proved provider independence is not a future architecture change this milestone is
+proposing — it already exists, unconfigured, in the one real Publication distribution pipeline shipped
+at 0.9.47: `application/PublicationDistributionRuntimeComposition.js` composes a Content provider
+(`ArweavePublicationMaterialUploader`) and a Discovery provider (`NostrPublicationDiscoveryPublisher`) in
+the same file, and neither collaborator's own source ever imports the other — proven by scanning for an
+actual `import` statement, not merely the absence of the word (`ArweavePublicationMaterialUploader`'s own
+prose mentions the other file by name eleven times, in comments, while importing nothing). A live
+reproduction goes further: `composeDecentralizedWorldEncounterMaterialDiscoveryServices()` already
+constructs and independently invokes BOTH a Nostr and an Arweave discovery service, side by side, for the
+identical Discovery role, today.
+
+**Section E** took the Arweave multi-role case specifically — the exact concern the original proposal
+raised — and proved it holds in shipped code, not just as an aspiration: the four Arweave-named production
+files (one Discovery seam, three Content seams) never import one another, construct four genuinely
+distinct object identities, and no Content-role instance is ever `instanceof` the Discovery role's base
+class or vice versa. Same external substrate, same role in three of the four cases (Content), still four
+separate architectural seams.
+
+**Section F** found that Configuration Authority — "a plugin names its own key; a registry only ever reads
+it back, never a UI conditional" — already exists in production for two of the three roles, via FOUR
+registries: `SnapshotPlacementStoreRegistry` and `SnapshotPlacementViewRegistry` for Content (0.8.18,
+0.8.20), `ExternalProofVerifierRegistry` and `ExternalAnchorEvidenceViewRegistry` for Proof (0.8.1, 0.8.14).
+All four were exercised with real registrations and real key-based retrieval in this audit. Discovery has
+no equivalent: the two Discovery-adjacent `*Registry.js` files that do exist
+(`DecentralizedWorldDiscoveryLeadRegistry.js`, `WorldDiscoverySourceRegistry.js`) were read, not just
+pattern-matched by filename, and both turned out to be `set*/list*` MEMBERSHIP stores for already-produced
+data — neither defines a `register()` method at all, so neither is the "plugin registers itself" shape the
+other four registries share. A repo-wide sweep for that exact anti-pattern the original proposal warned
+against — a `ui/`-level `if (provider === 'nostr')`-shaped branch — found none; the one place this codebase
+even discusses that shape in prose is `application/PublicationSnapshotPlacementDetailView.js`'s own header,
+explaining why it built `SnapshotPlacementViewRegistry.js` instead of writing one.
+
+**Sections G/H/I** confirmed, by repo-wide sweep, that no provider-preference concept exists in source
+today (zero hits for `providerPreference`/`networkPreference`/`preferredProvider`/`substratePreference`),
+that "no fallback between providers" is discussed repeatedly in file headers but never once implemented as
+an actual `*Fallback` class or function, and that no `discoveryProviderPreference`/
+`contentProviderPreference`/`proofProviderPreference`/`networkPreference` storage key exists anywhere to
+migrate or reason about compatibility with.
+
+### The verdict
+
+**Section J: `NOT_READY_FOR_PROVIDER_SELECTION_UI`.** Five source-verified gaps, not opinions: Base/Proof's
+missing verify half; Arweave/Discovery's missing write half; Discovery's missing keyed registry (Content
+and Proof both already have one); the complete absence of any provider-preference concept; and "preferred
+vs. exclusive" (fallback policy) as an entirely open, never-resolved product question this audit does not
+attempt to resolve either way. This is the second outcome the original proposal's own recommendation
+named — "provider capability incomplete → implement missing capability first" — reached from evidence,
+not asserted.
+
+Four concrete, unscheduled prerequisite milestones follow directly from the gaps above, named but not
+implemented here: a Base `ProofVerifier` registered through the existing `ExternalProofVerifierRegistry`;
+an Arweave discovery write-side publisher mirroring `NostrPublicationDiscoveryPublisher`/
+`NostrSnapshotDiscoveryPublisher`; a Discovery-role keyed registry mirroring the Content/Proof pattern
+Section F documents; and, only after those three, a Role Provider Configuration boundary that reads a
+stored per-role preference and resolves it through those (by-then-three) registries — still with no UI.
+Whichever of these ships first should be the smallest, per the original proposal's own request — and it is
+capability work, never a UI.
+
+### What this milestone adds
+
+`tests/DecentralizedSubstrateCapabilityMatrixAudit.test.js` (new, registered in `tests.html`) — ten
+sections, A-J, run against real collaborators and real repository source: every class this file imports
+(`NostrDiscoveryQueryService`, `NostrSnapshotDiscoveryQueryService`, `NostrPublicationDiscoveryPublisher`,
+`NostrSnapshotDiscoveryPublisher`, `ArweaveGraphqlDiscoveryQueryService`, `ArweaveContentStore`,
+`ArweavePublicationMaterialUploader`, `ArweaveWorldEncounterMaterialResolver`, `IpfsContentStore`,
+`IpfsGatewayContentStore`, `IpfsRemotePinningContentStore`, `BitcoinOpReturnProofVerifier`,
+`ExternalProofVerifierRegistry`, `ExternalAnchorEvidenceViewRegistry`, `SnapshotPlacementStoreRegistry`,
+`SnapshotPlacementViewRegistry`, and the base interfaces `DiscoveryProvider`/`ContentStore`/`ProofVerifier`/
+`DecentralizedDiscoveryQueryService`) is real and unmodified. Repo-wide source sweeps (a small
+`listJsFiles()`/`repoWideProductionFiles()` helper, `tests/`-excluded) back every "zero anywhere" claim
+with an actual filesystem walk rather than a fixed list of files this audit happened to already know about.
+
+### What this milestone deliberately excludes
+
+Per its own test-only brief: no `RoleProviderConfiguration` class, preference schema, or persisted
+preference of any kind (Sections G/H/I prove none exists; this file adds none either). No Base
+`ProofVerifier` and no write-side Arweave discovery publisher — Section B names both gaps precisely;
+closing either is real, unscheduled, unstarted future work. No `DiscoveryProviderRegistry` or any other new
+registry — Section F documents the gap; filling it is exactly the "before any UI" capability work Section
+J's verdict calls for, and exactly what this audit does not do. No UI, panel, or preference control of any
+kind — nothing in `ui/` is touched, and the one `ui/`-wide sweep this milestone runs (Section F's
+substrate-branching check) only reads, never edits. The three role names
+(`ANNOUNCEMENT_AND_DISCOVERY`/`CONTENT`/`PROOF_AND_ANCHORING`) live only inside the test file — promoting
+them to a new production module would itself be exactly the "configuration for capability that doesn't yet
+exist" mistake this audit exists to catch, one layer earlier.
+
+### What comes after
+
+Per the audit's own verdict: the smallest of the four named prerequisite milestones — most naturally, a
+Base `ProofVerifier` registered through the already-existing `ExternalProofVerifierRegistry`, the shortest
+path to closing one of Section B's two ◐ gaps using a registry this codebase already runs Bitcoin's proof
+verification through. `0.9.293` should be that capability work, never a Provider Selection UI — the
+original proposal's own "0.9.293 should be the smallest possible role-specific provider preference
+boundary, probably before building the UI" holds, with this audit's own Section F identifying exactly
+which boundary is smallest: the Discovery registry, or one of the two ◐-closing milestones, whichever a
+future milestone picks up first.
