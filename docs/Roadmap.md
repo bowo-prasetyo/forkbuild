@@ -84846,6 +84846,82 @@ Per this milestone's own brief: `0.9.274 — Notification Event Boundary Audit`,
 an identifiable recipient, a durable identity, and a meaningful timestamp — before any decision is made about which
 domain becomes the first real producer.
 
+## 0.9.274 — Notification Event Boundary Audit
+
+Per 0.9.273's own "what comes after": a test-only pass answering the narrower question 0.9.273 deliberately deferred
+rather than guessed at — which of this codebase's existing domain events already carry enough semantic information
+(a durable fact, a distinct recipient, a stable identity, a fact-provenance timestamp, a sufficient payload) to
+become a `NotificationEvent` by construction alone, independent of the delivery question 0.9.272's own Section D
+already found every candidate blocked on. Seven candidates are audited: the four 0.9.272 already named (Publication
+Commentary, Place Naming, Document Collaboration, World Presence), Publication/Snapshot distribution (0.9.272 D4,
+carried through a full boundary audit here for the first time), Friend Relationships (not examined by 0.9.272 at
+all), and Publication Commentary reply/threading (a second-order candidate that does not exist yet, included to give
+the audit's own DEFERRED classification a genuine, evidenced example).
+
+### What this milestone adds
+
+`tests/NotificationEventBoundaryAudit.test.js` (new, registered in `tests.html`) — seven sections, following the
+structure this milestone's own brief specified directly: event-source inventory (A) — which candidate facts are
+already durably or observably represented, finding Publication Commentary append-only and permanent, Friend
+Relationship durable only conditionally (a fresh action or any terminal action overwrites or clears the prior one,
+`core/FriendshipRecord.js#withIncomingAction`), Place Naming and Distribution durable but local-replica-scoped, and
+World Presence and Document Collaboration's causal-gap observation never persisted at all (a bare in-memory `Map`,
+reconfirmed with no `storage/` import anywhere in either chain); recipient determination (B) — proved LIVE for the
+two strongest candidates rather than merely asserted: Publication Commentary's `publisherIdentity` is a real,
+already-on-file, structurally distinct identity (reconfirming 0.9.272 D2 fresh), and Friend Relationship's
+`subjectIdentity` is, if anything, a stronger recipient story still — the wire protocol's own cryptographically
+verified addressee, requiring zero inference at all — while Place Naming and Distribution are confirmed to have no
+natural recipient whatsoever, never forced into having one merely because `NotificationEvent` requires the field;
+World Presence's participant-roster recipients are found moot next to its own MISSING_FACT finding, but a newly
+examined World-author angle (`core/DocumentMetadata.js#authorIdentityId`) surfaces a genuinely different kind of
+gap — reconciling "tell the owner someone visited" with the existing, deliberately designed
+`core/PresenceVisibilityPolicy.js` privacy boundary is a product decision, not a missing field; event identity (C) —
+Commentary's `commentaryId` is durable, conflict-guarded, and independently re-derivable at any later time from an
+already append-only store, while Friend Relationship's advertisement signature is equally stable in principle but
+reachable only at the live ingestion boundary (`FriendRelationshipUseCase#_handleIncoming`), before the domain's own
+overwrite-in-place storage clears it — a real integration constraint, not a defect in the identity itself; timestamp
+provenance (D) — Commentary's `createdAt` is a genuine fact timestamp; Friend Relationship's `timestamp` is also a
+genuine fact timestamp, but its own domain documentation permanently marks it untrusted display metadata, a caveat
+this file carries forward rather than smoothing over, and one that turns out not to matter because
+`core/NotificationEvent.js` itself never required an authoritative clock to begin with; payload sufficiency (E) —
+proved the strongest way available to a test-only milestone, by actually constructing and JSON-round-tripping real
+`NotificationEvent` instances from genuine domain data (a live comment/Publication pair, a live signed-and-verified
+friendship advertisement), never a synthetic fixture, and confirming construction succeeds with none of
+title/message/icon/url present; the ChatOutbox boundary (F) — a dedicated regression reconfirming 0.9.272 D6 fresh
+(narrowly typed to `ChatMessage`, zero non-Chat callers, a bounded 7-day best-effort guarantee) plus a check 0.9.272
+could not yet make, since `NotificationEvent.js` did not exist then: the absence of coupling verified in BOTH
+directions, `NotificationEvent.js` referencing nothing Chat-shaped and `ChatOutbox.js`/`ChatOutboxEntry.js`
+referencing nothing `NotificationEvent`-shaped; and candidate classification and the producer-selection decision (G)
+— a seven-row table using only the taxonomy this milestone's own brief defined (`READY_PRODUCER`,
+`MISSING_RECIPIENT`, `MISSING_EVENT_IDENTITY`, `MISSING_FACT`, `NEW_PRODUCT_SEMANTICS`, `DEFERRED`), explicitly
+recording that no candidate here classifies `MISSING_EVENT_IDENTITY` rather than force-fitting one merely to
+exercise every label, and closing with the decision itself: **Publication Commentary is recommended as the first
+producer**, over Friend Relationship, specifically because a producer needs both a recipient and a stable,
+re-derivable identity — Commentary is the candidate where neither needs new architectural work, even though Friend
+Relationship's own recipient story is structurally the stronger of the two.
+
+### What this milestone deliberately excludes
+
+Per this milestone's own brief, and per 0.9.273's own "what comes after": no notification producer is wired, no
+`NotificationEvent` store, no delivery mechanism, no `ChatOutbox` integration, no read/unread state, no notification
+UI, no subscriptions, no preferences, no retries, batching, deduplication, or ranking, no push/browser notifications,
+and no automatic notification generation of any kind. Section E's live `NotificationEvent` constructions are
+test-only evidence that construction succeeds — they are never wired into `AddPublicationCommentaryUseCase.js`,
+`FriendRelationshipUseCase.js`, or any other production file. Zero `application/`, `core/`, `ui/`, or `storage/`
+files are modified by this milestone, verified directly rather than merely claimed.
+
+### What comes after
+
+Per this milestone's own verdict: `0.9.275`, the first real `NotificationEvent` producer, built on Publication
+Commentary — the candidate this milestone found needs no new persistence design and no coupling to a lower-level
+wire-ingestion method, only a straightforward construction from data `AddPublicationCommentaryUseCase.js` already
+produces. Friend Relationship's own REQUEST/ACCEPT arrival remains a documented, evidenced `READY_PRODUCER`
+candidate for a later milestone, once (or if) a producer is deliberately wired at its own live ingestion boundary
+rather than derived from stored relationship state. A future milestone should also revisit whether the delivery
+question 0.9.272 Section D closed — every candidate blocked on reaching a recipient who is not currently connected —
+still holds once a producer actually exists to test it against, rather than assuming 0.9.272's own finding
+automatically transfers unchanged.
+
 ## 0.9.270 — Place Naming Adoption Status Lifecycle Audit
 
 0.9.269 built `alreadySaved`; this milestone proves it holds under a lifecycle, the same one-milestone-later audit
