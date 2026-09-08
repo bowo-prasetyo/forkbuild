@@ -86572,3 +86572,98 @@ original proposal's own "0.9.293 should be the smallest possible role-specific p
 boundary, probably before building the UI" holds, with this audit's own Section F identifying exactly
 which boundary is smallest: the Discovery registry, or one of the two ◐-closing milestones, whichever a
 future milestone picks up first.
+
+## 0.9.293 — Decentralized Role Provider Preference Boundary
+
+**Type:** Production domain boundary. **Scope:** one seam — a small, immutable value describing which
+provider a user prefers for one of the three roles 0.9.292 froze, independently per role.
+
+0.9.292's own "What comes after" named the smallest of its four prerequisite milestones as capability
+work — a Base `ProofVerifier`, most likely — and left the actual preference boundary for later, "only
+after those three" capability gaps closed, because that boundary was framed as something that RESOLVES a
+preference through a registry. Revisiting that framing is what this milestone does differently: a
+preference does not need capability resolution to exist to be meaningful. "This is the provider I
+prefer for this role" is a true, well-formed statement about what a user wants whether or not a Base
+`ProofVerifier` or an Arweave discovery publisher have shipped yet — resolving it against real capability
+is a separate, later question. Building the boundary this way sidesteps the sequencing 0.9.292 itself
+described ("only after those three") rather than waiting on it, without touching, weakening, or resolving
+any of the five gaps that audit found.
+
+### The model
+
+Three independent preferences fan out from one user, never a single flat "network" choice — the exact
+shape 0.9.292's own Section A/E already found the real codebase already respects, one layer down:
+
+```text
+                 User's decentralized preferences
+                            │
+          ┌─────────────────┼─────────────────┐
+          ▼                 ▼                 ▼
+      Discovery          Content            Proof
+      preference         preference         preference
+          │                 │                 │
+          ▼                 ▼                 ▼
+       providerKey       providerKey       providerKey
+```
+
+A recurring `providerKey` across roles (Arweave chosen for Discovery, Content, AND Proof) is valid and
+produces three distinct preference values, never one merged Arweave selection — the exact invariant
+0.9.292 Section E already found holds for Arweave's four real, mutually-unimporting production seams.
+
+### What this milestone adds
+
+- **`core/RoleProviderRole.js`** — the closed `ANNOUNCEMENT_AND_DISCOVERY`/`CONTENT`/`PROOF_AND_ANCHORING`
+  vocabulary, promoted out of 0.9.292's own audit-local test constants now that real, per-role capability
+  and per-role independent composition are both proven in shipped code (0.9.292 Sections B/D). Frozen,
+  with an `isValidRoleProviderRole()` guard, matching the `Object.freeze` + `isValid*` pattern
+  `core/PresenceVisibility.js`/`core/AvatarInteractionKind.js` already establish.
+- **`core/RoleProviderPreference.js`** — the immutable `{ role, providerKey }` value object itself.
+  `providerKey` is validated only for SHAPE (`/^[a-z][a-z0-9-]*$/`, the same short, stable, self-declared
+  token style `ContentStore#storage`/`ProofVerifier#anchorType` already use) — never for membership
+  against any real provider's roster, so a preference for a provider whose real capability is still
+  incomplete (Base/Proof, per 0.9.292 Section B) constructs exactly as successfully as one for a
+  fully-capable provider. Both `role` and `providerKey` are rejected outright, at construction, when
+  invalid — there is no silent coercion or default. Every instance is frozen in its own constructor;
+  `withProviderKey()` is the only way to derive a changed preference, and `role` has no mutation path of
+  any kind (see the file's own header for why role, not just providerKey, is part of a preference's
+  identity). `toJSON()`/`fromJSON()` are the same plain-data-shape convenience every value object in this
+  codebase already carries — not a persistence layer; this file never touches `localStorage` or any
+  storage key.
+- **`tests/DecentralizedRoleProviderPreferenceBoundary.test.js`** (new, registered in `tests.html`) —
+  twelve sections (A-L) plus a repo-wide sweep (Section M) proving nothing outside this boundary's own two
+  files references it yet, run against the real files above, never a guess.
+- A small, necessary update to `tests/DecentralizedSubstrateCapabilityMatrixAudit.test.js`'s own Section G
+  — its repo-wide sweep for a provider-preference concept correctly found zero hits at 0.9.292; this
+  milestone's own two new files now legitimately contain that phrase, so Section G is UPDATED (never
+  deleted) to assert the concept exists in exactly those two files, and nowhere else — the same guarantee
+  Section M checks from the new boundary's own side.
+
+### What this milestone deliberately excludes
+
+Per the task's own request, restated against 0.9.292's five named gaps so each exclusion has a reason:
+
+- **No capability validation.** This class never asks whether a `providerKey` can actually satisfy a
+  `role` — that requires a real per-role registry lookup, and 0.9.292 Section F found Discovery has none
+  yet. A preference is a statement of intent, not a grant.
+- **No provider resolution.** Nothing here imports, constructs, or looks up Nostr/IPFS/Bitcoin/Base/
+  Arweave — `core/RoleProviderPreference.js`'s only import is its own sibling, `core/RoleProviderRole.js`
+  (verified by both files' own architecture sweep, Section H).
+- **No fallback semantics.** 0.9.292 Section H found "no fallback between providers" documented
+  repeatedly and implemented nowhere — a genuinely open policy question this milestone does not resolve
+  in either direction. A preference names exactly one `providerKey` per role, with no second/backup slot.
+- **No persistence.** 0.9.292 Section I found no preference-shaped storage key anywhere; this milestone
+  adds none — `toJSON()`/`fromJSON()` are serialization convenience only, never wired to any storage.
+- **No UI, panel, or preference control of any kind**, and no `RoleProviderPreferenceSet`/aggregate —
+  keeping this milestone to the one seam the task asked for; a container for a user's complete
+  Discovery/Content/Proof configuration is real, natural future work, not built here.
+
+### What comes after
+
+A conditional sequence, each step justified only if the one before it turns out to be needed by then:
+Preference Persistence (a storage key, only once an actual settings workflow needs one) → Role-Aware
+Provider Resolution (translating a preference plus a THEN-existing per-role registry into a concrete
+provider, still with no fallback unless separately justified) → Provider Preference UI (only once the
+semantics and resolution path are proven) → a fresh audit. Closing 0.9.292's own remaining capability gaps
+(Base's verify half, Arweave's discovery write half, a Discovery-role registry) remains real, unscheduled,
+and independent of this sequence — none of them block this boundary, and this boundary does not block
+starting any of them first.
