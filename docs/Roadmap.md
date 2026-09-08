@@ -84512,3 +84512,75 @@ Per this milestone's own brief: another test-only reassessment, one
 metadata-presentation boundary later, asking whether Place Naming is
 genuinely finished as a product arc or whether a new, evidence-backed
 capability has emerged — rather than assuming the next feature.
+
+## 0.9.267 — Nearby Place Naming Metadata Presentation Lifecycle Audit
+
+0.9.266 built `createdAtLabel`; this milestone proves it holds under a
+lifecycle, the same one-milestone-later audit shape 0.9.261/0.9.264
+already ran for Navigate and Adopt. This milestone adds **no new
+capability**. It is a **test-only lifecycle audit**.
+
+### What this milestone adds
+
+`tests/PlaceNamingNearbyMetadataPresentationLifecycleAudit.test.js`
+(new) — fourteen sections, all driving the real
+`NostrPlaceNamingDiscoverySource`, the real composed discovery runtime, a
+real `PlaceNamingDiscoveryMonitor`, and a real `WorldNavigationSession`:
+initial presentation stable across repeated observation cycles (A); a
+post-signing-tampered `createdAt` degrading gracefully through the real
+pipeline, unusual-but-valid dates (the Unix epoch, a far-future date)
+round-tripping and adopting correctly, and a genuinely missing `createdAt`
+never even reaching presentation (B); discovery refresh replacing a row's
+entire metadata set atomically, never a mixture of a new claim with a
+stale label (C); movement across a proximity boundary
+(inside/outside/inside) without metadata ever being retained, duplicated,
+or accumulated (D); discovery order preserved exactly across repeated and
+deliberately reordered observation cycles, never resorted by
+createdAt/author (E); "Riverside"/"Old River" remaining equally,
+independently presented and independently adoptable across live cycles
+(F); World switching (A -> B -> A) leaking no metadata either direction
+and caching nothing across the switch (G); Navigate remaining fully
+independent of `createdAtLabel`, live and structurally (H); a
+deliberately corrupted `createdAtLabel` never influencing Adopt's own
+persisted `createdAt`, live, with a re-verification proof (I); the real
+verifier called zero times across four independent live
+discovery/proximity/presentation cycles and exactly once by Adopt (J); an
+adopted claim's own `createdAt` surviving its row's disappearance from
+live discovery, and a persisted record never carrying a `createdAtLabel`
+of its own (K); three race scenarios — a slow, superseded response never
+overwriting a faster one, a response resolving after unmount never
+reaching a torn-down view's refs, and a slow World-A response arriving
+only after a switch to World B never resurfacing World A's own metadata
+(L); a FLAGSHIP real Nostr -> discovery -> proximity -> presentation ->
+Adopt -> verification -> persistence lifecycle threading movement,
+competing claims, and a World switch through `createdAt` formatting, with
+no mocks around any real boundary (M); and a structural regression
+confirming the formatter stays pure and that no new domain state,
+verification call, ranking call, or World mutation was introduced (N).
+
+The invariant this file exists to freeze, verbatim from its own header:
+**`createdAtLabel` is presentation derived from `createdAt`; it is never
+an authority, input, or alternate source of truth.**
+
+Registered in `tests.html`.
+
+### What this milestone deliberately excludes
+
+No new capability, and no production-code change whatsoever — every
+section either reconfirms 0.9.266's own boundary under a lifecycle it had
+not yet been exercised against, or records (never patches) the identical
+honestly-unpatched boundaries 0.9.266 already chose to leave open (no
+signature/verification rendering). Also excluded, matching this
+milestone's own brief: raw signature display, new verification-status
+vocabulary, preferred/official names, ranking, competing-name resolution,
+claim deletion/retraction, moderation, synchronization, notifications,
+automatic adoption, `WorldRegion` mutation, and any new inspection UI.
+
+### What comes after
+
+Per this milestone's own brief: `0.9.268 — Post-Metadata Product
+Reassessment`, the real decision point this whole metadata-presentation
+arc was built to enable — asking whether Place Naming's remaining
+candidates (preferred-name semantics, retraction, moderation,
+synchronization) are genuine product decisions or missing capabilities,
+rather than assuming the next field to add.
