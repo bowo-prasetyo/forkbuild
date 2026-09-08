@@ -86995,3 +86995,93 @@ discovery's existing "query every configured provider" behavior should ever beco
 one of those is decided, wiring `RoleAwareProviderResolver` into any composition root would be either inert
 (resolving into an empty choice set) or a silent behavior change (Discovery) — both worse than leaving it
 exactly where 0.9.295 left it: real, tested, and unconsumed.
+
+## 0.9.297 — Role Provider Preference Application Boundary
+
+**Type:** Production application boundary. **Scope:** one seam — the single application-level entry point a
+future workflow calls to ask "what provider capability does the user prefer for this role," without
+constructing providers, adding fallback, or changing any existing workflow yet.
+
+0.9.296's own audit answered the question 0.9.295's own "What comes after" had left open: not one of eleven
+real production provider-selection seams is a clean, unconditional insertion point for `RoleAwareProviderResolver`
+today — each one carries either a data-provenance conflict, an explicit documented "never preferred or
+default" principle, an existing query-everything behavior to reconcile, or a missing second provider to
+choose between. Wiring the resolver directly into any of them would have silently redefined existing
+behavior — a far larger change than "add provider preferences." This milestone answers the narrower, prior
+question that finding leaves unavoidable: not "which workflow gets to consume a preference first," but "what
+is the one seam a workflow would call once that decision is made."
+
+### The model
+
+```text
+RoleProviderPreferenceStore.get(role)    (0.9.294, unmodified)
+RoleAwareProviderResolver.resolve(role)  (0.9.295, unmodified)
+                 │
+                 ▼
+ResolvePreferredRoleProviderUseCase.execute({ role })   ★ (THIS)
+                 │
+                 ▼
+{ role, preference, status, providerKey, provider? }
+```
+
+`execute()` reads the raw `RoleProviderPreference` directly from the injected `RoleProviderPreferenceStore`
+and separately delegates the actual resolution decision to the injected `RoleAwareProviderResolver`, then
+folds both into one frozen decision — never re-implementing registry lookup logic of its own, and never
+transforming either collaborator's own answer. `status` stays exactly one of `RoleProviderResolutionStatus`'s
+own `RESOLVED` / `NO_PREFERENCE` / `PROVIDER_NOT_FOUND`, read straight off the resolver's outcome. In
+particular, `PROVIDER_NOT_FOUND` is never turned into "use whatever is already configured," and
+`NO_PREFERENCE` is never turned into a manufactured default — this class does not even contain a branch that
+could make either substitution.
+
+### What this milestone adds
+
+- **`application/ResolvePreferredRoleProviderUseCase.js`** — `execute({ role })`, constructed with an injected
+  `RoleProviderPreferenceStore` (0.9.294) and `RoleAwareProviderResolver` (0.9.295). Never constructs a
+  provider, never imports `content/`, `anchoring/`, `discovery/`, `nostr/`, `arweave/`, `base/`, or `ui/`, and
+  is not imported by any composition root or use case.
+- **`tests/RoleProviderPreferenceApplicationBoundary.test.js`** (new, registered in `tests.html`) — eleven
+  sections (A-K): preference delegation through the store (verified with a spy, isolated from the resolver's
+  own internal store read), resolver delegation for the actual decision, resolved capability against real
+  registries (`SnapshotPlacementStoreRegistry` + `ArweaveContentStore`), `NO_PREFERENCE` and
+  `PROVIDER_NOT_FOUND` staying explicitly distinguishable, no fallback, store read-only behavior (`save()`
+  never called, on either outcome), role isolation, the "arweave" three-roles-at-once independence proof
+  reused through this seam, no construction, and a repo-wide sweep proving no composition root consumes this
+  class yet.
+- Small, necessary updates to three existing repo-wide sweeps, following the exact precedent each earlier
+  milestone in this sequence already set when updating the sweep before it:
+  `tests/DecentralizedRoleProviderPreferenceBoundary.test.js` Section M (now allows exactly three legitimate
+  consumers — 0.9.294's store, 0.9.295's resolver, and this milestone's application boundary),
+  `tests/DecentralizedSubstrateCapabilityMatrixAudit.test.js` Section G (now allows exactly five files
+  mentioning a provider preference, not four), and `tests/RoleAwareProviderResolution.test.js` Section M (now
+  allows exactly two legitimate references to `RoleAwareProviderResolver` in production source).
+
+### What this milestone deliberately excludes
+
+Per the task's own request:
+
+- **No settings UI, provider-selection control, or any `ui/` involvement of any kind.**
+- **No fallback, "recommended provider," ranking, or default substitution.** `PROVIDER_NOT_FOUND` and
+  `NO_PREFERENCE` are preserved exactly as `RoleAwareProviderResolver` reports them.
+- **No provider construction.** Every `provider` this class ever hands back was constructed by whichever
+  composition root built the registry the injected resolver was wired with.
+- **No new registry, and no change to `RoleAwareProviderResolver.js` or `RoleProviderPreferenceStore.js`
+  themselves.** Both are consumed exactly as their own existing tests already consume them.
+- **No change to any existing composition root or runtime behavior.** No file under `application/` that wires
+  a real Publication distribution, Snapshot distribution, discovery, material-loading, or anchoring pipeline
+  imports this class — a repo-wide sweep (this milestone's own tests, Section K) confirms it.
+- **No generic "preferred provider" object collapsing preference, resolution, and application concerns into
+  one.** `RoleProviderPreference` (what the user prefers), `RoleAwareProviderResolver` (what capability that
+  identifies), and this application boundary (whether/how a workflow may consume that decision) stay three
+  separate, independently-testable layers, on purpose.
+
+### What comes after
+
+This milestone deliberately does not pick the first real workflow to honor a preference — that is a product
+decision, not an architectural one, and 0.9.296's own audit already found no seam is an unconditional fit.
+The next milestone in this sequence should be a person's decision, informed by 0.9.296's own findings: whether
+to deliberately revisit `SnapshotPlacementCreationCoordinator`'s and `PublicationAnchorCreationCoordinator`'s
+own "never preferred or default" principle for Content/Proof creation, or whether Publication discovery's
+existing "query every configured provider" behavior should ever become preference-driven — either one would
+be the first real caller of `ResolvePreferredRoleProviderUseCase`, and the smallest, most explicit
+user-facing action (a distribution/material storage selection, for instance) remains a better candidate than
+silently reinterpreting every existing composition root at once.
