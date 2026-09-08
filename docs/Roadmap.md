@@ -84827,3 +84827,56 @@ no changes to adoption semantics.
 
 Per 0.9.269's own "what comes after": `0.9.271 — Post-Adoption-Status Product Reassessment`, which should reassess
 whether Place Naming has reached its natural product boundary rather than automatically adding another UI capability.
+
+## 0.9.271 — Post-Adoption-Status Place Naming Product Reassessment
+
+0.9.269 built `alreadySaved`; 0.9.270 proved it holds under a full lifecycle. This milestone asks the question that
+whole arc — discovery (0.9.253) through adoption-status lifecycle (0.9.270) — was building toward: is there still a
+concrete product gap in Place Naming, or has this product arc reached a natural stopping point? This milestone adds
+**no new capability**. It is a **test-only product reassessment**, the exact recurring shape 0.9.221/0.9.241/0.9.250/
+0.9.252/0.9.259/0.9.262/0.9.265/0.9.268 already established.
+
+### What this milestone adds
+
+`tests/PostAdoptionStatusPlaceNamingProductReassessment.test.js` (new, registered in `tests.html`) — nine sections:
+the complete pipeline (Nostr through World View to persistence) reconfirmed as a single, unambiguous machinery path,
+including the two newest arrows `hasPlaceNamingClaim()`/`retractPlaceNamingClaim()` (A); "Already saved" frozen as
+exactly "claim exists in this local claim store," proven pairwise and live distinct from adopted (no provenance
+field on the stored record), preferred (`LocalNamePreferenceStore` stays untouched, keyed by name rather than
+claimId), verified (the verifier's own `{signed, reason}` detail never survives importClaim()'s own success path),
+and authoritative (a stranger's claim and this replica's own claim read identically) (B); a thirteen-row
+capability/reachability matrix — eleven `COMPLETE`, one `REACHABLE_BUT_INTERNAL` (verification visibility), one
+`MISSING_DOMAIN_CAPABILITY` (non-authored, locally-saved claim removal) — each row backed by a fresh check in this
+file rather than carried over by assumption from 0.9.265/0.9.268's own tables (C); competing names reconfirmed fully
+preserved, with the explicit finding that navigate-and-adopt does not, on its own, create a demonstrated need for
+preferred/primary/official semantics (D); removal/retraction sharpened past 0.9.265's own finding — the authorship
+gate on retraction lives in exactly ONE place, `PlaceNamingClaimUseCase#retract()`, never in storage:
+`LocalPlaceNamingClaimStore#retract()` itself has no authorship opinion at all, and a live proof shows calling it
+directly removes a non-authored, adopted claim; building a "remove my local copy" capability would need one new,
+thin use-case method and zero storage-layer changes — but no evidence anywhere in this codebase demonstrates it is
+actually required yet (E); verification visibility examined in full — the verifier already computes a rich
+`{valid, signed, reason}` result, and a genuine, pre-existing NON-MUTATING verify pathway for a `PlaceNamingClaim`
+already exists (the 0.7.5 Publications-Center display-kind registry, composed with `store` deliberately omitted) —
+but it is reachable only through a completely separate `DecentralizedPublication`/anchor/catalog transport that
+nothing in the real Place Naming feature (publish/Nearby/Adopt) has ever used, so the two pathways are structurally
+disjoint and reaching a Nearby-discovered claim's verification status still means building something new, not
+flipping on an already-reachable switch (F); synchronization reconfirmed local-only and reconfirmed not a new
+asymmetry (G); the final product-gap verdict, classifying all thirteen candidates as `COMPLETE` /
+`REACHABLE_BUT_INTERNAL` / `MISSING_DOMAIN_CAPABILITY` and selecting **zero** next seams (H); and a verdict section (I).
+
+### What this milestone deliberately excludes
+
+No new capability, and no production-code change whatsoever — every section either reconfirms an existing boundary
+under a sharper, fresh examination, or records (never patches) product-design forks earlier reassessments already
+declined to resolve. Per this milestone's own brief: no `ADOPTED`/preferred/primary/official naming semantics, no
+claim removal/dismissal capability for a non-authored claim, no non-mutating verification-inspection surface, no
+synchronization, no moderation, no notifications, no signature UI, no `WorldRegion` mutation.
+
+### What comes after
+
+Not selected here, and per this milestone's own verdict, not automatically another Place Naming feature: the
+capability/reachability matrix closes at eleven of thirteen candidates `COMPLETE`, and the two open candidates
+(non-authored claim removal, non-mutating verification visibility) each lack either a demonstrated product
+requirement or a proportionate existing surface to build from — Place Naming is product-complete under its current
+semantic model. The next product evolution should return to the broader product roadmap, in a domain with an actual
+demonstrated user-facing gap, rather than extending this arc on reflex.
