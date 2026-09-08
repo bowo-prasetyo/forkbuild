@@ -85962,3 +85962,101 @@ lifecycle audit. That reassessment should not assume delivery is next — it sho
 product (durable, recipient-specific notification history) is sufficient on its own, or whether the repository
 contains concrete evidence for a genuinely separate delivery capability, the same evidence-driven discipline this
 arc has used at every prior branch point.
+
+## 0.9.287 — Post-Notification Product Reassessment
+
+0.9.286 closed the notification arc end to end against real infrastructure. Per this milestone's own brief, the
+right next move is not another feature but a second product-level reassessment of the entire arc — in the same
+lineage as 0.9.282's own post-persistence reassessment, now run once more with the recipient query, the Notification
+History UI, and the wired producer all in place, which 0.9.282 itself did not yet have. The central question this
+milestone exists to answer, stated exactly as it was posed: is durable, recipient-specific notification history
+itself a complete product capability, or does the product actually require a separate notification-delivery
+capability?
+
+### What this milestone adds
+
+`tests/PostNotificationHistoryProductReassessment.test.js` (new, registered in `tests.html`) — thirteen sections,
+lettered A-M, every claim grounded in a concrete, freshly re-checked signal against the real, unmodified source
+rather than trusted from any prior milestone's own header. Section A freezes the capability inventory as one signal
+per capability — immutable `NotificationEvent`, the one real Commentary producer, the deduplication policy, the
+durable store, the authenticated recipient query, the Notification History UI, exactly one production composition
+site, and persistence across restart reconfirmed for a third independent time — in the same breath as what
+provably does not exist, checked as code rather than an absent wishlist item. Section B re-exercises the single
+core claim minimally and fresh: a real Commentary produces a real, durable, recipient-scoped notification a real
+publisher retrieves through the real authenticated query, while the commenter retrieves nothing — a complete, usable
+capability today, not a stub. Section C is the delivery gap analysis this milestone's own brief asked for by name:
+eight candidate delivery mechanisms (in-app live notification, World View badge, WebSocket, browser Notification
+API, email, push, an unread badge, and polling), each checked as an absence of real code — including, for the
+WebSocket row specifically, confirming the technology is used extensively elsewhere in this codebase (Nostr relays,
+decentralized discovery) while never once being wired to notifications, so the finding is a scoped absence, not a
+false claim that the codebase avoids the technology altogether. Section D is the temporal-semantics audit: creation
+time is proven immune to a persistence delay (a notification saved well after construction still carries its
+original `createdAt`, never "now"), retrieval is proven side-effect-free by comparing serialized bytes across two
+reads, presentation is proven to stamp no timestamp of its own, and a public-method enumeration across the whole
+chain confirms delivery/acknowledgment have no method anywhere that could even carry such a claim — the six
+temporal claims the brief named stay six different things, not overlapping words for one mechanism.
+
+Section E is the consumer analysis: the one real consumer remains Notification History itself, and three plausible
+future producer candidates are checked directly against real source rather than assumed — Collaboration builds a
+live multi-participant session with no single addressable recipient; Friend Relationship already carries its own
+REQUEST/ACCEPT/REJECT exchange over a live `peerMessageBus` between already-connected peers, a synchronous delivery
+path that does not obviously need Commentary's own async-absence notification seam; Place Naming claims concern
+shared world state, not one addressed recipient. Section F turns that evidence into the producer-expansion
+question the brief actually asked — not "can we build another producer" but "does an existing behavior already
+generate an equally clear awareness fact" — and finds `publication.commented` still the only production call site,
+with neither candidate clearing the three-part bar 0.9.274 originally set for Commentary itself (a durable,
+independently re-derivable identity; a real already-on-file single recipient; the specific shape of an author
+acting while that recipient may be genuinely absent). Section G reconfirms Commentary's own recipient chain fresh
+and states explicitly, with the identities involved genuinely distinct, why neither Section E/F candidate is
+equally unambiguous.
+
+Sections H, I, J, and L are the boundary/regression sweeps this milestone's own brief asked for by name, each
+reconfirmed fresh rather than inherited: H proves `NotificationEvent`/`NotificationEventStore`'s own code carries
+none of the eight delivery-shaped fields the brief listed, and the persisted JSON shape is still exactly the same
+five fields 0.9.273 first defined; I proves the deduplication policy is still the one and only place notification
+identity/collision logic is *defined*, with the producer and the panel both independently confirmed to compute
+none of their own; J revisits the `ChatOutbox` comparison a third time and sharpens it structurally — `ChatOutbox`
+is a transient, self-pruning, per-connection delivery queue, while `NotificationEventStore` is a permanent,
+append-only, shared history that never removes anything, the opposite storage shape in the one dimension that
+matters most; L is the full twelve-point architecture-regression checklist the brief named verbatim (no lifecycle
+vocabulary, no delivery claims, no read/unread semantics, no polling, no implicit subscriptions, no UI storage
+access, no producer-side deduplication, no queue, no retry state, no notification mutation, no caller-supplied
+recipient, no second source of truth), all twelve holding with no erosion since 0.9.286's own equivalent sweep.
+Section K is the capability-reachability matrix the brief asked for, with "product need established?" as the
+decisive column rather than technical feasibility: three rows (persistence, recipient history, the UI) are
+Complete with concrete evidence; five rows (live delivery, read/unread, a notification badge, an additional
+producer, a competing dedup authority) are Deferred or Not needed, every one of them because no section of this
+audit, or of any of the fourteen milestones since 0.9.273, found real evidence asking for it.
+
+Section M is the verdict this milestone's own brief asked to be allowed to reach: **Outcome 1 — notification
+history is sufficient.** The arc is a complete, working product capability; this reassessment finds no evidenced
+reason to extend it with delivery, read/unread state, or an additional producer. The verdict names, explicitly,
+what WOULD change this finding (a real user report that a Commentary went unnoticed for lack of a delivery prompt;
+a second domain behavior that independently develops Commentary's own exact recipient/absence shape; an explicit,
+by-name product decision that delivery is now a goal) rather than leaving "what would justify revisiting this"
+unstated, and ranks the four candidate seams for the record — live in-app delivery, read/unread state, a second
+producer, and push/email/WebSocket, in that order — without selecting or building any of them.
+
+While validating the same template-exclusion pattern 0.9.286's own fix required, this audit found — and worked
+around in its own test file only, not in `ui/components/NotificationHistoryPanel.js` itself — the same one
+disclaiming sentence in the panel's rendered template ("there is no read/unread state here") tripping a
+delivery/read-state vocabulary grep two more times, in this file's own Section C7 (a badge/unread-count check) and
+Section L (the full regression sweep's concatenated-code check) — both excluded the template the same way
+0.9.286's own fix to `tests/NotificationHistoryUILifecycle.test.js` Section K4 already does, rather than
+weakening either check's own vocabulary list.
+
+### What this milestone deliberately excludes
+
+Per this milestone's own brief and its own Outcome 1 verdict: no delivery mechanism of any kind, no read/unread or
+seen state, no notification badge or unread count, no additional producer, no `NotificationEventStore` schema
+change, no change to `NotificationEvent`, `NotificationDeduplicationPolicy`, `PublicationCommentaryNotificationProducer`,
+`GetRecipientNotificationEventsUseCase`, or `NotificationHistoryPanel`. Every one of those five production files
+remains completely unmodified by this milestone — the only file this milestone adds is its own test, and the only
+existing files it touches are `tests.html` (registration) and this roadmap entry.
+
+### What comes after
+
+Not selected here, by design — this milestone's own scope was reassessment only, per its own Section M verdict.
+Outcome 3 (an unrelated product gap being more valuable than any notification extension) is left open for whoever
+picks the next milestone with its own fresh evidence; this reassessment's only job was to determine whether
+notification history itself still owed the product anything further. It does not, today.
