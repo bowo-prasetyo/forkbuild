@@ -85565,3 +85565,78 @@ third, deliberately below recipient querying so it does not compound Section J's
 unreachable" finding. Notification UI ranks fourth, strictly blocked on the first. Delivery/read-state/lifecycle
 ranks fifth, still the largest and still genuinely deferred. Choosing and building the next seam remains a separate,
 later, evidence-driven decision.
+
+## 0.9.283 — Recipient Notification Query Boundary
+
+0.9.282's own reassessment (Section C, Section K) found that a recipient-facing notification query is safely
+derivable from the already-persisted store — a plain filter over `loadAll()` — but that nothing above the storage
+layer ever performs that derivation, so no product capability exists yet to say "these are my notifications." This
+milestone closes exactly that gap, and only that gap.
+
+### What this milestone adds
+
+`application/GetRecipientNotificationEventsUseCase.js` (new) — a query boundary, not an inbox:
+
+```
+identityProvider.getSigningIdentity()   (existing identity/ infrastructure, unmodified)
+     │
+     ▼
+recipientIdentityId
+     │
+     │  GetRecipientNotificationEventsUseCase.execute()
+     ▼
+NotificationEventStore.loadAll()        (0.9.281, unmodified)
+     │
+     │  filter by recipientIdentityId
+     ▼
+NotificationEvent[]
+```
+
+`execute()` takes no arguments. The recipient is always the current authenticated identity, resolved through
+`identity/resolveSigningIdentityId.js` — the identical resolution `AddPublicationCommentaryUseCase` already uses for
+a commentary's author — never a caller-supplied id. No identity resolves to no result: a plain Error is thrown
+before the store is ever read, mirroring `AddPublicationCommentaryUseCase.execute()`'s own "sign in to comment on a
+publication" refusal. A genuine store read failure propagates unmodified — "no notifications" and "storage
+unavailable" stay two different outcomes. Results preserve the store's own save order; nothing here re-sorts.
+
+No `getForRecipient()` was added to `NotificationEventStore` itself. 0.9.282 Section C already proved the derivation
+is safe directly off `loadAll()`; this milestone builds the capability exactly one layer up, in the application
+layer, reusing `loadAll()` unmodified rather than adding a second, narrower read primitive to the store. This is the
+same restraint `GetPublicationCommentariesUseCase` already showed by depending only on `getForPublication()`.
+
+Adds `tests/GetRecipientNotificationEventsUseCase.test.js` (registered in `tests.html`), twelve sections: authenticated
+recipient; other-recipient isolation; multiple recipients via the same underlying event stream; empty history;
+ordering; a producer-retry pair the store already collapsed to one row, surfacing as exactly one result; two distinct
+event types addressed to the same recipient both surviving as separate entries; restart/reconstruction through a
+fresh store/use-case pair against the same underlying provider; an authentication failure throwing before the store
+is ever read; a storage failure propagating unmodified rather than degrading to `[]`; cross-recipient isolation
+proven through the real `PublicationCommentaryNotificationProducer` pipeline end to end; and an architectural check
+that the file touches no pre-existing production file this milestone depends on, imports nothing UI-shaped, contains
+no delivery/lifecycle/read-state/dedup vocabulary, never constructs a provider directly, and accepts no
+caller-supplied recipient parameter.
+
+Also updates `tests/PostNotificationPersistenceProductReassessment.test.js` (0.9.282) in the same place 0.9.251
+updated `tests/PostPublicationCommentaryProductReassessment.test.js` (0.9.250) after closing that milestone's own
+MISSING_UI finding: Section B's "Retrieve notifications for recipient" row and Section C's own findings are
+re-verified against the current source and updated from MISSING_DOMAIN_CAPABILITY to COMPLETE (0.9.283), Section K's
+narrative is updated to reflect that MISSING_UI is now the sole remaining gap in that dependency chain rather than one
+blocked behind a missing domain capability, and Section M/N's ranking and verdict text are updated to record that
+rank 1 is now closed. No other finding in that file (recipient isolation remaining field-level, `CONFLICT` remaining
+unreachable from the one real producer, zero existing consumers, etc.) is touched — none of them were affected by
+this milestone.
+
+### What this milestone deliberately excludes
+
+Per 0.9.282's own "what comes after" and this milestone's own brief: no `getForRecipient()` on the store, no inbox,
+no read/unread, no delivery, no push/WebSocket notifications, no notification lifecycle, no TTL/expiration, no
+sorting/ranking/prioritization, no pagination, no notification deletion, no acknowledgment, no new recipient model,
+no new storage provider, and no changes to `NotificationEvent`, `NotificationDeduplicationPolicy`, or
+`PublicationCommentaryNotificationProducer`.
+
+### What comes after
+
+Not selected here. The newly reachable recipient history is not yet consumed anywhere — no composition root wires
+`GetRecipientNotificationEventsUseCase` to a real `identityProvider`/`NotificationEventStore` pair, and no UI
+references it. A follow-up reassessment can determine whether that wiring, a notification UI, or something else is
+the next smallest real gap, the same "let the next product gap, not architectural momentum, choose what comes next"
+discipline this arc has followed since 0.9.273.
