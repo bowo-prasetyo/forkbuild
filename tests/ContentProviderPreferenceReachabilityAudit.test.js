@@ -137,20 +137,32 @@ async function run() {
         assert(/inject\('preferredSnapshotPlacementCreationCoordinator',\s*null\)/.test(viewSource),
             'A2b. DecentralizedPublicationsView.js now ALSO injects the preference-aware coordinator (0.9.301) — a SECOND, additive injection, never a replacement of A2a');
 
-        // A3. UPDATED by 0.9.301. Repo-wide: the injection key/identifier
-        // "preferredSnapshotPlacementCreationCoordinator" now exists in
-        // exactly TWO production files — the composition root that defines
-        // and provides it (unchanged), and the one view that now injects
-        // and consumes it.
+        // A3. UPDATED by 0.9.301, UPDATED AGAIN by 0.9.302. Repo-wide: the
+        // injection key/identifier "preferredSnapshotPlacementCreationCoordinator"
+        // now exists in exactly THREE production files — the composition
+        // root that defines and provides it (unchanged), the placement
+        // view that consumes it to CREATE a placement (0.9.301, unchanged),
+        // and the new settings view (0.9.302) that reads its
+        // `availableStorageTypes()` ONLY — read directly, never inferred —
+        // so the settings entry point offers exactly the providers this
+        // role's own real registry actually has, the same "never
+        // hardcoded, never a second, disconnected list" restraint
+        // application/RoleProviderPreferenceSettingsView.js's own header
+        // holds. It never calls `.create()`.
         const allProductionFiles = await repoWideProductionFiles();
         const hits = [];
         for (const file of allProductionFiles) {
             const text = await source(file);
             if (text.includes('preferredSnapshotPlacementCreationCoordinator')) hits.push(file);
         }
-        const KNOWN_INJECTION_KEY_FILES = new Set(['ui/main.js', 'ui/views/DecentralizedPublicationsView.js']);
+        const KNOWN_INJECTION_KEY_FILES = new Set([
+            'ui/main.js', 'ui/views/DecentralizedPublicationsView.js', 'ui/views/ContentProviderSettingsView.js'
+        ]);
         assert(hits.length === KNOWN_INJECTION_KEY_FILES.size && hits.every((f) => KNOWN_INJECTION_KEY_FILES.has(f)),
-            `A3a. exactly ui/main.js and ui/views/DecentralizedPublicationsView.js mention the "preferredSnapshotPlacementCreationCoordinator" identifier anywhere in production source (found ${hits.length}: ${hits.join(', ')}) — ui/main.js defines the binding, and the view is now its one real consumer (0.9.301)`);
+            `A3a. exactly ui/main.js, ui/views/DecentralizedPublicationsView.js, and ui/views/ContentProviderSettingsView.js mention the "preferredSnapshotPlacementCreationCoordinator" identifier anywhere in production source (found ${hits.length}: ${hits.join(', ')}) — ui/main.js defines the binding, and the two views are its only real consumers (0.9.301, 0.9.302)`);
+        const settingsViewSource = await source('ui/views/ContentProviderSettingsView.js');
+        assert(!/preferredPlacementCreationCoordinator\.create\(/.test(settingsViewSource),
+            'A3b. the settings view never calls .create() on the coordinator it injects — it reads availableStorageTypes() only, and never places anything');
 
         // A4. The class itself is imported by exactly its own composition
         // root, in production — never by any ui/ view or command.
@@ -431,12 +443,15 @@ async function run() {
         const B_CONSUMER_FIRST = 'B — Preference-aware user workflow -> proven useful -> Settings UI';
 
         // The decision follows mechanically from Sections A, D, and F
-        // above — not asserted independently of them.
+        // above, AS THEY STOOD AS OF 0.9.300 — this section is a historical
+        // record of the reasoning that produced 0.9.301, not a live rule
+        // this repository is still bound by now that both consequences it
+        // named (0.9.301's trigger, THEN 0.9.302's settings UI) are real.
         const reasoning = [
-            'Section A: zero production callers reach the preference-aware coordinator today — a settings UI published now would control a preference nothing ever reads',
-            'Section D: the existing UI has NO natural "use my preferred provider" state to attach a settings control\'s meaning to — the omission this milestone was asked to look for (Outcome 1) is not present',
-            'Section F: even the narrow act of displaying a PROVIDER_NOT_FOUND outcome has a real, unaddressed gap in the existing view-model — a settings UI that could produce that very state would ship ahead of the display logic needed to explain it honestly',
-            'storage/RoleProviderPreferenceStore.js#save() is never called anywhere in production either (confirmed below) — so even a settings UI\'s OWN write path has no precedent to follow yet in this codebase\'s real wiring, only in tests'
+            'Section A: as of 0.9.300, zero production callers reached the preference-aware coordinator — a settings UI published THEN would have controlled a preference nothing ever read. 0.9.301 closed that gap; Section A above is itself now updated to say so.',
+            'Section D: the existing UI had NO natural "use my preferred provider" state to attach a settings control\'s meaning to — the omission this milestone was asked to look for (Outcome 1) was not present. 0.9.301 added exactly that state.',
+            'Section F: even the narrow act of displaying a PROVIDER_NOT_FOUND outcome had a real, unaddressed gap in the existing view-model — a settings UI that could produce that very state would have shipped ahead of the display logic needed to explain it honestly. 0.9.301 closed that gap too.',
+            'storage/RoleProviderPreferenceStore.js#save() was never called anywhere in production as of 0.9.300 (H1 below records that historical fact) — this audit\'s own Section I verdict, step 4, named "only once that trigger is real does a settings UI ... have something legitimate to control" as the correct NEXT step, not a rejection of ever building one. That step is 0.9.302 — Content Provider Preference Settings Entry Point.'
         ];
 
         const allProductionFiles = await repoWideProductionFiles();
@@ -446,7 +461,17 @@ async function run() {
             const text = await source(file);
             if (/preferenceStore\.save\(|roleProviderPreferenceStore\.save\(/.test(text)) { saveCallers += 1; saveCallerFiles.push(file); }
         }
-        assert(saveCallers === 0, `H1. RoleProviderPreferenceStore.save() is called from ZERO production files today (found ${saveCallers}: ${saveCallerFiles.join(', ')}) — confirming there is currently no way for a person to even SET a CONTENT preference through anything this codebase ships, independent of whether anything would read it`);
+        // UPDATED by 0.9.302 — Content Provider Preference Settings Entry
+        // Point, this audit's own Section I, step 4, carried out.
+        // application/SetRoleProviderPreferenceUseCase.js is now the ONE
+        // production file that calls RoleProviderPreferenceStore.save() —
+        // never storage/RoleProviderPreferenceStore.js's own save() called
+        // directly from ui/ (see ui/views/ContentProviderSettingsView.js's
+        // own header, "the UI never constructs or interprets a
+        // RoleProviderPreference itself").
+        const KNOWN_SAVE_CALLER_FILES = new Set(['application/SetRoleProviderPreferenceUseCase.js']);
+        assert(saveCallers === KNOWN_SAVE_CALLER_FILES.size && saveCallerFiles.every((f) => KNOWN_SAVE_CALLER_FILES.has(f)),
+            `H1. RoleProviderPreferenceStore.save() is called from exactly application/SetRoleProviderPreferenceUseCase.js today (found ${saveCallers}: ${saveCallerFiles.join(', ')}) — as of 0.9.300 this was ZERO production files (see reasoning above); 0.9.302 is the legitimate settings-writing seam this audit's own Section I verdict named as the correct next step, once a consumer (0.9.301) existed`);
 
         const decision = B_CONSUMER_FIRST;
         assert(decision === B_CONSUMER_FIRST, 'H2. the decision this section exists to reach');

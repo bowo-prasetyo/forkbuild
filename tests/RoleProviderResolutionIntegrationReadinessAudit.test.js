@@ -515,9 +515,18 @@ async function run() {
             const text = await source(file);
             if (preferenceLikeUiPattern.test(text)) { uiPreferenceHits += 1; uiPreferenceHitFiles.push(file); }
         }
-        const KNOWN_UI_PREFERENCE_FILES = new Set(['ui/main.js', 'ui/views/DecentralizedPublicationsView.js']);
+        // UPDATED AGAIN by 0.9.302 — Content Provider Preference Settings
+        // Entry Point: a settings screen now genuinely exists —
+        // `ui/views/ContentProviderSettingsView.js`, routed from `ui/
+        // router/index.js`, is the ONE dedicated settings surface for the
+        // CONTENT role only; Discovery and Proof & Anchoring still have no
+        // settings screen of any kind, unchanged.
+        const KNOWN_UI_PREFERENCE_FILES = new Set([
+            'ui/main.js', 'ui/views/DecentralizedPublicationsView.js',
+            'ui/views/ContentProviderSettingsView.js', 'ui/router/index.js'
+        ]);
         assert(uiPreferenceHits === KNOWN_UI_PREFERENCE_FILES.size && uiPreferenceHitFiles.every((f) => KNOWN_UI_PREFERENCE_FILES.has(f)),
-            `H3. exactly ui/main.js and ui/views/DecentralizedPublicationsView.js mention a provider preference today, via 0.9.299's Content creation composition and 0.9.301's own trigger (found ${uiPreferenceHits}: ${uiPreferenceHitFiles.join(', ')}) — no settings screen exists, and no OTHER ui/ file references the concept`);
+            `H3. exactly ui/main.js, ui/views/DecentralizedPublicationsView.js, ui/views/ContentProviderSettingsView.js, and ui/router/index.js mention a provider preference today, via 0.9.299's Content creation composition, 0.9.301's own trigger, and 0.9.302's own CONTENT-only settings screen (found ${uiPreferenceHits}: ${uiPreferenceHitFiles.join(', ')}) — no Discovery or Proof & Anchoring settings screen exists, and no OTHER ui/ file references the concept`);
 
         // The explicit per-action pattern (real today) is the boundary a
         // future preference control must respect, never silently replace.

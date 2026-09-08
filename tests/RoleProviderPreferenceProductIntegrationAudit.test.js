@@ -462,9 +462,22 @@ async function run() {
             const text = await source(file);
             if (preferenceLikeUiPattern.test(text)) { uiPreferenceHits += 1; uiPreferenceHitFiles.push(file); }
         }
-        const KNOWN_UI_PREFERENCE_FILES = new Set(['ui/main.js', 'ui/views/DecentralizedPublicationsView.js']);
+        // UPDATED AGAIN by 0.9.302 — Content Provider Preference Settings
+        // Entry Point, this audit's own recommended eventual next step
+        // (Section I below, "0.9.302 — Content Provider Preference
+        // Settings Entry Point" per its own docs/Roadmap.md sequencing),
+        // carried out. `ui/views/ContentProviderSettingsView.js` is now a
+        // real settings view mentioning a provider preference; `ui/router/
+        // index.js`'s own route comment names it too. `ui/views/
+        // AvatarSettingsView.js` still mentions nothing here — this is a
+        // genuinely NEW, dedicated settings surface, never folded into an
+        // unrelated existing one.
+        const KNOWN_UI_PREFERENCE_FILES = new Set([
+            'ui/main.js', 'ui/views/DecentralizedPublicationsView.js',
+            'ui/views/ContentProviderSettingsView.js', 'ui/router/index.js'
+        ]);
         assert(uiPreferenceHits === KNOWN_UI_PREFERENCE_FILES.size && uiPreferenceHitFiles.every((f) => KNOWN_UI_PREFERENCE_FILES.has(f)),
-            `H1. exactly ui/main.js and ui/views/DecentralizedPublicationsView.js mention a provider preference today, via 0.9.299's Content creation composition and 0.9.301's own trigger — never a settings view (found ${uiPreferenceHits}: ${uiPreferenceHitFiles.join(', ')})`);
+            `H1. exactly ui/main.js, ui/views/DecentralizedPublicationsView.js, ui/views/ContentProviderSettingsView.js, and ui/router/index.js mention a provider preference today, via 0.9.299's Content creation composition, 0.9.301's own trigger, and 0.9.302's own settings entry point (found ${uiPreferenceHits}: ${uiPreferenceHitFiles.join(', ')})`);
 
         // The settings-UI template this codebase already establishes.
         const avatarSettingsSource = await source('ui/views/AvatarSettingsView.js');

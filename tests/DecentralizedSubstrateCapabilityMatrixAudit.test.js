@@ -562,6 +562,10 @@ async function run() {
     {
         const allProductionFiles = await repoWideProductionFiles();
         const preferencePattern = /providerPreference|networkPreference|preferredProvider|substratePreference/i;
+        // UPDATED by 0.9.302 — Content Provider Preference Settings Entry
+        // Point: four new files — the WRITE-side use case, its own pure
+        // settings view-model, the new dedicated settings Vue view, and
+        // ui/router/index.js's own route comment.
         const KNOWN_PREFERENCE_BOUNDARY_FILES = new Set([
             'core/RoleProviderRole.js',
             'core/RoleProviderPreference.js',
@@ -573,7 +577,11 @@ async function run() {
             'ui/main.js',
             'application/SnapshotPlacementCreationView.js',
             'application/SnapshotPlacementCreationUiState.js',
-            'ui/views/DecentralizedPublicationsView.js'
+            'ui/views/DecentralizedPublicationsView.js',
+            'application/SetRoleProviderPreferenceUseCase.js',
+            'application/RoleProviderPreferenceSettingsView.js',
+            'ui/views/ContentProviderSettingsView.js',
+            'ui/router/index.js'
         ]);
         let hits = 0;
         const hitFiles = [];
@@ -584,7 +592,7 @@ async function run() {
                 hitFiles.push(file);
             }
         }
-        assert(hits === KNOWN_PREFERENCE_BOUNDARY_FILES.size, `G1. exactly the eleven files 0.9.293/0.9.294/0.9.295/0.9.297/0.9.299/0.9.301 themselves introduced or wired mention a provider preference (found ${hits}: ${hitFiles.join(', ')}) — every OTHER production file remains exactly as free of the concept as it was when this audit first ran`);
+        assert(hits === KNOWN_PREFERENCE_BOUNDARY_FILES.size && hitFiles.every((f) => KNOWN_PREFERENCE_BOUNDARY_FILES.has(f)), `G1. exactly the fifteen files 0.9.293/0.9.294/0.9.295/0.9.297/0.9.299/0.9.301/0.9.302 themselves introduced or wired mention a provider preference (found ${hits}: ${hitFiles.join(', ')}) — every OTHER production file remains exactly as free of the concept as it was when this audit first ran`);
         for (const file of hitFiles) {
             assert(KNOWN_PREFERENCE_BOUNDARY_FILES.has(file), `G2. the only file(s) allowed to mention a provider preference are 0.9.293/0.9.294/0.9.295/0.9.297/0.9.299/0.9.301's own boundary/integration files — "${file}" is not one of them`);
         }

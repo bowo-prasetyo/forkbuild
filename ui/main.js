@@ -93,6 +93,7 @@ import { IpfsGatewayContentStore } from '../content/IpfsGatewayContentStore.js';
 import { CreateSnapshotPlacementOrchestratorUseCase } from '../application/CreateSnapshotPlacementOrchestratorUseCase.js';
 import { CreateSnapshotPlacementCreationCoordinatorUseCase } from '../application/CreateSnapshotPlacementCreationCoordinatorUseCase.js';
 import { CreatePreferredSnapshotPlacementCreationCoordinatorUseCase } from '../application/CreatePreferredSnapshotPlacementCreationCoordinatorUseCase.js';
+import { SetRoleProviderPreferenceUseCase } from '../application/SetRoleProviderPreferenceUseCase.js';
 import { PublicationCatalogDiscoveryProvider } from '../discovery/PublicationCatalogDiscoveryProvider.js';
 import { PublicationCatalogContentResolver } from '../discovery/PublicationCatalogContentResolver.js';
 import { CheckLocalSnapshotContentAvailabilityUseCase } from '../application/CheckLocalSnapshotContentAvailabilityUseCase.js';
@@ -681,9 +682,24 @@ const { coordinator: snapshotPlacementCreationCoordinator } = new CreateSnapshot
 // click handler still only ever calls `snapshotPlacementCreationCoordinator`
 // above. 0.9.301 added the ONE caller of THIS coordinator instead: that
 // same view's separate "Use Preferred Provider" action.
-const { coordinator: preferredSnapshotPlacementCreationCoordinator } = new CreatePreferredSnapshotPlacementCreationCoordinatorUseCase().execute({
+const {
+    coordinator: preferredSnapshotPlacementCreationCoordinator,
+    preferenceStore: roleProviderPreferenceStore
+} = new CreatePreferredSnapshotPlacementCreationCoordinatorUseCase().execute({
     snapshotPlacementCreationCoordinator,
     contentRegistry: snapshotPlacementStoreRegistry
+});
+
+// 0.9.302 — Content Provider Preference Settings Entry Point. The WRITE
+// half of the preference chain the wiring above already reads from —
+// wired against the EXACT SAME `roleProviderPreferenceStore` instance
+// `preferredSnapshotPlacementCreationCoordinator` above resolves through
+// (never a second, disconnected RoleProviderPreferenceStore), so a
+// preference saved by ui/views/ContentProviderSettingsView.js is
+// immediately what "Use Preferred Provider" above reads back. See
+// application/SetRoleProviderPreferenceUseCase.js's own header.
+const setRoleProviderPreferenceUseCase = new SetRoleProviderPreferenceUseCase({
+    preferenceStore: roleProviderPreferenceStore
 });
 
 // 0.8.33 — Local Snapshot Content Availability & Integrity UX. Reads
@@ -1371,6 +1387,11 @@ app.provide('snapshotPlacementCreationCoordinator', snapshotPlacementCreationCoo
 // only, thing that injects this key: ui/views/DecentralizedPublicationsView
 // .js's own "Use Preferred Provider" action.
 app.provide('preferredSnapshotPlacementCreationCoordinator', preferredSnapshotPlacementCreationCoordinator);
+// 0.9.302 — Content Provider Preference Settings Entry Point.
+// ui/views/ContentProviderSettingsView.js is the one thing that injects
+// either of these two keys.
+app.provide('roleProviderPreferenceStore', roleProviderPreferenceStore);
+app.provide('setRoleProviderPreferenceUseCase', setRoleProviderPreferenceUseCase);
 // 0.8.33 — Local Snapshot Content Availability & Integrity UX.
 app.provide('localSnapshotContentAvailabilityUseCase', localSnapshotContentAvailabilityUseCase);
 app.provide('snapshotContentMaterializationCoordinator', snapshotContentMaterializationCoordinator);
