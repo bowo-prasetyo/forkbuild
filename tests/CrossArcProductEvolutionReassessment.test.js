@@ -414,22 +414,34 @@ async function runTests() {
             'E4b. ui/components/OwnPublicationPanel.js is that one component.');
 
         // E5. The six UI surfaces that render OTHER Wanderers'
-        // Publications — every one confirmed to carry zero commentary
-        // vocabulary, checked fresh against real source, not inherited
-        // from 0.9.252's own finding.
-        const otherPublicationSurfaces = [
-            'ui/components/PublicationCard.js',
+        // Publications, as this milestone found them — five still carry
+        // zero commentary vocabulary; the sixth, PublicationCard.js, was
+        // wired by 0.9.289, this milestone's own named follow-up
+        // (docs/Roadmap.md's own 0.9.289 entry — "bind the two
+        // already-existing commands... into at least one Discovery-
+        // facing Publication view"). This section is re-checked fresh
+        // against real source on every run, so it now documents that
+        // transition explicitly rather than asserting a fact 0.9.289
+        // deliberately made false for one of the six.
+        const stillUnwiredOtherPublicationSurfaces = [
             'ui/components/PublicationCatalog.js',
             'ui/components/PublicationPreview.js',
             'ui/components/PublicationList.js',
             'ui/views/DecentralizedPublicationsView.js',
             'ui/components/WorldEncounterCanvas.js'
         ];
-        for (const path of otherPublicationSurfaces) {
+        for (const path of stillUnwiredOtherPublicationSurfaces) {
             assert(await sourceExists(path), `E5a. ${path} still exists.`);
             const source = await rawSource(path);
             assert(!/[Cc]ommentary/.test(source),
-                `E5b. ${path} still carries zero commentary vocabulary — unchanged since 0.9.252 first found this, thirty-six milestones ago (0.9.252 -> 0.9.288).`);
+                `E5b. ${path} still carries zero commentary vocabulary — 0.9.289 deliberately wired only ONE of the six surfaces this section named.`);
+        }
+        {
+            const path = 'ui/components/PublicationCard.js';
+            assert(await sourceExists(path), `E5c. ${path} still exists.`);
+            const source = await rawSource(path);
+            assert(/[Cc]ommentary/.test(source),
+                'E5d. ui/components/PublicationCard.js now carries commentary vocabulary — 0.9.289 closed this Section\'s own finding for exactly this one surface, per its own recommendation.');
         }
 
         // E6. Each of those six surfaces already resolves a concrete

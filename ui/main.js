@@ -3,6 +3,7 @@ import App from './App.js';
 import { router } from './router/index.js';
 import { CreateIdentityProviderUseCase } from '../application/CreateIdentityProviderUseCase.js';
 import { IdentityUseCase } from '../application/IdentityUseCase.js';
+import { CreatePublicationCommentaryUseCase } from '../application/CreatePublicationCommentaryUseCase.js';
 import { PeerSessionManager } from '../application/PeerSessionManager.js';
 import { WebRtcPeerConnectionProvider } from '../peer/WebRtcPeerConnectionProvider.js';
 import { WebSocketRendezvousTransport } from '../peer/WebSocketRendezvousTransport.js';
@@ -144,6 +145,17 @@ import { composeDiscoverWorldEncounterPublicationCommand } from '../application/
 
 const identityProvider = new CreateIdentityProviderUseCase().execute();
 const identityUseCase = new IdentityUseCase(identityProvider);
+// 0.9.289 — Other-Publication Commentary Entry Point. One app-wide
+// composition of the SAME Publication Commentary application layer
+// application/CreateWorldViewUseCase.js already wires for World View
+// alone (see application/CreatePublicationCommentaryUseCase.js's own
+// header) — so a Discovery-facing Publication surface with no
+// WorldNavigationSession of its own (ui/components/PublicationCard.js,
+// below) can still reach the identical read/write commentary path.
+// Shares the SAME identityProvider every other app-wide use case here
+// already does.
+const { getPublicationCommentariesCommand, addPublicationCommentaryCommand } =
+    new CreatePublicationCommentaryUseCase().execute(identityProvider);
 // 0.2.66 — real ICE (STUN/TURN) configuration and a real, networked
 // rendezvous bootstrap, both wired the same way: a plain, inspectable
 // config module (peer/IceServerConfig.js, peer/RendezvousConfig.js) this
@@ -1251,6 +1263,10 @@ app.provide('publicationPeerExchange', publicationPeerExchange);
 app.provide('publicationPeerContentExchange', publicationPeerContentExchange);
 app.provide('publicationResolutionCoordinator', publicationResolutionCoordinator);
 app.provide('publicationDisplayKindPlugins', publicationDisplayKindPlugins);
+// 0.9.289 — Other-Publication Commentary Entry Point. See this file's own
+// comment where these commands are built, above.
+app.provide('getPublicationCommentariesCommand', getPublicationCommentariesCommand);
+app.provide('addPublicationCommentaryCommand', addPublicationCommentaryCommand);
 // 0.8.3 — Publication Center: External Evidence UX.
 app.provide('publicationAnchorCatalog', publicationAnchorCatalog);
 app.provide('publicationEvidenceCoordinator', publicationEvidenceCoordinator);
