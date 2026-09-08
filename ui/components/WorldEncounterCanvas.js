@@ -1847,6 +1847,139 @@ import { describeWorldSnapshotContentComparisonView } from '../../application/Wo
 // - **Rendering arbitrary HTML/media/application content, or decoding
 //   document bytes.** The panel renders the same structured fields
 //   0.9.183's own Content View panel already renders, for each side.
+//
+// 0.9.291 — Publication Commentary on the World Encounter Surface.
+//
+// 0.9.288's own Section E named SIX UI surfaces holding a full
+// `Publication` object at render time yet carrying zero commentary
+// vocabulary. 0.9.289 wired the first (PublicationCard.js, a
+// Discovery-facing surface, via a NEW standalone composition —
+// application/CreatePublicationCommentaryUseCase.js — because that
+// component has no WorldNavigationSession to ask). This milestone wires
+// the second: WorldEncounterCanvas.js, the component named explicitly in
+// that same Section E finding — and, unlike PublicationCard, reaches
+// commentary through NEITHER a new composition NOR the app-wide one
+// 0.9.289 built, but through the composition ALREADY IN SCOPE one file
+// up: ui/views/WorldView.js's own `getPublicationCommentariesCommand`/
+// `addPublicationCommentaryCommand` (0.9.248), the exact functions that
+// already feed OwnPublicationPanel, now ALSO handed to THIS component as
+// two new, optional props — the identical shape every other WorldView-
+// composed capability (`distributionCommand`, `discoveryCommand`,
+// `snapshotDistributionCommand`, ...) already arrives as.
+//
+//   ui/views/WorldView.js
+//        session.getPublicationCommentaries()/.addPublicationCommentary()   (0.9.248, unmodified)
+//                  │
+//                  ▼
+//        getPublicationCommentariesCommand / addPublicationCommentaryCommand   (0.9.248, unmodified — ALREADY built for OwnPublicationPanel)
+//                  │
+//        ┌─────────┴─────────┐
+//        ▼                   ▼
+//   OwnPublicationPanel   WorldEncounterCanvas   ★ (THIS milestone — a NEW prop wire, not a new command)
+//
+// WHY THE SESSION-BACKED COMMANDS, NOT application/CreatePublicationCommentaryUseCase.js
+// (0.9.289)'s APP-WIDE ONES. Both compositions wrap the identical,
+// unmodified GetPublicationCommentariesUseCase/AddPublicationCommentaryUseCase/
+// CanCommentOnPublicationUseCase/PublicationCommentaryNotificationProducer
+// chain, and 0.9.290 already proved both converge on the SAME underlying
+// PublicationCommentaryStore/NotificationEventStore (the same
+// window.localStorage keys) — functionally, either would work. But
+// WorldEncounterCanvas is mounted BY ui/views/WorldView.js alone (see
+// "deliberately excluded," below, for ui/views/LiveWorldView.js's own
+// separate, unwired mount) — the SAME file that already composes
+// commentary for OwnPublicationPanel. Reaching for the app-wide
+// composition instead would mean plumbing a THIRD path
+// (main.js -> WorldView.js -> WorldEncounterCanvas) past a perfectly
+// good, already-in-scope SECOND one (WorldView.js's own session). This
+// file therefore imports NOTHING new from application/ or ui/main.js: it
+// adds two plain caller-injected Function props, exactly the way
+// `distributionCommand` (0.9.104) already is.
+//
+// NO NEW USE CASE, NO NEW STORE, NO NEW COMPOSITION ROOT. This is the
+// THIRD wiring of the identical, unmodified application layer 0.9.288's
+// Section E already found ownership-agnostic — after OwnPublicationPanel
+// (0.9.248, via WorldNavigationSession) and PublicationCard (0.9.289, via
+// CreatePublicationCommentaryUseCase) — and the FIRST to add no new
+// composition of its own at all.
+//
+// THE PUBLICATIONID IS THE ENCOUNTER'S OWN objectId — NEVER THE LOADED
+// MATERIAL'S. `core/WorldEncounter.js`'s own row construction already
+// sets `objectId: publication.id` for a PUBLICATION-kind encounter — the
+// identical identity `selectedEncounterInspection` (0.9.16/0.9.18)
+// already renders as "Title"/"Publisher" for the SAME encounter.
+// `encounterCommentaryPublicationId` (below) reads `selectedEncounter.objectId`
+// directly, gated on `selectedEncounterInspection.kind === 'PUBLICATION'`
+// (a currently live, resolvable encounter — see 0.9.18's own "a stale
+// selection renders unavailable," held here for commentary too) — NEVER
+// `distributablePublication.id` (0.9.104's own material-loading-gated
+// computed, one panel below). Commentary about an encountered Publication
+// is never made to wait on whether its signed material bytes happen to
+// load, fetch, or verify — those stay separate, independent questions
+// this milestone deliberately does not couple together. World position ≠
+// Publication identity (0.9.19's own line); this milestone holds that
+// line one further: World MATERIAL AVAILABILITY ≠ Publication identity,
+// either.
+//
+// RENDERED INSIDE THE EXISTING "World Encounter" INSPECTION PANEL, NEVER
+// A NEW ONE. The Comment action and its panel live inside
+// `world-encounter-inspection-panel` (0.9.18), immediately below the
+// existing Title/Publisher/Signed/Position `<dl>` — the same panel
+// already showing the Publication/Author facts this milestone's own task
+// framing sketched. There is no second "World Encounter" heading, no
+// separate card, and no new top-level panel.
+//
+// COLLAPSED BY DEFAULT, LOADED ONLY ON FIRST EXPANSION — MIRRORING
+// PublicationCard.js's OWN RESTRAINT (0.9.289), NOT OwnPublicationPanel's
+// OWN EAGER LOAD. OwnPublicationPanel shows exactly one Publication per
+// mount, so loading commentary immediately is cheap; this component's own
+// selection can change on every marker click as a Wanderer walks the
+// World, and 0.9.288's own six-surface finding was itself explicit about
+// "automatic Commentary loading for every encountered Publication" being
+// out of scope. `toggleEncounterCommentary()` (below) is the only thing
+// that ever triggers the first `refreshEncounterCommentaries()` call.
+//
+// COMMENTARY STATE IS RESET ON EVERY FRESH SELECTION — NEVER LEAKED FROM
+// ENCOUNTER A TO ENCOUNTER B. `selectEncounter()` (0.9.4) already resets
+// every other selection-scoped ephemeral field (`resolvedSelectionChoice`,
+// `distributionError`, `snapshotContentViewOpen`, ...) on every new
+// selection; this milestone adds `encounterCommentaryOpen`/
+// `encounterCommentaries`/`encounterCommentaryError`/
+// `newEncounterCommentaryText`/`encounterCommentarySubmitting` to that
+// same tail, mirroring the identical discipline one concept over — a
+// Wanderer who opened comments for Publication A and then selects
+// Publication B sees B's own (collapsed, unread) commentary section,
+// never A's stale list or draft.
+//
+// AUTHORSHIP IS NEVER UI-SUPPLIED, NO OWNERSHIP GATE, SYNCHRONOUS,
+// RE-QUERY ON SUCCESS — THE IDENTICAL RESTRAINT PublicationCard.js/
+// OwnPublicationPanel.js ALREADY HOLD, HELD HERE VERBATIM. See those
+// files' own headers; this file introduces no variation on any of it.
+// `viewerIdentityId` (a new, optional String prop, mirroring
+// OwnPublicationPanel's own identical prop) gates only the compose-form/
+// sign-in-hint choice — never sent to `addPublicationCommentaryCommand`,
+// which sends only `{ publicationId, content }`.
+//
+// DELIBERATELY EXCLUDED — NOT THIS MILESTONE.
+// - **Wiring ui/views/LiveWorldView.js.** Its own `<WorldEncounterCanvas>`
+//   mount supplies no session, no identity, and none of this component's
+//   other optional capabilities either — left exactly as it already was;
+//   the new props simply default to `null` there, exactly like every
+//   other optional prop already does for that mount.
+// - **A comment count badge on the marker itself, spatial/proximity
+//   comments, comment bubbles, World chat, replies, editing, deletion,
+//   moderation, or ranking.** None of it is commentary vocabulary this
+//   file, or any collaborator it calls, introduces.
+// - **A new notification producer, a new NotificationEvent kind, or any
+//   change to PublicationCommentaryNotificationProducer.js.** A comment
+//   created here produces the exact same `publication.commented` event
+//   0.9.275 already defines, through the exact same producer instance
+//   WorldView.js's own session already wraps `addPublicationCommentaryUseCase`
+//   with.
+// - **Refactoring CreateWorldViewUseCase.js, or collapsing it with
+//   application/CreatePublicationCommentaryUseCase.js (0.9.289) into one
+//   shared composition.** Two independently constructed, already-converging
+//   compositions stay two — see 0.9.290's own convergence proof for why
+//   that duplication is safe, not a defect to fix.
 
 const WORLD_HALF_SPAN = 50;
 const CANVAS_SIZE = 600;
@@ -2023,6 +2156,38 @@ export default {
         // component itself.
         discoverSnapshotCommand: {
             type: Function,
+            default: null
+        },
+        // 0.9.291 — optional. A `(publicationId) -> PublicationCommentary[]`
+        // function, or `null` when the capability is unavailable — the
+        // IDENTICAL prop shape `ui/components/OwnPublicationPanel.js`'s own
+        // `getPublicationCommentariesCommand` already is (0.9.248), and in
+        // the real running app the SAME function instance, forwarded by
+        // `ui/views/WorldView.js` — see this file's own header, "0.9.291."
+        // Synchronous; this component awaits nothing and shows no
+        // "loading" state for it. Never constructed by this component
+        // itself.
+        getPublicationCommentariesCommand: {
+            type: Function,
+            default: null
+        },
+        // 0.9.291 — optional. A `({ publicationId, content }) ->
+        // { commentary, isNew }` function, or `null` when the capability
+        // is unavailable — mirrors `getPublicationCommentariesCommand`
+        // immediately above, one action over. Also synchronous. Sends
+        // only `{ publicationId, content }` — see this file's own header,
+        // "authorship is never UI-supplied."
+        addPublicationCommentaryCommand: {
+            type: Function,
+            default: null
+        },
+        // 0.9.291 — optional. The CURRENT viewer's own identityId, or
+        // `null` when nobody is signed in — mirrors
+        // `OwnPublicationPanel.js`'s own identical `viewerIdentityId`
+        // prop. Read only to decide whether to show the compose form or a
+        // sign-in hint; never sent to `addPublicationCommentaryCommand`.
+        viewerIdentityId: {
+            type: String,
             default: null
         }
     },
@@ -2266,7 +2431,38 @@ export default {
             // comparison-target selection, or `clearComparisonSelection()`
             // call — mirrors `snapshotContentViewOpen`'s own reset
             // discipline, one panel over.
-            contentComparisonViewOpen: false
+            contentComparisonViewOpen: false,
+            // 0.9.291 — `true` for as long as the Wanderer has explicitly
+            // clicked "Comment" for the CURRENT primary selection. Written
+            // only by `toggleEncounterCommentary()`, and reset to `false`
+            // on every fresh `selectEncounter()` call — mirrors
+            // `snapshotContentViewOpen`'s (0.9.183) own reset discipline,
+            // one panel over. See this file's own "0.9.291" header,
+            // "collapsed by default, loaded only on first expansion."
+            encounterCommentaryOpen: false,
+            // 0.9.291 — every PublicationCommentary
+            // `getPublicationCommentariesCommand` returned for the
+            // current selection's own publicationId, in the EXACT order
+            // it returned them — no sort performed here, mirroring
+            // `OwnPublicationPanel.js`'s/`PublicationCard.js`'s own
+            // identical restraint. Reset to `[]` on every fresh selection.
+            encounterCommentaries: [],
+            // 0.9.291 — the current compose draft. Reset to `''` on every
+            // fresh selection and on a successful submission; left
+            // UNCHANGED on a failed one — see `submitEncounterCommentary()`,
+            // below.
+            newEncounterCommentaryText: '',
+            // 0.9.291 — guards against a second, overlapping submission —
+            // mirrors `publicationCommentarySubmitting`/
+            // `commentarySubmitting` one file over, each.
+            encounterCommentarySubmitting: false,
+            // 0.9.291 — the most recent read OR create failure's own
+            // plain-text notice, or `null`. A failed READ leaves
+            // `encounterCommentaries` exactly as it was; a failed CREATE
+            // leaves `encounterCommentaries`/`newEncounterCommentaryText`
+            // exactly as they were — see `refreshEncounterCommentaries()`/
+            // `submitEncounterCommentary()`, below.
+            encounterCommentaryError: null
         };
     },
     computed: {
@@ -2605,6 +2801,23 @@ export default {
                 contentViewA: this.selectedSnapshotContentView,
                 contentViewB: this.comparisonSnapshotContentView
             });
+        },
+        // 0.9.291 — the publicationId Commentary is scoped to for the
+        // CURRENT primary selection, or `null` when there isn't one — see
+        // this file's own "0.9.291" header, "the publicationId is the
+        // encounter's own objectId, never the loaded material's." `null`
+        // whenever `selectedEncounterInspection` is itself `null` (no
+        // selection, or a stale one no longer part of the World — the
+        // SAME gate the inspection panel's own "no longer part of the
+        // World" notice already applies) or its `kind` isn't
+        // `'PUBLICATION'`. Deliberately independent of
+        // `materialInspection`/`distributablePublication` — this never
+        // waits on material loading, fetching, or verification.
+        encounterCommentaryPublicationId() {
+            if (!this.selectedEncounterInspection || this.selectedEncounterInspection.kind !== 'PUBLICATION') {
+                return null;
+            }
+            return this.selectedEncounter.objectId;
         }
     },
     methods: {
@@ -2697,6 +2910,19 @@ export default {
             // previously-opened Content Comparison panel rendering
             // implicitly for the NEW pairing.
             this.contentComparisonViewOpen = false;
+            // 0.9.291 — a fresh selection never carries a stale open/
+            // closed state, commentary list, draft, or error from
+            // whatever was previously selected — see this file's own
+            // "0.9.291" header, "commentary state is reset on every fresh
+            // selection." Mirrors `snapshotContentViewOpen`'s own reset
+            // immediately above, one panel over; this branch never runs
+            // for `selectComparisonEncounter()`'s own routing either,
+            // exactly like every other reset in this method.
+            this.encounterCommentaryOpen = false;
+            this.encounterCommentaries = [];
+            this.newEncounterCommentaryText = '';
+            this.encounterCommentarySubmitting = false;
+            this.encounterCommentaryError = null;
         },
         // 0.9.13 — the only writer of `worldView`, and the only caller
         // of `describeWorldFromDiscoveryRegistry()` in this file. See
@@ -3253,6 +3479,70 @@ export default {
                 return;
             }
             this.selectedDiscoveredPublication = this.discoveryResult;
+        },
+        // 0.9.291 — the only writer of `encounterCommentaryOpen`. A no-op
+        // whenever no `getPublicationCommentariesCommand` was injected, or
+        // there is no current `encounterCommentaryPublicationId` — mirrors
+        // `PublicationCard.js`'s own `toggleCommentary()`. The FIRST time
+        // this opens for a given selection, this also performs the first
+        // read — see this file's own header, "collapsed by default,
+        // loaded only on first expansion."
+        toggleEncounterCommentary() {
+            if (!this.getPublicationCommentariesCommand || !this.encounterCommentaryPublicationId) {
+                return;
+            }
+            const opening = !this.encounterCommentaryOpen;
+            this.encounterCommentaryOpen = opening;
+            if (opening) {
+                this.refreshEncounterCommentaries();
+            }
+        },
+        // 0.9.291 — the only writer of `encounterCommentaries`/
+        // `encounterCommentaryError` from a read, and the only call site
+        // of `getPublicationCommentariesCommand` in this file. A FAILED
+        // read leaves `encounterCommentaries` exactly as it was — never
+        // wiped to `[]` — and only sets `encounterCommentaryError`,
+        // mirroring `PublicationCard.js`'s own `refreshCommentaries()`.
+        refreshEncounterCommentaries() {
+            if (!this.getPublicationCommentariesCommand || !this.encounterCommentaryPublicationId) {
+                return;
+            }
+            try {
+                const result = this.getPublicationCommentariesCommand(this.encounterCommentaryPublicationId);
+                this.encounterCommentaries = Array.isArray(result) ? result : [];
+                this.encounterCommentaryError = null;
+            } catch (error) {
+                this.encounterCommentaryError = 'Commentary could not be loaded.';
+            }
+        },
+        // 0.9.291 — the only call site of `addPublicationCommentaryCommand`
+        // in this file. Sends ONLY `{ publicationId, content }` — see this
+        // file's own header, "authorship is never UI-supplied." On
+        // success, clears the compose draft and RE-QUERIES through
+        // `refreshEncounterCommentaries()` rather than appending the
+        // returned commentary itself — one source of truth, never a
+        // second, UI-maintained interpretation of the store's own
+        // collection, mirroring `PublicationCard.js`'s/
+        // `OwnPublicationPanel.js`'s own identical restraint. On failure,
+        // `newEncounterCommentaryText`/`encounterCommentaries` are both
+        // left UNCHANGED.
+        submitEncounterCommentary() {
+            const publicationId = this.encounterCommentaryPublicationId;
+            const content = this.newEncounterCommentaryText.trim();
+            if (!publicationId || !this.addPublicationCommentaryCommand || !content || this.encounterCommentarySubmitting) {
+                return;
+            }
+            this.encounterCommentarySubmitting = true;
+            try {
+                this.addPublicationCommentaryCommand({ publicationId, content });
+                this.newEncounterCommentaryText = '';
+                this.encounterCommentaryError = null;
+                this.refreshEncounterCommentaries();
+            } catch (error) {
+                this.encounterCommentaryError = (error && error.message) ? error.message : 'Commentary could not be created.';
+            } finally {
+                this.encounterCommentarySubmitting = false;
+            }
         }
     },
     // 0.9.13 — seed, then subscribe; see this file's own header,
@@ -3437,6 +3727,60 @@ export default {
                         class="world-encounter-unregister-snapshot"
                         @click="unregisterSelectedSnapshot"
                     >Remove Snapshot from World</button>
+                </div>
+
+                <!-- 0.9.291 — Publication Commentary on the World Encounter
+                     Surface. Rendered only when a caller supplied
+                     getPublicationCommentariesCommand AND the current
+                     selection is a live PUBLICATION encounter — see this
+                     file's own "0.9.291" header. Never gated on ownership:
+                     shown identically whether the encountered Publication
+                     is the Wanderer's own or another Wanderer's. -->
+                <div v-if="encounterCommentaryPublicationId && getPublicationCommentariesCommand" class="world-encounter-commentary-panel">
+                    <h4 class="world-encounter-commentary-title">Commentary</h4>
+
+                    <button
+                        type="button"
+                        class="action-btn world-encounter-commentary-toggle"
+                        @click="toggleEncounterCommentary"
+                    >{{ encounterCommentaryOpen ? 'Hide Comments' : 'Comment' }}</button>
+
+                    <div v-if="encounterCommentaryOpen" class="world-encounter-commentary-body">
+                        <p v-if="encounterCommentaryError" class="world-encounter-commentary-error">{{ encounterCommentaryError }}</p>
+
+                        <p v-if="!encounterCommentaries.length" class="world-encounter-commentary-empty">No commentary yet.</p>
+                        <ul v-else class="world-encounter-commentary-list">
+                            <li
+                                v-for="commentary in encounterCommentaries"
+                                :key="commentary.commentaryId"
+                                class="world-encounter-commentary-entry"
+                            >
+                                <span class="world-encounter-commentary-author">{{ commentary.authorIdentityId }}</span>
+                                <p class="world-encounter-commentary-content">{{ commentary.content }}</p>
+                            </li>
+                        </ul>
+
+                        <p v-if="addPublicationCommentaryCommand && !viewerIdentityId" class="world-encounter-commentary-signin-hint">
+                            Sign in to add commentary.
+                        </p>
+                        <form
+                            v-else-if="addPublicationCommentaryCommand"
+                            class="world-encounter-commentary-form"
+                            @submit.prevent="submitEncounterCommentary"
+                        >
+                            <textarea
+                                v-model="newEncounterCommentaryText"
+                                class="world-encounter-commentary-input"
+                                :disabled="encounterCommentarySubmitting"
+                                placeholder="Add a comment…"
+                            ></textarea>
+                            <button
+                                type="submit"
+                                class="action-btn world-encounter-commentary-submit-action"
+                                :disabled="!newEncounterCommentaryText.trim() || encounterCommentarySubmitting"
+                            >{{ encounterCommentarySubmitting ? 'Posting…' : 'Post Comment' }}</button>
+                        </form>
+                    </div>
                 </div>
             </div>
 

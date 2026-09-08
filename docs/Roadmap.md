@@ -86317,3 +86317,114 @@ convergence milestone, since Section C found nothing today for one to fix. The o
 audit's own Section K surfaces for that next step is `WorldEncounterCanvas.js`, on the identical
 "already holds a real Publication object at a meaningful selection moment" evidence bar `PublicationCard`
 itself cleared — left unstarted here, for whoever picks up Commentary reachability next.
+
+## 0.9.291 — Publication Commentary on the World Encounter Surface
+
+0.9.290's own Section K named the candidate; this milestone picks it up. `ui/components/WorldEncounterCanvas.js`
+— the World View surface that renders an encountered Wanderer's Publication as a live, selectable marker with its
+own inspection/distribution actions already — is the SECOND of the six 0.9.288 Section E surfaces to gain
+Commentary, after `PublicationCard.js` in 0.9.289. Unlike 0.9.289, this milestone adds no new composition root at
+all: `ui/views/WorldView.js` already builds `getPublicationCommentariesCommand`/`addPublicationCommentaryCommand`
+(0.9.248, via `WorldNavigationSession`) for `OwnPublicationPanel`; this milestone hands the SAME two functions to
+`WorldEncounterCanvas` as two new, optional props, exactly the way every other WorldView-composed capability
+(`distributionCommand`, `discoveryCommand`, `snapshotDistributionCommand`, ...) already arrives as one.
+
+### What changed
+
+`ui/components/WorldEncounterCanvas.js` — three new, optional, caller-injected props
+(`getPublicationCommentariesCommand`, `addPublicationCommentaryCommand`, `viewerIdentityId`), mirroring
+`OwnPublicationPanel.js`'s own identically-named props exactly. A new computed, `encounterCommentaryPublicationId`,
+resolves the current selection's own commentary target directly off `selectedEncounter.objectId` — the SAME
+identity `core/WorldEncounter.js` already sets to `publication.id` for a PUBLICATION-kind encounter — gated on
+`selectedEncounterInspection` being a currently live PUBLICATION encounter (the same "no longer part of the World"
+boundary the existing inspection panel already holds), and deliberately independent of `distributablePublication`
+(0.9.104's own material-loading-gated computed): Commentary about an encountered Publication never waits on
+whether its signed material bytes happen to load, fetch, or verify. A new "Commentary" section — collapsed by
+default, loaded only on first expansion, mirroring `PublicationCard.js`'s own lazy restraint rather than
+`OwnPublicationPanel.js`'s own eager one, since this component's own selection can change on every marker click —
+renders inside the existing `world-encounter-inspection-panel` (0.9.18), immediately below the Title/Publisher/
+Signed/Position detail already shown there. `selectEncounter()` (0.9.4) now also resets the commentary
+open/list/draft/error state on every fresh selection, mirroring its own existing reset discipline for
+`resolvedSelectionChoice`/`distributionError`/`snapshotContentViewOpen` one concept over — commentary state never
+leaks from one encountered Publication to the next.
+
+`ui/views/WorldView.js` — binds its own already-existing `getPublicationCommentariesCommand`/
+`addPublicationCommentaryCommand`/`myIdentityId` (0.9.248) to `WorldEncounterCanvas`'s three new props, the exact
+same function/computed instances already bound to `OwnPublicationPanel`. No new function, no new composition, no
+change to `CreateWorldViewUseCase.js` or `WorldNavigationSession.js`.
+
+### What stayed unchanged
+
+The domain and application layers — `PublicationCommentary`, `PublicationCommentaryStore`,
+`CanCommentOnPublicationUseCase`, `GetPublicationCommentariesUseCase`, `AddPublicationCommentaryUseCase`,
+`PublicationCommentaryNotificationProducer` — are byte-for-byte untouched, as are `CreateWorldViewUseCase.js`,
+`application/CreatePublicationCommentaryUseCase.js` (0.9.289's own app-wide root, left unused here on purpose — see
+"What changed," above, for why the already-in-scope `WorldView.js` composition was preferred), `OwnPublicationPanel.js`,
+and `PublicationCard.js`. The remaining four 0.9.288-named surfaces — `PublicationCatalog`, `PublicationPreview`,
+`PublicationList`, `DecentralizedPublicationsView` — still carry no commentary wiring. Authorization, authorship,
+deduplication, and the `publication.commented` notification path are all unchanged: this milestone reuses the
+identical, already-proven application layer, never a new one.
+
+### What this milestone adds
+
+`tests/WorldEncounterPublicationCommentaryEntryPoint.test.js` (new, registered in `tests.html`) — twelve sections,
+A-L, run against real collaborators (`LocalIdentityProvider`, `LocalDiscoveryProvider`, `LocalPublisherProvider`,
+`PublicationCommentaryStore`, `NotificationEventStore`, and all four commentary use cases, unmodified), with
+`WorldEncounterCanvas.js`'s own lifecycle/computed/methods invoked against a plain ctx object, the same discipline
+every sibling `WorldEncounterCanvas` test file already establishes. Section A proves the selected encounter already
+carries the Publication's own identity. Section B proves the Comment action is reachable only when the capability
+is wired AND a live PUBLICATION encounter is selected — never for an AVATAR encounter. Section C proves commentary
+is never auto-loaded for a merely-selected Publication, only on an explicit toggle/refresh. Section D proves the
+exact encountered `publicationId` (`selectedEncounter.objectId`) is what flows into both commands. Section E proves
+authorship is the authenticated commentator, never the encountered Publication's own publisher. Section F proves no
+Publication-ownership concept exists anywhere in the file. Section G proves an unauthenticated attempt is rejected
+by the existing, unmodified use case. Section H proves genuine two-way persistence convergence: a comment created
+through `WorldEncounterCanvas` is readable through `PublicationCard`'s own read, and vice versa. Section I proves
+the existing `publication.commented` NotificationEvent still fires, addressed to the publisher, with
+`WorldEncounterCanvas.js` never referencing the notification producer or event type itself. Section J proves
+commentary state never leaks between two encountered Publications, including across repeated selections on one
+canvas instance. Section K proves the composition claim directly: `WorldEncounterCanvas.js` constructs no
+commentary use case, store, or producer of its own, and `WorldView.js` binds its own single, already-existing pair
+of command functions to exactly two template targets. Section L is a regression pass confirming
+`OwnPublicationPanel.js`, `PublicationCard.js`, both composition roots, and the four still-unwired 0.9.288 surfaces
+stay untouched.
+
+Three existing test files needed small, source-level updates to stay accurate now that a second surface carries
+commentary vocabulary — the same kind of update 0.9.289 itself made to `CrossArcProductEvolutionReassessment.test.js`'s
+own Section E5 when it closed that milestone's finding for `PublicationCard.js`:
+`tests/CrossArcProductEvolutionReassessment.test.js` (Section E5, now recording both 0.9.289's and 0.9.291's own
+transitions), `tests/OtherPublicationCommentaryEntryPoint.test.js` (Section K's "untouched surfaces" list, which
+described exactly what 0.9.289 itself did and so excludes `WorldEncounterCanvas.js` rather than being rewritten to
+describe today's broader state), and `tests/PublicationCommentaryCrossSurfaceConvergenceAudit.test.js` (Section K,
+recording that its own named candidate was picked up, and Section L's twelfth architecture-regression check).
+`tests/LiveWorldViewRegistrySubscription.test.js`'s own Section H architectural-boundary check (never reference
+peer-identity vocabulary) was narrowed from a blanket ban to an allowlist of exactly the two new, reviewed
+Commentary-authorship identifiers (`authorIdentityId`, `viewerIdentityId`) this milestone introduces — mirroring
+the same incremental-allowlist pattern that section's own `.origin` check already used across 0.9.20/0.9.101/
+0.9.112/0.9.169 — while continuing to ban every other peer-identity occurrence.
+`tests/WorldViewEncounterIntegration.test.js`'s own tag-length bound for the `<WorldEncounterCanvas>` mount was
+widened to fit the three new prop bindings. `tests/PostCommentaryUIProductReassessment.test.js` (0.9.252) — found,
+independently of this milestone, already failing on `main` since 0.9.289 shipped (its own frozen "carries no
+commentary vocabulary" list was never updated for `PublicationCard.js`) — had that same assertion repaired for both
+`PublicationCard.js` and `WorldEncounterCanvas.js`, since this milestone's own change would otherwise have made the
+identical, already-broken assertion doubly wrong. That file's own unrelated, pre-existing "no Notification class
+exists" failure (predating the Notification History arc built at 0.9.275-0.9.287) is untouched — out of scope for
+this milestone, and orthogonal to Commentary.
+
+### What this milestone deliberately excludes
+
+Per its own brief: spatial/proximity comments, comment bubbles in the 3D world, World chat, comment counts on the
+marker, replies, editing, deletion, moderation, ranking, a new notification producer or event type, notification
+delivery, automatic Commentary loading for every encountered Publication, refactoring `CreateWorldViewUseCase.js`,
+collapsing it with `application/CreatePublicationCommentaryUseCase.js` into a shared composition, and wiring any of
+the remaining four 0.9.288-named surfaces. Commentary stays attached to the Publication's own identity
+(`selectedEncounter.objectId`), never to the World position where it happens to be encountered.
+
+### What comes after
+
+Two of the six 0.9.288-named surfaces now carry Commentary, through two different, independently-converging
+composition roots (0.9.289's app-wide one, and this milestone's reuse of `WorldView.js`'s own session-backed one) —
+a natural point to ask, as 0.9.290 did after the first, whether a fresh convergence/lifecycle audit is warranted
+before any more surfaces are wired, or whether `WorldEncounterCanvas.js` turns out close enough to `PublicationCard.js`
+that the remaining four surfaces (`PublicationCatalog`, `PublicationPreview`, `PublicationList`,
+`DecentralizedPublicationsView`) are worth reassessing together instead, per this milestone's own brief.
