@@ -87085,3 +87085,99 @@ existing "query every configured provider" behavior should ever become preferenc
 be the first real caller of `ResolvePreferredRoleProviderUseCase`, and the smallest, most explicit
 user-facing action (a distribution/material storage selection, for instance) remains a better candidate than
 silently reinterpreting every existing composition root at once.
+
+## 0.9.298 — Role Provider Preference Product Integration Audit
+
+**Type:** Test-only product audit. **Scope:** zero production changes — one new evidence-gathering test file
+answering a narrower, PRODUCT question 0.9.296's TECHNICAL audit left open: of the workflows a person actually
+uses, which one can legitimately honor a role provider preference without redefining what that workflow
+already means to someone using it today?
+
+0.9.296 traced eleven provider-selection seams and classified them READY / BLOCKED / INTENTIONALLY_INTERNAL /
+NOT_A_SELECTION_SEAM — a technical bar for "is `resolve()` mechanically insertable here." This milestone
+re-audits the same territory against a stricter, product-shaped bar — READY / BLOCKED / SEMANTICALLY_UNSUITABLE
+/ INTERNAL / DUPLICATIVE — and adds one distinction 0.9.296 did not itself need to draw: three different
+provider-selection *semantics* already coexist in this codebase (a person explicitly choosing, per action; the
+application choosing, today unconditionally or by fixed constant; and a historical record naming what a
+specific, already-created placement or anchor already used), and a preference may only ever legitimately
+replace the second — never the third, and never silently supersede the first either.
+
+### What this milestone found
+
+Auditing Discovery, Content, and Proof & Anchoring independently, from real source and from `ui/main.js`'s own
+real production wiring (never from 0.9.296's prose, even where this audit's own verdict agrees with it):
+
+- **Zero seams are unconditionally READY** under this stricter bar — every candidate still carries either a
+  named, unmet product prerequisite, a semantic conflict with an already-created record, or is intentionally
+  internal composition infrastructure.
+- **CONTENT creation is the strongest candidate in the entire audit**, and decisively so on evidence, not
+  intuition: it is the one seam where a person already makes an explicit, per-action provider choice today
+  (`createPlacement(entry, storage)`), and — the load-bearing new finding this audit adds — `ui/main.js`
+  already registers **two real, distinct content stores side by side** for both Publication and Snapshot
+  placement creation (`local` + `ipfs`) in production right now. It remains BLOCKED behind exactly one named,
+  revisitable principle: `SnapshotPlacementCreationCoordinator`'s and `CreateExternalSnapshotPlacementUseCase`'s
+  own documented "never ranked, never narrowed to a preferred/default one."
+- **PROOF creation carries the identical documented restraint but no real second provider** — `ui/main.js`
+  registers exactly one anchor publisher (Bitcoin) — so even a revisited principle would have nothing to
+  distinguish between yet, making it a weaker candidate than Content on evidence alone.
+- **Publication discovery's read path** remains blocked behind 0.9.296's own still-open "query every configured
+  service" vs. "query only the preferred one" question — this audit adds a concrete, named cost to that
+  question: every service is queried independently and never combined, so narrowing it would shrink the
+  lead-resolution evidence pool a later step reasons over, not merely swap which bytes are fetched.
+- **Material provenance (`Origin: LOCAL`/`DECENTRALIZED`) is a distinct, orthogonal axis, never a selection
+  seam at all** — `application/PublicationMaterialProvenance.js`'s own header states outright that no
+  trust/rank/preferred/quality concept exists near it, and never will; a future Discovery-service preference
+  must never be read into, or written onto, Origin.
+- **Content resolution and Proof verification remain SEMANTICALLY_UNSUITABLE** — both dispatch on an
+  already-created record's own historical `storage`/`anchorType` field; a preference has no legitimate
+  business there regardless of any future prerequisite being met elsewhere.
+- **A repo-wide sweep found no existing, competing provider-preference mechanism** — the DUPLICATIVE row in
+  this audit's own classification table is a checked, real absence, not a hedge.
+- **The full stored-preference → `ResolvePreferredRoleProviderUseCase` → concrete-capability chain is proved
+  end-to-end** against a registry shaped exactly like `ui/main.js`'s own real Content-creation wiring (`local`
+  + `ipfs`, side by side) — and, separately, today's real Content-creation workflow is proved, from its own
+  source, to read none of it yet. That is the objective "before" state any future integration would change.
+- **UI sequencing decision: consumer-first, not settings-first** — a settings UI published today would control
+  a preference nothing reads; the first real decision worth a person's time is revisiting the one named
+  principle for Content creation specifically, not building a generic settings surface for three roles at
+  wildly different readiness levels.
+
+### What this milestone adds
+
+- **`tests/RoleProviderPreferenceProductIntegrationAudit.test.js`** (new, registered in `tests.html`) — nine
+  sections (A-I): Discovery audited independently (including the provenance distinction), Content audited
+  independently (including the `ui/main.js` two-real-provider evidence), Proof & Anchoring audited
+  independently (including the anchorType-scope check against "every cryptographic operation"), the three
+  semantics mapped onto every seam, the final product classification (with a real repo-wide DUPLICATIVE sweep),
+  the preference chain proved end-to-end for the strongest candidate against production-shaped wiring plus its
+  own unconsumed baseline, the three preference states audited per candidate (never globally, never invented
+  where the brief declines to answer), the UI-sequencing decision, and the verdict.
+- No other production or test file is modified. The three existing repo-wide sweeps 0.9.296/0.9.297 each
+  updated in turn (`tests/DecentralizedRoleProviderPreferenceBoundary.test.js` Section M, `tests/
+  DecentralizedSubstrateCapabilityMatrixAudit.test.js` Section G, `tests/RoleAwareProviderResolution.test.js`
+  Section M) all scan production directories only, excluding `tests/` — a test-only milestone changes none of
+  their counts, confirmed by re-running each unmodified.
+
+### What this milestone deliberately excludes
+
+Per the task's own request:
+
+- **No settings UI, provider-selection UI, or any `ui/` change of any kind.**
+- **No runtime integration.** No composition root is touched; the end-to-end proof runs entirely against
+  locally constructed registries, never against a real composition root's own wiring.
+- **No fallback policy, provider health checks, automatic switching, or new registry.**
+- **No change to Discovery architecture, existing provider implementations, or historical provider metadata.**
+- **No default-provider semantics.** `NO_PREFERENCE`/`PROVIDER_NOT_FOUND` are read exactly as 0.9.295/0.9.297
+  already define them.
+- **No invented fallback semantics for `PROVIDER_NOT_FOUND`/`RESOLVED` per candidate.** Where the honest answer
+  is "open," this audit says so and stops there, exactly as its own brief requires.
+
+### What comes after
+
+The next milestone (0.9.299, unscheduled) is a person's decision, narrower than any prior "what comes after"
+in this sequence: should `SnapshotPlacementCreationCoordinator`'s own documented "never preferred or default"
+principle be revisited for CONTENT creation specifically? If yes, the smallest legitimate integration is a
+DEFAULT suggestion layered onto the existing `availableStorageTypes()` button list — never narrowing it, never
+auto-submitting on a person's behalf — consumed through `ResolvePreferredRoleProviderUseCase` exactly as this
+milestone's own Section F already proved it resolves. Only once that first real consumer exists does a
+settings UI (0.9.300, per the originally recommended sequence) have anything real to control.
