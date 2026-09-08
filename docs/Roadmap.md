@@ -87376,3 +87376,107 @@ Preferred Provider") calling `preferredSnapshotPlacementCreationCoordinator.crea
 no storage argument, under its own non-colliding attempt-state key; extend `describeCreationAttempt()` so
 `PROVIDER_NOT_FOUND` renders an honest, visible message instead of silently collapsing to `IDLE`; and only
 then does a settings UI for reading and writing a CONTENT preference have something legitimate to control.
+
+## 0.9.301 — Preferred Content Provider Placement Trigger
+
+**Type:** Production UI integration. **Scope:** one existing view — `ui/views/DecentralizedPublicationsView.js`
+— gets exactly one new, additive action, "Use Preferred Provider," alongside its existing per-storage placement
+buttons. This is 0.9.300's own named next step, carried out.
+
+0.9.300's own reachability audit found a real, fully-tested preference-aware coordinator (application/
+PreferredSnapshotPlacementCreationCoordinator.js, 0.9.299) with zero real user-triggered callers, and concluded
+the existing per-action storage buttons must remain authoritative — a preference must never be layered onto
+them as a silent default. Its own recommended fix was additive, not a replacement: one new trigger, a
+non-colliding attempt-state key, and a display fix for `PROVIDER_NOT_FOUND`. This milestone builds exactly
+that, nothing more.
+
+### The model
+
+```text
+DecentralizedPublicationsView
+        │
+        ├── Local/Ipfs (per-storage buttons) ──► SnapshotPlacementCreationCoordinator   (0.8.25, UNCHANGED)
+        │
+        └── "Use Preferred Provider" (NEW)   ──► PreferredSnapshotPlacementCreationCoordinator   (0.9.299, UNCHANGED)
+                                                       │
+                                                       ▼
+                                              ResolvePreferredRoleProviderUseCase   (0.9.297, UNCHANGED)
+                                                       │
+                                        ┌──────────────┼──────────────┐
+                                        ▼              ▼              ▼
+                                    RESOLVED     NO_PREFERENCE  PROVIDER_NOT_FOUND
+                                  (places via         │                │
+                                 the preferred    the literal      an honest,
+                                    provider)    pre-existing       visible
+                                                "storage is      PROVIDER_NOT_FOUND
+                                                required" error    UI state
+```
+
+### What this milestone adds
+
+- **`ui/views/DecentralizedPublicationsView.js`** — injects `preferredSnapshotPlacementCreationCoordinator`
+  (already composed and provided by `ui/main.js` since 0.9.299, but never consumed until now) alongside the
+  pre-existing `snapshotPlacementCreationCoordinator` injection, which is completely unchanged. A new
+  `createPreferredPlacement(entry)` calls `preferredPlacementCreationCoordinator.create(entry.publication.id)`
+  with NO storage argument — the one detail that makes the wrapped coordinator consult the stored CONTENT
+  preference at all — and writes its result into a brand-new `entry.preferredPlacementCreationAttempt` field,
+  never into the existing, storage-keyed `entry.placementCreationAttempts` map 0.9.300's own Section C3 warned
+  a synthetic key could collide with. A new template section renders the "Use Preferred Provider" button/badge/
+  message, gated on the new coordinator being present, mirroring the existing "Discover from Peers" block's own
+  button+badge+message shape one axis over. Every existing per-storage button, its own `createPlacement(entry,
+  storage)` handler, and its own `placementCreationAttempts` map are byte-for-byte unchanged.
+- **`application/SnapshotPlacementCreationUiState.js`** — a fifth value, `PROVIDER_NOT_FOUND`, for the one real
+  domain outcome that did not exist when this enum was first written: a configured CONTENT preference naming a
+  storage nothing on this replica is registered under. Distinct from `UNAVAILABLE` (no store was ever even
+  resolved, let alone reached) and not the same kind of move as the deliberately-rejected `REJECTED` state —
+  this value already has a real, shipped outcome behind it (`RoleAwareProviderResolver.js`, 0.9.295).
+- **`application/SnapshotPlacementCreationView.js`** — `describeCreationAttempt()` gains one new `case`
+  matching `RoleProviderResolutionStatus.PROVIDER_NOT_FOUND`, naming WHAT preference was configured (via the
+  attempt's own `preference.providerKey`) rather than a generic message. This closes the exact gap 0.9.300's own
+  Section F found: reusing this function unmodified would have collapsed a `PROVIDER_NOT_FOUND` result to a
+  blank `IDLE` display through its pre-existing `default` branch, which itself is untouched and still governs
+  every other unrecognized outcome.
+- **`tests/PreferredContentProviderPlacementTrigger.test.js`** (new, registered in `tests.html`) — nine sections
+  (A-I) proving: the new trigger is really reachable, from real source AND functionally; the existing per-storage
+  buttons are unaffected by any stored preference; a configured preference genuinely decides which provider the
+  new trigger places onto; no preference reproduces the literal pre-existing "storage is required" refusal; an
+  unresolvable preference reports `PROVIDER_NOT_FOUND` honestly, touching no store, and now renders its own
+  visible UI state instead of collapsing to `IDLE`; the real store operation runs exactly once with the correct
+  bytes; Discovery/Proof preferences (including under the identical providerKey string) have no effect on this
+  action; RUNNING/CREATED/PROVIDER_NOT_FOUND are all correctly represented and never cross-contaminate between
+  the new trigger and any explicit per-storage attempt; and every existing explicit-selection workflow is
+  unchanged with the new trigger composed and used alongside it.
+- Small, necessary updates to six existing repo-wide sweeps, following the exact precedent each earlier
+  milestone in this sequence already set: `tests/ContentProviderPreferenceReachabilityAudit.test.js` Sections
+  A2/A3 (this milestone is exactly what that audit's own Section I recommended, carried out), `tests/
+  RoleAwareProviderResolution.test.js` Section M, `tests/RoleProviderPreferenceProductIntegrationAudit.test.js`
+  Section H, `tests/RoleProviderResolutionIntegrationReadinessAudit.test.js` Section H, `tests/
+  DecentralizedRoleProviderPreferenceBoundary.test.js` Section M, and `tests/
+  DecentralizedSubstrateCapabilityMatrixAudit.test.js` Section G — each now allows exactly the files this
+  milestone touches (`ui/views/DecentralizedPublicationsView.js`, `application/SnapshotPlacementCreationView.js`,
+  `application/SnapshotPlacementCreationUiState.js`) as legitimate new references, and no others.
+
+### What this milestone deliberately excludes
+
+Per the task's own request:
+
+- **No settings UI, provider dropdown, or "preferred" checkbox.** A person still cannot set a CONTENT
+  preference through any control in this codebase — only `tests/*.test.js` files ever call
+  `RoleProviderPreferenceStore#save()`.
+- **No change to the existing Local/IPFS buttons.** They never consult a preference, silently or otherwise —
+  an explicit per-action choice remains completely authoritative, exactly as 0.9.299's own guarantee already
+  held one layer down.
+- **No Discovery or Proof & Anchoring preference integration.** Only the one Content creation trigger is added.
+- **No fallback, provider ranking, or provider health/availability checks.** `PROVIDER_NOT_FOUND` is reported,
+  never substituted or retried automatically.
+- **No change to `SnapshotPlacementCreationCoordinator.js`, `RoleAwareProviderResolver.js`,
+  `RoleProviderPreferenceStore.js`, or `PreferredSnapshotPlacementCreationCoordinator.js` themselves.** This
+  milestone is a UI-layer consumer of an already-complete chain, never a change to any link in it.
+
+### What comes after
+
+The chain 0.9.293-0.9.299 built is now genuinely user-reachable, closing the exact gap 0.9.300 found. The
+recommended next milestone is **0.9.302 — Preferred Content Provider Product Audit**: now that a person can
+actually trigger preference-based placement, does the product have a legitimate way to ESTABLISH or CHANGE that
+preference? If not, that audit's own evidence would justify the smallest legitimate settings surface — never
+built ahead of a real, proven consumer, the same sequencing discipline this whole arc has held since 0.9.298.

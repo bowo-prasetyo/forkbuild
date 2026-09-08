@@ -124,26 +124,33 @@ async function run() {
         assert(/app\.provide\('preferredSnapshotPlacementCreationCoordinator',\s*preferredSnapshotPlacementCreationCoordinator\)/.test(mainSource),
             'A1d. the preference-aware coordinator is ALSO really provided to the Vue app — under its own, distinct injection key');
 
-        // A2. The one real view that ever creates a placement injects the
-        // OLD key only. Read directly, never inferred.
+        // A2. UPDATED by 0.9.301 — Preferred Content Provider Placement
+        // Trigger, this audit's OWN recommended next step, carried out.
+        // The one real view that ever creates a placement STILL injects
+        // the OLD key (the existing per-storage buttons are completely
+        // unchanged) but now ALSO injects the preference-aware coordinator
+        // under its own key, for its own new, separate "Use Preferred
+        // Provider" action. Read directly, never inferred.
         const viewSource = await source('ui/views/DecentralizedPublicationsView.js');
         assert(/inject\('snapshotPlacementCreationCoordinator',\s*null\)/.test(viewSource),
-            'A2a. DecentralizedPublicationsView.js injects the pre-existing (0.8.25) coordinator');
-        assert(!viewSource.includes('preferredSnapshotPlacementCreationCoordinator'),
-            'A2b. DecentralizedPublicationsView.js contains the string "preferredSnapshotPlacementCreationCoordinator" NOWHERE — not injected, not referenced, not mentioned in a comment as a TODO');
+            'A2a. DecentralizedPublicationsView.js still injects the pre-existing (0.8.25) coordinator, unchanged');
+        assert(/inject\('preferredSnapshotPlacementCreationCoordinator',\s*null\)/.test(viewSource),
+            'A2b. DecentralizedPublicationsView.js now ALSO injects the preference-aware coordinator (0.9.301) — a SECOND, additive injection, never a replacement of A2a');
 
-        // A3. Repo-wide: the injection key/identifier
-        // "preferredSnapshotPlacementCreationCoordinator" exists in
-        // exactly ONE production file — the composition root that defines
-        // and provides it. No second file, view, or command reads it.
+        // A3. UPDATED by 0.9.301. Repo-wide: the injection key/identifier
+        // "preferredSnapshotPlacementCreationCoordinator" now exists in
+        // exactly TWO production files — the composition root that defines
+        // and provides it (unchanged), and the one view that now injects
+        // and consumes it.
         const allProductionFiles = await repoWideProductionFiles();
         const hits = [];
         for (const file of allProductionFiles) {
             const text = await source(file);
             if (text.includes('preferredSnapshotPlacementCreationCoordinator')) hits.push(file);
         }
-        assert(hits.length === 1 && hits[0] === 'ui/main.js',
-            `A3a. exactly ui/main.js mentions the "preferredSnapshotPlacementCreationCoordinator" identifier anywhere in production source (found ${hits.length}: ${hits.join(', ')}) — it defines the binding AND is its own only reader (app.provide), never consumed a second time`);
+        const KNOWN_INJECTION_KEY_FILES = new Set(['ui/main.js', 'ui/views/DecentralizedPublicationsView.js']);
+        assert(hits.length === KNOWN_INJECTION_KEY_FILES.size && hits.every((f) => KNOWN_INJECTION_KEY_FILES.has(f)),
+            `A3a. exactly ui/main.js and ui/views/DecentralizedPublicationsView.js mention the "preferredSnapshotPlacementCreationCoordinator" identifier anywhere in production source (found ${hits.length}: ${hits.join(', ')}) — ui/main.js defines the binding, and the view is now its one real consumer (0.9.301)`);
 
         // A4. The class itself is imported by exactly its own composition
         // root, in production — never by any ui/ view or command.
@@ -155,7 +162,7 @@ async function run() {
         assert(classImporters.length === 1 && classImporters[0] === 'application/CreatePreferredSnapshotPlacementCreationCoordinatorUseCase.js',
             `A4a. application/PreferredSnapshotPlacementCreationCoordinator.js is imported by exactly its own composition root in production (found ${classImporters.length}: ${classImporters.join(', ')}) — no ui/ view imports it directly either`);
 
-        console.log('✓ Section A — VERDICT: PreferredSnapshotPlacementCreationCoordinator.create() is called from ZERO real user-triggered code paths today. It is composed, provided under its own injection key, and otherwise completely unconsumed — a production capability with no production caller, proven by a repo-wide sweep, not inferred from 0.9.299\'s own prose.');
+        console.log('✓ Section A — VERDICT (UPDATED by 0.9.301): PreferredSnapshotPlacementCreationCoordinator.create() is now reachable from a real, user-triggered code path — ui/views/DecentralizedPublicationsView.js\'s own "Use Preferred Provider" action (0.9.301 — Preferred Content Provider Placement Trigger), this audit\'s own named next step, carried out. This section originally proved ZERO callers as of 0.9.300; it is updated, not deleted, to keep asserting a true fact about the current repository, following the exact precedent every other repo-wide sweep in this sequence already set.');
     }
 
     // ===============================================================
@@ -458,7 +465,7 @@ async function run() {
         console.log('    2. give that trigger its own, non-colliding attempt-state key, never reusing an existing storage key (Section C3);');
         console.log('    3. extend describeCreationAttempt()\'s own outcome handling so PROVIDER_NOT_FOUND renders an honest, visible message — never the silent IDLE collapse this audit finds in its current, unmodified form (Section F3);');
         console.log('    4. only once that trigger is real does a settings UI for reading/WRITING a CONTENT preference (today, unbuilt in production either direction — Section H1) have something legitimate to control.');
-        console.log('  This sequencing is 0.9.301 — Content Provider Preference UI Integration — and per this milestone\'s own scope, none of it is built here.');
+        console.log('  This sequencing became 0.9.301 — Preferred Content Provider Placement Trigger — and per THIS milestone\'s own scope, none of it was built here; see tests/PreferredContentProviderPlacementTrigger.test.js for 0.9.301\'s own proof that all four steps above are now real.');
         console.log('\n✅ All Content Provider Preference Reachability Audit tests passed.');
     }
 }

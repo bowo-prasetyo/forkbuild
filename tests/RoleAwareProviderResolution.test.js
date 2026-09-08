@@ -482,9 +482,16 @@ async function run() {
     // directly), so existing publication distribution, Snapshot
     // distribution, discovery, material loading, and anchoring paths
     // stay exactly as before this milestone — only Content placement
-    // CREATION now has a real, live path to this resolver. This section
-    // is UPDATED, not deleted, following the exact precedent 0.9.293-
-    // 0.9.297 each already set for the sweep before them.
+    // CREATION now has a real, live path to this resolver. UPDATED AGAIN
+    // by 0.9.301 — Preferred Content Provider Placement Trigger —
+    // application/SnapshotPlacementCreationView.js now imports
+    // RoleProviderResolutionStatus from this same file so its own
+    // describeCreationAttempt() can name a PROVIDER_NOT_FOUND result
+    // honestly (see that file's own 0.9.301 header); it reads the
+    // exported constant only, never calls resolve() itself, and is not a
+    // second resolution path. This section is UPDATED, not deleted,
+    // following the exact precedent 0.9.293-0.9.299 each already set for
+    // the sweep before them.
     // ===============================================================
     {
         const allProductionFiles = await repoWideProductionFiles();
@@ -492,7 +499,9 @@ async function run() {
             'application/RoleAwareProviderResolver.js',
             'application/ResolvePreferredRoleProviderUseCase.js',
             'application/PreferredSnapshotPlacementCreationCoordinator.js',
-            'application/CreatePreferredSnapshotPlacementCreationCoordinatorUseCase.js'
+            'application/CreatePreferredSnapshotPlacementCreationCoordinatorUseCase.js',
+            'application/SnapshotPlacementCreationView.js',
+            'application/SnapshotPlacementCreationUiState.js'
         ]);
         let hits = 0;
         const hitFiles = [];

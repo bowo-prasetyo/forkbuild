@@ -441,7 +441,14 @@ async function run() {
     // file mentioning the concept — it composes application/
     // PreferredSnapshotPlacementCreationCoordinator.js's own composition
     // root, never a settings control (`ui/views/AvatarSettingsView.js`
-    // still mentions nothing here — see H2 below, unchanged). This
+    // still mentions nothing here — see H2 below, unchanged). UPDATED
+    // AGAIN by 0.9.301 — Preferred Content Provider Placement Trigger —
+    // ui/views/DecentralizedPublicationsView.js is now a SECOND
+    // legitimate `ui/` file: its own "Use Preferred Provider" action
+    // (this milestone's own recommended next step, named verbatim in this
+    // audit's own Section I below) is a real, additive trigger next to
+    // the existing per-storage buttons, still never a settings control —
+    // `ui/views/AvatarSettingsView.js` still mentions nothing here. This
     // section is UPDATED, not deleted, following the exact precedent
     // every other repo-wide sweep in this sequence already set.
     // ===============================================================
@@ -455,8 +462,9 @@ async function run() {
             const text = await source(file);
             if (preferenceLikeUiPattern.test(text)) { uiPreferenceHits += 1; uiPreferenceHitFiles.push(file); }
         }
-        assert(uiPreferenceHits === 1 && uiPreferenceHitFiles[0] === 'ui/main.js',
-            `H1. exactly ui/main.js mentions a provider preference today, via its 0.9.299 Content creation composition — never a settings view (found ${uiPreferenceHits}: ${uiPreferenceHitFiles.join(', ')})`);
+        const KNOWN_UI_PREFERENCE_FILES = new Set(['ui/main.js', 'ui/views/DecentralizedPublicationsView.js']);
+        assert(uiPreferenceHits === KNOWN_UI_PREFERENCE_FILES.size && uiPreferenceHitFiles.every((f) => KNOWN_UI_PREFERENCE_FILES.has(f)),
+            `H1. exactly ui/main.js and ui/views/DecentralizedPublicationsView.js mention a provider preference today, via 0.9.299's Content creation composition and 0.9.301's own trigger — never a settings view (found ${uiPreferenceHits}: ${uiPreferenceHitFiles.join(', ')})`);
 
         // The settings-UI template this codebase already establishes.
         const avatarSettingsSource = await source('ui/views/AvatarSettingsView.js');

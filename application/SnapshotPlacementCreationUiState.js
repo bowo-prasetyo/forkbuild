@@ -24,6 +24,25 @@
 //                  ExternalAnchorCreationUiState.js's own header already
 //                  states, applied here one axis over.
 //
+// 0.9.301 — Preferred Content Provider Placement Trigger. A fifth value,
+// PROVIDER_NOT_FOUND, was added for exactly one real domain outcome that
+// did not exist when this file was first written: application/
+// PreferredSnapshotPlacementCreationCoordinator.js (0.9.299) can resolve a
+// stored CONTENT preference to `RoleProviderResolutionStatus.
+// PROVIDER_NOT_FOUND` — a preference IS configured, but names a storage
+// nothing on this replica is registered under. That is a genuinely
+// different fact from UNAVAILABLE ("a real, resolved store could not
+// presently be reached") — here no store was ever even resolved, let
+// alone reached — and application/ContentProviderPreferenceReachabilityAudit
+// .test.js (0.9.300, Section F) already named collapsing it into IDLE as
+// a real display gap, not an acceptable simplification. See application/
+// SnapshotPlacementCreationView.js's own header for how this value is
+// produced, and this file's own "Deliberately no REJECTED state" note
+// below for why THIS addition is not the same kind of move: PROVIDER_NOT_
+// FOUND already has a real, shipped outcome behind it
+// (RoleAwareProviderResolver.js, 0.9.295) — it is not a speculative,
+// unbacked branch.
+//
 // DELIBERATELY NO REJECTED STATE. application/
 // ExternalAnchorCreationUiState.js has a fourth value, REJECTED, because
 // application/ExternalAnchorCreationOutcome.js has a real
@@ -51,5 +70,6 @@ export const SnapshotPlacementCreationUiState = Object.freeze({
     IDLE: 'idle',
     CREATING: 'creating',
     CREATED: 'created',
-    UNAVAILABLE: 'unavailable'
+    UNAVAILABLE: 'unavailable',
+    PROVIDER_NOT_FOUND: 'provider-not-found'
 });
