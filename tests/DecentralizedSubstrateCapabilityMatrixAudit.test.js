@@ -520,25 +520,36 @@ async function run() {
     // over the real Discovery composition for Discovery), but still never
     // falls back, never wires into any production composition root, and
     // never resolves via any registry outside the one its own role owns
-    // (see that file's own header). This section is UPDATED, not deleted,
-    // by each milestone in turn — it still holds the line that matters:
-    // the concept exists in exactly the boundary files those milestones
-    // themselves added, and nowhere else. A hit anywhere outside that set
-    // would mean the preference concept leaked into a composition root, a
-    // registry, or ui/ before the capability gaps Section J itself named
-    // (Base/Proof's verify half, Arweave/Discovery's write half,
-    // Discovery's own keyed registry) were ever closed — exactly what
-    // 0.9.293's boundary, 0.9.294's persistence layer, and 0.9.295's
-    // resolver were all built to avoid (see
+    // (see that file's own header). 0.9.296 — Role Provider Resolution
+    // Integration Readiness Audit — added no new file to this set (it is
+    // test-only). 0.9.297 — Role Provider Preference Application Boundary
+    // — added a fifth, application/ResolvePreferredRoleProviderUseCase.js:
+    // the single application-level seam a future workflow calls instead of
+    // importing the preference store or the resolver directly; it reads a
+    // preference straight from 0.9.294's own store and delegates the
+    // actual decision to 0.9.295's own resolver, but still constructs
+    // nothing, still never falls back, and is still not imported by any
+    // composition root (see that file's own header). This section is
+    // UPDATED, not deleted, by each milestone in turn — it still holds the
+    // line that matters: the concept exists in exactly the boundary files
+    // those milestones themselves added, and nowhere else. A hit anywhere
+    // outside that set would mean the preference concept leaked into a
+    // composition root, a registry, or ui/ before the capability gaps
+    // Section J itself named (Base/Proof's verify half, Arweave/
+    // Discovery's write half, Discovery's own keyed registry) were ever
+    // closed — exactly what 0.9.293's boundary, 0.9.294's persistence
+    // layer, 0.9.295's resolver, and 0.9.297's application seam were all
+    // built to avoid (see
     // tests/DecentralizedRoleProviderPreferenceBoundary.test.js Section M,
     // tests/DecentralizedRoleProviderPreferencePersistence.test.js
-    // Section K, and tests/RoleAwareProviderResolution.test.js Section M,
+    // Section K, tests/RoleAwareProviderResolution.test.js Section M, and
+    // tests/RoleProviderPreferenceApplicationBoundary.test.js Section K,
     // which each sweep for the same thing from their own side).
     // ===============================================================
     {
         const allProductionFiles = await repoWideProductionFiles();
         const preferencePattern = /providerPreference|networkPreference|preferredProvider|substratePreference/i;
-        const KNOWN_PREFERENCE_BOUNDARY_FILES = new Set(['core/RoleProviderRole.js', 'core/RoleProviderPreference.js', 'storage/RoleProviderPreferenceStore.js', 'application/RoleAwareProviderResolver.js']);
+        const KNOWN_PREFERENCE_BOUNDARY_FILES = new Set(['core/RoleProviderRole.js', 'core/RoleProviderPreference.js', 'storage/RoleProviderPreferenceStore.js', 'application/RoleAwareProviderResolver.js', 'application/ResolvePreferredRoleProviderUseCase.js']);
         let hits = 0;
         const hitFiles = [];
         for (const file of allProductionFiles) {
@@ -548,11 +559,11 @@ async function run() {
                 hitFiles.push(file);
             }
         }
-        assert(hits === KNOWN_PREFERENCE_BOUNDARY_FILES.size, `G1. exactly the four files 0.9.293/0.9.294/0.9.295 themselves introduced mention a provider preference (found ${hits}: ${hitFiles.join(', ')}) — every OTHER production file remains exactly as free of the concept as it was when this audit first ran`);
+        assert(hits === KNOWN_PREFERENCE_BOUNDARY_FILES.size, `G1. exactly the five files 0.9.293/0.9.294/0.9.295/0.9.297 themselves introduced mention a provider preference (found ${hits}: ${hitFiles.join(', ')}) — every OTHER production file remains exactly as free of the concept as it was when this audit first ran`);
         for (const file of hitFiles) {
-            assert(KNOWN_PREFERENCE_BOUNDARY_FILES.has(file), `G2. the only file(s) allowed to mention a provider preference are 0.9.293/0.9.294/0.9.295's own boundary files — "${file}" is not one of them`);
+            assert(KNOWN_PREFERENCE_BOUNDARY_FILES.has(file), `G2. the only file(s) allowed to mention a provider preference are 0.9.293/0.9.294/0.9.295/0.9.297's own boundary files — "${file}" is not one of them`);
         }
-        console.log('✓ Section G: as of 0.9.295, a provider-preference concept exists in exactly the four files those three milestones introduced (core/RoleProviderRole.js, core/RoleProviderPreference.js, storage/RoleProviderPreferenceStore.js, application/RoleAwareProviderResolver.js) — a pure semantic boundary with a durable home and a real, tested resolution path, still never wired into a runtime-resolved default; every other production file this audit already knew about remains exactly as free of the concept as it was at 0.9.292');
+        console.log('✓ Section G: as of 0.9.297, a provider-preference concept exists in exactly the five files those four milestones introduced (core/RoleProviderRole.js, core/RoleProviderPreference.js, storage/RoleProviderPreferenceStore.js, application/RoleAwareProviderResolver.js, application/ResolvePreferredRoleProviderUseCase.js) — a pure semantic boundary with a durable home, a real tested resolution path, and now one stable application seam, still never wired into a runtime-resolved default; every other production file this audit already knew about remains exactly as free of the concept as it was at 0.9.292');
     }
 
     // ===============================================================
