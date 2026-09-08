@@ -2739,6 +2739,23 @@ export default {
         // cryptographic assurance no existing machinery actually backs at
         // this boundary — so this milestone renders createdAt and leaves
         // signature/verification exactly as unrendered as 0.9.265 found it.
+        // 0.9.269 — Nearby Place Naming Claim Adoption Status Indicator.
+        // `alreadySaved` is read straight off the existing
+        // session.hasPlaceNamingClaim(worldId, claimId) — see that
+        // method's own header — never a second, UI-maintained
+        // "adoptedClaimIds" list. Deliberately keyed by the claim's own
+        // id alone, exactly like LocalPlaceNamingClaimStore#has()
+        // itself: two claims naming the same place ("Riverside" by
+        // Alice, "Riverside" by Bob) carry distinct ids and are
+        // therefore classified completely independently, and the same
+        // id under two different worldIds (a stale claim from a World
+        // that reused another World's regionId) is likewise never
+        // conflated — has()'s own storage key is already scoped per
+        // worldId. Recomputed as one atomic pass over the whole list
+        // every time this computed re-runs — never an incremental patch
+        // of one row's own flag — see adoptNearbyPlaceNamingClaim()'s own
+        // comment below on what actually triggers that re-run after a
+        // successful adoption.
         const nearbyPlaceNamingClaimRows = computed(() => (
             nearbyPlaceNamingClaims.value.map((entry) => ({
                 claimId: entry.claim.id,
@@ -2750,7 +2767,8 @@ export default {
                 worldId: entry.claim.worldId,
                 authorIdentityId: entry.claim.authorIdentityId,
                 createdAt: entry.claim.createdAt,
-                signature: entry.claim.signature
+                signature: entry.claim.signature,
+                alreadySaved: session.hasPlaceNamingClaim(entry.claim.worldId, entry.claim.id)
             }))
         ));
 
@@ -2850,6 +2868,23 @@ export default {
             const result = guarded(() => session.importPlaceNamingClaim(pkg));
             if (!result) return;
             const { claim, isNew } = result;
+            // 0.9.269 — Nearby Place Naming Claim Adoption Status
+            // Indicator. Only ever reached once session.importPlaceNamingClaim()
+            // has actually returned — a thrown/refused import (a tampered
+            // or unverifiable package) already short-circuited above via
+            // `if (!result) return;`, so a failed attempt reaches neither
+            // this line nor "Already saved," exactly per this milestone's
+            // own brief ("persistence fails -> still [Adopt]"). Reassigning
+            // `nearbyPlaceNamingClaims.value` to a NEW array (never mutating
+            // the existing one in place) is what actually makes
+            // nearbyPlaceNamingClaimRows above recompute `alreadySaved` for
+            // every row — the same atomic-refresh discipline a genuine
+            // discovery tick already applies, deliberately never an
+            // incremental flip of this one row's own flag. Reached on
+            // BOTH branches below (a brand new adoption and a re-adoption
+            // of something already known) since either way the store now
+            // genuinely holds the claim.
+            nearbyPlaceNamingClaims.value = [...nearbyPlaceNamingClaims.value];
             if (!isNew) {
                 feedback.show(`"${claim.name}" was already known — nothing changed`);
                 return;
@@ -4400,11 +4435,29 @@ export default {
                              comment. Discovery, proximity, presentation,
                              and Navigate above never trigger this
                              themselves; it only ever runs from this
-                             click. -->
+                             click.
+
+                             0.9.269 — Nearby Place Naming Claim Adoption
+                             Status Indicator. Adopt only renders while
+                             claim.alreadySaved is false; once
+                             session.hasPlaceNamingClaim() reports this
+                             claim is already on file, the button is
+                             replaced by a passive status line rather than
+                             a disabled button — a Wanderer never needs to
+                             click something to learn it would do nothing.
+                             Deliberately worded "Already saved," never
+                             "Already adopted": the underlying store also
+                             holds this identity's OWN published claims,
+                             not only ones reached via Adopt, so "saved"
+                             is the term that matches what has() actually
+                             establishes without overstating it — see this
+                             milestone's own docs/Roadmap.md entry. -->
                         <button
+                            v-if="!claim.alreadySaved"
                             class="action-btn world-view-nearby-row-adopt"
                             @click="adoptNearbyPlaceNamingClaim(claim)"
                         >Adopt</button>
+                        <span v-else class="world-view-nearby-row-status">✓ Already saved</span>
                     </div>
                 </CollapsibleSection>
                 <!-- 0.9.17 — Integrate World Encounters into the Existing

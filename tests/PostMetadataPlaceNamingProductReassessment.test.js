@@ -506,29 +506,32 @@ async function runTests() {
             'F2. The pre-existing "All Claims" list still renders name/author/date for every claim, adopted or not — inspection remains COMPLETE via reuse.');
 
         // F3. "Is it unclear which claims are merely discovered versus
-        // locally retained?" — the closer, real question: at the point of
-        // ENCOUNTER (the Nearby row, before Adopt is clicked), can a
-        // viewer tell whether a claim is already retained? NO — this is
-        // the one friction point that survives scrutiny, unchanged since
-        // 0.9.265 Section D.
+        // locally retained?" UPDATED at 0.9.269: this was the one
+        // friction point that survived scrutiny since 0.9.265 Section D —
+        // it is now BUILT. This reassessment is updated in place to
+        // reconfirm the built shape, mirroring exactly how Section D1 of
+        // tests/PostAdoptionPlaceNamingProductReassessment.test.js (0.9.265)
+        // was updated at 0.9.266 for createdAtLabel.
         const worldViewCode = codeOnlyLines(await rawSource('ui/views/WorldView.js'));
         const nearbyBlock = worldViewCode.match(/<!-- 0\.9\.257 — World View Place Naming Presentation\.[\s\S]*?<\/CollapsibleSection>/)[0];
-        assert(!/already|isKnown|isAdopted|alreadyAdopted/i.test(nearbyBlock),
-            'F3a. The Nearby row still carries no "already known/adopted" indicator of any kind — a viewer only learns a claim was already known AFTER clicking Adopt (via the resulting feedback message), never before.');
+        assert(/alreadySaved/.test(nearbyBlock) && /Already saved/i.test(nearbyBlock),
+            'F3a. UPDATED at 0.9.269 — BUILT: the Nearby row template now renders a passive "Already saved" status in place of Adopt once claim.alreadySaved is true — a viewer can now tell BEFORE clicking Adopt.');
         const sessionSource = codeOnlyLines(await rawSource('application/WorldNavigationSession.js'));
-        assert(!/hasPlaceNamingClaim|isClaimKnown|isClaimAdopted/.test(sessionSource),
-            'F3b. WorldNavigationSession still exposes no read-only "is this claim already in my store" query — reconfirmed unchanged since 0.9.265.');
-        // LIVE PROOF the underlying data already answers this correctly
-        // one layer down — the prerequisite is trivial, but nothing
-        // surfaces it before the click.
+        assert(sessionSource.includes('hasPlaceNamingClaim(worldId, claimId) {'),
+            'F3b. UPDATED at 0.9.269 — BUILT: WorldNavigationSession now exposes hasPlaceNamingClaim(worldId, claimId), a thin read-only pass-through onto PlaceNamingClaimUseCase#hasClaim() -> LocalPlaceNamingClaimStore#has().');
+        // LIVE PROOF the underlying data — and now the session-level door
+        // onto it — answers this correctly.
         const alice = makeIdentity('Alice');
         const bob = makeIdentity('Bob');
         const bobReplica = makeReplica(bob);
         const claim = signedClaim(alice, { worldId: 'world-1', regionId: 'region-1', name: 'Willowmere' });
         assert(bobReplica.store.has('world-1', claim.id) === false, 'F3c. Before adoption, has() correctly reports false.');
+        assert(bobReplica.useCase.hasClaim('world-1', claim.id) === false, 'F3c2. UPDATED at 0.9.269 — BUILT: the same reports false through the new PlaceNamingClaimUseCase#hasClaim() door.');
         adoptNearbyPlaceNamingClaim(bobReplica, rowFromEnvelope(discoverAsEnvelope(claim).claim));
         assert(bobReplica.store.has('world-1', claim.id) === true,
-            'F3d. LIVE PROOF: after adoption, has() correctly reports true — the exact boolean an "already known" indicator on the Nearby row would need already exists and already answers correctly, one layer below the session (unchanged since 0.9.265) — a real, still-open, precisely-scoped friction point, not a resolved one.');
+            'F3d. after adoption, has() correctly reports true — the exact boolean the Nearby row\'s "Already saved" indicator reads.');
+        assert(bobReplica.useCase.hasClaim('world-1', claim.id) === true,
+            'F3d2. UPDATED at 0.9.269 — BUILT: PlaceNamingClaimUseCase#hasClaim() reports the same true — the exact door session.hasPlaceNamingClaim() forwards to, and the row itself now reads.');
 
         // F4. "Does any existing domain capability become unreachable
         // after adoption?" — checked directly: export, preference-setting,
@@ -542,7 +545,7 @@ async function runTests() {
         const secondAdopt = adoptNearbyPlaceNamingClaim(bobReplica, rowFromEnvelope(discoverAsEnvelope(secondClaim).claim));
         assert(secondAdopt.isNew === true, 'F4c. Adopting a second, competing claim for the same region still works after the first adoption.');
 
-        console.log('✓ F: two of the brief\'s four example frictions are already resolved by pre-existing, unmodified surfaces (why names coexist — F1; inspecting an adopted claim — F2). The third — telling "already retained" from "newly discovered" AT THE POINT OF ENCOUNTER, before Adopt is clicked — remains real and unresolved, with its one missing prerequisite (a thin, read-only store.has() pass-through) already proven correct one layer down (F3). The fourth does not occur: no domain capability becomes unreachable after adoption (F4). This is the sharpest, most concretely evidenced friction this reassessment found — not a new discovery, but the same one 0.9.265 named, still unaddressed three milestones later.');
+        console.log('✓ F: UPDATED at 0.9.269 — two of the brief\'s four example frictions are already resolved by pre-existing, unmodified surfaces (why names coexist — F1; inspecting an adopted claim — F2). The third — telling "already retained" from "newly discovered" AT THE POINT OF ENCOUNTER, before Adopt is clicked — was the sharpest, most concretely evidenced friction this reassessment found, and is now BUILT: the Nearby row renders "Already saved" via the thin, read-only hasPlaceNamingClaim() pass-through this section itself already proved correct one layer down (F3). The fourth does not occur: no domain capability becomes unreachable after adoption (F4).');
     }
 
     // ---------------------------------------------------------------
@@ -564,7 +567,7 @@ async function runTests() {
             ['Signature presentation', 'NEW CAPABILITY, not built (Section B)'],
             ['Claim removal/retraction (non-author)', 'OPEN PRODUCT DECISION (Section C)'],
             ['Competing-name resolution', 'OPEN PRODUCT DECISION, deliberately preserved (Section D)'],
-            ['"Already known" at encounter (pre-Adopt)', 'MISSING_UI, thin, evidenced prerequisite (Section F)'],
+            ['"Already known" at encounter (pre-Adopt)', 'COMPLETE — BUILT at 0.9.269 (Section F)'],
             ['Moderation', 'MISSING_DOMAIN_CAPABILITY'],
             ['Synchronization', 'MISSING_DOMAIN_CAPABILITY, no requirement found (Section E)'],
             ['Notifications', 'MISSING_DOMAIN_CAPABILITY, standing gap since 0.9.221']
@@ -587,7 +590,7 @@ async function runTests() {
     // ---------------------------------------------------------------
     {
         const ranked = [
-            '1. An "already known" indicator on the Nearby row, at the point of encounter — MISSING_UI, the thinnest, most concretely evidenced candidate this reassessment found (Section F). LocalPlaceNamingClaimStore#has() already answers the exact boolean needed, live-proven correct; the only prerequisite is a read-only session pass-through. Unchanged in ranking from 0.9.265 candidate 2 — three milestones of metadata work have not displaced it, because it answers a genuinely different question (freshness at encounter) than author/createdAt (identity at encounter) do.',
+            '1. An "already known" indicator on the Nearby row, at the point of encounter — the thinnest, most concretely evidenced candidate this reassessment found (Section F). BUILT at 0.9.269, worded "Already saved" (see tests/PlaceNamingNearbyAdoptionStatus.test.js) via the exact thin, read-only session pass-through this reassessment named.',
             '2. Enable removing a claim a viewer only ADOPTED (never authored) — MISSING_DOMAIN_CAPABILITY, but a PRODUCT decision, not a technical one (Section C4: the storage layer has no authorship opinion at all; the use case is where the gate lives). Five structurally different candidate meanings remain genuinely open; none is assumed.',
             '3. A check-only, non-mutating verification/UI capability exposing verifyPlaceNamingClaim()\'s own already-meaningful result to a Nearby row or the All Claims list — a NEW verification/UI capability (Section B), not a missing field. The primitive is proven live to already produce a rich, truthful result; what is missing is a named, exposed, non-mutating path to it.',
             '4. Wire "Prefer this" onto the Nearby row (unchanged from 0.9.262/0.9.265) — MISSING_UI. The manual PlaceNamingPanel has had it since 0.5.2; Nearby still lacks it. Structurally independent of everything this milestone examined.',
