@@ -86060,3 +86060,77 @@ Not selected here, by design — this milestone's own scope was reassessment onl
 Outcome 3 (an unrelated product gap being more valuable than any notification extension) is left open for whoever
 picks the next milestone with its own fresh evidence; this reassessment's only job was to determine whether
 notification history itself still owed the product anything further. It does not, today.
+
+## 0.9.288 — Cross-Arc Product Evolution Reassessment
+
+0.9.287 closed the notification arc with a clean stopping point — the same rhythm this codebase has run nine times
+since 0.9.196 (build a vertical slice, audit its lifecycle, reassess the product, stop or deliberately select the
+next slice), applied in turn to World interaction, Vehicles, Publication distribution, Snapshot, Editor/autosave/
+history/undo-redo, Collaboration, Publication Commentary, Place Naming, and Notification History. This milestone is
+the wider question none of those nine reassessments was scoped to ask: now that ten arcs are each independently
+complete, where does the product AS A WHOLE still owe something — inside one arc, or, more valuably, in the seam
+BETWEEN two of them?
+
+Test/document-only, per this milestone's own brief. No production code changed.
+
+### What this milestone adds
+
+`tests/CrossArcProductEvolutionReassessment.test.js` (new, registered in `tests.html`) — ten sections, lettered
+A-J, every claim grounded in a concrete, freshly re-checked signal against the real, unmodified source. Section A
+freezes the baseline: one signal per completed arc (all ten IMPLEMENTED and REACHABLE, fresh), plus the one
+ARCHITECTURALLY-POSSIBLE-ONLY exception this codebase already knows about — the 0.2.7-0.2.9 authority-based
+collaboration protocol (`collaboration/CollaborationSession.js`, `DocumentAuthority.js`,
+`AuthorityCollaborationTransport.js`, `LocalCollaborationTransport.js`, `core/CollaborationEnvelope.js`,
+`application/CreateCollaborationUseCase.js`), still on disk, still uncalled outside its own file, unchanged since
+0.9.241 first flagged it OBSOLETE_CANDIDATE — forty-seven milestones of standing architecture debt, reconfirmed
+fresh rather than assumed still true. Section B runs the brief's own five-question capability-gap flow (exists? /
+composed? / reachable from UI? / actually useful? / missing capability or missing integration?) in full against the
+one candidate this audit selects, proving the selection is a process outcome, not a conclusion justified after the
+fact. Section C sweeps six categories the brief explicitly excludes (speculative features, duplicated
+abstractions, alternate implementations, infrastructure without a consumer) and finds nothing selectable in any of
+them — including reconfirming 0.9.212's own `BuildPublicationSnapshotTransferPackageUseCase` gap is closed. Section
+D reassesses six named product directions (richer Publication interaction, broader social/relationship semantics,
+World Presence, collaboration expansion, discovery/navigation, notification delivery) with fresh grep-verified
+evidence; five produce nothing, the sixth is exactly Section E's finding.
+
+### The finding (Section E)
+
+Publication Commentary's write-authorization policy (`CanCommentOnPublicationUseCase`, 0.9.246) is explicitly,
+provably ownership-agnostic — proven live, not merely read from its own comment: Bob, who neither authored nor
+published Alice's Publication, is authorized to comment on it. Its read query
+(`GetPublicationCommentariesUseCase`, 0.9.247) carries no ownership or identity concept of any kind. The one
+production wiring — `WorldView.js`'s `getPublicationCommentariesCommand(publicationId)` /
+`addPublicationCommentaryCommand`, forwarding into `WorldNavigationSession`'s own identically-shaped methods — is
+already parameterized by an arbitrary, caller-supplied `publicationId`, with no "must be mine" narrowing anywhere
+in the chain. Yet exactly one UI component binds either command: `OwnPublicationPanel`. All six UI surfaces that
+render OTHER Wanderers' Publications — `PublicationCard`, `PublicationCatalog`, `PublicationPreview`,
+`PublicationList`, `DecentralizedPublicationsView`, `WorldEncounterCanvas` — carry zero commentary vocabulary,
+unchanged for thirty-six milestones since 0.9.252 first observed the narrower version of this finding, and each
+already holds the full `Publication` object (`.id` included) at render time. This is the textbook cross-arc
+composition gap the brief's own Section E asked to find: two independently complete systems (Commentary, Discovery
+presentation) that fail to connect at a seam Commentary's own written policy already justifies.
+
+Section F is the identity-boundary audit the brief named by name: all twelve identity kinds it lists resolve to
+real, distinguishable fields; `core/createId.js` is a genuinely shared UUID generator across at least fifteen files
+spanning most arcs (35+ repository-wide), but shares only an implementation, never a namespace — its own code
+carries no domain-scoping prefix, so cross-arc reuse carries no collision risk by construction; `recipientIdentityId`
+and `authorIdentityId` stay two distinct slots even under a live same-person self-comment scenario, proven rather
+than assumed. Section G is the temporal-boundary audit, checking for conflation ACROSS arc boundaries (creation,
+publication, discovery, retrieval, presentation, materialization, placement) rather than merely within one arc —
+no stage has absorbed a neighboring one's timestamp. Section H is the brief's own six-row architecture-debt-vs-
+product-gap table, populated with this milestone's real findings: exactly one row classifies as an Integration gap
+(Section E's finding); the legacy collaboration protocol and the still-internal `getPublicationCommentaryById()`
+(0.9.250) are architecture debt, not gaps; Notification delivery and Place Naming's own open retraction-semantics
+fork remain correctly unselected for lack of evidence, exactly as their own prior reassessments concluded. Section
+I answers the brief's own four candidate-scoring questions for the one Integration-gap finding without inventing a
+numeric ranking system.
+
+### Verdict (Section J): INTEGRATE
+
+Publication Commentary has a concrete, evidenced reachability gap, not a missing domain capability — the read and
+write paths are both already generic and already composed; only a second UI wiring site is missing. Per this
+milestone's own scope (selection, not implementation, mirroring 0.9.196's own original "recommend, don't build"
+posture), nothing is wired here. **0.9.289** should bind `getPublicationCommentariesCommand`/
+`addPublicationCommentaryCommand` into at least one Discovery-facing Publication view, using the exact pattern
+`OwnPublicationPanel` already establishes (0.9.248), with no change to the domain/application layer this
+candidate's own Section I already confirms is unnecessary.
