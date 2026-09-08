@@ -84922,6 +84922,66 @@ question 0.9.272 Section D closed — every candidate blocked on reaching a reci
 still holds once a producer actually exists to test it against, rather than assuming 0.9.272's own finding
 automatically transfers unchanged.
 
+## 0.9.275 — Publication Commentary Notification Producer
+
+Per 0.9.274's own producer-selection decision: the first real `NotificationEvent` producer, wired to Publication
+Commentary — the candidate 0.9.274 found needs no new persistence design and no coupling to a lower-level
+wire-ingestion method, only a straightforward construction from data `AddPublicationCommentaryUseCase.js` already
+produces.
+
+### What this milestone adds
+
+`application/PublicationCommentaryNotificationProducer.js` (new) — a decorator wrapping a real
+`AddPublicationCommentaryUseCase` instance, never a fourth constructor argument added to it:
+`AddPublicationCommentaryUseCase.js` itself is left completely unmodified, so every existing caller and every
+existing test constructing it with its current three collaborators keeps working unchanged. `execute()` delegates
+entirely to the wrapped use case first; only once that call has already returned successfully does it look up the
+Publication through an injected `discoveryProvider` (the same `findById()` boundary
+`CanCommentOnPublicationUseCase.js` already depends on) and, when found, construct a `publication.commented`
+`NotificationEvent` — `recipientIdentityId` from `Publication.publisherIdentity.id`, `createdAt` from the
+Commentary's own fact timestamp, and a payload of exactly `publicationId`/`commentaryId`/`authorIdentityId`, no
+presentation fields — before handing it to an injected `notificationSink` function, this milestone's only new seam.
+No `try`/`catch` wraps either the wrapped use case's call or the sink call: a Commentary persistence failure
+propagates before any `NotificationEvent` is ever constructed, and a sink failure propagates after the Commentary
+is already durably saved, never rolling anything back and never inventing a transaction model to prevent it. Every
+successfully created Commentary produces a notification unconditionally, including a self-comment on one's own
+Publication — no suppression rule is invented here.
+
+`tests/PublicationCommentaryNotificationProducer.test.js` (new, registered in `tests.html`) — fourteen sections
+using the real `AddPublicationCommentaryUseCase`, a real `PublicationCommentaryStore`, a real
+`LocalDiscoveryProvider`, and real, authenticated `LocalIdentityProvider` instances throughout, with only the
+notification sink captured in memory: a flagship successful Commentary producing an exact, fully-verified
+`NotificationEvent` (A); the recipient always the publisher, never the commenting author (B); exact commentary/
+Publication identity in the payload (C); author identity preserved per-comment across different authors on the
+same Publication (D); `createdAt` copied from the Commentary's own fact timestamp, never processing time (E); a
+payload of exactly three keys, no presentation fields (F); distinct `notificationId`s across multiple comments (G);
+two Publications' notifications never cross-addressing each other's publisher (H); a genuine storage write failure
+propagating with zero notifications produced (I); a sink failure propagating unmodified while the
+already-persisted Commentary is left untouched (J); a self-comment still producing an unsuppressed notification,
+author and recipient explicitly equal (K); a deliberately constructed missing-Publication edge case producing no
+notification while the Commentary itself still succeeds (L); construction guards for all three collaborators (M);
+and two structural regressions confirming no `ChatOutbox`/notification-storage/delivery-lifecycle vocabulary
+appears anywhere in the producer's own code and importing nothing but `core/NotificationEvent.js` (N), and that
+none of `AddPublicationCommentaryUseCase.js`, `PublicationCommentary.js`, or `NotificationEvent.js` were modified to
+wire this producer in (O).
+
+### What this milestone deliberately excludes
+
+Per this milestone's own brief: no `NotificationEvent` persistence, no inbox, no delivery mechanism, no push/browser
+notifications, no unread/read state, no retries, deduplication, batching, or ranking, no notification preferences,
+no notification UI, no reuse of `application/ChatOutbox.js`, no automatic notification generation for any other
+domain (Friend Relationship's own `READY_PRODUCER` candidate from 0.9.274 remains unwired), no cross-device
+synchronization, and no notification lifecycle states of any kind. `notificationSink` is a plain injected function;
+this milestone builds no concrete implementation of one, in production code or otherwise — every test in
+`tests/PublicationCommentaryNotificationProducer.test.js` supplies its own in-memory capture function.
+
+### What comes after
+
+Per this milestone's own header: `0.9.276`, a producer lifecycle/failure audit — proving this producer's ordering
+and failure semantics hold under closer examination, the same one-milestone-later audit shape 0.9.270/0.9.274
+already used — before reassessing whether `NotificationEvent` persistence or delivery is actually justified. This
+milestone deliberately does not jump straight to `NotificationEvent` storage.
+
 ## 0.9.270 — Place Naming Adoption Status Lifecycle Audit
 
 0.9.269 built `alreadySaved`; this milestone proves it holds under a lifecycle, the same one-milestone-later audit
