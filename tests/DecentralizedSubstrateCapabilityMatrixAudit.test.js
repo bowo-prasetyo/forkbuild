@@ -70,7 +70,14 @@ import { SnapshotPlacementViewRegistry } from '../application/SnapshotPlacementV
 //                     (Content ×2, Proof ×2) versus the Discovery role,
 //                     which has none yet
 //        Section G — default behavior: no provider-preference concept
-//                     exists anywhere in source today
+//                     existed anywhere in source at the time this audit
+//                     was written; UPDATED by 0.9.293 — Decentralized
+//                     Role Provider Preference Boundary, which fills
+//                     exactly this gap with two new, deliberately
+//                     unconsumed files (core/RoleProviderRole.js,
+//                     core/RoleProviderPreference.js) — this section now
+//                     asserts the concept exists in exactly those two
+//                     files, and nowhere else
 //        Section H — availability vs preference: "no fallback" is
 //                     everywhere DOCUMENTED, never once IMPLEMENTED
 //        Section I — persistence: no preference-shaped storage key exists
@@ -487,19 +494,42 @@ async function run() {
     }
 
     // ===============================================================
-    // Section G — default behavior: no provider-preference concept exists
-    // anywhere in source today, confirmed by a repo-wide sweep.
+    // Section G — default behavior: at the time this audit was written,
+    // no provider-preference concept existed anywhere in source. 0.9.293
+    // — Decentralized Role Provider Preference Boundary — is the direct,
+    // named answer to this very gap (see Section J's own prerequisite
+    // list, item 4) and deliberately introduces exactly two files that
+    // now legitimately mention one: core/RoleProviderRole.js and
+    // core/RoleProviderPreference.js. This section is UPDATED, not
+    // deleted, by 0.9.293 — it still holds the line that matters: the
+    // concept exists in exactly those two boundary files 0.9.293 itself
+    // added, and nowhere else. A hit anywhere outside that pair would
+    // mean the preference concept leaked into a composition root, a
+    // registry, or ui/ before the capability gaps Section J itself named
+    // (Base/Proof's verify half, Arweave/Discovery's write half,
+    // Discovery's own keyed registry) were ever closed — exactly what
+    // 0.9.293's own boundary was built to avoid (see
+    // tests/DecentralizedRoleProviderPreferenceBoundary.test.js Section M,
+    // which sweeps for the same thing from the boundary's own side).
     // ===============================================================
     {
         const allProductionFiles = await repoWideProductionFiles();
         const preferencePattern = /providerPreference|networkPreference|preferredProvider|substratePreference/i;
+        const KNOWN_PREFERENCE_BOUNDARY_FILES = new Set(['core/RoleProviderRole.js', 'core/RoleProviderPreference.js']);
         let hits = 0;
+        const hitFiles = [];
         for (const file of allProductionFiles) {
             const text = await source(file);
-            if (preferencePattern.test(text)) hits += 1;
+            if (preferencePattern.test(text)) {
+                hits += 1;
+                hitFiles.push(file);
+            }
         }
-        assert(hits === 0, 'G1. zero production files anywhere mention a provider/network/substrate preference of any kind — today\'s providers are exclusively fixed at each composition root\'s own hardcoded constructor call (D1/D2), never runtime-selected by a stored default');
-        console.log('✓ Section G: no default-provider concept exists yet, anywhere — a "no explicit preference falls back to today\'s existing hardcoded default" model (the brief\'s own recommendation) is compatible with today\'s code precisely because today\'s code IS that hardcoded default, unconditionally, for every caller');
+        assert(hits === KNOWN_PREFERENCE_BOUNDARY_FILES.size, `G1. exactly the two files 0.9.293 itself introduced mention a provider preference (found ${hits}: ${hitFiles.join(', ')}) — every OTHER production file remains exactly as free of the concept as it was when this audit first ran`);
+        for (const file of hitFiles) {
+            assert(KNOWN_PREFERENCE_BOUNDARY_FILES.has(file), `G2. the only file(s) allowed to mention a provider preference are 0.9.293's own boundary files — "${file}" is not one of them`);
+        }
+        console.log('✓ Section G: as of 0.9.293, a provider-preference concept exists in exactly the two files that milestone introduced (core/RoleProviderRole.js, core/RoleProviderPreference.js) — a pure, unconsumed semantic boundary, never a runtime-selected default; every other production file this audit already knew about remains exactly as free of the concept as it was at 0.9.292');
     }
 
     // ===============================================================
