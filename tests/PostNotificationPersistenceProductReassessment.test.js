@@ -328,10 +328,17 @@ async function runTests() {
         capabilityRegister.push(['Enumerate notification history', `COMPLETE (storage layer); REACHABLE_BUT_INTERNAL end-to-end — ${loadAllCallers} application/ui callers`]);
 
         // B10. Retrieve notifications for recipient — the row this
-        // milestone's own brief calls out by name. No such method exists.
+        // milestone's own brief calls out by name. This finding was closed
+        // by 0.9.283 (see application/GetRecipientNotificationEventsUseCase.js's
+        // own header): no getForRecipient() was added to the STORE, exactly
+        // as Section C recommended, but the capability itself now exists
+        // one layer up, as a plain filter over loadAll() gated on the
+        // authenticated identity.
         assert(!/getForRecipient/.test(codeOnlyLines(store)),
-            'B10. storage/NotificationEventStore.js still exposes no getForRecipient() — the exact capability this milestone\'s own brief asks whether evidence justifies.');
-        capabilityRegister.push(['Retrieve notifications for recipient', 'MISSING_DOMAIN_CAPABILITY (Section C)']);
+            'B10. storage/NotificationEventStore.js still exposes no getForRecipient() — 0.9.283 deliberately built the capability one layer up instead, per Section C\'s own recommendation.');
+        assert(await sourceExists('application/GetRecipientNotificationEventsUseCase.js'),
+            'B10b. application/GetRecipientNotificationEventsUseCase.js now exists (0.9.283) — the capability this row named is built.');
+        capabilityRegister.push(['Retrieve notifications for recipient', 'COMPLETE (0.9.283) — application/GetRecipientNotificationEventsUseCase.js, no store change']);
 
         // B11. Mark notification read.
         assert(!/markRead|isRead|\breadAt\b/i.test(codeOnlyLines(store) + codeOnlyLines(await rawSource('core/NotificationEvent.js'))),
@@ -354,7 +361,7 @@ async function runTests() {
 
         assert(capabilityRegister.length === 13, 'B14. All thirteen capability rows this milestone\'s own brief names were classified.');
 
-        console.log('✓ B: Capability/reachability matrix complete — nine rows COMPLETE (create, determine recipient, deduplicate, persist, reconstruct, retrieve-by-id, retrieve-by-identity, detect conflicts at the storage layer, enumerate history at the storage layer), one MISSING_DOMAIN_CAPABILITY row this milestone\'s own brief specifically asked about (retrieve-for-recipient), two further MISSING_DOMAIN_CAPABILITY rows (mark read, deliver), and one MISSING_UI row. Each row cites a concrete signal, never asserted from category alone.');
+        console.log('✓ B: Capability/reachability matrix complete — nine rows COMPLETE (create, determine recipient, deduplicate, persist, reconstruct, retrieve-by-id, retrieve-by-identity, detect conflicts at the storage layer, enumerate history at the storage layer), one row this milestone\'s own brief specifically asked about now COMPLETE via 0.9.283 (retrieve-for-recipient — re-verified above, not re-derived), two further MISSING_DOMAIN_CAPABILITY rows (mark read, deliver), and one MISSING_UI row. Each row cites a concrete signal, never asserted from category alone.');
         console.log('\nCapability register:');
         for (const [name, status] of capabilityRegister) {
             console.log(`    ${name.padEnd(38)} ${status}`);
@@ -396,12 +403,19 @@ async function runTests() {
         assert(carolView.length === 1 && carolView[0].recipientIdentityId === carol.getSigningIdentity().id,
             'C1b. Carol\'s one real notification is correctly derived by filtering loadAll() on recipientIdentityId — the raw data already supports this query.');
 
-        // C2. ...but this derivation is NOT a built product capability.
-        // Zero application/ui callers of loadAll() exist at all (Section
-        // B9), and grep confirms it directly here, scoped and fresh.
+        // C2. At the time this milestone shipped, this derivation was NOT
+        // yet a built product capability — zero application/ui callers of
+        // loadAll() existed. 0.9.283 closed exactly that gap
+        // (application/GetRecipientNotificationEventsUseCase.js#execute()
+        // calls loadAll() and applies the identical filter this section
+        // demonstrates), so this is now re-verified as CLOSED rather than
+        // re-asserted as absent.
         const loadAllCallers = await grepCount('\\.loadAll(', ['application', 'ui']);
-        assert(loadAllCallers === 0,
-            'C2. Zero callers of NotificationEventStore#loadAll() exist in application/ or ui/ — the filter this section just performed exists ONLY in this test file, never in the product.');
+        assert(loadAllCallers >= 1,
+            'C2. At least one real application/ caller of NotificationEventStore#loadAll() now exists (0.9.283\'s GetRecipientNotificationEventsUseCase) — the filter this section demonstrates is no longer test-only.');
+        const recipientUseCaseCode = codeOnlyLines(await rawSource('application/GetRecipientNotificationEventsUseCase.js'));
+        assert(recipientUseCaseCode.includes('.loadAll()') && recipientUseCaseCode.includes('recipientIdentityId'),
+            'C2b. application/GetRecipientNotificationEventsUseCase.js still performs exactly the loadAll() + recipientIdentityId filter this section proved safe, never a reimplementation of it.');
 
         // C3. getForRecipient() itself does not exist as a method, on
         // this store or anywhere else in the codebase. storage/
@@ -431,7 +445,7 @@ async function runTests() {
         assert(probeRequiresFullEvent,
             'C4. getByDeduplicationIdentity() still takes a full NotificationEvent as its probe, not merely a recipientIdentityId — confirming it answers a different question than a recipient-facing query would.');
 
-        console.log('✓ C: getForRecipient() CAN be safely derived from the existing store\'s own data (C1) — a plain filter over loadAll() is provably correct, introduces no new semantics, and required no change to any existing method\'s contract. But it is not, today, a product capability: zero application/UI code performs this derivation (C2), the method does not exist anywhere (C3), and the one existing by-identity lookup answers a structurally different question (C4). Classification: MISSING_DOMAIN_CAPABILITY, safely derivable, not yet built — the honest middle ground this milestone\'s own brief asked to distinguish from either "already works" or "impossible."');
+        console.log('✓ C: getForRecipient() CAN be safely derived from the existing store\'s own data (C1) — a plain filter over loadAll() is provably correct, introduces no new semantics, and required no change to any existing method\'s contract. At the time this milestone shipped it was not yet a product capability (zero application/UI code performed this derivation); 0.9.283 closed that gap one layer up, in application/GetRecipientNotificationEventsUseCase.js, without ever adding getForRecipient() to the store itself (C2/C2b), the method still does not exist anywhere on the store (C3), and the one existing by-identity lookup still answers a structurally different question (C4). Classification: COMPLETE (0.9.283) — built exactly where Section C\'s own evidence said it safely could be, no store change.');
     }
 
     // ===============================================================
@@ -843,17 +857,21 @@ async function runTests() {
     // explicitly and grounded in Sections B/C/J's own evidence.
     // ===============================================================
     {
-        // K1. A UI cannot honestly show "your notifications" without a
-        // domain/application operation defining which persisted events
-        // belong to the current recipient — this milestone's own brief's
-        // central claim, verified structurally: zero UI files reference
+        // K1. At the time this milestone shipped, a UI could not honestly
+        // show "your notifications" without a domain/application
+        // operation defining which persisted events belong to the current
+        // recipient — verified structurally: zero UI files referenced
         // NotificationEvent (Section B13), and the one capability that
-        // would answer "which events belong to me" does not exist
-        // (Section B10/C3). A UI built today would have no honest data
-        // source to read from at all.
+        // would answer "which events belong to me" did not exist yet
+        // (Section B10/C3, pre-0.9.283). 0.9.283 closed the domain-
+        // capability half of that dependency (GetRecipientNotificationEventsUseCase);
+        // this section's own zero-UI-references finding still holds
+        // unchanged, so MISSING_UI is now the ONE remaining gap in this
+        // dependency chain, no longer blocked behind a missing domain
+        // capability too.
         const uiNotificationRefs = await grepCount('NotificationEvent', ['ui']);
         assert(uiNotificationRefs === 0,
-            'K1. Zero ui/ files reference NotificationEvent in any form — a "your notifications" UI has no honest data source to read from today, confirming the MISSING_UI classification is downstream of, not independent from, the MISSING_DOMAIN_CAPABILITY classification (getForRecipient).');
+            'K1. Zero ui/ files reference NotificationEvent in any form — a "your notifications" UI still has no wiring to read from today, even though the domain capability it would call (GetRecipientNotificationEventsUseCase, 0.9.283) now exists.');
 
         // K2. The distinction is not merely conceptual — it is a real
         // dependency order. Building UI before the query capability would
@@ -878,7 +896,7 @@ async function runTests() {
         assert(dependencyOrder[0] === 'getForRecipient() (domain capability)' && dependencyOrder[1] === 'notification UI',
             'K3. The dependency order is fixed: a domain/application query capability must exist before a UI can honestly claim to show "your notifications" — confirmed by K1\'s own zero-references finding, not merely asserted by convention.');
 
-        console.log('✓ K: MISSING_DOMAIN_CAPABILITY and MISSING_UI are not two independent gaps here — they are ordered. A notification UI has zero honest data source to read from today (K1), because the domain capability that would define "which events belong to me" does not exist (Section B10/C3). Building UI first would force it to inline Section C\'s own derivation logic, repeating the exact UI-as-second-source-of-truth mistake this codebase\'s own Commentary UI already avoided (K2). The dependency order is one-directional (K3).');
+        console.log('✓ K: MISSING_DOMAIN_CAPABILITY and MISSING_UI were not two independent gaps here — they were ordered, and 0.9.283 closed them in that order. A notification UI still has no wiring to read from today (K1), but the domain capability that would define "which events belong to me" now exists (Section B10/C2, 0.9.283\'s GetRecipientNotificationEventsUseCase) rather than being absent. Building UI on top of it can call that use case directly instead of inlining Section C\'s own derivation logic, avoiding the exact UI-as-second-source-of-truth mistake this codebase\'s own Commentary UI already avoided (K2). The dependency order proved itself correct (K3): the domain capability shipped first.');
     }
 
     // ===============================================================
@@ -941,8 +959,8 @@ async function runTests() {
         const ranked = [
             {
                 rank: 1,
-                name: 'Recipient query capability — getForRecipient(recipientIdentityId)',
-                evidence: 'Section C proves it is SAFELY DERIVABLE from the existing store with zero new semantics (a plain filter over loadAll()); Section K proves it is the strict prerequisite for any honest UI. The one genuine open design question it would need to resolve on the way in (Section D/G): whether the method accepts a caller-supplied id (matching the store\'s current field-level trust model) or is hard-scoped to resolveSigningIdentityId(identityProvider) the way AddPublicationCommentaryUseCase already resolves authorship (Section D6\'s own access-boundary finding).'
+                name: 'Recipient query capability — CLOSED by 0.9.283 (GetRecipientNotificationEventsUseCase)',
+                evidence: 'Section C proved it was SAFELY DERIVABLE from the existing store with zero new semantics (a plain filter over loadAll()); Section K proved it was the strict prerequisite for any honest UI. 0.9.283 built it exactly as ranked here, resolving the one open design question this section named (Section D/G) by hard-scoping to resolveSigningIdentityId(identityProvider) — the same resolution AddPublicationCommentaryUseCase already uses for authorship — rather than accepting a caller-supplied id.'
             },
             {
                 rank: 2,
@@ -999,10 +1017,10 @@ async function runTests() {
 '    Retrieve by logical identity             COMPLETE\n' +
 '    Detect conflicts                         COMPLETE (storage layer; unreachable from the one real producer — Section G)\n' +
 '    Enumerate notification history            COMPLETE (storage layer); REACHABLE_BUT_INTERNAL end-to-end\n' +
-'    Retrieve notifications for recipient      MISSING_DOMAIN_CAPABILITY (safely derivable — Section C)\n' +
+'    Retrieve notifications for recipient      COMPLETE (0.9.283 — GetRecipientNotificationEventsUseCase, no store change)\n' +
 '    Mark notification read                    MISSING_DOMAIN_CAPABILITY\n' +
 '    Deliver notification                      MISSING_DOMAIN_CAPABILITY\n' +
-'    Notification UI                           MISSING_UI (blocked on the row above — Section K)\n' +
+'    Notification UI                           MISSING_UI (Section K — no longer blocked on a missing domain capability)\n' +
 '\n' +
 'RECIPIENT ISOLATION (Section D)\n' +
 '    Holds at the FIELD level (recipientIdentityId), proven against two real\n' +
@@ -1026,11 +1044,12 @@ async function runTests() {
 '    None. Producer and store both remain fully built and fully unwired from\n' +
 '    any real composition root or UI surface.\n' +
 '\n' +
-'RANKED CANDIDATES FOR THE NEXT PRODUCT SEAM (named, not built)\n' +
-'    1. Recipient query capability — getForRecipient() — safely derivable\n' +
-'       (Section C), the strict prerequisite for everything downstream\n' +
-'       (Section K), with one real open design question (caller-supplied id\n' +
-'       vs. session-resolved id — Section D6).\n' +
+'RANKED CANDIDATES FOR THE NEXT PRODUCT SEAM (as ranked here; rank 1 since built)\n' +
+'    1. Recipient query capability — CLOSED by 0.9.283\n' +
+'       (application/GetRecipientNotificationEventsUseCase.js). Built exactly\n' +
+'       as safely derivable (Section C), resolving Section D6\'s own open\n' +
+'       design question by hard-scoping to the authenticated identity, never\n' +
+'       a caller-supplied id.\n' +
 '    2. Wire the existing, fully-built producer and store into a real\n' +
 '       composition root — pure composition, zero new capability.\n' +
 '    3. A second producer (Friend Relationship REQUEST) — the one other\n' +
@@ -1042,15 +1061,17 @@ async function runTests() {
 '       genuinely deferred.\n' +
 '\n' +
 'NEXT PRODUCT SEAM\n' +
-'    Not selected here. Per this milestone\'s own brief: durable notification\n' +
-'    history is real, recipient querying is provably safe to derive but not\n' +
-'    yet built, and the honest gaps this reassessment found (Section D6\'s\n' +
-'    field-level-only isolation, Section G\'s unreachable CONFLICT path) are\n' +
-'    recorded, not resolved. Choosing and building the next seam is a\n' +
-'    separate, later, evidence-driven decision — this milestone answers\n' +
-'    "what is now true," never "what to build next."\n');
+'    Not selected here — this milestone\'s own scope was reassessment only, no\n' +
+'    build. Per this milestone\'s own brief: durable notification history is\n' +
+'    real, recipient querying was provably safe to derive and was later built\n' +
+'    exactly that way (0.9.283), and the honest gaps this reassessment found\n' +
+'    (Section D6\'s field-level-only isolation, Section G\'s unreachable\n' +
+'    CONFLICT path) remain recorded, not resolved by that later build.\n' +
+'    Choosing and building the next seam after 0.9.283 is a separate, later,\n' +
+'    evidence-driven decision — this milestone answered "what was true then,"\n' +
+'    never "what to build next."\n');
 
-        console.log('✓ Section N: Verdict recorded. The notification pipeline is closed end to end with no layer having become a delivery system (Section A); the capability matrix classifies all thirteen named rows with concrete evidence (Section B); recipient querying is proven safely derivable but not yet a product capability (Section C); recipient isolation holds at the field level with an honestly-recorded storage-partition gap (Section D); restart/reconstruction and deduplication both hold through the full real pipeline, including a genuine closure of 0.9.276\'s own open retry-duplication finding (Sections E/F); conflict detection is reconfirmed but found structurally unreachable from the one real producer (Section G); the persistence/delivery boundary and the ChatOutbox boundary both hold, the latter on sharper grounds than before (Sections H/I); zero existing consumers benefit from any of this today (Section J); MISSING_DOMAIN_CAPABILITY and MISSING_UI are shown to be ordered, not independent (Section K); all four deferred candidates are revisited with none built (Section L); and five candidates are ranked with reasoning grounded in specific sections (Section M) — recipient querying first, no implementation happens in this milestone.');
+        console.log('✓ Section N: Verdict recorded. The notification pipeline is closed end to end with no layer having become a delivery system (Section A); the capability matrix classifies all thirteen named rows with concrete evidence (Section B); recipient querying was proven safely derivable and — re-verified here — was subsequently built exactly that way by 0.9.283, one layer up from the store (Section C); recipient isolation holds at the field level with an honestly-recorded storage-partition gap (Section D); restart/reconstruction and deduplication both hold through the full real pipeline, including a genuine closure of 0.9.276\'s own open retry-duplication finding (Sections E/F); conflict detection is reconfirmed but found structurally unreachable from the one real producer (Section G); the persistence/delivery boundary and the ChatOutbox boundary both hold, the latter on sharper grounds than before (Sections H/I); zero existing consumers benefited from any of this at the time this milestone shipped (Section J); MISSING_DOMAIN_CAPABILITY and MISSING_UI are shown to have been ordered, not independent, and 0.9.283 closed them in that order (Section K); all four deferred candidates are revisited with none built (Section L); and five candidates are ranked with reasoning grounded in specific sections (Section M) — recipient querying ranked first, and this milestone\'s own no-implementation scope is unaffected by 0.9.283\'s later build.');
     }
 
     console.log('\n✅ All PostNotificationPersistenceProductReassessment tests passed.');
