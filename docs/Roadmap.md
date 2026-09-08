@@ -84982,6 +84982,55 @@ and failure semantics hold under closer examination, the same one-milestone-late
 already used — before reassessing whether `NotificationEvent` persistence or delivery is actually justified. This
 milestone deliberately does not jump straight to `NotificationEvent` storage.
 
+## 0.9.276 — Publication Commentary Notification Producer Lifecycle Audit
+
+Per 0.9.275's own "what comes after": a producer lifecycle/failure audit, the same one-milestone-later shape
+0.9.270/0.9.274 already used, proving `PublicationCommentaryNotificationProducer.js`'s own ordering and failure
+semantics hold under closer, targeted examination before any reassessment of `NotificationEvent` persistence or
+delivery. Test-only, per this milestone's own brief.
+
+### What this milestone adds
+
+`tests/PublicationCommentaryNotificationProducerLifecycleAudit.test.js` (new, registered in `tests.html`) — eight
+sections. Rather than re-running 0.9.275's own fourteen sections a second time, this file restates the flagship
+lifecycle once, briefly (A), then spends its own budget on what 0.9.275's test suite never asked: a genuine
+`commentaryId` conflict (same id, different content) propagating as `PublicationCommentaryConflictError` with no
+notification produced, distinct from a raw storage-write throw (B); discovery-miss and sink-failure isolation each
+re-checked against an independently executed REFERENCE run of the same input through a plain
+`AddPublicationCommentaryUseCase` with no producer involved at all, so "the Commentary is unaffected" is proven
+byte-for-byte identical rather than merely "still present" (C, D); and, the section this milestone exists for, a
+caller retrying an already-persisted `commentaryId` (E) — `AddPublicationCommentaryUseCase`'s own `isNew: false`
+correctly reports the idempotent no-op, and the persisted Commentary count never grows past one, but the producer's
+own `execute()` branches only on Publication resolution, never on `isNew`, so **an idempotent retry still produces
+a second, distinct `NotificationEvent` referencing the same underlying `commentaryId`** — repeatable an unbounded
+number of times, one notification per call, with no de-duplication ceiling. This is recorded as this milestone's
+own central finding (E5, E8), never patched in place. Section F proves decorator transparency directly, by object
+identity rather than by shape alone: the value `PublicationCommentaryNotificationProducer#execute()` returns is the
+EXACT object reference `AddPublicationCommentaryUseCase#execute()` itself returned — not a copy, not a rebuilt
+`{ commentary, isNew }` — verified both when a notification is produced and when discovery suppresses one. Section
+G names the finding's classification explicitly — `OPEN_PRODUCT_DECISION`, not a defect — so a future milestone has
+a durable, citable home for it rather than needing to rediscover it from test output. Section H is a structural
+regression confirming zero production files this producer wraps or depends on were modified to perform this audit.
+
+### What this milestone deliberately excludes
+
+Per this milestone's own brief: no fix for the retry-duplication finding (Section E/G) — no `isNew`-conditioned
+skip, no notification de-duplication, no idempotency key on the sink side. Whether "one persisted Commentary -> one
+notification" should become an enforced invariant is left as the explicitly named open product decision a future
+milestone may pick up; this audit's own job was only to establish the actual, current behavior and give it a name.
+No `NotificationEvent` persistence, inbox, delivery mechanism, or lifecycle state is introduced. Zero
+`application/`, `core/`, `ui/`, or `storage/` files are modified, verified directly rather than merely claimed.
+
+### What comes after
+
+Per 0.9.275's own original sequencing: `0.9.277`, a notification persistence/delivery decision audit — whether the
+`NotificationEvent` objects this producer already constructs have a justified need for durable storage, and if so,
+whether that storage represents an event archive, recipient inbox, delivery queue, or something else. That
+milestone should also weigh in the retry-duplication finding this audit named: a durable store is exactly the place
+"one persisted Commentary -> one notification" could be enforced later (e.g. keyed by `commentaryId`) without this
+producer itself needing to track `isNew` — but that remains an option to evaluate then, not a conclusion reached
+here.
+
 ## 0.9.270 — Place Naming Adoption Status Lifecycle Audit
 
 0.9.269 built `alreadySaved`; this milestone proves it holds under a lifecycle, the same one-milestone-later audit
