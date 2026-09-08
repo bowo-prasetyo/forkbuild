@@ -84772,6 +84772,80 @@ product-design forks those reassessments each declined to resolve by fiat. A fut
 (`0.9.270`) and post-status reassessment (`0.9.271`) would follow the same one-milestone-later shape this arc has
 used throughout, per the sequence 0.9.268 itself proposed.
 
+## 0.9.273 — Notification Event Domain Boundary
+
+0.9.272's own reassessment closed six product arcs and, under a stronger three-condition test than the seven prior
+reassessments had used, found the first real architectural precedent for durable, addressed delivery —
+`application/ChatOutbox.js` — while also establishing exactly why its shape (sender-anchored, ChatMessage-typed,
+TTL-bounded) cannot be reused as-is: several domains (Publication Commentary, Place Naming, Document Collaboration,
+World Presence) can each produce an event a recipient might want to know about, but nothing in this codebase
+represents "something happened that may warrant user awareness" independent of which domain produced it or how it
+will eventually be delivered. This milestone builds exactly that missing representation, and nothing past it.
+
+### What this milestone adds
+
+`core/NotificationEvent.js` (new) — a small, immutable, standalone value object with five fields:
+
+```
+notificationId        — auto-generated (core/createId.js) unless supplied
+eventType              — an open, namespaced string identifier (e.g. "publication.commented"),
+                          never a closed enum — no producer exists yet to justify one
+recipientIdentityId    — who this event is addressed to
+createdAt               — when the underlying fact happened
+payload                 — a plain, JSON-serializable object, deep-cloned on both write and read
+```
+
+Deliberately minimal relative to `core/ChatOutboxEntry.js`: no `state`, no `queuedAt`/`sentAt`/`deliveredAt`, no
+`expiresAt`, no TTL. A `NotificationEvent` records a past fact, addressed to an identity — never a job in flight
+toward a connection, and never anything about whether it has been delivered, read, or dismissed. `eventType` is
+validated only as a namespaced-identifier shape (letters/digits joined by `.`/`:`/`_`/`-`), the same convention
+`docs/BrickIDs.md` already established for a stable type identifier — no fixed vocabulary is introduced, per this
+milestone's own brief. `payload` is deep-cloned going in and coming out, so neither the caller's original object nor
+a value read back from `.payload` can ever reach into the stored instance.
+
+The file imports nothing but `core/createId.js`. It has no application-layer counterpart yet (no store, no use case,
+no producer wiring, no UI) — see "What this milestone deliberately excludes" below.
+
+### What this milestone adds (tests)
+
+`tests/NotificationEvent.test.js` (new, registered in `tests.html`) — twelve sections: construction and validation
+(1); immutable representation, including that mutating a value read back from a getter (`createdAt`, `payload`)
+never reaches the stored instance, and that no `withState()`-style transition method exists at all (2); recipient
+identity preservation across distinct identities and at the length boundary (3); event-type preservation across a
+representative set of valid namespaced identifiers, with malformed shapes rejected by both the constructor and the
+standalone `isValidEventType()` (4); payload isolation, proven via a post-construction mutation of the caller's
+original object, a mutation of a value returned by `.payload`, and two independent reads returning distinct object
+instances (5); timestamp semantics — an explicit `Date`, an ISO string, and an omitted value defaulting to
+construction time (6); distinct events remaining distinct — two events built from field-for-field identical input
+still receive independent `notificationId`s unless one is explicitly supplied (7); a source-level check that
+`core/NotificationEvent.js` never references `ChatOutbox`/`ChatMessage`/`ChatDeliveryState` or any of their
+vocabulary (`peerIdentityId`, `expiresAt`, `TTL`) (8); the same check against Publication/Commentary/Place
+Naming/Collaboration/Presence vocabulary (9); a serialization round-trip through an actual `JSON.stringify`/`parse`
+wire hop, including a byte-identical re-serialization (10); malformed-input behavior for `fromJSON()`, which never
+throws (11); and an architectural import-boundary regression confirming the file has exactly one import statement
+(`core/createId.js`) and that a `NotificationEvent` constructs successfully with no Chat, Publication, Place Naming,
+Collaboration, or Presence machinery anywhere in scope (12).
+
+### What this milestone deliberately excludes
+
+Per this milestone's own brief, and per 0.9.272's own finding that assuming a delivery/lifecycle design ahead of a
+real producer would repeat the mistake this arc is meant to avoid:
+
+- No delivery mechanism of any kind — no push, no browser notifications, no notification-center UI, no unread counts.
+- No lifecycle state — no `PENDING`/`DELIVERED`/`READ`/`SEEN`/`DISMISSED`/`EXPIRED`, no retry/backoff.
+- No closed `eventType` vocabulary — `isValidEventType()` checks shape only, never a fixed list of known types.
+- No producer wiring — no domain (Commentary, Place Naming, Collaboration, Presence) constructs a `NotificationEvent`
+  yet, and none is modified by this milestone.
+- No store, no use case, no UI, no `ChatOutbox` reuse, no batching, deduplication, ranking, or preferences.
+- No cross-device synchronization.
+
+### What comes after
+
+Per this milestone's own brief: `0.9.274 — Notification Event Boundary Audit`, a test-only pass over the domains
+0.9.272 already named (Commentary, Place Naming, Collaboration, Presence) asking, per candidate event, whether it has
+an identifiable recipient, a durable identity, and a meaningful timestamp — before any decision is made about which
+domain becomes the first real producer.
+
 ## 0.9.270 — Place Naming Adoption Status Lifecycle Audit
 
 0.9.269 built `alreadySaved`; this milestone proves it holds under a lifecycle, the same one-milestone-later audit
