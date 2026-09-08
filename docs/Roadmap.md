@@ -84259,3 +84259,160 @@ Per the recommended sequence this milestone's own brief laid out:
 Navigate, one milestone later, for Adopt instead), then
 `0.9.265 — Post-Adoption Product Reassessment`. As with every roadmap arc
 recorded here, only the immediate next milestone is treated as committed.
+
+## 0.9.264 — Place Naming Claim Adoption Lifecycle Audit
+
+0.9.263 built Adopt; this milestone proves it holds under a lifecycle,
+the same one-milestone-later audit shape 0.9.261 already ran for
+Navigate. This milestone adds **no new capability**. It is a **test-only
+lifecycle audit**.
+
+### What this milestone adds
+
+`tests/PlaceNamingNearbyAdoptionLifecycleAudit.test.js` (new) — fifteen
+sections, all driving the real `NostrPlaceNamingDiscoverySource`, the
+real composed discovery runtime, a real `PlaceNamingDiscoveryMonitor`,
+and a real `WorldNavigationSession` (never a restricted proxy): a
+successful adoption through the full real pipeline (A); idempotent
+re-adoption, any number of times (B); manual file-import and Nearby
+Adopt converging onto the same persisted record regardless of which
+door is used first (C); two competing, independently-authored claims
+("Riverside"/"Old River") adopting independently across repeated LIVE
+observation cycles, with no ranking ever emerging (D); authorship
+preservation through the full pipeline, including the negative case
+that the adopting viewer's own identity never substitutes for the
+claim's real author (E); timestamp/signature preservation, including a
+genuinely past signed timestamp and independent re-verification against
+a real, unmocked verifier (F); three independent tampering vectors —
+signature bytes, claim content, and author substitution — each
+independently refused with nothing persisted (G); World-identity
+protection surviving both a World switch and a World that was never
+loaded at all (H); discovery failure isolated from adoption in both
+directions (I); Navigate/Adopt independence, live and structural (J);
+World-mutation negatives across repeated adoptions and a restart (K);
+persistence surviving a full application-layer reconstruction over the
+same underlying storage (L); presentation independence — the Nearby
+array is never the source of truth for what was adopted (M); an
+architectural tripwire directly confirming the four frozen edges
+(discovery/proximity/navigation never reaching adoption; adoption never
+reaching `WorldRegion.name`) (N); and a FLAGSHIP continuous lifecycle —
+discovery, competing claims, adoption, idempotent re-adoption, a
+restart, World-switch staleness, a refused forgery, and manual/automatic
+convergence, end to end, in one narrative (O).
+
+The invariant this file exists to freeze, verbatim from its own header:
+**adoption changes local persistence, not the meaning of the discovered
+claim.**
+
+Registered in `tests.html`.
+
+### What this milestone deliberately excludes
+
+No new capability, and no production-code change whatsoever — every
+section either reconfirms 0.9.263's own boundary under a lifecycle it
+had not yet been exercised against, or records (never patches) the
+identical honestly-unpatched boundaries 0.9.261 already chose to leave
+open for navigation.
+
+### What comes after
+
+Per 0.9.263's own "what comes after": `0.9.265 — Post-Adoption Product
+Reassessment`, the reassessment this whole discover -> adopt -> persist
+arc was built to enable.
+
+## 0.9.265 — Post-Adoption Place Naming Product Reassessment
+
+0.9.263 built Adopt; 0.9.264 proved it holds under a full lifecycle —
+idempotency, competing claims, tampering, restarts, and World-identity
+staleness. The discover -> encounter -> navigate -> explicitly adopt ->
+persist arc is now complete. Per the product-direction conversation that
+opened this milestone, and the exact recurring shape 0.9.221/0.9.241/
+0.9.250/0.9.252/0.9.259/0.9.262 already established, this is the
+reassessment one adoption boundary later: not another build, a fresh
+look at what the now-complete adoption seam reveals as the next
+meaningful product action.
+
+This milestone adds **no new capability**. It is a **test-only
+reassessment**.
+
+### What this milestone adds
+
+`tests/PostAdoptionPlaceNamingProductReassessment.test.js` (new) — nine
+sections:
+
+- **A. Pipeline closure** — reconfirms, live, that discovery -> proximity
+  -> Nearby -> Navigate/Adopt -> `importPlaceNamingClaim()` -> validate ->
+  construct -> verify -> persist remains COMPLETE, and confirms
+  `WorldNavigationSession#importPlaceNamingClaim()` is still a pure
+  one-line forward to `PlaceNamingClaimExchange#importClaim()` — the
+  basis for testing the exchange directly throughout this file rather
+  than reconstructing a full `WorldNavigationSession`/`World` in every
+  section.
+- **B. Semantic boundary of an adopted claim** — searches real source for
+  "preferred"/"official"/"authoritative"/"adopted" vocabulary rather than
+  assuming none exists. FINDING: `LocalNamePreferenceStore` (0.5.2)
+  already carries a real "preferred name" concept — but it pre-dates
+  adoption by three milestones and stays structurally separate: personal,
+  unsigned, keyed by `(worldId, regionId, name)` rather than `claimId`,
+  and never touched by `importPlaceNamingClaim()`, live-confirmed. No
+  "official"/"authoritative"/"trusted"/"adopted" vocabulary exists
+  anywhere else. Adoption's own meaning stays exactly what 0.9.260/0.9.263
+  already established.
+- **C. What a user can already do with an adopted claim** — a
+  `getById()`-shaped audit, the same question the Commentary
+  reassessments already asked of `storage/PublicationCommentaryStore.js#
+  getById()`. FINDING: no dedicated single-claim lookup exists anywhere
+  in the Place Naming layer, but inspection AND export of an adopted
+  claim are ALREADY COMPLETE — served by a pre-existing, adoption-unaware
+  surface (`PlaceNamingPanel`'s own "All Claims" section, built at 0.5.3)
+  that needed zero changes to already cover adoption, proven live. The
+  one real, narrow gap that surface leaves is display-only: no signature
+  or verification-status indicator.
+- **D. Nearby UI** — `createdAt`/`signature` already reach the row
+  (restored at 0.9.263) but the template never renders either; no
+  "already adopted" indicator exists, and the one precise prerequisite a
+  future one would need — a thin session read over
+  `LocalPlaceNamingClaimStore#has()` — already answers correctly today,
+  live-proven.
+- **E. Adopted-claim lifecycle** — create/store/get/export are all
+  COMPLETE for an adopted claim. The one genuine asymmetry: `retract()`
+  is deliberately author-gated, so a viewer can never remove a claim they
+  only adopted (never authored), by any path in this codebase today —
+  proven live. Recorded as an open product-design fork (a local
+  dismissal versus a true removal), never invented or resolved here.
+- **F. Competing names** — reconfirms, fresh and live but without
+  reproducing 0.9.264's own exhaustive proof, that no ranking/winner
+  semantics exist anywhere.
+- **G. Decentralized synchronization** — confirms adoption is local-only,
+  and confirms this is NOT a new asymmetry adoption introduced:
+  self-publishing a name has always been exactly as local, since this
+  codebase's only Nostr integration for Place Naming is read-only and
+  neither `importClaim()` nor `publish()` ever reaches a relay.
+- **H. Product-gap verdict** — eight candidates ranked from this
+  milestone's own fresh evidence. The strongest is removing an adopted,
+  non-authored claim (Section E) — overturning this milestone's own
+  opening speculation that an inspection UI would be the top gap, once
+  Section C found inspection/export already complete.
+- **I. Verdict** — summarizes all of the above; no candidate is selected
+  or built here.
+
+Registered in `tests.html`.
+
+### What this milestone deliberately excludes
+
+Any new capability, and any production-code change whatsoever —
+including a thin session pass-through over
+`LocalPlaceNamingClaimStore#has()` (Section D's own finding), any
+signature/verification-status display (Section C5/D1), and any removal
+path for a non-authored, adopted claim (Section E) — every one of these
+is recorded as evidence-backed, never opportunistically built as a side
+effect of this reassessment.
+
+### What comes after
+
+Not selected in this milestone, per its own brief: the strongest
+evidence-backed candidate this reassessment's own evidence points to is
+enabling removal of a claim a viewer only adopted, never authored — but,
+exactly as this reassessment's own brief asked for competing names, this
+names a genuine product-design fork (a local dismissal versus a true
+removal) rather than resolving one, so it is not treated as committed.
