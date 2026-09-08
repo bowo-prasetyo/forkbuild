@@ -85502,3 +85502,66 @@ reassessment should determine whether durable notification history is itself wor
 justified recipient-facing delivery/inbox capability actually exists, before this arc's next milestone is chosen —
 the same "let the next product gap, not architectural momentum, choose what comes next" discipline this whole
 Notification arc (0.9.273 through 0.9.281) has followed throughout.
+
+## 0.9.282 — Post-Persistence Notification Product Reassessment
+
+0.9.281 completed a genuine architectural boundary crossing: a `NotificationEvent` can now survive independently of
+the producer invocation that created it. Per this milestone's own brief, that crossing does not by itself justify
+guessing the next feature is an inbox — it justifies a reassessment. This milestone is that reassessment, test-only,
+in the same lineage as every earlier `Post-*-ProductReassessment` milestone in this codebase.
+
+### What this milestone adds
+
+`tests/PostNotificationPersistenceProductReassessment.test.js` (new, registered in `tests.html`) — fourteen
+sections. Section A freezes the completed pipeline (Commentary -> `NotificationEvent` -> Producer ->
+`NotificationDeduplicationPolicy` -> `NotificationEventStore`) as one wiring signal per stage, and proves none of
+the four notification files' own code (comments excluded) contains any delivery/lifecycle vocabulary. Section B
+builds a thirteen-row capability/reachability matrix, each row backed by a concrete signal. Section C asks whether
+`getForRecipient(recipientIdentityId)` can be safely derived from the existing store: yes, mechanically — a plain
+filter over `loadAll()` is provably correct — but it is not, today, a built product capability, since nothing above
+the storage layer calls `loadAll()` at all. Section D proves recipient isolation end to end against two real
+recipients through the full producer -> store pipeline, then makes the honest finding that isolation is a
+FIELD-LEVEL fact (`recipientIdentityId`), never a storage-level partition — every recipient's notifications share
+one flat, unparameterized storage key, unlike `application/ChatOutbox.js`'s own per-owner key. Section E re-proves
+restart/reconstruction, this time through the complete real pipeline (a real Commentary submitted through the real
+Producer) rather than only hand-constructed `NotificationEvent` objects (0.9.281 Section M's own scope). Section F
+runs 0.9.276 Section E's own `OPEN_PRODUCT_DECISION` retry-duplication finding — an idempotent Commentary retry
+still produces a second, distinct `NotificationEvent` from the producer, unboundedly — through a real
+`NotificationEventStore`, and finds the store closes the SYMPTOM (every retry now collapses to one durable row via
+`EXISTING`) without resolving the underlying PRODUCT QUESTION 0.9.276 left open. Section G reconfirms `CONFLICT`
+detection, then finds that the one real producer that exists cannot organically reach it at all — Commentary's own
+storage-layer conflict guard (0.9.243) already refuses the one input shape (same `commentaryId`, different author)
+that would produce one, making `CONFLICT` real, tested, load-bearing infrastructure that is currently dead code from
+the real producer's own vantage. Section H is an explicit persistence-versus-delivery regression (three outcomes
+only, no lifecycle state, a round-tripped record gains no new field). Section I re-runs the `ChatOutbox` comparison
+and finds the boundary sharper than before: `ChatOutbox`'s per-owner storage key is *why* it never needed a
+recipient-scoped query method, while `NotificationEventStore`'s single shared key is exactly why that question is
+live now. Section J searches for existing consumers and finds none — the producer and the store both remain fully
+built and fully unconstructed outside their own files, and neither `OwnPublicationPanel` nor
+`WorldNavigationSession` references notification vocabulary at all. Section K shows `MISSING_DOMAIN_CAPABILITY` and
+`MISSING_UI` are ordered, not independent: zero UI files reference `NotificationEvent`, because the domain
+capability that would define "which events belong to me" does not exist. Section L revisits all four candidates
+this milestone's own brief names, building none of them, and reconfirms 0.9.274's own audit still stands (Friend
+Relationship remains the one other structurally sound producer candidate). Section M ranks five candidates with
+reasoning grounded in specific sections. Section N records the verdict.
+
+### What this milestone deliberately excludes
+
+Per this milestone's own brief: no `getForRecipient()`, no inbox, no read/unread, no delivery, no push
+notifications, no WebSocket notification channel, no retry/queue machinery, no notification lifecycle, no TTL, no
+additional producers, no `ChatOutbox` refactoring, and no notification authorization redesign. Sections D and G each
+surface a genuine open gap (field-level-only isolation; an unreachable `CONFLICT` path) and deliberately record
+rather than patch either one.
+
+### What comes after
+
+Not selected here. Recipient querying (`getForRecipient()`) ranks first — proven safely derivable in Section C,
+established as the strict prerequisite for any honest notification UI in Section K, with one real open design
+question surfaced in Section D6 (a caller-supplied recipient id versus one hard-scoped to
+`resolveSigningIdentityId(identityProvider)`, the same resolution `AddPublicationCommentaryUseCase` already uses for
+authorship). Wiring the already-built producer and store into a real composition root ranks second — pure
+composition, no new capability. A second producer (Friend Relationship REQUEST, per 0.9.274's own audit) ranks
+third, deliberately below recipient querying so it does not compound Section J's own "fully built, fully
+unreachable" finding. Notification UI ranks fourth, strictly blocked on the first. Delivery/read-state/lifecycle
+ranks fifth, still the largest and still genuinely deferred. Choosing and building the next seam remains a separate,
+later, evidence-driven decision.
