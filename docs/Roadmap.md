@@ -85165,6 +85165,78 @@ merely because this audit named its candidate identities — it should first clo
 chosen identity must satisfy, and only then — if durable notification history or reliable delivery is actually
 justified, per 0.9.277's own unresolved conditional — become the `NotificationEvent` persistence boundary.
 
+## 0.9.279 — Notification Deduplication Collision Semantics Audit
+
+0.9.278 characterized five candidate dedup identities and proved which pairs of scenarios each candidate's own key
+computation collapses or keeps apart — but it only ever asked "do these two events compute the same key?" It never
+asked the question a real `NotificationEventStore` would actually need answered the moment two events do: if two
+independently produced `NotificationEvent`s share a proposed dedup identity, what exactly makes them the same
+notification, and what happens when they disagree on something else? This milestone is that collision audit. Test-only,
+per this milestone's own brief: no `NotificationEventStore`, no deterministic notification IDs, no de-duplication
+implementation, no inbox, no delivery, no read/unread state, no retry queues, no notification lifecycle, no
+notification UI, no `ChatOutbox` changes, no recipient fan-out implementation, no change to `NotificationEvent`, no
+selection of a notification persistence provider.
+
+### What this milestone adds
+
+`tests/NotificationDeduplicationCollisionSemanticsAudit.test.js` (new, registered in `tests.html`) — eleven sections,
+fixing 0.9.278's own `commentaryId + eventType + recipientIdentityId` candidate — one of the two candidates 0.9.278
+found structurally sound — as a stable collision detector for this file's own scenarios, used only as an audit
+vehicle and never adopted as production policy (Section K proves nothing about the choice reaches
+`core/NotificationEvent.js` itself). Section A restates an exact caller retry as a live collision, characterized by a
+`collisionProfile` (payload identity, `createdAt` identity, object identity) rather than a bare boolean. Section B
+proves a payload-identical collision narrows, but does not close, the resolution space: "first wins" and "latest
+wins" are observationally equivalent whenever payload and `createdAt` both agree, because no consumer-visible fact
+would be lost by discarding either representative. Section C hand-constructs a payload-DIFFERENT collision (a
+benign superset — one event carries an extra field the other lacks) and proves all four resolutions this milestone's
+own brief named (first wins, latest wins, conflicting representation, new notification despite the same key) are
+mechanically representable, while nothing on `NotificationEvent` — no `supersedes`, `revisionOf`, or `version`
+field — supplies a reason to prefer one. Section D hand-constructs a `createdAt`-different collision and proves the
+identity/metadata distinction directly: `createdAt` is a required, validated fact field on `NotificationEvent`, but
+plays no role in the candidate identity's own key computation, so two colliding events can legitimately disagree on
+it. Sections E and F reconfirm, under this file's own fixed candidate, the two `REQUIRED` structural guards 0.9.278
+already proved — different `eventType` and different recipient must never collide at all — because every later
+section in this file depends on both still holding. Section G is this milestone's own central finding: an original
+event, a reconstruction of it, and a second independent reconstruction all collide with each other, and that
+collision's profile is proven byte-for-byte identical in shape to Section A's own live-retry profile — nothing on a
+`NotificationEvent` records why two events collided, so no future policy can treat a "reconstructed" collision
+differently from a "retried" one without new, currently nonexistent provenance tracking. Section H proves a
+self-comment retry collides identically in shape to the non-self baseline — no special case. Section I is the
+collision-integrity boundary: a hand-constructed pair shares the identical candidate key while disagreeing on
+`payload.authorIdentityId`, a fact the candidate never inspects but which cannot legitimately differ for one real,
+immutable Commentary — proving candidate-key collision is necessary but never sufficient evidence that two events are
+safely interchangeable, and that detecting such a disagreement before applying any collapse policy is a `REQUIRED`
+constraint even though the corrective action taken remains `OPEN`. Section J aggregates a nine-row decision matrix
+from Sections A-I's own recorded findings, showing this audit resolves the space to six `REQUIRED` structural
+constraints, one `NARROWED` choice, and two rows that remain genuinely `OPEN` product decisions — deliberately not
+`OPEN` across the board, per this milestone's own brief. Section K is a structural regression confirming zero
+production files this audit examines were modified, and extends 0.9.278's own forbidden-method list with
+`collidesWith`/`isCompatibleWith`/`isConflictingWith`/`supersedes`/`merge`/`reconcile`, none of which exist anywhere
+on `NotificationEvent`'s prototype chain.
+
+### What this milestone deliberately excludes
+
+Per this milestone's own brief: no `NotificationEventStore`, no deterministic notification IDs, no de-duplication
+implementation, no inbox, no delivery, no read/unread state, no retry queues, no notification lifecycle, no
+notification UI, no `ChatOutbox` changes, no recipient fan-out implementation, no change to `NotificationEvent`, and
+no selection of a notification persistence provider. No collision resolution strategy is chosen as correct for any
+scenario this audit leaves `OPEN` or `NARROWED` — each is characterized, not adopted. Two genuinely open product
+decisions remain: whether a benign collision (an exact retry, or a reconstruction — proven the same kind of
+collision in Section G) should collapse into one stored notification at all, and, once an incompatible-facts
+collision is detected (Section I), what corrective action a persistence layer should take.
+
+### What comes after
+
+This audit narrows the decision space a future `NotificationEventStore` would need to encode, but does not remove
+the need to choose. A future `0.9.280` should not build persistence directly on the strength of this milestone's own
+`collisionProfile` vocabulary — it should first make the two decisions this audit deliberately left open (whether
+benign collisions collapse, and what a persistence layer does upon detecting an incompatible-facts collision),
+consolidate them alongside 0.9.278's own two `REQUIRED` structural constraints (recipient separation, event-type
+separation) and this milestone's own four additional constraints (`createdAt` excluded from identity,
+reconstruction-mirrors-retry, self-comment no special case, incompatible-facts detection) into one frozen policy
+descriptor, and only then — if durable notification history or reliable delivery is actually justified, per 0.9.277's
+own still-unresolved conditional — become the `NotificationEvent` persistence boundary.
+
 ## 0.9.270 — Place Naming Adoption Status Lifecycle Audit
 
 0.9.269 built `alreadySaved`; this milestone proves it holds under a lifecycle, the same one-milestone-later audit
