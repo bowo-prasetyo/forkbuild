@@ -19396,3 +19396,37 @@ question — building a special case for it now, with no evidence anyone has ask
 of guess 0.9.272's own reassessment discipline exists to avoid.
 
 See `docs/Roadmap.md`, 0.9.275, for the full milestone entry.
+
+## A Lifecycle Audit Names What It Finds; It Does Not Fix What It Finds (0.9.276)
+
+0.9.275 shipped `PublicationCommentaryNotificationProducer.js` and, in the same milestone, its own fourteen-section
+test suite covering the successful lifecycle, exact identity preservation, and both failure directions. 0.9.276
+does not re-run that coverage. It asks the two questions a producer's first test suite is rarely positioned to ask
+of itself: what happens on a caller RETRY, and is the producer's own return value genuinely the wrapped use case's,
+not merely shaped like it.
+
+**A retry surfaces a real gap, and the audit's job is to name it, not close it.** `AddPublicationCommentaryUseCase`
+already reports `isNew: false` for an idempotent re-save of an already-persisted `commentaryId` — the exact
+information a producer would need to decide "this Commentary was already announced." `PublicationCommentaryNotificationProducer#execute()`
+does not look at it: it branches only on whether the Publication resolves, so a caller retrying the same
+`commentaryId` (the identical, conflict-free retry path `AddPublicationCommentaryUseCase.js`'s own 0.9.245/0.9.246
+header already documents as a supported caller pattern) produces a second, fully-formed `NotificationEvent`
+referencing the same underlying Commentary — repeatable without bound, one notification per call. 0.9.276 proves
+this live, then explicitly classifies it `OPEN_PRODUCT_DECISION` rather than patching it in the same milestone that
+found it. Whether "one persisted Commentary -> one notification" should become an enforced invariant is a real
+product question — should a durable notification store eventually de-duplicate by `commentaryId`, should the
+producer itself skip on `isNew === false`, or is re-announcing an already-known fact actually fine — and answering
+it by reflex, inside the audit that merely discovered the question, would be exactly the kind of premature
+architectural commitment 0.9.272's own reassessment discipline warns against. The fix, if one is ever built, belongs
+to whichever later milestone actually needs to answer that question with evidence — most likely 0.9.277, once
+notification persistence itself is on the table and there is a natural place to enforce de-duplication without
+retrofitting `isNew`-awareness into a producer whose only stated job is "ask, don't own, the decision."
+
+**Decorator transparency is a reference-identity claim, not a shape claim.** 0.9.275's own header already asserted
+the producer "returns the exact `{ commentary, isNew }` shape the wrapped use case returned, unmodified." 0.9.276
+tightens that from "shaped like" to "is": a spying wrapper around a real `AddPublicationCommentaryUseCase` captures
+the literal object its own `execute()` returns, and the audit asserts `producer.execute(...) === thatExactObject` —
+proven both when a notification is produced and when discovery suppresses one, so transparency does not turn out to
+depend on whether the sink path ever ran.
+
+See `docs/Roadmap.md`, 0.9.276, for the full milestone entry.
