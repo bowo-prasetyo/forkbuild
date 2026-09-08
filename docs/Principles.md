@@ -19430,3 +19430,47 @@ proven both when a notification is produced and when discovery suppresses one, s
 depend on whether the sink path ever ran.
 
 See `docs/Roadmap.md`, 0.9.276, for the full milestone entry.
+
+## Reconstructible, Safe To Regenerate, Deduplicated, And Exactly-Once Are Four Separate Facts (0.9.277)
+
+0.9.276 found that a caller retry of an already-persisted `commentaryId` produces a second, distinct
+`NotificationEvent` for the same Commentary, and classified the question of whether that should be acceptable as
+open rather than answering it. The instinct a durable store invites next is: "persistence will fix this" — key the
+store by `commentaryId`, and the duplication disappears. 0.9.277 exists to show that instinct is not automatically
+true, before any store gets built on the strength of it.
+
+**Reconstruction is not deduplication.** `publication.commented` carries enough on-file information —
+`commentaryId`, `publicationId`, `authorIdentityId`, `createdAt`, and a still-resolvable `Publication.publisherIdentity`
+— to rebuild a `NotificationEvent` that matches a lost original on every factual field. But reconstructing TWICE
+from the identical durable inputs produces two DIFFERENT `notificationId` values, not one stable one — proving that
+a naive "reconstruct on read" strategy would reproduce the exact retry-duplication finding 0.9.276 named, one layer
+later. Reconstructible, safe-to-regenerate-as-the-same-record, deduplicated, and guaranteed-exactly-once are four
+separate properties. A future milestone that conflates any two of them risks building persistence that looks solved
+and duplicates anyway.
+
+**Persistence identity is not obviously `commentaryId`.** Five identities are in play around one `publication.commented`
+event — `commentaryId`, `publicationId`, `authorIdentityId`, `publisherIdentityId`, and `notificationId` — proven
+pairwise independent, with exactly one legitimate exception: when a Publication's own publisher comments on their
+own work, `authorIdentityId`, `publisherIdentityId`, and the notification's own `recipientIdentityId` coincide, not
+because one was substituted for another but because that is what the real-world fact actually is.
+`core/NotificationEvent.js` already permits one underlying fact to address more than one recipient — two
+hand-constructed events, same `commentaryId`, two different `recipientIdentityId` values, both construct without
+error — even though `PublicationCommentaryNotificationProducer.js` never reaches that capability today, because no
+on-file relationship exists yet for it to fan out to. Keying future persistence solely by `commentaryId` would
+quietly foreclose that capability the first time it is needed; `(sourceFactId, recipientIdentityId)` is the smallest
+key that survives a later fan-out without a migration.
+
+**A capability with nowhere to reach is not a defect.** Section D's finding is deliberately not phrased as
+`REACHABLE_BUT_INTERNAL` (this codebase's own label for machinery that exists but isn't exposed) — the missing piece
+for recipient fan-out is a genuinely new domain relationship (who else should be told about a comment on this
+Publication), not a wiring gap in an existing one. Building inbox or fan-out semantics now, with no evidence anyone
+needs them, would be inventing that relationship, not discovering it.
+
+**An audit sharpens a question; it does not have to close it.** 0.9.277 adds no `NotificationEventStore`, no inbox,
+no de-duplication implementation, and answers neither "should duplicate retries collapse" nor "is recipient fan-out
+required" — both remain named, evidenced, open decisions. Its own overall verdict: `NotificationEvent` persistence
+is justified only if ForkBuild needs durable user-awareness history or reliable delivery, and persistence alone does
+not resolve the retry-duplication question — the fix, if the product ever needs one, belongs to whichever later
+milestone has an actual durability requirement in hand, not to the audit that merely mapped the decision space.
+
+See `docs/Roadmap.md`, 0.9.277, for the full milestone entry.
