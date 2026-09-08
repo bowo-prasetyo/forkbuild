@@ -86754,3 +86754,110 @@ Role-Aware Provider Resolution (translating a preference this store now hands ba
 per-role registry, into a concrete provider — still with no fallback unless separately justified) →
 Provider Preference UI (only once resolution is proven) → a fresh architecture audit. Closing 0.9.292's own
 remaining capability gaps remains real, unscheduled, and independent of this sequence.
+
+## 0.9.295 — Role-Aware Provider Resolution Boundary
+
+**Type:** Production orchestration boundary. **Scope:** one seam — translating a `RoleProviderPreference`
+0.9.294 can now hand back into a concrete provider capability, through the real per-role registries that
+already exist, still without wiring into any production runtime path.
+
+0.9.294's own "What comes after" named this milestone directly: "translating a preference this store now
+hands back, plus a THEN-existing per-role registry, into a concrete provider." The per-role registries
+already existed before this milestone started — 0.9.292's own audit found Content and Proof each already
+keyed by a real registry (`application/SnapshotPlacementStoreRegistry.js`, `application/
+ExternalProofVerifierRegistry.js`) — so this milestone's job was narrower than it might have been: read a
+preference, consult the ONE registry its role owns, report a real, honest outcome. Nothing more.
+
+### The model
+
+```text
+RoleProviderPreferenceStore.get(role)   (0.9.294, unmodified)
+       │   a RoleProviderPreference, or null
+       ▼
+RoleAwareProviderResolver.resolve(role)   ★ (THIS)
+       │   picks the ONE registry `role` owns, looks providerKey up in it
+       ▼
+{ role, providerKey, status, provider? }
+```
+
+`resolve(role)` never collapses to `resolveProvider(providerKey)` — the one anti-pattern the task's own brief
+named by name. The same `providerKey` string, resolved for two different roles, consults two entirely
+independent registries and can produce two entirely independent outcomes; see this milestone's own tests,
+Section H, which proves this against three REAL registries at once: `"arweave"` resolves for Discovery (the
+real `ArweaveGraphqlDiscoveryQueryService` the existing composition already builds) but not for Content (the
+real `ArweaveContentStore` self-identifies as `"ar"`, never `"arweave"`) and not for Proof (Arweave has no
+Proof capability at all, per 0.9.292 Section B).
+
+### Resolution outcomes — three, not four
+
+```text
+RESOLVED             — role's own registry returned a real provider for the configured providerKey
+NO_PREFERENCE        — nothing is configured for this role at all (RoleProviderPreferenceStore.get() → null)
+PROVIDER_NOT_FOUND   — a preference IS configured, but role's own registry has nothing under that key
+```
+
+A fourth status distinguishing "no such provider anywhere" from "that provider exists, but not for this
+role" was deliberately not added, per the task's own caveat: every real registry in this codebase
+(`SnapshotPlacementStoreRegistry.get()`, `ExternalProofVerifierRegistry.get()`) already returns the identical
+`null` for both cases, so manufacturing that distinction here would be inventing vocabulary the architecture
+cannot actually support yet. The regression case this guards is 0.9.292's own Base/Proof partial: `"base"` is
+a real provider name elsewhere in this codebase (`base/BaseTransactionBroadcaster.js`) but has no
+`ProofVerifier` anywhere, so resolving `PROOF_AND_ANCHORING` + `"base"` reports the exact same
+`PROVIDER_NOT_FOUND` a wholly invented key would get — never returned merely because its name matches
+something real (this milestone's own tests, Section G).
+
+### What this milestone adds
+
+- **`application/RoleAwareProviderResolver.js`** — `resolve(role)`, constructed with an injected
+  `RoleProviderPreferenceStore` (0.9.294) and one keyed registry per role (`discoveryRegistry`,
+  `contentRegistry`, `proofRegistry` — anything exposing `get(providerKey)`, the exact minimal shape
+  `SnapshotPlacementStoreRegistry`/`ExternalProofVerifierRegistry` already share). Reads the preference
+  store, never writes it; never falls back from an unavailable preferred provider to any other; never
+  consults a role's registry while resolving a different role; never instantiates, imports, or hardcodes a
+  concrete provider itself. Discovery has no keyed registry of its own yet (0.9.292 Section F's still-open
+  gap #3) — building one is explicitly NOT this milestone's job; this file's own tests instead wrap the real
+  `composeDecentralizedWorldEncounterMaterialDiscoveryServices()` output in a minimal adapter, built only in
+  the test file, keeping Discovery's "different provider/query shapes, no keyed registry" reality visible
+  rather than hidden behind a fake universal registry abstraction.
+- **`tests/RoleAwareProviderResolution.test.js`** (new, registered in `tests.html`) — thirteen sections (A-M):
+  role-specific resolution, Discovery/Content/Proof resolution each against their REAL production
+  registries and composition (never a mock standing in for one), missing-vs-unresolvable preference
+  distinction, unknown provider, the Base/Proof unsupported-capability regression guard, the "arweave"
+  three-roles-at-once independence proof, no fallback, registry isolation, preference-store passivity, no UI,
+  and a repo-wide sweep proving no composition root consumes this resolver yet.
+- Small, necessary updates to two existing repo-wide sweeps, following the exact precedent 0.9.293 and
+  0.9.294 each already set when updating the sweep before them:
+  `tests/DecentralizedRoleProviderPreferenceBoundary.test.js` Section M (now allows exactly two legitimate
+  consumers — 0.9.294's store and this milestone's resolver) and
+  `tests/DecentralizedSubstrateCapabilityMatrixAudit.test.js` Section G (now allows exactly four files
+  mentioning a provider preference, not three).
+
+### What this milestone deliberately excludes
+
+Per the task's own request:
+
+- **No settings UI, provider-selection control, or any `ui/` involvement of any kind.** Nothing in `ui/` is
+  touched, imported, or read for behavior; the resolver's own source imports exactly two collaborators
+  (`RoleProviderRole`, `RoleProviderPreferenceStore`) and nothing else.
+- **No fallback, "recommended provider," ranking, or load balancing.** An unavailable preferred provider
+  reports `PROVIDER_NOT_FOUND` and stops there — it never tries a second registered provider, never
+  substitutes a default, and never widens the search to another role's own registry.
+- **No provider health monitoring or connectivity testing.** `resolve()` performs exactly one synchronous
+  registry lookup; it never pings, probes, or ranks anything.
+- **No new registry.** Content and Proof already had one apiece before this milestone started; Discovery
+  still does not, and this milestone does not build one — closing that gap remains 0.9.292 Section F's own
+  named, unscheduled, independent future work.
+- **No change to any existing composition root or runtime behavior.** No file under `application/` that
+  wires a real Publication distribution, Snapshot distribution, discovery, material-loading, or anchoring
+  pipeline imports this resolver — a repo-wide sweep (this milestone's own tests, Section M) confirms it.
+  Existing behavior across all of those paths is unchanged, byte-for-byte, by this milestone.
+
+### What comes after
+
+Provider Preference UI is now the last item in the sequence 0.9.293/0.9.294/0.9.295 built toward — but the
+task's own recommendation is an audit checkpoint first, not an immediate jump to UI: confirm the resolver's
+own boundary holds under review, THEN build a UI that only ever manipulates `RoleProviderPreference`/
+`RoleProviderPreferenceStore`, obtaining concrete capability through this resolver rather than needing to
+understand for itself whether Arweave, Nostr, IPFS, Bitcoin, or Base actually supports a given role. Closing
+0.9.292's own remaining capability gaps (a Base `ProofVerifier`, an Arweave discovery write-side publisher, a
+Discovery-role keyed registry) remains real, unscheduled, and independent of this sequence.

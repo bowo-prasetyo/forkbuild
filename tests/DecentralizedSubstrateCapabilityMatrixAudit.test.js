@@ -511,23 +511,34 @@ async function run() {
     // files' own preference finally gets; it persists a
     // RoleProviderPreference by role and hands one back, but still never
     // resolves, validates capability for, or falls back on one (see that
-    // file's own header). This section is UPDATED, not deleted, by each
-    // milestone in turn — it still holds the line that matters: the
-    // concept exists in exactly the boundary files those milestones
+    // file's own header). 0.9.295 — Role-Aware Provider Resolution
+    // Boundary — added a fourth, application/RoleAwareProviderResolver.js:
+    // it reads a preference back out of 0.9.294's own store and looks its
+    // providerKey up in a real per-role registry (application/
+    // SnapshotPlacementStoreRegistry.js for Content, application/
+    // ExternalProofVerifierRegistry.js for Proof, a caller-built adapter
+    // over the real Discovery composition for Discovery), but still never
+    // falls back, never wires into any production composition root, and
+    // never resolves via any registry outside the one its own role owns
+    // (see that file's own header). This section is UPDATED, not deleted,
+    // by each milestone in turn — it still holds the line that matters:
+    // the concept exists in exactly the boundary files those milestones
     // themselves added, and nowhere else. A hit anywhere outside that set
     // would mean the preference concept leaked into a composition root, a
     // registry, or ui/ before the capability gaps Section J itself named
     // (Base/Proof's verify half, Arweave/Discovery's write half,
     // Discovery's own keyed registry) were ever closed — exactly what
-    // 0.9.293's boundary and 0.9.294's persistence layer were both built
-    // to avoid (see tests/DecentralizedRoleProviderPreferenceBoundary.test.js
-    // Section M and tests/DecentralizedRoleProviderPreferencePersistence.test.js
-    // Section K, which each sweep for the same thing from their own side).
+    // 0.9.293's boundary, 0.9.294's persistence layer, and 0.9.295's
+    // resolver were all built to avoid (see
+    // tests/DecentralizedRoleProviderPreferenceBoundary.test.js Section M,
+    // tests/DecentralizedRoleProviderPreferencePersistence.test.js
+    // Section K, and tests/RoleAwareProviderResolution.test.js Section M,
+    // which each sweep for the same thing from their own side).
     // ===============================================================
     {
         const allProductionFiles = await repoWideProductionFiles();
         const preferencePattern = /providerPreference|networkPreference|preferredProvider|substratePreference/i;
-        const KNOWN_PREFERENCE_BOUNDARY_FILES = new Set(['core/RoleProviderRole.js', 'core/RoleProviderPreference.js', 'storage/RoleProviderPreferenceStore.js']);
+        const KNOWN_PREFERENCE_BOUNDARY_FILES = new Set(['core/RoleProviderRole.js', 'core/RoleProviderPreference.js', 'storage/RoleProviderPreferenceStore.js', 'application/RoleAwareProviderResolver.js']);
         let hits = 0;
         const hitFiles = [];
         for (const file of allProductionFiles) {
@@ -537,11 +548,11 @@ async function run() {
                 hitFiles.push(file);
             }
         }
-        assert(hits === KNOWN_PREFERENCE_BOUNDARY_FILES.size, `G1. exactly the three files 0.9.293/0.9.294 themselves introduced mention a provider preference (found ${hits}: ${hitFiles.join(', ')}) — every OTHER production file remains exactly as free of the concept as it was when this audit first ran`);
+        assert(hits === KNOWN_PREFERENCE_BOUNDARY_FILES.size, `G1. exactly the four files 0.9.293/0.9.294/0.9.295 themselves introduced mention a provider preference (found ${hits}: ${hitFiles.join(', ')}) — every OTHER production file remains exactly as free of the concept as it was when this audit first ran`);
         for (const file of hitFiles) {
-            assert(KNOWN_PREFERENCE_BOUNDARY_FILES.has(file), `G2. the only file(s) allowed to mention a provider preference are 0.9.293/0.9.294's own boundary files — "${file}" is not one of them`);
+            assert(KNOWN_PREFERENCE_BOUNDARY_FILES.has(file), `G2. the only file(s) allowed to mention a provider preference are 0.9.293/0.9.294/0.9.295's own boundary files — "${file}" is not one of them`);
         }
-        console.log('✓ Section G: as of 0.9.294, a provider-preference concept exists in exactly the three files those two milestones introduced (core/RoleProviderRole.js, core/RoleProviderPreference.js, storage/RoleProviderPreferenceStore.js) — a pure semantic boundary with a durable home, still never a runtime-resolved default; every other production file this audit already knew about remains exactly as free of the concept as it was at 0.9.292');
+        console.log('✓ Section G: as of 0.9.295, a provider-preference concept exists in exactly the four files those three milestones introduced (core/RoleProviderRole.js, core/RoleProviderPreference.js, storage/RoleProviderPreferenceStore.js, application/RoleAwareProviderResolver.js) — a pure semantic boundary with a durable home and a real, tested resolution path, still never wired into a runtime-resolved default; every other production file this audit already knew about remains exactly as free of the concept as it was at 0.9.292');
     }
 
     // ===============================================================
