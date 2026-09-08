@@ -19577,3 +19577,48 @@ external, application-level policy, exactly where 0.9.278 already drew that boun
 raises is a question about what happens BETWEEN two of them, asked and answered entirely from outside.
 
 See `docs/Roadmap.md`, 0.9.279, for the full milestone entry.
+
+## Deduplication Identity Is A Decision About A Fact, Never A Capability Of It (0.9.280)
+
+0.9.278 and 0.9.279 were both audits: they characterized candidate identities and collision outcomes but, by their
+own brief, never wrote an adopted answer down anywhere a real caller could use. 0.9.280 does — `core/
+NotificationDeduplicationPolicy.js`, a pure module with zero imports, sitting entirely OUTSIDE `NotificationEvent`
+itself. The ordering is the point: `NotificationEvent` is a fact ("this happened, addressed to this identity");
+`NotificationDeduplicationPolicy` is a decision about that fact ("do these two representations describe the same
+occurrence"). Collapsing the two — a `dedupKey()` or `equals()` living on `NotificationEvent`'s own prototype —
+would make the fact and the policy for interpreting it the same object, so that any future change to how sameness
+is judged would look like a change to what happened. Keeping them apart means a second dedup policy (a different
+identity for a different producer, say) can exist without touching `NotificationEvent` at all, and the eventual
+`NotificationEventStore` consumes this policy rather than reimplementing it.
+
+**A collision result is a three-way classification, not a boolean.** 0.9.279 already proved a key match is
+necessary but never sufficient evidence of sameness. 0.9.280 makes that finding a return value:
+`classifyNotificationCollision()` returns `NO_MATCH`, `MATCH`, or `CONFLICT` — never `true`/`false`. Collapsing
+`MATCH` and `CONFLICT` into one truthy result would be exactly the mistake 0.9.279 Section I warned against: a store
+that only asks "same key?" before overwriting would silently pick one of two contradictory claims about who
+authored a real Commentary and destroy the record that a contradiction ever existed. A three-way result makes that
+mistake require an extra, deliberate step to make — a caller has to actively ignore `CONFLICT` to reproduce the bug,
+rather than never learning it could happen.
+
+**This milestone decides what 0.9.279 left open, and only that.** 0.9.279 Section B and Section C both ended in
+`OPEN`/`NARROWED` — narrower than before, but still a choice deferred. 0.9.280 closes exactly one of those gaps:
+a shared identity with no disagreement on any field the two payloads both carry — whether that means genuinely
+identical payloads or one payload being a strict superset of the other — now classifies as `MATCH`. What remains
+open is unchanged from 0.9.279: what corrective action a `CONFLICT` should trigger. This policy detects it; it does
+not decide what happens next, the same restraint that kept `NotificationEvent` itself small since 0.9.273.
+
+**Producer invocation is retired as a candidate, not merely unused.** 0.9.278 Section B already showed no
+`NotificationEvent` field records which producer call constructed it. 0.9.280 Section J turns that observation into
+a standing structural guarantee: `describeNotificationDeduplicationPolicy().producerInvocationParticipatesInIdentity`
+is `false`, and no invocation-provenance field exists to even attempt a special case. Two genuinely independent
+`.execute()` calls for the identical fact classify exactly like a hand-constructed pair — there is no code path left
+anywhere that could tell them apart.
+
+**Purity is verified, not merely claimed.** Section K reads `core/NotificationDeduplicationPolicy.js`'s own source
+text to confirm zero imports and the absence of any time, randomness, or I/O token, then proves determinism by
+calling `classifyNotificationCollision()` three times on the same two events and checking neither argument was
+mutated. A policy this small earns the right to be trusted only by being checked exactly this literally, the same
+discipline 0.9.278/0.9.279's own "K" sections already applied to `NotificationEvent`'s untouched prototype chain —
+extended here to the new file that finally has responsibility to hold.
+
+See `docs/Roadmap.md`, 0.9.280, for the full milestone entry.
