@@ -87475,8 +87475,107 @@ Per the task's own request:
 
 ### What comes after
 
-The chain 0.9.293-0.9.299 built is now genuinely user-reachable, closing the exact gap 0.9.300 found. The
-recommended next milestone is **0.9.302 — Preferred Content Provider Product Audit**: now that a person can
-actually trigger preference-based placement, does the product have a legitimate way to ESTABLISH or CHANGE that
-preference? If not, that audit's own evidence would justify the smallest legitimate settings surface — never
-built ahead of a real, proven consumer, the same sequencing discipline this whole arc has held since 0.9.298.
+The chain 0.9.293-0.9.299 built is now genuinely user-reachable, closing the exact gap 0.9.300 found. This
+milestone's own "What comes after" originally recommended **0.9.302 — Preferred Content Provider Product Audit**
+— an audit asking whether the product has a legitimate way to ESTABLISH or CHANGE the preference before building
+one. The product review of 0.9.301 (see 0.9.302 below) answered that question directly, from the same evidence
+this milestone's own tests already established (a real consumer exists, CONTENT is the one role with genuine
+product-level multi-provider redundancy today), and asked for the settings surface itself rather than a separate
+audit step — 0.9.302 is that surface, not the audit.
+
+## 0.9.302 — Content Provider Preference Settings Entry Point
+
+The missing WRITE half of the preference chain 0.9.293-0.9.301 built and consumed. 0.9.301 gave "Use Preferred
+Provider" a real reader; nothing before this milestone ever gave a person an ordinary product path to CREATE or
+CHANGE the CONTENT preference it reads. Every preference exercised by every earlier suite in this arc was written
+directly through `RoleProviderPreferenceStore.save()` — a storage-layer method no UI ever called.
+
+```text
+User chooses preferred CONTENT provider
+              │
+              ▼
+RoleProviderPreference
+              │
+              ▼
+RoleProviderPreferenceStore.save()
+              │
+              ▼
+Use Preferred Provider   (0.9.301, unchanged)
+              │
+              ▼
+actual placement
+```
+
+### What this milestone builds
+
+- **`application/SetRoleProviderPreferenceUseCase.js`** — the smallest possible application capability, and the
+  WRITE-side symmetric partner of `ResolvePreferredRoleProviderUseCase.js` (0.9.297). `execute({ role,
+  providerKey })` validates `role`, constructs a `RoleProviderPreference` (which itself validates `providerKey`'s
+  shape — this class adds no rule of its own), saves it through the injected `RoleProviderPreferenceStore`, and
+  returns the persisted instance. It never resolves a provider, never instantiates one, never checks health, never
+  ranks, never falls back, and never touches a registry.
+- **`application/RoleProviderPreferenceSettingsView.js`** — a pure, read-only view-model, the settings-side
+  counterpart of `SnapshotPlacementCreationView.js` (0.8.25). `describeRoleProviderPreferenceSettings({ role,
+  availableProviderKeys, preference })` turns an already-resolved provider-key list (never hardcoded, never
+  re-derived here — supplied by the caller, e.g. `PreferredSnapshotPlacementCreationCoordinator
+  #availableStorageTypes()`) and an already-read `RoleProviderPreference` (or `null`) into `{ role,
+  selectedProviderKey, options: [{ providerKey, label, selected }] }`. It never imports the store or the write use
+  case, and never constructs a `RoleProviderPreference`.
+- **`ui/views/ContentProviderSettingsView.js`** — a new, dedicated settings page (routed at
+  `/settings/content-provider`, linked from the top nav as "Content Provider"), mirroring
+  `ui/views/AvatarSettingsView.js`'s own "one page, one concern, its own Save action" shape. It injects
+  `roleProviderPreferenceStore` (read-only, to display the current selection), `setRoleProviderPreferenceUseCase`
+  (to save a change), and the already-provided `preferredSnapshotPlacementCreationCoordinator` (read-only, for its
+  `availableStorageTypes()` — never its `create()`) — never `snapshotPlacementCreationCoordinator`, the coordinator
+  behind the *explicit* Local/IPFS placement buttons. It never constructs or interprets a `RoleProviderPreference`
+  itself; it expresses "save preferred CONTENT provider = 'ipfs'" and lets the use case own the domain object and
+  persistence.
+- **`ui/main.js`** now shares the SAME `RoleProviderPreferenceStore` instance between the 0.9.299 preferred-
+  placement wiring and the new `SetRoleProviderPreferenceUseCase`, and provides both under their own injection
+  keys — a preference saved by the settings view is immediately what "Use Preferred Provider" reads back.
+
+### Deliberately narrow
+
+- **CONTENT only.** No role selector, no Discovery or Proof & Anchoring section.
+- **Local and IPFS only**, because that is what `PreferredSnapshotPlacementCreationCoordinator
+  #availableStorageTypes()` — the SAME registry-derived list the existing placement buttons already use — actually
+  reports today. The settings view never hardcodes a provider list and never asks "is X valid" itself.
+- **No automatic preference update from the existing explicit Local/IPFS placement buttons.** "Use Local for this
+  placement" stays a genuinely different intention from "Use Local for this placement, and make Local my future
+  preference" — the two remain separate actions, exactly as this milestone's own brief required.
+- **No provider health check, ranking, fallback, or capability discovery anywhere in the new write path.** Saving
+  a well-formed but currently-unregistered `providerKey` still succeeds; resolving it still reports
+  `PROVIDER_NOT_FOUND` exactly as it always has — the pre-existing preference-boundary semantics are preserved,
+  never strengthened or weakened by this milestone.
+
+### Tests
+
+`tests/ContentProviderPreferenceSettingsEntryPoint.test.js` proves the complete lifecycle: entry-point
+reachability (nav link, route, shared store, a view that never bypasses its injected collaborators); existing-
+preference display for none/local/ipfs; save; Local↔IPFS replacement (never a second entry); restart (a newly
+constructed store/use-case pair, over the same underlying storage, observes and can further change what an
+earlier instance persisted); consumer convergence (saving IPFS through the settings entry point actually decides
+what "Use Preferred Provider" executes, proven against a real fake-IPFS-node network, not just a returned outcome
+string); role isolation (CONTENT writes never touch Discovery or Proof & Anchoring); the unregistered-but-well-
+formed-provider / genuinely-malformed-provider boundary; and regression proof that the existing explicit Local/
+IPFS placement buttons are completely unaffected by a saved preference.
+
+Six existing repo-wide sweep tests (`ContentProviderPreferenceReachabilityAudit`,
+`DecentralizedRoleProviderPreferenceBoundary`, `RoleAwareProviderResolution`,
+`RoleProviderPreferenceApplicationBoundary`, `RoleProviderPreferenceProductIntegrationAudit`,
+`RoleProviderResolutionIntegrationReadinessAudit`, and `DecentralizedSubstrateCapabilityMatrixAudit`) are updated
+to admit the new, legitimate references this milestone introduces — the same precedent every earlier milestone in
+this arc (0.9.293-0.9.301) already set for the sweep before it. `ContentProviderPreferenceReachabilityAudit.test
+.js` Section H, in particular, is updated from "RoleProviderPreferenceStore.save() is called from ZERO production
+files" to "called from exactly `application/SetRoleProviderPreferenceUseCase.js`" — the literal fact this
+milestone exists to change, and the step that audit's own Section I verdict named as correct only once a real
+consumer (0.9.301) existed.
+
+### What comes after
+
+The provider-preference arc now has a complete, user-controlled lifecycle for CONTENT: establish/change it here,
+consume it via "Use Preferred Provider" (0.9.301). The recommended next milestone is a short **lifecycle/product
+audit** — does real usage confirm the CONTENT preference concept is a stable product capability, or does it reveal
+a semantic problem worth fixing before extending the pattern? Only after that should Discovery or Proof &
+Anchoring be assessed for their own legitimate, role-specific selection seam — never a generic three-role
+provider-settings framework built ahead of any of them actually needing one.

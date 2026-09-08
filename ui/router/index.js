@@ -13,6 +13,7 @@ import PeerConnectionsView from '../views/PeerConnectionsView.js';
 import ChatView from '../views/ChatView.js';
 import ConversationsView from '../views/ConversationsView.js';
 import DecentralizedPublicationsView from '../views/DecentralizedPublicationsView.js';
+import ContentProviderSettingsView from '../views/ContentProviderSettingsView.js';
 import ReconciliationCandidateLeaderboardView from '../views/ReconciliationCandidateLeaderboardView.js';
 import ReconciliationCandidateLeaderboardEvidenceExportComparisonView from '../views/ReconciliationCandidateLeaderboardEvidenceExportComparisonView.js';
 
@@ -64,6 +65,14 @@ const routes = [
     // DecentralizedPublication envelopes (0.7.0) this replica has
     // cataloged (0.7.2), regardless of whether their content resolves.
     { path: '/publications', name: 'publications', component: DecentralizedPublicationsView },
+    // 0.9.302 — Content Provider Preference Settings Entry Point. The one
+    // ordinary product path to create/change the persisted CONTENT role
+    // provider preference (core/RoleProviderPreference.js, 0.9.293) that
+    // /publications' own "Use Preferred Provider" trigger (0.9.301)
+    // consumes — see ui/views/ContentProviderSettingsView.js's own header.
+    // Deliberately its own top-nav destination, not folded into
+    // /publications' own already-enormous template.
+    { path: '/settings/content-provider', name: 'content-provider-settings', component: ContentProviderSettingsView },
     // 0.8.180 — Reconciliation Candidate Leaderboard UI Integration. Not
     // yet a top-nav destination (see ui/views/ReconciliationCandidateLeaderboardView.js's
     // own header) — reached by URL until a future milestone gives it a

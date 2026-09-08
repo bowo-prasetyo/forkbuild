@@ -293,6 +293,14 @@ async function run() {
         const dirs = ['core', 'application', 'content', 'discovery', 'anchoring', 'base', 'arweave', 'nostr', 'publisher', 'ui', 'identity', 'storage', 'peer', 'replication', 'placement', 'spatial', 'serializer', 'presence', 'collaboration', 'world', 'world-layout', 'persistence', 'server', 'renderer'];
         const allFiles = [];
         for (const dir of dirs) await listJsFiles(dir, allFiles);
+        // UPDATED by 0.9.302 — Content Provider Preference Settings Entry
+        // Point. Four new legitimate references: the WRITE-side use case
+        // and its own pure settings view-model, the new settings Vue view
+        // that consumes both, and ui/router/index.js's own route comment
+        // naming core/RoleProviderPreference.js as the reason the route
+        // exists — the identical "a comment naming the concept still
+        // counts as a real, intentional reference" reading every earlier
+        // entry in this set already gets.
         const KNOWN_CONSUMER_FILES = new Set([
             'storage/RoleProviderPreferenceStore.js',
             'application/RoleAwareProviderResolver.js',
@@ -300,7 +308,11 @@ async function run() {
             'application/PreferredSnapshotPlacementCreationCoordinator.js',
             'application/CreatePreferredSnapshotPlacementCreationCoordinatorUseCase.js',
             'ui/main.js',
-            'application/SnapshotPlacementCreationView.js'
+            'application/SnapshotPlacementCreationView.js',
+            'application/SetRoleProviderPreferenceUseCase.js',
+            'application/RoleProviderPreferenceSettingsView.js',
+            'ui/views/ContentProviderSettingsView.js',
+            'ui/router/index.js'
         ]);
         let consumerCount = 0;
         const consumerFiles = [];
@@ -311,7 +323,7 @@ async function run() {
                 consumerFiles.push(file);
             }
         }
-        assert(consumerCount === KNOWN_CONSUMER_FILES.size, `M1. exactly the 0.9.294 persistence store, the 0.9.295 resolver, the 0.9.297 application boundary, the 0.9.299 Content creation integration (plus its ui/main.js wiring), and the 0.9.301 UI-facing view-model reference RoleProviderPreference or RoleProviderRole (found ${consumerCount}: ${consumerFiles.join(', ')}) — this boundary is consumed ONLY by those seven named layers; wiring it into any OTHER production composition root is separate, unscheduled future work`);
+        assert(consumerCount === KNOWN_CONSUMER_FILES.size && consumerFiles.every((f) => KNOWN_CONSUMER_FILES.has(f)), `M1. exactly the 0.9.294 persistence store, the 0.9.295 resolver, the 0.9.297 application boundary, the 0.9.299 Content creation integration (plus its ui/main.js wiring), the 0.9.301 UI-facing view-model, and the 0.9.302 settings write use case/view-model/view/route reference RoleProviderPreference or RoleProviderRole (found ${consumerCount}: ${consumerFiles.join(', ')}) — this boundary is consumed ONLY by those eleven named layers; wiring it into any OTHER production composition root is separate, unscheduled future work`);
         for (const file of consumerFiles) {
             assert(KNOWN_CONSUMER_FILES.has(file), `M2. "${file}" is not one of the known legitimate consumers of this boundary`);
         }

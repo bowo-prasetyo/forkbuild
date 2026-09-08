@@ -398,10 +398,16 @@ async function run() {
     // ===============================================================
     {
         const allProductionFiles = await repoWideProductionFiles();
+        // UPDATED by 0.9.302 — Content Provider Preference Settings Entry
+        // Point. application/SetRoleProviderPreferenceUseCase.js's own
+        // header names this class in prose only (drawing the
+        // read-use-case/write-use-case symmetry) — it never imports or
+        // constructs it.
         const KNOWN_FILES = new Set([
             'application/ResolvePreferredRoleProviderUseCase.js',
             'application/PreferredSnapshotPlacementCreationCoordinator.js',
-            'application/CreatePreferredSnapshotPlacementCreationCoordinatorUseCase.js'
+            'application/CreatePreferredSnapshotPlacementCreationCoordinatorUseCase.js',
+            'application/SetRoleProviderPreferenceUseCase.js'
         ]);
         let hits = 0;
         const hitFiles = [];
@@ -413,7 +419,7 @@ async function run() {
             }
         }
         assert(hits === KNOWN_FILES.size && hitFiles.every((file) => KNOWN_FILES.has(file)),
-            `K1. only the 0.9.299 Content creation seam and this class's own file mention it in production source (found ${hits}: ${hitFiles.join(', ')}) — no OTHER composition root, use case, or ui/ view wires it in`);
+            `K1. only the 0.9.299 Content creation seam, this class's own file, and the 0.9.302 settings write use case (in prose only) mention it in production source (found ${hits}: ${hitFiles.join(', ')}) — no OTHER composition root, use case, or ui/ view wires it in`);
 
         const store = makePreferenceStore();
         const { useCase } = makeUseCase({ preferenceStore: store });

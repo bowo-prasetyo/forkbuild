@@ -495,13 +495,20 @@ async function run() {
     // ===============================================================
     {
         const allProductionFiles = await repoWideProductionFiles();
+        // UPDATED by 0.9.302 — Content Provider Preference Settings Entry
+        // Point. application/SetRoleProviderPreferenceUseCase.js's own
+        // header names RoleAwareProviderResolver in prose only (explaining
+        // why the WRITE-side use case deliberately has no such dependency)
+        // — it never imports or references the class in actual code, see
+        // Section J's own sweep above for that stronger check.
         const KNOWN_RESOLVER_FILES = new Set([
             'application/RoleAwareProviderResolver.js',
             'application/ResolvePreferredRoleProviderUseCase.js',
             'application/PreferredSnapshotPlacementCreationCoordinator.js',
             'application/CreatePreferredSnapshotPlacementCreationCoordinatorUseCase.js',
             'application/SnapshotPlacementCreationView.js',
-            'application/SnapshotPlacementCreationUiState.js'
+            'application/SnapshotPlacementCreationUiState.js',
+            'application/SetRoleProviderPreferenceUseCase.js'
         ]);
         let hits = 0;
         const hitFiles = [];
@@ -512,7 +519,7 @@ async function run() {
                 hitFiles.push(file);
             }
         }
-        assert(hits === KNOWN_RESOLVER_FILES.size, `M1. only application/RoleAwareProviderResolver.js, its 0.9.297 application-boundary consumer, and the 0.9.299 Content creation seam mention RoleAwareProviderResolver in production source (found ${hits}: ${hitFiles.join(', ')}) — no OTHER composition root wires it in, so existing publication distribution, Snapshot distribution, discovery, material loading, and anchoring paths behave exactly as before this milestone`);
+        assert(hits === KNOWN_RESOLVER_FILES.size && hitFiles.every((f) => KNOWN_RESOLVER_FILES.has(f)), `M1. only application/RoleAwareProviderResolver.js, its 0.9.297 application-boundary consumer, the 0.9.299 Content creation seam, and the 0.9.302 settings write use case (in prose only) mention RoleAwareProviderResolver in production source (found ${hits}: ${hitFiles.join(', ')}) — no OTHER composition root wires it in, so existing publication distribution, Snapshot distribution, discovery, material loading, and anchoring paths behave exactly as before this milestone`);
         for (const file of hitFiles) {
             assert(KNOWN_RESOLVER_FILES.has(file), `M1b. "${file}" is not one of the known legitimate references to RoleAwareProviderResolver`);
         }

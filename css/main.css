@@ -3574,6 +3574,29 @@ html, body {
     font-family: inherit;
 }
 
+/* 0.9.302 — Content Provider Preference Settings Entry Point. Same card
+   language as .avatar-settings-view/.avatar-settings-form above, one
+   axis over. */
+.content-provider-settings-view {
+    padding: 2rem 2.5rem 3rem;
+    max-width: 560px;
+    margin: 0 auto;
+    width: 100%;
+}
+
+.content-provider-settings-form {
+    margin-top: 1.5rem;
+}
+
+.content-provider-option {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.6rem;
+    font-size: 0.9rem;
+    color: #e0e0e0;
+}
+
 .avatar-color-swatch {
     flex: 0 0 auto;
     width: 2.2rem;
