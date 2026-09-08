@@ -85237,6 +85237,81 @@ reconstruction-mirrors-retry, self-comment no special case, incompatible-facts d
 descriptor, and only then — if durable notification history or reliable delivery is actually justified, per 0.9.277's
 own still-unresolved conditional — become the `NotificationEvent` persistence boundary.
 
+## 0.9.280 — Notification Deduplication Policy Boundary
+
+0.9.278 and 0.9.279 were both, by their own explicit brief, test-only audits — they characterized candidate dedup
+identities and collision outcomes without ever adopting one or writing it down anywhere a real caller could use it.
+This milestone turns those findings into an explicit, pure policy contract a future persistence layer can consume,
+without building that persistence layer yet:
+
+```text
+NotificationEvent            = immutable fact
+Deduplication Policy         = external decision about equivalence
+Notification Store (future)  = persistence mechanism
+```
+
+This is a **production policy + focused test** milestone, unlike 0.9.278/0.9.279's own audit-only shape.
+
+### What this milestone adds
+
+`core/NotificationDeduplicationPolicy.js` (new production file) — a pure, dependency-free module (zero imports,
+matching `core/NotificationEvent.js`'s own "deliberately standalone" precedent) exposing exactly four functions:
+`describeNotificationDeduplicationPolicy()` (the executable form of this policy's own declared decisions —
+identity dimensions, exclusions, and collision handling — queryable directly rather than only asserted in prose),
+`notificationDeduplicationIdentity(event)` (the adopted identity for the current Commentary producer,
+`commentaryId + eventType + recipientIdentityId` — 0.9.278 Section I's own surviving content-based candidate),
+`haveSameNotificationDeduplicationIdentity(eventA, eventB)`, and `classifyNotificationCollision(eventA, eventB)`,
+which returns one of three `NotificationCollisionOutcome` values: `NO_MATCH` (different identity), `MATCH` (same
+identity, no disagreement on any payload field the two events both carry — this now DECIDES, rather than leaves
+`OPEN`, both 0.9.279 Section B's payload-identical case and Section C's benign-superset case), and `CONFLICT` (same
+identity, a shared payload field disagrees — 0.9.279 Section I's own collision-integrity boundary, made executable:
+a shared identity is evidence to INSPECT, never evidence a persistence layer may blindly overwrite). `notificationId`,
+`createdAt`, the payload as a whole (beyond `commentaryId`), and producer invocation are all explicitly excluded from
+identity, per 0.9.278/0.9.279's own findings — the fourth exclusion formally retires 0.9.278's own fifth candidate
+(producer invocation), since no `NotificationEvent` field records which producer call constructed it.
+
+`tests/NotificationDeduplicationPolicy.test.js` (new, registered in `tests.html`) — eleven sections. Section A
+verifies the policy descriptor's every declared field against real behavior (not only asserted values), including
+that a returned descriptor is an independent copy safe to mutate. Section B proves identity stability: the same
+Commentary/type/recipient produces the same identity despite simultaneously varying `notificationId`, `createdAt`,
+payload shape, and object identity. Sections C, D, and E prove event-type, recipient, and Commentary isolation in
+turn — each axis alone is sufficient to prevent any shared identity. Section F proves reconstruction stability: an
+original event and a live reconstruction of it (and a second, independent reconstruction) share an identity and
+classify as `MATCH`, not merely `NO_MATCH`/`sameIdentity`. Section G proves self-comment gets no special-case branch
+— a self-authored retry classifies as `MATCH` exactly like any other, and recipient separation still applies to a
+self-authored Commentary the same as any other. Section H proves the compatible-collision case classifies `MATCH`,
+covering both a payload-identical retry and a hand-constructed benign superset (a hypothetical future producer
+revision attaching an extra field) — the exact case 0.9.279 Section C left `OPEN`, now decided. Section I proves the
+contradictory-collision case classifies `CONFLICT` — two events sharing an identity while disagreeing on
+`payload.authorIdentityId`, 0.9.279 Section I's own scenario, now producing an explicit, never-silently-resolved
+result rather than a bare boolean. Section J proves producer-invocation exclusion directly: two genuinely separate
+`.execute()` calls for the identical fact classify exactly like a hand-constructed pair, and no invocation-provenance
+field exists anywhere on `NotificationEvent` to even attempt a special case — formally retiring 0.9.278's own fifth
+candidate from the identity model. Section K is a policy-purity regression: the policy source file is inspected
+directly for zero imports and the absence of any time/randomness/I-O token, `classifyNotificationCollision()` is
+proven deterministic and non-mutating across repeated calls, no pre-existing production file this milestone examines
+was modified, and 0.9.278/0.9.279's own forbidden-method lists on `NotificationEvent` are reconfirmed and extended.
+
+### What this milestone deliberately excludes
+
+Per this milestone's own brief: no `NotificationEventStore`, no deterministic `notificationId`, no inbox, no
+delivery, no read/unread state, no notification lifecycle, no TTL, no retry queues, no fan-out implementation, no
+`ChatOutbox` reuse, no notification UI, no change to `NotificationEvent` itself, and no change to
+`PublicationCommentaryNotificationProducer` or automatic producer-side deduplication. The policy answers "are these
+the same notification, and can that answer be trusted" — nothing about what happens once a caller has that answer.
+
+### What comes after
+
+Per this milestone's own architecture note, `NotificationDeduplicationPolicy` is deliberately consumed, never
+duplicated, by whatever comes next. A future `0.9.281` should be the persistence boundary — `NotificationEventStore`
+— but even there implement only `save(event)`, `getById(notificationId)`, `getByDeduplicationIdentity(...)`, and
+`loadAll()`, with this milestone's own policy injected rather than reimplemented inside the store. The store should
+be able to distinguish a new logical notification, an existing compatible notification, and an identity collision
+with conflicting facts — using `classifyNotificationCollision()`'s own three outcomes — without deciding delivery,
+read state, expiration, or UI behavior. What corrective action a `CONFLICT` should trigger (reject, flag, log and
+keep both) stays exactly as `OPEN` as 0.9.279 left it; this milestone only guarantees the store will never be handed
+a `CONFLICT` disguised as a `MATCH`.
+
 ## 0.9.270 — Place Naming Adoption Status Lifecycle Audit
 
 0.9.269 built `alreadySaved`; this milestone proves it holds under a lifecycle, the same one-milestone-later audit
