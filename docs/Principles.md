@@ -19622,3 +19622,45 @@ discipline 0.9.278/0.9.279's own "K" sections already applied to `NotificationEv
 extended here to the new file that finally has responsibility to hold.
 
 See `docs/Roadmap.md`, 0.9.280, for the full milestone entry.
+
+## A Persistence Layer Enforces A Policy; It Never Adjudicates What The Policy Leaves Open (0.9.281)
+
+0.9.280 gave the Notification arc a decision function, `classifyNotificationCollision()`, but nothing ever called it
+against durable storage. 0.9.281 is the first thing that does — `storage/NotificationEventStore.js` — and its own
+discipline is narrower than it might look: the store's entire job is to look up whether a `NotificationEvent`'s
+deduplication identity is already on file and act on whatever `classifyNotificationCollision()` says, never to
+compute, approximate, or override that answer itself. `save()` contains no field comparison of its own; every
+byte of "are these the same notification" logic still lives in exactly one file, exactly where 0.9.280 put it.
+
+**Three outcomes, not a boolean plus an exception.** `PublicationCommentaryStore.save()` — this file's own nearest
+precedent — returns a boolean and throws a custom error for its one conflict case, because that store's own header
+notes its conflict "can't arise from two honestly generated packages." A `NotificationEvent` identity collision has
+no such structural impossibility to lean on: 0.9.279 proved a shared identity is only evidence to INSPECT, and two
+independently authored facts can genuinely disagree. So `save()` returns `{ outcome, event, conflict? }` where
+`outcome` is `NEW`, `EXISTING`, or `CONFLICT` — a caller distinguishes "already on file, safely" from "already on
+file, but something is wrong" without parsing a message string, and without a thrown error forcing a `try`/`catch`
+around the ordinary, expected retry path.
+
+**`CONFLICT` is surfaced, never resolved.** The store does not pick a winner, does not merge the two records, and
+does not overwrite the original — the existing row is returned completely untouched, and the incoming, rejected
+event is never itself persisted under its own `notificationId` either. This is the same restraint
+`core/NotificationDeduplicationPolicy.js` already modeled for detection: a store built on top of a policy that
+refuses to adjudicate should not quietly start adjudicating just because it now has a place to write the answer
+down. What corrective action a real `CONFLICT` deserves (reject, flag, log-and-keep-both) is exactly as open after
+this milestone as 0.9.279 left it — 0.9.281 only guarantees the disagreement is never silently lost.
+
+**Idempotency is a property of the durable data, not of one instance's memory.** A retry proves nothing if it only
+works against the same `NotificationEventStore` object that produced the original write. This milestone's own
+Section M constructs a second, and then a third, store instance against the identical injected provider and shows
+each one independently reproduces the same `EXISTING` classification for the same retry — deduplication survives
+exactly the boundary 0.9.277's own retry finding was worried about (a fresh producer call, potentially a fresh
+process) because the identity check reads from the provider itself, not from any field cached on the store object.
+
+**The store still does not decide whether persistence is worth having.** `application/
+PublicationCommentaryNotificationProducer.js` is unmodified, and untouched deliberately: this milestone builds the
+seam, not the wiring. No live code path writes a `NotificationEvent` to this store yet, so 0.9.277's own conditional
+— persistence is justified only if durable notification history or reliable delivery is actually needed — remains
+exactly as unresolved as it was before this file existed. Building the boundary and deciding to use it are two
+different questions, and 0.9.281 only answers the first.
+
+See `docs/Roadmap.md`, 0.9.281, for the full milestone entry.

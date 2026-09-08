@@ -85420,3 +85420,85 @@ capability/reachability matrix closes at eleven of thirteen candidates `COMPLETE
 requirement or a proportionate existing surface to build from — Place Naming is product-complete under its current
 semantic model. The next product evolution should return to the broader product roadmap, in a domain with an actual
 demonstrated user-facing gap, rather than extending this arc on reflex.
+
+## 0.9.281 — NotificationEventStore Persistence Boundary
+
+0.9.280 turned 0.9.278/0.9.279's own audits into an adopted, executable policy — an identity function and a
+three-way collision classifier — without ever writing a `NotificationEvent` to durable storage. This milestone is
+the persistence boundary 0.9.280's own "what comes after" named, and deliberately nothing more:
+
+```text
+NotificationEvent            = immutable fact
+NotificationDeduplicationPolicy = external decision about equivalence
+NotificationEventStore       = persistence mechanism
+```
+
+### What this milestone adds
+
+`storage/NotificationEventStore.js` (new production file) — an injected-`StorageProvider` store, defaulting to
+`storage/LocalStorageProvider.js`, the identical seam `storage/PublicationCommentaryStore.js` already established.
+It exposes exactly four methods: `save(event)`, `getById(notificationId)`,
+`getByDeduplicationIdentity(event)`, and `loadAll()`. `save()` never invents notification semantics of its own —
+every identity and equivalence decision is delegated to `core/NotificationDeduplicationPolicy.js`
+(`notificationDeduplicationIdentity()` and `classifyNotificationCollision()`), consumed here rather than
+reimplemented. It returns one of three explicit `NotificationPersistenceOutcome` results rather than a boolean plus
+a thrown conflict error: `NEW` (no record shares this event's deduplication identity — the event is appended),
+`EXISTING` (a record sharing this identity is already on file and every shared field agrees — no write is
+performed, and the result points at the ORIGINAL on-file record, never the caller's own instance), and `CONFLICT`
+(a record sharing this identity disagrees on a shared payload field — no write is performed, the existing record is
+left completely untouched, and the result carries `conflict: { existing, incoming }` so the application layer can
+diagnose the collision itself). This gives 0.9.277's own flagship retry finding — two independently constructed
+`NotificationEvent`s, different `notificationId`/`createdAt`/object identity, same logical notification — a safe
+destination: the retry's `save()` returns `EXISTING`, never a second row and never an error. Corrupted or malformed
+storage degrades to an empty collection (a non-array persisted value drops the whole payload; one corrupted array
+entry is dropped alone), the identical restraint `storage/PublicationCommentaryStore.js` already uses, and a
+genuine storage-provider failure propagates unmodified out of `save()` rather than being swallowed into a false
+result. The dependency direction runs one way: `core/NotificationEvent.js` and
+`core/NotificationDeduplicationPolicy.js` import nothing from this file and remain completely unmodified.
+
+`tests/NotificationEventStore.test.js` (new, registered in `tests.html`) — fourteen sections, built directly
+against `NotificationEvent`/`NotificationDeduplicationPolicy`/`NotificationEventStore`, with no producer or
+identity-provider machinery required. Section A proves a genuinely new logical notification returns `NEW`. Section
+B proves exact retrieval by `notificationId`, including the null case for an unrecognized id. Section C proves
+`getByDeduplicationIdentity()` finds an already-persisted record from a separately constructed, never-saved probe
+event. Section D proves the flagship retry-idempotency case: two independently produced events for one logical
+notification collapse onto exactly one stored row, with the second `save()` returning `EXISTING`. Sections E and F
+prove recipient isolation and event-type isolation respectively — each axis alone produces a genuinely separate
+`NEW` row. Section G proves a live reconstruction (0.9.277 Section F's own "reconstruction is not deduplicated on
+its own" scenario) still finds, and safely collapses onto, the original persisted record. Section H proves a benign
+payload superset returns `EXISTING`, consistent with 0.9.280's own `MATCH` classification, and leaves the original
+record's own fields unexpanded. Section I proves a contradictory shared payload field returns `CONFLICT`, carries
+both the existing and incoming events for diagnosis, and leaves the original record completely untouched — the
+rejected incoming record is never separately persisted under its own id either. Section J proves a genuine storage-
+provider failure propagates unmodified out of `save()`, never producing a false `NEW`/`EXISTING`/`CONFLICT` result.
+Section K proves read-corruption degrades gracefully — a non-array persisted value yields an empty collection, and
+a single corrupted entry among valid ones is dropped alone. Section L proves several unrelated notification
+identities, saved in any order, never contaminate one another, and a retry of one leaves the other three
+unaffected. Section M is the restart/reload proof this milestone's own brief asked for: a brand-new
+`NotificationEventStore` instance, constructed against the SAME injected provider as an earlier instance, reproduces
+every read and correctly classifies a retry as `EXISTING` — proving deduplication is a property of the durable data,
+never of one instance's own memory — confirmed again across a third, independently reloaded instance. Section N is
+an architectural regression: no pre-existing production file this milestone depends on was modified, and neither
+`core/NotificationEvent.js` nor `core/NotificationDeduplicationPolicy.js` imports this store.
+
+### What this milestone deliberately excludes
+
+Per this milestone's own brief and 0.9.280's own "what comes after": no `getUnread()`, `getForRecipient()`,
+`markRead()`, `delete()`, or `expire()` — none of these are persistence primitives implied by the adopted policy,
+and this store represents durable history of notification facts, never a recipient's inbox. Also excluded: delivery,
+push notifications, read/unread state, seen timestamps, TTL/expiration, retry queues, notification lifecycle, UI,
+any change to `application/ChatOutbox.js`, recipient fan-out, any change to
+`application/PublicationCommentaryNotificationProducer.js`, a deterministic `notificationId`, any mutation of
+`NotificationEvent` itself, ranking/prioritization, automatic reconstruction, and notification deletion. What
+corrective action a `CONFLICT` should trigger beyond surfacing it (reject, flag, log-and-keep-both) stays exactly as
+`OPEN` as 0.9.279 left it — this milestone only guarantees the store never disguises a `CONFLICT` as a `MATCH`.
+
+### What comes after
+
+Per this milestone's own brief: pause rather than automatically build delivery. A durable `NotificationEventStore`
+now exists, independent of any producer wiring it up — `PublicationCommentaryNotificationProducer.js` is
+deliberately left unmodified, so no notification is actually persisted by any live code path yet. A future product
+reassessment should determine whether durable notification history is itself worth exposing, and whether a
+justified recipient-facing delivery/inbox capability actually exists, before this arc's next milestone is chosen —
+the same "let the next product gap, not architectural momentum, choose what comes next" discipline this whole
+Notification arc (0.9.273 through 0.9.281) has followed throughout.
