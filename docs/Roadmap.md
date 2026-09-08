@@ -87662,3 +87662,122 @@ raises it: does a person actually choose among multiple Discovery mechanisms, or
 anchor can be created, the way they already choose among Content stores today? If real usage never raises that
 choice, stopping the provider-preference arc at CONTENT is itself a complete, legitimate product outcome — not an
 abandoned extension.
+
+## 0.9.304 — Post-Content-Preference Product Evolution Reassessment
+
+**Type:** Test-only product reassessment. **Production changes:** None.
+
+0.9.293-0.9.303 built and then audited one complete role-provider-preference arc, for CONTENT, and 0.9.303's own
+"What comes after" deliberately left the next step open rather than assuming the same pattern should repeat for
+Announcement & Discovery or Proof & Anchoring. A user, reviewing that closure, asked for the reassessment 0.9.303
+deferred: now that Content Provider Preference is a complete, user-facing capability, is there a legitimate NEXT
+provider-selection problem elsewhere in ForkBuild — and, just as importantly, is `RoleProviderPreference`'s own
+`{ role, providerKey }` shape still the right one for whatever is found? This milestone answers both questions
+from real source, structured as ten lettered audits (A-J), and reaches one of exactly three allowed outcomes:
+INTEGRATE (a real seam exists — define the next milestone around it), INVESTIGATE (a promising but
+under-specified decision — a narrow follow-up audit, not code), or STOP (Content stays complete; the arc closes
+here). Symmetry across three roles is explicitly not assumed to be a requirement.
+
+### What this milestone found
+
+Every claim is a real object graph built from unmodified production classes, a real regex read of a named
+production file, or a real repo-wide sweep (`tests/` excluded) — never prose carried over from an earlier
+milestone without re-checking it against the current tree:
+
+- **Section A — capability inventory.** The CONTENT chain (`RoleProviderRole` → `RoleProviderPreference` →
+  `RoleProviderPreferenceStore` → `RoleAwareProviderResolver` → `ResolvePreferredRoleProviderUseCase` →
+  `SetRoleProviderPreferenceUseCase` → Settings → "Use Preferred Provider" → placement) is reconfirmed complete —
+  not merely by file existence, but functionally: a Settings-shaped save through `SetRoleProviderPreferenceUseCase`
+  is immediately what a fresh `ResolvePreferredRoleProviderUseCase.execute()` reads back, against a registry
+  shaped exactly like `ui/main.js`'s own real two-store (`local` + `ipfs`) wiring. CONTENT remains the only role
+  with any settings entry point in production.
+- **Section B — Discovery, classified seam by seam.** The local/catalog index is `NO_SELECTION` (this replica's
+  own singular index, constructed at most once in `ui/main.js`). The external query composition
+  (`application/DecentralizedWorldEncounterMaterialDiscoveryRuntimeComposition.js`) is genuinely two real
+  substrates (Nostr + Arweave) but is `APPLICATION_CHOOSES`, re-confirmed from that file's own unchanged header:
+  "EACH CONFIGURED SERVICE IS QUERIED INDEPENDENTLY, NEVER COMBINED OR RANKED" — narrowing that to one preferred
+  service would shrink the evidence pool a later resolution step reasons over, a real behavior change, not a UI
+  reveal. The two Discovery-adjacent `*Registry.js` files are re-confirmed, fresh, to still define no `register()`
+  method — still membership stores, never a keyed provider registry. Zero Discovery seams classify as
+  `USER_CHOOSES`.
+- **Section C — Proof & Anchoring, classified the same way.** A repo-wide sweep finds exactly one class anywhere
+  extends `ProofVerifier` (Bitcoin's) and exactly one anchor-publisher file exists in `anchoring/`. `BlockchainKind`
+  still names `BASE` as RESERVED-only vocabulary; no `BaseProofVerifier`/`BaseAnchorPublisher` exists anywhere.
+  The brief's own "creates a proof" vs. "an existing proof records" distinction is drawn explicitly and confirmed
+  from source: an existing anchor's own `anchorType` still drives `evidenceViewRegistry.get(anchor.anchorType)` —
+  a historical dispatch key, classified `HISTORICAL_RECORD`, never a live selection — while creation-time
+  `availableAnchorTypes()` is `NO_SELECTION` today because exactly one real provider is ever registered behind it.
+- **Section D — existing provider choices, ranked.** CONTENT ranks strongest on real evidence: an explicit
+  per-action choice already exists, with two real providers behind it. Proof & Anchoring creation has real buttons
+  but exactly one real provider — "multiple providers" is a registry SHAPE, not a current fact. Discovery ranks
+  "investigate, not integrate": real substrate plurality exists, but the application, not a person, already
+  decides to query all of them. Historical provider identity (anchor/placement `anchorType`/`storage` fields)
+  stays explicitly unsuitable.
+- **Section E — abstraction fitness, challenged directly.** `RoleProviderPreference` still carries exactly two
+  fields, confirmed by construction, not just by reading its constructor. A repo-wide sweep finds no fee, proof
+  type, anchoring frequency, transaction policy, or confirmation-requirement vocabulary exists anywhere near
+  anchoring today — so even a hypothetical second Proof provider has no real modeled parameters yet for a
+  preference to carry. The conclusion this evidence supports: `role + providerKey` remains correctly scoped to
+  CONTENT; generalizing it to Proof would be premature on requirements that do not yet exist in this codebase,
+  not merely unbuilt.
+- **Section F — CONTENT preference product value, re-verified fresh, not merely cited.** A fresh, minimal round
+  trip (independent of 0.9.303's own ten-section proof, which is cited, not re-derived wholesale) confirms
+  replacement-never-duplication, restart survival against a freshly constructed store over the same backing
+  storage, and that `SnapshotPlacementCreationCoordinator.js` (the explicit Local/IPFS buttons' own coordinator)
+  still never imports any `RoleProviderPreference`-family class.
+- **Section G — abstraction leakage, an independent fresh sweep.** No `ui/` file branches on a literal
+  `providerKey` string. `RoleProviderPreferenceStore` is constructed at exactly one textual production site — a
+  default parameter inside `CreatePreferredSnapshotPlacementCreationCoordinatorUseCase.js` — and `ui/main.js`
+  never passes its own store in, instead capturing and reusing that one instance for both the read and write
+  halves, so exactly one live instance exists in real wiring. `RoleProviderPreferenceStore#save()` is still called
+  from exactly one production file. No `ui/` file imports `RoleAwareProviderResolver` directly. No fallback,
+  ranking, or health-check vocabulary exists in the preference chain's own executable code. The explicit
+  `createPlacement(entry, storage)` handler still never mentions any preference concept in its own body. No
+  "preferred Discovery/Proof provider" identifier exists anywhere.
+- **Section H — candidate scoring**, a new seven-criterion rubric (user choice, multiplicity, persistence value,
+  frequency, identity, existing seam, semantic fit) applied for the first time in this sequence. CONTENT passes
+  cleanly on all seven. Discovery and Proof & Anchoring each fail a majority — not a close call.
+- **Section I — deliberate non-features**, a fresh repo-wide sweep (extending 0.9.303's own Section J check to
+  the full nine-item list this milestone's own brief named) confirms provider ranking, fallback, health-based
+  selection, automatic migration, "best provider" logic, cross-role preferences, a provider marketplace, provider
+  synchronization, and automatic preference learning are all still genuinely absent from production source.
+- **Section J — the final decision: STOP.** No Discovery or Proof & Anchoring seam scores as a real `USER_CHOOSES`
+  candidate; no existing explicit choice supports either beyond CONTENT; the preference shape itself is not proven
+  sufficient for a future Proof candidate; CONTENT itself still produces real, fresh-verified product value; no
+  abstraction leakage was found; and the scoring rubric is not close. Two named, evidence-based (not scheduled)
+  reopening conditions are recorded rather than left implicit: Proof & Anchoring reopens when a second real,
+  registered `ProofVerifier`/anchor-publisher ships AND the real parameters a person would need to choose between
+  them are modeled somewhere in this codebase; Discovery reopens only if the "query every configured service"
+  policy is deliberately revisited in favor of "query only the preferred one" — a real product decision this
+  milestone does not make either way.
+
+### What this milestone adds
+
+- **`tests/PostContentPreferenceProductEvolutionReassessment.test.js`** (new, registered in `tests.html`) — ten
+  lettered sections (A-J) matching the audit structure above, run against real, unmodified production classes and
+  real repo-wide sweeps.
+- **This `docs/Roadmap.md` entry.**
+
+No other file is touched. The existing repo-wide "who references the preference vocabulary" sweeps
+(`DecentralizedRoleProviderPreferenceBoundary`, `RoleAwareProviderResolution`,
+`RoleProviderPreferenceApplicationBoundary`, `RoleProviderPreferenceProductIntegrationAudit`,
+`RoleProviderResolutionIntegrationReadinessAudit`, `DecentralizedSubstrateCapabilityMatrixAudit`,
+`ContentProviderPreferenceReachabilityAudit`) all scan production directories only, excluding `tests/` — exactly
+the precedent 0.9.296/0.9.298 (both test-only) already set: a test-only milestone changes none of their counts,
+and none was modified here.
+
+### What this milestone deliberately excludes
+
+Per its own test-only brief: no Discovery provider registry; no Base `ProofVerifier` or anchor publisher; no
+Discovery or Proof & Anchoring settings UI; no generalization of `RoleProviderPreference`'s own shape; no
+fallback, ranking, or health-check machinery of any kind. Section I's own regression guard proves each of the
+nine named non-features is still absent from production, rather than merely asserting it in prose.
+
+### What comes after
+
+Per this milestone's own verdict: **nothing, for the provider-preference arc itself.** It is closed at CONTENT, as
+a complete, legitimate product outcome — not an abandoned extension. ForkBuild's broader product evolution process
+resumes on its own terms, unrelated to this arc, unless one of Section J's own two named conditions is later met
+by real, evidenced growth elsewhere in this codebase (a second real Proof provider with real selection parameters
+modeled, or a deliberate revisiting of Discovery's "query everything" policy) — at which point a future milestone,
+not this one, would pick the question back up from real requirements rather than from architectural symmetry.
