@@ -19360,3 +19360,39 @@ Place Naming, Collaboration, or Presence machinery anywhere in scope. Deciding w
 producer is 0.9.274's question, not this milestone's to answer by fiat.
 
 See `docs/Roadmap.md`, 0.9.273, for the full milestone entry.
+
+## A Producer Wraps The Command It Notifies About; It Never Becomes A Fourth Argument To It (0.9.275)
+
+0.9.274 found Publication Commentary ready to become a real `NotificationEvent` producer — a durable, conflict-guarded
+`commentaryId`, a recipient (`Publication.publisherIdentity`) already on file, and a genuine fact timestamp. The
+obvious way to wire that in would be adding a `notificationSink` collaborator directly to
+`AddPublicationCommentaryUseCase`'s own constructor. 0.9.275 deliberately does not do that.
+
+**A decorator, not a fourth argument.** `application/PublicationCommentaryNotificationProducer.js` wraps a real
+`AddPublicationCommentaryUseCase` instance instead of becoming part of it. `AddPublicationCommentaryUseCase.js` is
+left completely unmodified — every existing caller, and every one of `tests/AddPublicationCommentaryUseCase.test.js`'s
+own constructions with exactly three collaborators, keeps working exactly as it did before this milestone. Producing
+a notification is additive behavior layered in front of an unchanged command, the same "ask, don't own, the
+decision" composition `application/SpatialEditingService.js` already uses for
+`application/WorldAuthorizationService.js`'s own decisions — extended one step further here: let the wrapped command
+finish its own job entirely, then react to what it already produced.
+
+**Ordering falls out of sequencing, not a transaction.** The wrapped use case's `execute()` runs first, unguarded by
+any `try`/`catch` in the producer — a thrown error (validation, authorization, a genuine storage write failure)
+propagates before any `NotificationEvent` is ever constructed, simply because the code that would construct one
+never runs. No new rollback or transaction semantics were introduced to guarantee "no Commentary, no notification" —
+it is a property of running two steps in this order with nothing to undo.
+
+**A sink's own failure is the sink's own failure.** If the injected `notificationSink` throws, that error propagates
+out of the producer unmodified — the same "let it propagate" discipline `AddPublicationCommentaryUseCase.js`'s own
+header already documents for a storage provider's write failures. The Commentary was already durably saved through
+the wrapped use case before the sink was ever called; nothing reaches back to undo, retry, or re-queue that write
+merely because notifying about it afterward went wrong.
+
+**No suppression rule invented ahead of a product decision.** A Commentary authored by a Publication's own publisher,
+on their own Publication, still produces a `publication.commented` `NotificationEvent` addressed to that same
+identity. Whether self-notifications should ever be suppressed is left as an open, later, deliberate product
+question — building a special case for it now, with no evidence anyone has asked for one, would be exactly the kind
+of guess 0.9.272's own reassessment discipline exists to avoid.
+
+See `docs/Roadmap.md`, 0.9.275, for the full milestone entry.
