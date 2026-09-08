@@ -292,6 +292,16 @@ export class WorldNavigationSession {
 	    // (application/CreateWorldViewUseCase.js) hands it.
 	    getPublicationCommentariesUseCase = null,
 	    addPublicationCommentaryUseCase = null,
+	    // 0.9.284 — Notification History UI Boundary. The SAME
+	    // "enforce/offer only when the collaborator is actually wired"
+	    // posture as getPublicationCommentariesUseCase immediately above:
+	    // a session built without one (every pre-0.9.284 caller, and
+	    // every existing test) simply reports no notification history —
+	    // see getRecipientNotificationEvents() below.
+	    // GetRecipientNotificationEventsUseCase itself (0.9.283) is never
+	    // imported here — this file only ever holds whatever instance its
+	    // caller (application/CreateWorldViewUseCase.js) hands it.
+	    getRecipientNotificationEventsUseCase = null,
 	    spatialAllocationPolicy = SpatialAllocationPolicy.WARN,
 	    searchWorldUseCase = null,
 	    spatialDiscoveryProvider = null,
@@ -429,6 +439,8 @@ export class WorldNavigationSession {
 	    // 0.9.248: see getPublicationCommentaries()/addPublicationCommentary() below.
 	    this._getPublicationCommentariesUseCase = getPublicationCommentariesUseCase;
 	    this._addPublicationCommentaryUseCase = addPublicationCommentaryUseCase;
+	    // 0.9.284: see getRecipientNotificationEvents() below.
+	    this._getRecipientNotificationEventsUseCase = getRecipientNotificationEventsUseCase;
 	    // 0.2.25: the policy applied to EXPLICIT, interactive placement
 	    // (checkPlacementOverlap/movePlacement) — see
 	    // core/SpatialAllocationPolicy.js. Automatic initial placement
@@ -5444,6 +5456,33 @@ export class WorldNavigationSession {
             throw new Error('WorldNavigationSession: publication commentary cannot be created — no AddPublicationCommentaryUseCase wired');
         }
         return this._addPublicationCommentaryUseCase.execute({ publicationId, content });
+    }
+
+    // 0.9.284 — Notification History UI Boundary. The read-only seam a
+    // Notification History panel calls through — this method never
+    // touches NotificationEventStore or NotificationEvent itself, and
+    // never resolves an identity of its own; both are
+    // GetRecipientNotificationEventsUseCase's own job (0.9.283). Same
+    // "enforce/offer only when the collaborator is actually wired"
+    // posture as getPublicationCommentaries() above: a session built
+    // without one wired (every pre-0.9.284 caller) answers `[]`, never
+    // a throw — "no capability wired" degrades to "nothing to show."
+    // Once wired, this method performs NO try/catch of its own — an
+    // authentication failure ("sign in to view your notifications") or
+    // a genuine storage failure both propagate unmodified out of
+    // execute(), exactly as unpublishDocument() lets
+    // UnpublishDocumentUseCase's own errors propagate. A caller
+    // collapsing "no notifications" and "notifications could not be
+    // loaded" into the same empty result would be inventing a
+    // distinction this method deliberately does not make on its own —
+    // see ui/components/NotificationHistoryPanel.js for how the one
+    // real caller keeps them apart. Ordering is whatever the use case
+    // itself returns — this method performs no sort of its own.
+    getRecipientNotificationEvents() {
+        if (!this._getRecipientNotificationEventsUseCase) {
+            return [];
+        }
+        return this._getRecipientNotificationEventsUseCase.execute();
     }
 
     // _ensureEditableSelection() — REMOVED (0.5.9). Was the fork-on-write

@@ -37,6 +37,7 @@ import WorldEncounterCanvas from '../components/WorldEncounterCanvas.js';
 import OwnPublicationPanel from '../components/OwnPublicationPanel.js';
 import VehicleInteractionPrompt from '../components/VehicleInteractionPrompt.js';
 import HistoryTimelinePanel from '../components/HistoryTimelinePanel.js';
+import NotificationHistoryPanel from '../components/NotificationHistoryPanel.js';
 import { CameraPerspective } from '../../core/CameraPerspective.js';
 import { geographicPlaceLocationId } from '../../core/GeographicPlaceNavigation.js';
 import { WorldFocusKind } from '../../core/WorldFocusContext.js';
@@ -83,7 +84,7 @@ export default {
         WorldWelcomePanel, WorldMapPanel, PlaceNamingPanel,
         GeographicPlaceDirectoryPanel, GeographicPlacePanel, CollapsibleSection,
         WorldFocusPanel, WorldEncounterCanvas, OwnPublicationPanel, VehicleInteractionPrompt,
-        HistoryTimelinePanel
+        HistoryTimelinePanel, NotificationHistoryPanel
     },
     setup() {
         const route = useRoute();
@@ -981,6 +982,11 @@ export default {
         // record anticipated ("a viewer's landmark edit needs to be
         // undoable too") — see docs/Roadmap.md's 0.9.207 entry for the
         // full record.
+        // 0.9.284 — Notification History UI Boundary. Purely local UI
+        // state — which/whether the panel is open. Recipient-scoped, not
+        // document-scoped: unlike showHistoryPanel below, opening this
+        // never depends on an activeDocumentInfo/activePlacementInfo.
+        const showNotificationHistoryPanel = ref(false);
         const showHistoryPanel = ref(false);
         const historyPanelDocumentId = ref(null);
         const historyTimeline = ref([]);
@@ -1467,6 +1473,28 @@ export default {
 
         function addPublicationCommentaryCommand({ publicationId, content }) {
             return session.addPublicationCommentary({ publicationId, content });
+        }
+
+        // 0.9.284 — Notification History UI Boundary. A thin wrapper
+        // around session.getRecipientNotificationEvents(), mirroring
+        // getPublicationCommentariesCommand()'s own restraint immediately
+        // above: this view resolves nothing and decides nothing itself,
+        // it only forwards to the session. A thrown error (no
+        // authenticated identity, or a genuine storage failure) is
+        // deliberately NOT caught here or routed through guarded() —
+        // NotificationHistoryPanel catches it itself and renders it as
+        // its own notification-history error state, never a transient
+        // global feedback toast.
+        function getRecipientNotificationEventsCommand() {
+            return session.getRecipientNotificationEvents();
+        }
+
+        function openNotificationHistoryPanel() {
+            showNotificationHistoryPanel.value = true;
+        }
+
+        function closeNotificationHistoryPanel() {
+            showNotificationHistoryPanel.value = false;
         }
 
         // Tool switching (Select/Place) — REMOVED (0.5.9). World View
@@ -3992,6 +4020,10 @@ export default {
             unpublishOwnPublication,
             getPublicationCommentariesCommand,
             addPublicationCommentaryCommand,
+            getRecipientNotificationEventsCommand,
+            showNotificationHistoryPanel,
+            openNotificationHistoryPanel,
+            closeNotificationHistoryPanel,
             searchResults,
             catalogEmpty,
             performSearch,
@@ -4301,6 +4333,16 @@ export default {
                     title="Landmarks, regions, and every structure this session knows about"
                     @click="openLocationsPanel"
                 >Locations</button>
+                <!-- 0.9.284 — Notification History UI Boundary. Gated on
+                     cameraPosition alone, same as Home immediately above
+                     — never on activeDocumentInfo, since notification
+                     history is scoped to the signed-in identity, not to
+                     whichever document happens to be open for editing. -->
+                <button
+                    class="action-btn"
+                    title="A durable record of notification facts addressed to you"
+                    @click="openNotificationHistoryPanel"
+                >Notifications</button>
             </div>
             <div v-if="cameraPosition" class="world-view-primary-nav">
                 <button
@@ -5090,6 +5132,11 @@ export default {
                 @grant="grantWorldMember"
                 @revoke="revokeWorldMember"
                 @cancel="closeMembersPanel"
+            />
+            <NotificationHistoryPanel
+                v-if="showNotificationHistoryPanel"
+                :getRecipientNotificationEventsCommand="getRecipientNotificationEventsCommand"
+                @cancel="closeNotificationHistoryPanel"
             />
             <!-- 0.2.94/0.3.6 — Navigation HUD: camera coordinates
                  and compass as a floating overlay on the main
