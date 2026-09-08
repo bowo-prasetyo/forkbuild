@@ -256,10 +256,17 @@ async function run() {
     // its own composition root, application/
     // CreatePreferredSnapshotPlacementCreationCoordinatorUseCase.js, and
     // ui/main.js itself now composes and provides that coordinator (see
-    // that file's own 0.9.299 comment). This section is UPDATED, not
+    // that file's own 0.9.299 comment). UPDATED AGAIN by 0.9.301 —
+    // Preferred Content Provider Placement Trigger — application/
+    // SnapshotPlacementCreationView.js's own header now names
+    // `RoleProviderPreference` in prose, explaining why its
+    // describeCreationAttempt() reads `attempt.preference.providerKey` for
+    // a PROVIDER_NOT_FOUND result; it never imports core/
+    // RoleProviderPreference.js or core/RoleProviderRole.js, and never
+    // constructs, reads, or writes either. This section is UPDATED, not
     // deleted, by each milestone in turn — it still holds the line that
     // matters: the ONLY production files allowed to reference this
-    // boundary are those six named consumers, a repo-wide sweep, never a
+    // boundary are those seven named consumers, a repo-wide sweep, never a
     // guess from this file's own prose.
     // ===============================================================
     {
@@ -292,7 +299,8 @@ async function run() {
             'application/ResolvePreferredRoleProviderUseCase.js',
             'application/PreferredSnapshotPlacementCreationCoordinator.js',
             'application/CreatePreferredSnapshotPlacementCreationCoordinatorUseCase.js',
-            'ui/main.js'
+            'ui/main.js',
+            'application/SnapshotPlacementCreationView.js'
         ]);
         let consumerCount = 0;
         const consumerFiles = [];
@@ -303,7 +311,7 @@ async function run() {
                 consumerFiles.push(file);
             }
         }
-        assert(consumerCount === KNOWN_CONSUMER_FILES.size, `M1. exactly the 0.9.294 persistence store, the 0.9.295 resolver, the 0.9.297 application boundary, and the 0.9.299 Content creation integration (plus its ui/main.js wiring) reference RoleProviderPreference or RoleProviderRole (found ${consumerCount}: ${consumerFiles.join(', ')}) — this boundary is consumed ONLY by those six named layers; wiring it into any OTHER production composition root is separate, unscheduled future work`);
+        assert(consumerCount === KNOWN_CONSUMER_FILES.size, `M1. exactly the 0.9.294 persistence store, the 0.9.295 resolver, the 0.9.297 application boundary, the 0.9.299 Content creation integration (plus its ui/main.js wiring), and the 0.9.301 UI-facing view-model reference RoleProviderPreference or RoleProviderRole (found ${consumerCount}: ${consumerFiles.join(', ')}) — this boundary is consumed ONLY by those seven named layers; wiring it into any OTHER production composition root is separate, unscheduled future work`);
         for (const file of consumerFiles) {
             assert(KNOWN_CONSUMER_FILES.has(file), `M2. "${file}" is not one of the known legitimate consumers of this boundary`);
         }

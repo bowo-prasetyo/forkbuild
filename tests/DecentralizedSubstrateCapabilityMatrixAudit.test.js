@@ -536,16 +536,23 @@ async function run() {
     // CreatePreferredSnapshotPlacementCreationCoordinatorUseCase.js, AND —
     // for the first time — a real composition root, ui/main.js, which
     // wires the preference chain into the one production Content creation
-    // workflow (see that file's own 0.9.299 comment). This section is
-    // UPDATED, not deleted, by each milestone in turn — it still holds the
-    // line that matters: the concept exists in exactly the boundary/
+    // workflow (see that file's own 0.9.299 comment). 0.9.301 — Preferred
+    // Content Provider Placement Trigger — added three more: application/
+    // SnapshotPlacementCreationView.js and application/
+    // SnapshotPlacementCreationUiState.js each now name the concept in
+    // prose (explaining their own new PROVIDER_NOT_FOUND handling), and
+    // ui/views/DecentralizedPublicationsView.js is — for the first time —
+    // a real `ui/` VIEW mentioning it: the one place a person can actually
+    // trigger the preference chain this whole sequence built. This section
+    // is UPDATED, not deleted, by each milestone in turn — it still holds
+    // the line that matters: the concept exists in exactly the boundary/
     // integration files those milestones themselves added, and nowhere
     // else. A hit anywhere outside that set would mean the preference
     // concept leaked into a DIFFERENT composition root, registry, or ui/
-    // view than the one 0.9.299 deliberately integrated — exactly what
-    // 0.9.293's boundary, 0.9.294's persistence layer, 0.9.295's resolver,
-    // 0.9.297's application seam, and 0.9.299's own scoped integration
-    // were all built to hold the line on (see
+    // view than the ones 0.9.299/0.9.301 deliberately integrated — exactly
+    // what 0.9.293's boundary, 0.9.294's persistence layer, 0.9.295's
+    // resolver, 0.9.297's application seam, and 0.9.299/0.9.301's own
+    // scoped integration were all built to hold the line on (see
     // tests/DecentralizedRoleProviderPreferenceBoundary.test.js Section M,
     // tests/DecentralizedRoleProviderPreferencePersistence.test.js
     // Section K, tests/RoleAwareProviderResolution.test.js Section M, and
@@ -563,7 +570,10 @@ async function run() {
             'application/ResolvePreferredRoleProviderUseCase.js',
             'application/PreferredSnapshotPlacementCreationCoordinator.js',
             'application/CreatePreferredSnapshotPlacementCreationCoordinatorUseCase.js',
-            'ui/main.js'
+            'ui/main.js',
+            'application/SnapshotPlacementCreationView.js',
+            'application/SnapshotPlacementCreationUiState.js',
+            'ui/views/DecentralizedPublicationsView.js'
         ]);
         let hits = 0;
         const hitFiles = [];
@@ -574,11 +584,11 @@ async function run() {
                 hitFiles.push(file);
             }
         }
-        assert(hits === KNOWN_PREFERENCE_BOUNDARY_FILES.size, `G1. exactly the eight files 0.9.293/0.9.294/0.9.295/0.9.297/0.9.299 themselves introduced or wired mention a provider preference (found ${hits}: ${hitFiles.join(', ')}) — every OTHER production file remains exactly as free of the concept as it was when this audit first ran`);
+        assert(hits === KNOWN_PREFERENCE_BOUNDARY_FILES.size, `G1. exactly the eleven files 0.9.293/0.9.294/0.9.295/0.9.297/0.9.299/0.9.301 themselves introduced or wired mention a provider preference (found ${hits}: ${hitFiles.join(', ')}) — every OTHER production file remains exactly as free of the concept as it was when this audit first ran`);
         for (const file of hitFiles) {
-            assert(KNOWN_PREFERENCE_BOUNDARY_FILES.has(file), `G2. the only file(s) allowed to mention a provider preference are 0.9.293/0.9.294/0.9.295/0.9.297/0.9.299's own boundary/integration files — "${file}" is not one of them`);
+            assert(KNOWN_PREFERENCE_BOUNDARY_FILES.has(file), `G2. the only file(s) allowed to mention a provider preference are 0.9.293/0.9.294/0.9.295/0.9.297/0.9.299/0.9.301's own boundary/integration files — "${file}" is not one of them`);
         }
-        console.log('✓ Section G: as of 0.9.299, a provider-preference concept exists in exactly the eight files those five milestones introduced or wired (core/RoleProviderRole.js, core/RoleProviderPreference.js, storage/RoleProviderPreferenceStore.js, application/RoleAwareProviderResolver.js, application/ResolvePreferredRoleProviderUseCase.js, application/PreferredSnapshotPlacementCreationCoordinator.js, application/CreatePreferredSnapshotPlacementCreationCoordinatorUseCase.js, ui/main.js) — a pure semantic boundary with a durable home, a real tested resolution path, one stable application seam, and now one real production Content creation integration; every other production file this audit already knew about remains exactly as free of the concept as it was at 0.9.292');
+        console.log('✓ Section G: as of 0.9.301, a provider-preference concept exists in exactly the eleven files those six milestones introduced or wired (core/RoleProviderRole.js, core/RoleProviderPreference.js, storage/RoleProviderPreferenceStore.js, application/RoleAwareProviderResolver.js, application/ResolvePreferredRoleProviderUseCase.js, application/PreferredSnapshotPlacementCreationCoordinator.js, application/CreatePreferredSnapshotPlacementCreationCoordinatorUseCase.js, ui/main.js, application/SnapshotPlacementCreationView.js, application/SnapshotPlacementCreationUiState.js, ui/views/DecentralizedPublicationsView.js) — a pure semantic boundary with a durable home, a real tested resolution path, one stable application seam, one real production Content creation integration, and now one real, user-reachable UI trigger; every other production file this audit already knew about remains exactly as free of the concept as it was at 0.9.292');
     }
 
     // ===============================================================

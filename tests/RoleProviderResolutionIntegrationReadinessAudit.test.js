@@ -501,6 +501,11 @@ async function run() {
         // ProofVerifier through anything resembling a stored preference —
         // the explicit per-action button list Section A2 already found
         // (availableStorageTypes()/availableAnchorTypes()) is untouched.
+        // UPDATED AGAIN by 0.9.301 — Preferred Content Provider Placement
+        // Trigger: ui/views/DecentralizedPublicationsView.js now mentions
+        // the concept too, via its own additive "Use Preferred Provider"
+        // action — still never a settings screen, and the existing
+        // per-action button list (Section H4 below) is still untouched.
         const allProductionFiles = await repoWideProductionFiles();
         const uiFiles = allProductionFiles.filter((f) => f.startsWith('ui/'));
         const preferenceLikeUiPattern = /providerPreference|networkPreference|preferredProvider|substratePreference|RoleProviderPreference/i;
@@ -510,8 +515,9 @@ async function run() {
             const text = await source(file);
             if (preferenceLikeUiPattern.test(text)) { uiPreferenceHits += 1; uiPreferenceHitFiles.push(file); }
         }
-        assert(uiPreferenceHits === 1 && uiPreferenceHitFiles[0] === 'ui/main.js',
-            `H3. exactly ui/main.js mentions a provider preference today, via its 0.9.299 Content creation composition (found ${uiPreferenceHits}: ${uiPreferenceHitFiles.join(', ')}) — no settings screen exists, and no OTHER ui/ file references the concept`);
+        const KNOWN_UI_PREFERENCE_FILES = new Set(['ui/main.js', 'ui/views/DecentralizedPublicationsView.js']);
+        assert(uiPreferenceHits === KNOWN_UI_PREFERENCE_FILES.size && uiPreferenceHitFiles.every((f) => KNOWN_UI_PREFERENCE_FILES.has(f)),
+            `H3. exactly ui/main.js and ui/views/DecentralizedPublicationsView.js mention a provider preference today, via 0.9.299's Content creation composition and 0.9.301's own trigger (found ${uiPreferenceHits}: ${uiPreferenceHitFiles.join(', ')}) — no settings screen exists, and no OTHER ui/ file references the concept`);
 
         // The explicit per-action pattern (real today) is the boundary a
         // future preference control must respect, never silently replace.

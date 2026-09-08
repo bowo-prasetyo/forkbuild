@@ -674,7 +674,13 @@ const CREATION_BADGE_CLASSES = {
 const PLACEMENT_CREATION_BADGE_CLASSES = {
     [SnapshotPlacementCreationUiState.CREATING]: 'peer-badge--pending',
     [SnapshotPlacementCreationUiState.CREATED]: 'peer-badge--authenticated',
-    [SnapshotPlacementCreationUiState.UNAVAILABLE]: 'peer-badge--pending'
+    [SnapshotPlacementCreationUiState.UNAVAILABLE]: 'peer-badge--pending',
+    // 0.9.301 — the same "honestly inconclusive" amber every other
+    // UNAVAILABLE-shaped state in this view already uses, never the red
+    // .peer-badge--failed coloring: a configured-but-unresolvable
+    // preference was never rejected by anything, it was never even
+    // resolved to a store to ask.
+    [SnapshotPlacementCreationUiState.PROVIDER_NOT_FOUND]: 'peer-badge--pending'
 };
 
 // 0.8.57 — Bitcoin Anchor Proof & Confirmation Inspection UI. Two
@@ -985,6 +991,17 @@ export default {
         // posture `creationCoordinator` above already holds for
         // `availableAnchorTypes`.
         const placementCreationCoordinator = inject('snapshotPlacementCreationCoordinator', null);
+        // 0.9.301 — Preferred Content Provider Placement Trigger. Optional
+        // — absent here (e.g. a test harness that never provides it), "Use
+        // Preferred Provider" simply never renders, the identical degrade-
+        // gracefully posture `placementCreationCoordinator` immediately
+        // above already holds. A SEPARATE injected coordinator (application/
+        // PreferredSnapshotPlacementCreationCoordinator.js, 0.9.299,
+        // already composed and provided by ui/main.js since 0.9.299) — this
+        // milestone is the first thing that ever injects it. It is never
+        // substituted for `placementCreationCoordinator` above, which stays
+        // wired to every existing per-storage button completely unchanged.
+        const preferredPlacementCreationCoordinator = inject('preferredSnapshotPlacementCreationCoordinator', null);
         // 0.8.68 — Explicit Remote IPFS Publishing Configuration & UX.
         // Optional — absent here (e.g. a test harness that never provides
         // either), the "IPFS Publishing" section simply never renders,
@@ -2787,6 +2804,19 @@ export default {
                 // application/SnapshotPlacementCreationUiState.js's own
                 // header.
                 placementCreationAttempts: {},
+                // 0.9.301 — Preferred Content Provider Placement Trigger. A
+                // SEPARATE field from `placementCreationAttempts` above,
+                // never a synthetic key inside that same storage-keyed map
+                // — the "Use Preferred Provider" trigger has no storage
+                // value to key its own attempt under before resolution
+                // completes, and reusing a real storage key (or inventing a
+                // sentinel one) could let an explicit per-storage attempt
+                // and a preferred attempt that happens to resolve to the
+                // SAME storage clobber each other's displayed outcome (see
+                // tests/ContentProviderPreferenceReachabilityAudit.test.js,
+                // Section C3). Ephemeral for the lifetime of this page,
+                // exactly like `placementCreationAttempts` itself.
+                preferredPlacementCreationAttempt: null,
                 // 0.8.68 — Explicit Remote IPFS Publishing Configuration &
                 // UX. `ipfsRemotePublishingConfiguration` is an ephemeral
                 // application/IpfsRemotePublishingConfiguration.js instance
@@ -5735,6 +5765,74 @@ export default {
             return describePlacementCreationButtonLabel(humanizeContentKind(storage), { creating: view.state === SnapshotPlacementCreationUiState.CREATING, hasExisting });
         }
 
+        // 0.9.301 — Preferred Content Provider Placement Trigger. The "Use
+        // Preferred Provider" counterpart of createPlacement() above — the
+        // ONE other place this page ever calls a placement-creation
+        // coordinator, and the only caller anywhere of
+        // preferredPlacementCreationCoordinator.create() (application/
+        // PreferredSnapshotPlacementCreationCoordinator.js, 0.9.299,
+        // composed by ui/main.js since 0.9.299 but never invoked by
+        // anything until this milestone).
+        //
+        // Always called with NO storage argument — deliberately never
+        // passes one. That absence is exactly what makes create() consult
+        // the stored CONTENT preference instead of short-circuiting
+        // straight to the wrapped coordinator, the identical contract
+        // application/PreferredSnapshotPlacementCreationCoordinator.js's
+        // own header documents. This function never resolves a preference
+        // itself, never picks a storage type, and never re-implements any
+        // part of that decision — it only triggers the ONE call and
+        // displays whatever comes back.
+        //
+        // Writes to `entry.preferredPlacementCreationAttempt` only — never
+        // `entry.placementCreationAttempts[storage]` — so a resolved-to-
+        // Ipfs preferred attempt can never be confused for, or overwrite,
+        // an explicit "Ipfs" button's own result, and vice versa (see this
+        // milestone's own tests, Section H).
+        //
+        // Mirrors createPlacement()'s own try/catch exactly: a thrown
+        // error (nobody signed in, or no local content to place) is caught
+        // HERE, at the UI boundary, never left to crash the page.
+        async function createPreferredPlacement(entry) {
+            if (!preferredPlacementCreationCoordinator) return;
+            entry.preferredPlacementCreationAttempt = { creating: true, outcome: null, placement: null, reason: null, error: null, preference: null };
+            try {
+                const result = await preferredPlacementCreationCoordinator.create(entry.publication.id);
+                entry.preferredPlacementCreationAttempt = {
+                    creating: false, outcome: result.outcome, placement: result.placement, reason: result.reason, error: null,
+                    preference: result.preference || null
+                };
+                // Re-discover from the catalog so a CREATED placement
+                // immediately appears in the ordinary placement list below
+                // — mirrors createPlacement()'s own identical re-discovery
+                // above, one trigger over.
+                loadPlacements(entry);
+                if (result.outcome === SnapshotPlacementCreationOutcome.CREATED) {
+                    entry.placementsExpanded = true;
+                }
+            } catch (error) {
+                entry.preferredPlacementCreationAttempt = { creating: false, outcome: null, placement: null, reason: null, error: error.message, preference: null };
+            }
+        }
+
+        function preferredPlacementCreationView(entry) {
+            return describePlacementCreationAttempt(entry.preferredPlacementCreationAttempt);
+        }
+
+        function preferredPlacementCreationBadgeClass(entry) {
+            const state = preferredPlacementCreationView(entry).state;
+            return PLACEMENT_CREATION_BADGE_CLASSES[state] || null;
+        }
+
+        // Deliberately storage-agnostic, unlike placementCreationButtonLabel()
+        // above — before a click, this trigger has no storage to name yet;
+        // WHICH storage it ultimately used is only ever known from the
+        // result itself (surfaced through preferredPlacementCreationView()'s
+        // own `placement`/`message`), never guessed at in the button label.
+        function preferredPlacementCreationButtonLabel(entry) {
+            return preferredPlacementCreationView(entry).state === SnapshotPlacementCreationUiState.CREATING ? 'Creating…' : 'Use Preferred Provider';
+        }
+
         // 0.8.68 — Explicit Remote IPFS Publishing Configuration & UX.
         //
         // "Configure Remote Publishing" opens a small, entry-local form —
@@ -6531,6 +6629,8 @@ export default {
             togglePlacementInspect, placementInspectionExpanded, placementInspectionDetail, placementInspectionTypeSpecific,
             placementInspectionKnowledge,
             availableStorageTypes, createPlacement, placementCreationView, placementCreationBadgeClass, placementCreationButtonLabel,
+            preferredPlacementCreationCoordinator, createPreferredPlacement, preferredPlacementCreationView,
+            preferredPlacementCreationBadgeClass, preferredPlacementCreationButtonLabel,
             ipfsRemotePublicationCoordinator, publicationCatalogContentResolver,
             openIpfsRemotePublishingConfigureForm, cancelIpfsRemotePublishingConfigureForm,
             toggleIpfsRemotePublishingConfigureForm,
@@ -10469,6 +10569,39 @@ export default {
                                     </button>
                                 </div>
                             </div>
+                        </div>
+
+                        <!-- 0.9.301 — Preferred Content Provider Placement Trigger. A SEPARATE
+                             action from the per-storage cards above, never a replacement for any
+                             of them — those buttons still mean "explicitly use THIS provider for
+                             THIS placement" and remain completely unchanged. This one means "use
+                             whichever provider my saved CONTENT preference names," resolved fresh
+                             on every click by application/
+                             PreferredSnapshotPlacementCreationCoordinator.js (0.9.299) — never a
+                             default silently substituted for an explicit choice. Hidden entirely
+                             when no preferredPlacementCreationCoordinator was provided, exactly
+                             like the per-storage cards above hide with no placementCreationCoordinator. -->
+                        <div v-if="preferredPlacementCreationCoordinator" class="evidence-discovery">
+                            <div class="evidence-discovery-header">
+                                <button class="action-btn action-btn--secondary"
+                                        :disabled="preferredPlacementCreationView(entry).state === 'creating'"
+                                        @click="createPreferredPlacement(entry)">
+                                    {{ preferredPlacementCreationButtonLabel(entry) }}
+                                </button>
+                                <span v-if="preferredPlacementCreationView(entry).label" class="peer-badge" :class="preferredPlacementCreationBadgeClass(entry)">
+                                    {{ preferredPlacementCreationView(entry).label }}
+                                </span>
+                            </div>
+                            <p v-if="preferredPlacementCreationView(entry).message" class="form-hint form-hint--neutral">
+                                {{ preferredPlacementCreationView(entry).message }}
+                            </p>
+                            <p v-if="preferredPlacementCreationView(entry).reason" class="form-hint form-hint--neutral">
+                                {{ preferredPlacementCreationView(entry).reason }}
+                            </p>
+                            <dl v-if="preferredPlacementCreationView(entry).placement" class="evidence-fields">
+                                <div class="evidence-field"><dt>Locator</dt><dd>{{ preferredPlacementCreationView(entry).placement.locator }}</dd></div>
+                                <div class="evidence-field"><dt>Content hash</dt><dd>{{ preferredPlacementCreationView(entry).placement.contentHash }}</dd></div>
+                            </dl>
                         </div>
 
                         <!-- 0.8.23 — Multi-Placement Convergence & Relationship UX. Shown only

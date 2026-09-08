@@ -675,13 +675,12 @@ const { coordinator: snapshotPlacementCreationCoordinator } = new CreateSnapshot
 // just built above with a stored CONTENT role provider preference
 // (storage/RoleProviderPreferenceStore.js, 0.9.294) — see application/
 // CreatePreferredSnapshotPlacementCreationCoordinatorUseCase.js's own
-// header for why Discovery/Proof stay structurally inert here. Not yet
-// called from ui/views/DecentralizedPublicationsView.js's own
-// `createPlacement(entry, storage)` — that click handler still always
-// names an explicit storage today, so this coordinator's own preference
-// path is exercised by nothing in this file yet; it is composed here,
-// with the real production registry, so a future caller never has to
-// re-wire this seam from scratch to reach it.
+// header for why Discovery/Proof stay structurally inert here.
+// `createPlacement(entry, storage)` in ui/views/DecentralizedPublicationsView
+// .js still always names an explicit storage, completely unchanged — that
+// click handler still only ever calls `snapshotPlacementCreationCoordinator`
+// above. 0.9.301 added the ONE caller of THIS coordinator instead: that
+// same view's separate "Use Preferred Provider" action.
 const { coordinator: preferredSnapshotPlacementCreationCoordinator } = new CreatePreferredSnapshotPlacementCreationCoordinatorUseCase().execute({
     snapshotPlacementCreationCoordinator,
     contentRegistry: snapshotPlacementStoreRegistry
@@ -1367,8 +1366,10 @@ app.provide('placementKnowledgeStore', placementKnowledgeStore);
 // 0.8.25 — Explicit Snapshot Placement Creation UX.
 app.provide('snapshotPlacementCreationCoordinator', snapshotPlacementCreationCoordinator);
 // 0.9.299 — Content Creation Provider Preference Integration. Provided
-// under its own name, alongside the coordinator it wraps — no existing
-// view injects this key yet (see the composition comment above).
+// under its own name, alongside the coordinator it wraps. 0.9.301 —
+// Preferred Content Provider Placement Trigger — is the first, and still
+// only, thing that injects this key: ui/views/DecentralizedPublicationsView
+// .js's own "Use Preferred Provider" action.
 app.provide('preferredSnapshotPlacementCreationCoordinator', preferredSnapshotPlacementCreationCoordinator);
 // 0.8.33 — Local Snapshot Content Availability & Integrity UX.
 app.provide('localSnapshotContentAvailabilityUseCase', localSnapshotContentAvailabilityUseCase);
