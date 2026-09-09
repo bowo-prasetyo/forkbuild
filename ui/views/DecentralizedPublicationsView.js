@@ -2,6 +2,13 @@ import { reactive, ref, computed, onMounted, onBeforeUnmount, inject } from 'vue
 import { PeerLifecycleState } from '../../peer/PeerLifecycleState.js';
 import { PublicationResolutionOutcome } from '../../application/PublicationResolutionOutcome.js';
 import { resolvePublicationView, describePublicationOutcome, describeRetrieval } from '../../application/PublicationResolutionView.js';
+// 0.9.337 — Wire Resolved Decentralized Publications into Repository
+// Discovery. `Publication` (never previously imported here) is needed for
+// exactly one check: `view.content instanceof Publication`, the same
+// instanceof test 0.9.336's own flagship exercised test-only, now made a
+// real production admission gate — see `admitToRepositoryDiscovery()`
+// below.
+import { Publication } from '../../publisher/Publication.js';
 import { AnchorVerificationOutcome } from '../../application/AnchorVerificationOutcome.js';
 import { publicationEvidenceView, describeKnownEvidenceCount } from '../../application/PublicationEvidenceView.js';
 import { ExternalAnchorCreationUiState } from '../../application/ExternalAnchorCreationUiState.js';
@@ -936,6 +943,22 @@ export default {
         const catalog = inject('publicationCatalog');
         const coordinator = inject('publicationResolutionCoordinator');
         const kindPlugins = inject('publicationDisplayKindPlugins');
+        // 0.9.337 — Wire Resolved Decentralized Publications into
+        // Repository Discovery. The ONE application-lifetime
+        // DecentralizedPublicationDiscoveryProvider instance ui/main.js
+        // constructs alongside `catalog`/`coordinator` above — never a
+        // second instance built here (see 0.9.336's own Section H
+        // lifetime finding: a provider built fresh per view, the way a
+        // sibling composition root builds Repository's own local
+        // discovery backend, would silently discard every previously
+        // admitted candidate on the next navigation).
+        // Optional — absent here (e.g. a test harness exercising this
+        // view with no discovery composition at all), admission simply
+        // never happens; every other resolution behavior on this page
+        // is completely unaffected, the identical degrade-gracefully
+        // posture every other optional coordinator on this page already
+        // holds.
+        const discoveryProvider = inject('decentralizedPublicationDiscoveryProvider', null);
         const publicationPeerExchange = inject('publicationPeerExchange');
         const publicationPeerContentExchange = inject('publicationPeerContentExchange');
         const peerSessionManager = inject('peerSessionManager');
@@ -2627,10 +2650,32 @@ export default {
             return entries.find((entry) => entry.publication.id === publicationId);
         }
 
+        // 0.9.337 — Wire Resolved Decentralized Publications into
+        // Repository Discovery. The single semantic boundary this
+        // milestone exists to enforce: a decentralized envelope that
+        // merely arrived is NOT a Repository discovery candidate — only
+        // a Publication this replica has actually, successfully resolved
+        // is. `view.resolved` already means "outcome === RESOLVED" (see
+        // application/PublicationResolutionView.js's own header); the
+        // `instanceof Publication` check is what keeps every OTHER
+        // content kind (Blueprint Attribution, Place Naming Claim) out —
+        // resolvePublicationView()'s own `content` is genuinely a
+        // publisher/Publication.js instance for exactly one registered
+        // kindPlugin, never the others. A failed resolution, or a
+        // non-Publication kind, hits neither branch here — no
+        // placeholder, no failed entry, no retry queue, exactly as this
+        // milestone's own brief specifies.
+        function admitToRepositoryDiscovery(view) {
+            if (discoveryProvider && view && view.resolved && view.content instanceof Publication) {
+                discoveryProvider.add(view.content);
+            }
+        }
+
         async function resolveEntry(entry) {
             entry.checking = true;
             try {
                 entry.view = await resolvePublicationView(entry.publication, { coordinator, kindPlugins });
+                admitToRepositoryDiscovery(entry.view);
             } finally {
                 entry.checking = false;
             }
@@ -6531,6 +6576,7 @@ export default {
             entry.retrieving = true;
             try {
                 entry.view = await resolvePublicationView(entry.publication, { coordinator, kindPlugins, peers });
+                admitToRepositoryDiscovery(entry.view);
             } finally {
                 entry.retrieving = false;
             }
