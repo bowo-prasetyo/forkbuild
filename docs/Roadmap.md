@@ -89529,3 +89529,116 @@ audit (0.9.321) → this product reassessment (0.9.322) — is now a complete, c
 it comes, should be chosen by new user/product evidence external to this audit loop — a concrete complaint about
 browsing distant regions, an actual relay failure, a real request to connect naming to Commentary or Notifications —
 never by this loop re-examining its own, already-settled conclusions again.
+
+## 0.9.323 — Post-Place-Naming-Publication-Arc Product Evolution Reassessment
+
+**Type:** Test-only, whole-product reassessment. **Production changes:** None.
+
+0.9.322 closed the entire Place Naming publication arc (0.9.315-0.9.322: gap discovery → publication capability →
+convergence audit → product reassessment → stable baseline → explicit UI publication → action convergence audit →
+product reassessment) with a strictly stronger STOP than 0.9.318/0.9.319's own — the full name → persist → publish →
+relay → stranger-discover → inspect/adopt journey is now proven IMPLEMENTED and REACHABLE, live, with no substitute
+channel required. This milestone steps back from Place Naming entirely and repeats 0.9.307's/0.9.311's own
+whole-product method fresh, with 0.9.322 as the new evidence boundary. The governing question is unchanged:
+
+> Now that Place Naming publication is complete, what is the smallest genuinely user-visible capability that is
+> still missing from ForkBuild? Not "what existing code could we expose," and not "which architecture looks
+> incomplete."
+
+### What this milestone adds
+
+`tests/PostPlaceNamingPublicationArcProductEvolutionReassessment.test.js` (new, registered in `tests.html`), built
+against real, unmodified production collaborators across `application/`, `core/`, `identity/`, `replication/`, and
+`ui/`. Nine lettered sections:
+
+- **A — Current product inventory**, reconfirmed fresh: eighteen IMPLEMENTED+REACHABLE surfaces (Place Naming's
+  explicit publication now counted among them, per 0.9.322), three IMPLEMENTED+INTERNAL, the 0.9.312 HISTORICAL
+  family, three standing DEFERRED candidates, the one standing EVIDENCE REQUIRED candidate (a global Place Naming
+  browser, 0.9.322), and — this milestone's own genuine contribution — two newly-classified findings that were
+  unexplained orphans in every inventory before this one (see Section D/F). The always-mounted top nav is
+  reconfirmed as the exact same eleven-route set 0.9.313/0.9.314 pinned, unchanged by the entire Place Naming arc.
+- **B — Complete user journeys.** The six journeys this milestone's own brief names by name — Publication→
+  Placement→Discovery→Inspection; Snapshot→Discovery→Resolution→Materialization→World; Place Naming→Publish→
+  Stranger Discovery→Adoption (reconfirming 0.9.322's own live-proved chain is unchanged); Commentary→Notification→
+  Recipient History; Collaboration→Remote Operation→Causal Readiness→Application (the Editor-document collaboration
+  protocol, `RemoteDocumentOperationApplicationUseCase`/`DocumentOperationApplicationReadiness`/
+  `DocumentOperationRecoveryUseCase`, confirmed live-wired inside `EditorSession`, distinct from the World's own
+  Command-propagation protocol); and Provider Preference→Setting→Preferred Placement (0.9.293-0.9.303's own closed
+  chain, reconfirmed unchanged) — traced hop by hop against real source, plus one live execution through the World
+  collaboration/conflict-resolution pipeline. No journey dead-ends short of its own natural terminus.
+- **C — Reassess all previous deferred candidates.** All four standing candidates (placement navigation/management,
+  Discovery-level Commentary count, collaboration conflict/divergence UI, the global Place Naming browser) re-tested
+  against the brief's own five questions (blocked journey? external requirement? uncompletable workflow? changed
+  constraint? operational problem?). None applies to any of the four; none is reopened merely for remaining absent.
+- **D — Search for new user-facing gaps**, run as a genuinely fresh, repo-wide sweep — every top-level source
+  directory (`peer/`, `presence/`, `publisher/`, `content/`, `discovery/`, `spatial/`, `serializer/`, `anchoring/`,
+  `arweave/`, `world-layout/`, `persistence/`, `replication/`, `renderer/`, `base/`, in addition to the
+  `application/`/`core/`/`ui/` prior audits already covered). The sweep surfaces exactly two previously-unclassified
+  findings, both checked against every one of this milestone's own six named gap questions and failing all six for
+  the SAME structural reason: neither has a UI entry point a user could even begin at, so neither is a blocked
+  journey. No new user-facing gap was found.
+- **E — Reassess decentralized architecture.** The one real crossing among the three now-mature patterns
+  (Publication→Nostr/Arweave, Snapshot→content/discovery substrates, Place Naming→Nostr discovery/publication) is
+  shared, low-level Nostr transport (`nostr/NostrRelayQueryClient.js`/`NostrInjectedProviderPublisher.js`) —
+  infrastructure reuse, confirmed structurally to carry no shared product-level vocabulary between the Snapshot and
+  Place Naming publishers. No generic substrate/publication framework is warranted.
+- **F — Reassess historical implementations.** The 0.9.312 guard reconfirmed fresh with zero violations. This
+  milestone's own new finding: the **0.2.17 Delegated Ownership & Authorization family**
+  (`core/Delegation.js`/`DelegationVerifier`/`DelegationResolver`/`LocalDelegationResolver`/
+  `CreateDelegationUseCase`/`VerifyDelegationUseCase`) — present in `docs/Roadmap.md`'s own top-of-file checklist
+  ("0.2.17 Delegated Ownership & Authorization ✓") but never covered by any detailed narrative entry (which begin
+  only at 0.3.2) or by any of the nine subsequent whole-product/architecture reassessments (0.9.216 through 0.9.322)
+  — is proven LIVE: a genuine issue→sign→verify→delegated-authorization round trip succeeds end to end. Structurally,
+  it has zero production callers on the creation side, and the one concrete, live `LocalAuthorizationVerifier` never
+  calls the inherited `DelegationVerifier#verify()` and never reads a `PlacementRecord`'s own `authorizedBy` field —
+  confirmed by the codebase's own words: `identity/AuthorizationVerifier.js`'s header names itself "the seam where
+  0.2.17 (delegation)... plug[s] in," and `identity/LocalAuthorizationVerifier.js`'s header names delegated placement
+  authorization, verbatim, "a POLICY question for 0.2.17" — a documented, deliberate, never-activated extension
+  point, not an oversight. Checked honestly against the 0.9.312 precedent rather than force-classified: this is NOT
+  confirmed HISTORICAL — the later `WorldEditAuthority`/`WorldMembershipUseCase` family (0.2.97-0.2.98) that DID get
+  wired into live World collaboration solves a coarser, differently-shaped problem (whole-document edit authority,
+  no expiry, no spatial constraint), and no file or Roadmap record treats one as the other's replacement. Correctly
+  classified **ARCHITECTURALLY-POSSIBLE** — real, tested, deliberately seamed in, never activated, and not promoted
+  to a product gap absent any evidenced need for delegated, expiring, spatially-scoped capability grants.
+- **G — Identity and temporal boundary audit.** All six named pairs (claim identity ≠ Nostr event identity;
+  publication ≠ discovery; persisted ≠ delivered ≠ seen ≠ read; placement record ≠ World presence; snapshot identity
+  ≠ storage identity; provider role ≠ provider identity) reconfirmed structurally distinct against real, live
+  source — particularly valuable to recheck now that the Place Naming arc added a second Nostr-based publication
+  pathway alongside Snapshot distribution's own pre-existing one.
+- **H — Candidate scoring.** Six open candidates (the three standing DEFER items, the one standing EVIDENCE REQUIRED
+  item, and this milestone's own two new findings) scored on the six named axes (user impact, journey blockage,
+  evidence strength, existing capability reuse, implementation scope, semantic risk). Every candidate scores NOT
+  READY except the global Place Naming browser, which stays at its own already-distinct EVIDENCE REQUIRED verdict.
+- **I — Final decision: STABLE_WITH_DEFERRED_GAPS — STOP.**
+
+### The second new finding, named but deliberately not investigated as deeply
+
+Section D's sweep also surfaces the **Publisher Leaderboard Reconciliation Decision family**
+(`application/PublisherLeaderboardClaimSnapshotReconciliationDecision*.js`, `0.8.145-0.8.160`-era — decision record,
+history, statistics/timeline/difference/exchange/synchronization projections, all archived into
+`PublicationObservationArchive`'s own `reconciliationDecisionRecords` collection since 0.8.150) — a complete, tested,
+durably-archived read-model layer, structurally distinct from the LIVE, UI-reachable Reconciliation *Candidate*
+Leaderboard family (0.8.172-0.8.192, reached from `/reconciliation-leaderboard`) that shares no import with it.
+Zero production code ever calls `RecordPublisherLeaderboardClaimSnapshotReconciliationDecisionIntoArchiveUseCase` to
+create a decision record, and zero `ui/` file ever reads `reconciliationDecisionRecords`/
+`reconciliationDecisionRecordCount`. Classified **IMPLEMENTED + ORPHANED** — checked against the same six gap
+questions as Delegation, and failing all six for the identical structural reason (no UI entry point on either the
+creation or the display side). Both findings are recorded as available future work for a dedicated boundary audit
+in the shape 0.9.312 already modeled, precisely settling HISTORICAL vs. DEFERRED for each — but per this milestone's
+own scope, no such audit is performed or scheduled here.
+
+### What this milestone deliberately excludes
+
+Any production-code change, and any new capability. It does not activate Delegation, does not build a UI for
+Reconciliation Decisions, does not build a global Place Naming browser, placement navigation/management, a
+Discovery-level Commentary count, or a collaboration conflict/divergence UI. Per this milestone's own explicit
+instruction, it does not even pre-select a dedicated boundary-audit milestone for either of its own two new
+findings — both are named and classified, not scheduled.
+
+### What comes after
+
+**STABLE_WITH_DEFERRED_GAPS — STOP.** Per this milestone's own governing framework, there are only two desirable
+outcomes: this one, or a genuine concrete product gap selecting exactly one next milestone. This reassessment found
+the former. No 0.9.324 is pre-selected. ForkBuild's broader product evolution process resumes on its own terms, the
+next time genuine evidence — a newly observed blocked journey, a real external requirement, an actual operational
+problem — points somewhere, never by this loop re-examining its own already-settled conclusions again.
