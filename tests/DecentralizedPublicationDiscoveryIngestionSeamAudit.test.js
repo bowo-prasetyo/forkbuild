@@ -664,9 +664,25 @@ async function run() {
         const searchUseCaseSource = await readSource('application/SearchPublicationsUseCase.js');
         assert(!/DecentralizedPublicationDiscoveryProvider/.test(searchUseCaseSource),
             '1. application/SearchPublicationsUseCase.js never references discovery/DecentralizedPublicationDiscoveryProvider.js — Section D\'s proof required no change to it.');
+        // UPDATED by 0.9.339 — Merge Decentralized Publication Discovery
+        // into Repository Discovery. At the time THIS audit was written,
+        // application/CreateDiscoveryUseCase.js wired only
+        // LocalDiscoveryProvider, exactly as 0.9.335 left it. 0.9.339
+        // closed exactly the gap this audit's own Section H named ("the
+        // only lifetime this evidence supports is APPLICATION LIFETIME
+        // ... unless [CreateDiscoveryUseCase] itself changes to accept
+        // an injected, shared instance"): it now accepts an OPTIONAL
+        // `decentralizedDiscoveryProvider` and merges it in via a small,
+        // generic discovery/CompositeDiscoveryProvider.js — see
+        // tests/DecentralizedPublicationRepositoryMerge.test.js for that
+        // milestone's own flagship proof. Reconfirmed fresh, the same
+        // "reconfirmed in place rather than left to rot" discipline this
+        // file's own Section C5/C8 predecessor claim already applied.
         const createDiscoveryUseCaseSource = await readSource('application/CreateDiscoveryUseCase.js');
-        assert(!/DecentralizedPublicationDiscoveryProvider/.test(createDiscoveryUseCaseSource),
-            '2. application/CreateDiscoveryUseCase.js still wires only LocalDiscoveryProvider — this milestone leaves Repository\'s own composition root exactly as 0.9.335 left it.');
+        assert(createDiscoveryUseCaseSource.includes('new LocalDiscoveryProvider(storageProvider)') &&
+            createDiscoveryUseCaseSource.includes('CompositeDiscoveryProvider') &&
+            createDiscoveryUseCaseSource.includes('decentralizedDiscoveryProvider'),
+            '2. UPDATED (0.9.339): application/CreateDiscoveryUseCase.js still constructs LocalDiscoveryProvider exactly as before, and now ALSO accepts an optional decentralizedDiscoveryProvider, merged in through discovery/CompositeDiscoveryProvider.js when supplied.');
     }
     console.log('✓ Section J: Section D\'s own flagship already IS this proof — decentralized source (a real, live peer connection) -> resolve (the real application/PublicationResolutionView.js#resolvePublicationView() seam) -> add (the one test-only line) -> Repository\'s own real, unmodified SearchPublicationsUseCase -> a real Repository-shaped { items } result, matched by title and by author. Nothing about application/CreateDiscoveryUseCase.js or any Repository UI file was touched or imported to produce it.');
 

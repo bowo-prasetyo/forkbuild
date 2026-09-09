@@ -272,7 +272,16 @@ export default {
         const identityUseCase = inject('identityUseCase');
         const identityProvider = identityUseCase.provider;
         const { publishDocumentUseCase } = new CreatePublisherUseCase().execute(identityProvider);
-        const { findPublicationUseCase } = new CreateDiscoveryUseCase().execute();
+        // 0.9.339 — closes the exact fork/load lookup gap
+        // tests/FederatedRepositoryPublicationUserJourneyAudit.test.js's
+        // own Section D located: this findPublicationUseCase now merges
+        // in the SAME shared decentralized provider Repository search
+        // does, through the SAME composition root — see application/
+        // CreateDiscoveryUseCase.js's own 0.9.339 comment.
+        const decentralizedDiscoveryProviderForLookup = inject('decentralizedPublicationDiscoveryProvider', null);
+        const { findPublicationUseCase } = new CreateDiscoveryUseCase().execute({
+            decentralizedDiscoveryProvider: decentralizedDiscoveryProviderForLookup
+        });
         // 0.6.5 — Blueprint Identity & Attribution.
         // 0.6.6 — Decentralized Blueprint Exchange.
         const { blueprintAttributionUseCase, blueprintAttributionExchange } = new CreateBlueprintAttributionUseCase().execute(identityProvider);

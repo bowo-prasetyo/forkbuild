@@ -551,18 +551,30 @@ async function run() {
 
     // ===============================================================
     // Section J — No Repository architecture changes: application/
-    // SearchPublicationsUseCase.js, discovery/LocalDiscoveryProvider.js,
-    // and application/CreateDiscoveryUseCase.js are byte-for-byte
-    // untouched by this milestone.
+    // SearchPublicationsUseCase.js and discovery/LocalDiscoveryProvider.js
+    // are byte-for-byte untouched by THIS milestone (0.9.337).
+    //
+    // UPDATED by 0.9.339 — Merge Decentralized Publication Discovery
+    // into Repository Discovery. At the time THIS milestone (0.9.337)
+    // was written, application/CreateDiscoveryUseCase.js was ALSO
+    // untouched — that was never an architectural guarantee, only a
+    // true statement about what 0.9.337 itself changed (this milestone
+    // wired admission into the provider, at ui/views/
+    // DecentralizedPublicationsView.js, deliberately leaving Repository's
+    // own composition root for a later, separate milestone — see this
+    // file's own header). 0.9.339 was that later milestone, and it
+    // deliberately DID change application/CreateDiscoveryUseCase.js —
+    // see tests/DecentralizedPublicationRepositoryMerge.test.js for its
+    // own flagship proof. Dropped from this section's own untouched-file
+    // list accordingly, rather than left to assert a stale guarantee.
     // ===============================================================
     {
         const untouched = gitDiffFiles([
             'application/SearchPublicationsUseCase.js',
-            'discovery/LocalDiscoveryProvider.js',
-            'application/CreateDiscoveryUseCase.js'
+            'discovery/LocalDiscoveryProvider.js'
         ]);
         assert(untouched.length === 0,
-            `1. none of application/SearchPublicationsUseCase.js, discovery/LocalDiscoveryProvider.js, or application/CreateDiscoveryUseCase.js is modified by this milestone (found changed: ${untouched.join(', ') || 'none'}).`);
+            `1. neither application/SearchPublicationsUseCase.js nor discovery/LocalDiscoveryProvider.js is modified relative to HEAD (found changed: ${untouched.join(', ') || 'none'}).`);
 
         // Reconfirmed structurally too, matching 0.9.336's own Section J
         // style: neither file references the new provider at all.
@@ -573,7 +585,7 @@ async function run() {
         assert(!/DecentralizedPublicationDiscoveryProvider/.test(localDiscoverySource),
             '3. discovery/LocalDiscoveryProvider.js never references it either.');
     }
-    console.log('✓ Section J: no Repository architecture changes. application/SearchPublicationsUseCase.js, discovery/LocalDiscoveryProvider.js, and application/CreateDiscoveryUseCase.js are untouched by this milestone\'s own git diff, and structurally reconfirmed to carry no reference to the new provider at all — Repository\'s own real search path is exactly as it was, and every Section above worked through it unmodified.');
+    console.log('✓ Section J: no Repository SEARCH-CLASS changes. application/SearchPublicationsUseCase.js and discovery/LocalDiscoveryProvider.js are untouched by any git diff and structurally reconfirmed to carry no reference to the new provider at all — Repository\'s own real search algorithm is exactly as it was, and every Section above worked through it unmodified. UPDATED (0.9.339): application/CreateDiscoveryUseCase.js — Repository\'s composition ROOT, one level above the search class itself — was later, deliberately modified by that milestone to merge in the shared decentralized provider; this section\'s own scope was always the search/storage classes, not that composition root (see this file\'s own header on why 0.9.337 left it for later).');
 
     console.log('\nAll Decentralized Publication Repository Integration tests passed.');
 }

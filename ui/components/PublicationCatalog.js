@@ -1,4 +1,4 @@
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, inject } from 'vue';
 import { useRouter } from 'vue-router';
 import { CreateDiscoveryUseCase } from '../../application/CreateDiscoveryUseCase.js';
 import { PublicationQuery, DEFAULT_PAGE_SIZE } from '../../core/PublicationQuery.js';
@@ -34,11 +34,18 @@ export default {
     },
     setup(props) {
         const router = useRouter();
+        // 0.9.339 — the ONE application-lifetime decentralized discovery
+        // provider ui/main.js shares (0.9.337), merged in alongside the
+        // usual LocalDiscoveryProvider — see application/
+        // CreateDiscoveryUseCase.js's own 0.9.339 comment. `null` when
+        // absent (e.g. a mounted test harness) degrades to exactly the
+        // pre-0.9.339 local-only behavior.
+        const decentralizedDiscoveryProvider = inject('decentralizedPublicationDiscoveryProvider', null);
         const {
             discoveryProvider,
             loadPublicationDocumentUseCase,
             searchPublicationsUseCase
-        } = new CreateDiscoveryUseCase().execute();
+        } = new CreateDiscoveryUseCase().execute({ decentralizedDiscoveryProvider });
 
         const sort = ref(PublicationSort.RECENTLY_PUBLISHED);
         const view = ref('cards');
