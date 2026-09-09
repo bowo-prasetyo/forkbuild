@@ -4861,16 +4861,14 @@ export class WorldNavigationSession {
         return records.reduce((latest, r) => (!latest || r.updatedAt > latest.updatedAt) ? r : latest, null);
     }
 
-    // Normalized data for a Placement Info panel — position, revision,
-    // owner, and whether THIS identity is (as far as this session can
-    // tell, locally) the one who may move it. Returns null when the
-    // document has no known placement yet (never published, or
-    // placementRegistry isn't wired) rather than a placement-shaped
-    // object full of nulls.
-    getPlacementInfo(documentId) {
-        const id = documentId || this._activeDocumentId;
-        const record = this._resolvePlacementRecord(id);
-        if (!record) return null;
+    // Per-record enrichment shared by getPlacementInfo() (one record,
+    // reduced from possibly several) and getPlacementsForPublication()
+    // (0.9.308, every record, unreduced) — position, revision, owner,
+    // and whether THIS identity is (as far as this session can tell,
+    // locally) the one who may move/remove it. Extracted so both
+    // callers compute the IDENTICAL facts for a given record rather
+    // than maintaining two independent copies of this logic.
+    _enrichPlacementRecord(record) {
         const currentUser = this._identityProvider ? this._identityProvider.currentUser() : null;
         const currentUsername = currentUser ? (currentUser.username || currentUser.id) : null;
         // Best-effort, LOCAL ownership signal for the UI only — never
@@ -4897,7 +4895,6 @@ export class WorldNavigationSession {
             ? detectSpatialOverlap(record.position, this._placementRegistry.list(), { excludePlacementId: record.placementId })
             : null;
         return {
-            documentId: id,
             placementId: record.placementId,
             publicationId: record.publicationId,
             position: { x: record.position.x, y: record.position.y, z: record.position.z },
@@ -4915,6 +4912,56 @@ export class WorldNavigationSession {
             removable: ownedByCurrentUser,
             overlapCount: overlap ? overlap.count : 0
         };
+    }
+
+    // Normalized data for a Placement Info panel — position, revision,
+    // owner, and whether THIS identity is (as far as this session can
+    // tell, locally) the one who may move it. Returns null when the
+    // document has no known placement yet (never published, or
+    // placementRegistry isn't wired) rather than a placement-shaped
+    // object full of nulls.
+    getPlacementInfo(documentId) {
+        const id = documentId || this._activeDocumentId;
+        const record = this._resolvePlacementRecord(id);
+        if (!record) return null;
+        return { documentId: id, ...this._enrichPlacementRecord(record) };
+    }
+
+    // 0.9.308 — Publication Multi-Placement Visibility. getPlacementInfo()
+    // above (and getPlacementInfoForPublication() below) each reduce a
+    // Publication's placements down to a single record — a deliberate
+    // simplification _resolvePlacementRecord()'s own comment already
+    // names ("browsing/choosing among several is future scope"). This
+    // answers the SAME "where is this Publication placed" question
+    // WITHOUT that reduction: every PlacementRecord
+    // DiscoverPlacementsUseCase/PlacementRegistry.findByPublicationId()
+    // returns is enriched (via _enrichPlacementRecord(), above — the
+    // IDENTICAL per-record facts getPlacementInfo() computes) and
+    // returned, preserving multiplicity — see docs/Principles.md, "A
+    // Publication Is What; A Placement Is Where," 0.2.23's own "an
+    // exhibition copy here, a personal copy of the same publication
+    // there." Never sorts, dedupes, or ranks: whatever order
+    // findByPublicationId() itself returns is the order returned here.
+    //
+    // No `documentId` field — unlike getPlacementInfo(), this method
+    // starts from a publicationId directly (mirroring
+    // getPlacementInfoForPublication()'s own same choice), and a
+    // Publication placed several times has no single document to
+    // attribute all of them to.
+    //
+    // Returns `[]` (never `null`) when there is no placementRegistry
+    // wired, no publicationId supplied, or the Publication genuinely
+    // has zero placements — a real, honest, empty result. An actual
+    // discovery FAILURE (the registry itself throwing) is deliberately
+    // left to propagate, uncaught, rather than being swallowed into an
+    // indistinguishable empty array — see ui/components/
+    // OwnPublicationPanel.js's own refreshPublicationPlacements() for
+    // how a caller keeps "zero placements" and "discovery failed"
+    // distinguishable.
+    getPlacementsForPublication(publicationId) {
+        if (!this._placementRegistry || typeof publicationId !== 'string' || publicationId.length === 0) return [];
+        const records = this._placementRegistry.findByPublicationId(publicationId);
+        return records.map((record) => this._enrichPlacementRecord(record));
     }
 
     // 0.9.187 — Automatic Snapshot Encounter Cascade. getPlacementInfo()

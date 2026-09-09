@@ -88089,3 +88089,92 @@ already confirms is unnecessary. The two larger, scope-deferred findings (Editor
 parity) and the one INVESTIGATE-shaped finding (Discovery-level Commentary count) remain on record for a future
 milestone to pick up on their own evidence — never on inertia, and never merely because this reassessment named
 them.
+
+## 0.9.308 — Publication Multi-Placement Visibility
+
+0.9.307's own Section J finding, implemented: `application/DiscoverPlacementsUseCase.js#findByPublicationId()` was
+already fully implemented and fully regression-tested, but its own one production reader —
+`WorldNavigationSession#_resolvePlacementRecord()` — reduced every Publication's placements down to a single,
+most-recently-updated record, by its own documented admission ("browsing/choosing among several is future scope").
+A Publication placed more than once — an intended, named scenario (`docs/Principles.md`'s own 0.2.23 entry: "an
+exhibition copy here, a personal copy of the same publication there") — had no way for its own owner to see or
+manage anything but that one copy; every other placement was silently invisible, forever, unless its owner happened
+to physically stand at that exact spot again. This milestone is a read-side integration only: it wires
+`findByPublicationId()`'s full, unreduced result to `OwnPublicationPanel.js` — the existing Publication-inspection
+surface — through one new, thin `WorldNavigationSession` method. Placement creation, World placement semantics, and
+`DiscoverPlacementsUseCase` itself are all untouched.
+
+### What changed
+
+`application/WorldNavigationSession.js` gains one new method, `getPlacementsForPublication(publicationId)` — the
+non-reducing sibling of `getPlacementInfo()`/`getPlacementInfoForPublication()`. It calls
+`this._placementRegistry.findByPublicationId(publicationId)` (the exact same registry method
+`DiscoverPlacementsUseCase` itself wraps) and enriches *every* record it returns, never just the most-recently-updated
+one. The per-record enrichment itself (owner resolution, the local, best-effort `movable`/`removable` ownership
+signal, and 0.2.25's own passive overlap count) is factored out of `getPlacementInfo()` into a new private
+`_enrichPlacementRecord()` helper, so both methods compute the identical facts for a given record from one place —
+`getPlacementInfo()`'s own public shape and behavior (the single, reduced record) is otherwise byte-for-byte
+unchanged. Returns `[]` — never `null` — when there is no `placementRegistry` wired, no `publicationId` supplied, or
+the Publication genuinely has zero placements; an actual registry failure is deliberately left to propagate,
+uncaught, rather than being swallowed into an indistinguishable empty array.
+
+`ui/views/WorldView.js` gains `getPublicationPlacementsCommand(publicationId)`, a thin wrapper forwarding to
+`session.getPlacementsForPublication(publicationId)` — mirroring `getPublicationCommentariesCommand()`'s own
+restraint exactly: this view resolves and decides nothing, it only forwards. Bound onto `OwnPublicationPanel` as a
+new prop, alongside the existing `placementInfo`/`activePlacementInfo` binding (the *singular*, already-reduced
+placement for the active document) — the two stay independently readable, never merged.
+
+`ui/components/OwnPublicationPanel.js` gains a new, optional `getPublicationPlacementsCommand` prop (`null` default,
+feature hidden when absent — the same gate every other optional capability on this component already follows), a
+`publicationPlacements`/`publicationPlacementsError` ephemeral state pair mirroring `publicationCommentaries`/
+`publicationCommentaryError` exactly, and a `refreshPublicationPlacements()` method loaded on mount and on every
+Publication change (the identical cadence `refreshPublicationCommentaries()` already follows — no polling, no
+subscription). A new "Placements (N)" section renders every returned placement's position/revision/owner, in
+whatever order the command returned them — no sort, dedup, "latest," or ranking of any kind. A single placement
+renders through the exact same list markup as three; zero placements renders a dedicated, honest empty-state
+message, never an error; a genuine discovery failure sets `publicationPlacementsError` and leaves any
+previously-loaded list untouched, keeping `NO_PLACEMENTS` and `DISCOVERY_FAILED` two distinguishable outcomes
+without introducing any new domain vocabulary. The section is strictly read-only: no button, click handler, or
+emitted event anywhere in it creates, removes, moves, or alters a placement, a Publication, or World state of any
+kind — `ui/components/PlacementInfoPanel.js` remains the sole owner of Focus/Move/Remove actions, scoped to the
+single active placement it already renders.
+
+### What stayed unchanged
+
+`application/DiscoverPlacementsUseCase.js`, `application/PlacePublicationUseCase.js`,
+`application/MoveWorldPlacementUseCase.js`, `application/RemoveWorldPlacementUseCase.js`, and
+`application/UnpublishDocumentUseCase.js` are all byte-for-byte untouched — this milestone composes the first of
+those five, and edits none of them. `getPlacementInfo()`'s own public behavior (the single, most-recently-updated
+placement `PlacementInfoPanel.js` and the Snapshot placement family on `OwnPublicationPanel.js` itself already
+depend on) is unchanged, verified directly against the shared `_enrichPlacementRecord()` refactor. No "go to
+placement," "remove this placement," ranking, deduplication, spatial map, new Placement domain model/lifecycle,
+notification integration, provider-preference integration, or automatic World synchronization was introduced —
+per this milestone's own brief, visibility is the only gap being closed; navigation/management over multiple
+placements remains a deliberately separate, later, unscheduled decision.
+
+### What this milestone adds
+
+`tests/PublicationMultiPlacementVisibility.test.js` (new, registered in `tests.html`) — ten lettered sections
+(A-J) against real collaborators (`LocalPlacementRegistry`, `LocalSpatialIndexProvider`, `DiscoverPlacementsUseCase`,
+`PlacementRecord`, and a real `WorldNavigationSession`, all unmodified), mirroring
+`tests/PublicationCommentaryUIIntegration.test.js`'s own structure one capability over. Section A proves the real
+`DiscoverPlacementsUseCase` discovers every placement of one Publication. Section B traces Publication UI through
+the injected command to `WorldNavigationSession`/`DiscoverPlacementsUseCase`, against real source. Section C proves
+discovery is always performed for the exact Publication being inspected, never a substitute identity. Section D
+proves three placements of one Publication are all discovered and displayed, never collapsed. Section E proves one
+placement remains a legitimate one-item result. Section F proves zero placements renders an honest empty state,
+never an error. Section G proves placements stay correctly isolated per-Publication, including across a live
+Publication switch through the real `watch.publication` handler. Section H proves the surface is strictly
+read-only — no mutation of the registry, and no interactive control (`@click`/`v-model`/submit) anywhere inside its
+own rendered section. Section I proves `NO_PLACEMENTS` and `DISCOVERY_FAILED` remain two distinguishable, never
+conflated, outcomes. Section J is a regression pass confirming `getPlacementInfoForPublication()`'s own reduced
+shape, and the mutating placement/unpublish use cases, are all unmodified by this milestone's own refactor.
+
+### What comes after
+
+Per this milestone's own scope, no next step is prescribed here. The natural follow-up this milestone's own brief
+already named but deliberately excluded — per-placement navigation ("go to placement") or management ("remove this
+placement") — is left for a future milestone to pick up once there is real evidence that visibility alone is
+insufficient, never on inertia. 0.9.307's own two larger, scope-deferred findings (Editor/World Recover+Review-history
+parity) and its one INVESTIGATE-shaped finding (Discovery-level Commentary count) also remain on record, untouched
+by this milestone.
