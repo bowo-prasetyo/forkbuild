@@ -88355,3 +88355,120 @@ Per this milestone's own STOP verdict, the placement arc (0.9.308-0.9.310) close
 should not extend placements artificially. The next product direction should be selected fresh from the broader
 architecture/product inventory, the same posture 0.9.307's own Section E already modeled for its six then-completed
 arcs, applied here to a seventh.
+
+## 0.9.311 — Post-Placement Product Evolution Reassessment
+
+**Type:** Test-only, whole-product reassessment. **Production changes:** None.
+
+0.9.307 (Post-Arc Product Evolution Reassessment) last asked the wide question — across everything ForkBuild could
+do, not one arc — and selected Publication multi-placement visibility. 0.9.308-0.9.310 then built, converged, and
+closed that one arc down to a fresh STOP: visibility is complete; no evidenced next placement feature exists. Per
+0.9.310's own recommendation, this milestone repeats 0.9.307's own method fresh, across the **whole current
+product** — Editor, Publication, Commentary, World View, Wanderer/vehicle, placement, Snapshot discovery/
+materialization, collaboration, Place Naming, notifications, decentralized distribution, provider preferences, and
+authentication/identity — rather than re-opening the now-closed placement arc. The governing principle carried
+forward unchanged: select the next milestone from an evidenced user-facing gap, never an interesting architectural
+capability.
+
+### What this milestone adds
+
+`tests/PostPlacementProductEvolutionReassessment.test.js` (new, registered in `tests.html`), built against real,
+unmodified production collaborators (`CausalStamp`, `ConflictResolver`, `DOCUMENT_COLLABORATION_CONSISTENCY_POLICY`,
+`RoleProviderPreference`). Ten lettered sections:
+
+- **A — Complete capability inventory.** Thirteen named surfaces, each confirmed implemented and reachable from a
+  real nav destination or established composition. Classified against all five categories this milestone's own
+  brief requires: IMPLEMENTED+REACHABLE (all thirteen), IMPLEMENTED+ORPHANED (a complete, tested, working peer
+  placement-replication protocol — `replication/ConflictResolver.js`/`ReplicaMergeService.js`/
+  `LocalReplicationStore.js`, `application/ReplicatePlacementUseCase.js`/`SynchronizeReplicaUseCase.js`/
+  `CreateReplicationUseCase.js` — with zero production callers, proven live with a real `ConflictResolver.compare()`
+  call, not merely read from source), IMPLEMENTED+INTENTIONALLY-INTERNAL (Automatic Snapshot Encounter Retention,
+  reconfirmed), ARCHITECTURALLY-POSSIBLE (non-commuting-operation conflict detection — the primitive genuinely
+  works, per the same live proof, but is never surfaced to any UI, per the collaboration policy's own explicit
+  `ConcurrentConflictResolution.UNDEFINED` admission), and ACTUALLY-MISSING (an honest negative result: nothing
+  swept anywhere in this milestone's own research is a hard technical impossibility — every finding is a scope or
+  evidence question).
+- **B — User-journey closure.** The four representative journeys this milestone's own brief names — Create→Edit→
+  Publish→Distribute→Discover→Inspect; Encounter→Inspect→Comment→Notification→History; Create Snapshot→Distribute→
+  Discover→Verify→Materialize→Place; Place Publication→Own Publication→See all placements — each traced hop by hop
+  against real, unmodified source. None dead-ends short of its own natural terminus.
+- **C — Orphaned capability sweep.** A fresh, repo-wide zero-caller scan. The one genuinely new finding: the peer
+  placement-replication protocol from Section A, classified **HISTORICAL** — superseded by the live
+  `WorldCommandPropagationUseCase`/`replication/WorldConflictResolver.js` collaboration protocol that actually
+  shipped for the identical `PlacementRecord` data (confirmed structurally: the live protocol's own file imports
+  `WorldConflictResolver`, never the offline `ConflictResolver`), not a product gap. The SAME "composition root
+  bypassed by direct construction elsewhere" pattern 0.9.307/0.9.310 found for `CreatePlacementRegistryUseCase` is
+  confirmed to recur, unnamed until now, for `CreateIdentityUseCase`/`CreateAuthorizationUseCase`/
+  `CreateWorldLayoutUseCase` — classified **INTERNAL**, a codebase-wide convention, not three new gaps.
+  `createBrickRegistry()`'s own bare function export is **DUPLICATIVE** of the class it wraps (eleven real call
+  sites). `getPlacementInfoForPublication()` stays **INTERNAL** (0.9.310, unchanged). Discovery-level
+  Commentary-activity count and Editor/World history-autosave parity both stay **DEFER** (0.9.307, unchanged three
+  milestones later).
+- **D — Cross-arc convergence.** Snapshot's four-branch tree stays fully convergent (0.9.307, reconfirmed).
+  Publication's tree has a real seam where it already converges and a real, already-classified-DEFER gap where it
+  does not. One tempting pairing is explicitly evaluated and **REJECTED**, per this milestone's own brief: the
+  Publisher Leaderboard/external-anchor evidence subsystem (0.8.113-0.8.189) and Notifications (0.9.273-0.9.306) are
+  both real, both shipped, and structurally never wired together (the one real notification-producing file carries
+  zero Leaderboard/Achievement vocabulary) — "both exist" is not a journey, and this milestone does not invent one.
+- **E — Awareness/product-gap reassessment.** The Notification boundary (event fact → deduplication → durable
+  history → authenticated retrieval → History UI) reconfirmed intact end to end. No unread/read, badge, push, or
+  provider-preference vocabulary has been added since 0.9.306's own STOP.
+- **F — World interaction gap.** Reassessed fresh across all four candidates this milestone's own brief names —
+  richer Publication interaction (already rich; no bookmark/favorite/rating vocabulary has ever been proposed),
+  navigation (still document-keyed, not placement-keyed, by construction), placement-specific navigation/management
+  (still correctly `DEFER`red against 0.9.308's own still-unmet standing bar), Snapshot interaction (still
+  complete). No new journey-blocking gap found.
+- **G — Collaboration follow-up.** Five named "tempting" ideas, each graded on the identical evidence bar as any
+  unrelated gap. Presence indicators and invitations turn out to be **NOT gaps at all** — both already fully built
+  and live (`WorldPresenceIndicator`/`WorldCollaboratorIndicator`/`WorldCollaborationRoster` composed into
+  `WorldView.js`; `peer/PeerInvitation.js` constructed by the real `DiscoverPeersUseCase`) — the same "already
+  shipped, don't duplicate" shape 0.9.310 found for cross-publication placement discovery. Cursors and
+  operation-history sharing have zero evidence anywhere. Conflict/divergence UI is the most substantive of the
+  five — a real, deliberate policy gap (the frozen `DOCUMENT_COLLABORATION_CONSISTENCY_POLICY`'s own
+  `ConcurrentConflictResolution.UNDEFINED`/`MissingOperationDetection.NONE`/`ReplicaConvergenceGuarantee.NOT_GUARANTEED`,
+  live-verified) that 0.9.240 explicitly left as a "separate decision," still unaddressed — but with no user-facing
+  evidence of actual harm, and closing it correctly would mean revisiting a deliberate architecture decision, not
+  adding a UI seam. `DEFER`.
+- **H — Decentralized substrate reassessment.** 0.9.304's own STOP reconfirmed fresh (zero `RoleProviderPreference`
+  references in any Commentary/Notification file). The 0.9.292 capability matrix's own technical finding — several
+  roles remain capable of more than one provider — still holds structurally, but none of the six milestone TITLES
+  since 0.9.304 (0.9.305-0.9.310, checked directly against the Roadmap's own headers) is a provider-selection
+  milestone. Preserved unmodified, per this milestone's own brief.
+- **I — Architecture debt classification.** The five named traps this milestone's own brief lists, each anchored to
+  a real, current-tree example: missing abstraction ≠ missing product capability (the bypassed composition-root
+  family); unused class ≠ missing UI (`createBrickRegistry()`); possible provider ≠ provider choice requirement
+  (0.9.292's own matrix); available metadata ≠ metadata display requirement (`placement.overlapCount`, 0.9.310,
+  still correctly deferred); existing API ≠ user-facing action (`getPlacementInfoForPublication()`/
+  `getDocumentsAtPosition()`).
+- **J — Candidate scoring and final decision.** A five-row decision matrix (placement navigate/manage; Discovery
+  Commentary count; Editor/World history-autosave parity; collaboration conflict/divergence UI; peer
+  placement-replication revival) — every candidate scores `DEFER` or `STOP`. **Final verdict: STOP.**
+
+### What this milestone confirms
+
+Every recently-completed arc (Content Provider Preference, Commentary cross-surface, Notifications, Snapshot, Place
+Naming, Placement visibility) reconfirms STOP for itself, fresh, not by re-reading a prior conclusion. Two
+"tempting" ideas that looked like gaps (presence indicators, invitations) turn out to already be shipped — the
+third consecutive reassessment (0.9.307, 0.9.310, 0.9.311) to find at least one candidate like this. The one
+genuinely new substantive finding — the collaboration consistency policy's own deliberate, unaddressed
+conflict/divergence gap — is real but requires a product decision this test-only reassessment is correctly not
+positioned to make on its own, and has no user-facing evidence of actual harm behind it yet.
+
+### What stayed unchanged
+
+Every production file this milestone reads — `application/WorldCommandPropagationUseCase.js`,
+`replication/ConflictResolver.js`, `replication/WorldConflictResolver.js`, `core/DocumentCollaborationConsistencyPolicy.js`,
+`core/RoleProviderPreference.js`, `ui/views/WorldView.js`, `ui/App.js`, `application/EditorSession.js`, and every
+other file cited above — is byte-for-byte untouched. This milestone adds one new test file, one `tests.html`
+registration line, and this Roadmap entry, nothing else.
+
+### What comes after
+
+Per this milestone's own STOP verdict, no new milestone is selected automatically. Two large, scope-deferred
+candidates remain on record from 0.9.307, unaddressed three milestones later (Editor history-timeline parity; World
+autosave-recovery parity) — genuinely available to a future milestone that wants to take on their scope. The
+collaboration conflict/divergence gap this milestone surfaces fresh is a genuine open question — "does ForkBuild
+now need convergence?" — that a future milestone could turn into a dedicated investigation if real user-facing
+evidence of silent divergence ever appears; it is deliberately not scheduled here. ForkBuild's broader product
+evolution process resumes on its own terms, the next time genuine evidence — not architectural interest — points
+somewhere.
