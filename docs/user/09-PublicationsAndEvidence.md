@@ -9,7 +9,10 @@ one, several independent kinds of optional depth you can attach to it:
 **external evidence** that the claim was recorded somewhere independent of
 ForkBuild, like a Bitcoin transaction that timestamps it; **snapshot
 placements** that name where the claim's own content can currently be
-retrieved from, like an IPFS node; an [**IPFS Publishing**](#ipfs-publishing)
+retrieved from, like an IPFS node, plus a standing [**Content
+Provider**](#using-a-preferred-provider) preference so a **Use Preferred
+Provider** button can pick one for you instead of naming a backend every
+time; an [**IPFS Publishing**](#ipfs-publishing)
 section that explicitly publishes a claim's content to a remote pinning
 provider and independently verifies it's still retrievable; a **Local
 Snapshot** section that reports what your own device already holds and lets
@@ -92,6 +95,17 @@ Open the naming panel for a Region or Landmark in World View and use
 [Geographic places](03-WorldView.md#geographic-places). Publishing a name
 works the same way: it announces a signed claim to your connected peers.
 
+That reaches anyone currently connected, but it's not yet what
+[Nearby Place Names](03-WorldView.md#nearby-place-names--discovering-claims-from-anyone)
+searches — that reads a decentralized network (Nostr) directly, with no
+peer involved at all. To make a claim reachable that way too, open the
+naming panel's own **More** disclosure, find the claim under **All
+Claims**, and click **Publish to Nostr** next to it — a second, fully
+explicit action, independent of announcing to peers: neither does the
+other automatically, and neither is more official. A successful publish
+shows which relay it reached; a failure — most commonly, no compatible
+Nostr browser extension installed — shows a plain error instead.
+
 ### Receiving one from a peer
 
 You don't have to publish anything yourself to see entries here. The moment
@@ -102,6 +116,21 @@ appears on your own Publications page. Cataloging a publication only ever
 means your device has **seen a validly signed claim** — never that whatever
 it points to is sitting on your device right now, which is exactly what the
 page's status badge tells you.
+
+### A third kind: a Repository creation, decentralized
+
+Authorship attributions and place names aren't the only content this page
+can carry. A card can also hold a **Publication** — the same kind of
+object behind an ordinary Repository listing (see
+[Publishing & Forking](04-PublishingAndForking.md)), signed and wrapped
+for decentralized travel. If one ever reaches your Publications page this
+way and you resolve it — with **Re-check** or **Retrieve from Peers** — it
+gets folded into the Repository's own search results, your Author page,
+and World View exploration for the rest of this browser session, exactly
+as if it had been found the ordinary way; a reload forgets it. Nothing in
+ForkBuild today actually *produces* one of these from the ordinary
+**Publish** button — this is groundwork for a future decentralized
+publish path, not a flow you can start from either end yet.
 
 ## The Publications page
 
@@ -1618,6 +1647,31 @@ accepted these bytes just now.
 > resolve and materialize an `ipfs` placement someone *else* created —
 > theirs or a peer's — without ever installing or running IPFS software
 > yourself; only creating a brand-new IPFS placement still requires it.
+
+### Using a preferred provider
+
+Rather than naming **Local** or **IPFS** explicitly every time, you can
+set a standing preference once and let ForkBuild pick for you. Open
+**Content Provider** in the top bar (`/settings/content-provider`), choose
+one of the backends currently registered on this replica, and click
+**Save**. From then on, every publication card's **Use Preferred
+Provider** button — sitting alongside the explicit **Create Local/Ipfs
+Placement** buttons above — creates a placement on whichever backend you
+saved, without asking you to name one there.
+
+This never changes what the explicit per-backend buttons do, and saving
+or changing a preference never retroactively touches a placement you
+already created — it only decides what **Use Preferred Provider** does
+the next time you click it. Outcomes:
+
+| Label | Meaning |
+|---|---|
+| **Placement created** | Your preferred backend accepted the bytes — identical to clicking that backend's own button directly. |
+| **No placement was created** | Nothing is saved for Content yet, so this behaves exactly like clicking a placement button with no backend named at all. |
+| **Preferred provider not found** | A preference is saved, but names a backend this replica no longer has registered — you're told exactly what was configured, never silently switched to another one. |
+
+If no content providers are currently registered on this replica, the
+Content Provider settings page says so and offers nothing to choose.
 
 ### The Snapshot Placements list
 

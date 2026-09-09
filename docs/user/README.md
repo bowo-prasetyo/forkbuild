@@ -37,9 +37,13 @@ top-level [docs/](..) folder.
    picks a winner when two claims name the same ground, an open
    **Commentary** thread on your own published world reachable from **My
    Publication**, letting any signed-in identity leave a permanent,
-   unremovable comment, and a **Notifications** button opening a durable,
+   unremovable comment, a **Notifications** button opening a durable,
    cross-session **Notification History** of who commented on what and
-   when.
+   when, My Publication's own unreduced **Placements** list of every
+   location that publication is actually placed at, and a **Diagnostic
+   Tools** popup gathering its manual, step-by-step Snapshot
+   discover/resolve/materialize/place/register recovery tools in one
+   place for when the automatic path doesn't produce what you expect.
 4. **[Publishing & Forking](04-PublishingAndForking.md)** — sharing
    your work, licenses, how forking works (including the automatic
    fork that happens the moment you edit a published creation), and
@@ -60,13 +64,18 @@ top-level [docs/](..) folder.
    friends-only messaging, offline delivery, read receipts, and voice
    calls.
 9. **[Publications & External Evidence](09-PublicationsAndEvidence.md)** —
-   signed authorship and place-name claims, catalog status, retrieving
+   signed authorship and place-name claims — the latter now explicitly
+   publishable to a decentralized network (Nostr), independent of and
+   alongside announcing to peers — catalog status, retrieving
    content from peers, optional external evidence: creating, discovering
    from peers, verifying, and inspecting anchors like a Bitcoin timestamp,
    optional snapshot placements: creating, inspecting, resolving,
    materializing, and comparing locators like an IPFS node that can
    currently serve a claim's content (resolving now works through a
-   public IPFS gateway, with no local node required), an **IPFS
+   public IPFS gateway, with no local node required), a standing
+   **Content Provider** preference (its own settings page) so a **Use
+   Preferred Provider** button can create a placement on your saved
+   backend without naming one each time, an **IPFS
    Publishing** section for explicitly publishing content to a
    configured remote pinning provider, independently verifying it's
    still retrievable, and inspecting the full history of both, a
@@ -104,7 +113,11 @@ top-level [docs/](..) folder.
    Shared/Target-only tables with per-record and per-field identity
    inspection, plus an **Explicit Record Pairing** tool for hand-picking
    two records and seeing exactly which named fields differ between them,
-   and, orthogonal to all of it, an open **[Commentary](09-PublicationsAndEvidence.md#commentary)**
+   a third publication content kind — a Repository creation's own signed
+   record, decentralized — that, once resolved, now feeds straight into
+   the Repository's own search results, Author pages, and World View
+   exploration for the rest of that browser session, and, orthogonal to
+   all of it, an open **[Commentary](09-PublicationsAndEvidence.md#commentary)**
    system letting any signed-in identity comment on any publication —
    reached from World View's own **My Publication** panel — which
    notifies that publication's publisher through a durable **Notification

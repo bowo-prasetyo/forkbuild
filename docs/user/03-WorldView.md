@@ -577,6 +577,34 @@ picture of who can comment and what happens when they do. Like Distribute
 Snapshot, actually posting a comment needs your world published first;
 until then the compose box stays disabled.
 
+A **Placements (N)** list shows every location this Publication is
+actually placed at, in whatever order they were found — position,
+revision, and (when known) owner, one row per placement. Nothing here is
+reduced to "the latest one": a Publication can genuinely sit in more than
+one place, and every placement this device can discover is listed, never
+just a single, most-recently-updated stand-in for the rest. An empty list
+just means this Publication hasn't been placed anywhere yet; a read
+failure shows its own plain error instead.
+
+Further down, a **Diagnostic Tools** button — present only when at least
+one of the capabilities behind it is available — opens a small popup of
+manual, step-by-step recovery tools for when automatic Snapshot discovery
+or placement doesn't produce what you expect: **Discover Snapshots**
+browses everything announced under the shared campaign discovery tag —
+reachable even with no connected peers, no World Encounters, and no
+Publication of your own yet; selecting one and clicking **Resolve Selected
+Snapshot** checks whether it can actually be retrieved; from there you can
+**Attribute Selected Snapshot** (does it match this Publication's content
+hash?) and, independently, **Materialize Selected Snapshot** (store its
+bytes on this device) — and, at any point once you've selected a
+candidate, **Use Claimed Position** adopts the position the Snapshot
+itself claims, if it has one. Once materialized, **Place Materialized
+Snapshot** and then **Register Placed Snapshot** actually add it to the
+World you're viewing right now, without a reload. Every one of these is
+its own explicit click — nothing here chains, retries, or ranks a
+candidate for you; it's the same restraint every other manual, one-step-
+at-a-time flow in ForkBuild already holds to.
+
 ## The Operation Timeline
 
 This is one of ForkBuild's most powerful features. Every change you make —

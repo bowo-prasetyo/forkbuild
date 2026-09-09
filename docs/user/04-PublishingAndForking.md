@@ -26,8 +26,11 @@ always has somewhere to take people — see
 > roadmap — but ForkBuild does already have a separate, working
 > decentralized-publication system for a different kind of content:
 > signed authorship and place-name claims, exchanged directly between
-> peers with independently checkable external evidence. See
-> [Publications & External Evidence](09-PublicationsAndEvidence.md) if
+> peers with independently checkable external evidence — and, as of
+> recently, a real (if not yet reachable end-to-end) path for a Repository
+> creation's own signed record to travel that same way too, described in
+> [that guide's own "A third kind" section](09-PublicationsAndEvidence.md#a-third-kind-a-repository-creation-decentralized).
+> See [Publications & External Evidence](09-PublicationsAndEvidence.md) if
 > you're curious — it's optional depth, not required for anything in this
 > guide.
 
