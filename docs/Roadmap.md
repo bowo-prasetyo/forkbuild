@@ -89800,3 +89800,88 @@ distinction between normal user actions and exceptional recovery/diagnostic acti
 answer: yes, and 0.9.324/0.9.325 together are why. No 0.9.326 is pre-selected. ForkBuild's broader product
 evolution process resumes on its own terms, waiting for a newly observed blocked journey, a real external
 requirement, or an actual operational problem, exactly as 0.9.323's own governing rule already established.
+
+## 0.9.326 — Post-Diagnostic Product Evolution Reassessment
+
+**Type:** Test-only, whole-product reassessment. **Production changes:** none.
+
+With 0.9.325's convergence audit CLEAN, this milestone follows the same governing method every prior reassessment
+in this sequence has used (0.9.307, 0.9.311, 0.9.318, 0.9.322, 0.9.323 most recently), applied fresh with 0.9.324
+(Diagnostic Tools Surface) and 0.9.325 as the new evidence boundary — and investigates the one specific question its
+own brief named rather than assuming an answer: now that Diagnostic Tools separates ordinary actions from manual
+Snapshot recovery, is there a genuine *workflow-observability gap* between the automatic Snapshot encounter path
+(0.9.187) and the manual Diagnostic recovery path — can a user who wonders "I expected this to appear automatically,
+why didn't it?" actually answer that question with what already ships?
+
+### What this milestone adds
+
+`tests/PostDiagnosticProductEvolutionReassessment.test.js` (new, registered in `tests.html`), ten sections:
+
+- **A. Current product inventory** — reconfirmed fresh; the Diagnostic Tools popup is explicitly counted as the
+  *same* "Manual Snapshot recovery" capability's presentation, never a second capability of its own.
+- **B. User-journey verification** — the six journeys 0.9.323 already traced, reconfirmed unchanged, plus the new
+  pair this milestone's own brief named: Automatic Snapshot encounter and Manual Diagnostic recovery, verified as
+  two independent entry points sharing the same downstream commands by design (0.9.187's own "NO NEW OPERATION OF
+  ITS OWN"), never duplicate functionality — neither reads or depends on the other's state.
+- **C. Diagnostic boundary verification** — `diagnosticToolsOpen` reconfirmed absent from every line of
+  `OwnPublicationPanel.js`'s own `methods:` block, and no `DiagnosticService` or "diagnostic"-named
+  `application/` file exists anywhere.
+- **D. Orphan/capability scan** — a genuinely fresh, mechanical sweep methodology (basename cross-reference across
+  every top-level production source directory, independent of any prior audit's targeted grep list). Being a more
+  general mechanism, it surfaces a materially larger candidate set than any prior audit and classifies every one of
+  them: the three known 1-byte placeholder stub files (`application/services/{Export,Import,Screenshot}Service.js`,
+  matching `application/.gitkeep`'s own pattern — not implementations); the two families 0.9.323 already classified
+  (Delegated Ownership & Authorization, Publisher Leaderboard Reconciliation Decision), reconfirmed live; a
+  bypassed-composition-root family (`Create*UseCase` factories `ui/main.js` never constructs, wiring the live app
+  directly instead) considerably larger than the four members 0.9.323 named, including
+  `LoadPublishedWorldSessionUseCase.js`, whose own verify→deserialize→wrap job is confirmed superseded in *shape*
+  (never asserted historical outright, per 0.9.323's own F3 restraint) by the actually-wired
+  `ResolvePublicationUseCase.js`; and one genuinely new singleton finding, `BaseAnchorPublicationObservationView.js`
+  — a real, tested, zero-UI-consumer presentation view from the 0.8.100-era Bitcoin Anchor observation family,
+  structurally identical in shape to the already-known Reconciliation Decision finding. Every candidate fails the
+  same structural test this section always applies: zero UI entry point, so none is a blocked journey.
+- **E. Deferred-gap re-evaluation** — the four standing candidates (placement navigation, Discovery-level
+  Commentary count, collaboration conflict/divergence UI, global Place Naming browser) re-tested against the
+  five-question bar; none promoted.
+- **F. Cross-arc convergence — this milestone's own flagship.** Proves *live*, not merely by source-text inference,
+  that `ui/main.js`'s own composition hands the automatic path (`WorldSnapshotDiscoveryMonitor`) and the manual
+  Diagnostic path (`OwnPublicationPanel#discoverSnapshotCandidates()`) the exact same
+  `discoverSnapshotCandidatesCommand` function reference. A real harness (one `executeDiscoverSnapshotCandidatesCommand`
+  closed over one discoveryTag/fake query service, the same restraint 0.9.325's own flagship used) drives both
+  consumers independently and shows both observe the identical result reference for the identical query — not an
+  approximation, the same live answer. Combined with the pre-existing explicit
+  "No Snapshots have been announced under this discoveryTag yet." empty state and 0.9.325's own proven per-stage
+  error visibility, this settles the milestone's own named question: **no workflow-observability gap exists** — a
+  user who opens Diagnostic Tools gets the literal same answer the automatic path itself would have gotten, at
+  every stage.
+- **G. Architecture debt classification** — every open finding placed across the five-way split (unused
+  implementation / missing product capability / missing integration / historical code / deliberately deferred
+  feature); the Diagnostic Tools popup itself is explicitly none of these.
+- **H. External-evidence gate** — the 0.9.314 principle ("a technically possible feature is not automatically a
+  product gap") applied to the one candidate Section F's own investigation surfaced (surfacing automatic-cascade
+  outcomes/status in the UI): real and buildable, genuinely unbuilt, zero on-file evidence of a reported need — not
+  promoted.
+- **I. Candidate scoring** — seven open candidates scored (the six standing ones plus the automatic-cascade-
+  visibility candidate); all NOT READY except the standing EVIDENCE REQUIRED holdover.
+- **J. Final decision.**
+
+### Verdict
+
+**STABLE_WITH_DEFERRED_GAPS — STOP.** No new user-facing gap, no cross-arc integration gap, and — the question this
+milestone's own brief specifically asked about — no workflow-observability gap between automatic Snapshot discovery
+and manual Diagnostic recovery. Per this milestone's own governing framework, STOP is itself a successful result: a
+diagnostic surface deliberately kept small (0.9.324) and proven convergent both structurally (0.9.325) and now live,
+by design (0.9.326) is exactly the outcome the Diagnostic Tools arc was aiming for.
+
+### What this milestone deliberately excludes
+
+Per its own explicit scope: no explanation/status system for automatic-cascade outcomes (the investigation found
+none owed); no activation of the Delegated Ownership & Authorization seam; no UI surface for the Reconciliation
+Decision or Bitcoin Anchor Observation Correlation read-models; no rewiring of the bypassed composition-root
+factories into `ui/main.js`'s own composition; no change to any of the four standing deferred candidates.
+
+### What comes after
+
+No 0.9.327 is pre-selected. ForkBuild's broader product evolution process resumes on its own terms, the next time
+genuine evidence — a newly observed blocked journey, a real external requirement, an actual operational problem —
+points somewhere, never by this loop re-examining its own already-settled conclusions again.
