@@ -324,6 +324,25 @@ export default {
         // which stay scoped to exactly this one region, unchanged.
         const namingPanelGeographicRegions = ref([]);
         const namingPanelGeographicView = ref([]);
+        // 0.9.320 — Explicit Place Naming Publication Action. Ephemeral,
+        // per-open-panel UI state for "announce this already-signed claim
+        // to Nostr" — mirroring `ui/components/OwnPublicationPanel.js`'s own
+        // executing/error/result/requestId shape for its "Distribute
+        // Snapshot" action, one domain over. `namingPanelPublishToNostrClaimId`
+        // is the claim the LAST click targeted — since "All Claims" can list
+        // several claims, this is what lets the panel show a result/error
+        // beside the specific row it describes, rather than ambiguously
+        // beside every row. Reset (and any in-flight call invalidated via
+        // the requestId guard) in openNamingPanel()/closeNamingPanel() below
+        // — the identical "a changed target invalidates whatever the prior
+        // target's own state described" restraint that family already
+        // holds, applied here to "which region's panel is open" instead of
+        // "which Publication is active."
+        const namingPanelPublishToNostrClaimId = ref(null);
+        const namingPanelPublishToNostrExecuting = ref(false);
+        const namingPanelPublishToNostrError = ref(null);
+        const namingPanelPublishToNostrResult = ref(null);
+        const namingPanelPublishToNostrRequestId = ref(0);
         const myIdentityId = computed(() => session.getMyIdentityId());
         // 0.5.1 — World Maps & Geographic Navigation. `mapContent` is
         // session.getMapContent()'s own shape — refreshed on the SAME
@@ -571,6 +590,18 @@ export default {
         // `ui/main.js`'s: only this session actually holds the current
         // World layout `resolveClaimPosition` needs.
         const placeNamingDiscoveryQueryService = inject('placeNamingDiscoveryQueryService', null);
+        // 0.9.320 — Explicit Place Naming Publication Action. The SAME
+        // app-wide `publishPlaceNamingClaimToNostrCommand` `ui/main.js` now
+        // composes (`application/PlaceNamingPublicationRuntimeComposition.js`'s
+        // own `composePlaceNamingPublicationRuntime()`, wrapping the
+        // already-existing `NostrPlaceNamingDiscoveryPublisher`, 0.9.316) —
+        // a thin `(claim) -> Promise<{ published, relayUrl, id,
+        // discoveryTag }>` capability, injected here so
+        // `publishNamingClaimToNostr()` below can call it. `null` when
+        // `ui/main.js` provides nothing (e.g. in a test harness that never
+        // calls `app.provide` for it) — gated the identical way every other
+        // injected command in this file already is.
+        const publishPlaceNamingClaimToNostrCommand = inject('publishPlaceNamingClaimToNostrCommand', null);
         // 0.9.152 — Selected Snapshot Candidate Resolution. The SAME
         // app-wide `resolveSelectedSnapshotCommand` `ui/main.js` now
         // composes (reusing the SAME resolver/content store
@@ -2452,12 +2483,31 @@ export default {
         function openNamingPanel(regionId) {
             namingPanelRegionId.value = regionId;
             refreshNamingPanel();
+            resetNamingPanelPublishToNostr();
             showNamingPanel.value = true;
         }
 
         function closeNamingPanel() {
             showNamingPanel.value = false;
             namingPanelRegionId.value = null;
+            resetNamingPanelPublishToNostr();
+        }
+
+        // 0.9.320 — Explicit Place Naming Publication Action. Clears
+        // whatever the LAST "Publish to Nostr" click described and bumps
+        // the request id so an already-in-flight call (from the panel that
+        // was just closed, or the region that was just left) can never
+        // write a stale result/error into the panel now open — the
+        // identical staleness guard `distributeWorldEncounterSnapshot()`'s
+        // own caller (`OwnPublicationPanel.js`) already holds for its
+        // `publication`-change watcher, applied here at the two sites a
+        // naming panel's own target region can change.
+        function resetNamingPanelPublishToNostr() {
+            namingPanelPublishToNostrRequestId.value += 1;
+            namingPanelPublishToNostrClaimId.value = null;
+            namingPanelPublishToNostrExecuting.value = false;
+            namingPanelPublishToNostrError.value = null;
+            namingPanelPublishToNostrResult.value = null;
         }
 
         function publishNamingClaim(name) {
@@ -2545,6 +2595,60 @@ export default {
             } else {
                 feedback.show(`Imported "${claim.name}" for a different place — open its Names panel to see it`);
             }
+        }
+
+        // 0.9.320 — Explicit Place Naming Publication Action.
+        //
+        // "Create claim" (publishNamingClaim(), above — session.publishPlaceNamingClaim(),
+        // local and synchronous) and "announce claim" (THIS function) stay
+        // two separate, explicit steps — see docs/Roadmap.md's own 0.9.320
+        // entry. This function does neither: it identifies an EXISTING,
+        // already-signed claim already on file for the open panel's own
+        // region, and hands it to the injected
+        // publishPlaceNamingClaimToNostrCommand — never a second claim
+        // construction, never a mutation of the one handed over.
+        //
+        // READS THE CLAIM BACK THROUGH session.getPlaceNamingClaims() —
+        // NEVER `namingPanelClaims.value` DIRECTLY. Both are the same
+        // underlying data, but `namingPanelClaims` is this view's own
+        // cached copy, refreshed only by refreshNamingPanel(); reading
+        // through the session instead is the identical restraint
+        // `exportNamingClaim()`/`retractNamingClaim()`, immediately above,
+        // already hold for their own claimId-addressed actions — a fresh
+        // read, never a possibly-stale one.
+        //
+        // A DECLINED/FAILED PUBLICATION NEVER RETRACTS, RE-SAVES, OR
+        // OTHERWISE MUTATES THE LOCAL CLAIM. Only `namingPanelPublishToNostrError`/
+        // `namingPanelPublishToNostrResult` change — refreshNamingPanel() is
+        // never called here, because nothing this function does ever
+        // changes what session.getPlaceNamingClaims()/getPlaceNamingView()
+        // would return.
+        function publishNamingClaimToNostr(claimId) {
+            if (!publishPlaceNamingClaimToNostrCommand) return;
+            const regionId = namingPanelRegionId.value;
+            if (!regionId) return;
+            const claim = session.getPlaceNamingClaims(regionId).find((c) => c.id === claimId);
+            if (!claim) return;
+
+            namingPanelPublishToNostrRequestId.value += 1;
+            const requestId = namingPanelPublishToNostrRequestId.value;
+            namingPanelPublishToNostrClaimId.value = claimId;
+            namingPanelPublishToNostrExecuting.value = true;
+            namingPanelPublishToNostrError.value = null;
+            namingPanelPublishToNostrResult.value = null;
+
+            Promise.resolve()
+                .then(() => publishPlaceNamingClaimToNostrCommand(claim))
+                .then((result) => {
+                    if (namingPanelPublishToNostrRequestId.value !== requestId) return;
+                    namingPanelPublishToNostrExecuting.value = false;
+                    namingPanelPublishToNostrResult.value = result;
+                })
+                .catch((error) => {
+                    if (namingPanelPublishToNostrRequestId.value !== requestId) return;
+                    namingPanelPublishToNostrExecuting.value = false;
+                    namingPanelPublishToNostrError.value = (error && error.message) ? error.message : 'Publish to Nostr failed.';
+                });
         }
 
         // -----------------------------------------------------------------
@@ -4193,6 +4297,12 @@ export default {
             clearPreferredNamingName,
             exportNamingClaim,
             importNamingClaim,
+            publishNamingClaimToNostr,
+            canPublishPlaceNamingClaimToNostr: Boolean(publishPlaceNamingClaimToNostrCommand),
+            namingPanelPublishToNostrClaimId,
+            namingPanelPublishToNostrExecuting,
+            namingPanelPublishToNostrError,
+            namingPanelPublishToNostrResult,
             myIdentityId,
             showMembersPanel,
             worldCollaborationRoster,
@@ -5123,12 +5233,18 @@ export default {
                 :geographic-regions="namingPanelGeographicRegions"
                 :geographic-naming-view="namingPanelGeographicView"
                 :my-identity-id="myIdentityId"
+                :can-publish-to-nostr="canPublishPlaceNamingClaimToNostr"
+                :publish-to-nostr-claim-id="namingPanelPublishToNostrClaimId"
+                :publish-to-nostr-executing="namingPanelPublishToNostrExecuting"
+                :publish-to-nostr-error="namingPanelPublishToNostrError"
+                :publish-to-nostr-result="namingPanelPublishToNostrResult"
                 @publish-name="publishNamingClaim"
                 @retract-name="retractNamingClaim"
                 @set-preferred-name="setPreferredNamingName"
                 @clear-preferred-name="clearPreferredNamingName"
                 @export-claim="exportNamingClaim"
                 @import-claim="importNamingClaim"
+                @publish-to-nostr="publishNamingClaimToNostr"
                 @cancel="closeNamingPanel"
             />
             <WorldMapPanel
