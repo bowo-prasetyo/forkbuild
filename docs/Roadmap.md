@@ -88472,3 +88472,103 @@ now need convergence?" — that a future milestone could turn into a dedicated i
 evidence of silent divergence ever appears; it is deliberately not scheduled here. ForkBuild's broader product
 evolution process resumes on its own terms, the next time genuine evidence — not architectural interest — points
 somewhere.
+
+## 0.9.312 — Historical Placement Replication Boundary Audit
+
+**Type:** Test-only, architecture/documentation boundary audit. **Production changes:** None.
+
+0.9.311 closed with STOP and named exactly one actionable finding worth a dedicated milestone of its own: a
+complete, working, fully-tested peer placement-replication protocol — `replication/ConflictResolver.js`/
+`ReplicaMergeService.js`/`LocalReplicationStore.js`, `application/ReplicatePlacementUseCase.js`/
+`SynchronizeReplicaUseCase.js`/`CreateReplicationUseCase.js` — with zero production callers, superseded by the live,
+currently-shipping World collaboration protocol (`application/WorldCommandPropagationUseCase.js`/
+`replication/WorldConflictResolver.js`). The risk this milestone closes is not that the old code still exists — it
+is that a future developer, finding it, could reasonably conclude "ForkBuild already has peer placement
+replication; I should wire it back in." This milestone does not revive, migrate, adapt, or extend anything; it
+makes the architectural replacement boundary explicit and **executable**.
+
+### What this milestone adds
+
+`tests/HistoricalPlacementReplicationBoundaryAudit.test.js` (new, registered in `tests.html`), built against real,
+unmodified production collaborators (`ConflictResolver`, `ReplicaMergeService`, `CreateReplicationUseCase`,
+`WorldConflictResolver`, `WorldCommandPropagationUseCase`, real signed `PlacementRecord`s, a real `World` and real
+`Command`s). Nine lettered sections:
+
+- **A — Historical protocol identification.** The family's six files exist and export what 0.9.311's own inventory
+  found. Zero production callers construct any of them outside the family itself; the two real composition roots
+  (`ui/main.js`, `application/CreateWorldViewUseCase.js`) reference none of it; neither does `ui/` or `server/` as a
+  whole. Despite that, the family is proven fully instantiable and exercisable, live, through its OWN
+  never-constructed-in-production composition root: a genesis merge, a clean update, and a genuine `CONFLICT` result
+  carrying a real, two-revision `ConflictSet` — "unused" is a demonstrated fact about callers, never an assumption
+  from an absent grep hit.
+- **B — Live replacement identification.** `WorldCommandPropagationUseCase`/`WorldConflictResolver` exist and are
+  genuinely constructed by the real World-session composition root. A representative live operation — a real
+  `Command` reconciled through the real, unmodified `WorldConflictResolver#applyRemote()` against a real `World` —
+  is actually executed, not merely read from source, and produces the expected mutation. The live path is shown
+  wired to the same `CommandHistory` event stream (`COMMAND_EXECUTED`/`attachCommandHistory`) every other
+  collaborator already uses.
+- **C — Semantic comparison.** Documents, without asserting equivalence, that the two systems are built on different
+  ordering primitives: the historical resolver compares a vector-clock `CausalStamp` and can report `CONCURRENT`;
+  the live resolver orders by a scalar Lamport `logicalClock` plus an `operationId` tie-breaker
+  (`core/WorldOperationOrder.js`) and — proven live — never reports an undecidable relation, only a deterministic
+  `-1`/`0`/`1`. Cites `docs/Principles.md`'s own already-shipped rationale ("Ordering Is A Deterministic Total
+  Order, Never Wall-Clock Time (0.2.97)": the vector-clock machinery "built for a different object — PlacementRecord
+  ... was never the right tool for here") rather than re-deriving the distinction from scratch. Explicitly declines
+  to claim implementation equivalence: the two protocols reconcile different data — independently-published
+  `PlacementRecord` revisions versus `Command`-driven mutations of a live, shared World's `StructurePlacement`s.
+- **D — No accidental bridge.** A repo-wide sweep confirms no production file imports the live `WorldConflictResolver`
+  alongside any piece of the historical family, that every importer of any historical-family module is one of the
+  family's own six files, and that no file anywhere is named as a bridge/adapter between the two protocols.
+- **E — Conflict semantics.** Live-proves the historical path surfaces a retained, ambiguous `ConflictSet` for two
+  concurrent revisions (both kept, neither discarded), while the live path, given the same conceptual situation
+  (two concurrent edits of the same target), always converges on exactly one deterministic winner regardless of
+  arrival order — no retained ambiguity, ever. Because the two `*ConflictResolver` class names are deceptively
+  similar, this section also proves them structurally distinct — different class objects, no shared prototype
+  chain, disjoint method surfaces (`compare()` vs. `applyRemote()`) — so a future refactor that quietly aliases or
+  merges them fails this assertion first.
+- **F — Product capability distinction.** Classifies "peer placement replication" as **HISTORICAL**, explicitly
+  ruled out against the four categories a future reassessment might otherwise reach for: **not missing** (the files
+  exist), **not broken** (a real merge runs cleanly to a genuine result), **not an orphaned capability merely
+  awaiting a UI** (a live, composed replacement already exists for the adjacent collaborative-reconciliation
+  problem), and **not a deferred feature** (nothing in `docs/Roadmap.md` schedules reviving it).
+- **G — No user-facing gap.** Checks, against real import/construction sites (never bare prose — the live
+  `WorldCommandPropagationUseCase.js` header describes its own pipeline stage as "the ConflictResolver stage" in
+  plain English, which a naive text search would misfire on), that none of the five journeys this milestone's own
+  brief names — Create→Publish→Distribute→Discover; Encounter→Comment→Notification→History;
+  Snapshot→Distribution→Materialization→Placement; Publication→Placement visibility; Collaboration→World changes —
+  touch the historical family anywhere in their real UI/application surfaces.
+- **H — Documentation consistency.** Confirms `docs/Roadmap.md`'s own 0.9.311 entry classifies the family
+  **HISTORICAL** by name against the real files, that `docs/Principles.md` documents the live protocol's own
+  rationale for not reusing the historical machinery, and that neither document ever frames the historical family
+  as available, current, or pending ("TODO"/"planned"/"coming soon") work.
+- **I — Architecture regression guard.** One reusable invariant, asserted directly against the full current tree
+  (`application/`, `ui/`, `server/`, `replication/`, `core/`, `placement/`, `spatial/`, `discovery/`): no production
+  file outside the historical family's own six files may import or construct any piece of it. Verified to actually
+  fire — a synthetic caller injected during development and reverted before commit — so a future accidental
+  re-wiring fails this suite before it ships, not merely at the next audit.
+
+### What this milestone confirms
+
+The historical peer-placement-replication protocol is real, complete, and fully working — proven live, not merely
+read from source — and is, at the same time, genuinely disconnected from every production path: no composition
+root, no UI, no runtime registration, and no accidental bridge back to the live collaboration protocol that
+actually shipped for the adjacent problem. The two `*ConflictResolver` classes, despite their deceptively similar
+names, are semantically and structurally distinct tools for distinct data. None of ForkBuild's current user
+journeys require the historical protocol, and the existing documentation already describes it consistently as
+historical/superseded rather than available or pending work.
+
+### What stayed unchanged
+
+Every production file this milestone reads — the historical family's own six files, `application/
+WorldCommandPropagationUseCase.js`, `replication/WorldConflictResolver.js`, `core/WorldOperationOrder.js`,
+`docs/Roadmap.md`, `docs/Principles.md`, and every other file cited above — is byte-for-byte untouched. This
+milestone adds one new test file, one `tests.html` registration line, and this Roadmap entry, nothing else. No
+replication protocol was revived, no data was migrated, no adapter was added, and no collaboration, placement,
+Snapshot distribution, or notification behavior changed.
+
+### What comes after
+
+Per this milestone's own scope, no new product milestone is selected. This was a boundary/documentation audit, not
+a product-evolution reassessment — the STOP verdict 0.9.311 reached for the whole product stands unchanged. Per
+0.9.311's own recommendation, the next milestone is not preselected: ForkBuild's broader product evolution process
+resumes only when new, genuine user-facing evidence — not architectural interest — points somewhere.
