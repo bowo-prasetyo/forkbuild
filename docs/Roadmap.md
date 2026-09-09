@@ -89718,3 +89718,85 @@ reorganizing Place Naming's ordinary Publish/Export/Import workflow merely for s
 
 **0.9.325 — Diagnostic Tools Surface Convergence Audit** (per this milestone's own product brief) would verify the
 reorganization changed presentation only, followed by a product reassessment if warranted — not pre-scheduled here.
+
+## 0.9.325 — Diagnostic Tools Surface Convergence Audit
+
+**Type:** Test-only architecture/product audit. **Production changes:** none.
+
+0.9.324 moved the discover-candidates → select → resolve → attribute → materialize → use-claimed-position → place →
+register Snapshot pipeline (0.9.151-0.9.172) behind a new "Diagnostic Tools" trigger/popup and asserted, largely
+structurally, that nothing else changed. `tests/DiagnosticToolsSurface.test.js` already proved that placement claim
+— every action and its own result block is a descendant of the popup, the four ordinary actions and Commentary stay
+outside it, action order is unchanged, every method still calls its one injected command, `diagnosticToolsOpen` is
+never read or written by any method, and no `DiagnosticService` or new `application/` file exists. This milestone
+asks the harder, narrower question that suite was never positioned to answer: does the pipeline's own RUNTIME
+BEHAVIOR genuinely not care whether the popup is open, closed, or was never opened at all — proven through real
+composed application machinery driving a complete recovery run, not merely inferred from source-text placement?
+
+### What this milestone adds
+
+`tests/DiagnosticToolsSurfaceConvergenceAudit.test.js` (new, registered in `tests.html`), organized around one
+governing invariant:
+
+```
+Popup visibility has no causal relationship with Snapshot pipeline state.
+```
+
+Ten sections, matching the audit scope this milestone's own product brief named:
+
+- **A. Pipeline identity** — the same 8-stage sequence still exists as real, callable methods.
+- **B. Command identity** — each of the three injected commands is still invoked exactly once per action, proven
+  with the popup OPEN while the actions run (not merely a source-text grep).
+- **C. Arguments** — `resolveSelectedSnapshotCommand`/`materializeSelectedSnapshotCommand` still receive the exact
+  object REFERENCE the pipeline already held (the selected candidate; the resolution result) — no cloning, no
+  wrapping, no popup-introduced adapter.
+- **D. Results** — every early stage's own success detail AND its own error message remain independently
+  observable, both still rendered inside the popup (a check the 0.9.324 suite's own Section B did not make for
+  error markup specifically).
+- **E. State continuity — the flagship.** A complete, real 8-stage recovery run (real `ArweaveContentStore`,
+  `NostrSnapshotDiscoveryPublisher`/`NostrSnapshotDiscoveryQueryService`, `DecentralizedSnapshotResolver`,
+  `MaterializeSnapshotFromSelectedCandidateUseCase`, `WorldDiscoverySourceRegistry` — the identical machinery
+  `DecentralizedSnapshotSpatialE2EAudit` already trusts) is driven entirely through the popup, then survives
+  close → reopen with every pipeline field the exact same object reference, never merely an equal-looking copy.
+  A Discover FAILURE and a Resolve SUCCESS each independently survive the same close → reopen cycle unchanged.
+- **F. Action ordering** — Discover → Resolve → Attribute → Materialize → Use Claimed Position → Place → Register
+  still appear, textually, in exactly that order.
+- **G. Ordinary actions** — Check Snapshot Match, Distribute Snapshot, Export Snapshot, Unpublish, and Commentary
+  all still carry their exact, unrenamed labels and still render outside the popup.
+- **H. Automatic path** — `AutomaticSnapshotEncounterCascade` completes an entire background run to `REGISTERED`,
+  behaviorally proven unaffected by, and without affecting, a sibling manual popup sitting open alongside it (not
+  merely a grep for shared vocabulary).
+- **I. WorldView boundary** — `ui/views/WorldView.js`'s own composition of `OwnPublicationPanel` carries none of
+  the popup's vocabulary; every pre-existing prop binding is unchanged.
+- **J. Architecture guard** — no `DiagnosticService`, no new `application/` file named after "diagnostic," no
+  `diagnosticToolsOpen` read/write inside `methods:`.
+
+### Verdict
+
+**CLEAN.** Every section passed on the first correctly-constructed run (two fixture bugs in the audit's own test
+scaffolding — an `executeDiscoverSnapshotCandidatesCommand` query surface built ad hoc instead of reusing
+`NostrSnapshotDiscoveryQueryService`, and a `publicationId`-without-`claimedPosition` announcement that
+`NostrSnapshotDiscoveryPublisher`'s own validation silently rejects — were found and fixed in the test file itself
+before any assertion ran; neither implicated production code). No regression was found in `OwnPublicationPanel.js`,
+`ui/views/WorldView.js`, or `application/AutomaticSnapshotEncounterCascade.js`. The full pre-existing Snapshot
+pipeline test suite (`DiagnosticToolsSurface`, `WorldViewSnapshotCandidateBrowser`,
+`SelectedSnapshotCandidateResolution`, `SelectedSnapshotAttribution`, `SelectedSnapshotMaterialization`,
+`SelectedSnapshotWorldPlacement`, `SnapshotWorldRuntimeRegistration`, `SnapshotWorldPositionClaimConsumption`,
+`SnapshotCandidateInteractionCompletionAudit`, `DecentralizedSnapshotSpatialE2EAudit`,
+`SelectedSnapshotAttributionEndToEndAudit`) was re-run unmodified and passes exactly as before. Per this
+milestone's own governing brief: a clean convergence audit is itself a healthy, reportable outcome, not a reason to
+keep building.
+
+### What this milestone deliberately excludes
+
+Per its own explicit scope: diagnostic history, logging/telemetry, retry infrastructure, diagnostic event types,
+"recovery sessions," a `DiagnosticService`, Snapshot pipeline simplification, automatic fallback when manual
+recovery fails, Place Naming relocation, new diagnostic actions, and any change to automatic Snapshot discovery.
+
+### What comes after
+
+With the audit clean, the question this milestone's own brief poses next — "does the product now have a coherent
+distinction between normal user actions and exceptional recovery/diagnostic actions?" — has a straightforward
+answer: yes, and 0.9.324/0.9.325 together are why. No 0.9.326 is pre-selected. ForkBuild's broader product
+evolution process resumes on its own terms, waiting for a newly observed blocked journey, a real external
+requirement, or an actual operational problem, exactly as 0.9.323's own governing rule already established.
