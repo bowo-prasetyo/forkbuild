@@ -88962,3 +88962,88 @@ claim" UI action wired to `WorldNavigationSession`/`PlaceNamingPanel`, calling t
 `executeDiscoverPlaceNamingClaimsCommand()`, per 0.9.253's own scoping) should gain a UI path into
 `application/PlaceNamingClaimExchange.js#importClaim()`, closing the adoption half of the loop this milestone
 deliberately leaves open. Neither is assumed necessary on the strength of this milestone alone.
+
+## 0.9.317 — Place Naming Publication/Discovery Convergence Audit
+
+0.9.316 closed the actual product gap 0.9.315 identified — publishing a `PlaceNamingClaim` now genuinely reaches a
+second device through the existing, unmodified Nostr discovery path — without contaminating existing Place Naming
+semantics, and its own choice to make publication explicit rather than automatic held up. The natural next step is
+not another feature: it is proving, from a fresh and deliberately skeptical angle, that the new write path truly
+converges with the pre-existing, independently-built read path under realistic conditions, at every boundary where
+the two sides could silently drift apart in the future. This is a **test-only architectural/product audit**. It adds
+no production code and no new capability.
+
+### What this milestone adds
+
+`tests/PlaceNamingPublicationDiscoveryConvergenceAudit.test.js` (new, registered in `tests.html`) — eleven sections,
+all driving real collaborators, built independently of 0.9.316's own two test files rather than merely re-reading
+their assertions:
+
+- **A. FLAGSHIP (cross-device, instrumented)** — the full journey re-run against a brand-new scenario: Device A
+  creates and explicitly publishes; Device B, freshly built, discovers through the unmodified chain
+  (`NostrPlaceNamingDiscoverySource` → `PlaceNamingDiscoveryQueryService` → `executeDiscoverPlaceNamingClaimsCommand`).
+  Proxy instrumentation on Device A's own store/use case proves Device B's discovery makes zero property accesses
+  into either — the closure is not an artifact of any shared reference.
+- **B. Publication creates no second claim** — local claim count and the claim's own `toJSON()` are byte-for-byte
+  unchanged by `publish()`; `PlaceNamingClaimUseCase` remains the one production `new PlaceNamingClaim(` call site;
+  the publisher itself never calls a store's `save()` and never even imports the local claim store.
+- **C. Wire convergence** — the exact bytes reaching the relay equal an independently-built envelope for the same
+  claim and round-trip, field for field including the signature block, through the existing parser; a sweep confirms
+  no file in the family independently constructs a competing envelope literal.
+- **D. Discovery tag convergence — no alternate authority** — the tag attached to the published event, the tag
+  independently derived from `worldId`/`regionId`, and the tag derived from the claim's own fields are proven
+  identical; a deliberately mismatched (swapped) tag is proven, live, to make a real, already-published claim
+  genuinely undiscoverable; a grep sweep confirms the `forkbuild-place-naming:` tag literal exists in exactly one
+  file — `derivePlaceNamingDiscoveryTag()`'s own.
+- **E. Identity separation, live and pairwise** — `claimId`, publisher (signer) identity, Nostr event id, discovery
+  origin (the source instance itself), `worldId`, and `regionId` are checked as six pairwise-distinct values in one
+  concrete scenario, not merely asserted absent from a JSON shape.
+- **F. Multiple publication events** — publishing the same claim three times reaches the relay three independent
+  times with three independent event ids, mutates nothing, and creates no local duplicate; discovery's own,
+  separately-scoped (0.9.253) claim-id deduplication still collapses the three echoes to one result — reconfirming
+  that deduplication is discovery's job, never the publisher's, and that reconstructibility, deduplication, and
+  exactly-once remain three separate properties, exactly as the Notification family already established.
+- **G. Publication failure isolation** — across four distinct failure modes (relay decline, transport rejection,
+  timeout, malformed event id), the local claim is proven byte-for-byte intact, no publish-state field of any kind
+  appears on the claim's own JSON, an unrelated already-published claim on the same relay remains fully discoverable,
+  and the publisher's own source carries no retry/backoff vocabulary.
+- **H. Local-only regression** — the complete pre-0.9.316 workflow (`publish()`/`namingView()`/`retract()`) runs with
+  no `NostrPlaceNamingDiscoveryPublisher` ever imported or constructed anywhere in scope.
+- **I. Cross-device isolation, extended** — a third independent device (Carol) discovers the same claim through its
+  own freshly-built discovery objects, confirming Section A's closure is not an artifact of one particular object
+  graph; all three devices' storage instances are pairwise distinct, and discovery never writes into either
+  discovering device's own local store.
+- **J. Architectural sweep** — reconfirms the publisher/discovery non-coupling in both directions and the absence of
+  automatic publication from `PlaceNamingClaimUseCase`, then goes further than 0.9.316's own sweep: the publisher
+  never imports its Snapshot-domain sibling (`NostrSnapshotDiscoveryPublisher.js`) or this codebase's own generic
+  `core/DecentralizedPublication.js` (0.7.0) envelope, is not a subclass of anything, and no generic
+  domain-independent `DecentralizedPublisher`/`NostrPublisher` base class exists anywhere in `application/` for a
+  future domain publisher to be tempted to extend instead of mirroring by hand; no `PlaceNamingPublicationHistory`
+  file exists; no other-substrate or provider-preference vocabulary; no lifecycle/ranking/trust/history vocabulary.
+- **K. Verdict** — closure statement: the milestone's own named success criterion is proven, live, independently of
+  0.9.316's own tests; names precisely what this audit adds beyond that suite (tag-authority, multi-publish, failure
+  isolation, and cross-domain-abstraction guarantees); and recommends **STOP** — a Post-Place-Naming Distribution
+  Product Reassessment, not a preemptively-chosen next implementation milestone.
+
+### Verdict
+
+**PROVEN:** a Place Naming claim created and explicitly published on Device A can be discovered on Device B through
+the existing Nostr discovery path, using independent local stores, while local-only creation/persistence remains
+unchanged and publication introduces no new lifecycle or synchronization semantics. 0.9.315–0.9.317 is a clean,
+completed product arc: gap discovered → explicit publication built → cross-device convergence proven.
+
+### What this milestone deliberately excludes
+
+Any production-code change, and any new capability. It does not revisit whether 0.9.316's own product decision —
+publication is explicit, never automatic — was correct; that decision is treated as settled and every section
+reconfirms it holds. It does not invent deduplication, retry, unpublish/retraction, publication status, or any other
+semantics 0.9.316 deliberately deferred — it only proves the boundary as it already exists.
+
+### What comes after
+
+Not selected here. Per this milestone's own recommendation: a Post-Place-Naming Distribution Product Reassessment,
+which may well conclude STOP unless it surfaces another concrete, currently-uncompletable user journey — automatic
+publication, multi-relay fan-out, relay preference, retry/offline queues, unpublish/retraction, publication status,
+Nostr event persistence, Arweave backup, naming-claim synchronization, a generic `DecentralizedPublisher`, and
+publication-success notifications all remain deliberately unbuilt, each one introducing temporal, reliability, or
+product semantics this audit found no evidence the product currently requires.
