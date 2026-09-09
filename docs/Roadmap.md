@@ -89980,3 +89980,89 @@ No 0.9.328 is pre-selected. With the one new singleton 0.9.326 surfaced now expl
 every prior standing candidate already re-confirmed NOT READY across the 0.9.3xx reassessment sequence, ForkBuild's
 broader product evolution process again resumes on its own terms — the next time genuine evidence points somewhere,
 never by this loop re-examining its own already-settled conclusions again.
+
+## 0.9.328 — Post-Orphan-Sweep Product Evolution Reassessment
+
+**Type:** Test-only, whole-product decision milestone. **Production changes:** none.
+
+0.9.326 ran a fresh, mechanical orphan sweep and surfaced a materially larger candidate set than any prior audit,
+including one genuinely new singleton finding. 0.9.327 investigated that one singleton and returned DUPLICATIVE —
+real evidence, but only about one of the several buckets 0.9.326's own sweep actually found. This milestone's own
+brief was explicit about what NOT to do next: don't chase another orphaned implementation, and don't turn the fresh
+sweep into a recurring feature-development mechanism. Instead, it reconciles what is already known, reconfirms the
+baseline is still coherent, and runs exactly one genuinely new kind of check this sequence had not run before — a
+cross-arc integration scan for a blocked handoff between two otherwise-complete capabilities — before asking whether
+any of it clears the standing evidence gate.
+
+### What this milestone adds
+
+`tests/PostOrphanSweepReassessment.test.js` (new, registered in `tests.html`), ten sections:
+
+- **A. Reconcile 0.9.326's fresh sweep** — every bucket it found (three empty placeholder stubs, the Delegation
+  family, the historical replication family, the Reconciliation Decision family, the bypassed-composition-root
+  family, and the one singleton) re-run through the identical mechanical sweep and given a FINAL semantic
+  classification, folding in 0.9.327's own naming correction (the singleton belongs to Base's own family, not
+  Bitcoin's) and verdict (DUPLICATIVE) directly from its own test file, rather than re-derived.
+- **B. Reconfirm the product baseline** — a direct `git diff` against 0.9.326's own commit confirms zero production
+  files changed since (0.9.327 was genuinely test-only), and the full reachable-capability inventory re-verified
+  fresh, including the always-mounted top nav's own exact eleven-link count, unaffected.
+- **C. Verify the six established user journeys** — all six close hop to hop against real, unmodified source; no
+  seventh introduced merely for coverage's own sake.
+- **D. Re-evaluate the four standing deferred candidates** — re-tested against the same five-question bar; none has
+  new evidence.
+- **E. Cross-arc integration scan — THIS MILESTONE'S OWN FLAGSHIP.** A live, mechanical search for "Capability A =
+  complete, Capability B = complete, A -> B impossible for the user." Two already-known pairs (Content Provider
+  preference -> preferred Snapshot Placement; Bitcoin/Base wallet signing -> archival -> observation, re-verified
+  structurally at the exact `finalizeBitcoinAnchorSignedPsbt()`/`finalizeBaseSignedTransaction()` call sites) are
+  reconfirmed genuinely connected. One new, genuinely plausible candidate is investigated all the way to a verdict:
+  the shipped, routed Reconciliation Candidate Leaderboard (`/reconciliation-leaderboard`) exposes a "Decisions"
+  evidence-kind filter whose own data traces to the archive's own `reconciliationDecisionRecords` collection
+  (0.8.150), and every production writer of that collection has zero `ui/` construction sites. Rather than stopping
+  there and calling it a gap, this section runs the distinguishing test: the family's own more fundamental concept
+  (`PublisherLeaderboardSnapshotClaim`) is checked the identical way, across all five family writers at once, and
+  found equally unoriginable anywhere in production — proving this is consistent, deliberate, family-wide
+  "receive/archive/compare/exchange, never author" architecture, not an asymmetric integration gap. A live run of
+  the exact shipped `reconstructPublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardPage()` against
+  `PublicationObservationArchive.empty()` on both sides — the only archive shape any real replica running nothing
+  but reachable production code can ever have — confirms the page is symmetrically, permanently empty for both
+  Claims and Decisions alike. Zero genuine cross-arc integration gaps found.
+- **F. Operational evidence** — checked honestly against the recent Roadmap record for any on-file trace of a
+  workflow that repeatedly fails, a recovery a user cannot complete, an opaque operation, a deployment constraint, or
+  a changed external requirement. None found; none manufactured — this is a test-only codebase with no live
+  deployment or user telemetry, so operational evidence can only ever mean what is recorded on file.
+- **G. Architecture-health classification** — every remaining piece of unused code sorted into historical /
+  superseded / internal / placeholder / deliberately deferred, never left as undifferentiated "debt requiring product
+  work." The Publisher Leaderboard Claim/Decision family is classified `internal` on the strength of Section E's own
+  investigation, not assumption.
+- **H. Evidence gate** — the 0.9.314/0.9.327 executable classifier, reused verbatim, applied to all seven open
+  candidates this milestone touches (the four standing deferred candidates, the Delegation seam, the Reconciliation
+  Decision UI-writer candidate Section E investigated, and the automatic-cascade-visibility candidate 0.9.326 already
+  declined). None clears it.
+- **I. Candidate ranking** — vacuous; zero survivors.
+- **J. Final decision.**
+
+### Verdict
+
+**STABLE_STOP — STOP.** Every candidate 0.9.326's own fresh sweep found is now reconciled into a final
+classification; the product baseline and all six established journeys are reconfirmed unchanged; the four standing
+deferred candidates remain correctly deferred; and — this milestone's own real contribution — a genuine search for a
+blocked handoff between complete capabilities found exactly one plausible candidate, investigated it to a verdict
+rather than assuming either answer, and correctly recognized it as consistent deliberate architecture rather than a
+gap. Per this milestone's own governing framework, STABLE — STOP is the primary successful outcome: the product's
+entire reachable surface, its architecture-debt inventory, and now the seams between its complete capabilities have
+all been verified coherent.
+
+### What this milestone deliberately excludes
+
+Per its own explicit scope: no "Dead Code Cleanup" milestone for `BaseAnchorPublicationObservationView.js` (obsolete
+but not causing a product problem); no UI writer for the Reconciliation Decision family (Section E's own
+investigation found this to be deliberate, not missing); no activation of the Delegated Ownership & Authorization
+seam; no new user journey introduced for coverage's own sake; no repeat of the fresh orphan sweep as a recurring
+feature-development mechanism.
+
+### What comes after
+
+No 0.9.329 is pre-selected. ForkBuild's broader product evolution process ends this arc cleanly here, and resumes on
+its own terms only the next time genuine evidence — a newly observed blocked journey, a real external requirement, an
+actual operational problem — points somewhere, never by this loop re-examining its own already-settled conclusions
+again.
