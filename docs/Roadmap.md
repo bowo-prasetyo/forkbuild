@@ -88572,3 +88572,110 @@ Per this milestone's own scope, no new product milestone is selected. This was a
 a product-evolution reassessment — the STOP verdict 0.9.311 reached for the whole product stands unchanged. Per
 0.9.311's own recommendation, the next milestone is not preselected: ForkBuild's broader product evolution process
 resumes only when new, genuine user-facing evidence — not architectural interest — points somewhere.
+
+## 0.9.313 — Stable Product Baseline Audit
+
+**Type:** Test-only, whole-product baseline checkpoint. **Production changes:** None.
+
+0.9.311 (Post-Placement Product Evolution Reassessment) asked "what should we build next?" and answered STOP.
+0.9.312 (Historical Placement Replication Boundary Audit) then closed the one concrete, actionable finding that
+STOP left on record. This milestone asks a genuinely different question than either of them: not "what should we
+build next," but **"is there anything in the current product that should prevent us from treating this
+architecture as a stable baseline?"** The central invariant this milestone checks:
+
+> Every currently supported product capability has a clear owner, a reachable entry point, a defined semantic
+> boundary, and no known obsolete implementation competing with it.
+
+### What this milestone adds
+
+`tests/StableProductBaselineAudit.test.js` (new, registered in `tests.html`), built against real, unmodified
+production collaborators across `core/`, `application/`, `replication/`, `identity/`, and `ui/`. Ten lettered
+sections:
+
+- **A — Product capability inventory.** Nineteen named surfaces classified **IMPLEMENTED+REACHABLE** (each with a
+  real, always-mounted nav destination or established composition — reconfirmed against `ui/App.js`'s own top nav,
+  0.9.307/0.9.311's own A14/A16 signal, held unchanged a third time), three **IMPLEMENTED+INTERNAL** (Automatic
+  Snapshot Encounter Retention, `getPlacementInfoForPublication()`, and the family of bypassed-but-reachable
+  composition roots `CreateIdentityUseCase`/`CreateAuthorizationUseCase`/`CreateWorldLayoutUseCase`/
+  `CreatePlacementRegistryUseCase`), one **HISTORICAL** (the 0.9.312 peer placement-replication family, carried
+  forward explicitly, per this milestone's own brief), and three **DEFERRED** (placement navigation/management,
+  Discovery-level Commentary count, collaboration conflict/divergence UI — each with its own already-recorded,
+  still-unmet evidence bar, not a new gap this milestone invents). Zero capabilities classify as unexplained
+  orphans.
+- **B — User-journey closure.** Five product-level chains traced hop to hop against real source, one executed
+  live end to end: Editor→Publish→Distribution→Discovery→Inspection; Encounter→Commentary→Notification→
+  Notification History; Snapshot→Distribution→Discovery→Verification→Materialization→Placement (verification and
+  materialization confirmed as one bound hash-verify-then-store pipeline, not a skipped stage);
+  Publication→Multiple Placements→Placement Visibility, terminating at observation by design (0.9.308-0.9.310's
+  own already-converged finding); Collaboration→Command Propagation→Conflict Resolution, proven live with a real
+  `Command`, a real `World`, and the real `WorldConflictResolver`. No chain dead-ends short of its own natural
+  terminus.
+- **C — Single-source-of-truth audit.** Eight areas (Publication placement, Commentary, Notification persistence,
+  Discovery, provider preferences, collaboration, World state, Snapshot materialization) checked directly against
+  real source: in every case the UI or dependent use case reads through the one authoritative collaborator rather
+  than maintaining an independent copy that could drift out of sync.
+- **D — Composition-root audit.** Five checked seams confirm capabilities are reached through their intended
+  composition roots rather than constructed ad hoc inside UI components — the exact class of bug the 0.9.312 audit
+  would have caught, checked here from the construction side: World-session infrastructure is built once at
+  `CreateWorldViewUseCase.js`, not inside `WorldView.js`; Publish infrastructure is built once at `ui/main.js`, not
+  inside `EditorView.js`; notification retrieval and identity construction are likewise composed exactly once; and
+  neither real composition root references the historical replication family.
+- **E — Identity-boundary audit.** Ten named identity concepts (Publication identity, Placement identity, Snapshot
+  identity, Content hash, Material URI, Discovery origin, Publication origin, Provider key, Role, Authenticated
+  identity, World position) checked pairwise and confirmed structurally distinct wherever applicable — with one
+  explicit, deliberate exception recorded rather than hidden: Snapshot identity IS content-hash-keyed, by
+  `core/SnapshotDiscoveryEnvelope.js`'s own documented design, never by a Publication's own id.
+- **F — Temporal-boundary audit.** Eight temporal concepts checked, with live proof of both boundaries this
+  milestone's own brief named directly: **persisted notification != delivered != seen != read** (`NotificationEvent`
+  carries none of those fields; `NotificationEventStore.js`'s own header names `getUnread()`/`markRead()` as
+  deliberately excluded — "durable history of notification facts, not a recipient's inbox"), and **placement
+  record != current World presence** (the placement-record list renders unconditionally, independent of live
+  materialization; a live `Command` mutates the `World`'s own current state directly, never re-derived from the
+  retained operation).
+- **G — Historical implementation guard.** The 0.9.312 regression guard reconfirmed fresh with zero violations,
+  plus one additional similarly-named candidate (`replication/ConflictPolicy.js`) checked directly and confirmed
+  to already sit inside the same guarded family rather than being a second, separately-overlooked historical
+  implementation.
+- **H — Deliberately absent capabilities.** Nine absences recorded as explicit architectural decisions, each
+  checked against real source and its own documented rationale, never treated as a defect: notification
+  delivery/push, unread/read state, provider fallback, provider ranking, automatic provider switching, placement
+  navigation, placement management duplication, speculative collaboration features (live cursors,
+  conflict/divergence UI), and revived peer-placement replication.
+- **I — Product-gap scan.** Evidence-based, explicitly biased against "interesting API"/"unused class"/"missing
+  abstraction"/"possible integration"/"future enhancement." The three standing DEFERRED candidates remain real but
+  unpromoted; no TODO/FIXME anywhere names an unclassified blocking gap; the one candidate closest to a genuine
+  gap (collaboration conflict/divergence UI) is the same one 0.9.311 already found and correctly declined absent
+  user-facing evidence of actual harm — not manufactured here to justify continuing the sequence.
+- **J — Final baseline verdict.** **STABLE_WITH_DEFERRED_GAPS** — not bare STABLE, because three real,
+  previously-identified candidates remain genuinely open, each with its own already-recorded reason for not being
+  selected; not ACTION_REQUIRED, because none of the three is newly discovered, none blocks any of the five
+  journeys Section B traced end to end, and nothing in the current product actively prevents treating this
+  architecture as a stable baseline.
+
+### What this milestone confirms
+
+The product-capability inventory has zero unexplained orphans. All five named product-level chains close, including
+one proven live. UI state across eight accumulated-seam areas remains observation, never a competing authoritative
+copy. Capabilities are reached through their intended composition roots. No accidental identity or temporal
+collapse was found among ten and eight named concepts respectively. The 0.9.312 historical-implementation guard
+still fires with zero violations, and no second, separately-overlooked historical implementation was found. Nine
+absences are recorded as deliberate decisions, not defects. The evidence-based product-gap scan surfaced no new
+user-blocking gap — only the same three standing, already-classified DEFER candidates prior milestones already left
+on record.
+
+### What stayed unchanged
+
+Every production file this milestone reads is byte-for-byte untouched. This milestone adds one new test file, one
+`tests.html` registration line, and this Roadmap entry, nothing else. No refactor, no deletion of historical code,
+no new abstraction, no UI, no notification delivery, no placement navigation, no revived replication, no
+collaboration redesign, no provider-preference generalization, no lifecycle states, and no change to any existing
+semantic contract.
+
+### What comes after
+
+**STABLE_WITH_DEFERRED_GAPS** is a deliberate stopping point, not a prompt to manufacture `0.9.314`. Per this
+milestone's own brief: since no genuine new user-blocking gap emerged, the 0.9.x product-evolution expansion loop
+stops here until new, genuine user-facing evidence — not architectural interest, not roadmap continuity — points
+somewhere. The three standing DEFERRED candidates (placement navigation/management, Discovery-level Commentary
+count, collaboration conflict/divergence UI) remain on record, exactly where prior milestones already correctly
+left them, available to a future milestone that wants to take one on once real evidence, not inertia, warrants it.
