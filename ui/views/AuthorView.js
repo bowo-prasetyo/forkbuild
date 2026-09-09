@@ -1,4 +1,4 @@
-import { ref, onMounted, computed } from 'vue';
+import { ref, onMounted, computed, inject } from 'vue';
 import { useRoute } from 'vue-router';
 import { CreateDiscoveryUseCase } from '../../application/CreateDiscoveryUseCase.js';
 import PublicationCatalog from '../components/PublicationCatalog.js';
@@ -22,7 +22,13 @@ export default {
         const route = useRoute();
         const author = route.params.username;
         const allPublications = ref([]);
-        const { listPublicationsUseCase } = new CreateDiscoveryUseCase().execute();
+        // 0.9.339 — see ui/components/PublicationCatalog.js's own
+        // identical comment: the "Original Works & Forks" lineage below
+        // is this author's own Repository-shaped view, so it shares the
+        // same merged discovery composition PublicationCatalog itself
+        // now uses.
+        const decentralizedDiscoveryProvider = inject('decentralizedPublicationDiscoveryProvider', null);
+        const { listPublicationsUseCase } = new CreateDiscoveryUseCase().execute({ decentralizedDiscoveryProvider });
 
         onMounted(() => {
             allPublications.value = listPublicationsUseCase.execute({ author });

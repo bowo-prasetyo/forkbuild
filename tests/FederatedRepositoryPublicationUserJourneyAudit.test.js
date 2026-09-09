@@ -201,43 +201,56 @@ async function run() {
     // ===============================================================
     let flagshipPublication;
     let flagshipProvider;
+    let flagshipView;
     {
+        // UPDATED by 0.9.339 — Merge Decentralized Publication Discovery
+        // into Repository Discovery. This whole Section A originally
+        // proved a GAP: the flagship Publication was genuinely resolved
+        // and genuinely admitted, yet invisible to the real Repository
+        // page's own search call. 0.9.339 closed exactly that gap, at
+        // exactly the one composition root this section itself named —
+        // reconfirmed fresh below, live, rather than left describing a
+        // state that no longer holds.
+
         // A1. Structural: ui/components/PublicationCatalog.js — the ONE
         // component both RepositoryView.js and AuthorView.js mount — is
         // what a real user's "Repository" navigation actually renders.
         const catalogSource = await readSource('ui/components/PublicationCatalog.js');
-        assert(catalogSource.includes('new CreateDiscoveryUseCase().execute()'),
-            '1. ui/components/PublicationCatalog.js builds its discoveryProvider/searchPublicationsUseCase from application/CreateDiscoveryUseCase.js — the same composition root 0.9.337 itself named.');
-        assert(!/inject\(.*decentralizedPublicationDiscoveryProvider/.test(catalogSource) &&
-            !/DecentralizedPublicationDiscoveryProvider/.test(catalogSource),
-            '2. ui/components/PublicationCatalog.js never injects or references decentralizedPublicationDiscoveryProvider at all — confirmed by source, not inference.');
+        assert(catalogSource.includes('new CreateDiscoveryUseCase().execute({ decentralizedDiscoveryProvider })'),
+            '1. UPDATED (0.9.339): ui/components/PublicationCatalog.js builds its discoveryProvider/searchPublicationsUseCase from application/CreateDiscoveryUseCase.js, now passing through the injected decentralizedDiscoveryProvider — the same composition root 0.9.337 itself named, now actually reaching the shared provider.');
+        assert(catalogSource.includes("inject('decentralizedPublicationDiscoveryProvider', null)"),
+            '2. UPDATED (0.9.339): ui/components/PublicationCatalog.js now injects decentralizedPublicationDiscoveryProvider (defaulting to null when absent) and threads it into CreateDiscoveryUseCase — confirmed by source, not inference.');
 
         const repositoryViewSource = await readSource('ui/views/RepositoryView.js');
         assert(repositoryViewSource.includes('<PublicationCatalog') && !/decentralizedPublicationDiscoveryProvider/.test(repositoryViewSource),
-            '3. ui/views/RepositoryView.js is a thin wrapper around PublicationCatalog with no discovery wiring of its own.');
+            '3. ui/views/RepositoryView.js is still a thin wrapper around PublicationCatalog with no discovery wiring of its own — the injection lives in PublicationCatalog.js itself, not duplicated in every host view.');
 
         // A2. Structural: application/CreateDiscoveryUseCase.js itself,
-        // reconfirmed fresh (0.9.337's own Section J already established
-        // this; re-verified here because this milestone's own verdict
-        // depends on it, not on citation).
+        // reconfirmed fresh — UPDATED (0.9.339): it now accepts the
+        // shared provider and composes it via discovery/
+        // CompositeDiscoveryProvider.js's own small, generic merge, while
+        // still constructing LocalDiscoveryProvider exactly as before.
         const createDiscoverySource = await readSource('application/CreateDiscoveryUseCase.js');
         assert(createDiscoverySource.includes('new LocalDiscoveryProvider(storageProvider)') &&
-            !/DecentralizedPublicationDiscoveryProvider/.test(createDiscoverySource),
-            '4. application/CreateDiscoveryUseCase.js constructs a plain LocalDiscoveryProvider and never references the decentralized provider.');
+            createDiscoverySource.includes('new CompositeDiscoveryProvider([localDiscoveryProvider, decentralizedDiscoveryProvider])'),
+            '4. UPDATED (0.9.339): application/CreateDiscoveryUseCase.js still constructs a plain LocalDiscoveryProvider, and now ALSO composes an optional decentralizedDiscoveryProvider alongside it via CompositeDiscoveryProvider.');
 
-        // A3. LIVE negative proof: build the flagship decentralized-origin
+        // A3. LIVE proof: build the flagship decentralized-origin
         // Publication (documentId "9x7c2m", the brief's own flagship id),
         // resolve it, and admit it into a provider standing in for the
         // one real, shared, application-lifetime instance ui/main.js
         // constructs (0.9.337 Section A/I already proved structurally
         // that exactly one such instance exists). Then run the EXACT
         // production call PublicationCatalog.js's own onMounted()/runQuery()
-        // makes: `new CreateDiscoveryUseCase().execute().searchPublicationsUseCase`.
+        // now makes — `new CreateDiscoveryUseCase().execute({ decentralizedDiscoveryProvider })`
+        // — with `decentralizedDiscoveryProvider` standing in for exactly
+        // what `inject('decentralizedPublicationDiscoveryProvider', null)`
+        // would hand a real mounted component.
         const alice = makeIdentity('Alice');
         flagshipPublication = makePublication(
             { documentId: '9x7c2m', title: 'The Federated Atlas', author: 'alice' }, alice
         );
-        const flagshipView = await resolveAsDecentralizedPublication(flagshipPublication, alice);
+        flagshipView = await resolveAsDecentralizedPublication(flagshipPublication, alice);
         assert(flagshipView.resolved === true, `5. setup: the flagship Publication genuinely resolves (${flagshipView.reason}).`);
 
         flagshipProvider = new DecentralizedPublicationDiscoveryProvider();
@@ -245,25 +258,27 @@ async function run() {
         assert(flagshipProvider.list().length === 1,
             '6. setup: the flagship Publication is admitted into the shared provider, exactly as 0.9.337 proved live.');
 
-        // The real production composition PublicationCatalog.js calls —
-        // NOT wired to flagshipProvider, because no production file wires
-        // it there (A1/A2 above).
-        const { searchPublicationsUseCase: repositoryPageSearch } = new CreateDiscoveryUseCase().execute();
+        // The real production composition PublicationCatalog.js calls,
+        // now WITH the shared provider threaded through, exactly as A1
+        // above confirmed the real component does.
+        const { searchPublicationsUseCase: repositoryPageSearch } = new CreateDiscoveryUseCase().execute({
+            decentralizedDiscoveryProvider: flagshipProvider
+        });
         const repositoryPageResult = repositoryPageSearch.execute({ text: 'federated atlas' });
-        assert(repositoryPageResult.items.length === 0,
-            '7. THE GAP: the exact SearchPublicationsUseCase instance the real Repository page (PublicationCatalog.js via CreateDiscoveryUseCase.js) calls does NOT find the flagship Publication — it is invisible to a real user\'s Repository search, even though it is genuinely resolved and genuinely admitted.');
+        assert(repositoryPageResult.items.length === 1 && repositoryPageResult.items[0] === flagshipView.content,
+            '7. UPDATED (0.9.339) — THE GAP IS CLOSED: the exact SearchPublicationsUseCase instance the real Repository page (PublicationCatalog.js via CreateDiscoveryUseCase.js) calls NOW finds the flagship Publication — it is visible to a real user\'s Repository search, exactly as 0.9.337\'s own headline originally promised.');
 
-        // A4. By contrast — and this is the capability 0.9.337 genuinely
-        // built, not a fiction — a SearchPublicationsUseCase constructed
-        // DIRECTLY on the shared provider (exactly 0.9.337's own Section C
-        // construction) finds it immediately. The class works; only the
-        // real UI's composition root never reaches it.
+        // A4. And Repository search over the shared provider ALONE never
+        // required going through this composition root in the first
+        // place (0.9.337's own capability, unchanged) — restated here to
+        // show the composite result agrees with the direct one, not just
+        // that it is non-empty.
         const directSearch = new SearchPublicationsUseCase(flagshipProvider);
         const directResult = directSearch.execute({ text: 'federated atlas' });
         assert(directResult.items.length === 1 && directResult.items[0] === flagshipView.content,
-            '8. by contrast, SearchPublicationsUseCase(flagshipProvider) — the shared provider directly — finds it immediately: the capability exists in the class, it simply is not reachable from application/CreateDiscoveryUseCase.js, the one composition root every real UI surface (Repository, Author, Editor\'s fork/load lookup, World View) actually uses.');
+            '8. by contrast, SearchPublicationsUseCase(flagshipProvider) — the shared provider directly — finds the identical single result the real composition root (A3 above) now also finds: the composite adds the decentralized candidate, it never duplicates or reshapes it.');
     }
-    console.log('✓ Section A: Repository visibility FAILS through the real UI composition root. ui/components/PublicationCatalog.js (RepositoryView.js and AuthorView.js\'s shared implementation) builds its search exclusively from application/CreateDiscoveryUseCase.js, which constructs a plain LocalDiscoveryProvider and never references decentralizedPublicationDiscoveryProvider anywhere. A flagship Publication (documentId "9x7c2m") that is genuinely resolved and genuinely admitted into the one shared provider is invisible to the exact SearchPublicationsUseCase call the real Repository page runs — even though a SearchPublicationsUseCase built directly on that same shared provider finds it immediately. This is a real, narrow, precisely-located gap: one composition root, not the search class itself.');
+    console.log('✓ Section A: UPDATED (0.9.339). Repository visibility through the real UI composition root is now CONFIRMED, not FAILED. ui/components/PublicationCatalog.js (RepositoryView.js and AuthorView.js\'s shared implementation) now injects the shared decentralizedPublicationDiscoveryProvider and threads it into application/CreateDiscoveryUseCase.js, which composes it alongside LocalDiscoveryProvider via discovery/CompositeDiscoveryProvider.js. A flagship Publication (documentId "9x7c2m") that is genuinely resolved and genuinely admitted into the one shared provider is now found by the exact SearchPublicationsUseCase call the real Repository page runs, matching the result a SearchPublicationsUseCase built directly on that same shared provider already found. The gap this section originally located — one composition root, not the search class itself — is closed at exactly that root.');
 
     // ===============================================================
     // Section B — Selection identity: what does PublicationCatalog.js's
@@ -347,30 +362,45 @@ async function run() {
     // reach a decentralized-origin Publication the same way?
     // ===============================================================
     {
+        // UPDATED by 0.9.339 — Merge Decentralized Publication Discovery
+        // into Repository Discovery. This section originally proved the
+        // SAME root-cause gap Section A did: EditorView.js's own
+        // findPublicationUseCase silently returned null for a
+        // decentralized-origin Publication's own id. 0.9.339 closed it
+        // at the identical composition root, so sourcePublication is no
+        // longer silently null.
+
         // D1. Structural: EditorView.js's own fork branch, reproduced
         // faithfully — findPublicationUseCase.execute(route.query.publication)
         // then forkDocumentUseCase.execute(route.query.fork, identityProvider, sourcePublication).
         const editorViewSource = await readSource('ui/views/EditorView.js');
-        assert(editorViewSource.includes("const { findPublicationUseCase } = new CreateDiscoveryUseCase().execute();"),
-            '1. ui/views/EditorView.js builds findPublicationUseCase from the SAME application/CreateDiscoveryUseCase.js composition root Section A already proved never sees the decentralized provider.');
+        assert(editorViewSource.includes("inject('decentralizedPublicationDiscoveryProvider', null)") &&
+            /new CreateDiscoveryUseCase\(\)\.execute\(\{\s*decentralizedDiscoveryProvider:/.test(editorViewSource),
+            '1. UPDATED (0.9.339): ui/views/EditorView.js builds findPublicationUseCase from the SAME application/CreateDiscoveryUseCase.js composition root Section A proved is now merged, now also injecting and threading through the shared decentralized provider.');
         assert(editorViewSource.includes('sourcePublication = findPublicationUseCase.execute(route.query.publication);') &&
             editorViewSource.includes('forkDocumentUseCase.execute(route.query.fork, identityProvider, sourcePublication);'),
-            '2. the fork branch looks up route.query.publication (Publication.id) via findPublicationUseCase, then hands the result (or null) to forkDocumentUseCase alongside route.query.fork (documentId) — exactly the identity Section B proved selection carries.');
+            '2. the fork branch looks up route.query.publication (Publication.id) via findPublicationUseCase, then hands the result (or null) to forkDocumentUseCase alongside route.query.fork (documentId) — exactly the identity Section B proved selection carries. Unchanged by 0.9.339 — only what findPublicationUseCase itself can see changed, not this call shape.');
 
-        // D2. LIVE: the exact findPublicationUseCase EditorView.js builds,
-        // asked for the flagship Publication's own id — the same id
-        // forkPublication(pub) put in route.query.publication.
-        const { findPublicationUseCase } = new CreateDiscoveryUseCase().execute();
+        // D2. LIVE: the exact findPublicationUseCase EditorView.js builds
+        // — now WITH the shared provider threaded through, exactly as D1
+        // above confirmed the real component does — asked for the
+        // flagship Publication's own id, the same id forkPublication(pub)
+        // put in route.query.publication.
+        const { findPublicationUseCase } = new CreateDiscoveryUseCase().execute({
+            decentralizedDiscoveryProvider: flagshipProvider
+        });
         const lookedUp = findPublicationUseCase.execute(flagshipPublication.id);
-        assert(lookedUp === null,
-            "3. findPublicationUseCase.execute(pub.id) — the real production lookup EditorView.js's fork branch runs — returns null for the flagship Publication: it only ever searches LocalDiscoveryProvider (application/CreateDiscoveryUseCase.js, Section A), which never learned about it. sourcePublication silently defaults to null, not an error.");
+        assert(lookedUp === flagshipView.content,
+            "3. UPDATED (0.9.339): findPublicationUseCase.execute(pub.id) — the real production lookup EditorView.js's fork branch runs — NOW finds the flagship Publication instance itself, the SAME root-cause fix Section A applied to Repository search. sourcePublication is no longer silently null.");
 
         // D3. LIVE: forkDocumentUseCase.execute(), called with the exact
         // identity Repository selection carries (flagshipPublication.documentId,
-        // sourcePublication=null as D2 produced), against a StorageProvider
-        // that never received the material — the same clean failure
-        // Section C already proved for Explore, confirming Fork has no
-        // separate, decentralized-specific failure mode either.
+        // sourcePublication=lookedUp as D2 now produces), against a
+        // StorageProvider that never received the material — the same
+        // clean failure Section C already proved for Explore, confirming
+        // Fork has no separate, decentralized-specific failure mode
+        // either. This failure is now about MATERIAL absence only —
+        // D2's own identity lookup no longer fails first.
         const emptyStorage = new InMemoryStorageProvider();
         const forkUseCase = new ForkDocumentUseCase(emptyStorage);
         assertThrows(
@@ -385,7 +415,7 @@ async function run() {
         assert(!/Decentralized|decentralizedPublicationDiscoveryProvider/.test(forkUseCaseSource),
             '5. application/ForkDocumentUseCase.js contains no decentralized-specific code at all — it only ever knows about a documentId and an optional Publication.');
     }
-    console.log('✓ Section D: Fork reaches the flagship Publication through the EXACT SAME findPublicationUseCase/forkDocumentUseCase/documentId call shape a local Publication uses — application/ForkDocumentUseCase.js itself is completely decentralized-agnostic. The lookup gap is upstream and singular: findPublicationUseCase (built from the same application/CreateDiscoveryUseCase.js Section A named) cannot see a decentralized-origin Publication by its own id, so sourcePublication silently defaults to null rather than erroring — a real, precisely-located consequence of the SAME Section A gap, not a second, independent one.');
+    console.log('✓ Section D: UPDATED (0.9.339). Fork reaches the flagship Publication through the EXACT SAME findPublicationUseCase/forkDocumentUseCase/documentId call shape a local Publication uses — application/ForkDocumentUseCase.js itself is completely decentralized-agnostic. The lookup gap this section originally found was upstream and singular: findPublicationUseCase (built from the same application/CreateDiscoveryUseCase.js Section A named) could not see a decentralized-origin Publication by its own id, so sourcePublication silently defaulted to null rather than erroring. 0.9.339 closed that SAME Section A root cause, so findPublicationUseCase.execute(pub.id) now returns the flagship Publication itself, and sourcePublication is no longer silently null.');
 
     // ===============================================================
     // Section E — Material acquisition boundary: is "resolved
@@ -616,7 +646,13 @@ async function run() {
     // ===============================================================
     {
         console.log('\n--- Section J: Final Verdict ---');
-        console.log('Verdict: ONE_NARROW_PRODUCT_GAP');
+        console.log('Verdict (AS OF 0.9.338, WHEN THIS AUDIT WAS WRITTEN): ONE_NARROW_PRODUCT_GAP');
+        console.log('UPDATE (0.9.339 — Merge Decentralized Publication Discovery into Repository ' +
+            'Discovery): the gap this verdict describes is now CLOSED — Sections A and D above ' +
+            'were reconfirmed live against the 0.9.339 production code and now find the flagship ' +
+            'Publication through the real UI composition root. The verdict below is preserved as ' +
+            'this audit\'s own point-in-time record of the gap it found and the exact fix it ' +
+            'recommended (its own "Recommended next step" paragraph is, verbatim, what 0.9.339 built).');
         console.log(`
 The gap is real, small, and precisely located: application/CreateDiscoveryUseCase.js
 — the ONE composition root ui/components/PublicationCatalog.js (Repository,

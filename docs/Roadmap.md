@@ -91156,3 +91156,80 @@ to compose the already-injected, already-shared decentralized provider (where av
 source/origin field on a result. That one change would close both Section A and Section D's lookup gap at once, since
 both call through this same composition root — the product decision the brief asked to defer (whether proactive
 decentralized discovery, e.g. Nostr, is actually required) remains open and is deliberately not settled here.
+
+## 0.9.339 — Merge Decentralized Publication Discovery into Repository Discovery
+
+**Type:** Production wiring, deliberately small. **Production changes:** one new file
+(`discovery/CompositeDiscoveryProvider.js`), `application/CreateDiscoveryUseCase.js` (accepts an optional
+`decentralizedDiscoveryProvider` and composes it), and five call sites that now inject the shared instance and thread
+it through: `ui/components/PublicationCatalog.js`, `ui/views/AuthorView.js`, `ui/views/EditorView.js`,
+`ui/views/RecentWorldsView.js`, `ui/views/WorldView.js`. No other production file is touched.
+
+0.9.338's own audit located the one remaining gap with precision: `application/CreateDiscoveryUseCase.js` — the
+composition root every real UI surface calls — constructed a fresh `LocalDiscoveryProvider` every time and never
+merged in the app-wide `DecentralizedPublicationDiscoveryProvider` `ui/main.js` already builds and shares (0.9.337).
+Its own recommended fix, verbatim: "a small, generic composite discoveryProvider, never a new Repository-owned store,
+never a source/origin field on a result." This milestone builds exactly that, and nothing else.
+
+### The wiring itself
+
+`discovery/CompositeDiscoveryProvider.js` extends `DiscoveryProvider` and forwards each method to every provider it
+was given: `list()`/`findByAuthor()`/`findByParentId()`/`findByDocumentId()` concatenate every provider's own results
+(in constructor order — an implementation detail, never a designed "local first"/"decentralized first" policy);
+`findById()` returns the first match found. It performs no discovery, resolution, deduplication, ranking, or source
+preference of its own.
+
+`application/CreateDiscoveryUseCase.js#execute()` now takes an options object with an optional
+`decentralizedDiscoveryProvider`. It still unconditionally constructs `LocalDiscoveryProvider` exactly as before; only
+when a caller supplies the shared provider does it compose the two via `CompositeDiscoveryProvider`. A caller that
+passes nothing — including every existing test and any future caller that forgets to update — gets back the exact
+pre-0.9.339 behavior, unchanged.
+
+Each of the five call sites now does `inject('decentralizedPublicationDiscoveryProvider', null)` and threads the
+result through `new CreateDiscoveryUseCase().execute({ decentralizedDiscoveryProvider })` — the smallest
+dependency-injection change the 0.9.338 audit's own verdict called for, applied uniformly rather than to Repository
+alone.
+
+### Why widen Editor/World View/Recent Worlds/Author View too, not Repository alone
+
+0.9.338's own Section D already proved `EditorView.js`'s fork-time `findPublicationUseCase` fails for the SAME root
+cause as Repository's own gap — widening it is required by that finding, not merely convenient. `WorldView.js`'s
+`listPublicationsUseCase` is used only for title/author enrichment of loaded/nearby world markers and a
+`catalogEmpty` flag; World Search itself (`session.searchWorld()`, built inside `application/CreateWorldViewUseCase.js`'s
+own separate, untouched composition) never goes through this seam, so `docs/Principles.md`'s own "Discovery Is One
+Path, Not Two" is unaffected. `RecentWorldsView.js`'s `discoveryProvider.findByDocumentId(documentId)` only ever looks
+up a `documentId` already present in this replica's own local visit history — widening cannot surface a World never
+visited, only enrich one already known. `AuthorView.js`'s own "Original Works & Forks" lineage IS Repository, scoped
+to one author — the same composition `PublicationCatalog.js` already uses for the unscoped case. Each consumer was
+individually audited for compatibility rather than assumed compatible because it shares a composition root.
+
+### Tests
+
+`tests/DecentralizedPublicationRepositoryMerge.test.js` (new) — the flagship: the composition root diagram confirmed
+structurally; the exact provider instance populated during resolution proven (by object identity) to be the one
+Repository discovery consumes, with the "provider A ≠ provider B" failure mode reproduced on purpose to prove the
+test would catch it; local regression; decentralized discovery with zero Repository-specific code; combined results
+with neither source suppressing the other; ordering (query.sort fully governs display order regardless of provider
+composition order); identity preservation; failure isolation (omitted/null/empty decentralized provider); no
+duplicate admission; an individual compatibility audit of every existing non-Repository consumer; the brief's own
+"provider isolation" test (federation is additive, and additivity survives the decentralized side going empty); and a
+FLAGSHIP running a real, live, authenticated peer connection through resolution, admission, the exact production
+`PublicationCatalog.js` composition, Repository search, and into the already-proven (0.9.338) Explore/Fork identity
+path, unmodified. A closing section confirms the exclusion list: no Nostr, no new peer discovery, no
+`FederatedDiscoveryProvider` domain concept, no ranking/trust/TTL/source-preference, and no change to
+`SearchPublicationsUseCase.js`, `LocalDiscoveryProvider.js`, or `DecentralizedPublicationDiscoveryProvider.js` itself.
+
+Six prior audits (`FederatedRepositoryDiscoverySeamAudit`, `FederatedRepositoryProductGapAudit`,
+`FederatedRepositoryProductDirectionSeamAudit`, `FederatedRepositoryPublicationUserJourneyAudit`,
+`DecentralizedPublicationDiscoveryIngestionSeamAudit`, `DecentralizedPublicationRepositoryIntegration`) are reconfirmed
+in place: the point-in-time claims they made about `CreateDiscoveryUseCase.js` being unmerged are now corrected to
+reflect this milestone's own production change, in the same "reconfirmed in place rather than left to rot" discipline
+0.9.337 itself already applied to its own predecessors.
+
+### What comes after
+
+`docs/Roadmap.md`'s own 0.9.338 entry already named the next decision, deliberately left unsettled by this milestone:
+whether "Repository can discover decentralized Publications the user has encountered and resolved" (what now exists)
+is sufficient, or whether proactive decentralized Repository discovery — "search for Publications this node has never
+encountered" — is a genuine remaining product need. This milestone is architecture-complete for observation-based
+federation; it deliberately settles no product question about actively searching the decentralized world.

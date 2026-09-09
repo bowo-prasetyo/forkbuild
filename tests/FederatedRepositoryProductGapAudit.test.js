@@ -115,8 +115,18 @@ async function run() {
         const createDiscovery = await readSource('application/CreateDiscoveryUseCase.js');
         assert(createDiscovery.includes("import { LocalDiscoveryProvider } from '../discovery/LocalDiscoveryProvider.js';"),
             '5. CreateDiscoveryUseCase imports LocalDiscoveryProvider.');
-        assert(!/Peer|Decentralized/.test(createDiscovery),
-            '6. CreateDiscoveryUseCase never imports or constructs a Peer or Decentralized discovery provider — Repository\'s live contract has exactly one concrete implementation, today.');
+        // UPDATED by 0.9.339 — Merge Decentralized Publication Discovery
+        // into Repository Discovery. At the time THIS audit was written,
+        // CreateDiscoveryUseCase never imported or constructed a Peer or
+        // Decentralized discovery provider at all — the exact absence
+        // Section H below concludes is this milestone's own scoped-out
+        // future step. 0.9.339 built exactly that step: LocalDiscoveryProvider
+        // is still unconditionally constructed (assertion 5 above,
+        // unchanged), but Repository's live contract can now ALSO be
+        // given a second, decentralized provider — reconfirmed fresh
+        // rather than left to describe a state that no longer holds.
+        assert(!/Peer/.test(createDiscovery) && createDiscovery.includes('decentralizedDiscoveryProvider'),
+            '6. UPDATED (0.9.339): CreateDiscoveryUseCase still never references Peer discovery, but now DOES accept and compose an optional decentralized discovery provider — Repository\'s live contract is no longer limited to exactly one concrete implementation.');
 
         // DiscoveryProvider.js's own base-class contract is already
         // storage-agnostic — this is the CONTRACT'S honesty, established
@@ -210,15 +220,34 @@ async function run() {
         assert(proseIncludes(canvasSource, 'None of it is persisted, and none of it is written into any'),
             '4. a second, independent place in the same file restates the identical rule for the encounter\'s full discovery/resolution/inspection result.');
 
-        // Finally: does the shipped product ever tell a user to expect
+        // Finally: does the shipped product ever tell a USER to expect
         // Repository to find something they saw in World View? No
         // Repository-facing copy, route, or affordance references World
         // Encounter, Peer, or Decentralized material anywhere.
+        //
+        // UPDATED by 0.9.339 — Merge Decentralized Publication Discovery
+        // into Repository Discovery. At the time THIS audit was written,
+        // ui/components/PublicationCatalog.js's own SOURCE contained no
+        // trace of the word "decentralized" at all — checked against the
+        // whole file because there was nothing there to distinguish from
+        // user-facing copy. 0.9.339 gave Repository a real, silent
+        // capability (an already-resolved decentralized Publication now
+        // participates in search, exactly like a local one — see
+        // tests/DecentralizedPublicationRepositoryMerge.test.js), which
+        // necessarily means the component's own SOURCE now names
+        // `decentralizedPublicationDiscoveryProvider` — in an inject()
+        // call and its own comment, never in the rendered `template:`
+        // string this section's own question is actually about. This
+        // audit's real question — does the product's USER-FACING copy
+        // ever promise this — is unaffected and re-checked directly
+        // against the template literal, not the whole file.
         const repositoryFacingFiles = ['ui/components/PublicationCatalog.js', 'ui/components/PublicationCatalogToolbar.js'];
         for (const file of repositoryFacingFiles) {
             const src = await readSource(file);
-            assert(!/[Ee]ncounter|[Dd]ecentralized|[Pp]eer discovery/.test(src),
-                `5. ${file} never mentions World Encounter, decentralized material, or peer discovery — Repository never sets an expectation it doesn't meet.`);
+            const templateMatch = src.match(/template:\s*`([\s\S]*)`/);
+            const userFacingCopy = templateMatch ? templateMatch[1] : src;
+            assert(!/[Ee]ncounter|[Dd]ecentralized|[Pp]eer discovery/.test(userFacingCopy),
+                `5. ${file}'s own USER-FACING template never mentions World Encounter, decentralized material, or peer discovery — Repository still never sets an expectation to a user that it doesn't meet, even though (0.9.339) its own composition code now does reference the shared decentralized provider by name.`);
         }
     }
     console.log('✓ Section C: the strongest available journey — encounter a decentralized publication in World View, then expect Repository to find it afterward — was run for real. Retrieval succeeds. But the result is never persisted, by explicit, twice-stated design ("nothing here persists it," "none of it is written into any"), and Repository\'s own UI never sets an expectation that it would. This is not an incomplete journey; it is a journey the product never offers, on either end.');

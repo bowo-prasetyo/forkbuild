@@ -841,7 +841,21 @@ export default {
         // everything else in refreshSpatialUI() — never per-frame,
         // trust diagnostics don't need to be that fresh.
         const remoteAvatarDiagnostics = ref({ total: 0, trusted: 0, stale: 0, conflicting: 0, unavailable: 0 });
-        const { listPublicationsUseCase } = new CreateDiscoveryUseCase().execute();
+        // 0.9.339 — merges in the shared decentralized provider (see
+        // application/CreateDiscoveryUseCase.js's own 0.9.339 comment)
+        // purely for this view's own title/author ENRICHMENT of loaded/
+        // nearby world markers (refreshSpatialUI/parentTitle/
+        // refreshHoverUI below) and catalogEmpty. World Search itself —
+        // session.searchWorld(), built entirely separately inside
+        // application/CreateWorldViewUseCase.js — is untouched by this
+        // milestone and stays local-only, exactly as
+        // tests/FederatedRepositoryProductGapAudit.test.js already
+        // established; see docs/Principles.md, "Discovery Is One Path,
+        // Not Two."
+        const decentralizedDiscoveryProviderForEnrichment = inject('decentralizedPublicationDiscoveryProvider', null);
+        const { listPublicationsUseCase } = new CreateDiscoveryUseCase().execute({
+            decentralizedDiscoveryProvider: decentralizedDiscoveryProviderForEnrichment
+        });
         const allPublications = ref([]);
 
         let spatialInterval = null;

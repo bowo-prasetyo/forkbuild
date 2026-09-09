@@ -1,4 +1,4 @@
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, inject } from 'vue';
 import { useRouter } from 'vue-router';
 import { LocalStorageProvider } from '../../storage/LocalStorageProvider.js';
 import { LocalWorldExperienceStore } from '../../application/LocalWorldExperienceStore.js';
@@ -43,7 +43,14 @@ export default {
     setup() {
         const router = useRouter();
         const localWorldExperienceStore = new LocalWorldExperienceStore({ storageProvider: new LocalStorageProvider() });
-        const { discoveryProvider, loadPublicationDocumentUseCase } = new CreateDiscoveryUseCase().execute();
+        // 0.9.339 — a World this replica visited before can be a
+        // decentralized-origin Publication just as easily as a local
+        // one; merging in the shared provider (see application/
+        // CreateDiscoveryUseCase.js's own 0.9.339 comment) means its
+        // title/author card renders correctly here too, instead of
+        // falling back to the raw documentId.
+        const decentralizedDiscoveryProvider = inject('decentralizedPublicationDiscoveryProvider', null);
+        const { discoveryProvider, loadPublicationDocumentUseCase } = new CreateDiscoveryUseCase().execute({ decentralizedDiscoveryProvider });
 
         const worlds = ref([]);
         const loaded = ref(false);

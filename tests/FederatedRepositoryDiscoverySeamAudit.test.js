@@ -235,24 +235,43 @@ async function run() {
             localDiscoveryProvider.includes('Publication.fromJSON(record)'),
             '5. discovery/LocalDiscoveryProvider.js#list() returns real publisher/Publication.js instances, constructed via Publication.fromJSON() — never a projection type.');
 
-        // B4. Composition root: exactly one DiscoveryProvider is ever
-        // constructed and injected into SearchPublicationsUseCase in
-        // production.
+        // B4. Composition root: UPDATED by 0.9.339 — Merge Decentralized
+        // Publication Discovery into Repository Discovery. At the time
+        // THIS audit was written, exactly one DiscoveryProvider
+        // (LocalDiscoveryProvider, unconditionally) was ever constructed
+        // and injected into SearchPublicationsUseCase in production.
+        // 0.9.339 widened this the same way Section B5/B6 below already
+        // widens "exactly two/three DiscoveryProvider subclasses" rather
+        // than leaving a stale "exactly one" claim to rot: LocalDiscoveryProvider
+        // is still unconditionally constructed, unchanged, but is now
+        // OPTIONALLY combined with an injected decentralizedDiscoveryProvider
+        // through discovery/CompositeDiscoveryProvider.js — a real
+        // second discoveryProvider now reaches SearchPublicationsUseCase
+        // in production whenever a caller supplies one (every real UI
+        // caller now does — see tests/DecentralizedPublicationRepositoryMerge.test.js).
         const createDiscoveryUseCase = await readSource('application/CreateDiscoveryUseCase.js');
-        assert(createDiscoveryUseCase.includes('const discoveryProvider = new LocalDiscoveryProvider(storageProvider);') &&
+        assert(createDiscoveryUseCase.includes('const localDiscoveryProvider = new LocalDiscoveryProvider(storageProvider);') &&
+            createDiscoveryUseCase.includes('new CompositeDiscoveryProvider([localDiscoveryProvider, decentralizedDiscoveryProvider])') &&
             createDiscoveryUseCase.includes('new SearchPublicationsUseCase(discoveryProvider, loadPublicationDocumentUseCase)'),
-            '6. application/CreateDiscoveryUseCase.js unconditionally wires LocalDiscoveryProvider — the ONLY discoveryProvider Repository search is ever given in production.');
+            '6. UPDATED (0.9.339): application/CreateDiscoveryUseCase.js still unconditionally constructs LocalDiscoveryProvider, and now optionally composes it with an injected decentralizedDiscoveryProvider via discovery/CompositeDiscoveryProvider.js — LocalDiscoveryProvider alone is no longer the ONLY discoveryProvider Repository search can be given in production.');
         // 0.9.335 added the third: discovery/DecentralizedPublicationDiscoveryProvider.js,
         // exactly the accumulator this audit's own Section F named as
         // missing. Widened here explicitly, the same way 0.9.333 widened
         // 0.9.332's own Section G3 exception list, rather than left to
-        // rot into a false "exactly two" claim.
+        // rot into a false "exactly two" claim. 0.9.339 adds a fourth:
+        // discovery/CompositeDiscoveryProvider.js, the small, generic
+        // merge Section B4 above just reconfirmed — it performs no
+        // discovery of its own, only forwarding to the providers it is
+        // given (see its own header), so it does not change this
+        // section's own "no Steem/Hive/IPFS/Peer live-querying
+        // implementation has ever been built" finding.
         const extendsDiscoveryProvider = grepFiles('extends DiscoveryProvider', ['discovery']);
-        assert(extendsDiscoveryProvider.length === 3 &&
+        assert(extendsDiscoveryProvider.length === 4 &&
             extendsDiscoveryProvider.includes('discovery/LocalDiscoveryProvider.js') &&
             extendsDiscoveryProvider.includes('discovery/PublicationCatalogDiscoveryProvider.js') &&
-            extendsDiscoveryProvider.includes('discovery/DecentralizedPublicationDiscoveryProvider.js'),
-            `7. exactly three DiscoveryProvider subclasses exist in this codebase today (found: ${extendsDiscoveryProvider.join(', ')}) — 0.9.335 added the accumulator this audit's own Section F named as the missing half of the gap; still no Steem/Hive/IPFS/Peer live-querying implementation has ever been built.`);
+            extendsDiscoveryProvider.includes('discovery/DecentralizedPublicationDiscoveryProvider.js') &&
+            extendsDiscoveryProvider.includes('discovery/CompositeDiscoveryProvider.js'),
+            `7. UPDATED (0.9.339): exactly FOUR DiscoveryProvider subclasses exist in this codebase today (found: ${extendsDiscoveryProvider.join(', ')}) — 0.9.335 added the accumulator this audit's own Section F named as the missing half of the gap, and 0.9.339 added the small, generic merge that combines it with LocalDiscoveryProvider; still no Steem/Hive/IPFS/Peer live-querying implementation has ever been built.`);
     }
     console.log('✓ Section B: Repository\'s real search contract, traced to its actual collaborators — SearchPublicationsUseCase.execute() calls discoveryProvider.list() synchronously, once, for the entire candidate set, then filters/sorts/paginates in memory. discovery/DiscoveryProvider.js is ALREADY an abstract, substrate-neutral seam by its own header — the shape a federated source would plug into already exists. At the time this audit was originally written, exactly one working implementation existed in production, LocalDiscoveryProvider, unconditionally wired by CreateDiscoveryUseCase.js, returning real Publication instances from a plain localStorage scan; 0.9.335 has since added a second, accumulator-shaped one (discovery/DecentralizedPublicationDiscoveryProvider.js), reconfirmed above rather than left stale. No Peer, Steem, Hive, or IPFS DiscoveryProvider that itself performs live querying has ever been built.');
 
