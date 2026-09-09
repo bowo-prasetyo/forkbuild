@@ -87781,3 +87781,92 @@ resumes on its own terms, unrelated to this arc, unless one of Section J's own t
 by real, evidenced growth elsewhere in this codebase (a second real Proof provider with real selection parameters
 modeled, or a deliberate revisiting of Discovery's "query everything" policy) — at which point a future milestone,
 not this one, would pick the question back up from real requirements rather than from architectural symmetry.
+
+## 0.9.305 — Cross-Surface Publication Commentary Reassessment
+
+**Type:** Test-only product reassessment. **Production changes:** None.
+
+0.9.304 closed the provider-preference arc precisely because architectural reachability ("this could be wired") is
+not the same question as product need ("should it be"). This milestone applies that exact discipline to a
+different, older open thread: the four Publication-bearing UI surfaces 0.9.290's own Section K classified as "not
+worth wiring" for Commentary, back when only two of the six surfaces 0.9.288 originally named had been picked up
+(`PublicationCard.js`, 0.9.289; `WorldEncounterCanvas.js`, 0.9.291). That classification has never been re-checked
+against current source in the fourteen milestones since. Rather than assume it still holds by inertia — or that it
+should now be reversed — this milestone re-derives every claim fresh, against real, unmodified production files,
+and reaches one of four allowed verdicts per candidate: INTEGRATE / DEFER / DUPLICATIVE / STOP.
+
+### What this milestone found
+
+- **Section A — capability inventory.** Commentary's domain/storage/application/notification pipeline is
+  unchanged and intact. Exactly three UI surfaces are genuinely wired: `OwnPublicationPanel.js` and
+  `WorldEncounterCanvas.js` (both receive the commands as typed `props`, forwarded by `ui/views/WorldView.js`) and
+  `PublicationCard.js` (receives them via app-wide `inject`).
+- **Section B — surface rediscovery.** A fresh repo-wide sweep reproduces 0.9.288's own six-surface set plus their
+  two hosts, confirms the three real candidates (`PublicationCatalog.js`, `PublicationPreview.js`,
+  `DecentralizedPublicationsView.js`) still carry zero commentary vocabulary, and confirms the fourth name this
+  milestone's own brief listed — `PublicationDistributionPanel` — is not a file, class, or component that exists
+  anywhere in this repository. `docs/Roadmap.md`'s own 0.9.141 entry named it explicitly, once, as a hypothetical
+  shared abstraction it deliberately declined to build ("they passed this audit precisely because they stay two
+  separate components over one shared command") — nothing has built it since.
+- **Section C — `PublicationCatalog` → DUPLICATIVE.** It is the shared host that mounts `PublicationCard`/
+  `PublicationList`; its own `v-for` is keyed by the identical `pub.id` `PublicationCard` already receives one
+  level down, and `PublicationCard` already renders full commentary for that exact object. A comment entry point
+  at the host level would duplicate, not add, capability.
+- **Section D — `PublicationPreview` → STOP.** Its entire template is a `div`/`img`/`span` triad rendering a
+  thumbnail or a generated placeholder — its own code never reads `title`/`author`/`description`/`license`, and it
+  is mounted from exactly two places, both already-classified hosts (`PublicationCard.js`, wired;
+  `PublicationList.js`, itself 0.9.290's own DUPLICATIVE-of-Card finding, re-confirmed still unwired). The brief's
+  own hypothesis that a preview is "naturally an inspection surface" does not survive contact with its actual,
+  current fourteen-line template.
+- **Section E — `DecentralizedPublicationsView` → DEFER.** This is the one surface where the brief's caution not
+  to prejudge was warranted: it genuinely, deeply inspects a Publication per entry (hash, publisher identity,
+  placement convergence, peer evidence) and contains the real discover→create Snapshot Placement workflow the
+  brief asked about. But its own code never once reads `entry.publication.title` — Publications here are
+  identified by content hash and kind, never by name — and its action vocabulary stays entirely
+  technical/verification (`Retrieve from Peers`, `Re-check`, `Create Anchor`, `Synchronize`), with no `Open`/
+  `Fork`/`Explore`/author-navigation anywhere near it. Real inspection, wrong interaction context.
+- **Section F — `PublicationDistributionPanel` → DUPLICATIVE.** Building on Section B's non-existence finding: the
+  real capability the name would have referred to is a `snapshotDistributionCommand` prop, declared in exactly two
+  files (`OwnPublicationPanel.js`, `WorldEncounterCanvas.js`) — and in BOTH files, the distribution section and the
+  commentary section are siblings inside the identical component root (`own-publication-panel` wraps both
+  `own-publication-distribution-detail` and `own-publication-commentary`; `WorldEncounterCanvas.js` wraps both
+  `world-encounter-snapshot-distribution-panel` and `world-encounter-commentary-panel`). There is no separate
+  surface left to wire.
+- **Section G — identity/authorization convergence.** A real object graph (`CanCommentOnPublicationUseCase` against
+  a live `LocalDiscoveryProvider`/`LocalIdentityProvider`/`LocalPublisherProvider`) confirms the authorization
+  boundary remains genuinely ownership-agnostic — any future candidate could reuse it verbatim, at zero cost. The
+  technical question was never in doubt; only the product-fit question (Sections C-F) actually varies per surface.
+- **Section H — duplication, proven structurally.** Both DUPLICATIVE findings are backed by literal source
+  evidence (a shared `:key`, a shared component root), not impression.
+- **Section I — the reachability matrix**, printed and cross-checked against every Section C-F verdict:
+  two DUPLICATIVE, one STOP, one DEFER, zero INTEGRATE.
+- **Section J — final decision: the Commentary cross-surface arc closes here.** None of the four re-audited
+  surfaces is wired. Each has a concrete, source-verified reason to stay that way — none is merely "hasn't gotten
+  to it yet."
+
+### What this milestone adds
+
+- **`tests/PostCommentaryCrossSurfaceProductReassessment.test.js`** (new, registered in `tests.html`) — ten
+  lettered sections (A-J) matching the audit structure above, run against real, unmodified production classes and
+  real repo-wide sweeps.
+- **This `docs/Roadmap.md` entry.**
+
+No other file is touched.
+
+### What this milestone deliberately excludes
+
+Per its own test-only brief: no Commentary added to any surface; no change to Commentary domain/application code;
+no new notification types or delivery; no provider preferences of any kind; no generic "Commentable" abstraction;
+no automatic Comment button on every Publication-bearing view; no change to Commentary authorization or ownership
+semantics. Section J's own regression check confirms all three real candidate files, and the (still nonexistent)
+fourth, remain untouched.
+
+### What comes after
+
+Per this milestone's own verdict, **the Publication Commentary cross-surface arc is closed** — a complete, evidenced
+outcome (two live entry points reaching every Publication a Wanderer can meaningfully discuss:
+`OwnPublicationPanel`/`WorldEncounterCanvas` for a Wanderer's own material, `PublicationCard` for everyone else's),
+not an abandoned extension. It reopens only if a genuinely new Publication-bearing UI surface is built later —
+Section G already shows the authorization/identity plumbing such a surface would need is zero-cost to reuse, so
+the only real question next time, exactly as this milestone answered for these four, would be product fit.
+ForkBuild's broader product evolution process resumes on its own terms, unrelated to this arc.
