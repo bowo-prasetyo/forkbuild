@@ -90190,3 +90190,109 @@ different candidate than the one this milestone was asked to investigate, and pu
 exact "chase whatever the last audit happened to notice" pattern 0.9.328's own brief already warned against.
 ForkBuild's broader product evolution process resumes on its own terms only the next time genuine evidence — a
 newly observed blocked journey, a real external requirement, an actual operational problem — points somewhere.
+
+## 0.9.330 — Federated Repository Product Direction & Seam Audit
+
+**Type:** Test-only, product/architecture decision milestone. **Production changes:** none.
+
+0.9.329 answered "is Repository federation required by the architecture as it exists today?" with NOT_A_PRODUCT_GAP
+— a correct answer, on that evidence, to that question. After reading that verdict, the product owner raised a
+different question 0.9.329 was never asked: regardless of current-architecture necessity, what should Repository
+*ultimately* mean from the user's product perspective — should it become the place a user discovers and forks
+material regardless of whether it originates locally, from a peer, or from a decentralized substrate? This
+milestone does not reverse 0.9.329. It records that product-direction decision explicitly, corrects its own
+originating vocabulary against source, and asks whether a smallest safe implementation seam can be identified from
+real, shipped code rather than invented or preselected.
+
+### What this milestone adds
+
+`tests/FederatedRepositoryProductDirectionSeamAudit.test.js` (new, registered in `tests.html`), ten sections:
+
+- **A. Product direction recorded, vocabulary corrected against source.** The originating brief described
+  Repository's destination object as a "Snapshot." Checked directly, the way 0.9.327 corrected a misnamed
+  "Bitcoin" finding to "Base" one milestone later: this codebase's "Snapshot" (`application/
+  DiscoverSnapshotCandidatesCommand.js`, `application/MaterializeSnapshotFromPlacementUseCase.js`) is a
+  structurally disjoint, `discoveryTag`-keyed World-placement pipeline — confirmed by import in both directions —
+  never Repository's own object, which is `publisher/Publication.js`. Every later section reasons about
+  Publication federation, not Snapshot federation. The product direction itself is recorded as a stated decision
+  in this codebase's own corrected vocabulary; its legitimacy is not investigated, only its consequences.
+- **B. Source capability matrix, built from real code.** Local: Discover/Search/Retrieve all real and shipped
+  (`LocalDiscoveryProvider`). Peer: `peer/PeerDiscoveryProvider.js`'s own header states its own question directly
+  — "a candidate endpoint for a peer" — and never mentions Publication at all; it discovers peer endpoints, never
+  publications, though `application/PublicationPeerExchange.js` (0.7.3) does run a real, live gossip transport for
+  `DecentralizedPublication` envelopes over an authenticated connection. Decentralized: identity-scoped lookup
+  only, reconfirmed fresh (no free-text browse in `DecentralizedPublicationsView.js`); a real "browse the unknown
+  by tag" pattern exists (Nostr Snapshot candidate discovery) but is wired, confirmed structurally, to Snapshot,
+  never to Repository. The uniform matrix the originating brief sketched does not survive contact with source.
+- **C. Identity & content convergence.** 0.9.329's own finding (no shared `documentId`) is reconfirmed, but is not
+  the whole picture: `Publication` and `DecentralizedPublication` share real substrate — the identical
+  `core/ContentReference.js` class, and `Publication`'s own constructor has accepted optional
+  `contentReference`/`publisherIdentity`/`signature` fields since 0.2.16, explicitly documented as
+  forward-looking. That substrate is completely dormant in production: `publisher/LocalPublisherProvider.js`, the
+  one live construction path, sets `signature: null` and never populates the other two. Checked directly rather
+  than assumed: this codebase has registered exactly two `DecentralizedPublication` content kinds, ever (Blueprint
+  Attribution, Place Naming Claim) — Repository's own Publication has never once been wrapped as a
+  `DecentralizedPublication` anywhere in this codebase. Content overlap between Repository's catalog and anything
+  Peer/Decentralized can carry today is exactly zero, not merely "harder to reach."
+- **D. The existing downstream workflow.** Traced to its exact call sites: `PublicationCard.js` emits
+  `open`/`fork`/`explore`/`view-author` ("editable document/fork per the existing fork-on-write lifecycle," its
+  own words); `PublicationCatalog.js#forkPublication()` routes to `/editor` keyed by `pub.documentId` — a field
+  `DecentralizedPublication` structurally lacks (Section C). Neither existing action could be driven, unmodified,
+  by a hypothetical decentralized-origin result without a resolution step converting an evidence claim into a
+  genuine local, `documentId`-keyed entity first.
+- **E. Source-specific semantics.** Local hands back real, fork-ready `Publication` instances today. Checked
+  directly: no production file anywhere converts a `DecentralizedPublication` into a `publisher/Publication` — so
+  Peer and Decentralized, mechanically, hand back nothing Repository-shaped today. Not harder; empty.
+- **F. Deduplication policy, derived rather than invented.** Read directly off two independent, already-standing
+  restraints: `LocalPublicationCatalog`'s own header ("No ranking, trust score, 'canonical,' or 'preferred' field
+  exists") and the named principle "Acquisition Provenance Is Not Evidence Rank (0.8.17)." Policy: never merge
+  across sources by inferred equality (there is no shared key to merge on, regardless); group and tag by source,
+  rank nothing.
+- **G. No second source of truth.** Confirmed directly: no `RepositoryFederationStore`/`RepositoryProvider`/
+  equivalent has been silently introduced. The real constraint: Local composition is already possible with zero
+  new store; Peer/Decentralized composition is not yet possible without one, only because no existing store
+  currently holds any Repository-shaped content from either source — the right target is teaching the
+  already-existing `application/LocalPublicationCatalog.js` to hold Repository content too, not inventing a new
+  store.
+- **H. Smallest first implementation seam — identified, not preselected.** A third `DecentralizedPublication`
+  content-kind plugin (e.g. `application/PublicationContentKind.js`), built to the identical, already-proven
+  four-function template `BlueprintAttributionPublicationKind.js`/`PlaceNamingClaimPublicationKind.js` already
+  use — letting Publication's own dormant `contentReference`/`publisherIdentity`/`signature` fields finally travel
+  the existing `PublicationExchange` → `PublicationPeerExchange` → `PublicationResolver` pipeline, unmodified.
+  Three larger alternatives were considered and explicitly rejected with named reasons (extending
+  `DiscoveryProvider.list()`'s synchronous contract; a new Repository-owned `DiscoveryProvider`/store; a new Peer
+  publication-browsing protocol). Explicitly scoped down: this seam turns an already-known-by-reference
+  publication into a forkable Repository entry — it does not give Peer the ability to browse a stranger's catalog
+  with no prior lead, a separate, larger, unscoped problem.
+- **I. UX semantics, deliberately undesigned.** Checked, not merely declared: Repository's own UI files carry no
+  source-filter, provenance-badge, or tab vocabulary today. Left for later, once Section H's own seam is real.
+- **J. Final classification and production-change guard.**
+
+### Verdict
+
+**PRODUCT_DIRECTION_CONFIRMED_SEAM_IDENTIFIED.** The product direction is recorded as the product owner's own
+stated decision, not fabricated or contested by this audit — that distinction from 0.9.329's own NOT_A_PRODUCT_GAP
+verdict is deliberate and does not reverse it: the two milestones answer different questions. What this audit
+contributes is everything 0.9.329's own STOP left unexamined for the product-direction case: a real capability
+matrix built from source, the actual (currently dormant) identity substrate shared between `Publication` and
+`DecentralizedPublication`, the actual downstream workflow those results would have to feed, an honest
+content-overlap count (zero, today), a derived dedup policy, a no-second-source-of-truth constraint, and one
+concretely named, minimally-scoped, template-following seam — a third `DecentralizedPublication` content-kind
+plugin for Repository's own Publication, following the exact template two other content kinds already use.
+
+### What this milestone deliberately excludes
+
+Per its own Type and explicit scope: no `PublicationContentKind.js` or equivalent is created; no change to
+`SearchPublicationsUseCase.js`, `DiscoveryProvider.js`, or `CreateDiscoveryUseCase.js`; no new Repository-owned
+store; no UI filter, tab, source badge, or ranking of any kind; no Peer publication-browsing protocol. Every one of
+these is explicitly named as future work, not built here — this remains, per its own declared Type, a test-only
+decision milestone.
+
+### What comes after
+
+No 0.9.331 is pre-committed by this milestone. But for the first time in this sequence, one is pointed at something
+specific and minimally scoped: `application/PublicationContentKind.js` (or an equivalent name), built to the exact
+`BlueprintAttributionPublicationKind.js`/`PlaceNamingClaimPublicationKind.js` template, as the smallest real step
+toward the product direction Section A recorded — letting a Publication travel the existing decentralized
+publication pipeline for the first time, while leaving Peer's own inability to browse an unknown catalog, and every
+UX question Section I declined to answer, explicitly for whatever milestone actually builds and wires that plugin.
