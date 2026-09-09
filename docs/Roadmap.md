@@ -91356,3 +91356,102 @@ narrow next step rather than a speculative federation layer: an explicitly-trigg
 run outside `SearchPublicationsUseCase.js`'s own synchronous contract, whose results are resolved and admitted into
 the exact same `DecentralizedPublicationDiscoveryProvider`/`CompositeDiscoveryProvider` seam this arc already built —
 never a network-aware Repository search itself.
+
+## 0.9.341 — Peer Publication Connection-Sync Boundary Audit
+
+**Type:** Test-only boundary audit. **Production changes:** none.
+
+0.9.340's own STABLE_STOP verdict closed the Federated Repository Publication arc by name — proactive decentralized
+*search* (Repository reaching into Nostr or a peer with no prior lead) stays a deliberate, on-file exclusion, not a
+genuine gap. This milestone is not a re-examination of that verdict. It asks a narrower, adjacent question 0.9.340
+never considered at all, because it sits one layer below Repository entirely: when two replicas that already know
+how to gossip a Publication (`application/PublicationPeerExchange.js`, 0.7.3) simply *connect*, does either one learn
+what the other already holds — or does today's peer architecture require a human to explicitly re-announce, after
+the fact, to whichever peer happens to already be online at that exact moment?
+
+> Peer synchronization answers "What should a peer learn when we connect?" Indexing answers "How can I find
+> publications from peers who are not currently connected?" The first is solvable entirely within the existing peer
+> architecture. The second remains 0.9.340's own excluded territory — untouched by this milestone.
+
+### What this milestone adds
+
+`tests/PeerPublicationConnectionSyncBoundaryAudit.test.js` (new, registered in `tests.html`), ten sections, run
+against real, unmodified production code with real, live, authenticated peer connections throughout — no mocked
+transport anywhere in the file:
+
+- **A. Existing peer connection lifecycle.** Confirms, from source and live, that `PublicationPeerExchange`'s own
+  constructor already subscribes to `ConnectedPeerRegistry#onChange` — the exact connection-established seam — but
+  its callback body only ever calls `bus.attach(peer)`, never `announce()`. Bus attachment and publication
+  announcement have always been two separate acts.
+- **B. Existing publication exchange capability.** `toPublicationAnnounceMessage()` wraps an envelope whole, with no
+  field added, removed, or renamed; a live round trip confirms every `DecentralizedPublication.toJSON()` field
+  survives byte-for-byte. A connection-time announce needs no new wire format, message kind, or protocol — only a
+  new caller of the existing `announce()`.
+- **C. Metadata-only boundary.** Structural (no `PublicationResolver`/`ContentStore`/`PeerContentExchange` import in
+  either the exchange or the protocol file) and live (a received publication resolves `CONTENT_UNAVAILABLE` the
+  instant it arrives) confirmation that connection-time sharing carries no content-transfer component.
+- **D. FLAGSHIP — the late-joining peer journey.** Reproduces, live, that today Bob connecting to Alice *after* she
+  already published and cataloged a Publication delivers him nothing — a real, reproduced product gap, not a
+  hypothetical one. Closes the identical gap with the smallest seam available: a test-side-only helper
+  (`wireConnectionTimeSync`, added to no production file) that, on `ConnectedPeerRegistry#onChange` reporting a
+  newly `AUTHENTICATED` peer, re-announces the replica's entire catalog via the unmodified `announce()`. Proves the
+  gap closes with zero new wire format, message kind, or class, and that publishing to an already-connected peer
+  keeps working unmodified.
+- **E. Reconnection / repeated observation.** A genuinely new `connectionId` on reconnect re-triggers the seam;
+  re-observing an already-known publication fires `onPublicationReceived` again with `isNew: false` and adds no
+  duplicate catalog entry — `LocalPublicationCatalog#add()`'s own existing idempotency already makes repeated
+  connection-time observation safe. No new deduplication policy is introduced.
+- **F. Multiple Publications.** One connection carries three Publications' metadata; all three catalog, none of
+  their content is ever fetched — the metadata/content boundary holds regardless of volume.
+- **G. Publication identity.** Every envelope-level field (`kind`, `schemaVersion`, `id`, `contentKind`,
+  `contentSchemaVersion`, `contentReference`, `publisherIdentity`, `publishedAt`, `signature`) survives unchanged.
+  `documentId`/`title`/`author`/`license` are proven to NOT be envelope fields at all — they belong to the wrapped
+  `Publication` and only become known once a separate resolution step actually completes, reconfirming "Discovery Is
+  Not Resolution" (0.7.2) specifically at the connection-sync boundary.
+- **H. Notification boundary.** `onPublicationReceived`'s `{ publication, isNew }` shape already distinguishes
+  "new-to-this-peer" from a repeat, unmodified since 0.7.3 — that was never the open question. Applying this
+  codebase's own `NotificationEvent` boundary criterion (0.9.274, "a recipient identity distinct from the actor,
+  without inventing a new relationship"): every existing producer/candidate addresses a genuinely different
+  real-world identity than whoever acted (Commentary → the Publication's publisher; Friend Relationship → the
+  request's target). "A publication arrived from a peer" has no such second identity — the only candidate recipient
+  is the receiving replica's own current identity, which is not what any existing `NotificationEvent` use addresses.
+  Classified as not yet a producer candidate; the existing local feedback/list-refresh mechanisms
+  (`EditorView.js`'s `feedback.show()`, `DecentralizedPublicationsView.js`'s `onPublicationReceived(() =>
+  refreshList())`) already cover this fact. Per this milestone's own brief, no producer is built.
+- **I. Repository convergence.** A publication delivered by the connection-time seam converges into Repository
+  search through the exact, unmodified 0.9.335-0.9.339 chain (accumulator → composite → `CreateDiscoveryUseCase` →
+  `SearchPublicationsUseCase`), with a structural check that `CreateDiscoveryUseCase.js` contains no peer or
+  connection-sync-specific code at all.
+- **J. Offline / indexing boundary.** A peer that never connects — no shared network, no pairing of any kind — is
+  live-proven to never receive anything through this seam, however much the publishing replica catalogs; a
+  structural check confirms no Nostr/relay/global-index concept exists anywhere in `PublicationPeerExchange.js`.
+  Recorded as the exact, deliberate edge separating this milestone's own scope from a future, independent indexing
+  layer.
+
+### Verdict
+
+**CLEAR_SEAM — PROCEED.** A real, live-reproduced product gap (Section D) closes with a seam built entirely from
+already-public methods — `PublicationPeerExchange#announce()`, `LocalPublicationCatalog#list()`,
+`ConnectedPeerRegistry#onChange()` — with no wire-format change (B), no content-transfer risk (C/F), no new
+deduplication policy (E), full field preservation (G), and zero required Repository change (I). One candidate this
+audit examined — a `NotificationEvent` producer for "publication received from a peer" — is explicitly NOT ready
+(H): no evidenced recipient concept exists for it yet, so none is built. The offline/indexing boundary (J) is
+confirmed as a genuine, permanent architectural edge, never something this seam should grow into.
+
+### What this milestone deliberately excludes
+
+Per its own Type: no production-code change of any kind. No new class, no new message kind, no wire-format change,
+no `NotificationEvent` producer, no ranking/trust/peer-targeting concept, and no change to `CreateDiscoveryUseCase.js`
+or any other Repository-side file. `wireConnectionTimeSync()` exists only inside this milestone's own test file, as
+evidence the seam is real and small — it is not shipped.
+
+### What comes after
+
+**0.9.342 — Automatic Peer Publication Metadata Exchange**, implementing Section D's own proven seam in production:
+the smallest change is a new, small decorator composed alongside `CreatePublicationPeerExchangeUseCase.js` — the
+same "wrap, do not modify" shape `PublicationCommentaryNotificationProducer.js` already established one domain
+over — reusing `catalog.list()`/`peerExchange.announce()`/`registry.onChange()` completely unchanged. A
+`NotificationEvent`-producer milestone for this fact is explicitly NOT recommended next: Section H found no
+evidenced recipient concept to build one on. If awareness UI is ever wanted for connection-time sync, the narrower
+step is extending the existing local feedback/list-refresh mechanisms this milestone's own Section H already found
+in place, not inventing a `NotificationEvent` recipient concept ahead of evidence.
