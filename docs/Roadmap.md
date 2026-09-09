@@ -87972,3 +87972,120 @@ reassessment adds the specific architectural reasons (composition scope, storage
 it closed, rather than merely re-asserting 0.9.287's own conclusion. It reopens only on one of Section J's three
 named, evidence-based conditions — never on inertia, and never on architectural symmetry with an unrelated arc.
 ForkBuild's broader product evolution process resumes on its own terms, unrelated to this arc.
+
+## 0.9.307 — Post-Arc Product Evolution Reassessment
+
+**Type:** Test-only, cross-architecture product reassessment. **Production changes:** None.
+
+0.9.288 (Cross-Arc Product Evolution Reassessment) first asked the wider question no single-arc reassessment is
+scoped to ask: now that several arcs are each independently complete, where does the product AS A WHOLE still owe
+something — inside one arc, or, more valuably, in the seam between two of them? It answered once, selecting
+Publication Commentary's cross-surface reachability gap. 0.9.289-0.9.306 then closed three further, independent
+arcs on their own terms — Content Provider Preference (STOP, 0.9.304), Publication Commentary cross-surface
+(closed, 0.9.305), and Notification Awareness (STOP, 0.9.306). This milestone repeats 0.9.288's own method fresh
+against the current tree, rather than re-reading its conclusions — auditing everything built since, plus arcs
+0.9.288 did not itself audit in depth (Snapshot, Collaboration/Autosave/History/Undo-Redo, Publication placement).
+
+### What this milestone found
+
+- **Section A — capability inventory.** All fifteen named capabilities (World View, Avatar/vehicle, Publication
+  discovery/verification/placement, Snapshot discovery/inspection-comparison/World placement, Publication
+  Commentary, Collaboration, Autosave/recovery, Command history/undo-redo, Notifications/History, Content Provider
+  Preference, Place Naming) are implemented, reconfirmed fresh. The always-mounted app-wide nav (`ui/App.js`) links
+  ten real destinations and, unchanged since 0.9.306, still has no direct link into a specific World.
+- **Section B — incomplete-journey questions.** Four of the brief's six example questions are clean NOs (Discovery
+  always has a next action; a Commentary's recipient can always follow it to History; Collaboration always
+  transitions into the same-view Publish action on both document surfaces; Publishing always reaches real
+  distribution adapters). The fifth ("placed but not interacted with") splits: the Snapshot placement loop has no
+  dead end, but the *ordinary* Publication-placement loop does — `docs/Principles.md`'s own named 0.2.23 design
+  principle ("A Publication Is What; A Placement Is Where") states a single Publication is deliberately placeable
+  in more than one location ("an exhibition copy here, a personal copy of the same publication there"), yet nothing
+  in the running app lets an owner see or manage more than the single most-recently-updated copy.
+- **Section C — weak-exposure census.** The Snapshot chain is REACHABLE_AND_COMPLETE end to end (a dedicated
+  research pass into discovery/comparison/materialization/placement/attribution/export/retention found no dead
+  end anywhere). `DiscoverPlacementsUseCase` (`findByPublicationId`/`findByOwner`) is fully implemented and fully
+  regression-tested (`tests/PlacementRegistry.test.js`) but its own composition root, `CreatePlacementRegistryUseCase`,
+  has zero production call sites — `CreateWorldViewUseCase.js` builds an equivalent `LocalPlacementRegistry`
+  directly instead, so the query is orphaned. Editor/Structure Documents never got a History Timeline (`EditorSession.js`
+  has zero references to `getTimeline`/`ReplayDocumentUseCase`/`RestoreHistoryStateUseCase`, though the generic
+  `CommandHistory` machinery underneath is identical to World View's own); World Documents never got Autosave/
+  Recovery (`WorldView.js` carries zero Autosave/Recovery vocabulary). Automatic Snapshot Encounter Retention
+  remains correctly internal-by-design (no UI surface anywhere, by its own explicit "retention is never
+  visibility" header). The legacy 0.2.7-0.2.9 authority collaboration protocol remains OBSOLETE, reconfirmed a
+  fifth time.
+- **Section D — four journey chains, followed hop by hop.** *Create→Edit→Publish→Discover→Inspect→Place* has every
+  hop reachable through real router/`provide`/`inject` wiring, but its own weak link is Section C's own
+  `DiscoverPlacementsUseCase` finding: once placed, an owner has no route back to "where/who placed this" outside
+  coincidentally standing in the right World with the right document active. *Discover→Verify→Inspect→Comment*
+  converges cleanly on `WorldEncounterCanvas.js` (verification and commentary panels gated on the same selected
+  encounter) but splits on `PublicationCard.js` (Commentary, no verification) and `DecentralizedPublicationsView.js`
+  (verification, no Commentary) — real, but a duplication/DEFER shape 0.9.305 already priced in, not a new finding.
+  *Snapshot→Compare→Select→Materialize→Place→Observe* has no gap. *Collaborate→Recover→Review history→Publish* is
+  architecturally split by construction: the Editor surface has Collaborate+Recover+Publish but never Review
+  history; the World surface has Collaborate+Review history+Publish but never Recover — a real, but substantially
+  larger, candidate than the placement-visibility one.
+- **Section E — six recently-completed arcs reassessed.** All six (Content Provider Preference, Publication
+  Commentary cross-surface, Notifications, Collaboration, Snapshot, Place Naming) correctly answer STOP for
+  themselves — the evidence this milestone's own framing predicted: the next milestone should not come from
+  re-opening any single arc.
+- **Section F — convergence sweep.** Snapshot's four branches (Distribution, Attribution, Comparison, World
+  placement) are already fully convergent on one real surface (`WorldEncounterCanvas.js`) — no missing seam, no
+  abstraction to build. Publication's three branches (Commentary, Notification, Discovery) have a real gap: the
+  app-wide Discovery listing shows zero commentary-activity signal, not even a count — real, but narrower and
+  weaker evidence than the selected candidate, since 0.9.305 already answered the *fuller* Commentary-UI version
+  of this question (no, on three of four listing-level surfaces) without separately settling a bare count.
+- **Section G — the selected finding, scored against all six required facts.** (1) A real user action
+  `docs/Principles.md` names by name. (2) An existing, tested capability — `DiscoverPlacementsUseCase`, proven live
+  to return every placement for a publication or owner. (3) A meaningful missing step the codebase's own code
+  comment already names: `WorldNavigationSession#_resolvePlacementRecord()` calls `findByPublicationId()` (the full
+  list) then immediately reduces it to the single most-recently-updated record, with its own comment admitting
+  "browsing/choosing among several is future scope" — reconfirmed live by re-deriving the identical reduction.
+  (4) A natural existing UI surface — `OwnPublicationPanel.js` already receives the full `publication` object and a
+  *singular* `placementInfo` prop in the exact `(publication) -> result` command-prop shape every sibling
+  capability on that component already uses. (5) A clear semantic owner — `WorldNavigationSession` already exposes
+  the narrower sibling method `getPlacementInfoForPublication(publicationId)`, itself already composed but
+  reachable from zero UI components (its one consumer is `WorldView.js`'s own internal
+  `AutomaticSnapshotEncounterCascade` closure). (6) A small implementation seam — no new domain class, storage
+  shape, or use case; `DiscoverPlacementsUseCase`/`PlacementRecord` already exist and are already tested.
+- **Section H — evidence matrix.** The selected candidate is the only one scoring an unqualified pass on need,
+  existing capability, UI seam, and semantic clarity, at Small scope — the two next-strongest candidates (Editor/
+  World Recover+Review-history parity; Discovery-level Commentary count) are real but Large/Medium scope and only
+  partially evidenced on semantics.
+- **Section I — architecture debt vs. product gap.** Four rows are genuine product gaps (only one selected here,
+  on scope/semantic-readiness, not category); two rows are architecture debt with no user-facing effect (the
+  bypassed `CreatePlacementRegistryUseCase` composition root; the long-obsolete legacy collaboration protocol); one
+  row is confirmed intentionally internal (Automatic Snapshot Encounter Retention).
+- **Section J — final decision: INTEGRATE.** A Publication placed more than once — an intended, named scenario —
+  has no way for its owner to see or manage anything but the single most-recently-updated copy; every other copy
+  becomes invisible to its own creator unless they physically return to that exact spot.
+
+### What this milestone adds
+
+- **`tests/PostArcProductEvolutionReassessment.test.js`** (new, registered in `tests.html`) — ten lettered sections
+  (A-J) matching this milestone's own brief exactly, run against real, unmodified production classes, live proofs
+  using the real `DiscoverPlacementsUseCase`/`LocalPlacementRegistry`/`PlacementRecord` classes, and real
+  repo-wide sweeps.
+- **This `docs/Roadmap.md` entry.**
+
+No other file is touched.
+
+### What this milestone deliberately excludes
+
+Per its own test-only, selection-not-implementation brief: no new `WorldNavigationSession` method, no new
+`OwnPublicationPanel.js` prop or rendered section, no change to `DiscoverPlacementsUseCase`/`LocalPlacementRegistry`/
+`PlacementRecord`, no decision on exact rendered shape (list vs. count-with-expand vs. small map), no choice
+between `findByOwner` and `findByPublicationId` as the primary query, and no action taken on the two deliberately
+deferred, larger product gaps (Editor history-timeline parity; World autosave/recovery parity) or the one
+INVESTIGATE-shaped candidate (Discovery-level Commentary count).
+
+### What comes after
+
+Per this milestone's own verdict, **0.9.308** should expose `DiscoverPlacementsUseCase`'s existing
+`findByPublicationId` (and/or `findByOwner`) through a new, thin `WorldNavigationSession` method returning the full
+placement list — never reducing to one, unlike `getPlacementInfo`/`getPlacementInfoForPublication` — bound as one
+new prop into `OwnPublicationPanel.js`, using the exact command-prop pattern every sibling capability on that
+component already establishes, with no change to the domain/application layer this candidate's own Section G
+already confirms is unnecessary. The two larger, scope-deferred findings (Editor/World Recover+Review-history
+parity) and the one INVESTIGATE-shaped finding (Discovery-level Commentary count) remain on record for a future
+milestone to pick up on their own evidence — never on inertia, and never merely because this reassessment named
+them.
