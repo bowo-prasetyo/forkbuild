@@ -91233,3 +91233,126 @@ whether "Repository can discover decentralized Publications the user has encount
 is sufficient, or whether proactive decentralized Repository discovery — "search for Publications this node has never
 encountered" — is a genuine remaining product need. This milestone is architecture-complete for observation-based
 federation; it deliberately settles no product question about actively searching the decentralized world.
+
+## 0.9.340 — Federated Repository Product Reassessment
+
+**Type:** Test-only, whole-product decision milestone. **Production changes:** none.
+
+0.9.339 closed the exact gap 0.9.338's audit located: Repository, Author View, Editor's fork lookup, World View, and
+Recent Worlds all now discover both local and resolved-decentralized Publications through one merged composition.
+0.9.339's own "What comes after" named the question left unsettled: is the current encounter-driven federated
+Repository sufficient, or does the product actually require proactive decentralized discovery — Repository itself
+querying Nostr or peers for Publications it has never encountered? This milestone stops implementation and answers
+that question against live evidence, not against the shape of what now exists. It adds no production code and
+changes no production file.
+
+### What this milestone adds
+
+`tests/FederatedRepositoryProductReassessment.test.js` (new, registered in `tests.html`), ten sections:
+
+- **A. Baseline capability inventory.** Every link in the chain — decentralized content kind
+  (`PUBLICATION_CONTENT_KIND`), transport (`PublicationPeerExchange`), resolution (`resolvePublicationView` via the
+  registered kind plugin), display (`describe()` on that plugin), discovery accumulation
+  (`DecentralizedPublicationDiscoveryProvider`), composite discovery (`CompositeDiscoveryProvider`), Repository
+  search (`CreateDiscoveryUseCase`), Explore (`viewWorld()` by `documentId`), and Fork (`forkPublication()`/Editor's
+  fork lookup) — confirmed present in real source, with no broken handoff between any two adjacent links.
+- **B. FLAGSHIP journey.** Peer → resolve → admit → Repository → search → select → Editor's fork lookup →
+  `ForkDocumentUseCase`, driven live over a real, authenticated peer connection and the exact, unmodified
+  `ui/components/PublicationCatalog.js` composition — the complete journey the 0.9.330-0.9.339 arc has been building
+  toward, proven end to end rather than assumed from its parts.
+- **C. Local + decentralized convergence.** One local and one decentralized Publication discovered simultaneously by
+  one unfiltered Repository search, with identical downstream shape: same `Publication` class, same field set, no
+  `source`/`origin`/`provenance` field on either, and every `DiscoveryProvider` method reaching both.
+- **D. Unknown decentralized Publication — the important new test.** A Publication that was never
+  resolved/admitted is proven, live, unfindable by Repository search, `findById()`, and Editor's own fork lookup
+  alike — then proven reversible once the identical Publication genuinely is resolved and admitted, establishing
+  this is a real "not yet encountered" boundary, not a structural inability to ever discover it. This is the
+  boundary between accumulated federated discovery and proactive federated search, made concrete rather than
+  asserted.
+- **E. Search-side network activity.** Every collaborator in the search call chain (`SearchPublicationsUseCase`,
+  `DiscoveryProvider`, `CompositeDiscoveryProvider`, `LocalDiscoveryProvider`, `DecentralizedPublicationDiscoveryProvider`)
+  checked by actual `import` statement (not a bare keyword sweep, which would misfire on the accumulator's and
+  composite's own header comments explicitly disclaiming Nostr/peer/resolution) for any network, peer, Nostr, or
+  resolution collaborator — none found — plus a functional proof that `execute()` returns a plain, synchronous
+  result, never a `Promise`. Repository search cannot itself be quietly backed by a network call.
+- **F. Temporal semantics.** The pipeline is characterized live as four genuinely distinct stages — KNOWN → RESOLVED
+  → ADMITTED → REPOSITORY-VISIBLE — with resolution alone proven insufficient (still invisible to search) and
+  admission proven to be the one and only visibility gate, taking effect immediately, with no propagation delay.
+- **G. Restart behavior.** A fresh `DecentralizedPublicationDiscoveryProvider` instance is proven empty regardless of
+  what a prior instance held, both live (no state carries over between instances) and structurally (no persistence
+  collaborator anywhere in the accumulator, and no rehydration step at its one real construction site in
+  `ui/main.js`). Repository's decentralized visibility is scoped to observations made during the current application
+  lifetime, restored only by re-encountering material through a live session — recorded as a characterization, not
+  automatically a defect.
+- **H. Composite semantics.** `CompositeDiscoveryProvider`'s class body (isolated from its own header prose, which
+  legitimately discusses dedup/ranking/preference/health to disclaim doing any of it) is confirmed free of all four —
+  plus a live functional proof: the identical Publication id present in BOTH the local and decentralized source is
+  returned TWICE by `list()` and by Repository search alike, never silently merged, confirming "no dedup" as an
+  observed behavior, not only an absent keyword.
+- **I. Existing consumer impact.** `PublicationCatalog`/`AuthorView`/`EditorView`/`RecentWorldsView`/`WorldView`
+  reconfirmed structurally to share the merged composition, and World Search reconfirmed to stay a genuinely
+  separate, untouched path. This milestone's own new contribution: a live functional proof that `AuthorView`'s
+  author-scoping contract survives widened decentralized visibility — one author's page gains her own
+  decentralized-origin work additively while never leaking another author's decentralized-origin work onto her page.
+- **J. User-value assessment and final classification.** Journey 1 (encounter-driven: resolve → Repository-findable
+  → Fork) is exactly what Sections B-D already proved complete, live. Journey 2 (search-driven: open Repository,
+  search for something never encountered, have Repository itself reach into Nostr/peers to find it) is checked
+  against this codebase's own on-file record rather than argued fresh: 0.9.330 Section H explicitly named and
+  rejected "a new Peer publication-browsing protocol" as a separate, larger, unscoped problem from its very first
+  milestone in this arc — "it does not give Peer the ability to browse a stranger's catalog with no prior lead, a
+  separate, larger, unscoped problem" — and 0.9.330 Section F had already derived the no-ranking, no-cross-source-merge
+  policy Section H reconfirms structurally here. A direct search of `docs/Roadmap.md` for any on-file record of a
+  user or workflow requiring proactive decentralized search or a persistent decentralized catalog returns zero hits.
+  The decision matrix's nine rows are built directly from Sections A-I's own live findings: four capabilities
+  (local discovery, resolved-peer discovery, Repository search convergence, Explore/Fork convergence) are Complete;
+  five (proactive Nostr search, proactive peer search, a persistent decentralized Repository catalog, ranking,
+  cross-network deduplication) are Absent — and every one of the five traces to a specific, dated, on-file
+  deliberate decision, not an unexplained gap.
+
+### Decision matrix
+
+| Capability | Status |
+| --- | --- |
+| Local Repository discovery | Complete |
+| Resolved peer Publication discovery | Complete |
+| Repository search convergence | Complete |
+| Explore/Fork convergence | Complete |
+| Proactive Nostr search from Repository | Absent — deliberate exclusion (0.9.330 Section H) |
+| Proactive peer search from Repository | Absent — deliberate exclusion (0.9.330 Section H) |
+| Persistent decentralized Repository catalog | Absent — deliberate exclusion (Section G; no on-file evidence requiring it) |
+| Ranking | Absent — deliberate exclusion (0.9.330 Section F; Section H) |
+| Cross-network deduplication | Absent — deliberate exclusion (0.9.330 Section F; Section H) |
+
+### Verdict
+
+**STABLE_STOP — STOP.** The current encounter-driven federated Repository — peer → resolve → admit → Repository →
+search → select → Explore/Fork — is sufficient for the product direction 0.9.330 itself recorded, and is proven
+complete end to end by this milestone's own flagship (Section B), not merely inherited from 0.9.339's own claim.
+Proactive decentralized search (Journey 2) is a genuinely NEW capability, not the completion of an existing one:
+0.9.330 named and excluded it from this arc's own scope at the very first milestone, on record, before any of
+0.9.331-0.9.339 was built — this reassessment did not discover a newly-relevant exclusion, it confirmed a
+long-standing one still holds and still has no evidence against it. Every "Absent" row in the decision matrix
+traces to a specific, dated, on-file deliberate decision, never an unexplained gap this audit had to paper over. Per
+this codebase's own governing framework (0.9.322/0.9.328/0.9.329), STABLE — STOP is the primary successful outcome
+of a reassessment, not a consolation for finding nothing: the entire 0.9.330-0.9.339 Federated Repository Publication
+arc is now closed.
+
+### What this milestone deliberately excludes
+
+Per its own Type and explicit scope: no production-code change of any kind. No `RepositoryDecentralizedDiscoveryQuery`
+seam, no explicitly-triggered decentralized discovery step, no persistent decentralized catalog, no ranking, no
+cross-network deduplication, and no `SearchPublicationsUseCase.js` change making it network-aware. Every one of these
+remains exactly what Section J's evidence says it is — a deliberate exclusion, not deferred work waiting for a
+milestone number.
+
+### What comes after
+
+No 0.9.341 is pre-selected. Per this milestone's own STABLE_STOP verdict and this codebase's own established
+practice: ForkBuild's broader product evolution process resumes on its own terms, the next time genuine evidence — a
+newly observed blocked journey, a real external requirement (a user who actually needs to find a Publication they
+never encountered), an actual operational problem — points somewhere, never by this loop re-examining its own
+already-settled conclusions again. If such evidence ever does arrive, this milestone's own Section J points at the
+narrow next step rather than a speculative federation layer: an explicitly-triggered decentralized discovery query,
+run outside `SearchPublicationsUseCase.js`'s own synchronous contract, whose results are resolved and admitted into
+the exact same `DecentralizedPublicationDiscoveryProvider`/`CompositeDiscoveryProvider` seam this arc already built —
+never a network-aware Repository search itself.
