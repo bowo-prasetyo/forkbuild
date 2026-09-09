@@ -90735,3 +90735,97 @@ this audit named — not a federated search implementation, not a new Repository
 `SearchPublicationsUseCase`, which this audit's own flagship already proved needs none. Whether and how to hold a
 resolved candidate somewhere `list()`-able (the gap's second half) remains open, and deliberately not pre-committed
 by this milestone.
+
+## 0.9.335 — Decentralized Publication Discovery Provider
+
+**Type:** Production discovery seam. **Production changes:** one new file (plus its two point-in-time-audit
+neighbors, updated in place rather than left to rot — see below).
+
+0.9.334 closed the CONTRACT question (Repository already accepts a plain `Publication` from any
+`discoveryProvider.list()`, proven live) but left its own Section F gap open: nothing in production accumulates a
+resolved decentralized-origin Publication anywhere `list()` could find it. This milestone builds exactly that
+accumulator, and nothing else.
+
+### What this milestone adds
+
+**`discovery/DecentralizedPublicationDiscoveryProvider.js`** (new). A `DiscoveryProvider` subclass — the third one in
+this codebase, alongside `LocalDiscoveryProvider` and `PublicationCatalogDiscoveryProvider` — that holds
+already-resolved `publisher/Publication.js` instances in memory and exposes them through the full
+`list()`/`findById()`/`findByAuthor()`/`findByParentId()`/`findByDocumentId()` contract, mirroring
+`LocalDiscoveryProvider`'s own established lookup semantics exactly (`null` for a single miss, `[]` for a filtered
+miss). Its only public mutator is `add(publication)`, which validates only that its argument genuinely is a
+`Publication` instance — no signature verification, no content resolution, no trust judgement, and, per the brief's
+own explicit caution, no invented deduplication policy: `discovery/DiscoveryProvider.js`'s own contract specifies no
+uniqueness requirement, so `add()` appends unconditionally and two calls for the same Publication produce two
+entries. The provider performs no decentralized discovery or resolution of its own — no Nostr, no peer exchange, no
+Arweave, no call into `PublicationResolver` — confirmed structurally, not just by header comment: its only imports
+are its own base class and `publisher/Publication.js`, and its class body's executable code never mentions a
+signature, verification, trust, or the network. A caller resolves a candidate through the existing decentralized
+pipeline elsewhere, then hands the result to `add()` — discovery and resolution stay exactly where 0.9.331–0.9.334
+already built them; this class only ever catalogs what it is given, in the order it was given.
+
+Deliberately, this milestone does **not** wire the new provider into `application/CreateDiscoveryUseCase.js` or
+change `SearchPublicationsUseCase` to consult more than one `DiscoveryProvider`. Combining a decentralized-origin
+source with the local one is a real aggregation decision — ordering, conflicting candidates, what a UI would call
+each source — that the originating brief's own exclusion list named explicitly ("no cross-provider preference"),
+and building it here would smuggle a federation-of-sources decision into a milestone scoped to be one narrow catalog
+boundary.
+
+### The flagship test
+
+`tests/DecentralizedPublicationDiscoveryProvider.test.js` (new, registered in `tests.html`), five sections:
+
+- **A.** The provider is a genuine `DiscoveryProvider` subclass; `add()` rejects anything that is not a real
+  `Publication` instance and leaves state unchanged on rejection.
+- **B.** `list()` preserves insertion order and returns a defensive copy (mutating the returned array never touches
+  the provider's own state — the same discipline `SearchPublicationsUseCase`'s own `.slice().sort()` already
+  assumes); `findById()`/`findByAuthor()`/`findByParentId()`/`findByDocumentId()` mirror `LocalDiscoveryProvider`'s
+  own established lookup semantics.
+- **C.** No invented deduplication: two `add()` calls for the identical Publication produce two entries.
+- **D. FLAGSHIP.** A Publication travels the real, unmodified decentralized transport — `PublicationResolver#publish()`
+  under the Publication content kind (0.9.331), resolved back by a *different* identity through
+  `PublicationResolver#resolve()` (0.9.332's own convergence-proven pipeline) — and the resolved result, handed to a
+  real `DecentralizedPublicationDiscoveryProvider` via `add()`, is found by Repository's own real, unmodified
+  `SearchPublicationsUseCase` by title text search and by author filter, with `documentId` intact, and correctly
+  excluded from an unrelated query. A second, purely local Publication added to the same provider proves this is a
+  real catalog, not a single-item special case: both coexist and both surface through the identical, unmodified
+  search path. This is 0.9.334's own Section E proof, but through the real production accumulator this milestone
+  adds instead of a disposable test-only stub — the discovery gap that audit named is closed.
+- **E.** Confirmed structurally that the provider performs no decentralized discovery or resolution of its own.
+
+### Prior audits, reconfirmed in place rather than left to rot
+
+Adding a genuine third `DiscoveryProvider` subclass necessarily overtakes one literal claim `tests/
+FederatedRepositoryDiscoverySeamAudit.test.js` (0.9.334) made about the state of the codebase at the time it was
+written — "exactly two `DiscoveryProvider` subclasses exist." Its Section B7 assertion is updated in place to three,
+naming `discovery/DecentralizedPublicationDiscoveryProvider.js` explicitly as 0.9.334's own Section F gap now closed,
+the identical "reconfirmed fresh against the new reality rather than left to rot into a false statement" discipline
+0.9.333 already used on 0.9.330's and 0.9.332's own audit files. `tests/
+PublicationDecentralizedTransportConvergenceAudit.test.js` (0.9.332) needed no such update: its Section G3
+Repository-coupling check is satisfied as-is, because the new provider's own header comment was written to avoid the
+literal `PublicationContentKind`/`PUBLICATION_CONTENT_KIND` symbol names entirely — the provider's real,
+structurally-checked independence from that content kind (Section E above) made textual avoidance the honest choice
+over widening yet another exception list for a mention that was never more than documentation.
+
+`tests/PostDiagnosticProductEvolutionReassessment.test.js` (0.9.326) runs a fresh, basename-based zero-reference
+sweep across every top-level production directory and requires every candidate it finds to classify into a known
+bucket. Because this milestone deliberately leaves the new provider unwired from `CreateDiscoveryUseCase.js` (see
+above), the sweep surfaces it as a new singleton finding. Its Section D is updated in place with a new
+`DECENTRALIZED_DISCOVERY_SEAM` bucket and a D5-prime check confirming the file is real and tested, not abandoned
+code, and genuinely zero-referenced by design rather than by accident — the same "reconfirmed fresh" treatment
+applied to the other two audits above, not a loosening of the sweep's own "every candidate must be explained" bar.
+
+### What this milestone deliberately excludes
+
+Per the brief's own exclusion list: no Repository UI; no change to `SearchPublicationsUseCase`; no change to
+Repository's `Publication` model; no Nostr querying inside the provider; no peer querying inside the provider; no
+automatic discovery orchestration; no automatic materialization or forking; no ranking, relevance scoring, or
+cross-provider preference; no deduplication policy; no persistence or caching; no trust or authority; no change to
+local Publication discovery; no wiring into `CreateDiscoveryUseCase.js`.
+
+### What comes after
+
+Per the brief's own proposed 0.9.336: an ingestion-seam audit asking which existing decentralized discovery
+mechanism (Nostr publication discovery, peer exchange, or another) could naturally feed a resolved candidate into
+`add()` — the smallest real production ingestion point — before any milestone wires actual decentralized discovery
+into this provider or touches Repository's own composition root.

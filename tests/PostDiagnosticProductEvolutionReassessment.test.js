@@ -493,6 +493,7 @@ async function runTests() {
             if (base === 'CreateReplicationUseCase.js') return 'HISTORICAL_REPLICATION_FAMILY';
             if (/^PublisherLeaderboardClaimSnapshot.*View\.js$/.test(base)) return 'RECONCILIATION_DECISION_FAMILY';
             if (base === 'BaseAnchorPublicationObservationView.js') return 'BITCOIN_ANCHOR_ORPHANED_VIEW';
+            if (base === 'DecentralizedPublicationDiscoveryProvider.js') return 'DECENTRALIZED_DISCOVERY_SEAM';
             if (base === 'LoadPublishedWorldSessionUseCase.js') return 'BYPASSED_COMPOSITION_ROOT'; // ResolvePublicationUseCase's own superseding sibling — same subtree, same bucket (D3c)
             if (/^Create[A-Za-z]+UseCase\.js$/.test(base)) return 'BYPASSED_COMPOSITION_ROOT';
             return null;
@@ -621,6 +622,29 @@ async function runTests() {
             assert(observationUiHits === 0, 'D5d. Zero ui/ files ever call it — the same structural fact (no UI entry point) that disqualifies every finding in this section from being a "blocked journey."');
         }
 
+        // D5-prime. discovery/DecentralizedPublicationDiscoveryProvider.js
+        // (0.9.335) — a second, structurally different kind of orphan
+        // than D5's own presentation view: not an unreachable UI
+        // capability at all, but a DiscoveryProvider subclass deliberately
+        // built and left unwired by its own milestone (0.9.334's own
+        // Section F named the accumulator; 0.9.335 built it; wiring it
+        // into application/CreateDiscoveryUseCase.js is explicitly
+        // deferred to a future ingestion-seam milestone, per that
+        // milestone's own "what comes after"). Checked here, freshly,
+        // that this really is that seam and not silently-abandoned code.
+        {
+            assert((byBucket.get('DECENTRALIZED_DISCOVERY_SEAM') || []).includes('discovery/DecentralizedPublicationDiscoveryProvider.js'),
+                'D5e. discovery/DecentralizedPublicationDiscoveryProvider.js is still the sweep\'s own zero-reference finding (sanity).');
+            const providerSource = await rawSource('discovery/DecentralizedPublicationDiscoveryProvider.js');
+            assert(providerSource.includes('export class DecentralizedPublicationDiscoveryProvider extends DiscoveryProvider'),
+                'D5f. It is still a real DiscoveryProvider subclass, not a stub — the same "genuinely implemented" bar D2\'s empty placeholders fail.');
+            assert(grepCount('DecentralizedPublicationDiscoveryProvider', ['tests']) >= 1,
+                'D5g. It is still genuinely tested — real code, not dead scaffolding.');
+            const compositionRootHits = await grepCount('DecentralizedPublicationDiscoveryProvider', ['application', 'ui']);
+            assert(compositionRootHits === 0,
+                'D5h. Zero application/ or ui/ files construct or reference it — unwired by this milestone\'s own explicit design, never an accidental gap.');
+        }
+
         // D6. Checked against this milestone's own bar: an unreachable
         // capability only becomes a "blocked journey" once a user can
         // START it and then gets stuck. Every finding in this section
@@ -632,7 +656,7 @@ async function runTests() {
         assert(exportImportScreenshotHits === 0, 'D6b. Zero ui/ references to the three empty stub files\' own names — nothing even nominally points a user at them.');
 
         const bucketCounts = Array.from(byBucket.entries()).map(([bucket, files]) => `${bucket}: ${files.length}`).join(', ');
-        console.log(`✓ D: A genuinely fresh sweep methodology (basename cross-reference across every top-level production directory, independent of any prior audit\'s grep list) found ${zeroReference.length} zero-reference candidates, EVERY ONE of them classified (D1) — ${bucketCounts}. The three EMPTY_PLACEHOLDER_STUB files are 1-byte, matching application/.gitkeep\'s own pattern, never implementations (D2). The BYPASSED_COMPOSITION_ROOT family is materially LARGER than 0.9.323's own four named members — confirmed fresh, individually, to have zero construction sites and zero UI presence, including LoadPublishedWorldSessionUseCase.js, whose own job is confirmed superseded in shape (never in name) by the actually-wired ResolvePublicationUseCase.js (D3). The two 0.9.323 findings (Delegation, Reconciliation Decision) are reconfirmed fresh and live (D4). ONE genuinely new singleton finding — application/BaseAnchorPublicationObservationView.js, a real, tested, zero-UI-presence presentation view (0.8.100-era) — is named and checked (D5). Every finding in this section fails the same structural test: zero UI entry point, so none is a "blocked journey" (D6).`);
+        console.log(`✓ D: A genuinely fresh sweep methodology (basename cross-reference across every top-level production directory, independent of any prior audit\'s grep list) found ${zeroReference.length} zero-reference candidates, EVERY ONE of them classified (D1) — ${bucketCounts}. The three EMPTY_PLACEHOLDER_STUB files are 1-byte, matching application/.gitkeep\'s own pattern, never implementations (D2). The BYPASSED_COMPOSITION_ROOT family is materially LARGER than 0.9.323's own four named members — confirmed fresh, individually, to have zero construction sites and zero UI presence, including LoadPublishedWorldSessionUseCase.js, whose own job is confirmed superseded in shape (never in name) by the actually-wired ResolvePublicationUseCase.js (D3). The two 0.9.323 findings (Delegation, Reconciliation Decision) are reconfirmed fresh and live (D4). ONE genuinely new singleton finding — application/BaseAnchorPublicationObservationView.js, a real, tested, zero-UI-presence presentation view (0.8.100-era) — is named and checked (D5). A SECOND, structurally different singleton — discovery/DecentralizedPublicationDiscoveryProvider.js (0.9.335), a real, tested DiscoveryProvider subclass deliberately left unwired by its own milestone pending a future ingestion-seam audit, never abandoned code — is named and checked the same way (D5-prime). Every UI-shaped finding in this section fails the same structural test: zero UI entry point, so none is a "blocked journey" (D6).`);
     }
 
     // ===============================================================
