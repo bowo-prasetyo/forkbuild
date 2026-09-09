@@ -87870,3 +87870,105 @@ not an abandoned extension. It reopens only if a genuinely new Publication-beari
 Section G already shows the authorization/identity plumbing such a surface would need is zero-cost to reuse, so
 the only real question next time, exactly as this milestone answered for these four, would be product fit.
 ForkBuild's broader product evolution process resumes on its own terms, unrelated to this arc.
+
+## 0.9.306 — Notification Awareness Product Reassessment
+
+**Type:** Test-only product reassessment. **Production changes:** None.
+
+0.9.287 already reassessed whether durable Notification History was a complete product capability and found no
+evidenced reason to extend it with delivery mechanisms, read/unread state, or additional producers. 0.9.288-0.9.305
+then ran an entirely separate arc (Publication Commentary's own cross-surface reachability), closed at 0.9.305 with
+the same discipline — architectural reachability is not the same question as product need. This milestone returns
+to notifications with the sharper question 0.9.287's own delivery-mechanism framing did not fully carry through:
+does the recipient of `publication.commented` need to know while continuing another activity, or is inspecting
+Notification History later sufficient? Every claim below is grounded fresh against real, unmodified production
+source — nothing is inferred from the 0.9.273-0.9.305 milestone history itself.
+
+### What this milestone found
+
+- **Section A — capability reconfirmation.** The full seven-hop pipeline (fact, producer, dedup policy, durable
+  store, authenticated recipient query, History UI, composition wiring) is unchanged and intact. One new fact
+  surfaced that 0.9.287 did not have to account for: the WRITE side now has **two** real production construction
+  sites for `PublicationCommentaryNotificationProducer` — `CreateWorldViewUseCase.js` (0.9.285) and
+  `CreatePublicationCommentaryUseCase.js` (0.9.289, the app-wide "other publication" write path 0.9.305 already
+  confirmed feeds `PublicationCard.js`). Both write into the same underlying `window.localStorage` key, so this
+  remains one durable history, never two.
+- **Section B — producer census.** `publication.commented` remains the *only* NotificationEvent-producing behavior
+  (exactly one `*_EVENT_TYPE` constant exists in `application/`). The READ side still has exactly **one**
+  construction site (`GetRecipientNotificationEventsUseCase`, inside `CreateWorldViewUseCase.js` alone) — the
+  asymmetry between a now-doubled write path and a still-singular read path is the evidence Section C turns on.
+- **Section C — awareness need, the decisive section.** Three structural facts bound whether "know immediately"
+  can differ from "see later in History" *before* any UI preference enters into it: (i) the notification READ path
+  — and therefore Notification History itself — is composed only inside an open World session
+  (`ui/views/WorldView.js`'s own per-mount `CreateWorldViewUseCase`) and reachable from no other route, including
+  `ui/App.js`, the one persistent, always-mounted app shell, which carries no notification vocabulary and no
+  Notifications link among its many destinations; (ii) the underlying facts themselves cannot travel to a
+  genuinely different device — `storage/LocalStorageProvider.js` is backed by plain `window.localStorage`, and
+  neither `PublicationCommentaryStore` nor `NotificationEventStore` is referenced anywhere under `nostr/`,
+  `arweave/`, `replication/`, or `peer/` — unlike Presence/Chat/Friendship, which already use
+  BroadcastChannel/peer/Nostr transports; (iii) even granting one shared device, `LocalIdentityProvider` persists
+  exactly one `AuthenticationSession` under one storage key — only one identity is ever the live, current session
+  at a time, so there is no concurrent "the recipient is doing something else right now" moment for a same-device
+  scenario to interrupt either. The honest finding: a genuine "recipient is elsewhere, doing something else, right
+  now" scenario is not reachable in this product today, for reasons entirely upstream of any awareness-UI decision.
+- **Section D — surface evaluation**, classified against real templates, never assumed by convention: **World View
+  navigation** (the toolbar already hosting the Notifications button, correctly scoped to identity not document) →
+  NATURAL; **Application top navigation** (`ui/App.js`) → NO_EXISTING_SURFACE, since reaching it would require
+  entirely new app-wide composition, not a placement decision; **Notification History** itself → not applicable,
+  since it is the destination an awareness signal would point at, not a candidate signal surface (its own rendered
+  template already explicitly disclaims read/unread state); **Publication interaction surfaces**
+  (`PublicationCard.js` and its siblings) → INAPPROPRIATE, since each is scoped to one publication on screen, not
+  to a recipient's notifications across every publication they have ever published.
+- **Section E — temporal semantics**, reconfirmed a second time: creation, persistence, retrieval, and presentation
+  remain four provably distinct claims; delivery and acknowledgment still have no method anywhere in the chain's
+  public surface to even carry such a claim.
+- **Section F — persistence implications.** Confirmed architecturally, nothing built: a future recipient-
+  interaction-state concept (read/unread) would have to live as a separate store keyed by
+  `(notificationId, recipientIdentityId)`, never as a field grafted onto `NotificationEvent` itself — the same
+  two-stores-never-one-growing-a-second-concern shape `PublicationCommentaryStore`/`NotificationEventStore`
+  already hold between each other.
+- **Section G — delivery vs. awareness.** A conservative, local, in-app mechanism (no WebSocket, no browser push, no
+  email) would be the correct *shape* if pursued — but Section C's own evidence already shows the scenario such a
+  mechanism exists to serve is not reachable in production today. A conservative mechanism does not manufacture a
+  need Section C's evidence says does not yet exist.
+- **Section H — cadence audit.** None of this codebase's three existing observation families matches notification
+  temporal semantics: WorldView's own spatial/vehicle-interaction polling drives live scene state with no discrete
+  fact to persist; the `distributionLifecycleStore` subscription (the closest existing precedent to a push
+  mechanism) observes the *same actor's own* just-issued command, never a different identity's past action;
+  `UserWidget.js`'s app-wide vault-timeout interval recomputes the current identity's own local state, never polls
+  for a fact another identity produced. Reusing any of the three merely because it exists would borrow the wrong
+  shape.
+- **Section I — user-value test.** What would immediate awareness buy the publisher over opening History next time?
+  Per Section C: nothing measurable — cross-device, the fact cannot arrive any sooner regardless of UI; same-device,
+  only one identity is ever live at a time, so the next live session already is the next History visit. The answer
+  to the brief's own test comes back weak, not strong.
+- **Section J — final decision: STOP.** Notification History remains the complete notification capability. No
+  unread/read state, badge, toast, polling loop, or other active awareness mechanism is evidenced. Three concrete,
+  evidence-based (not scheduled) reopening conditions are recorded: a real, deliberate product decision to build
+  cross-device synchronization for Publication Commentary; a second, independently-arising `NotificationEvent`
+  producer with Commentary's own asynchronous-absence shape; or a real user report that a Commentary went
+  unnoticed specifically because nothing prompted opening History (0.9.287's own still-unmet condition).
+
+### What this milestone adds
+
+- **`tests/PostNotificationAwarenessProductReassessment.test.js`** (new, registered in `tests.html`) — ten lettered
+  sections (A-J) matching the audit structure above, run against real, unmodified production classes and real
+  repo-wide sweeps.
+- **This `docs/Roadmap.md` entry.**
+
+No other file is touched.
+
+### What this milestone deliberately excludes
+
+Per its own test-only brief: no unread/read implementation, no notification badge, no toast, no WebSocket
+notification transport, no browser Notification API, no email, no push notifications, no polling loop, no
+notification delivery queue, no modification to `NotificationEvent`, no generic notification lifecycle enum, and
+no new notification producer built merely to justify the feature.
+
+### What comes after
+
+Per this milestone's own verdict, the notification arc remains closed exactly where 0.9.287 left it — this
+reassessment adds the specific architectural reasons (composition scope, storage scope, session model) that keep
+it closed, rather than merely re-asserting 0.9.287's own conclusion. It reopens only on one of Section J's three
+named, evidence-based conditions — never on inertia, and never on architectural symmetry with an unrelated arc.
+ForkBuild's broader product evolution process resumes on its own terms, unrelated to this arc.
