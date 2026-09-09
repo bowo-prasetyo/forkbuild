@@ -553,31 +553,40 @@ async function run() {
         assert(!/SearchPublicationsUseCase|DiscoveryProvider|PublicationCatalog\.js|CreatePublicationCatalogUseCase/.test(kindSource + validatorSource),
             '2. application/PublicationContentKind.js and application/PublicationContentValidator.js import nothing Repository-shaped — this content kind is usable entirely independently of Repository, exactly what makes it a transport seam rather than a Repository-specific implementation.');
 
-        // G3. Only tests/PublicationContentKind.test.js and this audit
-        // file itself reference the new symbols outside application/ —
-        // confirmed directly rather than assumed from G1/G2 alone.
+        // G3. At the time this audit was written, only
+        // tests/PublicationContentKind.test.js and this audit file itself
+        // referenced the new symbols outside application/ — confirmed
+        // directly rather than assumed from G1/G2 alone. 0.9.333 closed
+        // this milestone's own Section H gap by adding exactly ONE more
+        // reference: application/CreatePublicationDisplayKindRegistryUseCase.js,
+        // the Publications Center's own generic display-kind registry —
+        // named here explicitly as the one intended, non-Repository
+        // exception, never silently widened to permit anything else.
         const nonTestHits = grepFiles('PublicationContentKind|PUBLICATION_CONTENT_KIND', ['application', 'ui', 'discovery'])
-            .filter((f) => !f.startsWith('application/PublicationContentKind.js') && !f.startsWith('application/PublicationContentValidator.js'));
-        assert(nonTestHits.length === 0, `3. no file under application/, ui/, or discovery/ other than the two files this content kind is defined in references it at all (found: ${nonTestHits.join(', ') || 'none'}).`);
+            .filter((f) => !f.startsWith('application/PublicationContentKind.js') && !f.startsWith('application/PublicationContentValidator.js') && !f.startsWith('application/CreatePublicationDisplayKindRegistryUseCase.js'));
+        assert(nonTestHits.length === 0, `3. no file under application/, ui/, or discovery/ other than the two files this content kind is defined in, plus the Publications Center's own display-kind registry (0.9.333), references it at all (found: ${nonTestHits.join(', ') || 'none'}).`);
     }
     console.log('✓ Section G: no Repository coupling in either direction — Repository\'s own search/catalog/discovery files never mention this content kind, and this content kind never imports anything Repository-shaped. It is usable, and tested, entirely on its own.');
 
     // ===============================================================
-    // Section H — The one honest gap this audit surfaces: the
-    // Publications Center's own display-kind registry does not yet know
-    // this kind exists. This is real, separately-scoped follow-up work —
-    // and, per Section G, explicitly NOT a Repository concern, since the
-    // registry below is the generic Publications Center's own, not
-    // Repository's.
+    // Section H — At the time this audit was written, the one honest gap
+    // it surfaced was that the Publications Center's own display-kind
+    // registry did not yet know this kind existed — real, separately-
+    // scoped follow-up work, and per Section G, explicitly NOT a
+    // Repository concern, since the registry is the generic Publications
+    // Center's own, not Repository's. 0.9.333 closed exactly that gap,
+    // the same way every other kindPlugin in that registry was already
+    // composed — reconfirmed here, fresh, rather than left to silently
+    // rot into a false claim.
     // ===============================================================
     {
         const registrySource = await readSource('application/CreatePublicationDisplayKindRegistryUseCase.js');
         assert(registrySource.includes('createBlueprintAttributionPublicationKind') && registrySource.includes('createPlaceNamingClaimPublicationKind'),
-            '1. the Publications Center\'s own display-kind registry currently wires exactly the two kinds that existed before this milestone.');
-        assert(!/PublicationContentKind|createPublicationContentKind|forkbuild\.publication/.test(registrySource),
-            '2. confirmed directly: application/CreatePublicationDisplayKindRegistryUseCase.js does not yet register the new forkbuild.publication kind — a cataloged, decentralized-origin Publication cannot yet be DISPLAYED by the Publications Center, even though it fully resolves through PublicationResolver (Section A). This is real, narrowly-scoped wiring left for later — never Repository\'s own concern (Section G), and never blocking today\'s transport/resolution milestone.');
+            '1. the Publications Center\'s own display-kind registry still wires the two kinds that existed before this milestone, unchanged.');
+        assert(registrySource.includes('createPublicationContentKind'),
+            '2. as of 0.9.333, application/CreatePublicationDisplayKindRegistryUseCase.js DOES register forkbuild.publication — composed via createPublicationContentKind(), exactly the way createBlueprintAttributionPublicationKind()/createPlaceNamingClaimPublicationKind() already were. A cataloged, decentralized-origin Publication can now be DISPLAYED by the Publications Center, closing the one gap this audit named. See tests/PublicationDisplayKindIntegration.test.js for the full display-path flagship this milestone\'s own successor built.');
     }
-    console.log('✓ Section H: one honest, narrowly-scoped gap recorded — application/CreatePublicationDisplayKindRegistryUseCase.js (the Publications Center\'s own kindPlugin registry, distinct from anything Repository-owned) does not yet include forkbuild.publication. Transport and resolution converge cleanly (Sections A-G); DISPLAY is a separate, smaller, not-yet-built seam. Named here so it is not mistaken for a defect in this milestone\'s own scope.');
+    console.log('✓ Section H: the one gap this audit named at the time — application/CreatePublicationDisplayKindRegistryUseCase.js not yet knowing forkbuild.publication existed — is closed as of 0.9.333, the Publications Center\'s own display-kind registry gaining a third entry, composed identically to the first two. Transport, resolution, AND display now all converge cleanly.');
 
     // ===============================================================
     // Section I — Final verdict and production-change guard.

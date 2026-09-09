@@ -90477,3 +90477,131 @@ seen in the Publications Center — smaller than, and prior to, any milestone th
 Repository-facing UI. What existing decentralized discovery mechanism could actually produce `forkbuild.publication`
 candidates for a future Repository integration remains open, and is deliberately not pre-committed by this
 milestone.
+
+## 0.9.333 — Decentralized Publication Display-Kind Integration
+
+**Type:** Feature (one file). **Production changes:** `application/CreatePublicationDisplayKindRegistryUseCase.js`
+only.
+
+0.9.331 built the third `kindPlugin`. 0.9.332 proved it genuinely travels the existing decentralized transport
+pipeline — `PublicationExchange`, `PublicationPeerExchange`, `LocalPublicationCatalog` — completely unmodified, and
+named one honest, narrowly-scoped gap in its own Section H: `application/CreatePublicationDisplayKindRegistryUseCase.js`,
+the Publications Center's own generic `kindPlugin` registry (distinct from anything Repository-owned), still wired
+only the two kinds that predate 0.9.331. A decentralized-origin Publication fully resolved but could not yet be
+DISPLAYED. This milestone closes exactly that gap, and nothing else.
+
+### The seam
+
+```
+Decentralized transport (0.9.331/0.9.332, unmodified)
+        │
+        ▼
+PublicationResolver
+        │
+        ▼
+forkbuild.publication  →  a real publisher/Publication.js instance
+        │
+        ▼
+application/CreatePublicationDisplayKindRegistryUseCase.js   ← the ONE file this milestone touches
+        │
+        ▼
+ui/views/DecentralizedPublicationsView.js's own EXISTING, generic card
+(humanized content-kind label + kindPlugin.describe())
+```
+
+`ui/views/DecentralizedPublicationsView.js` was never touched — its own template already renders every cataloged
+entry identically regardless of `contentKind` (a humanized label from `humanizeContentKind()` plus whatever
+`entry.view.contentSummary` — `kindPlugin.describe()`'s own output — happens to be). That template was already
+generic before this milestone; the only thing missing was a third entry in the registry it reads from. This is
+exactly the "no new renderer unless the existing architecture genuinely requires one" restraint the originating
+brief asked for, confirmed true rather than assumed: the existing architecture did not require one.
+
+### What was built
+
+`application/CreatePublicationDisplayKindRegistryUseCase.js` gains a third `kindPlugin`, composed the identical way
+the other two already are: spread `createPublicationContentKind({ verifier })` (0.9.331, `{ contentKind, validate,
+fromJSON, verify }`, deliberately no `store`), then add a `describe()` for presentation —
+
+```js
+const publicationKind = {
+    ...createPublicationContentKind({ verifier }),
+    describe: (publication) => {
+        const title = publication.title ? `"${publication.title}"` : 'an untitled publication';
+        return publication.author ? `Publication — ${title}, by ${publication.author}` : `Publication — ${title}`;
+    }
+};
+```
+
+`title`/`author` are handled as optional, not assumed present — the two fields `application/PublicationContentValidator.js`
+(0.9.331) deliberately leaves optional, matching `publisher/Publication.js`'s own long-standing tolerance for an
+anonymous, untitled publication. No `store` — this kind never had one (see `application/PublicationContentKind.js`'s
+own header) — so resolving one for display still can never import anything, exactly like the other two.
+
+### Tests
+
+`tests/PublicationDisplayKindIntegration.test.js` (new, registered in `tests.html`), eight sections:
+
+- **A. FLAGSHIP.** A real, signed Publication travels `publish()` → `announce()` (REAL `PublicationPeerExchange`) →
+  wire → `_handleIncoming()` → `importPublication()` → `LocalPublicationCatalog` (Bob's side, purely over the wire,
+  mirroring 0.9.332's own Section A) → `resolvePublicationView()`, driven by a REAL, unmodified-in-shape
+  `CreatePublicationDisplayKindRegistryUseCase` output. The resulting view resolves, and its `contentSummary` is a
+  real string produced by the newly-registered `describe()`, reflecting this publication's own title and author.
+- **B. Presentation convergence.** A Publication resolved purely locally (no peer transport at all) and the
+  FLAGSHIP's own decentralized-origin Publication converge on a byte-identical `contentSummary`, and agree on
+  title/author/license/schemaVersion/contentKind. Acquisition origin does not alter presentation.
+- **C. Identity preservation.** Every field the originating brief named — `id`, `documentId`, `contentReference`,
+  `title`, `author`, `license`, `schemaVersion`, `signature` — survives to the display view, and the envelope's own
+  identity (`core/DecentralizedPublication.js`) and the resolved content's own identity (`publisher/Publication.js`)
+  stay two structurally distinct spaces, never collapsed into one.
+- **D. Content-kind isolation.** All three registered kinds — `forkbuild.publication`,
+  `forkbuild.blueprint-attribution`, `forkbuild.place-naming-claim` — each dispatch to their own, distinct
+  `describe()` output (three real resolutions, three non-overlapping summaries). A deliberately unregistered fourth
+  `contentKind` still falls through to `PublicationResolutionView.js`'s own pre-existing "this replica does not yet
+  know how to display" case, proving the new registration never became a fallback/wildcard for every other kind.
+- **E. Existing-kind regression.** `BlueprintAttribution`/`PlaceNamingClaim` `describe()` output is exactly what it
+  was before this milestone, byte-for-byte. Registration order — `Object.keys(kindPlugins)` — proves the registry
+  was EXTENDED (the two original keys first, in their original order, the new one appended after), never reordered
+  or replaced. None of the three kindPlugins carry a `store()`.
+- **F. No decentralized-origin UI branch.** Source across the display path (`PublicationResolutionView.js`,
+  `DecentralizedPublicationsView.js`, the registry itself) carries no conditional keyed on acquisition source/origin
+  anywhere, and the resolved view's own field set carries no such flag for a UI to branch on even if it wanted to.
+- **G. No Repository coupling, reconfirmed.** Repository's own search/catalog/discovery files
+  (`SearchPublicationsUseCase.js`, `PublicationCatalog.js`, `PublicationCard.js`, `DiscoveryProvider.js`,
+  `LocalDiscoveryProvider.js`, `CreatePublicationCatalogUseCase.js`) still make zero reference to the display-kind
+  registry or `forkbuild.publication`; the registry itself imports nothing Repository-shaped; none of the transport
+  classes (`PublicationPeerExchange.js`, `PublicationExchange.js`, `LocalPublicationCatalog.js`) needed to change at
+  all — display integration required zero transport changes.
+- **H. Final verdict.**
+
+Two pre-existing audits made claims that this milestone's own change necessarily overtakes, and both were updated in
+place rather than left to silently rot into false statements: `tests/PublicationDecentralizedTransportConvergenceAudit.test.js`'s
+own Section G3/H (0.9.332) explicitly named `application/CreatePublicationDisplayKindRegistryUseCase.js` as the one
+intended exception to "no other file references this content kind," and recorded that the gap it once named is now
+closed. `tests/FederatedRepositoryProductDirectionSeamAudit.test.js`'s own Section C4/C5 (0.9.330) reconfirmed, fresh,
+that the registry now wires three kinds rather than two, while re-proving the deeper finding those assertions exist
+to protect — zero content overlap between Repository's own catalog/search stack and anything Peer/Decentralized can
+carry — still holds, unchanged, because this milestone touches only the Publications Center's own display registry,
+never Repository's.
+
+### Verdict
+
+**DISPLAY_KIND_INTEGRATION_CONFIRMED.** A decentralized-origin Publication now renders through the Publications
+Center's existing, generic card — the same template, the same dispatch, the same `describe()` mechanism every other
+content kind already uses. The only production change is the one line of wiring 0.9.332's own Section H named as the
+sole remaining gap. No new UI component was needed because none was required: `ui/views/DecentralizedPublicationsView.js`
+was already content-kind-agnostic before this milestone touched anything.
+
+### What this milestone deliberately excludes
+
+Per the originating brief's own exclusion list, kept in full: no Repository changes; no `SearchPublicationsUseCase.js`
+changes; no federated search; no Nostr/Arweave aggregation; no peer catalog discovery; no ranking, deduplication, or
+provider selection; no automatic forking or materialization; no new Publication store; no new Publication UI
+component (the existing registry genuinely did not require one); no new content-kind abstraction.
+
+### What comes after
+
+Per 0.9.332's own "What comes after," restated here because this milestone did not change it: what existing
+decentralized discovery capability could actually produce `forkbuild.publication` candidates suitable for a future
+Repository search seam remains open, and deliberately not pre-committed. That is a substantially different question
+from transport, resolution, or display, and it deserves its own evidence-driven audit before any milestone touches
+Repository, Search, or federated aggregation.
