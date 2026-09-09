@@ -89885,3 +89885,98 @@ factories into `ui/main.js`'s own composition; no change to any of the four stan
 No 0.9.327 is pre-selected. ForkBuild's broader product evolution process resumes on its own terms, the next time
 genuine evidence — a newly observed blocked journey, a real external requirement, an actual operational problem —
 points somewhere, never by this loop re-examining its own already-settled conclusions again.
+
+## 0.9.327 — Bitcoin Anchor Observation Product Gap Audit
+
+**Type:** Test-only, evidence-gathering milestone. **Production changes:** none.
+
+0.9.326's own fresh orphan sweep (Section D) surfaced one genuinely new singleton finding beyond its own
+already-classified families: `application/BaseAnchorPublicationObservationView.js`, described in 0.9.326's own
+commit message as "a real, tested, zero-UI-consumer presentation view from the 0.8.100-era Bitcoin Anchor
+observation family." This milestone's own brief asked whether that finding is a genuine product gap, a duplicate of
+an existing surface, or something else — investigated rather than assumed, and explicitly **not** implemented
+ahead of that answer.
+
+**Section A's own first result corrects the finding's own name.** The file 0.9.326 flagged is not part of the
+Bitcoin family. It is part of the separate, parallel BASE (the Coinbase L2 chain) anchor family —
+`BaseAnchorPublicationRecord`, `describeBaseAnchorPublicationObservations()`, keyed by `txid` — which this codebase
+has always kept structurally distinct from Bitcoin's own family (`BitcoinAnchorPublicationRecord`, keyed by
+`anchorId`; see `docs/Principles.md`'s own restraint against a universal transaction abstraction, 0.8.89, and
+0.8.100's own "Bitcoin keeps `anchorId`, Base keeps `txid` — neither is normalized toward the other"). 0.9.326's own
+commit message conflated the two — an imprecise label, not a second finding — because the correlation shape
+`BaseAnchorPublicationObservationView.js` composes was itself modeled on `BitcoinAnchorObservationEvidenceView.js`'s
+own, earlier pattern. This milestone keeps the "Bitcoin Anchor Observation" title the finding was raised under, and
+investigates the file that actually exists: Base's own publication-identity-scoped observation correlation view.
+
+### What this milestone adds
+
+`tests/BitcoinAnchorObservationProductGapAudit.test.js` (new, registered in `tests.html`), ten sections:
+
+- **A. Exact capability reconstruction** — the domain correction above, sourced from the file's own text (it never
+  mentions "Bitcoin") and its own header (0.8.100), plus 0.8.100's own Roadmap entry, read directly, which already
+  named its own successor as a deliberate, not-yet-decided follow-up rather than a finished feature.
+- **B. Real production reachability** — zero non-test, non-doc files anywhere in the codebase import
+  `BaseAnchorPublicationObservationView.js`, including `ui/main.js`'s own composition root. The underlying
+  capabilities it would observe are each independently confirmed live: Base publication identities and their
+  lifecycle timeline are rendered in `ui/views/DecentralizedPublicationsView.js`, Base transaction inclusion can be
+  explicitly observed from that same shipped UI, a Bitcoin publication lifecycle timeline is rendered there too, and
+  Bitcoin wallet connection — the entry point to actually producing a Bitcoin anchor — is wired into the shipped UI.
+- **C. User journey** — the smallest concrete journey (Base anchor → existing anchor fact → ? → user observation),
+  built over a real `PublicationObservationArchive` using the exact production `CreateBaseAnchorPublicationRecordUseCase`/
+  `appendBaseTransactionInclusionObservation()` calls the shipped UI itself makes: the "?" already resolves to a
+  concrete, present answer through `reconstructBaseAnchorPublicationLifecycleTimeline()`, the shipped path.
+- **D. Existing observation surfaces** — both a "Bitcoin Anchor Publications" card and a "Base Anchor Publications"
+  card exist in `ui/views/DecentralizedPublicationsView.js`, each independently exposing its own "Show Publication
+  Lifecycle" disclosure — confirmed by direct source match, not inference.
+- **E. Fact vs. observation** — the domain correlation function 0.8.100 introduced
+  (`describeBaseAnchorPublicationObservations()`) is proven, live, to be reused UNCHANGED by both the orphaned view
+  and the shipped 0.8.101 lifecycle timeline: the two differ in presentation SHAPE only (`{publication, observations}`
+  vs. one flattened chronological array), never in which underlying facts they draw from. No verdict vocabulary in
+  either.
+- **F. Identity and provenance** — 0.8.100's own flagship (two publications sharing one `contentHash` under two
+  different `txid`s, each with an independent observation history) is re-run through the SHIPPED lifecycle-timeline
+  path instead of the orphaned view, and holds the identical non-leaking guarantee — the duplication is safe, not
+  merely superficial.
+- **G. THE FLAGSHIP** — a live answer, through real archives and the exact functions
+  `ui/views/DecentralizedPublicationsView.js` itself calls, to this milestone's own central test: "can a user
+  currently determine, through the shipped product, whether an operation that produces an anchor actually resulted
+  in the expected anchor fact?" Answered YES for both chains — a real Base publication's inclusion at block 500 and
+  a real Bitcoin publication's confirmation at block height 900 are each recovered exactly, through
+  `reconstructBaseAnchorPublicationLifecycleTimeline()` and `reconstructBitcoinAnchorPublicationLifecycleTimeline()`
+  respectively, the identical functions the shipped UI's own "Show Publication Lifecycle" toggles call.
+- **H. External-evidence gate** — the 0.9.314 Section F/0.9.318 Section H executable classifier, reused verbatim;
+  the strongest honest characterization of this finding ("this UI could show the same information a second way")
+  falls under that classifier's own, already-established insufficient-reasons list.
+- **I. Candidate classification** — `DUPLICATIVE`: an existing, shipped, symmetric surface already exposes the
+  identical publication-identity-scoped observation fact the orphaned view would present, distinguishing this from
+  `UNUSED_INTERNAL` (no equivalent surface at all) or `DEFERRED` (the fact genuinely unobservable today).
+- **J. Production-change guard** — since the verdict is not `READY`, no production file is touched; verified
+  directly against `git diff` at test-run time, scoped outside `tests/`, `tests.html`, and this file.
+
+### Verdict
+
+**DUPLICATIVE — STOP.** `application/BaseAnchorPublicationObservationView.js` (0.9.326's own "Bitcoin Anchor
+observation view" finding) is not a product gap. It is Base's own 0.8.100 publication-identity-scoped observation
+correlation view — an intermediate presentation shape whose own Roadmap entry named its eventual lifecycle-timeline
+successor as a deliberate, separate follow-up, which then shipped exactly one milestone later as 0.8.101's
+`BaseAnchorPublicationLifecycleTimelineView.js`, wired live into the "Base Anchor Publications" card. The fact the
+orphaned view would present — a publication's identity together with its own correlated observations — has been
+fully user-observable, through the shipped product, since 0.8.101. No workflow is blocked, no external requirement
+exists, and no evidence clears the 0.9.314/0.9.318 gate. Per this milestone's own guard, `application/
+BaseAnchorPublicationObservationView.js` is left untouched — correct, tested, and now explicitly classified rather
+than left for a future sweep to rediscover as if it were still unclassified.
+
+### What this milestone deliberately excludes
+
+Per its own explicit scope, and per the DUPLICATIVE verdict: no Bitcoin anchor creation changes, no new Bitcoin
+providers, no anchor verification redesign, no transaction explorer integration, no automatic polling, no anchor
+history, no notifications, no proof dashboards, no provider preferences, no generalized "Proof UI," and no wiring of
+`BaseAnchorPublicationObservationView.js` into `ui/main.js`'s own composition or any UI route. The file is left
+exactly as 0.8.100 built it.
+
+### What comes after
+
+No 0.9.328 is pre-selected. With the one new singleton 0.9.326 surfaced now explicitly classified DUPLICATIVE, and
+every prior standing candidate already re-confirmed NOT READY across the 0.9.3xx reassessment sequence, ForkBuild's
+broader product evolution process again resumes on its own terms — the next time genuine evidence points somewhere,
+never by this loop re-examining its own already-settled conclusions again.
