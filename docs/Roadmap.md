@@ -89642,3 +89642,79 @@ outcomes: this one, or a genuine concrete product gap selecting exactly one next
 the former. No 0.9.324 is pre-selected. ForkBuild's broader product evolution process resumes on its own terms, the
 next time genuine evidence — a newly observed blocked journey, a real external requirement, an actual operational
 problem — points somewhere, never by this loop re-examining its own already-settled conclusions again.
+
+## 0.9.324 — Diagnostic Tools Surface
+
+**Type:** UI/product reorganization. **Production changes:** one file (`ui/components/OwnPublicationPanel.js`).
+
+0.9.323's own reassessment closed with STABLE_WITH_DEFERRED_GAPS and no 0.9.324 pre-selected, per its own governing
+rule: the next milestone waits for a newly observed blocked journey, a real external requirement, or an actual
+operational problem, never a re-examination of already-settled conclusions. This milestone's own trigger is
+exactly that kind of external, concrete observation, raised directly by the product owner rather than by another
+reassessment: `OwnPublicationPanel.js`'s primary "My Publication" screen had, since 0.9.151-0.9.172, permanently
+carried a complete manual discover-candidates → select → resolve → attribute → materialize → use-claimed-position
+→ place → register Snapshot pipeline — a deliberately-retained RECOVERY counterpart to `application/
+AutomaticSnapshotEncounterCascade.js`'s own background cascade (0.9.187), valuable precisely because it exposes
+individual stages a person can walk one at a time when the automatic path fails silently. Carrying it permanently
+beside ordinary actions (Distribute/Export/Unpublish) made every viewer of the primary screen see
+infrastructure/recovery vocabulary — contentHash, resolution outcome, world position claim, runtime registration —
+they normally never need.
+
+### What this milestone adds
+
+A "Diagnostic Tools" trigger button and popup, both inside `ui/components/OwnPublicationPanel.js` alone:
+
+```
+click "Diagnostic Tools"
+        │
+        ▼
+diagnosticToolsOpen = true   (new — a plain boolean, nothing else)
+        │
+        ▼
+the EXACT SAME discover/select/resolve/attribute/materialize/use-claimed-position/place/register
+markup (0.9.151-0.9.172, byte-for-byte unmoved) now renders inside a .modal-overlay/.modal-panel
+popup instead of inline on the primary screen
+```
+
+A pure presentation grouping, never a new diagnostic subsystem: no command prop, data field, method, disabled
+binding, or result/error rendering changed for a single one of the moved actions — every `v-if`, `:disabled`,
+`@click`, and result block is identical text to what 0.9.151-0.9.172 already wrote, merely nested one level deeper
+inside the new overlay. `diagnosticToolsOpen` is read only by the overlay's own `v-if` and written only by the
+trigger/Close button's own inline clicks — no pipeline method, and no existing reset watcher, ever touches it, so
+opening or closing the popup can never alter domain/application state.
+
+"Check Snapshot Match," "Distribute Snapshot," "Export Snapshot," and "Unpublish" stay on the primary screen,
+deliberately — each answers an ordinary lifecycle question over the ACTIVE Publication itself, never a multi-stage
+manual recovery path over a browsed, otherwise-automatic candidate. No Place Naming section exists in the popup: a
+fresh audit of `ui/components/PlaceNamingPanel.js` (Publish/Export/Import — ordinary, always-needed workflow) and
+World View's own automatic "Nearby Place Names" discovery (`PlaceNamingDiscoveryMonitor`, driven entirely by
+movement, no manual trigger of any kind) found no manually-triggered, multi-stage recovery pipeline analogous to
+the Snapshot one — nothing to relocate. Per this milestone's own governing product brief: "don't create artificial
+categories merely so [sections] look symmetrical."
+
+`tests/DiagnosticToolsSurface.test.js` (new, registered in `tests.html`) proves the relocation structurally and
+behaviorally: every pipeline action and its own result/list block is a descendant of the new overlay (never the
+primary screen); the four ordinary actions and Commentary stay outside it; the pipeline's own action order is
+unchanged; every pipeline method still exists and still calls its one injected command with unchanged arguments;
+`diagnosticToolsOpen` is never read or written by any method or reset watcher; no `DiagnosticService` or new
+`application/` file was introduced; `ui/views/WorldView.js`'s own wiring of `OwnPublicationPanel` (every prop,
+every injected command) is byte-for-byte unchanged; Place Naming's own surfaces carry none of this milestone's
+vocabulary; and `application/AutomaticSnapshotEncounterCascade.js` remains untouched. The full pre-existing
+Snapshot pipeline test suite (`WorldViewSnapshotCandidateBrowser`, `SelectedSnapshotCandidateResolution`,
+`SelectedSnapshotAttribution`, `SelectedSnapshotMaterialization`, `SelectedSnapshotWorldPlacement`,
+`SnapshotWorldRuntimeRegistration`, `SnapshotWorldPositionClaimConsumption`,
+`SnapshotCandidateInteractionCompletionAudit`, and every other file importing `OwnPublicationPanel.js`) was
+re-run unmodified and passes exactly as before this milestone — the relocation introduced zero regressions because
+it changed template placement alone.
+
+### What this milestone deliberately excludes
+
+Per its own explicit scope: any change to automatic discovery, the automatic Snapshot cascade, or Place Naming
+discovery semantics; diagnostics logging, telemetry, or a diagnostic history; retry or any new recovery action; a
+generic `DiagnosticService` or any second "diagnostic mode" concept; moving application logic into the popup; and
+reorganizing Place Naming's ordinary Publish/Export/Import workflow merely for symmetry with Snapshots.
+
+### What comes after
+
+**0.9.325 — Diagnostic Tools Surface Convergence Audit** (per this milestone's own product brief) would verify the
+reorganization changed presentation only, followed by a product reassessment if warranted — not pre-scheduled here.

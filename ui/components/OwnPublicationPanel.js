@@ -1236,6 +1236,99 @@ import { SnapshotWorldPositionClaimOutcome } from '../../application/SnapshotWor
 // - **Live updates, polling, or a subscription of any kind.** Loaded on
 //   mount and on Publication change only — the identical cadence
 //   `publicationCommentaries` already follows.
+//
+// 0.9.324 — Diagnostic Tools Surface.
+//
+// Every capability above (0.9.140 through 0.9.308) rendered directly,
+// always visible, on the SAME primary screen beside ordinary World View
+// actions — Distribute/Export/Unpublish and the discover-candidates ->
+// select -> resolve -> attribute -> materialize -> use-claimed-position ->
+// place -> register Snapshot pipeline alike. That pipeline (0.9.151
+// through 0.9.172) is, by its own design, a MANUAL/RECOVERY counterpart
+// to `application/AutomaticSnapshotEncounterCascade.js`'s own background
+// cascade (0.9.187) — a person reaches for it precisely when they suspect
+// the automatic path failed, not during ordinary exploration. Carrying it
+// permanently on the primary screen made every viewer of "My Publication"
+// see infrastructure/recovery vocabulary (contentHash, resolution
+// outcome, world position claim, runtime registration) they normally
+// never need. This milestone reorganizes ONLY where that pipeline
+// renders:
+//
+//   click "Diagnostic Tools"
+//           │
+//           ▼
+//   diagnosticToolsOpen = true   (NEW, above — a plain boolean, nothing
+//                                  else)
+//           │
+//           ▼
+//   the EXACT SAME discover/select/resolve/attribute/materialize/
+//   use-claimed-position/place/register markup (0.9.151-0.9.172,
+//   byte-for-byte unmoved in the methods/data below this line) now
+//   renders inside a `.modal-overlay`/`.modal-panel` popup instead of
+//   inline on the primary screen
+//
+// A PRESENTATION GROUPING, NEVER A NEW DIAGNOSTIC SUBSYSTEM. No command
+// prop, data field, method, disabled binding, or result/error rendering
+// changed for a single one of the moved actions — every `v-if`,
+// `:disabled`, `@click`, and result `<dl>` in the pipeline is IDENTICAL
+// text to what 0.9.151-0.9.172 already wrote, merely indented one level
+// deeper inside the new overlay. This file still discovers nothing,
+// resolves nothing, materializes nothing, places nothing, and registers
+// nothing itself — `discoverSnapshotCandidates()`/`resolveSelectedSnapshot()`/
+// `attributeSelectedSnapshot()`/`materializeSelectedSnapshot()`/
+// `useClaimedSnapshotPosition()`/`placeMaterializedSnapshot()`/
+// `registerMaterializedSnapshot()` are untouched, calling the exact same
+// injected commands they always have.
+//
+// `diagnosticToolsOpen` HAS EXACTLY ONE JOB: showing or hiding the popup.
+// It is never read by, and never written from, any pipeline method; no
+// existing reset site (the `publication` watcher, candidate reselection,
+// a fresh resolve/materialize attempt) touches it, and it never resets any
+// of them. Closing the popup and reopening it (or switching Publications
+// while it stays open) shows whatever `snapshotCandidateDiscoveryResult`/
+// `selectedSnapshotCandidate`/`selectedSnapshotResolutionResult`/etc.
+// already held — identical to what a person would have seen had the
+// markup never moved.
+//
+// "CHECK SNAPSHOT MATCH," "DISTRIBUTE SNAPSHOT," "EXPORT SNAPSHOT," AND
+// "UNPUBLISH" STAY ON THE PRIMARY SCREEN, DELIBERATELY. These four answer
+// ordinary lifecycle questions over the ACTIVE Publication itself
+// ("publish it," "does my own distribution resolve," "hand me my own
+// bytes," "retract it") — none of them is a multi-stage manual recovery
+// path over a BROWSED, otherwise-automatic candidate, so none of them
+// moves. Reorganizing them into "Diagnostic Tools" merely for symmetry
+// with the Snapshot pipeline was considered and rejected — see this
+// milestone's own product brief, "don't create artificial categories
+// merely so [sections] look symmetrical." No Place Naming section exists
+// in this popup for the identical reason: this codebase's Place Naming
+// surfaces (`ui/components/PlaceNamingPanel.js`'s own Publish/Export/
+// Import actions; World View's own automatic "Nearby Place Names"
+// discovery, driven by `PlaceNamingDiscoveryMonitor`) have no
+// manually-triggered, multi-stage recovery pipeline analogous to this
+// one — Place Naming discovery runs automatically with no manual
+// counterpart to relocate, and Publish/Export/Import are Place Naming's
+// own ordinary, always-needed workflow, not exceptional troubleshooting.
+//
+// GATED ON THE SAME THREE COMMAND PROPS THE PIPELINE'S OWN BUTTONS
+// ALREADY EACH GATE ON. The "Diagnostic Tools" trigger renders only when
+// `discoverSnapshotCandidatesCommand`, `resolveSelectedSnapshotCommand`,
+// or `materializeSelectedSnapshotCommand` is supplied — mirroring, never
+// replacing, each button's own existing `v-if`. A host that supplies
+// none of the three sees no trigger and no popup, exactly as it saw no
+// pipeline buttons before this milestone.
+//
+// DELIBERATELY EXCLUDED — NOT THIS MILESTONE.
+// - **Any new application command, use case, or orchestration.** Every
+//   arrow in the pipeline diagram above already existed; this milestone
+//   adds one boolean and one popup wrapper.
+// - **Diagnostics logging, telemetry, or a diagnostic history.** Opening
+//   or closing the popup produces no record of any kind.
+// - **Retry, new recovery actions, or any change to what a button does.**
+// - **Any change to automatic discovery or `AutomaticSnapshotEncounterCascade.js`.**
+//   Both remain byte-for-byte as their own prior milestones left them.
+// - **A generic `DiagnosticService`, a second "diagnostic mode," or any
+//   application-layer concept of "diagnostic."** "Diagnostic Tools" is a
+//   name for a popup in this file alone.
 export default {
     name: 'OwnPublicationPanel',
     props: {
@@ -1403,6 +1496,12 @@ export default {
     },
     data() {
         return {
+            // 0.9.324 — Diagnostic Tools Surface. Purely a "is the popup
+            // currently rendered" flag — see this file's own header,
+            // "0.9.324," and the trigger button's own comment below. Never
+            // read by, and never resets, any Snapshot pipeline field —
+            // toggling it changes visibility only, never behavior.
+            diagnosticToolsOpen: false,
             snapshotDistributionExecuting: false,
             snapshotDistributionError: null,
             snapshotDistributionResult: null,
@@ -2429,6 +2528,54 @@ export default {
                 <dd>{{ snapshotAttributionResult.outcome }}</dd>
             </dl>
 
+            <!-- 0.9.324 — Diagnostic Tools Surface. The ENTIRE
+                 discover-candidates -> select -> resolve -> attribute ->
+                 materialize -> use-claimed-position -> place -> register
+                 pipeline (0.9.151 through 0.9.172, unmodified below) is a
+                 deliberately-retained MANUAL/RECOVERY counterpart to
+                 application/AutomaticSnapshotEncounterCascade.js's own
+                 background cascade — valuable precisely because it exposes
+                 individual stages a person can walk one at a time when the
+                 automatic path fails silently, not because it belongs
+                 beside ordinary World View actions like Distribute/Export/
+                 Unpublish above. This trigger and the modal-overlay it
+                 opens are a PURE PRESENTATION GROUPING: no command, prop,
+                 data field, method, or disabled/result binding anywhere in
+                 this pipeline changed — every one of those still lives
+                 exactly where 0.9.151-0.9.172 left it, in THIS component,
+                 called from THIS same click handler. diagnosticToolsOpen
+                 (new, below) controls only whether this markup is
+                 currently rendered; it is never read by, and never
+                 resets, any of the pipeline's own ephemeral state — closing
+                 this popup and reopening it shows whatever
+                 snapshotCandidateDiscoveryResult/selectedSnapshotCandidate/
+                 etc. already held, unchanged, the identical restraint
+                 already governing v-if elsewhere in this file. Gated on
+                 the same three command props the pipeline's own buttons
+                 already individually gate on, so the trigger itself never
+                 renders when the whole capability is unavailable. -->
+            <button
+                v-if="discoverSnapshotCandidatesCommand || resolveSelectedSnapshotCommand || materializeSelectedSnapshotCommand"
+                type="button"
+                class="action-btn own-publication-diagnostic-trigger"
+                @click="diagnosticToolsOpen = true"
+            >Diagnostic Tools</button>
+
+            <div
+                v-if="diagnosticToolsOpen"
+                class="modal-overlay own-publication-diagnostic-overlay"
+                @click.self="diagnosticToolsOpen = false"
+            >
+                <div class="modal-panel own-publication-diagnostic-panel">
+                    <h3>Diagnostic Tools</h3>
+                    <p class="own-publication-diagnostic-intro">
+                        Use these tools to manually inspect or recover decentralized content
+                        when automatic discovery or placement does not produce the expected
+                        result.
+                    </p>
+
+                    <h4 class="own-publication-diagnostic-section-title">Snapshots</h4>
+
             <!-- 0.9.151 — World View Snapshot Candidate Browser. A
                  genuinely different operation from Check Snapshot Match
                  above — see this file's own header. Reachable with zero
@@ -2694,6 +2841,14 @@ export default {
                     <dd>{{ selectedSnapshotWorldRegistrationResult.reason }}</dd>
                 </template>
             </dl>
+
+                    <button
+                        type="button"
+                        class="action-btn own-publication-diagnostic-close"
+                        @click="diagnosticToolsOpen = false"
+                    >Close</button>
+                </div>
+            </div>
 
             <!-- 0.9.248 — Publication Commentary UI Integration.
                  Rendered only when a caller supplied
