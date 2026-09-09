@@ -88263,3 +88263,95 @@ Per the brief this milestone was given, no next milestone is chosen automaticall
 a fresh product-evolution reassessment asking whether users actually need to ACT on the multiple placements they can
 now see (navigate to one, manage one) or whether visibility alone is sufficient — resisting a navigation/management
 feature chosen on inertia rather than on demonstrated need.
+
+## 0.9.310 — Post-Placement-Visibility Product Evolution Reassessment
+
+0.9.308 built multi-placement visibility; 0.9.309 proved it converges on a single source of truth with no parallel
+placement state. Neither asked the question 0.9.309's own "what comes after" deferred: now that an owner can see
+`Publication -> Placements (N)`, is there a concrete user action currently BLOCKED because the placements are only
+observable and not actionable — or is multi-placement visibility itself a complete, terminal product capability?
+Test-only, per this milestone's own brief. No production code changes.
+
+### What this milestone adds
+
+`tests/PostPlacementVisibilityProductEvolutionReassessment.test.js` (new, registered in `tests.html`), built against
+the same real-collaborator stack (`LocalPlacementRegistry`, `LocalSpatialIndexProvider`, `DiscoverPlacementsUseCase`,
+a real `WorldNavigationSession`) 0.9.308/0.9.309 already use. Ten lettered sections:
+
+- **A — Capability inventory.** The complete placement lifecycle (create/discover/inspect-single/inspect-plural/
+  remove/render) is confirmed implemented AND reachable from a real click handler, live against the actual exported
+  `OwnPublicationPanel`/`DiscoverPlacementsUseCase` objects, not merely their source text. Two internal implementation
+  seams — `CreatePlacementRegistryUseCase` (zero production callers) and `getPlacementInfoForPublication()` (zero
+  `ui/components/*.js` callers) — are kept explicitly distinct from actual, UI-reachable capabilities.
+- **B — User journey closure.** `Publish -> Place -> OwnPublicationPanel -> Placements (N)` is confirmed read-only by
+  design (no `@click`/`v-model`/submit in its own rendered section), its terminal read model is shown to already
+  carry every fact any later candidate could want (position/revision/owner/movable/removable/overlapCount), and no
+  "placement resolution/verification/materialization" protocol (unlike Snapshot's own multi-stage chain) exists for
+  it to stop short of completing.
+- **C — Existing action reachability.** `OwnPublicationPanel.js`'s own code (comments aside) references neither
+  `PlacePublicationUseCase` nor `RemoveWorldPlacementUseCase`/`session.removePlacement()` — both stay owned by the
+  World placement flow and `PlacementInfoPanel`'s existing "Remove from World" action, respectively. Live-proven: the
+  existing single-active-placement removal action, exercised three times in most-recently-updated order, already
+  clears every placement of a Publication with no new per-row control.
+- **D — Candidate: Navigate to placement.** Evaluated against its own three named conditions. Condition 1
+  (distinguishable by position) holds trivially. Condition 2 (existing architecture can meaningfully target it) FAILS
+  on live, structural evidence: the entire navigation vocabulary (`focusDocument`/`focusWorld`/...) resolves its
+  camera position through `_getWorldPosition(documentId)` — the world LAYOUT provider's own single position per
+  DOCUMENT, never the placement registry, a placementId, or an explicit Position — and this exact boundary already
+  produces a visible seam on a DIFFERENT, older, already-shipped feature (`LocationDocumentsDialog`'s own "Focus"
+  action, which still only calls `focusWorld(documentId)`, never the coordinate the dialog was opened for).
+  Condition 3 has no positive evidence — the Roadmap's own 0.9.308 entry names this exact candidate only as
+  deliberately excluded scope, pending "real evidence... never inertia." DEFER.
+- **E — Candidate: Manage placement.** Move/remove exist and are already reachable through `PlacementInfoPanel` for
+  the single active placement (Section C). The one genuinely distinct gap — removing a specific NON-latest placement
+  of several — is real but PRE-EXISTING on the session API's own document-keyed convention, already named explicitly
+  by 0.9.309's own Section F (not manufactured here), with no evidenced journey selecting it as urgent. "Move" has no
+  natural home on a read-only inspection list (no coordinate-entry UI or `PlacementEditorDialog` reference exists).
+  DEFER.
+- **F — Candidate: Placement summary.** Position/revision/owner are ALREADY rendered per row — largely done already.
+  `overlapCount` is computed (shared `_enrichPlacementRecord()`) but never rendered here — a real, narrow gap — but
+  the identical fact already has a MORE complete, actionable answer elsewhere (`PlacementInfoPanel`'s own "View" ->
+  `LocationDocumentsDialog`); a bare second copy adds no new value. World/location naming has no existing
+  coordinate-to-place-name correlation to build on at all (`WorldLocationDirectory` directories STRUCTURE placements
+  inside loaded documents, a different concept, and carries no `publicationId` vocabulary). DEFER.
+- **G — Candidate: Cross-publication placement discovery.** Not a gap at all — ALREADY FULLY BUILT and live since
+  0.2.26 (`WorldNavigationSession#getDocumentsAtPosition()` + `ui/components/LocationDocumentsDialog.js`), live-proven
+  here to genuinely answer "what's placed here" over three distinct Publications sharing one coordinate, and kept
+  structurally distinct from "where is THIS Publication placed" (`getPlacementsForPublication()` never calls or wraps
+  `getDocumentsAtPosition()`). STOP outright.
+- **H — Temporal semantics.** Reconfirms 0.9.309's own boundary fresh: with no renderer attached, discovering a
+  placement leaves `getSpatialState()` (loaded/visible/nearby/failed/cameraPosition) completely unchanged, and neither
+  `getPlacementsForPublication()` nor `_enrichPlacementRecord()` references any avatar/session/presence vocabulary —
+  placement visibility stays a database fact, never a live-session fact.
+- **I — Architecture debt vs. product gap.** Confirms zero `class PlacementManager`/`PlacementViewModel`/
+  `PlacementLifecycle`/`PlacementStatus`/`PlacementCollection` declarations exist anywhere in `application/`, `core/`,
+  or `ui/` today (matched precisely enough to not trip on the pre-existing, unrelated
+  `SnapshotPlacementLifecycleView.js`/`SnapshotPlacementLifecycleState.js` Snapshot-resolution concept). Classifies
+  four of five named temptations as pure architecture speculation with zero evidenced user need; the one real,
+  pre-existing capability gap (removing a non-latest placement by id) is correctly deferred on evidence, never built
+  to fill a diagram.
+- **J — Final decision.** `STOP`.
+
+### What this milestone confirms
+
+Every candidate this milestone's own brief named (navigate/manage/summary/cross-publication-discovery) was graded
+against the same bar — a real, currently-blocked user action, never "the underlying capability already exists,
+therefore expose it" — and every one answers DEFER or STOP, each on its own live or structural evidence, not
+assumption. Multi-placement visibility (0.9.308), proven convergent (0.9.309), is confirmed here as a complete,
+terminal product capability.
+
+### What stayed unchanged
+
+`application/DiscoverPlacementsUseCase.js`, `application/PlacePublicationUseCase.js`,
+`application/RemoveWorldPlacementUseCase.js`, `application/MoveWorldPlacementUseCase.js`,
+`application/WorldNavigationSession.js`, `ui/components/OwnPublicationPanel.js`,
+`ui/components/PlacementInfoPanel.js`, `ui/components/LocationDocumentsDialog.js`, and `ui/views/WorldView.js` are all
+byte-for-byte untouched — this milestone adds one new test file, one `tests.html` registration line, and this
+Roadmap entry, nothing else.
+
+### What comes after
+
+Per this milestone's own STOP verdict, the placement arc (0.9.308-0.9.310) closes here — its own next milestone
+should not extend placements artificially. The next product direction should be selected fresh from the broader
+architecture/product inventory, the same posture 0.9.307's own Section E already modeled for its six then-completed
+arcs, applied here to a seventh.
