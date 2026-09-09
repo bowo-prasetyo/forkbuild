@@ -300,14 +300,26 @@ async function run() {
             /entries\.filter\(\(entry\) => !entry\.view/.test(viewSource),
             '7. only entries with no view yet are resolved — a re-announce of an already-known envelope is never re-resolved (load-bearing for Section I below).');
 
-        // C5. This call site is currently the ONLY production consumer
+        // C5. UPDATED by 0.9.337 — Wire Resolved Decentralized
+        // Publications into Repository Discovery. At the time THIS audit
+        // was written, this call site was the ONLY production consumer
         // of resolvePublicationView()'s own `content` field for anything
-        // beyond display — no add()/provider/discovery reference exists
-        // anywhere near it.
-        assert(!/DecentralizedPublicationDiscoveryProvider/.test(viewSource),
-            '8. confirmed: ui/views/DecentralizedPublicationsView.js never references discovery/DecentralizedPublicationDiscoveryProvider.js — the resolved content is used only for entry.view.contentSummary today, never handed anywhere else.');
+        // beyond display, and referenced no discovery provider at all.
+        // 0.9.337 closed exactly the gap this audit's own "What comes
+        // after" named: the identical call site now also admits a
+        // resolved Publication into the application-lifetime
+        // DecentralizedPublicationDiscoveryProvider ui/main.js
+        // constructs — see tests/DecentralizedPublicationRepositoryIntegration.test.js
+        // for that milestone's own flagship proof. Reconfirmed fresh,
+        // the same "reconfirmed in place rather than left to rot"
+        // discipline 0.9.335 already applied to this file's own Section
+        // B7 predecessor claim.
+        assert(/DecentralizedPublicationDiscoveryProvider/.test(viewSource) &&
+            viewSource.includes("inject('decentralizedPublicationDiscoveryProvider', null)") &&
+            viewSource.includes('discoveryProvider.add(view.content)'),
+            '8. UPDATED (0.9.337): ui/views/DecentralizedPublicationsView.js now references discovery/DecentralizedPublicationDiscoveryProvider.js by injecting the application-lifetime instance and admitting a resolved Publication via discoveryProvider.add(view.content) — the resolved content is no longer used for display alone.');
     }
-    console.log('✓ Section C: resolution of a peer-delivered envelope already happens today, at application/PublicationResolutionView.js#resolvePublicationView() — a real, exported, UI-agnostic application-layer function, dispatching by contentKind through a registry that already includes the Publication content kind (0.9.333). Exactly one production call site wires it to the peer event from Section B: ui/views/DecentralizedPublicationsView.js\'s refreshList()/resolveEntry(), which only resolves entries with no view yet (never re-resolving a repeat announce). That call site\'s own resolved `content` is used only for display today — no discovery-provider reference exists anywhere near it.');
+    console.log('✓ Section C: resolution of a peer-delivered envelope already happens today, at application/PublicationResolutionView.js#resolvePublicationView() — a real, exported, UI-agnostic application-layer function, dispatching by contentKind through a registry that already includes the Publication content kind (0.9.333). Exactly one production call site wires it to the peer event from Section B: ui/views/DecentralizedPublicationsView.js\'s refreshList()/resolveEntry(), which only resolves entries with no view yet (never re-resolving a repeat announce). UPDATED (0.9.337): that call site\'s own resolved `content` is now also admitted into Repository discovery via the shared DecentralizedPublicationDiscoveryProvider instance, whenever resolution succeeded with a genuine Publication.');
 
     // ===============================================================
     // Section D — FLAGSHIP: the whole Route A seam, live, over a real

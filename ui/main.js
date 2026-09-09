@@ -140,6 +140,7 @@ import { executeResolveSelectedSnapshotCommand } from '../application/ResolveSel
 import { MaterializeSnapshotFromSelectedCandidateUseCase } from '../application/MaterializeSnapshotFromSelectedCandidateUseCase.js';
 import { executeMaterializeSelectedSnapshotCommand } from '../application/MaterializeSelectedSnapshotCommand.js';
 import { LocalDiscoveryProvider } from '../discovery/LocalDiscoveryProvider.js';
+import { DecentralizedPublicationDiscoveryProvider } from '../discovery/DecentralizedPublicationDiscoveryProvider.js';
 import {
     composeDecentralizedWorldEncounterMaterialDiscoveryServices,
     composeDecentralizedWorldEncounterMaterialDiscoveryRuntime
@@ -444,6 +445,24 @@ const { coordinator: publicationResolutionCoordinator } = new CreatePublicationR
 // checking what a cataloged publication resolves to must never import
 // it into either of those durable stores as a side effect.
 const { kindPlugins: publicationDisplayKindPlugins } = new CreatePublicationDisplayKindRegistryUseCase().execute();
+
+// 0.9.337 — Wire Resolved Decentralized Publications into Repository
+// Discovery. The ONE `DecentralizedPublicationDiscoveryProvider`
+// (0.9.335) instance this replica ever constructs, built here — right
+// alongside `publicationCatalog`/`publicationResolutionCoordinator`
+// above — for the exact reason 0.9.336's own Section H lifetime audit
+// established: an in-memory accumulator built any other way (e.g. fresh
+// per view, the way `CreateDiscoveryUseCase` below builds
+// LocalDiscoveryProvider) would silently lose every previously admitted
+// candidate the moment a person navigated away and back. Provided
+// app-wide via `app.provide()` below — the SAME single instance
+// `ui/views/DecentralizedPublicationsView.js` admits a resolved
+// Publication into (see that file's own `admitToRepositoryDiscovery()`)
+// is the SAME single instance available to Repository's own discovery
+// composition. This class itself is completely unmodified: it performs
+// no decentralized discovery or resolution of its own (see its own
+// header) — this is only its first real production caller.
+const decentralizedPublicationDiscoveryProvider = new DecentralizedPublicationDiscoveryProvider();
 
 // 0.8.3 — Publication Center: External Evidence UX. The first UI wiring
 // for the anchor catalog/verifier pipeline 0.8.0-0.8.2 built with no UI
@@ -1297,6 +1316,11 @@ app.provide('publicationPeerExchange', publicationPeerExchange);
 app.provide('publicationPeerContentExchange', publicationPeerContentExchange);
 app.provide('publicationResolutionCoordinator', publicationResolutionCoordinator);
 app.provide('publicationDisplayKindPlugins', publicationDisplayKindPlugins);
+// 0.9.337 — Wire Resolved Decentralized Publications into Repository
+// Discovery. The SAME single instance constructed above — never a
+// second, isolated one — shared with both the decentralized resolution
+// UI (admission) and Repository's own discovery composition (search).
+app.provide('decentralizedPublicationDiscoveryProvider', decentralizedPublicationDiscoveryProvider);
 // 0.9.289 — Other-Publication Commentary Entry Point. See this file's own
 // comment where these commands are built, above.
 app.provide('getPublicationCommentariesCommand', getPublicationCommentariesCommand);

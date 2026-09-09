@@ -90944,3 +90944,110 @@ also calls `resolvePublicationView()` — and (2) building the application-lifet
 singleton this audit's own Section H proved is the only lifetime the evidence supports, wired alongside
 `publicationCatalog`/`publicationPeerExchange` in `ui/main.js`, never through `CreateDiscoveryUseCase`'s own present
 per-call shape.
+
+## 0.9.337 — Wire Resolved Decentralized Publications into Repository Discovery
+
+**Type:** Production wiring, deliberately small. **Production changes:** `ui/main.js` (compose one
+`DecentralizedPublicationDiscoveryProvider` instance, app-wide) and `ui/views/DecentralizedPublicationsView.js` (admit a
+resolved Publication into it, at both `resolveEntry()` and its "Retrieve from Peers" sibling `retrieve()`). No other
+production file is touched.
+
+0.9.336's own audit closed every open question about the seam but deliberately left two decisions to this milestone:
+where the one missing admission line belongs, and where the provider's single application-lifetime instance gets
+built. Both are resolved the way that audit's own evidence pointed: the line lives at the existing UI call site
+(`resolvePublicationView()`'s only production caller), not behind a new, invented coordinator; the provider is
+constructed once in `ui/main.js`, alongside `publicationCatalog`/`publicationResolutionCoordinator`, and shared
+app-wide via `app.provide('decentralizedPublicationDiscoveryProvider', ...)`.
+
+### The wiring itself
+
+`ui/views/DecentralizedPublicationsView.js` gains one small local function, `admitToRepositoryDiscovery(view)`:
+
+```js
+function admitToRepositoryDiscovery(view) {
+    if (discoveryProvider && view && view.resolved && view.content instanceof Publication) {
+        discoveryProvider.add(view.content);
+    }
+}
+```
+
+— called once at the end of `resolveEntry()` (the peer-announcement/manual-recheck path) and once at the end of
+`retrieve()` (the "Retrieve from Peers" path), the two production call sites of `resolvePublicationView()` this
+codebase has. `discoveryProvider` is injected (`inject('decentralizedPublicationDiscoveryProvider', null)`), optional
+the same way every other coordinator on this page degrades gracefully when absent — a test harness that never
+provides it simply never admits anything; every other resolution behavior on the page is unaffected.
+
+Nothing about `discovery/DecentralizedPublicationDiscoveryProvider.js` itself changes — it is exactly the 0.9.335
+accumulator, unmodified. Nothing about `application/PublicationResolutionView.js`, `application/
+PublicationResolutionCoordinator.js`, `application/PublicationPeerExchange.js`, `application/PublicationExchange.js`,
+or the peer transport changes either. `application/SearchPublicationsUseCase.js`, `discovery/LocalDiscoveryProvider.js`,
+and `application/CreateDiscoveryUseCase.js` — Repository's own real search stack — are untouched, confirmed both by
+git diff and structurally (neither file references the new provider).
+
+### The semantic boundary this milestone enforces
+
+Repository discovery occurs when a decentralized Publication is successfully **resolved**, never merely when a
+decentralized envelope is **received**. `view.resolved` (already `outcome === RESOLVED`) plus `view.content instanceof
+Publication` together gate admission — the second check is what keeps every other content kind (Blueprint Attribution,
+Place Naming Claim) out, since `resolvePublicationView()`'s own `content` is a genuine `publisher/Publication.js`
+instance for exactly one registered kindPlugin. A failed resolution, or a non-Publication kind, is simply never
+admitted: no placeholder, no failed Repository entry, no retry queue, no tombstone. The existing resolution UI
+continues to report the failure through its own existing mechanism, unchanged.
+
+### The flagship test
+
+`tests/DecentralizedPublicationRepositoryIntegration.test.js` (new, registered in `tests.html`), ten sections:
+
+- **A.** Real composition, structural and live: `ui/main.js` constructs exactly one
+  `DecentralizedPublicationDiscoveryProvider` and provides it app-wide; `ui/views/DecentralizedPublicationsView.js`
+  injects that same key and never constructs its own; a shadow of the identical object graph proves the SAME instance
+  backs both admission and a real `SearchPublicationsUseCase`.
+- **B. FLAGSHIP.** Over a real, live, authenticated peer connection, a self-published Publication reaches a
+  receiving replica's `onPublicationReceived` as a signed envelope; the real production `resolvePublicationView()`
+  resolves it; the production admission logic puts it in the shared provider's `list()`.
+- **C.** Repository's own real, unmodified `SearchPublicationsUseCase` finds the Section B Publication by title and
+  by author, and correctly excludes it from an unrelated query.
+- **D.** Resolution failure isolation: a `CONTENT_UNAVAILABLE` resolution is never admitted.
+- **E.** Content-kind isolation: a resolved BlueprintAttribution and a resolved PlaceNamingClaim — both genuinely
+  `resolved: true` — are never admitted, because neither is a `Publication` instance; a genuine Publication resolved
+  immediately afterward through the same provider proves the gate discriminates rather than merely reflecting an
+  empty provider.
+- **F.** Local Publication regression: `LocalDiscoveryProvider` + `SearchPublicationsUseCase` behave exactly as
+  before, unaffected by an unrelated `DecentralizedPublicationDiscoveryProvider` holding its own different
+  Publication in the same process; `CreateDiscoveryUseCase` still constructs a plain `LocalDiscoveryProvider`, live.
+- **G.** Identity: `documentId`/`contentReference`/`title`/`author`/`license`/`schemaVersion`/`signature`/`id` all
+  survive the full peer-transport-then-resolution-then-admission round trip unmodified; `add()` is confirmed
+  structurally to push the given instance as-is, minting no Repository-specific identity.
+- **H.** Provider singleton / accumulation: two independently resolved decentralized Publications, admitted through
+  the same shared provider, both accumulate and are both independently findable.
+- **I.** No duplicate provider construction: exactly one production file (`ui/main.js`) ever constructs
+  `DecentralizedPublicationDiscoveryProvider`.
+- **J.** No Repository architecture changes: `application/SearchPublicationsUseCase.js`, `discovery/
+  LocalDiscoveryProvider.js`, and `application/CreateDiscoveryUseCase.js` are byte-for-byte untouched by this
+  milestone's own git diff, and structurally confirmed to carry no reference to the new provider.
+
+### Prior audits, reconfirmed in place rather than left to rot
+
+Two point-in-time claims are now overtaken by this milestone's own production wiring and are updated in place, the
+same discipline 0.9.335/0.9.333 already applied to their own predecessors: `tests/
+DecentralizedPublicationDiscoveryIngestionSeamAudit.test.js`'s own Section C8 ("the view never references the
+provider") is corrected to confirm the opposite, citing this milestone by name; `tests/
+PostDiagnosticProductEvolutionReassessment.test.js`'s own Section D5-prime ("deliberately left unwired... zero
+application/ or ui/ references") is corrected the same way — the file no longer even appears in that section's own
+fresh zero-reference sweep, since it is now genuinely referenced from production.
+
+### What this milestone deliberately excludes
+
+Per the brief's own exclusion list: no Nostr Publication discovery; no new decentralized discovery protocol; no peer
+protocol changes; no Repository search changes; no Repository UI changes; no persistence; no ranking; no relevance;
+no deduplication; no trust; no automatic forking; no automatic materialization; no provider preference; no
+cross-device Repository synchronization; no generic federated-provider abstraction. The file-import path
+(`application/ImportPublicationReplicaPackageUseCase.js`) 0.9.336 named as sharing the identical catalog-shaped seam
+is deliberately left unwired — useful architectural evidence, not a product requirement of this milestone.
+
+### What comes after
+
+Per the brief's own proposed 0.9.338: a user-journey audit asking whether a Repository result sourced from a
+decentralized origin can proceed through the existing selection -> `documentId` -> Fork/Explore workflow unmodified —
+before deciding whether additional decentralized sources (Nostr discovery, peer discovery) are actually required, or
+whether the passive federated visibility this milestone provides is sufficient on its own.
