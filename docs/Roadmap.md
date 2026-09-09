@@ -88178,3 +88178,88 @@ placement") — is left for a future milestone to pick up once there is real evi
 insufficient, never on inertia. 0.9.307's own two larger, scope-deferred findings (Editor/World Recover+Review-history
 parity) and its one INVESTIGATE-shaped finding (Discovery-level Commentary count) also remain on record, untouched
 by this milestone.
+
+## 0.9.309 — Publication Placement Visibility Convergence Audit
+
+0.9.308 proved the new multi-placement UI *works*: wiring reaches, rendering is correct, isolation holds, failure and
+empty stay distinguishable. It did not ask whether the new plural read path actually observes the SAME placement
+facts as every other placement reader/writer, or whether it has quietly begun a second, parallel interpretation of
+placement state. This milestone is a test-only convergence audit answering exactly that question. No production code
+changes; `application/DiscoverPlacementsUseCase.js` is untouched, as required.
+
+### What this milestone adds
+
+`tests/PublicationPlacementVisibilityConvergenceAudit.test.js` (new, registered in `tests.html`), built against the
+same real collaborator stack `tests/RemovalRetractionLifecycleConvergenceAudit.test.js` already uses (real
+`LocalPlacementRegistry`, `LocalDiscoveryProvider`, `LocalPublisherProvider`, `PublishDocumentUseCase`,
+`PlacePublicationUseCase`, `RemoveWorldPlacementUseCase`, `DiscoverPlacementsUseCase`, and a real
+`WorldNavigationSession` — never a mock of the application layer). Ten lettered sections:
+
+- **A — Same source of truth.** `getPlacementsForPublication()` and `DiscoverPlacementsUseCase.findByPublicationId()`
+  both terminate at the identical `this._placementRegistry.findByPublicationId()` call (proven against real source,
+  not just behaviorally), and `OwnPublicationPanel.js` never imports the registry or `DiscoverPlacementsUseCase`
+  directly — there is exactly one placement collection, reached one way, fanned out through two thin readers.
+- **B — Enrichment consistency.** For the identical placement record, `getPlacementInfo()` (singular) and
+  `getPlacementsForPublication()` (plural) derive byte-identical position, revision, owner, and — using a second
+  Publication deliberately placed at the same coordinate for a genuine, non-zero fact — overlap count, both cross-
+  checked against the raw stored `PlacementRecord` itself.
+- **C — Multiplicity preservation.** Three placements: raw `findByPublicationId()` and enriched
+  `getPlacementsForPublication()` agree on count, per-index identity and order (no resort), and per-record values —
+  no reduction anywhere in the pipeline.
+- **D — Singular semantics unchanged.** `getPlacementInfoForPublication()` still reduces to the single, most-
+  recently-updated record with its existing minimal shape; `getPlacementsForPublication()` returns both, unreduced,
+  and its own body is confirmed (against source) to contain no `.reduce()` and no call into the singular method —
+  0.9.308 added a capability, it did not redefine an existing one.
+- **E — Creation convergence.** Placements created through the real, unmodified `PlacePublicationUseCase` appear
+  through `getPlacementsForPublication()` and `OwnPublicationPanel` immediately, with no registration/sync step;
+  confirmed structurally that `PlacePublicationUseCase.js` carries zero awareness of the visibility feature at all.
+- **F — Removal convergence.** `[A, B, C]` created through the real `PlacePublicationUseCase`, `B` removed through
+  the real, unmodified `RemoveWorldPlacementUseCase`, both `getPlacementsForPublication()` and `OwnPublicationPanel`
+  converge to `[A, C]` on their own next read — no UI-maintained placement lifecycle of any kind. (Notes, without
+  patching, a pre-existing limitation: the document-keyed `removePlacement()` can only ever resolve ONE of several
+  placements sharing a Publication — removing a specific one of several requires the raw use case directly.)
+- **G — No World-state conflation.** Every placement in this file is discovered with zero renderer attached and
+  `getSpatialState()` staying at its honest empty default throughout — proving discovery implies neither current
+  visibility, occupancy, nor rendered presence. Confirmed structurally that `getPlacementsForPublication()`,
+  `_enrichPlacementRecord()`, and `OwnPublicationPanel`'s own `refreshPublicationPlacements()` never reference
+  `_worldLayoutProvider`, `_session`, `addWorld`/`removeWorld`, or the spatial index — the visibility panel never
+  mutates World state.
+- **H — Publication isolation.** `A -> [A1, A2]`, `B -> [B1]`; querying either Publication through BOTH
+  `DiscoverPlacementsUseCase` and `getPlacementsForPublication()` at once never exposes the other's placements.
+- **I — Failure semantics.** A genuine registry failure injected directly into `LocalPlacementRegistry` propagates
+  uncaught at the `WorldNavigationSession` layer (never swallowed into `[]`), and is independently confirmed
+  recoverable; the panel layer keeps `publicationPlacementsError` (failure, prior list preserved) and a genuinely
+  empty `[]` (no error) as two outcomes that never collapse into each other.
+- **J — Architecture sweep.** No second placement collection in `OwnPublicationPanel.js`; no sort/filter/reduce
+  introduced in its refresh method or its rendered placements section; `getPlacementsForPublication()`'s own body
+  contains no `.reduce()` and never calls `detectSpatialOverlap()` directly (that utility's other, pre-existing call
+  sites in `checkPlacementOverlap()`/`getDocumentsAtPosition()` are unrelated, older features, not duplicates);
+  `_enrichPlacementRecord()` is defined exactly once and reused by both readers; no placement-scoped
+  lifecycle/status vocabulary was introduced (scoped precisely enough to not trip on the file's own pre-existing,
+  unrelated *document* `lifecycleState` concept); and `core/Placement*.js`/`placement/*.js` still name the exact same
+  files as after 0.9.308 — no new placement domain model or registry implementation exists.
+
+### What this milestone confirms
+
+Every convergence question 0.9.308's own design implied stays true under direct, real-collaborator exercise: one
+placement collection, one enrichment implementation, two independent (never merged) reduction behaviors, real
+creation/removal composing into the plural view with zero synchronization code, no World-state coupling, and no
+architectural drift toward a second placement domain model. Sanity-checked by deliberately reintroducing a "latest"
+reduction into `getPlacementsForPublication()` and confirming Section A fails immediately — this audit is not
+vacuously true.
+
+### What stayed unchanged
+
+`application/DiscoverPlacementsUseCase.js`, `application/PlacePublicationUseCase.js`,
+`application/RemoveWorldPlacementUseCase.js`, `application/WorldNavigationSession.js`,
+`ui/components/OwnPublicationPanel.js`, and `ui/views/WorldView.js` are all byte-for-byte untouched — this milestone
+adds one new test file and one `tests.html` registration line, nothing else. No placement navigation, "go to
+placement," deletion/management controls, spatial map, ranking, "latest"/current semantics, lifecycle states, World
+visibility tracking, automatic refresh/polling, notifications, or provider-preference integration was introduced.
+
+### What comes after
+
+Per the brief this milestone was given, no next milestone is chosen automatically here. The recommended next step is
+a fresh product-evolution reassessment asking whether users actually need to ACT on the multiple placements they can
+now see (navigate to one, manage one) or whether visibility alone is sufficient — resisting a navigation/management
+feature chosen on inertia rather than on demonstrated need.
