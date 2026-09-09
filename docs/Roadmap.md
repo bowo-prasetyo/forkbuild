@@ -90296,3 +90296,92 @@ specific and minimally scoped: `application/PublicationContentKind.js` (or an eq
 toward the product direction Section A recorded — letting a Publication travel the existing decentralized
 publication pipeline for the first time, while leaving Peer's own inability to browse an unknown catalog, and every
 UX question Section I declined to answer, explicitly for whatever milestone actually builds and wires that plugin.
+
+## 0.9.331 — Publication Content Kind for Decentralized Discovery
+
+**Type:** Production domain/application seam. **Production changes:** two new files; no existing production file
+modified.
+
+0.9.330 named the smallest safe seam and deliberately stopped short of building it. 0.9.331 builds exactly that
+seam, and nothing past it: `publisher/Publication.js` can now travel `application/PublicationResolver.js`'s own
+existing ten-step pipeline for the first time, as a third `DecentralizedPublication` content kind alongside
+Blueprint Attribution and Place Naming Claim — with no change to Repository, Search, discovery, or any UI.
+
+### What this milestone adds
+
+- **`application/PublicationContentValidator.js`** (new). Strict, side-effect-free structural validation of a
+  Publication as it travels wrapped inside a `DecentralizedPublication` envelope — the same split every other
+  publication validator in this codebase already draws. Exports `PUBLICATION_CONTENT_KIND` (`'forkbuild.publication'`)
+  and `validatePublicationContent(pkg)`. There is deliberately no separate wrapper struct the way
+  `PlaceNamingClaimPublication.js` has one: a Publication does not self-describe with its own `kind`/`schemaVersion`
+  field, but it does not need to — the enclosing `DecentralizedPublication` envelope's own `contentKind` already
+  answers "what kind of content is this?" one step before this validator ever runs. The wire shape validated is
+  simply `publication.toJSON()`, completely unwrapped — reusing `publisher/Publication.js`'s own existing
+  serialization exactly as it already exists, never a second wire format. `id` and `documentId` — the one identity
+  this milestone exists to preserve — are REQUIRED; `signature`/`publisherIdentity` stay OPTIONAL, matching
+  `publisher/Publication.js`'s own class header ("Both fields are optional for pre-0.2.16 compatibility") and
+  `identity/LocalAuthorizationVerifier.js#verifyPublication()`'s own identical tolerance — requiring a signature here
+  would reject the one construction path `publisher/LocalPublisherProvider.js` actually ships whenever its
+  `identityProvider` cannot sign, defeating the seam this milestone exists to activate. When a signature IS present,
+  it must be well-formed and paired with a `publisherIdentity` — the same pairing `verifyPublication()` itself
+  already requires.
+- **`application/PublicationContentKind.js`** (new). The third `kindPlugin` for `PublicationResolver`, built to the
+  identical `{ contentKind, validate, fromJSON, verify }` template `BlueprintAttributionPublicationKind.js`/
+  `PlaceNamingClaimPublicationKind.js` already proved generic. Every function it hands over already existed before
+  this milestone: `Publication.fromJSON()`, `PublicationContentValidator.js`, and
+  `LocalAuthorizationVerifier#verifyPublication()` — called the identical way `application/
+  WorldEncounterMaterialSignatureVerifier.js` already calls it (hydrate with `Publication.fromJSON()` first, hand the
+  INSTANCE to `verifyPublication()`, never raw JSON), a pre-existing seam this milestone simply reuses rather than
+  reinventing. Deliberately has NO `store` option, unlike the other two kind plugins: both of those already had an
+  established local domain store ready to receive resolved content; no such store exists yet for a
+  decentralized-origin Publication, and inventing one now would be exactly the "new Repository-owned store" 0.9.330's
+  own Section G explicitly rejected. Resolving a Publication through this plugin today can only ever answer "what
+  does this locator resolve to" — it is never written back into any local store as a side effect of resolving.
+
+### The flagship test
+
+`tests/PublicationContentKind.test.js` (new, registered in `tests.html`), six sections:
+
+- **A. Full round trip.** Alice constructs an ordinary, signed `Publication` exactly the way
+  `publisher/LocalPublisherProvider.js` itself does, publishes it through `PublicationResolver#publish()` under
+  `PUBLICATION_CONTENT_KIND`, and Bob resolves the resulting envelope's own JSON back through a fresh
+  `createPublicationContentKind()` plugin. Every identity the product owner's own brief named survives unmodified:
+  `id` (publicationId), `documentId`, `contentReference` (still naming the original DOCUMENT content, never the
+  envelope's own hash), `title`, `author`, `license`, `schemaVersion`, and the Publication's own signature — while
+  the resolved object is proven to be a freshly constructed instance, never the same object reference, and never a
+  `Publication` masquerading as the envelope or vice versa.
+- **B. Production compatibility.** An UNSIGNED Publication — `publisher/LocalPublisherProvider.js`'s own default
+  whenever its `identityProvider` cannot sign — resolves exactly as successfully as a signed one. This is the one
+  fact 0.9.330's own audit (Section C) found necessary and this section exists to prove was not broken.
+- **C. `contentKind` is unambiguous, both directions.** A `BlueprintAttribution` envelope is rejected by the new
+  Publication `kindPlugin`; a Publication envelope is rejected by the existing Blueprint Attribution `kindPlugin`.
+  Neither content kind can be mistaken for the other.
+- **D. The negative test 0.9.330's own "zero overlap" finding called for.** An ordinary `Publication` is never itself
+  a `DecentralizedPublication`; its own `toJSON()` carries no `contentKind` and no envelope-level `kind` discriminator
+  at all, and constructing a `DecentralizedPublication` directly from a bare Publication's own JSON throws. Becoming
+  decentralized content is always one explicit `publish()` call away — never automatic, never a side effect of a
+  Publication merely existing.
+- **E. Structural validation.** A payload missing `documentId` is rejected; a signature present without its
+  accompanying `publisherIdentity` is rejected (the same pairing `verifyPublication()` itself requires); an entirely
+  unsigned payload passes cleanly.
+- **F. Tamper detection, inherited for free.** Bytes mutated in the content store after publish are caught as
+  `CONTENT_HASH_MISMATCH` by `PublicationResolver`'s own existing pipeline — this content kind adds no new trust
+  surface of its own.
+
+### What this milestone deliberately excludes
+
+Per 0.9.330's own Section H/I and this milestone's own scope: no change to `application/
+CreatePublicationDisplayKindRegistryUseCase.js` (wiring this kind into the Publications Center's own display would be
+UI work, explicitly out of scope — a Publication resolved through this plugin is not yet shown anywhere); no change
+to `SearchPublicationsUseCase.js`, `DiscoveryProvider.js`, or `CreateDiscoveryUseCase.js`; no new Repository-owned
+store, and no `store` capability wired into the plugin itself; no Nostr/Arweave/peer publishing of an actual
+Publication; no ranking, provider selection, or automatic discovery of any kind; no second Publication model —
+`publisher/Publication.js` itself is completely unmodified. This remains, per its own declared Type, a narrow
+domain/application seam.
+
+### What comes after
+
+Per the sequence 0.9.330 itself proposed: a 0.9.332 content-kind / decentralized-pipeline convergence audit — proving
+this seam really travels the existing machinery (peer gossip, Publications Center resolution) without creating a
+parallel path — before any milestone touches Repository, Search, or UI to actually expose Publication discovery
+through it.
