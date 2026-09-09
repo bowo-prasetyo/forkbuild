@@ -88765,3 +88765,91 @@ The next milestone number should appear only when something external to this aud
 F's five named evidence kinds — a new user workflow, a real deployment requirement, a new substrate requirement, a
 usability problem reported against the real product, or another concrete piece of evidence. Until then, this test
 file is the standing contract, and `STOP` is the successful outcome of the process, not a pause in it.
+
+## 0.9.315 — Place Naming Distribution Gap Audit
+
+0.9.314 closed the 0.9.x product-evolution loop at `STABLE_WITH_DEFERRED_GAPS` and locked a standing rule: the loop
+reopens only when something external supplies one of five named evidence kinds (0.9.314 Section F), never on renewed
+architectural interest. This milestone exists because a product-direction conversation, held after that close, named
+a candidate that reads exactly like it could cross that bar: a Wanderer publishes a Place Naming claim on one
+device, expecting it to become discoverable on a second device through this codebase's own existing decentralized
+discovery path, and it never does. This milestone adds **no new capability**. It is a **test-only audit**, adapted
+from that conversation's own proposed structure, whose entire job is separating a genuinely new, demonstrated
+workflow from a rediscovery of an already-catalogued architectural fact wearing new language.
+
+### What this milestone adds
+
+`tests/PlaceNamingDistributionGapAudit.test.js` (new, registered in `tests.html`) — ten sections, all driving real
+collaborators (`PlaceNamingClaimUseCase`, `PlaceNamingClaimExchange`, `LocalPlaceNamingClaimStore`,
+`NostrPlaceNamingDiscoverySource`, `PlaceNamingDiscoveryQueryService`), never a reimplementation:
+
+- **A. Lifecycle inventory** — the local-publish path (sign → verify → `store.save()`) and the Nostr-discovery path
+  (relay query → parse → aggregate) reconfirmed structurally independent, live: each can be exercised with zero
+  reference to the other.
+- **B. Publishing authority** — `PlaceNamingClaimUseCase#publish()` confirmed as the ONE semantic producer of a
+  locally-authored claim, reached through exactly one UI door; a fresh, full-codebase sweep confirms `new
+  PlaceNamingClaim(` appears in exactly one production file — no second, parallel producer exists to route a future
+  network write through instead.
+- **C. Network-write absence** — extends 0.9.271 Section G1's own single-file check to all 16 files in the Place
+  Naming family: zero relay-write vocabulary anywhere. Confirms live that `application/
+  NostrSnapshotDiscoveryPublisher.js` (the sibling domain's real write-side class) exists, while no corresponding
+  `NostrPlaceNamingDiscoveryPublisher.js` exists anywhere in this codebase — the exact file 0.9.254's own header
+  named and explicitly deferred as "a separate, unscheduled" milestone, confirmed still genuinely unbuilt, not merely
+  unwired.
+- **D. Existing discovery contract sufficiency** — live proof that `buildPlaceNamingDiscoveryEnvelope()` (built at
+  0.9.253 specifically, per its own header, as "the shape a future publishing source hands to a transport") already
+  produces exactly the wire shape `parsePlaceNamingDiscoveryEnvelope()` accepts back, round-tripped fresh — and a
+  fresh sweep confirms this function has zero production call sites anywhere, only test callers. The wire format a
+  write side would need already exists, unused.
+- **E. Local vs. decentralized identity** — five concepts (claim id, claim content, publisher identity, local
+  persistence, discovery/network identity) proven live to stay distinct; `PlaceNamingClaim#toJSON()` and its own
+  discovery envelope both carry zero relay/event/Nostr-shaped fields — "saved locally" never manufactures a network
+  identity.
+- **F. FLAGSHIP — the cross-device journey, live** — against a shared fake relay standing in for the entire Nostr
+  network: Device A publishes locally, leaving the relay untouched (F1-F2); Device B's real, unmodified, shipped
+  discovery chain (`NostrPlaceNamingDiscoverySource` → `PlaceNamingDiscoveryQueryService` →
+  `executeDiscoverPlaceNamingClaimsCommand`) returns zero results for Device A's claim, and no action available to
+  Device A can change this (F3); once anything actually exists on the relay, Device B's completely unmodified
+  discovery finds it correctly, proving the read side is not the limiting factor (F4); manual export/import — this
+  codebase's own 0.5.3 file-exchange transport — is proven, live, to be the one channel that actually moves the claim
+  between the two independent replicas today, and it required an out-of-band step the test itself had to perform
+  (F5).
+- **G. Export boundary classification** — confirms, from `PlaceNamingClaimExchange.js`'s own header and
+  `PlaceNamingPanel`'s own live UI copy, that manual export/import is this codebase's own deliberately-designed
+  CURRENT sharing mechanism, not an incidental backup format — strengthening, not weakening, Section F's finding.
+- **H. Candidate substrate** — confirms live, against `ui/main.js`'s real composition root, that Nostr is already the
+  sole discovery substrate this domain has ever shipped (never a proposal to adopt a new one), and that
+  `NostrSnapshotDiscoveryPublisher.js` already demonstrates the exact class shape — down to its injected-`publishImpl`
+  contract — a mirrored counterpart would follow.
+- **I. Failure/acknowledgement semantics** — reading the sibling's own real contract: `null` | `{ published: true,
+  relayUrl, id }` | a rejected promise, no `PUBLISHED`/`CONFIRMED` delivery lifecycle, no retries. A mirrored
+  counterpart would need to invent no new domain state.
+- **J. Reconciliation and verdict** — reuses 0.9.314's own `opensNewImplementationMilestone()` classifier verbatim.
+  Cross-checks 0.9.271's own 13-row capability/reachability matrix (this domain's most authoritative prior scoring)
+  and confirms, by reading its real source, that no row there names anything resembling a decentralized-publish
+  capability — the read-only fact was reconfirmed in that same file's own Section G as background prose, never
+  entered into the scored matrix Section H actually verdicts against. Classifies the finding as candidate #14 for
+  this domain, `MISSING_DOMAIN_CAPABILITY`, under evidence kind `concrete-workflow-cannot-currently-be-completed` —
+  and states plainly why this is new evidence rather than a rediscovery: not a new FACT, but the first time this fact
+  has been run through this codebase's own live, demonstrated-workflow standard instead of carried forward as prose.
+
+### What this milestone deliberately excludes
+
+Any new capability, and any production-code change whatsoever. No `NostrPlaceNamingDiscoveryPublisher` class, no
+wiring into `ui/main.js` or `application/PlaceNamingDiscoveryRuntimeComposition.js`'s `sources` roster, no UI change,
+and no naming of the eventual feature ("Nostr Naming" or otherwise) — per this milestone's own brief and this
+domain's own unbroken audit-before-build discipline (0.9.253 named its own future publisher and deferred it;
+0.9.265/0.9.268/0.9.271 each named their own strongest candidate and built none of them), a demonstrated gap is a
+reason to score a candidate precisely, never a license to build inside the same milestone that found it.
+
+### What comes after
+
+Not selected here. Per Section J's own closing note: the seam this audit identifies is unusually small relative to
+most `MISSING_DOMAIN_CAPABILITY` findings in this codebase's own record — the wire format already exists and
+round-trips live (Section D), the substrate choice needs no debate (Section H — Nostr is already this domain's only
+discovery substrate), the exact class shape is already proven out by a sibling (Section H), and the acknowledgement
+semantics introduce no new domain state (Section I). A future milestone considering this candidate — provisionally
+`0.9.316 — Place Naming Claim Publication Boundary`, if and when taken up — would be deciding whether to mirror
+`application/NostrSnapshotDiscoveryPublisher.js` for this domain: a real, evidenced, narrowly-scoped decision, never
+a publication system designed from scratch, and never assumed to be worth building on the strength of this audit
+alone.
