@@ -90829,3 +90829,118 @@ Per the brief's own proposed 0.9.336: an ingestion-seam audit asking which exist
 mechanism (Nostr publication discovery, peer exchange, or another) could naturally feed a resolved candidate into
 `add()` — the smallest real production ingestion point — before any milestone wires actual decentralized discovery
 into this provider or touches Repository's own composition root.
+
+## 0.9.336 — Decentralized Publication Discovery Ingestion Seam Audit
+
+**Type:** Test-only audit. **Production changes:** none (enforced by the flagship's own git-diff guard).
+
+0.9.335 closed the accumulator gap 0.9.334's own Section F named — `discovery/DecentralizedPublicationDiscoveryProvider.js`
+is real, tested, and deliberately unwired, waiting for a caller to resolve a candidate elsewhere and hand it to
+`add()`. Its own "What comes after" pointed here explicitly: which existing decentralized discovery mechanism could
+naturally feed that call. This milestone answers exactly that question, by tracing both candidate routes fresh
+against source rather than assuming either diagram survives contact with it.
+
+### Route A (peer) — the brief's own diagram corrected, then proven live
+
+The brief's own diagram routed peer reception through `PublicationResolver`. Source says otherwise: neither
+`application/PublicationPeerExchange.js` nor `application/PublicationExchange.js` ever calls it — both their own
+headers say so directly, confirmed structurally by import search. Receiving a publication over a peer connection
+catalogs a signed `DecentralizedPublication` **envelope** (a locator) into `application/LocalPublicationCatalog.js`
+and fires `onPublicationReceived({ publication, isNew })` — never a resolved `publisher/Publication.js` instance.
+
+Resolution of that envelope already happens today, at `application/PublicationResolutionView.js#resolvePublicationView()`
+— a real, exported, UI-agnostic application-layer function that dispatches by `contentKind` through the kindPlugins
+registry `application/CreatePublicationDisplayKindRegistryUseCase.js` builds, which has included the Publication
+content kind since 0.9.333. Exactly one production call site wires the peer event to it:
+`ui/views/DecentralizedPublicationsView.js`'s `refreshList()`/`resolveEntry()`, which resolves only entries with no
+view yet — a repeat announce of the same envelope is never re-resolved.
+
+The flagship proves the whole route live: over a real, authenticated `peer/LocalPeerConnectionProvider.js` +
+`application/ConnectToPeerUseCase.js` connection, Alice's self-published Publication reaches Bob's
+`onPublicationReceived` as a signed envelope; the real `resolvePublicationView()` call, with the real
+`CreatePublicationDisplayKindRegistryUseCase` output, resolves it back to a genuine `publisher/Publication.js`
+instance; and a single test-only line —
+`if (view.resolved && view.content instanceof Publication) provider.add(view.content);` — at exactly that call site
+is enough to make it visible to Repository's own real, unmodified `SearchPublicationsUseCase`, by title text and by
+author, with `documentId` intact. Nothing about the transport, resolution pipeline, or the provider itself needs to
+change. The one honest caveat: the seam function itself is application-layer and UI-agnostic, but its only
+*production* caller today is a UI view, not a non-UI coordinator — wiring `add()` there means either adding the line
+inside that view or building a small new non-UI coordinator that also calls `resolvePublicationView()`, a real,
+open choice this audit deliberately leaves to whichever milestone wires it.
+
+### Route B (Nostr) — reconfirmed fresh: no producer exists
+
+Reconfirmed by exhaustive search, not by citing 0.9.334: zero Nostr-named production files anywhere in this
+codebase reference `DecentralizedPublication`, `PublicationResolver`, `LocalPublicationCatalog`, or
+`PublicationExchange`. The existing Nostr publication pipeline (`application/NostrPublicationDiscoveryPublisher.js`
+/ `application/NostrDiscoveryQueryService.js`) speaks `core/DecentralizedDiscoveryEnvelope.js` — a location claim
+for material belonging to a publication the caller *already knows about* — never a `forkbuild.publication` envelope.
+The honest answer to "does Nostr discovery produce enough information to resolve a Publication" is not "resolution
+terminates at the caller" — it is "resolution never begins": there is no producer of a resolvable candidate on the
+Nostr side today, at all.
+
+### One seam, catalog-shaped rather than peer-specific
+
+Given Route B produces nothing, there is only one live route to characterize, and it turns out not to be
+peer-specific: a second real production writer, `application/ImportPublicationReplicaPackageUseCase.js`, catalogs
+through the identical `PublicationExchange#importPublication()` call over a file-package transport instead of a live
+peer (currently unwired into any UI, confirmed by grep) and would flow through the identical
+`resolvePublicationView()` seam the moment it were wired. Peer delivery, package import, and self-publishing all
+converge on one catalog and one resolution seam today.
+
+### Provider lifetime — characterized against two composition patterns already in this codebase
+
+`publicationCatalog`/`publicationPeerExchange`/`publicationResolutionCoordinator` are constructed exactly once in
+`ui/main.js` (confirmed by grep count) and shared app-wide via `app.provide()` — application-lifetime singletons.
+`application/CreateDiscoveryUseCase.js`, by sharp contrast, is never constructed in `ui/main.js` at all and is
+instead constructed **fresh, per call**, inside five separate views' own `setup()` — safe today only because
+`LocalDiscoveryProvider` is a stateless projection over persistent `localStorage`, proven live: two `execute()`
+calls return distinct `discoveryProvider` references. A live probe with two independently-constructed
+`DecentralizedPublicationDiscoveryProvider` instances proves the concrete failure mode directly: a candidate added
+through one is invisible through the other. The only lifetime this evidence supports is **application lifetime** — a
+single instance built once, alongside `publicationCatalog`/`publicationPeerExchange`, in `ui/main.js`. Wiring it
+through `CreateDiscoveryUseCase`'s own present per-call shape would be a real regression, not a neutral choice,
+unless that composition root itself changes to accept an injected, shared instance instead of constructing one.
+
+### Repeated observations — characterized live, not deduplicated
+
+A literal re-announce of the identical signed envelope is suppressed upstream of the seam entirely —
+`LocalPublicationCatalog`'s own id-based dedup makes it `isNew: false`, and the real UI call site only resolves
+entries with no view yet, so it never reaches `resolvePublicationView()` or `add()` a second time. But two
+*independently signed* envelopes wrapping the identical underlying Publication (proven live: two `publish()` calls
+of the same content yield two different envelope ids, both cataloged, both resolved to two distinct object
+references sharing one `Publication.id`/`documentId`) are not deduplicated anywhere in this pipeline — handed to a
+real provider, both are retained, exactly matching `discovery/DecentralizedPublicationDiscoveryProvider.js`'s own
+documented "no invented deduplication policy." Real evidence for a future federated-observation-identity decision,
+not a bug this milestone fixes.
+
+### The flagship test
+
+`tests/DecentralizedPublicationDiscoveryIngestionSeamAudit.test.js` (new, registered in `tests.html`), twelve
+sections: **A** vocabulary/diagram correction (Route A never calls `PublicationResolver`, confirmed structurally by
+import search rather than bare string match); **B** Route A traced live (`onPublicationReceived` fires with the
+envelope, never a resolved Publication, but already carries its own `contentKind`); **C** where resolution actually
+happens today (`resolvePublicationView()`, one production caller); **D** FLAGSHIP, the whole Route A seam live over
+a real peer connection into a real, unmodified `SearchPublicationsUseCase`; **E** application-level-or-UI-only,
+answered honestly; **F** Route B traced fresh, exhaustive, zero hits; **G** one seam, catalog-shaped; **H** provider
+lifetime, live-probed against both composition patterns already in this codebase; **I** repeated observations,
+characterized live; **J** Repository visibility, reconfirmed untouched; **K** the git-diff guard; **L** final
+classification.
+
+### What this milestone deliberately excludes
+
+Per the brief's own exclusion list, restated and held to: no provider changes; no Repository changes; no
+`SearchPublicationsUseCase` changes; no Nostr/peer protocol changes; no automatic ingestion; no deduplication; no
+ranking; no source priority; no persistence; no TTL/expiration; no trust semantics; no provider federation
+abstraction; no Repository UI; no `FederatedDiscoveryProvider`.
+
+### What comes after
+
+The next milestone this audit's own evidence points to is narrower than the brief's own three-way branch: since
+Route B produces nothing today, there is no Nostr-ingestion milestone to schedule yet. What remains is Route A's
+own two open questions, both named here rather than pre-decided: (1) where the one missing line belongs — inside
+`ui/views/DecentralizedPublicationsView.js`'s own `resolveEntry()`, or behind a new, small, non-UI coordinator that
+also calls `resolvePublicationView()` — and (2) building the application-lifetime `DecentralizedPublicationDiscoveryProvider`
+singleton this audit's own Section H proved is the only lifetime the evidence supports, wired alongside
+`publicationCatalog`/`publicationPeerExchange` in `ui/main.js`, never through `CreateDiscoveryUseCase`'s own present
+per-call shape.
