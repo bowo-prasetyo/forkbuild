@@ -223,26 +223,56 @@ async function run() {
         assert(!/contentReference:|publisherIdentity:/.test(localPublisherProvider),
             '6. confirmed directly: LocalPublisherProvider.js never assigns contentReference or publisherIdentity — the shared substrate is real at the class level and completely unused at the production-path level.');
 
-        // C4. Content overlap, checked directly rather than assumed: this
-        // codebase has registered exactly TWO DecentralizedPublication
-        // content-kind plugins, ever, and neither is Repository's own
-        // Publication.
+        // C4. Content overlap, checked directly rather than assumed. This
+        // section originally found (0.9.330) exactly two
+        // DecentralizedPublication content-kind plugins registered, ever,
+        // neither of which was Repository's own Publication. 0.9.331 built
+        // a THIRD plugin (application/PublicationContentKind.js,
+        // forkbuild.publication) wrapping publisher/Publication.js itself
+        // — but left it unregistered in the Publications Center's own
+        // display-kind registry until 0.9.333, which wired it in exactly
+        // the way this section already anticipated: not as a Repository
+        // change (0.9.333's own scope explicitly excludes Repository,
+        // Search, and federated discovery), but as the Publications
+        // Center's own generic dispatch table gaining a third entry. See
+        // application/PublicationContentKind.js's own header on why this
+        // was always framed as "a SECOND, PARALLEL way for a Publication
+        // to travel," never a Repository-facing one.
         const displayKindRegistry = await readSource('application/CreatePublicationDisplayKindRegistryUseCase.js');
-        assert(proseIncludes(displayKindRegistry, 'this codebase has exactly two so far: application/ BlueprintAttributionPublicationKind.js and application/ PlaceNamingClaimPublicationKind.js'),
-            '7. application/CreatePublicationDisplayKindRegistryUseCase.js states, in its own words, that exactly two content kinds exist — Blueprint Attribution and Place Naming Claim.');
-        assert(!/publisher\/Publication\.js|forkbuild\.publication/i.test(displayKindRegistry),
-            '8. neither of those two registered kinds is Repository\'s own document Publication — confirmed directly, not inferred from the count alone.');
+        assert(displayKindRegistry.includes('createBlueprintAttributionPublicationKind') && displayKindRegistry.includes('createPlaceNamingClaimPublicationKind'),
+            '7. application/CreatePublicationDisplayKindRegistryUseCase.js still wires the original two kinds — Blueprint Attribution and Place Naming Claim — unchanged by 0.9.333\'s own addition.');
+        assert(/forkbuild\.publication|createPublicationContentKind/.test(displayKindRegistry),
+            '8. as of 0.9.333, the registry ALSO wires a third kind — forkbuild.publication, Repository\'s own publisher/Publication.js, transported through application/PublicationContentKind.js (0.9.331) — reconfirmed directly rather than assumed stale from 0.9.330\'s own snapshot.');
 
-        // C5. So the honest content-overlap answer today: zero. A live
-        // peer gossip transport for DecentralizedPublication envelopes
-        // exists (Section B3), but it can only ever carry Blueprint
-        // Attribution or Place Naming Claim content — never a Repository
-        // Publication, because nothing constructs that envelope for one.
+        // C5. What this does NOT do: it does not give Repository's own
+        // search/catalog/discovery stack (SearchPublicationsUseCase.js,
+        // PublicationCatalog.js, PublicationCard.js,
+        // CreatePublicationCatalogUseCase.js, discovery/*) any new
+        // dependency at all — the Publications Center's own display-kind
+        // registry is a SEPARATE composition from Repository's, per
+        // application/CreatePublicationDisplayKindRegistryUseCase.js's own
+        // header, and 0.9.332's own Section G already confirmed zero
+        // Repository coupling for forkbuild.publication in either
+        // direction. Reconfirmed fresh here: a decentralized-origin
+        // Publication can now be VIEWED in the Publications Center, but
+        // still cannot be found, searched, or forked through Repository —
+        // that overlap remains exactly zero, unchanged by 0.9.333.
+        const repositoryFacingFiles = [
+            'application/SearchPublicationsUseCase.js',
+            'ui/components/PublicationCatalog.js',
+            'ui/components/PublicationCard.js',
+            'application/CreatePublicationCatalogUseCase.js'
+        ];
+        for (const file of repositoryFacingFiles) {
+            const src = await readSource(file);
+            assert(!/PublicationContentKind|PUBLICATION_CONTENT_KIND|forkbuild\.publication|CreatePublicationDisplayKindRegistryUseCase/.test(src),
+                `9. ${file} still makes no reference to forkbuild.publication or the Publications Center's own display-kind registry — Repository's own catalog/search stack is untouched by 0.9.333.`);
+        }
         const grepNewDecentralizedPublicationSites = grepFiles('new DecentralizedPublication\\(', ['application']);
         assert(grepNewDecentralizedPublicationSites.length === 1 && grepNewDecentralizedPublicationSites[0] === 'application/PublicationResolver.js',
-            `9. the only production site constructing a DecentralizedPublication is application/PublicationResolver.js#publish(), which requires a caller-supplied kindPlugin — and Section C4 already proved only two exist, neither of which is Repository's own Publication (found construction sites: ${grepNewDecentralizedPublicationSites.join(', ') || 'none'}).`);
+            `10. the only production site constructing a DecentralizedPublication remains application/PublicationResolver.js#publish() (found construction sites: ${grepNewDecentralizedPublicationSites.join(', ') || 'none'}) — 0.9.333 registered a display kindPlugin, it did not add a second construction site.`);
     }
-    console.log('✓ Section C: 0.9.329\'s own finding (no shared documentId) still holds, reconfirmed fresh — but it was not the whole picture. Publication and DecentralizedPublication share a REAL substrate: the identical core/ContentReference.js class, and Publication\'s own constructor already accepts contentReference/publisherIdentity/signature, explicitly documented since 0.2.16 as forward-looking, optional fields. That substrate is completely dormant in production — publisher/LocalPublisherProvider.js, the one live construction path, never populates any of the three. And checked directly rather than assumed: this codebase has registered exactly two DecentralizedPublication content kinds, ever (Blueprint Attribution, Place Naming Claim) — Repository\'s own Publication has never once been wrapped as a DecentralizedPublication anywhere in this codebase. Today, content overlap between Repository\'s catalog and anything Peer/Decentralized can carry is not "harder to reach" — it is exactly zero.');
+    console.log('✓ Section C: 0.9.329\'s own finding (no shared documentId) still holds, reconfirmed fresh — but it was not the whole picture. Publication and DecentralizedPublication share a REAL substrate: the identical core/ContentReference.js class, and Publication\'s own constructor already accepts contentReference/publisherIdentity/signature, explicitly documented since 0.2.16 as forward-looking, optional fields. That substrate is completely dormant in production — publisher/LocalPublisherProvider.js, the one live construction path, never populates any of the three. Checked fresh, directly rather than assumed stale: as of 0.9.333 the Publications Center\'s own display-kind registry now wires THREE content kinds, the third being forkbuild.publication — Repository\'s own Publication, transportable and now VIEWABLE through the decentralized pipeline. But Repository\'s own search/catalog/discovery stack still has zero reference to any of it — content overlap between Repository\'s catalog and anything Peer/Decentralized can carry remains exactly zero; what changed is that a decentralized-origin Publication can now be SEEN outside Repository, not found THROUGH it.');
 
     // ===============================================================
     // Section D — The existing downstream workflow a federated result
