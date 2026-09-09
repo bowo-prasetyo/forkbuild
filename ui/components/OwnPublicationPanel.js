@@ -1111,6 +1111,131 @@ import { SnapshotWorldPositionClaimOutcome } from '../../application/SnapshotWor
 // discovery, moderation/removal, synchronization, navigation, persistence
 // management) or the REACHABLE_BUT_INTERNAL `getById()` finding — none of
 // those seams are touched by, or required for, rendering a count.
+//
+// 0.9.308 — Publication Multi-Placement Visibility.
+//
+// 0.9.307's own Post-Arc Product Evolution Reassessment named the exact
+// gap: `application/DiscoverPlacementsUseCase.js#findByPublicationId()`
+// already returns EVERY PlacementRecord for a Publication, fully
+// implemented and fully tested (tests/PlacementRegistry.test.js), but its
+// ONE production reader — `WorldNavigationSession#_resolvePlacementRecord()`
+// — reduces the result down to a single, most-recently-updated record,
+// by its own documented admission ("browsing/choosing among several is
+// future scope"). A Publication placed more than once — an intended,
+// named scenario (docs/Principles.md, 0.2.23: "an exhibition copy here, a
+// personal copy of the same publication there") — had no way for its own
+// owner to see or manage anything but that one copy. This closes exactly
+// that gap:
+//
+//   click (mount, or a new `publication` becomes current)
+//           │
+//           ▼
+//   refreshPublicationPlacements()
+//           │
+//           ▼
+//   getPublicationPlacementsCommand(publication.id)   (injected — a thin
+//                                     ui/views/WorldView.js wrapper around
+//                                     session.getPlacementsForPublication(),
+//                                     itself a thin, NEW WorldNavigationSession
+//                                     method wrapping DiscoverPlacementsUseCase's
+//                                     own pre-existing findByPublicationId(),
+//                                     never reducing the result — see that
+//                                     method's own header)
+//           │
+//           ▼
+//   publicationPlacements = [ { placementId, position, revision, owner,
+//                                overlapCount, ... }, ... ]   (rendered
+//                                VERBATIM, in the exact order received —
+//                                see "don't collapse multiple placements,"
+//                                below)
+//
+// A READ-SIDE INTEGRATION, NEVER A PLACEMENT-SYSTEM REDESIGN. No new
+// domain class, no new storage shape, no new use case: `PlacementRecord`
+// and `DiscoverPlacementsUseCase` already existed and were already
+// tested before this milestone; the only new code is one
+// WorldNavigationSession method (a thin, non-reducing sibling of
+// `getPlacementInfo()` and its own per-publicationId counterpart), one
+// thin WorldView.js wrapper, one new prop here, and this section's own
+// rendering — the exact size of 0.9.289's own Commentary seam, per
+// 0.9.307's own Section G6 estimate.
+//
+// PLACEMENT RECORDS, NEVER WORLD VISIBILITY OR OCCUPANCY. This section
+// answers "has this Publication been placed here" (a PlacementRecord
+// exists), never "can a viewer currently see it" (World visibility,
+// untouched — no camera, no viewport, no peer-presence concept anywhere
+// in this file) or "does something currently occupy that spot" (spatial
+// occupancy — `getDocumentsAtPosition()`/`checkPlacementOverlap()`'s own
+// question, never called by this section). `getPlacementsForPublication()`
+// queries the PlacementRegistry directly, exactly like
+// `getPlacementInfo()` already does — it is never turned into, and never
+// becomes, a World-state or spatial-index query.
+//
+// DON'T COLLAPSE MULTIPLE PLACEMENTS. Every record
+// `getPublicationPlacementsCommand` returns is rendered — no
+// deduplication by Publication, no "latest placement" reduction (the
+// EXACT reduction `placementInfo`/`activePlacementInfo` above still
+// performs, deliberately unchanged — see this file's own "0.9.159"
+// entry), no arbitrary first-match selection, no ranking, no spatial
+// aggregation. `refreshPublicationPlacements()` performs no `sort()` of
+// its own; `v-for` renders `publicationPlacements` in the exact order
+// `getPlacementsForPublication()` itself returned it. A single placement
+// (length === 1) renders through the SAME list markup as three — never a
+// special-cased "singleton" branch — and zero placements renders the
+// section's own honest `own-publication-placements-empty` message,
+// never treated as an error.
+//
+// NO_PLACEMENTS ≠ DISCOVERY_FAILED — THE CRITICAL SEMANTIC QUESTION.
+// `publicationPlacements: []` with `publicationPlacementsError: null`
+// means "this Publication genuinely has zero placements," a real and
+// distinct value never conflated with a discovery FAILURE
+// (`publicationPlacementsError` set, and — mirroring
+// `refreshPublicationCommentaries()`'s own restraint exactly —
+// `publicationPlacements` left UNCHANGED rather than wiped to `[]`, so a
+// previously-loaded list never silently disappears behind a transient
+// read failure). No new domain status is introduced for this: it is the
+// same plain try/catch shape `refreshPublicationCommentaries()` already
+// uses, one capability over — see that method's own header.
+//
+// STRICTLY READ-ONLY — NO GO-TO-PLACEMENT, NO PER-ROW REMOVE, NOT YET.
+// This section renders facts and nothing else: no button, click handler,
+// or emitted event anywhere in it creates, removes, moves, or alters a
+// placement, a Publication, or World state of any kind. `application/
+// DiscoverPlacementsUseCase.js`, `PlacePublicationUseCase`,
+// `MoveWorldPlacementUseCase`, and `RemoveWorldPlacementUseCase` are all
+// untouched by this milestone; `ui/components/PlacementInfoPanel.js`
+// remains the sole owner of Focus/Move/Remove actions, scoped to the
+// single ACTIVE placement it already renders. Per this milestone's own
+// brief, "the first product gap is visibility, not placement management"
+// — navigation/management actions per discovered placement are a
+// deliberately separate, later, unscheduled decision.
+//
+// `publicationId` IS ALWAYS THE PUBLICATION BEING INSPECTED, NEVER
+// SUBSTITUTED. `refreshPublicationPlacements()` calls
+// `getPublicationPlacementsCommand(publication.id)` — the SAME
+// `publication` prop every sibling capability in this file already reads
+// — never the current user's id, a different Publication's id, or a
+// selected placement's own id. The Publication-change watcher resets
+// `publicationPlacements`/`publicationPlacementsError` on every
+// `publication` switch (including to `null`) so inspecting Publication A
+// never leaves Publication B's placements on screen, mirroring
+// `publicationCommentaries`'s own identical reset one capability over.
+//
+// DELIBERATELY EXCLUDED — NOT THIS MILESTONE.
+// - **Any change to `DiscoverPlacementsUseCase`, `PlacePublicationUseCase`,
+//   `MoveWorldPlacementUseCase`, `RemoveWorldPlacementUseCase`, or World
+//   placement semantics of any kind.** All four remain byte-for-byte as
+//   their own prior milestones left them.
+// - **"Go to placement," "Remove this placement," or any other per-row
+//   action.** See "strictly read-only," above.
+// - **A spatial map, ranking, deduplication, or "latest placement"
+//   semantics for this section's own list.** See "don't collapse
+//   multiple placements," above.
+// - **A new Placement domain model or lifecycle, notification
+//   integration, provider-preference integration, or automatic World
+//   synchronization.**
+// - **Live updates, polling, or a subscription of any kind.** Loaded on
+//   mount and on Publication change only — the identical cadence
+//   `publicationCommentaries` already follows.
 export default {
     name: 'OwnPublicationPanel',
     props: {
@@ -1258,6 +1383,22 @@ export default {
         viewerIdentityId: {
             type: String,
             default: null
+        },
+        // 0.9.308 — Publication Multi-Placement Visibility. A
+        // `(publicationId) -> PlacementInfo[]` function, or `null` when
+        // the capability is unavailable — see this file's own header,
+        // "0.9.308." Mirrors `getPublicationCommentariesCommand` exactly:
+        // synchronous (WorldNavigationSession.getPlacementsForPublication()
+        // performs no network I/O), `null`-default, feature hidden when
+        // absent. Deliberately takes `publicationId`, never the
+        // `placementInfo` prop above — that prop is the SINGULAR,
+        // already-reduced placement for the ACTIVE document; this
+        // command answers a different question, "every placement this
+        // Publication has," and must be invoked fresh, never assembled
+        // by filtering/deriving from `placementInfo`.
+        getPublicationPlacementsCommand: {
+            type: Function,
+            default: null
         }
     },
     data() {
@@ -1380,7 +1521,35 @@ export default {
             // only thing a failure ever changes, so previously-loaded
             // commentary stays on screen instead of being replaced by an
             // empty list.
-            publicationCommentaryError: null
+            publicationCommentaryError: null,
+            // 0.9.308 — Publication Multi-Placement Visibility. Mirrors
+            // `publicationCommentaries`/`publicationCommentaryError`'s own
+            // shape exactly, one capability over — see this file's own
+            // header. Never written by anything but
+            // refreshPublicationPlacements(), below, and the publication
+            // watcher's own reset.
+            //
+            // `publicationPlacements` — every placement
+            // getPublicationPlacementsCommand returned for the CURRENT
+            // publication, in the EXACT order it returned them (no sort,
+            // dedup, "latest," or ranking of any kind performed here —
+            // see this file's own header, "preserve multiplicity"). `[]`
+            // is a legitimate, distinct value (a genuinely unplaced
+            // Publication, or the capability is unavailable), never an
+            // error.
+            publicationPlacements: [],
+            // `publicationPlacementsError` — the most recent read
+            // failure's message, or `null`. A FAILED refresh never clears
+            // `publicationPlacements` itself (see
+            // refreshPublicationPlacements() below) — this field is the
+            // only thing a failure ever changes, so a previously-loaded
+            // placement list stays on screen instead of being replaced by
+            // an empty one, and so NO_PLACEMENTS (`publicationPlacements:
+            // []`, `publicationPlacementsError: null`) stays
+            // distinguishable from DISCOVERY_FAILED (`publicationPlacementsError`
+            // set) — see this file's own header, "the critical semantic
+            // question."
+            publicationPlacementsError: null
         };
     },
     watch: {
@@ -1473,6 +1642,14 @@ export default {
             this.newCommentaryText = '';
             this.publicationCommentarySubmitting = false;
             this.publicationCommentaryError = null;
+            // 0.9.308 — a different (or cleared) Publication means any
+            // prior placement list and error belong to a Publication
+            // that is no longer this panel's own — the identical
+            // lifecycle-safety reason every OTHER family in this watcher
+            // already resets on. Switching from P1 to P2 must never
+            // leave P1's placements on screen.
+            this.publicationPlacements = [];
+            this.publicationPlacementsError = null;
             // Guarded the same way `guarded()`'s own `session.consumeForkNotice`
             // check is in ui/views/WorldView.js — every OTHER sibling
             // watcher/test in this codebase's own pre-0.9.248 suite calls
@@ -1483,6 +1660,11 @@ export default {
             // ctx from an unrelated milestone's own test file does not.
             if (typeof this.refreshPublicationCommentaries === 'function') {
                 this.refreshPublicationCommentaries();
+            }
+            // 0.9.308 — the identical guard, one capability over, for the
+            // identical reason.
+            if (typeof this.refreshPublicationPlacements === 'function') {
+                this.refreshPublicationPlacements();
             }
         }
     },
@@ -1495,6 +1677,9 @@ export default {
         // its own initial load here. Mirrors PublicationPreview.js's own
         // `mounted()` restraint: read once, on mount, nothing recurring.
         this.refreshPublicationCommentaries();
+        // 0.9.308 — the identical initial-load restraint, one capability
+        // over.
+        this.refreshPublicationPlacements();
     },
     beforeUnmount() {
         // Invalidates any still-in-flight call, mirroring
@@ -2025,6 +2210,36 @@ export default {
             } finally {
                 this.publicationCommentarySubmitting = false;
             }
+        },
+        // 0.9.308 — Publication Multi-Placement Visibility. Mirrors
+        // refreshPublicationCommentaries() exactly, one capability over
+        // (see this file's own header, "no new command needed... a
+        // thin injected command"). A no-op — `publicationPlacements`
+        // reset to `[]` — whenever there is no `publication` or no
+        // `getPublicationPlacementsCommand`. A FAILED read leaves
+        // `publicationPlacements` exactly as it was (never wiped to
+        // `[]`) and only sets `publicationPlacementsError` — this is
+        // the entire mechanism that keeps NO_PLACEMENTS (`[]`, no error)
+        // distinguishable from DISCOVERY_FAILED (an error, prior list
+        // untouched); see this file's own header, "the critical
+        // semantic question." Rendered in WHATEVER order the command
+        // returns, verbatim — this method performs no `sort()`, dedup,
+        // or "latest" reduction of its own — see this file's own header,
+        // "preserve all three records."
+        refreshPublicationPlacements() {
+            const publication = this.publication;
+            if (!publication || !this.getPublicationPlacementsCommand) {
+                this.publicationPlacements = [];
+                this.publicationPlacementsError = null;
+                return;
+            }
+            try {
+                const placements = this.getPublicationPlacementsCommand(publication.id);
+                this.publicationPlacements = Array.isArray(placements) ? placements : [];
+                this.publicationPlacementsError = null;
+            } catch (error) {
+                this.publicationPlacementsError = 'Placements could not be loaded.';
+            }
         }
     },
     template: `
@@ -2040,6 +2255,61 @@ export default {
             <p v-else class="own-publication-empty-hint">
                 Publish your current World to distribute its Snapshot.
             </p>
+
+            <!-- 0.9.308 — Publication Multi-Placement Visibility. Read-only:
+                 renders whatever getPublicationPlacementsCommand returns,
+                 nothing more — no "Focus"/"Move"/"Remove" action per row
+                 (see this file's own header, "one thing I would not do
+                 yet"; ui/components/PlacementInfoPanel.js already owns
+                 those actions for the SINGLE active placement). Rendered
+                 only when a caller supplied getPublicationPlacementsCommand,
+                 mirroring every other optional capability section in this
+                 file. Every placement this Publication has is shown —
+                 never deduplicated, never reduced to "the latest one"
+                 (unlike placementInfo/activePlacementInfo above, which
+                 IS that reduction) — see this file's own header, "don't
+                 collapse multiple placements." -->
+            <div v-if="getPublicationPlacementsCommand" class="own-publication-placements">
+                <h5 class="own-publication-placements-title">Placements ({{ publicationPlacements.length }})</h5>
+
+                <!-- DISCOVERY_FAILED — a genuine read failure, distinct
+                     from NO_PLACEMENTS below (see refreshPublicationPlacements()'s
+                     own header). Rendered instead of the list/empty-state
+                     branches, mirroring publicationCommentaryError's own
+                     precedence one capability over. -->
+                <p v-if="publicationPlacementsError" class="own-publication-placements-error">{{ publicationPlacementsError }}</p>
+
+                <!-- NO_PLACEMENTS — an honest, intentional empty state,
+                     never an error and never indistinguishable from a
+                     genuine read failure above (which sets
+                     publicationPlacementsError, not this branch). -->
+                <p v-else-if="!publicationPlacements.length" class="own-publication-placements-empty">
+                    This Publication has not been placed anywhere yet.
+                </p>
+                <ul v-else class="own-publication-placements-list">
+                    <!-- Rendered in EXACTLY the order publicationPlacements
+                         already holds — no sort, dedup, "latest," or
+                         ranking of any kind (see this file's own header).
+                         A single placement (length === 1) renders through
+                         this SAME v-for, never a separate "singleton"
+                         branch. placementId is a stable, unique key
+                         regardless of display order. -->
+                    <li
+                        v-for="placement in publicationPlacements"
+                        :key="placement.placementId"
+                        class="own-publication-placement-entry"
+                    >
+                        <dl class="own-publication-placement-detail">
+                            <dt>Position</dt>
+                            <dd>{{ placement.position.x.toFixed(1) }}, {{ placement.position.y.toFixed(1) }}, {{ placement.position.z.toFixed(1) }}</dd>
+                            <dt>Revision</dt>
+                            <dd>{{ placement.revision }}</dd>
+                            <dt v-if="placement.owner">Owner</dt>
+                            <dd v-if="placement.owner">{{ placement.owner }}</dd>
+                        </dl>
+                    </li>
+                </ul>
+            </div>
 
             <!-- 0.9.198 — Publication Unpublish/Retract UI Action.
                  Retracts THIS Publication from the publication-facing

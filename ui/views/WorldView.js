@@ -1484,6 +1484,20 @@ export default {
             return session.addPublicationCommentary({ publicationId, content });
         }
 
+        // 0.9.308 — Publication Multi-Placement Visibility. A thin
+        // wrapper around session.getPlacementsForPublication(), mirroring
+        // getPublicationCommentariesCommand()'s own restraint immediately
+        // above: this view resolves nothing and decides nothing itself,
+        // it only forwards to the session. An exception thrown by the
+        // session (a genuine discovery failure) is deliberately NOT
+        // caught here — OwnPublicationPanel catches it itself and renders
+        // it as its own placement-discovery error state, distinct from a
+        // real, empty `[]` result, never a transient global feedback
+        // toast.
+        function getPublicationPlacementsCommand(publicationId) {
+            return session.getPlacementsForPublication(publicationId);
+        }
+
         // 0.9.284 — Notification History UI Boundary. A thin wrapper
         // around session.getRecipientNotificationEvents(), mirroring
         // getPublicationCommentariesCommand()'s own restraint immediately
@@ -4028,6 +4042,7 @@ export default {
             removePlacementFromPanel,
             unpublishOwnPublication,
             getPublicationCommentariesCommand,
+            getPublicationPlacementsCommand,
             addPublicationCommentaryCommand,
             getRecipientNotificationEventsCommand,
             showNotificationHistoryPanel,
@@ -4310,7 +4325,15 @@ export default {
                      above: a thin wrapper around the app-wide
                      exportSnapshotCommand injected above, mirroring
                      distributeWorldEncounterSnapshot's own wrap one
-                     action over. -->
+                     action over.
+
+                     0.9.308 — getPublicationPlacementsCommand is a thin
+                     wrapper around session.getPlacementsForPublication(),
+                     above — the FULL, unreduced placement list for this
+                     Publication, never just the singular
+                     activePlacementInfo already handed to this same
+                     panel above. See ui/components/OwnPublicationPanel.js's
+                     own header, "0.9.308." -->
                 <OwnPublicationPanel
                     v-if="cameraPosition"
                     :publication="ownPublication"
@@ -4326,6 +4349,7 @@ export default {
                     :getPublicationCommentariesCommand="getPublicationCommentariesCommand"
                     :addPublicationCommentaryCommand="addPublicationCommentaryCommand"
                     :viewerIdentityId="myIdentityId"
+                    :getPublicationPlacementsCommand="getPublicationPlacementsCommand"
                 />
             <!-- 0.5.7 — World View UX & Progressive Exploration. Home
                  and Locations stay plain navigation utilities; Explore /
