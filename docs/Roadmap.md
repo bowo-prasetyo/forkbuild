@@ -90066,3 +90066,127 @@ No 0.9.329 is pre-selected. ForkBuild's broader product evolution process ends t
 its own terms only the next time genuine evidence — a newly observed blocked journey, a real external requirement, an
 actual operational problem — points somewhere, never by this loop re-examining its own already-settled conclusions
 again.
+
+## 0.9.329 — Federated Repository Product Gap Audit
+
+**Type:** Test-only, evidence-gathering milestone. **Production changes:** none.
+
+An outside observation raised a specific architectural claim after 0.9.328's own STABLE_STOP: `application/
+SearchPublicationsUseCase.js` is provider-swappable by contract — its own header explicitly leaves room for "a
+future decentralized discoveryProvider" — while the rest of ForkBuild already has substantial, independently-built
+Local/Peer/Decentralized machinery (Peer connections, Peer discovery, Arweave/IPFS/Nostr-facing Decentralized
+Publications). The observation drew a sharp, correct distinction between two different claims — "the Repository
+was designed so it *could* become federated" (an architectural fact) versus "a user currently cannot complete a
+workflow because the Repository is local-only" (a product-gap claim) — and named one phrase to specifically
+interrogate rather than accept at face value: Repository's local-only behavior as a "temporary, device-scoped
+placeholder." This milestone's own brief asked ten lettered audits (A-J) to settle which claim the evidence
+actually supports, with an explicit instruction not to change `SearchPublicationsUseCase` merely because its
+contract is abstract.
+
+### What this milestone adds
+
+`tests/FederatedRepositoryProductGapAudit.test.js` (new, registered in `tests.html`), ten sections:
+
+- **A. Repository's own contract, read from source.** `SearchPublicationsUseCase`'s own header, quoted directly,
+  answers "which publications match this description?" with "no position, no camera, no placement concept at
+  all." `docs/Principles.md`'s own named principle, "Repository Search Is Not World Search (0.2.31)," states the
+  provider swap is "a separate, later decision" — and the live composition root, `application/
+  CreateDiscoveryUseCase.js`, imports exactly one concrete `DiscoveryProvider`: `LocalDiscoveryProvider`. The base
+  `discovery/DiscoveryProvider.js` contract was already written provider-agnostic before Repository search ever
+  existed — "swappable by contract" is a general codebase habit, not a Repository-specific unfinished corner.
+- **B. Every existing discovery mechanism, mapped from real code.** World Search (`SearchWorldUseCase`) is
+  independently confirmed to ALSO be local-only in production — `application/CreateWorldViewUseCase.js` builds its
+  own fresh `LocalDiscoveryProvider`, and "Discovery Is One Path, Not Two (0.2.26)" is itself a named principle
+  requiring Repository View, Author View, and World Search to share the identical local source. Peer discovery and
+  a large (60+ file) Decentralized World Discovery/Encounter family exist as genuinely separate mechanisms, each
+  structurally disjoint from Repository's own provider. The shipped `ui/views/DecentralizedPublicationsView.js` —
+  a substantial, real view backed by `application/LocalPublicationCatalog.js` — has no free-text search/browse
+  affordance at all; it is identity-scoped lookup (a known contentHash/txid/anchorId in, evidence out), not a
+  second browsable catalog Repository already duplicates.
+- **C. The strongest concrete journey, run mechanically.** Built and ran the real `DecentralizedWorldEncounterMaterialSource#load()`
+  path end to end: retrieval of decentralized material during World Encounter succeeds. But the class imports no
+  storage or catalog collaborator at all (constructor takes exactly `retrieveByUri`), and `ui/components/
+  WorldEncounterCanvas.js`'s own header states, twice, in its own words — "Nothing here persists it to a
+  `StorageProvider`" and "None of it is persisted, and none of it is written into any" — that a resolved encounter
+  is never saved anywhere. Repository's own UI (`PublicationCatalog.js`/`PublicationCatalogToolbar.js`) never
+  mentions World Encounter, Peer, or Decentralized material. The strongest available journey is not incomplete —
+  it is a journey the product never offers, on either end.
+- **D. Identity convergence.** `publisher/Publication.js` (documentId + contentHash) and `core/
+  DecentralizedPublication.js` (signed contentReference + publisherIdentity, no documentId at all) are genuinely
+  different identity shapes, stored under different keys (`LocalPublicationCatalog`'s own
+  `'publication-catalog:entries'` versus Repository's `LocalStorageProvider`). `LocalPublicationCatalog`'s own
+  header states directly: "No ranking, trust score, 'canonical,' or 'preferred' field exists ... and none should
+  ever be added to it" — and "Discovery Is Not Resolution (0.7.2)" is itself a named, standing principle keeping
+  "what a decentralized source claims" and "what this replica can independently establish" apart by design.
+- **E. Provider semantics.** `DiscoveryProvider.list()`/`findById()` are synchronous, unconditional-once-implemented
+  contracts. `DecentralizedWorldEncounterMaterialSource#load()` is `async`, and 0.9.24's own Roadmap entry
+  describes a decentralized discovery result, in its own words, as "at best, a rumor about where material MIGHT
+  live." SEARCH, DISCOVER, and RETRIEVE are different CONTRACTS today, not different implementations of one
+  contract — unifying them into one `RepositoryProvider` would mean either laundering rumors as stable `list()`
+  results or redesigning the contract itself, not swapping an implementation behind it.
+- **F. Duplication test.** A federated Repository provider would sit in front of two large, independently-built,
+  already-UI-complete subsystems (World Discovery/Encounter, 60+ files; Peer, 10+ files), each with its own
+  dedicated shipped surface (`PeerConnectionsView.js`, `DecentralizedPublicationsView.js`, `WorldEncounterCanvas.js`)
+  — duplicating that UI, or becoming a shallow pass-through in front of it. The one "adopt material from elsewhere
+  into a local catalog" mechanism this codebase already built (`PublicationExchange#importPublication()`, 0.7.2/
+  0.8.29's `ImportPublicationReplicaPackageUseCase`) targets the decentralized catalog, never Repository's — but,
+  checked honestly rather than assumed, that path itself has zero `ui/` callers today. Neither direction offers
+  proof of a completed, merely-unconnected federation seam.
+- **G. Cross-arc integration scan.** Applying the standing "Capability A complete, Capability B complete, A -> B
+  blocked" test to World Encounter -> Repository specifically: the no-persist rule holds at both the leaf
+  material-source layer (Section C) and the orchestration layer above it (`application/
+  WorldEncounterMaterialLoading.js` imports no storage/catalog class either), and holds identically for LOCAL
+  encounters too (`LocalWorldEncounterMaterialSource.js`, already fully trusted, still never auto-saves) — a
+  consistent, family-wide rule, not a decentralized-specific asymmetry. Combined with Section F's honest finding
+  that the one real adoption path is itself unfinished on its own terms, there is no blocked handoff between two
+  FINISHED capabilities anywhere in this arc.
+- **H. External-evidence gate.** The 0.9.314/0.9.327/0.9.328 executable classifier, reused verbatim. The strongest
+  honest characterization of this milestone's own originating observation — "the search contract could be
+  generalized to another provider" — is exactly the classifier's own named insufficient reason. A direct search of
+  `docs/` for any on-file record of a user or workflow unable to find a publication through Repository specifically
+  returned zero hits.
+- **I. Smallest-seam identification.** Explicitly vacuous per the milestone's own brief: since the verdict is not
+  READY, no seam (local+peer composite, local+one decentralized substrate, or any other shape) is selected at all.
+- **J. Final classification and production-change guard.**
+
+### Verdict
+
+**NOT_A_PRODUCT_GAP — STOP.** Repository's local-only scope is a documented, deliberate architectural contract, not
+a placeholder awaiting completion — its own governing principle ("Repository Search Is Not World Search," 0.2.31)
+explicitly deferred the decision to ever build a second provider, and the base `DiscoveryProvider` contract was
+written provider-agnostic as a general codebase habit before Repository search ever existed. No blocked user
+journey exists: the strongest candidate (World Encounter -> Repository) is not merely unfinished but structurally
+never offered, by an explicit, twice-stated, family-wide "never persists what it retrieves" rule that also holds at
+the orchestration layer and for fully-trusted local encounters — this is deliberate architecture, repeated across
+multiple milestones (0.7.2, 0.7.5, 0.8.2, 0.9.33), not an oversight this audit is the first to notice. The two
+publication identity models a federated provider would need to reconcile (`Publication` vs. `DecentralizedPublication`)
+are kept structurally and philosophically apart by a named principle ("Discovery Is Not Resolution"), and SEARCH,
+DISCOVER, and RETRIEVE are different contracts today, not different implementations of one contract — federating
+Repository would mean redesigning that contract, not merely plugging a new implementation into it. Building it
+would duplicate two large, already-UI-complete subsystems (Decentralized World Discovery/Encounter, Peer) rather
+than complete an unfinished one, and the standing evidence gate is not cleared: this milestone's own originating
+observation is, at most, "the search contract could be generalized to another provider" — the gate's own explicitly
+named insufficient reason since 0.9.314.
+
+### What this milestone deliberately excludes
+
+Per its own explicit scope, and per the NOT_A_PRODUCT_GAP verdict: no changes to `SearchPublicationsUseCase.js`,
+`PublicationQuery.js`, `PublicationPage.js`, or `CreateDiscoveryUseCase.js`; no new `RepositoryProvider` abstraction;
+no composite Local+Peer+Decentralized search source; no UI wiring for `ImportPublicationReplicaPackageUseCase`
+(Section F's own finding is a separate, later, unscheduled candidate in its own right — adopting a peer-supplied
+publication replica package into the decentralized catalog, never into Repository's — and is explicitly not this
+milestone's job to wire); no free-text browse affordance added to `DecentralizedPublicationsView.js`; no persistence
+step added to any World Encounter material source. The provider-swappable contract `SearchPublicationsUseCase`
+already has is left exactly as 0.2.31 built it — architectural preparedness, not a commitment this milestone
+converts into an implementation.
+
+### What comes after
+
+No 0.9.330 is pre-selected. The one genuinely new, unscheduled thread this audit's own honest Section F check
+surfaced — `application/ImportPublicationReplicaPackageUseCase.js` and `application/
+BuildPublicationReplicaPackageUseCase.js` have zero `ui/` callers despite being real, tested, 0.8.29-era
+capabilities — is noted here rather than chased: it is a UI-wiring question for the DECENTRALIZED catalog, a
+different candidate than the one this milestone was asked to investigate, and pursuing it now would repeat the
+exact "chase whatever the last audit happened to notice" pattern 0.9.328's own brief already warned against.
+ForkBuild's broader product evolution process resumes on its own terms only the next time genuine evidence — a
+newly observed blocked journey, a real external requirement, an actual operational problem — points somewhere.
