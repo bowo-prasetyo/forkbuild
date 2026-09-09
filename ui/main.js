@@ -414,6 +414,13 @@ const voiceUseCase = new VoiceUseCase(identityProvider, {
 // never a second instance, so "what has this replica cataloged" reads
 // identically everywhere in the app.
 const { publicationResolver, contentStore: publicationContentStore } = new CreatePublicationResolverUseCase().execute();
+// 0.9.342 — Automatic Peer Publication Connection Sync. The use case
+// below also constructs a PublicationPeerConnectionSync internally,
+// wired to this SAME catalog/peerExchange/registry triple; it needs no
+// binding here to keep running (see its own header) so it is not
+// destructured — a peer reaching AUTHENTICATED now automatically
+// receives this replica's currently cataloged Publications, with no
+// separate call from this file.
 const { catalog: publicationCatalog, peerExchange: publicationPeerExchange } = new CreatePublicationPeerExchangeUseCase().execute({
     peerMessageBus,
     connectedPeerRegistry: peerSessionManager.registry
