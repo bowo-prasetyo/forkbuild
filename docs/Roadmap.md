@@ -89047,3 +89047,94 @@ publication, multi-relay fan-out, relay preference, retry/offline queues, unpubl
 Nostr event persistence, Arweave backup, naming-claim synchronization, a generic `DecentralizedPublisher`, and
 publication-success notifications all remain deliberately unbuilt, each one introducing temporal, reliability, or
 product semantics this audit found no evidence the product currently requires.
+
+## 0.9.318 — Post-Place-Naming Distribution Product Reassessment
+
+0.9.315 demonstrated a concrete, currently-uncompletable two-device workflow; 0.9.316 built the missing write-side
+capability; 0.9.317 audited convergence between that new write path and the pre-existing, independently-built read
+path from a fresh, skeptical angle and found no seam. This milestone answers the one question that arc's own closure
+left open: now that Place Naming can explicitly publish claims to Nostr and another device can discover them, is
+there another concrete user journey that is actually blocked? It is a **test-only product/architecture
+reassessment**. It adds no production code and no new capability.
+
+### What this milestone adds
+
+`tests/PostPlaceNamingDistributionProductReassessment.test.js` (new, registered in `tests.html`) — ten sections, all
+driving real collaborators or reading real source:
+
+- **A. Place Naming distribution journey closure** — every boundary in the arc's own diagram traced fresh and
+  classified as implemented and/or reachable, rather than trusted from a prior milestone's own header. Creation,
+  local persistence, discovery, and adoption are all implemented AND reachable through real, shipped UI actions with
+  no manual step. "Explicit Publish action → `NostrPlaceNamingDiscoveryPublisher`" is implemented and thoroughly
+  tested (0.9.316/0.9.317) but **not reachable** from anywhere a real Wanderer can click today: the one shipped
+  "Publish" action (`ui/views/WorldView.js#publishNamingClaim()`) still calls only the pre-existing local use case,
+  `application/WorldNavigationSession.js` never references the publisher, and grep confirms zero non-comment,
+  non-self production references to `NostrPlaceNamingDiscoveryPublisher` anywhere in this codebase.
+- **B. Publication/discovery capability inventory** — the write side and read side are both reconfirmed
+  capability-complete against a brand-new scenario, but proven to sit at two different reachability levels: the read
+  side has a real, composed `discoveryQueryService` provided from `ui/main.js`'s own composition root; no equivalent
+  publisher instance is ever provided under any name. A consequence stated honestly: because nothing in the shipped
+  product ever calls `publisher.publish()` outside a test file, this product's own discovery monitor will find zero
+  genuinely self-originated Place Naming events on a real relay until either the UI gap closes or an external actor
+  independently publishes compatible envelopes.
+- **C. Cross-device user-value verification** — whether Section A's reachability gap is a currently blocked user
+  journey, checked against the one channel that already, live, moves a claim between two independent replicas today:
+  manual export/import (0.5.3). A full export → import cycle is proven to still succeed end to end. The underlying
+  user goal ("get my claim to a specific other person") is completable today through reachable UI; what is missing
+  is specifically stranger-discoverability with no prior relationship, for which this codebase's own record carries
+  no case of an actual user being blocked.
+- **D. Remaining Place Naming candidates** — all 11 candidates from this milestone's own brief scored against real
+  source: automatic publication (DEFER), multi-relay publication, relay preference, retry/offline queue, publication
+  status/history, unpublish/retraction, and cross-device editing/synchronization (all NOT READY, each for its own
+  recorded reason); notifications for naming publication (NOT READY — a generic `NotificationEvent` domain now
+  exists with one real producer, Publication Commentary, but no Place Naming producer, and Place Naming discovery
+  still has no "recipient" concept to notify in the first place); local export/import (ALREADY FUNCTIONAL); Nostr
+  discovery (COMPLETE, capability and UI-reachable); and Nostr publication, corrected from this milestone's own
+  initiating table to **capability complete, UI wiring deliberately deferred** rather than a blanket COMPLETE.
+- **E. Decentralized substrate/provider reassessment** — confirms, structurally, that Place Naming's own Nostr
+  publication introduces no provider-preference concept, is not folded into the closed `RoleProviderRole`
+  vocabulary, and has exactly one production substrate for its role — never a genuine choice between providers —
+  reconfirming the 0.9.292-0.9.304 guard that a new decentralized capability does not by itself create a new
+  provider-selection requirement.
+- **F. Cross-arc convergence** — Publication distribution, Snapshot distribution, and Place Naming distribution
+  compared side by side. Publication and Snapshot are both fully wired end to end with a real `publishImpl`; Place
+  Naming is the one arc whose write side has no composition-root wiring at all. This difference is confirmed
+  **semantic** — an explicit, named, already-documented 0.9.316 product decision — not an oversight this
+  reassessment is the first to notice, and it does not justify merging the three arcs' own independently mirrored
+  publisher classes into a shared abstraction.
+- **G. Existing orphan/internal capability scan** — `NostrPlaceNamingDiscoveryPublisher` is explicitly classified
+  `REACHABLE_BUT_INTERNAL` (built, correct, thoroughly tested, zero composition-root callers), closing the loose end
+  a less careful reassessment might otherwise leave for a future milestone to rediscover from scratch. No other
+  orphan was introduced across the 0.9.315-0.9.317 arc.
+- **H. New product-gap evidence gate** — the executable classifier from 0.9.314 Section F/0.9.315 Section J is reused
+  verbatim and applied to every Section D candidate and to Section A's own finding. The Publish-UI-wiring gap is run
+  through that same gate and classified insufficient, for two independently sufficient reasons: an alternate channel
+  already completes the underlying user goal (Section C), and the gap is a named, already-recorded, deliberate
+  decision rather than newly discovered evidence (Section F).
+- **I. Architecture-debt vs. product-gap classification** — the Publish-UI-wiring gap classifies as
+  "unused-capability" under 0.9.314 Section E's own executable rule: real and worth naming precisely, but not itself
+  a product gap, and further distinguished from a vague "could be generalized" observation by having its own
+  specific, already-recorded, evidence-gated future integration point on file (0.9.316's own "What comes after").
+- **J. Final product evolution decision** — verdict: **STABLE_WITH_DEFERRED_GAPS**. No new implementation milestone
+  is opened.
+
+### Verdict
+
+**STABLE — STOP.** The 0.9.315-0.9.317 Place Naming distribution arc is a clean, complete product arc: gap
+discovered → minimal capability built → convergence proven → reassessed and found to raise no further currently-
+blocked journey. This milestone's own contribution beyond that record is precision, not new scope: "Nostr
+publication" is corrected from a blanket COMPLETE to capability-complete-but-not-yet-UI-reachable, and that
+correction is itself shown not to cross the evidence bar for a new milestone, because an alternate channel already
+serves the underlying user need and the gap was already named and deliberately deferred at 0.9.316.
+
+### What this milestone deliberately excludes
+
+Any production-code change, and any new capability, including wiring `NostrPlaceNamingDiscoveryPublisher` to any UI
+action. It does not revisit whether 0.9.316's own product decision — publication is explicit, never automatic — was
+correct; that decision is treated as settled.
+
+### What comes after
+
+Not selected here. The next 0.9.x milestone should appear only when something external to this audit loop supplies
+real evidence — a user actually blocked by the absence of stranger-discoverability, an operational relay failure, a
+changed constraint — never when this loop re-examines its own, already-settled conclusions again.
