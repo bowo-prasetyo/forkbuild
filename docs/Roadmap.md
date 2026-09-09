@@ -91455,3 +91455,120 @@ over — reusing `catalog.list()`/`peerExchange.announce()`/`registry.onChange()
 evidenced recipient concept to build one on. If awareness UI is ever wanted for connection-time sync, the narrower
 step is extending the existing local feedback/list-refresh mechanisms this milestone's own Section H already found
 in place, not inventing a `NotificationEvent` recipient concept ahead of evidence.
+
+## 0.9.342 — Automatic Peer Publication Connection Sync
+
+**Type:** Production milestone, deliberately small. **Production changes:** a new `application/
+PublicationPeerConnectionSync.js`, plus two small wiring edits — `application/
+CreatePublicationPeerExchangeUseCase.js` (constructs and returns it) and `ui/main.js` (one comment; no new binding
+required for it to run).
+
+0.9.341's own audit closed with a `CLEAR_SEAM — PROCEED` verdict and named the exact shape of what came next: a small
+decorator composed alongside `CreatePublicationPeerExchangeUseCase.js`, reusing `catalog.list()`/
+`peerExchange.announce()`/`connectedPeerRegistry.onChange()` completely unchanged. This milestone is exactly that —
+the audit's own test-side-only `wireConnectionTimeSync()` helper, moved into production as a real class, with no
+change of shape.
+
+### The semantic rule this milestone enforces, and nothing more
+
+> When a peer becomes connected, advertise the Publications currently present in the local catalog to that peer.
+
+Not "synchronize repositories." Not "replicate documents." Not "synchronize all decentralized state." Not "download
+content." Document/material bytes stay entirely outside this milestone — see `application/
+PublicationPeerConnectionSync.js`'s own header for the full boundary.
+
+### The seam itself
+
+`application/PublicationPeerConnectionSync.js` is a DECORATOR, not a modification — `application/
+PublicationPeerExchange.js` is completely unmodified, every existing caller and test keeps working unchanged. It
+subscribes to the same `ConnectedPeerRegistry#onChange()` `PublicationPeerExchange` already observes, and — only for
+a peer newly reaching `AUTHENTICATED` — re-announces the current `catalog.list()` snapshot through the existing,
+unmodified `announce()`:
+
+```js
+_handleChange(peers) {
+    const newlyAuthenticated = peers.filter((peer) =>
+        peer.getLifecycleState() === PeerLifecycleState.AUTHENTICATED && !this._syncedConnectionIds.has(peer.connectionId));
+    if (newlyAuthenticated.length === 0) return;
+    for (const peer of newlyAuthenticated) this._syncedConnectionIds.add(peer.connectionId);
+    for (const publication of this._catalog.list()) {
+        try { this._peerExchange.announce(publication); } catch { /* see FAILURE ISOLATION below */ }
+    }
+}
+```
+
+No wire-format change, no new message kind, no new class underneath `announce()`/`list()`/`onChange()` — exactly
+what 0.9.341 Section B/D already proved sufficient. `CreatePublicationPeerExchangeUseCase.js` now constructs one
+alongside its `PublicationPeerExchange`, returned as `connectionSync` purely so a caller can `dispose()` it; `ui/
+main.js` does not need to bind it for it to keep running, the same way it never binds `PublicationPeerExchange`'s own
+internal registry subscription either.
+
+**Current catalog snapshot only.** No persistent outbound queue, no synchronization cursor, no "last synced peer"
+store, no synchronization/retry state, no background polling, no reconciliation protocol — `_handleChange()` reads
+`catalog.list()` fresh, once, per newly authenticated peer; the only state that outlives a single callback is the
+small `connectionId` bookkeeping set already proven necessary and sufficient by 0.9.341 Section E.
+
+**Failure isolation, the one behavior 0.9.341 didn't need to prove.** `ConnectedPeerRegistry#_publishChange()` calls
+every registered `onChange` listener from one plain, synchronous loop — an uncaught exception from this class's own
+callback would silently cancel every OTHER listener still queued behind it on the same registry, including
+`PublicationPeerExchange`'s own bus-attach listener. The `try/catch` around each `announce()` call exists
+specifically to make that impossible: one publication's failed announce never aborts announcing the rest, never
+corrupts the local catalog (never touched by this class at all), and never breaks a sibling listener.
+
+### Notification: deliberately not decided here
+
+Per 0.9.341 Section H's own finding — no recipient identity distinct from the local replica's own current identity
+exists for "a publication arrived from a peer," without inventing one — this milestone builds no `NotificationEvent`
+producer. The existing local feedback/list-refresh mechanisms (`EditorView.js`'s `feedback.show()`, `Decentralized
+PublicationsView.js`'s `onPublicationReceived(() => refreshList())`) are untouched and remain the only visible signal.
+
+### Tests
+
+`tests/PublicationPeerConnectionSync.test.js` (new, registered in `tests.html`), exercising the real, production
+`PublicationPeerConnectionSync` (never a test-side reimplementation) over real, live, authenticated peer connections:
+
+- **A.** Existing, already-authenticated peer connection behavior — including the real composition root and the
+  pre-existing explicit `announce()` path — is unaffected by wiring this class in.
+- **B. FLAGSHIP.** A publishes P while B is offline; B connects; B automatically receives P with no second, explicit
+  announce call — the exact 0.9.341 failing journey, now passing in production.
+- **C.** Multiple Publications (P1/P2/P3) all arrive over one connection.
+- **D.** Structural (no `PeerMessageBus`/transport reference in the new file) and behavioral (a spied `announce()`
+  called exactly once per cataloged entry) confirmation that connection sync is a caller of the existing `announce()`
+  path, never a second message mechanism.
+- **E.** No content transfer: structural (no `PublicationResolver`/`ContentStore`/`PeerContentExchange` import) and
+  live (`CONTENT_UNAVAILABLE`, empty content store).
+- **F.** Every existing envelope field survives automatic announcement byte-for-byte.
+- **G.** connect → announcements → disconnect → connect → announcements again, without catalog corruption or a new
+  deduplication policy — `isNew: false` on the repeat, exactly as `LocalPublicationCatalog#add()` already provides.
+- **H.** The boundary: a Publication catalogued AFTER connection is not itself auto-announced by this seam alone
+  (connection-time sync only acts at the moment a peer authenticates); the existing, unmodified `announce()`
+  lifecycle still delivers it, confirming no new general synchronization subsystem was introduced.
+- **I.** Peer isolation: with A connected to both B and C, each independently receives A's catalog with no
+  cross-peer state leak.
+- **J.** Failure isolation: a simulated `announce()` failure for one publication never breaks the connection, the
+  delivery of other publications, the local catalog, an unrelated publication operation, or a sibling
+  `ConnectedPeerRegistry` listener registered after this class's own.
+
+### Directionality
+
+Symmetric knowledge exchange falls out for free, with no new protocol: both Alice's and Bob's replicas run their own
+`PublicationPeerConnectionSync` instance (via the same `ui/main.js` composition root each side already runs), each
+observing its own `ConnectedPeerRegistry`. When the connection authenticates, BOTH sides' `onChange` fire, so both
+sides announce their own catalog to the other — no "send me your catalog" request/response message was added or is
+needed.
+
+### What this milestone deliberately excludes
+
+Per its own brief: no persistent outbound queue, synchronization cursor, "last synced peer" store, retry state,
+background polling, or reconciliation protocol; no `NotificationEvent` producer (0.9.341 Section H's own finding
+stands); no ranking, trust, or peer-targeting concept; no change to `PublicationPeerExchange.js`,
+`PublicationExchange.js`, `LocalPublicationCatalog.js`, `ConnectedPeerRegistry.js`, or `PublicationPeerProtocol.js`;
+no Repository-side change of any kind; no document/material content transfer.
+
+### What comes after
+
+**0.9.343 — Peer Sync / Awareness Product Reassessment**, per the brief's own sequencing: does this milestone's
+passive, connection-time catalog sync sufficiently answer the "what should a peer learn when we connect" question on
+its own, or does real usage surface a genuine notification gap? If sufficient, stop — decentralized indexing/discovery
+of peers who are never simultaneously online remains 0.9.340's own separate, deliberately excluded territory, not
+something this seam should ever grow into.
