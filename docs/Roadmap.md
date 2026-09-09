@@ -89440,3 +89440,92 @@ arc has now evolved cleanly through gap discovery (0.9.315) → publication capa
 (0.9.317) → product reassessment (0.9.318) → stable baseline (0.9.319) → explicit UI publication (0.9.320) → this
 action convergence audit (0.9.321), without the new user-facing requirement expanding into a full decentralized
 publishing system.
+
+## 0.9.322 — Post-Place-Naming Publication Product Reassessment
+
+0.9.320 made `NostrPlaceNamingDiscoveryPublisher` (0.9.316) reachable from a real click. 0.9.321 audited that
+reachable action from a skeptical angle and found it converges cleanly with the pre-existing claim/persistence/
+discovery architecture, recommending this milestone next. This is a **test-only product/architecture reassessment**.
+It adds no production code and no new capability — the question is not "what could Place Naming publication grow
+into," it is "did 0.9.320/0.9.321 expose any NEW, currently blocked user journey," checked against real, live
+evidence rather than assumed from the shape of what now exists.
+
+### What this milestone adds
+
+`tests/PostPlaceNamingPublicationProductReassessment.test.js` (new, registered in `tests.html`) — nine sections:
+
+- **A. FLAGSHIP** — every stage of the journey diagram this milestone's own brief poses (name → persist locally →
+  explicit "Publish to Nostr" → relay acceptance → cross-device, stranger discovery → existing inspection/adoption)
+  driven live, end to end, through the real, shipped collaborators (`PlaceNamingPanel` → `WorldView` → `ui/main.js`'s
+  composed command → `NostrPlaceNamingDiscoveryPublisher` → the unmodified discovery chain →
+  `PlaceNamingClaimExchange#importClaim()`). Every stage classified **IMPLEMENTED + REACHABLE**, confirmed fresh
+  rather than trusted from 0.9.320/0.9.321's own headers.
+- **B** — the create/publish semantic boundary reconfirmed live and structurally: `PlaceNamingClaimUseCase#publish()`
+  still never references the publisher; five claims created in a row publish zero of them; the UI still exposes two
+  genuinely separate actions; and `docs/Roadmap.md`'s own "never automatic" decision (0.9.316) is still on file, word
+  for word, with no evidence anywhere contradicting it. Automatic publication remains confirmed **not required**.
+- **C** — publication feedback reassessed candidate by candidate against real source: history, persistent status,
+  retry, an offline queue, and multi-relay acknowledgement are all confirmed absent from the publisher and the
+  composition seam, with no recorded operational problem of any kind anywhere on
+  file — every failure scenario that does exist (0.9.321's own four) was manufactured by a test to prove isolation,
+  never observed in operation. **NOT READY**, not "missing."
+- **D** — the most interesting open question, tested live rather than argued from inspection: a genuine stranger (no
+  prior relationship, no shared storage, no file ever exchanged) is driven through the REAL
+  `PlaceNamingDiscoveryMonitor` → discovery chain → proximity-selection pipeline and automatically surfaces a claim
+  published near their own position, with zero additional UI — while a position far from the region correctly
+  surfaces nothing, proving the gate is genuine rather than "show everything." The proximity-based discovery this
+  product already ships answers "find names published near me" completely. What it does **not** answer — "browse a
+  region I've never been near, without traveling there" — is a genuinely different journey, with no recorded user
+  request anywhere on file, and is deliberately NOT built here.
+- **E** — the five questions this milestone's own brief names (who named it? which world/region? what was claimed?
+  can a stranger discover it? can they adopt/inspect it?) checked live, field by field, against the existing claim
+  model and the already-shipped UI (`ui/views/WorldView.js`'s own "claimed by `{{ claim.authorDisplayName }}`" and
+  `navigateToNearbyPlaceNamingClaim()`) — all five already answered. A sweep for feature-shaped social identifiers
+  (`UserProfile`, `ReputationScore`, `PlaceNamingVote`, `ModerationQueue`, `SocialGraph`, and similar) across the
+  entire Place Naming family finds none — deliberately checking for actual constructs, never bare words like "vote"
+  or "ranking," both of which this codebase's own headers already use constantly in NEGATING disclaimers (e.g.
+  `core/PlaceNamingProximitySelection.js`'s own "NO RANKING," `application/PlaceNamingClaimUseCase.js`'s own "never a
+  moderation tool").
+- **F** — seven arcs (Publication distribution, Snapshot distribution, Place Naming publication, Publication
+  Commentary, Notifications, Collaboration, Provider preferences) compared by their own distinct USER JOURNEYS, never
+  by "they all publish things" architectural shape. Each still stands on its own independent, non-shared
+  collaborator; no generic `DecentralizedPublisher`/`NostrPublisher`/publication-framework base class exists anywhere.
+  Place Naming publication produces no `NotificationEvent`, accepts no Commentary, requires no Collaboration session,
+  and reads no `RoleProviderPreference` — and no evidence anywhere on record asks for any of those seams.
+- **G** — the transition this milestone's own brief names by name: `NostrPlaceNamingDiscoveryPublisher`, classified
+  `REACHABLE_BUT_INTERNAL` at 0.9.318/0.9.319, is reconfirmed **COMPLETE** (IMPLEMENTED + REACHABLE) — proven live by
+  Section A's own flagship, not merely inferred from source — with no new orphan introduced by either 0.9.320 or
+  0.9.321: every file and wiring seam they added has a real, live, exercised caller.
+- **H** — the milestone brief's own ten-candidate table, scored against real source with the unmodified 0.9.314
+  evidence gate: automatic publication, publication history, retry/offline queue, multi-relay publishing, relay
+  preference, ranking, reputation, moderation, and unpublish all score **NOT READY**, each for its own recorded
+  reason. A global naming browser is held at **EVIDENCE REQUIRED** — a third, distinct verdict from both "ready" and
+  "NOT READY," meaning "watch for the concrete complaint," never "build" and never "permanently reject."
+- **I** — closure statement: **STABLE_WITH_DEFERRED_GAPS — STOP**.
+
+### The one genuine distinction from 0.9.318/0.9.319
+
+At 0.9.318/0.9.319, the announcement journey itself was still incomplete — publication was capability-complete but
+composition-root-unreachable, so "STOP" rested on an alternate channel (manual export/import) completing the
+underlying goal instead. At 0.9.322, the full journey — name, persist, explicit publish, relay acceptance,
+cross-device stranger discovery, inspection, and adoption — is proven **IMPLEMENTED and REACHABLE**, live, in one
+flagship scenario, with no substitute channel required to reach the same STOP conclusion. This is a strictly stronger
+stopping point.
+
+### What this milestone deliberately excludes
+
+Any production-code change, and any new capability. It does not build a global naming browser (held at EVIDENCE
+REQUIRED, not built preemptively), publication history, persistent status, retry, an offline queue, multi-relay
+fan-out, relay preference, ranking, reputation, moderation, or unpublish/retraction. It does not connect Place Naming
+publication to Notifications, Publication Commentary, or Collaboration — no evidence on file asks for any of those
+seams.
+
+### What comes after
+
+Not selected here, deliberately. Per this milestone's own recommendation: no 0.9.323 is pre-chosen. The Place Naming
+announcement journey — gap discovery (0.9.315) → publication capability (0.9.316) → convergence audit (0.9.317) →
+product reassessment (0.9.318) → stable baseline (0.9.319) → explicit UI publication (0.9.320) → action convergence
+audit (0.9.321) → this product reassessment (0.9.322) — is now a complete, closed arc. The next milestone, whenever
+it comes, should be chosen by new user/product evidence external to this audit loop — a concrete complaint about
+browsing distant regions, an actual relay failure, a real request to connect naming to Commentary or Notifications —
+never by this loop re-examining its own, already-settled conclusions again.
