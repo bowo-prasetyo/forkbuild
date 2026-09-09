@@ -89138,3 +89138,70 @@ correct; that decision is treated as settled.
 Not selected here. The next 0.9.x milestone should appear only when something external to this audit loop supplies
 real evidence — a user actually blocked by the absence of stranger-discoverability, an operational relay failure, a
 changed constraint — never when this loop re-examines its own, already-settled conclusions again.
+
+## 0.9.319 — Post-Place-Naming Stable Product Baseline Closure
+
+0.9.318 answered the one question the Place Naming distribution arc's own closure left open and found no further
+currently-blocked journey — an architectural asymmetry (an unwired "Publish to Nostr" UI action) is not the same
+thing as a missing product requirement. Per this milestone's own brief, that reassessment is not a reason to start
+another feature arc. It is a reason to formally move the product to a new stable baseline: 0.9.314 turned 0.9.313's
+own verdict into a machine-checked closure contract; this milestone does the same for 0.9.318, chained to (not
+merely copied from) the original baseline. It is a **test-only closure/audit**. It adds no production code and no
+new capability.
+
+### What this milestone adds
+
+`tests/PostPlaceNamingStableProductBaselineClosure.test.js` (new, registered in `tests.html`) — nine sections:
+
+- **A. Baseline verdict chain lock** — 0.9.313's own recorded verdict, 0.9.314's own closure contract, and 0.9.318's
+  own recorded verdict are each read from their own source, not re-derived, and confirmed to form a continuous,
+  closure-compatible chain rather than two disconnected "STABLE" stamps.
+- **B. Baseline inventory** — the 19 `IMPLEMENTED+REACHABLE` surfaces and 3 `IMPLEMENTED+INTERNAL` capabilities
+  0.9.314 recorded are reconfirmed, extended with Place Naming decentralized discovery as a twentieth reachable
+  surface and `NostrPlaceNamingDiscoveryPublisher` as a **fourth** `IMPLEMENTED+INTERNAL` capability — explicitly
+  classified rather than left an unexplained orphan, exactly as this milestone's own brief requires. Zero
+  unclassified surfaces remain.
+- **C. Place Naming arc closure** — the complete evidence chain (create, local persistence, decentralized discovery,
+  manual export/import, and the explicit-but-internal Nostr publication capability) is run live, end to end, across
+  three independent devices in one fresh scenario, rather than cited from a prior milestone's own header. Capability
+  exists is demonstrated separately from capability is a currently wired user-facing feature.
+- **D. Preserve the deliberate decision** — Nostr Place Naming publication's status is pinned in this same roadmap
+  record as `STATUS: IMPLEMENTED_BUT_DEFERRED`, `REASON: no current evidence requiring a user-facing publication
+  entry point`, checked against both this document's own text and the live structural fact (zero UI files construct
+  the publisher) so the two can never quietly drift apart. This is the record a future architecture audit is meant
+  to read, rather than rediscovering the same "gap" and reopening 0.9.316.
+- **E. External-evidence gate** — 0.9.314/0.9.318's own executable classifier is reused verbatim: a blocked journey,
+  a new external requirement, an uncompletable workflow, a changed constraint, or a real operational problem opens a
+  new milestone; an unused capability, a possible integration point, "another provider could be supported," or "this
+  could be generalized" does not. The Place Naming UI-wiring gap is reconfirmed insufficient under this same rule.
+- **F. Historical-boundary regression** — 0.9.312's guard, carried forward unchanged and re-verified with zero
+  violations across import, direct-construction, and adapter-naming patterns, plus one live execution proving the
+  real production collaboration path (`WorldConflictResolver`) still has zero dependency on the historical
+  replication family — reconfirming that yet another completed arc did not resurrect it either.
+- **G. Single-source-of-truth audit** — every class-owned reachable surface from Section B, plus notification
+  persistence (`NotificationEventStore`), temporal semantics (`LogicalClock`), and Place Naming decentralized
+  publication (`NostrPlaceNamingDiscoveryPublisher`), are each confirmed to resolve to exactly one canonical class
+  definition anywhere in the codebase. No competing state model appeared during 0.9.315-0.9.318.
+- **H. Deferred-feature guard** — the 3 pre-existing standing candidates from 0.9.314 remain candidate -> missing
+  evidence -> NOT READY. The Place Naming arc's own 11-candidate register from 0.9.318 is reconfirmed present and
+  still zero-ready by reading that file's own recorded assertions, rather than re-deriving all 11 findings again.
+- **I. Final verdict** — verdict: **STABLE_WITH_DEFERRED_GAPS**. No new implementation milestone is opened.
+
+### Verdict
+
+**STABLE — STOP.** This is a new, evidence-backed stable point, not merely a copy of 0.9.314's own conclusion. The
+product has now completed a full evolution cycle end to end: product evidence (0.9.315) → narrow capability
+(0.9.316) → convergence audit (0.9.317) → reassessment (0.9.318) → stable baseline (0.9.319) → stop.
+
+### What this milestone deliberately excludes
+
+Any production-code change, and any new capability, including wiring `NostrPlaceNamingDiscoveryPublisher` to any UI
+action. It does not reopen 0.9.318's own reassessment; that outcome is treated as settled and every section
+reconfirms it holds.
+
+### What comes after
+
+Not selected here. The next 0.9.x milestone should appear only when something external to this audit loop supplies
+real evidence — a newly observed blocked user journey, a newly introduced external requirement, a concrete
+workflow that cannot currently be completed, a changed product constraint, or a real operational problem this
+architecture cannot handle — never when this loop re-examines its own, already-settled conclusions again.
