@@ -90605,3 +90605,133 @@ decentralized discovery capability could actually produce `forkbuild.publication
 Repository search seam remains open, and deliberately not pre-committed. That is a substantially different question
 from transport, resolution, or display, and it deserves its own evidence-driven audit before any milestone touches
 Repository, Search, or federated aggregation.
+
+## 0.9.334 — Federated Repository Discovery Seam Audit
+
+**Type:** Audit (test-only). **Production changes:** none (enforced by the test's own git-diff guard).
+
+0.9.333 closed the transport/display family and its own "What comes after" pointed here explicitly: *"what existing
+decentralized discovery capability could actually produce `forkbuild.publication` candidates suitable for a future
+Repository search seam remains open... a substantially different question from transport, resolution, or display."*
+This milestone answers exactly that question, and only that question:
+
+> What is the smallest EXISTING discovery seam through which a resolved decentralized `forkbuild.publication` object
+> can become a Repository search candidate?
+
+### Vocabulary correction, first
+
+The originating brief's own diagram read `Repository -> SearchPublicationsUseCase -> LocalPublicationCatalog ->
+Publication`. That link does not survive contact with source, the identical "corrected against source rather than
+accepted as given" discipline 0.9.330 applied to the brief's own "Snapshot" vocabulary one milestone earlier.
+`application/LocalPublicationCatalog.js` is real — but it indexes `core/DecentralizedPublication.js` **envelopes**
+(any `contentKind`: Blueprint Attribution, Place Naming Claim, `forkbuild.publication`) for the Publications Center,
+under storage key `publication-catalog:entries`. It is never imported by `application/SearchPublicationsUseCase.js`
+or its composition root, `application/CreateDiscoveryUseCase.js`. Repository's real local store has no catalog
+*class* at all: `discovery/LocalDiscoveryProvider.js` scans a plain array directly, under its own, differently-named
+storage key (`forkbuild-publications`).
+
+### What Repository actually searches (Question A)
+
+Traced to its real collaborators: `SearchPublicationsUseCase.execute()` calls `discoveryProvider.list()`
+synchronously, once, for the full candidate set, then filters/sorts/paginates in memory over each candidate's own
+`.author`/`.title`/`.documentId` fields directly — no projection or wrapper type exists anywhere (confirmed by
+direct search for the obvious candidate names: `RepositoryEntry`, `RepositorySearchResult`,
+`PublicationCatalogEntry`, `DiscoveryResult`). **Repository's contract is `Publication -> searchable result`, never
+`LocalPublicationCatalog entry -> searchable result`.**
+
+`discovery/DiscoveryProvider.js` is *already* an abstract, substrate-neutral seam — its own header states plainly
+that a UI "consumes Publications through these methods without knowing whether the source is localStorage, Steem,
+Hive, IPFS, or another ForkBuild node." Exactly two subclasses exist today: `LocalDiscoveryProvider` (the only one
+unconditionally wired into `SearchPublicationsUseCase` in production) and `discovery/PublicationCatalogDiscoveryProvider.js`
+— a false-friend seam this audit rules out explicitly: it wraps `LocalPublicationCatalog` but implements only
+`findById()` (returning a `DecentralizedPublication`, the wrong type for Repository's own contract), leaves `list()`
+as an inherited throw, and its own header names its real, sole caller as the Snapshot placement creation pipeline
+(0.8.18/0.8.25) — never Repository.
+
+### Can a resolved decentralized Publication satisfy that contract? (Question B) — proven live
+
+Rather than reasoning from types alone, the flagship runs the real, unmodified pipeline: Alice publishes an ordinary
+`Publication` as a `forkbuild.publication` envelope through `PublicationResolver#publish()` (0.9.331, unmodified);
+Bob resolves it back through `PublicationResolver#resolve()` with `createPublicationContentKind()` (also unmodified).
+The result is a genuine `publisher/Publication.js` instance — confirmed by `instanceof`, not a type annotation. That
+instance is then handed to a minimal, test-only `DiscoveryProvider` stub, and Repository's own **real, unmodified**
+`SearchPublicationsUseCase` finds it by title text search and by author filter, with `documentId` (the field
+Fork/Explore key on) intact, and correctly excludes it from an unrelated query. **Yes — no new Repository model, no
+change to `SearchPublicationsUseCase`, no new identity field.**
+
+### What production code does not yet supply
+
+Section E's own proof required a producer/accumulator Section F shows does not exist in production:
+`application/PublicationContentKind.js` deliberately ships with no `store` option (confirmed structurally), and its
+one production caller (`CreatePublicationDisplayKindRegistryUseCase.js`) resolves a Publication for **display**,
+never persists it anywhere `list()`-able. No new Repository-owned store has been introduced since 0.9.330's own
+guard against exactly that.
+
+Peer infrastructure (Question D), reconfirmed fresh: `peer/PeerDiscoveryProvider.js` still only answers "what
+endpoints are worth attempting," never mentions Publication. `PublicationPeerExchange` carries a real gossip
+transport, but only **announces an envelope a replica already holds to peers it is already authenticated with** —
+never calls `PublicationResolver`, never browses a stranger's unknown catalog.
+
+Decentralized discovery (Question E), reconfirmed fresh: the Nostr pipeline built for Publications
+(`NostrPublicationDiscoveryPublisher`/`NostrDiscoveryQueryService`) speaks a **different** envelope —
+`core/DecentralizedDiscoveryEnvelope.js`, `{protocol, kind, objectId, uri}` — a self-declared **location** claim for
+material belonging to a publication the caller **already knows about**, never `core/DecentralizedPublication.js`,
+never `forkbuild.publication`. No existing decentralized discovery mechanism produces a resolvable
+`forkbuild.publication` candidate today.
+
+Identity (Question F), proven live rather than asserted: `Publication.id`, `documentId`, `Publication.contentReference.hash`,
+the `DecentralizedPublication` envelope's own `id`, the envelope's own `contentReference.hash` (a **second**,
+independent content-addressing layer over the transported Publication's own JSON — genuinely different from the
+Publication's own `contentReference.hash` over the underlying Document, not merely a different name for the same
+value), a Nostr event id, and a peer `connectionId` are all confirmed structurally distinct. Repository would invent
+no new identity by accepting a decentralized-origin Publication.
+
+Deduplication (Question G), characterized rather than built: `LocalPublicationCatalog`'s own dedup key is the
+envelope's `id`, never content hash — `findByContentHash()` surfaces siblings explicitly, "none more authoritative
+than another." "Same contentHash = same Repository record" is not an existing semantic anywhere in Repository's own
+search/catalog stack.
+
+### A direct correction
+
+Re-verifying a 0.9.330 claim fresh, rather than trusting it by citation: 0.9.330 Section C3 concluded
+`contentReference`/`publisherIdentity` are "completely unused at the production-path level" in
+`publisher/LocalPublisherProvider.js`, checked via a regex requiring a literal colon (`/contentReference:/`).
+`LocalPublisherProvider.js` in fact populates both fields on every real `publish()` call, using ES6 object-shorthand
+syntax (`contentReference,` / `publisherIdentity,`) the prior regex was structurally unable to detect either way.
+This strengthens rather than weakens this milestone's own finding: a locally-published Publication already carries
+the identical `contentReference` shape a decentralized-origin one carries.
+
+### Tests
+
+`tests/FederatedRepositoryDiscoverySeamAudit.test.js` (new, registered in `tests.html`), thirteen sections (A-M):
+vocabulary correction, Repository's real contract traced to source, the decoy seam ruled out, Question A answered,
+Question B proven live via the real `PublicationResolver`/`PublicationContentKind` pipeline feeding a real
+`SearchPublicationsUseCase`, the discovery-gap's other half named, peer infrastructure and decentralized discovery
+each reconfirmed fresh, identity proven structurally distinct, deduplication characterized, one prior claim
+corrected against source, a no-UI-change/no-production-file-touched guard, and a final classification.
+
+### Verdict
+
+**DISCOVERY_GAP.** The contract is not the gap — Repository already accepts a plain `Publication` instance from any
+`DiscoveryProvider`, and a resolved decentralized Publication already is one, proven live, with no new field,
+wrapper, or identity required. But this is not yet a clean seam ready for a small adapter alone: two things
+production code does not yet supply would both be needed — (1) a mechanism that produces a `forkbuild.publication`
+candidate a replica does not already possess (neither Peer nor any existing decentralized discovery service does
+this today), and (2) somewhere to hold a resolved candidate once one exists, since resolution is deliberately
+ephemeral and 0.9.330 already rejected inventing a new Repository-owned store for it.
+
+### What this milestone deliberately excludes
+
+Per the originating brief's own exclusion list: no Repository UI changes; no unified search implementation; no
+Nostr/peer/Arweave aggregation; no ranking or provider preference; no deduplication policy built (only
+characterized); no automatic retrieval, forking, or materialization; no new persistent Repository store; no change
+to `Publication`/`DecentralizedPublication` identity; no replacement of `LocalPublicationCatalog`.
+
+### What comes after
+
+The next milestone should build the smallest decentralized Publication discovery **source** — a mechanism that lets
+a replica learn about a `forkbuild.publication` envelope it does not already hold, closing the first half of the gap
+this audit named — not a federated search implementation, not a new Repository model, and not a change to
+`SearchPublicationsUseCase`, which this audit's own flagship already proved needs none. Whether and how to hold a
+resolved candidate somewhere `list()`-able (the gap's second half) remains open, and deliberately not pre-committed
+by this milestone.
