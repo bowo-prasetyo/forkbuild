@@ -89345,3 +89345,98 @@ Not selected here. A future milestone would decide whether the manual adoption g
 a *discovered* claim, distinct from publishing one's *own*) deserves the same reachability treatment this milestone
 gave publication. Not assumed necessary on the strength of this milestone alone — per this codebase's own evidence
 gate, that would need its own, independently-observed blocked journey first.
+
+## 0.9.321 — Place Naming Publication Action Convergence Audit
+
+0.9.320 made `NostrPlaceNamingDiscoveryPublisher` (0.9.316) genuinely reachable from an actual click — a new, explicit
+"Publish to Nostr" action in `ui/components/PlaceNamingPanel.js`, wired through `ui/views/WorldView.js`'s own
+`publishNamingClaimToNostr()` and a new composed command in `ui/main.js` — and its own test file already proved that
+wiring works end to end, including a cross-device flagship. The natural next step is not another feature: it is
+proving, from a fresh and deliberately skeptical angle, that the newly *reachable* action genuinely converges with
+the pre-existing claim, persistence, and discovery architecture, rather than quietly introducing a second authority
+or a hidden lifecycle alongside it. This is a **test-only architectural/product audit**. It adds no production code
+and no new capability.
+
+### What this milestone adds
+
+`tests/PlaceNamingPublicationActionConvergenceAudit.test.js` (new, registered in `tests.html`) — eleven sections, all
+driving real collaborators through the actual UI-shaped path, built independently of 0.9.320's own suite rather than
+a re-read of its assertions:
+
+- **A. FLAGSHIP** — the complete Create → Save → Publish → relay → Discover → inspect journey, cross-device, driven
+  through a source-verified reproduction of the actual click path (`PlaceNamingPanel.methods.onPublishToNostr()` →
+  the reproduced `WorldView.js` host wiring → the REAL `composePlaceNamingPublicationRuntime()` → the REAL,
+  unmodified `NostrPlaceNamingDiscoveryPublisher`), with Device B discovering through the completely unmodified
+  existing chain (`NostrPlaceNamingDiscoverySource` → `PlaceNamingDiscoveryQueryService` →
+  `executeDiscoverPlaceNamingClaimsCommand`) and never adopting anything into its own store.
+- **B. Exact claim identity** — the claim the UI path hands to the publisher is a real `PlaceNamingClaim` instance,
+  identical field for field and signature byte for byte to the one already on file; publishing creates no second
+  local claim and mutates nothing; a fresh grep sweep reconfirms `PlaceNamingClaimUseCase.js` as the one production
+  site (outside `PlaceNamingClaim.js`'s own class body) that ever constructs a new claim.
+- **C. No second publication authority** — `ui/main.js`/`ui/views/WorldView.js`/`ui/components/PlaceNamingPanel.js`
+  construct no discovery tag, envelope, event template, relay URL, or signature of their own on the publish side
+  (explicitly distinguishing this from `WorldView.js`'s own legitimate, pre-existing 0.9.257 *read-side*
+  `derivePlaceNamingDiscoveryTag()` call, which is the read half of this very convergence, never a second write-side
+  authority); exactly one file in the repository constructs `NostrPlaceNamingDiscoveryPublisher`.
+- **D. Discovery convergence** — the event the UI path actually produces is consumed by the unmodified existing
+  discovery chain with no adaptation, and a grep sweep confirms no "my published claims"-shaped special-case
+  discovery route exists anywhere in the family.
+- **E. Local persistence & failure isolation** — a successful publish never resaves the local claim; the four
+  failure classes named in the milestone brief that opened this audit (relay decline, transport rejection, timeout,
+  malformed event id), each driven through the UI-shaped path rather than the raw publisher, leave the local claim
+  byte-for-byte untouched and an unrelated control claim on the same relay fully discoverable throughout.
+- **F. Graceful capability absence, and a genuine nuance** — with no `publishImpl`, the composed command rejects
+  with an honest, exact message rather than throwing or fabricating success, and every other Place Naming action
+  (create, retract) keeps working untouched. This section also corrects an assumption the milestone brief that
+  opened this audit made: `ui/main.js` provides `publishPlaceNamingClaimToNostrCommand` **unconditionally** — the
+  identical shape `snapshotDistributionCommand` already holds one substrate over — so `canPublishPlaceNamingClaimToNostr`
+  is gated on "did the composition root provide a command at all," not on whether a compatible extension is actually
+  installed. The real, shipped behavior is graceful degradation *at call time* (an honest, immediate rejection, proven
+  live), never *at render time* via a hidden button — a previously-unstated architectural fact this audit surfaces
+  and reconciles against the brief's own working assumption, rather than silently building the audit around it.
+- **G. Staleness/concurrency** — a fresh scenario reconfirms that a more recent publish attempt is never displaced by
+  a stale, later-arriving one, and additionally proves a case 0.9.320's own suite did not: reopening even the
+  *identical* region (not only switching regions or closing the panel) still invalidates a still-in-flight request,
+  per `openNamingPanel()`'s own unconditional `resetNamingPanelPublishToNostr()` call.
+- **H. Publication repetition** — publishing the same claim three times reaches the relay three independent times
+  with three independent event ids, creates no local duplicate, and leaves no "already published" vocabulary
+  anywhere in the claim's own JSON or the publication path's own source — deduplication semantics are deliberately
+  never added.
+- **I. Substrate boundary** — the publish path carries zero vocabulary or imports belonging to Snapshot distribution,
+  Arweave, IPFS, Bitcoin/Base anchoring, or provider preference.
+- **J. Product semantics** — the shipped UI copy and the composed command's own error message are swept for a list of
+  overclaiming phrases ("published worldwide," "everyone has received," "globally authoritative," "guaranteed
+  discoverable," etc.) and confirmed absent; the panel renders only the publisher's own honest
+  `published`/`relayUrl`/`id`/`discoveryTag` result shape, never an invented delivery/confirmation field.
+- **K. Verdict** — closure statement naming what this audit adds beyond 0.9.320's own suite (the render-time-vs.-
+  call-time nuance chief among them) and recommending **STOP** — a Post-Place-Naming Publication Product
+  Reassessment, not a preemptively-chosen next implementation milestone.
+
+### The one genuine finding: graceful degradation is a call-time property, not a render-time one
+
+The milestone brief that opened this audit assumed an absent Nostr capability would make the "Publish to Nostr"
+button itself disappear. Section F establishes, against the real `ui/main.js` source, that this is not how the
+0.9.320 wiring actually behaves: the composed command is provided app-wide unconditionally, so the button always
+renders once any command exists at all, and unavailability is instead reported as an honest, immediate rejection the
+first time it is actually clicked. This is not a defect introduced by 0.9.320 — it is the *identical* shape
+`ui/components/OwnPublicationPanel.js`'s own `v-if="snapshotDistributionCommand"` already holds for Snapshot
+distribution, reconfirmed live in this section rather than assumed. Recorded here as a fact this arc's own product
+reassessments should carry forward, not as a bug to fix.
+
+### What this milestone deliberately excludes
+
+Any production-code change, and any new capability. It does not revisit whether publication should be automatic, add
+publication history, persistent publication status, retry, an offline queue, multi-relay orchestration, relay
+health/ranking, unpublish/retraction, publication deduplication, Nostr synchronization, notification generation, or
+provider-selection UI — all remain exactly as unbuilt as 0.9.316/0.9.320 left them. It does not change the button's
+render-time gating to match the brief's own original assumption — Section F treats that gap as a fact to record, not
+a defect this audit is licensed to fix on its own judgment.
+
+### What comes after
+
+Not selected here. Per this milestone's own recommendation: 0.9.322 — Post-Place-Naming Publication Product
+Reassessment, which may reasonably conclude STOP absent a newly-evidenced concrete user journey. The Place Naming
+arc has now evolved cleanly through gap discovery (0.9.315) → publication capability (0.9.316) → convergence audit
+(0.9.317) → product reassessment (0.9.318) → stable baseline (0.9.319) → explicit UI publication (0.9.320) → this
+action convergence audit (0.9.321), without the new user-facing requirement expanding into a full decentralized
+publishing system.
