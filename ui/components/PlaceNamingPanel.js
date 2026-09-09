@@ -89,6 +89,45 @@ export default {
         geographicNamingView: {
             type: Array,
             default: () => []
+        },
+        // 0.9.320 — Explicit Place Naming Publication Action. Whether the
+        // host has an actual publishPlaceNamingClaimToNostrCommand to call
+        // at all — mirrors ui/components/OwnPublicationPanel.js's own
+        // `v-if="unpublishCommand"`-style gating one domain over: the
+        // "Publish to Nostr" button per claim below only renders when this
+        // is true, never a disabled-but-visible button with nothing behind
+        // it.
+        canPublishToNostr: {
+            type: Boolean,
+            default: false
+        },
+        // The claimId the LAST "Publish to Nostr" click targeted — lets
+        // this panel show a result/error beside the specific "All Claims"
+        // row it describes, never ambiguously beside every row. `null`
+        // means nothing has been clicked yet (or the panel was just
+        // reopened — see ui/views/WorldView.js's own
+        // resetNamingPanelPublishToNostr()).
+        publishToNostrClaimId: {
+            type: String,
+            default: null
+        },
+        publishToNostrExecuting: {
+            type: Boolean,
+            default: false
+        },
+        publishToNostrError: {
+            type: String,
+            default: null
+        },
+        // NostrPlaceNamingDiscoveryPublisher#publish()'s own shape —
+        // { published: true, relayUrl, id, discoveryTag } — rendered
+        // verbatim, never reinterpreted by this component. See
+        // application/NostrPlaceNamingDiscoveryPublisher.js's own header,
+        // "a simple publication result, never trust, verification, or
+        // delivery semantics."
+        publishToNostrResult: {
+            type: Object,
+            default: null
         }
     },
     // 0.5.3 — Decentralized Place Name Exchange adds 'export-claim' (any
@@ -97,9 +136,20 @@ export default {
     // Blueprint someone else exported) and 'import-claim' (the raw text
     // read off whatever file the hidden input below picked, mirroring
     // ui/components/BuildLibraryPanel.js's own import-blueprint shape).
+    //
+    // 0.9.320 — Explicit Place Naming Publication Action adds
+    // 'publish-to-nostr' (a claimId — the exact same "any claim, not only
+    // this viewer's own" reach 'export-claim' already has, since a signed
+    // claim remains a portable fact anyone holding it may forward,
+    // regardless of transport). Deliberately NEVER automatic: this panel's
+    // own "Publish A Name" section (onPublish(), below) only ever emits
+    // 'publish-name' — creating a local claim and announcing it to Nostr
+    // stay two separate, explicit actions, never one combined click. See
+    // docs/Roadmap.md's own 0.9.320 entry, "create claim... announce
+    // claim... two different actions."
     emits: [
         'publish-name', 'retract-name', 'set-preferred-name', 'clear-preferred-name',
-        'export-claim', 'import-claim', 'cancel'
+        'export-claim', 'import-claim', 'publish-to-nostr', 'cancel'
     ],
     data() {
         return {
@@ -192,6 +242,16 @@ export default {
         // own header describes.
         onExportClaim(claimId) {
             this.$emit('export-claim', claimId);
+        },
+        // 0.9.320 — Explicit Place Naming Publication Action. A dumb
+        // pass-through, exactly like onExportClaim() immediately above —
+        // this component never calls a Nostr publisher itself, never
+        // constructs an event, and never decides whether publishing is
+        // even possible (canPublishToNostr, gating the button's own
+        // visibility in the template below, is the host's own answer to
+        // that question).
+        onPublishToNostr(claimId) {
+            this.$emit('publish-to-nostr', claimId);
         },
         triggerImportClaim() {
             this.$refs.importClaimFileInput.click();
@@ -329,6 +389,13 @@ export default {
 
                     <section v-if="claims.length > 0" class="naming-panel-section">
                         <h4 class="locations-panel-section-title">All Claims</h4>
+                        <p class="form-hint form-hint--neutral">
+                            "Export Claim" hands a claim to one person by
+                            file. "Publish to Nostr" announces it publicly
+                            instead — either way, the claim itself never
+                            changes, and neither action is more official
+                            than the other.
+                        </p>
                         <ul class="naming-panel-list">
                             <li v-for="claim in claims" :key="claim.id" class="naming-panel-item">
                                 <div class="naming-panel-item-info">
@@ -338,11 +405,25 @@ export default {
                                 <div class="naming-panel-item-actions">
                                     <button class="action-btn" @click="onExportClaim(claim.id)">Export</button>
                                     <button
+                                        v-if="canPublishToNostr"
+                                        class="action-btn"
+                                        :disabled="publishToNostrExecuting"
+                                        @click="onPublishToNostr(claim.id)"
+                                    >{{ publishToNostrExecuting && publishToNostrClaimId === claim.id ? 'Publishing…' : 'Publish to Nostr' }}</button>
+                                    <button
                                         v-if="claim.authorIdentityId === myIdentityId"
                                         class="action-btn action-btn--danger"
                                         @click="$emit('retract-name', claim.id)"
                                     >Retract</button>
                                 </div>
+                                <p
+                                    v-if="publishToNostrClaimId === claim.id && publishToNostrError"
+                                    class="world-view-place-naming-error"
+                                >{{ publishToNostrError }}</p>
+                                <p
+                                    v-else-if="publishToNostrClaimId === claim.id && publishToNostrResult"
+                                    class="form-hint form-hint--neutral"
+                                >Published to Nostr ({{ publishToNostrResult.relayUrl }}).</p>
                             </li>
                         </ul>
                     </section>

@@ -86,6 +86,18 @@ import { StorageProvider } from '../storage/StorageProvider.js';
 //               "broken."
 //   Section J — Final product evolution decision: STABLE — STOP, or not,
 //               decided from Sections A-I rather than asserted up front.
+//
+// ADDENDUM — 0.9.320 — Explicit Place Naming Publication Action. New
+// product evidence (a place name's own inherent social/discovery use case
+// — the author may want a STRANGER, not just their own other devices, to
+// discover it) reopened exactly the one gap this milestone characterized
+// but declined to act on (Sections A-B). Every assertion below that
+// checked "the publisher has no composition-root/UI caller" is updated IN
+// PLACE to record the new fact, mirroring the identical discipline 0.9.316
+// already held for 0.9.315's own now-closed findings — this file remains
+// an accurate account of what was true, and why STOP was the right call,
+// AS OF 0.9.318, while no longer asserting a state 0.9.320 has since
+// changed.
 
 function assert(condition, message) {
     if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
@@ -196,32 +208,42 @@ async function runTests() {
         assert(!navSessionCode.includes('NostrPlaceNamingDiscoveryPublisher'),
             'A2b. application/WorldNavigationSession.js — the one class publishNamingClaim() calls into — never references NostrPlaceNamingDiscoveryPublisher anywhere in its own code.');
 
-        // A3. The publisher class itself is fully IMPLEMENTED (0.9.316,
-        // reconfirmed convergent at 0.9.317) but structurally UNREACHABLE
-        // from any composition root or UI file — the ONLY places its
-        // name appears anywhere in production source are its own file
-        // and one forward-looking COMMENT in its read-side sibling.
+        // A3. HISTORICAL RECORD, SUPERSEDED BY 0.9.320 — Explicit Place
+        // Naming Publication Action. As of THIS milestone (0.9.318), the
+        // publisher class was fully IMPLEMENTED (0.9.316, reconfirmed
+        // convergent at 0.9.317) but structurally UNREACHABLE from any
+        // composition root or UI file — the ONLY places its name appeared
+        // anywhere in production source were its own file and one
+        // forward-looking COMMENT in its read-side sibling. 0.9.320 closed
+        // exactly this gap: `application/PlaceNamingPublicationRuntimeComposition.js`,
+        // `ui/main.js`, `ui/views/WorldView.js`, and `ui/components/PlaceNamingPanel.js`
+        // now all reference it as a genuine, live composition-root/UI
+        // caller. This section's own checks are updated in place to record
+        // the new fact — see tests/PlaceNamingClaimPublicationAction.test.js
+        // for the live proof this reachability actually works — rather than
+        // left asserting a state that no longer holds, the same discipline
+        // 0.9.316 already held for 0.9.315's own record.
         const publisherReferences = grepFiles('NostrPlaceNamingDiscoveryPublisher', ['application', 'ui', 'core', 'identity', 'server']);
         const nonSelfReferences = publisherReferences.filter((f) => f !== 'application/NostrPlaceNamingDiscoveryPublisher.js');
-        assert(nonSelfReferences.length === 1 && nonSelfReferences[0] === 'application/NostrPlaceNamingDiscoverySource.js',
-            `A3a. Exactly one production file other than the publisher's own references its name (found: ${nonSelfReferences.join(', ') || 'none'}).`);
-        const sourceFileRaw = await rawSource('application/NostrPlaceNamingDiscoverySource.js');
-        const referenceLine = sourceFileRaw.split('\n').find((l) => l.includes('NostrPlaceNamingDiscoveryPublisher'));
-        assert(referenceLine && referenceLine.trim().startsWith('//'),
-            `A3b. That one reference is a comment line, not code: "${referenceLine ? referenceLine.trim() : '(not found)'}" — the read-side source never imports or constructs the publisher.`);
+        assert(nonSelfReferences.includes('application/PlaceNamingPublicationRuntimeComposition.js') && nonSelfReferences.includes('application/NostrPlaceNamingDiscoverySource.js'),
+            `A3a. As of 0.9.320, at least the composition-root file and the pre-existing read-side comment reference the publisher's name (found: ${nonSelfReferences.join(', ') || 'none'}) — no longer "exactly one," and the additional reference is real, live-composed code, not a second comment.`);
+        const compositionSourceRaw = await rawSource('application/PlaceNamingPublicationRuntimeComposition.js');
+        assert(compositionSourceRaw.includes('new NostrPlaceNamingDiscoveryPublisher('),
+            'A3b. 0.9.320\'s own composition-root file genuinely constructs the publisher, in code — not merely a comment reference, unlike the pre-existing read-side sibling\'s own forward-looking comment.');
         assert(grepCount('new NostrPlaceNamingDiscoveryPublisher(', ['ui', 'server']) === 0,
-            'A3c. Zero UI or server files anywhere construct a NostrPlaceNamingDiscoveryPublisher — the class has no composition-root caller at all.');
+            'A3c. Still zero UI or server files directly construct a NostrPlaceNamingDiscoveryPublisher — 0.9.320 reaches it only through application/PlaceNamingPublicationRuntimeComposition.js\'s own composed function, never a concrete class reference from ui/, mirroring the identical restraint Snapshot distribution already holds for ArweaveContentStore/NostrSnapshotDiscoveryPublisher (Section F2).');
 
-        // A4. Nostr relay: IMPLEMENTED for discovery (a real query client
-        // is composed), but there is no configured PUBLISH transport for
-        // this domain at all — unlike Snapshot distribution, which
-        // ui/main.js wires to a real nostrHostPublisher (Section F below
-        // expands this comparison).
+        // A4. HISTORICAL RECORD, SUPERSEDED BY 0.9.320. As of THIS
+        // milestone, Nostr relay discovery was composed but there was no
+        // configured PUBLISH transport for this domain at all. 0.9.320
+        // wired one, reusing the SAME nostrHostPublisher instance already
+        // resolved for Publication/Snapshot distribution — never a second
+        // read of window.nostr.
         const mainJs = await rawSource('ui/main.js');
         assert(mainJs.includes('NostrPlaceNamingDiscoverySource') && mainJs.includes('nostrRelayQueryClient'),
             'A4a. ui/main.js still composes a real Nostr QUERY client for Place Naming discovery.');
-        assert(!mainJs.includes('placeNamingDiscoveryPublisher') && !/NostrPlaceNamingDiscoveryPublisher/.test(mainJs),
-            'A4b. ui/main.js never composes any Nostr PUBLISH client or publisher instance for Place Naming — there is no relay write transport wired for this domain at all, in either direction.');
+        assert(mainJs.includes('composePlaceNamingPublicationRuntime(') && mainJs.includes("app.provide('publishPlaceNamingClaimToNostrCommand'"),
+            'A4b. As of 0.9.320, ui/main.js DOES compose a real Nostr PUBLISH transport for Place Naming — a relay write path now exists for this domain, provided app-wide under its own dedicated key, reusing (never duplicating) the same nostrHostPublisher instance Publication/Snapshot distribution already resolved.');
 
         // A5. Existing discovery source -> Device B discovers claim:
         // IMPLEMENTED AND REACHABLE. The read half is genuinely live,
@@ -237,7 +259,7 @@ async function runTests() {
         assert(worldView.includes('function adoptNearbyPlaceNamingClaim(row)') && worldView.includes('@click="adoptNearbyPlaceNamingClaim(claim)"'),
             'A6. ui/views/WorldView.js still defines adoptNearbyPlaceNamingClaim(row) and wires it to a real @click handler on a discovered claim row (0.9.263) — a Wanderer can act on a discovered candidate today, not merely see one.');
 
-        console.log('✓ A: Every boundary in the arc\'s own diagram traced fresh. Create -> local persistence (A1), discovery -> adoption (A5/A6) are both IMPLEMENTED AND REACHABLE with zero required manual step. "Explicit Publish action -> NostrPlaceNamingDiscoveryPublisher" is IMPLEMENTED (fully built and tested, 0.9.316/0.9.317) but NOT REACHABLE from anywhere a real Wanderer can click (A2-A4) — the shipped "Publish" button performs local persistence only, and no composition root ever constructs the publisher. This is not new information; it is 0.9.316\'s own explicitly named, deliberately unselected decision (see this file\'s own header), reconfirmed live rather than merely cited.');
+        console.log('✓ A: HISTORICAL RECORD, SUPERSEDED BY 0.9.320. Every boundary in the arc\'s own diagram traced fresh, as of THIS milestone (0.9.318): create -> local persistence (A1), discovery -> adoption (A5/A6) were both IMPLEMENTED AND REACHABLE; "Explicit Publish action -> NostrPlaceNamingDiscoveryPublisher" was IMPLEMENTED (0.9.316/0.9.317) but NOT REACHABLE from anywhere a real Wanderer could click (A2-A4) — the shipped "Publish" button performed local persistence only. 0.9.320 — Explicit Place Naming Publication Action — later closed exactly that gap with a new, separate, explicit "Publish to Nostr" action; the pre-existing "Publish" action (local creation, A1/A2) remains completely unmodified. See tests/PlaceNamingClaimPublicationAction.test.js for the live proof.');
     }
 
     // ===============================================================
@@ -272,35 +294,35 @@ async function runTests() {
         assert(discovered.length === 1 && discovered[0].claim.id === claim.id,
             'B1b. Device B still discovers Alice\'s claim through the unmodified read chain — the capability inventory is unchanged since 0.9.317.');
 
-        // B2. THE ASYMMETRY, stated as a checkable fact rather than
-        // prose: the read side has a composed, live, production
+        // B2. HISTORICAL RECORD, SUPERSEDED BY 0.9.320. As of THIS
+        // milestone, the read side had a composed, live, production
         // discoveryQueryService reachable from a real UI refresh loop
-        // (Section A5); the write side has no equivalent production
-        // publisher instance anywhere. A capability inventory that only
-        // counted "does the class exist and pass its own tests" would
-        // score both COMPLETE identically — this section's own job is to
-        // prove that would be the wrong inventory to keep.
+        // (Section A5); the write side had no equivalent production
+        // publisher instance anywhere. 0.9.320 closed that asymmetry by
+        // providing a real, live command from the same composition root —
+        // under a name reflecting what it actually does
+        // (publishPlaceNamingClaimToNostrCommand: a thin function, never a
+        // bare publisher instance handed to the app), the identical shape
+        // every other injected command in ui/main.js already takes.
         const mainJs = await rawSource('ui/main.js');
         assert(mainJs.includes("app.provide('placeNamingDiscoveryQueryService'"),
             'B2a. A real, live discoveryQueryService is provided from ui/main.js\'s own composition root — reachable by any view that injects it.');
-        assert(!mainJs.includes("app.provide('placeNamingDiscoveryPublisher'") && !/app\.provide\(['"].*[Pp]laceNaming.*[Pp]ublish/.test(mainJs),
-            'B2b. No equivalent publisher instance is ever provided from the same composition root under any name — confirming the asymmetry is total, not an artifact of this section\'s own naming guess.');
+        assert(mainJs.includes("app.provide('publishPlaceNamingClaimToNostrCommand'"),
+            'B2b. As of 0.9.320, a real publish command IS provided from the same composition root, under its own dedicated key — the asymmetry Section B existed to characterize no longer holds at the composition-root level (Section C below still asks whether that changes the underlying user-value picture).');
 
-        // B3. Discovery's own real-world consequence of B2, stated
-        // honestly: because nothing in this shipped product ever calls
-        // publisher.publish() outside a test file, the relay this
-        // product's own discovery monitor queries will find zero
-        // genuine ForkBuild-originated Place Naming events until either
-        // (a) this UI gap is closed, or (b) some other, external actor
-        // independently publishes envelopes in this exact wire format.
-        // This is a fact about today's shipped behavior, not a defect in
-        // the discovery code itself, which Section B1 just reconfirmed
-        // works correctly against whatever a relay actually holds.
+        // B3. HISTORICAL RECORD, SUPERSEDED BY 0.9.320. As of THIS
+        // milestone, zero UI files constructed the publisher, so this
+        // product's own discovery monitor could never observe a genuinely
+        // self-originated Place Naming publication on a real relay except
+        // through an external actor. 0.9.320 gives a real Wanderer, using
+        // only the shipped "Publish to Nostr" action, a path to originate
+        // exactly such an event — reconfirmed live in
+        // tests/PlaceNamingClaimPublicationAction.test.js Section F.
         const uiWideNonTestPublisherConstruction = grepCount('new NostrPlaceNamingDiscoveryPublisher(', ['ui']);
         assert(uiWideNonTestPublisherConstruction === 0,
-            'B3. Zero UI files construct the publisher — reconfirming that today\'s shipped product has no path by which its own discovery monitor could ever observe a genuinely self-originated Place Naming publication on a real relay.');
+            'B3. Still zero UI files directly construct the publisher — 0.9.320 reaches it only through the composed application/PlaceNamingPublicationRuntimeComposition.js function, the identical "never a concrete class reference from ui/" restraint Snapshot distribution already holds.');
 
-        console.log('✓ B: The write side (B1) and read side (B2) are both capability-complete, reconfirmed fresh against a brand-new scenario. But they sit at two different reachability levels: the read side is composed and live from a real composition root (B2a), the write side has no equivalent anywhere (B2b/B3) — a fact about today\'s shipped product, not a regression in either side\'s own correctness.');
+        console.log('✓ B: HISTORICAL RECORD, SUPERSEDED BY 0.9.320. As of THIS milestone (0.9.318), the write side (B1) and read side (B2) were both capability-complete but sat at two different reachability levels — the read side composed and live (B2a), the write side with no equivalent anywhere (B2b/B3). 0.9.320 closed that gap by providing a real publish command from the same composition root; see that milestone\'s own record.');
     }
 
     // ===============================================================
@@ -434,8 +456,11 @@ async function runTests() {
 
         // D10. Nostr publication — precisely characterized, not merely
         // labeled COMPLETE. This is the one row Section A/B's own finding
-        // changes from this milestone's own initiating table.
-        candidateMatrix.push(['Nostr publication', 'CAPABILITY COMPLETE; UI WIRING DELIBERATELY DEFERRED (Section A/B) — not COMPLETE in the full user-reachable sense until a future, separately evidenced milestone wires an explicit action, per 0.9.316\'s own unselected "what comes after."']);
+        // changes from this milestone's own initiating table. HISTORICAL
+        // RECORD, SUPERSEDED BY 0.9.320: at the time this milestone ran,
+        // UI wiring was deliberately deferred (Section A/B); 0.9.320 later
+        // wired an explicit "Publish to Nostr" action, closing this row.
+        candidateMatrix.push(['Nostr publication', 'AS OF 0.9.318: CAPABILITY COMPLETE; UI WIRING DELIBERATELY DEFERRED (Section A/B). SUPERSEDED BY 0.9.320 — Explicit Place Naming Publication Action, which wired a real, explicit "Publish to Nostr" UI action reusing this same capability unmodified.']);
 
         // D11. Nostr discovery — the one row genuinely COMPLETE end to
         // end, including UI reachability, with no manual step.
@@ -510,12 +535,17 @@ async function runTests() {
         assert(snapshotNonSelf.length > 0,
             `F2. application/NostrSnapshotDiscoveryPublisher.js has at least one real, non-self production reference (found: ${snapshotNonSelf.join(', ')}) — unlike Place Naming's own publisher (Section A3), Snapshot's write side IS reachable from production composition.`);
 
-        // F3. Place Naming distribution: publication capability exists,
-        // discovery is live-wired, but publication itself has zero
-        // composition-root reference (Section A3/B2) — reconfirmed here
-        // as the one genuine structural difference among all three arcs.
-        assert(!mainJs.includes('placeNamingDiscoveryPublisher') && grepCount('new NostrPlaceNamingDiscoveryPublisher(', ['ui']) === 0,
-            'F3. Reconfirmed: Place Naming is the one arc of the three whose decentralized-publish half has no production composition-root reference at all.');
+        // F3. HISTORICAL RECORD, SUPERSEDED BY 0.9.320. As of THIS
+        // milestone, Place Naming distribution had zero composition-root
+        // reference for its publish half — the one genuine structural
+        // difference among the three arcs at the time. 0.9.320 closed
+        // that difference: Place Naming now has a real composition-root
+        // reference too (application/PlaceNamingPublicationRuntimeComposition.js,
+        // reused by ui/main.js), the identical "composed function only,
+        // never a concrete class reference from ui/" shape Snapshot
+        // distribution already holds (F2).
+        assert(mainJs.includes('composePlaceNamingPublicationRuntime(') && grepCount('new NostrPlaceNamingDiscoveryPublisher(', ['ui']) === 0,
+            'F3. As of 0.9.320, Place Naming\'s own decentralized-publish half DOES have a production composition-root reference (via the composed function, never a concrete class reference from ui/) — the structural gap Section A/B/F characterized at the time no longer holds.');
 
         // F4. Is this difference SEMANTIC (a deliberate product decision)
         // or ACCIDENTAL (an oversight)? Checked against the explicit
@@ -543,7 +573,7 @@ async function runTests() {
         assert(genericPublisherFiles.length === 0,
             'F5b. No generic, domain-independent publisher base class exists anywhere — the structural similarity Section F itself is built to compare does not, by itself, justify merging the two domains\' own mirrored-by-hand implementations.');
 
-        console.log('✓ F: Publication distribution (F1) and Snapshot distribution (F2) are both fully wired end to end; Place Naming (F3) is the one arc still missing its own write-side composition-root wiring. That difference is confirmed SEMANTIC — an explicit, named, documented product decision (F4), not an oversight this reassessment is the first to notice — and it does not, on its own, justify a shared abstraction across the three arcs\' own independently mirrored publisher classes (F5), consistent with 0.9.317 Section J\'s own finding, now reconfirmed one level up.');
+        console.log('✓ F: HISTORICAL RECORD, SUPERSEDED BY 0.9.320. As of THIS milestone (0.9.318), Publication distribution (F1) and Snapshot distribution (F2) were fully wired end to end; Place Naming (F3) was the one arc still missing its own write-side composition-root wiring — a difference confirmed SEMANTIC (F4) at the time, not accidental. 0.9.320 later closed that difference by wiring Place Naming\'s own write side too, without introducing any shared abstraction across the three arcs\' own independently mirrored publisher classes (F5 still holds unchanged).');
     }
 
     // ===============================================================
@@ -556,14 +586,18 @@ async function runTests() {
     {
         const CAPABILITY_TAXONOMY = ['COMPLETE', 'REACHABLE_BUT_INTERNAL', 'MISSING_UI', 'MISSING_DOMAIN_CAPABILITY', 'DEFERRED', 'OBSOLETE_CANDIDATE'];
 
-        // G1. NostrPlaceNamingDiscoveryPublisher: built, tested twice
-        // over (0.9.316/0.9.317), zero composition-root callers
-        // (Section A3) — this is the textbook shape of
+        // G1. HISTORICAL RECORD, SUPERSEDED BY 0.9.320. As of THIS
+        // milestone (0.9.318), NostrPlaceNamingDiscoveryPublisher was
+        // built, tested twice over (0.9.316/0.9.317), with zero
+        // composition-root callers (Section A3) — the textbook shape of
         // REACHABLE_BUT_INTERNAL from this codebase's own
         // ProductBaselineClosure vocabulary (0.9.314 Section B), never
         // MISSING_DOMAIN_CAPABILITY (the capability is not missing — it
         // exists and works) and never OBSOLETE_CANDIDATE (it has never
-        // had a caller to lose).
+        // had a caller to lose). 0.9.320 later gave it a real
+        // composition-root caller, reclassifying it COMPLETE — see
+        // tests/PostPlaceNamingStableProductBaselineClosure.test.js's own
+        // record for the reclassification.
         const classification = 'REACHABLE_BUT_INTERNAL';
         assert(CAPABILITY_TAXONOMY.includes(classification),
             'G1. The classification assigned to the publisher is drawn from this codebase\'s own existing six-value taxonomy, not a new vocabulary invented here.');

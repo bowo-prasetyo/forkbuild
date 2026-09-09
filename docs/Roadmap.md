@@ -89205,3 +89205,143 @@ Not selected here. The next 0.9.x milestone should appear only when something ex
 real evidence — a newly observed blocked user journey, a newly introduced external requirement, a concrete
 workflow that cannot currently be completed, a changed product constraint, or a real operational problem this
 architecture cannot handle — never when this loop re-examines its own, already-settled conclusions again.
+
+## 0.9.320 — Explicit Place Naming Publication Action
+
+0.9.318/0.9.319 both recorded the same architectural fact and both, correctly given the evidence in hand at the
+time, declined to act on it: `NostrPlaceNamingDiscoveryPublisher` (0.9.316) is fully built and tested, but the
+shipped "Publish" action in `ui/components/PlaceNamingPanel.js` reaches only local persistence, never that
+publisher — an already-shipped manual export/import channel was judged sufficient to complete the underlying user
+goal. New product evidence supplies the missing half of that judgment: **moving your own claim between your own
+devices** (what export/import already does) is not the same user goal as **announcing a place name so a stranger
+who was never involved in creating it can discover it**. A signed claim sitting in one replica's own local storage,
+with the one class capable of announcing it composition-root-unreachable, cannot answer "how does my name become
+discoverable by someone else" — a genuinely different, previously unevidenced journey. This milestone closes
+exactly that reachability gap, reusing 0.9.316's publisher entirely unmodified: **an existing capability becomes an
+explicit user-facing action, and nothing about what that action does is invented here.**
+
+### What this milestone adds
+
+`application/PlaceNamingPublicationRuntimeComposition.js` (new) — a composition-root seam mirroring
+`application/SnapshotDistributionRuntimeComposition.js`'s own `canAttemptNostrDiscovery()`/graceful-degradation
+shape (0.9.137), reduced to the one collaborator this domain actually needs:
+
+- `composePlaceNamingPublicationRuntime({ nostrPlaceNamingDiscoveryPublisherOptions }) -> { discoveryPublisher }` —
+  `discoveryPublisher` is a real `NostrPlaceNamingDiscoveryPublisher` when `publishImpl` is a usable function, or
+  `null` otherwise — never a throw for an absent host capability, never a fabricated stand-in. A genuinely
+  malformed *present* capability (a real `publishImpl` alongside an empty-string `relayUrl`, for instance) still
+  throws, exactly as constructing `NostrPlaceNamingDiscoveryPublisher` directly already would.
+- A single collaborator, not a `{ contentStore, discoveryPublisher }` pair — the one deliberate departure from the
+  Snapshot family's own shape. A `PlaceNamingClaim` has no companion content-placement step the way a Snapshot's
+  Arweave placement is a prerequisite to its own Nostr announcement; Nostr publication is the *only* substrate this
+  domain's own claim distribution ever needed.
+- No browser API, no I/O, no orchestration entry point, no coupling to Snapshot or Signed Claim distribution — the
+  identical restraints `SnapshotDistributionRuntimeComposition.js`'s own header already holds, one substrate over.
+
+`ui/main.js` (updated) — composes the above, reusing the SAME `nostrHostPublisher` instance already resolved from
+`window.nostr` for Publication/Snapshot distribution (never a second read of that host capability), and provides
+`publishPlaceNamingClaimToNostrCommand` app-wide: a thin `(claim) -> Promise<{ published, relayUrl, id,
+discoveryTag }>` function that rejects with a plain, readable error when no compatible extension is installed,
+rather than ever fabricating a publication result.
+
+`ui/views/WorldView.js` (updated) — injects that command and adds `publishNamingClaimToNostr(claimId)`, mirroring
+`distributeWorldEncounterSnapshot()`'s own shape one domain over:
+
+- Re-reads the claim through `session.getPlaceNamingClaims(regionId)` (never the view's own cached
+  `namingPanelClaims`) and hands the exact, already-signed `PlaceNamingClaim` instance to the injected command —
+  never a second claim construction, never a mutation of the one handed over, never a re-derivation of its fields.
+- A dedicated `namingPanelPublishToNostrClaimId`/`Executing`/`Error`/`Result`/`RequestId` ephemeral-state family
+  (never shared with any other action in this file), so a person publishing several of a region's claims in
+  sequence always sees the result belonging to the specific row they clicked — the identical per-action ephemeral
+  shape `ui/components/OwnPublicationPanel.js` already holds for its own "Distribute Snapshot."
+  `resetNamingPanelPublishToNostr()` clears this family (and bumps the request id, invalidating a still-in-flight
+  call) at the two sites a naming panel's own target region can change — `openNamingPanel()`/`closeNamingPanel()`.
+- A decline or failure never retracts, re-saves, or otherwise mutates the local claim — `refreshNamingPanel()` is
+  never called from this function, because nothing it does ever changes what
+  `session.getPlaceNamingClaims()`/`getPlaceNamingView()` would return.
+
+`ui/components/PlaceNamingPanel.js` (updated) — a new `'publish-to-nostr'` emit and a "Publish to Nostr" button
+beside each row's existing "Export"/"Retract" actions in "All Claims," available on ANY claim (not only the
+viewer's own) — the identical "a signed claim is a portable fact anyone holding it may forward" reach
+`'export-claim'` already has, applied to a public-relay transport instead of a private file. Gated on a new
+`canPublishToNostr` prop (`false` by default — no button renders at all when the host supplied no command),
+disabled while a call for that claim is in flight, and showing that claim's own `publishToNostrResult`/
+`publishToNostrError` beside its own row via a new `publishToNostrClaimId` prop — never ambiguously beside every
+row. `onPublishToNostr(claimId)` is a dumb pass-through, exactly like the pre-existing `onExportClaim()`: this
+component still never calls a Nostr publisher, constructs an event, or decides whether publishing is even possible.
+
+`tests/PlaceNamingPublicationRuntimeComposition.test.js` (new, registered in `tests.html`) — eight sections mirroring
+`tests/SnapshotDistributionRuntimeComposition.test.js`'s own structure, reduced to the one collaborator: real
+construction when usable, independent instances per call, verbatim option forwarding, no I/O during composition, a
+malformed-present-capability throw, graceful degradation to `null` when absent, a flagship fake-`window.nostr` round
+trip, and an architectural regression proving `ui/main.js` now calls `composePlaceNamingPublicationRuntime()` (never
+constructing the concrete publisher class by name) and provides the resulting command under its own dedicated key.
+
+`tests/PlaceNamingClaimPublicationAction.test.js` (new, registered in `tests.html`) — nine sections proving the full
+UI-shaped path, without ever mounting a real Vue component (the same restraint
+`tests/PlaceNamingWorldViewPresentation.test.js` already holds for its own 0.9.257 wiring — a `makeHost()`
+reproduces `ui/views/WorldView.js`'s own `publishNamingClaimToNostr()`/`resetNamingPanelPublishToNostr()` verbatim,
+kept honest by a source-string regression section):
+
+- **A/B** — `PlaceNamingPanel`'s own new prop/emit/method contract, and `onPublishToNostr()` as a dumb pass-through
+  emit.
+- **C** — the host wiring identifies the existing, already-signed claim by id and hands it unmodified to the
+  injected command; publishing to Nostr never creates a second local claim or mutates the one on file.
+- **D** — executing/result/error transitions across success, a genuine rejection, and a synchronous throw from the
+  composed command (`ui/main.js`'s own rejects, but the host tolerates either shape) — a failure never mutates local
+  state.
+- **E** — the staleness guard: a second click before the first settles means only the second attempt's own result
+  is ever recorded; closing the naming panel invalidates a still-in-flight call.
+- **F. FLAGSHIP** — Device A creates a claim locally (never automatically announced), explicitly publishes it
+  through the actual new path (a simulated `PlaceNamingPanel` click → the reproduced host wiring → the real
+  composed runtime → the real, unmodified `NostrPlaceNamingDiscoveryPublisher`), and Device B — an independent
+  replica sharing no local storage — discovers it through the completely unmodified existing discovery chain
+  (`NostrPlaceNamingDiscoverySource` → `PlaceNamingDiscoveryQueryService` →
+  `executeDiscoverPlaceNamingClaimsCommand`). This is the same convergence 0.9.316/0.9.317 already proved by calling
+  the publisher directly; this section proves it is now reachable through the actual UI-shaped seam. Discovery alone
+  still never writes into Device B's own local store — adoption remains its own, separate, unbuilt step.
+- **G. NEGATIVE** — with no command supplied, `canPublishToNostr` defaults to `false` (nothing renders) and calling
+  the host function directly is a silent, synchronous no-op that mutates nothing.
+- **H** — creating a claim locally and publishing it to Nostr stay two separate, explicit actions: creating one
+  never, by itself, triggers the other.
+- **I** — architectural regression confirming `ui/main.js`/`ui/views/WorldView.js`/`ui/components/PlaceNamingPanel.js`
+  genuinely contain the wiring every section above assumes, and that `application/PlaceNamingClaimUseCase.js`
+  remains completely unaware Nostr publication exists — `publish()` stays local-only and synchronous, unmodified.
+
+### One explicit product decision, reaffirmed
+
+Per 0.9.316's own decision, unchanged by this milestone: publishing to Nostr stays **never automatic**. Creating a
+local claim (`publishNamingClaim()`/`session.publishPlaceNamingClaim()`) and announcing that claim
+(`publishNamingClaimToNostr()`, new) remain two separate, explicit user actions — a person may want to name a place
+privately without ever announcing it, and this milestone preserves that choice rather than collapsing it. This
+milestone also settles nothing about whether every newly created claim *should* eventually be published
+automatically; that remains its own, later, unscheduled product decision.
+
+### A deliberately honest result vocabulary
+
+The panel reports "Published to Nostr (`<relayUrl>`)" — never "Published worldwide" or "Now visible to everyone." A
+successful `publish()` means only what `NostrPlaceNamingDiscoveryPublisher`'s own header already established: the
+relay accepted this event. It is never a claim that any other device has actually discovered it, never that its
+signature has been checked by anyone, and never that it is now more authoritative than before. No
+`PENDING`/`PUBLISHED`/`FAILED`/`RETRYING`/`CONFIRMED` lifecycle is introduced — an immediate action result (this
+click either succeeded or it didn't) is sufficient for this first product version, exactly as 0.9.316's own header
+already scoped the publisher itself.
+
+### What this milestone deliberately excludes
+
+Automatic publication of every locally-created claim (see "one explicit product decision," above); any persisted
+publication lifecycle/history/status; retry queues or offline publication queues; multi-relay fan-out, relay
+preference, or relay-selection policy of any kind; unpublish/retraction of an already-published Nostr event; a
+"Publish to Nostr" action anywhere other than the existing "All Claims" list (no automatic prompt immediately after
+creating a name); any change to `application/NostrPlaceNamingDiscoveryPublisher.js`,
+`core/PlaceNamingDiscoveryEnvelope.js`, or the discovery-side chain (`NostrPlaceNamingDiscoverySource.js`,
+`PlaceNamingDiscoveryQueryService.js`, `DiscoverPlaceNamingClaimsCommand.js`) — all remain byte-for-byte as 0.9.316
+left them; and any revisit of whether a discovered-but-not-yet-adopted candidate should gain an import UI path
+(0.9.316's own still-open "what comes after," untouched here).
+
+### What comes after
+
+Not selected here. A future milestone would decide whether the manual adoption gap 0.9.316 already named (importing
+a *discovered* claim, distinct from publishing one's *own*) deserves the same reachability treatment this milestone
+gave publication. Not assumed necessary on the strength of this milestone alone — per this codebase's own evidence
+gate, that would need its own, independently-observed blocked journey first.

@@ -129,6 +129,7 @@ import { createNostrInjectedProviderPublisher } from '../nostr/NostrInjectedProv
 import { createNostrRelayQueryClient } from '../nostr/NostrRelayQueryClient.js';
 import { composeSnapshotDistributionRuntime } from '../application/SnapshotDistributionRuntimeComposition.js';
 import { executeSnapshotDistributionCommand } from '../application/SnapshotDistributionCommand.js';
+import { composePlaceNamingPublicationRuntime } from '../application/PlaceNamingPublicationRuntimeComposition.js';
 import { composeDiscoverSnapshotRuntime } from '../application/DiscoverSnapshotRuntimeComposition.js';
 import { executeDiscoverSnapshotCommand } from '../application/DiscoverSnapshotCommand.js';
 import { executeDiscoverSnapshotCandidatesCommand } from '../application/DiscoverSnapshotCandidatesCommand.js';
@@ -1809,6 +1810,42 @@ const snapshotDistributionCommand = (bytes) => executeSnapshotDistributionComman
     discoveryPublisher: snapshotDiscoveryPublisher
 });
 app.provide('snapshotDistributionCommand', snapshotDistributionCommand);
+
+// 0.9.320 — Explicit Place Naming Publication Action.
+//
+// `application/NostrPlaceNamingDiscoveryPublisher.js` (0.9.316) has existed,
+// fully built and tested, since before this milestone — 0.9.318/0.9.319
+// each confirmed it stayed composition-root-unreachable. This is that one
+// composition, mirroring the immediately preceding `snapshotDistributionCommand`
+// wiring, and nothing more.
+//
+// `nostrHostPublisher` IS THE SAME INSTANCE the Publication/Snapshot
+// distribution wiring above already resolved from `window.nostr` — never a
+// second read of that host capability. `application/
+// PlaceNamingPublicationRuntimeComposition.js`'s own graceful degradation
+// means `placeNamingDiscoveryPublisher` may be `null` when no compatible
+// extension is installed, in which case `publishPlaceNamingClaimToNostrCommand(claim)`
+// rejects with a plain, readable error rather than ever fabricating a
+// publication result — `ui/views/WorldView.js`'s own
+// `publishNamingClaimToNostr()` surfaces that rejection exactly like any
+// other.
+//
+// NEVER A SECOND CAMPAIGN TAG. Unlike `snapshotDistributionCommand`'s own
+// `discoveryTag: 'forkbuild-snapshot'`, this file supplies no `discoveryTag`
+// at all — `NostrPlaceNamingDiscoveryPublisher#publish(claim)` derives one
+// itself, from the claim's own `worldId`/`regionId`, the one deliberate
+// departure from the Snapshot family's own shape that file's own header
+// already documents.
+const { discoveryPublisher: placeNamingDiscoveryPublisher } = composePlaceNamingPublicationRuntime({
+    nostrPlaceNamingDiscoveryPublisherOptions: { publishImpl: nostrHostPublisher }
+});
+const publishPlaceNamingClaimToNostrCommand = (claim) => Promise.resolve().then(() => {
+    if (!placeNamingDiscoveryPublisher) {
+        throw new Error('Nostr publishing is not available — no compatible browser extension was found');
+    }
+    return placeNamingDiscoveryPublisher.publish(claim);
+});
+app.provide('publishPlaceNamingClaimToNostrCommand', publishPlaceNamingClaimToNostrCommand);
 
 // 0.9.142 — World View Snapshot Discovery Command.
 //

@@ -44,7 +44,11 @@ import { StorageProvider } from '../storage/StorageProvider.js';
 //               capability re-classified IMPLEMENTED+REACHABLE or
 //               IMPLEMENTED+INTERNAL, with NostrPlaceNamingDiscoveryPublisher
 //               added as the fourth internal capability rather than left
-//               an unclassified orphan.
+//               an unclassified orphan. ADDENDUM — 0.9.320 gave that
+//               capability a real composition-root/UI caller; this
+//               section is updated in place to reclassify it REACHABLE
+//               (21 reachable surfaces, 3 remaining internal capabilities)
+//               rather than left describing a superseded state.
 //   Section C — Place Naming arc closure: the full evidence chain (create,
 //               local persistence, decentralized discovery, manual
 //               export/import, explicit-but-internal Nostr publication)
@@ -201,6 +205,15 @@ async function runTests() {
             ['Collaboration (conflict resolution)', 'replication/WorldConflictResolver.js', 'export class WorldConflictResolver'],
             ['Place Naming', 'core/PlaceNamingClaim.js', 'export class PlaceNamingClaim'],
             ['Place Naming decentralized discovery', 'application/NostrPlaceNamingDiscoverySource.js', 'export class NostrPlaceNamingDiscoverySource'],
+            // 0.9.320 — Explicit Place Naming Publication Action gave this
+            // class a real composition-root/UI caller
+            // (application/PlaceNamingPublicationRuntimeComposition.js,
+            // ui/main.js, ui/views/WorldView.js, ui/components/PlaceNamingPanel.js),
+            // reclassifying it from IMPLEMENTED+INTERNAL (this file's own
+            // original 0.9.319 record, superseded — see the former fourth
+            // INTERNAL_CAPABILITIES entry, below) to IMPLEMENTED+REACHABLE,
+            // moved here rather than left misclassified.
+            ['Place Naming decentralized publication', 'application/NostrPlaceNamingDiscoveryPublisher.js', 'export class NostrPlaceNamingDiscoveryPublisher'],
             ['Provider preferences', 'core/RoleProviderPreference.js', 'export class RoleProviderPreference'],
             ['Authentication/identity', 'identity/LocalIdentityProvider.js', 'export class LocalIdentityProvider'],
             ['Wanderer/vehicle', 'application/AvatarVehicleInteractionController.js', 'export class AvatarVehicleInteractionController']
@@ -210,8 +223,8 @@ async function runTests() {
             assert((await rawSource(path)).includes(marker), `B. [${name}] ${path} still contains "${marker}".`);
             reachableSurfaces.push([name, path, marker]);
         }
-        assert(reachableSurfaces.length === 20,
-            `B. Exactly 20 reachable surfaces are carried forward — 0.9.314's own 19, plus Place Naming decentralized discovery (0.9.253/0.9.316-era, live-wired since before this arc began but never previously given its own inventory row) (found ${reachableSurfaces.length}).`);
+        assert(reachableSurfaces.length === 21,
+            `B. Exactly 21 reachable surfaces are carried forward — 0.9.314's own 19, Place Naming decentralized discovery (0.9.253/0.9.316-era, added at 0.9.319), plus Place Naming decentralized publication (0.9.316, reclassified REACHABLE at 0.9.320 — see this file's own addendum) (found ${reachableSurfaces.length}).`);
 
         const appSource = await rawSource('ui/App.js');
         const EXPECTED_NAV_ROUTES = new Set(['/', '/editor', '/repository', '/worlds/recent', '/avatar', '/identity',
@@ -224,11 +237,17 @@ async function runTests() {
         assert(missing.length === 0, `B-nav. ui/App.js still links every previously-classified nav route (missing: ${missing.join(', ') || 'none'}).`);
         assert(added.length === 0, `B-nav. ui/App.js introduces no nav route beyond the classified set (found new: ${added.join(', ') || 'none'}) — a newly introduced product surface would need to be classified in this guard before this assertion is updated, not silently.`);
 
-        // The four IMPLEMENTED+INTERNAL capabilities. The first three
-        // carried forward unchanged from 0.9.314; the fourth is
-        // NostrPlaceNamingDiscoveryPublisher, classified here (not left
-        // as an unclassified fact for a future milestone to rediscover)
-        // exactly as 0.9.318 Section G already established.
+        // The three IMPLEMENTED+INTERNAL capabilities carried forward
+        // unchanged from 0.9.314. As originally recorded by THIS milestone
+        // (0.9.319), a FOURTH entry classified
+        // NostrPlaceNamingDiscoveryPublisher (0.9.316) as INTERNAL — zero
+        // composition-root callers, per 0.9.318 Section G. 0.9.320 —
+        // Explicit Place Naming Publication Action — gave it a real
+        // caller, so that entry is REMOVED from here and its class moved
+        // up into REACHABLE_SURFACES above instead (see that array's own
+        // 0.9.320 addendum) — corrected in place, the identical discipline
+        // 0.9.316 already held for 0.9.315's own now-closed findings,
+        // rather than left describing a state that no longer holds.
         const INTERNAL_CAPABILITIES = [
             ['Automatic Snapshot Encounter Retention', async () => {
                 const hits = grepCount('retentionRadius\\|RetentionReconciliation\\|shouldRetainAutomaticSnapshotEncounter', ['ui']);
@@ -243,29 +262,13 @@ async function runTests() {
                     const hits = grepCount(`new ${rootClass}`, ['application', 'ui']);
                     assert(hits === 0, `B. application/${rootClass}.js still has zero production call sites (found ${hits}).`);
                 }
-            }],
-            ['NostrPlaceNamingDiscoveryPublisher (0.9.316)', async () => {
-                assert(await sourceExists('application/NostrPlaceNamingDiscoveryPublisher.js'),
-                    'B. application/NostrPlaceNamingDiscoveryPublisher.js still exists.');
-                const references = grepFiles('NostrPlaceNamingDiscoveryPublisher', ['application', 'ui', 'core', 'identity', 'server']);
-                const nonSelf = references.filter((f) => f !== 'application/NostrPlaceNamingDiscoveryPublisher.js');
-                assert(nonSelf.length === 1 && nonSelf[0] === 'application/NostrPlaceNamingDiscoverySource.js',
-                    `B. [NostrPlaceNamingDiscoveryPublisher] exactly one non-self production file references it (found: ${nonSelf.join(', ') || 'none'}).`);
-                const referencingSource = await rawSource('application/NostrPlaceNamingDiscoverySource.js');
-                const referenceLine = referencingSource.split('\n').find((l) => l.includes('NostrPlaceNamingDiscoveryPublisher'));
-                assert(referenceLine && referenceLine.trim().startsWith('//'),
-                    'B. [NostrPlaceNamingDiscoveryPublisher] that one reference is a comment, not code — no import, no construction.');
-                assert(grepCount('new NostrPlaceNamingDiscoveryPublisher(', ['ui', 'server']) === 0,
-                    'B. [NostrPlaceNamingDiscoveryPublisher] zero UI or server files construct it — no composition-root caller exists.');
-                assert(grepCount('new NostrPlaceNamingDiscoveryPublisher(', ['tests']) >= 2,
-                    'B. [NostrPlaceNamingDiscoveryPublisher] is exercised by at least two independent test files — "internal" describes UI reachability, never test coverage, which is thorough.');
             }]
         ];
         for (const [, check] of INTERNAL_CAPABILITIES) await check();
-        assert(INTERNAL_CAPABILITIES.length === 4,
-            `B. Exactly 4 IMPLEMENTED+INTERNAL capabilities are on record — 0.9.314's original 3 plus NostrPlaceNamingDiscoveryPublisher, explicitly classified rather than an unexplained orphan (found ${INTERNAL_CAPABILITIES.length}).`);
+        assert(INTERNAL_CAPABILITIES.length === 3,
+            `B. Exactly 3 IMPLEMENTED+INTERNAL capabilities remain on record — 0.9.314's original 3; NostrPlaceNamingDiscoveryPublisher (this milestone's own original fourth) was reclassified REACHABLE at 0.9.320, not left here describing a superseded state (found ${INTERNAL_CAPABILITIES.length}).`);
 
-        console.log('✓ B: Baseline inventory reconfirmed. All 20 IMPLEMENTED+REACHABLE surfaces still carry capability -> owner -> composition/reachability. The always-mounted nav route set is pinned EXACTLY. All 4 IMPLEMENTED+INTERNAL capabilities remain composition-only, unchanged — NostrPlaceNamingDiscoveryPublisher is on this list explicitly, not an unexplained orphan.');
+        console.log('✓ B: Baseline inventory reconfirmed. All 21 IMPLEMENTED+REACHABLE surfaces (20 as of this milestone\'s own original record, plus NostrPlaceNamingDiscoveryPublisher reclassified up from INTERNAL at 0.9.320) still carry capability -> owner -> composition/reachability. The always-mounted nav route set is pinned EXACTLY. The 3 remaining IMPLEMENTED+INTERNAL capabilities are unchanged.');
     }
 
     // ===============================================================
@@ -555,10 +558,15 @@ async function runTests() {
 'This is a NEW, evidence-backed stable point — not a copy of 0.9.314\'s own\n' +
 'conclusion. The baseline verdict chain now runs 0.9.313 -> 0.9.314 -> 0.9.318,\n' +
 'each link read from its own recorded source and reconfirmed closure-compatible\n' +
-'(Section A). The baseline inventory carries 20 IMPLEMENTED+REACHABLE surfaces\n' +
-'and 4 IMPLEMENTED+INTERNAL capabilities, with NostrPlaceNamingDiscoveryPublisher\n' +
-'now explicitly on that internal-capability register rather than an unexplained\n' +
-'orphan (Section B). The Place Naming arc\'s own five-stage evidence chain — create,\n' +
+'(Section A). AS ORIGINALLY RECORDED BY THIS MILESTONE, the baseline inventory\n' +
+'carried 20 IMPLEMENTED+REACHABLE surfaces and 4 IMPLEMENTED+INTERNAL\n' +
+'capabilities, with NostrPlaceNamingDiscoveryPublisher explicitly on the\n' +
+'internal-capability register rather than an unexplained orphan (Section B).\n' +
+'0.9.320 — Explicit Place Naming Publication Action — later gave that capability\n' +
+'a real composition-root/UI caller; Section B is updated in place to reclassify\n' +
+'it REACHABLE (21 reachable surfaces, 3 remaining internal capabilities), the\n' +
+'identical in-place-correction discipline 0.9.316 already held for 0.9.315\'s own\n' +
+'findings. The Place Naming arc\'s own five-stage evidence chain — create,\n' +
 'local persistence, decentralized discovery, manual export/import, and the\n' +
 'explicit-but-internal Nostr publication capability — was run live, end to end, in\n' +
 'one fresh scenario (Section C). The deliberate decision behind that one remaining\n' +
