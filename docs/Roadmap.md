@@ -91051,3 +91051,108 @@ Per the brief's own proposed 0.9.338: a user-journey audit asking whether a Repo
 decentralized origin can proceed through the existing selection -> `documentId` -> Fork/Explore workflow unmodified —
 before deciding whether additional decentralized sources (Nostr discovery, peer discovery) are actually required, or
 whether the passive federated visibility this milestone provides is sufficient on its own.
+
+## 0.9.338 — Federated Repository Publication User-Journey Audit
+
+**Test-only. Production changes: none.**
+
+0.9.337 wired a resolved decentralized Publication into the one application-lifetime
+`DecentralizedPublicationDiscoveryProvider` instance, and proved — genuinely, live — that a `SearchPublicationsUseCase`
+built directly on that shared provider finds it. This milestone's brief asked a sharper question: does that Publication
+reach an actual person, through the actual Repository -> select -> Fork/Explore workflow this codebase already ships,
+or only through a test harness that wires a `SearchPublicationsUseCase` somewhere production never does?
+
+The answer is the latter, and the gap is small, real, and precisely located.
+
+### The flagship trace
+
+`tests/FederatedRepositoryPublicationUserJourneyAudit.test.js`, using the brief's own flagship `documentId="9x7c2m"`,
+starts from an already-admitted state (0.9.337's own peer-to-admission chain is proven live; re-proving it here would
+be redundant) and walks every step downstream: resolved Publication → shared provider → Repository search → selection
+→ `documentId`/`Publication.id` → Explore/Fork.
+
+### A — Repository visibility: FAILS through the real UI
+
+`ui/components/PublicationCatalog.js` — the single component both `RepositoryView.js` and `AuthorView.js` mount — never
+injects `decentralizedPublicationDiscoveryProvider` at all. It builds its `discoveryProvider`/`searchPublicationsUseCase`
+exclusively from `new CreateDiscoveryUseCase().execute()`, which (0.9.337's own Section F/J already noted, in passing)
+constructs a plain `LocalDiscoveryProvider` and never references the decentralized provider. Live: the flagship
+Publication, genuinely resolved and genuinely admitted into the shared provider, is invisible to the EXACT
+`SearchPublicationsUseCase.execute()` call the real Repository page runs — while a `SearchPublicationsUseCase` built
+directly on the same shared provider (0.9.337's own Section C construction) finds it immediately. The capability
+0.9.337 built is real; the composition root every real UI surface calls never reaches it.
+
+### B — Selection identity: exactly `documentId` / `Publication.id`, nothing new
+
+`ui/components/PublicationCatalog.js`'s own `openPublication`/`forkPublication`/`viewWorld` read only `pub.documentId`
+and `pub.id` — `publisher/Publication.js`'s own existing fields, off the exact Publication instance search returned, no
+Repository-minted identity, no wrapper, no origin/source field. `PublicationCard.js`/`PublicationList.js` emit that same
+instance unmodified.
+
+### C, D, G — Explore and Fork already converge, mechanically
+
+`application/ForkDocumentUseCase.js` and the document-loading mechanism `/world/:documentId` depends on
+(`application/LoadDocumentUseCase.js`) are both completely decentralized-agnostic — confirmed structurally (zero
+"Decentralized" references in either file) and live: the flagship Publication's own `documentId`/`Publication.id`
+reach the identical call shape, stamp the identical `sourcePublicationId`/`sourceDocumentId` attribution fields, a local
+Publication does. The one measured divergence is upstream: `ui/views/EditorView.js`'s own `findPublicationUseCase` is
+built from the same `CreateDiscoveryUseCase.js` composition root Section A named, so it silently returns `null` for a
+decentralized-origin Publication's own `id` rather than finding it — the SAME root cause as Section A, not a second one.
+
+### E, I — The material-acquisition boundary already exists, and was never Repository's job
+
+`application/PublicationResolver.js` resolves exactly one `ContentReference` — the envelope's own, addressing a
+Publication's metadata — and never reads `.documentId` or fetches the Publication's own (separate) `ContentReference`
+addressing its World Document's bytes. `application/PublicationContentKind.js` deliberately ships no `store` option, by
+its own documented design. `DecentralizedPublicationDiscoveryProvider.add()` has no storage dependency at all, so
+admission — and Repository search over it — never requires material presence. The natural boundary the brief asked
+this section to locate already exists one layer below Repository: `LoadDocumentUseCase`/`ForkDocumentUseCase`'s own
+`storageProvider.load(documentId)`, which throws a specific, caught, user-visible error identical to what a local
+Publication with a deleted document already produces.
+
+### F — Four failure classes, kept genuinely distinct
+
+Repository discovery "failure" is a well-formed empty `PublicationPage`, never an exception. Publication resolution
+failure is one of several named `PublicationResolutionOutcome` values. Document retrieval failure is a specific thrown
+`Error` (`"no document found with id …"`). Fork failure (a license denial) is a different thrown `Error` again. No
+generic "decentralized Publication unavailable" catch-all exists anywhere in the chain to collapse them into.
+
+### H — Re-entry, reconfirmed rather than newly discovered
+
+`discovery/DecentralizedPublicationDiscoveryProvider.js` has no persistence dependency of any kind — navigating within
+one running app shares the one `ui/main.js` instance (nothing lost); a genuine restart starts empty, by construction.
+Exactly the accumulator boundary 0.9.335/0.9.336 already designed, not a defect this milestone found.
+
+### J — Verdict: `ONE_NARROW_PRODUCT_GAP`
+
+One file — `application/CreateDiscoveryUseCase.js` — is the composition root `ui/components/PublicationCatalog.js`,
+`ui/views/EditorView.js`, and `ui/views/WorldView.js` all independently call, and it never merges in the app-wide
+`DecentralizedPublicationDiscoveryProvider` `ui/main.js` already builds and already shares via `provide`/`inject`. That
+single gap accounts for both Section A (Repository search) and Section D (Editor's fork-time lookup) — not two
+unrelated ones. Everything downstream — selection identity (B), Explore/Fork mechanics (C/D/G), the material-acquisition
+boundary (E/I), and failure classification (F) — already converges correctly, using existing identity and existing
+mechanisms, exactly per the brief's own architectural objective: a decentralized Publication becomes a normal
+Publication once resolved.
+
+Not `ACQUISITION_GAP`: the boundary is already correctly drawn and enforced; closing it (an explicit "Retrieve
+material" action) is separate, optional future work. Not `IDENTITY_GAP`: no identity concept is missing or ambiguous
+anywhere in this chain. Not `COMPLETE`: a real user cannot complete Repository → Fork/Explore for a decentralized-origin
+Publication today, because Repository search never surfaces it in the first place — 0.9.337's own headline is not yet
+true for the actual Repository UI, only for a directly-wired `SearchPublicationsUseCase` a real user never reaches.
+
+### What this milestone deliberately did not do
+
+Per the brief's own exclusion list and this milestone's own "test-only" charter: no production change of any kind —
+`application/CreateDiscoveryUseCase.js` is untouched, confirmed by `git status` carrying only the new test file and
+its `tests.html` registration. No Nostr discovery, no proactive crawling, no federated search UI, no Repository
+aggregation abstraction, no persistent decentralized catalog, no deduplication, no ranking, no source/origin labels, no
+automatic material retrieval, no automatic forking.
+
+### What comes after
+
+The recommended next step is sized exactly to the one gap this audit found: teach `application/CreateDiscoveryUseCase.js`
+to compose the already-injected, already-shared decentralized provider (where available) alongside its own
+`LocalDiscoveryProvider` — a small, generic composite `discoveryProvider`, never a new Repository-owned store, never a
+source/origin field on a result. That one change would close both Section A and Section D's lookup gap at once, since
+both call through this same composition root — the product decision the brief asked to defer (whether proactive
+decentralized discovery, e.g. Nostr, is actually required) remains open and is deliberately not settled here.
