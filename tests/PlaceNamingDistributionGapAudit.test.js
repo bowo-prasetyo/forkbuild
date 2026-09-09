@@ -249,10 +249,22 @@ async function runTests() {
 
         assert(await sourceExists('application/NostrSnapshotDiscoveryPublisher.js') === true,
             'C3. The sibling domain (Snapshot discovery) DOES have a real Nostr write-side publisher class — confirming a write-side counterpart is an established, precedented shape in this codebase, not a novel idea.');
-        assert(await sourceExists('application/NostrPlaceNamingDiscoveryPublisher.js') === false,
-            'C4. No corresponding class exists anywhere in this codebase for Place Naming — exactly the file 0.9.254\'s own header named and explicitly deferred as "a separate, unscheduled" milestone, and it remains genuinely unbuilt today, not merely unwired.');
+        // UPDATED AT 0.9.316 — a historical fact, not a live gap check.
+        // At the time this audit ran, no corresponding class existed
+        // anywhere in this codebase for Place Naming — exactly the file
+        // 0.9.254's own header named and explicitly deferred as "a
+        // separate, unscheduled" milestone. 0.9.316 (Place Naming Claim
+        // Publication Boundary) has SINCE built exactly this class,
+        // mirroring its Snapshot-discovery sibling per this audit's own
+        // Section H/J recommendation. This assertion is intentionally
+        // flipped, in place, rather than deleted — the same "update the
+        // prior record rather than pretend it never made the claim"
+        // discipline this codebase already holds for a milestone that
+        // closes a gap a numerically earlier one identified.
+        assert(await sourceExists('application/NostrPlaceNamingDiscoveryPublisher.js') === true,
+            'C4. 0.9.316 has since built application/NostrPlaceNamingDiscoveryPublisher.js — the write-side counterpart 0.9.254\'s own header named and deferred, and this very audit (Section J) classified MISSING_DOMAIN_CAPABILITY, is no longer missing. See tests/PlaceNamingClaimPublication.test.js for 0.9.316\'s own proof.');
 
-        console.log('✓ C: extended past 0.9.271 Section G1\'s own single-file check, zero relay-write vocabulary exists anywhere across the full 16-file Place Naming family. No NostrPlaceNamingDiscoveryPublisher class exists at all — contrasted live against its Snapshot-discovery sibling, which does exist — confirming this is a genuine absence of a class, not merely an unwired one.');
+        console.log('✓ C: extended past 0.9.271 Section G1\'s own single-file check, zero relay-write vocabulary exists anywhere across the full 16-file Place Naming family (0.9.316\'s own new publisher file is deliberately outside this 16-file list, and carries its own regression coverage instead). A NostrPlaceNamingDiscoveryPublisher class did not exist at the time of this audit — 0.9.316 has since built it, closing exactly the gap this section documented.');
     }
 
     // ===============================================================
@@ -282,14 +294,19 @@ async function runTests() {
         assert(tag === `forkbuild-place-naming:${claim.worldId}:${claim.regionId}`,
             'D3. derivePlaceNamingDiscoveryTag() already derives the identical routing tag a publisher and a query source would both need to agree on, unchanged since 0.9.253.');
 
-        // buildPlaceNamingDiscoveryEnvelope has zero production callers —
-        // built ahead of need, never wired to anything.
+        // UPDATED AT 0.9.316 — at the time this audit ran,
+        // buildPlaceNamingDiscoveryEnvelope() had zero production
+        // callers, built ahead of need and never wired to anything. 0.9.316
+        // added its own one production caller — application/
+        // NostrPlaceNamingDiscoveryPublisher.js — exactly the "missing
+        // piece is the transport call, not the wire format" this section's
+        // own original close already predicted.
         const productionHits = grepFiles('buildPlaceNamingDiscoveryEnvelope', ['application', 'ui', 'server', 'identity', 'core'])
             .filter((f) => f !== 'core/PlaceNamingDiscoveryEnvelope.js');
-        assert(productionHits.length === 0,
-            `D4. buildPlaceNamingDiscoveryEnvelope() has zero production call sites anywhere outside its own defining file (found: ${productionHits.join(', ') || 'none'}) — every real caller today is a test file. It exists, is correct, round-trips live, and has never been invoked by a running feature.`);
+        assert(productionHits.length === 1 && productionHits[0] === 'application/NostrPlaceNamingDiscoveryPublisher.js',
+            `D4. buildPlaceNamingDiscoveryEnvelope() now has exactly one production call site — application/NostrPlaceNamingDiscoveryPublisher.js, built at 0.9.316 (found: ${productionHits.join(', ') || 'none'}). At the time of this audit it had zero; the wire format itself needed no change to gain its first real caller.`);
 
-        console.log('✓ D: the wire contract a Place Naming publisher would need already exists in full — buildPlaceNamingDiscoveryEnvelope()/derivePlaceNamingDiscoveryTag(), built at 0.9.253 explicitly for this role, proven live to round-trip through the exact parser discovery already uses, and confirmed to have zero production callers today. If a write-side seam is ever built, the missing piece is the transport call, not the wire format.');
+        console.log('✓ D: the wire contract a Place Naming publisher would need already existed in full at the time of this audit — buildPlaceNamingDiscoveryEnvelope()/derivePlaceNamingDiscoveryTag(), built at 0.9.253 explicitly for this role, proven live to round-trip through the exact parser discovery already uses. 0.9.316 has since given it its first production caller, exactly as this section predicted, with no change to the wire format itself.');
     }
 
     // ===============================================================

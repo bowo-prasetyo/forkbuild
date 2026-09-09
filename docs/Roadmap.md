@@ -88853,3 +88853,112 @@ semantics introduce no new domain state (Section I). A future milestone consider
 `application/NostrSnapshotDiscoveryPublisher.js` for this domain: a real, evidenced, narrowly-scoped decision, never
 a publication system designed from scratch, and never assumed to be worth building on the strength of this audit
 alone.
+
+## 0.9.316 — Place Naming Claim Publication Boundary
+
+0.9.315 demonstrated, live, the one candidate its own gate classified as genuinely new evidence rather than a
+rediscovery: a `PlaceNamingClaim` published locally on one device never becomes discoverable to a second device
+through this codebase's own existing decentralized discovery path, because nothing in this domain has ever written
+to a relay. That same audit's own Sections D/H/I already established that the seam needed to close this gap is
+unusually small — the wire format exists and round-trips live, the substrate (Nostr) needs no debate, a sibling class
+(`application/NostrSnapshotDiscoveryPublisher.js`, 0.9.133) already proves out the exact shape, and the
+acknowledgement semantics introduce no new domain state. This milestone builds exactly that seam, and nothing more:
+**publishing an existing claim distributes it — it never creates a second kind of naming claim.**
+
+### What this milestone adds
+
+`application/NostrPlaceNamingDiscoveryPublisher.js` (new) — a small class mirroring
+`NostrSnapshotDiscoveryPublisher.js`'s own injected-`publishImpl` contract, adapted to Place Naming's own
+claim/envelope vocabulary instead of Snapshot's contentHash/locator/storage vocabulary:
+
+- **Takes an existing, already-signed `PlaceNamingClaim` instance** — never raw fields, never a second producer.
+  `publish(claim)` calls `buildPlaceNamingDiscoveryEnvelope(claim)` (0.9.253, unmodified) to build the wire
+  representation and `derivePlaceNamingDiscoveryTag(claim.worldId, claim.regionId)` (0.9.253, unmodified) to derive
+  the routing tag directly from the claim itself — a caller supplies no separate discovery tag, removing any chance
+  of a mismatched one. Both functions are reused exactly as they already existed; the wire format needed no change to
+  gain its first production caller.
+- **A malformed or unsigned claim throws synchronously** (via `buildPlaceNamingDiscoveryEnvelope()`'s own existing
+  discipline) rather than degrading to `null` — the one deliberate departure from the Snapshot sibling's own contract,
+  since this file's `claim` argument is never raw untrusted data the way Snapshot's `contentHash`/`locator`/`storage`
+  fields are.
+- **Acknowledgement semantics identical to the sibling's own three-way contract**: a relay's definite decline
+  degrades to `null`; a genuine `publishImpl` failure (including a timeout) propagates as a rejection; a `publishImpl`
+  resolving `published: true` with no valid event id throws. No `PENDING`/`RETRYING`/`PUBLISHED`/`CONFIRMED`/
+  `DISTRIBUTED` lifecycle of any kind — a successful `publish()` means only "the relay accepted this event."
+- **No local persistence, no discovery-side import, no other substrate.** The file never imports
+  `application/LocalPlaceNamingClaimStore.js`, `application/PlaceNamingClaimUseCase.js`,
+  `application/NostrPlaceNamingDiscoverySource.js`, `application/PlaceNamingDiscoveryQueryService.js`, or anything
+  Arweave/IPFS/Bitcoin/Base-shaped — publishing and discovery share only the passive wire contract
+  `core/PlaceNamingDiscoveryEnvelope.js` already named, never a code dependency.
+
+`tests/NostrPlaceNamingDiscoveryPublisher.test.js` (new, registered in `tests.html`) — ten sections mirroring
+`tests/NostrSnapshotDiscoveryPublisher.test.js`'s own structure: flagship publish, event-template/tag-derivation
+correctness, synchronous throw on malformed/unsigned input, relay decline → `null`, genuine failure/timeout →
+rejection, malformed-id contract violation → throw, round-trip through `parsePlaceNamingDiscoveryEnvelope()`,
+constructor validation, no caching, and an architectural-regression sweep for forbidden imports/lifecycle vocabulary.
+
+`tests/PlaceNamingClaimPublication.test.js` (new, registered in `tests.html`) — the end-to-end proof the milestone
+exists to deliver, ten sections, all driving real collaborators:
+
+- **A. Existing claim remains authoritative** — publishing a claim created through the existing use case never
+  creates a second local claim; the published representation derives from the existing claim's own fields.
+- **B. Correct discovery representation** — claim → envelope → published event → discovery parser → equivalent claim
+  information round-trips through the exact, unmodified existing wire contract; no second serialization format.
+- **C. FLAGSHIP (write)** — a real publish, through the real publisher, reaches an injected fake relay transport.
+- **D. FLAGSHIP (cross-device)** — Device A creates a claim locally and explicitly publishes it; Device B, an
+  independent replica sharing NO local storage, discovers it through the exact, unmodified, already-shipped
+  discovery chain (`NostrPlaceNamingDiscoverySource` → `PlaceNamingDiscoveryQueryService` →
+  `executeDiscoverPlaceNamingClaimsCommand`). This is the workflow 0.9.315 Section F proved uncompletable; it now
+  completes. Discovery alone still never writes into Device B's own local store — adoption remains a separate,
+  unbuilt step, exactly as 0.9.253 already scoped it.
+- **E. Local persistence independence** — the publisher never imports `LocalPlaceNamingClaimStore`, and publishing a
+  claim leaves the local store's own claim count unchanged.
+- **F. Identity preservation** — the Nostr event id and the claim's own id stay distinct; a single publisher instance
+  publishes claims from two independently-authored identities with no cross-contamination; the discovery envelope
+  carries no relay/event identity field of its own.
+- **G. Publication failure** — a genuine transport failure propagates as a rejection, and a definite relay decline
+  resolves to `null`; neither is ever silently reported back as a successful publication.
+- **H. Discovery remains independent** — live grep confirms `NostrPlaceNamingDiscoverySource.js`,
+  `PlaceNamingDiscoveryQueryService.js`, and `core/PlaceNamingDiscoveryEnvelope.js` never import the new publisher;
+  the discovery chain consumes a real published event with no call into the publisher anywhere in its own code.
+- **I. No accidental other-substrate coupling** — the new file references no Arweave/IPFS/Bitcoin/Base vocabulary and
+  introduces no provider-preference concept.
+- **J. Regression** — the entire existing local-only lifecycle (`publish()`, `namingView()`, `retract()`) continues
+  working unchanged with zero reference to the new publisher anywhere; `PlaceNamingClaimUseCase` itself never imports
+  it — publication is additive, never automatic, and local creation never depends on network capability.
+
+`tests/PlaceNamingDistributionGapAudit.test.js` (0.9.315, updated in place) — Section C's and Section D's own
+assertions that `application/NostrPlaceNamingDiscoveryPublisher.js` did not exist, and that
+`buildPlaceNamingDiscoveryEnvelope()` had zero production callers, are flipped to record that 0.9.316 has since built
+both — the prior record is corrected in place rather than left to silently rot, the same discipline this codebase
+already holds whenever a later milestone closes a gap an earlier one identified. The rest of that audit's own record
+(Sections A/B/E/F/G/H/I/J) is untouched — it remains an accurate historical account of what 0.9.315 found, when it
+found it.
+
+### One explicit product decision
+
+Per this milestone's own brief: publishing is **never automatic**. `PlaceNamingClaimUseCase#publish()` is completely
+unmodified and has no idea `NostrPlaceNamingDiscoveryPublisher` exists — creating a claim locally still requires
+no network capability at all, exactly as before. A future milestone deciding to wire an explicit "Publish to
+network" UI action is a separate, later, unscheduled step; this milestone builds only the capability such an action
+would call.
+
+### What this milestone deliberately excludes
+
+Automatic publication of every locally-created claim; retry queues or any publication lifecycle state
+(`PENDING`/`RETRYING`/`PUBLISHED`/`CONFIRMED`/`DISTRIBUTED`); relay health/ranking or multi-relay strategy; provider
+preferences; Arweave/IPFS/Bitcoin/Base publication of any kind; offline synchronization; unpublish/retraction of an
+already-published event; editing an already-published claim; publication history; delivery/read receipts; a generic,
+domain-independent `NostrPublisher` framework (the read-side `NostrPlaceNamingDiscoverySource` remains its own,
+separate, un-generalized transport shim, exactly as 0.9.254 left it); and any wiring of the new publisher into
+`ui/main.js`, `application/PlaceNamingDiscoveryRuntimeComposition.js`'s `sources` roster (a read-side roster this
+class is not a member of), or any UI surface.
+
+### What comes after
+
+Not selected here. A future milestone would decide: (1) whether and how to surface an explicit "Publish naming
+claim" UI action wired to `WorldNavigationSession`/`PlaceNamingPanel`, calling this new publisher with a real
+`publishImpl`; and (2) whether a discovered-but-not-yet-adopted candidate (already returned today by
+`executeDiscoverPlaceNamingClaimsCommand()`, per 0.9.253's own scoping) should gain a UI path into
+`application/PlaceNamingClaimExchange.js#importClaim()`, closing the adoption half of the loop this milestone
+deliberately leaves open. Neither is assumed necessary on the strength of this milestone alone.
