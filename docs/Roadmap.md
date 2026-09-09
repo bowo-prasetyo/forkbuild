@@ -90385,3 +90385,95 @@ Per the sequence 0.9.330 itself proposed: a 0.9.332 content-kind / decentralized
 this seam really travels the existing machinery (peer gossip, Publications Center resolution) without creating a
 parallel path — before any milestone touches Repository, Search, or UI to actually expose Publication discovery
 through it.
+
+## 0.9.332 — Publication Decentralized Transport Convergence Audit
+
+**Type:** Test-only architecture/convergence audit. **Production changes:** none.
+
+0.9.331 built the third `kindPlugin` and proved, via direct `PublicationResolver#resolve()` calls, that a
+Publication's own identity survives a round trip. That was necessary but not sufficient: a plugin that only works
+when called directly, rather than genuinely traveling the REST of the existing decentralized pipeline
+(`PublicationExchange`, `PublicationPeerExchange`, `LocalPublicationCatalog`), would be a second, parallel path
+wearing the existing pipeline's clothing. This milestone answers the harder question directly, by running the real
+transport classes rather than merely asserting they would work — exactly the milestone 0.9.331's own "What comes
+after" pointed at.
+
+### The flagship test
+
+`tests/PublicationDecentralizedTransportConvergenceAudit.test.js` (new, registered in `tests.html`), nine sections:
+
+- **A. FLAGSHIP.** Alice publishes a signed `Publication` under `PUBLICATION_CONTENT_KIND`, then announces the
+  resulting envelope through a REAL, unmodified `PublicationPeerExchange` (backed by the same `StubPeerMessageBus`
+  stand-in `tests/PublicationPeerExchange.test.js`'s own Section B already uses). Bob receives it purely over the
+  wire — through his own `PublicationPeerExchange#_handleIncoming()` → `PublicationExchange#importPublication()` →
+  `LocalPublicationCatalog`, never a direct call from the test — and only then, on demand, resolves the cataloged
+  envelope through a fresh `PublicationResolver` + `createPublicationContentKind()`. Every identity field (`id`,
+  `documentId`, `contentReference`, `title`, `author`, `license`, `schemaVersion`, the Publication's own signature)
+  survives intact, and a direct source check confirms neither `PublicationExchange.js` nor
+  `PublicationPeerExchange.js` was modified or taught anything about Publication specifically — both remain
+  completely content-kind-agnostic. This is genuine transport convergence, not a direct-resolver-call proof
+  re-dressed.
+- **B. Verification convergence.** `kindPlugin.validate` (`PublicationContentValidator`'s own structural check,
+  reused unmodified) and `kindPlugin.verify` (`identity/LocalAuthorizationVerifier.js#verifyPublication()`, the
+  identical cryptographic check every other Publication verification in this codebase already calls) are proven to
+  be genuinely separate steps, spied and counted: a hash-tampered publication is rejected before either content
+  check runs at all; a structurally well-formed but cryptographically forged publication (real hex signature bytes,
+  every nibble flipped) passes structural validation and is rejected only by the content-signature step, exactly
+  once each — proving rejection happens through `PublicationResolver`'s own existing mechanism, never a second,
+  silently-substituted validator.
+- **C. Envelope disambiguation.** A well-formed Publication published under the WRONG declared `contentKind` is
+  rejected as `INVALID_ENVELOPE`, and the structural validator is never even invoked in that case (spied and
+  counted at zero calls) — the `contentKind` discriminator alone gates entry, so "Publication JSON" can never be
+  confused with "some other object accidentally matching Publication's fields." This was the one open question the
+  product owner's own brief raised explicitly, and it is closed here.
+- **D. Content-kind isolation, all three kinds.** Every pairing of the three registered content kinds
+  (`forkbuild.publication`, `forkbuild.blueprint-attribution`, `forkbuild.place-naming-claim`) against every
+  `kindPlugin` — nine combinations — is exercised directly: each resolves only through its own plugin, rejected by
+  the other two. 0.9.331's own test checked only Publication vs. Blueprint Attribution; this closes the third pair.
+- **E. No new store.** `DecentralizedPublicationStore.js`/`PublicationContentStore.js`/`RepositoryPublicationStore.js`
+  are confirmed absent; `application/PublicationContentKind.js`'s own source is checked to define no `store`
+  capability at all; a freshly constructed plugin is confirmed at runtime to have no `store` property whatsoever.
+- **F. Local vs. decentralized identity.** Resolving the identical envelope twice, independently, produces two
+  different freshly-materialized `Publication` instances every time — never the same reference, never Alice's own
+  original instance — while both resolutions still agree completely on identity. A decentralized representation is
+  never cached into, and never becomes, a second local Publication record.
+- **G. No Repository coupling.** Checked by direct source search in both directions: none of
+  `SearchPublicationsUseCase.js`, `PublicationCatalog.js`, `PublicationCard.js`, `DiscoveryProvider.js`,
+  `LocalDiscoveryProvider.js`, or `CreatePublicationCatalogUseCase.js` references this content kind at all, and
+  `PublicationContentKind.js`/`PublicationContentValidator.js` import nothing Repository-shaped. A codebase-wide
+  grep confirms no file under `application/`, `ui/`, or `discovery/` other than the two files this kind is defined
+  in ever references it.
+- **H. One honest gap, named rather than hidden.** `application/CreatePublicationDisplayKindRegistryUseCase.js` —
+  the Publications Center's own generic `kindPlugin` registry, distinct from anything Repository-owned — still
+  wires only the two kinds that existed before 0.9.331, confirmed directly from source. A decentralized-origin
+  Publication fully resolves (Section A) but cannot yet be DISPLAYED by the Publications Center. This is real,
+  narrowly-scoped follow-up work, explicitly not a defect in this milestone's own scope, and explicitly not
+  Repository's concern (Section G already ruled that out).
+- **I. Final verdict and production-change guard.** `TRANSPORT_CONVERGENCE_CONFIRMED`, plus a `git diff` check
+  confirming no file outside `tests/`, `tests.html`, and this Roadmap entry was modified.
+
+### Verdict
+
+**TRANSPORT_CONVERGENCE_CONFIRMED.** Adding `forkbuild.publication` as a decentralized content kind activates an
+existing transport/resolution path; it does not create a new identity, verification, persistence, or Repository
+authority. Unlike 0.9.331's own flagship, this was proven by actually running the unmodified
+`PublicationExchange`/`PublicationPeerExchange`/`LocalPublicationCatalog` classes end to end, not merely asserted
+from the fact that a direct `PublicationResolver#resolve()` call already worked.
+
+### What this milestone deliberately excludes
+
+Per its own Type and this milestone's own explicit exclusion list: no Repository UI changes; no
+`SearchPublicationsUseCase.js` changes; no peer catalog aggregation; no Nostr/Arweave aggregation; no source
+ranking, deduplication UI, source filters, or provider preferences; no Repository persistence changes; no automatic
+Snapshot materialization or forking. Section H's own finding — wiring this kind into
+`CreatePublicationDisplayKindRegistryUseCase.js` — is explicitly named as real, separately-scoped follow-up, never
+built here.
+
+### What comes after
+
+Per Section H: the next concrete, narrowly-scoped step is wiring `forkbuild.publication` into
+`application/CreatePublicationDisplayKindRegistryUseCase.js` so a decentralized-origin Publication can actually be
+seen in the Publications Center — smaller than, and prior to, any milestone that touches Repository, Search, or
+Repository-facing UI. What existing decentralized discovery mechanism could actually produce `forkbuild.publication`
+candidates for a future Repository integration remains open, and is deliberately not pre-committed by this
+milestone.
