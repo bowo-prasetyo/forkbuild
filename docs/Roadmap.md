@@ -88679,3 +88679,89 @@ stops here until new, genuine user-facing evidence — not architectural interes
 somewhere. The three standing DEFERRED candidates (placement navigation/management, Discovery-level Commentary
 count, collaboration conflict/divergence UI) remain on record, exactly where prior milestones already correctly
 left them, available to a future milestone that wants to take one on once real evidence, not inertia, warrants it.
+
+## 0.9.314 — Product Baseline Closure Record
+
+**Type:** Test-only closure guard. **Production changes:** None.
+
+0.9.313 (Stable Product Baseline Audit) answered a different question than any prior milestone — not "what should
+we build next," but "is there anything in the current product that should prevent treating this architecture as a
+stable baseline?" — and reached a genuine architectural stopping point: 19 reachable surfaces, 3 intentional
+internal capabilities, 1 explicitly historical family, 3 evidence-gated deferred candidates, zero unexplained
+orphans, five closed end-to-end journeys. This milestone does not re-run that audit. It turns its OUTCOME into a
+standing, machine-checked **"do not expand without new evidence" contract** — narrower in purpose than 0.9.313,
+and deliberately the last milestone in this sequence until something external supplies new evidence.
+
+### What this milestone adds
+
+`tests/ProductBaselineClosure.test.js` (new, registered in `tests.html`), seven lettered sections:
+
+- **A — Baseline verdict lock.** 0.9.313's own recorded verdict is read directly from
+  `tests/StableProductBaselineAudit.test.js`'s own `const verdict = '...'` literal (never re-typed as a second,
+  driftable copy) and asserted to remain one of the two closure-compatible outcomes, `STABLE` or
+  `STABLE_WITH_DEFERRED_GAPS` — never `ACTION_REQUIRED`.
+- **B — Product-surface regression guard.** All 19 reachable surfaces, all 3 intentional internal capabilities, and
+  the 1 historical family's 6 files are re-checked against real source for their full evidence chain (capability ->
+  owner -> composition/reachability -> justification). The always-mounted nav route set is pinned as an EXACT set
+  (11 routes, including `/`) rather than "contains at least" — a newly introduced nav destination fails this guard
+  immediately, forcing a deliberate, reviewed extension rather than a silent addition.
+- **C — Deferred-feature guard.** The same 3 standing candidates (placement navigation/management, Discovery-level
+  Commentary count, collaboration conflict/divergence UI), each now recorded explicitly as
+  `candidate -> missing evidence -> NOT READY` rather than a bare "deferred" label, with the still-unmet evidence
+  condition spelled out per candidate and checked against real source.
+- **D — Historical boundary guard.** 0.9.312's own regression guard reconfirmed with zero violations, extended to
+  sweep adapter-naming patterns (`ReplicationAdapter`, `ReplicaMergeAdapter`, `ConflictResolverAdapter`) in addition
+  to import/construction references, plus one live execution proving the real, production collaboration path
+  (`WorldConflictResolver`) applies a `Command` end to end with zero dependency on the historical family —
+  historical replication X production architecture, demonstrated live, not merely asserted.
+- **E — Architecture/product distinction.** An executable `isProductGap()` classifier proving, by construction,
+  that an unused capability, a possible integration point, a missing abstraction, or a technically attractive
+  extension never counts as a product gap on its own — with the 3 intentional internal capabilities from Section B
+  checked as concrete instances the rule correctly keeps out of product-gap territory.
+- **F — New-product-evidence gate.** An executable `opensNewImplementationMilestone()` classifier separating the
+  five evidence kinds that DO justify new implementation work (a newly observed blocked journey, a newly
+  introduced external requirement, a concrete uncompletable workflow, a changed product constraint, a real
+  operational problem) from the six named reasons that do NOT (an unused API, "we could combine these," "another
+  provider could be supported," "this UI could show more," "this could be modernized," "this could be
+  generalized") — defaulting closed for any unrecognized reason, and cross-checked against Section C's own
+  candidates to confirm their current reasoning draws from the insufficient side, not the evidence side.
+- **G — Final closure statement.** Restates the governing conclusion in the terms this milestone's own brief
+  specified: ForkBuild has no currently evidenced journey-blocking product gap requiring the next 0.9.x
+  implementation milestone.
+
+### What this milestone confirms
+
+The 0.9.313 baseline verdict has not regressed. Every carried-forward surface, internal capability, and historical
+family member still has its evidence chain intact, and the nav-route pin means a new surface cannot be added to the
+always-mounted top nav without this guard being deliberately extended first. The three deferred candidates remain
+recorded with explicit, still-unmet evidence conditions, not a bare label. The historical replication boundary holds
+under an extended sweep and one live execution. The two governing rules this milestone exists to enforce — an
+architectural observation is not a product gap; new feature work requires new evidence — are now executable, not
+prose, and both hold.
+
+### What stayed unchanged
+
+Every production file this milestone reads is byte-for-byte untouched. This milestone adds one new test file, one
+`tests.html` registration line, and this Roadmap entry, nothing else. No refactor, no deletion of historical code,
+no new abstraction, no UI change, no placement navigation, no revived replication, no collaboration redesign, and no
+change to any existing semantic contract.
+
+### What comes after
+
+Per this milestone's own governing purpose, there is no scheduled `0.9.315`. The roadmap deliberately stops here:
+
+```
+0.9.313  Stable Product Baseline Audit       ✓
+0.9.314  Product Baseline Closure Record     ← final guard
+          │
+          ▼
+       STABLE_WITH_DEFERRED_GAPS
+          │
+          ▼
+   WAIT FOR NEW EVIDENCE
+```
+
+The next milestone number should appear only when something external to this audit loop supplies one of Section
+F's five named evidence kinds — a new user workflow, a real deployment requirement, a new substrate requirement, a
+usability problem reported against the real product, or another concrete piece of evidence. Until then, this test
+file is the standing contract, and `STOP` is the successful outcome of the process, not a pause in it.
