@@ -94487,3 +94487,110 @@ Convergence Audit proving `EditorView`/`WorldView`/`OwnPublicationPanel` all con
 Publication identity and identical failure semantics — remains a reasonable next step if a future milestone wants to
 close this gap out formally, but per 0.9.374's own `STABLE_STOP`, another feature should not be assumed to follow
 automatically.
+
+## 0.9.378 — Post-Publish Distribution Action Convergence Audit
+
+**Type: test-only, no production changes.** 0.9.377's own suggested follow-on, built exactly: does `EditorView`'s
+new third entry point onto Publication Distribution change ANYTHING about the existing seam other than adding a
+third caller onto it?
+
+```text
+                    publicationDistributionCommand   (composed exactly once, ui/main.js)
+                              │
+             ┌────────────────┼────────────────┐
+             │                │                │
+        EditorView       WorldView      OwnPublicationPanel
+   (direct inject)  (via WorldEncounterCanvas,  (via the SAME
+                      the SAME injected raw      WorldView-owned
+                      command)                    wrapper prop)
+```
+
+`tests/PostPublishDistributionActionConvergenceAudit.test.js` — ten sections (A–J), built fresh against real
+production source and real object graphs, in the same discipline `tests/PostPublishDistributionConvergenceAudit
+.test.js` (0.9.348) and `tests/EditorViewPostPublishDistributionAction.test.js` (0.9.377) already hold:
+
+- **A — Three-surface command convergence.** `ui/main.js` composes `publicationDistributionCommand` exactly once
+  (confirmed both by `app.provide()` occurring once AND `composePublicationDistributionCommand(` being called
+  exactly once across every production UI file this audit inspects); `EditorView.js` and `WorldView.js` each
+  `inject('publicationDistributionCommand', null)`; `WorldView.js` binds the identical `distributeWorldEncounterPublication`
+  function reference to both `OwnPublicationPanel`'s own prop and `WorldEncounterCanvas`'s own prop. Live: one raw
+  command, one shared `PublicationDistributionLifecycleMemoryStore`, three different Publications driven through all
+  three surfaces — EditorView injected directly, the other two through the literal same WorldView-style wrapper
+  instance — all three land in the same lifecycle store.
+- **B — Exact Publication identity, end to end, live.** The REAL, extracted `Toolbar.publish()` (its own `report()`
+  helper extracted alongside it, never hand-retyped) is executed against a real `PublishDocumentUseCase`, wired to
+  the REAL, extracted EditorView 0.9.377 block exactly as `@published="onDocumentPublished"` wires them in
+  production. The Publication object identity is confirmed unbroken across every hop: `PublishDocumentUseCase
+  .execute()`'s own return value === the object `Toolbar.publish()` emits === the object `onDocumentPublished()`
+  stores === the object the injected command's own request ultimately carries.
+- **C — Publish remains distribution-free, live.** Driving that same real chain with a call-counting command proves
+  zero distribution calls, while independently confirming persistence (the content store actually grew) and success
+  feedback (`report()`'s own toast fired) — not merely "the source contains no call," but that the live behavior
+  the spec asked for actually happened.
+- **D — Explicit-click boundary.** Exactly one call per click, live; repeated reads of `distributionResult` (what
+  template re-rendering does) never re-invoke; and two structural checks against the real source confirm
+  `distributeEditorPublication(` has exactly one caller and the injected command itself has exactly one call site
+  in the entire 0.9.377 block — plus confirmation that `EditorView.js` contains no `watch()` of any kind that could
+  fire a duplicate call on a state change.
+- **E — Multiple sequential Publications, through the complete path.** Section G's own 0.9.377 scenario (Publish A
+  → action A, Publish B before A resolves → action B, click B distributes B, A's stale response never leaks),
+  reproduced end to end through the real `Toolbar.publish()` chain rather than the isolated action alone.
+- **F — Failure/result convergence.** A shared `SURFACES` table (EditorView's own extracted block; `OwnPublicationPanel
+  .methods`; `WorldEncounterCanvas.methods`/`computed`, reusing 0.9.348's own adapters unmodified) drives four
+  identical scenarios — synchronous throw, rejection, success, duplicate-click-while-in-flight — across all three.
+  Each surface returns to idle correctly and guards duplicates correctly; a genuine success is confirmed through the
+  shared lifecycle store (the property that actually matters) regardless of whether a surface keeps its own local
+  `result` (EditorView/OwnPublicationPanel do; WorldView's own panel doesn't); each surface's own generic failure
+  wording is preserved as its own already-established convention, not unified into one string.
+- **G — Lifecycle convergence.** `EditorView.js` (and `Toolbar.js`) import none of `PublicationDistributionOrchestrator
+  .js`/`...Executor.js`/`...LifecycleStore.js`/`...Lifecycle.js`/`...Command.js`/`...CommandComposition.js`, and
+  contain no `"lifecycleStore"`/`"Orchestrator"`/`"Executor"` vocabulary anywhere — the chain EditorView → command →
+  orchestrator → executor → lifecycle store is entered only through the one injected capability.
+- **H — Dismissal and replacement.** Dismiss clears all ephemeral state immediately, including mid-flight, with the
+  existing `requestId` staleness guard confirmed to apply to a dismissed call's late resolution exactly as it does to
+  a superseding publish; Publish B (through the real chain) replaces A's action wholesale, leaving no residual
+  trigger; no `localStorage`/`sessionStorage` reference exists anywhere in the 0.9.377 block.
+- **I — WorldView / OwnPublicationPanel regression.** Six existing regression suites re-run live as real
+  subprocesses; neither `OwnPublicationPanel.js` nor `WorldEncounterCanvas.js` contains any reference to `"Editor"`
+  at all; both surfaces' own generic failure wording is confirmed unchanged and still deliberately distinct from
+  each other.
+- **J — Architecture boundary and verdict.** None of the nine structures 0.9.377 was warned away from — a second
+  distribution command, a UI-specific orchestrator, `ActionFeedback` command semantics, distribution persistence,
+  automatic distribution, retry/queue vocabulary, new lifecycle vocabulary (`EDITOR_DISTRIBUTION_*`, `NeedsDistribution`,
+  etc.), or provider selection/fallback (`Arweave`/`Nostr`/`relayUrl`/`gatewayUrl`/`CommandBus`/`EventBus` literals) —
+  exist anywhere in `EditorView.js` or `Toolbar.js`. Closes with a final convergence matrix and verdict, mirroring
+  0.9.348's own closing style.
+
+### Verdict: CONVERGED
+
+EditorView's new capability changes nothing about the existing seam beyond adding a third, fully-converged caller
+onto it. Per this milestone's own brief, this closes the Post-Publish Distribution Guidance arc:
+
+```text
+0.9.349  Distribution product reassessment
+     ↓
+0.9.359  World View clutter audit
+     ↓
+0.9.360  Discovery relocation
+     ↓
+0.9.362  World View reassessment
+     ↓
+0.9.374  Infrastructure/product reassessment
+     ↓
+0.9.375  Post-publish guidance audit
+     ↓
+0.9.376  EditorView command-channel audit
+     ↓
+0.9.377  Post-publish distribution action
+     ↓
+0.9.378  Convergence audit  ← arc closed
+```
+
+### What this milestone deliberately excludes
+
+No production-code change of any kind — `EditorView.js`, `Toolbar.js`, `WorldView.js`, `OwnPublicationPanel.js`, and
+`WorldEncounterCanvas.js` are all byte-for-byte unmodified by this milestone. No distribution receipts, distribution
+history, "distributed" badges, automatic distribution, retry, provider selection at publish time, or distribution
+status in Notifications — those are separate product decisions this milestone deliberately declines to assume follow
+automatically from an arc closing, per 0.9.374's own `STABLE_STOP` discipline. The recommended next step is a fresh
+whole-product product-evolution reassessment, not another adjacent enhancement to this arc.
