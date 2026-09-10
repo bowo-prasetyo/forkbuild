@@ -94108,3 +94108,112 @@ Per this milestone's own brief, no "Test Connection," health-check, or fallback 
 a gap this audit did not find, and it would introduce a new semantic (`configured ≠ reachable-now`) with no natural
 stopping point. With IPFS Gateway now closed as `DEFER` and no other infrastructure-endpoint candidate evidenced,
 the sequencing returns to the broader ForkBuild product evolution rather than accumulating further endpoint audits.
+
+## 0.9.374 — Post-Infrastructure Product Evolution Reassessment
+
+**Type:** Test-only, whole-product capability/reachability audit. **Production changes:** None.
+
+0.9.363-0.9.373 ran one continuous arc: inventory every hardcoded infrastructure endpoint (0.9.363), give the two
+candidates with a real, demonstrated recovery gap a full configuration boundary, convergence audit, settings UI,
+and lifecycle reassessment each (Arweave Gateway, 0.9.364-0.9.367; Nostr Relay, 0.9.369-0.9.372), and give the
+strongest remaining candidate the same single-subject depth before closing it (IPFS Gateway, 0.9.373 — `DEFER`).
+That arc's own question was narrow by design: "which infrastructure endpoint should we make configurable?" This
+milestone asks the wider question that arc was never scoped to ask: now that it is closed, what is the
+highest-value remaining product evolution for ForkBuild as a whole?
+
+### What this milestone adds
+
+`tests/PostInfrastructureProductEvolutionReassessment.test.js` (new, registered in `tests.html`), built against
+real, unmodified production source across `core/`, `application/`, `storage/`, `peer/`, `anchoring/`, `base/`, and
+`ui/` — plus one live behavioral proof reusing 0.9.372's own Arweave/Nostr configuration isolation fixture. Eight
+lettered sections:
+
+- **Section A — Infrastructure arc closure.** The final nine-candidate inventory, reconfirmed fresh rather than
+  inherited from 0.9.372/0.9.373's own prose: Arweave Gateway and Nostr Relay each still carry their complete real
+  chain (value object, store, use case, settings view, always-mounted nav entry); IPFS Gateway still has no
+  configuration seam and both real consumers remain the same two zero-argument, opt-in construction sites; IPFS
+  Kubo API and TURN remain structurally credential/identity-shaped, not plain-URL; STUN, Rendezvous, Bitcoin
+  Esplora, and Base RPC are all reconfirmed present and unchanged. The term `InfrastructureEndpointConfiguration`
+  is confirmed, by exact file sweep, to appear in exactly the two files that name what they refused to become —
+  never a third. Arweave Gateway and Nostr Relay configuration are reconfirmed, live, to round-trip independently
+  through one shared storage namespace with no value bleed. **No generic Infrastructure Settings subsystem is
+  justified** — two independently-justified settings is not a pattern.
+- **Section B — Whole-product capability re-inventory.** Twenty named capabilities — from Document creation
+  through Repository federation — each grounded in real, currently-existing evidence files and classified
+  `COMPLETE`/`PARTIAL`/`INTERNAL`/`DEFERRED`/`BROKEN`. Nineteen are `COMPLETE`; zero are `PARTIAL`, `DEFERRED`, or
+  `BROKEN`. One genuinely new finding this audit's own sweep produced (not inherited from any prior milestone):
+  the Achievement/Reconciliation Leaderboard (0.8.179-0.8.181, an evidence-comparison tool unrelated to the World
+  Snapshot system) is implemented and correct when reached, but classified `INTERNAL` — no router-link or
+  programmatic navigation anywhere in the running application leads to it.
+- **Section C — Cross-capability gap sweep.** Not "what hasn't been built" but "what already-complete capabilities
+  fail to meet each other at a natural user boundary." The six historical examples this milestone's own brief
+  names (Commentary→other Publication surfaces, Publish→decentralized distribution, Peer connection→automatic
+  sync, Discovery tag→consistent UX, Fork failure→recovery, Publication→Repository federation) are each
+  reconfirmed still closed against current source. This audit's own fresh sweep surfaces two real but minor,
+  non-blocking findings — the Reconciliation Leaderboard's own missing entry point (Section B), and the
+  always-mounted top nav having grown to exactly 13 flat, ungrouped `router-link` destinations across three
+  separate settings milestones added this arc. Neither rises to the flagship "two complete capabilities failing to
+  meet" shape the six historical examples share, and neither is promoted to a production candidate here.
+- **Section D — Repository re-audit.** Proactive Publication discovery, reassessed a fifth time (0.9.330, 0.9.340,
+  0.9.350, 0.9.351, this milestone), without assuming the answer has changed. `SearchPublicationsUseCase.js` still
+  imports no network/discovery collaborator and stays synchronous; `RepositoryView.js` references neither
+  configuration class this arc shipped — the infrastructure arc changed *which* gateway/relay URL is used, never
+  *whether* Repository search reaches out to one. The mechanism-level asymmetry 0.9.351 found (decentralized
+  discovery genuinely works, but is composed once for a narrower, different purpose) still holds unchanged, and no
+  discovery-triggering wiring has been added since. **Recorded as a deliberate `DEFER`, not reopened
+  indefinitely.**
+- **Section E — Strongest-direction reassessment.** The six directions this milestone's own brief names, each
+  answered from fresh evidence rather than a citation: Proactive Publication discovery (`DEFER`, Section D);
+  Notification delivery/unread-read (`STOP` — `NotificationEvent` still carries no delivered/seen/read field,
+  `NotificationEventStore.js` still names `getUnread()`/`markRead()` explicitly as deliberately excluded, and
+  exactly one `NotificationEvent`-producing behavior still exists); Collaboration (`STOP` — no
+  conflict/divergence/live-cursor UI component exists); Place Naming (`STOP` — decentralized publication/discovery
+  intact, no new adoption mechanism added); Repository federation's proactive boundary (`DEFER`, Section D);
+  Distribution (`STOP` — no automatic/queued/scheduled distribution mechanism exists anywhere).
+- **Section F — Temporal semantics audit.** The nine discovery/distribution-family terms and the four
+  notification-family terms this milestone's own brief names, checked for accidental conflation after the volume
+  of infrastructure work just added. `PublicationResolutionOutcome.js` still names `CONTENT_UNAVAILABLE` as its
+  own distinct outcome; "published" and "distributed" remain two distinct real files, never one combined step;
+  `ArweaveContentStore.js` still exposes its own retrieval method, distinct from any discovery/announcement step.
+  No regression found.
+- **Section G — Architecture-driven feature suppression.** The nine candidates this milestone's own brief names by
+  name — IPFS Gateway settings, generic infrastructure settings, provider fallback, a relay/gateway health
+  indicator, notification delivery, proactive discovery, provider ranking, a distribution queue, a generic
+  "network manager" — each checked against real source and confirmed absent or correctly rejected. Both shipped
+  settings pages' actual rendered templates (comments excluded, the identical exclusion Section A already applied)
+  are reconfirmed to carry none of the "Test Connection"/"reachable now" vocabulary the accompanying architectural
+  recommendation advises against building.
+- **Section H — Final candidate matrix and verdict.** Eight candidates scored against evidence, user value, and
+  architectural fit. None reaches `BUILD_NEXT`.
+
+### Verdict
+
+**`STABLE_STOP`.** The infrastructure-endpoint arc is formally closed. The whole-product capability inventory
+finds twenty reachable capabilities — nineteen `COMPLETE`, one `INTERNAL`, zero `PARTIAL`, zero `DEFERRED` as a
+capability, and zero `BROKEN`. The cross-capability gap sweep reconfirms all six historical examples are still
+closed and surfaces two real but minor, non-blocking findings, neither large enough to justify a production
+milestone on its own. Repository proactive discovery reconfirms `DEFER` a fifth time, on fresh evidence rather
+than citation. All six strongest directions reconfirm their prior verdict. Temporal semantics show no regression.
+Architecture-driven feature suppression holds across all nine named candidates.
+
+Per this milestone's own two-answer framework, **Answer B applies**: the current product surface is coherent;
+further development requires an explicit new product requirement, not another audit finding one by inertia. The
+two minor findings (Reconciliation Leaderboard entry point, top-nav grouping) remain on record as real but small,
+available to a future milestone that wants to take either up on genuine evidence — neither selected nor built
+here.
+
+### What this milestone deliberately excludes
+
+Per its own type and explicit scope: no production-code change of any kind. No router-link added for the
+Reconciliation Leaderboard, no top-nav regrouping, no notification delivery mechanism, no proactive Repository
+discovery, no relay/gateway health indicator, no provider fallback or ranking, no distribution queue, and no
+generic Infrastructure Settings or "network manager" abstraction. This milestone identifies and precisely
+classifies the product's current state; it does not change it.
+
+### What comes after
+
+No `0.9.375` is pre-selected. `STABLE_STOP` is a deliberate stopping point, not a prompt to manufacture the next
+milestone number. The two minor findings this audit's own sweep produced remain on record, exactly where this
+milestone leaves them, for a future milestone to take up if and when genuine user evidence — not architectural
+interest, not roadmap continuity — points at either. ForkBuild's broader product evolution resumes on its own
+terms when such evidence arrives.
