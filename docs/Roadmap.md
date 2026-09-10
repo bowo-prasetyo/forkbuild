@@ -94306,3 +94306,93 @@ still-open gap should scope itself honestly as "give `EditorView.js` a reachable
 point" — most simply, the same `OwnPublicationPanel` wiring World View already has, mounted where the Editor's own
 Publish action lives — rather than "make the toast actionable," which this audit shows is a different, smaller-
 sounding but architecturally larger change than it first appears.
+
+## 0.9.376 — EditorView Distribution Command Channel Audit
+
+**Type:** Test-only, single-subject audit. **Production changes:** None.
+
+0.9.375's own "What comes after" named the real, still-open gap precisely: `EditorView.js` has Publish, has
+feedback, but has no distribution-command channel of any kind, while `WorldView.js` already has one. Rather than
+build that channel on assumption, this milestone asks the identical question 0.9.346/0.9.348/0.9.375 already asked
+of their own proposals before building anything: *is giving `EditorView.js` a narrowly scoped Publication
+Distribution command channel architecturally justified, and can it converge on the exact existing distribution
+path — the same app-wide command `WorldView.js` already calls — without creating a second distribution
+architecture?*
+
+### What this milestone adds
+
+`tests/EditorViewDistributionCommandChannelAudit.test.js` (new, registered in `tests.html`), built against real,
+unmodified production source and real object graphs across `ui/`, `application/`, `publisher/`, `content/`,
+`identity/`, `storage/`, and `core/`. Ten lettered sections:
+
+- **Section A — Trace the existing command.** `ui/main.js` provides `publicationDistributionCommand` exactly
+  once, at the **app root** (`app.provide`, never route- or view-scoped), built by
+  `composePublicationDistributionCommand()` (`application/PublicationDistributionCommandComposition.js`) around the
+  unmodified `executePublicationDistributionCommand()`. `WorldView.js` reaches it through a plain
+  `inject('publicationDistributionCommand', null)` and a one-argument `distributeWorldEncounterPublication(publication)`
+  wrapper — the smallest callable contract identified, live-proven end to end through the real
+  orchestrator/executor/lifecycle-store chain.
+- **Section B — Publication identity, live-proven stronger than expected.** `Toolbar.js`'s own `publish()` holds
+  the just-published `Publication` in a **local variable**, the direct return of `execute()` — no "find latest
+  publication" step at all. That is actually *more* direct than `WorldView.js`'s own existing, already-shipped
+  path, which re-derives `ownPublication` through `session.getPublicationForDocument(activeId)`. Both paths compose
+  the identical `PublishDocumentUseCase` class, confirmed fresh.
+- **Section C — Caller-agnostic proof, at the import-graph level.** Beyond `executePublicationDistributionCommand()`'s
+  own caller-blind parameter signature (reconfirmed), every file in the command/orchestrator/lifecycle/composition
+  chain (five files, checked individually) imports nothing from `ui/` and names no specific view or component
+  anywhere in its own source.
+- **Section D — Command-channel design options, compared against what already exists.** A router-level prop
+  (Option 1) would be a brand-new pattern for the *entire app* — `ui/router/index.js` uses `props` on no route at
+  all. A Vue `inject()` capability (Option 2) is already both how `WorldView.js` itself reaches this exact command
+  *and* `EditorView.js`'s own dominant pattern already (9 existing `inject()` calls, 4 in the identical
+  `inject(key, null)` optional form) — reaching a tenth capability this way is not a new pattern. `ActionFeedback.js`
+  as a command carrier (Option 3) stays confirmed rejected, unrevisited.
+- **Section E — Lifecycle timing.** `PublishDocumentUseCase.execute()` and `LocalPublisherProvider.publish()` are
+  both fully synchronous — persistence, then feedback, in one call with no internal race. `EditorView.js` already
+  holds the exact teardown discipline (`clearTimeout(feedbackTimer)`, `editorSession.dispose()`) a new action would
+  simply join, and already runs at least one other unguarded async action
+  (`publishInspectedAttributionToNetwork()`) that writes to component state after an `await` — a distribution
+  wrapper introduces no new class of lifecycle risk.
+- **Section F — Failure/dismissal convergence, live-proven.** A fourth caller of the exact real command chain
+  inherits its real rejection on genuine failure and `OwnPublicationPanel.js`'s own single fixed failure message —
+  no editor-specific failure vocabulary exists anywhere, confirmed by grep.
+- **Section G — Local-first invariant.** `Toolbar.js`'s own `publish()` and `PublishDocumentUseCase.js` remain free
+  of any distribution-shaped call; `WorldView.js`'s own `publishActiveDocument()` never calls
+  `distributeWorldEncounterPublication()` itself — publishing and distributing stay two separate calls, crossed
+  only by an explicit user action, reconfirmed structurally.
+- **Section H — Existing WorldView behavior, structurally unaffected.** `publicationDistributionCommand` is
+  provided exactly once, at the app root, never locally re-provided inside `WorldView.js`; that file already hands
+  the identical function reference to two different child components today with no cross-talk between them — proven
+  multi-reader fan-out a third/fourth reader (an `EditorView` injector) simply joins, unable to alter what
+  `WorldView.js` itself receives.
+- **Section I — Scope and API pollution.** The proposed capability is exactly one `inject()` call plus a small
+  wrapper function shaped identically to `WorldView.js`'s own — no `uiCommandManager`/`GlobalCommandBus`/
+  `NotificationActionRouter`/registry vocabulary exists anywhere in production. `EditorActionRegistry.js`, this
+  codebase's one existing "registry," is confirmed scoped to unrelated editing actions in its own header, never
+  publication distribution.
+- **Section J — Final decision matrix and verdict.**
+
+### Verdict
+
+**`BUILD_NEXT`.** Every question this milestone asked resolves the same direction. The channel 0.9.375 asked about
+is not merely justifiable in the abstract — it already exists as running infrastructure (`ui/main.js`'s own
+`app.provide('publicationDistributionCommand', ...)`, unconditional, at the app root), and `EditorView.js` already
+uses the exact mechanism needed to reach it, nine times over, for nine other app-wide capabilities. Reaching it a
+tenth time needs no new `provide` call, no new composition-root wiring, no new router pattern, and no new failure
+vocabulary — only the same small wrapper function `WorldView.js` already has. Publication identity is, if
+anything, *more* directly available in `EditorView.js`'s own `Toolbar.publish()` than in `WorldView.js`'s own
+existing path — this is not a smaller or shakier version of what World View has; it converges on the identical
+command through an easier identity path.
+
+**Recommended scope for 0.9.377:** (1) `EditorView.js`: `inject('publicationDistributionCommand', null)`; (2) a
+wrapper function identical in shape to `WorldView.js`'s own `distributeWorldEncounterPublication(publication)`; (3)
+the smallest defensible action surface — mounting `OwnPublicationPanel` scoped to the open document's own
+publication, the same component and props shape `WorldView.js` already uses — never a change to `ActionFeedback.js`,
+which stays exactly as non-interactive and passive as 0.9.375 left it; (4) no new manager, queue, registry, or bus,
+per this milestone's own Section I.
+
+### What this milestone deliberately excludes
+
+Per its own type: no production-code change of any kind. `EditorView.js` receives no `inject()` call and no
+wrapper function. `ActionFeedback.js` is not modified. `OwnPublicationPanel` is not mounted anywhere it wasn't
+already. This milestone identifies and evidences the seam; it does not build it.
