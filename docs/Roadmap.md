@@ -94005,3 +94005,106 @@ evidenced, the sequencing returns to the broader ForkBuild product evolution rat
 "Discovery Failure Visibility" remains on record as a possible, separate, later milestone — distinguishing a
 genuinely empty discovery result from a relay outage across all three discovery paths — should product evidence
 ever make it urgent; it is deliberately unscheduled and undesigned here.
+
+## 0.9.373 — IPFS Gateway Product Gap Audit
+
+**Type:** test-only. **Production changes:** NONE.
+
+0.9.363 rated IPFS Gateway "High — same reasoning as Arweave Gateway" from a wide, first-pass inventory, before any
+real gateway-configuration feature existed to weigh it against. 0.9.367 and 0.9.368 each re-checked that rating once
+Arweave Gateway (0.9.364-0.9.366) shipped, and both landed on `DEFER` — but from a few structural checks folded into
+a wider, multi-candidate sweep, never a dedicated single-subject audit the way 0.9.367 gave Arweave Gateway itself.
+This milestone gives IPFS Gateway that same depth, once, rather than inheriting a prior sweep's conclusion — and, for
+the first time, actually proves the claim every prior audit had only asserted: that an alternative gateway genuinely
+serves the identical bytes for the same CID. `tests/IpfsGatewayProductGapAudit.test.js` is a single, self-contained
+suite built against the REAL production classes — `IpfsGatewayContentStore`, `IpfsContentStore`,
+`SnapshotPlacementResolver`, `IpfsPublicationContentVerifier`, the real `CreateSnapshotPlacementOrchestratorUseCase`
+creation pipeline — never a mock of any of those collaborators; only `fetchImpl`, the one genuine network boundary
+this codebase already treats as an injection point, is supplied by hand (a fake two-gateway network, one Map shared
+between a fake Kubo `add`/`cat` RPC and a fake HTTP gateway, so the SAME CID is reachable through either mechanism —
+exactly the relationship a real Kubo node and a real public gateway have). Ten sections (A-J), per this milestone's
+own brief:
+
+- **Section A — endpoint authority.** `DEFAULT_GATEWAY_URL` traced to its one declaring file and its exact resolution
+  path (`ipfs://<CID>` -> configured gateway -> `GET /ipfs/<CID>` -> bytes, the plain path-gateway form, never
+  DNSLink or a subdomain form). Exactly TWO real functional consumers exist in `ui/main.js` — both confirmed by exact
+  construction-site count, not assumed: the Snapshot placement RESOLUTION registry (an `ipfs://` placement a
+  publisher already made) and the "Observe Content" IPFS publication verifier. A THIRD reference to the same host
+  exists in `content/IpfsSnapshotPlacementView.js` but is structurally different — a presentation-only "View on IPFS
+  gateway" href, the identical "hardcoded host, zero network calls" shape 0.9.363 already found for mempool.space —
+  confirmed independent of the content store (neither file imports the other). The core World Encounter material
+  read path is reconfirmed to never import or construct anything IPFS-shaped; its own design-rationale comment names
+  IPFS only as unbuilt future work.
+- **Section B — failure-to-user-impact, against the real pipeline.** With the default gateway made genuinely
+  unreachable (a thrown network error, not a 404), BOTH real consumers report an honest, explicitly-named outcome —
+  `SnapshotPlacementResolver.resolve()` returns `CONTENT_UNAVAILABLE`, never a crash or an empty result;
+  `IpfsPublicationContentVerifier.verify()` returns `UNAVAILABLE`, never `HASH_MISMATCH`. Both are confirmed, from
+  the real `ui/views/DecentralizedPublicationsView.js` badge-class table, to render amber ("pending," inconclusive),
+  explicitly distinct from the red "failed" class an actual hash rejection gets — the failure is never
+  indistinguishable from missing or fraudulent content.
+- **Section C — alternative gateway viability, proven rather than assumed.** The load-bearing finding no prior audit
+  had actually demonstrated: the SAME `ipfs://` placement, resolved through a SECOND gateway (a different
+  `gatewayUrl`, a different fake host), resolves successfully through the REAL `SnapshotPlacementResolver` pipeline,
+  and the returned bytes verify against the SAME content hash the original Kubo-published bytes carried —
+  `core/ContentReference.js#verify()`, unmodified. Reconfirmed one layer down, directly against the store class, and
+  confirmed the CID is genuinely content-addressed rather than "whatever the second gateway happens to have": a CID
+  neither gateway ever received still throws honestly, never fabricated.
+- **Section D — user recovery journey, modeled end to end.** The journey demonstrably works through "default
+  unavailable -> retrieval fails" (Sections B/C already proved this mechanically) and then BREAKS at exactly one
+  step: "user changes configuration." Both real construction sites take zero arguments; no
+  `ui/views/IpfsGatewaySettingsView.js` exists (unlike `ArweaveGatewaySettingsView.js` and
+  `NostrRelaySettingsView.js`, both real); no `core/IpfsGatewayConfiguration.js` exists either — the identical gap
+  Arweave Gateway had before 0.9.364-0.9.366 closed it, still open here.
+- **Section E — existing configuration seams.** A real, clean constructor-injection seam already exists at both call
+  sites, reconfirmed live (a caller-supplied `gatewayUrl` genuinely overrides the default), plus one layer up:
+  `CreateIpfsPublicationContentVerifierUseCase` already accepts a pre-built `contentStore`. Unlike Arweave Gateway
+  before 0.9.364, no existing runtime-configuration object anywhere in this codebase already names an
+  `ipfsGatewayUrl`-shaped field even in an unused, present-but-ignored way — `application/
+  PublicationDistributionRuntimeConfiguration.js`, the one existing seam of that shape this codebase has, never
+  mentions IPFS at all. A future feature would start one layer lower than Arweave's did.
+- **Section F — local IPFS node separation, reconfirmed structurally.** Two independent files, two independent
+  `DEFAULT_*` constants, confirmed neither declares the other's; a real, live-confirmed capability difference
+  (`IpfsGatewayContentStore.put()` throws, inheriting `content/ContentStore.js`'s own unimplemented base); and the
+  real composition keeps them in genuinely separate `stores: [...]` registries in `ui/main.js` — resolution uses the
+  gateway, creation (which needs `put()`) uses local Kubo. Gateway configuration and local-node configuration remain
+  confirmed non-overlapping, exactly as this milestone's brief required before assuming otherwise.
+- **Section G — write-path isolation.** IPFS actually has THREE independent read/write surfaces in this codebase,
+  richer than Arweave's single content store: `IpfsGatewayContentStore` (get-only, this audit),
+  `IpfsContentStore` (get+put, local Kubo), and `IpfsRemotePinningContentStore` (put-only, remote pinning) — the
+  pinning store never references the gateway default at all and never implements `get()`. Its OWN configuration
+  surface, `application/IpfsRemotePublishingConfiguration.js`, already exists and is deliberately EPHEMERAL (no
+  save/load/persistence) and carries a credential field — a genuinely different shape from what a durable,
+  credential-free Gateway read-path setting would need. The remote publication coordinator never imports
+  `IpfsGatewayContentStore` at all — no shared class, constant, or runtime instance connects the two paths.
+- **Section H — persistence and restart, deliberately skipped.** Per this milestone's own brief: Section D already
+  established no genuine configuration seam exists yet, so there is nothing real to run a save -> restart ->
+  same-effective-gateway proof against. Recorded as a deliberate omission, not an oversight — building one here
+  would be exactly the "manufactured symmetry with Arweave" the brief warns against.
+- **Section I — remaining infrastructure candidates, reconfirmed against current source**, not assumed unchanged
+  from 0.9.368/0.9.372's own prior conclusion: STUN (`DEFER` — still one flat `iceServers` array), TURN
+  (`SEPARATE_PRODUCT` — still a dynamic credential fetch), Rendezvous, Bitcoin Esplora, and Base RPC (all `DEFER` —
+  unchanged, narrow/occasional). IPFS local node (Kubo API) is reconfirmed `SEPARATE_PRODUCT`: its own real gap
+  (0.9.363's own E1 finding) is "a person needs their own IPFS node/provider," a different capability question from
+  an alternative HTTP retrieval endpoint, not this milestone's Gateway question.
+- **Section J — final decision.** `DEFER` for IPFS Gateway itself — every dimension this milestone's brief asked
+  about strengthens (an honest, never-swallowed failure mode; a proven, not merely assumed, alternative-gateway
+  viability; a real, clean configuration seam; confirmed isolation from both local-node and write-path
+  configuration) EXCEPT the one that decides the verdict: Section A's own construction-site count. Both real
+  consumers are opt-in, per-item paths — a placement a publisher specifically chose `ipfs://` for, and the secondary
+  "Observe Content" verification action — never the default World Encounter material read path or the default
+  Snapshot retrieval path the way `arweave.net` is for Arweave Gateway. A down default gateway degrades a narrow,
+  already-opt-in corner of the product, not the core loop — a real, evidenced, but smaller recovery gap than Arweave
+  Gateway's, not the "no gap at all" a bare `DEFER` label alone could misread as.
+
+**Verdict: `DEFER`** for IPFS Gateway. No `BUILD_NEXT` candidate is produced by this audit. IPFS local node (Kubo
+API) and TURN remain `SEPARATE_PRODUCT`; STUN, Rendezvous, Bitcoin Esplora, and Base RPC remain `DEFER`. The
+infrastructure-endpoint category's own `STABLE_STOP` verdict (0.9.367/0.9.368/0.9.372) stands reconfirmed — IPFS
+Gateway was its last genuinely open question, and this milestone closes it with `DEFER`, proven fresh rather than
+inherited, including the one thing no prior audit had actually demonstrated: that an alternative gateway really does
+serve the identical bytes for the same CID. No production code changed in this milestone.
+
+Per this milestone's own brief, no "Test Connection," health-check, or fallback semantic is recommended here either
+— the same restraint 0.9.372 already applied to Nostr Relay, for the identical reason: none of that is necessary for
+a gap this audit did not find, and it would introduce a new semantic (`configured ≠ reachable-now`) with no natural
+stopping point. With IPFS Gateway now closed as `DEFER` and no other infrastructure-endpoint candidate evidenced,
+the sequencing returns to the broader ForkBuild product evolution rather than accumulating further endpoint audits.
