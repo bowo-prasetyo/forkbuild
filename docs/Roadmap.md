@@ -92441,3 +92441,129 @@ since 0.9.196, not merely arc by arc.
 No 0.9.351 is pre-selected. ForkBuild's broader product evolution process resumes on its own terms only the next
 time genuine evidence — a newly observed blocked journey, a real external requirement, an actual operational
 problem — points somewhere, never by this loop re-examining its own already-settled conclusions again.
+
+## 0.9.351 — Proactive Publication Discovery Product Direction Audit
+
+**Type:** Test-only product direction audit. **Production changes:** none.
+
+0.9.330 named proactive decentralized Publication discovery and excluded it from the Federated Repository
+Publication arc's own scope. 0.9.340's own whole-arc reassessment reconfirmed that exclusion against live evidence
+(STABLE_STOP). 0.9.350's cross-arc reassessment reconfirmed it a third time (Section G) and found no accumulated
+failure mode. This milestone asks the same direction a fourth time, deliberately from a different angle than any of
+the first three: not "can Repository search Nostr" (0.9.340's own question, already answered) but "should a user
+expect Repository search to find Publications that exist on decentralized substrates even when this device has
+never previously encountered them?" — and explicitly forbids assuming "Repository = network crawler" as the only
+possible shape an answer could take.
+
+### What this milestone adds
+
+`tests/ProactivePublicationDiscoveryProductDirectionAudit.test.js` (new, registered in `tests.html`), ten sections:
+
+- **A. Current Repository semantics.** Reconfirmed live and structurally: `searchPublicationsUseCase.execute()`
+  returns synchronously, finds nothing when nothing has been accumulated, and `SearchPublicationsUseCase.js` imports
+  no network collaborator.
+- **B. User expectation journey.** A Publication genuinely, legitimately announced to Nostr by its own author — a
+  real `NostrPublicationDiscoveryPublisher` publish, over a real fake-relay round trip, using the real
+  `PublicationDistributionDescriptor.js` — is proven, live, unfindable by Repository search on a device that never
+  independently encountered it, searched by the exact title and exact author a user who already knows it exists
+  would type. No back door: `findPublicationUseCase.execute()` also returns null.
+- **C. Existing decentralized discovery capability inventory — this milestone's own new evidence.** A live
+  publish/query round trip (real `NostrPublicationDiscoveryPublisher` + real `NostrDiscoveryQueryService` +
+  real `DecentralizedWorldDiscoveryQuery.js`, over one shared fake relay) proves the READ side of decentralized
+  Publication discovery already exists and genuinely works — reading Section B's own announcement back. It is even
+  already composed in production, once: `application/DecentralizedWorldEncounterMaterialDiscoveryRuntimeComposition.js`
+  wires a real `NostrDiscoveryQueryService` for World View's own known-objectId World Encounter lookup. But
+  `ui/main.js`'s own composition call feeds it a fresh, LOCAL-ONLY `LocalDiscoveryProvider`, never
+  `decentralizedPublicationDiscoveryProvider` — the one Repository search actually reads — and no other
+  Repository-facing surface (Repository/Author/Editor/Recent Worlds/the peer-encounter view) references the Nostr
+  classes at all. Most importantly: a live lead this round trip returns carries exactly `{ origin, discoveryTag,
+  uri, storage }` — no `objectId`, no title, no author, no documentId. A discovery lead is a location under a
+  shared, app-wide-configured campaign tag, not a description of, or even an identifier for, which Publication it
+  is.
+- **D. Avoid the wrong abstraction.** No production file anywhere is shaped like a "Repository crawler" (checked as
+  an absence, not merely never proposed), and the search path's own collaborators
+  (`CompositeDiscoveryProvider`/`LocalDiscoveryProvider`/`DecentralizedPublicationDiscoveryProvider`/`DiscoveryProvider`)
+  still import no network/discovery-query collaborator of any kind. Answered directly from Section C's own evidence:
+  the missing seam is not discovery itself (it genuinely works, live) and not admission (0.9.339 already solved
+  it) — it is discovery TRIGGERING wired into Repository's own composition root, compounded by the tag-scoped,
+  identity-blind substrate/product mismatch Section C located.
+- **E. Temporal semantics.** KNOWN → RESOLVED → ADMITTED → REPOSITORY-VISIBLE reconfirmed live as four genuinely
+  distinct stages (resolution alone still insufficient; admission still the one, immediate visibility gate). The
+  brief's own proposed non-admitting SEARCH/DISCOVER/RESOLVE/RETURN model is evaluated against Section C's live
+  evidence and found not to earn its own complexity: a "discover" step's own result carries no objectId and no
+  text, so it cannot even identify which Publication a candidate is, let alone filter by a user's query, before
+  paying resolution's full cost anyway. This model should NOT be introduced — the exact caution the brief itself
+  asked to honor.
+- **F. Identity and security boundary.** A lead whose content this replica never actually fetched resolves to
+  `CONTENT_UNAVAILABLE`, never `RESOLVED`; an envelope signed by the wrong identity but claiming the original
+  `publisherIdentity` is rejected as `INVALID_PUBLICATION_SIGNATURE`; both are refused by the SAME admission gate
+  (`view.resolved === true`) and never admitted; the identical, genuinely valid envelope, resolved against the
+  store that actually holds its bytes, DOES resolve and DOES admit — confirming this is a real boundary, not a
+  structural inability. This boundary holds unmodified under any future discovery-triggering seam.
+- **G. Performance/temporal behavior.** Real, on-file constants: an 8-second default timeout per relay query
+  (`NostrDiscoveryQueryService.DEFAULT_TIMEOUT_MS`), a 20-result default cap. `core/PublicationQuery.js` carries no
+  cancellation/abort concept; `core/PublicationPage.js` carries no partial/pending/stale flag;
+  `SearchPublicationsUseCase.execute()` stays synchronous. Interactive Repository search is confirmed the wrong
+  product surface for network discovery — every one of these would have to be invented from nothing.
+- **H. Alternative product shapes, scored.** Five shapes (A. network-backed Repository search, B. explicit
+  "Discover Decentralized Publications" action, C. background indexing, D. keep the current model, E. a dedicated
+  decentralized Publication browser) scored against Sections A-G's own evidence. Only D is recommended today; B/E
+  — precedented by Snapshot's/Place Naming's own already-working query-service-plus-browser pattern — are the
+  cheapest coherent next step IF genuine evidence ever emerges, never pre-approved work.
+- **I. Architectural cost inventory.** All ten items the brief's own checklist named — network calls into
+  Repository, asynchronous search, new lifecycle semantics, caching, remote result types, deduplication, source
+  attribution, freshness, cancellation, error aggregation — checked directly against real, current source and
+  confirmed absent, all ten. Full cost; zero of it already paid.
+- **J. Final decision matrix and verdict.** Ties this milestone to the historical chain: 0.9.330's own explicit
+  exclusion, 0.9.340's own STABLE_STOP, and 0.9.350 Section E's own third reconfirmation, all still on file.
+  0.9.340's own "What comes after" already named the one thing that would justify reopening this — "a user who
+  actually needs to find a Publication they never encountered" — reconfirmed still unmet by any on-file record
+  beyond this milestone's own constructed scenario (Section B).
+
+### Decision matrix
+
+| Direction | Verdict |
+| --- | --- |
+| Current Repository local/accumulated search semantics | NOT_A_PRODUCT_GAP — intentional, correct, reconfirmed a fourth time |
+| Decentralized discovery mechanism (publish + query) | Exists, proven live this milestone — was never the actual gap |
+| Discovery triggering for the Publication kind into Repository | Missing — DEFER, no demonstrated need |
+| A. Network-backed Repository Search | DEFER — disproportionate cost (Section I), substrate/product mismatch (Section C/E) |
+| B. Explicit "Discover Decentralized Publications" action | DEFER — precedented and cheapest if evidence ever emerges, not recommended now |
+| C. Background indexing | DEFER — same substrate limit as A/B, plus unrequested caching/freshness/dedup cost |
+| D. Keep current model (accumulated/local-first) | RECOMMENDED — zero cost, matches all evidence gathered |
+| E. Dedicated decentralized Publication browser | DEFER — same shape/cost as B |
+| Non-admitting SEARCH/DISCOVER/RESOLVE/RETURN model | DEFER — Section E: not achievable for this substrate, would not earn its own complexity |
+
+### Verdict
+
+**DEFER.** The current, accumulated/local-first Repository search model stays exactly as built (Option D). This is
+the fourth consecutive audit of this exact direction (0.9.330 named it, 0.9.340 STABLE_STOP'd the whole arc,
+0.9.350 reconfirmed it a third time) to find no genuine product gap — but the first with live, mechanism-level
+evidence rather than a citation of prior verdicts. That evidence sharpens the answer rather than reversing it:
+proactive decentralized discovery genuinely WORKS as a mechanism (Section C's live round trip), and is even already
+composed once in production for a narrower, known-objectId purpose — so this is not "the architecture can't do
+it." It is that the literal user expectation Section B tested — type a title into Repository on first search, with
+no prior lead, and find a Publication this device has never encountered — cannot be satisfied by any of the five
+candidate shapes without inventing a full-text index over a substrate that is tag-scoped and identity-blind by
+design, for every domain this codebase touches, not only Publication. Per this codebase's own established practice,
+DEFER is a complete, evidenced answer, not a postponement: Option D (keep the current model) is the one shape this
+milestone's own evidence actually recommends, and every other option's cost is now itemized (Section I) rather than
+estimated.
+
+### What this milestone deliberately excludes
+
+Per its own Type and explicit scope: no production-code change of any kind. No Publication-kind query service
+wired into `ui/main.js`'s Repository-facing composition, no `decentralizedPublicationDiscoveryProvider` feed from
+`discoverWorldEncounterPublicationCommand`'s own discovery, no non-admitting preview/discover stage, no
+`SearchPublicationsUseCase.js` change of any kind. Every one of these remains exactly what Section J's evidence
+says it is — a deliberate, evidenced deferral, not deferred work waiting for a milestone number.
+
+### What comes after
+
+No 0.9.352 is pre-selected. Per this milestone's own Section H, the ONE concrete next step this codebase would
+take if genuine evidence ever does point at proactive Publication discovery is named precisely, not speculatively:
+mirror Snapshot's own already-proven `NostrSnapshotDiscoveryQueryService` + `OwnPublicationPanel`-style browsing
+pattern (Option B/E) — an explicitly-triggered, tag-scoped "Discover Decentralized Publications" action, resolved
+and admitted through the exact same `DecentralizedPublicationDiscoveryProvider`/`CompositeDiscoveryProvider` seam
+0.9.339 already built — never a network-aware `SearchPublicationsUseCase.js`, and never built before that evidence
+actually arrives.
