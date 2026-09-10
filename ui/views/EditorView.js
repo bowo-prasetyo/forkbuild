@@ -82,6 +82,7 @@ export default {
                 :entry-context="entryContext"
                 @back-to-world="backToWorld"
                 @open-shortcuts="shortcutsOpen = true"
+                @published="onDocumentPublished"
             />
             <RecoveryBanner
                 :status="recoveryStatus"
@@ -184,6 +185,42 @@ export default {
                 @close="closePalette"
             />
             <ActionFeedback :message="feedbackMessage" :visible="feedbackVisible" />
+            <!-- 0.9.377 — EditorView Post-Publish Distribution Action.
+                 Reachable the instant a publish succeeds — never
+                 automatic, never a second way to trigger distribution.
+                 Rendered only while publishedPublication holds the just-
+                 published Publication; dismissing or publishing again
+                 replaces/clears it. Deliberately EditorView-owned rather
+                 than folded into ActionFeedback, which stays exactly as
+                 non-interactive/passive as 0.9.375 left it. Mirrors World
+                 View's own "Distribute Publication" action (0.9.347)
+                 button-and-result shape, one caller over — see this
+                 setup()'s own 0.9.377 comment, below, for the full
+                 lineage. -->
+            <div v-if="publishedPublication" class="editor-post-publish-action">
+                <span class="editor-post-publish-message">Publication published successfully.</span>
+                <button
+                    v-if="publicationDistributionCommand"
+                    type="button"
+                    class="action-btn editor-post-publish-distribute-btn"
+                    :disabled="distributionExecuting"
+                    @click="distributePublishedDocument"
+                >{{ distributionExecuting ? 'Distributing…' : 'Distribute now' }}</button>
+                <button
+                    type="button"
+                    class="editor-post-publish-dismiss-btn"
+                    @click="dismissPublishAction"
+                >Dismiss</button>
+            </div>
+            <p v-if="distributionError" class="editor-post-publish-distribution-error">{{ distributionError }}</p>
+            <dl v-else-if="distributionResult" class="editor-post-publish-distribution-detail">
+                <dt>Publication</dt>
+                <dd>{{ distributionResult.publication.objectId }}</dd>
+                <dt>Material</dt>
+                <dd>{{ distributionResult.material ? distributionResult.material.uri : 'Not yet uploaded' }}</dd>
+                <dt>Discovery</dt>
+                <dd>{{ distributionResult.discovery ? distributionResult.discovery.id : 'Not yet announced' }}</dd>
+            </dl>
             <KeyboardShortcutsOverlay
                 v-if="shortcutsOpen"
                 :registry="actionRegistry"
@@ -1204,6 +1241,129 @@ export default {
             }
         };
 
+        // ------------------- 0.9.377 post-publish distribution ----------
+        // EditorView Post-Publish Distribution Action. Toolbar's own
+        // publish() (unmodified in what it decides — see its own 0.9.377
+        // comment) now forwards the EXACT just-published Publication
+        // through its new `published` emit; onDocumentPublished() below
+        // is the only place that ever writes publishedPublication.
+        // Nothing here ever re-derives "the latest Publication" through a
+        // catalog or session lookup — see
+        // tests/EditorViewDistributionCommandChannelAudit.test.js's own
+        // Section B for why that would be a strictly less direct identity
+        // path than the one already in hand.
+        //
+        // ActionFeedback.js stays exactly as passive as 0.9.375 left it —
+        // this view owns the transient action itself, entirely separate
+        // from `feedback`/`feedbackMessage`/`feedbackVisible` above.
+        const publicationDistributionCommand = inject('publicationDistributionCommand', null);
+
+        // The smallest callable contract 0.9.376's own Section A/D
+        // identified — identical in shape to WorldView.js's own
+        // distributeWorldEncounterPublication(publication) (0.9.104/
+        // 0.9.347, unchanged): a one-argument (publication) -> Promise
+        // wrapper adding exactly one field (serializedMaterial) to the
+        // injected command's own request shape. Nothing about "Editor"
+        // appears anywhere in its own body.
+        function distributeEditorPublication(publication) {
+            if (!publicationDistributionCommand) {
+                return Promise.reject(new Error('Publication distribution is not available.'));
+            }
+            return publicationDistributionCommand({
+                publication,
+                serializedMaterial: JSON.stringify(publication.toJSON())
+            });
+        }
+
+        // The exact just-published Publication — replaced wholesale by
+        // each successful publish, never merged with a prior one. A later
+        // publish superseding an earlier one's still-visible action is
+        // deliberate: "Publish A -> action A, Publish B -> action B,
+        // click B" must distribute B — there is no "last Publication"
+        // lookup anywhere in this file.
+        const publishedPublication = ref(null);
+        // Mirrors OwnPublicationPanel.js's own
+        // publicationDistributionExecuting/publicationDistributionError/
+        // publicationDistributionResult/publicationDistributionRequestId
+        // ephemeral family exactly, one caller over — never a new
+        // vocabulary, never shared with any other family in this view. No
+        // persistence, no "needs distribution" state, no notification
+        // record, no retry queue, no distribution history, no unread
+        // state — the action stays ephemeral.
+        const distributionExecuting = ref(false);
+        const distributionError = ref(null);
+        const distributionResult = ref(null);
+        let distributionRequestId = 0;
+
+        // Toolbar's own `@published` handler — the ONLY place
+        // publishedPublication is ever written to a non-null value.
+        // Publishing itself never calls distributeEditorPublication() or
+        // publicationDistributionCommand() on its own: simply publishing
+        // causes zero distribution calls: distribution only ever happens
+        // on a LATER, separate, explicit user click, mirroring
+        // WorldView.js's own publishActiveDocument()/
+        // distributeWorldEncounterPublication() separation.
+        function onDocumentPublished(publication) {
+            publishedPublication.value = publication;
+            distributionExecuting.value = false;
+            distributionError.value = null;
+            distributionResult.value = null;
+            distributionRequestId += 1;
+        }
+
+        // The action's own dismiss — if the user ignores or dismisses it,
+        // nothing else happens. Never touches the Publication itself,
+        // never marks anything "needs distribution": it only clears this
+        // view's own ephemeral display state.
+        function dismissPublishAction() {
+            publishedPublication.value = null;
+            distributionExecuting.value = false;
+            distributionError.value = null;
+            distributionResult.value = null;
+            distributionRequestId += 1;
+        }
+
+        // The only writer of distributionExecuting/distributionError/
+        // distributionResult, and the only caller of
+        // distributeEditorPublication in this view — mirrors
+        // OwnPublicationPanel.js's own distributeOwnPublication() exactly,
+        // one caller over. A no-op whenever there is no
+        // publishedPublication, no publicationDistributionCommand, or a
+        // call is already in flight. Reuses the command's own existing
+        // result/failure semantics verbatim — no EDITOR_DISTRIBUTION_*
+        // vocabulary of any kind.
+        function distributePublishedDocument() {
+            const publication = publishedPublication.value;
+            if (!publication || !publicationDistributionCommand || distributionExecuting.value) {
+                return;
+            }
+            distributionExecuting.value = true;
+            distributionError.value = null;
+            distributionRequestId += 1;
+            const requestId = distributionRequestId;
+            Promise.resolve()
+                .then(() => distributeEditorPublication(publication))
+                .then((result) => {
+                    if (requestId === distributionRequestId) {
+                        distributionResult.value = result;
+                    }
+                })
+                .catch(() => {
+                    if (requestId === distributionRequestId) {
+                        // The SAME one fixed, generic failure message
+                        // OwnPublicationPanel.js's own
+                        // distributeOwnPublication() already uses — never
+                        // a distinct, editor-specific string.
+                        distributionError.value = 'Publication distribution could not be completed.';
+                    }
+                })
+                .then(() => {
+                    if (requestId === distributionRequestId) {
+                        distributionExecuting.value = false;
+                    }
+                });
+        }
+
         // ------------------------- 0.2.21 document lifecycle ------------
         // Document Info panel + Document Properties editor. The Editor's
         // document is always mutable/editable (there is no fork-on-edit
@@ -1946,6 +2106,15 @@ export default {
             feedback,
             feedbackMessage,
             feedbackVisible,
+            // 0.9.377 — EditorView Post-Publish Distribution Action.
+            publicationDistributionCommand,
+            publishedPublication,
+            distributionExecuting,
+            distributionError,
+            distributionResult,
+            onDocumentPublished,
+            distributePublishedDocument,
+            dismissPublishAction,
             documentInfo,
             showMetadataEditor,
             onSaveMetadata,
