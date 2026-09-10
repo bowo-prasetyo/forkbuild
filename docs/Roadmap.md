@@ -91572,3 +91572,146 @@ passive, connection-time catalog sync sufficiently answer the "what should a pee
 its own, or does real usage surface a genuine notification gap? If sufficient, stop — decentralized indexing/discovery
 of peers who are never simultaneously online remains 0.9.340's own separate, deliberately excluded territory, not
 something this seam should ever grow into.
+
+## 0.9.343 — Peer Publication Synchronization Product Reassessment
+
+**Type:** Test-only, whole-product decision milestone. **Production changes:** none.
+
+0.9.342 put a real `PublicationPeerConnectionSync` in front of every connecting peer, and its own test file proved
+the result AT THE CATALOG LAYER — `bob.catalog.has(envelope.id)`. This milestone asks the question the catalog layer
+alone cannot answer: now that connected peers automatically exchange their existing Publications, is the resulting
+SHARING EXPERIENCE — Repository search, Explore, Fork, what a person actually sees — complete enough, or is there a
+concrete remaining gap? It adds no production code and changes no production file.
+
+### The one fact this audit surfaces that no prior milestone's test file exercised end to end
+
+`application/PublicationResolver.js#resolve()` step 4 reads ONLY this replica's own, local `content/ContentStore.js`
+— never the network (its own header has said so since 0.7.0). An envelope `PublicationPeerConnectionSync` delivers
+therefore resolves `CONTENT_UNAVAILABLE` the instant it arrives, exactly like any other freshly-cataloged envelope
+always has, since 0.7.2's "Discovery Is Not Resolution." `ui/views/DecentralizedPublicationsView.js#refreshList()`
+already runs this SAME local-only resolution automatically for every new catalog entry, and `admitToRepositoryDiscovery()`
+only ever admits an outcome `RESOLVED` view. So: the envelope syncs automatically (0.9.342); becoming `RESOLVED` —
+and therefore Repository-searchable — still requires the one thing that has ALWAYS required it since 0.9.337: a
+successful content resolution, which for a peer-only publication means the existing, unmodified, explicitly-triggered
+peer content retrieval (`application/PeerContentExchange.js`, 0.7.4; `application/PublicationResolutionCoordinator.js`,
+0.7.5/0.7.6) — never anything new built by this milestone, and never anything 0.9.342 changed. This is not a bug this
+reassessment found; it is the metadata/content boundary — 0.9.342's own strongest architectural property — reconfirmed
+at the one layer no earlier test actually drove a live peer connection through.
+
+### What this milestone adds
+
+`tests/PeerPublicationSyncProductReassessment.test.js` (new, registered in `tests.html`), ten sections, run against
+real, unmodified production code, with real, live, authenticated peer connections and real, live, second peer-to-peer
+content round trips throughout — no shared `ContentStore` shortcut anywhere in the file:
+
+- **A. FLAGSHIP — the late-joining journey, driven all the way to Repository/Explore/Fork.** Alice publishes and
+  catalogs P while Bob is offline; Bob connects; the production `PublicationPeerConnectionSync` automatically
+  delivers the envelope. At that point, live: Repository search finds NOTHING — the local-only resolution
+  `refreshList()` already runs automatically lands on `CONTENT_UNAVAILABLE`. Bob then runs the EXISTING, unmodified
+  "Retrieve" action — a real `PeerContentExchange` request/response round trip over the same live connection — and
+  only then does Repository search find P, Editor's fork-lookup find the identical instance, and `ForkDocumentUseCase`
+  reach the same material-acquisition boundary a local Publication's fork would. Genuinely, completely reachable end
+  to end — with the one honest nuance that reaching Repository search still needs the pre-existing, unmodified
+  Retrieve action; 0.9.342 stages the envelope silently, and was never meant to skip content resolution.
+- **B. Existing connected-peer behavior converges.** A Publication created AFTER connection travels the existing,
+  unmodified explicit `announce()` lifecycle, then the IDENTICAL downstream pipeline (local-only resolve ->
+  `CONTENT_UNAVAILABLE` -> Retrieve -> `RESOLVED` -> admit -> search) Section A used for a connection-time-synced
+  one — plus a structural check that neither `ui/views/DecentralizedPublicationsView.js` nor `application/
+  CreateDiscoveryUseCase.js` contains any connection-sync-specific code at all. One mechanism, never two.
+- **C. Reconnection, with the mechanism NAMED.** connect -> retrieve -> admit -> disconnect -> connect -> announcements
+  again lands on exactly one Repository entry — not because `discovery/DecentralizedPublicationDiscoveryProvider.js`
+  deduplicates (it has no such policy, proven directly in Section E), but because `ui/views/
+  DecentralizedPublicationsView.js`'s own per-id view cache — unchanged since before 0.9.342 — never re-resolves, and
+  therefore never re-admits, a publication it already has a view for.
+- **D. Multiple peers.** A connected to both B and C (two independent `LocalPeerNetwork`s) each independently reach
+  Repository visibility for A's catalog; neither peer's registry ever contains the other's connection — no protocol
+  exists by which either could become an accidental intermediary.
+- **E. Multiple Publications + failure isolation, to Repository visibility.** Of three synced envelopes, one whose
+  content is deliberately erased from the publisher's own store (nobody, including its own publisher, can currently
+  serve it) stays `CONTENT_UNAVAILABLE` while the other two resolve, admit, and become Repository-searchable — the
+  0.9.342 Section J catalog-delivery isolation reconfirmed one full layer further downstream.
+- **F. Metadata/content boundary, the strongest regression guard.** Structural (no `ContentStore`/`PublicationResolver`/
+  `PeerContentExchange` import in the seam OR its composition root) and live: after syncing FIVE publications at once,
+  the receiving replica's content store holds zero entries. Bandwidth cost is zero regardless of catalog size, not
+  merely zero for one item.
+- **G. The notification question, investigated, not assumed.** Live-confirms `onPublicationReceived` genuinely fires
+  for a connection-sync-delivered envelope — the exact signal `DecentralizedPublicationsView.js`'s own
+  `onPublicationReceived(() => refreshList())` already listens for reaches this new source, unmodified. But
+  immediately after that signal fires there is nothing nameable yet to show (no title, `CONTENT_UNAVAILABLE`), and a
+  source check of `ui/main.js` finds no app-wide toast/badge/counter wired to connection-time sync anywhere. Decision:
+  existing feedback is sufficient for what 0.9.342 actually delivers — a global notification for an event with
+  nothing yet to name would be premature, reconfirming 0.9.341 Section H's own finding rather than superseding it.
+- **H. Restart, classified against real persisted storage.** Two publications sync; one is retrieved before a
+  simulated restart (fresh in-process instances over the SAME backing `StorageProvider`), one is not.
+  `LocalPublicationCatalog` (the peer-catalog index) survives restart — it already persists, entirely unrelated to
+  this milestone. A fresh `DecentralizedPublicationDiscoveryProvider` starts empty (0.9.340 Section G, reconfirmed
+  live in this exact scenario). The already-retrieved publication's content is ALSO persisted (`LocalContentStore`
+  writes through its own `StorageProvider`, unchanged since 0.7.1), so local-only resolution succeeds again after
+  restart with no peer needed, and re-admits automatically the next time the person visits the page that already runs
+  this resolution. The never-retrieved one stays exactly as unresolved as before restart — needing the identical
+  Retrieve action, before or after. Classified, not assumed: restart affects WHEN Repository visibility is
+  re-established for already-available content, never WHETHER a never-retrieved publication becomes visible.
+- **I. Offline peer boundary.** Reconfirmed unchanged: a peer that never connects receives nothing, however much the
+  publishing replica catalogs or even locally resolves; a structural check finds no Nostr/relay/global-index concept
+  anywhere in `PublicationPeerConnectionSync.js`.
+- **J. Final product matrix and verdict**, cross-checked against `docs/Roadmap.md` itself for the 0.9.340/0.9.341/
+  0.9.342 decisions the matrix's "Absent"/"excluded" rows lean on.
+
+### Decision matrix
+
+| Capability | Status |
+| --- | --- |
+| Local Publication discovery | Complete |
+| Decentralized Publication transport (envelope) | Complete |
+| Peer Publication reception (catalog) | Complete |
+| Late-joining peer synchronization (catalog layer) | Complete — 0.9.342 |
+| Automatic metadata (envelope) exchange | Complete — 0.9.342, reconfirmed Section F |
+| Late-joining peer -> Repository/Explore/Fork, end to end | Complete — Section A, over a real second peer round trip |
+| Automatic content transfer | Deliberately excluded — Section F |
+| Content retrieval required for Repository visibility | Unchanged, pre-existing since 0.7.4/0.9.337 — Section A |
+| Peer awareness/notification for connection-sync arrivals | Existing feedback sufficient — decision made, Section G |
+| Persistent peer-learned catalog (envelope index) | Already true — `LocalPublicationCatalog`, unrelated to this milestone, Section H |
+| Persistent Repository-admitted visibility across restart | Absent by design (0.9.340 Section G) — open, not urgent, Section H |
+| Peer-to-peer gossip propagation | Not yet required — no evidence |
+| Never-online-simultaneously discovery | Separate indexing problem — 0.9.340's own excluded territory, Section I |
+
+### Verdict
+
+**STABLE_STOP.** The late-joining peer journey — this milestone's own flagship question — is genuinely, completely
+reachable end to end, proven live over a real second peer content round trip, not merely at the catalog layer
+0.9.342's own test already covered. Every other section either reconfirms an existing, deliberate boundary (B, C, D,
+F, I) or resolves an open question with fresh, live evidence rather than assumption (E's deeper failure isolation,
+G's notification decision, H's restart classification). No section surfaced a genuine, currently-blocked user
+journey. Per this codebase's own governing framework (0.9.322/0.9.328/0.9.329) and its own established practice for a
+reassessment milestone (0.9.340), STOP is the primary successful outcome, not a consolation.
+
+Gossip propagation (A -> B -> C -> D transitive forwarding) is explicitly declined, per this milestone's own brief,
+for lacking every one of the properties it would need — propagation scope, loop prevention, origin identity, hop
+limits, freshness, provenance, amplification/bandwidth policy — and for having no evidenced user journey it alone
+would unblock. `PublicationPeerConnectionSync` stays exactly what 0.9.342 made it: direct, connection-time, one-hop
+catalog exchange.
+
+Persistent Repository-admitted visibility across restart (Section H) is the one genuinely open question this
+reassessment leaves on file, deliberately unresolved rather than guessed at. Should real evidence for it ever arrive
+— a user who actually expects a peer-learned Publication to remain Repository-visible after restarting the
+application — it is a separate, larger "persistent federated cataloging" milestone, never a reason to extend
+`PublicationPeerConnectionSync` itself.
+
+### What this milestone deliberately excludes
+
+Per its own Type: no production-code change of any kind. No `NotificationEvent` producer (Section G's own decision).
+No persistent Repository-admitted catalog, no automatic content pre-fetch, no gossip/propagation mechanism, no
+ranking or trust concept, and no change to `PublicationPeerConnectionSync.js`, `PublicationPeerExchange.js`,
+`PublicationResolver.js`, `PeerContentExchange.js`, `LocalPublicationCatalog.js`, `DecentralizedPublicationDiscoveryProvider.js`,
+or `CreateDiscoveryUseCase.js`.
+
+### What comes after
+
+No 0.9.344 is pre-selected. Per this milestone's own STABLE_STOP verdict and this codebase's own established
+practice: ForkBuild's broader product evolution process resumes on its own terms, the next time genuine evidence — a
+newly observed blocked journey, a real external requirement, an actual operational problem — points somewhere, never
+by this loop re-examining its own already-settled conclusions again. If evidence for persistent Repository-admitted
+visibility across restart ever does arrive, Section H's own findings point at the narrow next step: a durable
+accumulator, or a rehydration step at `DecentralizedPublicationDiscoveryProvider`'s one real construction site in
+`ui/main.js`, sourced from re-resolving `LocalPublicationCatalog`'s already-durable entries — never a new
+synchronization protocol, and never gossip.
