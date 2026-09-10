@@ -92313,3 +92313,131 @@ No 0.9.350 is pre-selected from within this arc. Per this milestone's own STABLE
 should come from the broader Product Evolution Reassessment surfacing an actual user-facing gap — never from a
 "Distribution Status" feature built merely because several independent distribution actions now exist side by side,
 and never from the existence of another decentralized substrate that could theoretically grow a button.
+
+## 0.9.350 — Cross-Arc Product Evolution Reassessment
+
+**Type:** Test-only, whole-product decision milestone. **Production changes:** none — verified directly against
+`git status` at test-run time.
+
+0.9.349's own STABLE_STOP closed the Post-Publish Distribution arc and explicitly declined to pre-select a next
+milestone, deferring instead to "the broader Product Evolution Reassessment" — the same whole-product audit 0.9.288
+already ran once, sixty-one milestones ago, before Commentary reachability (0.9.289-291), Provider Preference
+(0.9.292-304), Place Naming Distribution (0.9.315-323), the orphan/integration sweep (0.9.324-328), the Federated
+Repository Publication arc (0.9.329-340), Peer Publication Synchronization (0.9.341-343), Known-Peer Auto-Connection
+(0.9.344-345), and Post-Publish Distribution (0.9.346-349) existed. This milestone re-runs that same audit, fresh,
+against the current tree: not "what capability could be added," but "what currently prevents a user from
+accomplishing something they reasonably expect ForkBuild to support?"
+
+### What this milestone adds
+
+`tests/PostDistributionArcCrossArcProductEvolutionReassessment.test.js` (new, registered in `tests.html`), ten
+lettered sections (A-J), every claim checked fresh against real, unmodified production source and real object
+graphs — never prose inherited from 0.9.196-0.9.349 without re-verifying it against the current tree. A read-only
+research pass independently traced all five named journeys through the real UI/application/discovery layers before
+any assertion was written, so each one reproduces a concretely observed fact rather than a hoped-for one.
+
+- **Section A — Capability inventory.** All sixteen arcs this milestone's own brief names — local Repository/
+  Publication creation, editing and recovery, collaboration, Publication Commentary, World View/Encounter, Snapshot
+  discovery and materialization, Snapshot World placement, Place Naming, decentralized Publication discovery,
+  decentralized Snapshot distribution, Publication announcement, provider preference for content, peer Publication
+  synchronization, known-peer auto-connection, post-publish distribution guidance, and notification history —
+  reconfirmed COMPLETE, one fresh grep-verified signal each. The one exception: the legacy 0.2.7-0.2.9
+  authority-based collaboration protocol, reconfirmed OBSOLETE (uncalled outside its own file) for a fifth time on
+  file (0.9.241, 0.9.250, 0.9.288, implicitly every arc since, now here) — architecture debt, never a product gap,
+  alongside the live causal-chain collaboration protocol that remains COMPLETE and in active use for Document
+  editing.
+- **Section B — User-journey gap scan.** The five journeys the brief names — Create→Edit→Publish→Discover→Explore→
+  Fork; Create→Publish→Distribute→Remote Discover→Retrieve; Encounter→Inspect→Comment→Receive Notification;
+  Place→Name→Publish Claim→Remote Discover→Adopt; Connect→Exchange Publication→Repository→Explore/Fork — each
+  traced hop to hop through real, current production wiring (`PublicationCatalog.js`'s composite discovery
+  injection, `ForkDocumentUseCase`'s route-driven fork, `PublicationCommentaryNotificationProducer`'s live
+  notification wrapping, `PlaceNamingDiscoveryMonitor`/`adoptNearbyPlaceNamingClaim`, `AutoConnectKnownPeersUseCase`/
+  `PublicationPeerConnectionSync`'s real startup construction). No broken transition found in any of the five.
+  Journey 2's one honest limitation — Remote Discover succeeds only when the remote peer already has some lead (a
+  live peer connection/exchange, or a prior encounter), never a bare Nostr/Arweave crawl for a Publication never
+  encountered — is confirmed to still be a deliberate, three-times-recorded (0.9.330 Section H, 0.9.338, 0.9.340)
+  scope boundary, not a silent gap: no `PublicationDiscoveryQueryService`/`Source` pair (the pattern Place Naming and
+  Snapshot both use) exists anywhere in production for Publications.
+- **Section C — Cross-arc identity audit.** All thirteen identity kinds the brief names checked for accidental
+  equivalence, several proven live rather than merely read from source: `Publication.id !== documentId` on one real
+  instance; Snapshot identity (contentHash) is explicitly, on file, "never by a Publication's own id"
+  (`core/SnapshotDiscoveryEnvelope.js`); `contentHash`/`contentReference`/material URI stay three distinct fields,
+  live; "discovery envelope" is confirmed to be three deliberately different wire shapes
+  (`SnapshotDiscoveryEnvelope`, `PlaceNamingDiscoveryEnvelope`, `DecentralizedDiscoveryEnvelope`), never one unified
+  type — `PlaceNamingDiscoveryEnvelope.js`'s own header states this explicitly, by name, against Snapshot's; a live
+  `notificationId !== commentaryId` proof holds even when the notification's own payload references the commentary's
+  id as a foreign key. No equivalence the brief warns against — Publication===Snapshot, contentHash===Publication
+  identity, distribution===discovery, discovery===retrieval, notification===delivery, placement===visibility — is
+  found anywhere.
+- **Section D — Cross-arc temporal semantics.** The nine named stages checked for collapse. The one this milestone's
+  own brief flags as newly load-bearing after 0.9.349 — "distributed" stays an ACTION, never a Publication STATE,
+  now that it is directly post-publish-reachable — reconfirmed twice: `PublicationDistributionState` still carries
+  exactly `ABSENT`/`PRESENT` and nothing else, and `publisher/Publication.js` itself carries no distribution-state
+  field of its own. Distribution/discovery/admission remain three independent stages (neither
+  `PublicationDistributionOrchestrator.js` nor `PublicationDistributionCommand.js` imports the admission pipeline).
+  Resolving an envelope and retrieving its bytes remain two distinct, separately-triggered stages
+  (`PublicationResolver.js`'s content step still reads only the local store). Materialization and placement remain
+  two separate files. "Notified" and "read" remain genuinely distinct — `NotificationHistoryPanel.js` and
+  `GetRecipientNotificationEventsUseCase.js` both explicitly document the absence of read/unread state as a
+  deliberate boundary, not merely a missing field.
+- **Section E — Reachability audit table.** Eight rows (capability / exists / production caller / user-reachable /
+  gap), each populated from a fresh grep count against real production source rather than assumed: `AutoConnect
+  KnownPeersUseCase`, `PublicationPeerConnectionSync`, the commentary commands (now reachable from three UI
+  surfaces, up from 0.9.288's own single surface), `adoptNearbyPlaceNamingClaim`, the converged
+  `distributeWorldEncounterPublication`, `ResolvePreferredRoleProviderUseCase` (CONTENT role only, by design), and
+  `NotificationHistoryPanel` all show a real caller and real user-reachability with no gap. The one "No" row —
+  a `PublicationDiscoveryQueryService` for proactive Publication discovery — is a deliberate, already-recorded
+  exclusion, not an unreachability defect. Zero rows show the "exists, composed, but unreachable" shape that would
+  justify a new milestone.
+- **Section F — UI duplication sweep.** "fork," "distribute," "connect," and "adopt" each checked for genuine
+  duplication. All four converge on exactly one production implementation: World View's own "Edit a Copy" reuses
+  `PublicationCatalog.js`'s own fork navigation; `OwnPublicationPanel`'s and `WorldEncounterCanvas`'s distribution
+  buttons bind to the literal same function (`distributeWorldEncounterPublication`), checked directly rather than
+  by name similarity; exactly one production call site each for peer-connect and place-naming-adopt. A full
+  `ui/components` orphan sweep (every component checked for at least one reference elsewhere in `ui/`) finds zero
+  orphaned files — no dormant "`PublicationDistributionPanel`-style" false lead is sitting on disk.
+- **Section G — Deferred directions revisited.** Six named candidates — proactive decentralized Repository search,
+  richer notification delivery, richer IPFS UX, Bitcoin/Base anchoring, retry/reconnection for known peers, and
+  other provider preferences (Discovery/Proof roles) — each re-asked "does a real user journey require this today?"
+  against fresh evidence; none does. The one genuinely loose administrative thread this audit surfaced: 0.9.345's
+  own "What comes after" named "0.9.346 — Known-Peer Auto-Connection Product Reassessment" (examining polling
+  discipline, retry, and a possible second setting) as the planned next milestone, but the actual 0.9.346 was spent
+  on Distribution Guidance instead — that specific reassessment was never run under any later milestone number.
+  This section resolves it by evidence rather than leaving it silently open: no accumulated failure mode or blocked
+  journey has appeared across the four subsequent milestones (0.9.346-0.9.349) that exercised auto-connection
+  repeatedly, so it stays correctly deferred — administratively unanswered, evidentially settled.
+- **Section H — Product vs. architecture.** Four concrete pairs kept explicitly separate: three `RoleProviderRole`
+  values exist but only CONTENT has a settings UI; `PublicationResolver.js`'s protocol-neutral `kindPlugin` pipeline
+  could resolve any signed content kind but only two are ever registered; `BlockchainKind.BASE` is reserved
+  vocabulary with zero implementing publisher; `CompositeDiscoveryProvider`'s own code carries no ranking/dedup
+  logic, confirmed structurally. None crosses from "the architecture could support X" into "a user is blocked
+  without X."
+- **Section I — Candidate scoring.** Vacuous — zero survivors, mirroring 0.9.328's own "zero survivors" shape for
+  an honest STABLE_STOP rather than a rubric applied to a candidate that does not exist. Every section above was
+  searched explicitly for a finding meeting the brief's own bar ("the missing reachability actually prevents a
+  meaningful user journey"); none qualified.
+- **Section J — Final decision matrix and verdict.**
+
+### Verdict
+
+**STABLE_STOP.** Across sixteen named product arcs, five named user journeys traced hop to hop through real,
+current production wiring, thirteen named identity kinds, nine named temporal stages, an eight-row reachability
+audit, a UI-duplication sweep, six named deferred directions, and an explicit product-vs-architecture pass, this
+milestone found zero broken transitions, zero identity collisions, zero temporal conflations, zero
+unreachable-but-composed capabilities, zero UI duplications, and zero deferred directions with fresh evidence
+behind them. This milestone's own contribution is not discovering any of the sixty-one intervening milestones' own
+boundaries for the first time — each of those arcs already ran its own reassessment against live evidence and
+either closed cleanly or explicitly, on file, excluded the direction this milestone rechecked — but verifying, fresh
+against the current tree, that none of them has quietly eroded and that no new seam has opened *between* arcs since
+0.9.288 last checked. The one loose administrative thread this audit found (0.9.345's own deferred follow-up
+reassessment, superseded rather than answered) is resolved by evidence rather than left open: no accumulated
+failure mode justifies reopening it now. Per this codebase's own established practice (0.9.313/0.9.314/0.9.328/
+0.9.340/0.9.349), STABLE_STOP is the primary successful outcome of a reassessment, not a consolation for finding
+nothing — it means ForkBuild's reachable product surface is now verified coherent as a whole, across every arc built
+since 0.9.196, not merely arc by arc.
+
+### What comes after
+
+No 0.9.351 is pre-selected. ForkBuild's broader product evolution process resumes on its own terms only the next
+time genuine evidence — a newly observed blocked journey, a real external requirement, an actual operational
+problem — points somewhere, never by this loop re-examining its own already-settled conclusions again.
