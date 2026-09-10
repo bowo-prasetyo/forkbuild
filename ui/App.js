@@ -31,6 +31,7 @@ export default {
 	                    <router-link to="/publications" class="app-nav-link">Publications</router-link>
 	                    <router-link to="/settings/content-provider" class="app-nav-link">Content Provider</router-link>
 	                    <router-link to="/settings/arweave-gateway" class="app-nav-link">Arweave Gateway</router-link>
+	                    <router-link to="/settings/nostr-relay" class="app-nav-link">Nostr Relay</router-link>
 	                    <router-link to="/about" class="app-nav-link">About</router-link>
 	                </nav>
                     <UserWidget />
