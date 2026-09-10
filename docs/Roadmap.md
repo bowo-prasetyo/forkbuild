@@ -92208,3 +92208,108 @@ intact and deliberately scoped to the Publication Center.
 Per this audit's own verdict: **0.9.349 — Post-Publish Distribution Product Reassessment**, asking the harder
 product question this milestone deliberately does not answer itself — is an explicit post-publish distribution
 chooser sufficient, or does real usage surface a genuine value gap remaining? — which may reasonably conclude STOP.
+
+## 0.9.349 — Post-Publish Distribution Product Reassessment
+
+**Type:** Test-only, whole-arc decision milestone. **Production changes:** none — verified directly against
+`git status` at test-run time.
+
+0.9.348's own CONVERGED verdict closed the mechanical question (do both entry points reach the same distribution
+semantics?) and explicitly deferred the harder one to this milestone: now that Publication Distribution is directly
+reachable immediately after local publishing, is there still a genuine user-facing gap in this product arc? This
+milestone stops implementation and answers that question against live evidence, not against 0.9.346-0.9.348's own
+prose.
+
+### What this milestone checks
+
+`tests/PostPublishDistributionProductReassessment.test.js` (new, registered in `tests.html`), ten lettered sections
+(A-J), built fresh and run against real, unmodified production classes and real object graphs — never assumed from
+the three prior milestones' own headers without re-checking against the current tree:
+
+- **Section A** — the complete journey, live: a real Repository Publish (`PublishDocumentUseCase`) produces a real,
+  locally-resolvable Publication; the post-publish entry point (`OwnPublicationPanel`) is bound to it directly, with
+  no `WorldDiscoverySourceRegistry`, `WorldEncounterCanvas`, `selectedEncounter`, or router of any kind; one explicit
+  click reaches the real distribution command/orchestrator/executor chain and succeeds — confirmed both by a live
+  round trip and by a structural check that the entry point itself never reads `this.selectedEncounter` or navigates
+  anywhere to be reached.
+- **Section B** — Publication announcement: a live call reaches a real, well-formed Nostr-shaped discovery result
+  (`discovery.state === PRESENT`, a real event id, a real relay origin) directly from the post-publish surface, with
+  no `selectedEncounter` field present in the harness at all — the original 0.9.346 gap, reconfirmed closed rather
+  than merely restated.
+- **Section C** — Snapshot distribution: a live call proves it still runs through its own pre-existing (0.9.140)
+  command shape (`bytes` in, `{ contentReference, announcement }` out — a genuinely different contract from
+  Publication distribution's `Publication` in, `{ material, discovery }` out) and its own separate ephemeral state
+  family, and never touches Publication distribution's state or vice versa; structurally, `WorldView.js` still wires
+  two distinct wrapper functions and `OwnPublicationPanel.js` calls each command from exactly one place — 0.9.347
+  added a second capability beside Snapshot distribution, never merged or duplicated it.
+- **Section D** — the other three substrates, evaluated on prerequisite fitness rather than feasibility: a live call
+  proves `IpfsRemotePublicationCoordinator` genuinely refuses to publish without a pre-configured hosted endpoint
+  (`"a non-empty endpoint is required — configure remote publishing before ever requesting a publish"`); Bitcoin
+  anchoring's own source is explicit that a connected, funded wallet is a separate prerequisite it does not itself
+  supply; and `BlockchainKind.BASE` remains named but reserved, with no anchor publisher class implementing it
+  anywhere — reconfirming 0.9.346's expectation of "no" with fresh, live evidence rather than repeating it.
+- **Section E** — user agency, live: a real publish with a distribution command present and ready never calls it;
+  merely mounting the entry point with a Publication bound triggers nothing; only the explicit click starts a call.
+  `PublishDocumentUseCase.js` carries no distribution vocabulary, and neither distribution action is invoked from the
+  panel's own `mounted()` hook.
+- **Section F** — partial distribution, live: a real call where Arweave material succeeds and Nostr discovery
+  declines (`relayHandler: () => null`) produces a genuine mixed `{ material: PRESENT, discovery: ABSENT }`
+  lifecycle with no error — 0.9.49/0.9.50's own scenario, reconfirmed one milestone further downstream — plus a
+  structural sweep confirming the Snapshot, Publication, IPFS, and Anchor command/coordinator files import none of
+  one another.
+- **Section G** — discovery vs. distribution, live: a real publish followed by a real, successful Nostr announcement
+  leaves the local Repository read model (`LocalDiscoveryProvider`) byte-for-byte unchanged — announcement is
+  genuinely not admission. Structurally, neither `PublicationDistributionCommand.js` nor
+  `PublicationDistributionOrchestrator.js` imports any part of the decentralized discovery-ingestion/Repository-
+  admission pipeline (`PublicationResolutionCoordinator`, `DecentralizedPublicationDiscoveryProvider`,
+  `CompositeDiscoveryProvider`), and `SnapshotDistributionCommand.js` imports no `DiscoveryProvider`/
+  `PublisherProvider` either — placing or announcing content cannot itself make anything Repository-visible.
+- **Section H** — status/history, asked honestly rather than assumed: no `DistributionHistory`/`DistributionBadge`/
+  `RetryDistribution`/`DeliveryReceipt`/`AggregateDistributionProgress` vocabulary exists anywhere in production; a
+  live check confirms each panel's distribution result is genuinely ephemeral (switching the bound Publication
+  discards the prior result entirely, mirroring every other ephemeral family in this file); and
+  `PublicationDistributionLifecycleStore.js` still maps each Publication to its single latest fact, never a history
+  array.
+- **Section I** — existing architecture, reconfirmed fresh: no `DistributionManager`, generic `distributePublication(`,
+  provider ranking/fallback, distribution queue, retry scheduler, aggregate distribution status, or new distribution
+  lifecycle vocabulary anywhere in production; `PublicationDistributionState` still carries exactly `ABSENT`/`PRESENT`
+  and nothing else; and the local publish/unpublish use cases and the distribution command/orchestrator import
+  neither one another, in either direction.
+- **Section J** — the final product decision matrix and verdict.
+
+### Final product decision matrix
+
+| Capability                          | Available | Reachable after Publish | Further work justified? |
+|--------------------------------------|-----------|--------------------------|--------------------------|
+| Local Publication                     | Yes       | Yes                      | No                       |
+| Publication announcement/discovery    | Yes       | Yes                      | No                       |
+| Snapshot distribution                 | Yes       | Yes                      | No                       |
+| IPFS remote pinning                   | Yes       | Publication Center       | Defer                    |
+| Bitcoin anchoring                     | Yes       | Publication Center       | Defer                    |
+| Base anchoring                        | No (reserved) | -                    | Defer (unimplemented)    |
+| Automatic distribution                | No        | -                        | Deliberately excluded    |
+| Aggregate distribution status/history | No        | -                        | No demonstrated need     |
+
+### Verdict
+
+**STABLE_STOP.** The Post-Publish Distribution arc (0.9.346-0.9.349) is complete. The original reachability gap —
+Publication announcement reachable only by navigating World View and selecting a marker — is closed and live-proven,
+not merely patched around. Snapshot distribution remains independently reachable through its own pre-existing
+action, never absorbed into or duplicated by the new entry point. Local publish/unpublish, distribution outcomes
+(per destination), and Repository admission/discovery remain three genuinely independent concerns, live-proven in
+both directions rather than assumed from prior headers. IPFS pinning and Bitcoin/Base anchoring correctly remain in
+the Publication Center, each for a real, live-demonstrated external-prerequisite reason (a hosted endpoint that must
+already be configured; a connected, funded wallet the codebase's own source says it does not supply; an anchor type
+that is still, on file, unimplemented) — a genuine UX/prerequisite mismatch with an immediate post-publish surface,
+not an arbitrary scoping choice. No distribution-status/history surface — history, per-substrate badges, retry
+controls, aggregate progress, delivery receipts — has a demonstrated need today. The existing architecture holds
+exactly as five previous milestones left it: no distribution manager, no aggregate lifecycle, no provider
+ranking/fallback, no queue, no automatic distribution, no new Publication distribution state, and no coupling
+between local publication lifecycle and external distribution.
+
+### What comes after
+
+No 0.9.350 is pre-selected from within this arc. Per this milestone's own STABLE_STOP verdict, the next milestone
+should come from the broader Product Evolution Reassessment surfacing an actual user-facing gap — never from a
+"Distribution Status" feature built merely because several independent distribution actions now exist side by side,
+and never from the existence of another decentralized substrate that could theoretically grow a button.
