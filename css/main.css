@@ -3004,6 +3004,16 @@ html, body {
     color: #b0b0b0;
 }
 
+/* 0.9.353 — ui/components/ForkFailureDialog.js: same .modal-overlay/
+   .modal-panel/.modal-actions convention as .create-blueprint-dialog
+   above, with no .form-field of its own — just the one explanatory
+   message a fork failure needs. */
+.fork-failure-dialog-message {
+    margin: 0 0 0.85rem;
+    color: #c0c0c0;
+    line-height: 1.4;
+}
+
 /* 0.6.3 — ui/components/StructureInfoPanel.js: same .modal-overlay/
    .modal-panel convention, read-only — no .form-field/.form-input
    anywhere in this panel, only a label/value fact list. */
