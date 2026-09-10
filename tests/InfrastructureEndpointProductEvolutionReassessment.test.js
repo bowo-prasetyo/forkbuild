@@ -121,18 +121,26 @@ async function run() {
         // A4. The three actual runtime consumers, traced by name, never
         // inferred from the file's own prose comments.
         assert(mainSource.includes('nostrQueryImpl: nostrRelayQueryClient'), 'A4. consumer #1 — composeDecentralizedWorldEncounterMaterialDiscoveryServices({ nostrQueryImpl })');
-        assert(mainSource.includes('nostrSnapshotDiscoveryQueryServiceOptions: { queryImpl: nostrRelayQueryClient }'), 'A4. consumer #2 — composeDiscoverSnapshotRuntime({ nostrSnapshotDiscoveryQueryServiceOptions })');
-        assert(mainSource.includes('new NostrPlaceNamingDiscoverySource({ queryImpl: nostrRelayQueryClient })'), 'A4. consumer #3 — NostrPlaceNamingDiscoverySource, Place Naming discovery');
+        assert(mainSource.includes('nostrSnapshotDiscoveryQueryServiceOptions: { queryImpl: nostrRelayQueryClient, relayUrl: resolvedNostrRelayUrl }'), 'A4. consumer #2 — composeDiscoverSnapshotRuntime({ nostrSnapshotDiscoveryQueryServiceOptions })');
+        assert(mainSource.includes('new NostrPlaceNamingDiscoverySource({ queryImpl: nostrRelayQueryClient, relayUrl: resolvedNostrRelayUrl })'), 'A4. consumer #3 — NostrPlaceNamingDiscoverySource, Place Naming discovery');
 
-        // A5. None of the three consuming composition calls passes a
-        // relayUrl override of any kind — every one of them silently
-        // inherits DEFAULT_RELAY_URL from its own query-service file.
-        assert(!mainSource.includes('nostrRelayUrl:'), 'A5. ui/main.js never overrides nostrRelayUrl at the World Encounter composition site');
+        // A5 — UPDATED BY 0.9.369. At the time this milestone (0.9.368) ran,
+        // none of the three consuming composition calls passed a relayUrl
+        // override of any kind — every one of them silently inherited
+        // DEFAULT_RELAY_URL from its own query-service file, exactly the
+        // gap this milestone's own verdict (BUILD_NEXT) named. 0.9.369 —
+        // "Nostr Relay Configuration Boundary" — closed that gap: this
+        // section now reconfirms all three call sites receive a single
+        // resolved `resolvedNostrRelayUrl`, mirroring 0.9.364/0.9.366's own
+        // Arweave Gateway shape, rather than re-asserting an absence this
+        // codebase no longer has.
+        assert(mainSource.includes('const resolvedNostrRelayUrl ='), 'A5. ui/main.js now resolves one effective Nostr relay URL, mirroring resolvedArweaveGatewayUrl');
+        assert(mainSource.includes('nostrRelayUrl: resolvedNostrRelayUrl'), 'A5. ui/main.js overrides nostrRelayUrl at the World Encounter composition site with the resolved value');
         const snapshotCompositionRegion = mainSource.slice(
             mainSource.indexOf('composeDiscoverSnapshotRuntime({'),
             mainSource.indexOf('composeDiscoverSnapshotRuntime({') + 400
         );
-        assert(!/relayUrl:\s*['"]/.test(snapshotCompositionRegion), 'A5. the Snapshot discovery composition call never supplies a concrete relayUrl string either');
+        assert(/relayUrl:\s*resolvedNostrRelayUrl/.test(snapshotCompositionRegion), 'A5. the Snapshot discovery composition call now supplies the resolved relayUrl too');
 
         // A6. Place Naming discovery has NO other discovery source of any
         // kind — Nostr is not merely A source there, it is the ONLY source.
