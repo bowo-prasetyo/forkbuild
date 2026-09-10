@@ -93175,3 +93175,101 @@ independently-scoped popups into one shared container would undermine the case-b
 established. The next seam is a broader product-evolution reassessment, on the same terms 0.9.326 already used
 after 0.9.325 — waiting for a newly observed blocked journey, a real external requirement, or an actual operational
 problem, rather than continuing to optimize the Discovery popup for its own sake.
+
+## 0.9.362 — Post-World-View-Clutter Product Reassessment
+
+**Type:** test-only product reassessment. **Production changes:** none.
+
+0.9.361 closed the Publication Discovery relocation arc with its own STABLE_STOP verdict and explicitly named the
+broader product-evolution reassessment as the next seam, rather than pre-selecting a follow-on relocation. This
+milestone is that reassessment, asked broader than another Discovery audit: now that the main-screen clutter
+candidate 0.9.359 identified has been resolved, does World View still have a genuine product-surface problem worth
+addressing — or is the audit → one narrow change → convergence audit → reassessment → stop arc actually done?
+
+```text
+0.9.359  World View clutter audit
+0.9.360  Publication Discovery relocation
+0.9.361  Relocation convergence audit
+0.9.362  Post-clutter product reassessment   ★ (THIS milestone)
+```
+
+### What this milestone adds
+
+`tests/PostWorldViewClutterProductReassessment.test.js` (new, registered in `tests.html`), ten sections (A-J):
+
+- **A. Reassess the original problem.** Traced to real source, not re-asserted: at rest (no selection, popup
+  closed), `WorldEncounterCanvas` now renders exactly the SVG canvas plus one plain "Publication Discovery" trigger
+  button — every OTHER panel in the file gates on `selectedEncounter`/`comparisonEncounter`/
+  `selectedPublicationComparisonCandidate`. The trigger itself carries no input, result, or vocabulary of its own
+  (isolated by slicing its own opening `<button>` through to its closing tag). The original problem — a standing,
+  selection-independent PANEL rendered by default — is closed; one minimal, standing BUTTON is not the "several
+  accumulated controls" 0.9.359's own problem statement described.
+- **B. Re-inventory the main screen.** Twenty controls across `WorldEncounterCanvas`/`OwnPublicationPanel`/
+  `WorldView`, each freshly classified (EVERYDAY / CONTEXTUAL WORKFLOW / IMPORTANT WORKFLOW / MANUAL INSPECTION /
+  DIAGNOSTIC-RECOVERY / EVERYDAY NAVIGATION) rather than inherited from any prior label — including
+  `OwnPublicationPanel`'s own six-button standing row (Unpublish/Distribute Snapshot/Distribute Publication/Export
+  Snapshot/Check Snapshot Match/Diagnostic Tools), never assumed clean merely because 0.9.359 only named one of its
+  siblings.
+- **C. Revisit the two deliberately-retained candidates.** Snapshot Distribution's two gates (contextual on
+  `WorldEncounterCanvas`, standing on `OwnPublicationPanel`, both bound to the same `distributeWorldEncounterSnapshot`)
+  and Content Comparison's own gates are re-verified fresh, live (`distributablePublication` still returns `null`
+  with no selection in scope) — confirming the 0.9.360 diff, which touched `WorldEncounterCanvas.js` only, altered
+  neither candidate's own gate, template position, or reachability. KEEP and NOT_A_CLUTTER_PROBLEM both stand,
+  reconfirmed rather than merely re-cited.
+- **D. Newly-exposed-clutter test, evidence-only.** The 0.9.360 diff touched exactly one production file and, within
+  it, REMOVED an always-rendered panel (inputs, a submit button, a variable-length result block) and REPLACED it
+  with one fixed-size trigger — a strict reduction, never a concentration. Every pre-existing panel's own `v-if`
+  gate is confirmed independent of `publicationDiscoveryOpen`/`discoveryCommand`, and `OwnPublicationPanel.js`
+  contains zero references to 0.9.360's own vocabulary. No candidate reached "newly prominent AND newly a problem"
+  — the brief's own explicit warning against visual-prominence speculation is honored by finding nothing rather than
+  manufacturing a finding.
+- **E. Diagnostic distinction preserved.** 0.9.324's `diagnosticToolsOpen` (`OwnPublicationPanel`) and 0.9.360's
+  `publicationDiscoveryOpen` (`WorldEncounterCanvas`) remain two independent booleans in two different components —
+  no shared name, no cross-reference, no generic modal-manager/registry abstraction in either file's own code, and
+  no vocabulary bleed between their own popups' markup.
+- **F. Product capability inventory.** Ten named capabilities (vehicle interaction, Publication commentary, Place
+  Naming, Snapshot discovery, Snapshot distribution, Publication discovery, comparison, notifications, decentralized
+  distribution, repository/fork workflows), each checked against real production source for being exposed in an
+  appropriate place. One genuine discovery: World View's own "Edit a Copy" DOES carry fork vocabulary (reusing
+  `PublicationCatalog.js`'s exact `/editor?fork=` mechanism, contextually, only for a selected REGION/LANDMARK/
+  STRUCTURE) — checked directly rather than assumed absent, and found to be convergent reuse, never a duplicate or a
+  standing button.
+- **G. Candidate-generation discipline.** A decision matrix scoring every plausible candidate this reassessment
+  could generate — including `OwnPublicationPanel`'s own standing button row and `WorldView`'s standing
+  toolbar/avatar/search sections, neither named in 0.9.359's own brief — on evidence of problem / existing
+  alternative / new semantics required. Zero candidates reach RELOCATE.
+- **H. Architecture regression.** Presentation duplication (one `modal-overlay` per file), hidden state coupling
+  (both `publicationDiscoveryOpen` and `diagnosticToolsOpen` confirmed unread/unwritten by any method or computed
+  property, each written from exactly 3 real-code locations), command duplication (`discoverPublication` bound once;
+  `distributeWorldEncounterPublication` defined once), upward dependencies (neither component imports from
+  `ui/views`), and modal-lifecycle-into-domain-state leakage (neither boolean ever reaches an `application/`-layer
+  call) — all checked fresh; none found.
+- **I. Reachability.** A live call through the real, unmodified `discoverPublication()` → `discoveryCommand` →
+  `isDiscoveredPublicationSelectable` → `selectDiscoveredPublication()` chain, independent of whether the popup
+  wrapping it exists at all, proves Discover Publication's complete original capability survives the relocation.
+- **J. Final product verdict.**
+
+### Verdict
+
+**STABLE_STOP.** The original clutter problem is closed (Section A); the re-inventoried main screen holds up under
+fresh classification (Section B); both deliberately-retained candidates reconfirm KEEP/NOT_A_CLUTTER_PROBLEM with
+live evidence (Section C); no newly-exposed clutter was found, evidenced rather than assumed (Section D); the two
+diagnostic-surface arcs remain independent (Section E); all ten named product capabilities are appropriately exposed
+(Section F); every generated candidate scores KEEP, never RELOCATE (Section G); zero architecture regressions were
+introduced (Section H); and Discover Publication's full capability remains reachable end to end (Section I). This
+reassessment deliberately re-opened whether 0.9.360 was the whole problem, rather than assuming it, and found no
+second genuine problem.
+
+### What this milestone deliberately excludes
+
+Per its own Type and explicit scope: no production-code change of any kind. No relocation performed. No new feature
+proposed. No merge of the 0.9.324/0.9.360 diagnostic surfaces. No change to any command, prop, data, or method
+anywhere in `WorldEncounterCanvas.js` or `OwnPublicationPanel.js`.
+
+### What comes after
+
+None is pre-selected. World View's reachable product surface is now verified coherent for a second, independent
+time (0.9.359 and 0.9.362) — the next milestone should come from genuine product evolution (a newly observed
+blocked journey, a real external requirement, an actual operational problem), never from continuing to re-examine a
+surface this codebase has now checked twice and found clean both times. This closes the 0.9.356-0.9.362 UI-cleanup
+arc.
