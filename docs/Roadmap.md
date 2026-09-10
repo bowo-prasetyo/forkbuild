@@ -93758,3 +93758,41 @@ authority anywhere. If that confirms the boundary is clean: **0.9.371 — Nostr 
 **0.9.372 — Nostr Relay Lifecycle/Product Reassessment**, asking whether this actually closed the recovery gap
 0.9.368 demonstrated, and whether the silent-empty-result discovery UX (0.9.368's own Section B, deliberately
 untouched here) deserves its own, separate product decision.
+
+## 0.9.370 — Nostr Relay Configuration Convergence Audit
+
+**Type:** test-only. **Production changes:** NONE.
+
+0.9.369 gave a user's own Nostr relay choice a real value object, a durable store, and THREE wired read-path
+composition call sites — and its own three test files each proved one of those pieces correct in isolation. None of
+the three asked the harder, cross-cutting question this milestone answers: now that the configuration has crossed
+four boundaries (value object -> persistence -> composition root -> three independent read-path runtimes), do those
+pieces actually converge on one consistent story, with no second authority anywhere, and with the write
+(publishing) path genuinely unreachable by it? This is the direct structural mirror of 0.9.365's own Arweave Gateway
+convergence audit, applied to three read paths instead of two, and to a stateful WebSocket transport instead of
+`fetch`.
+
+`tests/NostrRelayConfigurationConvergenceAudit.test.js` answers with nine sections: configuration authority (one
+value object, one storage key, one composition point — a repo-wide structural sweep, not just this feature's own
+files); absence vs. an explicit default staying distinguishable facts in persistence even where their effective
+relay coincides; all THREE read paths proven against the CONCRETE WebSocket construction inside
+`nostr/NostrRelayQueryClient.js`'s own real, unmodified transport (not just a constructed instance's own `relayUrl`
+getter), default and custom; independent composition — three genuinely separate store/StorageProvider/transport
+triples converging on one relay with no shared singleton; restart convergence across independent store and
+StorageProvider instances sharing one storage namespace; failure semantics confirming an unreachable custom relay
+fails through each of the three consumers' own existing contract (two collapse to `[]`, one rejects) with zero
+fallback attempt against `relay.damus.io`; write-path isolation proven behaviorally — a read-path override on file
+at the exact same moment never reaches any of the three Nostr publishers' own resolved `relayUrl`, verified against
+the concrete `publishImpl` call; cross-configuration isolation — `NostrRelayConfiguration` and
+`ArweaveGatewayConfiguration` round-trip independently through one shared storage namespace with no key collision
+and no value bleed in either direction, and neither family references the other, IPFS, Bitcoin, Base, peer
+connectivity, or `RoleProviderPreference`, in either direction; and URL semantics confirming every trailing-slash
+variant is preserved byte-for-byte — the deliberate opposite of `ArweaveGatewayConfiguration`'s own normalization —
+and reaches the concrete transport unchanged, with no consumer ever concatenating onto `relayUrl`.
+
+Every section passed against the existing 0.9.369 implementation unmodified — no convergence defect was found, so no
+production change was made. Deliberately left alone, per 0.9.369's own sequencing: the existing
+"relay failure -> empty/silent discovery result" UX (0.9.368's own Section B) is a separate, later product question
+about failure visibility, not a configuration-convergence concern — fixing it here would make this milestone
+responsible for a problem it did not create. With this milestone confirming the boundary is clean, the sequencing
+continues: **0.9.371 — Nostr Relay Settings UI**, then **0.9.372 — Nostr Relay Lifecycle/Product Reassessment**.
