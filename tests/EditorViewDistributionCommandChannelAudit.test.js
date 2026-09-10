@@ -305,8 +305,16 @@ async function run() {
         const optionalInjectCalls = editorViewRaw.match(/inject\('[a-zA-Z]+',\s*null\)/g) || [];
         assert(optionalInjectCalls.length >= 4,
             `19. at least 4 of those already use the exact inject(key, null) optional/degrade-to-null shape a publicationDistributionCommand injection would use — found ${optionalInjectCalls.length}: ${JSON.stringify(optionalInjectCalls)}`);
-        assert(!editorViewRaw.includes("inject('publicationDistributionCommand'"),
-            '20. EditorView.js does NOT yet inject publicationDistributionCommand — the gap 0.9.375 identified still stands, confirmed fresh');
+        // 0.9.377 — EditorView Post-Publish Distribution Action closed
+        // exactly the gap this section identified, using exactly the
+        // option this section's own verdict recommended (Section J,
+        // below): the identical inject(key, null) shape, never a new
+        // channel. This assertion now confirms the closure rather than
+        // the gap — the rest of this audit's own evidence (Sections A-C,
+        // E-J) is unaffected, since none of it depended on the gap
+        // staying open.
+        assert(editorViewRaw.includes("inject('publicationDistributionCommand', null)"),
+            '20. EditorView.js now injects publicationDistributionCommand — 0.9.377 closed the gap this section identified, using the exact inject(key, null) shape recommended below');
 
         // Option 3 — ActionFeedback as command carrier. Reconfirmed
         // absent and still architecturally rejected (0.9.375, Sections

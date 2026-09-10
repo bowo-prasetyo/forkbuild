@@ -75,7 +75,13 @@ export default {
             default: null
         }
     },
-    emits: ['back-to-world', 'open-shortcuts'],
+    // 0.9.377 — EditorView Post-Publish Distribution Action. `published`
+    // carries the EXACT Publication object publish() below already holds
+    // as a local variable — never a re-derived lookup — so EditorView can
+    // offer a "Distribute now" action over that same identity without
+    // Toolbar knowing anything about distribution itself. Emitted only on
+    // a SUCCESSFUL publish; the catch branch below never emits it.
+    emits: ['back-to-world', 'open-shortcuts', 'published'],
     setup(props, { emit }) {
         const dirty = ref(props.documentManager.state.dirty);
         const recentDocuments = ref(props.loadDocumentUseCase.listSavedDocuments());
@@ -131,6 +137,11 @@ export default {
             try {
                 const publication = props.publishDocumentUseCase.execute(props.documentManager);
                 report(`Published "${publication.title}"`);
+                // 0.9.377 — forwards the exact just-published Publication
+                // to whichever host holds a `@published` listener. What,
+                // if anything, a listener does with it is entirely its
+                // own concern — see EditorView.js's own 0.9.377 comment.
+                emit('published', publication);
             } catch (err) {
                 report(`Publish failed: ${err.message}`);
             }

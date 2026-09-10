@@ -94396,3 +94396,94 @@ per this milestone's own Section I.
 Per its own type: no production-code change of any kind. `EditorView.js` receives no `inject()` call and no
 wrapper function. `ActionFeedback.js` is not modified. `OwnPublicationPanel` is not mounted anywhere it wasn't
 already. This milestone identifies and evidences the seam; it does not build it.
+
+## 0.9.377 — EditorView Post-Publish Distribution Action
+
+0.9.376's own `BUILD_NEXT` verdict handed this milestone a five-line scope. This is that seam, built:
+
+```text
+Toolbar.publish()  (existing, unchanged in what it decides)
+        │  new `published` emit — the exact local Publication it already holds
+        ▼
+EditorView#onDocumentPublished(publication)   (NEW)
+        │  user clicks "Distribute now"
+        ▼
+EditorView#distributePublishedDocument()   (NEW — mirrors OwnPublicationPanel.js's own
+        │                                    distributeOwnPublication() exactly)
+        ▼
+distributeEditorPublication(publication)   (NEW — mirrors WorldView.js's own
+        │                                    distributeWorldEncounterPublication() byte-for-byte in shape)
+        ▼
+publicationDistributionCommand(...)   (injected — the SAME app-wide command
+                                        WorldView.js/OwnPublicationPanel.js already call)
+```
+
+**Command injection, unchanged in shape.** `ui/views/EditorView.js` now calls
+`inject('publicationDistributionCommand', null)` — the tenth optional app-wide capability this view injects, and the
+identical `inject(key, null)` shape four of the other nine already use. No new `provide` call, no new
+composition-root wiring in `ui/main.js`.
+
+**Publication identity, held directly.** `ui/components/Toolbar.js`'s own `publish()` is unchanged in what it
+decides — it still computes the Publication, still calls `report(...)` — and now additionally emits it via a new
+`published` event, carrying the exact local variable it already held. `EditorView.js`'s own `onDocumentPublished()`
+is the *only* place that ever writes `publishedPublication`; nothing re-derives "the latest Publication" through a
+catalog or session lookup.
+
+**The action is EditorView-owned, never folded into `ActionFeedback.js`.** Per this milestone's own key
+implementation rule, `ActionFeedback.js` is untouched — still non-interactive, still no `onAction`/`emits`.
+`EditorView.js` instead owns a small, dedicated ephemeral state family —
+`publishedPublication`/`distributionExecuting`/`distributionError`/`distributionResult` — mirroring
+`OwnPublicationPanel.js`'s own `publicationDistributionExecuting`/`publicationDistributionError`/
+`publicationDistributionResult`/`publicationDistributionRequestId` family exactly, one caller over. A "Distribute
+now" action renders only while `publishedPublication` holds a value; dismissing it, or a later publish superseding
+it, simply clears/replaces that ephemeral state — no persistence, no "needs distribution" flag, no notification
+record, no retry queue, no distribution history, no unread state.
+
+**Explicit agency, never automatic.** `onDocumentPublished()` only ever assigns `publishedPublication` and resets
+the ephemeral family — it never calls `distributeEditorPublication()` or `publicationDistributionCommand()` itself.
+Distribution only ever happens on a later, separate, explicit "Distribute now" click, mirroring the exact
+`publishActiveDocument()`/`distributeWorldEncounterPublication()` separation `WorldView.js` already holds.
+
+**Existing result/failure semantics, reused verbatim.** A successful call stores the command's own
+`PublicationDistributionResult` directly; a rejection (genuine or a synchronous construction throw) surfaces through
+the SAME one fixed, generic message `OwnPublicationPanel.js`'s own `distributeOwnPublication()` already uses —
+`'Publication distribution could not be completed.'` — never a new `EDITOR_DISTRIBUTION_*` vocabulary. A Publication
+the command can no longer act on (e.g. subsequently unpublished) surfaces through that identical existing
+vocabulary; this view invents no lifecycle classification of its own.
+
+**Multiple publications, no global "last Publication" lookup.** Each `onDocumentPublished()` call replaces
+`publishedPublication` wholesale — Publish A produces action A, Publish B produces action B, and clicking B's own
+action distributes exactly B, never A, with A's own stale in-flight response (if any) guarded out by the identical
+per-call `requestId` pattern `OwnPublicationPanel.js`/`WorldView.js` already use.
+
+### Tests
+
+`tests/EditorViewPostPublishDistributionAction.test.js` — ten sections (A–J) covering command injection, exact
+Publication identity end to end (live, through the real orchestrator/executor/lifecycle chain), the "zero
+distribution calls from publish alone" invariant (both live and via source-text regression on `Toolbar.js`'s own
+`publish()`), successful and failing distribution (rejection, synchronous throw, no-command inertness, duplicate-click
+guarding), the multiple-Publications/no-stale-leak case, `WorldView.js`'s own path left unaffected, the
+unpublish/lifecycle interaction reusing existing vocabulary, and a live regression run of five pre-existing
+Publication Distribution test files. Because `EditorView.js`/`Toolbar.js` both import `vue`, this file uses the same
+marker-based source-extraction-plus-`new Function` technique `tests/ForkFailureUXConvergenceAudit.test.js` and
+`tests/EditorViewDistributionCommandChannelAudit.test.js` already established, executing the real, current
+production source rather than a hand-retyped copy.
+
+`tests/EditorViewDistributionCommandChannelAudit.test.js` (0.9.376) had one assertion whose entire purpose was
+confirming the gap this milestone closes was still open ("EditorView.js does NOT yet inject
+publicationDistributionCommand"). That single assertion is flipped to confirm the closure instead; the rest of that
+audit's own evidence (Sections A–C, E–J) never depended on the gap staying open and is unmodified.
+
+### What this milestone deliberately excludes
+
+Per 0.9.376's own recommended scope and this milestone's own brief: no change to `ActionFeedback.js`'s semantics; no
+automatic distribution (publishing alone never calls the command); no distribution retry, scheduling, history, or
+status persistence; no notification events; no provider selection or fallback; no new distribution command, use
+case, orchestrator, or provider; no generic UI command bus; no change to `WorldView.js`'s own distribution wiring or
+to the distribution orchestrator/executor/lifecycle themselves.
+
+No `0.9.378` is pre-selected here. 0.9.376's own suggestion — a test-only Post-Publish Distribution Action
+Convergence Audit proving `EditorView`/`WorldView`/`OwnPublicationPanel` all converge on the same command with exact
+Publication identity and identical failure semantics — remains a reasonable next step if a future milestone wants to
+close this gap out formally, but per 0.9.374's own `STABLE_STOP`, another feature should not be assumed to follow
+automatically.

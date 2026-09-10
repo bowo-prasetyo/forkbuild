@@ -517,10 +517,20 @@ async function run() {
             '34. ActionFeedback.js declares no onAction/actionLabel/actionCommand prop and emits nothing — Path 1 does not exist yet, and building it means revising this component\'s own documented restraint, not adding to it');
 
         // Path 2 — give EditorView its own distribution-command wiring.
-        // Confirmed absent today (Section D already proved this).
+        // Confirmed absent at the time this milestone ran (Section D
+        // already proved that). 0.9.376's own follow-up audit named this
+        // exact path BUILD_NEXT, and 0.9.377 — EditorView Post-Publish
+        // Distribution Action — built it: EditorView.js now injects
+        // publicationDistributionCommand and calls its own
+        // distributeEditorPublication() wrapper, mirroring WorldView.js's
+        // own distributeWorldEncounterPublication() in shape. This
+        // assertion now confirms that closure rather than the absence
+        // this milestone originally found — the rest of this section's
+        // (and this file's) own evidence is unaffected, since none of it
+        // depended on Path 2 staying unbuilt.
         const editorViewCode = await codeOnlySource('ui/views/EditorView.js');
-        assert(!editorViewCode.includes('publicationDistributionCommand') && !editorViewCode.includes('distributeWorldEncounterPublication'),
-            '35. EditorView.js has no distribution-command wiring of its own today — Path 2 does not exist yet either, and building it means giving EditorView a materially larger capability than a toast currently has any way to reach');
+        assert(editorViewCode.includes("inject('publicationDistributionCommand', null)") && editorViewCode.includes('function distributeEditorPublication(publication)'),
+            '35. EditorView.js now has its own distribution-command wiring — 0.9.377 built Path 2, using the exact inject(key, null) + wrapper shape this section originally described as the gap');
 
         // No forbidden shortcut vocabulary (a generic notification
         // manager, a toast-specific distribution wrapper) exists
@@ -531,7 +541,7 @@ async function run() {
             assert(hits.length === 0, `36. no "${term}" vocabulary exists anywhere in production`);
         }
 
-        console.log('✓ Section I: neither real path forward (an interactive ActionFeedback, or a distribution-command channel into EditorView) exists yet, and no shortcut vocabulary has been half-built toward either — confirmed fresh, not assumed');
+        console.log('✓ Section I: Path 1 (an interactive ActionFeedback) still does not exist — that restraint holds. Path 2 (a distribution-command channel into EditorView) has SINCE been built, by 0.9.377, using exactly the inject(key, null) + wrapper shape this section originally described as the gap; no shortcut vocabulary was ever half-built toward either.');
     }
 
     // ---------------------------------------------------------------
@@ -561,6 +571,11 @@ async function run() {
         console.log('  own real channel to the existing distribution command (Path 2, Section I), a materially larger, structurally different');
         console.log('  decision than this milestone\'s own proposed scope. That decision is real and left on record for a future milestone; it is');
         console.log('  not built here, and it is not the same milestone as making ActionFeedback clickable.');
+        console.log('');
+        console.log('  UPDATE (0.9.377): the decision this milestone left on record — giving EditorView its own real channel to the');
+        console.log('  existing distribution command — has since been built, per 0.9.376\'s own BUILD_NEXT audit. Section I\'s own assertion');
+        console.log('  35 above now confirms that closure rather than the gap this milestone originally found; every other assertion in');
+        console.log('  this file is unaffected, since none of them depended on Path 2 staying unbuilt.');
 
         console.log('\n✅ All Post-Publish Distribution Guidance Actionability Audit tests passed.');
     }
