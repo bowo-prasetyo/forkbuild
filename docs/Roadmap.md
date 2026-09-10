@@ -93519,3 +93519,94 @@ Gateway Settings Lifecycle / Product Audit** — confirming this small feature i
 before deciding whether any other endpoint genuinely deserves the same treatment. The product story stays narrow on
 purpose: "if the deployment's Arweave gateway cannot retrieve content, the user can explicitly choose another
 gateway."
+
+## 0.9.367 — Arweave Gateway Settings Product & Lifecycle Reassessment
+
+Test-only. 0.9.364-0.9.366 already answer "does the configuration work?" This milestone asks a different question,
+once: does it actually close the infrastructure-resilience gap it was built for, and — now that a real, shipped
+feature exists to compare against instead of a speculative guess — does any other endpoint 0.9.363 inventoried
+genuinely deserve the same treatment next?
+
+```text
+Deployment default          Before:
+      │                     default gateway unavailable -> retrieval fails -> no user recovery mechanism
+      ▼
+Gateway unavailable         After:
+      │                     default gateway unavailable -> user selects alternative -> restart -> retrieval
+      ▼                     uses alternative
+User opens Settings
+      │
+      ▼
+Configures alternative
+      │
+      ▼
+Restart application
+      │
+      ▼
+Content retrieval succeeds
+```
+
+`tests/ArweaveGatewayLifecycleReassessment.test.js` is a single, self-contained suite (it assumes nothing from any
+earlier Arweave Gateway test file still passing) built against the real production classes — never a mocked
+collaborator — with only the two genuine environment seams this codebase already treats as injection points
+(`StorageProvider`, `fetchImpl`) supplied by hand:
+
+- **Section A — capability inventory.** Confirms every piece the spec named is actually present: the value object,
+  the persistent store, clear/reset, the settings view, startup composition, both retrieval call sites, and
+  write-path isolation — one sweep, not a re-read of prior milestones' own sweeps.
+- **Section B — user-value closure.** The full before/after journey, against real `ArweaveWorldEncounterMaterialResolver`
+  and `ArweaveContentStore` instances: a genuinely unreachable deployment default (a rejected `fetch`, not a 404)
+  fails retrieval outright with no recovery; a settings save; a real restart boundary (a brand-new store instance
+  over the same underlying storage); and retrieval then succeeding against the chosen alternative, for both World
+  Encounter material and Snapshot content. Stronger evidence than "a URL gets stored" — this is the actual claimed
+  user value, proven against the concrete `fetch` call on both sides of the failure.
+- **Section C — reset semantics.** Custom -> Clear -> restart converges to the deployment default; a structural check
+  of `useDeploymentDefault()` confirms it resets the displayed configuration AND the text input in the same
+  synchronous step, so the UI cannot leave a stale custom URL on screen after clearing.
+- **Section D — scope isolation.** `resolvedArweaveGatewayUrl` is declared exactly once and consumed at exactly two
+  call sites in `ui/main.js`; every other composition (uploads, Snapshot distribution, Nostr, IPFS, Bitcoin, Base,
+  peer connectivity) is confirmed structurally free of it, and the reverse — the write-path composition blocks never
+  mention it either.
+- **Section E — multi-user/browser isolation.** This is a flat, single, browser-local preference with no per-user
+  dimension anywhere in this app (confirmed by the store's own constructor shape, which takes only a
+  `StorageProvider`) — and behaviorally, two independent storage namespaces (standing in for two separate browser
+  profiles) never observe or overwrite each other's configuration.
+- **Section F — failure semantics.** Invalid input rejected; a genuine storage failure (quota/unavailable) propagates
+  rather than being swallowed; an unreachable custom gateway fails loudly on both retrieval paths; and, the point
+  this section exists to nail down, a custom gateway's failure is proven — against a scenario where the deployment
+  default would have SUCCEEDED — to never trigger any automatic fallback attempt. Exactly one request is made, to
+  exactly the configured host, every time.
+- **Section G — configuration discoverability.** A product-language audit of the real settings page copy: the
+  retrieval-only scope is stated in one plain sentence (not left for the reader to infer from architecture);
+  "Use Deployment Default" is grounded by displaying the actual concrete URL in effect rather than standing as a bare
+  toggle; and the page never leaks unrelated infrastructure vocabulary (IPFS/TURN/STUN/Nostr/Bitcoin/Base/Rendezvous)
+  that would make its scope feel broader than one gateway. One non-blocking finding recorded (see below).
+- **Section H — existing infrastructure candidates, reassessed with real evidence.** 0.9.363 rated IPFS Gateway
+  "High — same reasoning as Arweave Gateway," before any shipped feature existed to compare against. With Arweave
+  Gateway now real, the actual composition tells a narrower story: `application/
+  DecentralizedWorldEncounterMaterialDiscoveryRuntimeComposition.js` — the one place a default gateway being
+  unreachable blocks the CORE World Encounter loop — is wired from Local + Nostr + Arweave only; IPFS never appears
+  in it. `IpfsGatewayContentStore`'s own two real call sites in `ui/main.js` are both opt-in, per-item paths
+  (resolving a Snapshot placement a publisher specifically chose IPFS for, and the secondary "Observe Content"
+  verification action) — never a deployment-wide default the way Arweave Gateway is for World Encounter material and
+  Snapshot retrieval. STUN/TURN (still one flat `iceServers` array, reconfirmed against the current source),
+  Rendezvous (still deployment/bootstrap identity, no per-user recovery scenario), Nostr relay (still duplicated
+  across multiple files with no single configuration authority — a consolidation prerequisite, not itself a
+  demonstrated recovery gap), Bitcoin Esplora, and Base RPC (both explicit, occasional anchoring actions, never the
+  default content pipeline) are all reconfirmed DEFER, unchanged from 0.9.363.
+- **Section I — timing semantics.** No `watch()`/`watchEffect()` of any kind ties the settings view to a running
+  composition, the view never imports a composition function, and `ui/main.js` resolves the effective gateway exactly
+  once, at startup. "Settings says gateway-B, running gateway says gateway-A" cannot structurally arise — there is no
+  live re-composition to disagree with what the page displays.
+
+**Recorded finding (non-blocking, not fixed by this test-only milestone):** the settings page's "Saved." confirmation
+does not itself state that a change takes effect on the next application load rather than immediately. Section I
+confirms the page is never actually misleading (there genuinely is no live re-composition to contradict it) — it
+simply doesn't say anything about timing either way. A one-line copy addition is a plausible future micro-revision;
+it is not a defect this milestone corrects, since 0.9.367 is test-only by design.
+
+**Verdict: `STABLE_STOP`.** The Arweave Gateway feature closes the gap it was built for — a real, evidenced
+before/after user journey, not merely a URL being stored — and no other endpoint candidate reassessed in Section H
+carries a demonstrated user-value gap comparable to Arweave Gateway's default-backbone role. IPFS Gateway remains the
+strongest `DEFER`: a genuine but structurally narrower, opt-in-per-item failure mode, worth revisiting only if it
+ever becomes a default path rather than an optional one. No production code changed in this milestone.
