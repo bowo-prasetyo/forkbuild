@@ -4796,7 +4796,6 @@ export default {
                 >
                     <WorldEncounterCanvas
                         :discoveryCommand="discoverWorldEncounterPublicationCommand"
-                        :defaultDiscoveryTag="publicationDiscoveryTag"
                         :registry="worldDiscoverySourceRegistry"
                         :materialSources="worldEncounterMaterialSources"
                         :materialVerifier="worldEncounterMaterialVerifier"
@@ -4808,6 +4807,7 @@ export default {
                         :getPublicationCommentariesCommand="getPublicationCommentariesCommand"
                         :addPublicationCommentaryCommand="addPublicationCommentaryCommand"
                         :viewerIdentityId="myIdentityId"
+                        :defaultDiscoveryTag="publicationDiscoveryTag"
                     />
                 </CollapsibleSection>
             </div>
