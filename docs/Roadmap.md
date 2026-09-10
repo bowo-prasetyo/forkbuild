@@ -93081,3 +93081,97 @@ preference of any kind — this is a presentation change local to one component,
 
 No further relocation is pre-selected. A short Publication Discovery Relocation Convergence Audit is the natural
 next seam, mirroring 0.9.325's own role after 0.9.324, before any broader product reassessment.
+
+## 0.9.361 — Publication Discovery Relocation Convergence Audit
+
+**Type:** Test-only. **Production changes:** none.
+
+0.9.360 moved Discover Publication behind a "Publication Discovery" trigger/popup, and its own test
+(`tests/RelocatePublicationDiscoveryToDiagnosticSurface.test.js`) already proved the relocation's PLACEMENT — the
+panel is a descendant of the new popup, the trigger reaches the real `discoverPublication()`, exactly one command
+path exists, and Snapshot Distribution/Content Comparison sit outside it. Mirroring 0.9.325's own role after
+0.9.324, this milestone asks the narrower, harder question that placement suite was never positioned to answer:
+does wrapping the panel in a popup risk turning `publicationDiscoveryOpen` into something more than presentation —
+a hidden gate on discovery semantics, a place where state quietly resets, or a dismissal path that behaves
+differently from another?
+
+The governing invariant, proven from several angles:
+
+```text
+Same discovery capability, same command, same state, different presentation location.
+
+popup visibility   ≠ discovery lifecycle
+component lifetime ≠ popup lifetime
+```
+
+### What this milestone adds
+
+`tests/PublicationDiscoveryRelocationConvergenceAudit.test.js` (new, registered in `tests.html`), nine sections:
+
+- **A. Primary-surface convergence** — the trigger is reachable, gated on `discoveryCommand`; opening the popup is
+  a bare boolean assignment that never itself performs discovery.
+- **B. Command identity** — exactly one `discoverPublication` binding, one `discoveryCommand` prop declaration, and
+  exactly one call site of `this.discoveryCommand(...)` inside `methods:` — confirmed by isolating that block from
+  the rest of the file, not merely grepping the whole source.
+- **C. Canonical tag continuity** — open → `forkbuild-publication` → edit → `custom-tag` → Discover → `custom-tag`,
+  live, through the real `discoverPublication()`, PLUS the specific claim 0.9.360's own test never checked: the
+  popup does not re-seed the canonical tag across any number of close/reopen cycles after a Wanderer's own edit,
+  including after a completed Discover call.
+- **D. State preservation, by OBJECT IDENTITY — the flagship.** discover → receive results → select Publication →
+  close → reopen, asserting every discovery-related field (`discoveryObjectId`/`Tag`/`discovering`/`Error`/
+  `Result`/`RequestId`/`selectedDiscoveredPublication`) is the exact same reference across the toggle, including a
+  nested field inside `discoveryResult` itself — not merely an equal-looking copy, mirroring
+  `DiagnosticToolsSurfaceConvergenceAudit.test.js`'s own `captureRefs`/`assertSameRefs` technique one popup over.
+- **E. Fresh-session semantics** — a genuinely new component instance (a second, independent call to
+  `WorldEncounterCanvas.data()`) inherits none of a first instance's discovery history, hand-edited tag, or request
+  counter, proven by direct reference inequality — contrasted directly against Section D's own close/reopen
+  continuity to make the two axes ("popup visibility ≠ discovery lifecycle" vs. "component lifetime ≠ popup
+  lifetime") concrete rather than merely asserted in prose.
+- **F. Outside-click vs. explicit Close** — proves, structurally, that both dismissal paths perform the
+  byte-identical `publicationDiscoveryOpen = false` assignment, then proves live that dismissing (by either
+  mechanism) clears no discovery field, never mutates the selected World Encounter, and never invokes
+  `discoveryCommand`; a dedicated case starts a request with a controlled, still-pending Promise, dismisses the
+  popup WHILE it is in flight, and confirms the result still lands once the Promise resolves — dismissal never
+  cancels an in-flight discovery.
+- **G. Discovery failure convergence** — a genuine rejection, through the popup, for both the canonical tag and an
+  arbitrary custom tag, produces the exact same pre-existing `'Discovery could not be completed.'` text; a
+  vocabulary guard confirms `WorldEncounterCanvas.js` defines no local status/outcome enum of its own anywhere in
+  the file — every status it ever renders is forwarded verbatim from an already-existing result.
+- **H. World Encounter regression** — live, through the real, unmodified `selectEncounter()`: selecting an ordinary
+  World Encounter, then running a full discovery cycle through the open popup, leaves the `selectedEncounter`
+  reference untouched; selecting a second, different World Encounter while the popup stays open still works
+  normally and neither closes the popup nor resets its discovery state. Snapshot Distribution and Content
+  Comparison are reconfirmed positioned entirely outside the popup.
+- **I. Diagnostic-surface semantics** — `publicationDiscoveryOpen` appears exactly 5 times in real code (one
+  `data()` default, one open, two close paths, one `v-if` read); it is read or written by no method and no
+  computed property (checked by isolating both blocks from the file); no discovery-domain vocabulary
+  (discovered/loading/resolved/failed/"active discovery session") sits near either of its writes; and toggling it
+  alone, with no discovery ever run, leaves every other field exactly at its `data()`-seeded default.
+- **J. Final convergence matrix** — the Before/After table this milestone's own product brief specified, printed
+  alongside the verdict.
+
+### Verdict
+
+**STABLE_STOP.** Every section passed on the first run of the audit as written — two adversarial mutation checks
+(making the Close button additionally clear `discoveryResult`; making `discoverPublication()` additionally clear
+`selectedEncounter`) were run against the real component to confirm Sections F and H are not vacuous, and both were
+caught before being reverted. No regression was found in `ui/components/WorldEncounterCanvas.js`. The full existing
+Publication Discovery suite (`RelocatePublicationDiscoveryToDiagnosticSurface`, `PublicationDiscoveryTagConvergenceAudit`,
+`PublicationDiscoveryTagUXConsistencyAudit`, `WireCanonicalPublicationDiscoveryTag`, `WorldViewMainScreenClutterProductAudit`)
+was re-run unmodified and passes exactly as before this milestone.
+
+### What this milestone deliberately excludes
+
+Per its own explicit scope: re-proving the full production network/composition stack, already proved by
+`PublicationDiscoveryTagConvergenceAudit.test.js` (0.9.358); re-proving the placement claims
+`RelocatePublicationDiscoveryToDiagnosticSurface.test.js` (0.9.360) already established structurally; any change to
+`discoverPublication()`, `discoveryCommand`, `defaultDiscoveryTag`, or any command/composition/query-layer file; and
+any relocation of Snapshot Distribution or Content Comparison.
+
+### What comes after
+
+With this audit STABLE_STOP, no generic "Diagnostics" menu is indicated — folding 0.9.324's and 0.9.360's two
+independently-scoped popups into one shared container would undermine the case-by-case principle 0.9.359 already
+established. The next seam is a broader product-evolution reassessment, on the same terms 0.9.326 already used
+after 0.9.325 — waiting for a newly observed blocked journey, a real external requirement, or an actual operational
+problem, rather than continuing to optimize the Discovery popup for its own sake.
