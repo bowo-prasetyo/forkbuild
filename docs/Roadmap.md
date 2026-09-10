@@ -91958,3 +91958,92 @@ constraints: is polling discipline (construction + relationship-change only) suf
 a genuine gap that would justify a bounded interval? Should failed peers ever be retried? Does the product need a
 second, independent "Automatically Connect to Known Peers" setting, distinct from "Be Discoverable"? Only that
 reassessment, not this milestone, should decide whether to add UX, notifications, or a new setting.
+
+## 0.9.346 — Known-Peer Auto-Connection Product Reassessment
+
+**Type:** Test-only. **Production changes:** none.
+
+0.9.345 put a real, production `AutoConnectKnownPeersUseCase` in front of every Known Peer relationship. Combined
+with 0.9.342's own `PublicationPeerConnectionSync`, that connection now also exchanges Publication metadata
+automatically, with no human gesture. This milestone asks 0.9.343's own question one layer earlier: is the
+resulting end-to-end arc — relationship -> lookup -> connection -> metadata sync -> Repository visibility —
+genuinely complete, or does real usage surface a concrete remaining gap? Answered against real, live, production
+code throughout (`tests/AutoConnectKnownPeersProductReassessment.test.js`, new, registered in `tests.html`), never
+by re-reading 0.9.345's own header.
+
+### Two genuine, non-obvious findings this reassessment surfaces
+
+1. **A concurrent-attempt race (Section D).** A manual "Find Someone" attempt racing CONCURRENTLY with
+   `AutoConnectKnownPeersUseCase`'s own in-flight pass for the SAME identity can open a genuine second,
+   independent authenticated session — its dedup check only guards against a second attempt by itself, never
+   against an independent, simultaneous one. Live-reproduced, then immediately controlled: two concurrent MANUAL
+   attempts alone, with 0.9.345 removed from the picture entirely, produce the identical duplicate. This is a
+   pre-existing property of `application/ConnectToPeerUseCase.js#connect()` (0.2.50) never claiming an opinion
+   about what else is already in flight — not a new risk 0.9.345 introduced or made worse.
+2. **Sequential-pass starvation on a hung lookup (Section E).** `AutoConnectKnownPeersUseCase#_runOnce()` awaits
+   each Known Peer's attempt one at a time. A lookup that never resolves for one identity delays every OTHER known
+   peer ordered after it in that SAME pass indefinitely — genuinely different from a fast rejection (0.9.345's own
+   Section F), which resolves and lets the loop continue. The application itself never depends on this: an
+   unrelated manual "Find Someone" attempt is completely unaffected while the hang is in progress, live-confirmed.
+
+### Sections
+
+- **A. FLAGSHIP.** Known relationship -> relationship already loaded -> discoverability lookup -> automatic
+  connection -> automatic Publication metadata sync -> Repository search -> Explore-lookup -> Fork boundary, over
+  real production classes throughout, with zero manual connection gesture. The one unchanged nuance, exactly as
+  0.9.343 already found: Repository visibility still requires the pre-existing, deliberate Retrieve action.
+- **B.** Startup semantics, live-confirmed: construction evaluates the existing relationship set exactly once (one
+  lookup); a peer not yet discoverable at that moment stays unconnected with no periodic re-check, even a full
+  200ms later — the concrete shape of 0.9.344 Section I's own polling-discipline constraint.
+- **C.** Relationship-change semantics: a peer becoming discoverable, alone, triggers nothing. A relationship-list
+  change about a COMPLETELY UNRELATED identity still re-evaluates every Known Peer, including one who became
+  discoverable since the last such change — the trigger is "the list changed," never "this peer's discoverability
+  changed."
+- **D.** Sequential convergence (construction, a later relationship-change pass, and a subsequent manual attempt
+  all agree on one session) plus the concurrent-race finding and its pre-existing control, above.
+- **E.** Isolation from a fast rejection reconfirmed (0.9.345 Section F); the hung-lookup starvation finding, above,
+  live-reproduced with the application itself proven unaffected.
+- **F.** The full privacy/product decision table (known+discoverable, known+not-discoverable, unknown however
+  discoverable, already-connected, previously-connected-now-undiscoverable) re-tested as a durable invariant, not a
+  one-time proof: discoverability is eligibility for FUTURE initiation, never a retroactive instruction to
+  disconnect.
+- **G.** User awareness, investigated rather than assumed: the automatic connection genuinely fires
+  `ConnectedPeerRegistry#onChange()` — the same signal `application/PeerPresenceUseCase.js#isIdentityOnline()` (and
+  therefore `ui/views/PeerConnectionsView.js`'s own "Connected now" badge) already reacts to — live-confirmed, with
+  no app-wide toast/badge anywhere in `ui/main.js`. Publication-arrival awareness is unchanged from 0.9.343 Section
+  G. Decision: existing signals are sufficient — STOP on notifications for both facts.
+- **H.** Retry/reconnection: structurally confirmed absent (no timer anywhere in `AutoConnectKnownPeersUseCase.js`)
+  and live-confirmed — a Known Peer who comes online well after startup, with no relationship-list change in
+  between, stays unconnected indefinitely. Named as the single most significant open decision, deliberately NOT
+  built here.
+- **I.** Restart semantics, classified against real persisted storage: the relationship survives (`application/
+  PeerRelationshipUseCase.js`, unrelated to this milestone); the connection and the rendezvous discovery cache do
+  not (`application/ConnectedPeerRegistry.js`, `peer/RendezvousDiscoveryProvider.js`, neither ever persisted, by
+  design). The good-news case, live-proven across a genuine restart boundary: a freshly-constructed
+  `AutoConnectKnownPeersUseCase`, given nothing but the persisted relationship, reconnects to a still-discoverable
+  peer with zero human gesture.
+- **J.** Final decision matrix and verdict.
+
+### Verdict
+
+**STABLE_STOP, WITH TWO NAMED OPEN ITEMS.** The composed arc is genuinely, completely reachable end to end (Section
+A); trigger semantics behave exactly as documented (Sections B/C); the privacy/product boundary holds as a durable
+invariant (Section F); user awareness needs no new UI (Section G). No section found a genuinely blocked user
+journey, so per this codebase's own established reassessment practice (0.9.340, 0.9.343), STOP on further
+automation is the correct outcome, not a consolation.
+
+Two items are named as genuinely open, left explicitly on file for a future milestone to pick up ONLY if real usage
+demonstrates an actual need, never speculatively:
+
+1. **Retry/reconnection** (Section H) — a genuine "connect automatically when my friend comes online" capability
+   needs its own interval, backoff, maximum-attempt policy, lifecycle/battery handling, and cancellation semantics
+   — a separate, larger product capability, never an extension smuggled into 0.9.345 or this reassessment.
+2. **Sequential-pass starvation on a hung lookup** (Section E) — a smaller, more surgical concern than retry: a
+   bounded per-lookup timeout, or replacing the sequential loop with `Promise.allSettled`, would resolve it without
+   touching retry semantics at all.
+
+### What this milestone deliberately excludes
+
+Per its own Type: no production-code change of any kind, and specifically no timeout, no `Promise.allSettled`
+concurrency change, no retry/backoff, no new privacy setting, and no notification/awareness UI — every finding
+above is left for a future milestone to decide, never fixed here.
