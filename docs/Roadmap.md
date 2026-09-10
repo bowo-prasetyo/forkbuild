@@ -93273,3 +93273,87 @@ time (0.9.359 and 0.9.362) — the next milestone should come from genuine produ
 blocked journey, a real external requirement, an actual operational problem), never from continuing to re-examine a
 surface this codebase has now checked twice and found clean both times. This closes the 0.9.356-0.9.362 UI-cleanup
 arc.
+
+## 0.9.363 — User-Configurable Infrastructure Endpoint Product Audit
+
+**Type:** test-only product audit. **Production changes:** none.
+
+This codebase's network-facing adapters — WebRTC peer connectivity, Arweave, IPFS, Nostr, Bitcoin anchoring, Base
+anchoring — each ship a public default endpoint a fresh checkout can use with zero setup, and each already accepts
+an override through ordinary constructor injection (a deliberate "replaceable deployment default," not an
+architectural accident). The motivating product question this milestone answers is narrower than "add settings for
+free servers": when one of those defaults is unreachable, is there anything today that lets an actual user keep
+using ForkBuild with their own infrastructure instead — and if not, which of these endpoints would be genuinely
+worth exposing, in what shape, before any settings surface gets built?
+
+### What this milestone adds
+
+`tests/UserConfigurableInfrastructureEndpointProductAudit.test.js` (new, registered in `tests.html`), ten sections
+(A-J):
+
+- **A. Current endpoint inventory.** Eleven candidates traced to real source, not assumption: STUN and TURN
+  (`peer/IceServerConfig.js`), Rendezvous (`peer/RendezvousConfig.js`), Arweave Gateway (independently duplicated
+  across four files), Arweave GraphQL, IPFS Gateway, IPFS local API, Nostr relay (independently duplicated across
+  six files — the widest duplication found), Bitcoin Esplora (independently duplicated across four files), Base
+  RPC, and mempool.space.
+- **B. Functional vs informational URLs.** mempool.space is confirmed to be exactly what it looks like: one
+  occurrence, inside one pure string-construction function whose own header already says "never a live network
+  call," verified independently by checking the function body itself contains no `fetch`/`await` — excluded from
+  configuration entirely. Every other candidate is confirmed functional by finding its own real `fetch`/relay call.
+- **C. Configuration ownership.** Every candidate is reconfirmed constructor-injectable, including one live
+  construction with an explicit override actually taking effect — but the composition root (`ui/main.js`) is shown
+  supplying zero overrides anywhere today (`new IpfsGatewayContentStore()`, `new
+  CreateBaseJsonRpcClientUseCase().execute()`, etc., all zero-argument), and no file under `ui/` references any of
+  this inventory's concrete endpoint hosts. This is mechanical, code-level configurability with no product surface.
+- **D. Semantic role separation**, with one correction to the milestone brief's own proposed grouping: STUN and TURN
+  are NOT independently configurable fields at their real consumer (`peer/WebRtcPeerConnectionProvider.js` accepts
+  one flat `iceServers` array, entries distinguished only by their own `stun:`/`turn:` scheme) — a faithful design
+  has one ICE-servers list plus a separate Rendezvous list, not three peer sub-objects. Arweave Gateway/GraphQL,
+  IPFS Gateway/API (the Gateway store's own `put()` is unimplemented — a structural difference, not just a
+  different default host), and Bitcoin Esplora/Base RPC are all confirmed genuinely independent.
+- **E. User-value assessment**, traced to real evidence rather than speculation — including `ui/main.js`'s own
+  existing comment already documenting the IPFS local API's default as "almost certainly unreachable" for an
+  ordinary user, direct on-file evidence of a real availability gap.
+- **F. Failure scenarios.** No existing surface lets an ordinary user restore capability when a default is down
+  today. The closest existing seam — `application/PublicationDistributionRuntimeConfiguration.js`'s own
+  `gatewayUrl`/`relayUrl` fields for the Publication Distribution WRITE path (0.9.106) — is confirmed still called
+  with nothing real from `ui/main.js`, even now.
+- **G. Configuration vs provider preference.** `core/RoleProviderPreference.js` (0.9.293) is confirmed to hold an
+  opaque provider KEY under a shape rule that cannot even syntactically accept a URL (no colon or slash permitted)
+  and never mentions a single endpoint host from this audit's own inventory — proving "which provider" and "which
+  URL that provider's adapter talks to" are genuinely separate concepts, not two names for one idea.
+- **H. Fallback semantics.** TURN's own `fetchIceServers()` is the one existing precedent for "default down, try
+  something else" — and it MERGES fetched servers with the static default rather than replacing either, a
+  redundancy pattern confined to TURN alone. Every other candidate has zero fallback concept
+  (`content/ArweaveContentStore.js`'s own header explicitly disclaims "NO CACHING, NO RETRY, NO DEDUPLICATION, NO
+  FALLBACK BETWEEN GATEWAYS"), confirming explicit replacement as the correct starting semantics everywhere else.
+- **I. Credential/security boundary.** TURN alone carries a credential requirement, with an already-documented
+  safe/unsafe key distinction (`peer/IceServerConfig.js`'s own header). Every other candidate's adapter is confirmed
+  to construct zero `Authorization` headers or API keys anywhere in its request path — a plain URL field is safe
+  and sufficient for all of them.
+- **J. Final candidate matrix and verdict.**
+
+### Verdict
+
+**SELECTIVE CONFIGURATION, NOT A GENERIC SERVER MANAGER.** The underlying capability is real and already
+architecturally present (Section C), but a single `InfrastructureSettings.servers[]` abstraction is explicitly
+rejected, refining the milestone brief's own proposed grouping at one point (STUN/TURN share one `iceServers` list,
+Section D). mempool.space is excluded outright (Section B). **BUILD FIRST:** Arweave Gateway and IPFS Gateway
+(content retrieval) — zero credentials, plain replacement semantics matching every non-TURN candidate's existing
+behavior, the highest and most visible user-value of any candidate (a down gateway makes already-published content
+simply unviewable), and a shape ({ `gatewayUrl` }) already proven in this exact codebase on the distribution write
+path. **CANDIDATE, not first:** Nostr relay (real single-point-of-failure value, but six independently duplicated
+constants to thread or consolidate), Arweave GraphQL, IPFS local API. **DEFER:** STUN, TURN (credential-shaped),
+Rendezvous (deployment/bootstrap identity by design), Bitcoin Esplora, Base RPC.
+
+### What this milestone deliberately excludes
+
+Per its own Type and explicit scope: no settings UI, no configuration schema, no persistence mechanism, no
+production-code change of any kind, and no credential-storage design for TURN.
+
+### What comes after
+
+Not pre-selected as a single next milestone, but this audit's own evidence names the strongest candidate: a
+read-path counterpart to `application/PublicationDistributionRuntimeConfiguration.js`'s existing `{ gatewayUrl }`
+shape, threaded through the Arweave and IPFS content-retrieval composition-root call sites in `ui/main.js`, is the
+smallest, safest, highest-value next step — never a single settings page covering all eleven candidates at once.
