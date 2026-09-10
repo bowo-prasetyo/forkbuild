@@ -91715,3 +91715,151 @@ visibility across restart ever does arrive, Section H's own findings point at th
 accumulator, or a rehydration step at `DecentralizedPublicationDiscoveryProvider`'s one real construction site in
 `ui/main.js`, sourced from re-resolving `LocalPublicationCatalog`'s already-durable entries — never a new
 synchronization protocol, and never gossip.
+
+## 0.9.344 — Known-Peer Auto-Connection Boundary Audit
+
+**Type:** Test-only boundary audit. **Production changes:** none.
+
+0.9.343's own STABLE_STOP closed the "what should a peer learn when we connect" arc on its own terms — connection-time
+Publication sync (0.9.342) is complete and sufficient. This milestone asks a genuinely different, externally-raised
+question one layer earlier in the pipeline, never examined by 0.9.340-0.9.343 at all: today, EVERY connection — the
+one 0.9.342 syncs Publications over, included — still requires a human to walk "Invite Someone"/"Connect to
+Peer"/"Find Someone" by hand, every time, even for an identity this device has already met, verified, and chosen to
+**Remember**. Given a Known Peer who has separately chosen **Be Discoverable** right now, what is the smallest
+existing seam that lets the two connect without a human repeating that dance — without turning discoverability into
+public-directory browsing, and without encoding "the user consented to be discoverable" as blanket cover for whatever
+an automatic connector might do with that fact?
+
+The originating proposal explicitly qualified its own legal/privacy framing: consent/opt-in makes an auto-connection
+feature more defensible, but does not by itself establish that every possible implementation of it is fine. This
+milestone tests that claim against real, live, unmodified production code rather than assuming it either way.
+
+### What this milestone adds
+
+`tests/KnownPeerAutoConnectionBoundaryAudit.test.js` (new, registered in `tests.html`), nine sections plus a final
+decision matrix, run against real, unmodified production code, with real, live, authenticated peer connections and a
+real, live rendezvous PUBLISH/LOOKUP/REMOVE round trip throughout — no mocked discovery or authentication anywhere in
+the file:
+
+- **A. Existing known-peer lookup is `identity -> known peer`, never a public directory.** Structural: the base
+  `peer/RendezvousTransport.js` contract is exactly three verbs (PUBLISH/LOOKUP/REMOVE) with no fourth,
+  enumeration/browse verb; the deployed reference server (`server/rendezvous-worker/worker.js`) implements exactly
+  that contract, resolving LOOKUP via a single exact-key storage read (`STORAGE_KEY_PREFIX + identityId`), structurally
+  incapable of returning "everything currently published." Live: three identities publish simultaneously; searching
+  one's exact identityId returns only that one, never a scan of the other two, and an identityId nobody published
+  under returns nothing.
+- **B. Discoverability semantics.** `RendezvousPublication`'s own default TTL is 5 minutes — shorter than the
+  invitation it wraps — confirming "Be Discoverable" is a time-boxed act, never a standing listing. Live: the
+  shortened, `…last14chars` display form this app's own UI shows everywhere else (`ui/views/PeerConnectionsView.js`)
+  never works as a search key — only the exact, full identityId a person was actually given does — and a publication
+  becomes unfindable the instant its own short TTL lapses.
+- **C. The connection-initiation seam.** `application/FindPeerUseCase.js#connect()` already delegates straight to
+  `peerSessionManager.connectToDiscovered()` -> `application/ConnectToPeerUseCase.js#connect()` — the identical path a
+  human's "Find Someone" click already walks today — with no transport-level code of its own. Live: a test-side-only
+  coordinator built from nothing but this already-public method plus `PeerRelationshipUseCase#getRelationships()`
+  authenticates a known, currently-discoverable peer with zero new production class.
+- **D. Opt-in enforcement, all three axes.** Live, over one scenario with a discoverable Known Peer, a
+  non-discoverable Known Peer, and a discoverable stranger never Remembered: every Known Peer is looked up, and ONLY a
+  Known Peer — the stranger is never searched for at all, because the coordinator has no source of identities beyond
+  `getRelationships()`. Known+discoverable is the only case that ever reaches an attempt; known+not-discoverable and
+  unknown+discoverable both correctly connect to nobody.
+- **E. Manual and automatic connection converge on one path.** Against the identical malicious/mislabeled-candidate
+  scenario `tests/DistributedPeerRendezvous.test.js` already established (bob's identityId, charlie's real endpoint),
+  a manual attempt and an automatic attempt both reject through the exact same `onCandidateRejected` signal — no
+  second, parallel connection or rejection mechanism exists or is needed.
+- **F. FLAGSHIP (negative) — deduplication is a real, live-reproduced gap today.** `application/
+  ConnectedPeerRegistry.js` has no identityId concept at all (confirmed by source). Live: with Alice already
+  authenticated to Bob, a naive automatic attempt that skips an "already connected?" check opens a genuine SECOND,
+  independent authenticated `ConnectedPeer`/connectionId to him. The fix requires no new store — reusing
+  `registry.list()`, the identical read `application/PeerPresenceUseCase.js#isIdentityOnline()` already performs —
+  closes it completely, proven live immediately after.
+- **G. Failure isolation.** Over three Known Peers at once — two genuinely reachable, one mislabeled — the mislabeled
+  one's rejection never prevents the other two from authenticating, and fires through the existing signal rather than
+  an uncaught exception.
+- **H. Consent withdrawal is prospective, never retroactive — plus one named caveat.** Live: an already-authenticated
+  connection is completely unaffected by the remote peer disabling discoverability afterward (structurally confirmed:
+  neither `peer/RendezvousDiscoveryProvider.js#unpublish()` nor `peer/DiscoveryBootstrap.js#unpublishFromAll()`
+  references `ConnectedPeerRegistry` at all), and a genuinely fresh lookup afterward correctly finds nobody. The one
+  caveat this audit surfaces rather than glossing over: a discovery provider that already cached a candidate before
+  it was withdrawn keeps offering that stale copy until its own TTL naturally lapses — real, live-demonstrated against
+  the exact long-lived provider shape `ui/main.js` actually constructs for the app's whole session, not a
+  freshly-constructed one.
+- **I. The rendezvous privacy boundary, examined against this codebase's own deployed default, not a hypothetical
+  operator.** `peer/RendezvousConfig.js`'s `DEFAULT_RENDEZVOUS_URLS` is non-empty in this codebase today — a fresh
+  install already talks to one specific, real, always-on operator-run node. `peer/WebSocketRendezvousTransport.js`
+  holds exactly one persistent socket reused across every PUBLISH/LOOKUP/REMOVE. The wire protocol never carries more
+  than one identityId per LOOKUP and never identifies the searcher. Live: a coordinator that loops over every Known
+  Peer, one LOOKUP each, hands that node's operator this device's complete Known Peers list, over the one connection
+  it already holds — not because any message's shape changed, but because automating a rare, human-initiated act into
+  a repeated one is a genuinely new exposure pattern, not a privacy-neutral implementation detail.
+- **J. Final decision matrix**, cross-checking every scenario the originating proposal's own matrix asked for against
+  this file's live evidence.
+
+### Decision matrix
+
+| Scenario | Automatic connection? |
+| --- | --- |
+| Known peer + currently discoverable | YES — Section D |
+| Known peer + not currently discoverable | NO — Section D |
+| Unknown/never-Remembered identity, even if discoverable | NO — Section D (structural, not merely a runtime check) |
+| Malicious/mislabeled candidate for a known identity | Rejected — Section E, same signal as manual |
+| Already-connected known peer, still discoverable | Reuse existing session — Section F (requires an explicit check; NOT automatic today) |
+| One attempt fails/rejects | Non-fatal to the others — Section G |
+| Discoverability later disabled | Blocks a fresh lookup immediately — Section H |
+| Existing authenticated session, discoverability disabled | Untouched — Section H |
+| A discovery provider that cached a candidate before withdrawal | May still offer it until its own TTL lapses — Section H (named caveat) |
+| Content/material transfer on auto-connection | Out of scope — stays 0.9.342/0.9.343's own unmodified boundary |
+| Publication metadata sync after auto-connection | Falls out for free, unmodified — `PublicationPeerConnectionSync` |
+| Public directory browsing of discoverable identities | Structurally absent — Section A/I |
+| Rendezvous-operator visibility into a device's Known Peers list | New, real exposure introduced by automating LOOKUP — Section I |
+
+### Verdict
+
+**CLEAR_SEAM — PROCEED, WITH TWO NAMED CONSTRAINTS.** The seam itself is real and small:
+`application/FindPeerUseCase.js#search()`/`#connect()`, completely unmodified, already is the exact path this feature
+needs (Section C); it converges with manual connection on one protocol (Section E); and eligibility falls out
+structurally from what a coordinator would iterate over — Known Peers only, checked against a currently-live
+publication only (Section D) — with unknown-identity auto-connection and public-directory browsing both confirmed
+structurally absent, never merely undesired (Sections A/D).
+
+Two things this audit found are **not** already solved by existing infrastructure, and a 0.9.345 implementation must
+own explicitly rather than inherit for free:
+
+1. **Deduplication** (Section F, flagship). `application/ConnectedPeerRegistry.js` has no identityId concept — an
+   automatic coordinator MUST check "is this identity already connected?" (reusing `registry.list()`, the same read
+   `application/PeerPresenceUseCase.js#isIdentityOnline()` already performs) before every attempt. No new store is
+   needed, but the check itself does not come for free.
+2. **Polling discipline** (Section I). This codebase already ships one real, always-on default rendezvous node.
+   Automating today's rare, human-initiated LOOKUP into a periodic background one hands that node's operator this
+   device's full Known Peers list over time — a genuinely new exposure pattern, not a wire-format change. A 0.9.345
+   implementation must adopt a deliberately bounded trigger (e.g., checked when a person opens Peer Connections, or on
+   a long, explicit interval) as a first-class part of the design, never an unattended tight loop.
+
+This is also this milestone's answer to the originating proposal's own qualification of its legal framing: Bob's
+consent to **Be Discoverable** covers being found once, by exact identity, for a few minutes — Section B and I
+together show it was never asked to cover being checked on, automatically and repeatedly, by every device that has
+ever Remembered him. That gap doesn't block the seam; it names exactly what a real implementation has to bound.
+
+### What this milestone deliberately excludes
+
+Per its own Type: no production-code change of any kind. No new class, no new message kind, no wire-format change, no
+`NotificationEvent` producer, and no change to `application/FindPeerUseCase.js`, `application/
+ConnectToPeerUseCase.js`, `application/PeerRelationshipUseCase.js`, `application/ConnectedPeerRegistry.js`, `peer/
+RendezvousDiscoveryProvider.js`, `peer/DiscoveryBootstrap.js`, or any other production file. The test-side-only
+`attemptKnownPeerAutoConnect()` coordinator exists only as evidence the seam is real and small — it is not shipped,
+and it is deliberately not the generic "AutoConnectManager" (discover/rank/schedule/retry/health-track/synchronize)
+the originating proposal itself warned against building prematurely.
+
+### What comes after
+
+**0.9.345 — Automatic Known-Peer Connection**, implementing this audit's own proven seam in production: a small,
+narrowly-scoped application-layer coordinator, composed the same way `application/PeerReconnectionUseCase.js` already
+composes `application/PeerSessionManager.js` and `application/PeerRelationshipUseCase.js` — for each Known Peer, skip
+if already connected (Section F's own read, reused), otherwise `FindPeerUseCase#search()`/`#connect()` unmodified,
+run under an explicit, bounded trigger (Section I's own constraint) rather than an unbounded background interval.
+Content/material transfer stays entirely outside this seam, exactly as it already does for manual connection and for
+0.9.342's own Publication sync — `PublicationPeerConnectionSync` needs no change at all: it already fires on any
+newly `AUTHENTICATED` peer regardless of how the connection was initiated. A **0.9.346 — Auto-Connection UX/Privacy
+Reassessment**, examining real usage against the two named constraints above, is the natural following checkpoint —
+never a reason to delay 0.9.345 itself, since both constraints already have a proven, cost-free fix named in this
+audit.
