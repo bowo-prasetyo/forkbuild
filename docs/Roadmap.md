@@ -92134,3 +92134,77 @@ distribution abstraction has appeared anywhere in the codebase — followed, per
 deliberately does not answer itself: is an explicit post-publish distribution chooser sufficient, or does real usage
 surface a genuine value gap remaining? That reassessment, not this milestone, decides whether anything further ships
 at all.
+
+## 0.9.348 — Post-Publish Distribution Convergence Audit
+
+**Type:** Test-only. **Production changes:** none — verified directly against `git status` at test-run time.
+
+0.9.347 gave `OwnPublicationPanel.js` a second entry point onto the SAME `distributeWorldEncounterPublication`
+wrapper `WorldEncounterCanvas.js`'s own pre-existing "Distribute Publication" action already calls. The important
+change since 0.9.347 is not another capability — it is that the same Publication can now reach the same
+distribution mechanism from two independent UI contexts. This milestone asks the one question that fact raises:
+
+> Do all legitimate Publication Distribution entry points now converge on the SAME existing distribution semantics,
+> while remaining independent from local publication lifecycle?
+
+### What this milestone checks
+
+`tests/PostPublishDistributionConvergenceAudit.test.js` (new, registered in `tests.html`), ten lettered sections
+(A-J), built fresh and independent of 0.9.104's and 0.9.347's own suites, run against real, unmodified production
+classes and real source reads:
+
+- **Section A (FLAGSHIP)** — the Own Publication path (`OwnPublicationPanel`), zero peers, zero World Encounters,
+  the real command/orchestrator/executor/lifecycle-store chain.
+- **Section B** — the pre-existing `selectedEncounter`-gated World Encounter path, driven through the literal SAME
+  command function reference as Section A, writing into the literal SAME lifecycle store — the strongest form of
+  convergence proof available: not "behaves alike," but `ownCtx.publicationDistributionCommand === canvasCtx.distributionCommand`.
+- **Section C** — exact Publication identity: the object handed to the command is the exact `publication` prop,
+  verbatim, even when a second Publication shares the first's `documentId`; `OwnPublicationPanel`'s own harness
+  carries no `selectedEncounter` field at all; `distributeOwnPublication()`'s own method body reads nothing but its
+  own prop and ephemeral state — no `.title`/`.documentId`/`.contentHash`, no `.find(`, no resolver, no session
+  query; and `WorldEncounterCanvas`'s own gate still requires a selected, materially-loaded Publication, confirming
+  the asymmetry 0.9.347 deliberately left in place rather than erasing.
+- **Section D** — success, rejection, a synchronous construction throw, duplicate-click protection, stale-response
+  protection, and lifecycle-store effects, run through both entry points via two thin adapters over the two real,
+  unmodified methods; both surfaces convert a genuine failure into one plain, generic, per-family notice (differing
+  only in each panel's own scoped wording — `"Publication distribution could not be completed."` vs.
+  `"Distribution could not be completed."` — an established per-family convention, not a divergence).
+- **Section E** — local-first isolation: a real `PublishDocumentUseCase`/`UnpublishDocumentUseCase` round trip
+  through `LocalPublisherProvider`/`LocalDiscoveryProvider` proves a distribution failure never touches the local
+  Publication and unpublish succeeds regardless of it; the reverse holds too — a distribution success never
+  resaves, republishes, or otherwise mutates the local Publication; and neither use case, nor the distribution
+  command/orchestrator, imports the other.
+- **Section F** — independent distribution semantics: `Publication.toJSON()` carries no distribution-status field;
+  no `isDistributed`/`aggregateDistributionStatus`/`globallyDistributed` vocabulary exists anywhere in
+  `application`/`ui`/`core`/`publisher`; a lifecycle record stays two independent per-dimension facts, never one
+  collapsed "distributed" verdict.
+- **Section G** — existing path preservation: the World Encounter route's own selection gate (no selection, an
+  unloaded selection, a non-`PUBLICATION` selection) still refuses to distribute exactly as before, and
+  `WorldEncounterCanvas.js` remains textually unaware of `OwnPublicationPanel` and keeps its own distinct
+  `distributionCommand` prop name.
+- **Section H** — scope boundary: a code-only sweep (comment-stripped, so 0.9.347's own "deliberately excluded"
+  header — which literally NAMES some of this vocabulary to document its absence — never registers as a false
+  positive) confirms no `DistributionManager`, generic `distributePublication(`, provider ranking, fallback,
+  automatic distribution, distribution queue, retry scheduler, aggregate distribution status, or new distribution
+  lifecycle vocabulary (`DISPATCHED`/`QUEUED`/`SCHEDULED`/`RETRYING`/`COMMANDED`) exists anywhere in production.
+- **Section I** — Publication Center boundary: remote IPFS pinning and Bitcoin/Base anchoring vocabulary is absent
+  from `OwnPublicationPanel.js`/`WorldView.js` and confirmed still fully present elsewhere in production — a
+  deliberate scoping choice, not an oversight or an accidental deletion.
+- **Section J** — the final convergence matrix and verdict.
+
+### Verdict
+
+**CONVERGED.** Both entry points reach the identical distribution semantics through the literal same command
+function and the literal same lifecycle store. The Publication distributed from `OwnPublicationPanel` is always the
+exact object bound to it, never a lookup by title/documentId/contentHash. Success, rejection, a synchronous
+exception, duplicate-click protection, and stale-response protection are identical in kind across both surfaces.
+Local publish/unpublish remain fully independent of distribution outcome in both directions. No aggregate
+Publication "distributed" flag, `DistributionManager`, target array, provider ranking, fallback, queue, retry
+scheduler, or new lifecycle vocabulary has appeared anywhere. Remote IPFS pinning and Bitcoin/Base anchoring remain
+intact and deliberately scoped to the Publication Center.
+
+### What comes after
+
+Per this audit's own verdict: **0.9.349 — Post-Publish Distribution Product Reassessment**, asking the harder
+product question this milestone deliberately does not answer itself — is an explicit post-publish distribution
+chooser sufficient, or does real usage surface a genuine value gap remaining? — which may reasonably conclude STOP.
