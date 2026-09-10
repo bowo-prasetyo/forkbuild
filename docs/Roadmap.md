@@ -93682,3 +93682,79 @@ never sharing `ArweaveGatewayConfigurationStore`'s), a `NostrRelaySettingsView.j
 sites named in Section A — leaving the three write-path publishers (`NostrPublicationDiscoveryPublisher`,
 `NostrSnapshotDiscoveryPublisher`, `NostrPlaceNamingDiscoveryPublisher` — a separate, unconsolidated concern of their
 own) untouched, exactly as Arweave Gateway left the distribution write path untouched.
+
+## 0.9.369 — Nostr Relay Configuration Boundary
+
+**Type:** production feature (configuration boundary, persistence, read-path integration). **Production changes:**
+`core/NostrRelayConfiguration.js` (new), `storage/NostrRelayConfigurationStore.js` (new), `ui/main.js` (wiring only —
+three read-path composition call sites now receive a resolved `relayUrl`).
+
+0.9.368's own audit named the concrete next step, and named it three times over: Nostr relay's read path has THREE
+live composition sites (World Encounter decentralized discovery, Snapshot discovery, Place Naming discovery), all
+three silently inheriting `wss://relay.damus.io` with no way back if it became unreachable — worse than the Arweave
+Gateway gap 0.9.364 closed, since Place Naming discovery has no OTHER source at all. This milestone builds the direct
+structural mirror of 0.9.364, applied to a relay URL instead of a gateway URL, for read/discovery only.
+
+### What this milestone adds
+
+- **`core/NostrRelayConfiguration.js`** — an immutable value object holding exactly one field, `relayUrl`. Validation
+  is shape-only: a non-empty, absolute `ws:`/`wss:` URL. Unlike `ArweaveGatewayConfiguration`, no trailing-slash
+  normalization — none of the three read-path consumers ever concatenate onto `relayUrl`, so there is no consumer
+  behavior to normalize for. No network call (no WebSocket opened at construction), no credentials, no
+  `timeout`/`retry`/`fallbackRelay`/`healthCheck`/`priority` fields, no relay list. Exports `DEFAULT_NOSTR_RELAY_URL`
+  (`wss://relay.damus.io`, byte-identical to what all three read-path classes already hardcode individually) as a
+  plain constant — the constructor itself never falls back to it, so "no configuration" and "the default itself got
+  persisted" stay distinguishable.
+- **`storage/NostrRelayConfigurationStore.js`** — durable persistence via the existing `StorageProvider` seam
+  (defaulting to `LocalStorageProvider`), under its OWN storage key (`'nostr-relay-configuration'`) — entirely
+  independent of `ArweaveGatewayConfigurationStore`'s own key, never a shared class. `save(configuration)` / `get()`
+  / `clear()`, the identical shape 0.9.364's own store already established. `get()` returns `null` — never a
+  configuration holding the deployment default — when nothing has been saved; malformed persisted data degrades to
+  `null` the same way; a genuinely throwing `StorageProvider` propagates unmodified.
+- **`ui/main.js` wiring** — resolves the effective relay once (`nostrRelayConfigurationStore.get() || { relayUrl:
+  DEFAULT_NOSTR_RELAY_URL }`) and threads it into all THREE read-path composition call sites:
+  `composeDecentralizedWorldEncounterMaterialDiscoveryServices()`'s own `nostrRelayUrl` (World Encounter discovery),
+  `composeDiscoverSnapshotRuntime()`'s own `nostrSnapshotDiscoveryQueryServiceOptions.relayUrl` (Snapshot discovery),
+  and `NostrPlaceNamingDiscoverySource`'s own `relayUrl` (Place Naming discovery, constructed directly — there is no
+  dedicated composition function for it). The three Nostr WRITE-path publishers (`NostrPublicationDiscoveryPublisher`,
+  `NostrSnapshotDiscoveryPublisher`, `NostrPlaceNamingDiscoveryPublisher`) and `createNostrInjectedProviderPublisher()`
+  are deliberately untouched — a user-configured relay is an explicit replacement for READ/DISCOVERY, never a policy
+  about where this replica's own new declarations get published.
+
+### A separate object, never a shared shape with `ArweaveGatewayConfiguration`
+
+The two value objects, and their two stores, look structurally identical — one string field, one validated scheme
+family, one storage key, one `save`/`get`/`clear` surface. Investigation confirmed they should stay two files rather
+than merge into one generic `InfrastructureEndpointConfiguration`: `core/ArweaveGatewayConfiguration.js`'s own header
+already names that exact abstraction as refused, by name, and this milestone holds the same restraint one substrate
+over. Shared implementation shape does not mean shared domain semantics — a relay URL is an endpoint configuration,
+never a provider preference in the `RoleProviderPreference` sense, and never the same persisted fact as an Arweave
+gateway merely because both happen to be one-field URL configurations.
+
+### No fallback, no merge, no ranking across relays
+
+A configured-but-unreachable relay fails through the existing three read-path classes' own failure semantics
+unchanged (each already collapses a `queryImpl` failure to `[]`, or — for `NostrPlaceNamingDiscoverySource` — lets it
+reject, per that file's own header) — this milestone never adds a "try the default if the configured relay fails"
+policy, and never adds a multi-relay list, fan-out, or ranking of any kind. The user's configured endpoint is an
+explicit replacement, exactly as 0.9.363/0.9.367/0.9.368 each established for every non-TURN candidate.
+
+### What this milestone deliberately excludes
+
+No settings UI — a user configures the relay today only through `NostrRelayConfigurationStore` directly (a future
+milestone's job, per this milestone's own sequencing: boundary and persistence before UI, one candidate more
+conservative than Arweave Gateway's own sequencing, since Nostr has three consumers instead of two). No fix to the
+silent-empty-result discovery UX 0.9.368's own Section B named — that is a separate product question about failure
+visibility, not a configuration-boundary concern; inventing new discovery-error semantics here would make this
+milestone responsible for a problem it did not create and should not silently absorb. No change to any Nostr
+publishing path. No generic `InfrastructureEndpointConfiguration` abstraction.
+
+### What comes after
+
+**0.9.370 — Nostr Relay Configuration Convergence Audit** (test-only, mirroring 0.9.365's own shape): verify the
+three consumers, default/override semantics, restart, isolation, and publishing separation converge with no second
+authority anywhere. If that confirms the boundary is clean: **0.9.371 — Nostr Relay Settings UI**, mirroring
+`ArweaveGatewaySettingsView.js`'s own "one page, one concern" shape at its own `/settings/nostr-relay` route. Then
+**0.9.372 — Nostr Relay Lifecycle/Product Reassessment**, asking whether this actually closed the recovery gap
+0.9.368 demonstrated, and whether the silent-empty-result discovery UX (0.9.368's own Section B, deliberately
+untouched here) deserves its own, separate product decision.

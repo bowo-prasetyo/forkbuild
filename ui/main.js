@@ -116,6 +116,8 @@ import { bootstrapWorldDiscoveryRuntime } from '../application/WorldDiscoveryRun
 import { LocalStorageProvider } from '../storage/LocalStorageProvider.js';
 import { DEFAULT_ARWEAVE_GATEWAY_URL } from '../core/ArweaveGatewayConfiguration.js';
 import { ArweaveGatewayConfigurationStore } from '../storage/ArweaveGatewayConfigurationStore.js';
+import { DEFAULT_NOSTR_RELAY_URL } from '../core/NostrRelayConfiguration.js';
+import { NostrRelayConfigurationStore } from '../storage/NostrRelayConfigurationStore.js';
 import { LocalWorldEncounterMaterialSource } from '../application/LocalWorldEncounterMaterialSource.js';
 import { composeWorldEncounterMaterialVerifier } from '../application/WorldEncounterMaterialVerifierRuntimeComposition.js';
 import { PublicationDistributionLifecycleMemoryStore } from '../application/PublicationDistributionLifecycleStore.js';
@@ -1597,9 +1599,55 @@ const setArweaveGatewayConfigurationUseCase = new SetArweaveGatewayConfiguration
 app.provide('arweaveGatewayConfigurationStore', arweaveGatewayConfigurationStore);
 app.provide('setArweaveGatewayConfigurationUseCase', setArweaveGatewayConfigurationUseCase);
 
+// 0.9.369 — Nostr Relay Configuration Boundary.
+//
+// 0.9.368's own audit named this exact gap: all three read-path Nostr
+// discovery classes below (application/NostrDiscoveryQueryService.js,
+// application/NostrSnapshotDiscoveryQueryService.js, application/
+// NostrPlaceNamingDiscoverySource.js, via `nostrRelayQueryClient`) already
+// accept their own `relayUrl` through ordinary constructor injection, but
+// this file supplied none anywhere, so every Wanderer silently inherited
+// `wss://relay.damus.io` with no way back if it ever became unreachable.
+// `core/NostrRelayConfiguration.js` and `storage/
+// NostrRelayConfigurationStore.js` (both new, this same milestone) are the
+// direct structural mirror of `core/ArweaveGatewayConfiguration.js` /
+// `storage/ArweaveGatewayConfigurationStore.js` (0.9.364), applied to a
+// relay URL — a SEPARATE store, under its own storage key, never sharing
+// `arweaveGatewayConfigurationStore` above.
+//
+// ABSENCE STAYS MEANINGFUL, EXACTLY AS FOR THE ARWEAVE GATEWAY ABOVE.
+// `nostrRelayConfigurationStore.get()` returns `null` when the user has
+// never configured an override, and `DEFAULT_NOSTR_RELAY_URL` (core/
+// NostrRelayConfiguration.js's own export — the same relay every one of the
+// three read-path classes already hardcodes as its own default) is
+// consulted only then.
+//
+// APPLIED ONLY TO READ/DISCOVERY, NEVER TO PUBLISHING. `resolvedNostrRelayUrl`
+// below is threaded into `composeDecentralizedWorldEncounterMaterialDiscoveryServices()`'s
+// own `nostrRelayUrl` (immediately below), into
+// `composeDiscoverSnapshotRuntime()`'s own `nostrSnapshotDiscoveryQueryServiceOptions.relayUrl`
+// (later in this file), and into `NostrPlaceNamingDiscoverySource`'s own
+// `relayUrl` (later in this file) — the three read-path composition sites
+// 0.9.368's own audit traced. It is never threaded into
+// `createNostrInjectedProviderPublisher()` or any of the three Nostr
+// WRITE-path publishers (`NostrPublicationDiscoveryPublisher`,
+// `NostrSnapshotDiscoveryPublisher`, `NostrPlaceNamingDiscoveryPublisher`),
+// exactly the "user setting affects read/discovery, never publishing"
+// boundary this milestone's own brief draws.
+//
+// NO SETTINGS UI YET — `nostrRelayConfigurationStore` is constructed and
+// consulted here so the boundary and its three read-path consumers exist
+// and are provably wired, but (unlike `arweaveGatewayConfigurationStore`
+// above, which also has its own 0.9.366 write-side use case and `app.provide()`
+// calls) this milestone deliberately stops at read-side composition — see
+// docs/Roadmap.md, 0.9.369, "no UI yet."
+const nostrRelayConfigurationStore = new NostrRelayConfigurationStore(new LocalStorageProvider());
+const resolvedNostrRelayUrl = (nostrRelayConfigurationStore.get() || { relayUrl: DEFAULT_NOSTR_RELAY_URL }).relayUrl;
+
 const nostrRelayQueryClient = createNostrRelayQueryClient({});
 const decentralizedWorldDiscoveryServices = composeDecentralizedWorldEncounterMaterialDiscoveryServices({
-    nostrQueryImpl: nostrRelayQueryClient
+    nostrQueryImpl: nostrRelayQueryClient,
+    nostrRelayUrl: resolvedNostrRelayUrl
 });
 const decentralizedWorldEncounterMaterialDiscoveryRuntime = composeDecentralizedWorldEncounterMaterialDiscoveryRuntime({
     discoveryServices: decentralizedWorldDiscoveryServices,
@@ -1997,9 +2045,12 @@ app.provide('publishPlaceNamingClaimToNostrCommand', publishPlaceNamingClaimToNo
 // is this file's own SECOND retrieval call site — see that resolution's
 // own comment for why this differs from `snapshotContentStore`'s own
 // `arweaveContentStoreOptions` immediately above, which stays unconfigured.
+// 0.9.369 — `relayUrl: resolvedNostrRelayUrl` (resolved once, above) is
+// this file's own SECOND Nostr read-path call site, after `nostrRelayUrl`
+// above.
 const { resolver: snapshotResolver, contentStore: snapshotRetrievalContentStore, queryService: snapshotDiscoveryQueryService } = composeDiscoverSnapshotRuntime({
     arweaveContentStoreOptions: { signer: arweaveHostSigner, gatewayUrl: resolvedArweaveGatewayUrl },
-    nostrSnapshotDiscoveryQueryServiceOptions: { queryImpl: nostrRelayQueryClient }
+    nostrSnapshotDiscoveryQueryServiceOptions: { queryImpl: nostrRelayQueryClient, relayUrl: resolvedNostrRelayUrl }
 });
 const discoverSnapshotCommand = (contentHash) => executeDiscoverSnapshotCommand({
     discoveryTag: 'forkbuild-snapshot',
@@ -2067,8 +2118,10 @@ app.provide('worldSnapshotDiscoveryMonitor', worldSnapshotDiscoveryMonitor);
 // query service a discovery command can be built against, exactly the same
 // restraint already drawn between `discoverSnapshotCandidatesCommand` above
 // and the view that actually calls it.
+// 0.9.369 — `relayUrl: resolvedNostrRelayUrl` (resolved once, above) is
+// this file's own THIRD, and last, Nostr read-path call site.
 const placeNamingDiscoverySources = nostrRelayQueryClient
-    ? [new NostrPlaceNamingDiscoverySource({ queryImpl: nostrRelayQueryClient })]
+    ? [new NostrPlaceNamingDiscoverySource({ queryImpl: nostrRelayQueryClient, relayUrl: resolvedNostrRelayUrl })]
     : [];
 const { queryService: placeNamingDiscoveryQueryService } = composePlaceNamingDiscoveryRuntime({ sources: placeNamingDiscoverySources });
 app.provide('placeNamingDiscoveryQueryService', placeNamingDiscoveryQueryService);
