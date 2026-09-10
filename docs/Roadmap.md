@@ -92567,3 +92567,162 @@ pattern (Option B/E) — an explicitly-triggered, tag-scoped "Discover Decentral
 and admitted through the exact same `DecentralizedPublicationDiscoveryProvider`/`CompositeDiscoveryProvider` seam
 0.9.339 already built — never a network-aware `SearchPublicationsUseCase.js`, and never built before that evidence
 actually arrives.
+
+## 0.9.352 — Remote Publication Fork Journey Product Gap Audit
+
+**Type: test-only. Production changes: none.**
+
+0.9.351 gathered live evidence that proactive decentralized Publication discovery cannot become part of
+synchronous Repository Search without inventing a substantial new contract (latency, cancellation, partial
+results, remote-search semantics) — and recommended not building it. That leaves the downstream question open:
+once a user has discovered a remote Publication and it is admitted into Repository, can they actually complete
+"fork/use this Publication" without an artificial product boundary? This milestone gathers that evidence, live,
+against real, unmodified production code (`tests/RemotePublicationForkJourneyProductGapAudit.test.js`).
+
+### A — Flagship journey, carried to genuine success
+
+0.9.340 Section B proved peer → resolve → admit → Repository search → select → Editor fork-lookup →
+`ForkDocumentUseCase`, but deliberately stopped at the material-acquisition boundary (`ForkDocumentUseCase`
+throwing `"no document found"`). This milestone supplies the missing positive case: the identical live peer
+exchange, this time with the source Document's own bytes seeded into the same `storageProvider`
+`ui/views/EditorView.js`'s own `forkDocumentUseCase` reads from — modeling "this replica has actually retrieved
+the material." The result is a genuine, editable `Document` instance, correctly titled `Fork of …`, with a fresh
+`world.id`. The full discover → admit → Repository → Explore route → Fork route → Editor lookup → fork chain is
+now proven to reach an actual success, not only its own failure boundary.
+
+### B — Identity preservation
+
+`Publication.id`, `documentId`, `contentReference`, `contentHash`, and `publisherIdentity` are confirmed, live, to
+remain five genuinely distinct values throughout. `ForkDocumentUseCase`'s own derivative `License.attribution`
+records `sourcePublicationId`/`sourceDocumentId` explicitly, naming the ORIGINAL Publication/document — never the
+fork's own freshly-generated `world.id`, and never anything reconstructed from `contentHash`/`contentReference`.
+`documentId` — not any content-identity value — is confirmed to be what the fork machinery actually loads and
+acts on.
+
+### C — Local/peer/decentralized convergence
+
+No `"if decentralized"` branch exists anywhere in the Explore/Fork call chain (`ForkDocumentUseCase.js`,
+`LoadPublicationDocumentUseCase.js`, `DocumentCloneService.js`, `CompositeDiscoveryProvider.js`'s own class body),
+confirmed against current source rather than cited from 0.9.338/0.9.339/0.9.340. Live: a local-origin and a
+decentralized-origin Publication, forked through the identical use-case call, produce byte-for-byte identical
+`Document`/attribution shapes — no origin-specific field on either.
+
+### D — Explore → Fork boundary
+
+Explore (`viewWorld`) and Fork (`forkPublication`) are two independent, ungated, one-click, `documentId`-keyed
+actions — a user may Explore without Forking or Fork directly. The one real asymmetry is ENTRY POINT: Repository/
+Author Catalog's own "Fork" button vs. World View's own "Edit a Copy" (`editFocusedCopyFromFocusPanel`). Both are
+confirmed, from source, to reuse the identical `/editor?fork=` navigation and converge on the SAME
+`ui/views/EditorView.js` `route.query.fork` handler — and `editFocusedCopyFromFocusPanel` itself has no try/catch
+of its own, so a failure reached from World View is handled entirely by that one shared handler, identically to a
+failure reached from Repository/Author Catalog.
+
+### E — Retrieval semantics
+
+Live, in both directions: a Publication that is genuinely discovered, resolved, and admitted — but whose
+underlying Document material was never separately retrieved — fails to fork with a specific thrown error
+(reconfirming 0.9.340 Section B). The SAME Publication, once material is genuinely present (Section A's own
+scenario), forks successfully. "Discovered," "retrieved," and "available for editing" are confirmed to be three
+genuinely different facts, not one collapsed concept.
+
+Structurally, this sharpens 0.9.338's own "four failure classes, kept genuinely distinct" finding: the RESOLUTION
+layer (`PublicationResolutionOutcome`) already names eight distinct, documented outcomes for "why didn't this
+resolve," including `CONTENT_UNAVAILABLE`, explicitly documented as "never a verdict about the publication's own
+validity." The FORK layer has no equivalent vocabulary at all — `ForkDocumentUseCase.js` defines no outcome enum
+or error class; both of its failure causes (license denial, missing/unretrieved material) are the same
+undifferentiated `Error` type, distinguishable only by string-matching the message.
+
+### F — License/authorization boundary (the finding)
+
+`PublicationCard.js` already renders a Publication's license id in plain text on every card, but its Fork button
+carries no `v-if`/`:disabled` reflecting `license.forkAllowed` — it is exactly as clickable on an ND-licensed
+Publication as on a CC0 one. Live: forking a real CC-BY-ND-4.0-licensed Publication through the actual
+`ForkDocumentUseCase` throws, and the complete, real, user-visible text is `"Fork failed: ForkDocumentUseCase:
+forking is not permitted under license CC-BY-ND-4.0"` — a raw, class-name-prefixed Error string, nothing more
+actionable.
+
+Structurally: `ui/views/EditorView.js`'s own `route.query.fork` handler calls `router.replace({ path: '/editor'
+})` UNCONDITIONALLY, after the try/catch, on both success and failure. `entryContext.value`/`arrivalDocumentId`
+are written to only inside the try block, before any point a thrown Error reaches — both initialize to `null`, so
+either failure cause leaves them at `null`. `ui/components/Toolbar.js`'s own `"← Back to World"` link is gated on
+exactly that field. The net, live-confirmed result: a fork failure of EITHER cause — a license the person had no
+warning about, or content that was never retrieved — produces the identical experience: one transient (2.5s)
+toast with a raw internal error string, followed by an unconditional landing on a blank, un-contextualized new
+Editor document, with no link back to the Publication or World the user came from.
+
+### G — Provenance
+
+Content-lineage provenance (`sourcePublicationId`/`sourceDocumentId` — which Publication/document a fork
+descends from) is preserved through every fork regardless of transport, confirmed live on this milestone's own
+genuinely peer-delivered flagship fork (Section A). Transport-origin provenance (local/peer/decentralized
+tagging) remains absent everywhere, reconfirmed against current source — and `ui/components/ForkTree.js`, the one
+real surface that visualizes fork lineage to a user, is confirmed to read only `documentId`/`parentDocumentId`-
+shaped lineage, with no use for a transport-origin field. The user journey's actual provenance need (attribution,
+fork-tree lineage) is already fully served; introducing transport-origin tagging would not close any gap this
+journey has.
+
+### H — Failure isolation
+
+Live: a license-denied fork attempt writes nothing to document storage (the license check runs before any
+load/clone/save) and leaves the discovery provider's own state byte-for-byte unchanged — same array length, same
+instance. A second, differently-caused failure (retrieval) against the same `documentId` likewise leaves the
+provider untouched. A subsequent, legitimately-licensed fork against the identical `documentId` still succeeds —
+neither prior failure, of either cause, left the storage or catalog state corrupted.
+
+### I — Existing UI duplication
+
+`ui/views/DecentralizedPublicationsView.js` — the one surface plausibly named closely enough to be a duplicate —
+is confirmed, from its own imports, to import `publisher/Publication.js` for exactly one `instanceof` admission
+check (its own documented 0.9.337 reason) and to reference no `ForkDocumentUseCase`, `CreateDiscoveryUseCase`, the
+Explore/Fork-facing `ui/components/PublicationCatalog.js`, `forkPublication`, or `viewWorld()`. It is the
+evidence/anchor/snapshot-placement surface for the unrelated `core/DecentralizedPublication.js` domain object, not
+an alternate Explore/Fork browsing surface. `ui/components/OwnPublicationPanel.js` offers no Fork action either.
+No existing surface duplicates `PublicationCatalog`'s Explore/Fork experience.
+
+### Decision matrix
+
+| Question | Verdict | Evidence |
+| --- | --- | --- |
+| Flagship discovery → admission → Repository → Explore → Fork journey (material available) | STABLE_STOP | Section A |
+| Identity preservation (id/documentId/contentReference/contentHash/publisherIdentity) | STABLE_STOP | Section B |
+| Local/peer/decentralized convergence, no origin branching | STABLE_STOP | Section C |
+| Explore/Fork mutual independence | NOT_A_PRODUCT_GAP | Section D |
+| Retrieval-vs-discovery distinction as a mechanism | STABLE_STOP | Section E |
+| Fork-layer failure vocabulary / user-facing outcome on denial | **INTEGRATE** | Sections E, F |
+| Transport-origin provenance | NOT_A_PRODUCT_GAP | Section G |
+| Failure isolation | STABLE_STOP | Section H |
+| A duplicate Explore/Fork surface | NOT_A_PRODUCT_GAP (none exists) | Section I |
+
+### Verdict
+
+**INTEGRATE — one precisely-scoped, evidenced gap, not implemented in this test-only milestone.** The
+discover → admit → Repository → Explore → Fork journey is complete and sound end to end, including a genuine
+success case this milestone reached that 0.9.340 deliberately did not. Five of nine questions this audit's own
+brief raised reconfirm STABLE_STOP; three more (Explore/Fork independence, transport-origin provenance, a
+duplicate surface) are answered directly as NOT_A_PRODUCT_GAP, with evidence, rather than left unexamined. Exactly
+one real, narrow, live-evidenced gap survives: a fork failure — whatever its cause, a license the user had no
+warning about or material that was never retrieved — gives the user one raw, class-name-prefixed `Error` string
+and an unconditional trip to a blank, un-contextualized Editor document, with no way back to where they came from.
+This is squarely the kind of "genuine product gap" this milestone's own brief asked to distinguish from a
+deliberate exclusion — it is not one; nothing on file ever decided fork failures should behave this way, it is
+simply what falls out of `ForkDocumentUseCase.js` never having needed a second failure cause before this journey
+existed.
+
+### What this milestone deliberately excludes
+
+Per its own type and explicit scope: no production-code change of any kind — `ForkDocumentUseCase.js`,
+`PublicationCard.js`, `EditorView.js`, and `Toolbar.js` are all untouched, confirmed by `git status` carrying only
+the new test file and its `tests.html` registration. No outcome enum, no button gating, no return-path
+preservation, no UI change of any kind — this milestone identifies and precisely locates the gap; it does not
+close it.
+
+### What comes after
+
+The recommended next step is sized exactly to the one gap this audit found: give `ForkDocumentUseCase`'s two
+failure causes (license denial, missing/unretrieved material) a small, named outcome distinction — mirroring
+`PublicationResolutionOutcome`'s own existing, proven shape, never a new UI framework — so `EditorView.js`'s catch
+block can show an actionable message (distinguishing "this Publication's license does not allow forking" from
+"this Publication's content is not yet available") and preserve a way back to where the user came from (the
+`returnWorldId`/`publication` context already computed before the throw) instead of unconditionally landing on a
+blank new document. This mirrors 0.9.338 naming 0.9.339's own fix, verbatim, without building it in the same
+milestone — the next milestone, if the user chooses to take it, is exactly this seam, and nothing larger.
