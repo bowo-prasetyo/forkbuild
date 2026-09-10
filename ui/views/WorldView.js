@@ -649,6 +649,15 @@ export default {
         // verification algorithm of its own.
         const worldDiscoveryLeadRegistry = inject('worldDiscoveryLeadRegistry', null);
         const discoverWorldEncounterPublicationCommand = inject('discoverWorldEncounterPublicationCommand', null);
+        // 0.9.357 — the SAME canonical campaign tag ui/main.js already
+        // supplies to Publication distribution's own Nostr publisher,
+        // forwarded verbatim to WorldEncounterCanvas's own new
+        // defaultDiscoveryTag prop below — never re-declared here, never a
+        // second literal. See tests/PublicationDiscoveryTagUXConsistencyAudit.test.js
+        // (0.9.356) for why this is safe: the value only seeds the
+        // Discovery-tag input's own starting value and never touches how
+        // discoverWorldEncounterPublicationCommand itself is called.
+        const publicationDiscoveryTag = inject('publicationDiscoveryTag', '');
         const registry = new CreateBrickRegistryUseCase().execute();
         const worldViewFactory = new CreateWorldViewUseCase().execute(identityUseCase.provider, {
             peerMessageBus,
@@ -4277,6 +4286,7 @@ export default {
             publicationDistributionLifecycleStore,
             worldDiscoveryLeadRegistry,
             discoverWorldEncounterPublicationCommand,
+            publicationDiscoveryTag,
             nearbyLandmarkRows,
             nearbyPeopleRows,
             goToNearbyCollaborator,
@@ -4735,6 +4745,17 @@ export default {
                      "0.9.111 — World View Decentralized Publication
                      Retrieval."
 
+                     0.9.357 — defaultDiscoveryTag, WorldEncounterCanvas's
+                     own new prop, forwarded the app-wide
+                     publicationDiscoveryTag verbatim (this file's own
+                     ui/main.js-injected copy of the SAME canonical campaign
+                     tag distribution already uses) — seeds ONLY the
+                     Discovery-tag input's own initial value; the field
+                     stays exactly as freely editable as before, and
+                     discoverPublication() itself is entirely unchanged. See
+                     tests/PublicationDiscoveryTagUXConsistencyAudit.test.js
+                     (0.9.356) for why this is safe.
+
                      0.9.138 — snapshotDistributionCommand, WorldEncounterCanvas's
                      own new prop, bound to this file's own
                      distributeWorldEncounterSnapshot() — a thin wrapper
@@ -4786,6 +4807,7 @@ export default {
                         :getPublicationCommentariesCommand="getPublicationCommentariesCommand"
                         :addPublicationCommentaryCommand="addPublicationCommentaryCommand"
                         :viewerIdentityId="myIdentityId"
+                        :defaultDiscoveryTag="publicationDiscoveryTag"
                     />
                 </CollapsibleSection>
             </div>
