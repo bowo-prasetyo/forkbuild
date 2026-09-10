@@ -94217,3 +94217,92 @@ milestone number. The two minor findings this audit's own sweep produced remain 
 milestone leaves them, for a future milestone to take up if and when genuine user evidence — not architectural
 interest, not roadmap continuity — points at either. ForkBuild's broader product evolution resumes on its own
 terms when such evidence arrives.
+
+## 0.9.375 — Post-Publish Distribution Guidance Actionability Audit
+
+**Type:** Test-only, single-subject audit. **Production changes:** None.
+
+0.9.374's own `STABLE_STOP` deliberately pre-selected no `0.9.375` — the next milestone had to come from an actual
+new product requirement, not roadmap continuity. One arrived: could the existing publish-success notification
+become an actionable entry point into the already-existing Publication Distribution command (0.9.140/0.9.346-
+0.9.349), the way "Published! [Distribute now]" would read — reusing that command exactly, adding no manager,
+queue, or lifecycle vocabulary of its own? This milestone audits that specific question before any production
+code changes, the identical discipline 0.9.346/0.9.348 already held before their own implementation milestones.
+
+### What this milestone adds
+
+`tests/PostPublishDistributionGuidanceActionabilityAudit.test.js` (new, registered in `tests.html`), built against
+real, unmodified production source and object graphs across `ui/`, `application/`, `publisher/`, `content/`,
+`discovery/`, `identity/`, `storage/`, and `core/`. Ten lettered sections:
+
+- **Section A — Locate the real notification path(s).** `Toolbar.js`'s `publish()` (the Editor's own Publish
+  button) and `WorldView.js`'s `publishActiveDocument()` (World View's own) each report success independently,
+  but both call an identically-shaped `feedback`/`report` object — confirmed byte-identical once whitespace is
+  normalized — rendered by exactly one component, `ActionFeedback.js`.
+- **Section B — Publication identity.** The full `Publication` is genuinely in hand at every publish call site,
+  but is discarded down to a bare `` `Published "${publication.title}"` `` string before it ever reaches the
+  notification's own state — `feedback.show(message)` takes exactly one parameter, live-confirmed.
+- **Section C — Interactivity by design.** `ActionFeedback.js` is non-interactive as a live CSS fact
+  (`pointerEvents: 'none'`, no click handler anywhere in its template) *and* as an explicit, self-documented
+  boundary in its own header: "no queue, no toast framework... If this ever needs more, that's evidence for a real
+  notification subsystem; until then, less is the architecture."
+- **Section D — Command availability per view.** `WorldView.js` already injects the existing
+  `publicationDistributionCommand` (`distributeWorldEncounterPublication`) into `OwnPublicationPanel`, the same
+  function reference `WorldEncounterCanvas`'s own action already uses. `EditorView.js` — the Editor's own Publish
+  surface — mounts no `OwnPublicationPanel`, imports no `PublicationDistribution`-named class, declares no `props`
+  block, and receives no such prop from its own route registration in `ui/router/index.js`.
+- **Section E — Existing UI surfaces, live-proven.** `publishActiveDocument()` calls `session.publishDocument()`
+  and `refreshSpatialUI()` synchronously in the same function; `refreshSpatialUI()` re-derives `ownPublication`
+  from the identical `session.getPublicationForDocument(activeId)` call `OwnPublicationPanel`'s own `publication`
+  prop reads, and that panel is mounted unconditionally (`v-if="cameraPosition"`) beside Save/Publish. In
+  World View, the seam this audit was asked to evaluate is already closed: a correctly-scoped "Distribute
+  Publication" action is already on-screen the instant Publish succeeds, live-confirmed end to end through the
+  real command/orchestrator/lifecycle-store chain.
+- **Section F — Duplicate/stale interaction, live-proven.** The shared `feedback` object is single-slot and
+  last-write-wins: a second `publish()` before the first notification's 2.5s timer clears overwrites the message
+  entirely, with nothing about the first recoverable. Any action attached to this primitive would need its own
+  `requestId`-style staleness guard — the identical discipline `distributeOwnPublication()`/`distributeOwnSnapshot()`
+  already hold — which the primitive itself does not provide today.
+- **Section G — Local-first invariant.** Neither `report()`/`feedback.show()` nor `PublishDocumentUseCase.js`
+  contain any distribution- or network-shaped call, reconfirmed fresh; Publish remains local-first regardless of
+  this audit's conclusion.
+- **Section H — Failure/dismissal convergence, live-proven.** `executePublicationDistributionCommand()`'s own
+  destructured parameter list carries no caller-identifying field; invoking the exact existing
+  `distributeWorldEncounterPublication` function reference a third time here, on both success and a genuine
+  failure, produces the identical result/rejection shape `OwnPublicationPanel`'s own catch already handles with
+  one fixed, generic message — a toast action wired through this same command would need no vocabulary of its own.
+- **Section I — The two real paths forward.** Path 1 (make `ActionFeedback.js` itself interactive) and Path 2
+  (give `EditorView.js` its own channel to the existing distribution command) are each confirmed absent from
+  production today, with no half-built shortcut vocabulary (`ToastDistributionManager`/`ToastDistributionUseCase`/
+  `ToastDistributionOrchestrator`, etc.) anywhere.
+- **Section J — Final decision matrix and verdict.**
+
+### Verdict
+
+**`DEFER`.** The specific mechanism this milestone was asked to audit — a clickable action inside the existing
+publish-success notification — does not converge safely on current architecture the way 0.9.347/0.9.348 converged
+on the existing distribution command. `ActionFeedback.js` is non-interactive as both a live CSS fact and an
+explicit, self-documented design boundary, and the one view where the existing distribution command is actually
+in scope (World View) already shows an equivalent, correctly-scoped action on-screen in the same render tick
+Publish succeeds in — a duplicate toast action there would be largely redundant. The one place with a genuine,
+still-open gap is the Editor: Publish success is reachable there, but no distribution surface of any kind is, and
+closing that gap is not "add a button to a toast" — it is giving `EditorView.js` its own real channel to the
+existing distribution command, a materially larger, structurally different decision than this milestone's own
+proposed scope. That decision is real and left on record; it is not built here, and it is not the same milestone
+as making `ActionFeedback.js` clickable.
+
+### What this milestone deliberately excludes
+
+Per its own type: no production-code change of any kind. `ActionFeedback.js` is not modified. No `onAction`/
+`actionLabel` prop is added to it. `EditorView.js` receives no distribution-command wiring. No
+`ToastDistributionManager`/`ToastDistributionUseCase`/`ToastDistributionOrchestrator` or any parallel distribution
+path is introduced. This milestone identifies precisely what would and would not converge safely; it does not
+build either path.
+
+### What comes after
+
+No `0.9.376` is pre-selected as originally proposed. A future milestone that wants to close the Editor's own
+still-open gap should scope itself honestly as "give `EditorView.js` a reachable post-publish distribution entry
+point" — most simply, the same `OwnPublicationPanel` wiring World View already has, mounted where the Editor's own
+Publish action lives — rather than "make the toast actionable," which this audit shows is a different, smaller-
+sounding but architecturally larger change than it first appears.
