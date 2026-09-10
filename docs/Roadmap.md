@@ -92726,3 +92726,81 @@ block can show an actionable message (distinguishing "this Publication's license
 `returnWorldId`/`publication` context already computed before the throw) instead of unconditionally landing on a
 blank new document. This mirrors 0.9.338 naming 0.9.339's own fix, verbatim, without building it in the same
 milestone — the next milestone, if the user chooses to take it, is exactly this seam, and nothing larger.
+
+*(0.9.353 "Fork Failure Reason Presentation," 0.9.354 "Fork Failure UX Convergence Audit," and 0.9.355 "Post-Fork
+Failure Product Reassessment" completed exactly this recommended arc — see their own commit messages and test
+files — but were not appended to this roadmap file at the time. Recorded here for continuity before 0.9.356.)*
+
+## 0.9.356 — Publication Discovery Tag UX Consistency Audit
+
+**Type:** Test-only. **Production changes:** none — confirmed directly in Section J against the two files any fix
+would touch.
+
+A user-reported observation: World View's own "Discover Publication" panel
+(`ui/components/WorldEncounterCanvas.js`) renders a blank "Discovery tag" text input, forcing a Wanderer to
+manually retype a tag the application already knows — `ui/main.js`'s own `'forkbuild-publication'`, the exact
+literal it already supplies, once, to Publication DISTRIBUTION's own Nostr publisher. This milestone audits
+whether that is a real, narrow integration gap or a deliberate design, following the same "audit first" discipline
+0.9.351/0.9.352/0.9.338 already established for this family of question.
+
+### Findings (Sections A-J)
+
+- **A.** Exactly one production-authoritative `discoveryTag` literal exists — `'forkbuild-publication'`,
+  `ui/main.js` line 1800 — a bare, non-interpolated string, documented in the file's own comment as "ForkBuild's
+  own distribution campaign marker, not a host concern," and proven live to reach the real
+  `resolveNostrPublisherOptions()` configuration boundary.
+- **B.** Live-proven (not merely read from source): a blank/omitted `discoveryTag` is a guaranteed, silent, empty
+  result at every layer — `WorldEncounterCanvas.methods.discoverPublication()` never even calls its own injected
+  `discoveryCommand` when the field is blank, and `queryDecentralizedWorldDiscovery()` resolves to `[]` without
+  ever consulting the query service for a blank/undefined tag.
+- **C.** Snapshot's own discovery tag (`'forkbuild-snapshot'`) is composed once in `ui/main.js` and reused verbatim
+  across its one publish-side and two discovery-side call sites, and is never exposed to a user at all (no input
+  field anywhere). Publication's own tag is composed once for its publish side but never threaded into its
+  discovery-side composition, which instead leaves the field entirely to free text. The two differ BY DESIGN —
+  `WorldEncounterCanvas.js`'s own header documents Publication discovery as "the Wanderer's own typed input," a
+  genuinely free-form recovery/diagnostic tool, unlike Snapshot's single fixed campaign lookup.
+- **D.** `'forkbuild-publication'` is a genuinely global, application-wide constant — one instance, one running
+  application, never derived from a Publication/World/objectId — stable enough to serve as a default.
+- **E.** The existing discovery command/composition/query chain needs no new mechanism: `discoveryTag` is already
+  a plain, forwarded argument at every layer (`composeDiscoverWorldEncounterPublicationCommand({ objectId,
+  discoveryTag })`, unmodified). The only missing wire is the input's own starting value.
+- **F/G.** Live-proven across a blank, the canonical, and an arbitrary hand-typed starting value: prefilling
+  changes only where the field starts — it stays a plain, always-editable `v-model`, and
+  `discoverPublication()` forwards exactly whatever the field currently holds, with no branch anywhere
+  distinguishing a prefilled value from a typed one.
+- **H.** Confirmed by absence: neither `ui/views/WorldView.js` nor `ui/components/WorldEncounterCanvas.js`
+  contains the literal today — the one existing definition remains `ui/main.js`'s own, reachable through the same
+  `inject()`/`app.provide()` seam already used for the discovery command itself, with no second copy required.
+
+### Decision matrix
+
+| Question | Verdict | Evidence |
+| --- | --- | --- |
+| Publication announcement tag authority | EXISTS, single literal | Section A |
+| Blank World View discovery input | CONFIRMED real gap, live | Section B |
+| Publication vs Snapshot semantics | Different by design | Section C |
+| Tag stability | Global, fixed | Section D |
+| Existing interface can consume it | Yes, no new mechanism | Section E |
+| Field editability if prefilled | Unchanged | Section F |
+| Exact command preservation | Proven live | Section G |
+| Second source of truth risk | Avoidable | Section H |
+
+### Verdict
+
+**INTEGRATE.** A real, narrow UX-consistency gap: the application already owns the exact canonical tag a
+same-app Publication would have been announced under, but never offers it to the one input that needs it.
+
+### What this milestone deliberately excludes
+
+No production-code change of any kind — `ui/main.js`, `ui/views/WorldView.js`, and
+`ui/components/WorldEncounterCanvas.js` are all untouched by this milestone; it locates and evidences the gap, it
+does not close it.
+
+### What comes after
+
+The recommended next step, sized to exactly this gap: extract `'forkbuild-publication'` to one named constant in
+`ui/main.js`, reused at both its existing distribution call site and one new `app.provide('publicationDiscoveryTag',
+...)` call; `ui/views/WorldView.js` `inject()`s it and forwards it to `WorldEncounterCanvas.js` as one new,
+optional, defaulted prop that seeds the existing `discoveryTag` field's own initial value — never overriding a
+later edit, never touching `discoverPublication()`'s own logic, and never introducing a second campaign-tag
+literal.
