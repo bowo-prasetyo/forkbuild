@@ -93425,3 +93425,31 @@ mirroring `ui/views/ContentProviderSettingsView.js`'s own shape. After that: IPF
 configuration/persistence/retrieval-integration pattern this milestone establishes, as its own separate
 `IpfsGatewayConfiguration`/`IpfsGatewayConfigurationStore` pair — never a shared, generic
 `InfrastructureEndpointConfiguration` abstraction.
+
+## 0.9.365 — Arweave Gateway Configuration Convergence Audit
+
+**Type:** test-only. **Production changes:** NONE.
+
+0.9.364 gave a user's own Arweave gateway choice a real value object, a durable store, and two wired retrieval
+composition call sites — and its own three test files each proved one of those pieces correct in isolation. None of
+the three asked the harder, cross-cutting question this milestone answers: now that the configuration has crossed
+four boundaries (value object -> persistence -> composition root -> two independent retrieval runtimes), do those
+pieces actually converge on one consistent story, with no second authority anywhere, and with the write path
+genuinely unreachable by it?
+
+`tests/ArweaveGatewayConfigurationConvergenceAudit.test.js` answers with nine sections: configuration authority (one
+value object, one storage key, one composition point — a repo-wide structural sweep, not just this feature's own
+files); absence vs. an explicit default staying distinguishable facts in persistence even where their effective URL
+coincides; both retrieval paths proven against the CONCRETE fetch call (not just a constructed instance's own
+`gatewayUrl` getter), default and custom; write-path isolation proven behaviorally — a retrieval override on file at
+the exact same moment never reaches Snapshot distribution's own POST (verified against the real fetch call) or
+Signed Claim distribution's own resolved uploader options; replacement/clearing leaving no residue across restart
+boundaries; three genuinely independent compositions (separate store AND separate `StorageProvider` instances) over
+one shared storage namespace proving persistence, never an in-memory singleton, is the authority; failure semantics
+confirming an unreachable custom gateway fails loudly with zero fallback attempt against `arweave.net`; URL
+normalization confirming every trailing-slash-equivalent input converges to one value while a gateway's own
+path/query is never destroyed; and a final architecture sweep confirming the configuration boundary imports nothing
+beyond its own declared seam.
+
+Every section passed against the existing 0.9.364 implementation unmodified — no convergence defect was found, so no
+production change was made.
