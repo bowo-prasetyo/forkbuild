@@ -93857,3 +93857,151 @@ produce an identical empty `[]` for both "genuinely nothing exists" and "the rel
 question is deliberately left unanswered here, and deliberately not solved in this milestone either — first finish
 the explicit relay-selection/recovery feature and reassess it independently, exactly as 0.9.368's own Section B
 already named.
+
+## 0.9.372 — Nostr Relay Settings Lifecycle & Product Reassessment
+
+**Type:** test-only. **Production changes:** NONE.
+
+0.9.369-0.9.371 answered "can a user configure another relay?" The question this milestone asks, once, is the
+harder one: does that actually close the relay-resilience gap 0.9.368 demonstrated, and — now that a real, shipped
+feature exists to compare against instead of a speculative guess — does anything else in this codebase genuinely
+deserve the same treatment next? The direct structural mirror of `tests/ArweaveGatewayLifecycleReassessment.test.js`
+(0.9.367), applied to three read paths and a stateful WebSocket transport instead of one retrieval path over
+`fetch`.
+
+```text
+Default relay                Before:
+    │                        default relay unavailable -> discovery silently finds nothing -> no recovery
+    ▼
+unavailable                  After:
+    │                        default relay unavailable -> user selects alternative -> reload -> discovery
+    ▼                        reaches the alternative -> previously undiscoverable content becomes discoverable
+Discovery silently produces
+no usable result
+    │
+    ▼
+User opens Nostr Relay Settings
+    │
+    ▼
+Saves alternative relay
+    │
+    ▼
+Reloads application
+    │
+    ▼
+Discovery reaches alternative relay
+```
+
+`tests/NostrRelaySettingsLifecycleReassessment.test.js` is a single, self-contained suite (assumes nothing from any
+earlier Nostr Relay test file still passing) built against the REAL production classes — `NostrRelayConfiguration`,
+`NostrRelayConfigurationStore`, `SetNostrRelayConfigurationUseCase`, `NostrDiscoveryQueryService`,
+`NostrSnapshotDiscoveryQueryService`, `NostrPlaceNamingDiscoverySource`, `PlaceNamingDiscoveryQueryService`, all
+three runtime compositions, and `nostr/NostrRelayQueryClient.js`'s own real, unmodified transport — never a mock of
+any of those collaborators. Only the two genuine environment seams this codebase already treats as injection points
+(`StorageProvider` and `webSocketImpl`) are supplied by hand, following ten sections (A-J):
+
+- **Section A — capability inventory.** A self-contained sweep confirms the complete chain
+  (`NostrRelayConfiguration` -> `NostrRelayConfigurationStore` -> `SetNostrRelayConfigurationUseCase` -> Settings UI
+  -> startup composition -> all three read-path consumers) is genuinely present, write-path isolation holds, and no
+  generic `InfrastructureEndpointConfiguration` abstraction exists anywhere in the repository — the string appears
+  only inside `core/NostrRelayConfiguration.js`'s and `core/ArweaveGatewayConfiguration.js`'s own headers, naming
+  exactly what each refused to become.
+- **Section B — user-value closure, the flagship journey.** The full before/after failure-and-recovery journey,
+  proven against REAL classes and the REAL (fake-transport) WebSocket construction, independently for all THREE
+  discovery paths: a genuinely unreachable deployment default (a rejected WebSocket connection, not an empty relay
+  response) finds nothing for Publication, Snapshot, AND Place Naming discovery; a settings save; a real restart
+  boundary (a brand-new store instance over the same underlying storage); and all three paths then finding
+  previously-undiscoverable content against the user-chosen alternative — each proven at the concrete
+  `new webSocketCtor(relayUrl)` call, never merely a constructed service's own `relayUrl` getter. The complete
+  before/after table from this milestone's own brief is also proven directly: a later-failing alternative still
+  fails through the existing per-consumer contract with no fallback attempt at the deployment default, and Clear
+  genuinely restores the deployment default on a subsequent fresh composition.
+- **Section C — three discovery surfaces.** Re-sweeps (independently of Section A) that each surface's own real
+  composition call site in `ui/main.js` receives the resolved relay, and gives Place Naming discovery the specific
+  care this milestone's own brief asked for: a structural check confirms `placeNamingDiscoverySources` in
+  `ui/main.js` is, at most, a single-element array holding exactly one `NostrPlaceNamingDiscoverySource` — no
+  second source type ever sits alongside it. The relay setting is this discovery family's ENTIRE resilience story,
+  exactly as the 0.9.368 audit found.
+- **Section D — publishing boundary.** Reconfirms, behaviorally, that `composeSnapshotDistributionRuntime()` and
+  `composePlaceNamingPublicationRuntime()` both still resolve `DEFAULT_NOSTR_RELAY_URL` even with a settings-saved
+  override on file at the exact same moment, down to the concrete `publishImpl` call; and confirms the settings
+  page copy already states the discovery-only scope in one explicit sentence — now a particularly important
+  invariant, per this milestone's own brief, since the Settings UI makes the configuration visible enough that a
+  user could reasonably assume "Nostr Relay" means "my relay" generally.
+- **Section E — the silent failure product question, and this milestone's load-bearing finding.** Reconfirms the
+  two class-level `[]`-collapse contracts (`NostrDiscoveryQueryService`, `NostrSnapshotDiscoveryQueryService`) and
+  the one class-level reject contract (`NostrPlaceNamingDiscoverySource`) 0.9.370's own Section F already
+  documented — then goes one layer further than any prior milestone did: `ui/main.js` NEVER hands
+  `NostrPlaceNamingDiscoverySource` to a consumer directly, it always wraps it in `PlaceNamingDiscoveryQueryService`
+  (`composePlaceNamingDiscoveryRuntime()`), and that aggregation class's own header says, in as many words, "Never
+  throws" — it isolates every source's own failure via `Promise.allSettled`. Proven directly, composed exactly as
+  the real app composes it (single source, real class, real fake-transport failure): the sole source's own
+  rejection is swallowed, and `executeDiscoverPlaceNamingClaimsCommand()` — the exact function `WorldView.js` calls
+  — resolves `[]` rather than rejecting. Consequence: `WorldView.js`'s own `placeNamingDiscoveryError` UI branch
+  ("Place naming discovery is temporarily unavailable") is real code, reachable only by a thrown
+  `WorldNavigationSession.getRegions()` or similar, but is NEVER the message a relay outage itself produces — the
+  identical structural story holds for `OwnPublicationPanel.js`'s own `snapshotCandidateDiscoveryError`, dead for
+  the same reason against `NostrSnapshotDiscoveryQueryService`. In the REAL composed pipeline, all three discovery
+  paths are equally silent about relay failure, not two of three as the class-level contracts alone would suggest.
+  Publication (World Encounter) discovery is the one path where the ambiguity is structurally DILUTED, never
+  eliminated, by its own independent Nostr+Arweave aggregation. Classified: a real, currently-invisible ambiguity,
+  but an alternative relay already resolves the PRACTICAL recovery need this milestone was built for — a Wanderer
+  who suspects discovery trouble has a working recovery action with no need to first diagnose which failure mode
+  they are in. What remains is a narrower, presentation-level question (distinguishing "still empty after switching
+  because nothing exists" from "still empty because this relay is ALSO unreachable"), named here as its own,
+  separate, later `SEPARATE_PRODUCT` candidate — "Discovery Failure Visibility" — never built or designed in this
+  test-only milestone.
+- **Section F — configuration discoverability.** A product-language audit of the real settings page copy: the
+  heading is the plain product name; "discovery" is grounded with the concrete families it covers (Publications,
+  Snapshots, Place Naming), never left as an unexplained term of art; "Use Deployment Default" is grounded with the
+  real concrete relay in effect; publishing-unaffected is stated in one explicit sentence — if anything stronger
+  than Arweave Gateway's own two-clause version; and the page never leaks unrelated infrastructure vocabulary. One
+  non-blocking finding recorded, the identical class 0.9.367 already recorded for Arweave Gateway: the "Saved."
+  confirmation does not itself state that a change takes effect on next application load. Per this milestone's own
+  brief — apply the same discipline as before, no milestone for wording that does not create a real usability
+  problem.
+- **Section G — restart and persistence.** Save relay-A -> reload -> relay-A active; Clear -> reload -> deployment
+  default active; plus the browser/profile isolation proof (two independent storage namespaces never observe or
+  overwrite each other's configuration), and confirmation the store's own constructor accepts only a
+  `StorageProvider` — no identity/profile dimension exists to isolate in the first place.
+- **Section H — remaining infrastructure candidates, reassessed against real, current source**, never assumed
+  "next" merely by resemblance to a completed candidate: IPFS Gateway (`DEFER` — still a real but structurally
+  narrower, opt-in-per-item failure mode, reconfirmed against current source, not assumed just because it resembles
+  Arweave), STUN (`DEFER` — still one flat `iceServers` array, no independently configurable field), TURN
+  (`SEPARATE_PRODUCT` — still a dynamic credential fetch, ruling out a plain-URL shape entirely), Rendezvous
+  (`DEFER` — still deployment/bootstrap identity, no per-user recovery scenario), Bitcoin Esplora and Base RPC
+  (`DEFER` — both still explicit, occasional anchoring actions, never the default content pipeline).
+- **Section I — cross-configuration isolation.** Behavioral proof — not just naming convention — that
+  `ArweaveGatewayConfiguration`/Store and `NostrRelayConfiguration`/Store round-trip independently through one
+  shared storage namespace, under exactly their own two distinct storage keys, with no value bleed and no key
+  collision in either direction; neither family's own executable code (design-rationale comments excluded, since
+  each legitimately names the other by name to explain why it stays separate) references the other; and neither
+  value object subclasses the other or any shared base — no abstraction emerged merely because their lifecycle
+  shapes (value object -> store -> use case -> settings view) now happen to match.
+- **Section J — final decision, per candidate**, using this milestone's own four-outcome vocabulary (`STABLE_STOP` /
+  `BUILD_NEXT` / `DEFER` / `SEPARATE_PRODUCT`), plus a direct, independent re-check that the settings page still
+  carries none of the "Test Connection"/"reachable now" vocabulary the accompanying architectural recommendation
+  (below) advises against building next.
+
+**Verdict: `STABLE_STOP`** for infrastructure-endpoint configuration. Arweave Gateway and Nostr Relay are both
+`COMPLETE` — each closes a real, evidenced before/after user journey, not merely a URL being stored. No remaining
+endpoint candidate reassessed in Section H demonstrates a comparable recovery gap: IPFS Gateway, STUN, Rendezvous,
+Bitcoin Esplora, and Base RPC all remain `DEFER`; TURN remains `SEPARATE_PRODUCT`. "Discovery Failure Visibility"
+(Section E) is named as its own, separate `SEPARATE_PRODUCT` candidate — real, but not an infrastructure-endpoint
+configuration question, and not urgent given an alternative relay already resolves the practical recovery need — so
+it does not change the `STABLE_STOP` verdict for infrastructure-endpoint configuration itself. No production code
+changed in this milestone.
+
+**One important architectural recommendation, reconfirmed structurally (Section J):** the natural next step after a
+user can enter a relay URL — a "Nostr Relay Test Connection" feature — is deliberately NOT recommended. It would
+introduce a new semantic (`configured ≠ reachable-now`) with no natural stopping point: what a test means, when it
+runs, what counts as healthy, how failures display, whether health is cached, and whether a result influences
+runtime behavior. None of that is necessary for the demonstrated product gap, and the current model — explicit
+choice, persisted, taking effect on next startup, with the existing protocol determining success or failure — stays
+simpler. The settings page (reconfirmed, Section J) carries none of that vocabulary today.
+
+With this milestone confirming Nostr relay resilience is complete and no other infrastructure-endpoint candidate is
+evidenced, the sequencing returns to the broader ForkBuild product evolution rather than configuring another server.
+"Discovery Failure Visibility" remains on record as a possible, separate, later milestone — distinguishing a
+genuinely empty discovery result from a relay outage across all three discovery paths — should product evidence
+ever make it urgent; it is deliberately unscheduled and undesigned here.
