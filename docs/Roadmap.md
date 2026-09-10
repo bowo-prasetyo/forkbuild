@@ -94594,3 +94594,89 @@ history, "distributed" badges, automatic distribution, retry, provider selection
 status in Notifications — those are separate product decisions this milestone deliberately declines to assume follow
 automatically from an arc closing, per 0.9.374's own `STABLE_STOP` discipline. The recommended next step is a fresh
 whole-product product-evolution reassessment, not another adjacent enhancement to this arc.
+
+## 0.9.379 — Post-Distribution Product Evolution Reassessment
+
+**Type:** Test-only, whole-arc product audit. **Production changes:** None.
+
+0.9.378's own closing note deliberately declined to pre-select a `0.9.379`, naming instead "a fresh whole-product
+product-evolution reassessment" as the correct next step. This milestone is that reassessment, scoped to the arc it
+follows: now that post-publish distribution is reachable from all three natural entry points (EditorView, WorldView,
+OwnPublicationPanel) and proven to converge on one command, what — if anything — should the product do next?
+
+### What this milestone adds
+
+`tests/PostDistributionProductEvolutionReassessment.test.js` (new, registered in `tests.html`), built against real,
+unmodified production source and real object graphs, reusing the EditorView/Toolbar extraction harness
+`tests/PostPublishDistributionActionConvergenceAudit.test.js` (0.9.378) already established. Ten lettered sections:
+
+- **Section A — Completed distribution capability inventory.** Seven named mechanisms — Publication distribution,
+  Nostr announcement, Snapshot distribution, IPFS placement/pinning, Bitcoin anchoring, provider preference for
+  Snapshot content, and the post-publish distribution action — each checked against real evidence (file existence,
+  route registration, top-nav presence) and classified. Six are `COMPLETE` and reachable; Base anchoring remains
+  `DEFERRED` (`BlockchainKind.BASE` still named but reserved, still no anchor publisher class anywhere). Nothing in
+  this inventory is `INTERNAL`.
+- **Section B — User journey reassessment.** Create → Edit → Publish → Distribute, driven live through the real
+  extracted `Toolbar.publish()` → `EditorView.onDocumentPublished()` → `distributePublishedDocument()` chain,
+  confirms the journey the milestone brief names reaches a concrete, checkable outcome (a real distribution result
+  naming the exact Publication distributed) rather than ending prematurely.
+- **Section C — Distribution-result usability.** Splits "is the result good enough" into five checked properties:
+  operation-succeeded, lifecycle-recorded, locator-available (and genuinely *rendered* — `EditorView.js` and
+  `OwnPublicationPanel.js` both interpolate `material.uri`/`discovery.id` in their own templates, not merely compute
+  them), discoverable (the Publication Center is a real, always-mounted route), and verifiable/retrievable later
+  (`DecentralizedPublicationsView.js` composes real `resolvePublicationView`/`describeRetrieval` logic, not a
+  placeholder). All five are `TRUE`. The one gap this section's own evidence finds: neither result panel links to
+  the Publication Center for the Publication just distributed.
+- **Section D — Discovery convergence.** Reconfirms, live and one entry point further than 0.9.349 checked, that a
+  successful Nostr announcement never mutates the local Repository read model. Distinguishes Section C's finding
+  from proactive Repository discovery (still correctly `DEFER`, reconfirmed via `SearchPublicationsUseCase.js`
+  staying synchronous and network-free): the Publication Center itself reads no route query parameter at all, so a
+  "jump straight to this Publication" link could not target anything yet even if the connective link existed —
+  a narrower, different, and smaller gap than the already-deferred discovery architecture.
+- **Section E — Cross-surface consistency.** Three existing regression suites re-run live as real subprocesses,
+  plus a fresh, independently-constructed three-surface run against a shared lifecycle store — a regression check,
+  confirming EditorView/OwnPublicationPanel/WorldEncounterCanvas remain presentation-only, not a new architecture.
+- **Section F — Partial distribution semantics.** A live material-`PRESENT`/discovery-`ABSENT` outcome, reproduced
+  through EditorView this time, confirms no error is raised and the template's own "Not yet announced" fallback
+  renders honestly; a vocabulary sweep confirms no "fully distributed" aggregate claim exists anywhere.
+- **Section G — Failure/recovery product gap.** Live, on all three surfaces: a synchronous failure surfaces the
+  existing generic notice, and clicking the SAME explicit trigger again — once the underlying cause is gone —
+  clears the error and succeeds, with no dedicated retry control. Proves today's UX already supports manual retry;
+  no retry infrastructure is introduced or justified.
+- **Section H — Existing deferred directions, revisited.** A vocabulary sweep across `application/`, `ui/`,
+  `core/`, `publisher/`, `storage/`, and `discovery/` for distribution history, delivery notifications, a retry
+  queue, provider fallback/health, automatic distribution, and multi-provider distribution — all still absent.
+  `RepositoryView.js` still imports neither distribution command.
+- **Section I — Architecture-driven feature rejection.** No file exists whose only reason to exist would be
+  "expose more of the lifecycle we already built" (no history/receipt/status-panel file); the lifecycle store
+  still accumulates no history array; `PublicationDistributionState` still carries exactly two values.
+- **Section J — Final decision matrix and verdict.**
+
+### Verdict
+
+**`STABLE_STOP`.** Every capability in Section A's inventory is `COMPLETE` and reachable except Base anchoring
+(deliberately `DEFERRED`). The Create → Edit → Publish → Distribute journey completes with a concrete, checkable
+outcome. The distribution result gives operation-succeeded, lifecycle-recorded, and a real, rendered locator;
+discovery and verification already exist as a separate, complete, always-reachable capability (the Publication
+Center). Distributed ≠ Discovered holds fresh. All three surfaces remain presentation-only and pass regression.
+Partial distribution is reported honestly, with no aggregate "fully distributed" claim anywhere. Today's generic
+failure notice already supports a genuine manual retry. None of the previously-deferred directions gained new
+evidence changing their status.
+
+The one real, narrow finding — no result panel links to the Publication Center for the Publication just
+distributed, and the Center itself has no mechanism yet to jump straight to one Publication — is recorded as
+`DEFER`, on the same footing as proactive Repository discovery: real, available to a future milestone on genuine
+evidence, and deliberately **not** selected as this milestone's own `BUILD_NEXT`.
+
+### What this milestone deliberately excludes
+
+Per its own type and explicit scope: no production-code change of any kind. No Publication Center contextual link,
+no route-query "jump to Publication" mechanism, no distribution history, no delivery notifications, no retry queue,
+no provider fallback/health, no automatic distribution, and no new distribution provider. This milestone identifies
+and precisely classifies the product's current state; it does not change it.
+
+### What comes after
+
+No `0.9.380` is pre-selected from within this arc. The one narrow finding this audit's own sweep produced (a
+missing contextual link from the distribution result to the Publication Center) remains on record for a future
+milestone to take up if and when genuine user evidence — not architectural interest — points at it.
