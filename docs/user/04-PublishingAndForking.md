@@ -139,6 +139,27 @@ the moment you edit a published creation directly — see
 Your published fork shows up with a **"↳ Fork of …"** note, linking it back to
 the original.
 
+### When a fork can't complete
+
+Occasionally a fork can't go through — most often when forking a Publication
+found through a peer or a decentralized network (see
+[Publications & External Evidence](09-PublicationsAndEvidence.md)) rather
+than an ordinary Repository entry. Instead of dropping you into a blank,
+unrelated Editor document, ForkBuild shows a **Fork Unavailable** dialog
+naming exactly what went wrong:
+
+- **This Publication cannot be forked under its license** — the license
+  attached to what you were trying to fork doesn't allow it (see
+  [Choosing a license](#choosing-a-license) above).
+- **This Publication's material is currently unavailable** — the license
+  allows forking, but the actual content isn't on this device (or
+  reachable through a connected peer) yet.
+
+Either way, the dialog's one button, **Back to Publication**, takes you back
+to wherever you found it — the World it was placed in, or the Publication
+itself — rather than leaving you stranded in the Editor with nothing to
+build on.
+
 ## The family tree
 
 Because every fork records its parent, ForkBuild can draw a creation's whole

@@ -27,10 +27,14 @@ top-level [docs/](..) folder.
    came from, its distribution status and a **Distribute Publication**
    action, a separate, independent **Snapshot Distribution** panel with
    its own **Distribute Snapshot** action for that publication's Snapshot
-   protocol, a separate **Discover Publication** search that queries
-   Arweave/Nostr directly by publication id and tag — independent of any
-   marker or connected peer — letting you inspect and explicitly select a
-   verified result found that way, a **Nearby Place Names** group that
+   protocol — both also reachable straight from **My Publication** for
+   your own current world, with no marker selection required — a
+   **Publication Discovery** popup, tucked behind its own trigger to keep
+   the main screen uncluttered, holding a **Discover Publication** search
+   that queries Arweave/Nostr directly by publication id and a discovery
+   tag prefilled with ForkBuild's own shared campaign tag — independent of
+   any marker or connected peer — letting you inspect and explicitly
+   select a verified result found that way, a **Nearby Place Names** group that
    discovers signed place-naming claims from a decentralized network for
    regions around you (again with no connected peer required), lets you
    **Navigate** to one or **Adopt** it onto your own device, and never
@@ -46,8 +50,12 @@ top-level [docs/](..) folder.
    place for when the automatic path doesn't produce what you expect.
 4. **[Publishing & Forking](04-PublishingAndForking.md)** — sharing
    your work, licenses, how forking works (including the automatic
-   fork that happens the moment you edit a published creation), and
-   browsing the Repository's searchable, sortable, paginated catalog.
+   fork that happens the moment you edit a published creation), a
+   **Fork Unavailable** dialog naming exactly why a fork couldn't
+   complete — a denying license or currently-unavailable material —
+   with a **Back to Publication** way out instead of a blank, stranded
+   Editor document, and browsing the Repository's searchable, sortable,
+   paginated catalog.
 5. **[Identity & Login](05-IdentityAndLogin.md)** — your cryptographic
    identity, the vault (locking/unlocking), and backing it up with
    export/import.
@@ -59,14 +67,17 @@ top-level [docs/](..) folder.
    through spatial awareness.
 7. **[Peer Connections & Friends](07-PeerConnectionsAndFriends.md)** —
    connecting directly to other people, remembering, friending, and
-   blocking.
+   blocking, plus automatic reconnection to any Known Peer who is
+   currently discoverable, with no manual Reconnect click required.
 8. **[Chat & Conversations](08-ChatAndConversations.md)** — direct,
    friends-only messaging, offline delivery, read receipts, and voice
    calls.
 9. **[Publications & External Evidence](09-PublicationsAndEvidence.md)** —
    signed authorship and place-name claims — the latter now explicitly
    publishable to a decentralized network (Nostr), independent of and
-   alongside announcing to peers — catalog status, retrieving
+   alongside announcing to peers — catalog status (connecting to a peer
+   now automatically catalogs everything they've already published, not
+   only what they publish from then on), retrieving
    content from peers, optional external evidence: creating, discovering
    from peers, verifying, and inspecting anchors like a Bitcoin timestamp,
    optional snapshot placements: creating, inspecting, resolving,

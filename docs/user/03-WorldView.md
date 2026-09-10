@@ -167,10 +167,15 @@ notice. Neither the button's state nor its result is remembered anywhere
 ### Discover Publication — searching decentralized networks directly
 
 Still inside the World Encounters group, but needing no marker click and
-no connected peer at all, sits a separate **Discover Publication**
-panel. Enter a **Publication id** and the **discovery tag** it was
-distributed under, then click **Discover Publication** to query Arweave
-(and, once this device has a relay connection, Nostr) directly for it.
+no connected peer at all, is a **Publication Discovery** button that opens
+a small popup of its own. Inside sits the **Discover Publication** panel:
+enter a **Publication id** and the **discovery tag** it was distributed
+under, then click **Discover Publication** to query Arweave (and, once
+this device has a relay connection, Nostr) directly for it. The discovery
+tag field starts prefilled with ForkBuild's own shared campaign tag — the
+one a publication distributed from inside this app would have used — so
+in the common case you only need to type the Publication id; it stays a
+plain, freely editable field if you need to point it at a different tag.
 The result shows a **Discovery** line (**Unavailable**, **Resolved**, or
 **Ambiguous** when more than one independent lead turns up for the same
 location) and, once resolved, the same Material/Source/Verification
@@ -179,6 +184,9 @@ this only ever resolves for one of your own publications — one you
 signed and still hold locally, whose own claimed location matches what
 the network reports — so think of it as "is my publication really out
 there, intact?" rather than a general search over everyone else's work.
+Closing the popup keeps whatever you'd typed or found — reopening it
+picks up right where you left off, until you search again or leave the
+page.
 
 Once a discovered result comes back **Verified**, a **Select
 Publication** button appears; clicking it records that result as "the
@@ -263,11 +271,17 @@ button, either way you got there.
 
 The original is never touched — ForkBuild tells you the moment your copy
 is ready, exactly like any other fork (see
-[Publishing & Forking](04-PublishingAndForking.md)). A **geographic
-place** and a **collaborator** never offer Edit a Copy — a geographic
-place is a grouping of several people's own regions with no single
-document of its own to copy (open one of its regions instead), and a
-person is not a document at all.
+[Publishing & Forking](04-PublishingAndForking.md)). If the copy can't be
+made — most often because the source is a Publication found through a
+peer or decentralized network whose material isn't available yet, or
+whose license denies forking — a **Fork Unavailable** dialog says exactly
+why and offers **Back to Publication** to return you to where you started,
+rather than leaving you in a blank Editor document (see
+[When a fork can't complete](04-PublishingAndForking.md#when-a-fork-cant-complete)).
+A **geographic place** and a **collaborator** never offer Edit a Copy — a
+geographic place is a grouping of several people's own regions with no
+single document of its own to copy (open one of its regions instead), and
+a person is not a document at all.
 
 This is the *only* door out of World View's read-only surface. Everything
 else here — flying around, Search, Explore Here/What's Here?, the compass,
@@ -550,16 +564,27 @@ shows which one it is.
 
 Right beside Save/Publish sits a **My Publication** panel, showing your
 current world's title and author once it's actually published, plus its
-own **Distribute Snapshot** button. This is a completely separate action
-from the **Distribute Snapshot** button inside
+own **Distribute Publication** and **Distribute Snapshot** buttons. Both
+are completely separate actions from the identically-named buttons inside
 [World Encounters](#world-encounters--publications-and-avatars-your-peers-are-sharing)
-— that one distributes whichever encountered publication you've selected;
-this one always distributes *your own current world*. Clicking it
-genuinely attempts a real Arweave upload and Nostr announcement, and shows
-back the same **Content hash** / **Locator** / **Announcement** readout
-(or "No announcement" for a placement that succeeded without one, or a
-plain failure notice) that World Encounters' own Snapshot Distribution
-panel already does.
+— those distribute whichever encountered publication you've selected;
+these two always distribute *your own current world*, and neither shares
+state, history, or a result with the other. Clicking either genuinely
+attempts a real Arweave upload and Nostr announcement, and shows back the
+same **Content hash** / **Locator** / **Announcement** readout (or "No
+announcement" for a placement that succeeded without one, or a plain
+failure notice) that World Encounters' own equivalent panels already do.
+**Distribute Publication** distributes the Signed Claim behind your world
+the same way World Encounters' own Distribute Publication button does;
+**Distribute Snapshot** distributes it under the separate Snapshot
+protocol — see
+[Local Snapshot](09-PublicationsAndEvidence.md#local-snapshot) for what
+that distinction means. Remote IPFS pinning and Bitcoin/Base anchoring stay
+in the Publications page's own Publication Center (see
+[IPFS Publishing](09-PublicationsAndEvidence.md#ipfs-publishing) and
+[The Bitcoin Anchor Pipeline](09-PublicationsAndEvidence.md#the-bitcoin-anchor-pipeline)) —
+both need an account or a connected wallet first, so neither is a
+one-click button here.
 
 The point of My Publication is that it never depends on World Encounters
 having anything to show. World Encounters only ever displays what a

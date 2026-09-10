@@ -109,13 +109,19 @@ Nostr browser extension installed — shows a plain error instead.
 ### Receiving one from a peer
 
 You don't have to publish anything yourself to see entries here. The moment
-you're connected to a peer (see
-[Peer Connections & Friends](07-PeerConnectionsAndFriends.md)), anything
-*they* publish while you're connected reaches your device automatically and
-appears on your own Publications page. Cataloging a publication only ever
-means your device has **seen a validly signed claim** — never that whatever
-it points to is sitting on your device right now, which is exactly what the
-page's status badge tells you.
+you connect to a peer (see
+[Peer Connections & Friends](07-PeerConnectionsAndFriends.md)), your device
+automatically receives everything they've already published, not only
+whatever they publish from then on — connecting for the first time after
+they published something is just as good as having been connected the whole
+time. Cataloging a publication only ever means your device has **seen a
+validly signed claim** — never that whatever it points to is sitting on your
+device right now, which is exactly what the page's status badge tells you.
+Reaching **Available** for something a peer catalogued this way still needs
+its own separate step: **Retrieve from Peers**, below, for a claim of
+authorship or a place name, or **Retrieve** on the Repository entry itself
+for a decentralized Repository creation (see the next section) — arriving in
+your catalog and having its content on hand are always two different facts.
 
 ### A third kind: a Repository creation, decentralized
 
