@@ -14,6 +14,7 @@ import ChatView from '../views/ChatView.js';
 import ConversationsView from '../views/ConversationsView.js';
 import DecentralizedPublicationsView from '../views/DecentralizedPublicationsView.js';
 import ContentProviderSettingsView from '../views/ContentProviderSettingsView.js';
+import ArweaveGatewaySettingsView from '../views/ArweaveGatewaySettingsView.js';
 import ReconciliationCandidateLeaderboardView from '../views/ReconciliationCandidateLeaderboardView.js';
 import ReconciliationCandidateLeaderboardEvidenceExportComparisonView from '../views/ReconciliationCandidateLeaderboardEvidenceExportComparisonView.js';
 
@@ -73,6 +74,14 @@ const routes = [
     // Deliberately its own top-nav destination, not folded into
     // /publications' own already-enormous template.
     { path: '/settings/content-provider', name: 'content-provider-settings', component: ContentProviderSettingsView },
+    // 0.9.366 — Arweave Gateway Settings UI. The one ordinary product path
+    // to create/change/clear the persisted Arweave gateway retrieval
+    // override (core/ArweaveGatewayConfiguration.js, storage/
+    // ArweaveGatewayConfigurationStore.js, both 0.9.364) — see
+    // ui/views/ArweaveGatewaySettingsView.js's own header. Deliberately its
+    // own top-nav destination, the identical "not folded into a growing
+    // dashboard" shape /settings/content-provider already holds.
+    { path: '/settings/arweave-gateway', name: 'arweave-gateway-settings', component: ArweaveGatewaySettingsView },
     // 0.8.180 — Reconciliation Candidate Leaderboard UI Integration. Not
     // yet a top-nav destination (see ui/views/ReconciliationCandidateLeaderboardView.js's
     // own header) — reached by URL until a future milestone gives it a

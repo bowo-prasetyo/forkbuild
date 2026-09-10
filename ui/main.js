@@ -95,6 +95,7 @@ import { CreateSnapshotPlacementOrchestratorUseCase } from '../application/Creat
 import { CreateSnapshotPlacementCreationCoordinatorUseCase } from '../application/CreateSnapshotPlacementCreationCoordinatorUseCase.js';
 import { CreatePreferredSnapshotPlacementCreationCoordinatorUseCase } from '../application/CreatePreferredSnapshotPlacementCreationCoordinatorUseCase.js';
 import { SetRoleProviderPreferenceUseCase } from '../application/SetRoleProviderPreferenceUseCase.js';
+import { SetArweaveGatewayConfigurationUseCase } from '../application/SetArweaveGatewayConfigurationUseCase.js';
 import { PublicationCatalogDiscoveryProvider } from '../discovery/PublicationCatalogDiscoveryProvider.js';
 import { PublicationCatalogContentResolver } from '../discovery/PublicationCatalogContentResolver.js';
 import { CheckLocalSnapshotContentAvailabilityUseCase } from '../application/CheckLocalSnapshotContentAvailabilityUseCase.js';
@@ -1586,6 +1587,15 @@ const { verifier: worldEncounterMaterialVerifier } = composeWorldEncounterMateri
 // named but unbuilt.
 const arweaveGatewayConfigurationStore = new ArweaveGatewayConfigurationStore(new LocalStorageProvider());
 const resolvedArweaveGatewayUrl = (arweaveGatewayConfigurationStore.get() || { gatewayUrl: DEFAULT_ARWEAVE_GATEWAY_URL }).gatewayUrl;
+// 0.9.366 — Arweave Gateway Settings UI. The WRITE half of the settings
+// entry point, wired against this SAME store instance (never a second,
+// disconnected ArweaveGatewayConfigurationStore) — see application/
+// SetArweaveGatewayConfigurationUseCase.js's own header. Both this use
+// case and the store itself are provided app-wide below so ui/views/
+// ArweaveGatewaySettingsView.js is the one thing that ever injects either.
+const setArweaveGatewayConfigurationUseCase = new SetArweaveGatewayConfigurationUseCase({ arweaveGatewayConfigurationStore });
+app.provide('arweaveGatewayConfigurationStore', arweaveGatewayConfigurationStore);
+app.provide('setArweaveGatewayConfigurationUseCase', setArweaveGatewayConfigurationUseCase);
 
 const nostrRelayQueryClient = createNostrRelayQueryClient({});
 const decentralizedWorldDiscoveryServices = composeDecentralizedWorldEncounterMaterialDiscoveryServices({

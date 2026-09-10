@@ -93453,3 +93453,69 @@ beyond its own declared seam.
 
 Every section passed against the existing 0.9.364 implementation unmodified — no convergence defect was found, so no
 production change was made.
+
+## 0.9.366 — Arweave Gateway Settings UI
+
+0.9.364 gave a user's own Arweave gateway choice a real value object, a durable store, and two wired retrieval
+composition call sites; 0.9.365 proved those pieces converge with no second authority anywhere. Neither milestone
+gave a person any ordinary product path to actually reach that configuration — every override either milestone's own
+tests exercised was written directly through `ArweaveGatewayConfigurationStore.save()`, a storage-layer method no UI
+has ever called. This milestone closes that gap, and only that gap: it exposes the existing configuration boundary
+to a settings page, without adding any new infrastructure semantics.
+
+```text
+Settings
+   │
+   ▼
+Arweave Gateway
+   │
+   ├── current override
+   ├── Save
+   └── Use Deployment Default
+          │
+          ▼
+ArweaveGatewayConfigurationStore
+```
+
+`application/SetArweaveGatewayConfigurationUseCase.js` is the one new application-layer seam: a settings view hands
+it a plain `{ gatewayUrl }`, it alone constructs and validates an `ArweaveGatewayConfiguration`, and it alone calls
+`ArweaveGatewayConfigurationStore.save()`. An invalid URL throws before `save()` is ever reached, so a rejected input
+never mutates whatever was previously on file. There is deliberately no symmetric "Get" or "Clear" use case:
+`ui/views/ArweaveGatewaySettingsView.js` reads the current configuration through `store.get()` directly, and "Use
+Deployment Default" calls `store.clear()` directly — clearing needs no construction or validation of any kind, and
+saving `{ gatewayUrl: DEFAULT_ARWEAVE_GATEWAY_URL }` instead would wrongly turn "no preference" into "an explicit
+preference that happens to match the default," the exact confusion `ArweaveGatewayConfigurationStore.js`'s own
+header already rules out.
+
+The view itself never constructs a retrieval adapter and never imports `content/ArweaveContentStore.js` or
+`application/ArweaveWorldEncounterMaterialResolver.js` — the one thing it imports from `core/
+ArweaveGatewayConfiguration.js` is the plain `DEFAULT_ARWEAVE_GATEWAY_URL` constant, consulted only to label the
+effective gateway as informational text when no override is on file. Opening the page never writes anything: `load()`
+only ever calls `store.get()`. A change saved here reaches the real retrieval adapters through `ui/main.js`'s own
+existing composition (`resolvedArweaveGatewayUrl`, 0.9.364, unmodified) on the next application load — this view
+never attempts a live re-composition of its own.
+
+`ui/main.js` now also constructs `SetArweaveGatewayConfigurationUseCase` against the SAME `arweaveGatewayConfigurationStore`
+instance the 0.9.364 retrieval composition already resolves through (never a second, disconnected store), and
+provides both app-wide. The route (`/settings/arweave-gateway`) and top-nav link ("Arweave Gateway") sit alongside
+the existing Content Provider settings entry point, never folded into a growing "Infrastructure Settings" dashboard.
+
+**Deliberately excluded** — Test Connection, health indicators, automatic fallback, multiple gateway entries, gateway
+priority/rotation, retry/timeout configuration, credentials, a generic "Infrastructure Settings" page, and
+configuration for IPFS, TURN, Nostr, Bitcoin, or Base. This page is simply the already-established Arweave retrieval
+override made reachable — nothing more.
+
+`tests/ArweaveGatewaySettingsEntryPoint.test.js` proves reachability (nav link, route, composition-root wiring, view
+wiring — a real source sweep, never inferred from prose); save/reject/replace/clear/restart behavior through the new
+use case and the existing store; that a saved override actually reaches both retrieval paths' CONCRETE fetch calls
+after a fresh composition, and that a subsequent Clear reverts a later fresh composition to the deployment default;
+that the write (distribution) path remains completely unaffected; a view template sweep confirming the no-override/
+override display states, that opening the page never mutates anything, that Save goes through the use case and Use
+Deployment Default goes through `store.clear()` only, and that none of the deliberately-excluded feature vocabulary
+appears in what the view actually renders; and an architecture sweep of the new use case file.
+
+**What comes after:** not IPFS Gateway configuration automatically. The next milestone should be **0.9.367 — Arweave
+Gateway Settings Lifecycle / Product Audit** — confirming this small feature is complete from the user's perspective
+before deciding whether any other endpoint genuinely deserves the same treatment. The product story stays narrow on
+purpose: "if the deployment's Arweave gateway cannot retrieve content, the user can explicitly choose another
+gateway."

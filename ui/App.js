@@ -30,6 +30,7 @@ export default {
 	                    <router-link to="/conversations" class="app-nav-link">Conversations</router-link>
 	                    <router-link to="/publications" class="app-nav-link">Publications</router-link>
 	                    <router-link to="/settings/content-provider" class="app-nav-link">Content Provider</router-link>
+	                    <router-link to="/settings/arweave-gateway" class="app-nav-link">Arweave Gateway</router-link>
 	                    <router-link to="/about" class="app-nav-link">About</router-link>
 	                </nav>
                     <UserWidget />
