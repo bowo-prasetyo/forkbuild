@@ -92843,3 +92843,66 @@ own STABLE_STOP on that direction stands, unrevisited).
 
 No further milestone is pre-selected by this arc. The Publication Discovery Tag UX Consistency audit-and-fix pair
 (0.9.356-0.9.357) is complete.
+
+## 0.9.358 — Publication Discovery Tag Convergence Audit
+
+**Type:** test-only, no production changes. Production changes: NONE.
+
+0.9.357 changed a composition-root value (`ui/main.js`'s own `PUBLICATION_DISCOVERY_TAG`) that now crosses
+`ui/main.js -> WorldView -> WorldEncounterCanvas`. This milestone is the convergence audit that seam deserves
+before this arc moves on to anything else — proving the integration is COMPLETE, not merely present, and that it
+introduced no second source of truth, no discovery-protocol change, and no accidental coupling to Snapshot's own
+nearby (but deliberately separate) discovery precedent.
+
+### Findings (Sections A-I)
+
+- **A.** Exactly one production-authoritative `'forkbuild-publication'` literal exists — `ui/main.js`'s own
+  `PUBLICATION_DISCOVERY_TAG` — and it feeds BOTH Publication distribution and World View's own discovery default;
+  no component-level duplicate exists in `WorldEncounterCanvas.js`'s or `WorldView.js`'s own code (both discuss it
+  only in comments).
+- **B.** Live-proven against the REAL composition `ui/main.js` itself builds
+  (`composeDecentralizedWorldEncounterMaterialDiscoveryServices` + `composeDecentralizedWorldEncounterMaterialDiscoveryRuntime`
+  + `composeDiscoverWorldEncounterPublicationCommand`): a click through a canonical-seeded `WorldEncounterCanvas`
+  genuinely carries `'forkbuild-publication'` onto the actual (faked) Arweave GraphQL request and resolves a real,
+  signed local `Publication` end to end — the runtime VALUE converges, not merely the source text.
+- **C.** A newly created World View mount receives `discoveryTag === 'forkbuild-publication'`; the component's own
+  standalone/backward-compatible mount (`defaultDiscoveryTag` absent) still yields `discoveryTag === ''` — both
+  proven live off the same `data()` function.
+- **D.** An edit made after the canonical seed reaches `discoveryCommand` verbatim, never the seed; clearing the
+  field entirely is honored as a genuine no-op, never a silent fall-back to the seeded default. Structurally
+  guaranteed, not just observed once: this component declares no `watch:` block of any kind on `defaultDiscoveryTag`
+  (confirmed directly against source), so a later prop change has no code path back into a Wanderer's own edit.
+- **E.** The canonical tag and an arbitrary custom tag travel the identical
+  `discoverPublication() -> discoveryCommand -> executeDiscoverWorldEncounterPublicationCommand` path, proven live
+  with the SAME command function instance — zero discovery-protocol changes.
+- **F.** Publication announcement (`resolveNostrPublisherOptions()`) and World View discovery genuinely converge on
+  ONE value, proven by direct comparison rather than by re-typing the literal twice — while remaining two entirely
+  independent command/composition pipelines (`composePublicationDistributionCommand` /
+  `composeDiscoverWorldEncounterPublicationCommand`), neither ever passed the other's own output.
+- **G.** Snapshot retains its own separate, independently-typed campaign literal (`'forkbuild-snapshot'`) and its
+  own separate discovery call site (`discoverSnapshotCommand(publication)`, driven by the selected `Publication`
+  object, never by `discoveryTag`); no automatic discovery, background polling, or shared discovery/lifecycle state
+  was introduced anywhere in this change.
+- **H.** A genuine discovery failure produces the exact same, unmodified message whether the field held the seeded
+  canonical tag or a hand-typed one; the no-`discoveryCommand` guard is untouched. The default is input
+  initialization only, never a new success/failure semantic.
+- **I.** `WorldEncounterCanvas` remains fully reusable standalone (`defaultDiscoveryTag` still defaults to `''`),
+  and no file at or below its own layer (`WorldEncounterCanvas.js`, the discovery command/composition/runtime
+  files, `LocalDiscoveryProvider.js`, `LocalPublisherProvider.js`) imports `ui/main.js` or `ui/views/WorldView.js`
+  — the dependency direction stays strictly `main.js -> WorldView -> WorldEncounterCanvas`, never reversed.
+
+### Verdict
+
+**STABLE_STOP.** Publication discovery tag integration complete — 0.9.357 genuinely closed the UX gap 0.9.356
+identified, with no loose end left for a future milestone to find.
+
+### What this milestone deliberately excludes
+
+No production-code change of any kind. No new Publication-discovery feature of any kind, either — per this
+milestone's own scoping, the purpose is convergence verification, not another feature hunt.
+
+### What comes after
+
+No further milestone is pre-selected by this arc. A broader product-evolution reassessment, rather than another
+Publication-discovery feature, is the recommended next seam — the same discipline this arc has used throughout:
+close the small gap, verify convergence, then let the product choose the next direction.
