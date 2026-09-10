@@ -93007,3 +93007,77 @@ presentation grouping in the same shape 0.9.324 already proved safe, changing ze
 behavior. Per Section C's own finding, no existing secondary surface can absorb it as-is, so this next milestone
 would need to construct one. Snapshot Distribution and Content Comparison are not pre-selected for any future
 milestone — this audit's own evidence found neither a genuine main-screen clutter problem.
+
+## 0.9.360 — Relocate Publication Discovery to a Secondary Diagnostic Surface
+
+**Type:** production UI relocation. **Production changes:** `ui/components/WorldEncounterCanvas.js` only — one new
+`data()` boolean and a trigger+modal wrapper around markup that already existed. No command, prop, data field,
+method, or disabled/result binding inside the Discover Publication panel changed.
+
+0.9.359's own audit named exactly one genuine main-screen clutter problem — Discover Publication, a standing,
+selection-independent manual lookup rendered by default inside the expanded "World Encounters" section — and left
+Snapshot Distribution and Content Comparison alone (`NOT_A_CLUTTER_PROBLEM`/`KEEP`). This milestone performs that one
+relocation, and only that one:
+
+```text
+World View
+   ↓
+Publication Discovery trigger   (NEW — a plain "Publication Discovery" button, gated on discoveryCommand,
+   ↓                              exactly like the panel it opens already gated on)
+Publication Discovery popup     (NEW — .modal-overlay/.modal-panel, closes on outside click or Close)
+   ↓
+existing discoverPublication() → discoveryCommand   (byte-for-byte unchanged)
+   ↓
+existing discovery command / query service           (untouched)
+```
+
+### Why not the existing Diagnostic Tools Surface (0.9.324-0.9.326)
+
+Checked first, per 0.9.359's own "what comes after." Rejected on the same criterion 0.9.324 itself already used —
+"does the existing surface already mean manual/advanced inspection and recovery actions," never "can we technically
+put this button there":
+
+- It lives in a different component (`OwnPublicationPanel`, always mounted) than Discover Publication
+  (`WorldEncounterCanvas`, mounted only in EXPLORE mode). Hosting it there would mean moving `discoveryCommand`/
+  `defaultDiscoveryTag` across a component boundary and re-wiring `ui/views/WorldView.js`'s own bindings — a
+  structural change, not a pure presentation grouping.
+- Its own scope is narrower than "diagnostics in general": a Wanderer's OWN Snapshot candidate discover/resolve/
+  materialize recovery pipeline, the manual counterpart to `AutomaticSnapshotEncounterCascade.js`'s own background
+  cascade. Discover Publication looks up ANY Publication by objectId/discoveryTag, unrelated to "my own Snapshot" —
+  folding it in would be the same semantically-misleading reuse 0.9.324 already rejected for Place Naming.
+
+So this milestone builds the small, dedicated secondary surface 0.9.359's own Section C anticipated — local to
+`WorldEncounterCanvas`, never a generic `DiagnosticToolsManager`/shared tool registry.
+
+### What this milestone adds
+
+- `publicationDiscoveryOpen` — a new, plain boolean `data()` field, `false` by default. Written only by the
+  trigger's `@click` and the popup's own Close/outside-click handlers; never read by, and never written from,
+  `discoverPublication()` or `selectDiscoveredPublication()`.
+- A "Publication Discovery" trigger button, gated on `discoveryCommand` — the same prop the panel inside already
+  gated on individually.
+- A `.modal-overlay`/`.modal-panel` popup (reusing the same generic convention every other modal in this codebase
+  already uses, including 0.9.324's own) wrapping the EXISTING Discover Publication panel and the EXISTING
+  "Selected discovered publication" notice, byte-for-byte unmoved.
+- `tests/RelocatePublicationDiscoveryToDiagnosticSurface.test.js` (new, registered in `tests.html`), a real
+  integration/presentation audit rather than source-only testing, ten sections (A-J): primary-surface removal;
+  secondary reachability, proven live through the real `discoverPublication()`; command identity (exactly one
+  binding, one prop, no duplicate in `OwnPublicationPanel.js`); canonical-tag preservation (0.9.357); a full
+  discovery regression and a custom-tag regression, both driven live end-to-end; lifecycle behavior (open/close/
+  reopen/repeated-opening never resets discovery state; a fresh mount starts clean); confirmation that Snapshot
+  Distribution (both copies) and Content Comparison remain exactly where 0.9.359 left them, positionally outside
+  the new popup; no capability duplication; and a final BEFORE/AFTER convergence check.
+
+### What this milestone deliberately excludes
+
+Per its own scope: no change to `discoverPublication()`, `discoveryCommand`, `defaultDiscoveryTag`, or any
+command/composition/query-layer file. No relocation of Snapshot Distribution or Content Comparison — 0.9.359's own
+Decision Matrix already scored both `NOT_A_CLUTTER_PROBLEM`/`KEEP`. No reuse, merge, or rename of
+`OwnPublicationPanel.js`'s own 0.9.324 "Diagnostic Tools" popup — the two remain independent, differently-scoped
+surfaces. No generic `DiagnosticToolsManager`, shared tool registry, permissions, feature flags, or persisted UI
+preference of any kind — this is a presentation change local to one component, not a new subsystem.
+
+### What comes after
+
+No further relocation is pre-selected. A short Publication Discovery Relocation Convergence Audit is the natural
+next seam, mirroring 0.9.325's own role after 0.9.324, before any broader product reassessment.

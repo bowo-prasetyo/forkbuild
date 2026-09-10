@@ -1311,6 +1311,110 @@ import { describeWorldSnapshotContentComparisonView } from '../../application/Wo
 // - **An application-layer `SelectDiscoveredPublicationCommand`.** See "no
 //   application-layer command," above.
 
+// 0.9.360 — Relocate Publication Discovery to a Secondary Diagnostic Surface.
+//
+// 0.9.359's own audit (`tests/WorldViewMainScreenClutterProductAudit.test.js`)
+// found exactly one genuine main-screen clutter problem among three named
+// candidates: the Discover Publication panel immediately below is a
+// standing, selection-independent manual lookup, rendered by default
+// (EXPLORE mode, expanded "World Encounters") for every Wanderer, for a
+// capability nothing in ordinary navigation or Publication interaction ever
+// requires (0.9.359's own Section B1-B3). Snapshot Distribution and Content
+// Comparison were independently audited and scored NOT_A_CLUTTER_PROBLEM/
+// KEEP — neither is touched by this milestone; see that audit's own
+// Decision Matrix and Section H, "artificial-symmetry check."
+//
+//   click "Publication Discovery"
+//           │
+//           ▼
+//   publicationDiscoveryOpen = true   (NEW, below — a plain boolean,
+//                                       nothing else)
+//           │
+//           ▼
+//   the EXACT SAME Discover Publication panel (0.9.111-0.9.113, 0.9.357,
+//   byte-for-byte unmoved below) now renders inside a
+//   `.modal-overlay`/`.modal-panel` popup instead of inline on the
+//   standing "World Encounters" surface
+//
+// A PRESENTATION GROUPING, NEVER A NEW DIAGNOSTIC SUBSYSTEM — the identical
+// restraint `ui/components/OwnPublicationPanel.js`'s own 0.9.324 "Diagnostic
+// Tools Surface" already proved safe for a different manual/recovery
+// pipeline. No command, prop, data field, method, or disabled/result
+// binding changed for any part of the moved panel: `discoveryCommand`,
+// `defaultDiscoveryTag`, `discoveryObjectId`/`discoveryTag`/`discovering`/
+// `discoveryError`/`discoveryResult`/`discoveryRequestId`,
+// `discoverPublication()`, `isDiscoveredPublicationSelectable`,
+// `selectDiscoveredPublication()`, and `selectedDiscoveredPublication` are
+// all untouched below — every `v-if`, `:disabled`, `@click`, and result
+// `<dl>` inside the panel is IDENTICAL text to what 0.9.111-0.9.113/0.9.357
+// already wrote, merely indented one level deeper inside the new overlay.
+//
+// WHY NOT THE EXISTING DIAGNOSTIC TOOLS SURFACE. 0.9.359's own "what comes
+// after" explicitly asked this milestone to check whether
+// `OwnPublicationPanel.js`'s own 0.9.324 "Diagnostic Tools" popup could host
+// this control before building a second one. It cannot, on the same
+// criterion 0.9.324 itself already used to decide what belongs inside it —
+// "does the existing surface already mean manual/advanced inspection and
+// recovery actions," never "can we technically put this button there":
+//   - It lives in a DIFFERENT component (`OwnPublicationPanel`, always
+//     mounted, independent of primaryMode) than Discover Publication
+//     (`WorldEncounterCanvas`, mounted only inside EXPLORE mode's "World
+//     Encounters" section). Hosting it there would mean moving
+//     `discoveryCommand`/`defaultDiscoveryTag` across a component boundary
+//     and re-wiring `ui/views/WorldView.js`'s own bindings — a structural
+//     change, never the pure presentation grouping this milestone is
+//     scoped to.
+//   - Its own stated scope is narrower than "diagnostics in general": a
+//     Wanderer's OWN Snapshot candidate discover/resolve/materialize
+//     recovery pipeline, the manual counterpart to `application/
+//     AutomaticSnapshotEncounterCascade.js`'s own background cascade — see
+//     that popup's own 0.9.324 header, "valuable precisely because it
+//     exposes individual stages... not because it belongs beside ordinary
+//     World View actions." Discover Publication looks up ANY Publication by
+//     objectId/discoveryTag, entirely independent of "my own Snapshot" —
+//     folding it into "my own Publication's recovery tools" would be
+//     exactly the kind of semantically-misleading reuse 0.9.324's own
+//     header already rejected for Place Naming, one section over ("no Place
+//     Naming section exists in this popup... Place Naming discovery runs
+//     automatically with no manual counterpart to relocate").
+// This milestone therefore builds the small, dedicated secondary surface
+// 0.9.359's own Section C anticipated ("no existing secondary surface... a
+// real destination would need building") — local to `WorldEncounterCanvas`,
+// never a generic `DiagnosticToolsManager`/shared tool registry of any kind.
+//
+// `publicationDiscoveryOpen` HAS EXACTLY ONE JOB: showing or hiding the
+// popup. It is never read by, and never written from, `discoverPublication()`
+// or `selectDiscoveredPublication()`; neither method touches it, and it
+// never resets `discoveryObjectId`/`discoveryTag`/`discoveryResult`/
+// `selectedDiscoveredPublication`. Closing the popup and reopening it (or
+// selecting/deselecting a World Encounter marker while it stays open) shows
+// whatever those fields already held — identical to what a Wanderer would
+// have seen had the markup never moved. `selectedDiscoveredPublication`'s
+// own "never auto-resets" restraint (0.9.113) is unaffected: it does not
+// reset when the popup closes either.
+//
+// GATED ON THE SAME PROP THE PANEL ITSELF ALREADY GATES ON. The trigger
+// renders only when `discoveryCommand` is supplied — mirroring, never
+// replacing, the panel's own existing `v-if="discoveryCommand"`. A host
+// that supplies no `discoveryCommand` sees no trigger and no popup, exactly
+// as it saw no Discover Publication panel before this milestone.
+//
+// DELIBERATELY EXCLUDED — NOT THIS MILESTONE.
+// - **Any change to `discoverPublication()`, `discoveryCommand`,
+//   `defaultDiscoveryTag`, or any command/composition/query-layer file.**
+//   This milestone adds one boolean and one popup wrapper around markup
+//   that already existed.
+// - **Relocating Snapshot Distribution or Content Comparison.** 0.9.359's
+//   own Decision Matrix scored both NOT_A_CLUTTER_PROBLEM/KEEP; neither is
+//   touched here.
+// - **Reusing, merging with, or renaming `OwnPublicationPanel.js`'s own
+//   0.9.324 "Diagnostic Tools" popup.** See "why not the existing
+//   Diagnostic Tools Surface," above — that popup, and this one, remain two
+//   independent, component-local surfaces with two different scopes.
+// - **A generic `DiagnosticToolsManager`, shared tool registry, permissions,
+//   feature flags, or persisted UI preference of any kind.** This is a
+//   presentation change local to one component, not a new subsystem.
+
 // 0.9.138 — World View Snapshot Distribution Action.
 //
 // 0.9.104 wired the Signed Claim family's own distribution command into
@@ -2400,6 +2504,14 @@ export default {
             // `discoverSelectedSnapshot()`, below, in the same `.then()` as
             // `snapshotDiscoveryResult` itself.
             snapshotAttributionResult: null,
+            // 0.9.360 — Relocate Publication Discovery to a Secondary
+            // Diagnostic Surface. Purely a "is the popup currently open"
+            // flag — see this file's own 0.9.360 header. Never read by, and
+            // never written from, `discoverPublication()` or
+            // `selectDiscoveredPublication()`; closing/reopening the popup
+            // never resets `discoveryObjectId`/`discoveryTag`/
+            // `discoveryResult`/`selectedDiscoveredPublication`, below.
+            publicationDiscoveryOpen: false,
             // 0.9.111 — the Wanderer's own typed discovery input, page-local
             // UI state only — see this file's own header, "ephemeral UI
             // state only." Never persisted, never validated beyond a plain
@@ -4217,78 +4329,105 @@ export default {
                 </dl>
             </div>
 
-            <!-- 0.9.111 — entirely independent of selectedEncounter: a
-                 discovered Publication is never a marker — see this file's
-                 own header, "a discovered Publication is never a marker."
-                 Rendered only when a caller supplied a discoveryCommand.
-                 The Material/Verification dl blocks below reuse the EXACT
-                 same CSS classes/shape the selection-driven panel above
-                 already renders — see this file's own header, "the
-                 existing inspection mechanism stays canonical." -->
-            <div v-if="discoveryCommand" class="world-encounter-discovery-panel">
-                <h4 class="world-encounter-discovery-title">Discover Publication</h4>
-                <input v-model="discoveryObjectId" placeholder="Publication id" :disabled="discovering" />
-                <input v-model="discoveryTag" placeholder="Discovery tag" :disabled="discovering" />
-                <button
-                    type="button"
-                    class="action-btn world-encounter-discovery-action"
-                    :disabled="discovering"
-                    @click="discoverPublication"
-                >{{ discovering ? 'Discovering…' : 'Discover Publication' }}</button>
+            <!-- 0.9.360 — Relocate Publication Discovery to a Secondary
+                 Diagnostic Surface. Trigger only; gated on the SAME prop
+                 (discoveryCommand) the panel inside the popup already gates
+                 on individually — see this file's own 0.9.360 header. -->
+            <button
+                v-if="discoveryCommand"
+                type="button"
+                class="action-btn world-encounter-publication-discovery-trigger"
+                @click="publicationDiscoveryOpen = true"
+            >Publication Discovery</button>
 
-                <p v-if="discoveryError" class="world-encounter-discovery-error">{{ discoveryError }}</p>
-                <template v-else-if="discoveryResult">
-                    <dl class="world-encounter-discovery-detail">
-                        <dt>Discovery</dt>
-                        <dd>{{ discoveryResult.resolution.status }}</dd>
-                    </dl>
+            <div
+                v-if="publicationDiscoveryOpen"
+                class="modal-overlay world-encounter-publication-discovery-overlay"
+                @click.self="publicationDiscoveryOpen = false"
+            >
+                <div class="modal-panel world-encounter-publication-discovery-modal">
+                    <h3>Publication Discovery</h3>
 
-                    <template v-if="discoveryResult.inspection">
-                        <h4 class="world-encounter-material-title">Material</h4>
-                        <dl class="world-encounter-material-detail">
-                            <dt>Status</dt>
-                            <dd>{{ discoveryResult.inspection.loading.status }}</dd>
-                        </dl>
-
-                        <!-- 0.9.112 — discoveryResult.provenance is already
-                             computed by 0.9.110's own runtime composition
-                             (application/DecentralizedWorldEncounterMaterialDiscoveryRuntimeComposition.js)
-                             and forwarded verbatim through 0.9.111's own
-                             command boundary — rendered directly, never
-                             re-derived here. See this file's own header,
-                             "discoveryResult.provenance is rendered
-                             verbatim." -->
-                        <dl v-if="discoveryResult.provenance" class="world-encounter-provenance-detail">
-                            <dt>Source</dt>
-                            <dd>{{ discoveryResult.provenance.origin }}</dd>
-                        </dl>
-
-                        <h4 class="world-encounter-verification-title">Verification</h4>
-                        <dl class="world-encounter-verification-detail">
-                            <dt>Status</dt>
-                            <dd>{{ discoveryResult.inspection.verification.status }}</dd>
-                        </dl>
-
-                        <!-- 0.9.113 — see isDiscoveredPublicationSelectable,
-                             below, and this file's own 0.9.113 header, for
-                             the one eligibility rule gating this button. -->
+                    <!-- 0.9.111 — entirely independent of selectedEncounter: a
+                         discovered Publication is never a marker — see this file's
+                         own header, "a discovered Publication is never a marker."
+                         Rendered only when a caller supplied a discoveryCommand.
+                         The Material/Verification dl blocks below reuse the EXACT
+                         same CSS classes/shape the selection-driven panel above
+                         already renders — see this file's own header, "the
+                         existing inspection mechanism stays canonical." -->
+                    <div v-if="discoveryCommand" class="world-encounter-discovery-panel">
+                        <h4 class="world-encounter-discovery-title">Discover Publication</h4>
+                        <input v-model="discoveryObjectId" placeholder="Publication id" :disabled="discovering" />
+                        <input v-model="discoveryTag" placeholder="Discovery tag" :disabled="discovering" />
                         <button
-                            v-if="isDiscoveredPublicationSelectable"
                             type="button"
-                            class="action-btn world-encounter-discovery-selection-action"
-                            @click="selectDiscoveredPublication"
-                        >Select Publication</button>
-                    </template>
-                </template>
-            </div>
+                            class="action-btn world-encounter-discovery-action"
+                            :disabled="discovering"
+                            @click="discoverPublication"
+                        >{{ discovering ? 'Discovering…' : 'Discover Publication' }}</button>
 
-            <!-- 0.9.113 — independent of discoveryResult's own CURRENT
-                 state: see this file's own header, "selectedDiscoveredPublication
-                 never auto-resets." Renders for as long as a selection
-                 exists, regardless of whether the panel above still shows
-                 the same result, a different one, or none at all. -->
-            <div v-if="selectedDiscoveredPublication" class="world-encounter-discovered-selection-panel">
-                <p class="world-encounter-discovered-selection-notice">Selected discovered publication.</p>
+                        <p v-if="discoveryError" class="world-encounter-discovery-error">{{ discoveryError }}</p>
+                        <template v-else-if="discoveryResult">
+                            <dl class="world-encounter-discovery-detail">
+                                <dt>Discovery</dt>
+                                <dd>{{ discoveryResult.resolution.status }}</dd>
+                            </dl>
+
+                            <template v-if="discoveryResult.inspection">
+                                <h4 class="world-encounter-material-title">Material</h4>
+                                <dl class="world-encounter-material-detail">
+                                    <dt>Status</dt>
+                                    <dd>{{ discoveryResult.inspection.loading.status }}</dd>
+                                </dl>
+
+                                <!-- 0.9.112 — discoveryResult.provenance is already
+                                     computed by 0.9.110's own runtime composition
+                                     (application/DecentralizedWorldEncounterMaterialDiscoveryRuntimeComposition.js)
+                                     and forwarded verbatim through 0.9.111's own
+                                     command boundary — rendered directly, never
+                                     re-derived here. See this file's own header,
+                                     "discoveryResult.provenance is rendered
+                                     verbatim." -->
+                                <dl v-if="discoveryResult.provenance" class="world-encounter-provenance-detail">
+                                    <dt>Source</dt>
+                                    <dd>{{ discoveryResult.provenance.origin }}</dd>
+                                </dl>
+
+                                <h4 class="world-encounter-verification-title">Verification</h4>
+                                <dl class="world-encounter-verification-detail">
+                                    <dt>Status</dt>
+                                    <dd>{{ discoveryResult.inspection.verification.status }}</dd>
+                                </dl>
+
+                                <!-- 0.9.113 — see isDiscoveredPublicationSelectable,
+                                     below, and this file's own 0.9.113 header, for
+                                     the one eligibility rule gating this button. -->
+                                <button
+                                    v-if="isDiscoveredPublicationSelectable"
+                                    type="button"
+                                    class="action-btn world-encounter-discovery-selection-action"
+                                    @click="selectDiscoveredPublication"
+                                >Select Publication</button>
+                            </template>
+                        </template>
+                    </div>
+
+                    <!-- 0.9.113 — independent of discoveryResult's own CURRENT
+                         state: see this file's own header, "selectedDiscoveredPublication
+                         never auto-resets." Renders for as long as a selection
+                         exists, regardless of whether the panel above still shows
+                         the same result, a different one, or none at all. -->
+                    <div v-if="selectedDiscoveredPublication" class="world-encounter-discovered-selection-panel">
+                        <p class="world-encounter-discovered-selection-notice">Selected discovered publication.</p>
+                    </div>
+
+                    <button
+                        type="button"
+                        class="action-btn world-encounter-publication-discovery-close"
+                        @click="publicationDiscoveryOpen = false"
+                    >Close</button>
+                </div>
             </div>
         </div>
     `
