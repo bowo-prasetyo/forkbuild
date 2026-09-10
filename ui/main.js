@@ -113,6 +113,8 @@ import { SnapshotPeerPossessionCoordinator } from '../application/SnapshotPeerPo
 import { SnapshotMaterializationSelectionCoordinator } from '../application/SnapshotMaterializationSelectionCoordinator.js';
 import { bootstrapWorldDiscoveryRuntime } from '../application/WorldDiscoveryRuntimeBootstrap.js';
 import { LocalStorageProvider } from '../storage/LocalStorageProvider.js';
+import { DEFAULT_ARWEAVE_GATEWAY_URL } from '../core/ArweaveGatewayConfiguration.js';
+import { ArweaveGatewayConfigurationStore } from '../storage/ArweaveGatewayConfigurationStore.js';
 import { LocalWorldEncounterMaterialSource } from '../application/LocalWorldEncounterMaterialSource.js';
 import { composeWorldEncounterMaterialVerifier } from '../application/WorldEncounterMaterialVerifierRuntimeComposition.js';
 import { PublicationDistributionLifecycleMemoryStore } from '../application/PublicationDistributionLifecycleStore.js';
@@ -1548,6 +1550,43 @@ const { verifier: worldEncounterMaterialVerifier } = composeWorldEncounterMateri
 // `composeDecentralizedWorldEncounterMaterialDiscoveryServices()` degrades
 // exactly as it always has: `nostr: null`, never a throw. In any real
 // browser this resolves a real, usable transport.
+// 0.9.364 — User-Configurable Arweave Gateway Retrieval Integration.
+//
+// 0.9.363's own audit named this exact gap: every Arweave-facing retrieval
+// adapter below already accepts its own `gatewayUrl` through ordinary
+// constructor injection, but this file supplied none anywhere, so a user
+// whose default `https://arweave.net` was unreachable had no way to keep
+// using ForkBuild against their own gateway. `core/
+// ArweaveGatewayConfiguration.js` and `storage/
+// ArweaveGatewayConfigurationStore.js` (both new, this same milestone) are
+// the read-path counterpart to `application/
+// PublicationDistributionRuntimeConfiguration.js`'s own `{ gatewayUrl }`
+// shape on the distribution WRITE path, above — see 0.9.363's own "What
+// comes after."
+//
+// ABSENCE STAYS MEANINGFUL. `arweaveGatewayConfigurationStore.get()`
+// returns `null` when the user has never configured an override, and
+// `DEFAULT_ARWEAVE_GATEWAY_URL` (core/ArweaveGatewayConfiguration.js's own
+// export — the same host every Arweave-facing adapter in this codebase
+// already hardcodes as its own default) is consulted only then. A saved
+// preference is never confused with "the default itself got persisted" —
+// see that file's own header for why.
+//
+// APPLIED ONLY TO RETRIEVAL, NEVER TO DISTRIBUTION. `resolvedArweaveGatewayUrl`
+// below is threaded into `arweaveResolverOptions` (World Encounter material
+// retrieval, immediately below) and into `composeDiscoverSnapshotRuntime()`'s
+// own `arweaveContentStoreOptions` (Snapshot RETRIEVAL, later in this
+// file) — never into `arweaveUploaderOptions` (Signed Claim distribution,
+// above) or `composeSnapshotDistributionRuntime()`'s own
+// `arweaveContentStoreOptions` (Snapshot's own `put()`, later in this
+// file). A user-configured gateway is an explicit replacement for READING
+// already-published content; it says nothing about where THIS replica's
+// own new content gets written, exactly the distinction 0.9.363's own
+// audit drew between the write-path seam and the read-path gap it left
+// named but unbuilt.
+const arweaveGatewayConfigurationStore = new ArweaveGatewayConfigurationStore(new LocalStorageProvider());
+const resolvedArweaveGatewayUrl = (arweaveGatewayConfigurationStore.get() || { gatewayUrl: DEFAULT_ARWEAVE_GATEWAY_URL }).gatewayUrl;
+
 const nostrRelayQueryClient = createNostrRelayQueryClient({});
 const decentralizedWorldDiscoveryServices = composeDecentralizedWorldEncounterMaterialDiscoveryServices({
     nostrQueryImpl: nostrRelayQueryClient
@@ -1555,7 +1594,8 @@ const decentralizedWorldDiscoveryServices = composeDecentralizedWorldEncounterMa
 const decentralizedWorldEncounterMaterialDiscoveryRuntime = composeDecentralizedWorldEncounterMaterialDiscoveryRuntime({
     discoveryServices: decentralizedWorldDiscoveryServices,
     local: new LocalWorldEncounterMaterialSource(new LocalStorageProvider()),
-    verifier: worldEncounterMaterialVerifier
+    verifier: worldEncounterMaterialVerifier,
+    arweaveResolverOptions: { gatewayUrl: resolvedArweaveGatewayUrl }
 });
 const worldDiscoveryLeadRegistry = decentralizedWorldEncounterMaterialDiscoveryRuntime.registry;
 const worldEncounterMaterialSources = decentralizedWorldEncounterMaterialDiscoveryRuntime.materialSources;
@@ -1943,8 +1983,12 @@ app.provide('publishPlaceNamingClaimToNostrCommand', publishPlaceNamingClaimToNo
 // `discoverOwnSnapshot()` already wraps every call in a
 // `Promise.resolve().then(...)`, catching that synchronous throw the same
 // way it already catches a genuine rejection.
+// 0.9.364 — `gatewayUrl: resolvedArweaveGatewayUrl` (resolved once, above)
+// is this file's own SECOND retrieval call site — see that resolution's
+// own comment for why this differs from `snapshotContentStore`'s own
+// `arweaveContentStoreOptions` immediately above, which stays unconfigured.
 const { resolver: snapshotResolver, contentStore: snapshotRetrievalContentStore, queryService: snapshotDiscoveryQueryService } = composeDiscoverSnapshotRuntime({
-    arweaveContentStoreOptions: { signer: arweaveHostSigner },
+    arweaveContentStoreOptions: { signer: arweaveHostSigner, gatewayUrl: resolvedArweaveGatewayUrl },
     nostrSnapshotDiscoveryQueryServiceOptions: { queryImpl: nostrRelayQueryClient }
 });
 const discoverSnapshotCommand = (contentHash) => executeDiscoverSnapshotCommand({

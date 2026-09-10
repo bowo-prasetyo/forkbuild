@@ -93357,3 +93357,71 @@ Not pre-selected as a single next milestone, but this audit's own evidence names
 read-path counterpart to `application/PublicationDistributionRuntimeConfiguration.js`'s existing `{ gatewayUrl }`
 shape, threaded through the Arweave and IPFS content-retrieval composition-root call sites in `ui/main.js`, is the
 smallest, safest, highest-value next step — never a single settings page covering all eleven candidates at once.
+
+## 0.9.364 — User-Configurable Arweave Gateway
+
+**Type:** production feature (configuration boundary, persistence, retrieval integration). **Production changes:**
+`core/ArweaveGatewayConfiguration.js` (new), `storage/ArweaveGatewayConfigurationStore.js` (new), `ui/main.js`
+(wiring only — two retrieval composition call sites now receive a resolved `gatewayUrl`).
+
+0.9.363's own audit named the concrete next step: a read-path counterpart to `application/
+PublicationDistributionRuntimeConfiguration.js`'s existing `{ gatewayUrl }` shape (the distribution WRITE path),
+threaded through the Arweave content-retrieval composition-root call sites in `ui/main.js`. This milestone builds
+exactly that, for Arweave Gateway only — IPFS Gateway remains the named, separate second candidate.
+
+### What this milestone adds
+
+- **`core/ArweaveGatewayConfiguration.js`** — an immutable value object holding exactly one field, `gatewayUrl`.
+  Validation is shape-only: a non-empty, absolute `http:`/`https:` URL, with a trailing slash normalized away the
+  same way `content/ArweaveContentStore.js`'s own constructor already does. No network call, no credentials, no
+  `timeout`/`retry`/`fallbackGateway`/`healthCheck`/`priority` fields. Exports `DEFAULT_ARWEAVE_GATEWAY_URL`
+  (`https://arweave.net`) as a plain constant — the constructor itself never falls back to it, so "no configuration"
+  and "the default itself got persisted" stay distinguishable.
+- **`storage/ArweaveGatewayConfigurationStore.js`** — durable persistence via the existing `StorageProvider`
+  seam (defaulting to `LocalStorageProvider`, the same idiom `storage/RoleProviderPreferenceStore.js`, 0.9.294,
+  already established). `save(configuration)` / `get()` / `clear()`. `get()` returns `null` — never a configuration
+  holding the deployment default — when nothing has been saved; malformed persisted data degrades to `null` the
+  same way; a genuinely throwing `StorageProvider` propagates unmodified. `clear()` is the one addition beyond the
+  0.9.294 precedent's own shape — the explicit way back to "no override," since saving `DEFAULT_ARWEAVE_GATEWAY_URL`
+  itself would wrongly turn the default into a persisted preference.
+- **`ui/main.js` wiring** — resolves the effective gateway once (`arweaveGatewayConfigurationStore.get() ||
+  { gatewayUrl: DEFAULT_ARWEAVE_GATEWAY_URL }`) and threads it into exactly the two RETRIEVAL composition call
+  sites: `composeDecentralizedWorldEncounterMaterialDiscoveryRuntime()`'s own `arweaveResolverOptions` (World
+  Encounter material retrieval) and `composeDiscoverSnapshotRuntime()`'s own `arweaveContentStoreOptions` (Snapshot
+  retrieval). The Signed Claim distribution write path (`arweaveUploaderOptions`, via `application/
+  PublicationDistributionRuntimeConfiguration.js`) and Snapshot distribution's own `put()` call
+  (`composeSnapshotDistributionRuntime()`) are deliberately untouched — a user-configured gateway is an explicit
+  replacement for READING already-published content, never a policy about where this replica's own new content
+  gets written.
+
+### A separate object, never a reuse of the distribution-side seam
+
+0.9.363's own Section F named `PublicationDistributionRuntimeConfiguration.gatewayUrl` as the closest existing
+seam. Investigation confirmed it should NOT be reused directly: that field configures the DISTRIBUTION WRITE path,
+resolved once per distribution attempt from host signing capability, with no persistence and no "absent means use
+the default" semantics of its own. `ArweaveGatewayConfiguration` configures the RETRIEVAL READ path, a durable,
+user-editable preference. Sharing one field name across two files that happen to both wrap an Arweave gateway URL
+would conflate two genuinely different configuration lifetimes — two small, unconnected files stay easier to reason
+about than one field serving two unrelated callers for reasons of coincidence alone.
+
+### No fallback, no merge
+
+A configured-but-unreachable gateway fails through the existing `content/ArweaveContentStore.js` / `application/
+ArweaveWorldEncounterMaterialResolver.js` failure semantics unchanged — this milestone never adds a "try the
+default if the configured gateway fails" policy. The user's configured endpoint is an explicit replacement, exactly
+as 0.9.363's own Section H established for every non-TURN candidate.
+
+### What this milestone deliberately excludes
+
+No settings UI — a user configures the gateway today only through `ArweaveGatewayConfigurationStore` directly (a
+future milestone's job, per 0.9.363's own sequencing: boundary and persistence before UI). No IPFS Gateway
+configuration (the named, separate second candidate). No health checking, retry, or fallback-gateway policy. No
+change to the Signed Claim or Snapshot distribution write paths.
+
+### What comes after
+
+A settings surface that lets a user actually construct and save an `ArweaveGatewayConfiguration` through the UI,
+mirroring `ui/views/ContentProviderSettingsView.js`'s own shape. After that: IPFS Gateway, following the identical
+configuration/persistence/retrieval-integration pattern this milestone establishes, as its own separate
+`IpfsGatewayConfiguration`/`IpfsGatewayConfigurationStore` pair — never a shared, generic
+`InfrastructureEndpointConfiguration` abstraction.
