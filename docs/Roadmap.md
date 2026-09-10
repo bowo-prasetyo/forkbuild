@@ -93796,3 +93796,64 @@ production change was made. Deliberately left alone, per 0.9.369's own sequencin
 about failure visibility, not a configuration-convergence concern — fixing it here would make this milestone
 responsible for a problem it did not create. With this milestone confirming the boundary is clean, the sequencing
 continues: **0.9.371 — Nostr Relay Settings UI**, then **0.9.372 — Nostr Relay Lifecycle/Product Reassessment**.
+
+## 0.9.371 — Nostr Relay Settings UI
+
+**Type:** production.
+
+0.9.369 gave a user's own Nostr relay choice a real value object, a durable store, and three wired read-path
+composition call sites; 0.9.370 proved those pieces converge with no second authority anywhere, down to the concrete
+WebSocket construction. Neither milestone gave a person any ordinary product path to actually reach that
+configuration — every override either milestone's own tests exercised was written directly through
+`NostrRelayConfigurationStore.save()`, a storage-layer method no UI has ever called. This milestone closes that gap,
+the direct structural mirror of `ArweaveGatewaySettingsView.js` (0.9.366) applied to a relay URL instead of a
+gateway URL, at its own `/settings/nostr-relay` route exactly as 0.9.369's own "what comes after" named.
+
+`application/SetNostrRelayConfigurationUseCase.js` (new) is the WRITE seam: a settings view hands it a plain
+`{ relayUrl }`, and it alone constructs and validates a real `NostrRelayConfiguration` before calling
+`NostrRelayConfigurationStore.save()` — an invalid URL throws before anything is persisted, so a rejected input
+never mutates whatever was previously on file. There is no symmetric `GetNostrRelayConfigurationUseCase`: a view
+reads the current configuration through `store.get()` directly, exactly the restraint
+`SetArweaveGatewayConfigurationUseCase.js`'s own header already holds for the identical reason.
+
+`ui/views/NostrRelaySettingsView.js` (new) is the page itself: current override (or, when absent, the deployment
+default shown purely informationally), a URL input, Save, and Use Deployment Default. Opening the page never writes
+anything — `load()` only ever reads `store.get()`. Use Deployment Default calls `store.clear()`, never
+`save({ relayUrl: DEFAULT_NOSTR_RELAY_URL })`, preserving 0.9.369's own "absence and an explicit default are never
+the same persisted fact" rule. The view never constructs a `NostrRelayConfiguration` itself, never imports any of
+the three read-path discovery classes or `nostr/NostrRelayQueryClient.js`, and never touches a composition
+function — a saved change only takes effect through `ui/main.js`'s own next composition, on the next application
+load, never a live re-composition this view performs. Deliberately excluded, per this milestone's own brief: no Test
+Connection, no live relay probing, no health indicator, no automatic retry, no fallback to `relay.damus.io`, no
+multiple relay entries, no priority/ranking/health history — the user is selecting an endpoint, not asking this page
+to establish whether it is currently reachable. The three read paths' own differing failure contracts (Publication
+and Snapshot discovery collapse to `[]`; Place Naming discovery rejects — 0.9.370's own Section F) are left exactly
+as they are; this milestone configures which relay is used and never normalizes those into a new discovery-error
+model.
+
+`ui/router/index.js` registers `/settings/nostr-relay`; `ui/App.js` adds a top-nav "Nostr Relay" link, mirroring
+"Arweave Gateway" exactly. `ui/main.js` wires `SetNostrRelayConfigurationUseCase` against the SAME
+`nostrRelayConfigurationStore` instance its own 0.9.369 read-path composition already constructs and resolves
+through — never a second, disconnected store — and provides both the store and the use case app-wide, closing the
+"no settings UI yet" gap that instance's own 0.9.369 comment named.
+
+`tests/NostrRelaySettingsEntryPoint.test.js` (new) covers, across fourteen sections: entry-point reachability (nav
+link, route, composition-root wiring, view wiring); no-override displaying the deployment-default state; an existing
+override loading correctly; a valid `ws:`/`wss:` URL saving; invalid input being rejected; rejected input never
+mutating the existing configuration; replacement semantics; clear semantics; restart persistence; a custom relay
+saved through the settings entry point reaching Publication, Snapshot, and Place Naming discovery's own concrete
+WebSocket construction, each independently, after a fresh composition; publishing remaining unaffected by a
+settings-saved override on file at the same moment; Arweave Gateway configuration remaining unaffected by this
+milestone's own new wiring; a view template sweep confirming no infrastructure construction or network logic and
+none of the deliberately-excluded feature vocabulary; and confirmation that Save never reconstructs or reaches into
+an already-composed discovery consumer — only a genuinely new composition observes a later Save.
+
+### What comes after
+
+**0.9.372 — Nostr Relay Settings Lifecycle & Product Reassessment** (test-only, mirroring 0.9.367's own shape): does
+this feature actually close the silent-relay-failure recovery gap 0.9.368 demonstrated? And does a separate product
+gap now stand out — distinguishing "no results" from "relay unavailable," since the current architecture can
+produce an identical empty `[]` for both "genuinely nothing exists" and "the relay was unreachable"? That second
+question is deliberately left unanswered here, and deliberately not solved in this milestone either — first finish
+the explicit relay-selection/recovery feature and reassess it independently, exactly as 0.9.368's own Section B
+already named.

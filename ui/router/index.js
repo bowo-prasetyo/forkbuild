@@ -15,6 +15,7 @@ import ConversationsView from '../views/ConversationsView.js';
 import DecentralizedPublicationsView from '../views/DecentralizedPublicationsView.js';
 import ContentProviderSettingsView from '../views/ContentProviderSettingsView.js';
 import ArweaveGatewaySettingsView from '../views/ArweaveGatewaySettingsView.js';
+import NostrRelaySettingsView from '../views/NostrRelaySettingsView.js';
 import ReconciliationCandidateLeaderboardView from '../views/ReconciliationCandidateLeaderboardView.js';
 import ReconciliationCandidateLeaderboardEvidenceExportComparisonView from '../views/ReconciliationCandidateLeaderboardEvidenceExportComparisonView.js';
 
@@ -82,6 +83,14 @@ const routes = [
     // own top-nav destination, the identical "not folded into a growing
     // dashboard" shape /settings/content-provider already holds.
     { path: '/settings/arweave-gateway', name: 'arweave-gateway-settings', component: ArweaveGatewaySettingsView },
+    // 0.9.371 — Nostr Relay Settings UI. The one ordinary product path to
+    // create/change/clear the persisted Nostr relay discovery override
+    // (core/NostrRelayConfiguration.js, storage/NostrRelayConfigurationStore.js,
+    // both 0.9.369) — see ui/views/NostrRelaySettingsView.js's own header.
+    // Deliberately its own top-nav destination, the identical "not folded
+    // into a growing dashboard" shape /settings/arweave-gateway already
+    // holds.
+    { path: '/settings/nostr-relay', name: 'nostr-relay-settings', component: NostrRelaySettingsView },
     // 0.8.180 — Reconciliation Candidate Leaderboard UI Integration. Not
     // yet a top-nav destination (see ui/views/ReconciliationCandidateLeaderboardView.js's
     // own header) — reached by URL until a future milestone gives it a

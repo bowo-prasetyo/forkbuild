@@ -118,6 +118,7 @@ import { DEFAULT_ARWEAVE_GATEWAY_URL } from '../core/ArweaveGatewayConfiguration
 import { ArweaveGatewayConfigurationStore } from '../storage/ArweaveGatewayConfigurationStore.js';
 import { DEFAULT_NOSTR_RELAY_URL } from '../core/NostrRelayConfiguration.js';
 import { NostrRelayConfigurationStore } from '../storage/NostrRelayConfigurationStore.js';
+import { SetNostrRelayConfigurationUseCase } from '../application/SetNostrRelayConfigurationUseCase.js';
 import { LocalWorldEncounterMaterialSource } from '../application/LocalWorldEncounterMaterialSource.js';
 import { composeWorldEncounterMaterialVerifier } from '../application/WorldEncounterMaterialVerifierRuntimeComposition.js';
 import { PublicationDistributionLifecycleMemoryStore } from '../application/PublicationDistributionLifecycleStore.js';
@@ -1635,14 +1636,20 @@ app.provide('setArweaveGatewayConfigurationUseCase', setArweaveGatewayConfigurat
 // exactly the "user setting affects read/discovery, never publishing"
 // boundary this milestone's own brief draws.
 //
-// NO SETTINGS UI YET — `nostrRelayConfigurationStore` is constructed and
-// consulted here so the boundary and its three read-path consumers exist
-// and are provably wired, but (unlike `arweaveGatewayConfigurationStore`
-// above, which also has its own 0.9.366 write-side use case and `app.provide()`
-// calls) this milestone deliberately stops at read-side composition — see
-// docs/Roadmap.md, 0.9.369, "no UI yet."
+// 0.9.371 — Nostr Relay Settings UI. The WRITE half of the settings entry
+// point, wired against this SAME store instance (never a second,
+// disconnected NostrRelayConfigurationStore) — see application/
+// SetNostrRelayConfigurationUseCase.js's own header. Both this use case and
+// the store itself are provided app-wide below so ui/views/
+// NostrRelaySettingsView.js is the one thing that ever injects either — the
+// identical "no settings UI yet" gap 0.9.369's own comment named here is now
+// closed, mirroring `arweaveGatewayConfigurationStore`'s own 0.9.366
+// write-side use case and `app.provide()` calls exactly.
 const nostrRelayConfigurationStore = new NostrRelayConfigurationStore(new LocalStorageProvider());
 const resolvedNostrRelayUrl = (nostrRelayConfigurationStore.get() || { relayUrl: DEFAULT_NOSTR_RELAY_URL }).relayUrl;
+const setNostrRelayConfigurationUseCase = new SetNostrRelayConfigurationUseCase({ nostrRelayConfigurationStore });
+app.provide('nostrRelayConfigurationStore', nostrRelayConfigurationStore);
+app.provide('setNostrRelayConfigurationUseCase', setNostrRelayConfigurationUseCase);
 
 const nostrRelayQueryClient = createNostrRelayQueryClient({});
 const decentralizedWorldDiscoveryServices = composeDecentralizedWorldEncounterMaterialDiscoveryServices({
