@@ -91863,3 +91863,98 @@ newly `AUTHENTICATED` peer regardless of how the connection was initiated. A **0
 Reassessment**, examining real usage against the two named constraints above, is the natural following checkpoint —
 never a reason to delay 0.9.345 itself, since both constraints already have a proven, cost-free fix named in this
 audit.
+
+## 0.9.345 — Automatic Known-Peer Connection
+
+**Type:** Production milestone, deliberately small. **Production changes:** a new `application/
+AutoConnectKnownPeersUseCase.js`, plus one small wiring edit in `ui/main.js` (constructs it alongside the existing
+`findPeerUseCase`/`peerRelationshipUseCase`; no binding required for it to keep running).
+
+0.9.344's own audit closed with a `CLEAR_SEAM — PROCEED, WITH TWO NAMED CONSTRAINTS` verdict and named the exact
+shape of what came next: the audit's own test-side-only `attemptKnownPeerAutoConnect()` helper, moved into
+production unchanged in shape, with both named constraints (deduplication, polling discipline) owned explicitly
+rather than assumed away.
+
+### The semantic rule this milestone enforces, and nothing more
+
+> For each identity this device already knows, look it up by exact identityId; if it is currently discoverable and
+> not already connected, connect through the existing manual-connection path.
+
+Not "peer discovery." Not "a public directory." Not "retry until reachable." Not "rank/schedule/health-track
+connections." Automatic connection is an alternate TRIGGER for the existing `application/FindPeerUseCase.js#search()`/
+`#connect()` path, never a second connection mechanism — see `application/AutoConnectKnownPeersUseCase.js`'s own
+header for the full boundary.
+
+### The seam itself
+
+`application/AutoConnectKnownPeersUseCase.js` composes three already-public collaborators exactly the way
+`application/PeerReconnectionUseCase.js` already composes its own two — no new discovery, storage, or transport of
+its own:
+
+```js
+async _attempt(identityId) {
+    if (this._isAlreadyConnected(identityId)) return;         // 0.9.344 Section F
+    const candidates = await this._findPeerUseCase.search(identityId); // may throw/empty — Sections G/D
+    if (!candidates || candidates.length === 0) return;
+    await this._findPeerUseCase.connect(candidates[0], identityId);    // Section E — same path as manual
+}
+```
+
+`_isAlreadyConnected()` reuses `connectedPeerRegistry.list()`, the identical read `application/
+PeerPresenceUseCase.js#isIdentityOnline()` already performs — no new identityId index on `ConnectedPeerRegistry`
+itself, exactly as 0.9.344 Section F's own fix required.
+
+**Trigger, deliberately bounded (0.9.344 Section I).** This class runs an attempt exactly twice per reason, never on
+a timer: once at construction (the Known Peers this device already has, the moment this class starts observing
+them) and again on every `application/PeerRelationshipUseCase.js#onRelationshipsChanged()` — the same event this
+codebase already fires for UI reactivity, never a new one. A relationship change that arrives while a pass is
+already in flight coalesces into exactly one more full pass afterward, rather than letting two passes overlap and
+each independently decide, correctly at the time, that the same identity is not yet connected.
+
+**Failure isolation (0.9.344 Section G).** Each identity is attempted in its own `try`/`catch`; one identity's
+failed lookup or rejected/mismatched candidate never blocks another's.
+
+**No retries, no ranking, no scheduling, no persistence of any kind.** A peer this pass could not reach is not
+attempted again until the next of the two triggers above fires naturally — see the class's own header.
+
+### Tests
+
+`tests/AutoConnectKnownPeers.test.js` (new, registered in `tests.html`), exercising the real, production
+`AutoConnectKnownPeersUseCase` (never a test-side reimplementation) over real, live rendezvous/discovery/
+authentication:
+
+- **A. FLAGSHIP.** A Known Peer who is already discoverable authenticates automatically the instant this class
+  starts observing an existing relationship — zero human gesture beyond "Remember" and "Be Discoverable," both
+  already done.
+- **B.** Remembering a peer AFTER this class is already running triggers an automatic attempt through
+  `onRelationshipsChanged`, not construction.
+- **C.** Known + not currently discoverable: no automatic connection.
+- **D.** An identity never Remembered is never even looked up.
+- **E.** Duplicate connection prevention: an already-connected known peer is never attempted again, and the
+  existing connection is reused, not replaced.
+- **F.** Failure isolation over three known peers at once, including a mislabeled candidate rejected through the
+  same `onCandidateRejected` signal a manual attempt already uses.
+- **G.** Discoverability withdrawal is prospective: an already-authenticated session survives untouched, including
+  across a LATER, unrelated automatic pass triggered by a different relationship change.
+- **H.** `PublicationPeerConnectionSync` (0.9.342) delivers a pre-existing catalog to a peer reached through
+  automatic connection, with no change to that class and no new coupling between the two milestones.
+- **I.** Two relationship-changed events fired back-to-back coalesce into a bounded number of passes — never two
+  overlapping passes racing a duplicate connection.
+- **J.** `dispose()` stops all future automatic attempts.
+
+### What this milestone deliberately excludes
+
+Per its own brief: no retry queue, backoff, or connection-health tracking; no ranking, trust, or peer-targeting
+concept; no background polling interval of any kind; no second "Automatically Connect to Known Peers" privacy
+setting (the existing "Be Discoverable" setting remains the only opt-in surface); no notification/awareness UI; no
+change to `application/FindPeerUseCase.js`, `application/ConnectToPeerUseCase.js`, `application/
+PeerRelationshipUseCase.js`, `application/ConnectedPeerRegistry.js`, `application/PublicationPeerConnectionSync.js`,
+`peer/RendezvousDiscoveryProvider.js`, or `peer/DiscoveryBootstrap.js`.
+
+### What comes after
+
+**0.9.346 — Known-Peer Auto-Connection Product Reassessment**, examining real usage against 0.9.344's own two named
+constraints: is polling discipline (construction + relationship-change only) sufficient, or does real usage surface
+a genuine gap that would justify a bounded interval? Should failed peers ever be retried? Does the product need a
+second, independent "Automatically Connect to Known Peers" setting, distinct from "Be Discoverable"? Only that
+reassessment, not this milestone, should decide whether to add UX, notifications, or a new setting.

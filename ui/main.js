@@ -14,6 +14,7 @@ import { DEFAULT_RENDEZVOUS_URLS } from '../peer/RendezvousConfig.js';
 import { CreatePeerRelationshipUseCase } from '../application/CreatePeerRelationshipUseCase.js';
 import { PeerReconnectionUseCase } from '../application/PeerReconnectionUseCase.js';
 import { FindPeerUseCase } from '../application/FindPeerUseCase.js';
+import { AutoConnectKnownPeersUseCase } from '../application/AutoConnectKnownPeersUseCase.js';
 import { CreateFriendRelationshipUseCase } from '../application/CreateFriendRelationshipUseCase.js';
 import { CreateIdentityLifecyclePropagationUseCase } from '../application/CreateIdentityLifecyclePropagationUseCase.js';
 import { CreateDeviceAuthorizationUseCase } from '../application/CreateDeviceAuthorizationUseCase.js';
@@ -217,6 +218,17 @@ const peerReconnectionUseCase = new PeerReconnectionUseCase({ peerSessionManager
 // identityId threaded through as expectedIdentityId) — see
 // application/FindPeerUseCase.js's own header.
 const findPeerUseCase = new FindPeerUseCase({ peerSessionManager });
+// 0.9.345 — one app-wide AutoConnectKnownPeersUseCase, composing the SAME
+// findPeerUseCase/peerRelationshipUseCase/peerSessionManager.registry
+// already wired above rather than owning any discovery, storage, or
+// transport of its own — see application/AutoConnectKnownPeersUseCase.js's
+// own header. It needs no binding here to keep running, the same way
+// application/PublicationPeerConnectionSync.js never needs one either: its
+// own constructor already attempts every currently eligible Known Peer
+// once, then again on every future application/
+// PeerRelationshipUseCase.js#onRelationshipsChanged() — never a background
+// polling interval.
+new AutoConnectKnownPeersUseCase({ findPeerUseCase, peerRelationshipUseCase, connectedPeerRegistry: peerSessionManager.registry });
 // 0.2.57 — one app-wide peer/PeerMessageBus.js, the shared transport
 // application/FriendRelationshipUseCase.js's own header documents as a
 // collaborator it never owns. This is the FIRST live consumer of
