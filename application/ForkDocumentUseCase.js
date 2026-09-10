@@ -2,6 +2,7 @@ import { DocumentSerializer } from '../serializer/DocumentSerializer.js';
 import { DocumentCloneService } from './DocumentCloneService.js';
 import { License } from '../core/License.js';
 import { resolveSigningIdentityId } from '../identity/resolveSigningIdentityId.js';
+import { ForkFailureReason } from './ForkFailureReason.js';
 
 // Creates a new Document derived from an existing one. The source is
 // loaded from storage by its world id (publication.documentId), then
@@ -29,16 +30,23 @@ export class ForkDocumentUseCase {
             : new License(sourcePublication.license || {});
             
         if (!pubLicense.forkAllowed) {
-            throw new Error(
+            const error = new Error(
                 `ForkDocumentUseCase: forking is not permitted under license ${pubLicense.id}`
             );
+            // 0.9.353 — see application/ForkFailureReason.js's own
+            // header: a structural signal the UI boundary can branch on,
+            // never a string it has to pattern-match out of `.message`.
+            error.reason = ForkFailureReason.LICENSE_DENIED;
+            throw error;
         }
     }
 
 
         const json = this._storageProvider.load(sourceDocumentId);
         if (json === null) {
-            throw new Error(`ForkDocumentUseCase: no document found with id "${sourceDocumentId}"`);
+            const error = new Error(`ForkDocumentUseCase: no document found with id "${sourceDocumentId}"`);
+            error.reason = ForkFailureReason.MATERIAL_UNAVAILABLE;
+            throw error;
         }
         
         const sourceDocument = this._documentSerializer.deserialize(json);

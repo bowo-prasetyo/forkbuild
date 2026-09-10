@@ -485,10 +485,18 @@ async function run() {
 
         const forkUseCaseSource = await readSource('application/ForkDocumentUseCase.js');
         assert(!/class\s+\w*Error|Object\.freeze\(\{[\s\S]*?:\s*'/.test(forkUseCaseSource),
-            '5. ForkDocumentUseCase.js defines no equivalent outcome enum/error-class of its own — every failure is a bare `new Error(string)`.');
-        const forkThrowCount = (forkUseCaseSource.match(/throw new Error\(/g) || []).length;
+            '5. ForkDocumentUseCase.js defines no equivalent outcome enum/error-class of its own — every failure is a bare `new Error(string)`, still true post-0.9.353 (the reason CODES it now attaches live in the separate application/ForkFailureReason.js, never inlined here).');
+        // 0.9.353 note: this milestone's own recommendation (Section J)
+        // has since been implemented — ForkDocumentUseCase's two throw
+        // sites now attach a `.reason` (see application/
+        // ForkFailureReason.js) rather than staying undifferentiated.
+        // This structural count is updated to match that shape rather
+        // than re-asserting the pre-fix one; see
+        // tests/ForkFailureReasonPresentation.test.js for 0.9.353's own
+        // live coverage of the fix itself.
+        const forkThrowCount = (forkUseCaseSource.match(/\.reason = ForkFailureReason\./g) || []).length;
         assert(forkThrowCount === 2,
-            `6. exactly ${forkThrowCount} distinct failure causes exist in ForkDocumentUseCase.js (license denial, missing document) — both raised as the SAME undifferentiated Error type, with no code/kind a caller could branch on the way it already can for resolution's PublicationResolutionOutcome.`);
+            `6. exactly ${forkThrowCount} distinct failure causes exist in ForkDocumentUseCase.js (license denial, missing document) — as of 0.9.353 each is tagged with its own ForkFailureReason code rather than being the same undifferentiated Error type.`);
     }
     console.log('✓ Section E: "discovered" (Repository-visible), "retrieved" (material present in local storage), and "available for editing" (Fork succeeds) are proven, live, to be three genuinely different facts — Direction 1 fails exactly where retrieval is missing, Direction 2 succeeds once it is supplied. Structurally, the resolution layer already has a rich, named, documented outcome vocabulary for this same class of question; the fork layer has none — every fork failure, whatever its cause, is the same undifferentiated Error type. Section F traces what that means for the person who actually clicks Fork.');
 

@@ -50,6 +50,7 @@ import DocumentInfoPanel from '../components/DocumentInfoPanel.js';
 import MetadataEditorDialog from '../components/MetadataEditorDialog.js';
 import CreateBlueprintDialog from '../components/CreateBlueprintDialog.js';
 import StructureInfoPanel from '../components/StructureInfoPanel.js';
+import ForkFailureDialog from '../components/ForkFailureDialog.js';
 import { editorEntryContextFromQuery } from '../../core/EditorEntryContext.js';
 import { deriveBlueprintFingerprint, describeBlueprintFingerprint } from '../../core/BlueprintFingerprint.js';
 import { BLUEPRINT_ATTRIBUTION_KIND } from '../../core/BlueprintAttribution.js';
@@ -68,7 +69,7 @@ const TOOL_SHORTCUTS = { 1: ToolId.SELECT, 2: ToolId.PLACE };
 
 export default {
     name: 'EditorView',
-    components: { Toolbar, BuildLibraryPanel, EditingSidebar, StructureInstancePanel, SelectionInspector, CommandPalette, KeyboardShortcutsOverlay, ActionFeedback, RecoveryBanner, DocumentInfoPanel, MetadataEditorDialog, CreateBlueprintDialog, StructureInfoPanel, TransformFeedback },
+    components: { Toolbar, BuildLibraryPanel, EditingSidebar, StructureInstancePanel, SelectionInspector, CommandPalette, KeyboardShortcutsOverlay, ActionFeedback, RecoveryBanner, DocumentInfoPanel, MetadataEditorDialog, CreateBlueprintDialog, StructureInfoPanel, TransformFeedback, ForkFailureDialog },
     template: `
         <div class="editor-view">
             <Toolbar
@@ -200,6 +201,11 @@ export default {
                 :preview-service="libraryPreviewService"
                 @create="onCreateBlueprint"
                 @cancel="closeCreateBlueprintDialog"
+            />
+            <ForkFailureDialog
+                v-if="forkFailure"
+                :reason="forkFailure.reason"
+                @back="backFromForkFailure"
             />
             <StructureInfoPanel
                 v-if="inspectedStructure"
@@ -1240,6 +1246,18 @@ export default {
         const entryContext = ref(null);
         let arrivalDocumentId = null;
 
+        // 0.9.353 — Fork Failure Reason Presentation. Set by the
+        // route.query.fork handler's own catch block below, on a failed
+        // fork ONLY (never on success — see that block's own header).
+        // `{ reason, returnWorldId, focusLocationId }` — reason is a
+        // ForkFailureReason value or null (an unnamed cause);
+        // returnWorldId/focusLocationId are exactly the fields
+        // backToWorld() below already reads off entryContext, computed
+        // the identical way for the failure path in backFromForkFailure().
+        // Cleared the instant the dialog it drives resolves; never
+        // persisted, never read anywhere outside this view.
+        const forkFailure = ref(null);
+
         function refreshDocumentInfo() {
             documentVersion.value++;
             const document = documentManager.document;
@@ -1344,6 +1362,29 @@ export default {
             router.push({
                 path: `/world/${context.returnWorldId}`,
                 query: context.focusLocationId ? { returnLocation: context.focusLocationId } : {}
+            });
+        }
+
+        // 0.9.353 — Fork Failure Reason Presentation. ForkFailureDialog's
+        // own (and only) way out. Navigates by the SAME `/world/<id>`
+        // shape backToWorld() above already uses — never a second
+        // navigation concept for "return to the Publication" — to
+        // whichever World the failed fork's own route.query.fork handler
+        // (below) recorded as `forkFailure.value.returnWorldId`: the
+        // World View "Edit a Copy" entered from, when that's how this
+        // fork was reached, else the Publication's own documentId — the
+        // SAME id ui/components/PublicationCatalog.js's own Explore
+        // action already navigates to for this Publication (see that
+        // handler's own header on why one id covers both entry points).
+        function backFromForkFailure() {
+            const failure = forkFailure.value;
+            forkFailure.value = null;
+            if (!failure || !failure.returnWorldId) {
+                return;
+            }
+            router.push({
+                path: `/world/${failure.returnWorldId}`,
+                query: failure.focusLocationId ? { returnLocation: failure.focusLocationId } : {}
             });
         }
 
@@ -1530,30 +1571,36 @@ export default {
             recoveryObserver.start();
 
             if (route.query.fork) {
+                const sourceDocumentId = route.query.fork;
+                // 0.6.0 — Context-Preserving Fork-to-Edit. Decodes
+                // whatever EditorEntryContext World View's "Edit a
+                // Copy" attached to this same navigation (see
+                // core/EditorEntryContext.js's own header on the
+                // query-param channel). A pure function of route.query
+                // — hoisted above the try (0.9.353) because both
+                // outcomes need it: openDocument() on success (below),
+                // and — new in 0.9.353 — returnWorldId/focusLocationId
+                // on failure, so a failed fork can send the viewer back
+                // to precisely the World they came from rather than an
+                // unconditional trip to a blank document (see
+                // tests/RemotePublicationForkJourneyProductGapAudit.test.js
+                // Section F).
+                const decodedEntryContext = editorEntryContextFromQuery(route.query, sourceDocumentId);
                 try {
-			        let sourcePublication = null;
-			        if (route.query.publication) {
-			            sourcePublication = findPublicationUseCase.execute(route.query.publication);
-			        }
-			        const forkedDocument = forkDocumentUseCase.execute(route.query.fork, identityProvider, sourcePublication);
-                    // 0.6.0 — Context-Preserving Fork-to-Edit. Decodes
-                    // whatever EditorEntryContext World View's "Edit a
-                    // Copy" attached to this same navigation (see
-                    // core/EditorEntryContext.js's own header on the
-                    // query-param channel) and hands it to
-                    // openDocument(), which frames the camera and, for a
-                    // STRUCTURE, selects the fork's own bricks — the one
-                    // place this context is ever consumed; it is
-                    // discarded the instant this block finishes, never
-                    // stored anywhere.
-                    // Named `decodedEntryContext` here, distinct from
-                    // the top-level `entryContext` ref (0.6.1) it feeds
-                    // — this local is the ONE-TIME decode result;
+                    let sourcePublication = null;
+                    if (route.query.publication) {
+                        sourcePublication = findPublicationUseCase.execute(route.query.publication);
+                    }
+                    const forkedDocument = forkDocumentUseCase.execute(route.query.fork, identityProvider, sourcePublication);
+                    // Hands decodedEntryContext to openDocument(), which
+                    // frames the camera and, for a STRUCTURE, selects the
+                    // fork's own bricks — the one place this context is
+                    // ever consumed; it is discarded the instant this
+                    // block finishes, never stored anywhere.
                     // `entryContext.value` below is what stays live for
                     // Toolbar's own header/"← Back to World" for as long
                     // as this fork is the open document (see that ref's
                     // own header, just above refreshDocumentInfo()).
-                    const decodedEntryContext = editorEntryContextFromQuery(route.query, route.query.fork);
                     editorSession.openDocument(forkedDocument, decodedEntryContext);
                     // 0.6.1 — set AFTER openDocument() succeeds, so a
                     // fork that throws (caught below) never leaves a
@@ -1575,7 +1622,27 @@ export default {
                         ? `Editing a copy of "${decodedEntryContext.title}"`
                         : `Created your editable fork of "${forkedDocument.metadata.title}"`);
                 } catch (err) {
-                    feedback.show(`Fork failed: ${err.message}`);
+                    // 0.9.353 — Fork Failure Reason Presentation.
+                    // Replaces the bare `Fork failed: ${err.message}`
+                    // toast (transient, and never told apart a license
+                    // denial from a retrieval failure — see
+                    // application/ForkFailureReason.js's own header) with
+                    // a persistent dialog naming why (err.reason, when
+                    // ForkDocumentUseCase supplied one) and a route back
+                    // to the Publication/World the viewer actually came
+                    // from: decodedEntryContext's own returnWorldId when
+                    // this fork was reached through "Edit a Copy," else
+                    // sourceDocumentId itself — the SAME id
+                    // ui/components/PublicationCatalog.js's own Explore
+                    // action already navigates to for this Publication
+                    // (see backFromForkFailure()'s own header). Never
+                    // entered a blank editor as a dead end — the dialog
+                    // covers it until the viewer picks that one way out.
+                    forkFailure.value = {
+                        reason: err.reason || null,
+                        returnWorldId: (decodedEntryContext && decodedEntryContext.returnWorldId) || sourceDocumentId,
+                        focusLocationId: (decodedEntryContext && decodedEntryContext.focusLocationId) || null
+                    };
                 }
                 router.replace({ path: '/editor' });
             } else if (route.query.load) {
@@ -1824,6 +1891,8 @@ export default {
             recoverDocument,
             discardRecovery,
             backToWorld,
+            forkFailure,
+            backFromForkFailure,
             structureGroups,
             personalStructureGroups,
             personalSavedAtById,
