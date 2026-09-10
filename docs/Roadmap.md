@@ -92906,3 +92906,104 @@ milestone's own scoping, the purpose is convergence verification, not another fe
 No further milestone is pre-selected by this arc. A broader product-evolution reassessment, rather than another
 Publication-discovery feature, is the recommended next seam — the same discipline this arc has used throughout:
 close the small gap, verify convergence, then let the product choose the next direction.
+
+## 0.9.359 — World View Main-Screen Clutter Product Audit
+
+**Type:** test-only product/UX audit. **Production changes:** none.
+
+World View's "World Encounters" surface has accumulated several controls across many arcs — Discover Publication
+(0.9.111), Snapshot Distribution (0.9.138/0.9.140), Snapshot Discovery (0.9.142), and Snapshot/Content Comparison
+(0.9.182/0.9.184) among them — and the product question this milestone asks is deliberately narrow: which of these
+are genuinely everyday World View interactions, and which are manual plumbing/diagnostic tools that merely happen to
+share a parent component? Per its own explicit framing, this is a product audit of INDIVIDUAL controls classified by
+semantic purpose, never a UI refactor, and never "these are all World Encounter features, therefore they all move."
+
+### What this milestone adds
+
+`tests/WorldViewMainScreenClutterProductAudit.test.js` (new, registered in `tests.html`), ten sections (A-J):
+
+- **A. Current primary-surface inventory.** Traced to real source, not a screenshot: `WorldViewNavigationState`
+  defaults to `EXPLORE`, and the "World Encounters" `CollapsibleSection` defaults to expanded
+  (`isSectionCollapsed(..., false)` with nothing persisted) — so World Encounters is the DEFAULT surface, not an
+  opt-in one. `OwnPublicationPanel` mounts unconditionally on `v-if="cameraPosition"` alone, a separate standing
+  surface outside the World Encounters section entirely; `WorldEncounterCanvas` mounts only inside the EXPLORE-mode
+  branch. Home/Notifications/Locations/Explore/Map/Places are the always-visible toolbar.
+- **B. User-journey frequency semantics.** Live/structural proof, not assertion: Discover Publication's own panel
+  gates on `discoveryCommand` alone (an exact opening-tag match, never a windowed guess) and its own
+  `discoverPublication()` method body never reads `selectedEncounter` or touches navigation state — a genuinely
+  standing, selection-independent action. WorldEncounterCanvas's own Distribute Publication/Distribute
+  Snapshot/Discover Snapshot panels all gate on `selectedEncounter && selectedEncounter.kind === 'PUBLICATION'` —
+  genuinely contextual. OwnPublicationPanel's own Distribute Snapshot carries no `v-if` beyond its command-prop gate
+  — always rendered, merely disabled — and the file never gates any `v-if` on `selectedEncounter` at all. Both
+  Compare and Content Comparison panels gate on selection-derived state (`selectedPublicationComparisonCandidate` /
+  `comparisonEncounter`); live-called, `distributablePublication` returns `null` with no selection in scope.
+- **C. Alternative entry-point availability.** "Discover Publication" appears exactly once in
+  `WorldEncounterCanvas.js` — no existing secondary surface; a relocation would need a genuinely new destination, not
+  a re-pointer. Snapshot Distribution already has two independent, intentional entry points (0.9.141's own
+  Distribution Entry-Point Convergence Audit re-verified fresh: exactly two components declare
+  `snapshotDistributionCommand`, both bound to the same `distributeWorldEncounterSnapshot`). "Compare with…" appears
+  exactly once, reachable only via the selection path Section B already covers.
+- **D. Diagnostic-tool classification.** Four distinct classifications, never one "World Encounters" bucket: Discover
+  Publication = MANUAL DISCOVERY; WorldEncounterCanvas's Snapshot Distribution copy = DISTRIBUTION, already
+  contextual; OwnPublicationPanel's Snapshot Distribution copy = DISTRIBUTION, standing (the sole local entry point);
+  Content Comparison = INSPECTION, already contextual.
+- **E. Existing product arcs.** Every candidate traced to the arc that built it (0.9.111, 0.9.138/0.9.140/0.9.141,
+  0.9.142, 0.9.182/0.9.184, plus the Publication Commentary/Place Naming/Presence arcs as sibling context) — and,
+  crucially, to the one arc that already performed exactly this kind of relocation once: 0.9.324-0.9.326's own
+  "Diagnostic Tools Surface," which moved OwnPublicationPanel's manual Snapshot-candidate pipeline behind a
+  `diagnosticToolsOpen` trigger+modal as a PURE PRESENTATION GROUPING (zero command/prop/data change) and then proved
+  (0.9.326) that relocation introduced no workflow-observability gap. Confirmed still on file and still load-bearing.
+- **F. Cross-surface reachability.** `discoverPublication` is bound from exactly one template location — moving that
+  binding moves the entire capability, nothing duplicated or left behind. The 0.9.324 precedent's own
+  `discoverSnapshotCandidates` binding, already relocated behind a modal, is proof a command function's reachability
+  survives a markup relocation.
+- **G. Recovery semantics.** Relocating Discover Publication requires building a real destination (Section C found no
+  existing fallback) — never simply deleting the standing panel. WorldView.js still documents, verbatim, why Own
+  Publication Distribution "must never" sit inside the Explore-mode World Encounters section. Content Comparison's
+  own arm/clear/consume writer set (exactly three, confirmed) is unaffected by where its result panel is presented.
+- **H. Artificial-symmetry check.** All four classifications are distinct — no two candidates collapsed into one
+  verdict merely because they share a parent component (`WorldEncounterCanvas`). Discover Publication's standing gate
+  and Content Comparison's contextual gate are independently reconfirmed as the actual (structural) reason their
+  verdicts differ, never their shared location.
+- **I. Candidate decision matrix** — everyday necessity / diagnostic nature / existing capability elsewhere / decision,
+  for all four audited surfaces.
+- **J. Final UX decision.**
+
+### Decision matrix
+
+| Candidate | Everyday necessity | Diagnostic nature | Existing capability elsewhere | Decision |
+| --- | --- | --- | --- | --- |
+| Discover Publication | Low | High | None — a destination would need building | **RELOCATE** |
+| Snapshot Distribution — WorldEncounterCanvas (remote/selected) | Low (contextual) | Low | Yes — already gated behind selection | **NOT_A_CLUTTER_PROBLEM** |
+| Snapshot Distribution — OwnPublicationPanel (local/own) | Medium — beside Save/Publish | Low | No — this IS the primary surface | **KEEP** |
+| Content Comparison (Compare / Content Comparison) | Low | High | Yes — already unreachable without a prior selection | **NOT_A_CLUTTER_PROBLEM** |
+
+### Verdict
+
+**RELOCATE — Publication Discovery only.** Of the three named candidates, only Discover Publication is genuinely
+main-screen clutter by this audit's own semantic-purpose test: a standing, selection-independent, manual-lookup panel
+rendered by default (EXPLORE mode, expanded World Encounters) for every Wanderer, for a capability nothing in
+ordinary navigation or Publication interaction ever requires. Content Comparison is diagnostic in purpose, exactly as
+suspected, but already correctly scoped — both its panels are structurally unreachable without a prior explicit
+Publication selection, so there is no clutter to relocate. Snapshot Distribution splits cleanly along its own two
+pre-existing, intentional entry points: the WorldEncounterCanvas copy is already contextual; the OwnPublicationPanel
+copy is the sole standing entry point for a Wanderer's own work and must stay visible. This is the asymmetric,
+per-control outcome the task's own framing asked this audit to be willing to reach — one relocation, not three, and
+no generic "Diagnostic Tools menu" invented merely because three controls share a parent component.
+
+### What this milestone deliberately excludes
+
+Per its own Type and explicit scope: no production-code change of any kind. No relocation performed. No new
+Diagnostic Tools/Advanced Mode surface built. No change to Discover Publication's, Snapshot Distribution's, or
+Content Comparison's own command, prop, data, or method — every finding here is about where existing, unmodified
+capabilities are presented, never what they do.
+
+### What comes after
+
+The one concrete next step this audit's own evidence recommends: **0.9.360 — Relocate Publication Discovery**,
+moving Discover Publication's markup out of WorldEncounterCanvas's standing "World Encounters" surface into either
+(a) a narrowly-scoped Publication/Discovery-specific panel, or (b) a small Tools trigger local to World View — a pure
+presentation grouping in the same shape 0.9.324 already proved safe, changing zero commands, props, or discovery
+behavior. Per Section C's own finding, no existing secondary surface can absorb it as-is, so this next milestone
+would need to construct one. Snapshot Distribution and Content Comparison are not pre-selected for any future
+milestone — this audit's own evidence found neither a genuine main-screen clutter problem.
