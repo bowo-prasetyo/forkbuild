@@ -71,6 +71,17 @@ old connection details. If a reconnect attempt authenticates as a
 connection with an explicit error, rather than silently trusting whoever
 answered.
 
+ForkBuild also tries this for you, automatically, for every identity in
+Known Peers: as soon as the app starts, and again any time you Remember,
+Forget, or otherwise change a Known Peer relationship, it quietly checks
+whether each one is currently **Be Discoverable** and, if so, connects
+without you having to click Reconnect yourself. A Known Peer who isn't
+discoverable right now, or who can't be reached, is simply left alone —
+there's no retry loop chasing them, no notification about the attempt, and
+one identity failing never affects another. Manual **Reconnect** still works
+exactly as before, for the moment you want it to happen right now rather
+than waiting for the next automatic pass.
+
 ## What's next?
 
 Once you've made a friend, chat with them in
