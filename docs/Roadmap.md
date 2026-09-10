@@ -92804,3 +92804,42 @@ The recommended next step, sized to exactly this gap: extract `'forkbuild-public
 optional, defaulted prop that seeds the existing `discoveryTag` field's own initial value — never overriding a
 later edit, never touching `discoverPublication()`'s own logic, and never introducing a second campaign-tag
 literal.
+
+## 0.9.357 — Wire Canonical Publication Discovery Tag into World View
+
+**Type:** Production + test. Closes the exact, narrow gap 0.9.356's own audit found and recommended.
+
+One production seam only, exactly as 0.9.356 Section I (option B) scored:
+
+- `ui/main.js`: `'forkbuild-publication'` is hoisted to one named constant (`PUBLICATION_DISCOVERY_TAG`), reused
+  verbatim at its existing distribution call site and a new `app.provide('publicationDiscoveryTag', ...)` call —
+  never a second, independently-typed copy of the string.
+- `ui/views/WorldView.js`: `inject('publicationDiscoveryTag', '')`s that value and forwards it, unmodified, to
+  `WorldEncounterCanvas`'s own new `defaultDiscoveryTag` prop, on the same element that already receives
+  `discoveryCommand`.
+- `ui/components/WorldEncounterCanvas.js`: a new, optional, `String`-typed `defaultDiscoveryTag` prop (default
+  `''`, preserving prior behavior for any caller that does not supply it) seeds `discoveryTag`'s own initial value
+  in `data()` — read exactly once, at construction.
+
+No new discovery mechanism, no command/composition/query-layer change, and `discoverPublication()` itself is
+byte-for-byte unmodified — confirmed directly against its own source. Proven live, end to end
+(`tests/WireCanonicalPublicationDiscoveryTag.test.js`): a component seeded with the canonical tag and clicked with
+no edit now reaches `discoveryCommand` with that tag, with no Wanderer input required; a component whose seeded
+value is edited before clicking forwards the edited value, never the seed; and a component given no
+`defaultDiscoveryTag` at all still starts exactly as blank as it always has, preserving full backward
+compatibility.
+
+One stale structural assertion set in 0.9.356's own audit test (Sections A, B, D, H, J — the ones checking the
+pre-fix literal/blank-default shape) is updated to match the now-implemented fix, mirroring 0.9.353's own
+identical update to 0.9.352's audit test.
+
+### What this milestone deliberately excludes
+
+Per 0.9.356's own scoping: no change to `discoverPublication()`, `discoveryCommand`, or any command/composition/
+query-layer file; no hiding or disabling of the field; no automatic/background discovery of any kind (0.9.351's
+own STABLE_STOP on that direction stands, unrevisited).
+
+### What comes after
+
+No further milestone is pre-selected by this arc. The Publication Discovery Tag UX Consistency audit-and-fix pair
+(0.9.356-0.9.357) is complete.

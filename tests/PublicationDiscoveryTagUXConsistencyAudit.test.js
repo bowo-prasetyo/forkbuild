@@ -77,12 +77,22 @@ async function run() {
     // ===============================================================
     {
         const mainSource = await readSource('ui/main.js');
-        const literalOccurrences = mainSource.match(/discoveryTag:\s*'forkbuild-publication'/g) || [];
-        assert(literalOccurrences.length === 1,
-            `1. 'forkbuild-publication' is assigned to discoveryTag in exactly ONE place in ui/main.js today (found ${literalOccurrences.length}) — a single production-authoritative value, not several candidate definitions to reconcile.`);
+        // 0.9.357 note: this milestone's own recommendation (hoist the
+        // literal to one named constant, reused at both its distribution
+        // call site and a new discovery-facing provide() call) has since
+        // been implemented — the bare literal itself now appears exactly
+        // once, as that constant's own declaration, with both call sites
+        // referencing the CONSTANT rather than retyping the string. This
+        // assertion is updated to match that shape rather than re-asserting
+        // the pre-fix one; see tests/WireCanonicalPublicationDiscoveryTag.test.js
+        // for 0.9.357's own live coverage of the fix itself.
+        const literalDeclarations = mainSource.match(/const PUBLICATION_DISCOVERY_TAG = 'forkbuild-publication';/g) || [];
+        assert(literalDeclarations.length === 1,
+            `1. 'forkbuild-publication' is assigned to a bare constant in exactly ONE place in ui/main.js today (found ${literalDeclarations.length}) — a single production-authoritative value, not several candidate definitions to reconcile.`);
 
-        assert(mainSource.includes("discoveryTag: 'forkbuild-publication'"),
-            '2. the literal is a bare string assignment, not a template literal or computed expression — confirming it is not derived from any per-call argument.');
+        const constantUsages = mainSource.match(/discoveryTag:\s*PUBLICATION_DISCOVERY_TAG|'publicationDiscoveryTag',\s*PUBLICATION_DISCOVERY_TAG/g) || [];
+        assert(constantUsages.length === 2,
+            `2. that ONE constant, never a second literal, is what both the distribution call site and the discovery-facing provide() call reference (found ${constantUsages.length} usages) — confirming no second, independently-typed copy of the string exists anywhere in this file.`);
 
         // It is fed into createPublicationDistributionRuntimeProvider(),
         // which resolveRuntimeCapabilities() regroups into the exact { arweave,
@@ -107,8 +117,16 @@ async function run() {
     // ===============================================================
     {
         const canvasSource = await readSource('ui/components/WorldEncounterCanvas.js');
-        assert(canvasSource.includes("discoveryTag: ''"),
-            '1. WorldEncounterCanvas.js\'s own data() initializes discoveryTag to a blank string — the exact field the user observed.');
+        // 0.9.357 note: this milestone's own recommendation has since been
+        // implemented — data() now seeds discoveryTag from a new
+        // defaultDiscoveryTag prop (itself defaulting to '') rather than an
+        // unconditional blank string, so any embedding that does not wire
+        // that prop (exactly the field the user originally observed) still
+        // starts blank, preserving backward compatibility. See
+        // tests/WireCanonicalPublicationDiscoveryTag.test.js for 0.9.357's
+        // own live coverage.
+        assert(canvasSource.includes('discoveryTag: this.defaultDiscoveryTag') && WorldEncounterCanvas.props.defaultDiscoveryTag.default === '',
+            '1. as of 0.9.357, WorldEncounterCanvas.js\'s own data() seeds discoveryTag from defaultDiscoveryTag, whose own prop default is still \'\' — the exact blank behavior the user originally observed remains the default for any caller that does not supply it.');
         assert(canvasSource.includes('<input v-model="discoveryTag" placeholder="Discovery tag" :disabled="discovering" />'),
             '2. that field is rendered as a plain, freely user-editable text input — confirming it is real UI state, not a display-only label.');
 
@@ -201,9 +219,12 @@ async function run() {
     // ===============================================================
     {
         const mainSource = await readSource('ui/main.js');
-        const literalLine = mainSource.split('\n').find((l) => l.includes("discoveryTag: 'forkbuild-publication'"));
+        // 0.9.357 note: the literal now lives in one hoisted constant
+        // declaration rather than inline at its use site — checked there
+        // instead, still a bare, non-interpolated string.
+        const literalLine = mainSource.split('\n').find((l) => l.includes("const PUBLICATION_DISCOVERY_TAG = 'forkbuild-publication';"));
         assert(literalLine && !/\$\{|publication\.|world\.|objectId/.test(literalLine),
-            '1. the discoveryTag assignment is a bare string literal on its own line — no interpolation, no reference to any Publication/World/objectId-scoped variable.');
+            '1. the discoveryTag constant\'s own declaration is a bare string literal on its own line — no interpolation, no reference to any Publication/World/objectId-scoped variable.');
 
         const publisherSource = await readSource('application/NostrPublicationDiscoveryPublisher.js');
         assert(publisherSource.includes('discoveryTag: the free-form tag value attached to every event this'),
@@ -300,13 +321,21 @@ async function run() {
     // read from that one place rather than typing a second copy.
     // ===============================================================
     {
+        // Comment lines (0.9.357 added prose in both files' own headers
+        // explaining WHERE the value comes from, quoting the literal for
+        // documentation purposes) are excluded — only a real CODE
+        // assignment of the bare string would count as a second copy.
+        function codeContainsLiteral(source, literal) {
+            return source.split('\n').some((line) => !/^\s*\/\//.test(line) && line.includes(literal));
+        }
+
         const canvasSource = await readSource('ui/components/WorldEncounterCanvas.js');
-        assert(!canvasSource.includes('forkbuild-publication'),
-            '1. WorldEncounterCanvas.js contains no \'forkbuild-publication\' literal of its own today — confirming a same-named default would have to be INJECTED (a new prop, sourced from ui/main.js\'s own existing constant), never hand-typed a second time inside this file.');
+        assert(!codeContainsLiteral(canvasSource, 'forkbuild-publication'),
+            '1. WorldEncounterCanvas.js contains no \'forkbuild-publication\' literal in its own CODE today (only in documentation prose, 0.9.357) — confirming a same-named default is INJECTED (a new prop, sourced from ui/main.js\'s own existing constant), never hand-typed a second time inside this file.');
 
         const viewSource = await readSource('ui/views/WorldView.js');
-        assert(!viewSource.includes('forkbuild-publication'),
-            '2. ui/views/WorldView.js — the one file standing between ui/main.js and WorldEncounterCanvas.js — also contains no such literal today, confirming the ONLY existing definition remains ui/main.js\'s own, and any wiring through WorldView.js would forward an already-resolved value, never re-declare it.');
+        assert(!codeContainsLiteral(viewSource, 'forkbuild-publication'),
+            '2. ui/views/WorldView.js — the one file standing between ui/main.js and WorldEncounterCanvas.js — also contains no such literal in its own CODE today, confirming the ONLY existing definition remains ui/main.js\'s own, and any wiring through WorldView.js forwards an already-resolved value, never re-declares it.');
 
         // The recommended architecture, checked here as a plain factual
         // claim about the files involved, never implemented in this
@@ -362,18 +391,27 @@ async function run() {
 
     // ===============================================================
     // Section J — Final decision.
+    //
+    // 0.9.357 note: this milestone's own recommendation (Section I,
+    // option B) has since been implemented — ui/main.js now hoists the
+    // literal to one named constant and provides it as `publicationDiscoveryTag`,
+    // and WorldEncounterCanvas.js now seeds discoveryTag from a new
+    // `defaultDiscoveryTag` prop rather than always starting blank. These
+    // two assertions are updated to match that shape rather than
+    // re-asserting the pre-fix one — this milestone itself (0.9.356) still
+    // added no production change of its own; see
+    // tests/WireCanonicalPublicationDiscoveryTag.test.js for 0.9.357's own
+    // live coverage of the fix itself.
     // ===============================================================
     {
-        // Reconfirm this milestone itself changed no production file —
-        // the one thing every prior audit in this family checks last.
         const canvasSource = await readSource('ui/components/WorldEncounterCanvas.js');
-        assert(canvasSource.includes("discoveryTag: ''"),
-            '1. WorldEncounterCanvas.js is unmodified by this milestone — the blank default this audit examined is still exactly as found.');
+        assert(canvasSource.includes('discoveryTag: this.defaultDiscoveryTag'),
+            '1. as of 0.9.357, WorldEncounterCanvas.js seeds discoveryTag from its own new defaultDiscoveryTag prop rather than an unconditional blank string — the fix this audit recommended.');
         const mainSource = await readSource('ui/main.js');
-        assert(mainSource.includes("discoveryTag: 'forkbuild-publication'") && !mainSource.includes('publicationDiscoveryTag'),
-            '2. ui/main.js is unmodified by this milestone — no new provide() call exists yet; that is next milestone\'s own, separately-scoped work.');
+        assert(mainSource.includes("app.provide('publicationDiscoveryTag',") && mainSource.includes("const PUBLICATION_DISCOVERY_TAG = 'forkbuild-publication';"),
+            '2. as of 0.9.357, ui/main.js hoists the literal to one named constant and provides it app-wide as publicationDiscoveryTag — never a second, independently-typed literal.');
     }
-    console.log('✓ Section J: this milestone changed no production file — confirmed directly against the two files any fix would touch.');
+    console.log('✓ Section J: this milestone (0.9.356) itself added no production change of its own. Its recommendation was implemented immediately after, as 0.9.357 — these two assertions are updated to reflect that completed state, mirroring 0.9.353\'s own identical update to 0.9.352\'s audit test.');
 
     console.log('\n=== DECISION MATRIX ===');
     console.log('Publication announcement tag authority (Section A) ................ EXISTS, single production-authoritative literal');

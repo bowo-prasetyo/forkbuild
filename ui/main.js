@@ -1580,6 +1580,19 @@ const discoverWorldEncounterPublicationCommand = composeDiscoverWorldEncounterPu
 });
 app.provide('discoverWorldEncounterPublicationCommand', discoverWorldEncounterPublicationCommand);
 
+// 0.9.357 — Wire Canonical Publication Discovery Tag into World View.
+// `PUBLICATION_DISCOVERY_TAG` is the SAME literal already supplied to
+// `createPublicationDistributionRuntimeProvider()` below, hoisted to one
+// named constant used at both sites rather than typed twice — see
+// `tests/PublicationDiscoveryTagUXConsistencyAudit.test.js` (0.9.356)
+// Section H, "no second source of truth." Provided app-wide, alongside
+// `discoverWorldEncounterPublicationCommand` above, so `ui/views/WorldView.js`
+// can hand it to `WorldEncounterCanvas.js` as its own Discovery-tag input's
+// initial value — never baked into the command itself, which would remove
+// the field's own per-call editability (0.9.356 Section E/F).
+const PUBLICATION_DISCOVERY_TAG = 'forkbuild-publication';
+app.provide('publicationDiscoveryTag', PUBLICATION_DISCOVERY_TAG);
+
 // 0.9.100 — Publication Distribution World View Integration.
 // `application/PublicationDistributionLifecycle.js` (0.9.50) through
 // `...LifecycleHydration.js` (0.9.57) already built a complete lifecycle
@@ -1797,7 +1810,7 @@ const arweavePublicationRuntimeCapabilities = createArweavePublicationDistributi
 const publicationDistributionRuntimeProvider = createPublicationDistributionRuntimeProvider({
     ...arweavePublicationRuntimeCapabilities,
     ...nostrPublicationRuntimeCapabilities,
-    discoveryTag: 'forkbuild-publication'
+    discoveryTag: PUBLICATION_DISCOVERY_TAG
 });
 const { arweaveUploaderOptions, nostrPublisherOptions } = resolvePublicationDistributionRuntimeConfiguration(publicationDistributionRuntimeProvider.resolveRuntimeCapabilities());
 const publicationDistributionCommand = composePublicationDistributionCommand({

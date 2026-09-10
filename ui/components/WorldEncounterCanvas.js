@@ -1073,6 +1073,47 @@ import { describeWorldSnapshotContentComparisonView } from '../../application/Wo
 //   All of it lives and dies with this component instance, exactly like
 //   `selectedEncounter`/`materialInspection` already do.
 //
+// 0.9.357 — Wire Canonical Publication Discovery Tag into World View.
+//
+// 0.9.356's own audit (`tests/PublicationDiscoveryTagUXConsistencyAudit.test.js`)
+// found `discoveryTag`'s own blank default, above, to be a real UX gap: the
+// application already owns the exact campaign tag (`ui/main.js`'s own
+// `'forkbuild-publication'`) a same-app Publication would have been
+// announced under, but never offered it to this input. The new
+// `defaultDiscoveryTag` prop, above, seeds `discoveryTag`'s own initial
+// value with it — ONE assignment, in `data()`, nothing more.
+//
+// NEVER BAKED INTO `discoveryCommand` ITSELF, AND NEVER A SECOND LITERAL.
+// The canonical tag remains defined exactly once, in `ui/main.js`; this
+// component only ever reads it through `defaultDiscoveryTag`, exactly the
+// way `discoveryCommand` itself already arrives as a caller-injected
+// collaborator rather than something this component constructs. Baking the
+// tag into the command's own closure (mirroring how Snapshot's own
+// `discoverSnapshotCommand` is pre-bound) was considered and rejected —
+// see 0.9.356's own Section C: unlike Snapshot's fixed single campaign,
+// this field is documented, above, as "the Wanderer's own typed input," a
+// genuinely free-form recovery tool a person may need to point at a
+// DIFFERENT tag. Baking the value in would remove that capability; seeding
+// only the starting value preserves it.
+//
+// `discoveryTag` REMAINS EXACTLY AS EDITABLE AS BEFORE. `defaultDiscoveryTag`
+// is read exactly once, inside `data()`, at construction — never re-read,
+// never re-applied, and no code path anywhere in this file resets
+// `discoveryTag` back to it. `discoverPublication()` itself, below, is
+// completely unmodified: it still reads whatever `discoveryTag` currently
+// holds, whether that is the seeded default, an edit, or (with no
+// `defaultDiscoveryTag` supplied, e.g. every test constructing this
+// component directly) the prior blank string.
+//
+// DELIBERATELY EXCLUDED — NOT THIS MILESTONE.
+// - **Any change to `discoverPublication()`, `discoveryCommand`, or any
+//   command/composition/query-layer file.** See "never baked into
+//   discoveryCommand itself," above — this milestone touches exactly one
+//   `data()` field's own initial value.
+// - **Hiding the field, disabling it, or any other UX shape.** 0.9.356's
+//   own Section I scored this (Option B: prefill, remain editable) as the
+//   one recommended shape; nothing else was in scope.
+//
 // 0.9.112 — Publication Provenance in World View.
 //
 // 0.9.111 made the selection-driven Material/Verification panel
@@ -2141,6 +2182,20 @@ export default {
             type: Function,
             default: null
         },
+        // 0.9.357 — optional. The canonical Publication discovery campaign
+        // tag (ui/main.js's own 'forkbuild-publication', forwarded through
+        // ui/views/WorldView.js) used ONLY to seed discoveryTag's own
+        // initial value in data(), below — never read again afterward. A
+        // mount with no defaultDiscoveryTag supplied (e.g. every existing
+        // test constructing this component directly) keeps discoveryTag's
+        // own prior blank default, unchanged. See this file's own header,
+        // "0.9.111 — ephemeral UI state only": discoveryTag remains the
+        // Wanderer's own freely editable typed input; this prop changes
+        // only where that input starts.
+        defaultDiscoveryTag: {
+            type: String,
+            default: ''
+        },
         // 0.9.144 — optional. A `(publication) -> Promise<{ outcome, bytes,
         // candidates, locator, storage, reason }>` function, called with
         // exactly the loaded `Publication` domain object for the CURRENTLY
@@ -2350,7 +2405,15 @@ export default {
             // state only." Never persisted, never validated beyond a plain
             // trim/empty check in `discoverPublication()` below.
             discoveryObjectId: '',
-            discoveryTag: '',
+            // 0.9.357 — seeded from defaultDiscoveryTag (the canonical
+            // 'forkbuild-publication' campaign tag, when supplied) rather
+            // than always starting blank — read exactly once, at mount, the
+            // same "initial value only" restraint every other data() field
+            // seeded from a prop already holds on this component. Still a
+            // plain, freely editable v-model field afterward; see this
+            // file's own header, "0.9.357 — Wire Canonical Publication
+            // Discovery Tag into World View."
+            discoveryTag: this.defaultDiscoveryTag,
             // 0.9.111 — `true` for exactly as long as a call to
             // `discoveryCommand` is in flight — mirrors `distributionExecuting`
             // exactly.
