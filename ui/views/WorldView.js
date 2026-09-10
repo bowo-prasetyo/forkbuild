@@ -4457,12 +4457,25 @@ export default {
                      Publication, never just the singular
                      activePlacementInfo already handed to this same
                      panel above. See ui/components/OwnPublicationPanel.js's
-                     own header, "0.9.308." -->
+                     own header, "0.9.308."
+
+                     0.9.347 — publicationDistributionCommand is
+                     distributeWorldEncounterPublication, above: the SAME
+                     thin wrapper WorldEncounterCanvas's own
+                     "Distribute Publication" action (reachable only
+                     through a selected marker) already calls, handed here
+                     unchanged so this panel's own "Distribute Publication"
+                     button — reachable with zero connected peers and no
+                     selection of any kind — reaches the EXACT SAME command
+                     boundary, never a second implementation. See
+                     ui/components/OwnPublicationPanel.js's own header,
+                     "0.9.347 — Post-Publish Distribution Entry Point." -->
                 <OwnPublicationPanel
                     v-if="cameraPosition"
                     :publication="ownPublication"
                     :unpublishCommand="unpublishOwnPublication"
                     :snapshotDistributionCommand="distributeWorldEncounterSnapshot"
+                    :publicationDistributionCommand="distributeWorldEncounterPublication"
                     :discoverSnapshotCommand="discoverOwnSnapshot"
                     :exportSnapshotCommand="exportOwnSnapshot"
                     :discoverSnapshotCandidatesCommand="discoverSnapshotCandidatesCommand"

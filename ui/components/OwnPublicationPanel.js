@@ -1329,6 +1329,115 @@ import { SnapshotWorldPositionClaimOutcome } from '../../application/SnapshotWor
 // - **A generic `DiagnosticService`, a second "diagnostic mode," or any
 //   application-layer concept of "diagnostic."** "Diagnostic Tools" is a
 //   name for a popup in this file alone.
+//
+// 0.9.347 — Post-Publish Distribution Entry Point.
+//
+// 0.9.346's own audit named the exact gap: `WorldEncounterCanvas.js`'s
+// "Distribute Publication" action is reachable ONLY when
+// `this.selectedEncounter && this.selectedEncounter.kind === 'PUBLICATION'`
+// — i.e. only by navigating World View and selecting a marker — while
+// this panel's own "Distribute Snapshot" (0.9.140) has needed no such
+// selection for 200+ milestones. That audit's own header already named
+// this panel as never having grown a "Distribute Publication" action of
+// its own. This gives it exactly that, mirroring `distributeOwnSnapshot()`
+// (0.9.140) byte-for-byte, one action over:
+//
+//   publication   (unchanged prop, ★ above)
+//           │
+//           │ click "Distribute Publication"
+//           ▼
+//   distributeOwnPublication()   (THIS FILE, NEW)
+//           │
+//           ▼
+//   publicationDistributionCommand(publication)   (injected — the SAME
+//                                    `(publication) -> Promise<Publication
+//                                    DistributionResult | null>` function
+//                                    `ui/views/WorldView.js`'s own
+//                                    `distributeWorldEncounterPublication()`
+//                                    already is — the EXACT wrapper
+//                                    `WorldEncounterCanvas`'s own
+//                                    `distributionCommand` prop already
+//                                    binds to, reused here unmodified)
+//           │
+//           ▼
+//   publicationDistributionResult | rejection
+//
+// NO NEW COMMAND, NO NEW SEQUENCER, NO SELECTEDENCOUNTER OF ANY KIND. This
+// component never imports `application/PublicationDistributionExecutor.js`,
+// never constructs an Arweave uploader or a Nostr discovery publisher, and
+// never reads a `WorldEncounter`/`selectedEncounter` — the entire point of
+// this milestone is freeing "Distribute Publication" from that gate the
+// identical way 0.9.140 already freed "Distribute Snapshot" from it, not
+// building a second implementation of the capability. `WorldEncounterCanvas.js`
+// is untouched by this milestone — its own "Distribute Publication" action,
+// reachable through a selected marker, keeps working exactly as before;
+// this is a second, independent entry point over the SAME injected command,
+// never a replacement.
+//
+// MIRRORS `distributeOwnSnapshot()` EXACTLY: A DEDICATED, RESULT-STORING
+// EPHEMERAL FAMILY. `publicationDistributionExecuting`/
+// `publicationDistributionError`/`publicationDistributionResult`/
+// `publicationDistributionRequestId` never share state with the Snapshot
+// family's own identically-shaped fields — distributing a Publication
+// record and distributing a Snapshot are two different operations over
+// two different substrates (see `application/PublicationDistributionExecutor.js`'s
+// own header vs. `application/SnapshotDistributionCommand.js`'s own,
+// "no coupling"), and this panel already holds that line for every other
+// sibling pair it owns. Unlike `WorldEncounterCanvas.js`'s own
+// `distributeSelectedPublication()` (which stores no result of its own,
+// relying entirely on `distributionLifecycleStore`'s separate subscription
+// — see that file's own header, "execution is ephemeral UI state — never
+// a third lifecycle value"), this panel stores and renders the resolved
+// `PublicationDistributionResult` directly, the identical convention
+// `distributeOwnSnapshot()` already holds for its own result — this panel
+// has no `distributionLifecycleStore` subscription of any kind to lean on
+// instead.
+//
+// RESET EXACTLY WHERE THE SNAPSHOT DISTRIBUTION FAMILY ALREADY IS — the
+// `publication` watcher and `beforeUnmount()` clear/bump this family's own
+// four fields at the identical sites, for the identical lifecycle-safety
+// reason, one action over.
+//
+// STAYS ON THE PRIMARY SCREEN, NEVER MOVED INTO "DIAGNOSTIC TOOLS." See
+// this file's own header, "'Check Snapshot Match,' 'Distribute Snapshot,'
+// 'Export Snapshot,' and 'Unpublish' stay on the primary screen,
+// deliberately" — Distribute Publication answers the identical kind of
+// ordinary, single-click lifecycle question over the ACTIVE Publication,
+// not a multi-stage manual recovery path over a browsed candidate.
+//
+// GATED THE IDENTICAL WAY EVERY SIBLING ACTION IN THIS FILE ALREADY IS:
+// the button only renders when a caller supplied `publicationDistributionCommand`
+// at all, and is disabled whenever there is no `publication` or a call is
+// already in flight — no second, UI-only readiness rule.
+//
+// DELIBERATELY EXCLUDED — NOT THIS MILESTONE.
+// - **Remote IPFS pinning, Bitcoin anchoring, or Base anchoring.** 0.9.346's
+//   own verdict named both as carrying genuine external prerequisites (a
+//   hosted pinning account; a connected, funded wallet) and explicitly
+//   recommended they stay exactly where they already are — in
+//   `ui/views/DecentralizedPublicationsView.js`'s own Publication Center —
+//   rather than being promoted to a one-click post-publish surface before
+//   a person is ready for them. Neither is referenced anywhere in this
+//   milestone.
+// - **A generic `distributePublication(publication, targets)` API, a
+//   "Distribute to…" menu abstraction, an aggregate distribution status,
+//   a distribution queue, or a retry scheduler.** Each distribution family
+//   in this codebase stays its own independent action over its own
+//   collaborator, exactly as 0.9.346's own Section E already confirmed at
+//   the code level — this milestone adds one more independent button,
+//   never a unifying abstraction over the buttons that already exist.
+// - **Automatic invocation of any kind.** Publishing a Repository still
+//   produces nothing but a toast on both surfaces
+//   (`Toolbar.js#publish()`/`WorldView.js#publishActiveDocument()`,
+//   unmodified) — this milestone only makes an already-existing capability
+//   reachable with one more click than before, never zero.
+// - **Any change to `PublishDocumentUseCase.js`, `UnpublishDocumentUseCase.js`,
+//   or either publish-success toast handler.** The local-first invariant
+//   0.9.346's own Section D already proved — a local publish succeeds with
+//   zero distribution collaborator ever constructed — holds unmodified: a
+//   Publication is fully valid whether or not this button is ever clicked,
+//   and a distribution failure never turns a successful local Publication
+//   into a failed one.
 export default {
     name: 'OwnPublicationPanel',
     props: {
@@ -1357,6 +1466,18 @@ export default {
         // shape/default `WorldEncounterCanvas`'s own
         // `snapshotDistributionCommand` prop already uses.
         snapshotDistributionCommand: {
+            type: Function,
+            default: null
+        },
+        // 0.9.347 — optional. A `(publication) -> Promise<Publication
+        // DistributionResult | null>` function, or `null` when the
+        // capability is unavailable — see this file's own header,
+        // "0.9.347 — Post-Publish Distribution Entry Point." The SAME
+        // shape `WorldEncounterCanvas`'s own `distributionCommand` prop
+        // already uses; this component forwards the whole `publication`
+        // object, unread, exactly like `snapshotDistributionCommand`
+        // above.
+        publicationDistributionCommand: {
             type: Function,
             default: null
         },
@@ -1506,6 +1627,16 @@ export default {
             snapshotDistributionError: null,
             snapshotDistributionResult: null,
             snapshotDistributionRequestId: 0,
+            // 0.9.347 — see this file's own header, "0.9.347 — Post-Publish
+            // Distribution Entry Point." A separate ephemeral state, never
+            // shared with the Snapshot distribution family's own —
+            // mirrors `snapshotDistributionExecuting`/`snapshotDistributionError`/
+            // `snapshotDistributionResult`/`snapshotDistributionRequestId`
+            // exactly, one action over.
+            publicationDistributionExecuting: false,
+            publicationDistributionError: null,
+            publicationDistributionResult: null,
+            publicationDistributionRequestId: 0,
             snapshotDiscoveryExecuting: false,
             snapshotDiscoveryError: null,
             snapshotDiscoveryResult: null,
@@ -1666,6 +1797,13 @@ export default {
             this.snapshotDistributionError = null;
             this.snapshotDistributionResult = null;
             this.snapshotDistributionRequestId += 1;
+            // 0.9.347 — reset for the identical lifecycle-safety reason,
+            // one action over — see this file's own header, "reset
+            // exactly where the Snapshot distribution family already is."
+            this.publicationDistributionExecuting = false;
+            this.publicationDistributionError = null;
+            this.publicationDistributionResult = null;
+            this.publicationDistributionRequestId += 1;
             this.snapshotDiscoveryExecuting = false;
             this.snapshotDiscoveryError = null;
             this.snapshotDiscoveryResult = null;
@@ -1785,6 +1923,10 @@ export default {
         // WorldEncounterCanvas's own `beforeUnmount()` invalidation of
         // `snapshotDistributionRequestId`.
         this.snapshotDistributionRequestId += 1;
+        // 0.9.347 — invalidates any still-in-flight call, mirroring
+        // `snapshotDistributionRequestId`'s own invalidation immediately
+        // above, one action over.
+        this.publicationDistributionRequestId += 1;
         this.snapshotDiscoveryRequestId += 1;
         this.snapshotExportRequestId += 1;
         this.snapshotCandidateDiscoveryRequestId += 1;
@@ -1841,6 +1983,42 @@ export default {
                 .then(() => {
                     if (requestId === this.snapshotDistributionRequestId) {
                         this.snapshotDistributionExecuting = false;
+                    }
+                });
+        },
+        // 0.9.347 — the only writer of `publicationDistributionExecuting`/
+        // `publicationDistributionError`/`publicationDistributionResult`,
+        // and the only caller of `publicationDistributionCommand` in this
+        // file — mirrors `distributeOwnSnapshot()` immediately above,
+        // exactly, one substrate over. A no-op whenever there is no
+        // `publication`, no `publicationDistributionCommand`, or a call is
+        // already in flight.
+        distributeOwnPublication() {
+            const publication = this.publication;
+            if (!publication || !this.publicationDistributionCommand || this.publicationDistributionExecuting) {
+                return;
+            }
+
+            this.publicationDistributionExecuting = true;
+            this.publicationDistributionError = null;
+            this.publicationDistributionRequestId += 1;
+            const requestId = this.publicationDistributionRequestId;
+
+            Promise.resolve()
+                .then(() => this.publicationDistributionCommand(publication))
+                .then((result) => {
+                    if (requestId === this.publicationDistributionRequestId) {
+                        this.publicationDistributionResult = result;
+                    }
+                })
+                .catch(() => {
+                    if (requestId === this.publicationDistributionRequestId) {
+                        this.publicationDistributionError = 'Publication distribution could not be completed.';
+                    }
+                })
+                .then(() => {
+                    if (requestId === this.publicationDistributionRequestId) {
+                        this.publicationDistributionExecuting = false;
                     }
                 });
         },
@@ -2446,6 +2624,34 @@ export default {
                 <dd>{{ snapshotDistributionResult.contentReference.uri }}</dd>
                 <dt>Announcement</dt>
                 <dd>{{ snapshotDistributionResult.announcement ? snapshotDistributionResult.announcement.id : 'No announcement' }}</dd>
+            </dl>
+
+            <!-- 0.9.347 — Post-Publish Distribution Entry Point. See this
+                 file's own header. Reachable with zero connected peers and
+                 an empty World Encounters panel, the identical restraint
+                 Distribute Snapshot above already holds — this action was,
+                 until this milestone, reachable only by navigating World
+                 View and selecting a marker in WorldEncounterCanvas.
+                 Rendered only when a caller supplied a
+                 publicationDistributionCommand. Disabled whenever there is
+                 no local Publication yet, or a call is already in
+                 flight. -->
+            <button
+                v-if="publicationDistributionCommand"
+                type="button"
+                class="action-btn own-publication-publication-distribution-action"
+                :disabled="!publication || publicationDistributionExecuting"
+                @click="distributeOwnPublication"
+            >{{ publicationDistributionExecuting ? 'Distributing…' : 'Distribute Publication' }}</button>
+
+            <p v-if="publicationDistributionError" class="own-publication-publication-distribution-error">{{ publicationDistributionError }}</p>
+            <dl v-else-if="publicationDistributionResult" class="own-publication-publication-distribution-detail">
+                <dt>Publication</dt>
+                <dd>{{ publicationDistributionResult.publication.objectId }}</dd>
+                <dt>Material</dt>
+                <dd>{{ publicationDistributionResult.material ? publicationDistributionResult.material.uri : 'Not yet uploaded' }}</dd>
+                <dt>Discovery</dt>
+                <dd>{{ publicationDistributionResult.discovery ? publicationDistributionResult.discovery.id : 'Not yet announced' }}</dd>
             </dl>
 
             <!-- 0.9.215 — Snapshot Export Capability Integration.
