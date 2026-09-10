@@ -91958,3 +91958,99 @@ constraints: is polling discipline (construction + relationship-change only) suf
 a genuine gap that would justify a bounded interval? Should failed peers ever be retried? Does the product need a
 second, independent "Automatically Connect to Known Peers" setting, distinct from "Be Discoverable"? Only that
 reassessment, not this milestone, should decide whether to add UX, notifications, or a new setting.
+
+## 0.9.346 — Decentralized Distribution Guidance Product Gap Audit
+
+**Type:** Test-only product gap audit. **Production changes:** None.
+
+0.9.345's own "what comes after" preselected a Known-Peer Auto-Connection reassessment; the product owner, reviewing
+that closure, redirected to a different, longer-standing question instead — the identical kind of deliberate
+redirect 0.9.304 already exercised over its own preselected next step. The question: after Repository Publish
+succeeds and a Publication exists LOCALLY, is the substantial decentralized-distribution machinery this codebase has
+already built — Snapshot distribution, Publication announcement, Snapshot placement, remote IPFS pinning, Bitcoin/
+Base anchoring, every one of them real, tested, and shipped — actually REACHABLE at the moment a person most wants
+it: right after they just published? This is deliberately not the earlier provider-preference question (0.9.293-
+0.9.304, "which provider") — one layer earlier: how does a person discover and deliberately invoke a capability that
+already exists, never whether to build a new one.
+
+### What this milestone found
+
+Every claim is sourced to real production files or a real, live object graph (`PublishDocumentUseCase`,
+`UnpublishDocumentUseCase`, `executeSnapshotDistributionCommand`, all unmodified), never prose carried over from an
+earlier milestone without re-checking it against the current tree:
+
+- **Section A — FLAGSHIP.** On both surfaces Repository Publish is reachable from (the Editor's `Toolbar.js#publish()`
+  and World View's `WorldView.js#publishActiveDocument()`), a successful publish produces exactly one thing: a
+  one-line "Published "&lt;title&gt;"" toast. Neither handler's own source references navigation, a modal, or any
+  distribution/announcement/anchoring vocabulary, confirmed both structurally and against a real, live `Publication`
+  object, which carries no method or field hinting at further action.
+- **Section B — capability inventory.** Five real, independently shipped mechanisms exist: Snapshot distribution
+  ("Distribute Snapshot," Arweave + Nostr, fused — `OwnPublicationPanel.js`), Publication-record announcement
+  ("Distribute Publication," `WorldEncounterCanvas.js`), Snapshot placement (Local/IPFS via a local Kubo daemon,
+  CONTENT-preference-integrated — `DecentralizedPublicationsView.js`), remote IPFS pinning (a hosted pinning service,
+  same file), and Bitcoin/Base anchoring (a real wallet/PSBT/broadcast flow for Bitcoin; Base support is
+  observation/recording of an externally-obtained `txid` only — no `anchoring/Base*.js` transport exists anywhere).
+  Exactly ONE of the five ("Distribute Snapshot") is reachable from the primary post-publish screen with zero further
+  dependency.
+- **Section C — the asymmetric reachability finding, this audit's own flagship.** The one existing capability that
+  most resembles "announce this Publication for discovery" — `WorldEncounterCanvas.js`'s own "Distribute
+  Publication" — is reachable ONLY when `this.selectedEncounter && this.selectedEncounter.kind === 'PUBLICATION'`,
+  i.e. only by navigating World View and selecting a marker. `OwnPublicationPanel.js`'s own 0.9.140 header names
+  BOTH "Distribute Publication" and "Distribute Snapshot" as having shared this identical `selectedEncounter`-gated
+  problem before that file existed — 0.9.140 fixed it for Snapshot distribution only; the literal phrase "Distribute
+  Publication" never appears anywhere else in `OwnPublicationPanel.js`, confirmed by source.
+- **Section D — local-first invariant.** `PublishDocumentUseCase.js`/`UnpublishDocumentUseCase.js` contain no network
+  I/O and no reference to any distribution substrate; a live publish/unpublish round trip succeeds with zero
+  distribution collaborator ever constructed. The invariant holds by construction, not convention.
+- **Section E — fusion vs. independence, examined honestly.** WITHIN the Snapshot family, placement and announcement
+  are NOT independent — a fresh, live re-check of 0.9.136's own contract confirms a content-store failure prevents
+  the Nostr announcement from ever being attempted, and a successful placement is never rolled back by an
+  announcement failure. ACROSS the five families, independence is real at the code level: none of the five
+  orchestration files ever `import`s another, even though several explicitly cite one another's headers in comments
+  as the documented design precedent each mirrors — shared vocabulary, never runtime coupling.
+- **Section F — provider-preference scope, reconfirmed fresh.** The CONTENT `RoleProviderPreference` arc touches
+  exactly one of the five mechanisms (Snapshot placement, through `PreferredSnapshotPlacementCreationCoordinator.js`)
+  — the other four reference no preference vocabulary anywhere in their own source, reconfirming 0.9.304's own STOP
+  verdict is still accurate.
+- **Section G — UI duplication assessment.** Every pair that looks similar is a genuinely distinct capability over
+  distinct collaborators: Snapshot placement's local-daemon IPFS (`content/IpfsContentStore.js`, Kubo) is not remote
+  pinning (`content/HttpPinningProvider.js`, hosted); Distribute Snapshot's bytes are not Distribute Publication's
+  signed claim, per `SnapshotDistributionCommand.js`'s own explicit "no coupling to Signed Claim distribution"
+  disclaimer; Export Snapshot's local, no-network package is not Distribute Snapshot's external placement. No
+  duplicate implementation was found anywhere in this inventory — the fragmentation is a reachability problem, never
+  a redundant-code problem.
+- **Section H — route topology.** A persistent, app-wide nav bar (`ui/App.js`) links every relevant route
+  (Repository, World, Publications) from anywhere in the app — nothing is unreachable in the "no path exists" sense.
+  `/repository` itself is a thin catalog wrapper with no distribution action of its own. Neither publish handler ever
+  calls `router.push()`/`router.replace()`, confirmed within each function's own isolated body.
+- **Section I — explicit user agency, proven negatively.** Zero automatic invocation of any of the five mechanisms
+  exists anywhere in the Publish/Unpublish path, confirmed at both the application-use-case layer and the UI-handler
+  layer — whatever ships next is purely additive.
+- **Section J — the final verdict: CONFIRMED GAP — SMALL, NAMED SEAM, NOT A NEW SUBSYSTEM.** No missing capability
+  was found anywhere; the machinery is complete. The reachability gap is real, live-proven, and narrower than a
+  generic "add a distribution menu": (1) the handoff itself — Repository Publish produces a toast and nothing more,
+  on both surfaces; (2) the asymmetry — "Distribute Publication" still needs the exact fix 0.9.140 already gave
+  "Distribute Snapshot," for the identical reason, not a new mechanism.
+
+### What this milestone adds
+
+`tests/DecentralizedDistributionGuidanceProductGapAudit.test.js` (new, registered in `tests.html`), ten lettered
+sections (A-J) matching the audit structure above, run against real, unmodified production classes and real source
+reads. No other file is touched — verified directly against `git status` at test-run time.
+
+### What this milestone deliberately excludes
+
+Per its own test-only brief: no post-publish UI entry point, no change to `OwnPublicationPanel.js`,
+`WorldEncounterCanvas.js`, `Toolbar.js`, or `WorldView.js`, no generalization of `RoleProviderPreference`, no new
+distribution mechanism of any kind, and no automatic invocation of anything. Every finding is evidence for a future
+milestone to act on, not a change this one makes itself.
+
+### What comes after
+
+Per this milestone's own verdict: **0.9.347 — Post-Publish Distribution Entry Point**, scoped to exactly the two
+named findings above — a small, additive affordance at the moment of publish success offering, at minimum,
+"Distribute Snapshot" and a "Distribute Publication" newly freed from its `selectedEncounter` gate, forwarding to the
+EXISTING commands this milestone found already work, never reimplementing either one. Remote IPFS pinning and
+Bitcoin/Base anchoring, both of which carry real external prerequisites (a hosted pinning account; a connected,
+funded wallet), stay exactly where they already are — in the Publication Center — per Section J's own explicit
+caution against promoting an irreversible or costly action into a one-click surface before a person is ready for it.
