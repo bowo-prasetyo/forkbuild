@@ -93610,3 +93610,75 @@ before/after user journey, not merely a URL being stored — and no other endpoi
 carries a demonstrated user-value gap comparable to Arweave Gateway's default-backbone role. IPFS Gateway remains the
 strongest `DEFER`: a genuine but structurally narrower, opt-in-per-item failure mode, worth revisiting only if it
 ever becomes a default path rather than an optional one. No production code changed in this milestone.
+
+## 0.9.368 — Infrastructure Endpoint Product Evolution Reassessment
+
+Test-only. Same question 0.9.367 asked — after Arweave Gateway, which remaining infrastructure endpoint has a real,
+reproducible user-facing recovery gap? — re-run from scratch against fresh runtime-consumer evidence rather than
+either prior audit's own conclusion. `tests/InfrastructureEndpointProductEvolutionReassessment.test.js` follows the
+milestone's own ten-section brief (A-J):
+
+- **Section A — capability inventory.** Traces endpoint -> configuration -> composition -> runtime consumer ->
+  user-visible operation for every remaining candidate. The load-bearing finding: Nostr relay is not merely "widely
+  duplicated" (0.9.367's own framing, drawn from the WRITE-path publisher files) — its THREE READ-path classes
+  (`NostrDiscoveryQueryService`, `NostrSnapshotDiscoveryQueryService`, `NostrPlaceNamingDiscoverySource`) are each
+  already `relayUrl`-injectable, and `ui/main.js` constructs exactly ONE `nostrRelayQueryClient` (a real WebSocket
+  transport, `nostr/NostrRelayQueryClient.js`) and threads it into all three live composition sites — World Encounter
+  decentralized discovery, Snapshot discovery, and Place Naming discovery — with no `relayUrl` override anywhere, so
+  all three silently inherit `wss://relay.damus.io`. Place Naming discovery has no OTHER discovery source at all —
+  Nostr is not "a" source there, it is the only one.
+- **Section B — failure-to-user-impact.** Modeled against real failure-handling code, not speculation.
+  `NostrDiscoveryQueryService.search()` (and its Snapshot/Place-Naming siblings) collapse every relay failure into
+  `[]` — SILENTLY, with no error a Wanderer could ever notice or report, worse than the loud `ContentUnavailableError`
+  `ArweaveContentStore` already raises on its own gateway failure. Concretely: a Wanderer opening a World Encounter
+  marker, running "Discover" on a Snapshot, or searching a Place Naming claim, whose only announced lead lives on
+  Nostr, sees nothing at all when `relay.damus.io` is unreachable — indistinguishable from "nothing was ever
+  published here."
+- **Section C — configuration fitness.** Live-proves (constructing a real `NostrDiscoveryQueryService` with an
+  overridden `relayUrl`) that Nostr relay's read path already holds the exact GOOD shape
+  `core/ArweaveGatewayConfiguration.js` itself names in its own header ("never a generic
+  `InfrastructureEndpointConfiguration`") — specific configuration over an already-injected dependency, not a
+  provider registry. TURN is reconfirmed the one candidate whose real consumer (a dynamic credential fetch, `peer/
+  IceServerConfig.js#fetchIceServers`) rules out a plain-URL shape entirely.
+- **Section D — recovery semantics.** `nostr/NostrRelayQueryClient.js`'s own header documents "exactly one relay, one
+  subscription, per call — no fan-out, no retry, no ranking" as deliberate; the smallest matching configuration
+  semantic is explicit single-URL replacement, mirroring Arweave exactly — never a multi-relay list this codebase's
+  own read path has never implemented, whatever the wider Nostr protocol could theoretically support.
+- **Section E — credentials.** Reconfirms, from `NostrRelayQueryClient.js`'s own header, that reading a relay needs no
+  wallet, signature, or credential of any kind — a plain URL field is safe, exactly like Arweave Gateway. TURN's own
+  credential boundary is unaffected.
+- **Section F — automatic fallback.** No fallback/secondary-relay concept exists anywhere in the three read-path
+  classes today, and none should be added — explicit replacement only, matching every non-TURN candidate.
+- **Section G — comparison matrix.** Arweave Gateway `COMPLETE`; Nostr relay `BUILD_NEXT`; IPFS Gateway, STUN,
+  Rendezvous, Bitcoin Esplora, Base RPC `DEFER`; TURN and IPFS local API `SEPARATE_PRODUCT` (credential-shaped, and a
+  publishing/`put()` capability question, respectively — never this audit's retrieval-resilience shape).
+- **Section H — product surface.** A Nostr Relay settings page belongs at its own route (e.g.
+  `/settings/nostr-relay`), mirroring `ArweaveGatewaySettingsView.js`'s own "one page, one concern" shape exactly —
+  confirmed the existing Arweave settings page imports nothing Nostr-related today, and App.js already adds one
+  standalone nav entry per settings page, the pattern to repeat, never a shared "Infrastructure" parent surface.
+- **Section I — cross-configuration isolation.** Direct absence-checks (not naming convention alone) confirm
+  `ArweaveGatewayConfiguration`/`ArweaveGatewayConfigurationStore` are referenced by exactly the six files that should
+  reference them, and never by any Nostr/IPFS/TURN/Bitcoin/Base/peer file; `core/RoleProviderPreference.js` remains
+  structurally blind to every endpoint host in the inventory; no generic `InfrastructureEndpointConfiguration` class
+  exists anywhere (the string appears only inside `ArweaveGatewayConfiguration.js`'s own header, naming exactly what
+  it refused to become).
+- **Section J — final decision, per candidate**, using this milestone's own four-outcome vocabulary (`STABLE_STOP` /
+  `BUILD_NEXT` / `DEFER` / `SEPARATE_PRODUCT`) rather than one verdict for everything.
+
+**Verdict: `BUILD_NEXT` — Nostr relay.** This corrects one specific input to 0.9.367's own `STABLE_STOP`: that
+milestone reassessed Nostr relay by inspecting its write-path publisher duplication, and never traced what its
+read-path composition actually does in the one running application. Traced there, the evidence bar this milestone's
+own brief sets — "a concrete ForkBuild user cannot perform X, and another relay would restore X" — is met three times
+over (World Encounter discovery, Snapshot discovery, Place Naming discovery), not zero. Every other candidate is
+reconfirmed unchanged: Arweave Gateway stays `COMPLETE`; TURN and IPFS local API are named `SEPARATE_PRODUCT` rather
+than a plain `DEFER`, since each carries a real gap but needs fundamentally different semantics (credentials; a
+publishing capability, not retrieval); IPFS Gateway, STUN, Rendezvous, Bitcoin Esplora, and Base RPC remain `DEFER`
+for the same reasons 0.9.363/0.9.367 already established. No production code changed in this milestone.
+
+**What comes after:** **0.9.369 — User-Configurable Nostr Relay**, a direct structural mirror of 0.9.364/0.9.366:
+`core/NostrRelayConfiguration.js` (value object) + `storage/NostrRelayConfigurationStore.js` (its own storage key,
+never sharing `ArweaveGatewayConfigurationStore`'s), a `NostrRelaySettingsView.js` at its own
+`/settings/nostr-relay` route, and a single resolved `relayUrl` threaded into exactly the three read-path composition
+sites named in Section A — leaving the three write-path publishers (`NostrPublicationDiscoveryPublisher`,
+`NostrSnapshotDiscoveryPublisher`, `NostrPlaceNamingDiscoveryPublisher` — a separate, unconsolidated concern of their
+own) untouched, exactly as Arweave Gateway left the distribution write path untouched.
