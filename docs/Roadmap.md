@@ -92054,3 +92054,83 @@ EXISTING commands this milestone found already work, never reimplementing either
 Bitcoin/Base anchoring, both of which carry real external prerequisites (a hosted pinning account; a connected,
 funded wallet), stay exactly where they already are — in the Publication Center — per Section J's own explicit
 caution against promoting an irreversible or costly action into a one-click surface before a person is ready for it.
+
+## 0.9.347 — Post-Publish Distribution Entry Point
+
+**Type:** Production milestone, deliberately small. **Production changes:** one new prop/method/ephemeral-state
+family added to the existing `ui/components/OwnPublicationPanel.js` (mirroring its own 0.9.140 "Distribute Snapshot"
+family exactly, one action over), plus one new prop binding in `ui/views/WorldView.js` connecting that new prop to
+the already-existing `distributeWorldEncounterPublication()` wrapper. No new file, no new use case, no new command.
+
+0.9.346's own verdict named the shape of this milestone precisely: "Distribute Publication" still needs the exact fix
+0.9.140 already gave "Distribute Snapshot," for the identical reason, not a new mechanism. This is that fix, and
+nothing more.
+
+### The seam itself
+
+`ui/views/WorldView.js`'s own `distributeWorldEncounterPublication(publication)` (0.9.104) already exists, already
+takes a bare `Publication` object, and already has no dependency on `selectedEncounter` of its own — the gate
+0.9.346 found was entirely inside `WorldEncounterCanvas.js`'s own `distributablePublication` computed property, one
+layer above this function, never inside the function itself. `WorldEncounterCanvas.js` already binds this exact
+function to its own `distributionCommand` prop. This milestone binds the SAME function to `OwnPublicationPanel.js`'s
+new `publicationDistributionCommand` prop:
+
+```
+OwnPublicationPanel                              WorldEncounterCanvas
+  :publicationDistributionCommand=" ┐    ┌─────  :distributionCommand="
+     distributeWorldEncounterPublication         distributeWorldEncounterPublication
+                                    └────┘
+                        (the exact same function, WorldView.js:1217)
+```
+
+`OwnPublicationPanel.js`'s own `distributeOwnPublication()` mirrors its sibling `distributeOwnSnapshot()` (0.9.140)
+byte-for-byte: a dedicated `publicationDistributionExecuting`/`publicationDistributionError`/
+`publicationDistributionResult`/`publicationDistributionRequestId` ephemeral family, reset on the same `publication`
+watcher and `beforeUnmount()` sites every sibling family already resets on, guarded against duplicate concurrent
+calls and stale in-flight responses the identical way. Since this panel holds no `distributionLifecycleStore`
+subscription (unlike `WorldEncounterCanvas.js`'s own Distribution panel), the resolved `PublicationDistributionResult`
+is stored and rendered directly — the same convention `distributeOwnSnapshot()`'s own result rendering already
+holds, one substrate over.
+
+The button is mounted on `OwnPublicationPanel.js`'s primary screen, beside the pre-existing "Distribute Snapshot"
+button — never inside the "Diagnostic Tools" popup (see that file's own header for why those two stay separate) —
+and that panel is itself mounted directly beside World View's own Save/Publish actions (0.9.140), so both
+capabilities are now reachable from the exact place a person lands immediately after a successful Repository
+Publish, with zero connected peers, zero World Encounters, and zero selection of any kind.
+
+### What this milestone deliberately excludes
+
+Per 0.9.346's own explicit scoping: remote IPFS pinning and Bitcoin/Base anchoring stay exactly where they already
+are, in the Publication Center (`ui/views/DecentralizedPublicationsView.js`) — both carry genuine external
+prerequisites (a hosted pinning account; a connected, funded wallet) that make a one-click post-publish surface
+premature. No generic `distributePublication(publication, targets)` API, no "Distribute to…" menu abstraction, no
+aggregate distribution status, no distribution queue, no retry scheduler, no provider ranking/fallback, no new
+distribution protocol, no new distribution domain object, no distribution lifecycle model, and no global
+"distributed" state on `Publication` — five independent capabilities remain five independent buttons over five
+independent collaborators, never unified into one abstraction merely because they now sit side by side. No
+automatic invocation of anything: Repository Publish still produces nothing but a toast on both surfaces
+(`Toolbar.js#publish()`/`WorldView.js#publishActiveDocument()`, both unmodified), and closing or ignoring this
+panel has no effect on the Publication itself. `Toolbar.js` (the Editor's own publish surface) is unmodified — it
+has no adjacent World View/spatial infrastructure to host this panel, and this milestone does not attempt to build
+one; the Editor's own publish-success toast is unchanged.
+
+### Tests
+
+`tests/PostPublishDistributionEntryPoint.test.js` (new, registered in `tests.html`), ten lettered sections (A-J)
+exercising the real production `OwnPublicationPanel.js`/`WorldView.js` wiring end to end, including a FLAGSHIP
+section reaching the real `executePublicationDistributionCommand()`/orchestrator/executor/lifecycle-store chain with
+zero peers and zero World Encounters, plus structural regression checks confirming the exact same
+`distributeWorldEncounterPublication` wrapper reaches both entry points and that no IPFS/Bitcoin/Base vocabulary or
+generic distribution abstraction was introduced.
+
+### What comes after
+
+**0.9.348 — Post-Publish Distribution Convergence Audit** (test-only), verifying both publish surfaces reach the
+same entry semantics where they can, exact Publication identity is preserved end to end, no distribution occurs
+before explicit user action, each action invokes its existing capability unmodified, one failed distribution never
+affects another, the local Publication remains valid regardless of what a person chooses here, and no duplicate
+distribution abstraction has appeared anywhere in the codebase — followed, per that audit's own verdict, by
+**0.9.349 — Post-Publish Distribution Product Reassessment**, asking the harder product question this milestone
+deliberately does not answer itself: is an explicit post-publish distribution chooser sufficient, or does real usage
+surface a genuine value gap remaining? That reassessment, not this milestone, decides whether anything further ships
+at all.
