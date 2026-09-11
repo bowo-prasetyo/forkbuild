@@ -7441,6 +7441,20 @@ export default {
                         {{ showPublicationArchiveImportForm ? 'Cancel Import' : 'Import Archive' }}
                     </button>
                 </div>
+                <!-- 0.9.400 — Reconciliation Leaderboard Entry Point. An
+                     export from THIS card is the exact peer archive the
+                     Leaderboard's own "Use as Peer Archive" step asks a
+                     person to paste — the two features were already one
+                     workflow split across two pages with no link between
+                     them. Contextual, not top-nav, the identical shape
+                     PeerConnectionsView's own "Chat" button already gives
+                     /chat/:identityId — see ui/router/index.js's own
+                     comment on /reconciliation-leaderboard. -->
+                <p class="form-hint form-hint--neutral">
+                    Comparing this archive's decision and observation evidence, candidate
+                    by candidate, against a peer's own exported archive above happens on the
+                    <router-link to="/reconciliation-leaderboard">Reconciliation Candidate Leaderboard</router-link>.
+                </p>
 
                 <div v-if="publicationArchiveExportedPackage.json" class="evidence-inspection-adapter">
                     <span class="evidence-inspection-adapter-title">Exported Archive</span>
