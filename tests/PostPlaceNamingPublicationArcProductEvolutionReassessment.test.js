@@ -162,12 +162,21 @@ async function runTests() {
 
         // A-nav. The always-mounted top nav, reconfirmed a fourth time
         // (0.9.307's own A16, 0.9.311's own A14, 0.9.313's own A-nav) as
-        // an EXACT eleven-route set — unchanged by the entire Place
-        // Naming arc, since Place Naming is reached from inside World
-        // View, never from a new top-level nav destination.
+        // an EXACT route set — unchanged by the entire Place Naming arc,
+        // since Place Naming is reached from inside World View, never
+        // from a new top-level nav destination. 0.9.393 — this file's own
+        // count had gone stale: the eleven-route set below predates
+        // 0.9.364-0.9.372 (Arweave Gateway/Nostr Relay settings) and
+        // 0.9.386/0.9.388 (STUN/Rendezvous settings), each of which added
+        // a real, always-mounted nav route with no relation to the Place
+        // Naming arc this file audits, and nothing re-ran this guard to
+        // notice until 0.9.393's own full-suite execution. Extended to
+        // fifteen now, per this milestone's own classification, never a
+        // bare count bump.
         const appSource = await rawSource('ui/App.js');
         const appWideRoutes = ['/', '/editor', '/repository', '/worlds/recent', '/avatar', '/identity',
-            '/peers', '/conversations', '/publications', '/settings/content-provider', '/about'];
+            '/peers', '/conversations', '/publications', '/settings/content-provider', '/about',
+            '/settings/arweave-gateway', '/settings/nostr-relay', '/settings/stun', '/settings/rendezvous'];
         for (const route of appWideRoutes) {
             const linkMarker = route === '/' ? 'to="/"' : `to="${route}"`;
             assert(appSource.includes(linkMarker), `A-nav. ui/App.js still links ${route} from the always-mounted top nav.`);

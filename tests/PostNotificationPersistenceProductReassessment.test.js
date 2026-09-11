@@ -829,11 +829,30 @@ async function runTests() {
         // exactly as 0.9.281's own "what comes after" left it. CLOSED by
         // 0.9.285 (application/CreateWorldViewUseCase.js now constructs
         // one real PublicationCommentaryNotificationProducer, backing
-        // WorldNavigationSession's own addPublicationCommentary()) —
-        // re-verified here as exactly one caller, never re-derived.
-        const producerCallers = await grepCount('new PublicationCommentaryNotificationProducer(', ['application', 'ui'], { excludeSuffix: 'PublicationCommentaryNotificationProducer\\.js' });
-        assert(producerCallers === 1,
-            `J1. application/PublicationCommentaryNotificationProducer.js now has exactly one "new PublicationCommentaryNotificationProducer(" caller in application/ or ui/ (found ${producerCallers}) — application/CreateWorldViewUseCase.js (0.9.285).`);
+        // WorldNavigationSession's own addPublicationCommentary()).
+        // 0.9.393 — this count had gone stale: "exactly one caller" was
+        // always a PROXY for the real invariant ("every caller shares the
+        // same durable sink"), and 0.9.29x-era work added
+        // application/CreatePublicationCommentaryUseCase.js as a second,
+        // legitimate composition root reusing the identical sink — never
+        // caught because nothing re-ran this guard until 0.9.393's own
+        // full-suite execution. Replaced here with the real invariant: an
+        // exact, named set of callers, each proven to route through the
+        // SAME `notificationEventStore.save()` sink.
+        const KNOWN_PRODUCER_CALLERS = [
+            'application/CreateWorldViewUseCase.js',
+            'application/CreatePublicationCommentaryUseCase.js'
+        ];
+        const producerCallerFiles = execSync('grep -rl "new PublicationCommentaryNotificationProducer(" application ui --include="*.js" || true',
+            { cwd: SOURCE_ROOT.pathname }).toString().trim().split('\n').filter(Boolean).sort();
+        assert(producerCallerFiles.length === KNOWN_PRODUCER_CALLERS.length
+            && KNOWN_PRODUCER_CALLERS.every((f) => producerCallerFiles.includes(f)),
+            `J1. application/PublicationCommentaryNotificationProducer.js now has exactly the two known, classified callers in application/ or ui/ — no third, unclassified one (found: ${producerCallerFiles.join(', ')}).`);
+        for (const file of KNOWN_PRODUCER_CALLERS) {
+            const callerSource = await rawSource(file);
+            assert(/\(notificationEvent\)\s*=>\s*notificationEventStore\.save\(notificationEvent\)/.test(callerSource),
+                `J1. ${file} still hands PublicationCommentaryNotificationProducer the SAME "(notificationEvent) => notificationEventStore.save(notificationEvent)" sink — the invariant that actually matters (one durable destination), not the bare caller count.`);
+        }
 
         // J2. The store itself — CLOSED (for reads) by 0.9.284, which
         // wires a REAL NotificationEventStore into
@@ -845,12 +864,32 @@ async function runTests() {
         // identity can now honestly ask "what notifications exist for
         // me" through a store that will, correctly, always answer
         // "none" until a producer is separately wired to write into it.
-        const storeCallers = await grepCount('new NotificationEventStore(', ['application', 'ui'], { excludeSuffix: 'NotificationEventStore\\.js' });
-        assert(storeCallers === 1,
-            `J2. storage/NotificationEventStore.js now has exactly one "new NotificationEventStore(" caller in application/ or ui/ (found ${storeCallers}) — application/CreateWorldViewUseCase.js (0.9.284), wired for reads only.`);
+        // 0.9.393 — this count had gone stale the same way J1's did:
+        // "exactly one caller" was a PROXY for "exactly one underlying
+        // storage namespace," and 0.9.29x-era work added
+        // application/CreatePublicationCommentaryUseCase.js as a second
+        // NotificationEventStore construction (its own write-side
+        // composition root, mirroring J1's producer) — over the SAME
+        // storageProvider, never a second namespace. Replaced with the
+        // real invariant: an exact, named set of construction sites, each
+        // proven to wrap the same `storageProvider` argument.
+        const KNOWN_STORE_CALLERS = [
+            'application/CreateWorldViewUseCase.js',
+            'application/CreatePublicationCommentaryUseCase.js'
+        ];
+        const storeCallerFiles = execSync('grep -rl "new NotificationEventStore(" application ui --include="*.js" || true',
+            { cwd: SOURCE_ROOT.pathname }).toString().trim().split('\n').filter(Boolean).sort();
+        assert(storeCallerFiles.length === KNOWN_STORE_CALLERS.length
+            && KNOWN_STORE_CALLERS.every((f) => storeCallerFiles.includes(f)),
+            `J2. storage/NotificationEventStore.js now has exactly the two known, classified callers in application/ or ui/ — no third, unclassified one (found: ${storeCallerFiles.join(', ')}).`);
+        for (const file of KNOWN_STORE_CALLERS) {
+            const callerSource = await rawSource(file);
+            assert(/new NotificationEventStore\(storageProvider\)/.test(callerSource),
+                `J2. ${file} still constructs NotificationEventStore over the SAME "storageProvider" argument — one underlying storage namespace, never a second, isolated one.`);
+        }
         const createWorldView = await rawSource('application/CreateWorldViewUseCase.js');
         assert(createWorldView.includes('new GetRecipientNotificationEventsUseCase(notificationEventStore, identityProvider)'),
-            'J2b. The one real NotificationEventStore construction backs GetRecipientNotificationEventsUseCase specifically (0.9.284) — never a write path.');
+            'J2b. application/CreateWorldViewUseCase.js\'s own NotificationEventStore construction backs GetRecipientNotificationEventsUseCase specifically (0.9.284) — never a write path.');
 
         // J3. The one place a producer WOULD be wired in — WorldView's
         // composition root — at the time this milestone shipped, still
