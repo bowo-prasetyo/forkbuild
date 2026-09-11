@@ -95031,3 +95031,92 @@ milestone number. The two small, real findings on record (Reconciliation Leaderb
 "Repository" naming overlap between `/repository` and `/world/:documentId`) remain available to a future
 milestone that wants to take either up on genuine evidence — neither selected nor built here. ForkBuild's broader
 product evolution resumes on its own terms when an explicit new product requirement arrives.
+
+## 0.9.384 — Explicit Next Product Direction Selection
+
+**Type:** test-only, decision artifact. **Production changes:** none.
+
+0.9.383 answered "is there an accidental product gap?" with `STABLE_STOP`. That is a different question from "what,
+if anything, does ForkBuild intentionally build next?" — conflating the two is exactly how a product ends up
+shipping architecture-driven features: a seam exists, so something gets built to fill it, whether or not real
+evidence calls for it. This milestone is a **gate**, not an audit and not an implementation: it evaluates a fixed
+roster of five named candidate directions against a fixed, evidence-grounded scoring framework, and produces
+exactly one of two outcomes — `SELECTED_DIRECTION = <candidate>` or `NO_DIRECTION_SELECTED = true`. Both are
+valid; neither is a default.
+
+### What this milestone adds
+
+`tests/ExplicitNextProductDirectionSelection.test.js` (new, registered in `tests.html`). Ten lettered sections:
+
+- **Section A — Entry-state reconfirmation.** 0.9.383's `STABLE_STOP` verdict is on record, and the specific facts
+  this milestone's own evaluations depend on are re-checked fresh against current source rather than inherited
+  from 0.9.383's own prose (`SearchPublicationsUseCase.js` still synchronous; `NotificationEvent.js` still carries
+  no delivered/seen/read field; `collaboration/CollaborationSession.js` still exists).
+- **Section B — The scoring framework.** Five criteria (`userValue`, `reachability`, `architecturalFit`,
+  `semanticCost`, `scope`) and a gate rule: `SELECTED` requires `userValue` to reach `DEMONSTRATED` AND the
+  candidate to be concretely specified (a real `reachability`/`scope` reading, not merely a category name).
+  `architecturalFit`, however high, can never substitute for either — proven structurally, not merely asserted, by
+  running the evaluator function itself against two synthetic candidates: one with maximal architectural fit and
+  undemonstrated value (rejected) and one with minimal architectural fit and demonstrated value (accepted).
+- **Section C — Candidate 1: Proactive decentralized Repository discovery.** The largest previously-identified
+  deferred capability, and the most seam-ready — `ResolvePublicationUseCase`/`discoveryProvider`/
+  `admitToRepositoryDiscovery` already exist and already work for the *reactive* paths (the federated/reactive
+  discovery direction 0.9.330/0.9.334/0.9.336's own seam-audit milestones already selected and built).
+  `SearchPublicationsUseCase.js` remains synchronous with no network collaborator; `docs/Roadmap.md` records at
+  least five separate deferrals of *proactive* discovery specifically (0.9.330/0.9.340/0.9.350/0.9.351/0.9.374/
+  0.9.383). `userValue: NOT_DEMONSTRATED` — the gate rejects it despite `architecturalFit: HIGH`.
+- **Section D — Candidate 2: Collaboration expansion (live editing / visible collaborators).** The foundation
+  (`CollaborationSession`) is real, but no UI file imports it, and it carries no remote-cursor/editing-presence
+  vocabulary at the protocol level (its own "cursor" usages are `CommandHistory`'s unrelated undo/redo cursor).
+  `WorldCollaboratorIndicator.js` is confirmed a genuinely separate mechanism — world-spatial avatar presence,
+  driven by `WorldSpatialActivity`, never `CollaborationSession` — not evidence this candidate has quietly
+  shipped under another name. `STOP` since 0.9.241, reconfirmed at every reassessment since; no explicit
+  product-priority declaration exists on record, which the brief's own text names as the selection precondition.
+- **Section E — Candidate 3: Notification delivery.** `NotificationEvent.js` still carries no delivered/seen/read
+  field by design. 0.9.383's own Section I already named and rejected this exact shape
+  ("notification event → push") as architecture-driven — re-confirmed on record, not re-derived. `semanticCost:
+  HIGH` (a genuinely new semantic layer, per the brief's own warning) with `userValue: NOT_DEMONSTRATED` fails the
+  gate.
+- **Section F — Candidate 4: Global Place Naming, richer semantics.** The existing create → persist → publish →
+  discover → adopt arc is genuinely `COMPLETE`. No `PlaceNamingAlias`/`PlaceNamingHierarchy`/
+  `PlaceNamingNamespace` vocabulary exists anywhere — "richer semantics" names a direction of travel, not a
+  specified capability, so it fails the gate's concreteness requirement before `userValue` is even reached.
+- **Section G — Candidate 5: a new product domain, unrelated to existing subsystems.** Evaluated differently by
+  design — `architecturalFit` is deliberately not a gating factor for it. What is still required, same as every
+  other candidate, is an actual proposal backed by real evidence; none exists anywhere in this conversation,
+  `docs/Roadmap.md`, or the current product surface. Inventing one here purely to fill the milestone would be
+  inertia-driven building wearing product language instead of architecture language — exactly what this gate
+  exists to prevent.
+- **Section H — Decision matrix.** All five candidates: `NOT_SELECTED`, each for its own distinct,
+  evidence-grounded reason (not one blanket rejection). At least one `NOT_SELECTED` candidate carries
+  `architecturalFit: HIGH`, reconfirming the gate rejects on evidence, not on difficulty of construction.
+- **Section I — Final verdict.** `SELECTED_DIRECTION = null`; `NO_DIRECTION_SELECTED = true`.
+- **Section J — Exclusions and what comes after.** Checked against the live working tree (`git status
+  --porcelain`), not merely narrated: no production file is modified or added, and this milestone adds exactly
+  one new test file — its own — opening no candidate's forward seam/direction audit.
+
+### Verdict
+
+**`NO_DIRECTION_SELECTED = true`.** Proactive Repository discovery has the strongest architectural fit of any
+candidate on the roster, and is still rejected: architectural readiness is explicitly not a substitute for
+demonstrated user value, the gate rule Section B proves structurally before applying it. Collaboration expansion
+has no explicit product-priority declaration behind it. Notification delivery is a genuinely new semantic layer
+already named and rejected once, at 0.9.383. Global Place Naming's "richer semantics" and an unrelated new
+product domain both fail earlier still — neither is concretely specified enough to evaluate at all.
+
+Per this milestone's own two-outcome framework, `NO_DIRECTION_SELECTED` is recorded as a legitimate conclusion of
+a genuine choice point, not a failure to choose. ForkBuild remains at `STABLE_STOP` (0.9.383).
+
+### What this milestone deliberately excludes
+
+No production-code change of any kind. No candidate is promoted to a forward seam or direction audit. No new
+vocabulary (`PlaceNamingAlias`, `RemoteCursor`, notification delivery fields, a proactive-discovery network
+collaborator) is introduced anywhere in production. The gate is not weakened to manufacture a `SELECTED_DIRECTION`
+where the evidence does not support one.
+
+### What comes after
+
+Nothing is scheduled. The five evaluations this milestone recorded (Sections C–G) remain available, individually,
+to a future milestone that arrives with real, new evidence for any one of them — none is closed off, none is
+pre-selected by inertia. ForkBuild's broader product evolution resumes on its own terms, the same footing 0.9.383
+left it on, when an explicit new product requirement arrives.
