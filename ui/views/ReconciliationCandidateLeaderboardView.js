@@ -284,6 +284,44 @@ import ReconciliationCandidateLeaderboardTable from '../components/Reconciliatio
 // persisting it anywhere are each explicitly out of scope — see this
 // file's own header, "Importing never touches," above, and 0.8.188's own
 // module header for the full architectural boundary.
+//
+// 0.9.403 — Evidence Export Comparison Contextual Entry Point. 0.9.402's
+// own decision audit (tests/EvidenceExportComparisonEntryPointDecisionAudit
+// .test.js) found /evidence-export-comparison's real predecessor and
+// recorded CONTEXTUAL_ENTRY_POINT but deliberately deferred wiring it. This
+// milestone fulfills exactly that deferral: one `<router-link>` to
+// `/evidence-export-comparison`, placed in the Evidence Export panel's own
+// template below, immediately beside the "Export Evidence" button —
+// nowhere else. No new component, no new ref, no new computed value, and
+// no change to `exportEvidence()` itself: the export action still only
+// ever produces `evidenceExportPackage` exactly as it did before this
+// milestone.
+//
+//   Export Evidence panel (unchanged: exportEvidence(), evidenceExportPackage)
+//                    │
+//                    ├── [Export Evidence]                (unchanged)
+//                    └── [Compare Exported Evidence]  ───► /evidence-export-comparison
+//                        (this milestone's own addition — a plain
+//                         router-link, styled like the button beside it,
+//                         the identical `action-btn`-styled router-link
+//                         shape ConversationsView.js's own Chat button
+//                         already uses for /chat/:identityId)
+//
+// NAVIGATION, NOT DATA TRANSFER. The link carries no query parameter, no
+// route param, and no shared/injected state of any kind — clicking it is
+// indistinguishable, from the router's point of view, from a person typing
+// the URL by hand. Evidence Export Comparison still obtains its own two
+// inputs exactly as it always has: two independent pastes of previously
+// exported evidence JSON, validated by 0.8.188's own importXxx() — see
+// this milestone's own audit,
+// tests/EvidenceExportComparisonContextualEntryPoint.test.js, Section F.
+//
+// NOT AN AUTOMATIC CONSEQUENCE OF EXPORTING. `exportEvidence()` itself is
+// completely unmodified — clicking "Export Evidence" still only ever
+// populates `evidenceExportPackage`; it never navigates anywhere, and
+// nothing here calls `router.push()` on that click. "Compare Exported
+// Evidence" is its own, separate, explicit action a person chooses to
+// click afterward, or not at all.
 export const RECONCILIATION_CANDIDATE_LEADERBOARD_EVIDENCE_KIND_OPTIONS = [
     { value: ReconciliationCandidateLeaderboardEvidenceKind.ALL, label: 'All' },
     { value: ReconciliationCandidateLeaderboardEvidenceKind.DECISIONS, label: 'Decisions' },
@@ -513,6 +551,16 @@ export default {
                     <button type="button" class="action-btn action-btn--secondary" @click="exportEvidence">
                         Export Evidence
                     </button>
+                    <!-- 0.9.403 — Evidence Export Comparison Contextual Entry
+                         Point. A plain navigation edge, styled like the
+                         button beside it — see this file's own 0.9.403
+                         header comment above. Carries no query parameter and
+                         no shared state; Evidence Export Comparison still
+                         obtains its own two inputs by paste, exactly as
+                         before. -->
+                    <router-link to="/evidence-export-comparison" class="action-btn action-btn--secondary">
+                        Compare Exported Evidence
+                    </router-link>
                 </div>
                 <div v-if="evidenceExportPackage.json" class="evidence-inspection-adapter">
                     <span class="evidence-inspection-adapter-title">Exported Evidence</span>

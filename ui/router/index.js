@@ -135,6 +135,16 @@ const routes = [
     // reached by URL only, with no in-app link anywhere, a real gap this
     // milestone named but did not close. A future milestone's own decision
     // to make.
+    //
+    // 0.9.402 recorded that future decision explicitly — CONTEXTUAL_ENTRY_
+    // POINT, with the Leaderboard's own "Export Evidence" panel above as
+    // the verified natural predecessor — but deliberately deferred wiring
+    // it. 0.9.403 fulfills that deferral: one `<router-link>` in
+    // ui/views/ReconciliationCandidateLeaderboardView.js's own Evidence
+    // Export panel, "Compare Exported Evidence," beside "Export Evidence"
+    // itself. This route's own registration, name, and component below are
+    // unchanged by that milestone — only a caller was added, one hop below
+    // /reconciliation-leaderboard, still never a top-nav destination.
     { path: '/evidence-export-comparison', name: 'evidence-export-comparison', component: ReconciliationCandidateLeaderboardEvidenceExportComparisonView },
     { path: '/about', name: 'about', component: AboutView }
 ];

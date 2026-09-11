@@ -200,14 +200,28 @@ async function run() {
             const contents = await readFile(path.join(SOURCE_ROOT, relFile), 'utf8');
             if (evidenceLinkPattern.test(contents)) filesLinkingToComparison.push(relFile);
         }
-        assert(filesLinkingToComparison.length === 0, n(`E2. /evidence-export-comparison remains linked from nowhere in ui/ — this milestone named that gap but deliberately left it for a future milestone's own decision (found: ${JSON.stringify(filesLinkingToComparison)})`));
+        // AMENDED BY 0.9.403 — Evidence Export Comparison Contextual Entry
+        // Point. At THIS milestone's own moment (0.9.400), the gap really
+        // was unlinked from anywhere, which is the fact E2 originally
+        // recorded. 0.9.402 later turned that gap into an explicit
+        // CONTEXTUAL_ENTRY_POINT decision, and 0.9.403 fulfilled it — see
+        // tests/EvidenceExportComparisonContextualEntryPoint.test.js. A
+        // decision audit that keeps asserting a superseded fact would be
+        // the exact "ambiguity" this whole audit family exists to prevent,
+        // so E2 now asserts the CURRENT, truthful reachability instead:
+        // exactly the one link 0.9.403 authorized, from the Leaderboard's
+        // own Evidence Export panel — never a second, accidental caller.
+        assert(
+            filesLinkingToComparison.length === 1 && filesLinkingToComparison[0] === 'ui/views/ReconciliationCandidateLeaderboardView.js',
+            n(`E2. /evidence-export-comparison is now linked from exactly the one place 0.9.403 authorized — the Leaderboard's own Evidence Export panel — never anywhere else (found: ${JSON.stringify(filesLinkingToComparison)})`)
+        );
         assert(
             routerSource.includes('Deliberately OUT OF SCOPE for 0.9.400'),
-            n('E3. the router comment explicitly records this as a named, deliberate exclusion rather than an oversight')
+            n('E3. the router comment still records this milestone\'s own original exclusion, unmodified — 0.9.403 added new text alongside it rather than rewriting this milestone\'s own history')
         );
 
         console.log('\n=== SECTION E: SIBLING SCOPE BOUNDARY ===');
-        console.log('✓ Section E: /evidence-export-comparison is confirmed still URL-only and unlinked anywhere — a real gap this milestone found and explicitly declined to close, recorded as such rather than silently swept in.');
+        console.log('✓ Section E: /evidence-export-comparison was confirmed URL-only and unlinked anywhere at THIS milestone\'s own time — a real gap this milestone found and explicitly declined to close. 0.9.403 later closed it; E2 above is amended to assert that later, truthful state rather than silently going stale.');
     }
 
     // ===============================================================
