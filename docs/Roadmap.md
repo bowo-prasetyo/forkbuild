@@ -95781,3 +95781,111 @@ milestone number. This arc reopens only on one of the concrete conditions named 
 bring-your-own-TURN, a concrete TURN failover specification, a resolved TURN credential lifecycle, or a new,
 explicit availability/resilience requirement for any of the four already-configurable endpoints) — never on
 architectural interest or roadmap continuity alone.
+
+## 0.9.392 — Post-Infrastructure-Arc Product Evolution Reassessment
+
+**Type:** test-only, whole-product audit. **Production changes:** none.
+
+0.9.391 closed the STUN/Rendezvous/TURN infrastructure arc (0.9.385-0.9.391) with a second `STABLE_STOP`, on top of
+0.9.383's own whole-product `STABLE_STOP`. Rather than treating either verdict as still automatically true, this
+milestone asks the wider question again, fresh: does ForkBuild have another demonstrated user-facing discontinuity
+anywhere, now that the closed arc sits on top of everything 0.9.383 already swept? It was also asked to explicitly
+revisit the one conceptual distinction the closed arc surfaced — configuration solves endpoint SELECTION, never
+AVAILABILITY — and decide, on real evidence rather than architectural interest, whether that gap is worth building
+into a new "automatic failover" direction.
+
+### What this milestone adds
+
+`tests/PostInfrastructureArcProductEvolutionReassessment.test.js` (new, registered in `tests.html`). Ten lettered
+sections:
+
+- **Section A — Entry-state reconfirmation.** Both 0.9.383's and 0.9.391's own `STABLE_STOP` verdicts are on record,
+  and the requirement 0.9.385 recorded remains unchanged.
+- **Section B — Fresh whole-product capability inventory.** Twenty-four capabilities (0.9.383's own twenty-two, plus
+  STUN and Rendezvous configuration, the two the closed arc genuinely added), each re-derived from current source.
+  Twenty-two `COMPLETE`, one `DEFERRED` (Base anchoring), one `INTERNAL` (Reconciliation Leaderboard) — zero
+  `PARTIAL`, zero `BROKEN`.
+- **Section C — Primary journeys, nav surface, and the Repository/Publication model.** Reconfirmed structurally: the
+  closed arc added exactly two new, independent, always-mounted nav destinations (now 15 total) and touched none of
+  the eight primary journeys or the Repository/Publication model — neither `EditorView.js` nor `WorldView.js`
+  references either new settings view.
+- **Section D (flagship) — Regression-guard integrity sweep.** This milestone's own central, concrete finding: this
+  codebase's "test-only, no production changes" discipline implicitly assumes every prior milestone's own regression
+  guard keeps passing on its own once written. It does not. Six distinct assertions, across five existing test files
+  spanning four separate milestones, had silently gone stale exactly where the closed infrastructure arc added a new
+  nav route or a new configuration file — because nothing ever re-ran them to notice:
+  - `tests/PostInfrastructureProductEvolutionReassessment.test.js` (0.9.374) — its own count of files carrying the
+    `InfrastructureEndpointConfiguration` design-rationale string (three, patched forward from two at 0.9.386) was
+    never patched forward again when 0.9.388 added `core/RendezvousConfiguration.js` as a fourth; and its own
+    always-mounted nav-link count (14) was never updated for 0.9.388's fifteenth link either.
+  - `tests/WholeProductProductEvolutionReassessment.test.js` (0.9.383) — the same nav-link count (14), never updated
+    for 0.9.388.
+  - `tests/UserConfigurableInfrastructureEndpointProductDirectionAudit.test.js` (0.9.385) — its own Sections C3/D3
+    still asserted the PRE-0.9.388 wiring (`bootstrapProviders` built directly from the bare `DEFAULT_RENDEZVOUS_URLS`
+    literal; no `core/RendezvousConfiguration.js`). This same file's Sections C2/D2 (the STUN analogue) had been
+    patched forward with an "(as resolved by 0.9.386)" note at the time; the matching Rendezvous update never
+    happened at 0.9.388/0.9.389.
+  - `tests/ProductBaselineClosure.test.js` (0.9.314) and `tests/PostPlaceNamingStableProductBaselineClosure.test.js`
+    (0.9.318) — both carry a dedicated nav-route regression guard, pinned to an exact route set, whose own text
+    already anticipates exactly this failure mode ("a newly introduced product surface must be classified in this
+    guard... before this assertion is updated, not silently"). Four real settings routes (Arweave Gateway, Nostr
+    Relay, STUN, Rendezvous) were each added, across four separate milestones, without ever receiving that
+    classification.
+
+  All six are corrected here — a proper `owner`/`marker` classification entry added for each of the four settings
+  surfaces in both closure guards (never a bare count bump), the stale STUN/Rendezvous wiring assertions rewritten to
+  describe current, live reality with a note explaining what changed and why, and the two plain nav-count assertions
+  updated to 15. Section D then live-executes all five corrected files via `node`, in-process, and asserts each now
+  runs to completion — not merely that their source now contains the right string.
+- **Section E — Previously-deferred candidates.** Eight candidates (Base anchoring, Reconciliation Leaderboard entry
+  point, proactive Repository discovery, collaboration expansion, notification delivery, additional infrastructure
+  providers, TURN, a generic `InfrastructureEndpointConfiguration` abstraction), each reconfirmed on fresh evidence.
+  None is reversed; none is reclassified `BUILD_NEXT`.
+- **Section F — Resilience vs. configuration, explicitly revisited.** The distinction 0.9.391 proved live (a
+  configured-but-unreachable STUN server and Rendezvous server both still reach/degrade through the real, unmodified
+  production classes with no automatic substitution) is reconfirmed live, fresh. Then, per this milestone's own
+  brief, 0.9.384's own scoring gate (`evaluateCandidate()`, reused verbatim, never redefined to fit a preferred
+  answer) is applied fresh to "automatic failover across configured infrastructure endpoints" as a candidate
+  direction: `userValue: NOT_DEMONSTRATED` (no user report or requirement text beyond the original selection-shaped
+  one) and `reachability`/`scope` both `UNSPECIFIED`/`UNBOUNDED` (the candidate does not yet name which endpoints,
+  what user-visible signal, or what recovery behavior) — `NOT_SELECTED`. The gate's own even-handedness is
+  re-proven structurally (maximal architectural fit with undemonstrated value still fails; minimal fit with
+  demonstrated, concretely-specified value still clears), so the rejection is not a rule invented to reject this
+  candidate specifically.
+- **Section G — Cross-arc identity and isolation.** Spot-reconfirmed live: all four shipped configurations remain
+  isolated over one shared storage namespace, and neither STUN nor Rendezvous configuration carries any
+  Publication/Document identity vocabulary.
+- **Section H — What Section D actually means.** The regression-guard staleness is generalized, not merely fixed in
+  place: this codebase's own regression guards need to actually be run to keep a `STABLE_STOP` verdict honest over
+  time, not merely written once and trusted. Recorded as a fact about this codebase's own process, not selected as a
+  new implementation milestone — building automated enforcement would itself need to clear Section F's own evidence
+  gate, which is not asserted here.
+- **Section I — Final product decision matrix.**
+- **Section J — Final decision and production-change guard.**
+
+### Verdict
+
+**`STABLE_STOP`** for new production features. No genuine user-facing product gap survives this sweep (Sections
+B/C/E/G). The resilience-vs-configuration distinction this milestone was explicitly asked to revisit was checked on
+real evidence, not architectural interest — 0.9.384's own gate rejects "automatic failover" today, exactly as it
+would reject any other undemonstrated, unspecified candidate.
+
+This milestone is not vacuous, however: Section D found and corrected six real, content-based stale assertions
+across five existing test files, all traceable to the same cause — the closed infrastructure arc's own
+nav/configuration additions outrunning this codebase's own regression guards. That finding is recorded, generalized
+(Section H), and closed, as test-only work, with zero production files touched.
+
+### What this milestone deliberately excludes
+
+Per its own type: no production-code change of any kind. No automatic-failover implementation, no health-check
+seam, no generic retry/resilience abstraction, no CI enforcement of `tests/*.test.js`. The five test-file
+corrections in Section D touch only stale assertions inside existing test files (plus this milestone's own new
+test file and its `tests.html` registration) — no file outside `tests/`/`tests.html`/`docs/` is modified or added.
+
+### What comes after
+
+No `0.9.393` is pre-selected. Reopening conditions, named explicitly: (1) a new, explicit product requirement naming
+AVAILABILITY (not merely selection) for any configured endpoint, concretely specified enough to clear 0.9.384's own
+gate; (2) evidence that the regression-guard staleness Section D found recurs after this correction, which would
+argue for automated enforcement rather than another manual sweep; (3) any of the reopening conditions 0.9.390/0.9.391
+already named for TURN specifically.

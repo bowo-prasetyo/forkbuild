@@ -241,13 +241,18 @@ async function run() {
         const leaderboardLinkFiles = await grepCodeOnlyFiles("reconciliation-leaderboard'", ['ui']);
         assert(leaderboardLinkFiles.length === 1, n(`the string 'reconciliation-leaderboard' appears in exactly one UI file (the router's own registration) — found ${leaderboardLinkFiles.length}: ${JSON.stringify(leaderboardLinkFiles)}`));
 
-        // A2. Reconfirm the always-mounted top nav, fresh: 14 flat links
-        // as of 0.9.386 (STUN Servers) — the post-publish distribution
-        // arc itself added zero new top-level nav destinations (its own
-        // navigation lives inside the post-publish result panel, not the
-        // nav bar); the one new destination since is 0.9.386's own.
+        // A2. Reconfirm the always-mounted top nav, fresh: 15 flat links
+        // as of 0.9.388 (STUN Servers, then Rendezvous Servers) — the
+        // post-publish distribution arc itself added zero new top-level
+        // nav destinations (its own navigation lives inside the
+        // post-publish result panel, not the nav bar); the two new
+        // destinations since are 0.9.386/0.9.388's own. Count corrected
+        // from 14 to 15 by 0.9.392 upon discovering this assertion had
+        // gone stale — 0.9.388 added the fifteenth link without updating
+        // this historical count, and nothing re-ran this test to notice
+        // until 0.9.392's own fresh sweep.
         const navLinkOpenTags = (appCode.match(/<router-link/g) || []).length;
-        assert(navLinkOpenTags === 14, n(`the always-mounted top nav carries exactly 14 router-link destinations — found ${navLinkOpenTags}`));
+        assert(navLinkOpenTags === 15, n(`the always-mounted top nav carries exactly 15 router-link destinations — found ${navLinkOpenTags}`));
 
         console.log('\n=== SECTION A: CURRENT PRODUCT CAPABILITY INVENTORY ===');
         for (const row of capabilityInventory) console.log(`${row.capability}: ${row.classification}${row.note ? ' — ' + row.note : ''}`);

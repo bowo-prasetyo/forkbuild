@@ -216,19 +216,31 @@ async function runTests() {
             ['Place Naming decentralized publication', 'application/NostrPlaceNamingDiscoveryPublisher.js', 'export class NostrPlaceNamingDiscoveryPublisher'],
             ['Provider preferences', 'core/RoleProviderPreference.js', 'export class RoleProviderPreference'],
             ['Authentication/identity', 'identity/LocalIdentityProvider.js', 'export class LocalIdentityProvider'],
-            ['Wanderer/vehicle', 'application/AvatarVehicleInteractionController.js', 'export class AvatarVehicleInteractionController']
+            ['Wanderer/vehicle', 'application/AvatarVehicleInteractionController.js', 'export class AvatarVehicleInteractionController'],
+            // 0.9.392 — this closure guard's own B-nav assertion had gone
+            // stale: 0.9.364-0.9.372 (Arweave Gateway/Nostr Relay
+            // settings) and 0.9.386/0.9.388 (STUN/Rendezvous settings)
+            // each added a real, always-mounted nav route without adding
+            // the matching classification entry here, and nothing re-ran
+            // this guard to notice until 0.9.392's own fresh sweep. Added
+            // now, per this guard's own stated rule, never silently.
+            ['Arweave Gateway settings', 'ui/views/ArweaveGatewaySettingsView.js', 'export default'],
+            ['Nostr Relay settings', 'ui/views/NostrRelaySettingsView.js', 'export default'],
+            ['STUN settings', 'ui/views/StunSettingsView.js', 'export default'],
+            ['Rendezvous settings', 'ui/views/RendezvousSettingsView.js', 'export default']
         ];
         for (const [name, path, marker] of REACHABLE_SURFACES) {
             assert(await sourceExists(path), `B. [${name}] owner ${path} still exists — capability -> owner holds.`);
             assert((await rawSource(path)).includes(marker), `B. [${name}] ${path} still contains "${marker}".`);
             reachableSurfaces.push([name, path, marker]);
         }
-        assert(reachableSurfaces.length === 21,
-            `B. Exactly 21 reachable surfaces are carried forward — 0.9.314's own 19, Place Naming decentralized discovery (0.9.253/0.9.316-era, added at 0.9.319), plus Place Naming decentralized publication (0.9.316, reclassified REACHABLE at 0.9.320 — see this file's own addendum) (found ${reachableSurfaces.length}).`);
+        assert(reachableSurfaces.length === 25,
+            `B. Exactly 25 reachable surfaces are carried forward — 0.9.314's own 19, Place Naming decentralized discovery (0.9.253/0.9.316-era, added at 0.9.319), Place Naming decentralized publication (0.9.316, reclassified REACHABLE at 0.9.320), plus Arweave Gateway/Nostr Relay/STUN/Rendezvous settings (classified by 0.9.392, previously missing from this guard) (found ${reachableSurfaces.length}).`);
 
         const appSource = await rawSource('ui/App.js');
         const EXPECTED_NAV_ROUTES = new Set(['/', '/editor', '/repository', '/worlds/recent', '/avatar', '/identity',
-            '/peers', '/conversations', '/publications', '/settings/content-provider', '/about']);
+            '/peers', '/conversations', '/publications', '/settings/content-provider', '/about',
+            '/settings/arweave-gateway', '/settings/nostr-relay', '/settings/stun', '/settings/rendezvous']);
         const actualNavRoutes = new Set(
             [...appSource.matchAll(/to="(\/[a-zA-Z0-9\-/]*)"/g)].map((m) => m[1])
         );
