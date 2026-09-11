@@ -95674,3 +95674,110 @@ The infrastructure-endpoint configuration story now stands at:
 No follow-up implementation milestone is scheduled for TURN. Per this milestone's own reopening condition, a
 future milestone resumes this only when product direction disambiguates the underlying need, not merely because
 the existing `endpoint`/`apiKey` seam happens to make one shape cheap to wire.
+
+## 0.9.391 — Infrastructure Configuration Product Reassessment
+
+**Type:** test-only, decision artifact. **Production changes:** none.
+
+0.9.385 opened this arc on one recorded requirement — "users must be able to switch critical infrastructure
+endpoints when the default endpoint is unavailable" — and named STUN, Rendezvous, and TURN its three CRITICAL
+candidates. 0.9.386/0.9.387 shipped and converged STUN. 0.9.388/0.9.389 shipped and converged Rendezvous.
+0.9.390 deferred TURN, on the finding that every candidate configuration shape would introduce this
+configuration family's first persisted secret over a credential whose lifecycle this codebase's own source
+cannot verify. This milestone asks the question that six-part arc was never scoped to ask on its own: now that
+0.9.386-0.9.390 are all done, does the requirement have a **complete** product path, or does a real,
+demonstrated user-facing gap remain?
+
+### What this milestone adds
+
+`tests/InfrastructureConfigurationProductReassessment.test.js` (new, registered in `tests.html`). Ten lettered
+sections, expanding this milestone's own five-area brief (requirement coverage; completed configuration
+journeys; the deferred TURN boundary; resilience vs. configuration; final decision) into this codebase's own
+established ten-section convergence-audit shape:
+
+- **Section A — Requirement reconfirmation.** 0.9.385's own requirement text, and its own "re-run every
+  candidate against fresh evidence, never bless by category membership" discipline, both reconfirmed still on
+  record, verbatim, unchanged by anything shipped since.
+- **Section B — Fresh endpoint classification.** All eight named candidates re-derived from current source
+  rather than cited prose: Arweave Gateway, Nostr Relay, STUN, and Rendezvous each confirmed to still have their
+  full three-file chain (value object, store, settings view) on disk; TURN confirmed to still have none;
+  IPFS Gateway, Base RPC, and Bitcoin Esplora confirmed to still carry no configuration seam of any kind.
+- **Sections C-F — Completed configuration journeys**, one per shipped endpoint (Arweave Gateway, Nostr Relay,
+  STUN, Rendezvous), each combining a citation of that endpoint's own already-existing convergence audit
+  (0.9.365/0.9.367 Arweave, 0.9.370/0.9.372 Nostr, 0.9.387 STUN, 0.9.389 Rendezvous — none re-derived) with one
+  small, fresh, LIVE re-check of the exact chain this milestone's own brief names: Settings → persist → restart
+  → startup resolution → concrete consumer. Every `resolved*` variable in `ui/main.js` is confirmed assigned
+  exactly once; Nostr Relay's own three independent read-path consumers (World Encounter, Snapshot, Place Naming
+  discovery — 0.9.368's own finding) are individually reconfirmed; STUN's live proof reaches a real, unmodified
+  `RTCPeerConnection` construction call; Rendezvous's live proof reaches `discoveryBootstrap`'s own
+  `bootstrapProviders` construction.
+- **Section G — The deferred TURN boundary**, proven directly rather than merely asserted: a live round trip
+  (fetch → merge with STUN → real `RTCPeerConnection` construction, reusing the TURN audit's own fixture) confirms
+  TURN is fully technically functional today — the deferral is not an architectural limitation. The three
+  specific, still-unresolved reasons it remains `DEFER` (relay-hostname/credential-endpoint/credentials-themselves
+  asymmetry; an unverifiable credential lifecycle; every candidate shape being this family's first persisted
+  secret) are each reconfirmed unchanged against current source.
+- **Section H (flagship) — Resilience vs. configuration.** Live-proven, not merely stated: a configured-but-
+  unreachable custom STUN entry still reaches the real `RTCPeerConnection` construction call unchanged, with no
+  silent substitution of the deployment default; a configured-but-unreachable Rendezvous server, through the
+  real, unmodified `RendezvousDiscoveryProvider`, still degrades `discover()` to an empty result rather than
+  throwing or silently falling back to `DEFAULT_RENDEZVOUS_URLS`. Structurally reconfirmed across all four
+  shipped configuration files and their stores that no health-check, latency-ranking, automatic-selection,
+  failover, retry-scheduling, or connection-testing vocabulary exists anywhere in this family, and that
+  Arweave's own loud `ContentUnavailableError` and Nostr's own silent `[]`-degrade are both unchanged by
+  configurability. **User-configurable endpoints solve endpoint SELECTION; they were never built to, and do not,
+  solve AVAILABILITY** — that split is proven live, not assumed.
+- **Section I — Cross-configuration isolation and the non-configurable boundary.** All four shipped
+  configurations round-trip independently over one freshly-constructed shared storage namespace with zero key
+  collision and zero value bleed in either direction (four distinct storage keys, live-proven); clearing one
+  configuration leaves the other three completely untouched. `InfrastructureEndpointConfiguration` is confirmed,
+  by exact sweep, to appear in exactly the four configuration files' own headers — never as an actual class.
+  IPFS Gateway, Base RPC, and the three Bitcoin Esplora files are reconfirmed to carry no
+  `*ConfigurationStore` wiring of any kind. Four independent, always-mounted settings routes are reconfirmed in
+  `ui/App.js`; no shared `/settings/infrastructure` parent route exists.
+- **Section J — Final decision and production-change guard.** Checked against the live working tree (`git status
+  --porcelain`): no production file is modified or added.
+
+### Verdict
+
+**`STABLE_STOP`.** No remaining product discontinuity was found. The recorded requirement is answered wherever
+its own semantics are actually well-defined:
+
+| Endpoint         | Status                                       |
+|-------------------|-----------------------------------------------|
+| Arweave Gateway   | COMPLETE (0.9.365/0.9.367)                    |
+| Nostr Relay       | COMPLETE (0.9.370/0.9.372)                    |
+| STUN              | COMPLETE (0.9.387)                            |
+| Rendezvous        | COMPLETE (0.9.389)                            |
+| TURN              | DEFERRED — technically possible, semantically unresolved (0.9.390) |
+| IPFS Gateway      | Deliberately not user-configurable            |
+| Base RPC          | Deliberately not user-configurable            |
+| Bitcoin Esplora   | Deliberately not user-configurable            |
+
+TURN is not a gap left open by inertia — Section G proves it remains fully functional today and is deferred for
+a specific, still-open product/security reason, never a "cannot be built" reason. IPFS Gateway, Base RPC, and
+Bitcoin Esplora remain deliberately outside this requirement's scope, each backing an explicitly optional or
+deferred capability, never a primary journey's own default path.
+
+Section H is the reason this is `STABLE_STOP` rather than a prompt to keep building: the requirement this arc
+answers was always endpoint-selection-shaped, and every endpoint that answers it (Arweave, Nostr, STUN,
+Rendezvous) does so completely, with zero hidden resilience semantics anywhere. A future requirement for
+*automatic* recovery — keep working when the default fails, without a human re-configuring anything — would be a
+genuinely new product direction (failover/resilience), never a hidden extension of endpoint configuration, and
+would need its own explicit requirement and its own audit, exactly as 0.9.390's own reopening condition already
+states for TURN specifically.
+
+### What this milestone deliberately excludes
+
+Per its own type and explicit scope: no production-code change of any kind. No Settings UI, no new
+`core/*Configuration.js` value object, no storage class, no composition-root wiring, no TURN implementation of
+any shape, and no generic `InfrastructureEndpointConfiguration` abstraction. This milestone classifies the
+infrastructure-configuration arc's current state; it does not change it.
+
+### What comes after
+
+No `0.9.392` is pre-selected. `STABLE_STOP` is a deliberate stopping point, not a prompt to manufacture the next
+milestone number. This arc reopens only on one of the concrete conditions named above (evidence for
+bring-your-own-TURN, a concrete TURN failover specification, a resolved TURN credential lifecycle, or a new,
+explicit availability/resilience requirement for any of the four already-configurable endpoints) — never on
+architectural interest or roadmap continuity alone.
