@@ -7468,6 +7468,21 @@ export default {
                     explicitly, happens on the
                     <router-link to="/reconciliation-workspace">Reconciliation Workspace</router-link>.
                 </p>
+                <!-- 0.9.411 — Publisher Leaderboard Snapshot Claim Authoring
+                     & Export. A third, independent link beside the two
+                     above: those two consume peer evidence; this one
+                     authors, signs, and exports THIS replica's own signed
+                     leaderboard snapshot claim — the exact peer-evidence
+                     artifact the Reconciliation Workspace's own "Peer
+                     Evidence" field asks a peer to paste. See ui/views/
+                     PublisherLeaderboardSnapshotClaimAuthoringView.js's own
+                     header. -->
+                <p class="form-hint form-hint--neutral">
+                    Authoring and exporting YOUR OWN signed leaderboard snapshot
+                    claim — the evidence a peer's Workspace expects — happens on
+                    the
+                    <router-link to="/publisher-snapshot-claim">Publisher Snapshot Claim</router-link> page.
+                </p>
 
                 <div v-if="publicationArchiveExportedPackage.json" class="evidence-inspection-adapter">
                     <span class="evidence-inspection-adapter-title">Exported Archive</span>

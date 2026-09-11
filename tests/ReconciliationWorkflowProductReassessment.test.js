@@ -245,19 +245,30 @@ async function run() {
             n('E2. the export-to-portable-JSON function is real, complete, and already tested (0.8.122) — the transport is not missing either')
         );
 
-        // The live sweep: zero UI construction sites for either seam,
-        // anywhere — the SAME "ui/ construction sites are the one measure
-        // of real reachability" discipline 0.9.323/0.9.326/0.9.361's own
-        // orphan-sweep lineage already established, re-run fresh here.
+        // AMENDED BY 0.9.411 — Publisher Leaderboard Snapshot Claim
+        // Authoring & Export. At THIS milestone's own moment (0.9.410),
+        // the construction site count was genuinely zero, which is the
+        // fact E3 originally recorded. 0.9.411 built the first genuine UI
+        // construction site — see ui/views/
+        // PublisherLeaderboardSnapshotClaimAuthoringView.js's own header.
+        // The identical "assert the CURRENT, truthful state, never a
+        // superseded one" convention 0.9.408's own amendment to
+        // tests/ReconciliationWorkspaceExecutionBoundary.test.js already
+        // established applies here too: E3 now asserts exactly the one
+        // file 0.9.411 authorized constructs it, never a second,
+        // accidental caller.
         const createUiSites = grepFiles('new CreatePublisherLeaderboardSnapshotClaimUseCase(', ['ui']);
         assert(
-            createUiSites.length === 0,
-            n(`E3. CreatePublisherLeaderboardSnapshotClaimUseCase has ZERO ui/ construction sites today (found: ${createUiSites.join(', ') || 'none'}) — no button, anywhere in the shipped app, signs a leaderboard claim`)
+            createUiSites.length === 1 && createUiSites[0] === 'ui/views/PublisherLeaderboardSnapshotClaimAuthoringView.js',
+            n(`E3. exactly the one file 0.9.411 authorized to construct CreatePublisherLeaderboardSnapshotClaimUseCase does so, never a second, accidental caller (found: ${JSON.stringify(createUiSites)})`)
         );
+        // AMENDED BY 0.9.411 — the identical amendment, one layer over:
+        // 0.9.411's own new view is also the first (and only) ui/ call
+        // site for the export function.
         const exportCallSites = grepFiles('exportPublisherLeaderboardSnapshotClaim(', ['ui']);
         assert(
-            exportCallSites.length === 0,
-            n(`E4. exportPublisherLeaderboardSnapshotClaim() has ZERO ui/ call sites today (found: ${exportCallSites.join(', ') || 'none'}) — even if a claim existed in memory, nothing in the UI turns it into portable JSON for a peer`)
+            exportCallSites.length === 1 && exportCallSites[0] === 'ui/views/PublisherLeaderboardSnapshotClaimAuthoringView.js',
+            n(`E4. exactly the one file 0.9.411 authorized to call exportPublisherLeaderboardSnapshotClaim() does so, never a second, accidental caller (found: ${JSON.stringify(exportCallSites)})`)
         );
         const mainSource = await readSource('ui/main.js');
         assert(
@@ -271,6 +282,14 @@ async function run() {
             workspaceSource.includes('(Export Claim, on their replica)'),
             n('E6. the Workspace\'s own hint text literally says "(Export Claim, on their replica)" — telling a person to go find an "Export Claim" action for THIS claim type on a peer\'s replica')
         );
+        // AMENDED BY 0.9.411 — the identical amendment, applied to the
+        // "Export Claim" button census specifically: at 0.9.410's own
+        // moment, zero ui/ files mentioning PublisherLeaderboardSnapshotClaim
+        // carried a real "Export Claim" button, which is the fact E7
+        // originally recorded. 0.9.411 built exactly one — see
+        // ui/views/PublisherLeaderboardSnapshotClaimAuthoringView.js's own
+        // header. E7 now asserts exactly that one file carries it, never a
+        // second, accidental button.
         const leaderboardClaimUiFiles = grepFiles('PublisherLeaderboardSnapshotClaim', ['ui']);
         const filesWithRealExportClaimButton = [];
         for (const file of leaderboardClaimUiFiles) {
@@ -278,8 +297,8 @@ async function run() {
             if (/>\s*Export Claim\s*</.test(source) || /'Export Claim'/.test(source)) filesWithRealExportClaimButton.push(file);
         }
         assert(
-            filesWithRealExportClaimButton.length === 0,
-            n(`E7. of every ui/ file that even mentions PublisherLeaderboardSnapshotClaim (${leaderboardClaimUiFiles.join(', ')}), NONE contains a real "Export Claim" button for it — the affordance the Workspace's own copy names does not exist anywhere for this claim type`)
+            filesWithRealExportClaimButton.length === 1 && filesWithRealExportClaimButton[0] === 'ui/views/PublisherLeaderboardSnapshotClaimAuthoringView.js',
+            n(`E7. exactly the one file 0.9.411 authorized carries a real "Export Claim" button for this claim type — the affordance the Workspace's own copy names now exists, and nowhere else (found: ${JSON.stringify(filesWithRealExportClaimButton)})`)
         );
 
         // This is NOT a hard, novel, or ambiguous problem — the identical
@@ -483,11 +502,22 @@ async function run() {
             assert(!pattern.test(bundle), n(`K1. no anti-solution pattern ${pattern} exists anywhere in ui/, application/, or core/`));
         }
 
-        // The one recommended follow-up this audit itself names (Section
-        // E/L) is confirmed NOT implemented by this milestone — a
-        // decision recorded, never smuggled in as code.
+        // AMENDED BY 0.9.411 — Publisher Leaderboard Snapshot Claim
+        // Authoring & Export. At THIS milestone's own moment (0.9.410),
+        // the one recommended follow-up (Section E/L) was confirmed NOT
+        // yet implemented — a decision recorded, never smuggled in as
+        // code — which is the fact K2 originally recorded. 0.9.411 is
+        // exactly that recommended follow-up, built: see
+        // ui/views/PublisherLeaderboardSnapshotClaimAuthoringView.js's own
+        // header. K2 now asserts the CURRENT, truthful state — exactly the
+        // one file 0.9.411 authorized, never a second, accidental one —
+        // the identical "assert what's true now" convention Section E's
+        // own 0.9.411 amendments (E3/E4/E7, above) already apply.
         const createUiSitesAfter = grepFiles('new CreatePublisherLeaderboardSnapshotClaimUseCase(', ['ui']);
-        assert(createUiSitesAfter.length === 0, n('K2. this milestone itself adds no UI construction site for CreatePublisherLeaderboardSnapshotClaimUseCase — the gap is named, not closed, here'));
+        assert(
+            createUiSitesAfter.length === 1 && createUiSitesAfter[0] === 'ui/views/PublisherLeaderboardSnapshotClaimAuthoringView.js',
+            n(`K2. exactly the one file 0.9.411 authorized constructs CreatePublisherLeaderboardSnapshotClaimUseCase — the gap this audit named is now closed, by the recommended follow-up itself, never by a second/accidental site (found: ${JSON.stringify(createUiSitesAfter)})`)
+        );
 
         console.log('\n=== SECTION K: DELIBERATE EXCLUSION CENSUS ===');
         console.log('✓ Section K: none of the explicitly out-of-scope anti-solutions exist anywhere in current source, and the one capability this audit recommends for a future milestone is confirmed absent from THIS one — a decision is recorded, nothing is implemented.');
