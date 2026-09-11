@@ -96011,3 +96011,102 @@ should at minimum re-run this milestone's own Section G full-suite sweep before 
 rather than trusting a targeted, hand-picked investigation the way 0.9.392 did; (2) a follow-up implementation
 milestone (0.9.394 or later) should take up the ten `UNKNOWN`-classified files named in Section G above, each as
 its own small, evidence-checked correction, never a bulk rewrite.
+
+## 0.9.394 — Regression Guard Effectiveness & Mutation Audit
+
+**Type:** test-only, engineering audit (not a product-capability audit). **Production changes:** none.
+
+**A named divergence from 0.9.393's own recommendation, stated up front:** this milestone does NOT take up the ten
+`UNKNOWN`-classified deferred files 0.9.393's own "What comes after" named as the intended follow-up. It pursues a
+different, independently motivated engineering question instead. Those ten files remain exactly where 0.9.393 left
+them, named again below, not silently dropped.
+
+0.9.393 asked whether regression guards are FRESH — does an assertion still describe current reality. This
+milestone asks a different question: of the guards that ARE fresh, which ones would actually FAIL if the specific
+behavior they read as protecting genuinely regressed? A guard can be fresh and still weak — passing today only
+because nothing has ever exercised it against the failure mode its own name or comment claims to catch.
+
+### What this milestone adds
+
+`tests/RegressionGuardEffectivenessAudit.test.js` (new, registered in `tests.html`). A taxonomy of six
+classifications (`BEHAVIORAL_GUARD`, `CONTRACT_GUARD`, `STRUCTURAL_GUARD`, `PRESENCE_GUARD`, `WEAK_GUARD`,
+`UNKNOWN`), and nine live counterfactual mutation trials — each a small, realistic regression introduced directly
+into real production source, run live under `node` against the guarding test file, recorded, and reverted via
+`git checkout` before the next trial began.
+
+- **Section A — Taxonomy.** `WEAK_GUARD` is defined as an OUTCOME (a live counterfactual regression in the exact
+  behavior a guard reads as protecting goes undetected), never a judgment about how an assertion looks.
+- **Section B — Sampling methodology.** The population is this codebase's own existing ~500-file `FLAGSHIP`-section
+  convention (503 of 813 test files today). Nine trials across eight architecturally distinct domains is this
+  milestone's own explicit, bounded scope — a curated counterfactual sample, not a claim of exhaustive
+  mutation-testing coverage.
+- **Section C (flagship, alongside I) — Nine live trials.** `core/IndexEquivocation.js` (competing-root threshold),
+  `application/WorldEncounterMaterialSignatureVerifier.js` (signature-validity check), `identity/
+  LocalAuthorizationVerifier.js` (signer-identity cross-check), `application/AchievementBadgeView.js`
+  (cross-record anchor attribution), `application/PublicationReferenceRecord.js` (self-reference rejection),
+  `application/CheckRecoveryUseCase.js` (checkpoint integrity check), `core/License.js` (CC BY-ND fork
+  permission), `discovery/DecentralizedPublicationDiscoveryProvider.js` (author-scoped filter), and `identity/
+  LocalIdentityProvider.js` (device-authorization revocation). Outcome: four caught immediately by the file the
+  mutation directly targeted; two caught only by a correctly-scoped SIBLING test rather than the nominally-relevant
+  `FLAGSHIP` consumer test; one equivalent mutant; two genuine `WEAK_GUARD` findings.
+- **Section D — Genuine findings, fixed live.** `tests/AchievementBadgeView.test.js`'s own Section D previously
+  never passed `findSourceAnchorId()` more than one Bitcoin record, so "return the first record" and "return the
+  matching record" were indistinguishable to it — fixed with a nine-distinct-record disambiguation scenario
+  (assertions 24/25). `tests/PersistenceRecovery.test.js` previously exercised checkpoint-integrity rejection only
+  through `RecoverDocumentUseCase`'s own separate check, never through `CheckRecoveryUseCase`'s own — fixed with a
+  new section (7b) calling `CheckRecoveryUseCase#execute()` directly against a tampered checkpoint and verifying
+  both the returned descriptor and that the checkpoint is actually discarded. Both fixes were re-verified against
+  the ORIGINAL mutation (failed as intended) before being reverted and counted done.
+- **Section E — The equivalent-mutant case.** `WorldEncounterMaterialSignatureVerifier.js`'s own `result.valid ===
+  true` weakened to `result.valid !== false` was not caught — but `identity/LocalAuthorizationVerifier.js#
+  verifyDescriptor()` provably never returns `valid` as anything but a literal `true`/`false`, so the two
+  expressions decide identically over every real input. Recorded explicitly, not counted as a third finding.
+- **Section F — Division-of-labor cases.** The signer-identity mutation was missed by three nominally-relevant
+  `FLAGSHIP` files and caught only by `tests/DecentralizedIdentity.test.js`'s own dedicated "mismatch is named"
+  assertion; the CC BY-ND fork-permission mutation was missed by `tests/ForkPublishedWorld.test.js`'s own "full
+  lifecycle" flagship claim and caught only by `tests/Licensing.test.js` (itself not `FLAGSHIP`-tagged). Both
+  argued as sound test-pyramid design — a primitive tested once, at its own dedicated test, rather than duplicated
+  at every consumer — not classified `WEAK_GUARD`, and not "fixed," since doing so would add duplication rather
+  than protection.
+- **Section G — Static census.** `STRUCTURAL_GUARD` (0.9.393's own four-file `InfrastructureEndpointConfiguration`
+  whitelist) and `PRESENCE_GUARD` (a nav-route string-presence check) are each grounded in one real, existing,
+  cited example — neither newly mutated — so every taxonomy label has a concrete instance, and the reason neither
+  is "weak" merely for being structural/presence-based: neither ever claimed the runtime-behavior protection
+  `WEAK_GUARD` requires missing.
+- **Section H — Coverage this audit does not claim.** A fresh full-suite execution today: 652 of 813 files pass
+  under plain `node`, 161 fail — the same environment-limited gap (no browser `three` import map, no
+  `RTCPeerConnection` shim) 0.9.393's own Section G2 already named. Nine trials is a sample, not a census; two
+  findings in nine trials (22%) is reported as this sample's own rate, never extrapolated codebase-wide.
+- **Section I — Production guard.**
+- **Section J — Verdict.**
+
+### Verdict
+
+**`REGRESSION_GUARD_SENSITIVITY_SAMPLE_VERIFIED_TWO_FINDINGS_FIXED`.** Freshness and effectiveness are genuinely
+different properties. This milestone's own nine-trial sample found two genuine findings, both fixed live in the
+same milestone that found them (this codebase's own established precedent), and two division-of-labor cases
+recorded rather than papered over with duplicate assertions.
+
+### What this milestone deliberately excludes
+
+No production-code change of any kind — every mutation introduced during Section C's own live trials was reverted
+before the next trial began (Section I). No systematic/exhaustive mutation-testing framework (Stryker or similar)
+— nine hand-chosen, realistic regressions across a curated sample, matching this milestone's own brief explicitly
+("even a curated set of representative counterfactuals," never "a full mutation-testing framework"). Most
+importantly: the ten `UNKNOWN`-classified files 0.9.393 deferred (`tests/PostCollaborationProductReassessment.
+test.js`, `tests/PostCommentaryUIProductReassessment.test.js`, `tests/PostPlaceNamingProductEvolutionReassessment.
+test.js`, `tests/PostPlaceNamingProductReassessment.test.js`, `tests/PostPublicationCommentaryProductReassessment.
+test.js`, `tests/ProductEvolutionBaseline.test.js`, `tests/DecentralizedDistributionGuidanceProductGapAudit.
+test.js`, `tests/PostAdoptionPlaceNamingProductReassessment.test.js`, `tests/
+PostPlaceNamingPublicationProductReassessment.test.js`, and `tests/WorldViewOwnPublicationSnapshotDiscovery.
+test.js`) remain untouched and open — this milestone's own divergence, named up front, not a silent drop.
+
+### What comes after
+
+Two recommendations: (1) a small, curated counterfactual-mutation sweep like this one is worth repeating
+periodically — this sample's own 22% finding rate is real evidence for that, never evidence for building an
+exhaustive automated mutation-testing framework across all 813 files, which remains disproportionate to a
+test-only milestone; a future sweep choosing domains this one did not touch (spatial/collision, presence trust
+boundaries beyond the one primitive checked here, notification delivery, schema migration itself) would extend
+this evidence rather than repeat it; (2) 0.9.393's own ten deferred `UNKNOWN`-classified files still need a
+follow-up milestone — this one was not it, and they should not be deferred a second time without one.

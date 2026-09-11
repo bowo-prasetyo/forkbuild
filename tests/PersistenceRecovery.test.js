@@ -296,6 +296,37 @@ function buildStack(storage) {
 }
 
 // ---------------------------------------------------------------------
+// 7b. CheckRecoveryUseCase's OWN integrity check, exercised directly.
+// 0.9.394 — items 6 and 7 above only ever call stack.recover.execute(),
+// which carries its own, separate contentHash check
+// (RecoverDocumentUseCase). stack.check.execute() (CheckRecoveryUseCase)
+// has its own EARLIER integrity check — the one a caller actually
+// probes with, before ever attempting a full recover() — and nothing in
+// this file exercised it in isolation until this section: a mutation
+// that disabled CheckRecoveryUseCase's own contentHash comparison
+// passed this entire file clean (0.9.394's own mutation-testing sweep —
+// see docs/Roadmap.md, 0.9.394, "Findings").
+// ---------------------------------------------------------------------
+{
+    const storage = new InMemoryStorageProvider();
+    const stack = buildStack(storage);
+    const doc = createDocument();
+    const id = doc.world.id;
+    const serialized = stack.serializer.serialize(doc);
+    stack.recoveryStore.save(id, {
+        documentId: id, revision: 5, savedAt: new Date().toISOString(),
+        contentHash: 'tampered-hash-does-not-match',
+        document: serialized
+    });
+    const result = stack.check.execute(id);
+    assert(result.available === false, 'check.execute() reports a tampered checkpoint as unavailable, never as available');
+    assert(result.obsolete === true, 'check.execute() classifies a tampered checkpoint as obsolete, its own signal for "reject and discard"');
+    assert(result.recovery === null, 'check.execute() never hands back a DocumentRevision for a checkpoint whose integrity failed');
+    assert(stack.recoveryStore.load(id) === null, 'check.execute() actually discards the tampered checkpoint from the recovery store — it does not merely report a problem and leave it sitting there for a later probe to trust');
+    console.log('✓ CheckRecoveryUseCase rejects and discards a tampered checkpoint, exercised directly (not only through RecoverDocumentUseCase\'s own separate check)');
+}
+
+// ---------------------------------------------------------------------
 // 8. Old-format recovery -> migrate -> validate -> recover
 // ---------------------------------------------------------------------
 {
