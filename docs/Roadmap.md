@@ -95364,3 +95364,87 @@ RendezvousConfiguration.js` modeling a list of rendezvous URLs — never a gener
 `storage/RendezvousConfigurationStore.js`, a `SetRendezvousConfigurationUseCase.js`, and a
 `RendezvousSettingsView.js`) against `peer/RendezvousConfig.js`'s own `DEFAULT_RENDEZVOUS_URLS` and
 `DiscoveryBootstrap`, followed by its own convergence audit before TURN is revisited as its own product decision.
+
+## 0.9.388 — User-Configurable Rendezvous Server Configuration
+
+0.9.385's own audit selected Rendezvous as the second of exactly two `BUILD_NEXT` candidates (STUN the other, built
+in 0.9.386 and converged in 0.9.387), on the strength of the same criticality finding (both back the sole default
+path of the `Peer -> Sync -> Repository -> Explore -> Fork` primary journey) and clean constructor injection
+(`WebSocketRendezvousTransport#url`, `RendezvousDiscoveryProvider#transport`). This milestone builds the missing
+settings-persistable half, mirroring `core/IceServerConfiguration.js`/`storage/IceServerConfigurationStore.js`
+(0.9.386) exactly, applied to a list of rendezvous URLs instead of a list of STUN server entries. The governing rule
+stated at kickoff — **configure where Rendezvous discovery connects; do not configure how Rendezvous failure is
+handled** — is the same configuration/resilience boundary 0.9.386/0.9.387 already established for STUN, held here
+for a second, genuinely independent endpoint.
+
+### What shipped
+
+- **`core/RendezvousConfiguration.js`** — an immutable value object holding one or more validated `ws:`/`wss:`
+  rendezvous URLs (`{ urls: [...] }`, a flat list of plain strings — not the `{ urls }`-per-entry shape
+  `IceServerConfiguration` uses, since `peer/RendezvousConfig.js`'s own `DEFAULT_RENDEZVOUS_URLS` and every
+  consumer already take a plain string). Validation is shape-only (an absolute URL whose scheme is `ws:`/`wss:`,
+  the same `new URL(...)` + protocol-check technique `core/NostrRelayConfiguration.js` already established), never
+  reachability. Every read of `urls` returns a fresh, defensive copy; the instance and its internal array are
+  frozen. No `peer/` import, no persistence, no network call of any kind.
+- **`storage/RendezvousConfigurationStore.js`** — `save()`/`get()`/`clear()` over an injected `StorageProvider`
+  (defaulting to `LocalStorageProvider`), under one fixed key (`rendezvous-configuration`). Absence and default are
+  never the same persisted fact: `get()` returns `null` when nothing is saved, never a configuration holding
+  `DEFAULT_RENDEZVOUS_URLS`. Malformed stored data (wrong shape, empty list, any invalid or non-ws/wss entry)
+  degrades silently to `null` — the whole saved configuration is either entirely valid or entirely treated as
+  absent, never a partial list. A genuine `StorageProvider` failure propagates.
+- **`application/SetRendezvousConfigurationUseCase.js`** — the write seam: constructs a `RendezvousConfiguration`
+  (which validates) and saves it. No connection testing, no automatic fallback, no `clear()` of its own (a caller
+  reaches `RendezvousConfigurationStore.clear()` directly, exactly as `SetIceServerConfigurationUseCase` already
+  establishes for its own store).
+- **`ui/views/RendezvousSettingsView.js`**, reachable at **`/settings/rendezvous`** (top-nav "Rendezvous Servers",
+  alongside "STUN Servers"). One rendezvous URL per line in a textarea; Save / Reset to Defaults. Never constructs a
+  `RendezvousConfiguration` itself, never imports `DiscoveryBootstrap`/`RendezvousDiscoveryProvider`/
+  `WebSocketRendezvousTransport`, and never issues a PUBLISH/LOOKUP of any kind. `DEFAULT_RENDEZVOUS_URLS` is the
+  one thing imported from `peer/RendezvousConfig.js`, for display only.
+- **`ui/main.js` composition root.** `rendezvousConfigurationStore.get()` is resolved once at startup;
+  `resolvedRendezvousUrls` falls back to `DEFAULT_RENDEZVOUS_URLS` only when nothing is saved. `DiscoveryBootstrap`'s
+  own `bootstrapProviders: resolvedRendezvousUrls.map((url) => new RendezvousDiscoveryProvider({ transport: new
+  WebSocketRendezvousTransport({ url }), identityProvider }))` replaces the previous bare
+  `DEFAULT_RENDEZVOUS_URLS.map(...)` construction — `RendezvousDiscoveryProvider` and
+  `WebSocketRendezvousTransport` themselves are completely unmodified.
+
+### Critical startup semantics (the flagship invariant)
+
+No saved configuration → `DEFAULT_RENDEZVOUS_URLS`. Saved configuration → the configured rendezvous servers.
+Malformed saved configuration → absence → `DEFAULT_RENDEZVOUS_URLS` — never a partial or broken list reaching the
+bootstrap. A configured-but-unreachable rendezvous server is never silently replaced or health-checked away from —
+that would introduce fallback semantics 0.9.385 explicitly declined to select, exactly the same invariant 0.9.387's
+own flagship proved for STUN:
+
+```
+Configured:  wss://custom-rendezvous.example
+Lookup fails
+        │
+        ▼
+failure remains failure — NOT a silent fall-back to wss://forkbuild-rendezvous.prazjp.workers.dev
+```
+
+`tests/UserConfigurableRendezvousConfiguration.test.js` proves the full chain against the real, unmodified
+production classes: default rendezvous URL → save an alternate URL → simulate a restart (new store/use-case
+instances over the same underlying storage) → compose `DiscoveryBootstrap` → a real (simulated) LOOKUP round trip
+actually reaches the exact configured URL's own server, on the real `WebSocketRendezvousTransport`/
+`RendezvousDiscoveryProvider` classes.
+
+### What this milestone deliberately excludes
+
+No health check, no connectivity test, no automatic fallback, no endpoint ranking, no latency measurement, no
+retry policy, no automatic failover, no rendezvous protocol changes, no peer connection changes, no STUN/TURN
+changes, no authentication changes, no multiple configuration profiles, no per-peer endpoint selection. The fact
+that `DEFAULT_RENDEZVOUS_URLS` and a user's own override are both LISTS is never read as an implicit HA policy —
+`DiscoveryBootstrap` already fans a list out and merges/tolerates individual failures on its own, completely
+unmodified by this milestone; this configuration boundary only ever changes WHICH urls populate that existing list,
+never how the bootstrap treats them. No generic `InfrastructureEndpointConfiguration` abstraction was introduced —
+`core/RendezvousConfiguration.js` is a fourth, independently-shaped sibling to
+`IceServerConfiguration`/`ArweaveGatewayConfiguration`/`NostrRelayConfiguration`, never a shared base class.
+
+### Next
+
+0.9.389 — Rendezvous Configuration Lifecycle & Convergence Audit, the direct structural mirror of 0.9.387's own STUN
+convergence audit, before TURN is revisited as its own product decision — TURN's own credential-fetch endpoint and
+credential lifecycle remain substantially different from both STUN and Rendezvous and are not decided by either
+milestone.
