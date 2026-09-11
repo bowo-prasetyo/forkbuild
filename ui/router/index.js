@@ -21,6 +21,7 @@ import RendezvousSettingsView from '../views/RendezvousSettingsView.js';
 import ReconciliationCandidateLeaderboardView from '../views/ReconciliationCandidateLeaderboardView.js';
 import ReconciliationCandidateLeaderboardEvidenceExportComparisonView from '../views/ReconciliationCandidateLeaderboardEvidenceExportComparisonView.js';
 import ReconciliationWorkspaceView from '../views/ReconciliationWorkspaceView.js';
+import PublisherLeaderboardSnapshotClaimAuthoringView from '../views/PublisherLeaderboardSnapshotClaimAuthoringView.js';
 
 const routes = [
     { path: '/', name: 'home', component: HomeView },
@@ -157,6 +158,19 @@ const routes = [
     // identical "contextual, not global" navigation shape this whole
     // reconciliation family already holds.
     { path: '/reconciliation-workspace', name: 'reconciliation-workspace', component: ReconciliationWorkspaceView },
+    // 0.9.411 — Publisher Leaderboard Snapshot Claim Authoring & Export.
+    // The producer-side counterpart to /reconciliation-workspace directly
+    // above: that page consumes a pasted peer claim; this page authors,
+    // signs, and exports THIS replica's own — see ui/views/
+    // PublisherLeaderboardSnapshotClaimAuthoringView.js's own header.
+    // Deliberately its own route, one hop from /publications (the SAME
+    // "Publication Archive" card that already links to
+    // /reconciliation-leaderboard and /reconciliation-workspace above),
+    // never folded into either existing reconciliation page and never
+    // itself a top-nav destination — the identical "contextual, not
+    // global" navigation shape this whole reconciliation family already
+    // holds.
+    { path: '/publisher-snapshot-claim', name: 'publisher-snapshot-claim', component: PublisherLeaderboardSnapshotClaimAuthoringView },
     { path: '/about', name: 'about', component: AboutView }
 ];
 
