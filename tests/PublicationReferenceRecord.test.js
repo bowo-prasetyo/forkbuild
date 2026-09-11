@@ -241,7 +241,12 @@ async function run() {
         const referenced = identity({ blockchain: BlockchainKind.BITCOIN, contentHash: CONTENT_HASH_ALICE, chainReference: BITCOIN_TXID_ALICE, createdAt });
         const record = new PublicationReferenceRecord({ sourcePublicationIdentity: source, referencedPublicationIdentity: referenced, createdAt });
 
-        assert(PublicationObservationArchive.SCHEMA_VERSION === 8, '35. SCHEMA_VERSION is now 8 (bumped from 5 by 0.8.104, to 7 by 0.8.108, then to 8 by 0.8.130)');
+        // 0.9.393 — this assertion had gone stale at "8": SCHEMA_VERSION
+        // has since been bumped twice more (to 9, then to 10 — see
+        // application/PublicationObservationArchive.js's own header),
+        // uncaught because nothing re-ran this guard until 0.9.393's own
+        // full-suite execution.
+        assert(PublicationObservationArchive.SCHEMA_VERSION === 10, '35. SCHEMA_VERSION is now 10 (bumped from 5 by 0.8.104, to 7 by 0.8.108, to 8 by 0.8.130, then to 9 and 10 by two later milestones)');
 
         let archive = PublicationObservationArchive.empty();
         assert(archive.publicationReferenceRecords.length === 0, '36. a fresh archive holds no publication reference records');

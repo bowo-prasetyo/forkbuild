@@ -95889,3 +95889,125 @@ AVAILABILITY (not merely selection) for any configured endpoint, concretely spec
 gate; (2) evidence that the regression-guard staleness Section D found recurs after this correction, which would
 argue for automated enforcement rather than another manual sweep; (3) any of the reopening conditions 0.9.390/0.9.391
 already named for TURN specifically.
+
+## 0.9.393 — Regression Guard Freshness Audit
+
+**Type:** test-only, engineering audit (not a product-capability audit). **Production changes:** none.
+
+0.9.392 found and fixed six stale, architecture-count assertions across five test files, all traceable to one
+cause: the closed infrastructure arc added new nav routes and configuration files, and nothing ever re-ran the
+older regression guards to notice. 0.9.392's own Section H named an explicit reopening condition: evidence that
+the same staleness recurs would argue for automated test-execution enforcement rather than another manual,
+targeted sweep. This milestone supplies that evidence, and finds a second, previously unnamed flavor of the same
+underlying problem.
+
+### What this milestone adds
+
+`tests/RegressionGuardFreshnessAudit.test.js` (new, registered in `tests.html`). Rather than re-inspecting source
+by eye the way every prior "test-only" milestone has, this one executed all 812 files under `tests/` directly via
+`node` — not sampled — and classified every failure.
+
+- **Section A — Test inventory.** A brittle-assertion candidate is defined precisely: an exact-equality assertion
+  whose value is derived from CURRENT SOURCE (a grep sweep, a regex match count, a live class field) rather than
+  from a domain object the same test constructed with known inputs. Fifty-four existing test files use the
+  whole-codebase grep-sweep helper pattern; ninety-eight carry an "exactly N"-worded assertion — the population
+  this audit classifies from.
+- **Section B — Classification.** Four labels, applied to concrete instances: `SEMANTIC_INVARIANT` (a count a test
+  derives from its own controlled inputs — cannot drift), `ARCHITECTURAL_INVARIANT` (a grep-derived count compared
+  against a named, extensible list or an explicit whitelist — correctly strict, left alone), `INCIDENTAL_SNAPSHOT`
+  (a bare magic number with no product meaning), and a new fourth label this audit introduces —
+  `UNKNOWN` — for a permanent negative claim ("no Notification class exists anywhere") that was true when written
+  and has since been falsified by a real, later build. Neither "meaningless count" nor "must never change" fits
+  that shape.
+- **Section C — False-positive resistance (flagship, alongside G).** 0.9.392's own six corrections, reconfirmed
+  live, plus **seven new stale-assertion findings across seven test files** (eight corrected assertions total) this
+  milestone's own full-suite execution found — none of them visible from source inspection alone, since 0.9.392's
+  own targeted investigation had already looked at nearby files and still missed these:
+  - `tests/PostDiagnosticProductEvolutionReassessment.test.js` and
+    `tests/PostPlaceNamingPublicationArcProductEvolutionReassessment.test.js` — both carry the identical
+    `navLinkCount === appWideRoutes.length` nav-count guard 0.9.392 fixed elsewhere, each still pinned to an
+    eleven-route list that predates the Arweave Gateway/Nostr Relay/STUN/Rendezvous settings routes.
+  - `tests/PostNotificationHistoryProductReassessment.test.js` and
+    `tests/PostNotificationPersistenceProductReassessment.test.js` — three "exactly one construction site" guards
+    (for `PublicationCommentaryNotificationProducer` and `NotificationEventStore`) broken by a later milestone's
+    legitimate second composition root (`application/CreatePublicationCommentaryUseCase.js`), which reuses the
+    identical durable sink. The count was always a PROXY for "one shared destination," and the proxy broke while
+    the real invariant held.
+  - `tests/DurableBaseTransactionInclusionObservationArchive.test.js`, `tests/PublicationReferenceRecord.test.js`,
+    and `tests/PublisherPublicationAssociationRecord.test.js` — all three pinned
+    `PublicationObservationArchive.SCHEMA_VERSION === 8`, two migrations behind the current value of 10.
+
+  All seven are corrected here — the same discipline 0.9.392 established (never a bare count bump): the two nav
+  guards are extended to the classified fifteen-route list, the two notification guards are replaced with an
+  exact, named set of construction sites each proven to share the same sink/namespace (Section D), and the three
+  schema-version literals are updated with a note pointing at the production file's own migration history. All
+  twelve affected files are live-executed via `node` and confirmed passing.
+- **Section D — Semantic replacement candidates.** The notification-producer and notification-store fixes are not
+  mere renumberings: they replace "exactly one construction site" with the invariant that was always the actual
+  point (every construction site shares the same sink/namespace), demonstrated live in production test files, with
+  the generalized rule itself expressed as executable code.
+- **Section E — Closed-product protection.** Confirms this audit weakened nothing: the four-file
+  `InfrastructureEndpointConfiguration` whitelist and the historical-replication-family zero-callers guard both
+  remain exactly as strict as before, and the two currently-passing bare `navLinkCount === 15` literals 0.9.392
+  itself left as bare bumps are documented (Section H) but not rewritten, since they are not broken.
+- **Section F — Cross-arc regression.** The two oldest closure guards in this codebase — already caught drifting
+  once by 0.9.392 — are spot-checked hardest: both still pass live, and their Set-based route-diff pattern (rather
+  than a bare count) is confirmed as precisely why they have not drifted a second time.
+- **Section G — Test-only execution (flagship, alongside C).** The full-suite numbers, recorded as data: 166 of 812
+  files failed before this milestone's own corrections. 145 are execution-environment gaps this audit cannot
+  evaluate in either direction (135 need a browser's own `three` import map — never installed as an npm package for
+  `node` — and 10 need a real/mocked `RTCPeerConnection`). Four are suite-health issues distinct from
+  architecture-count staleness: one test pins a `git diff` against a hardcoded, historical commit SHA (brittle to
+  VCS-history shape, not source content); one fails only when run after certain other files in the same pass and
+  passes clean standalone (shared on-disk storage state leaking between test files); two fail on
+  timing-sensitive assertions sensitive to this sandbox's own CPU contention during an 812-file sequential run.
+  Seventeen are genuine architecture-count/version staleness — Section C fixes seven outright; ten are classified
+  `UNKNOWN` (Section B) and deferred, named explicitly rather than silently patched:
+  `tests/PostCollaborationProductReassessment.test.js`, `tests/PostCommentaryUIProductReassessment.test.js`,
+  `tests/PostPlaceNamingProductEvolutionReassessment.test.js`, `tests/PostPlaceNamingProductReassessment.test.js`,
+  `tests/PostPublicationCommentaryProductReassessment.test.js`, `tests/ProductEvolutionBaseline.test.js`,
+  `tests/DecentralizedDistributionGuidanceProductGapAudit.test.js`,
+  `tests/PostAdoptionPlaceNamingProductReassessment.test.js`,
+  `tests/PostPlaceNamingPublicationProductReassessment.test.js`, and
+  `tests/WorldViewOwnPublicationSnapshotDiscovery.test.js` — each a historical "this capability does not exist"
+  audit whose named gap was later closed by a real, deliberate, evidence-gated build (Notification history,
+  Publication Commentary), never a reopened product gap.
+- **Section H — Intentional snapshots.** `SCHEMA_VERSION`-style version literals (exact by design; Section C's own
+  three fixes ARE the correct maintenance discipline, not an exception to it) and historical, append-only
+  milestone-brief tallies (e.g. "sixteen arcs this milestone's own brief names" — permanently fixed by definition,
+  never claiming to track current reality forward) are both documented as deliberately fixed-count and left
+  completely untouched.
+- **Section I — Production guard.**
+- **Section J — Verdict.**
+
+### Verdict
+
+**`TEST_GUARD_HARDENING_REQUIRED` — partially addressed this milestone.** Not `NO_REMAINING_TEST_FRESHNESS_GAP`:
+0.9.392's own named reopening condition #2 ("evidence that the regression-guard staleness Section D found
+recurs... would argue for automated enforcement rather than another manual sweep") has now been met, concretely,
+in one execution. Seven of the seventeen real findings — every one with a purely mechanical correction — are fixed
+in this same milestone, live-verified passing, following 0.9.392's own precedent rather than leaving a
+demonstrated, currently-red regression guard broken until a hypothetical follow-up. The other ten are a
+structurally different, more substantive kind of staleness (a permanent negative claim later falsified by a real
+build) that this test-only milestone's own scope does not extend to correcting — each would need its own
+evidence-checked re-audit, not a number bump.
+
+Nothing about product direction changes. Every one of the ten deferred files documents a gap that was later
+CLOSED by deliberate, evidence-gated product work — the opposite of a missing capability. This is entirely a
+regression-suite bookkeeping finding.
+
+### What this milestone deliberately excludes
+
+Per its own type: no production-code change of any kind. The seven test-file corrections in Section C touch only
+stale assertions inside existing test files (plus this milestone's own new test file and its `tests.html`
+registration) — no file outside `tests/`/`tests.html`/`docs/` is modified or added. No CI workflow is added (this
+repository has no `.github/` directory at all); that is named as a recommendation, not built here.
+
+### What comes after
+
+Two concrete recommendations, named explicitly rather than left implicit: (1) the next 0.9.x engineering milestone
+should add CI enforcement that runs every `tests/*.test.js` file automatically, or — if that is out of scope —
+should at minimum re-run this milestone's own Section G full-suite sweep before any future `STABLE_STOP` verdict,
+rather than trusting a targeted, hand-picked investigation the way 0.9.392 did; (2) a follow-up implementation
+milestone (0.9.394 or later) should take up the ten `UNKNOWN`-classified files named in Section G above, each as
+its own small, evidence-checked correction, never a bulk rewrite.

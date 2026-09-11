@@ -208,12 +208,32 @@ async function runTests() {
         assert(sources['ui/components/NotificationHistoryPanel.js'].includes("name: 'NotificationHistoryPanel'"),
             'A6. ui/components/NotificationHistoryPanel.js still exists and is named "Notification History," never "Inbox"/"Center".');
 
-        // A7. Production composition — exactly one producer construction
-        // site and one shared store instance backing both directions,
-        // reconfirmed fresh rather than trusted from 0.9.285/0.9.286.
-        const producerConstructionSites = await grepCount('new PublicationCommentaryNotificationProducer(', ['application', 'ui']);
-        assert(producerConstructionSites === 1,
-            `A7a. Exactly one production construction site for PublicationCommentaryNotificationProducer exists (found ${producerConstructionSites}).`);
+        // A7. Production composition — reconfirmed fresh rather than
+        // trusted from 0.9.285/0.9.286. 0.9.393 — this count had gone
+        // stale: "exactly one construction site" was always a PROXY for
+        // the real invariant ("every construction site shares the same
+        // durable sink, so no notification is ever lost to a second,
+        // unwired store"), and 0.9.29x-era work added
+        // application/CreatePublicationCommentaryUseCase.js as a second,
+        // legitimate composition root reusing the identical sink — never
+        // caught because nothing re-ran this guard until 0.9.393's own
+        // full-suite execution. Replaced here with the real invariant:
+        // an exact, named set of construction sites, each proven to
+        // route through the SAME `notificationEventStore.save()` sink.
+        const KNOWN_PRODUCER_CONSTRUCTION_SITES = [
+            'application/CreateWorldViewUseCase.js',
+            'application/CreatePublicationCommentaryUseCase.js'
+        ];
+        const producerConstructionFiles = execSync('grep -rl "new PublicationCommentaryNotificationProducer(" application ui --include="*.js" || true',
+            { cwd: SOURCE_ROOT.pathname }).toString().trim().split('\n').filter(Boolean).sort();
+        assert(producerConstructionFiles.length === KNOWN_PRODUCER_CONSTRUCTION_SITES.length
+            && KNOWN_PRODUCER_CONSTRUCTION_SITES.every((f) => producerConstructionFiles.includes(f)),
+            `A7a. Exactly the two known, classified production construction sites for PublicationCommentaryNotificationProducer exist — no third, unclassified one (found: ${producerConstructionFiles.join(', ')}).`);
+        for (const file of KNOWN_PRODUCER_CONSTRUCTION_SITES) {
+            const siteSource = await rawSource(file);
+            assert(/\(notificationEvent\)\s*=>\s*notificationEventStore\.save\(notificationEvent\)/.test(siteSource),
+                `A7a. ${file} still hands PublicationCommentaryNotificationProducer the SAME "(notificationEvent) => notificationEventStore.save(notificationEvent)" sink — the invariant that actually matters (one durable destination), not the bare construction-site count.`);
+        }
         assert(composition.includes('new NotificationEventStore(storageProvider)')
             && composition.includes('new GetRecipientNotificationEventsUseCase(notificationEventStore, identityProvider)')
             && (composition.match(/notificationEventStore/g) || []).length >= 2,

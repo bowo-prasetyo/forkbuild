@@ -298,7 +298,12 @@ async function run() {
         const publicationIdentity = identity({ blockchain: BlockchainKind.BITCOIN, contentHash: CONTENT_HASH_SHARED_AB, chainReference: BITCOIN_TXID_A, createdAt });
         const record = new PublisherPublicationAssociationRecord({ publisherIdentity, publicationIdentity, createdAt });
 
-        assert(PublicationObservationArchive.SCHEMA_VERSION === 8, '49. SCHEMA_VERSION is now 8 (bumped from 6 by 0.8.108, then to 8 by 0.8.130)');
+        // 0.9.393 — this assertion had gone stale at "8": SCHEMA_VERSION
+        // has since been bumped twice more (to 9, then to 10 — see
+        // application/PublicationObservationArchive.js's own header),
+        // uncaught because nothing re-ran this guard until 0.9.393's own
+        // full-suite execution.
+        assert(PublicationObservationArchive.SCHEMA_VERSION === 10, '49. SCHEMA_VERSION is now 10 (bumped from 6 by 0.8.108, to 8 by 0.8.130, then to 9 and 10 by two later milestones)');
 
         let archive = PublicationObservationArchive.empty();
         assert(archive.publisherPublicationAssociationRecords.length === 0, '50. a fresh archive holds no publisher association records');
