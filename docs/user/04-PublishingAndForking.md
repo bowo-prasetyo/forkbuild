@@ -34,6 +34,38 @@ always has somewhere to take people — see
 > you're curious — it's optional depth, not required for anything in this
 > guide.
 
+## Distributing straight from the Editor
+
+The moment **Publish** succeeds, the Editor shows a small notice right
+there — "Publication published successfully." — with a **Distribute now**
+button beside it, and a **Dismiss** to make it go away without doing
+anything. Clicking **Distribute now** does exactly what World View's own
+**Distribute Publication** button does for a publication you're
+inspecting there (see
+[World Encounters](03-WorldView.md#world-encounters--publications-and-avatars-your-peers-are-sharing)):
+a real attempt at an Arweave upload and a Nostr announcement, for the
+exact Publication your Publish click just produced — never a separate
+lookup by title or id.
+
+The result appears right below:
+
+| Field | Meaning |
+|---|---|
+| **Publication** | The publication's own id — confirms which publication this result is about. |
+| **Material** | The Arweave location the upload produced, or "Not yet uploaded" if it didn't complete. |
+| **Discovery** | The Nostr announcement id, or "Not yet announced" if it didn't complete. |
+| **Repository** | An **Explore** button that jumps straight to this publication's page in World View — shown whenever the publication carries somewhere to explore, which in practice is always. |
+
+Like every other Distribute Publication button in this app, on a device
+with no wallet or relay connection configured this always ends in
+"Publication distribution could not be completed" — the button and the
+attempt are real, the missing piece is host capability, not app plumbing.
+Publishing itself never distributes anything on its own: distribution only
+ever happens on this later, separate, explicit click. Publishing again
+replaces the notice with a fresh one for the new publication; dismissing
+it, or leaving the page, clears it — neither the notice nor its result is
+remembered anywhere.
+
 ## Choosing a license
 
 A published creation is always shown with a license, chosen from the

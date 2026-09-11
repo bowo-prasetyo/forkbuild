@@ -54,8 +54,11 @@ top-level [docs/](..) folder.
    **Fork Unavailable** dialog naming exactly why a fork couldn't
    complete — a denying license or currently-unavailable material —
    with a **Back to Publication** way out instead of a blank, stranded
-   Editor document, and browsing the Repository's searchable, sortable,
-   paginated catalog.
+   Editor document, browsing the Repository's searchable, sortable,
+   paginated catalog, and, the instant a publish succeeds, a **Distribute
+   now** action right there in the Editor for pushing that exact
+   publication onto Arweave/Nostr without a trip to World View, including
+   a **Repository** link straight back to it once distributed.
 5. **[Identity & Login](05-IdentityAndLogin.md)** — your cryptographic
    identity, the vault (locking/unlocking), and backing it up with
    export/import.
@@ -86,7 +89,10 @@ top-level [docs/](..) folder.
    public IPFS gateway, with no local node required), a standing
    **Content Provider** preference (its own settings page) so a **Use
    Preferred Provider** button can create a placement on your saved
-   backend without naming one each time, an **IPFS
+   backend without naming one each time, two further standing overrides —
+   **Arweave Gateway** and **Nostr Relay**, each its own settings page —
+   for replacing which endpoint every Arweave retrieval and every Nostr
+   discovery on this device goes through, an **IPFS
    Publishing** section for explicitly publishing content to a
    configured remote pinning provider, independently verifying it's
    still retrievable, and inspecting the full history of both, a
