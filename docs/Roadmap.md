@@ -95120,3 +95120,117 @@ Nothing is scheduled. The five evaluations this milestone recorded (Sections C�
 to a future milestone that arrives with real, new evidence for any one of them — none is closed off, none is
 pre-selected by inertia. ForkBuild's broader product evolution resumes on its own terms, the same footing 0.9.383
 left it on, when an explicit new product requirement arrives.
+
+## 0.9.385 — User-Configurable Infrastructure Endpoint Product Direction Audit
+
+**Type:** test-only, decision artifact. **Production changes:** none.
+
+0.9.384's own "what comes after" named the one thing that could reopen product evolution past `NO_DIRECTION_SELECTED`:
+an explicit new product requirement. That requirement has now arrived, stated directly rather than derived from
+source: **users must be able to switch critical infrastructure endpoints when the default endpoint is
+unavailable.** This is not the architecture-driven "a seam exists, so build it" pattern 0.9.384's own gate exists
+to catch — but it is also not a blank check for the six remaining candidates 0.9.363 originally inventoried and
+0.9.373 partially re-audited (STUN, TURN, Rendezvous, IPFS Gateway, Base RPC, Bitcoin Esplora). "Critical
+infrastructure endpoints," plural, is a category; applying the requirement responsibly means re-running every
+remaining candidate against fresh evidence, not assuming the requirement blesses all six uniformly merely because
+each is, nominally, an endpoint.
+
+### What this milestone adds
+
+`tests/UserConfigurableInfrastructureEndpointProductDirectionAudit.test.js` (new, registered in `tests.html`). Ten
+lettered sections:
+
+- **Section A — Requirement confirmation.** 0.9.384's own `NO_DIRECTION_SELECTED` verdict and its own stated
+  precondition for reopening product evolution ("when an explicit new product requirement arrives") are both
+  reconfirmed on record. The new requirement is stated as a concrete, checkable sentence rather than a category
+  label, and deliberately not read as blanket authorization for all six candidates — that is exactly why Section C
+  exists rather than treating the question as already settled.
+- **Section B — Endpoint inventory.** All six candidates reconfirmed fresh against current source (not cited from
+  0.9.363/0.9.373's own prose): STUN/TURN (`peer/IceServerConfig.js`), Rendezvous (`peer/RendezvousConfig.js`), IPFS
+  Gateway (`content/IpfsGatewayContentStore.js`, still exactly two opt-in construction sites in `ui/main.js`), Base
+  RPC (`base/BaseJsonRpcClient.js`), and Bitcoin Esplora — newly counted here as **four** independent files
+  (`BitcoinEsploraTransactionBroadcaster.js`, `BitcoinEsploraTransactionConfirmationObserver.js`,
+  `BitcoinEsploraWalletFundingSource.js`, `BitcoinOpReturnProofVerifier.js`), each declaring its own
+  `DEFAULT_API_URL`, never a shared module.
+- **Section C — Criticality classification.** "Critical" is defined operationally — does the endpoint's own
+  default sit on the sole default path of one of 0.9.383's own eight named primary journeys? Checked structurally:
+  `ui/main.js` constructs exactly one `WebRtcPeerConnectionProvider` application-wide, built directly from
+  `DEFAULT_ICE_SERVERS` (both entries Google-operated — a single-provider concentration risk), and
+  `discoveryBootstrap`'s own `bootstrapProviders` is built directly from `DEFAULT_RENDEZVOUS_URLS` (one
+  operator-run node, whose own file header already names the single-point-of-failure risk explicitly). Both back
+  the `Peer → Sync → Repository → Explore → Fork` primary journey and are therefore **CRITICAL**. IPFS Gateway,
+  Base RPC, and Bitcoin Esplora each back a real but explicitly optional/deferred/non-default capability — IPFS
+  placement/pinning is on record as "gated by a real external prerequisite... not the default path," Base
+  anchoring is on record as explicitly `DEFERRED`, and Bitcoin anchoring is an optional, user-initiated action —
+  none is one of the eight primary journeys, so none is **CRITICAL** under this definition.
+- **Section D — Existing injection readiness.** STUN already has a real, *live* runtime-replacement seam
+  (`WebRtcPeerConnectionProvider#setIceServers()`, proven against the concrete class — the same call site 0.3.7's
+  own `fetchIceServers()` already uses), confirmed live rather than assumed. Rendezvous has clean constructor
+  injection (`WebSocketRendezvousTransport#url`, `RendezvousDiscoveryProvider#transport`), proven live in Section
+  G. Neither has a settings-persistable seam yet (no `core/IceServerConfiguration.js` or
+  `core/RendezvousConfiguration.js` exists). TURN's own existing seam (`fetchIceServers({ endpoint, apiKey })`)
+  already names credential fields — its gap is a design decision (which of four structurally different
+  configuration shapes), not missing wiring.
+- **Section E — Configuration shape.** STUN and Rendezvous both already have a real, credential-free, list-shaped
+  default today (`DEFAULT_ICE_SERVERS`, `DEFAULT_RENDEZVOUS_URLS` are both arrays, confirmed live) — a user
+  override is a natural extension of an existing shape. TURN remains genuinely underdetermined among (1) URL only,
+  (2) URL + static credential, (3) an alternate credential-issuing service endpoint, or (4) a fully manual
+  `iceServers` entry — four structurally different products, not decided here.
+- **Section F — Write/read semantics and the peer-identity invariant.** `peer/PeerAuthenticationSession.js` — the
+  sole authority on peer identity — imports none of STUN/TURN/Rendezvous's own configuration or transport classes,
+  confirmed structurally; changing which endpoint carries the bytes cannot change who those bytes are proven to
+  belong to. Unlike Arweave/Nostr, connectivity has no separate read/write split to preserve.
+- **Section G — Live functional proof.** For both CRITICAL candidates, a substituted endpoint is proven through
+  the real, unmodified production classes: a default STUN list, a custom STUN entry, and a third mid-session
+  `setIceServers()` swap each reach the concrete `new RTCPeerConnectionImpl({ iceServers })` construction call
+  (reusing `tests/IceGatheringTimeout.test.js`'s own `FakeRTCPeerConnection` shape). A default rendezvous URL and a
+  custom one, each backed by its own independent fake server (reusing `tests/RealNetworkRendezvous.test.js`'s own
+  `FakeWebSocket`/`FakeRendezvousServer` fixtures), each resolve a real PUBLISH/LOOKUP round trip through the
+  unmodified `WebSocketRendezvousTransport`/`RendezvousDiscoveryProvider` — never a stale default, never a shared
+  fake standing in for two genuinely different endpoints.
+- **Section H — Failure/recovery journey and security.** Deliberately not persisted or health-checked — no
+  configuration/store seam exists yet to persist, the same restraint 0.9.373's own Section H already held for IPFS
+  Gateway. STUN and Rendezvous both remain credential-free; `NostrRelayConfiguration`'s own existing wss:-only
+  scheme-validation precedent is noted as available for a future value object to reuse in shape.
+- **Section I — Priority matrix.** All six candidates against the four-way taxonomy `BUILD_NEXT` / `DEFER` /
+  `SEPARATE_PRODUCT_DECISION` / `NOT_USER_CONFIGURABLE`: STUN and Rendezvous `BUILD_NEXT`; TURN
+  `SEPARATE_PRODUCT_DECISION`; IPFS Gateway, Base RPC, and Bitcoin Esplora `DEFER`; no candidate is
+  `NOT_USER_CONFIGURABLE`.
+- **Section J — Final verdict and production-change guard.** Checked against the live working tree (`git status
+  --porcelain`): no production file is modified or added.
+
+### Verdict
+
+**`BUILD_NEXT`: STUN, Rendezvous.** Both sit on the sole default path of the `Peer → Sync → Repository → Explore →
+Fork` primary journey, both are already credential-free and list-shaped, and both already have a real,
+constructor-injectable — and for STUN, live runtime-replaceable — seam, proven against the real production classes
+rather than assumed. **`SEPARATE_PRODUCT_DECISION`: TURN** — equally critical, but its own credential-shaped
+configuration question (which of four structurally different shapes) must resolve before any implementation
+milestone can touch it; it is never bundled into the same seam as STUN merely because both configure `iceServers`.
+**`DEFER`: IPFS Gateway** (reconfirmed, 0.9.373 — narrow, opt-in, never a primary journey's default path), **Base
+RPC and Bitcoin Esplora** (each backs an explicitly optional or deferred anchoring capability, not a primary
+journey; Bitcoin Esplora additionally carries an unrelated readiness gap — four independent hardcodings with no
+shared module). No candidate classifies `NOT_USER_CONFIGURABLE`.
+
+The new requirement's own word "critical" does real, narrowing work here: it clears the gate for exactly two of
+six nominal candidates, on the strength of which primary journey each actually backs, not on category membership
+in "infrastructure endpoint."
+
+### What this milestone deliberately excludes
+
+No Settings UI, no `core/*Configuration.js` value object, no `storage/*ConfigurationStore.js`, no composition-root
+wiring, no persistence, no health checking, no credential handling for TURN, and no generic
+`InfrastructureEndpointConfiguration` abstraction unifying candidates that are genuinely different in kind. This
+milestone decides which candidates a future implementation milestone should take up, and in what shape — it builds
+none of them, mirroring this codebase's own established two-step pattern (0.9.363 named Arweave Gateway and IPFS
+Gateway `BUILD FIRST`; 0.9.364/0.9.366 then actually built Arweave Gateway; 0.9.369/0.9.371 then actually built
+Nostr Relay).
+
+### What comes after
+
+A future milestone would give STUN and Rendezvous each their own `core/*Configuration.js` value object,
+`storage/*ConfigurationStore.js`, and settings surface, mirroring `core/ArweaveGatewayConfiguration.js` and
+`core/NostrRelayConfiguration.js`'s own shape. TURN's own credential-shaped question remains open for a separate
+audit to resolve before any such milestone can include it. IPFS Gateway, Base RPC, and Bitcoin Esplora remain
+available to a future milestone that arrives with evidence that either is, in fact, critical — none is closed off,
+none is pre-selected by inertia.
