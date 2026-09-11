@@ -96213,3 +96213,118 @@ follow-up milestone — this one was not it, and a future integrity-boundary aud
 twelve-invariant sample (this one leaned toward identity/persistence/publication; spatial/collision, presence
 trust boundaries, and the renderer/world-layout boundary remain unmapped) would extend this evidence rather than
 repeat it.
+
+## 0.9.396 — Product Integrity Boundary Hardening
+
+**Type:** test-only, engineering hardening. **Production changes:** none (one live counterfactual trial against
+real production source is performed and reverted during the milestone's own run — see below).
+
+0.9.395 found eleven of its own twelve inventoried product invariants protected — ten by a dedicated guard, one
+(`World.updateBrick`) by strong incidental coverage — and exactly one, invariant 9 ("`core/` never imports
+`application/`, `renderer/`, or `ui/`" — the first sentence of `docs/Architecture.md`'s own description of
+`core/`), with none at all: true today by author discipline alone, live-confirmed unprotected by injecting a real
+upward import that nothing caught. Its own Section G/J named this exact guard as 0.9.396. This milestone adds it,
+and only it.
+
+### What this milestone adds
+
+`tests/ProductIntegrityBoundaryHardening.test.js` (new, registered in `tests.html`). A general-purpose sweep
+function — not a hand-picked file list — that walks every `.js` file under `core/` (any depth), resolves every
+relative import specifier against the filesystem, and flags any that resolve into `application/`, `renderer/`,
+or `ui/`.
+
+- **Section A.** The sweep function proven correct against six synthetic cases (clean; upward into
+  `application/`; upward into `ui/` at depth; upward into `renderer/` from a nested file; a bare package
+  specifier that merely spells "application" is never flagged) before it is ever pointed at real source.
+- **Section B.** A fresh, independently recomputed population census — 246 `core/` files today, reaching both
+  `core/library/` and `core/events/`, not inherited from 0.9.395's own reported count.
+- **Section C.** The guard itself, run for real against all 246 current files: zero violations.
+- **Section D.** Robustness checks: not fooled by legitimate internal `core/` cross-imports
+  (`core/library/CoreLibrary.js` passes clean); its one honest over-approximation — matching inside a
+  commented-out import line — is named explicitly rather than hidden, since a false positive on dead code is the
+  safe direction for a guard like this to err in; and confirmed structurally distinct from 0.9.395's own narrower
+  per-file-pair idiom (this sweep takes no target-file argument — it always walks the whole tree).
+- **Section E (flagship).** 0.9.395 Section F trial 1's exact mutation — a real, inert upward import from
+  `core/CausalStamp.js` into `application/TransformMath.js` — is re-injected live into that real production file,
+  the guard is re-run from disk, and it is CAUGHT. The file is then reverted and confirmed byte-for-byte identical
+  to its original content.
+- **Section F.** Coverage this guard does not claim: it is static and textual, so a dynamically constructed
+  import path (string concatenation, an indirect multi-hop re-export) is outside what it can prove; and it closes
+  invariant 9 only — invariant 10 (`World.updateBrick`) remains exactly as `PARTIAL` as 0.9.395 Section H1 left
+  it, not silently folded into this milestone's unrelated scope.
+- **Section G.** Production guard: no file outside `tests/`, `tests.html`, or `docs/` remains modified once this
+  file finishes running.
+
+### Verdict
+
+**`BOUNDARY_GUARD_ADDED`.** Invariant 9 from 0.9.395's own twelve-invariant inventory moves from `OBSERVED_ONLY`
+to `ENFORCED_BY_TEST_SWEEP`, proven live against 0.9.395's own counterfactual mutation rather than merely by a
+static count. Invariant 10 remains untouched and `PARTIAL`. 0.9.393's own ten `UNKNOWN`-classified deferred files
+remain open, untouched by this milestone.
+
+### What this milestone deliberately excludes
+
+No other invariant from 0.9.395's inventory is touched. No production-code change of any kind: the one live
+trial (Section E) was reverted before this file finished running (Section G). 0.9.393's ten deferred `UNKNOWN`
+files are named again, not silently dropped, but are not this milestone's own task.
+
+### What comes after
+
+With 0.9.396 closing the one concrete, evidence-backed gap 0.9.395 found, ForkBuild returns to the same choice
+point 0.9.384 first posed: whether any genuinely new product direction has emerged strongly enough to justify
+leaving the current stable plateau, re-evaluated fresh rather than inherited from any prior milestone's own
+classification. That is 0.9.397's task.
+
+## 0.9.397 — Explicit Product Direction Selection Gate
+
+**Type:** test-only, decision artifact. **Production changes:** none.
+
+Six consecutive milestones (0.9.391-0.9.396) reassessed the whole product, audited regression-guard freshness
+and effectiveness, mapped product invariants to their protecting layer, and closed the one live gap that
+mapping found — with zero new product capability. This milestone asks, fresh, whether that streak should
+continue: has any concrete product direction emerged strongly enough to justify leaving the current stable
+plateau? It reuses 0.9.384's own scoring gate (`evaluateCandidate()`, proven byte-identical to 0.9.384's own
+source, not redefined to fit a preferred answer) against a seven-candidate roster: the five 0.9.384 originally
+named, plus two (automatic endpoint failover, TURN configuration) that only became concretely nameable after the
+0.9.385-0.9.390 infrastructure arc that came after 0.9.384.
+
+The one methodological addition over 0.9.384/0.9.391's own precedent: every candidate's evidence is gathered
+through the same five-signal, fresh-source protocol — current source, current production callers, current UI
+reachability, current tests, current user requirement — rather than citing an old roadmap classification as
+though it were self-renewing. 0.9.393 is the reason this matters: a `DEFER` verdict is exactly the kind of claim
+that can go stale unread, and deserves the same fresh-check discipline as any other regression guard.
+
+### What this milestone adds
+
+`tests/ExplicitProductDirectionSelectionGate.test.js` (new, registered in `tests.html`). Thirteen lettered
+sections: entry-state reconfirmation (0.9.396's own `BOUNDARY_GUARD_ADDED`); the scoring framework, proven
+byte-identical to 0.9.384's original `evaluateCandidate()` by direct source comparison, then the gate rule
+reproven structurally; the fresh-source-evidence protocol itself; seven candidate evaluations (automatic
+failover, TURN, proactive Repository discovery, collaboration expansion, notification delivery/push, richer
+Place Naming semantics, a new product domain), each backed by evidence gathered fresh against current source
+rather than cited from any prior milestone's prose; a decision matrix; the final verdict; and a production
+guard.
+
+### Verdict
+
+**`NO_DIRECTION_SELECTED` → `STABLE_STOP`.** All seven candidates evaluate `NOT_SELECTED`. Automatic failover and
+TURN both remain unspecified/undemonstrated even after a real infrastructure arc built the configuration seams
+they would extend. Proactive Repository discovery again has the strongest architectural fit on the roster and is
+again rejected on the same structural gate rule, reconfirmed fresh rather than assumed to still hold. Nothing
+about product direction changes; nothing is invented to fill a milestone number.
+
+### What this milestone deliberately excludes
+
+No production-code change of any kind. No candidate's forward seam/direction audit is opened. The seven
+evaluations on record remain available to a future milestone that arrives with real, new evidence for any of
+them — none is closed off, none is pre-selected.
+
+### What comes after
+
+ForkBuild holds at `STABLE_STOP`, on record as a legitimate, freshly-checked conclusion rather than a default
+produced by inertia. The next milestone should be either (a) a genuine, concretely specified new user
+requirement — replacing this gate rather than repeating it — or, absent that, (b) this codebase's own named,
+still-open items: 0.9.393's ten `UNKNOWN`-classified deferred files, and a future integrity-boundary audit
+covering the invariant classes 0.9.395 left unmapped (spatial/collision, presence trust boundaries, the
+renderer/world-layout boundary). Re-running this exact gate again without new evidence would itself be the
+inertia this milestone was designed to refuse.
