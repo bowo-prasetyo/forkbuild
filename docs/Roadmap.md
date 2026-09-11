@@ -94776,3 +94776,71 @@ history, no generic navigation service, and no automatic navigation.
 '/world/' + documentId })` call, placed at the end of the existing `<dl class="editor-post-publish-distribution-
 detail">`. Never a "Publication Center" link, as the originating brief first worded it: this audit's own
 Sections B and D are the evidence for retargeting it before it is built, not after.
+
+## 0.9.381 — EditorView Distribution Result → Repository Navigation
+
+**Type:** Production UI integration. **Production changes:** `ui/views/EditorView.js` only.
+
+0.9.380's own audit closed with a corrected, five-line `BUILD_NEXT`: forward
+`publishedPublication.value.documentId` — already held by EditorView, never looked up — into a
+`router.push({ path: '/world/' + documentId })` call, placed at the end of the existing `<dl
+class="editor-post-publish-distribution-detail">`. Never a "View in Publication Center" link, as the
+milestone's own originating brief first worded it: that audit's own Sections B and D proved
+`LocalPublicationCatalog` (the Publication Center's own catalog) structurally disjoint from this Publication
+type. This milestone builds exactly the corrected edge, nothing more.
+
+### What this milestone adds
+
+- **`ui/views/EditorView.js`** — a new `viewDistributedPublicationInRepository()` function, reachable the
+  instant `publishedPublication` holds a Publication with a `documentId` (i.e. as soon as a publish succeeds —
+  independent of whether distribution has run, succeeded, or failed). It reads *only*
+  `publishedPublication.value.documentId` and calls `router.push({ path: '/world/' + documentId })` — the
+  identical shape `ui/components/PublicationCatalog.js`'s own "Explore" action already uses for exactly this
+  Publication type, with `router` already in this view's own `setup()` scope (`backToWorld()`/
+  `backFromForkFailure()` already use it). A missing `documentId` — there is none in practice, every Publication
+  carries one, but the guard costs nothing — is a silent no-op: no thrown error, no invented error state.
+- **Template**: a new "Repository" row, rendered as an `<button>Explore</button>` labeled to match the app's own
+  existing terminology for this exact action (`ui/components/PublicationCard.js`'s own "Explore" —
+  "navigates to the publication's World placement"), placed inside the SAME
+  `<dl class="editor-post-publish-distribution-detail">` immediately after the existing Discovery row — the
+  exact seam 0.9.380's own Section H located. No new panel, dialog, or section. The row is gated on
+  `publishedPublication && publishedPublication.documentId`, not on `distributionResult` — the Publication
+  already exists in the Repository the moment it is published, independent of whether distribution has since
+  succeeded, failed, or not been attempted at all.
+- **`tests/EditorViewDistributionResultRepositoryNavigation.test.js`** (new, registered in `tests.html`): ten
+  lettered sections — exact identity (A), a successful publish/distribution exposing the action (B), each
+  explicit click navigating exactly once (C), no automatic navigation on publish or on distribution completion
+  (D), a failed distribution never auto-navigating and a subsequent click still resolving to the real,
+  already-published Publication (E), an unpublished/withdrawn Publication degrading to a safe, thrown-error-free
+  navigation call and a Publication with no usable `documentId` producing no navigation at all (F), sequential
+  Publications never cross-contaminating each other's navigation target (G), the generated route matching the
+  existing `/world/:documentId` convention byte-for-byte against `PublicationCatalog.js`'s own "Explore" shape
+  (H), a live regression run of five related existing test files plus confirmation that `OwnPublicationPanel.js`
+  and `WorldEncounterCanvas.js` remain completely unmodified (I), and an architecture-boundary sweep rejecting a
+  receipt model, a navigation service, a new Publication lookup, automatic navigation, network I/O, and provider
+  selection/fallback (J).
+- **`tests/DistributionResultPublicationCenterDeepLinkAudit.test.js`** (0.9.380) and
+  **`tests/PostDistributionProductEvolutionReassessment.test.js`** (0.9.379): each had exactly one assertion
+  whose sole purpose was confirming the gap this milestone closes was still open. Both are flipped to confirm
+  the closure instead — and, per 0.9.380's own corrected verdict, to confirm the closure landed at
+  `/world/<documentId>`, never at `/publications` — the same treatment 0.9.377 already gave
+  `tests/EditorViewDistributionCommandChannelAudit.test.js` (0.9.376) and
+  `tests/PostPublishDistributionGuidanceActionabilityAudit.test.js` (0.9.375). Every other assertion in either
+  file is unmodified and unaffected — both suites still pass in full.
+
+### What this milestone deliberately excludes
+
+Per its own implementation boundary: `publicationDistributionCommand` is untouched, the distribution lifecycle
+is untouched, no new distribution state is introduced. The Repository/World route is reused exactly as it
+already exists — no new route, no query parameters, no Publication-specific navigation abstraction, no
+generic `NavigationService`. `OwnPublicationPanel.js` and `WorldEncounterCanvas.js` are untouched (0.9.380's own
+Section E already established neither needs a new edge). No bridging of `LocalPublicationCatalog` to admit
+Document/World Publications, no distribution receipt or history, and no automatic navigation of any kind —
+navigation only ever happens on an explicit click.
+
+### Then
+
+Per this milestone's own originating brief: not another feature immediately. The next step is one convergence
+audit — 0.9.382, a deep-link convergence / end-to-end audit across Publish → Distribute → Explore → `/world/
+<documentId>` — followed by a fresh whole-product reassessment, preserving the audit → discover the real seam →
+implement only that seam → verify → reassess pattern this arc has followed since 0.9.374.

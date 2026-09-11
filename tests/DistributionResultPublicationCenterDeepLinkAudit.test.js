@@ -460,10 +460,11 @@ async function run() {
         const objectId = editorHarness.distributionResult.value.publication.objectId;
         const documentId = editorHarness.publishedPublication.value.documentId;
 
-        // D1 — a candidate navigation call, test-only (production carries
-        // no such function today — see Section H), constructed from
-        // ONLY identity already in hand, reusing the EXACT shape Section
-        // C3/C4 already proved real.
+        // D1 — a candidate navigation call, reconstructed here test-only
+        // (0.9.381 later gave production the real
+        // viewDistributedPublicationInRepository() — see Section H),
+        // constructed from ONLY identity already in hand, reusing the
+        // EXACT shape Section C3/C4 already proved real.
         const pushedCalls = [];
         const stubRouter = { push: (target) => pushedCalls.push(target) };
         function candidateViewInWorld(router, publishedPublicationValue) {
@@ -636,21 +637,29 @@ async function run() {
     // Section H — Existing UI reachability.
     // ---------------------------------------------------------------
     {
-        // The exact, already-existing template seam: immediately after
-        // the Discovery <dd> inside the SAME <dl> the result already
-        // renders in — never a new panel, never a new section.
-        assert(editorViewSource.includes(
-            '<dt>Discovery</dt>\n                <dd>{{ distributionResult.discovery ? distributionResult.discovery.id : \'Not yet announced\' }}</dd>\n            </dl>'),
-            n('EditorView.js\'s own <dl class="editor-post-publish-distribution-detail"> ends immediately after the Discovery <dd> — the exact, already-existing insertion point for one more row or a link, never a new panel'));
+        // 0.9.381 closed this exact seam: immediately after the Discovery
+        // <dd>, inside the SAME <dl> the result already renders in — never
+        // a new panel, never a new section. This assertion originally
+        // confirmed the gap was still open (the <dl> ended right there);
+        // it now confirms the gap is closed the same way EditorViewDistrib
+        // utionCommandChannelAudit's own 0.9.376 assertion was flipped by
+        // 0.9.377, rather than left describing a state that no longer
+        // exists.
+        assert(editorViewSource.includes('<dt>Discovery</dt>')
+            && editorViewSource.includes('viewDistributedPublicationInRepository')
+            && editorViewSource.indexOf('<dt>Discovery</dt>') < editorViewSource.indexOf('viewDistributedPublicationInRepository')
+            && editorViewSource.indexOf('viewDistributedPublicationInRepository') < editorViewSource.indexOf('</dl>', editorViewSource.indexOf('<dt>Discovery</dt>')),
+            n('EditorView.js\'s own <dl class="editor-post-publish-distribution-detail"> now navigates via viewDistributedPublicationInRepository() between the Discovery row and the closing </dl> — the exact, already-existing insertion point this audit located, never a new panel'));
 
-        // OwnPublicationPanel.js carries the byte-identical shape one
-        // caller over — confirming the seam, if built, is one shared
-        // template pattern, not two independently-invented ones.
+        // OwnPublicationPanel.js carries the byte-identical PRE-0.9.381
+        // shape, unmodified — confirming Section E's own finding that this
+        // surface needs no link, since it already lives at the
+        // destination.
         assert(panelSource.includes(
             '<dt>Discovery</dt>\n                <dd>{{ publicationDistributionResult.discovery ? publicationDistributionResult.discovery.id : \'Not yet announced\' }}</dd>\n            </dl>'),
             n('OwnPublicationPanel.js\'s own <dl> carries the byte-identical shape — but per Section E, this surface needs no link, since it already lives at the destination'));
 
-        console.log('✓ Section H: the exact template seam already exists — the end of EditorView.js\'s own <dl class="editor-post-publish-distribution-detail">, immediately after the Discovery row. No new panel, dialog, or section is implied by anything this audit found.');
+        console.log('✓ Section H: the exact template seam this audit located — the end of EditorView.js\'s own <dl class="editor-post-publish-distribution-detail">, immediately after the Discovery row — is now where 0.9.381\'s own viewDistributedPublicationInRepository() navigation lives. No new panel, dialog, or section was needed.');
     }
 
     // ---------------------------------------------------------------
