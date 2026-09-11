@@ -96328,3 +96328,94 @@ still-open items: 0.9.393's ten `UNKNOWN`-classified deferred files, and a futur
 covering the invariant classes 0.9.395 left unmapped (spatial/collision, presence trust boundaries, the
 renderer/world-layout boundary). Re-running this exact gate again without new evidence would itself be the
 inertia this milestone was designed to refuse.
+
+## 0.9.398 — Stable Plateau Closure Audit
+
+**Type:** test-only closure certificate — not another decision gate, and not a disguised feature-selection
+milestone. **Production changes:** none.
+
+0.9.396 closed the one live gap 0.9.395 found. 0.9.397 asked, fresh, whether any concrete product direction had
+emerged strongly enough to leave the current stable plateau, and answered `NO_DIRECTION_SELECTED` ->
+`STABLE_STOP` against a seven-candidate roster. That is eight consecutive milestones (0.9.391-0.9.397) of
+engineering rigor with zero new product capability. This milestone asks a third, different question from either
+of those two: not "is there a new gap to close" (0.9.395/0.9.396) and not "is there a new direction to select"
+(0.9.397), but whether the current stop point is a deliberate, evidence-backed conclusion, reverified against
+current source right now, rather than an assumption carried forward because nothing has obviously broken.
+
+### What this milestone adds
+
+`tests/StablePlateauClosureAudit.test.js` (new, registered in `tests.html`). Twelve lettered sections. Per its
+own stated method: no new generic architecture checker, and no re-derivation of logic other milestones already
+built and proved — wherever a real, dedicated guard already exists for a claim this audit needs, that guard's
+own file is RE-EXECUTED LIVE, right now, as a real subprocess against current source, and its exit code and its
+own verdict string are read back, not its prose cited.
+
+- **Section A.** 0.9.396's and 0.9.397's own guard files re-executed live; both reconfirm their own recorded
+  verdict against current source. One named methodology accommodation: 0.9.397 Section M's own "no unexpected
+  new test file" self-check reads global `git status`, the same class of gap 0.9.395 Section F(4) already found
+  for a different pair of files — re-running it while this milestone's own new file sits uncommitted trips it,
+  so this file is briefly relocated outside `tests/` for that one subprocess call and restored unconditionally
+  in a `finally` block, mirroring 0.9.396 Section E's own "mutate, check, revert" discipline.
+- **Section B.** A fresh product-baseline census — `core/`, `application/`, `ui/`, `tests/` file counts and the
+  live route count in `ui/router/index.js`, all recomputed by this milestone's own walk rather than copied from
+  any prior milestone's reported figure.
+- **Section C.** Primary journey termination (Create -> Edit -> Publish -> Distribute -> Discover/Encounter ->
+  Repository -> Fork/Continue): the existing full-lifecycle flagship test (`tests/ForkPublishedWorld.test.js`,
+  the file 0.9.394 Section F already cited as this codebase's own end-to-end witness) re-executed live, plus
+  Distribute/Discover/Repository each confirmed present AND wired into the real router.
+- **Section D.** World subsystem journeys (Vehicle, Snapshot, Place Naming, Commentary, Presence) — one real,
+  current, live-passing witness test per subsystem.
+- **Section E.** Infrastructure settings journeys (Arweave, Nostr, STUN, Rendezvous) — one live-passing witness
+  per subsystem, each confirmed wired into a real settings route.
+- **Section F.** Boundary integrity matrix, composed from existing evidence rather than a new generic sweep: the
+  one boundary 0.9.396 actually built a codebase-wide guard for (`core/` -> `application/renderer/ui`) is
+  classified `ENFORCED_BY_TEST_SWEEP`; the other eight rows the requesting brief named are classified honestly
+  (`OBSERVED_ONLY` or `PARTIAL_PER_FEATURE`) from real, cited per-feature evidence rather than uniformly claimed
+  enforced.
+- **Section G.** New-direction evidence sweep since 0.9.397: zero production files changed since 0.9.397's own
+  closing commit; zero new forward-looking candidate markers in this file.
+- **Section H.** Deferred-item re-check: all ten of 0.9.393's `UNKNOWN`-classified files still exist untouched;
+  all seven of 0.9.397's roster candidates are still present, unchanged, in that gate's own source.
+- **Section I (flagship).** Regression-guard staleness closure — a genuine, freshly-discovered finding: ten real
+  test files, spanning milestones 0.9.349 through 0.9.387 (`ContentProviderPreferenceLifecycleAudit`,
+  `ContentProviderPreferenceSettingsEntryPoint`, `EditorViewPostPublishDistributionAction`,
+  `ForkFailureReasonPresentation`, `ForkFailureUXConvergenceAudit`, `NostrRelaySettingsEntryPoint`,
+  `NostrRelaySettingsLifecycleReassessment`, `PostPublishDistributionActionConvergenceAudit`,
+  `StunConfigurationLifecycleConvergenceAudit`, `UserConfigurableStunConfiguration`), existed on disk and passed
+  individually but were never wired into `tests.html`, so never ran as part of this codebase's own browser test
+  suite. Found fresh by this milestone's own registration census (comparing the filesystem against `tests.html`
+  directly, not trusting either), fixed in this same milestone per 0.9.392/0.9.393's own "fix what you find"
+  precedent for a purely mechanical correction, and reconfirmed closed by an independent re-census.
+- **Section J.** The `STABLE_PLATEAU_VALID` verdict — the conjunction of Sections B through I.
+- **Section K.** Deliberate exclusions, matching 0.9.397's own roster.
+- **Section L.** Production guard.
+
+### Verdict
+
+**`STABLE_PLATEAU_VALID`.** The current product baseline is internally consistent (fresh census); the primary
+journeys, five World subsystems, and four infrastructure-configuration subsystems all remain reachable (every
+witness re-executed live, not merely confirmed present); architectural boundaries are honestly reported rather
+than uniformly asserted; no new product direction has appeared since 0.9.397; none of 0.9.393's ten deferred
+files or 0.9.397's seven candidates has quietly acquired new evidence; and the one real regression-guard gap
+this milestone's own census found — ten real test files never wired into the browser test suite — is fixed and
+reconfirmed closed. No implementation, architectural, or product-direction evidence currently justifies leaving
+the established product plateau.
+
+### What this milestone deliberately excludes
+
+Per its own brief: another product feature, another configuration type, automatic failover, TURN configuration,
+proactive Repository discovery, notification delivery, richer Place Naming, collaboration expansion, a generic
+architecture framework, a generic endpoint abstraction, new lifecycle states, new persistence, new UI. No
+production-code change of any kind. No new codebase-wide architecture sweep beyond 0.9.396's own (Section F).
+`tests.html`'s ten-file registration fix is the one concrete correction this milestone makes, and it is test
+infrastructure, not production source, consistent with every prior test-only milestone's own convention for
+that file.
+
+### What comes after
+
+This milestone recommends **stopping the milestone-number sequence here** until a concrete, evidence-backed
+product requirement appears from outside this codebase's own audit loop. Re-running either the direction gate
+(0.9.397) or this closure audit again without new external evidence would itself be the inertia both were
+designed to refuse. If a follow-up is still wanted from inside the codebase's own backlog rather than from a new
+requirement, 0.9.393's own ten `UNKNOWN`-classified deferred files remain the one concretely-scoped, still-open
+item on record — each its own small, evidence-checked correction, never a bulk rewrite.
