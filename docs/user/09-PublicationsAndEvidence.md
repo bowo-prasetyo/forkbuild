@@ -1795,6 +1795,64 @@ more likely correct — and unlike that comparison, this one is never
 affected by whether you've actually resolved any of the placements; it's
 derived purely from the claims themselves, every time.
 
+## Arweave Gateway and Nostr Relay
+
+Two independent settings pages, reached from the top bar, let you replace
+the network endpoint ForkBuild retrieves and discovers decentralized
+content through — without touching anything about what gets uploaded or
+announced when you distribute your own content.
+
+### Arweave Gateway
+
+Open **Arweave Gateway** in the top bar (`/settings/arweave-gateway`). It
+shows whichever gateway is currently in effect — either "No override
+configured. Currently using the deployment default: `https://arweave.net`"
+or, once you've saved one, "Current override: `<your URL>`" — type a new
+`http://` or `https://` URL and click **Save**, or click **Use Deployment
+Default** to go back to having no override at all. **Save** rejects
+anything that isn't a valid absolute `http:`/`https:` URL with a plain
+error message and leaves whatever was previously on file completely
+untouched; it never checks that the URL actually serves Arweave content,
+so a syntactically valid but wrong or unreachable gateway only ever
+surfaces later, as an ordinary retrieval-time failure, never something
+this page predicts up front.
+
+This setting affects retrieval only — never where your own publications
+or snapshots get uploaded. Concretely, it's the gateway consulted when
+this device retrieves a publication's material for a **Decentralized**
+source (see
+[World Encounters](03-WorldView.md#world-encounters--publications-and-avatars-your-peers-are-sharing))
+and when a Snapshot placement is resolved or materialized against Arweave
+(see [Resolution outcomes](#resolution-outcomes) above).
+
+A change you save or clear here takes effect the next time the app loads
+— this page never re-wires an already-running session live, so an
+already-open World View or Editor tab keeps using whatever gateway it
+started with until you reload.
+
+### Nostr Relay
+
+Open **Nostr Relay** in the top bar (`/settings/nostr-relay`). It works
+identically to Arweave Gateway above — the same "Current override" / "No
+override configured" display, the same free-text input (placeholder
+`wss://relay.damus.io`), the same **Save** and **Use Deployment Default**
+buttons, and equally modest validation: **Save** only ever checks that
+what you typed parses as an absolute `ws:`/`wss:` URL, never that the
+relay is actually reachable or speaks the Nostr protocol.
+
+This setting affects discovery only — never publishing. It's the relay
+consulted by all three of ForkBuild's Nostr read paths: **World
+Encounters**' own decentralized lookups and **Discover Publication** (see
+[World Encounters](03-WorldView.md#world-encounters--publications-and-avatars-your-peers-are-sharing)
+and
+[Discover Publication](03-WorldView.md#discover-publication--searching-decentralized-networks-directly)),
+Snapshot discovery, and **Nearby Place Names** (see
+[Nearby Place Names](03-WorldView.md#nearby-place-names--discovering-claims-from-anyone)).
+None of the places you *announce* something over Nostr — publishing a
+Signed Claim, a Snapshot, or a place-naming claim — ever consult this
+setting; only what those same read paths *look for* does. Exactly like
+Arweave Gateway, a change here only takes effect on the next app load.
+
 ## IPFS Publishing
 
 Every publication card also has its own **IPFS Publishing** section,
