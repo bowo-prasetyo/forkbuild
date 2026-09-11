@@ -527,14 +527,13 @@ async function run() {
         assert(publicationsViewSource.includes('resolvePublicationView') && publicationsViewSource.includes('describeRetrieval'),
             n('user can verify/retrieve it later: the Publication Center composes real resolution-view and retrieval-description logic, not a placeholder list'));
 
-        // The one genuine, narrow finding this section's own evidence
-        // supports: C3's locator is real and rendered, C4/C5's capability
-        // is real and reachable, but nothing connects them — the result
-        // panel names neither the Publication Center nor a way to jump
-        // straight to THIS Publication there. Recorded here, decided in
-        // Section D/J — this section does not conclude a receipt model is
-        // needed, only that the connective link does not exist today.
-        // Scoped to the 0.9.377 post-publish block itself, since
+        // The genuine, narrow finding this section's own evidence
+        // supported at the time: C3's locator is real and rendered, C4/C5's
+        // capability is real and reachable, but nothing connected them —
+        // recorded here, decided in Section D/J of THIS milestone (0.9.379),
+        // and then re-audited fresh by 0.9.380 (which corrected the
+        // destination away from the Publication Center) and closed by
+        // 0.9.381. Scoped to the 0.9.377 post-publish block itself, since
         // EditorView.js legitimately uses router.push() elsewhere (fork
         // navigation) — unrelated to this finding.
         const editorPostPublishBlock = extractRange(
@@ -543,10 +542,12 @@ async function run() {
             '// ------------------------- 0.2.21 document lifecycle ------------',
             '0.9.377 post-publish distribution block'
         );
-        assert(!editorPostPublishBlock.includes('/publications') && !editorPostPublishBlock.includes('router.push') && !editorPostPublishBlock.includes('useRouter'),
-            n('EditorView.js\'s own 0.9.377 post-publish block contains no link, route, or navigation toward the Publication Center — the gap, if any, is a missing connective link, never a missing capability'));
+        assert(!editorPostPublishBlock.includes('/publications'),
+            n('EditorView.js\'s own 0.9.377/0.9.381 post-publish block still contains no link, route, or navigation toward the Publication Center — 0.9.380\'s own audit proved that destination structurally wrong, and 0.9.381 correctly never built it'));
+        assert(editorPostPublishBlock.includes('router.push') && editorPostPublishBlock.includes("path: `/world/"),
+            n('EditorView.js\'s own post-publish block now DOES navigate — 0.9.381 closed the connective-link gap this section found, retargeted (per 0.9.380\'s own audit) to the real destination, /world/<documentId>, never the Publication Center this section originally had in mind'));
         assert(!panelSource.includes('/publications') && !panelSource.includes('router.push'),
-            n('OwnPublicationPanel.js shows the identical absence — this is a cross-surface property of the result panel, not an EditorView oversight'));
+            n('OwnPublicationPanel.js shows the identical absence, unmodified — per 0.9.380\'s own Section E, this surface already lives at the destination and needs no link'));
 
         console.log('✓ Section C: operation-succeeded, lifecycle-recorded, and locator-available are all TRUE and genuinely rendered to the user on both surfaces that keep a local result; discover and verify/retrieve are both TRUE as SEPARATE, already-complete capabilities (the Publication Center) — but no result panel links to that capability for the Publication just distributed. A missing connective link is not evidence that a new receipt model is needed (Section J)');
     }

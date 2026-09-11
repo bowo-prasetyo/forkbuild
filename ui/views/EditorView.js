@@ -220,6 +220,23 @@ export default {
                 <dd>{{ distributionResult.material ? distributionResult.material.uri : 'Not yet uploaded' }}</dd>
                 <dt>Discovery</dt>
                 <dd>{{ distributionResult.discovery ? distributionResult.discovery.id : 'Not yet announced' }}</dd>
+                <!-- 0.9.381 — EditorView Distribution Result -> Repository
+                     Navigation. The exact seam 0.9.380's own audit located:
+                     immediately after the Discovery row, inside the SAME
+                     <dl>, never a new panel. Rendered only while there is a
+                     real documentId to navigate to — no documentId, no row
+                     at all, per that audit's own Section F "graceful
+                     inability to navigate, never a thrown error." -->
+                <template v-if="publishedPublication && publishedPublication.documentId">
+                    <dt>Repository</dt>
+                    <dd>
+                        <button
+                            type="button"
+                            class="action-btn editor-post-publish-distribution-view-btn"
+                            @click="viewDistributedPublicationInRepository"
+                        >Explore</button>
+                    </dd>
+                </template>
             </dl>
             <KeyboardShortcutsOverlay
                 v-if="shortcutsOpen"
@@ -1364,6 +1381,35 @@ export default {
                 });
         }
 
+        // 0.9.381 — EditorView Distribution Result -> Repository
+        // Navigation. Closes the one gap 0.9.380's own audit found — and
+        // corrected: NOT a "View in Publication Center" link
+        // (LocalPublicationCatalog is structurally disjoint from this
+        // Publication type, live-proven in that audit's own Section B/D),
+        // but a jump to the SAME already-existing /world/:documentId
+        // route ui/components/PublicationCatalog.js's own "Explore"
+        // action, and this view's own backToWorld()/backFromForkFailure()
+        // below, already navigate to.
+        //
+        // Built from ONLY publishedPublication.value.documentId — already
+        // held in this view, never looked up through a catalog or
+        // session, never reconstructed from title/author/contentHash/
+        // distribution-result position (see that audit's own Section
+        // A/D/G). A missing documentId — there is none in practice, every
+        // Publication carries one, but the guard costs nothing — degrades
+        // to no navigation action at all, never a thrown error and never
+        // a new error state, exactly as that audit's own Section F called
+        // for. No lifecycle mutation, no distribution call, no I/O of any
+        // kind: a single router.push(), the same shape Section G already
+        // proved pure.
+        function viewDistributedPublicationInRepository() {
+            const publication = publishedPublication.value;
+            if (!publication || !publication.documentId) {
+                return;
+            }
+            router.push({ path: `/world/${publication.documentId}` });
+        }
+
         // ------------------------- 0.2.21 document lifecycle ------------
         // Document Info panel + Document Properties editor. The Editor's
         // document is always mutable/editable (there is no fork-on-edit
@@ -2115,6 +2161,7 @@ export default {
             onDocumentPublished,
             distributePublishedDocument,
             dismissPublishAction,
+            viewDistributedPublicationInRepository,
             documentInfo,
             showMetadataEditor,
             onSaveMetadata,
