@@ -22,6 +22,7 @@ import ReconciliationCandidateLeaderboardView from '../views/ReconciliationCandi
 import ReconciliationCandidateLeaderboardEvidenceExportComparisonView from '../views/ReconciliationCandidateLeaderboardEvidenceExportComparisonView.js';
 import ReconciliationWorkspaceView from '../views/ReconciliationWorkspaceView.js';
 import PublisherLeaderboardSnapshotClaimAuthoringView from '../views/PublisherLeaderboardSnapshotClaimAuthoringView.js';
+import PublisherPerformanceLeaderboardView from '../views/PublisherPerformanceLeaderboardView.js';
 
 const routes = [
     { path: '/', name: 'home', component: HomeView },
@@ -171,6 +172,22 @@ const routes = [
     // global" navigation shape this whole reconciliation family already
     // holds.
     { path: '/publisher-snapshot-claim', name: 'publisher-snapshot-claim', component: PublisherLeaderboardSnapshotClaimAuthoringView },
+    // 0.9.417 — Publisher Performance Leaderboard UI. 0.9.416's own audit
+    // (tests/PublisherPerformanceLeaderboardProductGapAudit.test.js)
+    // proved application/PublisherRankingPolicy.js (0.8.112) and
+    // application/PublisherLeaderboardView.js (0.8.113), both UNCHANGED,
+    // real and correct but reachable by zero UI paths, and named this
+    // exact shape — a distinct route, contextual, not top-nav — as its
+    // preferred entry-point candidate (that audit's own Section E).
+    // Reached from the SAME "Publication Archive" card on /publications
+    // that already links to /reconciliation-leaderboard,
+    // /reconciliation-workspace, and /publisher-snapshot-claim above —
+    // see ui/views/DecentralizedPublicationsView.js's own 0.9.417
+    // comment. Deliberately its own route, never folded into
+    // /reconciliation-leaderboard itself (the two remain genuinely
+    // distinct concepts — see 0.9.416's own Section A) and never a
+    // top-nav destination.
+    { path: '/publisher-leaderboard', name: 'publisher-leaderboard', component: PublisherPerformanceLeaderboardView },
     { path: '/about', name: 'about', component: AboutView }
 ];
 

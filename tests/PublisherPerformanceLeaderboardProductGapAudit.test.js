@@ -316,36 +316,62 @@ async function run() {
         const uiFiles = listFiles(['ui']);
         const uiBundle = await joinedSource(uiFiles);
 
-        const uiImportsRankingPolicy = (uiBundle.match(/PublisherRankingPolicy/g) || []).length;
-        const uiImportsLeaderboardView = (uiBundle.match(/\bPublisherLeaderboardView\b/g) || []).length;
-        assert(uiImportsRankingPolicy === 0, n(`D1. UI imports PublisherRankingPolicy = 0 (found ${uiImportsRankingPolicy} textual occurrences anywhere in ui/)`));
-        assert(uiImportsLeaderboardView === 0, n(`D2. UI imports PublisherLeaderboardView = 0 (found ${uiImportsLeaderboardView} textual occurrences anywhere in ui/)`));
+        // AMENDED BY 0.9.417 — Publisher Performance Leaderboard UI. At
+        // THIS milestone's own moment (0.9.416), D1-D6 below recorded
+        // zero UI imports, zero routes, and zero contextual entries —
+        // true at the time, and the exact evidence this section's own
+        // brief asked it to earn for a BUILD_NEXT decision (Section H).
+        // 0.9.417 built exactly the recommended next step this audit's
+        // own Section E named — a distinct, contextual, non-top-nav
+        // route — so D1-D6 now assert the CURRENT, truthful state, the
+        // identical "assert the current state, don't go stale" convention
+        // already applied to tests/ReconciliationLeaderboardEntryPointDecisionAudit
+        // .test.js (0.9.403/0.9.408 amendments) and
+        // tests/ReconciliationFrontDoorProductDirectionAudit.test.js (its
+        // own H1, amended by 0.9.411): EXACTLY one UI file now reaches
+        // PublisherRankingPolicy.js's own ranking (transitively, through
+        // PublisherLeaderboardView.js's own composition — never a second,
+        // parallel path directly into PublisherRankingPolicy.js itself),
+        // EXACTLY one route now exists, and EXACTLY one contextual entry
+        // now links to it — never a second, accidental surface, and top
+        // nav remains untouched. See
+        // tests/PublisherPerformanceLeaderboardUi.test.js for this new
+        // reachability's own full, dedicated proof.
+        const filesImportingRankingPolicyDirectly = [];
+        const filesImportingLeaderboardView = [];
+        for (const file of uiFiles) {
+            const src = await readSource(file);
+            if (/from '[^']*PublisherRankingPolicy\.js'/.test(src)) filesImportingRankingPolicyDirectly.push(file);
+            if (/from '[^']*PublisherLeaderboardView\.js'/.test(src)) filesImportingLeaderboardView.push(file);
+        }
+        assert(filesImportingRankingPolicyDirectly.length === 0, n(`D1. zero UI files import PublisherRankingPolicy.js DIRECTLY (found: ${JSON.stringify(filesImportingRankingPolicyDirectly)}) — 0.9.417's own new view reaches the ranking exclusively through PublisherLeaderboardView.js's own composition, never a second, parallel path`));
+        assert(filesImportingLeaderboardView.length === 1 && filesImportingLeaderboardView[0] === 'ui/views/PublisherPerformanceLeaderboardView.js', n(`D2. exactly the one file 0.9.417 authorized to own this capability imports PublisherLeaderboardView.js (found: ${JSON.stringify(filesImportingLeaderboardView)}) — never a second, accidental owner`));
 
         const routerCode = await readSource('ui/router/index.js');
-        const performanceRouteCount = (routerCode.match(/performance|publisher-rank|publisher-performance/gi) || []).length;
-        assert(performanceRouteCount === 0, n('D3. route to performance leaderboard = 0 (no route path, name, or component anywhere in ui/router/index.js names "performance" or "publisher-rank")'));
+        assert(/\{ path: '\/publisher-leaderboard', name: 'publisher-leaderboard', component: PublisherPerformanceLeaderboardView \}/.test(routerCode), n('D3. exactly one route, /publisher-leaderboard, now exists, pointed at PublisherPerformanceLeaderboardView — 0.9.417\'s own real, contextual (never top-nav) entry point'));
 
         const appCode = await readSource('ui/App.js');
         const navLinkCount = (appCode.match(/<router-link/g) || []).length;
-        assert(navLinkCount === 15, n(`D4. the always-mounted top nav carries fifteen router-link destinations, none of them a performance/ranking destination, recomputed fresh (found ${navLinkCount})`));
-        assert(!/performance|ranking/i.test(appCode), n('D5. no "performance" or "ranking" vocabulary exists anywhere in ui/App.js\'s own top navigation'));
+        assert(navLinkCount === 15, n(`D4. the always-mounted top nav still carries fifteen router-link destinations, none of them a performance/ranking destination, recomputed fresh (found ${navLinkCount}) — 0.9.417 left App.js completely untouched`));
+        assert(!/performance|ranking/i.test(appCode), n('D5. no "performance" or "ranking" vocabulary exists anywhere in ui/App.js\'s own top navigation — this remains a contextual, not top-nav, entry point'));
 
         // Contextual entry: a link or button on some OTHER real page that
-        // leads to a ranking/performance destination without being in top
-        // nav (the exact shape /reconciliation-leaderboard itself uses,
-        // per 0.9.400's own audit, cited in ui/router/index.js's own
-        // comments).
-        const contextualEntryPattern = /publisher-performance|publisher-ranking|\/performance/;
-        const contextualEntryCount = uiFiles.filter((f) => !f.endsWith('router/index.js')).length
-            ? (uiBundle.match(contextualEntryPattern) || []).length
-            : 0;
-        assert(contextualEntryCount === 0, n('D6. contextual entry to performance ranking = 0 (no other view, anywhere in ui/, links to a performance/ranking destination by path or name)'));
+        // leads to the leaderboard without being in top nav (the exact
+        // shape /reconciliation-leaderboard itself uses, per 0.9.400's own
+        // audit, cited in ui/router/index.js's own comments).
+        const contextualEntryPattern = /<router-link\s+to="\/publisher-leaderboard">/g;
+        const contextualEntryCount = (uiBundle.match(contextualEntryPattern) || []).length;
+        assert(contextualEntryCount === 1, n(`D6. exactly one contextual entry to /publisher-leaderboard now exists anywhere in ui/ (found ${contextualEntryCount}) — never zero (the 0.9.416 gap), and never a second, duplicate link`));
 
         // The backend capability itself remains fully operational — this
-        // is not a case where the capability is broken and therefore
+        // was never a case where the capability was broken and therefore
         // unreachable for a good reason. Sections B and C already proved
-        // it live, against real data, immediately above.
-        assert(liveRanking.entries.length > 0 && leaderboardFamilyFiles.includes('application/PublisherLeaderboardView.js'), n('D7. the backend capability (PublisherRankingPolicy.js + PublisherLeaderboardView.js) is confirmed operational (Sections B/C) at the exact same moment it is confirmed unreachable (D1-D6) — the gap is reachability, not capability'));
+        // it live, against real data, immediately above. AMENDED BY
+        // 0.9.417 — see this section's own header comment above: D1-D6
+        // now confirm the gap they found is CLOSED, not still open, so D7
+        // asserts the capability remains operational at the exact same
+        // moment it is now confirmed REACHABLE, rather than unreachable.
+        assert(liveRanking.entries.length > 0 && leaderboardFamilyFiles.includes('application/PublisherLeaderboardView.js'), n('D7. the backend capability (PublisherRankingPolicy.js + PublisherLeaderboardView.js) is confirmed operational (Sections B/C) at the exact same moment D1-D6 confirm it is now genuinely reachable — 0.9.416\'s own gap is closed, not merely re-described'));
 
         // The ONE, single, indirect path by which PublisherLeaderboardView.js
         // is ever composed at all: PublisherLeaderboardSnapshot.js (0.8.119),
@@ -362,13 +388,13 @@ async function run() {
         const snapshotSource = await readSource('application/PublisherLeaderboardSnapshot.js');
         assert(!/render|<div|<td|<th/i.test(snapshotSource), n('D9. PublisherLeaderboardSnapshot.js itself renders nothing — it composes the leaderboard purely as reproducibility data, confirming the indirect path never reaches a user-visible rank'));
 
-        console.log('\n=== SECTION D: REACHABILITY AUDIT ===');
-        console.log(`  UI imports PublisherRankingPolicy        = ${uiImportsRankingPolicy}`);
-        console.log(`  UI imports PublisherLeaderboardView      = ${uiImportsLeaderboardView}`);
-        console.log(`  route to performance leaderboard         = ${performanceRouteCount}`);
-        console.log(`  contextual entry to performance ranking  = ${contextualEntryCount}`);
-        console.log('  backend capability                       = OPERATIONAL (Sections B/C)');
-        console.log('✓ Section D: the ranking capability exists and produces genuine ranked publisher data (Section B), and PublisherLeaderboardView.js already presents it correctly (Section C) — but no user-facing application surface owns or exposes that result. Zero UI imports, zero routes, zero contextual entries. This is the clean product-gap statement this milestone\'s own brief asked this section to earn.');
+        console.log('\n=== SECTION D: REACHABILITY AUDIT (AMENDED BY 0.9.417) ===');
+        console.log(`  UI files importing PublisherRankingPolicy.js directly = ${filesImportingRankingPolicyDirectly.length}`);
+        console.log(`  UI files importing PublisherLeaderboardView.js        = ${JSON.stringify(filesImportingLeaderboardView)}`);
+        console.log('  route to publisher leaderboard                        = /publisher-leaderboard (registered)');
+        console.log(`  contextual entry to publisher leaderboard             = ${contextualEntryCount}`);
+        console.log('  backend capability                                    = OPERATIONAL (Sections B/C)');
+        console.log('✓ Section D (AMENDED): at 0.9.416\'s own moment this section found zero UI imports, zero routes, and zero contextual entries — the clean product-gap statement that earned Section H\'s BUILD_NEXT decision. 0.9.417 closed that exact gap: exactly one UI file now owns the ranking capability, exactly one route now exists, and exactly one contextual entry now reaches it — never a second, accidental surface, and never coupled to PublisherRankingPolicy.js directly.');
     }
 
     // ===============================================================
@@ -377,9 +403,26 @@ async function run() {
     {
         const routerCode = await readSource('ui/router/index.js');
         const routeCount = (routerCode.match(/\{ path:/g) || []).length;
-        assert(routeCount === 23, n(`E1. twenty-three routes are currently registered, recomputed fresh (found ${routeCount}) — a distinct future route would be the twenty-fourth, not a repurposing of an existing one`));
-        assert(routerCode.includes("{ path: '/publications', name: 'publications', component: DecentralizedPublicationsView }"), n('E2. /publications is a real, existing, top-nav-reachable route — a plausible contextual home for a future entry point'));
-        assert(!/publisher-performance|\/performance/.test(routerCode), n('E3. no "/publisher-performance" or "/performance"-shaped route exists yet — the candidate route this section identifies has not been pre-built'));
+        // AMENDED BY 0.9.417 — see Section D's own header comment above for
+        // the amendment convention this follows. E1 originally recorded
+        // twenty-three routes as the baseline a future, distinct route
+        // would extend; 0.9.417 built exactly that twenty-fourth route,
+        // /publisher-leaderboard, so E1 now asserts that current count.
+        assert(routeCount === 24, n(`E1. twenty-four routes are now registered, recomputed fresh (found ${routeCount}) — the twenty-third-plus-one this section anticipated, /publisher-leaderboard, built by 0.9.417`));
+        assert(routerCode.includes("{ path: '/publications', name: 'publications', component: DecentralizedPublicationsView }"), n('E2. /publications is a real, existing, top-nav-reachable route — the contextual home 0.9.417 actually used for its own entry point'));
+        // AMENDED BY 0.9.417 — E3 originally recorded that no
+        // "/publisher-performance" or "/performance"-shaped route existed
+        // yet. 0.9.417 built the preferred candidate this section named
+        // (E6 below) under the concrete path /publisher-leaderboard
+        // instead of the illustrative "/publisher-performance" example —
+        // still a distinct, contextual, non-top-nav route, the one
+        // property this section's own preferred candidate actually
+        // required (see this section's own E6, "a distinct, contextual,
+        // non-top-nav route," which names no single literal path as
+        // mandatory). E3 now asserts that the illustrative example itself
+        // was never built verbatim, while the real, chosen route is
+        // confirmed separately by Section D's own D3 above.
+        assert(!/publisher-performance/.test(routerCode), n('E3. no route is registered under the illustrative example path "/publisher-performance" itself — 0.9.417 built the same preferred candidate shape under /publisher-leaderboard instead (confirmed live and reachable by Section D\'s own D3/D6 above)'));
 
         const appCode = await readSource('ui/App.js');
         assert(!/Leaderboard|Performance|Ranking/.test(appCode), n('E4. top navigation currently contains no "Leaderboard"/"Performance"/"Ranking" label at all — confirming Section A\'s point that the word "Leaderboard" does not yet carry a user-facing meaning collision in top nav specifically, only at the route-name level (/reconciliation-leaderboard)'));

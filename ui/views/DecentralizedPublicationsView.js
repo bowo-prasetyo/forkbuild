@@ -7483,6 +7483,24 @@ export default {
                     the
                     <router-link to="/publisher-snapshot-claim">Publisher Snapshot Claim</router-link> page.
                 </p>
+                <!-- 0.9.417 — Publisher Performance Leaderboard UI. A
+                     fourth, independent link beside the three above: those
+                     three read, author, or reconcile PEER evidence; this
+                     one exposes the already-existing publisher
+                     PERFORMANCE ranking (application/PublisherRankingPolicy.js,
+                     0.8.112, and application/PublisherLeaderboardView.js,
+                     0.8.113, both UNCHANGED, composed over THIS replica's
+                     own archive alone — never a peer's) — see ui/views/
+                     PublisherPerformanceLeaderboardView.js's own header.
+                     Deliberately still not a top-nav destination — the
+                     identical "contextual, not global" navigation shape
+                     every other link on this card already uses. -->
+                <p class="form-hint form-hint--neutral">
+                    Seeing publishers ranked by their own recorded achievements and
+                    publications — computed fresh from THIS replica's own archive
+                    alone, never a peer's — happens on the
+                    <router-link to="/publisher-leaderboard">Publisher Performance Leaderboard</router-link> page.
+                </p>
 
                 <div v-if="publicationArchiveExportedPackage.json" class="evidence-inspection-adapter">
                     <span class="evidence-inspection-adapter-title">Exported Archive</span>
