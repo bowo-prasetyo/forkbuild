@@ -129,9 +129,22 @@ async function run() {
             const contents = await readFile(path.join(SOURCE_ROOT, relFile), 'utf8');
             if (linkPattern.test(contents)) filesWithLinks.push(relFile);
         }
+        // AMENDED BY 0.9.408 — Reconciliation Workspace UI. At THIS
+        // milestone's own moment (0.9.400), exactly one file linked here —
+        // the fact B5 originally recorded. 0.9.408 later built a SECOND,
+        // independently-authorized contextual link, the Leaderboard
+        // handoff at the end of a successful reconciliation run (see
+        // ui/views/ReconciliationWorkspaceView.js's own header) — a
+        // genuinely new, deliberate edge, never an accidental duplicate of
+        // this one. The identical "amend rather than go stale" convention
+        // this file's own Section E already applies to
+        // /evidence-export-comparison, applied here too: B5 now asserts the
+        // CURRENT, truthful two-link reachability instead.
         assert(
-            filesWithLinks.length === 1 && filesWithLinks[0] === 'ui/views/DecentralizedPublicationsView.js',
-            n(`B5. across the entire ui/ tree, exactly one file links to /reconciliation-leaderboard, and it is the one this decision authorized (found: ${JSON.stringify(filesWithLinks)})`)
+            filesWithLinks.length === 2 &&
+                filesWithLinks.includes('ui/views/DecentralizedPublicationsView.js') &&
+                filesWithLinks.includes('ui/views/ReconciliationWorkspaceView.js'),
+            n(`B5. across the entire ui/ tree, exactly the two files this decision (0.9.400) and 0.9.408 each authorized link to /reconciliation-leaderboard — never an accidental third (found: ${JSON.stringify(filesWithLinks)})`)
         );
 
         console.log('\n=== SECTION B: REACHABILITY CENSUS ===');
@@ -139,7 +152,7 @@ async function run() {
         console.log('Frontend view      = reachable');
         console.log('Backend capability = reachable');
         console.log('Top navigation     = NOT_REACHABLE (deliberately — see Section D)');
-        console.log('Contextual entry   = REACHABLE (Publications page, one link, nowhere else)');
+        console.log('Contextual entry   = REACHABLE (Publications page; and, since 0.9.408, the Reconciliation Workspace\'s own handoff link — nowhere else)');
     }
 
     // ===============================================================
