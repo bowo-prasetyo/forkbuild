@@ -16,6 +16,7 @@ import DecentralizedPublicationsView from '../views/DecentralizedPublicationsVie
 import ContentProviderSettingsView from '../views/ContentProviderSettingsView.js';
 import ArweaveGatewaySettingsView from '../views/ArweaveGatewaySettingsView.js';
 import NostrRelaySettingsView from '../views/NostrRelaySettingsView.js';
+import StunSettingsView from '../views/StunSettingsView.js';
 import ReconciliationCandidateLeaderboardView from '../views/ReconciliationCandidateLeaderboardView.js';
 import ReconciliationCandidateLeaderboardEvidenceExportComparisonView from '../views/ReconciliationCandidateLeaderboardEvidenceExportComparisonView.js';
 
@@ -91,6 +92,15 @@ const routes = [
     // into a growing dashboard" shape /settings/arweave-gateway already
     // holds.
     { path: '/settings/nostr-relay', name: 'nostr-relay-settings', component: NostrRelaySettingsView },
+    // 0.9.386 — STUN Settings UI. The one ordinary product path to
+    // create/change/clear the persisted STUN server configuration
+    // override (core/IceServerConfiguration.js, storage/
+    // IceServerConfigurationStore.js, both this same milestone) — see
+    // ui/views/StunSettingsView.js's own header. Deliberately its own
+    // top-nav destination, the identical "not folded into a growing
+    // dashboard" shape /settings/arweave-gateway and /settings/nostr-relay
+    // already hold.
+    { path: '/settings/stun', name: 'stun-settings', component: StunSettingsView },
     // 0.8.180 — Reconciliation Candidate Leaderboard UI Integration. Not
     // yet a top-nav destination (see ui/views/ReconciliationCandidateLeaderboardView.js's
     // own header) — reached by URL until a future milestone gives it a

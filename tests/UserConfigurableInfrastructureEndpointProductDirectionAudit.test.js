@@ -316,8 +316,16 @@ async function run() {
         const mainSource = await source('ui/main.js');
         const webRtcConstructions = (mainSource.match(/new WebRtcPeerConnectionProvider\(/g) || []).length;
         assert(webRtcConstructions === 1, n(`C2. exactly one WebRtcPeerConnectionProvider is constructed application-wide (found ${webRtcConstructions}) — STUN/TURN are not an optional corner of peer connectivity, they ARE its one default path`));
-        assert(mainSource.includes('new WebRtcPeerConnectionProvider({ iceServers: DEFAULT_ICE_SERVERS })'),
-            n('C2. that one provider is constructed directly from DEFAULT_ICE_SERVERS — both configured STUN entries are Google-operated, a single-provider concentration: a network or policy that blocks Google\'s infrastructure loses BOTH entries at once, not merely one of several independent providers'));
+        // 0.9.386 — this exact single-provider concentration is the gap
+        // 0.9.386 closed: the provider is now constructed from
+        // `resolvedIceServers` (a user's own saved override when one
+        // exists, `DEFAULT_ICE_SERVERS` otherwise via `core/
+        // IceServerConfiguration.js`/`storage/IceServerConfigurationStore.js`),
+        // never from the bare `DEFAULT_ICE_SERVERS` literal this Section
+        // originally observed. See tests/UserConfigurableStunConfiguration.test.js
+        // for the milestone that resolved this Section's own C2/D2 finding.
+        assert(mainSource.includes('new WebRtcPeerConnectionProvider({ iceServers: resolvedIceServers })'),
+            n('C2. (as resolved by 0.9.386) that one provider is now constructed from resolvedIceServers — a user-configurable STUN override when one is on file, DEFAULT_ICE_SERVERS otherwise — never a bare, unconfigurable literal'));
 
         // C3. Rendezvous sits on the SAME journey's discovery half —
         // confirmed structurally: DiscoveryBootstrap's own
@@ -384,13 +392,17 @@ async function run() {
         assert(RecordingRTCPeerConnection.constructions.length === 1 && RecordingRTCPeerConnection.constructions[0][0].urls === 'stun:custom.example:3478',
             n('D1. WebRtcPeerConnectionProvider#setIceServers() genuinely changes what the NEXT concrete RTCPeerConnection construction receives — a real, already-shipped runtime-replacement seam (0.3.7\'s own fetchIceServers() already exercises it), not merely a hypothetical constructor argument'));
 
-        // D2. …but NO settings-persistable seam exists: ui/main.js hands
-        // DEFAULT_ICE_SERVERS/fetchIceServers() straight to the provider,
-        // and no configuration/store class exists for a USER'S OWN
-        // override, distinct from this deployment's own Metered account.
+        // D2. 0.9.386 closed this Section's own named gap: core/
+        // IceServerConfiguration.js (+ storage/IceServerConfigurationStore.js,
+        // application/SetIceServerConfigurationUseCase.js,
+        // ui/views/StunSettingsView.js) now exist — the runtime-replacement
+        // seam this Section already found real (D1) now has a real
+        // settings-persistable seam in front of it, letting an ordinary
+        // Wanderer, not only this deployment's own operator, supply the
+        // replacement. See tests/UserConfigurableStunConfiguration.test.js.
         let iceConfigurationExists = true;
         try { await source('core/IceServerConfiguration.js'); } catch { iceConfigurationExists = false; }
-        assert(!iceConfigurationExists, n('D2. no core/IceServerConfiguration.js (or equivalent) exists — the runtime-replacement seam is real, but nothing today lets an ordinary Wanderer, rather than this deployment\'s own operator, supply the replacement'));
+        assert(iceConfigurationExists, n('D2. (as resolved by 0.9.386) core/IceServerConfiguration.js now exists — the gap this Section originally named is closed'));
 
         // D3. Rendezvous — constructor-injectable (WebSocketRendezvousTransport
         // takes `url`; RendezvousDiscoveryProvider takes `transport`),
