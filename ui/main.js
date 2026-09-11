@@ -13,6 +13,8 @@ import { DEFAULT_ICE_SERVERS, fetchIceServers } from '../peer/IceServerConfig.js
 import { IceServerConfigurationStore } from '../storage/IceServerConfigurationStore.js';
 import { SetIceServerConfigurationUseCase } from '../application/SetIceServerConfigurationUseCase.js';
 import { DEFAULT_RENDEZVOUS_URLS } from '../peer/RendezvousConfig.js';
+import { RendezvousConfigurationStore } from '../storage/RendezvousConfigurationStore.js';
+import { SetRendezvousConfigurationUseCase } from '../application/SetRendezvousConfigurationUseCase.js';
 import { CreatePeerRelationshipUseCase } from '../application/CreatePeerRelationshipUseCase.js';
 import { PeerReconnectionUseCase } from '../application/PeerReconnectionUseCase.js';
 import { FindPeerUseCase } from '../application/FindPeerUseCase.js';
@@ -225,8 +227,35 @@ fetchIceServers({ fallback: resolvedIceServers }).then((iceServers) => peerConne
 // the store itself are provided app-wide below so ui/views/
 // StunSettingsView.js is the one thing that ever injects either.
 const setIceServerConfigurationUseCase = new SetIceServerConfigurationUseCase({ iceServerConfigurationStore });
+// 0.9.388 — User-Configurable Rendezvous Server Configuration.
+//
+// `core/RendezvousConfiguration.js` / `storage/RendezvousConfigurationStore.js`
+// (both this same milestone) give a user's own rendezvous server list a
+// real, validated, durable home — the direct structural mirror of
+// `iceServerConfigurationStore` above, applied here to the rendezvous
+// bootstrap instead of the peer connection provider.
+// `rendezvousConfigurationStore.get()` returns `null` when the user has
+// never saved an override — the identical "absence stays meaningful" rule
+// `iceServerConfigurationStore` already holds — so `resolvedRendezvousUrls`
+// falls back to `DEFAULT_RENDEZVOUS_URLS` only then, never persisting that
+// fallback as if it were a saved preference.
+const rendezvousConfigurationStore = new RendezvousConfigurationStore(new LocalStorageProvider());
+const resolvedRendezvousUrls = (rendezvousConfigurationStore.get() || { urls: DEFAULT_RENDEZVOUS_URLS }).urls;
+// 0.9.388 — Rendezvous Settings UI. The WRITE half of the settings entry
+// point, wired against this SAME store instance (never a second,
+// disconnected RendezvousConfigurationStore) — see application/
+// SetRendezvousConfigurationUseCase.js's own header. Both this use case
+// and the store itself are provided app-wide below so ui/views/
+// RendezvousSettingsView.js is the one thing that ever injects either.
+const setRendezvousConfigurationUseCase = new SetRendezvousConfigurationUseCase({ rendezvousConfigurationStore });
 const discoveryBootstrap = new DiscoveryBootstrap({
-    bootstrapProviders: DEFAULT_RENDEZVOUS_URLS.map((url) => new RendezvousDiscoveryProvider({
+    // 0.9.388 — `resolvedRendezvousUrls`, no longer the hard-coded
+    // `DEFAULT_RENDEZVOUS_URLS` literal. `RendezvousDiscoveryProvider` and
+    // `WebSocketRendezvousTransport` themselves are completely UNMODIFIED
+    // by this milestone — the only change is which URL list this mapping
+    // is built from: a user's own configured rendezvous list when one is
+    // on file, the same deployment default otherwise.
+    bootstrapProviders: resolvedRendezvousUrls.map((url) => new RendezvousDiscoveryProvider({
         transport: new WebSocketRendezvousTransport({ url }),
         identityProvider
     }))
@@ -1694,6 +1723,16 @@ app.provide('setNostrRelayConfigurationUseCase', setNostrRelayConfigurationUseCa
 // `nostrRelayConfigurationStore` already hold above.
 app.provide('iceServerConfigurationStore', iceServerConfigurationStore);
 app.provide('setIceServerConfigurationUseCase', setIceServerConfigurationUseCase);
+
+// 0.9.388 — Rendezvous Settings UI. `rendezvousConfigurationStore` and
+// `setRendezvousConfigurationUseCase` were already constructed earlier in
+// this file (needed immediately, to build `discoveryBootstrap` itself) —
+// provided app-wide here, alongside the other settings stores/use cases,
+// so ui/views/RendezvousSettingsView.js is the one thing that ever injects
+// either, the identical shape `iceServerConfigurationStore`/
+// `nostrRelayConfigurationStore` already hold above.
+app.provide('rendezvousConfigurationStore', rendezvousConfigurationStore);
+app.provide('setRendezvousConfigurationUseCase', setRendezvousConfigurationUseCase);
 
 const nostrRelayQueryClient = createNostrRelayQueryClient({});
 const decentralizedWorldDiscoveryServices = composeDecentralizedWorldEncounterMaterialDiscoveryServices({
