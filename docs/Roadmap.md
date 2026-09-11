@@ -96419,3 +96419,77 @@ product requirement appears from outside this codebase's own audit loop. Re-runn
 designed to refuse. If a follow-up is still wanted from inside the codebase's own backlog rather than from a new
 requirement, 0.9.393's own ten `UNKNOWN`-classified deferred files remain the one concretely-scoped, still-open
 item on record — each its own small, evidence-checked correction, never a bulk rewrite.
+
+## 0.9.399 — Test-Suite Registration Integrity Audit
+
+**Type:** test-infrastructure verification audit — not a product-direction gate, and not another closure
+certificate. **Production changes:** none.
+
+0.9.398 Section I found, by its own fresh registration census, that ten real test files (spanning 0.9.349-0.9.387)
+existed on disk and passed individually but were never wired into `tests.html`, so never ran as part of this
+codebase's own browser test suite. That finding was fixed in the same milestone. This milestone asks the
+narrower, focused question that finding raises: does the mechanism connecting `tests/*.test.js` to the browser
+test runner actually hold, and is the census that checks it itself trustworthy — not merely "is the gap closed
+right now."
+
+### Core invariant
+
+Every discovered test file is explicitly classified as `REGISTERED`, `INTENTIONALLY_EXCLUDED` (named, with a
+reason — none exist today), or `UNCLASSIFIED` (failure — the exact shape of 0.9.398's own flagship finding). The
+relationship is checked in both directions: filesystem → registration table (catching an orphaned test) and
+registration table → browser runner (catching a dangling registration, and, one step further than mere path
+existence, a registered-but-syntactically-broken file).
+
+### What this milestone adds
+
+`tests/TestSuiteRegistrationIntegrityAudit.test.js` (new, registered in `tests.html`). Nine lettered sections.
+
+- **Section A.** Test population census — a fresh `readdir` walk of `tests/`, filtered to real files (excluding
+  `tests/fixtures/`), not read from `tests.html` or any prior milestone's reported count.
+- **Section B.** Registration extraction — a parser scoped to `tests.html`'s own `const testFiles = [ ... ];`
+  array literal specifically, rather than a whole-document regex scan (0.9.398 Section I's own approach). Each
+  line inside the array is matched against a strict single-line pattern, rejecting anything before or after a
+  quoted `./tests/Name.test.js` literal.
+- **Section C.** Set comparison and classification — `missing` (orphaned), `dangling` (registered but absent on
+  disk), and duplicate registrations, plus the three-way `REGISTERED` / `INTENTIONALLY_EXCLUDED` / `UNCLASSIFIED`
+  classification of every discovered file. The `UNCLASSIFIED` assertion here is the exact check that would have
+  caught 0.9.398's own ten-file finding before it was found.
+- **Section D.** False-positive / false-negative resistance — five synthetic, in-memory fixtures (never written
+  to disk) run through the *same* Section B parser function, proving it is not fooled by an HTML comment or a JS
+  comment mentioning a fake path, a commented-out array line, near-miss filenames (`.test.js.bak`, a missing dot
+  before `Test`, a pluralized `.tests.js`), a string or HTML fragment elsewhere in the document, an unrelated
+  directory or subdirectory path inside the array, or a duplicated entry — and that it does not produce a false
+  negative on irregular whitespace or a missing trailing comma.
+- **Section E.** The intentional-exclusion registry — an explicit, typed list declared once, currently empty (not
+  manufactured merely to exercise the classification); any future entry must carry a non-empty reason.
+- **Section F.** Real execution witness — for every one of the current registrations (a full population sweep,
+  not a sample), the exact case-sensitive filename is confirmed against a fresh directory listing, and the file
+  is confirmed to parse cleanly under `node --check`. This is the "registered ≠ executable" distinction: a path
+  can resolve while the module body itself no longer parses, which plain existence checks would miss.
+- **Section G.** `REGISTRATION_INTEGRITY_VALID` — the conjunction of A-F.
+- **Section H.** Deliberate exclusions (see below) plus a check that no production directory changed.
+- **Section I.** Production guard — no production file touched, and the only new test file is this milestone's
+  own.
+
+### Verdict
+
+**`REGISTRATION_INTEGRITY_VALID`.** The `tests/*.test.js` → `tests.html` → browser-runner chain holds in both
+directions for the current population (819 files, including this milestone's own): zero orphaned tests, zero
+dangling registrations, zero unclassified files, and every current registration is confirmed both
+case-resolvable and syntactically loadable. The registration parser itself is shown resistant to every
+false-positive and false-negative shape named in this milestone's own brief.
+
+### What this milestone deliberately excludes
+
+A new test framework; automatic test discovery wired into the runner; automatic modification of `tests.html`
+(a gap, if one is ever found again, is reported and asserted against, never silently patched in — silent
+registration would hide the same kind of decision 0.9.398's own finding made visible); a test categorization
+framework beyond the three-way classification above; a test dependency graph; coverage measurement; test-quality
+scoring; production-code analysis; another product-direction gate; another stable-plateau audit. No
+production-code change of any kind.
+
+### What comes after
+
+This milestone does not reopen the product-direction question 0.9.397 already closed, and does not replace
+0.9.398's own closure verdict — it narrows and hardens one mechanism that closure's own flagship finding exposed.
+The recommendation to stop the milestone-number sequence, from 0.9.398, stands unchanged.
