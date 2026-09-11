@@ -94844,3 +94844,77 @@ Per this milestone's own originating brief: not another feature immediately. The
 audit — 0.9.382, a deep-link convergence / end-to-end audit across Publish → Distribute → Explore → `/world/
 <documentId>` — followed by a fresh whole-product reassessment, preserving the audit → discover the real seam →
 implement only that seam → verify → reassess pattern this arc has followed since 0.9.374.
+
+## 0.9.382 — Distribution Result → Repository Navigation Convergence Audit
+
+**Type:** test-only. **Production changes:** none.
+
+0.9.381 gave EditorView's distribution-result panel a single new edge — `viewDistributedPublicationInRepository()`
+— and its own suite already proved that edge works in isolation. This milestone asks the same question every
+convergence audit in this arc asks of the milestone before it (0.9.348 of 0.9.347, 0.9.378 of 0.9.377): is
+0.9.381 merely a single presentation-level navigation edge onto the existing Repository route, or did it quietly
+grow a second Publication/distribution/navigation architecture alongside the existing one?
+
+### What this milestone adds
+
+- **`tests/DistributionResultRepositoryNavigationConvergenceAudit.test.js`** (new, registered in `tests.html`):
+  ten lettered sections, built fresh against real production source and real object graphs — never by importing
+  and re-running 0.9.381's own harness.
+  - **Section A** traces exact Publication identity through the complete chain: the real, extracted
+    `Toolbar.publish()` body forwarding its own local `publication` verbatim through the `published` emit,
+    `EditorView`'s template wiring that emit directly to `onDocumentPublished()`, and the navigation call
+    resolving `publishedPublication.value`'s own `documentId` — no re-fetch or re-derivation at any hop.
+  - **Section B** proves route convergence live: the router registers `/world/:documentId` exactly once (never
+    confused with the unrelated `/worlds/recent` listing route), and the pushed target for a real Publication is
+    byte-for-byte structurally identical — via `JSON.stringify` comparison, not string containment alone — to
+    `PublicationCatalog.js`'s own pre-existing "Explore" target for the same Publication.
+  - **Section C** proves distribution independence live: publish, an in-flight distribution (checked mid-flight,
+    not just after settlement), a successful distribution, and a failed distribution all leave `router.push()`
+    uncalled — only the explicit Explore call navigates.
+  - **Section D** proves distribution-result independence: navigating three times in a row never increments a
+    counting wrapper around `publicationDistributionCommand`, never replaces the object reference held in
+    `PublicationDistributionLifecycleMemoryStore`, and never replaces the `distributionResult` reference itself —
+    pure, side-effect-free routing.
+  - **Section E** drives Publish A → distribute A → Explore A, then Publish B → distribute B → Explore B, through
+    one shared harness, confirming each resolves to its own `documentId` with no stale-closure leakage and that
+    publishing B resets the transient result state so no stale A result is visible while B is pending.
+  - **Section F** covers all four named scenarios: distribution failure with a valid `documentId` (still
+    navigates to the real, already-published Publication), distribution success with a missing `documentId`
+    (silent no-op), a withdrawn publication (live, via the real `LocalPublisherProvider#unpublish()` — the
+    navigation call itself still fires safely, since it never re-resolves through the Repository), and an
+    unpublished publication (no navigation reachable at all).
+  - **Section G** is the Repository-convergence flagship: `Publication.documentId`, the pushed route's
+    `documentId`, and the Repository-resolvable identity (via the real `discoveryProvider.findById()`, the same
+    mechanism `WorldView`'s own destination route already uses) are proven to be the exact same value — while a
+    separate assertion confirms the navigation function itself never references `discoveryProvider`/`findById`,
+    so the convergence holds because the identity is already shared, not because navigation re-resolves anything.
+  - **Section H** confirms `OwnPublicationPanel.js` and `WorldEncounterCanvas.js` remain byte-for-byte unchanged,
+    live-proves all three distribution surfaces converge on one shared composed command instance via a counting
+    wrapper, and re-runs four related existing suites (0.9.377, 0.9.378, 0.9.380, 0.9.381) as real subprocesses.
+  - **Section I** proves lifecycle/UI teardown: `dismissPublishAction()` (this view's own established
+    leave/reset path) clears `publishedPublication`/`distributionResult`/`distributionError`; a fresh harness
+    mount (modeling remounting `EditorView`) never resurrects the prior `documentId`; and a new publication
+    replaces the dismissed one's navigation target wholesale.
+  - **Section J** sweeps for the full named architecture boundary — no Publication Center integration (the
+    unrelated, pre-existing `publicationCatalog` injection used by this file's own separate BlueprintAttribution
+    fork-publish flow is confirmed absent from the entire 0.9.377/0.9.381 block, not merely the navigation
+    function itself), no catalog mutation, no new navigation service (exactly one `router.push()` call), no
+    distribution receipt or history vocabulary anywhere in production, no automatic navigation (no timer,
+    watcher, or mount hook), no network lookup (no `fetch`/`await`/`.then` in the navigation function), no new
+    Publication identity resolution, and no distribution lifecycle changes — closing with a convergence matrix
+    and verdict: **CONVERGED**.
+
+### What this milestone deliberately excludes
+
+No production file is touched. No new assertion in any pre-existing suite is flipped — 0.9.381 already flipped
+the two gap-confirming assertions this arc had standing (in `DistributionResultPublicationCenterDeepLinkAudit
+.test.js` and `PostDistributionProductEvolutionReassessment.test.js`); this milestone is a pure convergence
+check, not a gap closure, so it introduces no new production vocabulary, no new route, and no new test
+double-bookkeeping of state 0.9.381 doesn't already expose.
+
+### Then
+
+Per this milestone's own verdict, and the pattern this arc has followed since 0.9.374: not another distribution
+enhancement. This closes the post-publish distribution micro-arc (0.9.377–0.9.382). The next milestone,
+0.9.383, returns to a fresh whole-product reassessment: now that Create → Publish → Distribute → Explore is a
+continuous user journey, what is the strongest remaining genuine product gap?
