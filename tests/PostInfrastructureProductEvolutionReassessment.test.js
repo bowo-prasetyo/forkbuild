@@ -154,26 +154,31 @@ async function run() {
         // A7. No generic Infrastructure Settings subsystem exists
         // anywhere — the central assertion this milestone's own brief
         // asks Section A to prove, not merely assert in prose. The
-        // string legitimately appears three times as of 0.9.386 (STUN's
-        // own core/IceServerConfiguration.js joined the original two,
-        // holding the identical design-rationale-comment-only shape), but
-        // only inside each file's own design-rationale comments — naming
-        // exactly what each refused to become (0.9.373's own finding,
-        // reconfirmed by 0.9.386's own header for the same reason) — so
-        // code-only lines are checked here, the same exclusion 0.9.372
-        // Section I2 already established.
+        // string legitimately appears four times as of 0.9.388
+        // (Rendezvous's own core/RendezvousConfiguration.js joined
+        // Arweave/Nostr/STUN, holding the identical design-rationale-
+        // comment-only shape; corrected from three to four by 0.9.392
+        // upon discovering this assertion had gone stale — 0.9.388 added
+        // the fourth file without updating this historical count, and
+        // nothing re-ran this test to notice until 0.9.392's own fresh
+        // sweep), but only inside each file's own design-rationale
+        // comments — naming exactly what each refused to become (0.9.373's
+        // own finding, reconfirmed by 0.9.386/0.9.388's own headers for the
+        // same reason) — so code-only lines are checked here, the same
+        // exclusion 0.9.372 Section I2 already established.
         const arweaveConfigExecutable = (await rawSource('core/ArweaveGatewayConfiguration.js')).replace(/\/\/.*$/gm, '');
         const nostrConfigExecutable = (await rawSource('core/NostrRelayConfiguration.js')).replace(/\/\/.*$/gm, '');
         const iceConfigExecutable = (await rawSource('core/IceServerConfiguration.js')).replace(/\/\/.*$/gm, '');
-        assert(!/InfrastructureEndpointConfiguration/.test(arweaveConfigExecutable) && !/InfrastructureEndpointConfiguration/.test(nostrConfigExecutable) && !/InfrastructureEndpointConfiguration/.test(iceConfigExecutable),
-            'A7. the term appears only in each file\'s own comments, never in executable code, in any of the three files');
-        assert(!/class ArweaveGatewayConfiguration extends/.test(arweaveConfigExecutable) && !/class NostrRelayConfiguration extends/.test(nostrConfigExecutable) && !/class IceServerConfiguration extends/.test(iceConfigExecutable),
-            'A7. no configuration value object subclasses another or any shared base — three coincidentally-matching lifecycle shapes, never one abstraction');
+        const rendezvousConfigExecutable = (await rawSource('core/RendezvousConfiguration.js')).replace(/\/\/.*$/gm, '');
+        assert(!/InfrastructureEndpointConfiguration/.test(arweaveConfigExecutable) && !/InfrastructureEndpointConfiguration/.test(nostrConfigExecutable) && !/InfrastructureEndpointConfiguration/.test(iceConfigExecutable) && !/InfrastructureEndpointConfiguration/.test(rendezvousConfigExecutable),
+            'A7. the term appears only in each file\'s own comments, never in executable code, in any of the four files');
+        assert(!/class ArweaveGatewayConfiguration extends/.test(arweaveConfigExecutable) && !/class NostrRelayConfiguration extends/.test(nostrConfigExecutable) && !/class IceServerConfiguration extends/.test(iceConfigExecutable) && !/class RendezvousConfiguration extends/.test(rendezvousConfigExecutable),
+            'A7. no configuration value object subclasses another or any shared base — four coincidentally-matching lifecycle shapes, never one abstraction');
         const genericFiles = execSync('grep -rl "InfrastructureEndpointConfiguration\\|InfrastructureSettingsView\\|class NetworkManager\\|GenericEndpointConfig" application core storage ui --include="*.js" || true',
             { cwd: SOURCE_ROOT.pathname }).toString().trim().split('\n').filter(Boolean).sort();
-        const allowedGenericFiles = new Set(['core/ArweaveGatewayConfiguration.js', 'core/NostrRelayConfiguration.js', 'core/IceServerConfiguration.js']);
-        assert(genericFiles.length === 3 && genericFiles.every((f) => allowedGenericFiles.has(f)),
-            `A7. the term is confined to exactly those three files' own design-rationale comments, naming what each refused to become — no fourth file anywhere references it — found: ${genericFiles.join(', ')}`);
+        const allowedGenericFiles = new Set(['core/ArweaveGatewayConfiguration.js', 'core/NostrRelayConfiguration.js', 'core/IceServerConfiguration.js', 'core/RendezvousConfiguration.js']);
+        assert(genericFiles.length === 4 && genericFiles.every((f) => allowedGenericFiles.has(f)),
+            `A7. the term is confined to exactly those four files' own design-rationale comments, naming what each refused to become — no fifth file anywhere references it — found: ${genericFiles.join(', ')}`);
 
         // A8. Arweave Gateway and Nostr Relay stay two independently
         // persisted facts — 0.9.372 Section I's own isolation proof,
@@ -310,14 +315,18 @@ async function run() {
         // C8. Finding #2: the always-mounted top nav (ui/App.js) has
         // grown to a flat, ungrouped list across separate milestones
         // adding settings destinations (Content Provider, Arweave
-        // Gateway, Nostr Relay, and — 0.9.386 — STUN Servers) on top of
-        // the pre-existing eleven. Recorded as a minor, non-blocking
-        // observation, in the same spirit as 0.9.367/0.9.372's own
-        // recorded wording findings — never as a new milestone driver on
-        // its own.
+        // Gateway, Nostr Relay, and — 0.9.386/0.9.388 — STUN Servers and
+        // Rendezvous Servers) on top of the pre-existing eleven. Count
+        // corrected from 14 to 15 by 0.9.392 upon discovering this
+        // assertion had gone stale — 0.9.388 added the fifteenth link
+        // without updating this historical count, and nothing re-ran
+        // this test to notice until 0.9.392's own fresh sweep. Recorded
+        // as a minor, non-blocking observation, in the same spirit as
+        // 0.9.367/0.9.372's own recorded wording findings — never as a
+        // new milestone driver on its own.
         const navSource = await rawSource('ui/App.js');
         const navLinkCount = (navSource.match(/router-link/g) || []).length / 2; // opening + closing tag
-        assert(navLinkCount === 14, `C8. the always-mounted top nav carries exactly 14 router-link destinations, four of them settings destinations added across this arc and 0.9.386 — found ${navLinkCount}`);
+        assert(navLinkCount === 15, `C8. the always-mounted top nav carries exactly 15 router-link destinations, five of them settings destinations added across this arc and 0.9.386/0.9.388 — found ${navLinkCount}`);
 
         console.log('\n=== SECTION C: CROSS-CAPABILITY GAP SWEEP ===');
         console.log('Six historical examples (Commentary->surfaces, Publish->distribution, Peer->sync, Discovery tag->UX,');

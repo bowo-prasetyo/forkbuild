@@ -151,13 +151,26 @@ async function runTests() {
             ['Place Naming', 'core/PlaceNamingClaim.js', 'export class PlaceNamingClaim'],
             ['Provider preferences', 'core/RoleProviderPreference.js', 'export class RoleProviderPreference'],
             ['Authentication/identity', 'identity/LocalIdentityProvider.js', 'export class LocalIdentityProvider'],
-            ['Wanderer/vehicle', 'application/AvatarVehicleInteractionController.js', 'export class AvatarVehicleInteractionController']
+            ['Wanderer/vehicle', 'application/AvatarVehicleInteractionController.js', 'export class AvatarVehicleInteractionController'],
+            // 0.9.392 — this closure guard's own B-nav assertion had gone
+            // stale: 0.9.364-0.9.372 (Arweave Gateway/Nostr Relay
+            // settings) and 0.9.386/0.9.388 (STUN/Rendezvous settings)
+            // each added a real, always-mounted nav route without adding
+            // the matching classification entry here, and nothing re-ran
+            // this guard to notice until 0.9.392's own fresh sweep. Added
+            // now, per this guard's own stated rule ("must be classified
+            // in this guard... before this assertion is updated"), never
+            // silently.
+            ['Arweave Gateway settings', 'ui/views/ArweaveGatewaySettingsView.js', 'export default'],
+            ['Nostr Relay settings', 'ui/views/NostrRelaySettingsView.js', 'export default'],
+            ['STUN settings', 'ui/views/StunSettingsView.js', 'export default'],
+            ['Rendezvous settings', 'ui/views/RendezvousSettingsView.js', 'export default']
         ];
         for (const [name, path, marker] of REACHABLE_SURFACES) {
             assert(await sourceExists(path), `B. [${name}] owner ${path} still exists — capability -> owner holds.`);
             assert((await rawSource(path)).includes(marker), `B. [${name}] ${path} still contains "${marker}" — the owner still exposes the surface user-facing evidence names.`);
         }
-        assert(REACHABLE_SURFACES.length === 19, `B. Exactly 19 reachable surfaces are carried forward from 0.9.313 (found ${REACHABLE_SURFACES.length}) — a change here means the inventory itself moved and this guard must be updated deliberately, not silently.`);
+        assert(REACHABLE_SURFACES.length === 23, `B. Exactly 23 reachable surfaces are carried forward — 0.9.313's own 19, plus Arweave Gateway/Nostr Relay/STUN/Rendezvous settings (classified by 0.9.392, previously missing from this guard) (found ${REACHABLE_SURFACES.length}).`);
 
         // Reachability: the always-mounted top nav is pinned as an
         // EXACT set, not merely "contains at least these" — a newly
@@ -165,7 +178,8 @@ async function runTests() {
         // this fail, exactly as intended.
         const appSource = await rawSource('ui/App.js');
         const EXPECTED_NAV_ROUTES = new Set(['/', '/editor', '/repository', '/worlds/recent', '/avatar', '/identity',
-            '/peers', '/conversations', '/publications', '/settings/content-provider', '/about']);
+            '/peers', '/conversations', '/publications', '/settings/content-provider', '/about',
+            '/settings/arweave-gateway', '/settings/nostr-relay', '/settings/stun', '/settings/rendezvous']);
         const actualNavRoutes = new Set(
             [...appSource.matchAll(/to="(\/[a-zA-Z0-9\-/]*)"/g)].map((m) => m[1])
         );

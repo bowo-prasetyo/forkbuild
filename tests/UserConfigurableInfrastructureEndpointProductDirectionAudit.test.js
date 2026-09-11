@@ -329,11 +329,26 @@ async function run() {
 
         // C3. Rendezvous sits on the SAME journey's discovery half —
         // confirmed structurally: DiscoveryBootstrap's own
-        // bootstrapProviders is built directly from
-        // DEFAULT_RENDEZVOUS_URLS, the one deployment-run node, with no
-        // second, independent rendezvous provider composed alongside it.
-        assert(mainSource.includes('DEFAULT_RENDEZVOUS_URLS.map((url) => new RendezvousDiscoveryProvider('),
-            n('C3. discoveryBootstrap\'s bootstrapProviders is built directly from DEFAULT_RENDEZVOUS_URLS — the one operator-run node IS the entire automatic-discovery mechanism, not one of several'));
+        // bootstrapProviders was, at the time this Section originally
+        // ran, built directly from DEFAULT_RENDEZVOUS_URLS, the one
+        // deployment-run node, with no second, independent rendezvous
+        // provider composed alongside it.
+        // 0.9.388/0.9.389 — this exact single-provider concentration is
+        // the gap that arc closed, mirroring C2's own STUN resolution:
+        // bootstrapProviders is now built from `resolvedRendezvousUrls`
+        // (a user's own saved override when one exists,
+        // `DEFAULT_RENDEZVOUS_URLS` otherwise via `core/
+        // RendezvousConfiguration.js`/`storage/RendezvousConfigurationStore.js`),
+        // never from the bare `DEFAULT_RENDEZVOUS_URLS` literal this
+        // Section originally observed. Corrected by 0.9.392, which found
+        // this assertion had gone stale — 0.9.386 updated this file's own
+        // C2/D2 STUN finding with an "(as resolved by ...)" note, but
+        // 0.9.388/0.9.389 never made the matching update here, and
+        // nothing re-ran this test to notice until 0.9.392's own fresh
+        // sweep. See tests/RendezvousConfigurationLifecycleConvergenceAudit.test.js
+        // for the milestone that resolved this Section's own C3 finding.
+        assert(mainSource.includes('resolvedRendezvousUrls.map((url) => new RendezvousDiscoveryProvider('),
+            n('C3. (as resolved by 0.9.388/0.9.389) discoveryBootstrap\'s bootstrapProviders is now constructed from resolvedRendezvousUrls — a user-configurable Rendezvous override when one is on file, DEFAULT_RENDEZVOUS_URLS otherwise — never a bare, unconfigurable literal'));
         const rendezvousConfigSource = await source('peer/RendezvousConfig.js');
         assert(/would make THIS codebase the one thing every deployment/.test(rendezvousConfigSource),
             n('C3. that file\'s own header already names the single-point-of-failure risk explicitly — this audit did not invent the concern, it is reconfirming a concern the codebase already flagged about its own default'));
@@ -406,11 +421,22 @@ async function run() {
 
         // D3. Rendezvous — constructor-injectable (WebSocketRendezvousTransport
         // takes `url`; RendezvousDiscoveryProvider takes `transport`),
-        // live-confirmed via Section G below. No composition-root seam for
-        // a user override, and no settings-persistable seam either.
+        // live-confirmed via Section G below.
+        // 0.9.388/0.9.389 closed this Section's own named gap, mirroring
+        // D2's own STUN resolution: core/RendezvousConfiguration.js (+
+        // storage/RendezvousConfigurationStore.js, application/
+        // SetRendezvousConfigurationUseCase.js, ui/views/
+        // RendezvousSettingsView.js) now exist — the constructor-injectable
+        // seam this Section already found real now has a real
+        // settings-persistable seam in front of it. Corrected by 0.9.392,
+        // which found this assertion had gone stale — 0.9.386 updated
+        // this file's own D2 STUN finding with an "(as resolved by ...)"
+        // note, but 0.9.388/0.9.389 never made the matching update here,
+        // and nothing re-ran this test to notice until 0.9.392's own
+        // fresh sweep. See tests/RendezvousConfigurationLifecycleConvergenceAudit.test.js.
         let rendezvousConfigurationExists = true;
         try { await source('core/RendezvousConfiguration.js'); } catch { rendezvousConfigurationExists = false; }
-        assert(!rendezvousConfigurationExists, n('D3. no core/RendezvousConfiguration.js (or equivalent) exists either — same gap in kind as STUN, one layer lower than Arweave/Nostr were before 0.9.364/0.9.369 (Section G proves the underlying seam works; nothing yet reads a user\'s own choice into it)'));
+        assert(rendezvousConfigurationExists, n('D3. (as resolved by 0.9.388/0.9.389) core/RendezvousConfiguration.js now exists — the gap this Section originally named is closed'));
 
         // D4. TURN's readiness gap is different IN KIND, not merely
         // degree — fetchIceServers()'s own accepted shape already
