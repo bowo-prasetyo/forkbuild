@@ -95293,3 +95293,74 @@ none of these were selected by 0.9.385's own scoped brief. Rendezvous configurat
 convergence audit, before TURN is revisited as its own product decision). No generic
 `InfrastructureEndpointConfiguration` abstraction was introduced — `core/IceServerConfiguration.js` is a third,
 independently-shaped sibling to `ArweaveGatewayConfiguration`/`NostrRelayConfiguration`, never a shared base class.
+
+## 0.9.387 — STUN Configuration Lifecycle & Convergence Audit
+
+Test-only, no production changes. 0.9.386's own test file
+(`tests/UserConfigurableStunConfiguration.test.js`) already proved the value object, the store, the write use case,
+the settings view, and one full restart round-trip correct — but that suite's own job was correctness of each
+piece, not whether the pieces, now that they span the full
+
+```
+StunSettingsView -> SetIceServerConfigurationUseCase -> IceServerConfigurationStore -> persistent StorageProvider
+-> (restart) -> ui/main.js -> resolvedIceServers -> WebRtcPeerConnectionProvider -> fetchIceServers() ->
+RTCPeerConnection
+```
+
+lifecycle, actually converge with no second authority, no accidental bleed into TURN/Rendezvous/peer identity, and
+no configuration that has quietly become a fallback, health-check, or connection-retry policy. This is the direct
+structural mirror of 0.9.365's Arweave Gateway convergence audit and 0.9.370's Nostr Relay convergence audit,
+applied to STUN's own list-shaped configuration and its two write-path collaborators (a use case and a settings
+view) neither sibling configuration has.
+
+### What this audit proved
+
+- **`tests/StunConfigurationLifecycleConvergenceAudit.test.js`** — ten lettered sections (A-J), built fresh against
+  real production source and real object graphs.
+  - **Section A** — exactly one value object, one storage key, one store construction site
+    (`ui/main.js`), and one write-use-case construction site exist; no unrelated file imports either boundary
+    directly or constructs its own instance.
+  - **Section B** — absence and an explicit saved default remain distinguishable persisted facts even though their
+    effective STUN list resolves identically.
+  - **Section C** — four independently-composed "replicas" sharing one storage namespace converge on the identical
+    effective STUN list at every step (save → restart → restart-through-a-concrete-`RTCPeerConnection` → a write
+    from a later replica visible back through the first → clear → restart → deployment default), with no shared
+    singleton anywhere in the chain.
+  - **Section D** — `clear()` is confirmed a genuine raw storage removal directly against the `StorageProvider`
+    (not merely `store.get()`), genuinely distinct from an explicit save of default-matching entries.
+  - **Section E** — a genuine `StorageProvider` failure propagates out of `save()`/`get()`/`clear()` (the
+    degrade-to-`null` behavior is reserved for malformed *data*, never a transport failure); an already-running
+    `WebRtcPeerConnectionProvider`'s resolved `iceServers` is proven immune to a later corruption of the underlying
+    storage — only a fresh startup's own resolution would ever observe it.
+  - **Section F** — an adversarial sweep (case variants, whitespace, an embedded `turn` substring, a query string,
+    a mixed valid/TURN list) confirms no scheme-confusable variant is ever accepted as STUN, rejected on shape
+    alone; none of this configuration's own files reference `fetchIceServers()` or its TURN credential constants.
+  - **Section G** — `peer/RendezvousConfig.js`, `peer/DiscoveryBootstrap.js`, and
+    `peer/PeerAuthenticationSession.js` (the sole authority on peer identity) are untouched, checked in both
+    directions.
+  - **Section H** — `IceServerConfiguration`, `ArweaveGatewayConfiguration`, and `NostrRelayConfiguration`
+    round-trip independently through one shared storage namespace with no key collision and no value bleed in any
+    direction.
+  - **Section I (flagship)** — the governing invariant from this milestone's own brief, proven directly: a
+    syntactically-valid-but-unreachable configured STUN server reaches the concrete `RTCPeerConnection`
+    construction, survives a real bounded ICE-gathering timeout (reusing `tests/IceGatheringTimeout.test.js`'s own
+    never-completes-gathering technique) with the underlying connection's `iceServers` provably unchanged
+    afterward, remains what a *second*, later connection from the same provider uses, and remains exactly what is
+    persisted — configuration and resilience/fallback policy stay two genuinely separate concerns.
+  - **Section J** — no health-check, latency-ranking, automatic-selection, or reconnection-policy identifier or
+    method exists anywhere in this configuration boundary; saving still never attempts a network call.
+
+### Verdict
+
+**Converged / architecturally closed.** No convergence defect was found in 0.9.386's implementation; no production
+change was made by this milestone. STUN configuration remains a single, closed authority: one value object, one
+storage key, one composition point, with zero coupling to TURN, Rendezvous, or peer identity, and zero hidden
+resilience semantics.
+
+### Next
+
+0.9.388 — User-Configurable Rendezvous Server Configuration, mirroring this same architecture (a `core/
+RendezvousConfiguration.js` modeling a list of rendezvous URLs — never a generic endpoint abstraction — a
+`storage/RendezvousConfigurationStore.js`, a `SetRendezvousConfigurationUseCase.js`, and a
+`RendezvousSettingsView.js`) against `peer/RendezvousConfig.js`'s own `DEFAULT_RENDEZVOUS_URLS` and
+`DiscoveryBootstrap`, followed by its own convergence audit before TURN is revisited as its own product decision.
