@@ -94918,3 +94918,116 @@ Per this milestone's own verdict, and the pattern this arc has followed since 0.
 enhancement. This closes the post-publish distribution micro-arc (0.9.377–0.9.382). The next milestone,
 0.9.383, returns to a fresh whole-product reassessment: now that Create → Publish → Distribute → Explore is a
 continuous user journey, what is the strongest remaining genuine product gap?
+
+## 0.9.383 — Whole-Product Product Evolution Reassessment
+
+**Type:** test-only, whole-product audit. **Production changes:** none.
+
+0.9.382 closed the post-publish distribution micro-arc cleanly: the new Repository navigation edge is a single
+presentation-level hop onto the existing `/world/:documentId` route, not a second architecture growing alongside
+the existing one. Rather than adding another distribution-related milestone, this one zooms back out — the same
+shape as 0.9.374 (Post-Infrastructure) and 0.9.379 (Post-Distribution) before it, but wider: does a genuine
+product gap exist ANYWHERE in ForkBuild now, or has the product reached a stable stopping point?
+
+### What this milestone adds
+
+`tests/WholeProductProductEvolutionReassessment.test.js` (new, registered in `tests.html`), built fresh against
+real, unmodified production source — never inherited from 0.9.374/0.9.379's own prose without re-checking against
+the current tree. Ten lettered sections:
+
+- **Section A — Current capability inventory.** Twenty-two named capabilities (0.9.374's own twenty, plus the two
+  the post-publish distribution arc genuinely added: Publication distribution and post-publish → Repository
+  navigation), each grounded in real evidence files and freshly classified. Twenty `COMPLETE`, one `DEFERRED`
+  (Base anchoring — `BlockchainKind.BASE` still named and reserved, unimplemented), one `INTERNAL` (the
+  Achievement/Reconciliation Leaderboard — still reachable by exactly one file in the whole app, its own router
+  registration, reconfirmed unchanged since 0.9.374). The always-mounted top nav is reconfirmed still exactly 13
+  flat `router-link` destinations — the distribution arc added zero new top-level nav entries.
+- **Section B — Primary user journeys.** All eight journeys the milestone's own brief names, each checked against
+  real wiring. Create → Edit → Publish → Distribute → Explore is live-reproduced end to end through the real
+  `EditorView` post-publish block (reusing 0.9.379/0.9.382's own harness discipline), landing on a genuinely
+  resolvable `/world/:documentId`. Discover → Resolve → Retrieve → Explore closes through
+  `DecentralizedPublicationsView.js`'s own `admitToRepositoryDiscovery()` gate, which admits a resolved
+  Document-kind Publication straight into the same `discoveryProvider` that backs Repository/World (0.9.337) — not
+  previously connected to this arc's own recent work, verified fresh here. Discover → Attribute → Place is real
+  (`OwnPublicationPanel.js`'s own "Place Materialized Snapshot"/"Register Placed Snapshot" buttons). Comment →
+  Notify → History, Name → Persist → Publish → Discover → Adopt (`WorldView.js` literally names a function
+  `adoptNearbyPlaceNamingClaim()` — not this audit's own paraphrase), Peer → Sync → Repository → Explore → Fork,
+  and Fork → Edit are each grounded in real, currently-existing production files. No journey ends prematurely.
+- **Section C — Repository / Publication model.** `Publication`, `DecentralizedPublication`, `Snapshot`, and
+  `Document` remain four genuinely distinct models — 0.9.380's own finding that `LocalPublicationCatalog`
+  (Publication Center) is structurally disjoint from `publisher/Publication.js` still holds. But neither real
+  Document-kind Publication path is a dead end: the local-publish path bridges directly into `/world/:documentId`
+  (0.9.381), and the decentralized-discovery path bridges into the same shared `discoveryProvider`
+  (`admitToRepositoryDiscovery`, 0.9.337) independently — two separate, already-built bridges, not one missing
+  one. Proactive decentralized Repository search is explicitly reconfirmed **not** reopened
+  (`SearchPublicationsUseCase.js` still synchronous, no network collaborator).
+- **Section D — Post-distribution state.** Distributed → Explore → Repository → ? is checked empirically, not
+  assumed: Retrieve (the distributed Publication is live-resolvable through `discoveryProvider` by the exact
+  `documentId` Explore navigates to), Fork (`/repository`'s own `RepositoryView.js` is a thin wrapper around the
+  same `PublicationCatalog.js` that carries the real Fork action), context (`WorldView.js`'s own template renders
+  title, author, and fork provenance), and return-to-prior-activity (`EditorView.js`'s own `backToWorld()` is
+  untouched, and the new navigation edge uses `router.push`, never `router.replace`) are all real and already
+  work. **Recorded as STOP** — no gap found downstream of the arc that just closed.
+- **Section E — Cross-arc identity audit.** `Publication.id`/`documentId`, `contentHash`/material URI,
+  `discoveryTag`/origin, and Snapshot placement identity are all reconfirmed distinct fields on distinct types —
+  no accidental interchange found. One presentation-layer finding is recorded, not acted on: the English word
+  "Repository" is used both for the `/repository` catalog route and, in `EditorView.js`'s own function name
+  (`viewDistributedPublicationInRepository()`), for the unrelated `/world/:documentId` destination. The underlying
+  identifier (`documentId`) is identical and correct at both call sites — only the prose label is reused across
+  two different routes. Audit-only; no abstraction is built to "fix" a naming coincidence.
+- **Section F — Temporal semantics audit.** Every discovery/distribution-family term the brief names
+  (published/distributed/discovered/resolved/retrieved/verified/placed/registered/visible) is reconfirmed distinct
+  via its own real carrier type or file. The notification family (created/persisted/delivered/seen/read) is
+  reconfirmed distinct for `NotificationEvent` — and, freshly checked, the Conversations view's own unrelated
+  `unreadCount` (a per-conversation chat read-marker, `application/PeerPresenceUseCase.js`) is confirmed a
+  genuinely separate, pre-existing mechanism, not evidence the deferred notification-delivery direction has
+  quietly shipped under a different name.
+- **Section G — User-facing failure audit.** Three real failure paths are checked: a distribution failure
+  surfaces the existing generic notice and a live-proven manual retry (the same click, again) genuinely recovers;
+  a fork failure carries its own named reason (`ForkFailureReason.LICENSE_DENIED`/`MATERIAL_UNAVAILABLE`) and a
+  dedicated `backFromForkFailure()` recovery screen; a resolution failure is rendered through
+  `describePublicationOutcome()`, never a bare status code. Existing graceful degradation remains preferable to a
+  generalized error framework — none is warranted.
+- **Section H — Previously deferred candidates.** All ten candidates the brief names by name are re-evaluated on
+  fresh evidence rather than cited: eight reconfirm `STOP` (distribution history, distribution receipts, retry
+  queue, notification delivery, unread/read badges, provider fallback/health, automatic distribution,
+  multi-provider distribution), two reconfirm `DEFER` (proactive Repository discovery; additional infrastructure
+  providers). None is reversed; none is reopened without new evidence.
+- **Section I — Architecture-driven feature sweep.** The four named "we have the subsystem, so expose more of it"
+  shapes (distribution lifecycle → history, notification event → push, provider preference → provider manager,
+  discovery provider → proactive crawler) are each checked against real source and rejected absent independent
+  user evidence.
+- **Section J — Final product decision matrix and verdict.**
+
+### Verdict
+
+**`STABLE_STOP`.** The whole-product capability inventory finds twenty-two capabilities — twenty `COMPLETE`, one
+`DEFERRED` (Base anchoring, deliberately reserved), one `INTERNAL` (Reconciliation Leaderboard, unchanged since
+0.9.374) — zero `PARTIAL`, zero `BROKEN`. All eight primary journeys, including a full live reproduction of the
+newest one, reach a concrete outcome with no premature dead end. The Repository/Publication model has no
+remaining discontinuity — both real Document-kind Publication paths already bridge into the shared Repository
+read model independently. The post-distribution journey (retrieve/fork/context/return) already works end to end.
+Cross-arc identifiers stay distinct, with one purely presentational naming overlap recorded but not acted on.
+Temporal semantics show no regression. Every checked failure path leaves the user able to understand and act.
+All ten previously-deferred candidates reconfirm their prior status. No architecture-driven feature sweep
+candidate survives without independent user evidence.
+
+Per this milestone's own two-outcome framework, **`STABLE_STOP` is recorded as a first-class successful result**,
+not a failure to find work: the current product has reached a stable stopping point. The next milestone, if any,
+should come from an explicitly chosen new product direction — not another audit finding one by inertia.
+
+### What this milestone deliberately excludes
+
+Per its own type: no production-code change of any kind. No router-link added for the Reconciliation Leaderboard,
+no "Repository" naming rename, no proactive Repository discovery, no distribution history/receipts/retry queue,
+no notification delivery or unread/read badges, no provider fallback/health, no additional infrastructure
+provider, no automatic or multi-provider distribution, no generic abstraction unifying Publication/
+DecentralizedPublication/Snapshot.
+
+### What comes after
+
+No `0.9.384` is pre-selected. `STABLE_STOP` is a deliberate stopping point, not a prompt to manufacture the next
+milestone number. The two small, real findings on record (Reconciliation Leaderboard entry point; the
+"Repository" naming overlap between `/repository` and `/world/:documentId`) remain available to a future
+milestone that wants to take either up on genuine evidence — neither selected nor built here. ForkBuild's broader
+product evolution resumes on its own terms when an explicit new product requirement arrives.
