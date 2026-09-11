@@ -94680,3 +94680,99 @@ and precisely classifies the product's current state; it does not change it.
 No `0.9.380` is pre-selected from within this arc. The one narrow finding this audit's own sweep produced (a
 missing contextual link from the distribution result to the Publication Center) remains on record for a future
 milestone to take up if and when genuine user evidence — not architectural interest — points at it.
+
+## 0.9.380 — Publication Result → Publication Center Deep-Link Audit
+
+**Type:** Test-only product/architecture seam audit. **Production changes:** None.
+
+0.9.379's own Section C/D/J recorded the one narrow finding above and left it there for a future audit to take
+up. This milestone is that audit, asked to determine the smallest safe way to make an existing distribution
+result actionable — navigation only, never a new capability.
+
+### What this milestone adds
+
+`tests/DistributionResultPublicationCenterDeepLinkAudit.test.js` (new, registered in `tests.html`), built fresh
+against real, unmodified production source and real object graphs. Ten lettered sections, following the
+brief's own structure — but Section B overturns the brief's own premise, the same way 0.9.336's audit corrected
+its own Route A diagram where it did not survive contact with source:
+
+- **Section A — Result identity.** `describePublicationDistributionResult()`'s own `publication` section is
+  exactly `{ kind, objectId: publication.id }` — `objectId` is `Publication.id` verbatim, live-proven; the file
+  reads no title/author/contentHash field, so no reconstruction is even possible. The field a deep-link actually
+  needs (`documentId`) lives on the separately-held Publication object (`publishedPublication`/the `publication`
+  prop), not on the result itself.
+- **Section B — CORRECTED.** `DecentralizedPublicationsView.js` ("the Publication Center," `/publications`) has
+  no `selectPublication()` or route-query mechanism; its own private `findEntry(publicationId)` is a
+  single-purpose internal helper (Bitcoin anchor finalization), never template-reachable. More fundamentally: its
+  catalog (`application/LocalPublicationCatalog.js`, holding `core/DecentralizedPublication.js` envelopes) is
+  **structurally disjoint** from this milestone's own Publication (`publisher/Publication.js`, produced by
+  `PublishDocumentUseCase`). Traced fresh: the only production caller of `PublicationResolver#publish()` anywhere
+  in this codebase is `EditorView.js`'s own `publishInspectedAttributionToNetwork()`, wrapping a
+  BlueprintAttribution — never `PUBLICATION_CONTENT_KIND`, never a Document/World Publication.
+  `PublishDocumentUseCase`/`LocalPublisherProvider` import neither `LocalPublicationCatalog` nor
+  `PublicationResolver`. A live attempt to bridge the two by calling `catalog.add()` on a real, freshly
+  distributed Publication is accepted silently at write time but throws on every subsequent `catalog.list()`
+  call catalog-wide — `DecentralizedPublication.fromJSON()` requires a `contentKind` a `publisher/Publication`
+  JSON shape never carries. The Publication Center is the wrong destination for this Publication type, not a
+  right destination with a missing selection mechanism.
+- **Section C — Existing routing conventions.** `/publications` carries no `:id` path segment and no
+  `route.query` convention of any kind. `/world/:documentId` is a real, existing per-entity route already
+  targeted by `PublicationCatalog.js`'s own "Explore" action (`router.push({ path: '/world/' + pub.documentId })`)
+  for exactly this Publication type — the identical `{ path, query }` shape `EditorView.js` already uses twice
+  over (`backToWorld()`/`backFromForkFailure()`), with `router` already in the same `setup()` scope the 0.9.377
+  post-publish block lives in.
+- **Section D — FLAGSHIP.** Live, end to end: Publish → Distribute produces a real result naming `objectId`; a
+  candidate navigation call built from only already-held identity (`publishedPublication.value.documentId`)
+  reaches the real destination (`discovery/LocalDiscoveryProvider.js`, i.e. Repository), where the exact same
+  `Publication.id` already resolves — proven live one call further downstream than 0.9.379 Section D. The exact
+  same id, checked against the brief's own named destination (`LocalPublicationCatalog`), resolves to nothing,
+  live.
+- **Section E — Cross-surface convergence.** Exactly one surface (EditorView, mounted at `/editor`, genuinely
+  different from where the Publication lives) needs a new navigation edge. `OwnPublicationPanel` is already
+  mounted inside `WorldView.js` at `/world/:documentId`, bound to `session.getPublicationForDocument(activeId)`
+  for the CURRENT route's own `documentId` — a link there would navigate to itself. `WorldEncounterCanvas` holds
+  no distinguishable result object to attach a link to at all (reconfirming its own "PLAIN NOTICE — NEVER A
+  RECLASSIFIED DOMAIN RESULT" header), independent of routing.
+- **Section F — Failure and stale identity.** Live: an unpublished/withdrawn Publication (via
+  `LocalPublisherProvider#unpublish()`) degrades a candidate navigation to "nothing to resolve to" — never a
+  thrown error. A Publication superseded by republishing the SAME document still resolves by its own exact id
+  (Repository never deletes it) — but a `documentId`-keyed deep-link (rather than `objectId`-keyed) could
+  legitimately land on the newer sibling Publication if one was created before the link is clicked, per
+  `WorldNavigationSession`'s own "most recent Publication for this documentId wins" rule — a real, narrow
+  characteristic, not a defect.
+- **Section G — Local-first boundary.** Live-verified: a candidate `router.push()` call touches no lifecycle
+  store, invokes no distribution/discovery command, and performs no I/O of any kind — navigation only.
+- **Section H — Existing UI reachability.** The exact seam already exists: the end of `EditorView.js`'s own
+  `<dl class="editor-post-publish-distribution-detail">`, immediately after the Discovery row. No new panel or
+  section is implied.
+- **Section I — Architecture boundary.** Rejects a receipt model, distribution history, a generic navigation
+  service, a new Publication lookup service, and automatic navigation — none exist. Explicitly rejects bridging
+  `LocalPublicationCatalog` to admit Document/World Publications merely to force the brief's own literally-named
+  `/publications` destination to work — a new, far larger cataloging capability, never a navigation edge, with
+  no evidence calling for it.
+- **Section J — Final decision matrix and verdict.**
+
+### Verdict
+
+**`BUILD_NEXT`, retargeted.** The seam the brief identified is real — a distribution result already knows
+exactly which Publication it distributed, and nothing today lets a person act on that from `EditorView`. But the
+brief's own named destination (the Publication Center, `/publications`) is the wrong one: its catalog is
+structurally disjoint from this Publication type, live-proven in Sections B and D, not merely a page missing a
+selection mechanism. The real, already-populated, already-reachable destination is `/world/<documentId>`
+(Repository, `discovery/LocalDiscoveryProvider.js`), reached by the same `router.push({ path: '/world/' +
+documentId })` shape `PublicationCatalog.js`'s own "Explore" action already uses, with `router` already in
+`EditorView.js`'s own scope. Exactly one surface needs the new edge.
+
+### What this milestone deliberately excludes
+
+Per its own type: no production-code change of any kind. No new route, no new Publication lookup mechanism, no
+bridging of `LocalPublicationCatalog` to admit Document/World Publications, no receipt model, no distribution
+history, no generic navigation service, and no automatic navigation.
+
+### Then
+
+**0.9.381 — Distribution Result → World View Deep-Link.** `EditorView.js`'s own post-publish result forwards
+`publishedPublication.value.documentId` — already in hand, never looked up — into a `router.push({ path:
+'/world/' + documentId })` call, placed at the end of the existing `<dl class="editor-post-publish-distribution-
+detail">`. Never a "Publication Center" link, as the originating brief first worded it: this audit's own
+Sections B and D are the evidence for retargeting it before it is built, not after.
