@@ -20,6 +20,7 @@ import StunSettingsView from '../views/StunSettingsView.js';
 import RendezvousSettingsView from '../views/RendezvousSettingsView.js';
 import ReconciliationCandidateLeaderboardView from '../views/ReconciliationCandidateLeaderboardView.js';
 import ReconciliationCandidateLeaderboardEvidenceExportComparisonView from '../views/ReconciliationCandidateLeaderboardEvidenceExportComparisonView.js';
+import ReconciliationWorkspaceView from '../views/ReconciliationWorkspaceView.js';
 
 const routes = [
     { path: '/', name: 'home', component: HomeView },
@@ -146,6 +147,16 @@ const routes = [
     // unchanged by that milestone — only a caller was added, one hop below
     // /reconciliation-leaderboard, still never a top-nav destination.
     { path: '/evidence-export-comparison', name: 'evidence-export-comparison', component: ReconciliationCandidateLeaderboardEvidenceExportComparisonView },
+    // 0.9.408 — Reconciliation Workspace UI. The first user-facing surface
+    // over application/ReconcilePublisherLeaderboardSnapshotClaimUseCase.js
+    // (0.9.407, UNCHANGED) — see ui/views/ReconciliationWorkspaceView.js's
+    // own header. Deliberately its own route, one hop from /publications
+    // (the same "Publication Archive" card that already links to
+    // /reconciliation-leaderboard above), never folded into either existing
+    // reconciliation page and never itself a top-nav destination — the
+    // identical "contextual, not global" navigation shape this whole
+    // reconciliation family already holds.
+    { path: '/reconciliation-workspace', name: 'reconciliation-workspace', component: ReconciliationWorkspaceView },
     { path: '/about', name: 'about', component: AboutView }
 ];
 

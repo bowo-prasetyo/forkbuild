@@ -84,6 +84,15 @@ async function readSource(relativePath) {
     return readFile(path.join(SOURCE_ROOT, relativePath), 'utf8');
 }
 
+// A genuine COMPOSITION/IMPORT means the symbol is actually IMPORTED (an
+// `import { ... } from` binding a file's own code can construct and call)
+// — never merely mentioned in a comment. Hoisted to module scope (rather
+// than declared inside Section A's own block, below) so Section E's own
+// 0.9.408 amendment can reuse it too.
+function importsSymbol(text, symbol) {
+    return new RegExp(`import\\s*\\{[^}]*\\b${symbol}\\b[^}]*\\}\\s*from`, 's').test(text);
+}
+
 // ---------------------------------------------------------------------
 // Fixture helpers — the identical shapes 0.9.405's own live proof uses,
 // reused here rather than reinvented, because this milestone's job is to
@@ -139,16 +148,13 @@ async function run() {
         const decisionWriteSymbol = 'RecordPublisherLeaderboardClaimSnapshotReconciliationDecisionIntoArchiveUseCase';
         const observationWriteSymbol = 'RecordPublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationIntoArchiveUseCase';
 
-        // A genuine COMPOSITION means the symbol is actually IMPORTED (an
-        // `import { ... } from` binding this file's own code can construct
-        // and call) — never merely mentioned in a comment, as
-        // `application/PublicationObservationArchive.js`'s own doc prose
-        // and this decision-writer's sibling observation-writer file each
-        // innocently do when explaining their own relationship to it.
-        function importsSymbol(text, symbol) {
-            return new RegExp(`import\\s*\\{[^}]*\\b${symbol}\\b[^}]*\\}\\s*from`, 's').test(text);
-        }
-
+        // `importsSymbol()` (module scope, above) — a genuine COMPOSITION
+        // means the symbol is actually IMPORTED (an `import { ... } from`
+        // binding this file's own code can construct and call) — never
+        // merely mentioned in a comment, as `application/
+        // PublicationObservationArchive.js`'s own doc prose and this
+        // decision-writer's sibling observation-writer file each innocently
+        // do when explaining their own relationship to it.
         let coOccurrenceCount = 0;
         const coOccurringFiles = [];
         for (const file of otherFiles) {
@@ -304,8 +310,32 @@ async function run() {
     // ===============================================================
     {
         const uiFiles = execSync('git ls-files ui', { cwd: SOURCE_ROOT }).toString().split('\n').filter((f) => f.endsWith('.js'));
-        const uiSourceBundle = (await Promise.all(uiFiles.map((f) => readSource(f)))).join('\n');
-        assert(!/\bReconcilePublisherLeaderboardSnapshotClaimUseCase\b/.test(uiSourceBundle), n('E1. no file under ui/ references ReconcilePublisherLeaderboardSnapshotClaimUseCase — there is no UI call site of any kind yet'));
+        // AMENDED BY 0.9.408 — Reconciliation Workspace UI. At THIS
+        // milestone's own moment (0.9.407), the operation genuinely had
+        // zero callers anywhere in `ui/`, which is the fact E1 originally
+        // recorded. 0.9.408 built the first genuine UI call site — see
+        // ui/views/ReconciliationWorkspaceView.js's own header. A boundary
+        // test that kept asserting a superseded fact would be exactly the
+        // staleness tests/ReconciliationLeaderboardEntryPointDecisionAudit
+        // .test.js's own 0.9.403 amendment already rejected, so E1 now
+        // asserts the CURRENT, truthful reachability instead: exactly the
+        // one file 0.9.408 authorized GENUINELY IMPORTS the operation
+        // (checked with this file's own `importsSymbol()`, Section A,
+        // above — a real `import { ... }` binding, never a raw substring),
+        // never a second, accidental caller — a router comment that merely
+        // NAMES the file by name, as ui/router/index.js's own 0.9.408
+        // comment does, correctly does not count.
+        const uiFilesImportingOperation = [];
+        for (const file of uiFiles) {
+            const text = await readSource(file);
+            if (importsSymbol(text, 'ReconcilePublisherLeaderboardSnapshotClaimUseCase')) {
+                uiFilesImportingOperation.push(file);
+            }
+        }
+        assert(
+            uiFilesImportingOperation.length === 1 && uiFilesImportingOperation[0] === 'ui/views/ReconciliationWorkspaceView.js',
+            n(`E1. exactly the one file 0.9.408 authorized to call this operation genuinely imports it — never a second, accidental caller (found: ${JSON.stringify(uiFilesImportingOperation)})`)
+        );
 
         const newFileSource = await readSource('application/ReconcilePublisherLeaderboardSnapshotClaimUseCase.js');
         assert(!/setInterval|setTimeout|requestAnimationFrame|addEventListener|\.on\(/.test(newFileSource), n('E2. the new file contains no timer, interval, animation-frame loop, or event subscription of any kind — it can only ever run because a caller explicitly calls execute()'));

@@ -7455,6 +7455,19 @@ export default {
                     by candidate, against a peer's own exported archive above happens on the
                     <router-link to="/reconciliation-leaderboard">Reconciliation Candidate Leaderboard</router-link>.
                 </p>
+                <!-- 0.9.408 — Reconciliation Workspace UI. A second,
+                     independent link beside the Leaderboard one above: that
+                     page only ever compares two archives it is handed; this
+                     one explicitly reconciles this replica's own archive
+                     (the SAME one this card exports/imports) against a
+                     single piece of pasted peer evidence, and durably
+                     records what it finds. See ui/views/
+                     ReconciliationWorkspaceView.js's own header. -->
+                <p class="form-hint form-hint--neutral">
+                    Reconciling this archive against a single piece of peer evidence,
+                    explicitly, happens on the
+                    <router-link to="/reconciliation-workspace">Reconciliation Workspace</router-link>.
+                </p>
 
                 <div v-if="publicationArchiveExportedPackage.json" class="evidence-inspection-adapter">
                     <span class="evidence-inspection-adapter-title">Exported Archive</span>
