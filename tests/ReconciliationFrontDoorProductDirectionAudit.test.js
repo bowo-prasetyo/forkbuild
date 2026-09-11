@@ -365,10 +365,27 @@ async function run() {
         // substring "LeaderboardClaim" — does not produce a false
         // positive here), not assumed from the negative results already
         // found in D/E/F.
+        // AMENDED BY 0.9.411 — Publisher Leaderboard Snapshot Claim
+        // Authoring & Export. At THIS milestone's own moment (0.9.406),
+        // zero ui/ files touched these exact symbols, which is the fact
+        // H1 originally recorded — evidence, at the time, that NO existing
+        // page owned this candidate's own capability. 0.9.411 built
+        // exactly the recommended candidate this section itself evaluates
+        // ("explicit reconciliation workspace" — realized one milestone
+        // later as two pages, the Workspace (0.9.408) and this audit's own
+        // recommended authoring/export half (0.9.411)) — see
+        // ui/views/PublisherLeaderboardSnapshotClaimAuthoringView.js's own
+        // header. The identical "assert the CURRENT, truthful state"
+        // convention this whole audit family already established (see
+        // tests/ReconciliationLeaderboardEntryPointDecisionAudit.test.js's
+        // own 0.9.403/0.9.408 amendments) applies here too: H1 now asserts
+        // exactly the one file 0.9.411 authorized carries these symbols,
+        // never a second, accidental owner.
         const uiFiles = execSync('git ls-files ui', { cwd: SOURCE_ROOT }).toString().split('\n').filter((f) => f.endsWith('.js'));
         const claimOwningFiles = grepFiles('PublisherLeaderboardSnapshotClaim\\b|\\bLeaderboardClaimRecord\\b', uiFiles.join(' '));
-        assert(claimOwningFiles.length === 0,
-            n(`H1. zero files anywhere in ui/ (all ${uiFiles.length} checked) reference the exact PublisherLeaderboardSnapshotClaim or LeaderboardClaimRecord symbols — not even the Leaderboard's own components hold this object directly (found: ${JSON.stringify(claimOwningFiles)}); every existing reconciliation-family view works one layer up, through describeXxx()/reconstructXxx() projections, never the raw claim class itself`));
+        assert(
+            claimOwningFiles.length === 1 && claimOwningFiles[0] === 'ui/views/PublisherLeaderboardSnapshotClaimAuthoringView.js',
+            n(`H1. exactly the one file 0.9.411 authorized to own PublisherLeaderboardSnapshotClaim/exportPublisherLeaderboardSnapshotClaim references these symbols (all ${uiFiles.length} ui/ files checked; found: ${JSON.stringify(claimOwningFiles)}) — the capability this section evaluated is now real, deliberately, in exactly the one place named for it`));
         // Confirms this is a real, exact-symbol check and not an
         // accidentally-vacuous pattern: the SAME word-boundary pattern
         // does match a synthetic line carrying the real symbol.
