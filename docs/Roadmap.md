@@ -95234,3 +95234,62 @@ A future milestone would give STUN and Rendezvous each their own `core/*Configur
 audit to resolve before any such milestone can include it. IPFS Gateway, Base RPC, and Bitcoin Esplora remain
 available to a future milestone that arrives with evidence that either is, in fact, critical — none is closed off,
 none is pre-selected by inertia.
+
+## 0.9.386 — User-Configurable STUN Server Configuration
+
+0.9.385's own audit selected STUN as one of exactly two `BUILD_NEXT` candidates (Rendezvous the other, left for a
+later milestone), on the strength of a real criticality finding and an already-proven live runtime-replacement seam
+(`WebRtcPeerConnectionProvider#setIceServers()`). This milestone builds the missing settings-persistable half,
+mirroring `core/ArweaveGatewayConfiguration.js`/`storage/ArweaveGatewayConfigurationStore.js` (0.9.364) and
+`core/NostrRelayConfiguration.js`/`storage/NostrRelayConfigurationStore.js` (0.9.369) exactly, applied to a
+list-shaped STUN server configuration instead of a single URL field.
+
+### What shipped
+
+- **`core/IceServerConfiguration.js`** — an immutable value object holding one or more validated `stun:`/`stuns:`
+  server entries (`{ servers: [{ urls }, ...] }`). Validation is shape-only (RFC 7064 URI form), never reachability.
+  A `turn:`/`turns:` entry is rejected outright, by construction — this file cannot be used to smuggle TURN
+  configuration in under a STUN label. Every read of `servers` returns a fresh, defensive copy; the instance and
+  every entry inside it are frozen. No WebRTC import, no persistence, no network call of any kind.
+- **`storage/IceServerConfigurationStore.js`** — `save()`/`get()`/`clear()` over an injected `StorageProvider`
+  (defaulting to `LocalStorageProvider`), under one fixed key (`ice-server-configuration`). Absence and default are
+  never the same persisted fact: `get()` returns `null` when nothing is saved, never a configuration holding
+  `DEFAULT_ICE_SERVERS`. Malformed stored data (wrong shape, empty list, any invalid or non-STUN entry) degrades
+  silently to `null` — the whole saved configuration is either entirely valid or entirely treated as absent, never a
+  partial list. A genuine `StorageProvider` failure propagates.
+- **`application/SetIceServerConfigurationUseCase.js`** — the write seam: constructs an `IceServerConfiguration`
+  (which validates) and saves it. No connection testing, no automatic fallback, no `clear()` of its own (a caller
+  reaches `IceServerConfigurationStore.clear()` directly, exactly as the two sibling use cases already establish for
+  their own stores).
+- **`ui/views/StunSettingsView.js`**, reachable at **`/settings/stun`** (top-nav "STUN Servers", alongside "Arweave
+  Gateway"/"Nostr Relay"). One STUN URL per line in a textarea; Save / Reset to Defaults. Never constructs an
+  `IceServerConfiguration` itself, never imports `WebRtcPeerConnectionProvider` or calls `setIceServers()`, never
+  touches `fetchIceServers()`. `DEFAULT_ICE_SERVERS` is the one thing imported from `peer/IceServerConfig.js`, for
+  display only.
+- **`ui/main.js` composition root.** `iceServerConfigurationStore.get()` is resolved once at startup;
+  `resolvedIceServers` falls back to `DEFAULT_ICE_SERVERS` only when nothing is saved.
+  `new WebRtcPeerConnectionProvider({ iceServers: resolvedIceServers })` replaces the previous bare
+  `DEFAULT_ICE_SERVERS` literal. The background TURN-credential enrichment (0.3.7's own `fetchIceServers()`) is
+  otherwise completely unmodified — only its `fallback` argument changes, from the hard-coded default to
+  `resolvedIceServers`, so a user's own configured STUN list stays in the mix even after TURN credentials arrive.
+
+### Critical startup semantics (the flagship proof)
+
+No saved configuration → `DEFAULT_ICE_SERVERS`. Saved configuration → the configured STUN servers. Malformed saved
+configuration → absence → `DEFAULT_ICE_SERVERS` — never a partial or broken list reaching the provider. A
+configured-but-unreachable STUN server is never silently replaced or health-checked away from — that would
+introduce fallback semantics 0.9.385 explicitly declined to select. `tests/UserConfigurableStunConfiguration.test.js`
+proves the full chain against the real, unmodified production classes: default STUN → save an alternate STUN list →
+simulate a restart (new store/use-case instances over the same underlying storage) → compose
+`WebRtcPeerConnectionProvider` → the concrete `RTCPeerConnection` construction receives exactly the configured list,
+on both the offerer and answerer side.
+
+### What this milestone deliberately excludes
+
+Test Connection, health checking, latency ranking, automatic fallback, STUN discovery, TURN configuration,
+credential management, peer reconnection orchestration, multiple configuration profiles, per-peer STUN selection —
+none of these were selected by 0.9.385's own scoped brief. Rendezvous configuration is a separate, later milestone
+(0.9.385's own sequencing: STUN first, then a convergence/lifecycle audit, then Rendezvous, then its own
+convergence audit, before TURN is revisited as its own product decision). No generic
+`InfrastructureEndpointConfiguration` abstraction was introduced — `core/IceServerConfiguration.js` is a third,
+independently-shaped sibling to `ArweaveGatewayConfiguration`/`NostrRelayConfiguration`, never a shared base class.

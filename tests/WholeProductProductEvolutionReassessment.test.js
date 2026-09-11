@@ -241,12 +241,13 @@ async function run() {
         const leaderboardLinkFiles = await grepCodeOnlyFiles("reconciliation-leaderboard'", ['ui']);
         assert(leaderboardLinkFiles.length === 1, n(`the string 'reconciliation-leaderboard' appears in exactly one UI file (the router's own registration) — found ${leaderboardLinkFiles.length}: ${JSON.stringify(leaderboardLinkFiles)}`));
 
-        // A2. Reconfirm the always-mounted top nav, fresh: still exactly
-        // 13 flat links — the post-publish distribution arc added zero
-        // new top-level nav destinations (its own navigation lives inside
-        // the post-publish result panel, not the nav bar).
+        // A2. Reconfirm the always-mounted top nav, fresh: 14 flat links
+        // as of 0.9.386 (STUN Servers) — the post-publish distribution
+        // arc itself added zero new top-level nav destinations (its own
+        // navigation lives inside the post-publish result panel, not the
+        // nav bar); the one new destination since is 0.9.386's own.
         const navLinkOpenTags = (appCode.match(/<router-link/g) || []).length;
-        assert(navLinkOpenTags === 13, n(`the always-mounted top nav still carries exactly 13 router-link destinations — found ${navLinkOpenTags}`));
+        assert(navLinkOpenTags === 14, n(`the always-mounted top nav carries exactly 14 router-link destinations — found ${navLinkOpenTags}`));
 
         console.log('\n=== SECTION A: CURRENT PRODUCT CAPABILITY INVENTORY ===');
         for (const row of capabilityInventory) console.log(`${row.capability}: ${row.classification}${row.note ? ' — ' + row.note : ''}`);

@@ -154,22 +154,26 @@ async function run() {
         // A7. No generic Infrastructure Settings subsystem exists
         // anywhere — the central assertion this milestone's own brief
         // asks Section A to prove, not merely assert in prose. The
-        // string legitimately appears twice, but only inside
-        // core/ArweaveGatewayConfiguration.js's and
-        // core/NostrRelayConfiguration.js's own design-rationale
-        // comments — naming exactly what each refused to become
-        // (0.9.373's own finding) — so code-only lines are checked here,
-        // the same exclusion 0.9.372 Section I2 already established.
+        // string legitimately appears three times as of 0.9.386 (STUN's
+        // own core/IceServerConfiguration.js joined the original two,
+        // holding the identical design-rationale-comment-only shape), but
+        // only inside each file's own design-rationale comments — naming
+        // exactly what each refused to become (0.9.373's own finding,
+        // reconfirmed by 0.9.386's own header for the same reason) — so
+        // code-only lines are checked here, the same exclusion 0.9.372
+        // Section I2 already established.
         const arweaveConfigExecutable = (await rawSource('core/ArweaveGatewayConfiguration.js')).replace(/\/\/.*$/gm, '');
         const nostrConfigExecutable = (await rawSource('core/NostrRelayConfiguration.js')).replace(/\/\/.*$/gm, '');
-        assert(!/InfrastructureEndpointConfiguration/.test(arweaveConfigExecutable) && !/InfrastructureEndpointConfiguration/.test(nostrConfigExecutable),
-            'A7. the term appears only in each file\'s own comments, never in executable code, in either file');
-        assert(!/class ArweaveGatewayConfiguration extends/.test(arweaveConfigExecutable) && !/class NostrRelayConfiguration extends/.test(nostrConfigExecutable),
-            'A7. neither configuration value object subclasses the other or any shared base — two coincidentally-matching lifecycle shapes, never one abstraction');
+        const iceConfigExecutable = (await rawSource('core/IceServerConfiguration.js')).replace(/\/\/.*$/gm, '');
+        assert(!/InfrastructureEndpointConfiguration/.test(arweaveConfigExecutable) && !/InfrastructureEndpointConfiguration/.test(nostrConfigExecutable) && !/InfrastructureEndpointConfiguration/.test(iceConfigExecutable),
+            'A7. the term appears only in each file\'s own comments, never in executable code, in any of the three files');
+        assert(!/class ArweaveGatewayConfiguration extends/.test(arweaveConfigExecutable) && !/class NostrRelayConfiguration extends/.test(nostrConfigExecutable) && !/class IceServerConfiguration extends/.test(iceConfigExecutable),
+            'A7. no configuration value object subclasses another or any shared base — three coincidentally-matching lifecycle shapes, never one abstraction');
         const genericFiles = execSync('grep -rl "InfrastructureEndpointConfiguration\\|InfrastructureSettingsView\\|class NetworkManager\\|GenericEndpointConfig" application core storage ui --include="*.js" || true',
             { cwd: SOURCE_ROOT.pathname }).toString().trim().split('\n').filter(Boolean).sort();
-        assert(genericFiles.length === 2 && genericFiles.every((f) => f === 'core/ArweaveGatewayConfiguration.js' || f === 'core/NostrRelayConfiguration.js'),
-            `A7. the term is confined to exactly those two files' own design-rationale comments, naming what each refused to become — no third file anywhere references it — found: ${genericFiles.join(', ')}`);
+        const allowedGenericFiles = new Set(['core/ArweaveGatewayConfiguration.js', 'core/NostrRelayConfiguration.js', 'core/IceServerConfiguration.js']);
+        assert(genericFiles.length === 3 && genericFiles.every((f) => allowedGenericFiles.has(f)),
+            `A7. the term is confined to exactly those three files' own design-rationale comments, naming what each refused to become — no fourth file anywhere references it — found: ${genericFiles.join(', ')}`);
 
         // A8. Arweave Gateway and Nostr Relay stay two independently
         // persisted facts — 0.9.372 Section I's own isolation proof,
@@ -304,15 +308,16 @@ async function run() {
         assert(leaderboardLinkHits === 1, `C7. the string 'reconciliation-leaderboard' appears in exactly one UI file — the router's own registration — found ${leaderboardLinkHits}, confirming no router-link or programmatic navigation anywhere else references this route`);
 
         // C8. Finding #2: the always-mounted top nav (ui/App.js) has
-        // grown to a flat, ungrouped list across three separate
-        // milestones adding settings destinations (Content Provider,
-        // Arweave Gateway, Nostr Relay) on top of the pre-existing
-        // eleven. Recorded as a minor, non-blocking observation, in the
-        // same spirit as 0.9.367/0.9.372's own recorded wording findings
-        // — never as a new milestone driver on its own.
+        // grown to a flat, ungrouped list across separate milestones
+        // adding settings destinations (Content Provider, Arweave
+        // Gateway, Nostr Relay, and — 0.9.386 — STUN Servers) on top of
+        // the pre-existing eleven. Recorded as a minor, non-blocking
+        // observation, in the same spirit as 0.9.367/0.9.372's own
+        // recorded wording findings — never as a new milestone driver on
+        // its own.
         const navSource = await rawSource('ui/App.js');
         const navLinkCount = (navSource.match(/router-link/g) || []).length / 2; // opening + closing tag
-        assert(navLinkCount === 13, `C8. the always-mounted top nav carries exactly 13 router-link destinations, three of them settings destinations added across this arc — found ${navLinkCount}`);
+        assert(navLinkCount === 14, `C8. the always-mounted top nav carries exactly 14 router-link destinations, four of them settings destinations added across this arc and 0.9.386 — found ${navLinkCount}`);
 
         console.log('\n=== SECTION C: CROSS-CAPABILITY GAP SWEEP ===');
         console.log('Six historical examples (Commentary->surfaces, Publish->distribution, Peer->sync, Discovery tag->UX,');
@@ -541,7 +546,7 @@ async function run() {
             { candidate: 'Automatic Distribution', evidence: 'contrary to local-first, explicit-action design', userValue: 'unclear', architecturalFit: 'bad — new semantics, no demonstrated need', decision: 'STOP' },
             { candidate: 'Provider Fallback', evidence: 'none', userValue: 'unclear', architecturalFit: 'new semantics (configured != reachable-now), no natural stopping point', decision: 'STOP' },
             { candidate: 'Reachable entry point for the Reconciliation Leaderboard', evidence: 'real (Section C7), but an internal/diagnostic surface, not a named product capability', userValue: 'small — affects only whoever already knows this surface exists', architecturalFit: 'trivial (one router-link)', decision: 'DEFER — real but too small to justify a milestone on its own' },
-            { candidate: 'Top-nav grouping', evidence: 'real (Section C8), 13 flat links, growing', userValue: 'unclear — no user report of difficulty on file', architecturalFit: 'precedented pattern exists (0.9.360 relocation) if ever needed', decision: 'DEFER — no user evidence yet, per Section G restraint' }
+            { candidate: 'Top-nav grouping', evidence: 'real (Section C8), 14 flat links, growing', userValue: 'unclear — no user report of difficulty on file', architecturalFit: 'precedented pattern exists (0.9.360 relocation) if ever needed', decision: 'DEFER — no user evidence yet, per Section G restraint' }
         ];
         for (const row of finalMatrix) {
             assert(['STABLE_STOP', 'STOP', 'BUILD_NEXT', 'DEFER', 'SEPARATE_PRODUCT'].includes(row.decision.split(' ')[0]) || row.decision.startsWith('DEFER'),

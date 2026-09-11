@@ -10,6 +10,8 @@ import { WebSocketRendezvousTransport } from '../peer/WebSocketRendezvousTranspo
 import { RendezvousDiscoveryProvider } from '../peer/RendezvousDiscoveryProvider.js';
 import { DiscoveryBootstrap } from '../peer/DiscoveryBootstrap.js';
 import { DEFAULT_ICE_SERVERS, fetchIceServers } from '../peer/IceServerConfig.js';
+import { IceServerConfigurationStore } from '../storage/IceServerConfigurationStore.js';
+import { SetIceServerConfigurationUseCase } from '../application/SetIceServerConfigurationUseCase.js';
 import { DEFAULT_RENDEZVOUS_URLS } from '../peer/RendezvousConfig.js';
 import { CreatePeerRelationshipUseCase } from '../application/CreatePeerRelationshipUseCase.js';
 import { PeerReconnectionUseCase } from '../application/PeerReconnectionUseCase.js';
@@ -177,7 +179,22 @@ const { getPublicationCommentariesCommand, addPublicationCommentaryCommand } =
 // configures a real rendezvous URL there, at which point
 // discoveryBootstrap starts actually asking it on every discover() and
 // publishSelf(), with zero changes anywhere else in this file.
-const peerConnectionProvider = new WebRtcPeerConnectionProvider({ iceServers: DEFAULT_ICE_SERVERS });
+// 0.9.386 — User-Configurable STUN Server Configuration.
+//
+// `core/IceServerConfiguration.js` / `storage/IceServerConfigurationStore.js`
+// (both this same milestone) give a user's own STUN server list a real,
+// validated, durable home — the direct structural mirror of
+// `arweaveGatewayConfigurationStore`/`nostrRelayConfigurationStore` below,
+// applied here instead of further down the file because THIS store's
+// result is needed immediately, to construct `peerConnectionProvider`
+// itself. `iceServerConfigurationStore.get()` returns `null` when the user
+// has never saved an override — the identical "absence stays meaningful"
+// rule those two sibling stores already hold — so `resolvedIceServers`
+// falls back to `DEFAULT_ICE_SERVERS` only then, never persisting that
+// fallback as if it were a saved preference.
+const iceServerConfigurationStore = new IceServerConfigurationStore(new LocalStorageProvider());
+const resolvedIceServers = (iceServerConfigurationStore.get() || { servers: DEFAULT_ICE_SERVERS }).servers;
+const peerConnectionProvider = new WebRtcPeerConnectionProvider({ iceServers: resolvedIceServers });
 // 0.3.7 — enriches `peerConnectionProvider`'s iceServers in the
 // BACKGROUND with this deployment's live Metered TURN credentials
 // (peer/IceServerConfig.js#fetchIceServers) — deliberately NEVER
@@ -186,11 +203,28 @@ const peerConnectionProvider = new WebRtcPeerConnectionProvider({ iceServers: DE
 // block on a network call this codebase doesn't control" discipline
 // peer/WebRtcPeerConnection.js's own 0.3.6 ICE-gathering timeout
 // applies one layer down). Every connection created before this
-// resolves simply uses DEFAULT_ICE_SERVERS, exactly like today;
+// resolves simply uses `resolvedIceServers`, exactly like today;
 // fetchIceServers() itself never throws and never hangs past its own
 // bounded timeout, so this is a pure best-effort upgrade, not a
 // dependency anything else here waits on.
-fetchIceServers().then((iceServers) => peerConnectionProvider.setIceServers(iceServers));
+//
+// 0.9.386 — `fallback: resolvedIceServers`, no longer the hard-coded
+// `DEFAULT_ICE_SERVERS`. `fetchIceServers()` itself, its TURN credentials,
+// and its own merge/dedupe logic are completely UNMODIFIED by this
+// milestone (see core/IceServerConfiguration.js's own header, "STUN
+// only — never TURN") — the only change is which STUN baseline that TURN
+// fetch is merged with: a user's own configured STUN list when one is on
+// file, the same deployment default otherwise. A failed or slow TURN
+// fetch still degrades to exactly `resolvedIceServers`, never throwing and
+// never blocking startup, exactly as before.
+fetchIceServers({ fallback: resolvedIceServers }).then((iceServers) => peerConnectionProvider.setIceServers(iceServers));
+// 0.9.386 — STUN Settings UI. The WRITE half of the settings entry point,
+// wired against this SAME store instance (never a second, disconnected
+// IceServerConfigurationStore) — see application/
+// SetIceServerConfigurationUseCase.js's own header. Both this use case and
+// the store itself are provided app-wide below so ui/views/
+// StunSettingsView.js is the one thing that ever injects either.
+const setIceServerConfigurationUseCase = new SetIceServerConfigurationUseCase({ iceServerConfigurationStore });
 const discoveryBootstrap = new DiscoveryBootstrap({
     bootstrapProviders: DEFAULT_RENDEZVOUS_URLS.map((url) => new RendezvousDiscoveryProvider({
         transport: new WebSocketRendezvousTransport({ url }),
@@ -1650,6 +1684,16 @@ const resolvedNostrRelayUrl = (nostrRelayConfigurationStore.get() || { relayUrl:
 const setNostrRelayConfigurationUseCase = new SetNostrRelayConfigurationUseCase({ nostrRelayConfigurationStore });
 app.provide('nostrRelayConfigurationStore', nostrRelayConfigurationStore);
 app.provide('setNostrRelayConfigurationUseCase', setNostrRelayConfigurationUseCase);
+
+// 0.9.386 — STUN Settings UI. `iceServerConfigurationStore` and
+// `setIceServerConfigurationUseCase` were already constructed earlier in
+// this file (needed immediately, to build `peerConnectionProvider` itself)
+// — provided app-wide here, alongside the other settings stores/use cases,
+// so ui/views/StunSettingsView.js is the one thing that ever injects
+// either, the identical shape `arweaveGatewayConfigurationStore`/
+// `nostrRelayConfigurationStore` already hold above.
+app.provide('iceServerConfigurationStore', iceServerConfigurationStore);
+app.provide('setIceServerConfigurationUseCase', setIceServerConfigurationUseCase);
 
 const nostrRelayQueryClient = createNostrRelayQueryClient({});
 const decentralizedWorldDiscoveryServices = composeDecentralizedWorldEncounterMaterialDiscoveryServices({
