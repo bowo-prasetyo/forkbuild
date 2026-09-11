@@ -211,8 +211,37 @@ async function run() {
         for (const badge of orphanBadges.badges) {
             assert(badge.sourceAnchorId === null, '23. with no Bitcoin records at all, every badge\'s sourceAnchorId is null');
         }
+
+        // 0.9.394 — every case above ever hands findSourceAnchorId() an
+        // array with AT MOST ONE Bitcoin record, so a regression that
+        // returns "whichever Bitcoin record is first/only in the array"
+        // instead of "the record that actually matches this badge's own
+        // sourcePublicationIdentity" could never fail any assertion above
+        // (confirmed live by 0.9.394's own mutation-testing sweep — see
+        // docs/Roadmap.md, 0.9.394, "Findings"). Nine distinct Bitcoin
+        // records disambiguate it directly: PUBLICATION_10 is earned by
+        // whichever record completes the TENTH overall publication — the
+        // ninth Bitcoin record here, chronologically last, never the
+        // first — so its own sourceAnchorId must name THAT record's own
+        // anchorId, not the first record's.
+        const manyBitcoinBase = baseRecord({ contentHash: 'd-base', txid: 'y'.repeat(64), createdAt: new Date('2026-06-01T00:00:00Z') });
+        const nineBitcoinRecords = [];
+        for (let i = 1; i <= 9; i++) {
+            nineBitcoinRecords.push(bitcoinRecord({
+                anchorId: `d-anchor-${i}`,
+                contentHash: `d-content-${i}`,
+                txid: `d${i}`.padStart(64, '0'),
+                createdAt: new Date(new Date('2026-06-01T00:00:00Z').getTime() + i * 24 * 60 * 60 * 1000)
+            }));
+        }
+        const disambiguationResult = describeAchievementBadges(nineBitcoinRecords, [manyBitcoinBase]);
+        const publication10Badge = disambiguationResult.badges.find((b) => b.achievementKind === AchievementKind.PUBLICATION_10);
+        assert(publication10Badge.sourceAnchorId === 'd-anchor-9',
+            '24. among nine distinct Bitcoin records, PUBLICATION_10\'s sourceAnchorId names the NINTH record\'s own anchorId — the one that actually completed the threshold');
+        assert(publication10Badge.sourceAnchorId !== nineBitcoinRecords[0].anchorId,
+            '25. ...and is never silently the FIRST record\'s anchorId merely because it is first/only in the array — the exact regression a naive "find the first Bitcoin record" implementation would produce without failing assertion 24 above if this codebase ever only tested single-record arrays');
     }
-    console.log('✓ Section D: sourceAnchorId names the exact originating Bitcoin record, is null for Base, and is never fabricated');
+    console.log('✓ Section D: sourceAnchorId names the exact originating Bitcoin record, is null for Base, and is never fabricated — disambiguated across multiple distinct Bitcoin records, not merely proven for arrays of one');
 
     // ---------------------------------------------------------------
     // Section E — malformed/absent inputs never throw.
