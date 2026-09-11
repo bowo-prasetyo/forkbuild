@@ -145,9 +145,21 @@ async function run() {
             const contents = await readFile(path.join(SOURCE_ROOT, relFile), 'utf8');
             if (linkPattern.test(contents)) filesWithLinks.push(relFile);
         }
+        // AMENDED BY 0.9.403 — Evidence Export Comparison Contextual Entry
+        // Point. THIS milestone (0.9.402) is a decision audit, not an
+        // implementation: at its own moment, zero in-app links genuinely
+        // existed, which is the fact B4 originally recorded — Section E
+        // below explicitly deferred wiring one to a future milestone.
+        // 0.9.403 is that future milestone; it added exactly the one edge
+        // this audit's own Section E authorized. Re-asserting "zero" here
+        // forever would make this test lie about the live app the moment
+        // 0.9.403 shipped, so B4 now asserts the current, truthful
+        // reachability instead — see
+        // tests/EvidenceExportComparisonContextualEntryPoint.test.js for
+        // the audit dedicated to that later milestone.
         assert(
-            filesWithLinks.length === 0,
-            n(`B4. across the entire ui/ tree, ZERO in-app links to /evidence-export-comparison exist today — no existing UI caller, no contextual entry (found: ${JSON.stringify(filesWithLinks)})`)
+            filesWithLinks.length === 1 && filesWithLinks[0] === 'ui/views/ReconciliationCandidateLeaderboardView.js',
+            n(`B4. across the ui/ tree, /evidence-export-comparison is now linked from exactly the one place 0.9.403 authorized — the Leaderboard's own Evidence Export panel, the natural predecessor Section C below identifies — and nowhere else (found: ${JSON.stringify(filesWithLinks)})`)
         );
 
         leaderboardViewSource = await readSource('ui/views/ReconciliationCandidateLeaderboardView.js');
@@ -155,10 +167,10 @@ async function run() {
         console.log('\n=== SECTION B: REACHABILITY CENSUS ===');
         console.log('Direct route            = reachable');
         console.log('Feature implementation  = reachable (Section A)');
-        console.log('Existing UI caller      = NONE FOUND');
-        console.log('Contextual entry        = NONE FOUND');
+        console.log('Existing UI caller      = ui/views/ReconciliationCandidateLeaderboardView.js (added by 0.9.403)');
+        console.log('Contextual entry        = REACHABLE (0.9.403 fulfilled the deferral recorded below)');
         console.log('Top navigation          = NOT_REACHABLE');
-        console.log('(absence of navigation is not automatically a defect — see Sections C-E)');
+        console.log('(absence of navigation was not automatically a defect at this milestone\'s own time — see Sections C-E; 0.9.403 later closed it)');
     }
 
     // ===============================================================
