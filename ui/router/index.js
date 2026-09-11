@@ -111,11 +111,17 @@ const routes = [
     // dashboard" shape /settings/arweave-gateway, /settings/nostr-relay,
     // and /settings/stun already hold.
     { path: '/settings/rendezvous', name: 'rendezvous-settings', component: RendezvousSettingsView },
-    // 0.8.180 — Reconciliation Candidate Leaderboard UI Integration. Not
-    // yet a top-nav destination (see ui/views/ReconciliationCandidateLeaderboardView.js's
-    // own header) — reached by URL until a future milestone gives it a
-    // real entry point, the same "reached from elsewhere, never top-nav"
-    // shape /chat/:identityId already holds above.
+    // 0.8.180 — Reconciliation Candidate Leaderboard UI Integration. 0.9.400's
+    // own audit (tests/ReconciliationLeaderboardEntryPointDecisionAudit.test.js)
+    // found this route real, wired, and reachable end to end EXCEPT that no
+    // in-app link to it existed anywhere — not even the "contextual, not
+    // top-nav" kind /chat/:identityId already held above. Reached now from
+    // the Publication Archive card on /publications (ui/views/
+    // DecentralizedPublicationsView.js), the exact page that already
+    // produces the peer archive export this page's own "Use as Peer
+    // Archive" step asks a person to paste. Deliberately still not its own
+    // top-nav destination — the identical "contextual, not global"
+    // navigation /chat/:identityId already uses.
     { path: '/reconciliation-leaderboard', name: 'reconciliation-leaderboard', component: ReconciliationCandidateLeaderboardView },
     // 0.8.192 — Reconciliation Candidate Leaderboard Evidence Export
     // Comparison UI. A second, independent workflow from
@@ -123,9 +129,12 @@ const routes = [
     // LIVE archives; this page compares two previously EXPORTED, portable
     // evidence documents, and never reads either live archive at all — see
     // ui/views/ReconciliationCandidateLeaderboardEvidenceExportComparisonView.js's
-    // own header. Not yet a top-nav destination, the identical "reached by
-    // URL until a future milestone gives it a real entry point" shape held
-    // above.
+    // own header. Deliberately OUT OF SCOPE for 0.9.400: that milestone's
+    // own audit gave /reconciliation-leaderboard directly above a real
+    // entry point but explicitly left this page as it found it — still
+    // reached by URL only, with no in-app link anywhere, a real gap this
+    // milestone named but did not close. A future milestone's own decision
+    // to make.
     { path: '/evidence-export-comparison', name: 'evidence-export-comparison', component: ReconciliationCandidateLeaderboardEvidenceExportComparisonView },
     { path: '/about', name: 'about', component: AboutView }
 ];
