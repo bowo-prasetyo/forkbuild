@@ -96110,3 +96110,106 @@ test-only milestone; a future sweep choosing domains this one did not touch (spa
 boundaries beyond the one primitive checked here, notification delivery, schema migration itself) would extend
 this evidence rather than repeat it; (2) 0.9.393's own ten deferred `UNKNOWN`-classified files still need a
 follow-up milestone — this one was not it, and they should not be deferred a second time without one.
+
+## 0.9.395 — Product Integrity Boundary Audit
+
+**Type:** test-only, engineering audit (not a product-capability audit). **Production changes:** none.
+
+0.9.393 asked whether regression guards are FRESH (does an assertion still describe current reality). 0.9.394
+asked whether the fresh ones are EFFECTIVE (would a guard actually fail if the behavior it reads as protecting
+genuinely regressed). Both are questions about tests. This milestone changes the axis: it starts from the
+PRODUCT and asks which of its actual invariants matter, whether each is protected at an appropriate layer, and —
+the part 0.9.393/0.9.394 never asked at all — what must never become true, and whether that negative space is
+covered by design or merely by accident.
+
+**A named non-goal, stated up front:** "no forced coverage expansion." A missing test is a finding here only when
+the underlying invariant is important enough to warrant deliberate protection — never merely because a line or
+branch happens to be unexercised.
+
+### What this milestone adds
+
+`tests/ProductIntegrityBoundaryAudit.test.js` (new, registered in `tests.html`). Twelve real product invariants,
+inventoried across six classifications (`USER_VISIBLE_INVARIANT`, `DOMAIN_INVARIANT`, `PERSISTENCE_INVARIANT`,
+`INTEGRATION_CONTRACT`, `ARCHITECTURAL_INVARIANT`, `OPERATIONAL_INVARIANT`), mapped to their actual protecting
+layer, and probed with four live counterfactual trials — each a small, realistic change introduced directly into
+real production source, run live under `node`, and reverted via `git checkout` before the next trial began.
+
+- **Section A — Product invariant inventory.** Twelve invariants, two per classification, every citation verified
+  against actual, currently-existing source or docs rather than paraphrased from memory.
+- **Section B — Protection mapping.** Ten of twelve carry a verified, dedicated guard. One (`World.updateBrick()`
+  as the sole transform mutation path) has real incidental coverage this audit did not live-verify. One — `core/`'s
+  own foundational "never imports `application/`, `renderer/`, or `ui/`" rule, the first sentence of
+  `docs/Architecture.md`'s own description of `core/` — has no dedicated, codebase-wide guard at all, confirmed by
+  direct search rather than assumed.
+- **Section C — Boundary ownership.** `PublisherPublicationAssociationRecord`'s own constructor (`instanceof`
+  checks on both fields, at construction) and `LocalAuthorizationVerifier`'s own signer-identity cross-check are
+  both `ENFORCED_AT_PRIMITIVE`. The `core/` import boundary, by contrast, is `OBSERVED_ONLY`: true of every file
+  that exists today, entirely by author discipline, with no mechanism a careless edit would need to defeat.
+- **Section D — Negative-space audit, with a correction.** This milestone's own requesting brief offered
+  "duplicate durable association must never occur" as an illustrative example. Checked directly against
+  `application/PublisherPublicationAssociationRecord.js` and its own test file, this is FALSE for this product by
+  deliberate, documented design (its own header: "NEVER DEDUPLICATED"; its own test's assertion 41: a duplicate
+  re-association "adds a THIRD, independent entry — never collapsed into one"). Corrected here rather than
+  accepted uncritically. Five genuine must-never invariants are then confirmed present, each cited against real
+  code.
+- **Section E — Guard redundancy analysis.** A fresh census: 246 `core/` files today, zero import
+  `application/`/`renderer/`/`ui/`, zero dedicated guards for that fact. By contrast, notification dedup carries
+  twelve genuinely dedicated guard files, while the association primitive and license-fork permission each carry
+  exactly one dedicated guard beneath dozens of incidental mentions (27 and 6 respectively) — real division of
+  labor, distinguished from redundancy by direct verification, never by mention count alone.
+- **Section F (flagship, alongside I) — Four live counterfactual trials.** (1) `core/CausalStamp.js` given a real,
+  inert upward import from `application/TransformMath.js` — not caught by any of its seven direct consumer test
+  files; the one file among them that did fail, failed identically before the mutation, for the pre-existing
+  `three`-package environment gap 0.9.393/0.9.394 already named. (2) `core/NotificationDeduplicationPolicy.js`'s
+  own `payloadsAgreeOnSharedFields()` collapsed to `return true` — caught immediately by
+  `tests/NotificationDeduplicationPolicy.test.js`'s own assertion I3. (3)
+  `application/PublisherPublicationAssociationRecord.js`'s own `publisherIdentity instanceof PublisherIdentityRecord`
+  check disabled — caught immediately by `tests/PublisherPublicationAssociationRecord.test.js`'s own assertion 17.
+  (4) A methodology finding: running the full 814-file suite while trial 1's mutation sat uncommitted produced
+  sixteen new failures; fifteen were confirmed, file by file, to be an existing "no production file modified"
+  self-check in unrelated milestone audits that reads GLOBAL git status rather than scoping to its own files; the
+  sixteenth was independently confirmed to be pre-existing sequential-run flakiness unrelated to either mutation.
+  Named honestly rather than misreported as sixteen guards catching the regression.
+- **Section G — Findings.** Exactly one finding clears this milestone's own bar: the `core/` import boundary
+  (invariant 9) is important, currently true, and live-confirmed unprotected, backed by four independent kinds of
+  evidence (static census, ownership analysis, fresh violation count, live trial). Nothing else in the inventory
+  is promoted to a finding on incidental coverage or suspicion alone.
+- **Section H — Coverage this audit does not claim.** Twelve invariants and four trials are an explicit sample,
+  never a census. No forced coverage expansion: the one finding is reported and evidenced, not patched inline —
+  an explicit, named divergence from 0.9.393/0.9.394's own "fix what you find in the same milestone" precedent,
+  because a guard for this finding deserves its own design pass rather than a rushed addition inside an audit
+  milestone. 0.9.393's own ten `UNKNOWN`-classified deferred files remain open, named again, not dropped a second
+  time.
+- **Section I — Production guard.**
+- **Section J — Verdict.**
+
+### Verdict
+
+**`PRODUCT_INTEGRITY_GAP_IDENTIFIED_HARDENING_DEFERRED`.** One genuine, important, live-confirmed gap: `core/`'s
+own foundational import boundary has zero deliberate protection today, despite holding in fact. One correction to
+this milestone's own requesting brief: "duplicate association must never occur" does not hold for this product,
+by deliberate design, and the audit reports that rather than assuming the suggested example was correct. One
+methodology finding about full-suite execution during live mutation trials, named honestly rather than
+overclaimed as evidence either way.
+
+### What this milestone deliberately excludes
+
+No production-code change of any kind — every one of Section F's three real source mutations was reverted before
+the next trial began (Section I). The one finding (Section G) is deliberately NOT fixed inline, diverging from
+0.9.393/0.9.394's own precedent of fixing what they found in the same milestone: that precedent fit a
+demonstrated, currently-red regression guard; this finding is a different shape — an invariant that holds today
+with no mechanism behind it, whose own right guard (what a codebase-wide sweep actually checks, how it treats
+`core/library/` registration files, whether any exception is ever legitimate) deserves a real design pass rather
+than a rushed addition inside a milestone whose own stated type is "test-only, engineering audit." 0.9.393's own
+ten `UNKNOWN`-classified deferred files remain untouched and open.
+
+### What comes after
+
+Two recommendations: (1) **0.9.396 — Product Integrity Boundary Hardening** should add the one guard this
+milestone's own Section G names: a codebase-wide sweep proving every file under `core/` (any depth) never imports
+`application/`, `renderer/`, or `ui/`, mirroring 0.9.393's own precedent for a structural, whitelist-style guard
+where the shape itself is the invariant; (2) 0.9.393's own ten deferred `UNKNOWN`-classified files still need a
+follow-up milestone — this one was not it, and a future integrity-boundary audit choosing a different
+twelve-invariant sample (this one leaned toward identity/persistence/publication; spatial/collision, presence
+trust boundaries, and the renderer/world-layout boundary remain unmapped) would extend this evidence rather than
+repeat it.
