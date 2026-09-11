@@ -95448,3 +95448,113 @@ never how the bootstrap treats them. No generic `InfrastructureEndpointConfigura
 convergence audit, before TURN is revisited as its own product decision — TURN's own credential-fetch endpoint and
 credential lifecycle remain substantially different from both STUN and Rendezvous and are not decided by either
 milestone.
+
+## 0.9.389 — Rendezvous Configuration Lifecycle & Convergence Audit
+
+Test-only, no production changes. 0.9.388's own test file (`tests/UserConfigurableRendezvousConfiguration.test.js`)
+already proved the value object, the store, the write use case, the settings view, and one full restart round-trip
+(through to a real, simulated network LOOKUP) correct — but that suite's own job was correctness of each piece, not
+whether the pieces, now that they span the full
+
+```
+RendezvousSettingsView -> SetRendezvousConfigurationUseCase -> RendezvousConfigurationStore -> StorageProvider
+-> restart -> ui/main.js -> resolvedRendezvousUrls -> discoveryBootstrap -> RendezvousDiscoveryProvider ->
+existing peer-discovery behavior
+```
+
+lifecycle, actually converge with no second authority, no accidental bleed into STUN/TURN/Arweave/Nostr/peer
+identity, and no configuration that has quietly become a health-check, endpoint-ranking, or retry/failover policy.
+This is the direct structural mirror of 0.9.387's own STUN convergence audit, applied to Rendezvous's own
+list-of-plain-strings configuration and its real networked consumer (`DiscoveryBootstrap`/
+`RendezvousDiscoveryProvider`/`WebSocketRendezvousTransport`) rather than a WebRTC ICE configuration.
+
+### What this audit proved
+
+- **`tests/RendezvousConfigurationLifecycleConvergenceAudit.test.js`** — ten lettered sections (A-J), built fresh
+  against real production source and real object graphs.
+  - **Section A** — exactly one value object, one storage key, one store construction site, and one write-use-case
+    construction site exist (all in `ui/main.js`); no settings UI constructs the domain object directly; and
+    `RendezvousDiscoveryProvider` never self-selects a default — it only ever knows the transport it was
+    constructed with.
+  - **Section B** — absence and an explicit saved default remain distinguishable persisted facts even though their
+    effective rendezvous URL list resolves identically.
+  - **Section C** — a single URL, a multi-URL list with order preserved, and a duplicate URL (accepted and preserved
+    as given — this class performs shape validation only, never list normalization) all behave exactly as the
+    contract states; every read of `.urls` returns a defensive copy; both the instance and its internal array are
+    frozen; a list of two valid entries plus one invalid entry is rejected atomically, with the previously saved
+    configuration proven completely untouched.
+  - **Section D** — an adversarial scheme sweep (`http:`, `https:`, `turn:`, `turns:`, `stun:`, `stuns:`, `ftp:`,
+    malformed, relative, scheme-relative, `javascript:`, `data:`, `file:`) confirms only `ws:`/`wss:` is ever
+    accepted; case-confusable (`WS://`, `WSS://`) and whitespace-padded variants of an otherwise-valid scheme are
+    correctly still accepted (the platform URL parser's own case-insensitivity and trimming — confirmed to preserve
+    the original string verbatim except for the one deliberate whitespace-trim), while an embedded `turn`/`stun`/
+    `http` *substring* inside an otherwise-valid `wss:` path is confirmed not itself grounds for rejection — the
+    scheme check inspects the parsed protocol, never a keyword blocklist. A mixed valid/invalid-scheme list rejects
+    atomically.
+  - **Section E** — a genuine `StorageProvider` failure propagates out of `save()`/`get()`/`clear()` (the
+    degrade-to-`null` behavior is reserved for malformed *data*, never a transport failure); an already-running
+    `DiscoveryBootstrap`'s own resolved provider composition is proven immune to a later corruption of the
+    underlying storage — only a fresh startup's own resolution would ever observe it.
+  - **Section F (flagship)** — five independently-composed "replicas" sharing one storage namespace converge on the
+    identical effective rendezvous list at every step (save → restart → restart-through-a-real-simulated-LOOKUP →
+    a write from a later replica visible back through the first → clear → restart → deployment default → two more
+    replicas constructed back-to-back never sharing in-memory state), with no shared singleton anywhere in the
+    chain.
+  - **Section G** — structural proof (`resolvedRendezvousUrls` assigned exactly once, `rendezvousConfigurationStore
+    .get()` called exactly once in `ui/main.js`'s own executable code, `bootstrapProviders` built directly from
+    that same variable, the old bare `DEFAULT_RENDEZVOUS_URLS.map(...)` construction entirely gone) plus behavioral
+    proof (a configured custom list reaches a real `DiscoveryBootstrap` with exactly one provider per URL, and the
+    deployment default is never silently re-included alongside a genuinely different configured list) that the
+    exact resolved list reaches the bootstrap with no hidden second resolution.
+  - **Section H (flagship)** — the governing invariant from 0.9.388's own brief, proven directly against the
+    real, completely unmodified `RendezvousDiscoveryProvider`/`DiscoveryBootstrap` classes: a configured but
+    unreachable rendezvous server (a `RendezvousTransport` whose `lookup()` genuinely rejects) degrades
+    `discover()` to a real empty array, never a thrown error — the existing, documented "A Rendezvous Lookup
+    Degrades; It Never Fails Loud" behavior, unmodified — while `publishToAll()` still surfaces the failure and
+    `unpublishFromAll()` still tolerates it, exactly as `peer/DiscoveryBootstrap.js`'s own existing header already
+    documents. Repeated afterward: the persisted configuration, the bootstrap's own provider composition, and a
+    *second* `discover()` call all remain exactly the configured, still-unreachable URL — nothing was ever silently
+    replaced by `DEFAULT_RENDEZVOUS_URLS`, and no new retry/backoff state accumulated across calls.
+  - **Section I** — `RendezvousConfiguration`, `IceServerConfiguration`, `ArweaveGatewayConfiguration`, and
+    `NostrRelayConfiguration` (all four, not just Rendezvous-and-one-sibling) round-trip independently through one
+    shared storage namespace with no key collision and no value bleed in either direction; clearing any one of the
+    four, or all three of the others, leaves the remaining configuration(s) completely untouched.
+  - **Section J** — no health-check, latency-ranking, automatic-selection, failover, retry-scheduling,
+    connection-testing, per-peer-configuration-dimension, STUN/TURN-coupling, or new rendezvous wire-protocol
+    identifier or method exists anywhere in this configuration boundary; saving still never opens a `WebSocket` or
+    issues a `fetch`.
+
+### Verdict
+
+**Converged / architecturally closed.** No convergence defect was found in 0.9.388's implementation; no production
+change was made by this milestone. Rendezvous configuration remains a single, closed authority: one value object,
+one storage key, one composition point, with zero coupling to STUN, TURN, Arweave, Nostr, or peer identity, and
+zero hidden resilience semantics:
+
+> Rendezvous configuration selects the configured discovery endpoints; the existing Rendezvous provider remains
+> solely responsible for what happens when those endpoints succeed or fail.
+
+The infrastructure-endpoint configuration story now stands at:
+
+| Endpoint         | Configuration status                 |
+|-------------------|---------------------------------------|
+| Arweave Gateway   | User-configurable (converged, 0.9.365)|
+| Nostr Relay       | User-configurable (converged, 0.9.370)|
+| STUN              | User-configurable (converged, 0.9.387)|
+| Rendezvous        | User-configurable (converged, 0.9.389, this milestone)|
+| TURN              | Separate product decision, not yet made|
+| IPFS Gateway      | Deliberately not user-configurable    |
+| Base RPC          | Deliberately not user-configurable    |
+| Bitcoin Esplora   | Deliberately not user-configurable    |
+
+### Next
+
+0.9.390 — TURN Configuration Product Decision Audit. TURN is genuinely different from STUN and Rendezvous, not
+merely the next item on the same list: this codebase's existing TURN support (`peer/IceServerConfig.js#
+fetchIceServers`) obtains *ephemeral* credentials from a third-party credential service (Metered), so
+"configuring TURN" raises questions STUN's and Rendezvous's own static-URL configuration never had to answer — a
+TURN server address, a credential-acquisition endpoint, the credentials themselves, their lifetime, and how the
+result is represented as an `RTCConfiguration.iceServers` entry are five separable concerns bundled into one
+existing function today. This next milestone is a decision audit, not an assumed implementation: STOP/DEFER if
+user-configurable TURN cannot be scoped as cleanly as STUN/Rendezvous were, or BUILD_NEXT with its own smallest
+semantic seam only if it can.
