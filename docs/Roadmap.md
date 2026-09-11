@@ -95558,3 +95558,119 @@ result is represented as an `RTCConfiguration.iceServers` entry are five separab
 existing function today. This next milestone is a decision audit, not an assumed implementation: STOP/DEFER if
 user-configurable TURN cannot be scoped as cleanly as STUN/Rendezvous were, or BUILD_NEXT with its own smallest
 semantic seam only if it can.
+
+## 0.9.390 — TURN Configuration Product Decision Audit
+
+**Type:** test-only, decision artifact. **Production changes:** none.
+
+0.9.385's own audit named TURN the third CRITICAL infrastructure endpoint but classified it
+`SEPARATE_PRODUCT_DECISION` rather than `BUILD_NEXT`, on the strength of one structural difference from STUN and
+Rendezvous: TURN's own existing seam (`peer/IceServerConfig.js#fetchIceServers`) is coupled to dynamic credential
+acquisition from a third-party service (Metered), never a static value a settings field could safely collect
+without a prior design decision. This milestone is that deferred decision — not an assumed implementation — asking
+directly whether user-configurable TURN is a coherent product capability at all, and if so, which of several
+genuinely non-equivalent things a user would actually be configuring.
+
+### What this milestone adds
+
+`tests/TurnConfigurationProductDecisionAudit.test.js` (new, registered in `tests.html`). Ten lettered audits:
+
+- **Audit A — Current TURN dependency.** Every value `fetchIceServers()` touches, traced to real source and split
+  STATIC (the credential-fetch URL, the API key, the fetch timeout, the fallback STUN list — all hardcoded
+  deployment constants) vs. DYNAMIC (the TURN relay hostname, username, and credential — all obtained fresh from
+  the credential service's own JSON response, with the relay hostname arriving bundled inside that same response,
+  never a separate field). No credential-lifetime field is ever read anywhere in this dependency chain.
+- **Audit B — User-value test.** The only requirement actually on record (0.9.385: "users must be able to switch
+  critical infrastructure endpoints when the default endpoint is unavailable") is resilience-shaped, never a
+  "bring your own TURN server" statement. The two are not equivalent: a single user-swappable TURN entry answers
+  the second reading without necessarily answering the first — the identical single-point-of-failure risk this
+  codebase already named for Rendezvous's own bootstrap list.
+- **Audit C — Configuration shape.** The three things this milestone's own brief named as potentially separate
+  (TURN relay server, TURN credential endpoint, TURN credentials themselves) are proven NOT symmetric today: only
+  the credential endpoint (`fetchIceServers`'s own `endpoint`/`apiKey` parameters) already varies independently,
+  live-proven against the real function. The relay hostname is never an independent field — it arrives bundled
+  inside whatever the credential endpoint returns. Raw TURN credentials have no expression in current code at all,
+  and `core/IceServerConfiguration.js`'s own existing manual-ICE-entry shape is STUN-only by construction
+  (`isValidStunUrl()` and the constructor both reject `turn:`/`turns:` live).
+- **Audit D — Credential lifecycle.** This codebase's own git history documents two structurally different TURN
+  credential shapes: a static, non-expiring, dashboard-issued credential (0.3.2, removed 0.3.5) and the current
+  dynamically-fetched credential (0.3.7-present) whose lifetime is never stated in source. Whether today's fetched
+  credential is safe to persist is genuinely unverifiable from this codebase's own evidence — the single most
+  consequential open question this audit surfaces. The one existing persistence seam
+  (`storage/IceServerConfigurationStore.js`) is confirmed to reject any non-STUN entry, live.
+- **Audit E — Security boundary.** Every configuration this codebase has actually shipped (Arweave Gateway, Nostr
+  Relay, STUN, Rendezvous) is confirmed, live, to hold zero secret-shaped fields. Any TURN configuration answering
+  this milestone's own three named things would persist a genuine secret for the first time in this configuration
+  family — not from a poor design choice, but because a working `RTCIceServer` TURN entry inherently requires a
+  credential — over `LocalStorageProvider`'s own plain, unencrypted storage, confirmed to add no additional
+  protection for a secret versus a public URL.
+- **Audit F — Existing ICE convergence.** STUN configuration, Rendezvous configuration, and the existing
+  STUN+TURN ICE composition are all proven untouched, through the real, unmodified production classes: a merged
+  iceServers list (configured STUN + a freshly fetched TURN entry) reaches the concrete `RTCPeerConnection`
+  construction call unchanged. `peer/PeerAuthenticationSession.js` still imports none of these classes.
+- **Audit G — Failure semantics.** Four possible "configured TURN unreachable" policies are enumerated and none
+  selected. Today's actual, already-shipped behavior — a credential-FETCH failure degrades to the fallback STUN
+  list, proven directly — is named precisely and kept distinct from the genuinely different, unbuilt case of a
+  user-configured relay that answers the fetch but never functions at ICE-gathering time; no TURN-specific branch
+  exists in `peer/WebRtcPeerConnection.js`'s own generic ICE-gathering timeout today.
+- **Audit H — Product alternatives.** All five named alternatives evaluated against Audits A-G's own findings:
+  options 2 and 3 converge technically (Audit C); option 4 (credential-service override) is the cheapest to wire
+  but the worst trust boundary among the credential-bearing options, since it makes this app custodian of a
+  user-supplied secret for a third-party service it does not operate; option 3 (a complete, manually-entered TURN
+  ICE entry) is the only credential-bearing shape that sidesteps Audit D's unresolved lifecycle question entirely;
+  option 5 (failover) is the only option that actually answers Audit B's resilience reading, and is explicitly
+  kept a separate feature, never smuggled into this decision.
+- **Audit I — Capability reachability.** Option 4 is "existing capability, missing UI" — `fetchIceServers()`'s own
+  `endpoint`/`apiKey` parameters already work, live-proven. Options 2/3 require a genuinely NEW domain capability:
+  no existing function accepts a manually-supplied TURN entry bypassing the credential fetch. Option 5 faces no
+  existing architectural blocker (`WebRtcPeerConnectionProvider` imposes no single-entry limit on `iceServers`).
+- **Audit J — Decision and production-change guard.** Checked against the live working tree (`git status
+  --porcelain`): no production file is modified or added. `core/IceServerConfiguration.js`'s own STUN-only scope
+  is confirmed unmodified.
+
+### Decision
+
+**`DEFER`** — not `NOT_A_PRODUCT_GAP` (TURN remains real, critical infrastructure, and a real resilience
+requirement is on record that TURN configuration could help satisfy), and not `BUILD_NEXT`, for four independent
+reasons: (1) the only requirement on record is resilience-shaped, but the cheapest-to-build option does not
+clearly serve resilience over a single new point of failure, while the option that would is explicitly out of
+scope here; (2) the three things this milestone's brief named as potentially separate are not symmetric today,
+and picking a configuration object before that asymmetry is resolved risks a shape that quietly conflates two of
+the three; (3) this codebase's own source cannot establish whether a fetched TURN credential is safe to persist;
+(4) every candidate shape introduces this configuration family's first persisted secret, over storage with no
+additional protection, a materially different risk than every configuration shipped so far.
+
+**Concrete reopening condition**, mirroring 0.9.384's own "reopens on an explicit new requirement" discipline: if
+product direction confirms the need is specifically "let a user run their own TURN server," the smallest safe
+shape is a complete, manually-entered TURN ICE entry (`urls` + `username` + `credential`, entered and persisted
+together) — never the credential-service-override shape, which would make this app custodian of a third-party
+secret it does not operate. If product direction instead confirms the need is "keep working when the default TURN
+is down," the correct feature is multiple TURN servers / failover, as its own, later, separate audit — never
+smuggled into a basic configuration milestone. Either reopening still requires the credential-lifecycle question
+to be resolved, or rendered moot by construction, before any credential is persisted.
+
+### What this milestone deliberately excludes
+
+No Settings UI, no `core/TurnConfiguration.js` (or equivalent) value object, no storage class, no composition-root
+wiring, no credential handling, and no generic `InfrastructureEndpointConfiguration` abstraction. `core/
+IceServerConfiguration.js`'s own STUN-only scope is left exactly as 0.9.386 shipped it — this audit does not
+reopen or widen it.
+
+The infrastructure-endpoint configuration story now stands at:
+
+| Endpoint         | Configuration status                 |
+|-------------------|---------------------------------------|
+| Arweave Gateway   | User-configurable (converged, 0.9.365)|
+| Nostr Relay       | User-configurable (converged, 0.9.370)|
+| STUN              | User-configurable (converged, 0.9.387)|
+| Rendezvous        | User-configurable (converged, 0.9.389)|
+| TURN              | `DEFER` (0.9.390) — real gap, no safe smallest configuration object yet|
+| IPFS Gateway      | Deliberately not user-configurable    |
+| Base RPC          | Deliberately not user-configurable    |
+| Bitcoin Esplora   | Deliberately not user-configurable    |
+
+### Next
+
+No follow-up implementation milestone is scheduled for TURN. Per this milestone's own reopening condition, a
+future milestone resumes this only when product direction disambiguates the underlying need, not merely because
+the existing `endpoint`/`apiKey` seam happens to make one shape cheap to wire.
