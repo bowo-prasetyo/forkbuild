@@ -175,8 +175,7 @@ async function runTests() {
         // bare count bump.
         const appSource = await rawSource('ui/App.js');
         const appWideRoutes = ['/', '/editor', '/repository', '/worlds/recent', '/avatar', '/identity',
-            '/peers', '/conversations', '/publications', '/settings/content-provider', '/about',
-            '/settings/arweave-gateway', '/settings/nostr-relay', '/settings/stun', '/settings/rendezvous'];
+            '/peers', '/conversations', '/publications', '/settings', '/about'];
         for (const route of appWideRoutes) {
             const linkMarker = route === '/' ? 'to="/"' : `to="${route}"`;
             assert(appSource.includes(linkMarker), `A-nav. ui/App.js still links ${route} from the always-mounted top nav.`);

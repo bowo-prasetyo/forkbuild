@@ -114,7 +114,7 @@ async function run() {
         // this section does not merely trust that nothing moved since.
         const appCode = await readSource('ui/App.js');
         const navLinkCount = (appCode.match(/<router-link/g) || []).length;
-        assert(navLinkCount === 15, n(`A8. the always-mounted top nav still carries fifteen router-link destinations, recomputed fresh (found ${navLinkCount})`));
+        assert(navLinkCount === 11, n(`A8. the always-mounted top nav now carries eleven router-link destinations, the five settings destinations consolidated behind one Network Settings hub link, recomputed fresh (found ${navLinkCount})`));
         const routerCode = await readSource('ui/router/index.js');
         const routeCount = (routerCode.match(/\{ path:/g) || []).length;
         assert(routeCount === 23, n(`A9. the router still registers twenty-three routes, recomputed fresh (found ${routeCount})`));
@@ -410,7 +410,7 @@ async function run() {
         assert(routeCount === 23, n('F2. no new route was added — the number of registered routes is unchanged from Section A9'));
         const appCode = await readSource('ui/App.js');
         const navLinkCount = (appCode.match(/<router-link/g) || []).length;
-        assert(navLinkCount === 15, n('F3. no new top-nav link was added — global navigation is unchanged from Section A8'));
+        assert(navLinkCount === 11, n('F3. no new top-nav link was added — global navigation is unchanged from Section A8'));
 
         // Section C/D specifically: the 58-file PARKED family (Section A10)
         // has not quietly grown, and none of the seven deferred candidates

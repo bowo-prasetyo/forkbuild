@@ -252,7 +252,7 @@ async function run() {
         // this historical count, and nothing re-ran this test to notice
         // until 0.9.392's own fresh sweep.
         const navLinkOpenTags = (appCode.match(/<router-link/g) || []).length;
-        assert(navLinkOpenTags === 15, n(`the always-mounted top nav carries exactly 15 router-link destinations — found ${navLinkOpenTags}`));
+        assert(navLinkOpenTags === 11, n(`the always-mounted top nav carries exactly 11 router-link destinations, the five settings destinations now consolidated behind one Network Settings hub link — found ${navLinkOpenTags}`));
 
         console.log('\n=== SECTION A: CURRENT PRODUCT CAPABILITY INVENTORY ===');
         for (const row of capabilityInventory) console.log(`${row.capability}: ${row.classification}${row.note ? ' — ' + row.note : ''}`);

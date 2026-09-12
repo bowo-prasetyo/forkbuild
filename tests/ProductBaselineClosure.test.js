@@ -177,9 +177,12 @@ async function runTests() {
         // added route with no corresponding evidence entry above makes
         // this fail, exactly as intended.
         const appSource = await rawSource('ui/App.js');
+        // The five individual settings destinations are now reached one hop
+        // further, through a single "/settings" Network Settings hub link —
+        // see REACHABLE_SURFACES above, unchanged: each settings view still
+        // exists and is still reachable, just no longer directly nav-linked.
         const EXPECTED_NAV_ROUTES = new Set(['/', '/editor', '/repository', '/worlds/recent', '/avatar', '/identity',
-            '/peers', '/conversations', '/publications', '/settings/content-provider', '/about',
-            '/settings/arweave-gateway', '/settings/nostr-relay', '/settings/stun', '/settings/rendezvous']);
+            '/peers', '/conversations', '/publications', '/settings', '/about']);
         const actualNavRoutes = new Set(
             [...appSource.matchAll(/to="(\/[a-zA-Z0-9\-/]*)"/g)].map((m) => m[1])
         );

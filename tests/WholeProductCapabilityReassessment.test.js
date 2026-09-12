@@ -160,7 +160,7 @@ async function run() {
         // Section K) has tracked, reconfirmed fresh rather than inherited.
         const appCode = await readSource('ui/App.js');
         const navLinkCount = (appCode.match(/<router-link/g) || []).length;
-        assert(navLinkCount === 15, n(`A3. the always-mounted top nav still carries exactly fifteen router-link destinations (found ${navLinkCount}) — unchanged since 0.9.392`));
+        assert(navLinkCount === 11, n(`A3. the always-mounted top nav now carries exactly eleven router-link destinations, the five settings destinations consolidated behind one Network Settings hub link (found ${navLinkCount})`));
         const routerCode = await readSource('ui/router/index.js');
         const routeCount = (routerCode.match(/\{ path:/g) || []).length;
         assert(routeCount === 23, n(`A4. the router still registers exactly twenty-three routes (found ${routeCount}) — unchanged since 0.9.413 Section K`));
@@ -528,7 +528,7 @@ async function run() {
         assert(routeCount === 23, n('G2. no new route was added over the course of writing this reassessment — the 58-file finding (Section C) did not quietly become a 24th route'));
         const appCode = await readSource('ui/App.js');
         const navLinkCount = (appCode.match(/<router-link/g) || []).length;
-        assert(navLinkCount === 15, n('G3. no new top-nav link was added — global navigation was not expanded to surface the parked family'));
+        assert(navLinkCount === 11, n('G3. no new top-nav link was added — global navigation was not expanded to surface the parked family'));
 
         // Automation, provider fallback, and dashboarding remain absent
         // codebase-wide (reused from 0.9.383 Section H/I and 0.9.413

@@ -174,7 +174,7 @@ async function runTests() {
         // reconfirmed unchanged a third time).
         const appSource = await rawSource('ui/App.js');
         const appWideRoutes = ['/editor', '/repository', '/worlds/recent', '/avatar', '/identity',
-            '/peers', '/conversations', '/publications', '/settings/content-provider', '/about'];
+            '/peers', '/conversations', '/publications', '/settings', '/about'];
         for (const route of appWideRoutes) {
             assert(appSource.includes(`to="${route}"`), `A-nav. ui/App.js still links ${route} from the always-mounted top nav.`);
         }

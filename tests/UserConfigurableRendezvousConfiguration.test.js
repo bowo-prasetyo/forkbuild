@@ -201,7 +201,9 @@ async function run() {
             '12. the router imports the real view component, never a stub');
 
         const appSource = await source('ui/App.js');
-        assert(/router-link to="\/settings\/rendezvous"/.test(appSource), '13. a real top-nav link reaches the settings entry point');
+        assert(/router-link to="\/settings"/.test(appSource), '13a. a real top-nav link reaches the Network Settings hub');
+        const networkSettingsSource = await source('ui/views/NetworkSettingsView.js');
+        assert(/router-link to="\/settings\/rendezvous"/.test(networkSettingsSource), '13b. the Network Settings hub links to the settings entry point — reachable one hop further, not a URL-only capability');
 
         const viewSource = await source('ui/views/RendezvousSettingsView.js');
         const viewExecutable = viewSource.replace(/\/\/.*$/gm, '');

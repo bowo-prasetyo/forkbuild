@@ -291,7 +291,7 @@ async function run() {
         // make the test pass.
         const appSource = await source('ui/App.js');
         const navLinkCount = (appSource.match(/router-link/g) || []).length / 2;
-        assert(navLinkCount === 15, n(`C3. ui/App.js carries exactly 15 router-link destinations today (found ${navLinkCount}) — the corrected appWideRoutes lists in both newly-fixed files now match live reality`));
+        assert(navLinkCount === 11, n(`C3. ui/App.js carries exactly 11 router-link destinations today (found ${navLinkCount}) — the five settings destinations were consolidated behind one Network Settings hub link, and the corrected appWideRoutes lists in both newly-fixed files now match live reality`));
 
         const producerSites = execSync('grep -rl "new PublicationCommentaryNotificationProducer(" application ui --include="*.js" || true',
             { cwd: SOURCE_ROOT.pathname }).toString().trim().split('\n').filter(Boolean).sort();
