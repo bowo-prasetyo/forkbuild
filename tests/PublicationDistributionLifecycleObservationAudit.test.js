@@ -263,7 +263,15 @@ async function run() {
         // forwards, unread, per 0.9.430's own amendment.
         const commandSource = await source('application/PublicationDistributionCommand.js');
         assert(/discoveryProvider/.test(commandSource), n('B7. `discoveryProvider` (\'nostr\'|\'arweave\') already exists as an explicit, caller-supplied argument at exactly the call site (`executePublicationDistributionCommand`) that already reads the fresh result and already calls `lifecycleStore.set()` — the minimum additional identity this audit is looking for was already flowing past the exact seam that needs it, before this milestone, unused for this purpose'));
-        assert(!/recordPublicationDistributionResult\([^)]*discoveryProvider/.test(codeOnly(commandSource)), n('B8. confirmed as a genuine gap, not a false alarm: `recordPublicationDistributionResult()` today receives the store and the result, but NOT `discoveryProvider` — the one additional fact needed is not merely unused, it is not even threaded to the one function that would need it'));
+        // AMENDED BY 0.9.433 — Concurrent Discovery Observation Preservation.
+        // B8 originally confirmed this as a genuine, still-open gap:
+        // `recordPublicationDistributionResult()` received the store and
+        // the result, but not `discoveryProvider`. 0.9.433 closed exactly
+        // that gap, threading `discoveryProvider` into that same function —
+        // this assertion is inverted, never deleted, so this section keeps
+        // testifying to the exact seam 0.9.433 changed, rather than going
+        // silently stale against the source it once described.
+        assert(/recordPublicationDistributionResult\([^)]*discoveryProvider/.test(codeOnly(commandSource)), n('B8. AMENDED BY 0.9.433 — the gap this section originally found is now closed: `recordPublicationDistributionResult()` receives `discoveryProvider` too, exactly the minimal additional threading this audit identified as missing'));
 
         console.log('✓ Section B: the collision key is confirmed to be `publicationId` alone (never a distribution-dimension identity), the collision itself traces to a structurally total replacement in `buildDiscoverySection()`, and the minimum additional identity needed is `discoveryProvider` — a value already explicit, already caller-supplied, and already flowing through the exact call site that would need it, requiring no new generic identifier of any kind');
     }
@@ -470,29 +478,26 @@ async function run() {
     // ===============================================================
     {
         const canvasSource = await source('ui/components/WorldEncounterCanvas.js');
-
-        // Confirm, structurally, exactly what 0.9.431's own Section D
-        // already found: today there is exactly ONE Discovery row.
         const distributionPanelStart = canvasSource.indexOf('world-encounter-distribution-panel');
-        const distributionPanelTemplate = canvasSource.slice(distributionPanelStart, distributionPanelStart + 1200);
-        const discoveryRowMatches = distributionPanelTemplate.match(/<dt>Discovery/g) || [];
-        assert(discoveryRowMatches.length === 1, n('G1. the real Distribution panel template renders exactly one "Discovery" row today — confirmed structurally, the exact single slot this audit\'s Sections A-C trace back to the store'));
-        assert(distributionPanelTemplate.includes('{{ distributionDiscoveryState }}'), n('G2. that one row is bound to the single computed `distributionDiscoveryState`, itself sourced from `distributionLifecycle.discovery.state` (0.9.100) — the same single lifecycle object Sections A/B/C already traced'));
+        // AMENDED BY 0.9.433 — Concurrent Discovery Observation Preservation.
+        // G1/G2/G4 originally confirmed "today" (as of 0.9.432) there was
+        // exactly one Discovery row and no `v-for` in this panel at all —
+        // exactly the gap this section's own prose recommended closing.
+        // 0.9.433 closed it, so this window is widened (the added
+        // v-for/template markup no longer fits the original 1200-character
+        // slice) and G1/G4 are inverted to confirm the recommended change
+        // now genuinely exists in production, never merely re-asserting
+        // the pre-0.9.433 absence against post-0.9.433 source.
+        const distributionPanelTemplate = canvasSource.slice(distributionPanelStart, distributionPanelStart + 2000);
 
-        // The smallest presentation change this audit can identify, given
-        // Sections C/D/E's own seam shape: replace the single `<dt>Discovery</dt><dd>...</dd>`
-        // pair with one such pair PER OBSERVATION the seam's own
-        // `getDiscoveryObservations(publicationId)` returns (falling back
-        // to today's single row when there is 0 or 1, which Section D
-        // proved is indistinguishable from today's behavior). This is a
-        // template loop over an existing row shape, never a new panel,
-        // never a new heading, never a route, and never a screen of its
-        // own — it stays under the existing "Distribution" heading
-        // alongside the existing Material row, completely unchanged.
-        assert(canvasSource.includes('<h4 class="world-encounter-distribution-title">Distribution</h4>'), n('G3. the existing "Distribution" heading is confirmed as the one place this change would live — never a new heading or a separate panel, matching the requesting brief\'s own "not a new dashboard" instruction'));
-        assert(!/v-for/.test(distributionPanelTemplate), n('G4. today\'s Distribution panel contains no `v-for` loop at all — introducing one, scoped to the Discovery row alone, is confirmed as an addition rather than a modification of any existing loop or list-rendering logic'));
+        assert(distributionPanelTemplate.includes('{{ distributionMaterialState }}'), n('G1a. the Material row is unchanged — still bound to the single computed `distributionMaterialState`, never touched by this milestone'));
+        assert((distributionPanelTemplate.match(/<dt>Discovery/g) || []).length >= 2, n('G1. AMENDED BY 0.9.433 — the panel template now contains more than one literal "Discovery" row source: the fallback single row (unchanged text) plus the new per-provider `v-for` row, confirming the recommended change is genuinely present, not merely described'));
+        assert(distributionPanelTemplate.includes('{{ distributionDiscoveryState }}'), n('G2. the pre-existing single-row fallback is still bound to the same computed `distributionDiscoveryState` (0.9.100, unmodified) — used whenever zero or one substrate observation exists, which Section D already proved is indistinguishable from today\'s behavior'));
 
-        console.log('✓ Section G: the smallest presentation change is a `v-for` over the seam\'s own per-provider observations, replacing the single Discovery `<dt>/<dd>` pair with one pair per observed substrate, entirely inside the existing "Distribution" heading — never a new panel, dashboard, or history screen');
+        assert(canvasSource.includes('<h4 class="world-encounter-distribution-title">Distribution</h4>'), n('G3. the existing "Distribution" heading is confirmed as the one place this change lives — never a new heading or a separate panel, matching the requesting brief\'s own "not a new dashboard" instruction'));
+        assert(/v-for="observation in discoveryObservations"/.test(distributionPanelTemplate), n('G4. AMENDED BY 0.9.433 — the Distribution panel now contains exactly the `v-for` this section recommended, scoped to the Discovery row alone, over the seam\'s own `discoveryObservations` computed — never a modification of any pre-existing loop, since none existed before this milestone'));
+
+        console.log('✓ Section G (AMENDED BY 0.9.433): the recommended `v-for` over per-provider observations now genuinely exists in production, replacing the single Discovery `<dt>/<dd>` pair with one pair per observed substrate when more than one exists, entirely inside the existing "Distribution" heading — never a new panel, dashboard, or history screen');
     }
 
     // ===============================================================
@@ -657,9 +662,14 @@ additive structure inside \`PublicationDistributionLifecycleStore.js\` —
 never replacing its existing per-publication get()/set()/subscribe()
 surface — and (3) a template-only, v-for-scoped change to the existing
 Distribution panel's own Discovery row in
-\`ui/components/WorldEncounterCanvas.js\`. This remains recommended as
-0.9.433's own scope, not built here — this milestone stays test-only, per
-its own header, and touches no production file.
+\`ui/components/WorldEncounterCanvas.js\`. This was recommended as
+0.9.433's own scope, not built here — this milestone itself stays
+test-only, per its own header, and touches no production file. AMENDED
+BY 0.9.433 (which DID build exactly this shape, in the three files named
+above, plus \`tests/ConcurrentDiscoveryObservationPreservation.test.js\`):
+Sections B8 and G, above, are updated in place to confirm the recommended
+change now genuinely exists in production, rather than left to silently
+disagree with the source they once described.
 `);
 
         assert(verdict === 'OBSERVATION_GAP_REQUIRES_MINIMAL_STORE_CHANGE', n('J4. the verdict this file actually reports matches the verdict printed above'));

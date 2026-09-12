@@ -2217,6 +2217,22 @@ function resolvedEncounterSelectionsEqual(previousResolvedSelection, nextResolve
 //   `publicationDistributionCommand(publication)` with no
 //   `discoveryProvider` of its own, which still resolves to `'nostr'`
 //   exactly as it already did.
+//
+// AMENDED BY 0.9.433 — Concurrent Discovery Observation Preservation.
+// `distributionLifecycleStore.get()`'s own single-slot Discovery fact
+// (0.9.100, unmodified) silently showed only the most recently used
+// substrate once a Publication had been announced on a second one — real,
+// independently discoverable evidence from the first substrate, simply not
+// observable through this panel. `PublicationDistributionLifecycleStore.js`
+// gained an additive `getDiscoveryObservations(publicationId)` accessor
+// (0.9.433); this file adds exactly one new computed,
+// `discoveryObservations` (below), and replaces the Discovery `<dt>/<dd>`
+// pair in the template with a `v-for` over it whenever more than one
+// substrate observation exists, falling back to today's exact single row
+// otherwise. No new panel, heading, route, or history view; `get()`/
+// `subscribe()`'s own existing single-slot observation
+// (`distributionMaterialState`/`distributionDiscoveryState`) is unchanged
+// and still the fallback for the common, single-substrate case.
 
 export default {
     name: 'WorldEncounterCanvas',
@@ -2294,7 +2310,11 @@ export default {
         // Publication Distribution Observation." `null` by default: a mount
         // with no store supplied never renders the Distribution panel and
         // never calls `get()`/`subscribe()`. Never constructed by this
-        // component itself, and never written to.
+        // component itself, and never written to. AMENDED BY 0.9.433: also
+        // duck-typed for an optional `getDiscoveryObservations(publicationId)`
+        // — see this file's own header, "Amended by 0.9.433" — read by the
+        // new `discoveryObservations` computed, below; a store lacking it
+        // still renders exactly today's single Discovery row.
         distributionLifecycleStore: {
             type: Object,
             default: null
@@ -2893,6 +2913,26 @@ export default {
         // header, unrevisited here.
         distributionDiscoveryState() {
             return this.distributionLifecycle ? this.distributionLifecycle.discovery.state : PublicationDistributionState.ABSENT;
+        },
+        // 0.9.433 — every CURRENT Announcement/Discovery observation for
+        // the selected Publication, one entry per substrate actually used,
+        // read from `distributionLifecycleStore.getDiscoveryObservations()`
+        // (additive, 0.9.433) — see this file's own header, "0.9.433 —
+        // Concurrent Discovery Observation Preservation." `[]` whenever
+        // there is no current selection, no `distributionLifecycleStore`,
+        // or the store does not expose `getDiscoveryObservations()` (a
+        // duck-typed guard, matching this store's own optional-method
+        // convention). Depends on `distributionLifecycle` purely so this
+        // computed re-evaluates on the SAME existing subscription
+        // notification (0.9.100) that already fires whenever a fresh
+        // distribution result is recorded — never a new notification
+        // channel of its own.
+        discoveryObservations() {
+            if (!this.distributionLifecycle || !this.selectedEncounter || !this.distributionLifecycleStore
+                || typeof this.distributionLifecycleStore.getDiscoveryObservations !== 'function') {
+                return [];
+            }
+            return this.distributionLifecycleStore.getDiscoveryObservations(this.selectedEncounter.objectId);
         },
         // 0.9.104 — the loaded `Publication` domain object for the CURRENT
         // selection, when (and only when) there genuinely is one to
@@ -4307,8 +4347,22 @@ export default {
                 <dl class="world-encounter-distribution-detail">
                     <dt>Material</dt>
                     <dd>{{ distributionMaterialState }}</dd>
-                    <dt>Discovery</dt>
-                    <dd>{{ distributionDiscoveryState }}</dd>
+                    <!-- 0.9.433 — a genuine second substrate observation
+                         renders one Discovery row per substrate, via the
+                         additive discoveryObservations() below; otherwise
+                         (zero or one observation) this stays byte-identical
+                         to the single pre-0.9.433 row, bound to the
+                         pre-existing distributionDiscoveryState. -->
+                    <template v-if="discoveryObservations.length > 1">
+                        <template v-for="observation in discoveryObservations" :key="observation.discoveryProvider">
+                            <dt>Discovery ({{ observation.discoveryProvider }})</dt>
+                            <dd>{{ observation.state }}</dd>
+                        </template>
+                    </template>
+                    <template v-else>
+                        <dt>Discovery</dt>
+                        <dd>{{ distributionDiscoveryState }}</dd>
+                    </template>
                 </dl>
 
                 <!-- 0.9.430 — the Wanderer's own explicit Announcement/

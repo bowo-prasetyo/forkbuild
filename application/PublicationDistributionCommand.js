@@ -204,6 +204,24 @@ import { transitionPublicationDistributionLifecycle } from './PublicationDistrib
 // makes no provider decision of its own: an omitted `discoveryProvider`
 // resolves to `'nostr'` exactly where it already did, several layers down,
 // in `PublicationDistributionRuntimeComposition.js`.
+//
+// AMENDED BY 0.9.433 — Concurrent Discovery Observation Preservation.
+// 0.9.430 threaded `discoveryProvider` past this file, unread, to the
+// orchestrator; 0.9.432's own read-only audit found the one place that
+// same value was needed but never reached — `recordPublicationDistributionResult()`
+// itself, the exact function that already reads a fresh PRESENT discovery
+// fact and already calls `lifecycleStore.set()`. This file now ALSO reads
+// `discoveryProvider` (still forwarded to the orchestrator exactly as
+// before) to attribute that fresh discovery fact to the substrate that
+// actually produced it, via `lifecycleStore.recordDiscoveryObservation()`
+// (0.9.433, additive) — called alongside, never instead of, the existing
+// `lifecycleStore.set()` call. An omitted `discoveryProvider` is attributed
+// as `'nostr'`, matching the same default `PublicationDistributionRuntimeComposition.js`
+// already applies for execution. `recordDiscoveryObservation()` is called
+// only when `lifecycleStore` actually exposes it (a duck-typed guard, like
+// every other collaborator this file checks) — a caller supplying a
+// minimal `{ get, set }` store, exactly as this file's own tests already
+// do, keeps working exactly as before, unchanged.
 
 const BASELINE_LIFECYCLE = Object.freeze({
     material: Object.freeze({ state: PublicationDistributionState.ABSENT }),
@@ -215,8 +233,12 @@ const BASELINE_LIFECYCLE = Object.freeze({
 // file's own header, "Recording into the store uses a transition, never a
 // blind overwrite." Calls `lifecycleStore.set()` only when at least one
 // transition actually applied — see "A call that learns nothing new writes
-// nothing to the store."
-function recordPublicationDistributionResult(lifecycleStore, result) {
+// nothing to the store." AMENDED BY 0.9.433: when the fresh result reports
+// discovery `PRESENT`, also calls `lifecycleStore.recordDiscoveryObservation()`
+// — see this file's own header, "Amended by 0.9.433" — attributing the
+// fresh discovery fact to `discoveryProvider` (defaulting to `'nostr'`,
+// matching `PublicationDistributionRuntimeComposition.js`'s own default).
+function recordPublicationDistributionResult(lifecycleStore, result, discoveryProvider) {
     if (!result) {
         return;
     }
@@ -251,6 +273,10 @@ function recordPublicationDistributionResult(lifecycleStore, result) {
         if (transitioned) {
             next = transitioned;
             changed = true;
+
+            if (typeof lifecycleStore.recordDiscoveryObservation === 'function') {
+                lifecycleStore.recordDiscoveryObservation(result.publication.objectId, discoveryProvider || 'nostr', transitioned.discovery);
+            }
         }
     }
 
@@ -309,7 +335,7 @@ export function executePublicationDistributionCommand({
     });
 
     return distribution.then((result) => {
-        recordPublicationDistributionResult(lifecycleStore, result);
+        recordPublicationDistributionResult(lifecycleStore, result, discoveryProvider);
         return result;
     });
 }
