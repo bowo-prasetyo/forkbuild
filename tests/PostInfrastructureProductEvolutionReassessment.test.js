@@ -108,7 +108,9 @@ async function run() {
         const routerSource = await rawSource('ui/router/index.js');
         assert(routerSource.includes("path: '/settings/arweave-gateway'"), 'A1. /settings/arweave-gateway route registered');
         const appSource = await rawSource('ui/App.js');
-        assert(appSource.includes('to="/settings/arweave-gateway"'), 'A1. Arweave Gateway settings reachable from the always-mounted top nav');
+        assert(appSource.includes('to="/settings"'), 'A1. the Network Settings hub is reachable from the always-mounted top nav');
+        const networkSettingsSource = await rawSource('ui/views/NetworkSettingsView.js');
+        assert(networkSettingsSource.includes('to="/settings/arweave-gateway"'), 'A1. Arweave Gateway settings reachable from the Network Settings hub');
 
         // A2. Nostr Relay — the direct structural mirror, reconfirmed.
         assert(await sourceExists('core/NostrRelayConfiguration.js'), 'A2. core/NostrRelayConfiguration.js exists');
@@ -116,7 +118,7 @@ async function run() {
         assert(await sourceExists('application/SetNostrRelayConfigurationUseCase.js'), 'A2. application/SetNostrRelayConfigurationUseCase.js exists');
         assert(await sourceExists('ui/views/NostrRelaySettingsView.js'), 'A2. ui/views/NostrRelaySettingsView.js exists');
         assert(routerSource.includes("path: '/settings/nostr-relay'"), 'A2. /settings/nostr-relay route registered');
-        assert(appSource.includes('to="/settings/nostr-relay"'), 'A2. Nostr Relay settings reachable from the always-mounted top nav');
+        assert(networkSettingsSource.includes('to="/settings/nostr-relay"'), 'A2. Nostr Relay settings reachable from the Network Settings hub');
 
         // A3. IPFS Gateway — reconfirmed absent (0.9.373's own DEFER
         // still holds): no configuration seam exists, and both real
@@ -326,7 +328,7 @@ async function run() {
         // new milestone driver on its own.
         const navSource = await rawSource('ui/App.js');
         const navLinkCount = (navSource.match(/router-link/g) || []).length / 2; // opening + closing tag
-        assert(navLinkCount === 15, `C8. the always-mounted top nav carries exactly 15 router-link destinations, five of them settings destinations added across this arc and 0.9.386/0.9.388 — found ${navLinkCount}`);
+        assert(navLinkCount === 11, `C8. the always-mounted top nav carries exactly 11 router-link destinations, the five settings destinations added across this arc and 0.9.386/0.9.388 now consolidated behind one Network Settings hub link — found ${navLinkCount}`);
 
         console.log('\n=== SECTION C: CROSS-CAPABILITY GAP SWEEP ===');
         console.log('Six historical examples (Commentary->surfaces, Publish->distribution, Peer->sync, Discovery tag->UX,');

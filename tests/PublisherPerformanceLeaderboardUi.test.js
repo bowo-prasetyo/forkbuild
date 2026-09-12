@@ -170,7 +170,7 @@ async function run() {
         );
 
         const routeCount = (routerSource.match(/\{ path:/g) || []).length;
-        assert(routeCount === 24, n(`A6. twenty-four routes are now registered — one more than 0.9.416's own audit found (23) — /publisher-leaderboard is a genuinely new, twenty-fourth route, never a repurposing of an existing one (found ${routeCount})`));
+        assert(routeCount === 25, n(`A6. twenty-five routes are now registered — /publisher-leaderboard (one more than 0.9.416's own audit found, 23->24) plus the new /settings Network Settings hub route (24->25) — neither a repurposing of an existing one (found ${routeCount})`));
 
         console.log('\n=== SECTION A: ROUTE REACHABILITY ===');
         console.log('✓ Section A: /publisher-leaderboard is registered, resolves to a real PublisherPerformanceLeaderboardView component, and is actually reachable from a real link on the Publications page.');
@@ -331,7 +331,7 @@ async function run() {
 
         const topNavLinks = [...appSource.matchAll(/<router-link to="([^"]+)"/g)].map((m) => m[1]);
         assert(!topNavLinks.includes('/publisher-leaderboard'), n('H3. /publisher-leaderboard remains ABSENT from App.js\'s top-nav router-link destinations — this milestone did not promote it to global navigation'));
-        assert(topNavLinks.length === 15, n(`H4. App.js\'s top nav still carries exactly fifteen destinations, unchanged (found ${topNavLinks.length})`));
+        assert(topNavLinks.length === 11, n(`H4. App.js\'s top nav now carries exactly eleven destinations, the five settings destinations consolidated behind one Network Settings hub link (found ${topNavLinks.length})`));
 
         // /reconciliation-leaderboard remains separately, independently
         // reachable — this milestone did not fold it away or replace it.

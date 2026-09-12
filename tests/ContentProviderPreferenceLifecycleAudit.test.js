@@ -301,8 +301,10 @@ async function run() {
         assert(/path:\s*'\/settings\/content-provider'/.test(routerSource),
             '2. the settings route is still reachable');
         const appSource = await source('ui/App.js');
-        assert(/router-link to="\/settings\/content-provider"/.test(appSource),
-            '3. the settings page is still linked from the top nav — establishing a preference is not a URL-only capability');
+        assert(/router-link to="\/settings"/.test(appSource), '3a. the Network Settings hub is still linked from the top nav');
+        const networkSettingsSource = await source('ui/views/NetworkSettingsView.js');
+        assert(/router-link to="\/settings\/content-provider"/.test(networkSettingsSource),
+            '3b. the settings page is still linked from the Network Settings hub — establishing a preference is not a URL-only capability');
         const publicationsViewSource = await source('ui/views/DecentralizedPublicationsView.js');
         assert(/await preferredPlacementCreationCoordinator\.create\(entry\.publication\.id\)/.test(publicationsViewSource),
             '4. the Publication Center\'s own "Use Preferred Provider" trigger is still the one production caller of the preferred coordinator with no explicit storage — the consuming half of the journey');

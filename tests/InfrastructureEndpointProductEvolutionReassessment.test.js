@@ -427,8 +427,8 @@ async function run() {
         // time, each its own route/link — the same mechanical pattern a
         // Nostr Relay entry would follow, never a generic "Infrastructure"
         // parent page.
-        const appSource = await source('ui/App.js');
-        assert(appSource.includes("router-link to=\"/settings/arweave-gateway\""), 'H2. Arweave Gateway already has its own standalone nav entry, the pattern to repeat for Nostr relay, not replace with a shared page');
+        const networkSettingsSource = await source('ui/views/NetworkSettingsView.js');
+        assert(networkSettingsSource.includes("router-link to=\"/settings/arweave-gateway\""), 'H2. Arweave Gateway already has its own standalone settings route, linked from the Network Settings hub — the pattern to repeat for Nostr relay, not replace with a shared page');
 
         console.log('✓ Section H: a Nostr Relay settings page belongs at its own route (e.g. /settings/nostr-relay), mirroring ArweaveGatewaySettingsView.js\'s exact one-page-one-concern shape — never folded into the existing Arweave page and never a shared "Infrastructure" parent surface');
     }

@@ -185,8 +185,10 @@ async function run() {
             '5. a real route exists for the settings entry point');
 
         const appSource = await source('ui/App.js');
-        assert(/router-link to="\/settings\/content-provider"/.test(appSource),
-            '6. a real top-nav link reaches the settings entry point — the same reachability gap 0.9.300 named for the CONSUMING side is not repeated on the ESTABLISHING side');
+        assert(/router-link to="\/settings"/.test(appSource), '6a. a real top-nav link reaches the Network Settings hub');
+        const networkSettingsSource = await source('ui/views/NetworkSettingsView.js');
+        assert(/router-link to="\/settings\/content-provider"/.test(networkSettingsSource),
+            '6b. the Network Settings hub links to the settings entry point — the same reachability gap 0.9.300 named for the CONSUMING side is not repeated on the ESTABLISHING side');
 
         const viewSource = await source('ui/views/ContentProviderSettingsView.js');
         assert(/inject\('roleProviderPreferenceStore',\s*null\)/.test(viewSource),

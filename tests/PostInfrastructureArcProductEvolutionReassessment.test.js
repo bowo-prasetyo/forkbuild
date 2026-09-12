@@ -234,9 +234,10 @@ async function run() {
         // not the stale 14 several existing regression guards still
         // asserted before Section D's own fix.
         const navLinkOpenTags = (appSource.match(/<router-link/g) || []).length;
-        assert(navLinkOpenTags === 15, n(`C1. the always-mounted top nav carries exactly 15 router-link destinations (found ${navLinkOpenTags})`));
-        assert(appSource.includes('/settings/stun') && appSource.includes('/settings/rendezvous'),
-            n('C1. the two new settings destinations are real, always-mounted nav entries, not hidden or conditionally rendered'));
+        assert(navLinkOpenTags === 11, n(`C1. the always-mounted top nav carries exactly 11 router-link destinations, the five settings destinations now consolidated behind one Network Settings hub link (found ${navLinkOpenTags})`));
+        const networkSettingsSource = await source('ui/views/NetworkSettingsView.js');
+        assert(appSource.includes('/settings') && networkSettingsSource.includes('/settings/stun') && networkSettingsSource.includes('/settings/rendezvous'),
+            n('C1. the two new settings destinations are real, reachable from the always-mounted Network Settings hub link, not hidden or conditionally rendered'));
 
         // C2. Neither new settings surface was inserted INTO an existing
         // primary journey — each is its own independent route, never a
@@ -337,7 +338,7 @@ async function run() {
 
         const appSource = await source('ui/App.js');
         const navLinkCount = (appSource.match(/router-link/g) || []).length / 2;
-        assert(navLinkCount === 15, n(`D2. the nav carries exactly 15 router-link destinations (found ${navLinkCount}) — the corrected counts in tests/PostInfrastructureProductEvolutionReassessment.test.js and tests/WholeProductProductEvolutionReassessment.test.js now match live reality`));
+        assert(navLinkCount === 11, n(`D2. the nav carries exactly 11 router-link destinations, the five settings destinations now consolidated behind one Network Settings hub link (found ${navLinkCount}) — the corrected counts in tests/PostInfrastructureProductEvolutionReassessment.test.js and tests/WholeProductProductEvolutionReassessment.test.js now match live reality`));
 
         const mainSource = await source('ui/main.js');
         assert(mainSource.includes('bootstrapProviders: resolvedRendezvousUrls.map((url) => new RendezvousDiscoveryProvider('),
@@ -348,9 +349,7 @@ async function run() {
         const closureFileA = await source('tests/ProductBaselineClosure.test.js');
         const closureFileB = await source('tests/PostPlaceNamingStableProductBaselineClosure.test.js');
         for (const [label, closureSource] of [['tests/ProductBaselineClosure.test.js', closureFileA], ['tests/PostPlaceNamingStableProductBaselineClosure.test.js', closureFileB]]) {
-            for (const route of ['/settings/arweave-gateway', '/settings/nostr-relay', '/settings/stun', '/settings/rendezvous']) {
-                assert(closureSource.includes(`'${route}'`), n(`D2. ${label}'s own EXPECTED_NAV_ROUTES now names ${route}`));
-            }
+            assert(closureSource.includes(`'/settings'`), n(`D2. ${label}'s own EXPECTED_NAV_ROUTES now names the Network Settings hub, '/settings'`));
             for (const view of ['ArweaveGatewaySettingsView.js', 'NostrRelaySettingsView.js', 'StunSettingsView.js', 'RendezvousSettingsView.js']) {
                 assert(closureSource.includes(view), n(`D2. ${label}'s own REACHABLE_SURFACES now classifies ${view}`));
             }

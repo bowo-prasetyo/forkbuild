@@ -238,9 +238,12 @@ async function runTests() {
             `B. Exactly 25 reachable surfaces are carried forward — 0.9.314's own 19, Place Naming decentralized discovery (0.9.253/0.9.316-era, added at 0.9.319), Place Naming decentralized publication (0.9.316, reclassified REACHABLE at 0.9.320), plus Arweave Gateway/Nostr Relay/STUN/Rendezvous settings (classified by 0.9.392, previously missing from this guard) (found ${reachableSurfaces.length}).`);
 
         const appSource = await rawSource('ui/App.js');
+        // The five individual settings destinations are now reached one hop
+        // further, through a single "/settings" Network Settings hub link —
+        // see REACHABLE_SURFACES above, unchanged: each settings view still
+        // exists and is still reachable, just no longer directly nav-linked.
         const EXPECTED_NAV_ROUTES = new Set(['/', '/editor', '/repository', '/worlds/recent', '/avatar', '/identity',
-            '/peers', '/conversations', '/publications', '/settings/content-provider', '/about',
-            '/settings/arweave-gateway', '/settings/nostr-relay', '/settings/stun', '/settings/rendezvous']);
+            '/peers', '/conversations', '/publications', '/settings', '/about']);
         const actualNavRoutes = new Set(
             [...appSource.matchAll(/to="(\/[a-zA-Z0-9\-/]*)"/g)].map((m) => m[1])
         );

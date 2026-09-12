@@ -268,7 +268,7 @@ async function run() {
 
         const appSource = await rawSource('ui/App.js');
         const appWideRoutes = ['/', '/editor', '/repository', '/worlds/recent', '/avatar', '/identity',
-            '/peers', '/conversations', '/publications', '/settings/content-provider', '/about'];
+            '/peers', '/conversations', '/publications', '/settings', '/about'];
         for (const route of appWideRoutes) {
             const linkMarker = route === '/' ? 'to="/"' : `to="${route}"`;
             assert(appSource.includes(linkMarker), `B3. ui/App.js still links ${route} from the always-mounted top nav.`);

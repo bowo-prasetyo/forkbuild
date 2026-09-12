@@ -352,7 +352,7 @@ async function run() {
 
         const appCode = await readSource('ui/App.js');
         const navLinkCount = (appCode.match(/<router-link/g) || []).length;
-        assert(navLinkCount === 15, n(`D4. the always-mounted top nav still carries fifteen router-link destinations, none of them a performance/ranking destination, recomputed fresh (found ${navLinkCount}) — 0.9.417 left App.js completely untouched`));
+        assert(navLinkCount === 11, n(`D4. the always-mounted top nav still carries eleven router-link destinations, none of them a performance/ranking destination, recomputed fresh (found ${navLinkCount}) — 0.9.417 left App.js completely untouched`));
         assert(!/performance|ranking/i.test(appCode), n('D5. no "performance" or "ranking" vocabulary exists anywhere in ui/App.js\'s own top navigation — this remains a contextual, not top-nav, entry point'));
 
         // Contextual entry: a link or button on some OTHER real page that
@@ -408,7 +408,7 @@ async function run() {
         // twenty-three routes as the baseline a future, distinct route
         // would extend; 0.9.417 built exactly that twenty-fourth route,
         // /publisher-leaderboard, so E1 now asserts that current count.
-        assert(routeCount === 24, n(`E1. twenty-four routes are now registered, recomputed fresh (found ${routeCount}) — the twenty-third-plus-one this section anticipated, /publisher-leaderboard, built by 0.9.417`));
+        assert(routeCount === 25, n(`E1. twenty-five routes are now registered, recomputed fresh (found ${routeCount}) — the twenty-third-plus-one this section anticipated, /publisher-leaderboard, built by 0.9.417, plus the new /settings Network Settings hub route`));
         assert(routerCode.includes("{ path: '/publications', name: 'publications', component: DecentralizedPublicationsView }"), n('E2. /publications is a real, existing, top-nav-reachable route — the contextual home 0.9.417 actually used for its own entry point'));
         // AMENDED BY 0.9.417 — E3 originally recorded that no
         // "/publisher-performance" or "/performance"-shaped route existed

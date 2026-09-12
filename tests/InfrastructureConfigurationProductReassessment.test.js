@@ -522,11 +522,16 @@ async function run() {
 
         // I5. Nav surface: four independent settings routes, never one
         // shared "Infrastructure" parent — reconfirmed against the real
-        // App.js.
+        // App.js. The four are now reached one hop further, through a
+        // single "/settings" Network Settings hub link, rather than four
+        // direct top-nav entries — still four independent routes/views,
+        // never merged into one shared "Infrastructure" page.
         const appSource = await sourceExists('ui/App.js') ? await source('ui/App.js') : '';
-        if (appSource) {
-            assert(appSource.includes('/settings/arweave-gateway') && appSource.includes('/settings/nostr-relay') && appSource.includes('/settings/stun') && appSource.includes('/settings/rendezvous'),
-                n('I5. all four settings surfaces remain independent, always-mounted nav entries in ui/App.js'));
+        const networkSettingsSource = await sourceExists('ui/views/NetworkSettingsView.js') ? await source('ui/views/NetworkSettingsView.js') : '';
+        if (appSource && networkSettingsSource) {
+            assert(appSource.includes('/settings')
+                && networkSettingsSource.includes('/settings/arweave-gateway') && networkSettingsSource.includes('/settings/nostr-relay') && networkSettingsSource.includes('/settings/stun') && networkSettingsSource.includes('/settings/rendezvous'),
+                n('I5. all four settings surfaces remain independent routes, reachable from the always-mounted Network Settings hub link in ui/App.js'));
             assert(!/\/settings\/infrastructure\b/.test(appSource),
                 n('I5. no shared "/settings/infrastructure" (or equivalent generic parent) route exists — each configuration keeps its own dedicated surface'));
         }

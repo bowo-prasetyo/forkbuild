@@ -13,6 +13,7 @@ import PeerConnectionsView from '../views/PeerConnectionsView.js';
 import ChatView from '../views/ChatView.js';
 import ConversationsView from '../views/ConversationsView.js';
 import DecentralizedPublicationsView from '../views/DecentralizedPublicationsView.js';
+import NetworkSettingsView from '../views/NetworkSettingsView.js';
 import ContentProviderSettingsView from '../views/ContentProviderSettingsView.js';
 import ArweaveGatewaySettingsView from '../views/ArweaveGatewaySettingsView.js';
 import NostrRelaySettingsView from '../views/NostrRelaySettingsView.js';
@@ -72,6 +73,10 @@ const routes = [
     // DecentralizedPublication envelopes (0.7.0) this replica has
     // cataloged (0.7.2), regardless of whether their content resolves.
     { path: '/publications', name: 'publications', component: DecentralizedPublicationsView },
+    // Network Settings hub — one top-nav entry point linking to the five
+    // endpoint-server settings pages below (content-provider, arweave-gateway,
+    // nostr-relay, stun, rendezvous), each still its own route and component.
+    { path: '/settings', name: 'network-settings', component: NetworkSettingsView },
     // 0.9.302 — Content Provider Preference Settings Entry Point. The one
     // ordinary product path to create/change the persisted CONTENT role
     // provider preference (core/RoleProviderPreference.js, 0.9.293) that

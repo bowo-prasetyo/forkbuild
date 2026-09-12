@@ -417,8 +417,11 @@ async function run() {
             n('provider preference for Snapshot content: core/RoleProviderPreference.js exists'));
         assert(routerCode.includes("path: '/settings/content-provider'"),
             n('provider preference for Snapshot content is reachable through a real route (/settings/content-provider) — COMPLETE, not INTERNAL'));
-        assert(appCode.includes('to="/settings/content-provider"'),
-            n('the Content Provider settings destination is a real, always-mounted top-nav link — COMPLETE'));
+        assert(appCode.includes('to="/settings"'),
+            n('the Content Provider settings destination is reachable through the always-mounted Network Settings hub link — COMPLETE'));
+        const networkSettingsCode = await readSource('ui/views/NetworkSettingsView.js');
+        assert(networkSettingsCode.includes('to="/settings/content-provider"'),
+            n('the Network Settings hub itself links to the Content Provider settings destination'));
 
         // 7. Post-publish distribution action — three converging entry
         // points, reconfirmed present (not re-litigating 0.9.378's own
