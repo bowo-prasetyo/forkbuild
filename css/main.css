@@ -3850,6 +3850,36 @@ html, body {
     color: #c9c9c9;
 }
 
+/* 0.9.436 — Publications Distribution Section Reorganization. One
+   contextual "Distribution" section per publication card, always
+   visible (never nested inside .identity-mgmt-card-details above) —
+   grouping the three RoleProviderRole roles (Announcement/Discovery,
+   Content, Proof/Anchoring) that were previously split across two
+   different views/locations. Reuses .evidence-list/.evidence-anchor-card/
+   .evidence-convergence-title wholesale — the one genuinely new
+   presentation element is the section heading and the per-role wrapper. */
+.identity-mgmt-distribution {
+    margin-top: 0.85rem;
+    padding-top: 0.85rem;
+    border-top: 1px solid #2a2a2a;
+    display: flex;
+    flex-direction: column;
+    gap: 0.9rem;
+}
+
+.identity-mgmt-distribution-heading {
+    margin: 0;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #e0e0e0;
+}
+
+.identity-mgmt-distribution-role {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+}
+
 /* Page-level wallet/archive/publisher tools panel on the Publications
    page — same disclosure pattern, one level up. */
 .publications-tools-panel {

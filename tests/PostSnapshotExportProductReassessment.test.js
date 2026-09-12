@@ -459,13 +459,27 @@ async function runTests() {
         assert(/discoverPublication\(\)\s*\{/.test(canvasSource), 'H2b. ...and still defines discoverPublication()');
         assert(/@click="discoverPublication"/.test(canvasSource), 'H2c. ...wired to a real @click handler — "Discover Publication" stays reachable');
 
-        // H3 — the naming correction, asserted directly so a future
-        // sweep does not mistake DecentralizedPublicationsView.js's own
-        // silence on Nostr/Arweave for an unwired capability.
+        // H3 — AMENDED BY 0.9.436 — Publications Distribution Section
+        // Reorganization. This assertion originally guarded against a
+        // future sweep mistaking DecentralizedPublicationsView.js's own
+        // (then-total) silence on Nostr/Arweave for an unwired capability.
+        // 0.9.436 deliberately ends that silence: the SAME already-composed,
+        // already-app-wide publicationDistributionCommand/
+        // snapshotDistributionCommand this section's own H1/H2 already
+        // confirm are composed in ui/main.js and reachable through
+        // WorldEncounterCanvas.js are now ALSO injected here, inside a
+        // contextual "Distribution > Announcement / Discovery" section —
+        // never a second composition, never a second Nostr/Arweave client
+        // (see ui/views/DecentralizedPublicationsView.js's own 0.9.436
+        // header). `DecentralizedWorldDiscoveryQuery` specifically remains
+        // absent — this milestone touches Announcement/Discovery
+        // DISTRIBUTION only, never the World-material discovery query
+        // family H1/H2 above cover; that half of this assertion still
+        // holds unchanged.
         const decentralizedViewSource = await rawSource('ui/views/DecentralizedPublicationsView.js');
-        assert(!/Nostr|Arweave|DecentralizedWorldDiscoveryQuery/.test(decentralizedViewSource), 'H3. ui/views/DecentralizedPublicationsView.js still contains zero Nostr/Arweave/DecentralizedWorldDiscoveryQuery references — that view is Bitcoin/Base anchor evidence + IPFS, a different decentralization concern entirely; the real Nostr/Arweave discovery UI is WorldEncounterCanvas.js\'s own "Discover Publication"/"Distribute Publication" panels');
+        assert(!/DecentralizedWorldDiscoveryQuery/.test(decentralizedViewSource), 'H3. AMENDED BY 0.9.436 — ui/views/DecentralizedPublicationsView.js still contains zero DecentralizedWorldDiscoveryQuery references (the World-material discovery family remains WorldEncounterCanvas.js\'s own, untouched); Nostr/Arweave references now DO exist here, deliberately, as this milestone\'s own Announcement/Discovery distribution wiring — not a naming-assumption violation, but this milestone\'s own explicit scope');
 
-        console.log('✓ Section H: Decentralized discovery — COMPLETE. Nostr + Arweave discovery/distribution is composed in ui/main.js and reachable through WorldEncounterCanvas.js\'s own actions — not through DecentralizedPublicationsView.js, whose name suggests it but whose actual scope is Bitcoin/Base anchor evidence and IPFS mirroring.');
+        console.log('✓ Section H: AMENDED BY 0.9.436 — Decentralized discovery composition remains exactly as this section originally found it (H1/H2, WorldEncounterCanvas.js untouched); DecentralizedPublicationsView.js now ALSO reaches the same already-composed Nostr/Arweave distribution commands, inside its own contextual "Distribution" section, closing the reachability gap tests/PublicationsDistributionSectionProductAndUIBoundaryAudit.test.js (0.9.435) documented.');
     }
 
     // ---------------------------------------------------------------

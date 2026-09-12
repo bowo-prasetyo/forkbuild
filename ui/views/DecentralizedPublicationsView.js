@@ -1039,6 +1039,31 @@ export default {
         // comment).
         const ipfsRemotePublicationCoordinator = inject('ipfsRemotePublicationCoordinator', null);
         const publicationCatalogContentResolver = inject('publicationCatalogContentResolver', null);
+        // 0.9.436 — Publications Distribution Section Reorganization.
+        // Announcement/Discovery's own two real write actions
+        // ("Distribute Publication"/"Distribute Snapshot") reach THIS
+        // page for the first time here — the SAME app-wide commands
+        // ui/main.js already composes and provides
+        // (`publicationDistributionCommand`/`snapshotDistributionCommand`),
+        // and ui/views/WorldView.js already injects for
+        // OwnPublicationPanel.js/WorldEncounterCanvas.js (0.9.104/0.9.138/
+        // 0.9.430). See tests/
+        // PublicationsDistributionSectionProductAndUIBoundaryAudit.test.js's
+        // own Section C: this exact command already succeeds, unmodified,
+        // against a plain /publications-shaped entry. No new orchestrator,
+        // uploader, or publisher is constructed here — this file calls
+        // exactly what those two components already call. Optional,
+        // exactly like every other collaborator on this page: absent, the
+        // new Distribution > Announcement/Discovery section simply
+        // renders nothing for the corresponding action.
+        // `publicationDistributionLifecycleStore` is read-only here — the
+        // SAME store WorldEncounterCanvas already reads its own
+        // `discoveryObservations` computed through (0.9.433/0.9.434); this
+        // page never records into it directly, only through the command
+        // above, exactly as that component does.
+        const publicationDistributionCommand = inject('publicationDistributionCommand', null);
+        const snapshotDistributionCommand = inject('snapshotDistributionCommand', null);
+        const publicationDistributionLifecycleStore = inject('publicationDistributionLifecycleStore', null);
         // 0.8.70 — IPFS Publication & Content Verification UI. Optional —
         // absent here (e.g. a test harness that never provides it), the
         // "Content retrieval" sub-section simply never renders, the
@@ -3234,7 +3259,34 @@ export default {
                 // pure projection over state already held above. Nothing
                 // here is fetched, polled, or persisted, and expanding this
                 // disclosure performs zero network operations.
-                crossDomainPublicationObservationTimelineExpanded: false
+                crossDomainPublicationObservationTimelineExpanded: false,
+                // 0.9.436 — Publications Distribution Section
+                // Reorganization. Announcement/Discovery's own per-entry
+                // ephemeral state, following the identical convention
+                // `creationAttempts`/`placementCreationAttempts` above
+                // already establish, one role over.
+                // `discoveryDistributionProvider` is THIS entry's own
+                // explicit Nostr/Arweave choice — mirrors
+                // WorldEncounterCanvas's own `selectedDiscoveryProvider`
+                // (0.9.430), one entry at a time rather than one
+                // page-global selection, because this page lists many
+                // entries at once (see this milestone's own audit,
+                // tests/PublicationsDistributionSectionProductAndUIBoundaryAudit.test.js,
+                // Section D). `discoveryDistributionAttempt`/
+                // `snapshotDistributionAttempt` are single ephemeral
+                // attempt objects for THIS entry, `null` until
+                // "Distribute Publication"/"Distribute Snapshot" is
+                // clicked — mirroring `discoveryAttempt`/
+                // `bitcoinAnchorTransactionConstruction` above exactly,
+                // never keyed by anything, since one publication has at
+                // most one of each in flight at a time. None of the
+                // three is ever read from or written to anything durable
+                // — the durable record stays entirely
+                // publicationDistributionLifecycleStore's own, read
+                // fresh through discoveryObservationsView(entry) below.
+                discoveryDistributionProvider: 'nostr',
+                discoveryDistributionAttempt: null,
+                snapshotDistributionAttempt: null
             })));
             await Promise.all(entries.filter((entry) => !entry.view && !entry.checking).map(resolveEntry));
             entries.forEach(loadEvidence);
@@ -6564,6 +6616,109 @@ export default {
             return describeCreationButtonLabel(humanizeContentKind(anchorType), { creating: view.state === ExternalAnchorCreationUiState.CREATING, hasExisting });
         }
 
+        // 0.9.436 — Publications Distribution Section Reorganization.
+        // Announcement/Discovery's own two real write actions, wired onto
+        // THIS page for the first time. Mirrors
+        // ui/views/WorldView.js#distributeWorldEncounterPublication()/
+        // distributeWorldEncounterSnapshot() exactly, one call site over
+        // — this page constructs no new orchestrator, uploader, or
+        // publisher of its own, and reads no ownership field (see this
+        // milestone's own audit, Section C5).
+        function distributeEntryPublication(entry, discoveryProviderChoice) {
+            if (!publicationDistributionCommand) {
+                return Promise.reject(new Error('Publication distribution is not available.'));
+            }
+            return publicationDistributionCommand({
+                publication: entry.publication,
+                serializedMaterial: JSON.stringify(entry.publication.toJSON()),
+                discoveryProvider: discoveryProviderChoice
+            });
+        }
+
+        function distributeEntrySnapshot(entry) {
+            if (!snapshotDistributionCommand || !publicationCatalogContentResolver) {
+                return Promise.reject(new Error('Snapshot distribution is not available.'));
+            }
+            const snapshotJson = publicationCatalogContentResolver.resolve(entry.publication.id);
+            if (snapshotJson === null) {
+                return Promise.reject(new Error('Snapshot distribution is not available.'));
+            }
+            return snapshotDistributionCommand(JSON.stringify(snapshotJson));
+        }
+
+        // The only writer of `entry.discoveryDistributionAttempt`, and
+        // the only caller of distributeEntryPublication() in this file —
+        // mirrors createAnchor()/createPlacement() above exactly, one
+        // role over: a single explicit click, the most recent attempt's
+        // own outcome shown here and nowhere else persists it (the
+        // durable record stays publicationDistributionLifecycleStore's
+        // own — see discoveryObservationsView() below). Named
+        // `...ForEntry`, never bare `distributePublication`, to stay
+        // clear of the one-Publication-plus-a-target-list shape that
+        // name would suggest — this function still takes exactly one
+        // entry and this page's own already-selected discoveryProvider,
+        // never a `targets` array (see application/
+        // PublicationDistributionOrchestrator.js's own header, "no
+        // multi-relay fan-out," unrevisited here).
+        async function distributePublicationForEntry(entry) {
+            if (entry.discoveryDistributionAttempt && entry.discoveryDistributionAttempt.distributing) {
+                return;
+            }
+            entry.discoveryDistributionAttempt = { distributing: true, error: null, result: null };
+            try {
+                const result = await distributeEntryPublication(entry, entry.discoveryDistributionProvider);
+                entry.discoveryDistributionAttempt = { distributing: false, error: null, result };
+            } catch (error) {
+                entry.discoveryDistributionAttempt = { distributing: false, error: error.message, result: null };
+            }
+        }
+
+        function discoveryDistributionButtonLabel(entry) {
+            return (entry.discoveryDistributionAttempt && entry.discoveryDistributionAttempt.distributing)
+                ? 'Distributing…'
+                : 'Distribute Publication';
+        }
+
+        // The only writer of `entry.snapshotDistributionAttempt`, and the
+        // only caller of distributeEntrySnapshot() in this file — mirrors
+        // distributePublicationForEntry() immediately above exactly, one
+        // action over.
+        async function distributeSnapshot(entry) {
+            if (entry.snapshotDistributionAttempt && entry.snapshotDistributionAttempt.distributing) {
+                return;
+            }
+            entry.snapshotDistributionAttempt = { distributing: true, error: null, result: null };
+            try {
+                const result = await distributeEntrySnapshot(entry);
+                entry.snapshotDistributionAttempt = { distributing: false, error: null, result };
+            } catch (error) {
+                entry.snapshotDistributionAttempt = { distributing: false, error: error.message, result: null };
+            }
+        }
+
+        function snapshotDistributionButtonLabel(entry) {
+            return (entry.snapshotDistributionAttempt && entry.snapshotDistributionAttempt.distributing)
+                ? 'Distributing…'
+                : 'Distribute Snapshot';
+        }
+
+        // Read-only projection over publicationDistributionLifecycleStore's
+        // own getDiscoveryObservations(publicationId) — the SAME
+        // store-side, already-portable multi-substrate observation model
+        // 0.9.433/0.9.434 already built (see this milestone's own audit,
+        // Section F). Never recomputed, never re-derived — a plain read,
+        // mirroring WorldEncounterCanvas's own discoveryObservations()
+        // computed one layer down (a plain function here, rather than a
+        // computed, since this page must key the read by
+        // `entry.publication.id` rather than one single page-wide
+        // selection).
+        function discoveryObservationsView(entry) {
+            if (!publicationDistributionLifecycleStore || typeof publicationDistributionLifecycleStore.getDiscoveryObservations !== 'function') {
+                return [];
+            }
+            return publicationDistributionLifecycleStore.getDiscoveryObservations(entry.publication.id);
+        }
+
         async function recheck(entry) {
             await resolveEntry(entry);
         }
@@ -6669,6 +6824,10 @@ export default {
             canRetrieve, retrieve, recheck,
             describeKnownEvidenceCount, toggleEvidence, verifyAnchor, evidenceBadgeClass, lifecycleNote,
             createAnchor, creationView, creationBadgeClass, creationButtonLabel,
+            publicationDistributionCommand, snapshotDistributionCommand,
+            distributePublicationForEntry, discoveryDistributionButtonLabel,
+            distributeSnapshot, snapshotDistributionButtonLabel,
+            discoveryObservationsView,
             toggleInspect, inspectionExpanded, inspectionDetail, inspectionTypeSpecific, inspectionKnowledge,
             evidenceDiscoveryCoordinator, discoverFromPeers, discoveryView, discoveryBadgeClass, discoveryButtonLabel,
             placementResolutionCoordinator, describeKnownPlacementCount, togglePlacements, resolvePlacement, placementBadgeClass, placementLifecycleNote,
@@ -8902,6 +9061,227 @@ export default {
                         </button>
                     </div>
 
+                    <!-- 0.9.436 — Publications Distribution Section
+                         Reorganization. One contextual "Distribution"
+                         section per publication, grouping the three
+                         RoleProviderRole roles (0.9.293) that were
+                         previously split across two structurally
+                         different views/locations — see tests/
+                         PublicationsDistributionSectionProductAndUIBoundaryAudit.test.js
+                         (0.9.435) for the audit this milestone implements.
+                         This section changes NO distribution semantics:
+                         Content and Proof/Anchoring below are the EXACT
+                         SAME availableStorageTypes()/availableAnchorTypes()
+                         driven cards, createPlacement()/createAnchor()
+                         calls, and per-entry ephemeral state
+                         (placementCreationAttempts/creationAttempts) this
+                         page already had — MOVED here verbatim from
+                         deeper in the "Snapshot, Anchoring, IPFS &
+                         Evidence Details" disclosure below, never
+                         rebuilt (see the two "moved verbatim" comments
+                         left at their old locations). Announcement/
+                         Discovery is the one genuinely NEW wiring on this
+                         page: the same already-composed, already-app-wide
+                         publicationDistributionCommand/
+                         snapshotDistributionCommand OwnPublicationPanel.js/
+                         WorldEncounterCanvas.js already call (0.9.104/
+                         0.9.138/0.9.430), reached from /publications for
+                         the first time — this milestone's own audit,
+                         Section C, already proved that command succeeds
+                         unmodified against a plain /publications-shaped
+                         entry.
+
+                         EACH ROLE KEEPS ITS OWN EXISTING VERB — "Distribute
+                         Publication"/"Distribute Snapshot" for Announcement/
+                         Discovery, "Create <type> Anchor" for Proof/
+                         Anchoring, "Create <type> Placement" for Content —
+                         deliberately never renamed to one generic "Publish"
+                         verb: see application/SnapshotPlacementCreationView.js's
+                         own header, "never called 'Publish to <storage>'...
+                         a snapshot placement is a claim about WHERE bytes
+                         can presently be retrieved, never a second act of
+                         publishing." Renaming it here would quietly
+                         reintroduce the exact distinction that file's own
+                         header explicitly rejects.
+
+                         NO NEW ORCHESTRATOR, COORDINATOR, OR PROVIDER
+                         ABSTRACTION. This section is presentation-only — a
+                         heading and a grouping around three independent
+                         collaborators this page either already called
+                         (createAnchor/createPlacement) or now calls the
+                         identical way another component already does
+                         (publicationDistributionCommand/
+                         snapshotDistributionCommand). No
+                         "DistributionProviderPanel," no unified
+                         AnnouncementProvider/ContentProvider/AnchorProvider
+                         abstraction — the three roles remain three
+                         independently meaningful facts, per publicationId
+                         (see discoveryObservationsView(entry) below,
+                         reading 0.9.433/0.9.434's own already-portable,
+                         per-substrate observation model unmodified).
+
+                         CONFIGURATION LINKS ARE DELIBERATELY NOT PART OF
+                         THIS SECTION. Reaching Settings contextually from
+                         here (CONFIGURATION_DISCOVERABILITY_GAP, this
+                         milestone's own audit Section E) is a separate,
+                         later, already-scoped milestone's own job. -->
+                    <div class="identity-mgmt-distribution">
+                        <h4 class="identity-mgmt-distribution-heading">Distribution</h4>
+
+                        <!-- Announcement / Discovery. Hidden entirely when
+                             neither command was ever provided — the same
+                             degrade-gracefully posture every optional
+                             section on this page already holds. -->
+                        <div v-if="publicationDistributionCommand || snapshotDistributionCommand" class="identity-mgmt-distribution-role">
+                            <span class="evidence-convergence-title">Announcement / Discovery</span>
+                            <div class="evidence-list">
+                                <div v-if="publicationDistributionCommand" class="evidence-anchor-card">
+                                    <div class="evidence-anchor-header">
+                                        <span class="evidence-anchor-type">Publication</span>
+                                    </div>
+                                    <p class="form-hint form-hint--neutral">
+                                        Distributes this Publication's own signed envelope — uploading its
+                                        material and announcing it via the chosen substrate in one call.
+                                    </p>
+                                    <label class="form-label">
+                                        Substrate
+                                        <select v-model="entry.discoveryDistributionProvider" class="form-select"
+                                                :disabled="entry.discoveryDistributionAttempt && entry.discoveryDistributionAttempt.distributing">
+                                            <option value="nostr">Nostr</option>
+                                            <option value="arweave">Arweave</option>
+                                        </select>
+                                    </label>
+                                    <div class="identity-mgmt-actions">
+                                        <button class="action-btn action-btn--primary"
+                                                :disabled="entry.discoveryDistributionAttempt && entry.discoveryDistributionAttempt.distributing"
+                                                @click="distributePublicationForEntry(entry)">
+                                            {{ discoveryDistributionButtonLabel(entry) }}
+                                        </button>
+                                    </div>
+                                    <p v-if="entry.discoveryDistributionAttempt && entry.discoveryDistributionAttempt.error" class="form-hint form-hint--neutral">
+                                        {{ entry.discoveryDistributionAttempt.error }}
+                                    </p>
+                                    <!-- 0.9.433/0.9.434 — every substrate this
+                                         Publication has been distributed
+                                         through, independently, read straight
+                                         from publicationDistributionLifecycleStore
+                                         — never collapsed into one aggregate
+                                         status. -->
+                                    <dl v-if="discoveryObservationsView(entry).length > 0" class="evidence-fields">
+                                        <div v-for="observation in discoveryObservationsView(entry)" :key="observation.discoveryProvider" class="evidence-field">
+                                            <dt>Discovery ({{ observation.discoveryProvider }})</dt>
+                                            <dd>{{ observation.state }}</dd>
+                                        </div>
+                                    </dl>
+                                </div>
+
+                                <div v-if="snapshotDistributionCommand" class="evidence-anchor-card">
+                                    <div class="evidence-anchor-header">
+                                        <span class="evidence-anchor-type">Snapshot</span>
+                                    </div>
+                                    <p class="form-hint form-hint--neutral">
+                                        Distributes this replica's own locally held Snapshot bytes — never
+                                        available when this replica does not currently possess them.
+                                    </p>
+                                    <div class="identity-mgmt-actions">
+                                        <button class="action-btn action-btn--primary"
+                                                :disabled="entry.snapshotDistributionAttempt && entry.snapshotDistributionAttempt.distributing"
+                                                @click="distributeSnapshot(entry)">
+                                            {{ snapshotDistributionButtonLabel(entry) }}
+                                        </button>
+                                    </div>
+                                    <p v-if="entry.snapshotDistributionAttempt && entry.snapshotDistributionAttempt.error" class="form-hint form-hint--neutral">
+                                        {{ entry.snapshotDistributionAttempt.error }}
+                                    </p>
+                                    <dl v-if="entry.snapshotDistributionAttempt && entry.snapshotDistributionAttempt.result" class="evidence-fields">
+                                        <div class="evidence-field"><dt>Content</dt><dd>{{ entry.snapshotDistributionAttempt.result.contentReference }}</dd></div>
+                                    </dl>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Content — MOVED VERBATIM from this card's own
+                             "Snapshot Placements" disclosure below (0.8.25);
+                             see the "moved verbatim" comment left at its old
+                             location. Same v-for, same createPlacement()/
+                             placementCreationView() calls, same per-entry
+                             placementCreationAttempts state — nothing about
+                             the action itself changed, only where it
+                             renders. Never called "Publish to <storage>" —
+                             a snapshot placement is a claim about WHERE
+                             bytes can presently be retrieved, never a
+                             second act of publishing (application/
+                             SnapshotPlacementCreationView.js's own header). -->
+                        <div v-if="availableStorageTypes.length > 0" class="identity-mgmt-distribution-role">
+                            <span class="evidence-convergence-title">Content</span>
+                            <div class="evidence-list">
+                                <div v-for="storage in availableStorageTypes" :key="storage" class="evidence-anchor-card">
+                                    <div class="evidence-anchor-header">
+                                        <span class="evidence-anchor-type">{{ humanizeContentKind(storage) }}</span>
+                                        <span v-if="placementCreationView(entry, storage).label" class="peer-badge" :class="placementCreationBadgeClass(entry, storage)">
+                                            {{ placementCreationView(entry, storage).label }}
+                                        </span>
+                                    </div>
+                                    <p v-if="placementCreationView(entry, storage).message" class="form-hint form-hint--neutral">
+                                        {{ placementCreationView(entry, storage).message }}
+                                    </p>
+                                    <p v-if="placementCreationView(entry, storage).reason" class="form-hint form-hint--neutral">
+                                        {{ placementCreationView(entry, storage).reason }}
+                                    </p>
+                                    <dl v-if="placementCreationView(entry, storage).placement" class="evidence-fields">
+                                        <div class="evidence-field"><dt>Locator</dt><dd>{{ placementCreationView(entry, storage).placement.locator }}</dd></div>
+                                        <div class="evidence-field"><dt>Content hash</dt><dd>{{ placementCreationView(entry, storage).placement.contentHash }}</dd></div>
+                                    </dl>
+                                    <div class="identity-mgmt-actions">
+                                        <button class="action-btn action-btn--primary"
+                                                :disabled="placementCreationView(entry, storage).state === 'creating'"
+                                                @click="createPlacement(entry, storage)">
+                                            {{ placementCreationButtonLabel(entry, storage) }}
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Proof / Anchoring — MOVED VERBATIM from this
+                             card's own evidence disclosure below (0.8.11);
+                             see the "moved verbatim" comment left at its old
+                             location. Same v-for, same createAnchor()/
+                             creationView() calls, same per-entry
+                             creationAttempts state — nothing about the
+                             action itself changed, only where it renders. -->
+                        <div v-if="availableAnchorTypes.length > 0" class="identity-mgmt-distribution-role">
+                            <span class="evidence-convergence-title">Proof / Anchoring</span>
+                            <div class="evidence-list">
+                                <div v-for="anchorType in availableAnchorTypes" :key="anchorType" class="evidence-anchor-card">
+                                    <div class="evidence-anchor-header">
+                                        <span class="evidence-anchor-type">{{ humanizeContentKind(anchorType) }}</span>
+                                        <span v-if="creationView(entry, anchorType).label" class="peer-badge" :class="creationBadgeClass(entry, anchorType)">
+                                            {{ creationView(entry, anchorType).label }}
+                                        </span>
+                                    </div>
+                                    <p v-if="creationView(entry, anchorType).message" class="form-hint form-hint--neutral">
+                                        {{ creationView(entry, anchorType).message }}
+                                    </p>
+                                    <p v-if="creationView(entry, anchorType).reason" class="form-hint form-hint--neutral">
+                                        {{ creationView(entry, anchorType).reason }}
+                                    </p>
+                                    <dl v-if="creationView(entry, anchorType).anchor" class="evidence-fields">
+                                        <div class="evidence-field"><dt>Transaction</dt><dd>{{ creationView(entry, anchorType).anchor.locator }}</dd></div>
+                                        <div class="evidence-field"><dt>Content hash</dt><dd>{{ creationView(entry, anchorType).anchor.contentHash }}</dd></div>
+                                    </dl>
+                                    <div class="identity-mgmt-actions">
+                                        <button class="action-btn action-btn--primary"
+                                                :disabled="creationView(entry, anchorType).state === 'creating'"
+                                                @click="createAnchor(entry, anchorType)">
+                                            {{ creationButtonLabel(entry, anchorType) }}
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                     <!-- Everything below is unchanged functionality (local
                          snapshot state, peer possession/transfer,
                          decentralization & sync, external anchoring on
@@ -9664,40 +10044,16 @@ export default {
                             </p>
                         </div>
 
-                        <!-- 0.8.11 — Explicit External Anchoring UX. One card per anchorType this
-                             replica can currently create evidence for (application/
-                             PublicationAnchorCreationCoordinator.js#availableAnchorTypes()) — hidden
-                             entirely when this replica has no publisher configured, exactly like
-                             "Retrieve from Peers" hides with no connected peer. Creating is always a
-                             single, explicit click; the result of the most recent attempt is shown
-                             here and nowhere else persists it. -->
-                        <div v-if="availableAnchorTypes.length > 0" class="evidence-list">
-                            <div v-for="anchorType in availableAnchorTypes" :key="anchorType" class="evidence-anchor-card">
-                                <div class="evidence-anchor-header">
-                                    <span class="evidence-anchor-type">{{ humanizeContentKind(anchorType) }}</span>
-                                    <span v-if="creationView(entry, anchorType).label" class="peer-badge" :class="creationBadgeClass(entry, anchorType)">
-                                        {{ creationView(entry, anchorType).label }}
-                                    </span>
-                                </div>
-                                <p v-if="creationView(entry, anchorType).message" class="form-hint form-hint--neutral">
-                                    {{ creationView(entry, anchorType).message }}
-                                </p>
-                                <p v-if="creationView(entry, anchorType).reason" class="form-hint form-hint--neutral">
-                                    {{ creationView(entry, anchorType).reason }}
-                                </p>
-                                <dl v-if="creationView(entry, anchorType).anchor" class="evidence-fields">
-                                    <div class="evidence-field"><dt>Transaction</dt><dd>{{ creationView(entry, anchorType).anchor.locator }}</dd></div>
-                                    <div class="evidence-field"><dt>Content hash</dt><dd>{{ creationView(entry, anchorType).anchor.contentHash }}</dd></div>
-                                </dl>
-                                <div class="identity-mgmt-actions">
-                                    <button class="action-btn action-btn--primary"
-                                            :disabled="creationView(entry, anchorType).state === 'creating'"
-                                            @click="createAnchor(entry, anchorType)">
-                                        {{ creationButtonLabel(entry, anchorType) }}
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
+                        <!-- 0.8.11 — Explicit External Anchoring UX. Its own
+                             per-anchorType creation card (one card per
+                             availableAnchorTypes()) now renders in this
+                             publication's own "Distribution > Proof / Anchoring"
+                             section, near the top of this card — see
+                             0.9.436's own header, above. Moved verbatim
+                             (same v-for, same createAnchor()/creationView()
+                             calls, same per-entry creationAttempts state);
+                             nothing about the action itself changed, only
+                             where it renders. -->
 
                         <!-- 0.8.61 — Explicit Bitcoin Anchor Transaction
                              Construction UI. One card per publication,
@@ -10639,43 +10995,19 @@ export default {
                             </button>
                         </div>
 
-                        <!-- 0.8.25 — Explicit Snapshot Placement Creation UX. One card per
-                             storage type this replica can currently place bytes onto
-                             (application/SnapshotPlacementCreationCoordinator.js#
-                             availableStorageTypes()) — hidden entirely when this replica has no
-                             content store registered, exactly like "Create <type> Anchor" hides
-                             with no creationCoordinator. Creating is always a single, explicit
-                             click; the result of the most recent attempt is shown here and
-                             nowhere else persists it. Never called "Publish to <storage>" — a
-                             snapshot placement is a claim about WHERE bytes can presently be
-                             retrieved, never a second act of publishing. -->
-                        <div v-if="availableStorageTypes.length > 0" class="evidence-list">
-                            <div v-for="storage in availableStorageTypes" :key="storage" class="evidence-anchor-card">
-                                <div class="evidence-anchor-header">
-                                    <span class="evidence-anchor-type">{{ humanizeContentKind(storage) }}</span>
-                                    <span v-if="placementCreationView(entry, storage).label" class="peer-badge" :class="placementCreationBadgeClass(entry, storage)">
-                                        {{ placementCreationView(entry, storage).label }}
-                                    </span>
-                                </div>
-                                <p v-if="placementCreationView(entry, storage).message" class="form-hint form-hint--neutral">
-                                    {{ placementCreationView(entry, storage).message }}
-                                </p>
-                                <p v-if="placementCreationView(entry, storage).reason" class="form-hint form-hint--neutral">
-                                    {{ placementCreationView(entry, storage).reason }}
-                                </p>
-                                <dl v-if="placementCreationView(entry, storage).placement" class="evidence-fields">
-                                    <div class="evidence-field"><dt>Locator</dt><dd>{{ placementCreationView(entry, storage).placement.locator }}</dd></div>
-                                    <div class="evidence-field"><dt>Content hash</dt><dd>{{ placementCreationView(entry, storage).placement.contentHash }}</dd></div>
-                                </dl>
-                                <div class="identity-mgmt-actions">
-                                    <button class="action-btn action-btn--primary"
-                                            :disabled="placementCreationView(entry, storage).state === 'creating'"
-                                            @click="createPlacement(entry, storage)">
-                                        {{ placementCreationButtonLabel(entry, storage) }}
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
+                        <!-- 0.8.25 — Explicit Snapshot Placement Creation UX. Its own
+                             per-storage-type creation card (one card per
+                             availableStorageTypes()) now renders in this
+                             publication's own "Distribution > Content"
+                             section, near the top of this card — see
+                             0.9.436's own header, above. Moved verbatim
+                             (same v-for, same createPlacement()/
+                             placementCreationView() calls, same per-entry
+                             placementCreationAttempts state); nothing
+                             about the action itself changed, only where it
+                             renders. Still never called "Publish to
+                             <storage>" there either — see that section's
+                             own comment. -->
 
                         <!-- 0.9.301 — Preferred Content Provider Placement Trigger. A SEPARATE
                              action from the per-storage cards above, never a replacement for any
