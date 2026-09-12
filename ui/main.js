@@ -14,6 +14,7 @@ import { IceServerConfigurationStore } from '../storage/IceServerConfigurationSt
 import { SetIceServerConfigurationUseCase } from '../application/SetIceServerConfigurationUseCase.js';
 import { TurnServerConfigurationStore } from '../storage/TurnServerConfigurationStore.js';
 import { resolveTurnServerConfiguration } from '../application/TurnServerConfigurationProvider.js';
+import { SetTurnServerConfigurationUseCase } from '../application/SetTurnServerConfigurationUseCase.js';
 import { DEFAULT_RENDEZVOUS_URLS } from '../peer/RendezvousConfig.js';
 import { RendezvousConfigurationStore } from '../storage/RendezvousConfigurationStore.js';
 import { SetRendezvousConfigurationUseCase } from '../application/SetRendezvousConfigurationUseCase.js';
@@ -229,6 +230,13 @@ const resolvedStunServers = (iceServerConfigurationStore.get() || { servers: DEF
 // exposed to any other part of this file.
 const turnServerConfigurationStore = new TurnServerConfigurationStore(new LocalStorageProvider());
 const resolvedTurnServerConfiguration = resolveTurnServerConfiguration({ turnServerConfigurationStore });
+// 0.9.456 — TURN Server Settings UI. The WRITE half of the settings entry
+// point, wired against this SAME store instance (never a second,
+// disconnected TurnServerConfigurationStore) — see application/
+// SetTurnServerConfigurationUseCase.js's own header. Both this use case and
+// the store itself are provided app-wide below so ui/views/
+// TurnServerSettingsView.js is the one thing that ever injects either.
+const setTurnServerConfigurationUseCase = new SetTurnServerConfigurationUseCase({ turnServerConfigurationStore });
 const resolvedIceServers = resolvedTurnServerConfiguration
     ? [...resolvedStunServers, resolvedTurnServerConfiguration.toIceServerEntry()]
     : resolvedStunServers;
@@ -1813,6 +1821,16 @@ app.provide('setNostrPublicationRelaySetConfigurationUseCase', setNostrPublicati
 // `nostrRelayConfigurationStore` already hold above.
 app.provide('iceServerConfigurationStore', iceServerConfigurationStore);
 app.provide('setIceServerConfigurationUseCase', setIceServerConfigurationUseCase);
+
+// 0.9.456 — TURN Server Settings UI. `turnServerConfigurationStore` and
+// `setTurnServerConfigurationUseCase` were already constructed earlier in
+// this file (needed immediately, to build `resolvedIceServers` itself) —
+// provided app-wide here, alongside the other settings stores/use cases, so
+// ui/views/TurnServerSettingsView.js is the one thing that ever injects
+// either, the identical shape `iceServerConfigurationStore`/
+// `nostrRelayConfigurationStore` already hold above.
+app.provide('turnServerConfigurationStore', turnServerConfigurationStore);
+app.provide('setTurnServerConfigurationUseCase', setTurnServerConfigurationUseCase);
 
 // 0.9.388 — Rendezvous Settings UI. `rendezvousConfigurationStore` and
 // `setRendezvousConfigurationUseCase` were already constructed earlier in

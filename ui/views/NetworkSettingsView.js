@@ -64,6 +64,20 @@ export default {
                     </router-link>
                 </li>
                 <li>
+                    <!-- 0.9.456 — TURN Server Settings UI. A genuinely
+                         separate page from "STUN Servers" above: that page
+                         configures STUN servers only (see core/
+                         IceServerConfiguration.js's own "STUN ONLY — NEVER
+                         TURN" header); this one configures a user's own TURN
+                         relay (core/TurnServerConfiguration.js, 0.9.454),
+                         deliberately never folded into the STUN row — see
+                         ui/views/TurnServerSettingsView.js's own header. -->
+                    <router-link to="/settings/turn-server" class="network-settings-link">
+                        <span class="network-settings-link-title">TURN Server</span>
+                        <span class="form-hint form-hint--neutral">Your own TURN relay for peer connections that need one.</span>
+                    </router-link>
+                </li>
+                <li>
                     <router-link to="/settings/rendezvous" class="network-settings-link">
                         <span class="network-settings-link-title">Rendezvous Servers</span>
                         <span class="form-hint form-hint--neutral">Servers used to help peers find each other.</span>

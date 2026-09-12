@@ -19,6 +19,7 @@ import ArweaveGatewaySettingsView from '../views/ArweaveGatewaySettingsView.js';
 import NostrRelaySettingsView from '../views/NostrRelaySettingsView.js';
 import NostrPublicationRelaySettingsView from '../views/NostrPublicationRelaySettingsView.js';
 import StunSettingsView from '../views/StunSettingsView.js';
+import TurnServerSettingsView from '../views/TurnServerSettingsView.js';
 import RendezvousSettingsView from '../views/RendezvousSettingsView.js';
 import ReconciliationCandidateLeaderboardView from '../views/ReconciliationCandidateLeaderboardView.js';
 import ReconciliationCandidateLeaderboardEvidenceExportComparisonView from '../views/ReconciliationCandidateLeaderboardEvidenceExportComparisonView.js';
@@ -123,6 +124,17 @@ const routes = [
     // dashboard" shape /settings/arweave-gateway and /settings/nostr-relay
     // already hold.
     { path: '/settings/stun', name: 'stun-settings', component: StunSettingsView },
+    // 0.9.456 — TURN Server Settings UI. A genuinely separate route/store/
+    // use case from /settings/stun directly above — see ui/views/
+    // TurnServerSettingsView.js's own header, "STUN CONFIGURATION ≠ TURN
+    // CONFIGURATION." The one ordinary product path to create/change/clear
+    // the persisted TURN server configuration (core/TurnServerConfiguration.js,
+    // storage/TurnServerConfigurationStore.js, application/
+    // SetTurnServerConfigurationUseCase.js) that 0.9.454/0.9.455 built with
+    // no settings surface of its own. Deliberately its own top-nav
+    // destination, the identical "not folded into a growing dashboard" shape
+    // every sibling endpoint-settings page above already holds.
+    { path: '/settings/turn-server', name: 'turn-server-settings', component: TurnServerSettingsView },
     // 0.9.388 — Rendezvous Settings UI. The one ordinary product path to
     // create/change/clear the persisted rendezvous server configuration
     // override (core/RendezvousConfiguration.js, storage/
