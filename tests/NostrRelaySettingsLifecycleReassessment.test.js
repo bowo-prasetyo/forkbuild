@@ -236,8 +236,16 @@ async function run() {
 
         // A7-A9. All THREE read-path composition call sites receive the
         // resolved relay.
-        assert(/composeDecentralizedWorldEncounterMaterialDiscoveryServices\(\{[\s\S]{0,300}?nostrRelayUrl:\s*resolvedNostrRelayUrl/.test(mainSource),
-            'A7. World Encounter (Publication) discovery composition receives the resolved relay');
+        //
+        // AMENDED BY 0.9.451 — Nostr Publication Relay Set Discovery
+        // Alignment. World Encounter (Publication) discovery no longer
+        // receives `resolvedNostrRelayUrl`; it now receives the resolved
+        // publication relay SET instead (`resolvedNostrPublicationRelayUrls`)
+        // — see `application/NostrPublicationRelaySetDiscoveryQueryService.js`'s
+        // own header for why a publication distributed to a configured
+        // relay set must be discoverable through that same set.
+        assert(/composeDecentralizedWorldEncounterMaterialDiscoveryServices\(\{[\s\S]{0,300}?nostrRelayUrls:\s*resolvedNostrPublicationRelayUrls/.test(mainSource),
+            'A7. World Encounter (Publication) discovery composition receives the resolved publication relay set — 0.9.451');
         assert(/nostrSnapshotDiscoveryQueryServiceOptions:\s*\{[\s\S]{0,200}?relayUrl:\s*resolvedNostrRelayUrl/.test(mainSource),
             'A8. Snapshot discovery composition receives the resolved relay');
         assert(/new NostrPlaceNamingDiscoverySource\(\{[\s\S]{0,200}?relayUrl:\s*resolvedNostrRelayUrl/.test(mainSource),
@@ -419,10 +427,14 @@ async function run() {
         // C1-C3. All three surfaces were already proven end-to-end in
         // Section B — this section confirms the STRUCTURAL claim behind
         // that proof: each surface's own real composition call site in
-        // ui/main.js genuinely receives resolvedNostrRelayUrl (re-swept
+        // ui/main.js genuinely receives its own resolved relay(s) (re-swept
         // independently of Section A's own sweep, never assumed).
-        assert(/composeDecentralizedWorldEncounterMaterialDiscoveryServices\(\{[\s\S]{0,300}?nostrRelayUrl:\s*resolvedNostrRelayUrl/.test(mainSource),
-            'C1. Publication discovery\'s real composition call site receives the resolved relay');
+        //
+        // AMENDED BY 0.9.451 — see this file's own A7 amendment, above:
+        // Publication discovery's own resolved value is now the publication
+        // relay set, not the general single discovery-relay preference.
+        assert(/composeDecentralizedWorldEncounterMaterialDiscoveryServices\(\{[\s\S]{0,300}?nostrRelayUrls:\s*resolvedNostrPublicationRelayUrls/.test(mainSource),
+            'C1. Publication discovery\'s real composition call site receives the resolved publication relay set — 0.9.451');
         assert(/nostrSnapshotDiscoveryQueryServiceOptions:\s*\{[\s\S]{0,200}?relayUrl:\s*resolvedNostrRelayUrl/.test(mainSource),
             'C2. Snapshot discovery\'s real composition call site receives the resolved relay');
         assert(/new NostrPlaceNamingDiscoverySource\(\{[\s\S]{0,200}?relayUrl:\s*resolvedNostrRelayUrl/.test(mainSource),

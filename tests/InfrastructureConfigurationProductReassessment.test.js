@@ -268,17 +268,28 @@ async function run() {
         // D4. Startup resolution -> concrete consumer: 0.9.368's own
         // finding was that Nostr relay has THREE independent read-path
         // consumers (World Encounter discovery, Snapshot discovery, Place
-        // Naming discovery) — reconfirmed live, all three still reference
-        // the single resolved value, never a hardcoded relay of their own.
-        const worldEncounterConsumer = /nostrRelayUrl:\s*resolvedNostrRelayUrl/.test(mainSource);
+        // Naming discovery) — reconfirmed live for the two 0.9.451 left
+        // untouched (Snapshot, Place Naming); World Encounter (Publication)
+        // discovery now reads the resolved publication relay SET instead
+        // (resolvedNostrPublicationRelayUrls) — see this file's own 0.9.451
+        // amendment, below.
+        const worldEncounterConsumer = /nostrRelayUrls:\s*resolvedNostrPublicationRelayUrls/.test(mainSource);
         const snapshotConsumer = /nostrSnapshotDiscoveryQueryServiceOptions:\s*\{[^}]*relayUrl:\s*resolvedNostrRelayUrl/.test(mainSource);
         const placeNamingConsumer = /NostrPlaceNamingDiscoverySource\(\{[^}]*relayUrl:\s*resolvedNostrRelayUrl/.test(mainSource);
-        assert(worldEncounterConsumer, n('D4. resolvedNostrRelayUrl still reaches World Encounter decentralized discovery composition'));
+        assert(worldEncounterConsumer, n('D4. resolvedNostrPublicationRelayUrls now reaches World Encounter (Publication) discovery composition — 0.9.451'));
         assert(snapshotConsumer, n('D4. resolvedNostrRelayUrl still reaches Snapshot discovery composition'));
         assert(placeNamingConsumer, n('D4. resolvedNostrRelayUrl still reaches Place Naming discovery composition — 0.9.368\'s own "not just one consumer" finding is unchanged'));
 
         console.log('\n=== SECTION D: NOSTR RELAY JOURNEY ===');
-        console.log('✓ Section D: Settings -> persist -> restart -> startup resolution -> all three real consumers (World Encounter, Snapshot, Place Naming discovery) is intact, live-reconfirmed. Full correctness already proven by 0.9.370/0.9.372.');
+        console.log('✓ Section D: Settings -> persist -> restart -> startup resolution -> all three real consumers (Snapshot, Place Naming discovery on resolvedNostrRelayUrl; World Encounter/Publication discovery on the publication relay set since 0.9.451) is intact, live-reconfirmed. Full correctness already proven by 0.9.370/0.9.372.');
+
+        // AMENDED BY 0.9.451 — Nostr Publication Relay Set Discovery
+        // Alignment. World Encounter (Publication) discovery is the exact
+        // read-side gap 0.9.449's own product reassessment named alongside
+        // the write-side gap 0.9.450 closed; this reassessment's own D3/D4
+        // above is updated to reflect that a Wanderer's configured
+        // publication relay set — not the general single discovery-relay
+        // preference — is now what Publication discovery actually queries.
     }
 
     // ===============================================================
