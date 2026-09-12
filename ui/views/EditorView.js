@@ -229,7 +229,7 @@ export default {
                 <dt>Material</dt>
                 <dd>{{ distributionResult[0].material ? distributionResult[0].material.uri : 'Not yet uploaded' }}</dd>
                 <template v-for="(relayResult, relayIndex) in distributionResult" :key="relayIndex">
-                    <dt>{{ distributionResult.length > 1 ? `Discovery (relay ${relayIndex + 1})` : 'Discovery' }}</dt>
+                    <dt>{{ distributionResult.length > 1 ? \`Discovery (relay \${relayIndex + 1})\` : 'Discovery' }}</dt>
                     <dd>{{ relayResult.discovery ? relayResult.discovery.id : 'Not yet announced' }}</dd>
                 </template>
                 <!-- 0.9.381 — EditorView Distribution Result -> Repository
