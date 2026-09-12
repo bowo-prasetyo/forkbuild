@@ -1996,9 +1996,43 @@ app.provide('publicationDistributionLifecycleStore', publicationDistributionLife
 // `discoveryTag`... are ForkBuild's own campaign configuration" — supplied
 // here, once, for the same reason this file is the one place 0.9.108's own
 // header already named for it.
-const arweaveHostSigner = createArweaveInjectedProviderSigner({
-    injectedProvider: typeof window !== 'undefined' ? window.arweaveWallet : undefined
-});
+//
+// BUG FIX — `arweaveHostSigner`/`nostrHostPublisher` (below) NO LONGER
+// RESOLVE `window.arweaveWallet`/`window.nostr` ONCE, EAGERLY, AT THIS
+// MODULE'S OWN EVALUATION INSTANT. A real extension's own content script
+// is not guaranteed to have finished injecting by the moment this file's
+// top-level code runs — a person can have a fully working Arweave/Nostr
+// extension installed and this file still captures `undefined` a moment
+// too early, permanently, for the rest of that page load, with no later,
+// successful injection ever seen again (reported and reproduced live:
+// Wander and nos2x both installed and confirmed present in devtools,
+// "Distribute Snapshot" still failing with "a discoveryPublisher with a
+// publish() method is required" on that same load). Both are now a small,
+// always-present, LAZY delegate: each actual `sign()`/`publish()` call
+// re-resolves the injected provider fresh, at that exact moment, rather
+// than trusting a snapshot taken at boot. Every downstream duck-typed
+// presence check in this file (`canAttemptArweavePlacement()` and
+// siblings, one per composition below) only ever asks "is there a
+// function here at all" — never whether it can presently succeed — so
+// both delegates are always truthy; "no extension is currently available"
+// now surfaces honestly at the moment an actual sign/publish is attempted,
+// mirroring `arweave/ArweaveInjectedProviderSigner.js`'s and `nostr/
+// NostrInjectedProviderPublisher.js`'s own "no explicit connect step —
+// connection is lazy" restraint, extended one step earlier, to WALLET
+// PRESENCE DETECTION itself.
+function resolveArweaveHostSigner() {
+    return createArweaveInjectedProviderSigner({
+        injectedProvider: typeof window !== 'undefined' ? window.arweaveWallet : undefined
+    });
+}
+const arweaveHostSigner = {
+    sign(material) {
+        const signer = resolveArweaveHostSigner();
+        return signer
+            ? signer.sign(material)
+            : Promise.reject(new Error('This device has no Arweave wallet/signing capability configured yet.'));
+    }
+};
 
 // 0.9.425 — Arweave Proof/Anchoring Provider Implementation.
 //
@@ -2022,24 +2056,23 @@ const arweaveHostSigner = createArweaveInjectedProviderSigner({
 // the publish (write) and verify (read) side, exactly as Bitcoin's own
 // `network: 'mainnet'` is reused across its publisher and verifier.
 //
-// `arweaveAnchorFallbackSigner` MIRRORS `bitcoinBroadcaster`'S OWN
-// HONEST-UNAVAILABLE PATTERN (0.8.11, above) EXACTLY. When no Arweave
-// wallet extension is installed, `arweaveHostSigner` is `undefined`; this
-// device still gets a REAL, registered `ArweaveAnchorPublisher` — never
-// one hidden from the running app until a wallet happens to be connected
-// — wired against a signer that always, and honestly, rejects with the
-// actual reason. "Create Arweave Anchor" therefore always appears once a
-// person opens the Publication Center, exactly like "Create Bitcoin
-// Anchor" already does, and reports PUBLISH_UNAVAILABLE with a truthful
+// NO SEPARATE FALLBACK SIGNER NEEDED HERE. `arweaveHostSigner` MIRRORS
+// `bitcoinBroadcaster`'S OWN HONEST-UNAVAILABLE PATTERN (0.8.11, above)
+// ON ITS OWN, DIRECTLY — no wrapping needed at this call site. Before the
+// lazy-resolution bug fix above, `arweaveHostSigner` could be `undefined`
+// outright when no wallet extension was installed, so this wiring needed
+// its own dedicated `arweaveAnchorFallbackSigner` to get the same honest
+// rejection. `arweaveHostSigner` is now always a real object whose own
+// `sign()` already rejects with the identical "This device has no Arweave
+// wallet/signing capability configured yet." message when no extension is
+// currently available — a second, duplicate fallback here would just be
+// dead code. "Create Arweave Anchor" still always appears once a person
+// opens the Publication Center, exactly like "Create Bitcoin Anchor"
+// already does, and still reports PUBLISH_UNAVAILABLE with a truthful
 // reason until a real wallet extension is connected — never a crash,
 // never a silently absent option.
-const arweaveAnchorFallbackSigner = {
-    async sign() {
-        throw new Error('This device has no Arweave wallet/signing capability configured yet.');
-    }
-};
 const { arweaveAnchorPublisher } = new CreateArweaveAnchorPublisherUseCase().execute({
-    signer: arweaveHostSigner || arweaveAnchorFallbackSigner,
+    signer: arweaveHostSigner,
     gatewayUrl: resolvedArweaveGatewayUrl
 });
 externalAnchorPublisherRegistry.register(arweaveAnchorPublisher);
@@ -2052,9 +2085,24 @@ externalAnchorProofVerifierRegistry.register(arweaveProofVerifier);
 const { arweaveAnchorEvidenceView } = new CreateArweaveAnchorEvidenceViewUseCase().execute();
 externalAnchorEvidenceViewRegistry.register(arweaveAnchorEvidenceView);
 
-const nostrHostPublisher = createNostrInjectedProviderPublisher({
-    injectedProvider: typeof window !== 'undefined' ? window.nostr : undefined
-});
+// See the "BUG FIX" comment above `arweaveHostSigner`, above — the
+// identical lazy-resolution fix, one substrate over. `nostrHostPublisher`
+// is a plain function (never an object), matching exactly what
+// `createNostrInjectedProviderPublisher()` itself already returns, so
+// every downstream `typeof publishImpl === 'function'` presence check
+// keeps working unmodified.
+function resolveNostrHostPublisher() {
+    return createNostrInjectedProviderPublisher({
+        injectedProvider: typeof window !== 'undefined' ? window.nostr : undefined
+    });
+}
+const nostrHostPublisher = async function nostrHostPublish(relayUrl, eventTemplate) {
+    const publishImpl = resolveNostrHostPublisher();
+    if (!publishImpl) {
+        throw new Error('This device has no Nostr (NIP-07) publishing capability configured yet.');
+    }
+    return publishImpl(relayUrl, eventTemplate);
+};
 const nostrPublicationRuntimeCapabilities = createNostrPublicationDistributionRuntimeAdapter({ publish: nostrHostPublisher });
 const arweavePublicationRuntimeCapabilities = createArweavePublicationDistributionRuntimeAdapter({ signer: arweaveHostSigner });
 const publicationDistributionRuntimeProvider = createPublicationDistributionRuntimeProvider({
