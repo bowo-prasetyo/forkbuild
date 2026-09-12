@@ -12,6 +12,8 @@ import { DiscoveryBootstrap } from '../peer/DiscoveryBootstrap.js';
 import { DEFAULT_ICE_SERVERS, fetchIceServers } from '../peer/IceServerConfig.js';
 import { IceServerConfigurationStore } from '../storage/IceServerConfigurationStore.js';
 import { SetIceServerConfigurationUseCase } from '../application/SetIceServerConfigurationUseCase.js';
+import { TurnServerConfigurationStore } from '../storage/TurnServerConfigurationStore.js';
+import { resolveTurnServerConfiguration } from '../application/TurnServerConfigurationProvider.js';
 import { DEFAULT_RENDEZVOUS_URLS } from '../peer/RendezvousConfig.js';
 import { RendezvousConfigurationStore } from '../storage/RendezvousConfigurationStore.js';
 import { SetRendezvousConfigurationUseCase } from '../application/SetRendezvousConfigurationUseCase.js';
@@ -197,11 +199,39 @@ const { getPublicationCommentariesCommand, addPublicationCommentaryCommand } =
 // result is needed immediately, to construct `peerConnectionProvider`
 // itself. `iceServerConfigurationStore.get()` returns `null` when the user
 // has never saved an override — the identical "absence stays meaningful"
-// rule those two sibling stores already hold — so `resolvedIceServers`
+// rule those two sibling stores already hold — so `resolvedStunServers`
 // falls back to `DEFAULT_ICE_SERVERS` only then, never persisting that
-// fallback as if it were a saved preference.
+// fallback as if it were a saved preference. (0.9.455 renamed this binding
+// from `resolvedIceServers` to `resolvedStunServers` — see that milestone's
+// own comment immediately below — because `resolvedIceServers` now names
+// the STUN+TURN composite actually handed to WebRtcPeerConnectionProvider.)
 const iceServerConfigurationStore = new IceServerConfigurationStore(new LocalStorageProvider());
-const resolvedIceServers = (iceServerConfigurationStore.get() || { servers: DEFAULT_ICE_SERVERS }).servers;
+const resolvedStunServers = (iceServerConfigurationStore.get() || { servers: DEFAULT_ICE_SERVERS }).servers;
+// 0.9.455 — TURN Configuration into WebRTC ICE.
+//
+// `resolveTurnServerConfiguration()` (application/TurnServerConfigurationProvider.js,
+// 0.9.454) resolves the user's own TurnServerConfigurationStore to either a
+// TurnServerConfiguration instance or `null` — "no TURN server," never a
+// fabricated one (see that file's own header). ForkBuild supplies TURN
+// configuration to the browser's ICE machinery; it never implements TURN
+// selection, retry, or failover itself — so when a TURN server IS
+// configured, its own `.toIceServerEntry()` (a single RTCIceServer-shaped
+// object, one or more `urls` handed to the browser as alternatives, never
+// tried one at a time by this codebase) is appended ALONGSIDE
+// `resolvedStunServers`, never replacing it; when none is configured, this
+// resolves to `resolvedStunServers` alone — the exact, unmodified STUN-only
+// behavior every prior milestone already held.
+// `resolvedTurnServerConfiguration` and the object `.toIceServerEntry()`
+// returns (which carries the real credential — see core/
+// TurnServerConfiguration.js's own header, "the credential is sensitive
+// configuration") are read ONCE, right here, folded straight into
+// `resolvedIceServers` below, and never separately stored, logged, or
+// exposed to any other part of this file.
+const turnServerConfigurationStore = new TurnServerConfigurationStore(new LocalStorageProvider());
+const resolvedTurnServerConfiguration = resolveTurnServerConfiguration({ turnServerConfigurationStore });
+const resolvedIceServers = resolvedTurnServerConfiguration
+    ? [...resolvedStunServers, resolvedTurnServerConfiguration.toIceServerEntry()]
+    : resolvedStunServers;
 const peerConnectionProvider = new WebRtcPeerConnectionProvider({ iceServers: resolvedIceServers });
 // 0.3.7 — enriches `peerConnectionProvider`'s iceServers in the
 // BACKGROUND with this deployment's live Metered TURN credentials
@@ -225,6 +255,14 @@ const peerConnectionProvider = new WebRtcPeerConnectionProvider({ iceServers: re
 // file, the same deployment default otherwise. A failed or slow TURN
 // fetch still degrades to exactly `resolvedIceServers`, never throwing and
 // never blocking startup, exactly as before.
+//
+// 0.9.455 — `resolvedIceServers` may now ALSO already include a user's own
+// configured TURN entry (see the comment immediately above its own
+// declaration). This call needed no change to keep that entry intact
+// either way: on a failed/slow Metered fetch, `fallback` (== `resolvedIceServers`)
+// is returned as-is, TURN entry included; on a successful fetch,
+// `dedupeIceServers([...fetched, ...fallback])` still carries the user's
+// TURN entry through from `fallback`, alongside whatever Metered returned.
 fetchIceServers({ fallback: resolvedIceServers }).then((iceServers) => peerConnectionProvider.setIceServers(iceServers));
 // 0.9.386 — STUN Settings UI. The WRITE half of the settings entry point,
 // wired against this SAME store instance (never a second, disconnected
