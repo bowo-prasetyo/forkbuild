@@ -161,8 +161,8 @@ async function run() {
         assert(storeConstructions === 1, `7. ui/main.js constructs exactly one IceServerConfigurationStore instance — found ${storeConstructions}`);
         assert(mainSource.includes('new WebRtcPeerConnectionProvider({ iceServers: resolvedIceServers })'),
             '8. WebRtcPeerConnectionProvider is constructed from resolvedIceServers, never a bare DEFAULT_ICE_SERVERS literal');
-        assert(/const resolvedIceServers = \(iceServerConfigurationStore\.get\(\) \|\| \{ servers: DEFAULT_ICE_SERVERS \}\)\.servers;/.test(mainSource),
-            '9. resolvedIceServers falls back to DEFAULT_ICE_SERVERS only when no override is on file, never persisting that fallback as a preference');
+        assert(/const resolvedStunServers = \(iceServerConfigurationStore\.get\(\) \|\| \{ servers: DEFAULT_ICE_SERVERS \}\)\.servers;/.test(mainSource),
+            '9. the resolved STUN list (resolvedStunServers, since 0.9.455 folded TURN into resolvedIceServers itself — see tests/TurnWebRtcIntegration.test.js) falls back to DEFAULT_ICE_SERVERS only when no override is on file, never persisting that fallback as a preference');
         assert(mainSource.includes('fetchIceServers({ fallback: resolvedIceServers })'),
             '10. the TURN-fetching background enrichment merges with resolvedIceServers, not a hard-coded default — TURN\'s own fetch/credential logic is otherwise untouched');
 
