@@ -231,10 +231,22 @@ async function run() {
         // grouped per catalog entry, already choice-driven (0.9.422).
         assert(/v-for="storage in availableStorageTypes"/.test(publicationsViewSource) && /@click="createPlacement\(entry, storage\)"/.test(publicationsViewSource), n('A9. DecentralizedPublicationsView.js: CONTENT is a real, per-entry, per-storage choice control'));
         assert(/v-for="anchorType in availableAnchorTypes"/.test(publicationsViewSource) && /@click="createAnchor\(entry, anchorType\)"/.test(publicationsViewSource), n('A10. ...and PROOF_AND_ANCHORING is the identical shape, one role over'));
-        assert(!/'Distribute Snapshot'|'Distribute Publication'/.test(publicationsViewSource), n('A11. DecentralizedPublicationsView.js contains NEITHER of the two ANNOUNCEMENT_AND_DISCOVERY action labels found in A1/A2/A6 — this role is not merely under-labeled here, it is textually absent'));
-        assert(!/publicationDistributionCommand|snapshotDistributionCommand/.test(publicationsViewSource), n('A12. ...confirmed structurally, not just by label: this file injects neither command function at all'));
+        // AMENDED BY 0.9.436 — Publications Distribution Section
+        // Reorganization. 0.9.436 wires both actions onto THIS page,
+        // inside a new contextual "Distribution > Announcement /
+        // Discovery" section (see ui/views/DecentralizedPublicationsView.js's
+        // own 0.9.436 header comment) — A11/A12 below now assert
+        // PRESENCE, the exact mirror of what they asserted before this
+        // milestone. See tests/DecentralizedSubstrateRoleChoiceUIReachabilityAudit.test.js's
+        // own "AMENDED BY 0.9.430" precedent for this repository's
+        // established convention of amending a prior milestone's own
+        // assertion in place once a later milestone actually closes the
+        // gap it was evaluating, rather than leaving a now-false
+        // assertion standing.
+        assert(/'Distribute Snapshot'/.test(publicationsViewSource) && /'Distribute Publication'/.test(publicationsViewSource), n('A11. AMENDED BY 0.9.436 — DecentralizedPublicationsView.js now contains BOTH ANNOUNCEMENT_AND_DISCOVERY action labels found in A1/A2/A6 — this role is no longer textually absent from /publications'));
+        assert(/publicationDistributionCommand/.test(publicationsViewSource) && /snapshotDistributionCommand/.test(publicationsViewSource), n('A12. AMENDED BY 0.9.436 — confirmed structurally, not just by label: this file now injects both command functions — the identical app-wide `publicationDistributionCommand`/`snapshotDistributionCommand` OwnPublicationPanel.js/WorldEncounterCanvas.js already inject, never a second composition'));
 
-        console.log('✓ Section A: CONTENT and PROOF_AND_ANCHORING already render, grouped per catalog entry, on /publications. ANNOUNCEMENT_AND_DISCOVERY\'s only two real write actions live exclusively on two other components (OwnPublicationPanel.js, WorldEncounterCanvas.js), neither of which /publications hosts, and neither command is even injected into /publications today.');
+        console.log('✓ Section A: AMENDED BY 0.9.436 — CONTENT and PROOF_AND_ANCHORING already rendered, grouped per catalog entry, on /publications, and now render inside one contextual "Distribution" section there. ANNOUNCEMENT_AND_DISCOVERY\'s two real write actions ("Distribute Publication"/"Distribute Snapshot") are now ALSO wired onto /publications, inside that same section, through the identical already-composed, already-app-wide commands OwnPublicationPanel.js/WorldEncounterCanvas.js already call — no new orchestrator, uploader, or publisher was built to do it.');
     }
 
     // ===============================================================
@@ -249,30 +261,37 @@ async function run() {
         const routerSource = await source('ui/router/index.js');
         assert(/path: '\/publications', name: 'publications', component: DecentralizedPublicationsView/.test(routerSource), n('B2. /publications is a real, registered route'));
 
+        // AMENDED BY 0.9.436 — Publications Distribution Section
+        // Reorganization. ANNOUNCEMENT_AND_DISCOVERY's own row below now
+        // reads `true`, per A11/A12 above — this table described a real,
+        // page-scoped gap at the time this audit (0.9.435) was written;
+        // 0.9.436 closed it, on this exact page, through the exact
+        // wiring Section C below already proved possible.
         const rows = [
             { role: 'CONTENT', reachableFromPublicationsPage: true, evidence: 'A9' },
             { role: 'PROOF_AND_ANCHORING', reachableFromPublicationsPage: true, evidence: 'A10' },
-            { role: 'ANNOUNCEMENT_AND_DISCOVERY', reachableFromPublicationsPage: false, evidence: 'A11/A12' }
+            { role: 'ANNOUNCEMENT_AND_DISCOVERY', reachableFromPublicationsPage: true, evidence: 'A11/A12 (0.9.436)' }
         ];
-        assert(rows.filter((r) => r.reachableFromPublicationsPage).length === 2, n('B3. exactly two of the three roles are reachable from /publications today'));
+        assert(rows.filter((r) => r.reachableFromPublicationsPage).length === 3, n('B3. AMENDED BY 0.9.436 — all three roles are now reachable from /publications'));
         const discoveryRow = rows.find((r) => r.role === 'ANNOUNCEMENT_AND_DISCOVERY');
-        assert(discoveryRow.reachableFromPublicationsPage === false, n('B4. ANNOUNCEMENT_AND_DISCOVERY is the one role genuinely absent from this page — never merely poorly labeled, per A11/A12'));
+        assert(discoveryRow.reachableFromPublicationsPage === true, n('B4. AMENDED BY 0.9.436 — ANNOUNCEMENT_AND_DISCOVERY is no longer absent from this page, per A11/A12'));
 
-        // This is a DIFFERENT finding from 0.9.422's own NO_PRODUCT_GAP —
+        // This was a DIFFERENT finding from 0.9.422's own NO_PRODUCT_GAP —
         // that audit asked whether a substrate CHOICE is reachable given
-        // where a role's action already lives; this section asks whether
-        // the ACTION ITSELF lives on /publications at all. Both are true
-        // at once: 0.9.422's own verdict is not contradicted, because it
+        // where a role's action already lives; this section asked whether
+        // the ACTION ITSELF lives on /publications at all. Both were true
+        // at once: 0.9.422's own verdict was not contradicted, because it
         // never claimed ANNOUNCEMENT_AND_DISCOVERY's entry point WAS
         // /publications — its own Section C named the entry point as
-        // "Editor/World/OwnPublicationPanel," exactly what this section
-        // reconfirms, live, against current source.
+        // "Editor/World/OwnPublicationPanel," which remains an ADDITIONAL
+        // entry point after 0.9.436, never a replaced one (OwnPublicationPanel.js/
+        // WorldEncounterCanvas.js are untouched by this milestone).
         const priorAuditSource = await source('tests/DecentralizedSubstrateRoleChoiceUIReachabilityAudit.test.js');
-        assert(/entryPoint: 'Editor\/World\/OwnPublicationPanel "Distribute" button'/.test(priorAuditSource), n('B5. 0.9.422\'s own entry-point table already named this exact fact for the record — this section confirms it still holds against CURRENT source, never merely quoting a possibly-stale prior finding'));
+        assert(/entryPoint: 'Editor\/World\/OwnPublicationPanel "Distribute" button'/.test(priorAuditSource), n('B5. 0.9.422\'s own entry-point table already named this exact fact for the record — still true as a historical entry point, now joined rather than replaced by /publications itself (0.9.436)'));
 
         console.log('\n=== SECTION B: /PUBLICATIONS REACHABILITY TABLE ===');
         rows.forEach((r) => console.log(`  ${r.role}: reachable from /publications = ${r.reachableFromPublicationsPage} (${r.evidence})`));
-        console.log('✓ Section B: this is a genuine, real, page-scoped gap — never a re-litigation of 0.9.422\'s own separate, still-valid, substrate-choice finding.');
+        console.log('✓ Section B: AMENDED BY 0.9.436 — the page-scoped gap this section documented is now closed; ANNOUNCEMENT_AND_DISCOVERY joins CONTENT/PROOF_AND_ANCHORING as reachable from /publications, alongside its own pre-existing Editor/World entry point, never in place of it.');
     }
 
     // ===============================================================

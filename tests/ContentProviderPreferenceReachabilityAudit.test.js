@@ -202,10 +202,21 @@ async function run() {
         // B3. No <select>/dropdown exists anywhere for choosing storage —
         // the choice is which BUTTON a person clicks, not a value they
         // pick from a list and then confirm separately.
-        const placementSectionStart = viewSource.indexOf('0.8.25 — Explicit Snapshot Placement Creation UX. One card per');
-        const placementSectionEnd = viewSource.indexOf('0.8.23 — Multi-Placement Convergence', placementSectionStart);
+        //
+        // AMENDED BY 0.9.436 — Publications Distribution Section
+        // Reorganization. The placement-creation card (same v-for, same
+        // createPlacement()/placementCreationView() calls, same per-entry
+        // placementCreationAttempts state — B1/B2 above still match it
+        // unchanged) moved verbatim into this card's own new "Distribution
+        // > Content" section, near the top of the card; its old location
+        // now carries only a short "moved verbatim" pointer comment. The
+        // locator below follows it to its new home rather than re-quoting
+        // stale prose — see ui/views/DecentralizedPublicationsView.js's
+        // own 0.9.436 header for the full boundary this milestone holds.
+        const placementSectionStart = viewSource.indexOf('Content — MOVED VERBATIM from this card\'s own');
+        const placementSectionEnd = viewSource.indexOf('Proof / Anchoring — MOVED VERBATIM from this', placementSectionStart);
         assert(placementSectionStart !== -1 && placementSectionEnd > placementSectionStart,
-            'B3a. the placement-creation template section is present and located, bounded by its own leading comment and the next section\'s own leading comment');
+            'B3a. AMENDED BY 0.9.436 — the placement-creation template section is present and located in its new "Distribution > Content" home, bounded by its own leading comment and the next role section\'s own leading comment');
         const placementSectionMatch = [viewSource.slice(placementSectionStart, placementSectionEnd)];
         assert(!/<select/.test(placementSectionMatch[0]),
             'B3b. the placement-creation section contains no <select> element — storage is never a dropdown value a person picks and then confirms with a separate, generic button');
