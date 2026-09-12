@@ -209,10 +209,25 @@ async function run() {
         assert(mainSource.includes('fetchIceServers({ fallback: resolvedIceServers })'),
             n("10. the Metered TURN-fetching background enrichment still merges with resolvedIceServers — a user's own configured TURN entry rides through as part of that same fallback, on both the fetch-success and fetch-failure path"));
 
-        assert(!/app\.provide\(\s*['"]turnServerConfigurationStore['"]/.test(mainSource),
-            n('11. this milestone does NOT provide turnServerConfigurationStore to the Vue app — the Settings UI stays out of scope for 0.9.455, deferred to 0.9.456'));
-        assert(!/SetTurnServerConfigurationUseCase/.test(mainSource),
-            n('12. no write use case is wired here either — 0.9.455 is read-and-compose only, never a write path'));
+        // AMENDED BY 0.9.456 — assertions 11/12 previously required that
+        // `turnServerConfigurationStore` was NOT provided to the Vue app and
+        // that no write use case existed at all, correctly reflecting that
+        // 0.9.455 was read-and-compose only and deliberately left the
+        // Settings UI (and its write seam) out of scope, deferred by name to
+        // "0.9.456." ui/views/TurnServerSettingsView.js + application/
+        // SetTurnServerConfigurationUseCase.js (0.9.456) are exactly that
+        // named, anticipated follow-up landing on schedule — so the
+        // assertions below now check the OPPOSITE of what they checked
+        // before: that the store IS provided (app-wide, for the new
+        // Settings view to inject) and that the write use case DOES exist,
+        // wired against this SAME store instance this milestone's own
+        // Section 0 already pinned above. Nothing about 0.9.455's own
+        // read-and-compose logic (assertions 01-10 above) changed by one
+        // character.
+        assert(/app\.provide\(\s*['"]turnServerConfigurationStore['"]\s*,\s*turnServerConfigurationStore\s*\)/.test(mainSource),
+            n('11. 0.9.456 now provides the SAME turnServerConfigurationStore instance to the Vue app, app-wide, for ui/views/TurnServerSettingsView.js to inject — the Settings UI 0.9.455 deferred by name'));
+        assert(/SetTurnServerConfigurationUseCase/.test(mainSource) && /new SetTurnServerConfigurationUseCase\(\{\s*turnServerConfigurationStore\s*\}\)/.test(mainSource),
+            n('12. 0.9.456 now wires a real SetTurnServerConfigurationUseCase against that same store — the write path 0.9.455 explicitly left absent'));
 
         const turnConfigSource = await source('core/TurnServerConfiguration.js');
         assert(!turnConfigSource.includes("import") || !/from '\.\.\/peer\//.test(turnConfigSource),
