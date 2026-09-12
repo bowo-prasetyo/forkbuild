@@ -9141,7 +9141,7 @@ export default {
                          this milestone's own audit named, Section E) was a
                          separate, later, already-scoped milestone's own job.
                          0.9.437 is that milestone: each "Configure" link
-                         below is a plain `<router-link>` to an already-
+                         below is a plain router-link to an already-
                          existing, already-registered Settings route — never
                          a new configuration surface, never a duplicated
                          control, and never a distribution command of any
