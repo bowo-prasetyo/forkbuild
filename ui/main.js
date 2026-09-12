@@ -126,6 +126,9 @@ import { ArweaveGatewayConfigurationStore } from '../storage/ArweaveGatewayConfi
 import { DEFAULT_NOSTR_RELAY_URL } from '../core/NostrRelayConfiguration.js';
 import { NostrRelayConfigurationStore } from '../storage/NostrRelayConfigurationStore.js';
 import { SetNostrRelayConfigurationUseCase } from '../application/SetNostrRelayConfigurationUseCase.js';
+import { NostrPublicationRelaySetConfigurationStore } from '../storage/NostrPublicationRelaySetConfigurationStore.js';
+import { SetNostrPublicationRelaySetConfigurationUseCase } from '../application/SetNostrPublicationRelaySetConfigurationUseCase.js';
+import { resolveNostrPublicationRelayUrls } from '../application/NostrPublicationRelaySetConfigurationProvider.js';
 import { LocalWorldEncounterMaterialSource } from '../application/LocalWorldEncounterMaterialSource.js';
 import { composeWorldEncounterMaterialVerifier } from '../application/WorldEncounterMaterialVerifierRuntimeComposition.js';
 import { PublicationDistributionLifecycleMemoryStore } from '../application/PublicationDistributionLifecycleStore.js';
@@ -133,7 +136,7 @@ import { PublicationDistributionLifecyclePersistence } from '../application/Publ
 import { PublicationDistributionLifecyclePersistenceBridge } from '../application/PublicationDistributionLifecyclePersistenceBridge.js';
 import { PublicationDistributionLifecycleRestorer } from '../application/PublicationDistributionLifecycleRestorer.js';
 import { hydratePublicationDistributionLifecycles } from '../application/PublicationDistributionLifecycleHydration.js';
-import { composePublicationDistributionCommand } from '../application/PublicationDistributionCommandComposition.js';
+import { composePublicationDistributionCommand, composeMultiRelayNostrPublicationDistributionCommand } from '../application/PublicationDistributionCommandComposition.js';
 import { resolvePublicationDistributionRuntimeConfiguration } from '../application/PublicationDistributionRuntimeConfiguration.js';
 import { createPublicationDistributionRuntimeProvider } from '../application/PublicationDistributionRuntimeProvider.js';
 import { createNostrPublicationDistributionRuntimeAdapter } from '../application/NostrPublicationDistributionRuntimeAdapter.js';
@@ -1736,6 +1739,26 @@ const setNostrRelayConfigurationUseCase = new SetNostrRelayConfigurationUseCase(
 app.provide('nostrRelayConfigurationStore', nostrRelayConfigurationStore);
 app.provide('setNostrRelayConfigurationUseCase', setNostrRelayConfigurationUseCase);
 
+// 0.9.447 — Nostr Publication Relay Set Configuration. A GENUINELY SEPARATE
+// store from `nostrRelayConfigurationStore` above — its own storage key,
+// its own value object, its own use case — never a widening of the
+// read/discovery boundary above. 0.9.446's own audit
+// (tests/NostrMultiRelayConfigurationUIReachabilityAudit.test.js) proved
+// live that `/settings/nostr-relay` never reaches the write/publish path at
+// all, and recommended exactly this: a new, sibling relay-SET configuration
+// for publication-distribution fan-out (0.9.444), reachable through
+// ui/views/NostrPublicationRelaySettingsView.js (this same milestone) at
+// its own route. `resolvedNostrPublicationRelayUrls` never falls back to
+// `resolvedNostrRelayUrl` above — see application/
+// NostrPublicationRelaySetConfigurationProvider.js's own header, "the
+// fallback comes from the write-side default, never from discovery
+// configuration."
+const nostrPublicationRelaySetConfigurationStore = new NostrPublicationRelaySetConfigurationStore(new LocalStorageProvider());
+const resolvedNostrPublicationRelayUrls = resolveNostrPublicationRelayUrls({ nostrPublicationRelaySetConfigurationStore });
+const setNostrPublicationRelaySetConfigurationUseCase = new SetNostrPublicationRelaySetConfigurationUseCase({ nostrPublicationRelaySetConfigurationStore });
+app.provide('nostrPublicationRelaySetConfigurationStore', nostrPublicationRelaySetConfigurationStore);
+app.provide('setNostrPublicationRelaySetConfigurationUseCase', setNostrPublicationRelaySetConfigurationUseCase);
+
 // 0.9.386 — STUN Settings UI. `iceServerConfigurationStore` and
 // `setIceServerConfigurationUseCase` were already constructed earlier in
 // this file (needed immediately, to build `peerConnectionProvider` itself)
@@ -2144,6 +2167,28 @@ const publicationDistributionCommand = composePublicationDistributionCommand({
     arweaveAnnouncementPublisherOptions
 });
 app.provide('publicationDistributionCommand', publicationDistributionCommand);
+
+// 0.9.447 — Nostr Publication Relay Set Configuration. The one composition
+// change 0.9.446's own Section F5 named precisely: this same composition
+// root, immediately below its own existing single-relay
+// `publicationDistributionCommand` above, now ALSO composes
+// `executeMultiRelayNostrPublicationDistributionCommand()` (0.9.444) via
+// `composeMultiRelayNostrPublicationDistributionCommand()` (this same
+// milestone) — pre-binding `resolvedNostrPublicationRelayUrls` (resolved
+// above from the new, dedicated store) alongside the identical
+// `arweaveUploaderOptions`/`nostrPublisherOptions`/`lifecycleStore`
+// collaborators the single-relay command already uses. This changes
+// nothing about `publicationDistributionCommand` itself, and nothing about
+// any existing caller's behavior — it only makes the already-implemented
+// multi-relay fan-out capability reachable, configured, from this
+// composition root, for a future caller to invoke.
+const multiRelayNostrPublicationDistributionCommand = composeMultiRelayNostrPublicationDistributionCommand({
+    lifecycleStore: publicationDistributionLifecycleStore,
+    arweaveUploaderOptions,
+    nostrRelayUrls: resolvedNostrPublicationRelayUrls,
+    nostrPublisherOptions
+});
+app.provide('multiRelayNostrPublicationDistributionCommand', multiRelayNostrPublicationDistributionCommand);
 
 // 0.9.138 — World View Snapshot Distribution Action.
 //

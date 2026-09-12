@@ -1,4 +1,4 @@
-import { executePublicationDistributionCommand } from './PublicationDistributionCommand.js';
+import { executePublicationDistributionCommand, executeMultiRelayNostrPublicationDistributionCommand } from './PublicationDistributionCommand.js';
 
 // 0.9.105 — Publication Distribution Configuration Boundary.
 //
@@ -103,6 +103,55 @@ export function composePublicationDistributionCommand({ lifecycleStore, arweaveU
         arweaveUploaderOptions,
         nostrPublisherOptions,
         arweaveAnnouncementPublisherOptions,
+        lifecycleStore
+    });
+}
+
+// AMENDED BY 0.9.447 — Nostr Publication Relay Set Configuration. This file
+// gains one new, entirely additive export,
+// `composeMultiRelayNostrPublicationDistributionCommand()` — the direct
+// structural mirror of `composePublicationDistributionCommand()`, above,
+// one collaborator over. 0.9.446's own Section F5 named this exact file,
+// by name, as "the concrete missing seam" once a real, persisted Nostr
+// publication relay set existed to pre-bind: this composition root already
+// pre-binds `arweaveUploaderOptions`/`nostrPublisherOptions`/
+// `arweaveAnnouncementPublisherOptions`/`lifecycleStore` for the single-
+// relay command; `nostrRelayUrls` (resolved by
+// `application/NostrPublicationRelaySetConfigurationProvider.js`, this same
+// milestone) joins that same pre-bound set here, for the multi-relay
+// command specifically.
+//
+// THE FOUR COMPOSITION-ROOT COLLABORATORS ALWAYS WIN OVER ANYTHING A
+// CALLER'S OWN `request` HAPPENS TO CARRY — the identical restraint
+// `composePublicationDistributionCommand()`'s own header already holds for
+// its own three. `request`'s own fields are spread first;
+// `arweaveUploaderOptions`, `nostrRelayUrls`, `nostrPublisherOptions`, and
+// `lifecycleStore` are then set explicitly, so a caller can never
+// accidentally override what the composition root itself decided.
+//
+// A COMPOSITION, NEVER A SECOND COMMAND, NEVER A CONFIGURATION RESOLVER OF
+// ITS OWN. This function performs no persistence, no validation, and no
+// relay-set resolution of any kind — `nostrRelayUrls` arrives already
+// resolved, exactly as `arweaveUploaderOptions`/`nostrPublisherOptions`
+// already do for the single-relay composer above. Resolving it is entirely
+// `application/NostrPublicationRelaySetConfigurationProvider.js`'s own job,
+// called once, by this function's own caller (`ui/main.js`), before this
+// function is ever invoked.
+//
+// composeMultiRelayNostrPublicationDistributionCommand({ lifecycleStore,
+//   arweaveUploaderOptions, nostrRelayUrls, nostrPublisherOptions }) ->
+//   (request) -> Promise<Array<PublicationDistributionResult>>. Forwards
+//   `request` verbatim to
+//   `executeMultiRelayNostrPublicationDistributionCommand()` (0.9.444), with
+//   `arweaveUploaderOptions`/`nostrRelayUrls`/`nostrPublisherOptions`/
+//   `lifecycleStore` always taken from THIS call's own arguments, never from
+//   `request`.
+export function composeMultiRelayNostrPublicationDistributionCommand({ lifecycleStore, arweaveUploaderOptions, nostrRelayUrls, nostrPublisherOptions } = {}) {
+    return (request) => executeMultiRelayNostrPublicationDistributionCommand({
+        ...request,
+        arweaveUploaderOptions,
+        nostrRelayUrls,
+        nostrPublisherOptions,
         lifecycleStore
     });
 }

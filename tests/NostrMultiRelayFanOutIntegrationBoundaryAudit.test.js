@@ -638,10 +638,31 @@ async function run() {
         const queryServiceSource = codeOnly(await source('application/NostrDiscoveryQueryService.js'));
         assert(!/relayUrls/.test(queryServiceSource), n('J3. NostrDiscoveryQueryService.js (the read-side discovery-query service) has no relayUrls-shaped option anywhere — read-side multiplicity remains completely untouched'));
 
-        // J4. Every real ui/ file — the entire UI tree — is swept for any
-        // independent reference to multi-relay fan-out; only this
-        // milestone's own new application/ files are allowed to know it
-        // exists.
+        // AMENDED BY 0.9.447 — Nostr Publication Relay Set Configuration.
+        // This section's own point-in-time finding was "zero ui/ files
+        // reference multi-relay fan-out at all" — true only because no
+        // configuration or reachability had been wired yet. 0.9.446's own
+        // later audit found that absence itself was the real gap, and
+        // 0.9.447 closed it through the ordinary composition root, exactly
+        // as every other substrate in this codebase already reaches ui/
+        // main.js: via `application/PublicationDistributionCommandComposition.js`'s
+        // own new, additive composer, never a UI-side reimplementation. The
+        // check below is narrowed rather than removed: it now allowlists
+        // exactly the three files 0.9.447 legitimately touches for this
+        // reason (ui/main.js's own composition-root wiring, ui/router/
+        // index.js's own new route registration, and the one new Settings
+        // view built for it), and still asserts that NO OTHER ui/ file —
+        // most importantly WorldView.js, WorldEncounterCanvas.js, and
+        // DecentralizedPublicationsView.js's own distribution actions —
+        // references multi-relay fan-out independently. It also confirms,
+        // live, that even the allowlisted ui/main.js never constructs
+        // NostrMultiRelayPublicationDiscoveryPublisher directly — it only
+        // ever calls the existing, unmodified application-layer composer.
+        const NOSTR_MULTI_RELAY_UI_REACHABILITY_ALLOWLIST = new Set([
+            'ui/main.js',
+            'ui/router/index.js',
+            'ui/views/NostrPublicationRelaySettingsView.js'
+        ]);
         const uiFiles = await listJsFilesRecursive('ui');
         const uiFilesReferencingMultiRelay = [];
         for (const relPath of uiFiles) {
@@ -650,7 +671,12 @@ async function run() {
                 uiFilesReferencingMultiRelay.push(relPath);
             }
         }
-        assert(uiFilesReferencingMultiRelay.length === 0, n(`J4. no file under ui/ references "MultiRelay" or "nostrRelayUrls" — found: ${JSON.stringify(uiFilesReferencingMultiRelay)}. The UI layer has no independent, hidden fan-out capability of its own`));
+        const unexpectedUiFiles = uiFilesReferencingMultiRelay.filter((relPath) => !NOSTR_MULTI_RELAY_UI_REACHABILITY_ALLOWLIST.has(relPath));
+        assert(unexpectedUiFiles.length === 0, n(`J4. AMENDED BY 0.9.447 — no file under ui/ OUTSIDE this milestone's own three allowlisted files references "MultiRelay" or "nostrRelayUrls" — found unexpected: ${JSON.stringify(unexpectedUiFiles)}. The UI layer still has no independent, hidden fan-out capability of its own — the only reachability is through the existing, unmodified application-layer composer`));
+        assert(new Set(uiFilesReferencingMultiRelay).size <= NOSTR_MULTI_RELAY_UI_REACHABILITY_ALLOWLIST.size, n('J4b. the allowlisted set itself has not silently grown beyond the three files this milestone actually added'));
+        const mainSource = await source('ui/main.js');
+        assert(!/new NostrMultiRelayPublicationDiscoveryPublisher/.test(mainSource) && !mainSource.includes("from '../application/NostrMultiRelayPublicationDiscoveryPublisher.js'"),
+            n('J4c. ui/main.js never constructs NostrMultiRelayPublicationDiscoveryPublisher directly and never imports it — it only calls composeMultiRelayNostrPublicationDistributionCommand(), the existing application-layer composer, exactly as it already does for the single-relay command'));
 
         console.log('✓ Section J: the lifecycle store, the pre-existing single-relay command, the discovery-query read side, and every real ui/ file are all confirmed free of any independent multi-relay fan-out capability — only the Nostr multi-relay publisher/orchestrator own it');
     }
@@ -719,41 +745,58 @@ async function run() {
         // starting fact.
         assert(typeof executeMultiRelayNostrPublicationDistributionCommand === 'function', n('L1. executeMultiRelayNostrPublicationDistributionCommand is a real, callable export of application/PublicationDistributionCommand.js'));
 
-        // L2. The UI composition root — the one file that turns a command
-        // export into something a real click handler can call — has no
-        // multi-relay variant at all. composePublicationDistributionCommand()
-        // (the function ui/main.js actually calls, and the function this
-        // audit's own Section H1 exercised for real) wraps ONLY
-        // executePublicationDistributionCommand(); it exposes no sibling
-        // "composeMultiRelayNostrPublicationDistributionCommand" of any
-        // kind.
+        // AMENDED BY 0.9.447 — Nostr Publication Relay Set Configuration.
+        // Section L's own original point-in-time classification was
+        // "real and correct but not reachable through any existing UI or
+        // application entry point" — and it explicitly named that gap as
+        // 0.9.446's own job to decide, and 0.9.446 then recommended closing
+        // it exactly the way 0.9.447 did: a genuinely separate, sibling
+        // relay-SET configuration, reached through the ordinary composition
+        // root. L2/L2b/L3/L4 below are updated to assert the NEW, deliberate
+        // reachability instead of its prior absence — never loosened into a
+        // vague "something changed," but pinned to the exact same three
+        // files 0.9.446's own audit and this milestone's own
+        // NostrPublicationRelaySetConfiguration.test.js (Section G/J) already
+        // name as legitimate.
+        //
+        // L2. The UI composition root now DOES expose a multi-relay
+        // variant, additively, alongside the untouched single-relay one.
         const compositionSource = await source('application/PublicationDistributionCommandComposition.js');
-        assert(!/MultiRelay/.test(compositionSource), n('L2. application/PublicationDistributionCommandComposition.js (the real UI composition root) contains no reference to "MultiRelay" anywhere'));
-        assert(/executePublicationDistributionCommand/.test(compositionSource) && compositionSource.includes('executeMultiRelayNostrPublicationDistributionCommand') === false, n('L2b. the composition root wraps only the single-relay command export — the multi-relay export is never imported there'));
+        assert(/composeMultiRelayNostrPublicationDistributionCommand/.test(compositionSource), n('L2. AMENDED BY 0.9.447 — application/PublicationDistributionCommandComposition.js (the real UI composition root) now exposes composeMultiRelayNostrPublicationDistributionCommand(), the deliberate reachability seam this section originally found missing'));
+        assert(/executePublicationDistributionCommand/.test(compositionSource) && compositionSource.includes('executeMultiRelayNostrPublicationDistributionCommand'), n('L2b. AMENDED BY 0.9.447 — the composition root now wraps BOTH the single-relay command export (untouched) and the multi-relay command export (new, additive)'));
 
-        // L3. Every real ui/ file — already swept exhaustively in Section
-        // J4 above — has zero references to "MultiRelay" or
-        // "nostrRelayUrls". Restated here as the classification's own
-        // direct evidence: no button, no menu item, no prop, no injected
-        // capability anywhere in this application's actual UI tree can
-        // reach this command today.
+        // L3. Every real ui/ file is swept; only the three files 0.9.447
+        // legitimately added (ui/main.js's own composition-root wiring,
+        // ui/router/index.js's own new route, and the one new Settings
+        // view) may reference the multi-relay command — every OTHER ui/
+        // file, above all WorldView.js, WorldEncounterCanvas.js, and
+        // DecentralizedPublicationsView.js's own distribution actions,
+        // still has zero references, exactly as this section originally
+        // required for the whole tree.
+        const NOSTR_MULTI_RELAY_UI_REACHABILITY_ALLOWLIST = new Set([
+            'ui/main.js',
+            'ui/router/index.js',
+            'ui/views/NostrPublicationRelaySettingsView.js'
+        ]);
         const uiFiles = await listJsFilesRecursive('ui');
-        let uiReachabilityFound = false;
+        const uiReachabilityFiles = [];
         for (const relPath of uiFiles) {
             const text = await source(relPath);
             if (/MultiRelay|nostrRelayUrls|executeMultiRelayNostrPublicationDistributionCommand/.test(text)) {
-                uiReachabilityFound = true;
+                uiReachabilityFiles.push(relPath);
             }
         }
-        assert(!uiReachabilityFound, n('L3. no file anywhere under ui/ names the multi-relay command, "MultiRelay", or "nostrRelayUrls" — confirmed by an exhaustive recursive sweep of every real .js file in the UI tree'));
+        const unexpectedUiReachabilityFiles = uiReachabilityFiles.filter((relPath) => !NOSTR_MULTI_RELAY_UI_REACHABILITY_ALLOWLIST.has(relPath));
+        assert(unexpectedUiReachabilityFiles.length === 0, n(`L3. AMENDED BY 0.9.447 — no file anywhere under ui/ OUTSIDE this milestone's own three allowlisted files names the multi-relay command, "MultiRelay", or "nostrRelayUrls" — found unexpected: ${JSON.stringify(unexpectedUiReachabilityFiles)}`));
 
-        // L4. `application/` itself: the ONLY files that import the new
-        // multi-relay orchestrator/publisher are the two new production
-        // files themselves and this test family (0.9.444's own test, and
-        // this one) — no OTHER application/ file (a use case, a runtime
-        // composition, a different command) references them either, which
-        // is the direct evidence for "not already reachable through an
-        // existing legitimate application entry point."
+        // L4. `application/` itself: the multi-relay classes are now
+        // referenced by the two original production files, the command
+        // boundary that composes them (PublicationDistributionCommand.js,
+        // unchanged since 0.9.444), and this milestone's own new
+        // configuration-provider file (which references them only in
+        // prose/header commentary explaining the architecture, never in
+        // executable code) — no OTHER application/ file (a use case, a
+        // runtime composition, a different command) references them.
         const applicationFiles = await listJsFilesRecursive('application');
         const referencingFiles = [];
         for (const relPath of applicationFiles) {
@@ -765,9 +808,10 @@ async function run() {
                 referencingFiles.push(relPath);
             }
         }
-        assert(JSON.stringify(referencingFiles.sort()) === JSON.stringify(['application/PublicationDistributionCommand.js']), n(`L4. exactly one OTHER application/ file references the new multi-relay classes — PublicationDistributionCommand.js itself (the command boundary 0.9.444 already built) — and no use case, runtime composition, or other command file does. Found: ${JSON.stringify(referencingFiles)}`));
+        assert(JSON.stringify(referencingFiles.sort()) === JSON.stringify(['application/NostrPublicationRelaySetConfigurationProvider.js', 'application/PublicationDistributionCommand.js']),
+            n(`L4. AMENDED BY 0.9.447 — exactly the expected two OTHER application/ files reference the multi-relay classes: PublicationDistributionCommand.js (unchanged since 0.9.444) and application/NostrPublicationRelaySetConfigurationProvider.js (this milestone's own new file, referencing them only in its own header commentary) — no use case, runtime composition, or other command file does. Found: ${JSON.stringify(referencingFiles)}`));
 
-        console.log('✓ Section L: CLASSIFICATION — executeMultiRelayNostrPublicationDistributionCommand() is a real, fully working, production-composed application-layer capability (Sections A-K above) that is NOT reachable through any existing legitimate application entry point (ruled out by L2/L3/L4 above: the UI composition root has no multi-relay variant, no ui/ file references it, and no other application/ file calls it besides the command file that defines it). This is classification (2) — "currently internal but intentionally so" — matching this milestone\'s own new NostrMultiRelayAnnouncementFanOut.test.js Section L7, which already asserts the identical fact from the composition-root side alone; this audit confirms it independently and exhaustively, from the UI side and the application/ side both, and additionally rules out classification (1) "already reachable" (false — L2/L3 above) and classification (4) "an actual product integration gap" (there is no broken integration to name — the capability was never wired to anything, by design, per 0.9.444\'s own explicit exclusion of "a relay Settings UI, or any relay list configuration surface"). It IS, simultaneously, classification (3) in the narrow sense that a real product decision — where a caller\'s own nostrRelayUrls list should come from — remains genuinely unmade; that is exactly the question this milestone\'s own request already scheduled as 0.9.446, not a defect for this milestone to fix.');
+        console.log('✓ Section L: AMENDED BY 0.9.447 — CLASSIFICATION UPDATED. executeMultiRelayNostrPublicationDistributionCommand() is now reachable through the ordinary application composition root (composeMultiRelayNostrPublicationDistributionCommand(), application/PublicationDistributionCommandComposition.js), wired at ui/main.js exactly like every other distribution command, with a real Settings surface (ui/views/NostrPublicationRelaySettingsView.js) and route (/settings/nostr-publication-relays) supplying its configuration. This section\'s own original "classification (2), currently internal but intentionally so" finding is superseded — the product decision it named as remaining ("where should a caller\'s own nostrRelayUrls list come from") was 0.9.446\'s own job, and 0.9.446 recommended exactly the configuration this milestone (0.9.447) built. See tests/NostrPublicationRelaySetConfiguration.test.js for the full, dedicated test coverage of that new configuration layer.');
     }
 
     // ===============================================================
@@ -775,7 +819,7 @@ async function run() {
     // ===============================================================
     {
         console.log(`\n✅ All Nostr Multi-Relay Fan-Out Integration Boundary Audit (0.9.445) checks passed (${assertionCount} assertions).`);
-        console.log('VERDICT: NOSTR_MULTI_RELAY_FAN_OUT_INTEGRATION_COMPLETE — 0.9.444\'s fan-out capability survives the real application boundary: the real executeMultiRelayNostrPublicationDistributionCommand() delivers every configured field (relayUrls, discoveryTag, tagName, kind, publication identity, shared material URI, injected publishImpl) unmolested; material uploads exactly once regardless of relay count; independent relay success/failure is preserved in both directions; three relays\' own observations are simultaneously retrievable through the real 0.9.443 lifecycle path with no phantom entries on failure; repeated publication replaces rather than accumulates; relay order never changes the resulting set of facts; a one-element relay list is semantically identical to the pre-existing single-relay command; and every OTHER distribution surface — the existing single-relay Nostr command, Arweave content/gateway-failover, Arweave/Bitcoin anchoring, Snapshot distribution, and the discovery-query read side — remains structurally and behaviorally untouched. REACHABILITY CLASSIFICATION: the capability is real and correct but not reachable through any existing UI or application entry point — an intentional, already-documented gap (0.9.444\'s own exclusions), not a defect, and not yet a decided product direction; that decision is 0.9.446\'s own job, unstarted here. Test-only — no production file changed.');
+        console.log('VERDICT: NOSTR_MULTI_RELAY_FAN_OUT_INTEGRATION_COMPLETE — 0.9.444\'s fan-out capability survives the real application boundary: the real executeMultiRelayNostrPublicationDistributionCommand() delivers every configured field (relayUrls, discoveryTag, tagName, kind, publication identity, shared material URI, injected publishImpl) unmolested; material uploads exactly once regardless of relay count; independent relay success/failure is preserved in both directions; three relays\' own observations are simultaneously retrievable through the real 0.9.443 lifecycle path with no phantom entries on failure; repeated publication replaces rather than accumulates; relay order never changes the resulting set of facts; a one-element relay list is semantically identical to the pre-existing single-relay command; and every OTHER distribution surface — the existing single-relay Nostr command, Arweave content/gateway-failover, Arweave/Bitcoin anchoring, Snapshot distribution, and the discovery-query read side — remains structurally and behaviorally untouched. REACHABILITY CLASSIFICATION: AMENDED BY 0.9.447 — the capability is now reachable through the ordinary application composition root (application/PublicationDistributionCommandComposition.js\'s own new composeMultiRelayNostrPublicationDistributionCommand()), configured through a genuinely separate, persisted relay-set configuration (core/NostrPublicationRelaySetConfiguration.js, storage/NostrPublicationRelaySetConfigurationStore.js) and a real Settings surface (ui/views/NostrPublicationRelaySettingsView.js, /settings/nostr-publication-relays) — see tests/NostrPublicationRelaySetConfiguration.test.js for that layer\'s own full coverage. Test-only when originally written (0.9.445) — this file\'s own Section L is amended here to record a later, real production change made by a subsequent milestone (0.9.447), not by this file itself.');
     }
 }
 
