@@ -433,7 +433,7 @@ async function run() {
     // ===============================================================
     {
         const storeSource = codeOnly(await source('application/PublicationDistributionLifecycleStore.js'));
-        assert(/recordDiscoveryObservation\(publicationId, discoveryProvider, discoverySection\)/.test(storeSource), n('F1. recordDiscoveryObservation() is confirmed real production code, keyed by (publicationId, discoveryProvider) — never by which UI component happened to call it'));
+        assert(/recordDiscoveryObservation\(publicationId, discoveryProvider, discoverySection, discoveryOrigin\)/.test(storeSource), n('F1. recordDiscoveryObservation() is confirmed real production code, keyed by (publicationId, discoveryProvider) — or, since 0.9.443, (publicationId, discoveryProvider, discoveryOrigin) when a caller supplies one — never by which UI component happened to call it'));
         assert(/getDiscoveryObservations\(publicationId\)/.test(storeSource), n('F2. getDiscoveryObservations(publicationId) reads by publicationId alone too'));
 
         // Live proof: two substrate observations recorded through the
