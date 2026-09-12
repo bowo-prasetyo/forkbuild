@@ -1,4 +1,5 @@
 import { orchestratePublicationDistribution } from './PublicationDistributionOrchestrator.js';
+import { orchestrateMultiRelayNostrPublicationDistribution } from './NostrMultiRelayPublicationDistributionOrchestrator.js';
 import { describePublicationDistributionLifecycle, PublicationDistributionState } from './PublicationDistributionLifecycle.js';
 import { transitionPublicationDistributionLifecycle } from './PublicationDistributionLifecycleTransition.js';
 
@@ -222,6 +223,23 @@ import { transitionPublicationDistributionLifecycle } from './PublicationDistrib
 // exactly as 0.9.430 left it, and `PublicationDistributionRuntimeComposition.js`'s
 // own strict substrate selector is untouched.
 //
+// AMENDED BY 0.9.444 — Nostr Multi-Relay Announcement Fan-Out. This file
+// gains one new, entirely additive export, `executeMultiRelayNostrPublicationDistributionCommand()`
+// — see its own doc comment, below, for its full contract. It calls the new
+// `orchestrateMultiRelayNostrPublicationDistribution()` (this same milestone,
+// sibling file) instead of `orchestratePublicationDistribution()`, receives
+// an ARRAY of `PublicationDistributionResult` (one per relay — see that
+// file's own header) rather than a single result, and calls THIS file's own
+// existing, unmodified `recordPublicationDistributionResult()` helper once
+// PER ARRAY ELEMENT, always with `discoveryProvider` fixed to `'nostr'` —
+// the exact same per-relay `discoveryOrigin` attribution 0.9.443 already
+// built for exactly this purpose. `executePublicationDistributionCommand()`
+// itself is completely untouched: a caller wanting the existing single-relay
+// behavior keeps calling it exactly as before, forwarding through the
+// identical `orchestratePublicationDistribution()` call path, unmodified.
+// No aggregate status of any kind is introduced — seeing the outer array IS
+// this file's entire "multi-relay" contribution.
+//
 // AMENDED BY 0.9.433 — Concurrent Discovery Observation Preservation.
 // 0.9.430 threaded `discoveryProvider` past this file, unread, to the
 // orchestrator; 0.9.432's own read-only audit found the one place that
@@ -363,5 +381,59 @@ export function executePublicationDistributionCommand({
     return distribution.then((result) => {
         recordPublicationDistributionResult(lifecycleStore, result, discoveryProvider);
         return result;
+    });
+}
+
+// executeMultiRelayNostrPublicationDistributionCommand({ publication,
+//   serializedMaterial, materialStorage, arweaveUploaderOptions,
+//   nostrRelayUrls, nostrPublisherOptions, lifecycleStore }) ->
+//   Promise<Array<PublicationDistributionResult>>.
+//
+// 0.9.444 — see this file's own header, "Amended by 0.9.444," for the full
+// contract. Calls `orchestrateMultiRelayNostrPublicationDistribution()` (this
+// same milestone, sibling file) with `nostrRelayUrls` naming the relay set to
+// fan announcement publication out across — `nostrPublisherOptions` carries
+// every OTHER Nostr option (`tagName`, `kind`, `discoveryTag`, `publishImpl`,
+// `timeoutMs`) exactly as `executePublicationDistributionCommand()`'s own
+// `nostrPublisherOptions` already does, minus `relayUrl` itself, which
+// `nostrRelayUrls` supplies instead. Records each element of the resulting
+// array into `lifecycleStore` via this file's own existing, unmodified
+// `recordPublicationDistributionResult()` helper, called once per relay,
+// always with `discoveryProvider` fixed to `'nostr'` — never a caller-
+// supplied value, since this command is Nostr-fan-out-specific and never
+// selects Arweave-as-announcement-provider. Resolves to exactly the array
+// `orchestrateMultiRelayNostrPublicationDistribution()` itself resolved to —
+// never re-described, never collapsed into a single value. Throws
+// synchronously, before any collaborator is constructed, when `lifecycleStore`
+// is missing or does not expose `get()`/`set()` — identical to
+// `executePublicationDistributionCommand()`'s own check, above. The returned
+// promise rejects exactly when that orchestrator call's own promise rejects.
+export function executeMultiRelayNostrPublicationDistributionCommand({
+    publication,
+    serializedMaterial,
+    materialStorage,
+    arweaveUploaderOptions,
+    nostrRelayUrls,
+    nostrPublisherOptions,
+    lifecycleStore
+} = {}) {
+    if (!lifecycleStore || typeof lifecycleStore.get !== 'function' || typeof lifecycleStore.set !== 'function') {
+        throw new Error('executeMultiRelayNostrPublicationDistributionCommand: a lifecycleStore with get()/set() methods is required');
+    }
+
+    const distribution = orchestrateMultiRelayNostrPublicationDistribution({
+        publication,
+        serializedMaterial,
+        materialStorage,
+        arweaveUploaderOptions,
+        nostrRelayUrls,
+        nostrPublisherOptions
+    });
+
+    return distribution.then((results) => {
+        for (const result of results) {
+            recordPublicationDistributionResult(lifecycleStore, result, 'nostr');
+        }
+        return results;
     });
 }

@@ -332,7 +332,15 @@ async function run() {
         assert(!/\bfetch\(/.test(codeOnly), '38. never calls fetch(...) directly — no network access of its own');
         assert(!codeOnly.includes('WebSocket'), '39. never references WebSocket directly');
         assert(!/\btry\s*{/.test(codeOnly), '40. no try/catch anywhere — a genuine failure is never caught here, only forwarded');
-        assert((codeOnly.match(/\bexport\s+(async\s+)?function\b/g) || []).length === 1, '41. exports exactly one function — no second entry point');
+        // AMENDED BY 0.9.444 — Nostr Multi-Relay Announcement Fan-Out. This
+        // file now exports exactly TWO functions: 0.9.103's own original
+        // `executePublicationDistributionCommand()`, completely unmodified,
+        // and the new, purely additive `executeMultiRelayNostrPublicationDistributionCommand()`
+        // — never a THIRD, and never one that replaces or wraps the other.
+        // See `tests/NostrMultiRelayAnnouncementFanOut.test.js` Section J for
+        // live confirmation that the original single-relay function's own
+        // observable behavior is unchanged.
+        assert((codeOnly.match(/\bexport\s+(async\s+)?function\b/g) || []).length === 2, '41. exports exactly two functions (0.9.444: the original single-relay command, unmodified, plus the new multi-relay command) — never a third entry point');
 
         const forbiddenTerms = ['rollback', 'compensate', 'compensation', 'transaction', 'retry', 'cache', 'dedup', 'success', 'failed', 'failure', 'pending', 'trusted', 'reputation', 'weight', 'confidence', 'ranking', 'scoring', 'preferred', 'queue', 'schedule', 'undo', 'button', 'onclick', 'render'];
         for (const term of forbiddenTerms) {
@@ -345,7 +353,7 @@ async function run() {
         const storeSource = await readFile(new URL('../application/PublicationDistributionLifecycleStore.js', import.meta.url), 'utf8');
         assert(!storeSource.includes('PublicationDistributionCommand'), '44. the 0.9.52/0.9.53 store itself is never modified to know about this command');
 
-        console.log('✓ Architectural regression: no re-implemented construction/sequencing/lifecycle logic, no UI/persistence imports, no forbidden vocabulary, exactly one export');
+        console.log('✓ Architectural regression: no re-implemented construction/sequencing/lifecycle logic, no UI/persistence imports, no forbidden vocabulary, exactly two exports (0.9.444)');
     }
 
     console.log('\nAll PublicationDistributionCommand tests passed.');
