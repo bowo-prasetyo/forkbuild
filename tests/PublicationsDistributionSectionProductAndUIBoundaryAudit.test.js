@@ -393,13 +393,27 @@ async function run() {
         const canvasSource = await source('ui/components/WorldEncounterCanvas.js');
         const viewSource = await source('ui/views/DecentralizedPublicationsView.js');
 
+        // UPDATED by 0.9.437 — Contextual Distribution Configuration
+        // Reachability, this audit's own recommended next step (Section H),
+        // carried out. This audit originally found ZERO of the three
+        // action surfaces linking to any /settings/* route (its own
+        // original E1 assertion, for all three, was the negative form).
+        // 0.9.437's own scope was /publications only — OwnPublicationPanel.js
+        // and WorldEncounterCanvas.js remain untouched, so the negative
+        // assertion still holds for those two; DecentralizedPublicationsView.js
+        // is updated to its new, true shape rather than silently dropped,
+        // the same "amend, never delete" convention tests/
+        // ContentProviderPreferenceReachabilityAudit.test.js's own Section A
+        // already set.
         for (const [label, fileSource] of [
             ['OwnPublicationPanel.js', ownPanelSource],
-            ['WorldEncounterCanvas.js', canvasSource],
-            ['DecentralizedPublicationsView.js', viewSource]
+            ['WorldEncounterCanvas.js', canvasSource]
         ]) {
-            assert(!/router-link[^>]*\/settings\//.test(fileSource), n(`E1[${label}]. no router-link to any /settings/* route exists in this file today — none of the three action surfaces this audit maps offers a contextual "Configure in Settings" link of any kind`));
+            assert(!/router-link[^>]*\/settings\//.test(fileSource), n(`E1[${label}]. no router-link to any /settings/* route exists in this file today — 0.9.437's own scope was /publications only, so this surface remains exactly as this audit originally found it`));
         }
+        assert(/router-link[^>]*\/settings\/nostr-relay/.test(viewSource), n('E1[DecentralizedPublicationsView.js]a. a contextual /settings/nostr-relay router-link now exists — the gap this audit named is closed for the Nostr substrate'));
+        assert(/router-link[^>]*\/settings\/arweave-gateway/.test(viewSource), n('E1[DecentralizedPublicationsView.js]b. a contextual /settings/arweave-gateway router-link now exists — the gap this audit named is closed for the Arweave substrate'));
+        assert(/router-link[^>]*\/settings\/content-provider/.test(viewSource), n('E1[DecentralizedPublicationsView.js]c. a contextual /settings/content-provider router-link now exists — the gap this audit named is closed for CONTENT'));
 
         const routerSource = await source('ui/router/index.js');
         const settingsRoutes = ['content-provider', 'arweave-gateway', 'nostr-relay', 'stun', 'rendezvous'];
@@ -408,8 +422,9 @@ async function run() {
         }
         assert(!/\/settings\/(bitcoin|anchor)/.test(routerSource), n('E3. no Bitcoin/anchor-endpoint Settings route exists — confirmed deliberate, not merely missing: Bitcoin anchoring has no persistent gateway/relay concept to configure, it is wallet-connection-driven, live, inline in DecentralizedPublicationsView.js itself'));
         assert(/bitcoinWalletConnection|baseWalletConnection/.test(codeOnly(viewSource)), n('E4. confirmed live: the wallet-connection state this role actually needs already renders inline, contextually, exactly where the anchor action itself occurs — the SAME "configuration lives where the action is" principle Settings views already hold for the other two roles, just achieved by a different, already-adequate mechanism for this one'));
+        assert(!/router-link[^>]*\/settings\/(bitcoin|anchor)/.test(viewSource), n('E5. Proof/Anchoring still carries no Settings link of any kind — 0.9.437 deliberately added none, matching E3\'s own finding that no such route exists to link to'));
 
-        console.log('✓ Section E: a real, concretely-scoped CONFIGURATION_DISCOVERABILITY_GAP exists — three real Settings views (content-provider, arweave-gateway, nostr-relay) already exist and are already reachable from the global top nav, but are linked from none of the three publication-facing action surfaces. Bitcoin/anchor configuration is not missing a Settings view by gap; it has no persistent endpoint of its own to put in one.');
+        console.log('✓ Section E — UPDATED by 0.9.437: the CONFIGURATION_DISCOVERABILITY_GAP this audit named is now closed for all three Settings-backed roles, contextually, from /publications itself — see tests/PublicationsDistributionConfigurationReachability.test.js for that milestone\'s own full proof (correct per-substrate targeting, no duplicated controls, and distribution isolation).');
     }
 
     // ===============================================================
@@ -512,23 +527,26 @@ async function run() {
     // Section I — deliberate exclusions and the production boundary.
     // ===============================================================
     {
-        // This audit itself builds nothing beyond its own test file and
-        // tests.html's own registration — the same guard every milestone
-        // in this family ends with.
-        const statusOutput = execSync('git status --porcelain', { cwd: SOURCE_ROOT }).toString();
-        const changed = statusOutput.split('\n').map((line) => line.slice(3).trim()).filter(Boolean);
-        const AUTHORIZED = new Set([
-            'tests.html',
-            'tests/PublicationsDistributionSectionProductAndUIBoundaryAudit.test.js'
-        ]);
-        const unauthorized = changed.filter((f) => !AUTHORIZED.has(f));
-        assert(unauthorized.length === 0, n(`I1. every changed/added file is exactly this milestone's own test/registration file (found unauthorized: ${JSON.stringify(unauthorized)})`));
-
-        const domainDirs = ['core', 'application', 'renderer', 'discovery', 'anchoring', 'collaboration', 'persistence', 'identity', 'publisher', 'storage', 'ui', 'peer', 'content', 'presence', 'docs'];
-        for (const dir of domainDirs) {
-            const status = execSync(`git status --porcelain -- ${dir}`, { cwd: SOURCE_ROOT }).toString().trim();
-            assert(status === '', n(`I2[${dir}]. ${dir}/ shows no change — this audit classifies a gap, it does not build the fix`));
-        }
+        // I1/I2 ORIGINALLY asserted, live, against `git status --porcelain`,
+        // that this audit (0.9.435) built nothing beyond its own test file
+        // and tests.html's own registration. That was a true, live
+        // constraint on 0.9.435's OWN commit alone — it was never a
+        // standing regression gate against every later commit, and
+        // 0.9.436 (Section A/B/E's own real, in-place amendments above,
+        // this file's own header still describing 0.9.435's original
+        // scope unmodified) and 0.9.437 (Section E's own amendment above)
+        // both intentionally extended production exactly where this
+        // audit's own Section H named the gap — a live `git status`
+        // assertion here would now fail on every one of those legitimate,
+        // already-merged changes, and on this milestone's own real,
+        // in-progress `ui/views/DecentralizedPublicationsView.js` edit.
+        // Demoted to a historical record, the same "not a live rule this
+        // repository is still bound by now" demotion tests/
+        // ContentProviderPreferenceReachabilityAudit.test.js's own Section H
+        // already applies to an identical situation — never silently
+        // deleted, since it correctly documents what WAS true when this
+        // audit was first written.
+        console.log('  (historical) I1/I2 — as of 0.9.435\'s own original commit, this audit built nothing beyond its own test file and tests.html\'s own registration, and touched no production directory. 0.9.436 and 0.9.437 both legitimately extended production afterward, exactly where Section H above named the gap — this is no longer a live constraint.');
 
         // This file's own imports never reach into ui/ (never constructs,
         // mounts, or drives the real Vue components it reads as text),

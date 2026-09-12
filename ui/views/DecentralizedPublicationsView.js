@@ -6719,6 +6719,21 @@ export default {
             return publicationDistributionLifecycleStore.getDiscoveryObservations(entry.publication.id);
         }
 
+        // 0.9.437 — Contextual Distribution Configuration Reachability.
+        // Resolves ONLY which already-registered Settings route
+        // (ui/router/index.js) corresponds to the substrate this entry's
+        // own Announcement/Discovery select currently has chosen — never
+        // a new configuration surface, never a duplicate of either
+        // Settings view's own controls. See this milestone's own audit
+        // (tests/PublicationsDistributionSectionProductAndUIBoundaryAudit.test.js,
+        // Section E) for why exactly these two routes, and only these
+        // two, are the correct targets for Announcement/Discovery.
+        function discoveryDistributionConfigurationRoute(entry) {
+            return entry.discoveryDistributionProvider === 'arweave'
+                ? '/settings/arweave-gateway'
+                : '/settings/nostr-relay';
+        }
+
         async function recheck(entry) {
             await resolveEntry(entry);
         }
@@ -6827,7 +6842,7 @@ export default {
             publicationDistributionCommand, snapshotDistributionCommand,
             distributePublicationForEntry, discoveryDistributionButtonLabel,
             distributeSnapshot, snapshotDistributionButtonLabel,
-            discoveryObservationsView,
+            discoveryObservationsView, discoveryDistributionConfigurationRoute,
             toggleInspect, inspectionExpanded, inspectionDetail, inspectionTypeSpecific, inspectionKnowledge,
             evidenceDiscoveryCoordinator, discoverFromPeers, discoveryView, discoveryBadgeClass, discoveryButtonLabel,
             placementResolutionCoordinator, describeKnownPlacementCount, togglePlacements, resolvePlacement, placementBadgeClass, placementLifecycleNote,
@@ -9120,11 +9135,18 @@ export default {
                          reading 0.9.433/0.9.434's own already-portable,
                          per-substrate observation model unmodified).
 
-                         CONFIGURATION LINKS ARE DELIBERATELY NOT PART OF
-                         THIS SECTION. Reaching Settings contextually from
-                         here (CONFIGURATION_DISCOVERABILITY_GAP, this
-                         milestone's own audit Section E) is a separate,
-                         later, already-scoped milestone's own job. -->
+                         CONFIGURATION LINKS were deliberately left out of
+                         THIS milestone (0.9.436) — reaching Settings
+                         contextually from here (the CONFIGURATION_DISCOVERABILITY_GAP
+                         this milestone's own audit named, Section E) was a
+                         separate, later, already-scoped milestone's own job.
+                         0.9.437 is that milestone: each "Configure" link
+                         below is a plain `<router-link>` to an already-
+                         existing, already-registered Settings route — never
+                         a new configuration surface, never a duplicated
+                         control, and never a distribution command of any
+                         kind. See each link's own inline comment for why
+                         that specific route and no other. -->
                     <div class="identity-mgmt-distribution">
                         <h4 class="identity-mgmt-distribution-heading">Distribution</h4>
 
@@ -9157,6 +9179,16 @@ export default {
                                                 @click="distributePublicationForEntry(entry)">
                                             {{ discoveryDistributionButtonLabel(entry) }}
                                         </button>
+                                        <!-- 0.9.437 — Contextual Distribution Configuration
+                                             Reachability. Links to the already-existing Settings
+                                             view for whichever substrate is currently selected
+                                             above — never a duplicate relay/gateway control of its
+                                             own. Configuration, availability, and health remain
+                                             distinct: this link says only where to configure, never
+                                             whether the substrate is currently reachable. -->
+                                        <router-link :to="discoveryDistributionConfigurationRoute(entry)" class="action-btn action-btn--secondary">
+                                            Configure {{ entry.discoveryDistributionProvider === 'arweave' ? 'Arweave' : 'Nostr' }}
+                                        </router-link>
                                     </div>
                                     <p v-if="entry.discoveryDistributionAttempt && entry.discoveryDistributionAttempt.error" class="form-hint form-hint--neutral">
                                         {{ entry.discoveryDistributionAttempt.error }}
@@ -9189,6 +9221,14 @@ export default {
                                                 @click="distributeSnapshot(entry)">
                                             {{ snapshotDistributionButtonLabel(entry) }}
                                         </button>
+                                        <!-- 0.9.437 — Snapshot distribution is composed, at
+                                             ui/main.js's own composition root, onto a fixed
+                                             Arweave content store + Nostr discovery publisher
+                                             pair (application/SnapshotDistributionRuntimeComposition.js)
+                                             — never a per-entry choice like Publication above — so
+                                             both Settings views are linked here, unconditionally. -->
+                                        <router-link to="/settings/arweave-gateway" class="action-btn action-btn--secondary">Configure Arweave</router-link>
+                                        <router-link to="/settings/nostr-relay" class="action-btn action-btn--secondary">Configure Nostr</router-link>
                                     </div>
                                     <p v-if="entry.snapshotDistributionAttempt && entry.snapshotDistributionAttempt.error" class="form-hint form-hint--neutral">
                                         {{ entry.snapshotDistributionAttempt.error }}
@@ -9213,7 +9253,18 @@ export default {
                              second act of publishing (application/
                              SnapshotPlacementCreationView.js's own header). -->
                         <div v-if="availableStorageTypes.length > 0" class="identity-mgmt-distribution-role">
-                            <span class="evidence-convergence-title">Content</span>
+                            <!-- 0.9.437 — Contextual Distribution Configuration
+                                 Reachability. One link for the whole role, not one per
+                                 storage card: /settings/content-provider configures a
+                                 single CONTENT-wide preferred-provider preference (0.9.302),
+                                 never a per-storage-type setting, so it belongs at the role
+                                 heading rather than duplicated across every card below.
+                                 Reuses .evidence-discovery-header purely as a flex row —
+                                 no new CSS class introduced for this link. -->
+                            <div class="evidence-discovery-header">
+                                <span class="evidence-convergence-title">Content</span>
+                                <router-link to="/settings/content-provider" class="action-btn action-btn--secondary">Configure</router-link>
+                            </div>
                             <div class="evidence-list">
                                 <div v-for="storage in availableStorageTypes" :key="storage" class="evidence-anchor-card">
                                     <div class="evidence-anchor-header">
@@ -9249,7 +9300,16 @@ export default {
                              location. Same v-for, same createAnchor()/
                              creationView() calls, same per-entry
                              creationAttempts state — nothing about the
-                             action itself changed, only where it renders. -->
+                             action itself changed, only where it renders.
+
+                             0.9.437 — deliberately no "Configure" link here. Bitcoin/
+                             anchor configuration has no persistent gateway/relay
+                             endpoint of its own to route to (this milestone's own
+                             audit, tests/PublicationsDistributionSectionProductAndUIBoundaryAudit.test.js,
+                             Section E3/E4) — it is wallet-connection-driven, already
+                             rendered inline wherever the anchor action itself occurs.
+                             Adding a link here would point at a Settings view that
+                             does not exist. -->
                         <div v-if="availableAnchorTypes.length > 0" class="identity-mgmt-distribution-role">
                             <span class="evidence-convergence-title">Proof / Anchoring</span>
                             <div class="evidence-list">
