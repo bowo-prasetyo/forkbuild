@@ -1223,13 +1223,28 @@ export default {
         // the already-composed `publicationDistributionCommand` injected
         // above — the same restraint `WorldEncounterCanvas` itself holds
         // one layer down.
-        function distributeWorldEncounterPublication(publication) {
+        //
+        // AMENDED BY 0.9.430 — Announcement/Discovery Provider Selection
+        // Reachability. `discoveryProvider` is a new, optional second
+        // parameter — the Wanderer's own explicit Nostr/Arweave choice,
+        // made in `WorldEncounterCanvas`'s own new "Announcement/Discovery
+        // substrate" control (see that file's own header) — forwarded
+        // verbatim into `publicationDistributionCommand()`'s own request,
+        // exactly like `serializedMaterial` already is. This function still
+        // interprets nothing: an omitted `discoveryProvider` (every caller
+        // that predates this milestone, unchanged) reaches
+        // `publicationDistributionCommand()` as `undefined` and resolves to
+        // `'nostr'` exactly where it already did, several layers down, in
+        // `PublicationDistributionRuntimeComposition.js` — see that file's
+        // own header, "discoveryProvider itself is the one new option."
+        function distributeWorldEncounterPublication(publication, discoveryProvider) {
             if (!publicationDistributionCommand) {
                 return Promise.reject(new Error('Publication distribution is not available.'));
             }
             return publicationDistributionCommand({
                 publication,
-                serializedMaterial: JSON.stringify(publication.toJSON())
+                serializedMaterial: JSON.stringify(publication.toJSON()),
+                discoveryProvider
             });
         }
 

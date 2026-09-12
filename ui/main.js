@@ -2062,11 +2062,25 @@ const publicationDistributionRuntimeProvider = createPublicationDistributionRunt
     ...nostrPublicationRuntimeCapabilities,
     discoveryTag: PUBLICATION_DISCOVERY_TAG
 });
-const { arweaveUploaderOptions, nostrPublisherOptions } = resolvePublicationDistributionRuntimeConfiguration(publicationDistributionRuntimeProvider.resolveRuntimeCapabilities());
+// 0.9.430 — Announcement/Discovery Provider Selection Reachability.
+// `createPublicationDistributionRuntimeProvider()`'s own `arweaveAnnouncement`
+// section (see that file's own header, "AMENDED BY 0.9.430") is what now
+// produces `arweaveAnnouncementPublisherOptions` below — this file still
+// never imports `application/PublicationDistributionConfigurationProvider.js`
+// directly, exactly the same restraint it already holds for
+// `arweaveUploaderOptions`/`nostrPublisherOptions`. No `uploadTaggedTransaction`
+// host capability exists anywhere in this codebase yet (see 0.9.108's/
+// 0.9.109's own "no host capability exists yet" precedent for the other
+// two substrates before their own adapters existed) — building that
+// adapter is a separate, later, unscheduled milestone, so this section
+// honestly resolves `undefined`, exactly like both siblings did before a
+// real signer/publishImpl existed.
+const { arweaveUploaderOptions, nostrPublisherOptions, arweaveAnnouncementPublisherOptions } = resolvePublicationDistributionRuntimeConfiguration(publicationDistributionRuntimeProvider.resolveRuntimeCapabilities());
 const publicationDistributionCommand = composePublicationDistributionCommand({
     lifecycleStore: publicationDistributionLifecycleStore,
     arweaveUploaderOptions,
-    nostrPublisherOptions
+    nostrPublisherOptions,
+    arweaveAnnouncementPublisherOptions
 });
 app.provide('publicationDistributionCommand', publicationDistributionCommand);
 

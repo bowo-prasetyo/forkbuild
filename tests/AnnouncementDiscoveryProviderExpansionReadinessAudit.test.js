@@ -225,15 +225,39 @@ async function run() {
         // Identity is constructed exactly once, in ui/main.js.
         const composeCallCount = (mainSource.match(/composePublicationDistributionCommand\(\{/g) || []).length;
         assert(composeCallCount === 1, n(`B7. composePublicationDistributionCommand is called exactly once in ui/main.js (found ${composeCallCount}) — one construction site, not per-action`));
-        assert(/const \{ arweaveUploaderOptions, nostrPublisherOptions \} = resolvePublicationDistributionRuntimeConfiguration\(/.test(mainSource), n('B8. arweaveUploaderOptions/nostrPublisherOptions are produced by exactly one real call, in ui/main.js — the one place "which provider" is ever decided today'));
+        // AMENDED BY 0.9.430 — Announcement/Discovery Provider Selection
+        // Reachability. `arweaveAnnouncementPublisherOptions` joined the
+        // same destructured call as a third, independent field — this
+        // audit's own recommended seam (Section G, below), now built. "The
+        // one place 'which provider' is ever decided today" now reads
+        // `discoveryProvider`, threaded from a real caller (`ui/components/
+        // WorldEncounterCanvas.js`'s own new substrate control) rather than
+        // fixed at this call site — this call site still produces the
+        // OPTIONS each provider needs, never the SELECTION between them.
+        assert(/const \{ arweaveUploaderOptions, nostrPublisherOptions, arweaveAnnouncementPublisherOptions \} = resolvePublicationDistributionRuntimeConfiguration\(/.test(mainSource), n('B8. arweaveUploaderOptions/nostrPublisherOptions/arweaveAnnouncementPublisherOptions are produced by exactly one real call, in ui/main.js — the one place each provider\'s OWN options are ever resolved (0.9.430: provider SELECTION itself now lives one layer up, at a real caller)'));
 
         // Every layer beneath that ONE construction site forwards the pair
         // verbatim, opaque, as a per-call parameter — never re-read, never
         // re-interpreted, never hard-coded.
-        assert(/composePublicationDistributionCommand\(\{ lifecycleStore, arweaveUploaderOptions, nostrPublisherOptions \} = \{\}\)/.test(compositionSource), n('B9. PublicationDistributionCommandComposition.js accepts both as opaque per-call constructor arguments'));
-        assert(/executePublicationDistributionCommand\(\{[\s\S]{0,120}arweaveUploaderOptions,\s*\n\s*nostrPublisherOptions,/.test(commandSource), n('B10. PublicationDistributionCommand.js accepts both as opaque per-call function arguments'));
-        assert(/arweaveUploaderOptions,\s*\n\s*nostrPublisherOptions\s*\n\} = \{\}\) \{/.test(orchestratorSource), n('B11. PublicationDistributionOrchestrator.js accepts both as opaque per-call function arguments'));
-        assert(/arweaveUploaderOptions = \{\},\s*\n\s*nostrPublisherOptions = \{\}\s*\n\} = \{\}\) \{/.test(runtimeSource), n('B12. PublicationDistributionRuntimeComposition.js accepts both as opaque per-call function arguments, only here finally constructing the two concrete collaborators'));
+        //
+        // AMENDED BY 0.9.430 — Announcement/Discovery Provider Selection
+        // Reachability. `discoveryProvider`/`arweaveAnnouncementPublisherOptions`
+        // (or, at the composition-root binding in
+        // PublicationDistributionCommandComposition.js, just
+        // `arweaveAnnouncementPublisherOptions` — `discoveryProvider` stays
+        // a per-call, caller-supplied field there, never bound at
+        // composition time; see that file's own "AMENDED BY 0.9.430")
+        // joined the forwarded set at every layer below. B12's own regex
+        // was already stale as of 0.9.428 (which added `discoveryProvider`/
+        // `arweaveAnnouncementPublisherOptions` to
+        // PublicationDistributionRuntimeComposition.js itself, before this
+        // milestone touched anything) — confirmed failing even on this
+        // audit's own pre-0.9.430 content; corrected here alongside B9-B11
+        // for the same file family.
+        assert(/composePublicationDistributionCommand\(\{ lifecycleStore, arweaveUploaderOptions, nostrPublisherOptions, arweaveAnnouncementPublisherOptions \} = \{\}\)/.test(compositionSource), n('B9. PublicationDistributionCommandComposition.js accepts arweaveUploaderOptions/nostrPublisherOptions/arweaveAnnouncementPublisherOptions as opaque per-call constructor arguments'));
+        assert(/executePublicationDistributionCommand\(\{[\s\S]{0,200}arweaveUploaderOptions,\s*\n\s*discoveryProvider,\s*\n\s*nostrPublisherOptions,\s*\n\s*arweaveAnnouncementPublisherOptions,/.test(commandSource), n('B10. PublicationDistributionCommand.js accepts all four as opaque per-call function arguments'));
+        assert(/arweaveUploaderOptions,\s*\n\s*discoveryProvider,\s*\n\s*nostrPublisherOptions,\s*\n\s*arweaveAnnouncementPublisherOptions\s*\n\} = \{\}\) \{/.test(orchestratorSource), n('B11. PublicationDistributionOrchestrator.js accepts all four as opaque per-call function arguments'));
+        assert(/arweaveUploaderOptions = \{\},\s*\n\s*discoveryProvider = 'nostr',\s*\n\s*nostrPublisherOptions = \{\},\s*\n\s*arweaveAnnouncementPublisherOptions = \{\}\s*\n\} = \{\}\) \{/.test(runtimeSource), n('B12. PublicationDistributionRuntimeComposition.js accepts all four as opaque per-call function arguments, only here finally constructing the two concrete collaborators (selected by discoveryProvider, never both)'));
 
         console.log('\n=== SECTION B: THE COMPLETE PIPELINE TRACE ===');
         console.log('  ui/main.js  --(construct, once)-->  PublicationDistributionCommandComposition.js');
@@ -293,7 +317,16 @@ async function run() {
         const resolverSource = await readSource('application/RoleAwareProviderResolver.js');
 
         assert(/ALWAYS WIN OVER ANYTHING A\s*\n\/\/ CALLER'S OWN `request` HAPPENS TO CARRY/.test(compositionSource), n('E1. PublicationDistributionCommandComposition.js\'s own header states, verbatim, that its three bound collaborators always win over anything a caller\'s own request carries'));
-        assert(/return \(request\) => executePublicationDistributionCommand\(\{\s*\n\s*\.\.\.request,\s*\n\s*arweaveUploaderOptions,\s*\n\s*nostrPublisherOptions,\s*\n\s*lifecycleStore\s*\n\s*\}\);/.test(compositionSource), n('E2. confirmed in the real code, not only the header: `...request` is spread FIRST, then arweaveUploaderOptions/nostrPublisherOptions/lifecycleStore are set explicitly, so a `request.arweaveUploaderOptions` a caller supplied would be silently overwritten, never honored'));
+        // AMENDED BY 0.9.430 — Announcement/Discovery Provider Selection
+        // Reachability. `arweaveAnnouncementPublisherOptions` joined the
+        // three explicitly-set fields — still spread-then-override, still
+        // never honoring a caller-supplied override of any of the three
+        // composition-root collaborators. `discoveryProvider` is
+        // deliberately NOT among them: it reaches `executePublicationDistributionCommand()`
+        // purely through `...request`'s own spread, unoverridden — see
+        // that file's own header, "discoveryProvider is deliberately NOT
+        // added to that pre-bound set."
+        assert(/return \(request\) => executePublicationDistributionCommand\(\{\s*\n\s*\.\.\.request,\s*\n\s*arweaveUploaderOptions,\s*\n\s*nostrPublisherOptions,\s*\n\s*arweaveAnnouncementPublisherOptions,\s*\n\s*lifecycleStore\s*\n\s*\}\);/.test(compositionSource), n('E2. confirmed in the real code, not only the header: `...request` is spread FIRST, then arweaveUploaderOptions/nostrPublisherOptions/arweaveAnnouncementPublisherOptions/lifecycleStore are set explicitly, so a `request.arweaveUploaderOptions` (etc.) a caller supplied would be silently overwritten, never honored — while `request.discoveryProvider` passes through unoverridden, the one deliberate exception'));
 
         const mainSource = await readSource('ui/main.js');
         assert(/app\.provide\('publicationDistributionCommand', publicationDistributionCommand\);/.test(mainSource), n('E3. the ONE composed command this produces is provide()\'d exactly once, app-wide, at boot — every later inject() in this app receives the SAME fixed function reference'));

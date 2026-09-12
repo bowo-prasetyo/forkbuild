@@ -193,6 +193,17 @@ import { transitionPublicationDistributionLifecycle } from './PublicationDistrib
 // - **Undoing a distribution, or any withdrawal semantics.** Neither
 //   0.9.50 nor 0.9.51 offers a `PRESENT` -> `ABSENT` transition; this file
 //   invents none either.
+//
+// AMENDED BY 0.9.430 — Announcement/Discovery Provider Selection
+// Reachability. `discoveryProvider` and `arweaveAnnouncementPublisherOptions`
+// (0.9.428) are now accepted alongside `arweaveUploaderOptions`/
+// `nostrPublisherOptions` and forwarded verbatim to
+// `orchestratePublicationDistribution()` — the same "forwarded verbatim,
+// unread by this file" restraint this file's own header already holds for
+// every other distribution-configuration field, above. This file still
+// makes no provider decision of its own: an omitted `discoveryProvider`
+// resolves to `'nostr'` exactly where it already did, several layers down,
+// in `PublicationDistributionRuntimeComposition.js`.
 
 const BASELINE_LIFECYCLE = Object.freeze({
     material: Object.freeze({ state: PublicationDistributionState.ABSENT }),
@@ -249,14 +260,16 @@ function recordPublicationDistributionResult(lifecycleStore, result) {
 }
 
 // executePublicationDistributionCommand({ publication, serializedMaterial,
-//   materialStorage, arweaveUploaderOptions, nostrPublisherOptions,
+//   materialStorage, arweaveUploaderOptions, discoveryProvider,
+//   nostrPublisherOptions, arweaveAnnouncementPublisherOptions,
 //   lifecycleStore }) -> Promise<PublicationDistributionResult | null>.
 //
 // The application-level command boundary for initiating Publication
 // Distribution — see this file's own header for the full contract. Calls
-// `orchestratePublicationDistribution()` (0.9.58, unmodified) with
+// `orchestratePublicationDistribution()` (0.9.58, amended by 0.9.430) with
 // `publication`/`serializedMaterial`/`materialStorage`/
-// `arweaveUploaderOptions`/`nostrPublisherOptions` forwarded verbatim, then
+// `arweaveUploaderOptions`/`discoveryProvider`/`nostrPublisherOptions`/
+// `arweaveAnnouncementPublisherOptions` forwarded verbatim, then
 // records whatever new material/discovery facts the resulting
 // `PublicationDistributionResult` actually reports into `lifecycleStore`,
 // via `describePublicationDistributionLifecycle()` (0.9.50) and
@@ -276,7 +289,9 @@ export function executePublicationDistributionCommand({
     serializedMaterial,
     materialStorage,
     arweaveUploaderOptions,
+    discoveryProvider,
     nostrPublisherOptions,
+    arweaveAnnouncementPublisherOptions,
     lifecycleStore
 } = {}) {
     if (!lifecycleStore || typeof lifecycleStore.get !== 'function' || typeof lifecycleStore.set !== 'function') {
@@ -288,7 +303,9 @@ export function executePublicationDistributionCommand({
         serializedMaterial,
         materialStorage,
         arweaveUploaderOptions,
-        nostrPublisherOptions
+        discoveryProvider,
+        nostrPublisherOptions,
+        arweaveAnnouncementPublisherOptions
     });
 
     return distribution.then((result) => {

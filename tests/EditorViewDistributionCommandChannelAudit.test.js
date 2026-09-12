@@ -174,10 +174,18 @@ async function run() {
         const worldViewCode = await codeOnlySource('ui/views/WorldView.js');
         assert(worldViewCode.includes("inject('publicationDistributionCommand', null)"),
             '4. WorldView.js injects the app-wide command via inject(key, null) — the standard Vue provide/inject channel, not a bespoke one');
-        assert(worldViewCode.includes('function distributeWorldEncounterPublication(publication)') &&
+        // AMENDED BY 0.9.430 — Announcement/Discovery Provider Selection
+        // Reachability. `discoveryProvider` joined this wrapper as a new,
+        // optional second parameter, forwarded into the same request object
+        // as a second added field — see `application/
+        // PublicationDistributionRuntimeComposition.js`'s own header for why
+        // that choice belongs at a caller boundary, never computed here.
+        // The contract's own SHAPE is otherwise unchanged: still a plain,
+        // non-`async` function calling exactly one thing.
+        assert(worldViewCode.includes('function distributeWorldEncounterPublication(publication, discoveryProvider)') &&
                worldViewCode.includes('return publicationDistributionCommand({') &&
                worldViewCode.includes('serializedMaterial: JSON.stringify(publication.toJSON())'),
-            '5. WorldView.js\'s own distributeWorldEncounterPublication(publication) is the smallest callable contract: a ONE-argument (publication) -> Promise function that adds exactly one field (serializedMaterial) to the injected command\'s own request shape');
+            '5. WorldView.js\'s own distributeWorldEncounterPublication(publication, discoveryProvider) is the smallest callable contract: a TWO-argument (publication, discoveryProvider) -> Promise function that adds exactly two fields (serializedMaterial, discoveryProvider) to the injected command\'s own request shape');
 
         // Live: the exact composition chain end to end, called through a
         // wrapper with the identical shape WorldView.js's own function

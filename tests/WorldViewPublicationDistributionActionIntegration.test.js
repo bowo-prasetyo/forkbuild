@@ -400,7 +400,12 @@ async function runTests() {
             '31. WorldView.js injects the existing publicationDistributionCommand, defaulting to null');
         assert(/:distributionCommand="distributeWorldEncounterPublication"/.test(viewCodeOnly),
             '32. WorldView.js forwards its own wrapper to WorldEncounterCanvas as its new distributionCommand prop');
-        assert(viewCodeOnly.includes('function distributeWorldEncounterPublication(publication)')
+        // AMENDED BY 0.9.430 — Announcement/Discovery Provider Selection
+        // Reachability. `discoveryProvider` joined `publication` as a new,
+        // optional second parameter, forwarded into the same request object —
+        // this function still calls exactly one thing, the injected
+        // `publicationDistributionCommand`, never a second command.
+        assert(viewCodeOnly.includes('function distributeWorldEncounterPublication(publication, discoveryProvider)')
             && viewCodeOnly.includes('return publicationDistributionCommand({'),
             '33. distributeWorldEncounterPublication calls the injected publicationDistributionCommand — never a second command');
         assert(!/ArweavePublicationMaterialUploader|NostrPublicationDiscoveryPublisher|PublicationDistributionExecutor|PublicationDistributionOrchestrator|PublicationDistributionRuntimeComposition|orchestratePublicationDistribution/.test(viewCodeOnly),
