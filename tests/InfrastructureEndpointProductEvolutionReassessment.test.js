@@ -419,7 +419,11 @@ async function run() {
         // /settings/nostr-relay (not built by this test-only milestone).
         const arweaveSettingsSource = await source('ui/views/ArweaveGatewaySettingsView.js');
         assert(arweaveSettingsSource.includes('one page, one\n// concern'), 'H1. ArweaveGatewaySettingsView\'s own header names the pattern a Nostr equivalent would mirror: one page, one concern');
-        assert(arweaveSettingsSource.includes('nothing for IPFS, TURN,\n// Nostr, Bitcoin, or Base'),
+        // 0.9.440 — matched by substring, not one fragile literal
+        // multi-line fragment: this milestone's own header edits legitimately
+        // reflowed where this comment block wraps, without changing which
+        // substrates it names as excluded.
+        assert(/nothing for IPFS, TURN, Nostr,?\s*\n\/\/\s*Bitcoin, or Base/.test(arweaveSettingsSource),
             'H1. the existing Arweave settings page explicitly names Nostr only in its own "deliberately excluded" list — never imports or wires anything Nostr-related');
         assert(!/import.*[Nn]ostr/.test(arweaveSettingsSource), 'H1. the existing Arweave settings page imports nothing Nostr-related — confirming it is not where Nostr relay configuration should be added');
 

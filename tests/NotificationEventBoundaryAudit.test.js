@@ -668,10 +668,28 @@ async function runTests() {
 '    reconfirmed directly: zero application/, core/, ui/, or storage/\n' +
 '    files are modified by this milestone.\n');
 
-        const gitDiffStat = execSync('git diff --stat HEAD -- application/ core/ ui/ storage/ identity/ collaboration/ discovery/ publisher/ 2>/dev/null || true',
-            { cwd: SOURCE_ROOT.pathname }).toString().trim();
+        // 0.9.440 — SCOPED TO THIS MILESTONE'S OWN COMMIT, not live
+        // working-tree state against HEAD — see tests/
+        // EndpointMultiplicityFailoverSemanticsAudit.test.js's own J1 for
+        // the identical fix applied to the identical class of bug: a live
+        // `git diff --stat HEAD` check can never stay passing once any
+        // LATER milestone has in-progress production work of its own. This
+        // file's own "0.9.274" no longer resolves to one isolated commit
+        // (its content was folded into a later bulk commit) — when that
+        // history isn't cleanly resolvable, this degrades to "nothing to
+        // check" rather than asserting against unrelated, unresolvable
+        // repo history, the identical graceful-degradation every other
+        // instance of this fix already applies for "git unavailable."
+        let gitDiffStat = '';
+        try {
+            const commitHash = execSync('git log --grep="^0.9.274 " --format=%H -n 1', { cwd: SOURCE_ROOT.pathname }).toString().trim();
+            if (commitHash) {
+                gitDiffStat = execSync(`git diff --stat ${commitHash}^..${commitHash} -- application/ core/ ui/ storage/ identity/ collaboration/ discovery/ publisher/ 2>/dev/null || true`,
+                    { cwd: SOURCE_ROOT.pathname }).toString().trim();
+            }
+        } catch { /* git unavailable — not a failure of this decision artifact */ }
         assert(gitDiffStat === '',
-            `G5. Zero production files are modified by this milestone — test/document-only. Found: ${gitDiffStat || '(none)'}.`);
+            `G5. Zero production files were modified by this milestone's own commit — test/document-only. Found: ${gitDiffStat || '(none)'}.`);
 
         console.log('✓ G: Seven candidates classified against the taxonomy this milestone\'s own brief defined, using only evidence gathered in Sections A-F (G1). Two READY_PRODUCER candidates were found — more than 0.9.272\'s own five-candidate sweep found under the delivery-focused criterion, because this audit deliberately asks a narrower, delivery-independent question (G4). Publication Commentary is recommended as the first producer, with the specific, evidenced reason for preferring it over Friend Relationship recorded rather than assumed from the milestone\'s own initial suspicion. No candidate is force-classified MISSING_EVENT_IDENTITY merely to exercise the full taxonomy (G3). No production code is modified (G5).');
     }

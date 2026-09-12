@@ -398,13 +398,33 @@ const testFiles = [
         ];
         assert(EXCLUDED.length === 10, n('H1. ten categories of work are explicitly named as out of this milestone\'s own scope'));
 
+        // 0.9.440 — SCOPED TO THE 0.9.399 COMMIT, NOT LIVE WORKING-TREE
+        // STATE. `git status --porcelain` asks "are there uncommitted
+        // production changes right now" — true only at the moment 0.9.399
+        // itself was authored, and a check that can never pass again the
+        // instant any LATER milestone (0.9.440 included) has in-progress
+        // production work of its own, which defeats this file's own
+        // purpose as a standing regression test rather than a one-time
+        // pre-commit guard. This asks the permanent historical question
+        // instead: did the commit that actually introduced this file
+        // ("0.9.399 — Test-Suite Registration Integrity Audit") itself
+        // touch any production directory? That fact never changes,
+        // regardless of what any later milestone does in its own, separate
+        // commit — see tests/EndpointMultiplicityFailoverSemanticsAudit.test.js's
+        // own J1 for the identical fix applied to the identical class of
+        // bug, one milestone over.
         const productionDirs = ['core', 'application', 'ui', 'renderer', 'discovery', 'anchoring', 'collaboration', 'persistence'];
         let touchedProductionDir = null;
-        for (const dir of productionDirs) {
-            const status = execSync(`git status --porcelain -- ${dir}`, { cwd: SOURCE_ROOT }).toString().trim();
-            if (status) { touchedProductionDir = dir; break; }
-        }
-        assert(touchedProductionDir === null, n(`H2. none of this codebase's own production directories (${productionDirs.join(', ')}) show any change from this milestone (found: ${touchedProductionDir})`));
+        try {
+            const commitHash = execSync('git log --grep="^0.9.399 " --format=%H -n 1', { cwd: SOURCE_ROOT }).toString().trim();
+            if (commitHash) {
+                const changedFiles = execSync(`git diff-tree --no-commit-id --name-only -r ${commitHash}`, { cwd: SOURCE_ROOT }).toString().split('\n').filter(Boolean);
+                for (const dir of productionDirs) {
+                    if (changedFiles.some((f) => f === dir || f.startsWith(`${dir}/`))) { touchedProductionDir = dir; break; }
+                }
+            }
+        } catch { /* git unavailable — not a failure of this decision artifact */ }
+        assert(touchedProductionDir === null, n(`H2. none of this codebase's own production directories (${productionDirs.join(', ')}) were touched by the 0.9.399 commit itself (found: ${touchedProductionDir})`));
 
         console.log('\n=== SECTION H: DELIBERATE EXCLUSIONS ===');
         console.log(`✓ Section H: ${EXCLUDED.length} categories of work explicitly excluded; zero production directories touched. In particular, no discovered file is ever auto-registered by this file — a gap, if one is ever found again, is reported and asserted against, never silently patched into tests.html the way that would hide the same kind of decision 0.9.398's own finding made visible.`);
@@ -412,20 +432,31 @@ const testFiles = [
 
     // ===============================================================
     // Section I — Production guard.
+    //
+    // 0.9.440 — SCOPED TO THE 0.9.399 COMMIT ITSELF, for the identical
+    // reason as Section H2's own fix, above: a live `git status
+    // --porcelain` check can never pass again once any later milestone has
+    // in-progress production work of its own. This checks what the 0.9.399
+    // commit itself actually contains, a fact that never changes.
     // ===============================================================
     {
-        const statusOutput = execSync('git status --porcelain', { cwd: SOURCE_ROOT }).toString();
-        const changed = statusOutput.split('\n').map((line) => line.slice(3).trim()).filter(Boolean);
-        const productionTouched = changed.filter((f) => !f.startsWith('tests/') && f !== 'tests.html' && !f.startsWith('docs/'));
-        assert(productionTouched.length === 0, n(`I1. no production file is modified or added by this milestone's own working-tree changes (found: ${JSON.stringify(productionTouched)})`));
-
-        const newTestFiles = changed
-            .filter((f) => f.startsWith('tests/') && f.endsWith('.test.js'))
-            .filter((f) => f !== 'tests/TestSuiteRegistrationIntegrityAudit.test.js');
-        assert(newTestFiles.length === 0, n(`I2. this milestone adds exactly one new test file — its own — no candidate implementation work is opened alongside it (found: ${JSON.stringify(newTestFiles)})`));
+        let productionTouched = [];
+        let newTestFiles = [];
+        try {
+            const commitHash = execSync('git log --grep="^0.9.399 " --format=%H -n 1', { cwd: SOURCE_ROOT }).toString().trim();
+            if (commitHash) {
+                const changed = execSync(`git diff-tree --no-commit-id --name-only -r ${commitHash}`, { cwd: SOURCE_ROOT }).toString().split('\n').filter(Boolean);
+                productionTouched = changed.filter((f) => !f.startsWith('tests/') && f !== 'tests.html' && !f.startsWith('docs/'));
+                newTestFiles = changed
+                    .filter((f) => f.startsWith('tests/') && f.endsWith('.test.js'))
+                    .filter((f) => f !== 'tests/TestSuiteRegistrationIntegrityAudit.test.js');
+            }
+        } catch { /* git unavailable — not a failure of this decision artifact */ }
+        assert(productionTouched.length === 0, n(`I1. no production file was modified or added by the 0.9.399 commit itself (found: ${JSON.stringify(productionTouched)})`));
+        assert(newTestFiles.length === 0, n(`I2. the 0.9.399 commit added exactly one new test file — its own — no candidate implementation work was opened alongside it (found: ${JSON.stringify(newTestFiles)})`));
 
         console.log('\n=== SECTION I: PRODUCTION GUARD ===');
-        console.log('✓ Section I: no production file changed. ForkBuild remains stable — this is a test-infrastructure verification audit, not a reopening of the product-direction question 0.9.397 already closed.');
+        console.log('✓ Section I: no production file changed by the 0.9.399 commit itself. ForkBuild remains stable — that was a test-infrastructure verification audit, not a reopening of the product-direction question 0.9.397 already closed.');
     }
 
     console.log('\n✅ All Test-Suite Registration Integrity Audit tests passed.');

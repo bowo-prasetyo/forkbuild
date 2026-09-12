@@ -1,4 +1,5 @@
 import { ArweaveWorldEncounterMaterialResolver } from './ArweaveWorldEncounterMaterialResolver.js';
+import { ArweaveGatewayFailoverWorldEncounterMaterialResolver } from './ArweaveGatewayFailoverWorldEncounterMaterialResolver.js';
 import { DecentralizedWorldEncounterMaterialSource } from './DecentralizedWorldEncounterMaterialSource.js';
 
 // 0.9.36 — Decentralized World Encounter Material Runtime Composition.
@@ -154,28 +155,65 @@ import { DecentralizedWorldEncounterMaterialSource } from './DecentralizedWorldE
 // - **Signature verification, hash verification, content authentication,
 //   or any trust/ranking decision about retrieved material.** A future
 //   "Retrieved Material Integrity Boundary" (0.9.37), unscheduled here.
-// - **Caching, retrying, or falling back between gateways or sources.**
-//   Inherited unchanged from 0.9.21, 0.9.33, and 0.9.35 — this file adds
-//   no policy of its own on top of theirs.
+// - **Caching, or falling back between SOURCES** (decentralized vs. local
+//   vs. peer). Inherited unchanged from 0.9.21, 0.9.33, and 0.9.35 — this
+//   file adds no policy of its own on top of theirs. Ordered failover
+//   BETWEEN GATEWAYS of the one Arweave source, added 0.9.440, is a
+//   narrower thing entirely — see `buildArweaveWorldEncounterMaterialResolver()`,
+//   below, and its own header — and never blurs into falling back between
+//   sources: `materialSources.decentralized` is still exactly one source,
+//   whichever resolver class backs it.
 // - **Modifying `application/WorldEncounterMaterialLoading.js` or
 //   `application/DecentralizedWorldEncounterLeadAwareMaterialLoading.js`
 //   in any way, or inventing a decentralized `origin` naming convention
 //   that would let the former route to `.decentralized` on its own.** See
 //   "0.9.21 is still never modified," above.
 
-// Constructs one fresh `ArweaveWorldEncounterMaterialResolver` (0.9.35)
+// Constructs one fresh `ArweaveWorldEncounterMaterialResolver` (0.9.35) —
+// or, since 0.9.440, one fresh `ArweaveGatewayFailoverWorldEncounterMaterialResolver`
+// when `resolverOptions.gatewayUrls` (plural) names more than one gateway,
+// see this file's own header, "0.9.440 — ordered gateway read failover" —
 // and one fresh `DecentralizedWorldEncounterMaterialSource` (0.9.33) wired
 // around its own `retrieveByUri`, and returns both. `resolverOptions` is
-// forwarded verbatim to the resolver's own constructor — see this file's
-// own header, "Resolver constructor options are forwarded verbatim." A
-// malformed `resolverOptions` (an empty `gatewayUrl`, no usable `fetchImpl`
-// and no global `fetch`) throws exactly as `new
+// forwarded verbatim to whichever resolver's own constructor — see this
+// file's own header, "Resolver constructor options are forwarded
+// verbatim." A malformed `resolverOptions` (an empty `gatewayUrl`, no
+// usable `fetchImpl` and no global `fetch`) throws exactly as `new
 // ArweaveWorldEncounterMaterialResolver(...)` already throws on its own;
 // see "A construction failure propagates."
+//
+// 0.9.440 — ORDERED GATEWAY READ FAILOVER. `resolverOptions.gatewayUrls`
+// (an array — new, additional to the pre-existing singular `gatewayUrl`)
+// with more than one entry builds an application/
+// ArweaveGatewayFailoverWorldEncounterMaterialResolver.js instead of a
+// plain ArweaveWorldEncounterMaterialResolver — see that file's own header
+// for what it does differently. Zero or one entries, the original singular
+// `gatewayUrl` string, or no gatewayUrl/gatewayUrls at all is byte-for-byte
+// the pre-0.9.440 construction, unchanged — `resolver instanceof
+// ArweaveWorldEncounterMaterialResolver` still holds for every caller that
+// never opts into the plural shape. Either resolver satisfies the
+// identical `retrieveByUri` contract `DecentralizedWorldEncounterMaterialSource`
+// already requires, so `decentralized`'s own behavior is unaffected by
+// which one was built.
 export function composeArweaveDecentralizedWorldEncounterMaterialSource(resolverOptions = {}) {
-    const resolver = new ArweaveWorldEncounterMaterialResolver(resolverOptions);
+    const resolver = buildArweaveWorldEncounterMaterialResolver(resolverOptions);
     const decentralized = new DecentralizedWorldEncounterMaterialSource(resolver.retrieveByUri);
     return Object.freeze({ resolver, decentralized });
+}
+
+// buildArweaveWorldEncounterMaterialResolver(options) -> resolver. Picks
+// the plain, pre-0.9.440 ArweaveWorldEncounterMaterialResolver for
+// zero/one configured gateway, or the new
+// ArweaveGatewayFailoverWorldEncounterMaterialResolver for two or more —
+// see this function's own caller, above, for the full rationale.
+function buildArweaveWorldEncounterMaterialResolver({ gatewayUrls, ...options }) {
+    if (Array.isArray(gatewayUrls) && gatewayUrls.length > 1) {
+        return new ArweaveGatewayFailoverWorldEncounterMaterialResolver({ ...options, gatewayUrls });
+    }
+    if (Array.isArray(gatewayUrls) && gatewayUrls.length === 1) {
+        return new ArweaveWorldEncounterMaterialResolver({ ...options, gatewayUrl: gatewayUrls[0] });
+    }
+    return new ArweaveWorldEncounterMaterialResolver(options);
 }
 
 // The one entry point a real composition root actually uses. Returns

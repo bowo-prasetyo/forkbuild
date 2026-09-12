@@ -101,12 +101,26 @@ export class ArweaveGatewayConfigurationStore {
     // header) — both cases are indistinguishable to a caller, deliberately:
     // "absent" and "unreadable" both mean this store has no valid
     // configuration to hand back right now.
+    //
+    // 0.9.440 — BOTH persisted shapes round-trip. `configuration.toJSON()`
+    // has written `{ gatewayUrls: [...] }` since 0.9.440, but a payload
+    // saved by an earlier build of this codebase — `{ gatewayUrl: '...' }`
+    // — is still read back exactly as it always was: a genuine, one-element
+    // ordered list, byte-identical in effect to what it always meant. An
+    // upgrade never loses, and never silently reinterprets, a user's
+    // existing single-gateway preference.
     get() {
         const raw = this._storageProvider.load(ARWEAVE_GATEWAY_CONFIGURATION_STORE_KEY);
-        if (!raw || typeof raw !== 'object' || Array.isArray(raw) || !isValidArweaveGatewayUrl(raw.gatewayUrl)) {
+        if (!raw || typeof raw !== 'object' || Array.isArray(raw)) {
             return null;
         }
-        return new ArweaveGatewayConfiguration({ gatewayUrl: raw.gatewayUrl });
+        if (Array.isArray(raw.gatewayUrls) && raw.gatewayUrls.length > 0 && raw.gatewayUrls.every(isValidArweaveGatewayUrl)) {
+            return new ArweaveGatewayConfiguration({ gatewayUrls: raw.gatewayUrls });
+        }
+        if (isValidArweaveGatewayUrl(raw.gatewayUrl)) {
+            return new ArweaveGatewayConfiguration({ gatewayUrl: raw.gatewayUrl });
+        }
+        return null;
     }
 
     // Removes any persisted override outright — the one way back to "no

@@ -306,13 +306,17 @@ async function run() {
         assert(nostrConfigSource.includes('relay LIST, or any field beyond'),
             n('C3. this single-URL shape is an EXISTING, explicit 0.9.369 design decision on record ("a relay LIST... None of these are evidenced... as needed"), never an oversight this milestone discovers fresh'));
 
-        // C4. Arweave — ArweaveGatewayConfiguration takes exactly one
-        // gatewayUrl STRING, identically.
+        // C4. Arweave — ArweaveGatewayConfiguration's own singular
+        // `gatewayUrl` key takes exactly one gatewayUrl STRING, identically
+        // — still true after 0.9.440 (below), which added a SEPARATE
+        // `gatewayUrls` (plural) key rather than ever accepting an array
+        // under the singular one; see this file's own Section J for why
+        // this audit's own recommendation is exactly what 0.9.440 built.
         assert((() => { try { new ArweaveGatewayConfiguration({ gatewayUrl: ['https://a.example', 'https://b.example'] }); return false; } catch { return true; } })(),
-            n('C4. ArweaveGatewayConfiguration rejects an array where a gatewayUrl string is expected — a single-URL value object today, live-confirmed'));
+            n('C4. ArweaveGatewayConfiguration rejects an array under the singular gatewayUrl key — a single-URL value under THAT key, live-confirmed, unchanged by 0.9.440'));
         const arweaveConfigSource = await source('core/ArweaveGatewayConfiguration.js');
-        assert(arweaveConfigSource.includes('or any field beyond `gatewayUrl`'),
-            n('C4. this single-URL shape is likewise an EXISTING, explicit 0.9.364 design decision on record, not a fresh finding'));
+        assert(arweaveConfigSource.includes('`gatewayUrl`/`gatewayUrls`'),
+            n('C4. 0.9.440 — this file now names its own successor by field name (`gatewayUrl`/`gatewayUrls`) exactly where 0.9.364 once ruled out "any field beyond gatewayUrl" — the single-string shape\'s CONTINUED VALIDITY (never both fields, never an array under the singular key) is still an explicit, on-the-record decision, not a regression of it'));
 
         console.log('\n=== SECTION C: CURRENT MULTIPLICITY MODEL ===');
         console.log('STUN: list (2+ entries, live-confirmed)');
@@ -466,13 +470,23 @@ async function run() {
         assert(!/nostrHostPublish[\s\S]{0,400}resolvedNostrRelayUrl/.test(mainSource),
             n('F1. the WRITE-path publish flow (nostrHostPublish/nostrHostPublisher) never references resolvedNostrRelayUrl at all — a user\'s own read-side relay override cannot silently change where this device PUBLISHES'));
 
-        // F2. Arweave — resolvedArweaveGatewayUrl reaches BOTH read
+        // F2. Arweave — resolvedArweaveGatewayUrl(s) reaches BOTH read
         // composition sites (World Encounter material resolution,
         // Snapshot retrieval) and is explicitly, deliberately absent from
         // the write side (Signed Claim distribution's arweaveUploaderOptions,
         // and Snapshot distribution's own arweaveContentStoreOptions).
-        assert(mainSource.includes('arweaveResolverOptions: { gatewayUrl: resolvedArweaveGatewayUrl }'), n('F2. resolvedArweaveGatewayUrl reaches World Encounter material RESOLUTION (read)'));
-        assert(mainSource.includes("arweaveContentStoreOptions: { signer: arweaveHostSigner, gatewayUrl: resolvedArweaveGatewayUrl }"), n('F2. resolvedArweaveGatewayUrl reaches Snapshot RETRIEVAL (read)'));
+        //
+        // 0.9.440 — UPDATED, NOT JUST RECONFIRMED. This audit's own Section
+        // H3/I named Arweave gateway read/retrieval the one
+        // MINIMAL_FAILOVER_SEAM candidate and recommended building exactly
+        // this next (see this file's own Section J, below) — 0.9.440 did,
+        // and both read call sites now receive the PLURAL
+        // `resolvedArweaveGatewayUrls` (the full ordered list) rather than
+        // the singular value this section originally checked for. The
+        // singular `resolvedArweaveGatewayUrl` still exists, unchanged, and
+        // is still what F3 (below) finds reaching Arweave Anchor.
+        assert(mainSource.includes('arweaveResolverOptions: { gatewayUrls: resolvedArweaveGatewayUrls }'), n('F2. resolvedArweaveGatewayUrls reaches World Encounter material RESOLUTION (read)'));
+        assert(mainSource.includes("arweaveContentStoreOptions: { signer: arweaveHostSigner, gatewayUrls: resolvedArweaveGatewayUrls }"), n('F2. resolvedArweaveGatewayUrls reaches Snapshot RETRIEVAL (read)'));
         assert(/arweaveContentStoreOptions:\s*\{\s*signer:\s*arweaveHostSigner\s*\}/.test(mainSource),
             n('F2. Snapshot DISTRIBUTION\'s own arweaveContentStoreOptions carries ONLY `signer`, never `gatewayUrl` — the write half of the identical class stays on its own hardcoded default, live-confirmed at the exact call site, not merely asserted from the header comment'));
         assert(mainSource.includes('APPLIED ONLY TO RETRIEVAL, NEVER TO DISTRIBUTION'),
@@ -655,18 +669,33 @@ async function run() {
         console.log('before multiplicity is even askable there. No EndpointServerList/ServerPool/ResilientEndpoint abstraction is warranted by any');
         console.log('finding in this audit — every candidate above resolved to its own distinct, protocol-specific answer.');
 
-        // J1. Production-change guard — no production file is modified or
-        // added by this milestone's own working tree changes.
+        // J1. Production-change guard — no production file was modified or
+        // added by THIS MILESTONE'S OWN COMMIT (0.9.439 itself).
+        //
+        // 0.9.440 — SCOPED TO THE 0.9.439 COMMIT, NOT LIVE WORKING-TREE
+        // STATE. The original form of this check (`git status --porcelain`)
+        // asked "are there uncommitted production changes right now" —
+        // true at the moment 0.9.439 itself was authored, but a check that
+        // can never pass again the instant any LATER milestone has
+        // in-progress production work, which defeats this file's own
+        // purpose as a regression test rather than a one-time pre-commit
+        // guard. This asks the actual, permanent historical question
+        // instead: did the commit that introduced this file's own message
+        // ("0.9.439 — Endpoint Multiplicity...") touch any production
+        // file? That fact never changes, regardless of what any later
+        // milestone (0.9.440 included) does in its own, separate commit.
         let productionTouched = [];
         try {
-            const statusOutput = execSync('git status --porcelain', { cwd: SOURCE_ROOT.pathname }).toString();
-            productionTouched = statusOutput.split('\n')
-                .map((line) => line.slice(3).trim())
-                .filter(Boolean)
-                .filter((f) => !f.startsWith('tests/') && f !== 'tests.html' && !f.startsWith('docs/'));
+            const commitHash = execSync('git log --grep="^0.9.439 " --format=%H -n 1', { cwd: SOURCE_ROOT.pathname }).toString().trim();
+            if (commitHash) {
+                const diffOutput = execSync(`git diff-tree --no-commit-id --name-only -r ${commitHash}`, { cwd: SOURCE_ROOT.pathname }).toString();
+                productionTouched = diffOutput.split('\n')
+                    .filter(Boolean)
+                    .filter((f) => !f.startsWith('tests/') && f !== 'tests.html' && !f.startsWith('docs/'));
+            }
         } catch { /* git unavailable — not a failure of this decision artifact */ }
         assert(productionTouched.length === 0,
-            n(`J1. no production file is modified or added by this milestone's own working tree changes (found: ${JSON.stringify(productionTouched)})`));
+            n(`J1. no production file was modified or added by the 0.9.439 commit itself (found: ${JSON.stringify(productionTouched)})`));
 
         console.log('\n✅ All Endpoint Multiplicity & Failover Semantics Audit tests passed.');
     }

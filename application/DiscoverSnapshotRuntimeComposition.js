@@ -1,4 +1,5 @@
 import { ArweaveContentStore } from '../content/ArweaveContentStore.js';
+import { ArweaveGatewayFailoverContentStore } from '../content/ArweaveGatewayFailoverContentStore.js';
 import { NostrSnapshotDiscoveryQueryService } from './NostrSnapshotDiscoveryQueryService.js';
 import { DecentralizedSnapshotResolver } from './DecentralizedSnapshotResolver.js';
 
@@ -161,9 +162,27 @@ import { DecentralizedSnapshotResolver } from './DecentralizedSnapshotResolver.j
 // - **Calling `executeDiscoverSnapshotCommand()` itself, or any other new
 //   orchestration entry point.**
 // - **Retries, caching, or fallback between multiple relays/gateways.**
-//   Exactly one `queryService` and one `contentStore` per call.
+//   Exactly one `queryService` and one `contentStore` per call — still true
+//   after 0.9.440, below: a `contentStore` built from `gatewayUrls` (plural)
+//   is still exactly one object handed back, one that happens to try more
+//   than one gateway internally. This file adds no policy of its own on
+//   top of what that one object already does.
 // - **Validating options beyond the one presence check each resolver
 //   helper performs.**
+//
+// 0.9.440 — `arweaveContentStoreOptions.gatewayUrls` (PLURAL, an array) IS
+// A NEW, ADDITIONAL WAY TO CONFIGURE THE SAME ONE `contentStore` FIELD.
+// Passing `gatewayUrls` with more than one entry builds a
+// content/ArweaveGatewayFailoverContentStore.js instead of a plain
+// ArweaveContentStore — see that file's own header for what it does
+// differently (ordered read failover, unchanged single-gateway write).
+// Passing zero or one entries, or the original singular `gatewayUrl`
+// string, or nothing at all, is byte-for-byte the pre-0.9.440 behavior:
+// exactly one plain `ArweaveContentStore` is constructed, unchanged. This
+// function still never decides retrieval POLICY itself — it decides only
+// WHICH already-built collaborator class a given options shape resolves
+// to, the identical "composition, never orchestration" restraint this
+// file's own header already holds.
 
 // canAttemptNostrQuery({ queryImpl }) -> boolean. Asks exactly the one
 // question `application/NostrSnapshotDiscoveryQueryService.js`'s own
@@ -178,6 +197,22 @@ function canAttemptNostrQuery({ queryImpl } = {}) {
 // asks of `signer` — see this file's own header, "graceful degradation."
 function canAttemptArweaveRetrieval({ signer } = {}) {
     return Boolean(signer) && typeof signer.sign === 'function';
+}
+
+// buildArweaveRetrievalContentStore(options) -> ContentStore. 0.9.440 —
+// picks the plain, pre-0.9.440 `ArweaveContentStore` for zero/one
+// configured gateway (byte-for-byte unchanged construction), or the new
+// ArweaveGatewayFailoverContentStore for two or more — see this file's own
+// header, "gatewayUrls (plural) is a new, additional way to configure the
+// same one contentStore field."
+function buildArweaveRetrievalContentStore({ gatewayUrls, ...options }) {
+    if (Array.isArray(gatewayUrls) && gatewayUrls.length > 1) {
+        return new ArweaveGatewayFailoverContentStore({ ...options, gatewayUrls });
+    }
+    if (Array.isArray(gatewayUrls) && gatewayUrls.length === 1) {
+        return new ArweaveContentStore({ ...options, gatewayUrl: gatewayUrls[0] });
+    }
+    return new ArweaveContentStore(options);
 }
 
 // composeDiscoverSnapshotRuntime({ arweaveContentStoreOptions,
@@ -213,7 +248,7 @@ export function composeDiscoverSnapshotRuntime({
     nostrSnapshotDiscoveryQueryServiceOptions = {}
 } = {}) {
     const contentStore = canAttemptArweaveRetrieval(arweaveContentStoreOptions)
-        ? new ArweaveContentStore(arweaveContentStoreOptions)
+        ? buildArweaveRetrievalContentStore(arweaveContentStoreOptions)
         : null;
 
     const queryService = canAttemptNostrQuery(nostrSnapshotDiscoveryQueryServiceOptions)

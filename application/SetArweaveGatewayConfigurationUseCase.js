@@ -56,18 +56,20 @@ export class SetArweaveGatewayConfigurationUseCase {
         this._store = arweaveGatewayConfigurationStore;
     }
 
-    // Saves `gatewayUrl` as the user's own Arweave gateway override,
-    // replacing whatever was previously on file outright (see
-    // ArweaveGatewayConfigurationStore.js's own "A SINGLE CONFIGURATION,
-    // NEVER A HISTORY" header for why that replacement is a structural
-    // property of the store itself). Returns the new, persisted
+    // Saves `gatewayUrl` (a single string) or `gatewayUrls` (0.9.440, an
+    // ordered array — exactly one of the two, never both) as the user's own
+    // Arweave gateway override, replacing whatever was previously on file
+    // outright (see ArweaveGatewayConfigurationStore.js's own "A SINGLE
+    // CONFIGURATION, NEVER A HISTORY" header for why that replacement is a
+    // structural property of the store itself). Returns the new, persisted
     // ArweaveGatewayConfiguration.
     //
     // Throws for anything core/ArweaveGatewayConfiguration.js's own
-    // constructor rejects (not an absolute http(s) URL, empty, ...) —
-    // before this method ever calls `save()`.
-    execute({ gatewayUrl } = {}) {
-        const configuration = new ArweaveGatewayConfiguration({ gatewayUrl });
+    // constructor rejects (not an absolute http(s) URL, empty, both fields
+    // supplied, ...) — before this method ever calls `save()`. This method
+    // adds no validation of its own beyond forwarding verbatim.
+    execute({ gatewayUrl, gatewayUrls } = {}) {
+        const configuration = new ArweaveGatewayConfiguration({ gatewayUrl, gatewayUrls });
         this._store.save(configuration);
         return configuration;
     }

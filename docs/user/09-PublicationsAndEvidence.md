@@ -1805,29 +1805,39 @@ announced when you distribute your own content.
 ### Arweave Gateway
 
 Open **Arweave Gateway** in the top bar (`/settings/arweave-gateway`). It
-shows whichever gateway is currently in effect — either "No override
+shows whichever gateway(s) are currently in effect — either "No override
 configured. Currently using the deployment default: `https://arweave.net`"
-or, once you've saved one, "Current override: `<your URL>`" — type a new
-`http://` or `https://` URL and click **Save**, or click **Use Deployment
-Default** to go back to having no override at all. **Save** rejects
-anything that isn't a valid absolute `http:`/`https:` URL with a plain
-error message and leaves whatever was previously on file completely
-untouched; it never checks that the URL actually serves Arweave content,
-so a syntactically valid but wrong or unreachable gateway only ever
-surfaces later, as an ordinary retrieval-time failure, never something
-this page predicts up front.
+or, once you've saved one or more, "Current override(s): `<your URLs>`" —
+enter one `http://` or `https://` URL per line, in the order you want them
+tried, and click **Save**, or click **Use Deployment Default** to go back
+to having no override at all. **Save** rejects anything that isn't a valid
+absolute `http:`/`https:` URL with a plain error message and leaves
+whatever was previously on file completely untouched; it never checks that
+a URL actually serves Arweave content, so a syntactically valid but wrong
+or unreachable gateway only ever surfaces later, as an ordinary
+retrieval-time failure, never something this page predicts up front.
+
+If you list more than one gateway, they're tried in the order you entered
+them: a read first tries your top gateway, and only moves on to the next
+one if that gateway is unreachable or returns an error — the moment one of
+them answers, the rest are left alone. This never changes *what* gets
+retrieved, only *where from* — Arweave content is addressed by an
+unchangeable transaction id, so any gateway that has it returns the exact
+same bytes. A single gateway (or the original single-URL setting from
+before this feature existed) behaves exactly as it always has.
 
 This setting affects retrieval only — never where your own publications
-or snapshots get uploaded. Concretely, it's the gateway consulted when
-this device retrieves a publication's material for a **Decentralized**
-source (see
+or snapshots get uploaded, and never the separate Arweave Anchor evidence
+feature, which keeps using your top gateway for both its own creation and
+verification. Concretely, your gateway list is consulted when this device
+retrieves a publication's material for a **Decentralized** source (see
 [World Encounters](03-WorldView.md#world-encounters--publications-and-avatars-your-peers-are-sharing))
 and when a Snapshot placement is resolved or materialized against Arweave
 (see [Resolution outcomes](#resolution-outcomes) above).
 
 A change you save or clear here takes effect the next time the app loads
 — this page never re-wires an already-running session live, so an
-already-open World View or Editor tab keeps using whatever gateway it
+already-open World View or Editor tab keeps using whatever gateway(s) it
 started with until you reload.
 
 ### Nostr Relay

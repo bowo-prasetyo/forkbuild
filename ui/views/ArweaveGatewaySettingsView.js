@@ -29,7 +29,7 @@ import { DEFAULT_ARWEAVE_GATEWAY_URL } from '../../core/ArweaveGatewayConfigurat
 // only to display what is already on file — the identical "read the store
 // directly, no symmetric Get use case" pattern ContentProviderSettingsView.js
 // already holds — and it saves a change by calling
-// `setArweaveGatewayConfigurationUseCase.execute({ gatewayUrl })`, never
+// `setArweaveGatewayConfigurationUseCase.execute({ gatewayUrls })`, never
 // `new ArweaveGatewayConfiguration(...)` and never
 // `ArweaveGatewayConfigurationStore.save()` directly. An invalid URL is
 // rejected by that use case's own construction step before anything is
@@ -63,13 +63,25 @@ import { DEFAULT_ARWEAVE_GATEWAY_URL } from '../../core/ArweaveGatewayConfigurat
 // ArweaveGatewayConfigurationStore.js's own header already rules out. This
 // button is the one UI path back to genuine absence.
 //
+// 0.9.440 — ONE GATEWAY PER LINE, IN TRY ORDER. The single text input
+// became a multi-line field: each non-empty line is one gateway URL, and
+// the ORDER of the lines is the order gateways are tried on a read — see
+// core/ArweaveGatewayConfiguration.js's own 0.9.440 header, "ordering IS
+// the priority." A single line still behaves exactly as the single input
+// always did — see that same header, "why the single-value shape isn't
+// just a list of one everywhere." This view still performs no ordering
+// decision of its own: it only ever splits the textarea into lines and
+// hands the resulting array to `setArweaveGatewayConfigurationUseCase.execute({ gatewayUrls })`,
+// which is itself a thin, unvalidating forward to core/
+// ArweaveGatewayConfiguration.js's own constructor.
+//
 // DELIBERATELY EXCLUDED — NOT THIS MILESTONE. No Test Connection, no
-// health indicator, no automatic fallback, no multiple gateway entries, no
-// priority or rotation, no retry/timeout configuration, no credentials, no
-// generic "Infrastructure Settings" page, and nothing for IPFS, TURN,
-// Nostr, Bitcoin, or Base — see docs/Roadmap.md, 0.9.366, for the full
+// health indicator, no automatic reordering, no drag-to-reorder control, no
+// per-gateway timeout configuration, no credentials, no generic
+// "Infrastructure Settings" page, and nothing for IPFS, TURN, Nostr,
+// Bitcoin, or Base — see docs/Roadmap.md, 0.9.366/0.9.440, for the full
 // list. Only the one Arweave retrieval override this codebase already has
-// a real, persistent home for.
+// a real, persistent home for, now able to name more than one gateway.
 export default {
     name: 'ArweaveGatewaySettingsView',
     setup() {
@@ -79,15 +91,16 @@ export default {
         // The ArweaveGatewayConfiguration currently on file, or null — read
         // straight from the injected store, never constructed here.
         const configuration = ref(null);
+        // One gateway URL per line, in the order they should be tried.
         const gatewayUrlInput = ref('');
         const saveError = ref(null);
         const saveStatus = ref('idle'); // 'idle' | 'saving' | 'saved'
         const clearStatus = ref('idle'); // 'idle' | 'cleared'
 
         const hasOverride = computed(() => configuration.value !== null);
-        // The gateway actually in effect right now: the stored override
-        // when one exists, otherwise the deployment default — never a
-        // merge of the two, mirroring ui/main.js's own
+        // The gateway actually in effect right now when no override is on
+        // file — the deployment default, shown as informational text.
+        // Never a merge with anything, mirroring ui/main.js's own
         // `resolvedArweaveGatewayUrl` resolution exactly.
         const effectiveGatewayUrl = computed(() => (
             configuration.value ? configuration.value.gatewayUrl : DEFAULT_ARWEAVE_GATEWAY_URL
@@ -100,7 +113,19 @@ export default {
         function load() {
             if (!store) return;
             configuration.value = store.get();
-            gatewayUrlInput.value = configuration.value ? configuration.value.gatewayUrl : '';
+            gatewayUrlInput.value = configuration.value ? configuration.value.gatewayUrls.join('\n') : '';
+        }
+
+        // Splits the textarea into one trimmed URL per non-empty line —
+        // the ONLY interpretation this view performs; every other rule
+        // (what counts as a valid URL, whether the list is non-empty)
+        // stays inside core/ArweaveGatewayConfiguration.js's own
+        // constructor, reached through the use case below.
+        function parseGatewayUrls() {
+            return gatewayUrlInput.value
+                .split('\n')
+                .map((line) => line.trim())
+                .filter((line) => line.length > 0);
         }
 
         function save() {
@@ -109,8 +134,8 @@ export default {
             clearStatus.value = 'idle';
             saveStatus.value = 'saving';
             try {
-                configuration.value = setArweaveGatewayConfigurationUseCase.execute({ gatewayUrl: gatewayUrlInput.value.trim() });
-                gatewayUrlInput.value = configuration.value.gatewayUrl;
+                configuration.value = setArweaveGatewayConfigurationUseCase.execute({ gatewayUrls: parseGatewayUrls() });
+                gatewayUrlInput.value = configuration.value.gatewayUrls.join('\n');
                 saveStatus.value = 'saved';
             } catch (error) {
                 // The use case's own construction step threw before
@@ -142,23 +167,23 @@ export default {
         <section class="arweave-gateway-settings-view">
             <h1>Arweave Gateway</h1>
             <p class="form-hint form-hint--neutral">
-                Gateway used for retrieving Arweave content. This setting affects retrieval only; it does not change where your publications are uploaded.
+                Gateway(s) used for retrieving Arweave content. One per line, in the order they should be tried — if the first does not respond, the next one is used. This setting affects retrieval only; it does not change where your publications are uploaded.
             </p>
 
             <p v-if="hasOverride" class="form-hint form-hint--neutral">
-                Current override: {{ configuration.gatewayUrl }}
+                Current override(s): {{ configuration.gatewayUrls.join(', ') }}
             </p>
             <p v-else class="form-hint form-hint--neutral">
                 No override configured. Currently using the deployment default: {{ effectiveGatewayUrl }}
             </p>
 
             <div class="arweave-gateway-settings-form">
-                <input
-                    type="text"
+                <textarea
                     v-model="gatewayUrlInput"
                     placeholder="https://arweave.net"
+                    rows="4"
                     class="arweave-gateway-input"
-                />
+                ></textarea>
 
                 <p v-if="saveError" class="form-hint">{{ saveError }}</p>
                 <p v-if="saveStatus === 'saved'" class="form-hint form-hint--neutral">Saved.</p>
