@@ -1,7 +1,7 @@
 import { readFile } from 'node:fs/promises';
 import { execFileSync } from 'node:child_process';
 
-import { composePublicationDistributionCommand } from '../application/PublicationDistributionCommandComposition.js';
+import { composeMultiRelayNostrPublicationDistributionCommand } from '../application/PublicationDistributionCommandComposition.js';
 import { PublicationDistributionLifecycleMemoryStore } from '../application/PublicationDistributionLifecycleStore.js';
 import { PublishDocumentUseCase } from '../application/PublishDocumentUseCase.js';
 import { LocalPublisherProvider } from '../publisher/LocalPublisherProvider.js';
@@ -57,7 +57,7 @@ import { DocumentMetadata } from '../core/DocumentMetadata.js';
 //               distribution-result panel.
 //   Section D — Distribution-result independence: navigating never
 //               mutates PublicationDistributionLifecycleMemoryStore,
-//               never invokes publicationDistributionCommand again,
+//               never invokes multiRelayNostrPublicationDistributionCommand again,
 //               never creates a second distribution, and never produces
 //               a new result/receipt.
 //   Section E — Sequential publications: Publish A -> distribute A ->
@@ -173,19 +173,23 @@ function realReplicaRig() {
     const discoveryProvider = new LocalDiscoveryProvider(storage);
     const publishDocumentUseCase = new PublishDocumentUseCase(publisherProvider, alice);
     const lifecycleStore = new PublicationDistributionLifecycleMemoryStore();
-    const publicationDistributionCommand = composePublicationDistributionCommand({
+    // AMENDED BY 0.9.450 — Nostr Multi-Relay Publication Distribution
+    // Wiring. EditorView.js's own injected command changed from the
+    // single-relay multiRelayNostrPublicationDistributionCommand to
+    // multiRelayNostrPublicationDistributionCommand.
+    const multiRelayNostrPublicationDistributionCommand = composeMultiRelayNostrPublicationDistributionCommand({
         lifecycleStore,
         arweaveUploaderOptions: {
             signer: { sign: async (material) => ({ id: 'ConvergenceAuditTxId0000001', transaction: { data: material } }) },
             fetchImpl: async () => new Response('accepted', { status: 200 })
         },
+        nostrRelayUrls: ['wss://relay.example'],
         nostrPublisherOptions: {
-            relayUrl: 'wss://relay.example',
             discoveryTag: 'forkbuild-navigation-convergence-audit',
             publishImpl: async () => ({ published: true, id: 'c'.repeat(64) })
         }
     });
-    return { storage, alice, publisherProvider, discoveryProvider, publishDocumentUseCase, lifecycleStore, publicationDistributionCommand };
+    return { storage, alice, publisherProvider, discoveryProvider, publishDocumentUseCase, lifecycleStore, multiRelayNostrPublicationDistributionCommand };
 }
 
 // -----------------------------------------------------------------
@@ -193,18 +197,18 @@ function realReplicaRig() {
 // ui/views/EditorView.js (never hand-retyped) and executes it with fake
 // `ref`/`inject` implementations plus a spy `router`.
 // -----------------------------------------------------------------
-function buildHarness(editorViewSource, { publicationDistributionCommand = null, router = { push: () => {} } } = {}) {
+function buildHarness(editorViewSource, { multiRelayNostrPublicationDistributionCommand = null, router = { push: () => {} } } = {}) {
     const blockSource = extractRange(
         editorViewSource,
-        "const publicationDistributionCommand = inject('publicationDistributionCommand', null);",
+        "const multiRelayNostrPublicationDistributionCommand = inject('multiRelayNostrPublicationDistributionCommand', null);",
         '// ------------------------- 0.2.21 document lifecycle ------------',
-        '0.9.377/0.9.381 post-publish distribution block'
+        '0.9.377/0.9.381/0.9.450 post-publish distribution block'
     );
 
     function ref(initial) { return { value: initial }; }
     function inject(key, fallback) {
-        if (key === 'publicationDistributionCommand') {
-            return publicationDistributionCommand === null ? fallback : publicationDistributionCommand;
+        if (key === 'multiRelayNostrPublicationDistributionCommand') {
+            return multiRelayNostrPublicationDistributionCommand === null ? fallback : multiRelayNostrPublicationDistributionCommand;
         }
         return fallback;
     }
@@ -213,7 +217,7 @@ function buildHarness(editorViewSource, { publicationDistributionCommand = null,
     const factory = new Function(
         'inject', 'ref', 'router',
         `${blockSource}\nreturn {
-            publicationDistributionCommand,
+            multiRelayNostrPublicationDistributionCommand,
             distributeEditorPublication,
             publishedPublication,
             distributionExecuting,
@@ -250,7 +254,7 @@ async function run() {
         const { publishDocumentUseCase } = realReplicaRig();
         const pushed = [];
         const router = { push: (target) => pushed.push(target) };
-        const harness = buildHarness(editorViewSource, { publicationDistributionCommand: () => Promise.resolve(null), router });
+        const harness = buildHarness(editorViewSource, { multiRelayNostrPublicationDistributionCommand: () => Promise.resolve(null), router });
 
         // Reproduce the real chain: a real publish (the same use case
         // Toolbar.js's own publish() calls) hands its result straight to
@@ -299,7 +303,7 @@ async function run() {
         const catalogTarget = { path: `/world/${publication.documentId}` };
         const pushed = [];
         const router = { push: (target) => pushed.push(target) };
-        const harness = buildHarness(editorViewSource, { publicationDistributionCommand: () => Promise.resolve(null), router });
+        const harness = buildHarness(editorViewSource, { multiRelayNostrPublicationDistributionCommand: () => Promise.resolve(null), router });
         harness.onDocumentPublished(publication);
         harness.viewDistributedPublicationInRepository();
         assert(JSON.stringify(pushed[0]) === JSON.stringify(catalogTarget),
@@ -312,10 +316,10 @@ async function run() {
     // Section C — Distribution independence.
     // ---------------------------------------------------------------
     {
-        const { publishDocumentUseCase, lifecycleStore, publicationDistributionCommand } = realReplicaRig();
+        const { publishDocumentUseCase, lifecycleStore, multiRelayNostrPublicationDistributionCommand } = realReplicaRig();
         const pushed = [];
         const router = { push: (target) => pushed.push(target) };
-        const harness = buildHarness(editorViewSource, { publicationDistributionCommand, router });
+        const harness = buildHarness(editorViewSource, { multiRelayNostrPublicationDistributionCommand, router });
 
         const publication = publishDocumentUseCase.execute({ document: makeDocument('Section C Manor') });
 
@@ -334,7 +338,7 @@ async function run() {
         assert(pushed.length === 0, n('a successfully completed distribution never navigates on its own'));
 
         // Distribution failure does not navigate.
-        const failingHarness = buildHarness(editorViewSource, { publicationDistributionCommand: () => Promise.reject(new Error('boom')), router });
+        const failingHarness = buildHarness(editorViewSource, { multiRelayNostrPublicationDistributionCommand: () => Promise.reject(new Error('boom')), router });
         const publicationForFailure = publishDocumentUseCase.execute({ document: makeDocument('Section C Manor Failure') });
         failingHarness.onDocumentPublished(publicationForFailure);
         failingHarness.distributePublishedDocument();
@@ -358,15 +362,15 @@ async function run() {
     // no lifecycle/command side effects of any kind.
     // ---------------------------------------------------------------
     {
-        const { publishDocumentUseCase, lifecycleStore, publicationDistributionCommand } = realReplicaRig();
+        const { publishDocumentUseCase, lifecycleStore, multiRelayNostrPublicationDistributionCommand } = realReplicaRig();
         let commandCallCount = 0;
         const countingCommand = (request) => {
             commandCallCount += 1;
-            return publicationDistributionCommand(request);
+            return multiRelayNostrPublicationDistributionCommand(request);
         };
         const pushed = [];
         const router = { push: (target) => pushed.push(target) };
-        const harness = buildHarness(editorViewSource, { publicationDistributionCommand: countingCommand, router });
+        const harness = buildHarness(editorViewSource, { multiRelayNostrPublicationDistributionCommand: countingCommand, router });
 
         const publication = publishDocumentUseCase.execute({ document: makeDocument('Section D Manor') });
         harness.onDocumentPublished(publication);
@@ -384,24 +388,24 @@ async function run() {
         harness.viewDistributedPublicationInRepository();
 
         assert(commandCallCount === 1,
-            n('navigating (even three times) never invokes publicationDistributionCommand again — no second distribution is created'));
+            n('navigating (even three times) never invokes multiRelayNostrPublicationDistributionCommand again — no second distribution is created'));
         assert(lifecycleStore.get(publication.id) === lifecycleBeforeNav,
             n('the lifecycle entry in PublicationDistributionLifecycleMemoryStore is the exact same object reference after navigating — never mutated, replaced, or re-set'));
         assert(harness.distributionResult.value === resultBeforeNav,
             n('distributionResult itself is the exact same object reference after navigating — no new result/receipt was produced'));
         assert(pushed.length === 3, n('the three navigations themselves did fire — this is a targeted absence of side effects, not a broken harness'));
 
-        console.log('✓ Section D: navigating never mutates PublicationDistributionLifecycleMemoryStore, never invokes publicationDistributionCommand again, and never produces a new distributionResult — it is pure, side-effect-free routing.');
+        console.log('✓ Section D: navigating never mutates PublicationDistributionLifecycleMemoryStore, never invokes multiRelayNostrPublicationDistributionCommand again, and never produces a new distributionResult — it is pure, side-effect-free routing.');
     }
 
     // ---------------------------------------------------------------
     // Section E — Sequential publications.
     // ---------------------------------------------------------------
     {
-        const { publishDocumentUseCase, publicationDistributionCommand } = realReplicaRig();
+        const { publishDocumentUseCase, multiRelayNostrPublicationDistributionCommand } = realReplicaRig();
         const pushed = [];
         const router = { push: (target) => pushed.push(target) };
-        const harness = buildHarness(editorViewSource, { publicationDistributionCommand, router });
+        const harness = buildHarness(editorViewSource, { multiRelayNostrPublicationDistributionCommand, router });
 
         const publicationA = publishDocumentUseCase.execute({ document: makeDocument('Section E Manor A') });
         harness.onDocumentPublished(publicationA);
@@ -433,14 +437,14 @@ async function run() {
     // Section F — Failure and missing identity.
     // ---------------------------------------------------------------
     {
-        const { publishDocumentUseCase, publisherProvider, discoveryProvider, publicationDistributionCommand } = realReplicaRig();
+        const { publishDocumentUseCase, publisherProvider, discoveryProvider, multiRelayNostrPublicationDistributionCommand } = realReplicaRig();
 
         // F1 — distribution failure + valid documentId: navigation still
         // resolves to the real, already-published Publication.
         {
             const pushed = [];
             const router = { push: (target) => pushed.push(target) };
-            const harness = buildHarness(editorViewSource, { publicationDistributionCommand: () => Promise.reject(new Error('boom')), router });
+            const harness = buildHarness(editorViewSource, { multiRelayNostrPublicationDistributionCommand: () => Promise.reject(new Error('boom')), router });
             const publication = publishDocumentUseCase.execute({ document: makeDocument('Section F1 Manor') });
             harness.onDocumentPublished(publication);
             harness.distributePublishedDocument();
@@ -455,7 +459,7 @@ async function run() {
         {
             const pushed = [];
             const router = { push: (target) => pushed.push(target) };
-            const harness = buildHarness(editorViewSource, { publicationDistributionCommand, router });
+            const harness = buildHarness(editorViewSource, { multiRelayNostrPublicationDistributionCommand, router });
             harness.onDocumentPublished({ documentId: null, id: 'f2-fake-id', toJSON: () => ({}) });
             let threw = false;
             try { harness.viewDistributedPublicationInRepository(); } catch (e) { threw = true; }
@@ -470,7 +474,7 @@ async function run() {
         {
             const pushed = [];
             const router = { push: (target) => pushed.push(target) };
-            const harness = buildHarness(editorViewSource, { publicationDistributionCommand: () => Promise.resolve(null), router });
+            const harness = buildHarness(editorViewSource, { multiRelayNostrPublicationDistributionCommand: () => Promise.resolve(null), router });
             const publication = publishDocumentUseCase.execute({ document: makeDocument('Section F3 Manor') });
             harness.onDocumentPublished(publication);
             assert(publisherProvider.unpublish(publication.id) === true, n('F3: live withdrawal via the real, production LocalPublisherProvider#unpublish()'));
@@ -488,7 +492,7 @@ async function run() {
         {
             const pushed = [];
             const router = { push: (target) => pushed.push(target) };
-            const harness = buildHarness(editorViewSource, { publicationDistributionCommand: () => Promise.resolve(null), router });
+            const harness = buildHarness(editorViewSource, { multiRelayNostrPublicationDistributionCommand: () => Promise.resolve(null), router });
             assert(harness.publishedPublication.value === null, n('F4: sanity — nothing has been published in this harness'));
             harness.viewDistributedPublicationInRepository();
             assert(pushed.length === 0, n('F4: with no publication ever published, the navigation call is a silent no-op'));
@@ -503,10 +507,10 @@ async function run() {
     // through no new lookup mechanism.
     // ---------------------------------------------------------------
     {
-        const { publishDocumentUseCase, discoveryProvider, publicationDistributionCommand } = realReplicaRig();
+        const { publishDocumentUseCase, discoveryProvider, multiRelayNostrPublicationDistributionCommand } = realReplicaRig();
         const pushed = [];
         const router = { push: (target) => pushed.push(target) };
-        const harness = buildHarness(editorViewSource, { publicationDistributionCommand, router });
+        const harness = buildHarness(editorViewSource, { multiRelayNostrPublicationDistributionCommand, router });
 
         const publication = publishDocumentUseCase.execute({ document: makeDocument('Section G Manor') });
         harness.onDocumentPublished(publication);
@@ -557,12 +561,12 @@ async function run() {
         // command — live proof, not just absence-of-reference: all three
         // surfaces' own distribution wrappers, when supplied the SAME
         // command instance, ultimately call that SAME instance.
-        const { publishDocumentUseCase, publicationDistributionCommand } = realReplicaRig();
+        const { publishDocumentUseCase, multiRelayNostrPublicationDistributionCommand } = realReplicaRig();
         let sharedCommandCalls = 0;
-        const countingCommand = (request) => { sharedCommandCalls += 1; return publicationDistributionCommand(request); };
+        const countingCommand = (request) => { sharedCommandCalls += 1; return multiRelayNostrPublicationDistributionCommand(request); };
         const pushed = [];
         const router = { push: (target) => pushed.push(target) };
-        const harness = buildHarness(editorViewSource, { publicationDistributionCommand: countingCommand, router });
+        const harness = buildHarness(editorViewSource, { multiRelayNostrPublicationDistributionCommand: countingCommand, router });
         const publication = publishDocumentUseCase.execute({ document: makeDocument('Section H Manor') });
         harness.onDocumentPublished(publication);
         harness.distributePublishedDocument();
@@ -595,10 +599,10 @@ async function run() {
     // Section I — Lifecycle/UI teardown.
     // ---------------------------------------------------------------
     {
-        const { publishDocumentUseCase, publicationDistributionCommand } = realReplicaRig();
+        const { publishDocumentUseCase, multiRelayNostrPublicationDistributionCommand } = realReplicaRig();
         const pushed = [];
         const router = { push: (target) => pushed.push(target) };
-        const harness = buildHarness(editorViewSource, { publicationDistributionCommand, router });
+        const harness = buildHarness(editorViewSource, { multiRelayNostrPublicationDistributionCommand, router });
 
         const publication = publishDocumentUseCase.execute({ document: makeDocument('Section I Manor') });
         harness.onDocumentPublished(publication);
@@ -621,7 +625,7 @@ async function run() {
         // harness (the real shape of remounting EditorView) starts with
         // nothing to navigate to, and the OLD publication's documentId
         // is never implicitly available.
-        const freshHarness = buildHarness(editorViewSource, { publicationDistributionCommand, router });
+        const freshHarness = buildHarness(editorViewSource, { multiRelayNostrPublicationDistributionCommand, router });
         assert(freshHarness.publishedPublication.value === null,
             n('a fresh mount (return-to-EditorView) starts with publishedPublication null — never resurrecting the prior publication'));
         freshHarness.viewDistributedPublicationInRepository();
@@ -654,7 +658,7 @@ async function run() {
         // from this Publication type. This milestone's own concern is
         // narrower: the NEW navigation function itself must never touch
         // it, which the assertion above already proves.
-        const publicationDistributionBlock = extractRange(editorViewCodeOnly, "const publicationDistributionCommand = inject('publicationDistributionCommand', null);", "function viewDistributedPublicationInRepository()", '0.9.377/0.9.381 block up to and including the navigation function');
+        const publicationDistributionBlock = extractRange(editorViewCodeOnly, "const multiRelayNostrPublicationDistributionCommand = inject('multiRelayNostrPublicationDistributionCommand', null);", "function viewDistributedPublicationInRepository()", '0.9.377/0.9.381 block up to and including the navigation function');
         assert(!publicationDistributionBlock.includes("inject('publicationCatalog'"),
             n('the whole 0.9.377/0.9.381 post-publish-distribution block (publishedPublication, distribution state, and the navigation function) never injects publicationCatalog — that stays confined to the unrelated, pre-existing fork-publish flow elsewhere in this file'));
 
@@ -701,11 +705,11 @@ Final convergence matrix:
 | Route to a Publication's World placement     | /world/:documentId (PublicationCatalog) | SAME /world/:documentId, one caller added                |
 | Navigation-time Publication identity source  | already-held object (all other callers) | SAME — publishedPublication.value, already held          |
 | Distribution lifecycle store                 | one shared instance (app-wide)          | unchanged — navigation never reads or writes it           |
-| publicationDistributionCommand invocations   | one per explicit "Distribute now" click | unchanged — navigation adds zero invocations               |
+| multiRelayNostrPublicationDistributionCommand invocations   | one per explicit "Distribute now" click | unchanged — navigation adds zero invocations               |
 | OwnPublicationPanel / WorldEncounterCanvas    | no navigation edge                      | unchanged — still no navigation edge                      |
 `);
 
-        console.log('\n✅ VERDICT — CONVERGED. 0.9.381 adds a single presentation-level navigation edge from EditorView\'s existing distribution-result panel to the existing Repository route (/world/:documentId), built from the exact Publication object already held in publishedPublication.value, reached through the byte-identical target shape PublicationCatalog.js\'s own pre-existing "Explore" action already uses. Publish, distribution start, distribution success, and distribution failure never navigate on their own — only an explicit click does. Navigating never mutates PublicationDistributionLifecycleMemoryStore, never invokes publicationDistributionCommand again, and never produces a new result or receipt. Sequential publications never cross-contaminate each other\'s target, dismissal/remount never resurrects a stale documentId, and a failed distribution or a withdrawn/unpublished Publication all degrade exactly as gracefully as before. No Publication Center integration, catalog mutation, new navigation service, distribution receipt/history, automatic navigation, network lookup, new identity-resolution mechanism, or distribution lifecycle change exists anywhere in production. Per this milestone\'s own brief, the post-publish distribution micro-arc (0.9.377-0.9.382) is complete; the next milestone should not extend this arc further, but return to a fresh whole-product reassessment.');
+        console.log('\n✅ VERDICT — CONVERGED. 0.9.381 adds a single presentation-level navigation edge from EditorView\'s existing distribution-result panel to the existing Repository route (/world/:documentId), built from the exact Publication object already held in publishedPublication.value, reached through the byte-identical target shape PublicationCatalog.js\'s own pre-existing "Explore" action already uses. Publish, distribution start, distribution success, and distribution failure never navigate on their own — only an explicit click does. Navigating never mutates PublicationDistributionLifecycleMemoryStore, never invokes multiRelayNostrPublicationDistributionCommand again, and never produces a new result or receipt. Sequential publications never cross-contaminate each other\'s target, dismissal/remount never resurrects a stale documentId, and a failed distribution or a withdrawn/unpublished Publication all degrade exactly as gracefully as before. No Publication Center integration, catalog mutation, new navigation service, distribution receipt/history, automatic navigation, network lookup, new identity-resolution mechanism, or distribution lifecycle change exists anywhere in production. Per this milestone\'s own brief, the post-publish distribution micro-arc (0.9.377-0.9.382) is complete; the next milestone should not extend this arc further, but return to a fresh whole-product reassessment.');
     }
 
     console.log('\n✅ All Distribution Result -> Repository Navigation Convergence Audit tests passed.');

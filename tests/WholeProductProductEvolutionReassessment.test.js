@@ -158,18 +158,21 @@ function extractRange(source, startMarker, endMarker, label) {
 // tests/PostDistributionProductEvolutionReassessment.test.js (0.9.379) and
 // tests/DistributionResultRepositoryNavigationConvergenceAudit.test.js
 // (0.9.382) already build fresh against real source.
-function buildEditorViewHarness(editorViewSource, { publicationDistributionCommand = null } = {}) {
+// AMENDED BY 0.9.450 — Nostr Multi-Relay Publication Distribution Wiring.
+// EditorView.js's own injected command changed from the single-relay
+// `publicationDistributionCommand` to `multiRelayNostrPublicationDistributionCommand`.
+function buildEditorViewHarness(editorViewSource, { multiRelayNostrPublicationDistributionCommand = null } = {}) {
     const blockSource = extractRange(
         editorViewSource,
-        "const publicationDistributionCommand = inject('publicationDistributionCommand', null);",
+        "const multiRelayNostrPublicationDistributionCommand = inject('multiRelayNostrPublicationDistributionCommand', null);",
         '// ------------------------- 0.2.21 document lifecycle ------------',
-        '0.9.377/0.9.381 post-publish distribution + navigation block'
+        '0.9.377/0.9.381/0.9.450 post-publish distribution + navigation block'
     );
     let pushedRoute = null;
     function ref(initial) { return { value: initial }; }
     function inject(key, fallback) {
-        if (key === 'publicationDistributionCommand') {
-            return publicationDistributionCommand === null ? fallback : publicationDistributionCommand;
+        if (key === 'multiRelayNostrPublicationDistributionCommand') {
+            return multiRelayNostrPublicationDistributionCommand === null ? fallback : multiRelayNostrPublicationDistributionCommand;
         }
         return fallback;
     }
@@ -283,7 +286,7 @@ async function run() {
                 publishImpl: async () => ({ published: true, id: 'b'.repeat(64) })
             }
         });
-        const harness = buildEditorViewHarness(editorViewSource, { publicationDistributionCommand: rawCommand });
+        const harness = buildEditorViewHarness(editorViewSource, { multiRelayNostrPublicationDistributionCommand: rawCommand });
         harness.onDocumentPublished(publication);
         assert(harness.publishedPublication.value === publication, n('Create -> Edit -> Publish reaches a concrete Publication, held by the view'));
 
@@ -383,7 +386,7 @@ async function run() {
         // Both bridges are real; there is no third, still-disjoint path.
         const publicationsViewSource = await readSource('ui/views/DecentralizedPublicationsView.js');
         const editorPostPublishBlock = extractRange(editorViewSource,
-            "const publicationDistributionCommand = inject('publicationDistributionCommand', null);",
+            "const multiRelayNostrPublicationDistributionCommand = inject('multiRelayNostrPublicationDistributionCommand', null);",
             '// ------------------------- 0.2.21 document lifecycle ------------',
             'post-publish block');
         assert(editorPostPublishBlock.includes('router.push') && editorPostPublishBlock.includes("path: `/world/"),
@@ -471,7 +474,7 @@ async function run() {
 
     function editorPostPublishRouterPushIsReplace(source) {
         const block = extractRange(source,
-            "const publicationDistributionCommand = inject('publicationDistributionCommand', null);",
+            "const multiRelayNostrPublicationDistributionCommand = inject('multiRelayNostrPublicationDistributionCommand', null);",
             '// ------------------------- 0.2.21 document lifecycle ------------',
             'post-publish block');
         return block.includes('router.replace');
@@ -581,7 +584,7 @@ async function run() {
             if (attempt === 1) throw new Error('Section G gateway unavailable');
             return Promise.resolve({ publication: { objectId: 'pub-g' }, material: null, discovery: null });
         };
-        const harness = buildEditorViewHarness(editorViewSource, { publicationDistributionCommand: flakyCommand });
+        const harness = buildEditorViewHarness(editorViewSource, { multiRelayNostrPublicationDistributionCommand: flakyCommand });
         const { publishDocumentUseCase } = publishingRig();
         const publication = publishDocumentUseCase.execute({ document: makeDocument('Section G Failure Manor') });
         harness.onDocumentPublished(publication);

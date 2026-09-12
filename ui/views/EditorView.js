@@ -200,7 +200,7 @@ export default {
             <div v-if="publishedPublication" class="editor-post-publish-action">
                 <span class="editor-post-publish-message">Publication published successfully.</span>
                 <button
-                    v-if="publicationDistributionCommand"
+                    v-if="multiRelayNostrPublicationDistributionCommand"
                     type="button"
                     class="action-btn editor-post-publish-distribute-btn"
                     :disabled="distributionExecuting"
@@ -213,13 +213,25 @@ export default {
                 >Dismiss</button>
             </div>
             <p v-if="distributionError" class="editor-post-publish-distribution-error">{{ distributionError }}</p>
-            <dl v-else-if="distributionResult" class="editor-post-publish-distribution-detail">
+            <!-- AMENDED BY 0.9.450 — distributionResult is now an ARRAY,
+                 one PublicationDistributionResult per configured Nostr
+                 relay (see distributeEditorPublication()'s own 0.9.450
+                 amendment). Material is uploaded once, shared by every
+                 relay result (the multi-relay distribution flow's own
+                 "one material upload, shared across every relay"
+                 invariant), so it is read once, from the first element;
+                 Discovery genuinely differs per relay, so every element
+                 gets its own row — never collapsed into one aggregate
+                 line. -->
+            <dl v-else-if="distributionResult && distributionResult.length" class="editor-post-publish-distribution-detail">
                 <dt>Publication</dt>
-                <dd>{{ distributionResult.publication.objectId }}</dd>
+                <dd>{{ distributionResult[0].publication.objectId }}</dd>
                 <dt>Material</dt>
-                <dd>{{ distributionResult.material ? distributionResult.material.uri : 'Not yet uploaded' }}</dd>
-                <dt>Discovery</dt>
-                <dd>{{ distributionResult.discovery ? distributionResult.discovery.id : 'Not yet announced' }}</dd>
+                <dd>{{ distributionResult[0].material ? distributionResult[0].material.uri : 'Not yet uploaded' }}</dd>
+                <template v-for="(relayResult, relayIndex) in distributionResult" :key="relayIndex">
+                    <dt>{{ distributionResult.length > 1 ? `Discovery (relay ${relayIndex + 1})` : 'Discovery' }}</dt>
+                    <dd>{{ relayResult.discovery ? relayResult.discovery.id : 'Not yet announced' }}</dd>
+                </template>
                 <!-- 0.9.381 — EditorView Distribution Result -> Repository
                      Navigation. The exact seam 0.9.380's own audit located:
                      immediately after the Discovery row, inside the SAME
@@ -1273,7 +1285,18 @@ export default {
         // ActionFeedback.js stays exactly as passive as 0.9.375 left it —
         // this view owns the transient action itself, entirely separate
         // from `feedback`/`feedbackMessage`/`feedbackVisible` above.
-        const publicationDistributionCommand = inject('publicationDistributionCommand', null);
+        // AMENDED BY 0.9.450 — Nostr Multi-Relay Publication Distribution
+        // Wiring. This view offers no Announcement/Discovery substrate
+        // choice of its own (unlike WorldView.js/DecentralizedPublicationsView.js
+        // — no `discoveryProvider` argument, no substrate `<select>`
+        // anywhere in this file), so its ENTIRE publication distribution
+        // path has always been the Nostr default. That makes the injected
+        // command here the app-wide `multiRelayNostrPublicationDistributionCommand`
+        // outright, never a conditional choice between it and the
+        // single-relay `publicationDistributionCommand` — this view has no
+        // Arweave case to keep the single-relay command around for, so it
+        // is no longer injected here at all.
+        const multiRelayNostrPublicationDistributionCommand = inject('multiRelayNostrPublicationDistributionCommand', null);
 
         // The smallest callable contract 0.9.376's own Section A/D
         // identified — identical in shape to WorldView.js's own
@@ -1281,12 +1304,16 @@ export default {
         // 0.9.347, unchanged): a one-argument (publication) -> Promise
         // wrapper adding exactly one field (serializedMaterial) to the
         // injected command's own request shape. Nothing about "Editor"
-        // appears anywhere in its own body.
+        // appears anywhere in its own body. AMENDED BY 0.9.450: resolves
+        // to an ARRAY of `PublicationDistributionResult` (one per
+        // configured Nostr relay) rather than a single result — see
+        // `distributionResult`'s own 0.9.450 amendment, below, for how
+        // this view's own display adapted.
         function distributeEditorPublication(publication) {
-            if (!publicationDistributionCommand) {
+            if (!multiRelayNostrPublicationDistributionCommand) {
                 return Promise.reject(new Error('Publication distribution is not available.'));
             }
-            return publicationDistributionCommand({
+            return multiRelayNostrPublicationDistributionCommand({
                 publication,
                 serializedMaterial: JSON.stringify(publication.toJSON())
             });
@@ -1345,13 +1372,14 @@ export default {
         // distributeEditorPublication in this view — mirrors
         // OwnPublicationPanel.js's own distributeOwnPublication() exactly,
         // one caller over. A no-op whenever there is no
-        // publishedPublication, no publicationDistributionCommand, or a
-        // call is already in flight. Reuses the command's own existing
-        // result/failure semantics verbatim — no EDITOR_DISTRIBUTION_*
-        // vocabulary of any kind.
+        // publishedPublication, no multiRelayNostrPublicationDistributionCommand
+        // (AMENDED BY 0.9.450 — see distributeEditorPublication()'s own
+        // amendment), or a call is already in flight. Reuses the command's
+        // own existing result/failure semantics verbatim — no
+        // EDITOR_DISTRIBUTION_* vocabulary of any kind.
         function distributePublishedDocument() {
             const publication = publishedPublication.value;
-            if (!publication || !publicationDistributionCommand || distributionExecuting.value) {
+            if (!publication || !multiRelayNostrPublicationDistributionCommand || distributionExecuting.value) {
                 return;
             }
             distributionExecuting.value = true;
@@ -2153,7 +2181,10 @@ export default {
             feedbackMessage,
             feedbackVisible,
             // 0.9.377 — EditorView Post-Publish Distribution Action.
-            publicationDistributionCommand,
+            // AMENDED BY 0.9.450: multiRelayNostrPublicationDistributionCommand
+            // replaces publicationDistributionCommand here — see
+            // distributeEditorPublication()'s own 0.9.450 amendment.
+            multiRelayNostrPublicationDistributionCommand,
             publishedPublication,
             distributionExecuting,
             distributionError,

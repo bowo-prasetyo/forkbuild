@@ -658,10 +658,36 @@ async function run() {
         // live, that even the allowlisted ui/main.js never constructs
         // NostrMultiRelayPublicationDiscoveryPublisher directly — it only
         // ever calls the existing, unmodified application-layer composer.
+        //
+        // AMENDED BY 0.9.450 — Nostr Multi-Relay Publication Distribution
+        // Wiring. 0.9.449's own product reassessment (tests/
+        // NostrMultiRelayPublicationDistributionProductReassessment.test.js,
+        // Section A) found the previous version of this guard was itself
+        // the regression it warned against: it kept the three real
+        // distribution actions from EVER calling the already-composed
+        // multi-relay command at all. 0.9.450 closed that gap by having
+        // WorldView.js/DecentralizedPublicationsView.js inject
+        // `multiRelayNostrPublicationDistributionCommand` ALONGSIDE the
+        // pre-existing single-relay `publicationDistributionCommand`
+        // (routing between the two per the Wanderer's own Nostr/Arweave
+        // substrate choice), and EditorView.js — which never offered that
+        // choice, and was always Nostr-only — inject it INSTEAD of the
+        // single-relay command. The allowlist below grows to admit exactly
+        // those three files, for exactly this reason; the invariant itself
+        // is UNCHANGED: every admitted file reaches multi-relay fan-out
+        // ONLY through the existing, unmodified `multiRelayNostrPublicationDistributionCommand`
+        // instance `ui/main.js` composes and provides — never by
+        // constructing `NostrMultiRelayPublicationDiscoveryPublisher` or
+        // `NostrMultiRelayPublicationDistributionOrchestrator` directly, and
+        // never by importing either. J4c, below, is extended to prove this
+        // for all six allowlisted files together, not only ui/main.js.
         const NOSTR_MULTI_RELAY_UI_REACHABILITY_ALLOWLIST = new Set([
             'ui/main.js',
             'ui/router/index.js',
-            'ui/views/NostrPublicationRelaySettingsView.js'
+            'ui/views/NostrPublicationRelaySettingsView.js',
+            'ui/views/WorldView.js',
+            'ui/views/EditorView.js',
+            'ui/views/DecentralizedPublicationsView.js'
         ]);
         const uiFiles = await listJsFilesRecursive('ui');
         const uiFilesReferencingMultiRelay = [];
@@ -672,11 +698,29 @@ async function run() {
             }
         }
         const unexpectedUiFiles = uiFilesReferencingMultiRelay.filter((relPath) => !NOSTR_MULTI_RELAY_UI_REACHABILITY_ALLOWLIST.has(relPath));
-        assert(unexpectedUiFiles.length === 0, n(`J4. AMENDED BY 0.9.447 — no file under ui/ OUTSIDE this milestone's own three allowlisted files references "MultiRelay" or "nostrRelayUrls" — found unexpected: ${JSON.stringify(unexpectedUiFiles)}. The UI layer still has no independent, hidden fan-out capability of its own — the only reachability is through the existing, unmodified application-layer composer`));
-        assert(new Set(uiFilesReferencingMultiRelay).size <= NOSTR_MULTI_RELAY_UI_REACHABILITY_ALLOWLIST.size, n('J4b. the allowlisted set itself has not silently grown beyond the three files this milestone actually added'));
+        assert(unexpectedUiFiles.length === 0, n(`J4. AMENDED BY 0.9.450 — no file under ui/ OUTSIDE this milestone's own six allowlisted files references "MultiRelay" or "nostrRelayUrls" — found unexpected: ${JSON.stringify(unexpectedUiFiles)}. The UI layer still has no independent, hidden fan-out capability of its own — the only reachability is through the existing, unmodified application-layer composer`));
+        assert(new Set(uiFilesReferencingMultiRelay).size <= NOSTR_MULTI_RELAY_UI_REACHABILITY_ALLOWLIST.size, n('J4b. the allowlisted set itself has not silently grown beyond the six files this milestone actually added'));
         const mainSource = await source('ui/main.js');
         assert(!/new NostrMultiRelayPublicationDiscoveryPublisher/.test(mainSource) && !mainSource.includes("from '../application/NostrMultiRelayPublicationDiscoveryPublisher.js'"),
             n('J4c. ui/main.js never constructs NostrMultiRelayPublicationDiscoveryPublisher directly and never imports it — it only calls composeMultiRelayNostrPublicationDistributionCommand(), the existing application-layer composer, exactly as it already does for the single-relay command'));
+        // J4d. AMENDED BY 0.9.450 — the same "no direct construction, no
+        // direct import" check, extended to the three real distribution
+        // views this milestone newly admits to the allowlist above. Each
+        // one calls the injected `multiRelayNostrPublicationDistributionCommand`
+        // by name only — never `new NostrMultiRelayPublicationDiscoveryPublisher(...)`,
+        // never `orchestrateMultiRelayNostrPublicationDistribution(...)`,
+        // and never an import of either file — the identical restraint
+        // J4c already proves for ui/main.js, held here for its three own
+        // new callers.
+        const worldViewSource = await source('ui/views/WorldView.js');
+        const editorViewSource = await source('ui/views/EditorView.js');
+        const publicationsViewSource = await source('ui/views/DecentralizedPublicationsView.js');
+        for (const [label, text] of [['WorldView.js', worldViewSource], ['EditorView.js', editorViewSource], ['DecentralizedPublicationsView.js', publicationsViewSource]]) {
+            assert(!/new NostrMultiRelayPublicationDiscoveryPublisher/.test(text) && !/orchestrateMultiRelayNostrPublicationDistribution/.test(text),
+                n(`J4d. ${label} never constructs NostrMultiRelayPublicationDiscoveryPublisher or calls orchestrateMultiRelayNostrPublicationDistribution directly — it only calls the injected multiRelayNostrPublicationDistributionCommand, exactly like every other admitted file`));
+            assert(!text.includes("from '../application/NostrMultiRelayPublicationDiscoveryPublisher.js'") && !text.includes("from '../application/NostrMultiRelayPublicationDistributionOrchestrator.js'"),
+                n(`J4e. ${label} imports neither NostrMultiRelayPublicationDiscoveryPublisher.js nor NostrMultiRelayPublicationDistributionOrchestrator.js`));
+        }
 
         console.log('✓ Section J: the lifecycle store, the pre-existing single-relay command, the discovery-query read side, and every real ui/ file are all confirmed free of any independent multi-relay fan-out capability — only the Nostr multi-relay publisher/orchestrator own it');
     }
@@ -773,10 +817,21 @@ async function run() {
         // DecentralizedPublicationsView.js's own distribution actions,
         // still has zero references, exactly as this section originally
         // required for the whole tree.
+        //
+        // AMENDED BY 0.9.450 — Nostr Multi-Relay Publication Distribution
+        // Wiring. The reachability gap L3's own prior wording named as a
+        // virtue ("above all WorldView.js... still has zero references")
+        // was exactly the product gap 0.9.449 found and 0.9.450 closed —
+        // see this file's own J4/J4d amendment, immediately above, for the
+        // full rationale. The allowlist grows to admit the same three
+        // files, for the identical reason.
         const NOSTR_MULTI_RELAY_UI_REACHABILITY_ALLOWLIST = new Set([
             'ui/main.js',
             'ui/router/index.js',
-            'ui/views/NostrPublicationRelaySettingsView.js'
+            'ui/views/NostrPublicationRelaySettingsView.js',
+            'ui/views/WorldView.js',
+            'ui/views/EditorView.js',
+            'ui/views/DecentralizedPublicationsView.js'
         ]);
         const uiFiles = await listJsFilesRecursive('ui');
         const uiReachabilityFiles = [];
@@ -787,7 +842,7 @@ async function run() {
             }
         }
         const unexpectedUiReachabilityFiles = uiReachabilityFiles.filter((relPath) => !NOSTR_MULTI_RELAY_UI_REACHABILITY_ALLOWLIST.has(relPath));
-        assert(unexpectedUiReachabilityFiles.length === 0, n(`L3. AMENDED BY 0.9.447 — no file anywhere under ui/ OUTSIDE this milestone's own three allowlisted files names the multi-relay command, "MultiRelay", or "nostrRelayUrls" — found unexpected: ${JSON.stringify(unexpectedUiReachabilityFiles)}`));
+        assert(unexpectedUiReachabilityFiles.length === 0, n(`L3. AMENDED BY 0.9.450 — no file anywhere under ui/ OUTSIDE this milestone's own six allowlisted files names the multi-relay command, "MultiRelay", or "nostrRelayUrls" — found unexpected: ${JSON.stringify(unexpectedUiReachabilityFiles)}`));
 
         // L4. `application/` itself: the multi-relay classes are now
         // referenced by the two original production files, the command

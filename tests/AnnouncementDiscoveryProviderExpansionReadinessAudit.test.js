@@ -178,8 +178,16 @@ async function run() {
         const registryFiles = allProductionFiles.filter((f) => /DiscoveryPublisherRegistry|AnnouncementRegistry|DistributionRegistry/i.test(f));
         assert(registryFiles.length === 0, n(`A2. no DiscoveryPublisherRegistry/AnnouncementRegistry/DistributionRegistry class exists anywhere in application/ today (found ${JSON.stringify(registryFiles)}) — re-derived fresh, never trusted from 0.9.422's own cached finding`));
 
+        // AMENDED BY 0.9.450 — Nostr Multi-Relay Publication Distribution
+        // Wiring. EditorView.js's own injected key renamed from
+        // `publicationDistributionCommand` to
+        // `multiRelayNostrPublicationDistributionCommand` (it never offered
+        // an Arweave substrate choice to keep the single-relay command
+        // for) — still exactly one single, app-wide command, never a
+        // per-action provider PARAMETER of its own (EditorView.js still
+        // has no substrate `<select>` anywhere in its own template).
         const editorSource = await readSource('ui/views/EditorView.js');
-        assert(/inject\('publicationDistributionCommand', null\)/.test(editorSource), n('A3. EditorView.js still injects one single, app-wide publicationDistributionCommand — no per-action provider parameter exists in the real UI today'));
+        assert(/inject\('multiRelayNostrPublicationDistributionCommand', null\)/.test(editorSource), n('A3. AMENDED BY 0.9.450 — EditorView.js still injects one single, app-wide distribution command (now multiRelayNostrPublicationDistributionCommand) — no per-action provider parameter exists in EditorView.js today'));
         const routerSource = await readSource('ui/router/index.js');
         assert(!/provider-picker|substrate-picker|announcement-provider/i.test(routerSource), n('A4. no announcement/discovery provider-selection route exists anywhere in the real router'));
 

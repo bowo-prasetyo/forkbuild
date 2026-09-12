@@ -1062,6 +1062,14 @@ export default {
         // page never records into it directly, only through the command
         // above, exactly as that component does.
         const publicationDistributionCommand = inject('publicationDistributionCommand', null);
+        // 0.9.450 — Nostr Multi-Relay Publication Distribution Wiring. The
+        // SAME app-wide `multiRelayNostrPublicationDistributionCommand`
+        // `ui/main.js` has provided since 0.9.447, injected here so
+        // `distributeEntryPublication()` below can reach it for the Nostr
+        // substrate choice — mirrors `ui/views/WorldView.js`'s own 0.9.450
+        // amendment exactly, one call site over. This page still
+        // constructs no orchestrator, uploader, or publisher of its own.
+        const multiRelayNostrPublicationDistributionCommand = inject('multiRelayNostrPublicationDistributionCommand', null);
         const snapshotDistributionCommand = inject('snapshotDistributionCommand', null);
         const publicationDistributionLifecycleStore = inject('publicationDistributionLifecycleStore', null);
         // 0.8.70 — IPFS Publication & Content Verification UI. Optional —
@@ -6624,14 +6632,35 @@ export default {
         // — this page constructs no new orchestrator, uploader, or
         // publisher of its own, and reads no ownership field (see this
         // milestone's own audit, Section C5).
+        // AMENDED BY 0.9.450 — Nostr Multi-Relay Publication Distribution
+        // Wiring. Mirrors `ui/views/WorldView.js`'s own
+        // `distributeWorldEncounterPublication()` 0.9.450 amendment exactly,
+        // one call site over: `discoveryProviderChoice === 'arweave'` keeps
+        // calling the single-relay `publicationDistributionCommand()`
+        // unchanged; every other choice (today, only `'nostr'` — see the
+        // Substrate `<select>`'s own two options, above) now calls the
+        // already-composed `multiRelayNostrPublicationDistributionCommand()`
+        // instead, resolving to an array of results (one per configured
+        // relay) rather than a single one. `entry.discoveryDistributionAttempt.result`
+        // is never rendered anywhere on this page (see its own template),
+        // so this shape change is invisible to this page's own display.
         function distributeEntryPublication(entry, discoveryProviderChoice) {
-            if (!publicationDistributionCommand) {
+            if (discoveryProviderChoice === 'arweave') {
+                if (!publicationDistributionCommand) {
+                    return Promise.reject(new Error('Publication distribution is not available.'));
+                }
+                return publicationDistributionCommand({
+                    publication: entry.publication,
+                    serializedMaterial: JSON.stringify(entry.publication.toJSON()),
+                    discoveryProvider: discoveryProviderChoice
+                });
+            }
+            if (!multiRelayNostrPublicationDistributionCommand) {
                 return Promise.reject(new Error('Publication distribution is not available.'));
             }
-            return publicationDistributionCommand({
+            return multiRelayNostrPublicationDistributionCommand({
                 publication: entry.publication,
-                serializedMaterial: JSON.stringify(entry.publication.toJSON()),
-                discoveryProvider: discoveryProviderChoice
+                serializedMaterial: JSON.stringify(entry.publication.toJSON())
             });
         }
 
@@ -6839,7 +6868,7 @@ export default {
             canRetrieve, retrieve, recheck,
             describeKnownEvidenceCount, toggleEvidence, verifyAnchor, evidenceBadgeClass, lifecycleNote,
             createAnchor, creationView, creationBadgeClass, creationButtonLabel,
-            publicationDistributionCommand, snapshotDistributionCommand,
+            publicationDistributionCommand, multiRelayNostrPublicationDistributionCommand, snapshotDistributionCommand,
             distributePublicationForEntry, discoveryDistributionButtonLabel,
             distributeSnapshot, snapshotDistributionButtonLabel,
             discoveryObservationsView, discoveryDistributionConfigurationRoute,
@@ -9154,10 +9183,17 @@ export default {
                              neither command was ever provided — the same
                              degrade-gracefully posture every optional
                              section on this page already holds. -->
-                        <div v-if="publicationDistributionCommand || snapshotDistributionCommand" class="identity-mgmt-distribution-role">
+                        <div v-if="publicationDistributionCommand || multiRelayNostrPublicationDistributionCommand || snapshotDistributionCommand" class="identity-mgmt-distribution-role">
                             <span class="evidence-convergence-title">Announcement / Discovery</span>
                             <div class="evidence-list">
-                                <div v-if="publicationDistributionCommand" class="evidence-anchor-card">
+                                <!-- AMENDED BY 0.9.450 — either command being
+                                     present is enough to render this card:
+                                     distributeEntryPublication() itself picks
+                                     between them per the Substrate choice
+                                     below, and degrades to a plain rejection
+                                     only when the ONE it actually needs for
+                                     the current choice is missing. -->
+                                <div v-if="publicationDistributionCommand || multiRelayNostrPublicationDistributionCommand" class="evidence-anchor-card">
                                     <div class="evidence-anchor-header">
                                         <span class="evidence-anchor-type">Publication</span>
                                     </div>

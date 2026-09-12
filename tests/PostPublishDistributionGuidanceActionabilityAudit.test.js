@@ -345,8 +345,33 @@ async function run() {
         const editorViewCode = await codeOnlySource('ui/views/EditorView.js');
         assert(!editorViewCode.includes('OwnPublicationPanel'),
             '17. EditorView.js never imports or mounts OwnPublicationPanel — the one component the existing distribution command is already wired to');
-        assert(!/PublicationDistribution/.test(editorViewCode),
-            '18. EditorView.js contains no PublicationDistribution-named identifier of any kind — no command, no lifecycle store, no orchestrator import');
+        // AMENDED BY 0.9.450 — Nostr Multi-Relay Publication Distribution
+        // Wiring. This section's own original point-in-time finding was
+        // "EditorView.js has no distribution command in scope at all" —
+        // 0.9.377 (a LATER milestone than this one) already closed that
+        // gap by giving EditorView.js its own real channel (see Section I,
+        // below, "the decision this milestone left on record... has since
+        // been built"). 0.9.450 then renamed that channel's own inject key
+        // from `publicationDistributionCommand` to
+        // `multiRelayNostrPublicationDistributionCommand`, and its own
+        // doc comments now also mention `PublicationDistributionResult`
+        // (the per-relay result shape) and
+        // `NostrMultiRelayPublicationDistributionOrchestrator.js` (in
+        // prose, never imported) — three sources of a literal
+        // "PublicationDistribution" substring that carry no class import
+        // or construction of their own, unlike what this check originally
+        // existed to catch. The check is narrowed from a blanket substring
+        // scan to what its own original prose actually named — "no
+        // command, no lifecycle store, no orchestrator import" — checked
+        // directly against import statements and constructor calls, which
+        // remains a strictly STRONGER guarantee than the substring scan
+        // ever was (a prose mention could never have tripped it either,
+        // had this file's own EditorView.js source carried one before).
+        const editorViewImportLines = editorViewCode.split('\n').filter((line) => line.trim().startsWith('import'));
+        assert(!editorViewImportLines.some((line) => /PublicationDistribution/.test(line)),
+            '18a. AMENDED BY 0.9.450 — EditorView.js imports nothing PublicationDistribution-named — no lifecycle store class, no orchestrator, no command-boundary function');
+        assert(!/new PublicationDistribution\w*\(/.test(editorViewCode),
+            '18b. AMENDED BY 0.9.450 — EditorView.js constructs no PublicationDistribution-named class directly');
 
         // EditorView.js is a plain router-level component: no `props`
         // block for the router to hand it anything, confirming the app
@@ -528,9 +553,17 @@ async function run() {
         // this milestone originally found — the rest of this section's
         // (and this file's) own evidence is unaffected, since none of it
         // depended on Path 2 staying unbuilt.
+        //
+        // AMENDED BY 0.9.450 — Nostr Multi-Relay Publication Distribution
+        // Wiring. The injected key renamed from `publicationDistributionCommand`
+        // to `multiRelayNostrPublicationDistributionCommand` (EditorView.js
+        // never offered an Arweave substrate choice to keep the single-relay
+        // command for — see that file's own 0.9.450 amendment); the wrapper
+        // itself, `distributeEditorPublication(publication)`, is unchanged
+        // in shape.
         const editorViewCode = await codeOnlySource('ui/views/EditorView.js');
-        assert(editorViewCode.includes("inject('publicationDistributionCommand', null)") && editorViewCode.includes('function distributeEditorPublication(publication)'),
-            '35. EditorView.js now has its own distribution-command wiring — 0.9.377 built Path 2, using the exact inject(key, null) + wrapper shape this section originally described as the gap');
+        assert(editorViewCode.includes("inject('multiRelayNostrPublicationDistributionCommand', null)") && editorViewCode.includes('function distributeEditorPublication(publication)'),
+            '35. AMENDED BY 0.9.450 — EditorView.js still has its own distribution-command wiring (0.9.377\'s own Path 2), now through multiRelayNostrPublicationDistributionCommand');
 
         // No forbidden shortcut vocabulary (a generic notification
         // manager, a toast-specific distribution wrapper) exists

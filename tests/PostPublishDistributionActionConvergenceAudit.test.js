@@ -207,18 +207,30 @@ function wrapAsWorldViewDistributionAction(rawCommand) {
 // tests/EditorViewPostPublishDistributionAction.test.js's own
 // buildHarness().
 // -----------------------------------------------------------------
-function buildEditorViewHarness(editorViewSource, { publicationDistributionCommand = null } = {}) {
+// AMENDED BY 0.9.450 — Nostr Multi-Relay Publication Distribution Wiring.
+// EditorView.js's own injected command changed from the single-relay
+// `publicationDistributionCommand` to `multiRelayNostrPublicationDistributionCommand`
+// — see that file's own 0.9.450 amendment. The `rawCommand`/`command` this
+// harness is handed throughout this file remains built via the single-
+// relay `composePublicationDistributionCommand()` test double (see
+// `realAppWideDistributionCommand()`'s own header, unchanged) — this file's
+// own convergence claim is about ONE SHARED RAW COMMAND reaching every
+// surface identically, never about re-proving the multi-relay array shape
+// itself (covered exhaustively by tests/NostrMultiRelayPublicationDistributionWiring.test.js
+// and sibling files) — so every assertion in this file keeps working
+// against a plain, single-object result, unchanged.
+function buildEditorViewHarness(editorViewSource, { multiRelayNostrPublicationDistributionCommand = null } = {}) {
     const blockSource = extractRange(
         editorViewSource,
-        "const publicationDistributionCommand = inject('publicationDistributionCommand', null);",
+        "const multiRelayNostrPublicationDistributionCommand = inject('multiRelayNostrPublicationDistributionCommand', null);",
         '// ------------------------- 0.2.21 document lifecycle ------------',
-        '0.9.377 post-publish distribution block'
+        '0.9.377/0.9.450 post-publish distribution block'
     );
 
     function ref(initial) { return { value: initial }; }
     function inject(key, fallback) {
-        if (key === 'publicationDistributionCommand') {
-            return publicationDistributionCommand === null ? fallback : publicationDistributionCommand;
+        if (key === 'multiRelayNostrPublicationDistributionCommand') {
+            return multiRelayNostrPublicationDistributionCommand === null ? fallback : multiRelayNostrPublicationDistributionCommand;
         }
         return fallback;
     }
@@ -227,7 +239,7 @@ function buildEditorViewHarness(editorViewSource, { publicationDistributionComma
     const factory = new Function(
         'inject', 'ref',
         `${blockSource}\nreturn {
-            publicationDistributionCommand,
+            multiRelayNostrPublicationDistributionCommand,
             distributeEditorPublication,
             publishedPublication,
             distributionExecuting,
@@ -353,7 +365,7 @@ function makeEditorViewSurface(editorViewSource) {
     return {
         name: 'EditorView',
         makeCtx: (publication, rawCommand) => {
-            const harness = buildEditorViewHarness(editorViewSource, { publicationDistributionCommand: rawCommand });
+            const harness = buildEditorViewHarness(editorViewSource, { multiRelayNostrPublicationDistributionCommand: rawCommand });
             harness.onDocumentPublished(publication);
             return harness;
         },
@@ -403,9 +415,9 @@ async function run() {
     const SURFACES = [EDITOR_VIEW_SURFACE, OWN_PUBLICATION_SURFACE, WORLD_ENCOUNTER_SURFACE];
     const editorViewBlock = codeOnlyLines(extractRange(
         editorViewSource,
-        "const publicationDistributionCommand = inject('publicationDistributionCommand', null);",
+        "const multiRelayNostrPublicationDistributionCommand = inject('multiRelayNostrPublicationDistributionCommand', null);",
         '// ------------------------- 0.2.21 document lifecycle ------------',
-        '0.9.377 block (raw, before comment-stripping)'
+        '0.9.377/0.9.450 block (raw, before comment-stripping)'
     ));
 
     // ---------------------------------------------------------------
@@ -418,9 +430,22 @@ async function run() {
             n('ui/main.js provides publicationDistributionCommand exactly once, at the app root — a single composition, never one per view'));
 
         const worldViewCode = await codeOnlySource('ui/views/WorldView.js');
-        assert(editorViewCodeOnly.includes("inject('publicationDistributionCommand', null)") &&
-               worldViewCode.includes("inject('publicationDistributionCommand', null)"),
-            n('EditorView.js AND WorldView.js each inject the SAME app-wide capability via the standard Vue inject(key, null) channel — neither constructs, nor is handed, a second instance'));
+        // AMENDED BY 0.9.450 — Nostr Multi-Relay Publication Distribution
+        // Wiring. WorldView.js still injects the single-relay
+        // publicationDistributionCommand (kept for its own Arweave
+        // substrate choice) AND now ALSO injects
+        // multiRelayNostrPublicationDistributionCommand (its own Nostr
+        // path); EditorView.js, which never offered a substrate choice,
+        // now injects ONLY multiRelayNostrPublicationDistributionCommand.
+        // Both views still reach every command they use through the
+        // standard Vue inject(key, null) channel — neither constructs, nor
+        // is handed, a second instance of any command outside that channel.
+        assert(worldViewCode.includes("inject('publicationDistributionCommand', null)") &&
+               worldViewCode.includes("inject('multiRelayNostrPublicationDistributionCommand', null)"),
+            n('AMENDED BY 0.9.450 — WorldView.js injects BOTH app-wide commands (single-relay for Arweave, multi-relay for Nostr) via the standard Vue inject(key, null) channel'));
+        assert(editorViewCodeOnly.includes("inject('multiRelayNostrPublicationDistributionCommand', null)") &&
+               !editorViewCodeOnly.includes("inject('publicationDistributionCommand', null)"),
+            n('AMENDED BY 0.9.450 — EditorView.js injects ONLY the app-wide multiRelayNostrPublicationDistributionCommand (it never offered an Arweave substrate choice to keep the single-relay command for) via the standard Vue inject(key, null) channel'));
 
         assert(worldViewCode.includes(':publicationDistributionCommand="distributeWorldEncounterPublication"'),
             n('WorldView.js binds its own distributeWorldEncounterPublication() to OwnPublicationPanel\'s publicationDistributionCommand prop'));
@@ -446,7 +471,7 @@ async function run() {
         const publicationForOwnPanel = publishLocally('Section A OwnPublicationPanel Manor');
         const publicationForWorldView = publishLocally('Section A WorldView Manor');
 
-        const editorHarness = buildEditorViewHarness(editorViewSource, { publicationDistributionCommand: rawCommand });
+        const editorHarness = buildEditorViewHarness(editorViewSource, { multiRelayNostrPublicationDistributionCommand: rawCommand });
         editorHarness.onDocumentPublished(publicationForEditor);
         const ownCtx = panelCtx({ publication: publicationForOwnPanel, publicationDistributionCommand: sharedWorldViewWrapper });
         const worldCtx = canvasCtx({
@@ -493,7 +518,7 @@ async function run() {
             receivedRequest = request;
             return Promise.resolve({ publication: { objectId: 'obj-section-b' }, material: null, discovery: null });
         };
-        const editorHarness = buildEditorViewHarness(editorViewSource, { publicationDistributionCommand: command });
+        const editorHarness = buildEditorViewHarness(editorViewSource, { multiRelayNostrPublicationDistributionCommand: command });
 
         const { emittedEvent, emittedArg } = publishThroughRealChain(publishSource, editorHarness, {
             publishDocumentUseCase,
@@ -522,7 +547,7 @@ async function run() {
     {
         let calls = 0;
         const command = () => { calls += 1; return Promise.resolve(null); };
-        const editorHarness = buildEditorViewHarness(editorViewSource, { publicationDistributionCommand: command });
+        const editorHarness = buildEditorViewHarness(editorViewSource, { multiRelayNostrPublicationDistributionCommand: command });
         const { publishDocumentUseCase, storage } = publishingRig();
         const persistedBefore = storage.list().length;
         const feedbackMessages = [];
@@ -549,7 +574,7 @@ async function run() {
     {
         let calls = 0;
         const command = () => { calls += 1; return Promise.resolve({ publication: { objectId: 'obj-section-d' }, material: null, discovery: null }); };
-        const editorHarness = buildEditorViewHarness(editorViewSource, { publicationDistributionCommand: command });
+        const editorHarness = buildEditorViewHarness(editorViewSource, { multiRelayNostrPublicationDistributionCommand: command });
         const { publishDocumentUseCase } = publishingRig();
 
         publishThroughRealChain(publishSource, editorHarness, { publishDocumentUseCase, documentManager: { document: makeDocument('Section D Manor') } });
@@ -583,9 +608,11 @@ async function run() {
         const wrapperOccurrences = editorViewBlock.split('distributeEditorPublication(').length - 1;
         assert(wrapperOccurrences === 2,
             n('distributeEditorPublication( appears exactly twice in the whole 0.9.377 block — its own definition, and the ONE call inside distributePublishedDocument() — never a third, duplicate call site'));
-        const commandOccurrences = editorViewBlock.split('publicationDistributionCommand(').length - 1;
+        // AMENDED BY 0.9.450 — the injected command is now
+        // multiRelayNostrPublicationDistributionCommand.
+        const commandOccurrences = editorViewBlock.split('multiRelayNostrPublicationDistributionCommand(').length - 1;
         assert(commandOccurrences === 1,
-            n('the injected command itself is invoked from exactly ONE call site in the whole block — inside distributeEditorPublication() — never from onDocumentPublished(), dismissPublishAction(), or anywhere else'));
+            n('AMENDED BY 0.9.450 — the injected command itself is invoked from exactly ONE call site in the whole block — inside distributeEditorPublication() — never from onDocumentPublished(), dismissPublishAction(), or anywhere else'));
 
         console.log('✓ Section D: exactly one distribution invocation per click, live-confirmed and structurally confirmed against the real source — no duplicate from the publish event, the toast, a watcher, a state change, or result rendering');
     }
@@ -604,7 +631,7 @@ async function run() {
             }
             return Promise.resolve({ publication: { objectId: `obj-section-e-${received.length}` }, material: null, discovery: null });
         };
-        const editorHarness = buildEditorViewHarness(editorViewSource, { publicationDistributionCommand: command });
+        const editorHarness = buildEditorViewHarness(editorViewSource, { multiRelayNostrPublicationDistributionCommand: command });
         const { publishDocumentUseCase } = publishingRig();
 
         const { emittedArg: publicationA } = publishThroughRealChain(publishSource, editorHarness, { publishDocumentUseCase, documentManager: { document: makeDocument('Section E Manor A') } });
@@ -738,7 +765,7 @@ async function run() {
         {
             let resolveA;
             const command = () => new Promise((resolve) => { resolveA = resolve; });
-            const editorHarness = buildEditorViewHarness(editorViewSource, { publicationDistributionCommand: command });
+            const editorHarness = buildEditorViewHarness(editorViewSource, { multiRelayNostrPublicationDistributionCommand: command });
             const publicationA = publishLocally('Section H1 Manor');
             editorHarness.onDocumentPublished(publicationA);
             editorHarness.distributePublishedDocument();
@@ -765,7 +792,7 @@ async function run() {
         {
             let calls = [];
             const command = (request) => { calls.push(request.publication.id); return Promise.resolve({ publication: { objectId: `obj-h2-${calls.length}` }, material: null, discovery: null }); };
-            const editorHarness = buildEditorViewHarness(editorViewSource, { publicationDistributionCommand: command });
+            const editorHarness = buildEditorViewHarness(editorViewSource, { multiRelayNostrPublicationDistributionCommand: command });
             const { publishDocumentUseCase } = publishingRig();
 
             const { emittedArg: publicationA } = publishThroughRealChain(publishSource, editorHarness, { publishDocumentUseCase, documentManager: { document: makeDocument('Section H2 Manor A') } });
@@ -846,8 +873,8 @@ async function run() {
         assert(!/localStorage|sessionStorage/.test(editorViewBlock),
             n('no distribution persistence of any kind exists in the 0.9.377 block (restated from Section H for this section\'s own completeness)'));
         const onPublishedSource = extractRange(editorViewCodeOnly, 'function onDocumentPublished(publication) {', '\n        }', 'onDocumentPublished() body');
-        assert(!onPublishedSource.includes('publicationDistributionCommand(') && !onPublishedSource.includes('distributePublishedDocument(') && !onPublishedSource.includes('distributeEditorPublication('),
-            n('onDocumentPublished() never calls the command or either distribution wrapper itself — publishing alone remains fully automatic-distribution-free'));
+        assert(!onPublishedSource.includes('multiRelayNostrPublicationDistributionCommand(') && !onPublishedSource.includes('distributePublishedDocument(') && !onPublishedSource.includes('distributeEditorPublication('),
+            n('AMENDED BY 0.9.450 — onDocumentPublished() never calls the (now multi-relay) command or either distribution wrapper itself — publishing alone remains fully automatic-distribution-free'));
 
         // f) No retry/queue semantics.
         const forbiddenRuntimeTerms = ['setInterval', 'retry', 'Retry', 'queue', 'Queue'];
@@ -880,8 +907,8 @@ async function run() {
 Final convergence matrix:
 | Surface           | Command injection                          | Wrapper shape                          | Publication identity                     | Result stored locally |
 |-------------------|---------------------------------------------|-----------------------------------------|-------------------------------------------|------------------------|
-| EditorView        | inject('publicationDistributionCommand')     | distributeEditorPublication(publication) | Toolbar.publish() local var, unmodified   | Yes                    |
-| WorldView         | inject('publicationDistributionCommand')     | distributeWorldEncounterPublication(pub) | selectedEncounter -> materialInspection   | No (lifecycle only)    |
+| EditorView        | inject('multiRelayNostrPublicationDistributionCommand') [0.9.450] | distributeEditorPublication(publication) | Toolbar.publish() local var, unmodified   | Yes                    |
+| WorldView         | inject('publicationDistributionCommand') + inject('multiRelayNostrPublicationDistributionCommand') [0.9.450] | distributeWorldEncounterPublication(pub) | selectedEncounter -> materialInspection   | No (lifecycle only)    |
 | OwnPublicationPanel| (same wrapper, passed as a prop)            | (same wrapper, unmodified)               | host-supplied \`publication\` prop         | Yes                    |
 `);
 
