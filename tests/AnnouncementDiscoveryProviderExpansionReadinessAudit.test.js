@@ -215,9 +215,17 @@ async function run() {
         const runtimeSource = await readSource('application/PublicationDistributionRuntimeComposition.js');
 
         // The chain, import by import, real and current.
-        assert(/import \{ composePublicationDistributionCommand \} from '\.\.\/application\/PublicationDistributionCommandComposition\.js';/.test(mainSource), n('B1. ui/main.js imports composePublicationDistributionCommand — the real, current entry point'));
+        // AMENDED BY 0.9.447 — Nostr Publication Relay Set Configuration.
+        // Both import lines below now ALSO name one new, additive sibling
+        // each (composeMultiRelayNostrPublicationDistributionCommand /
+        // executeMultiRelayNostrPublicationDistributionCommand) — the
+        // regexes are widened to tolerate that second name, in either
+        // order, while still requiring the original name this section
+        // actually traces to be present in the SAME import statement, from
+        // the SAME file.
+        assert(/import \{ composePublicationDistributionCommand(, composeMultiRelayNostrPublicationDistributionCommand)? \} from '\.\.\/application\/PublicationDistributionCommandComposition\.js';/.test(mainSource), n('B1. AMENDED BY 0.9.447 — ui/main.js imports composePublicationDistributionCommand — the real, current entry point (now alongside its new, additive multi-relay sibling)'));
         assert(/import \{ resolvePublicationDistributionRuntimeConfiguration \}/.test(mainSource), n('B2. ui/main.js imports the one real resolver that turns host capabilities into arweaveUploaderOptions/nostrPublisherOptions'));
-        assert(/import \{ executePublicationDistributionCommand \} from '\.\/PublicationDistributionCommand\.js';/.test(compositionSource), n('B3. PublicationDistributionCommandComposition.js imports executePublicationDistributionCommand'));
+        assert(/import \{ executePublicationDistributionCommand(, executeMultiRelayNostrPublicationDistributionCommand)? \} from '\.\/PublicationDistributionCommand\.js';/.test(compositionSource), n('B3. AMENDED BY 0.9.447 — PublicationDistributionCommandComposition.js imports executePublicationDistributionCommand (now alongside its new, additive multi-relay sibling)'));
         assert(/import \{ orchestratePublicationDistribution \} from '\.\/PublicationDistributionOrchestrator\.js';/.test(commandSource), n('B4. PublicationDistributionCommand.js imports orchestratePublicationDistribution'));
         assert(/import \{ composePublicationDistributionRuntime \} from '\.\/PublicationDistributionRuntimeComposition\.js';/.test(orchestratorSource), n('B5. PublicationDistributionOrchestrator.js imports composePublicationDistributionRuntime'));
         assert(/import \{ ArweavePublicationMaterialUploader \}/.test(runtimeSource) && /import \{ NostrPublicationDiscoveryPublisher \}/.test(runtimeSource), n('B6. PublicationDistributionRuntimeComposition.js imports both concrete collaborators — the bottom of the chain'));

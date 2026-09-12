@@ -483,11 +483,19 @@ async function run() {
         // service.
         assert(!/NostrDiscoveryQueryService/.test(publisherCode) && !/NostrDiscoveryQueryService/.test(orchestratorCode), n('L6. neither new file imports the read-side NostrDiscoveryQueryService — this milestone modifies announcement PUBLICATION only'));
 
-        // No relay Settings UI, and no wiring into ui/main.js or the
-        // command composition root — configuration reachability remains
-        // explicitly out of scope.
+        // AMENDED BY 0.9.447 — Nostr Publication Relay Set Configuration.
+        // This section's own point-in-time finding — that
+        // PublicationDistributionCommandComposition.js was untouched and no
+        // relay-list configuration reachability existed — is exactly what
+        // 0.9.446's own audit later recommended closing, and 0.9.447 closed:
+        // see tests/NostrPublicationRelaySetConfiguration.test.js (Section
+        // G) for the live, end-to-end proof of the new, additive
+        // composeMultiRelayNostrPublicationDistributionCommand() seam. This
+        // milestone (0.9.444) itself remains otherwise unmodified — only
+        // this one assertion, about a DIFFERENT file's later state, is
+        // updated to match that deliberate, subsequent change.
         const commandCompositionSource = await source('application/PublicationDistributionCommandComposition.js');
-        assert(!/MultiRelay/.test(commandCompositionSource), n('L7. PublicationDistributionCommandComposition.js (the UI composition root) is untouched — no relay-list configuration reachability was wired in this milestone'));
+        assert(/composeMultiRelayNostrPublicationDistributionCommand/.test(commandCompositionSource), n('L7. AMENDED BY 0.9.447 — PublicationDistributionCommandComposition.js now composes the multi-relay command too, via the new, additive composeMultiRelayNostrPublicationDistributionCommand(), closing the reachability gap this section originally found'));
 
         console.log('✓ Section L: no aggregate status, no hidden race semantics, no relay Settings UI, and discoveryProvider identity remains exactly as 0.9.443 left it');
     }

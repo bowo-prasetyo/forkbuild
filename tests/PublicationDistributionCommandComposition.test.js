@@ -221,13 +221,25 @@ async function run() {
         const source = await readFile(sourceUrl, 'utf8');
         const codeOnly = source.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
 
-        assert(codeOnly.includes("import { executePublicationDistributionCommand } from './PublicationDistributionCommand.js'"),
-            '13. imports exactly the existing 0.9.103 command — never a second implementation');
-        assert(!codeOnly.includes('ArweavePublicationMaterialUploader') && !codeOnly.includes('NostrPublicationDiscoveryPublisher') && !codeOnly.includes('orchestratePublicationDistribution'),
-            '14. never constructs distribution infrastructure or calls the orchestrator directly — that stays entirely 0.9.103\'s own concern');
+        // AMENDED BY 0.9.447 — Nostr Publication Relay Set Configuration.
+        // This file gained one new, additive export,
+        // composeMultiRelayNostrPublicationDistributionCommand(), importing
+        // executeMultiRelayNostrPublicationDistributionCommand (0.9.444)
+        // alongside the pre-existing executePublicationDistributionCommand
+        // import — never a SECOND implementation of the single-relay
+        // command itself, which remains the one and only thing
+        // composePublicationDistributionCommand() calls, unmodified. The
+        // checks below are updated to assert that precise shape rather than
+        // "exactly one export/one import," which this milestone's own
+        // recommended change (0.9.446's own Section F5) necessarily widens.
+        assert(codeOnly.includes("import { executePublicationDistributionCommand, executeMultiRelayNostrPublicationDistributionCommand } from './PublicationDistributionCommand.js'"),
+            '13. AMENDED BY 0.9.447 — imports both the existing 0.9.103 single-relay command and the 0.9.444 multi-relay command from the SAME existing file — never a second, competing implementation of either');
+        assert(!codeOnly.includes('ArweavePublicationMaterialUploader') && !codeOnly.includes('NostrPublicationDiscoveryPublisher') && !codeOnly.includes('orchestratePublicationDistribution') && !codeOnly.includes('orchestrateMultiRelayNostrPublicationDistribution'),
+            '14. never constructs distribution infrastructure or calls either orchestrator directly — that stays entirely PublicationDistributionCommand.js\'s own concern');
         assert(!codeOnly.includes("'../ui/") && !codeOnly.includes('"../ui/'), '15. no UI import of any kind');
-        assert((codeOnly.match(/\bexport\s+function\b/g) || []).length === 1, '16. exports exactly one function');
-        assert((codeOnly.match(/executePublicationDistributionCommand\(/g) || []).length === 1, '17. calls executePublicationDistributionCommand exactly once');
+        assert((codeOnly.match(/\bexport\s+function\b/g) || []).length === 2, '16. AMENDED BY 0.9.447 — exports exactly two functions: the pre-existing single-relay composer and the new 0.9.447 multi-relay composer');
+        assert((codeOnly.match(/(?<!MultiRelayNostr)executePublicationDistributionCommand\(/g) || []).length === 1, '17. calls executePublicationDistributionCommand (single-relay) exactly once');
+        assert((codeOnly.match(/executeMultiRelayNostrPublicationDistributionCommand\(/g) || []).length === 1, '17b. AMENDED BY 0.9.447 — calls executeMultiRelayNostrPublicationDistributionCommand exactly once, from the new composer only');
 
         console.log('✓ Section E: architectural regression — a pure composition seam, no re-implemented distribution logic, no UI import');
     }

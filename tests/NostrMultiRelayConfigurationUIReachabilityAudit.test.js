@@ -288,8 +288,16 @@ async function run() {
         const publicationCardStart = viewSource.indexOf('<span class="evidence-anchor-type">Publication</span>');
         const snapshotCardStart = viewSource.indexOf('<span class="evidence-anchor-type">Snapshot</span>', publicationCardStart);
         const publicationCardSlice = viewSource.slice(publicationCardStart, snapshotCardStart);
-        assert((publicationCardSlice.match(/<router-link/g) || []).length === 1,
-            n('B3. the Publication card in Distribution > Announcement/Discovery carries exactly one router-link — no second, multi-relay-specific entry point exists today'));
+        // AMENDED BY 0.9.447 — Nostr Publication Relay Set Configuration.
+        // This audit's own verdict recommended exactly this: a second,
+        // additive contextual link pointed at a NEW destination
+        // (/settings/nostr-publication-relays), never a duplicate of or
+        // replacement for the existing discovery-relay link this section
+        // originally found alone. The count below is updated to match that
+        // deliberate, recommended change — never loosened to "at least
+        // one," so a THIRD, unreviewed link would still fail this check.
+        assert((publicationCardSlice.match(/<router-link/g) || []).length === 2,
+            n('B3. AMENDED BY 0.9.447 — the Publication card in Distribution > Announcement/Discovery now carries exactly two router-links: the original discovery-relay link this section found, plus the new Nostr Publication Relays link this milestone\'s own verdict recommended'));
 
         // B3. The route it targets is really registered, resolving to the
         // real NostrRelaySettingsView component, not a 404 or a stub.
@@ -518,7 +526,16 @@ async function run() {
         // today.
         const compositionSource = await source('application/PublicationDistributionCommandComposition.js');
         assert(/executePublicationDistributionCommand/.test(compositionSource), n('F5a. the real composition root imports the single-relay command'));
-        assert(!compositionSource.includes('executeMultiRelayNostrPublicationDistributionCommand'), n('F5b. the real composition root does not import the multi-relay command at all — confirming, live, that this file (never NostrRelaySettingsView.js, never NostrRelayConfigurationStore.js) is the one missing seam'));
+        // AMENDED BY 0.9.447 — Nostr Publication Relay Set Configuration.
+        // This section's own point-in-time finding — that this exact file
+        // was the one missing seam — is what 0.9.447 closed, precisely as
+        // recommended: `composeMultiRelayNostrPublicationDistributionCommand()`
+        // now lives in this same file, alongside the pre-existing
+        // single-relay composer, never inside NostrRelaySettingsView.js or
+        // NostrRelayConfigurationStore.js (see tests/
+        // NostrPublicationRelaySetConfiguration.test.js, Section G, for the
+        // live proof that the new composer is wired end to end).
+        assert(compositionSource.includes('executeMultiRelayNostrPublicationDistributionCommand'), n('F5b. AMENDED BY 0.9.447 — the real composition root now imports the multi-relay command, closing the exact seam this section identified as missing'));
 
         console.log('\n=== SECTION F: UI COMPOSITION EXPERIMENT ===');
         console.log('✓ Section F: the existing Settings value CAN drive the real multi-relay command end to end for the one-element case, with no production change — but this only demonstrates the easy direction. A genuine relay SET has no existing store to read from at all (Section E3), and the concrete missing seam for wiring even a one-element case for real is application/PublicationDistributionCommandComposition.js, not the Settings page or its store.');

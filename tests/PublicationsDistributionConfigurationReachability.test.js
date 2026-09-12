@@ -105,8 +105,18 @@ async function run() {
     {
         assert(/<router-link\s+:to="discoveryDistributionConfigurationRoute\(entry\)"/.test(publicationCardSlice),
             n('A1. the Publication card carries exactly one dynamic router-link, resolved per-entry from discoveryDistributionConfigurationRoute(entry)'));
-        assert(countOccurrences(publicationCardSlice, '<router-link') === 1,
-            n('A2. the Publication card carries exactly one router-link — never two, never a duplicate for each substrate'));
+        // AMENDED BY 0.9.447 — Nostr Publication Relay Set Configuration.
+        // This milestone added a SECOND, additive contextual link — "Configure
+        // Nostr Publication Relays," pointed at the new
+        // /settings/nostr-publication-relays route — never a duplicate of
+        // the dynamic per-entry link above, and never a replacement for it:
+        // that link still resolves per-entry from
+        // discoveryDistributionConfigurationRoute(entry) exactly as before
+        // (still true, per A1 immediately above). See
+        // tests/NostrPublicationRelaySetConfiguration.test.js, Section J,
+        // for this new link's own dedicated coverage.
+        assert(countOccurrences(publicationCardSlice, '<router-link') === 2,
+            n('A2. AMENDED BY 0.9.447 — the Publication card now carries exactly two router-links: the original dynamic, per-entry discovery-relay link, plus the new, additive Nostr Publication Relays link'));
 
         assert(/<router-link to="\/settings\/arweave-gateway"/.test(snapshotCardSlice),
             n('A3. the Snapshot card links to /settings/arweave-gateway'));
@@ -191,8 +201,15 @@ async function run() {
         // handler of their own — @click triggers a distribution command
         // elsewhere in this same section (the existing buttons), never a
         // router-link.
+        // AMENDED BY 0.9.447 — Nostr Publication Relay Set Configuration.
+        // The count below grows from four to five for exactly the one new,
+        // additive link this milestone introduced (Section A2, above) — a
+        // second, distinctly-targeted link, never a fifth Settings-backed
+        // substrate/role of its own (Nostr Publication Relays configures the
+        // SAME "nostr" choice Section A's own table already names, just a
+        // different, genuinely separate destination for it).
         const routerLinkTags = distributionSection.match(/<router-link[^>]*>/g) || [];
-        assert(routerLinkTags.length === 4, n(`D1. exactly four router-link opening tags exist in the Distribution section (found ${routerLinkTags.length}) — one per Settings-backed substrate/role named in Section A`));
+        assert(routerLinkTags.length === 5, n(`D1. AMENDED BY 0.9.447 — exactly five router-link opening tags exist in the Distribution section (found ${routerLinkTags.length}) — the original four, plus the one new Nostr Publication Relays link`));
         for (const tag of routerLinkTags) {
             assert(!/@click/.test(tag), n(`D2[${tag.replace(/\s+/g, ' ').trim()}]. carries no @click handler of its own — navigation only, never a distribution trigger`));
         }
@@ -225,7 +242,6 @@ async function run() {
     // ===============================================================
     {
         const guardedFiles = [
-            'ui/router/index.js',
             'ui/views/ContentProviderSettingsView.js',
             'ui/views/ArweaveGatewaySettingsView.js',
             'ui/views/NostrRelaySettingsView.js'
@@ -235,7 +251,25 @@ async function run() {
             assert(diff === '', n(`E1[${file}]. byte-for-byte unchanged by this milestone — this milestone links to these Settings views, it never edits any of them or the router that already registered them`));
         }
 
-        console.log('✓ Section E: ui/router/index.js and all three Settings views this milestone links to are confirmed, via a real git diff against HEAD, completely untouched — every one of them remains independently reachable exactly as it was before this milestone, whether or not /publications exists at all.');
+        // AMENDED BY 0.9.447 — Nostr Publication Relay Set Configuration.
+        // ui/router/index.js is no longer checked for a zero-byte diff — a
+        // LATER, independent milestone (0.9.447) legitimately added one new
+        // route to it (/settings/nostr-publication-relays), which this
+        // originally-written check would otherwise reject forever. What
+        // matters for THIS milestone's own claim — that the three routes it
+        // itself links to are still registered, unmodified, exactly as they
+        // were — is checked directly instead: the exact three original route
+        // registrations are still present, byte-for-byte, in the current
+        // file.
+        const routerSource = await source('ui/router/index.js');
+        assert(routerSource.includes("{ path: '/settings/content-provider', name: 'content-provider-settings', component: ContentProviderSettingsView },"),
+            n('E1b. AMENDED BY 0.9.447 — the original /settings/content-provider route registration this milestone links to is still present, unmodified'));
+        assert(routerSource.includes("{ path: '/settings/arweave-gateway', name: 'arweave-gateway-settings', component: ArweaveGatewaySettingsView },"),
+            n('E1c. AMENDED BY 0.9.447 — the original /settings/arweave-gateway route registration this milestone links to is still present, unmodified'));
+        assert(routerSource.includes("{ path: '/settings/nostr-relay', name: 'nostr-relay-settings', component: NostrRelaySettingsView },"),
+            n('E1d. AMENDED BY 0.9.447 — the original /settings/nostr-relay route registration this milestone links to is still present, unmodified'));
+
+        console.log('✓ Section E: all three Settings views this milestone links to are confirmed, via a real git diff against HEAD, completely untouched, and their original route registrations in ui/router/index.js are confirmed still present and unmodified (that file itself now also carries one new, later, unrelated route — see AMENDED BY 0.9.447, above) — every one of them remains independently reachable exactly as it was before this milestone, whether or not /publications exists at all.');
     }
 
     // ===============================================================

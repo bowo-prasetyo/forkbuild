@@ -31,6 +31,18 @@ export default {
                     </router-link>
                 </li>
                 <li>
+                    <!-- 0.9.447 — Nostr Publication Relay Set Configuration.
+                         A genuinely separate page from "Nostr Relay" above:
+                         that page configures discovery only (see its own
+                         template text); this one configures the relay SET
+                         a signed announcement actually fans out to when
+                         distributing a Publication or Snapshot. -->
+                    <router-link to="/settings/nostr-publication-relays" class="network-settings-link">
+                        <span class="network-settings-link-title">Nostr Publication Relays</span>
+                        <span class="form-hint form-hint--neutral">Relays used to publish announcements when distributing a Publication or Snapshot over Nostr.</span>
+                    </router-link>
+                </li>
+                <li>
                     <router-link to="/settings/stun" class="network-settings-link">
                         <span class="network-settings-link-title">STUN Servers</span>
                         <span class="form-hint form-hint--neutral">Servers used for peer-to-peer connection negotiation.</span>
