@@ -6,6 +6,7 @@ const TX_HASH_PATTERN = /^0x[0-9a-fA-F]{64}$/;
 // 0.8.90 — Explicit Base Network & Account Observation.
 // 0.8.91 — Explicit Base Publication Transaction Construction.
 // 0.8.96 — Explicit Base Transaction Inclusion & Confirmation Observation.
+// 0.9.462 — Base Transaction Payload RPC Read.
 //
 // The concrete, read-only `rpcSource` base/BaseNetworkObserver.js and
 // base/BasePublicationTransactionPlanner.js each inject to actually reach
@@ -17,7 +18,7 @@ const TX_HASH_PATTERN = /^0x[0-9a-fA-F]{64}$/;
 // using the standard Ethereum JSON-RPC methods Base itself documents
 // supporting.
 //
-// NINE METHODS ARE WRAPPED, AND NO OTHERS. 0.8.90 shipped exactly
+// TEN METHODS ARE WRAPPED, AND NO OTHERS. 0.8.90 shipped exactly
 // `eth_chainId`/`eth_getBalance`, read-only observation of a chain and an
 // account. 0.8.91 added exactly the four further reads a transaction PLAN
 // needs to construct itself — `eth_getTransactionCount`, `eth_estimateGas`,
@@ -25,16 +26,21 @@ const TX_HASH_PATTERN = /^0x[0-9a-fA-F]{64}$/;
 // write — `eth_sendRawTransaction`. 0.8.96 adds exactly the two further
 // reads `base/BaseTransactionInclusionObserver.js` needs to observe
 // whether an already-broadcast transaction has been included in the
-// chain — `eth_getTransactionReceipt`, `eth_blockNumber` — and stops
-// there. Still no `eth_getTransactionByHash`, still no
-// `eth_getBlockByNumber`, and still no other method Base's JSON-RPC
-// surface exposes: every method here still reads or submits exactly one
-// fact — no polling, no confirmation-count POLICY of any kind (the two new
-// methods each answer one question; whether to call either of them again,
-// and when, is entirely `base/BaseTransactionInclusionObserver.js`'s own
-// caller's decision — see that file's own header). See this file's own
-// constructor for why nothing resembling a fee-bump or replacement path
-// exists here to even accidentally call.
+// chain — `eth_getTransactionReceipt`, `eth_blockNumber`. 0.9.462 adds
+// exactly ONE further read — `eth_getTransactionByHash` — the one method
+// tests/BaseTransactionProofVerificationCapabilityAudit.test.js (0.9.461)
+// found genuinely missing: every other method here answers WHETHER or
+// WHERE a transaction landed, never WHAT it carried. `fetchTransactionByHash()`
+// is the one read that returns a transaction's own `input` payload — still
+// undecoded, uninterpreted raw hex, exactly like every other quantity this
+// class already passes through rather than makes sense of. Still no
+// `eth_getBlockByNumber`, and still no other method Base's JSON-RPC surface
+// exposes: every method here still reads or submits exactly one fact — no
+// polling, no confirmation-count POLICY of any kind (each read method
+// answers one question; whether to call it again, and when, is entirely
+// its own caller's decision — see e.g. `base/BaseTransactionInclusionObserver.js`'s
+// own header). See this file's own constructor for why nothing resembling
+// a fee-bump or replacement path exists here to even accidentally call.
 //
 // `fetchImpl` is the identical injection point every HTTP-speaking adapter
 // in this codebase already establishes (anchoring/
@@ -81,6 +87,16 @@ const TX_HASH_PATTERN = /^0x[0-9a-fA-F]{64}$/;
 //                          receipt object.
 //   fetchLatestBlockNumber() -> { available: true, blockNumber }
 //                    | { available: false, reason }
+//   fetchTransactionByHash(txid) -> { available: true, found: true, hash, input }
+//                    | { available: true, found: false }
+//                        — the endpoint was reached and genuinely reports no
+//                          transaction exists (yet) for this txid — never
+//                          treated as unavailable, exactly mirroring
+//                          `fetchTransactionReceipt()`'s own `found: false`.
+//                    | { available: false, reason }
+//                        — cannot presently tell: unreachable, a timeout, a
+//                          non-2xx response, or an incomplete/malformed
+//                          transaction object.
 //
 // NEVER THROWS. Every failure this class can distinguish — an unreachable
 // host, a timeout, a non-2xx response, a JSON-RPC error object, or an
@@ -324,6 +340,52 @@ export class BaseJsonRpcClient {
             return { available: false, reason: `${this._rpcUrl} returned a malformed eth_blockNumber result` };
         }
         return { available: true, blockNumber };
+    }
+
+    // 0.9.462 — Base Transaction Payload RPC Read.
+    //
+    // Resolves to exactly one of:
+    //
+    //   { available: true, found: true, hash, input }
+    //       — the endpoint returned a genuine transaction object for this
+    //         exact `txid`. `input` is the transaction's own raw calldata,
+    //         an unmodified `0x...`-prefixed hex string — this method
+    //         decodes NO further meaning from it (no ABI decoding, no
+    //         contentHash extraction, no publication semantics of any
+    //         kind — see this file's own header).
+    //   { available: true, found: false }
+    //       — the endpoint was reached and its own JSON-RPC result was
+    //         genuinely `null`: Base itself reports no transaction exists
+    //         for this txid (yet). A real, positive, available answer —
+    //         never confused with the endpoint being unreachable, exactly
+    //         mirroring `fetchTransactionReceipt()`'s own `found: false`.
+    //   { available: false, reason }
+    //       — cannot presently tell: unreachable, a timeout, a non-2xx
+    //         response, or a transaction object missing/malformed on one
+    //         of its required fields.
+    //
+    // `txid` is passed through unmodified — this method encodes nothing
+    // and validates nothing about its shape beyond what `_call()` already
+    // requires to serialize a request, exactly like `fetchTransactionReceipt()`
+    // above. Never throws — see this file's own header.
+    async fetchTransactionByHash(txid) {
+        const result = await this._call('eth_getTransactionByHash', [txid]);
+        if (!result.ok) return { available: false, reason: result.reason };
+
+        if (result.value === null || typeof result.value === 'undefined') {
+            return { available: true, found: false };
+        }
+        if (typeof result.value !== 'object') {
+            return { available: false, reason: `${this._rpcUrl} returned a malformed eth_getTransactionByHash result for ${txid}` };
+        }
+
+        const hash = typeof result.value.hash === 'string' && result.value.hash ? result.value.hash : null;
+        const input = typeof result.value.input === 'string' ? result.value.input : null;
+        if (hash === null || input === null) {
+            return { available: false, reason: `${this._rpcUrl} returned an incomplete eth_getTransactionByHash result for ${txid}` };
+        }
+
+        return { available: true, found: true, hash, input };
     }
 
     async _call(method, params) {
