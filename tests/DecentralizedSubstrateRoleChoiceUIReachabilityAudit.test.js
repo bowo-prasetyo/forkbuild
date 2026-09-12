@@ -146,8 +146,17 @@ async function run() {
         assert(distributionRegistryFiles.length === 0, n(`A5. no DiscoveryPublisherRegistry/AnnouncementRegistry/DistributionRegistry class exists anywhere in application/ (found ${JSON.stringify(distributionRegistryFiles)}) — no third, equivalent generic mechanism exists for this role's own write action`));
 
         // Its own real write action instead takes one fixed options pair.
+        //
+        // AMENDED BY 0.9.430 — Announcement/Discovery Provider Selection
+        // Reachability. `discoveryProvider`/`arweaveAnnouncementPublisherOptions`
+        // now sit between the two fields this assertion originally matched
+        // contiguously — still a fixed, explicit options shape a caller
+        // states directly (never a registry lookup keyed by an opaque
+        // identifier); see `application/PublicationDistributionRuntimeComposition.js`'s
+        // own header, "discoveryProvider itself is the one new option...
+        // it is not, and does not require, a registry lookup."
         const orchestratorSource = await readSource('application/PublicationDistributionOrchestrator.js');
-        assert(/arweaveUploaderOptions,\s*\n\s*nostrPublisherOptions/.test(orchestratorSource), n('A6. application/PublicationDistributionOrchestrator.js (0.9.58) takes one fixed arweaveUploaderOptions/nostrPublisherOptions pair per call — an options object, never a registry lookup keyed by a caller-chosen identifier'));
+        assert(/arweaveUploaderOptions,\s*\n\s*discoveryProvider,\s*\n\s*nostrPublisherOptions/.test(orchestratorSource), n('A6. application/PublicationDistributionOrchestrator.js (0.9.58/0.9.430) takes one fixed arweaveUploaderOptions/discoveryProvider/nostrPublisherOptions/arweaveAnnouncementPublisherOptions set per call — an options object plus an explicit provider-selection string, never a registry lookup keyed by a caller-chosen identifier'));
         assert(!/\.register\(|\.get\(providerKey\)|Registry\b/.test(codeOnly(orchestratorSource)), n('A7. confirmed structurally: no register()/get()/Registry vocabulary of any kind appears in its own real code'));
 
         // Real registered provider counts today, from the one real
@@ -157,9 +166,16 @@ async function run() {
         const proofPublisherCount = /publishers: \[bitcoinAnchorPublisher\]/.test(mainSource) ? 1 : 0;
         assert(contentProviderCount === 2, n(`A8. CONTENT has two real registered providers today (found ${contentProviderCount})`));
         assert(proofPublisherCount === 1, n(`A9. PROOF_AND_ANCHORING has exactly one real registered publisher today (found ${proofPublisherCount}) — unchanged since 0.9.304`));
+        // AMENDED BY 0.9.430 — Announcement/Discovery Provider Selection
+        // Reachability. `arweaveAnnouncementPublisherOptions` joined the
+        // fixed pair as a third, still-fixed, still-composed-exactly-once
+        // field — "how many are registered" remains not a meaningful
+        // question: there is still no registry, only ui/main.js's own one
+        // real composition call, now producing three provider-facing
+        // options instead of two.
         const distributionIsSingleFixedPair = /const publicationDistributionCommand = composePublicationDistributionCommand\(\{/.test(mainSource)
-            && /arweaveUploaderOptions,\s*\n\s*nostrPublisherOptions\s*\n\}\);/.test(mainSource);
-        assert(distributionIsSingleFixedPair, n('A10. ANNOUNCEMENT_AND_DISCOVERY\'s one real write action is composed exactly once, from exactly one Arweave/Nostr pair — "how many are registered" is not even a meaningful question for this role\'s own real action, because there is no registry to count entries in'));
+            && /arweaveUploaderOptions,\s*\n\s*nostrPublisherOptions,\s*\n\s*arweaveAnnouncementPublisherOptions\s*\n\}\);/.test(mainSource);
+        assert(distributionIsSingleFixedPair, n('A10. ANNOUNCEMENT_AND_DISCOVERY\'s one real write action is composed exactly once, from exactly one Arweave-uploader/Nostr/Arweave-announcement options set — "how many are registered" is not even a meaningful question for this role\'s own real action, because there is no registry to count entries in'));
 
         console.log('\n=== SECTION A: ROLE / PROVIDER / MECHANISM CENSUS ===');
         console.log(`  CONTENT: ${contentProviderCount} real providers, generic registry-driven mechanism present`);

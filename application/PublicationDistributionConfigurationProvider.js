@@ -113,6 +113,30 @@
 //   no relationship to `ui/` beyond being called from it.
 // - **Combining Arweave and Nostr configuration into one shape.** See "Two
 //   independent resolvers," above.
+//
+// AMENDED BY 0.9.430 — Announcement/Discovery Provider Selection
+// Reachability. `resolveArweaveAnnouncementPublisherOptions()` joins the two
+// resolvers above as a THIRD, exactly as independent — Arweave-as-content-
+// uploader (`resolveArweaveUploaderOptions`) and Arweave-as-announcement-
+// publisher (`resolveArweaveAnnouncementPublisherOptions`) share a substrate
+// but not a shape, and this file keeps that separation identically: no
+// field either resolver reads off the other's own input, and a caller
+// wanting only one of the two Arweave roles configured calls only that one
+// resolver. It decides the identical question the other two already
+// decide — "is there enough here to even attempt this substrate?" — the
+// same duck-typed way: `new ArweaveAnnouncementPublisher()` (0.9.428)
+// itself already refuses construction without an `uploadTaggedTransaction`
+// function and a non-empty `discoveryTag`, so this resolver requires
+// exactly those two and forwards `gatewayUrl`/`tagName` verbatim,
+// undefaulted, unread, exactly like `resolveArweaveUploaderOptions()`'s own
+// `gatewayUrl`/`fetchImpl` and `resolveNostrPublisherOptions()`'s own
+// `relayUrl`/`tagName`/`kind`. `undefined`, never `null`, is returned for
+// the identical reason documented above: preserving 0.9.428's own friendly
+// "an uploadTaggedTransaction function and a discoveryTag are required"
+// throw rather than regressing it into a `Cannot destructure` message.
+// No concrete `uploadTaggedTransaction` implementation exists anywhere in
+// this codebase yet — see "Nothing real to resolve yet," above, held here
+// unchanged for this third resolver.
 
 // resolveArweaveUploaderOptions({ signer, gatewayUrl, fetchImpl }) ->
 //   options object | undefined. See this file's own header for the full
@@ -138,4 +162,20 @@ export function resolveNostrPublisherOptions({ publishImpl = null, relayUrl, dis
         return undefined;
     }
     return Object.freeze({ publishImpl, relayUrl, discoveryTag, tagName, kind });
+}
+
+// resolveArweaveAnnouncementPublisherOptions({ uploadTaggedTransaction,
+//   gatewayUrl, tagName, discoveryTag }) -> options object | undefined.
+//   0.9.430 — see this file's own header for the full contract: `undefined`
+//   unless `uploadTaggedTransaction` is a function AND `discoveryTag` is a
+//   non-empty string; otherwise every field forwarded verbatim, unread,
+//   undefaulted.
+export function resolveArweaveAnnouncementPublisherOptions({ uploadTaggedTransaction = null, gatewayUrl, tagName, discoveryTag } = {}) {
+    if (typeof uploadTaggedTransaction !== 'function') {
+        return undefined;
+    }
+    if (typeof discoveryTag !== 'string' || discoveryTag.trim().length === 0) {
+        return undefined;
+    }
+    return Object.freeze({ uploadTaggedTransaction, gatewayUrl, tagName, discoveryTag });
 }

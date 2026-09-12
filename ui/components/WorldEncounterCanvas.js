@@ -2149,6 +2149,75 @@ function resolvedEncounterSelectionsEqual(previousResolvedSelection, nextResolve
         && previousResolvedSelection.origin === nextResolvedSelection.origin;
 }
 
+// 0.9.430 — Announcement/Discovery Provider Selection Reachability.
+//
+// 0.9.429's own audit found `application/PublicationDistributionRuntimeComposition.js`'s
+// own `discoveryProvider: 'nostr' | 'arweave'` selection (0.9.428) to be
+// real, correct, and completely unreachable from this component's own
+// "Distribute Publication" action — every real click silently distributed
+// on Nostr, with no control anywhere offering a choice. This milestone is
+// that control, and nothing more:
+//
+//   Distribution panel (0.9.100/0.9.104, already rendered below)
+//        │
+//        │  new "Announcement / Discovery substrate" <select>   ★ (THIS)
+//        ▼
+//   selectedDiscoveryProvider = 'nostr' | 'arweave'   (page-local UI state)
+//        │
+//        │  click "Distribute Publication"
+//        ▼
+//   distributeSelectedPublication()   (0.9.104, amended)
+//        │
+//        ▼
+//   distributionCommand(publication, selectedDiscoveryProvider)
+//        │                                    ★ the one new argument
+//        ▼
+//   (WorldView.js's own distributeWorldEncounterPublication(), amended;
+//    ultimately application/PublicationDistributionRuntimeComposition.js's
+//    own already-real selection)
+//
+// THIS COMPONENT CHOOSES NOTHING — IT ONLY OFFERS THE CHOICE. Exactly like
+// every other injected command this file already holds
+// (`distributionCommand`/`snapshotDistributionCommand`/`discoveryCommand`),
+// this milestone constructs no Arweave client, no Nostr client, and knows
+// nothing about `gatewayUrl`/`tagName`/`uploadTaggedTransaction` — see
+// `application/PublicationDistributionRuntimeComposition.js`'s own header,
+// "Keep Arweave options out of the UI," held here as this component's own
+// restraint too. `selectedDiscoveryProvider` is a bare string, the same
+// vocabulary that file's own `discoveryProvider` parameter already accepts,
+// never a stored preference or registry lookup keyed by role of any kind —
+// this milestone reaches no file under `core/RoleProvider*.js`.
+//
+// EXACTLY ONE SELECTION, NEVER FAN-OUT — THE SAME INVARIANT
+// `PublicationDistributionRuntimeComposition.js`'s OWN HEADER ALREADY
+// HOLDS, ONE LAYER UP. The new control is a single `<select>`, never a
+// pair of checkboxes; `selectedDiscoveryProvider` is always exactly one of
+// `'nostr'`/`'arweave'`, never an array, and this component sends exactly
+// one `distributionCommand()` call per click, exactly as 0.9.104 already
+// does.
+//
+// DEFAULTS TO `'nostr'` — EVERY PRE-0.9.430 MOUNT BEHAVES IDENTICALLY.
+// `selectedDiscoveryProvider` starts `'nostr'` in `data()`, below, matching
+// `composePublicationDistributionRuntime()`'s own default exactly; a
+// Wanderer who never touches the new control gets precisely today's
+// existing behavior, unchanged.
+//
+// DELIBERATELY EXCLUDED — NOT THIS MILESTONE.
+// - **Endpoint/relay/gateway configuration UI of any kind** (`gatewayUrl`,
+//   `tagName`, `relayUrl`, `uploadTaggedTransaction`, a signer/wallet
+//   picker). See "This component chooses nothing," above — those remain
+//   entirely `ui/main.js`'s own composition-root concern.
+// - **Multi-substrate selection, fan-out, or fallback.** See "Exactly one
+//   selection, never fan-out," above.
+// - **A second Distribution action, panel, or command.** The existing
+//   `distributionCommand`/`distributeSelectedPublication()` seam is
+//   extended with one argument — never duplicated.
+// - **`ui/components/OwnPublicationPanel.js`'s own, separate distribution
+//   action.** Unmodified by this milestone; it keeps calling
+//   `publicationDistributionCommand(publication)` with no
+//   `discoveryProvider` of its own, which still resolves to `'nostr'`
+//   exactly as it already did.
+
 export default {
     name: 'WorldEncounterCanvas',
     components: { WorldEncounterMarker, WandererMarker },
@@ -2230,18 +2299,25 @@ export default {
             type: Object,
             default: null
         },
-        // 0.9.104 — optional. A `(publication) -> Promise<PublicationDistributionResult
+        // 0.9.104 — optional. A `(publication, discoveryProvider) -> Promise<PublicationDistributionResult
         // | null>` function, called with exactly the loaded `Publication`
         // domain object for the CURRENTLY selected, local-origin
         // PUBLICATION encounter — see this file's own header, "0.9.104 —
         // World View Publication Distribution Action." `null` by default:
         // a mount with no `distributionCommand` supplied renders no
         // distribution action at all. Never constructed by this component
-        // itself, and never called with anything but that one `Publication`
-        // argument — every other input a real distribution needs
+        // itself — every other input a real distribution needs
         // (`serializedMaterial`, `materialStorage`, `arweaveUploaderOptions`,
-        // `nostrPublisherOptions`) stays entirely this function's own,
-        // caller-side concern.
+        // `nostrPublisherOptions`, `arweaveAnnouncementPublisherOptions`)
+        // stays entirely this function's own, caller-side concern.
+        //
+        // AMENDED BY 0.9.430 — Announcement/Discovery Provider Selection
+        // Reachability. `discoveryProvider` is a new, optional second
+        // argument — this component's own `selectedDiscoveryProvider`
+        // (below), the Wanderer's explicit Nostr/Arweave choice. This
+        // component computes no value for it beyond forwarding that page-
+        // local string verbatim; see this file's own header, "0.9.430 —
+        // Announcement/Discovery Provider Selection Reachability."
         distributionCommand: {
             type: Function,
             default: null
@@ -2450,6 +2526,17 @@ export default {
             // stale response," mirroring `materialInspectionRequestId`
             // (0.9.39) exactly, one layer over.
             distributionRequestId: 0,
+            // 0.9.430 — the Wanderer's own freely editable choice of
+            // Announcement/Discovery substrate for the NEXT "Distribute
+            // Publication" click, page-local UI state only — exactly like
+            // `wandererPosition`/`selectedEncounter` above, never persisted,
+            // never synchronized. Defaults to `'nostr'`, matching the
+            // identical default `PublicationDistributionRuntimeComposition.js`
+            // itself already holds, so a mount that never touches this
+            // control behaves exactly as every pre-0.9.430 mount already
+            // did. See this file's own header, "0.9.430 — Announcement/
+            // Discovery Provider Selection."
+            selectedDiscoveryProvider: 'nostr',
             // 0.9.138 — ephemeral UI interaction state only, mirroring
             // `distributionExecuting`/`distributionError`/`distributionRequestId`
             // (0.9.104) exactly, one collaborator over. `true` for exactly
@@ -3292,7 +3379,11 @@ export default {
         // (`distributablePublication` is `null`), no `distributionCommand`
         // was supplied, or a call is already in flight for this selection —
         // see this file's own header, "repeated clicks never start a
-        // second, overlapping call." Wrapping the call in
+        // second, overlapping call." AMENDED BY 0.9.430: calls
+        // `distributionCommand` with `this.selectedDiscoveryProvider` as a
+        // second argument — the Wanderer's own current substrate choice —
+        // never anything this method itself derives or interprets.
+        // Wrapping the call in
         // `Promise.resolve().then(...)` catches a SYNCHRONOUS construction
         // throw exactly the same way as an asynchronous rejection — see
         // this file's own header, "a genuine rejection (or a synchronous
@@ -3313,7 +3404,7 @@ export default {
             const requestId = this.distributionRequestId;
 
             Promise.resolve()
-                .then(() => this.distributionCommand(publication))
+                .then(() => this.distributionCommand(publication, this.selectedDiscoveryProvider))
                 .catch(() => {
                     if (requestId === this.distributionRequestId) {
                         this.distributionError = 'Distribution could not be completed.';
@@ -4219,6 +4310,27 @@ export default {
                     <dt>Discovery</dt>
                     <dd>{{ distributionDiscoveryState }}</dd>
                 </dl>
+
+                <!-- 0.9.430 — the Wanderer's own explicit Announcement/
+                     Discovery substrate choice for the NEXT click below —
+                     see this file's own header, "0.9.430 — Announcement/
+                     Discovery Provider Selection Reachability." Rendered
+                     alongside the action it configures; never its own
+                     panel, never a global settings surface. -->
+                <label
+                    v-if="distributionCommand"
+                    class="world-encounter-distribution-provider-label"
+                >
+                    Announcement / Discovery substrate:
+                    <select
+                        v-model="selectedDiscoveryProvider"
+                        class="form-select world-encounter-distribution-provider-select"
+                        :disabled="distributionExecuting"
+                    >
+                        <option value="nostr">Nostr</option>
+                        <option value="arweave">Arweave</option>
+                    </select>
+                </label>
 
                 <!-- 0.9.104 — a request/attempt action, never a claim of
                      success; see this file's own header, "0.9.104 — World

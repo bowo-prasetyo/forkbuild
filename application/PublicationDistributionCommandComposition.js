@@ -70,20 +70,39 @@ import { executePublicationDistributionCommand } from './PublicationDistribution
 // - **A UI trigger, a class, or a singleton.** A plain function returning a
 //   plain function, called once in `ui/main.js`, exactly the way the
 //   closure it replaces already was.
+//
+// AMENDED BY 0.9.430 — Announcement/Discovery Provider Selection
+// Reachability. `arweaveAnnouncementPublisherOptions` (0.9.428) joins
+// `arweaveUploaderOptions`/`nostrPublisherOptions` as a THIRD
+// composition-root collaborator, pre-bound here exactly the same way —
+// always taken from this call's own arguments, never from `request`, per
+// "the three composition-root collaborators always win," above, now
+// extended to a third. `discoveryProvider` is deliberately NOT added to
+// that pre-bound set: it is the one field this whole milestone exists to
+// let a CALLER choose per request — see `application/
+// PublicationDistributionRuntimeComposition.js`'s own header, "discoveryProvider
+// itself is the one new option... a caller states its choice explicitly."
+// It therefore reaches `executePublicationDistributionCommand()` purely
+// through `...request`'s own existing, unmodified spread, exactly like
+// `publication`/`serializedMaterial`/`materialStorage` already do — this
+// file adds no new field, no new default, and no new validation for it.
 
 // composePublicationDistributionCommand({ lifecycleStore,
-//   arweaveUploaderOptions, nostrPublisherOptions }) -> (request) ->
+//   arweaveUploaderOptions, nostrPublisherOptions,
+//   arweaveAnnouncementPublisherOptions }) -> (request) ->
 //   Promise<PublicationDistributionResult | null>. See this file's own
 //   header for the full contract — the returned function forwards `request`
 //   verbatim to `executePublicationDistributionCommand()` (0.9.103,
-//   unmodified), with `arweaveUploaderOptions`/`nostrPublisherOptions`/
-//   `lifecycleStore` always taken from THIS call's own arguments, never
-//   from `request`.
-export function composePublicationDistributionCommand({ lifecycleStore, arweaveUploaderOptions, nostrPublisherOptions } = {}) {
+//   amended by 0.9.430), with `arweaveUploaderOptions`/`nostrPublisherOptions`/
+//   `arweaveAnnouncementPublisherOptions`/`lifecycleStore` always taken from
+//   THIS call's own arguments, never from `request` — `request`'s own
+//   `discoveryProvider` (0.9.430), when supplied, passes through unchanged.
+export function composePublicationDistributionCommand({ lifecycleStore, arweaveUploaderOptions, nostrPublisherOptions, arweaveAnnouncementPublisherOptions } = {}) {
     return (request) => executePublicationDistributionCommand({
         ...request,
         arweaveUploaderOptions,
         nostrPublisherOptions,
+        arweaveAnnouncementPublisherOptions,
         lifecycleStore
     });
 }

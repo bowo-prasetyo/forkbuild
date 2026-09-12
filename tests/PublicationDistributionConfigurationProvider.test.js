@@ -124,9 +124,16 @@ async function run() {
         assert(!codeOnly.includes('window') && !codeOnly.includes('process.env') && !codeOnly.includes('import.meta.env') && !codeOnly.includes('localStorage'),
             '30. never reads a browser global, an environment variable, or persisted storage itself — deciding where real values originate stays entirely a caller\'s own concern');
         assert(!/return\s+null\s*;/.test(codeOnly), '31. an unresolvable substrate returns undefined, never null — see this file\'s own header on why that distinction matters');
-        assert((codeOnly.match(/\bexport\s+function\b/g) || []).length === 2, '32. exports exactly two functions — no combined "credentials" shape');
+        // AMENDED BY 0.9.430 — Announcement/Discovery Provider Selection
+        // Reachability. `resolveArweaveAnnouncementPublisherOptions()`
+        // joined the original two resolvers as a third, independent
+        // resolver (Arweave-as-announcement-publisher, never combined with
+        // Arweave-as-content-uploader's own shape) — see this file's own
+        // header, "AMENDED BY 0.9.430." "No combined credentials shape"
+        // still holds: three separate functions, still zero shared field.
+        assert((codeOnly.match(/\bexport\s+function\b/g) || []).length === 3, '32. exports exactly three functions — no combined "credentials" shape, even with a third resolver');
 
-        console.log('✓ Section F: architectural regression — two independent, side-effect-free resolver functions, nothing more');
+        console.log('✓ Section F: architectural regression — three independent, side-effect-free resolver functions, nothing more');
     }
 
     console.log('\nAll PublicationDistributionConfigurationProvider tests passed.');

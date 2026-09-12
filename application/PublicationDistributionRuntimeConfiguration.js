@@ -1,4 +1,4 @@
-import { resolveArweaveUploaderOptions, resolveNostrPublisherOptions } from './PublicationDistributionConfigurationProvider.js';
+import { resolveArweaveUploaderOptions, resolveNostrPublisherOptions, resolveArweaveAnnouncementPublisherOptions } from './PublicationDistributionConfigurationProvider.js';
 
 // 0.9.106 — Publication Distribution Runtime Configuration.
 //
@@ -111,15 +111,27 @@ import { resolveArweaveUploaderOptions, resolveNostrPublisherOptions } from './P
 //   two-field grouping this file itself introduces.** See "One runtime
 //   configuration shape, never a combined 'credentials' object," above.
 
-// resolvePublicationDistributionRuntimeConfiguration({ arweave, nostr }) ->
-//   { arweaveUploaderOptions, nostrPublisherOptions }. See this file's own
-//   header for the full contract: `arweave`/`nostr` (each optional,
-//   defaulted to `{}`) are forwarded verbatim to `resolveArweaveUploaderOptions()`/
-//   `resolveNostrPublisherOptions()` (0.9.105, unmodified) — this function
-//   performs no sufficiency check of its own.
-export function resolvePublicationDistributionRuntimeConfiguration({ arweave, nostr } = {}) {
+// AMENDED BY 0.9.430 — Announcement/Discovery Provider Selection
+// Reachability. `arweaveAnnouncement` joins `arweave`/`nostr` as a THIRD,
+// equally independent section — `resolveArweaveAnnouncementPublisherOptions()`
+// (0.9.430, `application/PublicationDistributionConfigurationProvider.js`)
+// is called exactly the same way its two siblings already are, on its own
+// field, defaulted only to `{}` when absent. See "One runtime configuration
+// shape, never a combined credentials object," above, now held across
+// three sections instead of two.
+//
+// resolvePublicationDistributionRuntimeConfiguration({ arweave, nostr,
+//   arweaveAnnouncement }) -> { arweaveUploaderOptions, nostrPublisherOptions,
+//   arweaveAnnouncementPublisherOptions }. See this file's own header for
+//   the full contract: `arweave`/`nostr`/`arweaveAnnouncement` (each
+//   optional, defaulted to `{}`) are forwarded verbatim to
+//   `resolveArweaveUploaderOptions()`/`resolveNostrPublisherOptions()`/
+//   `resolveArweaveAnnouncementPublisherOptions()` (0.9.105/0.9.430,
+//   unmodified) — this function performs no sufficiency check of its own.
+export function resolvePublicationDistributionRuntimeConfiguration({ arweave, nostr, arweaveAnnouncement } = {}) {
     return Object.freeze({
         arweaveUploaderOptions: resolveArweaveUploaderOptions(arweave || {}),
-        nostrPublisherOptions: resolveNostrPublisherOptions(nostr || {})
+        nostrPublisherOptions: resolveNostrPublisherOptions(nostr || {}),
+        arweaveAnnouncementPublisherOptions: resolveArweaveAnnouncementPublisherOptions(arweaveAnnouncement || {})
     });
 }

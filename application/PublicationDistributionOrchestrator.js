@@ -197,32 +197,56 @@ import { executePublicationDistribution } from './PublicationDistributionExecuto
 //   or service) remains a separate, later, unscheduled step, the same
 //   restraint 0.9.36's, 0.9.43's, and 0.9.47's own headers already hold
 //   for their own composed results.
+//
+// AMENDED BY 0.9.430 — Announcement/Discovery Provider Selection
+// Reachability. 0.9.429's own audit found this file to be the exact
+// MECHANISM_GAP standing between a real caller and 0.9.428's already-real
+// `discoveryProvider: 'arweave'` selection: this function accepted
+// `arweaveUploaderOptions`/`nostrPublisherOptions` only, so
+// `discoveryProvider` and `arweaveAnnouncementPublisherOptions` were
+// silently dropped by ordinary destructuring before ever reaching
+// `composePublicationDistributionRuntime()` (0.9.47/0.9.428), and every
+// real caller always got `'nostr'`. This function now accepts both and
+// forwards each verbatim, unread — the identical "translate call inputs
+// into 0.9.47's own construction call, add nothing of its own" restraint
+// this file's header already holds for every other field, merely extended
+// to the two fields 0.9.428 itself added one layer down. No default is
+// added here for `discoveryProvider` — `composePublicationDistributionRuntime()`
+// remains the one place `'nostr'` is decided, so an omitted
+// `discoveryProvider` (every existing caller, unchanged) still resolves to
+// exactly that default, several layers down, exactly as it already did.
 
-// Composes `composePublicationDistributionRuntime()` (0.9.47) with
+// Composes `composePublicationDistributionRuntime()` (0.9.47/0.9.428) with
 // `executePublicationDistribution()` (0.9.49) into one Publication-facing
 // call — see this file's own header for the full contract. `publication`,
 // `serializedMaterial`, and `materialStorage` are forwarded verbatim to
-// `executePublicationDistribution()`; `arweaveUploaderOptions` and
-// `nostrPublisherOptions` are forwarded verbatim to
+// `executePublicationDistribution()`; `arweaveUploaderOptions`,
+// `discoveryProvider`, `nostrPublisherOptions`, and
+// `arweaveAnnouncementPublisherOptions` (0.9.430) are forwarded verbatim to
 // `composePublicationDistributionRuntime()`. Returns exactly the `Promise`
 // `executePublicationDistribution()` itself returns — resolving to a
 // `PublicationDistributionResult` or `null` per 0.9.48's own contract,
 // rejecting exactly when that call's own collaborators reject. Throws
 // synchronously, before any collaborator is constructed or called, when
-// `arweaveUploaderOptions` or `nostrPublisherOptions` is malformed in a way
-// 0.9.47's own composed constructors already reject (e.g. a missing
-// `signer` or `discoveryTag`) — see "A construction or contract failure
-// propagates," above.
+// `arweaveUploaderOptions`, `nostrPublisherOptions`, or
+// `arweaveAnnouncementPublisherOptions` is malformed, or `discoveryProvider`
+// is unrecognized, in a way 0.9.47's own composed constructors/selection
+// already reject — see "A construction or contract failure propagates,"
+// above.
 export function orchestratePublicationDistribution({
     publication,
     serializedMaterial,
     materialStorage,
     arweaveUploaderOptions,
-    nostrPublisherOptions
+    discoveryProvider,
+    nostrPublisherOptions,
+    arweaveAnnouncementPublisherOptions
 } = {}) {
     const runtime = composePublicationDistributionRuntime({
         arweaveUploaderOptions,
-        nostrPublisherOptions
+        discoveryProvider,
+        nostrPublisherOptions,
+        arweaveAnnouncementPublisherOptions
     });
 
     return executePublicationDistribution({

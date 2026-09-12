@@ -483,10 +483,16 @@ async function run() {
         const worldViewCode = await codeOnlySource('ui/views/WorldView.js');
         assert(worldViewCode.includes("inject('publicationDistributionCommand', null)"),
             '34. WorldView.js still injects the SAME app-wide publicationDistributionCommand, unmodified by this milestone');
-        assert(worldViewCode.includes('function distributeWorldEncounterPublication(publication)') &&
+        // AMENDED BY 0.9.430 — Announcement/Discovery Provider Selection
+        // Reachability. distributeWorldEncounterPublication() gained a new,
+        // optional discoveryProvider parameter — this milestone's own
+        // EditorView wrapper (Section E, above) still mirrors whatever
+        // SHAPE WorldView.js's own wrapper currently has; 0.9.430 amends
+        // both together, never one without the other.
+        assert(worldViewCode.includes('function distributeWorldEncounterPublication(publication, discoveryProvider)') &&
                worldViewCode.includes('return publicationDistributionCommand({') &&
                worldViewCode.includes('serializedMaterial: JSON.stringify(publication.toJSON())'),
-            '35. WorldView.js\'s own distributeWorldEncounterPublication() is byte-for-byte unchanged — this milestone\'s EditorView wrapper mirrors its SHAPE, never edits it');
+            '35. WorldView.js\'s own distributeWorldEncounterPublication() is unchanged except for 0.9.430\'s own discoveryProvider parameter — this milestone\'s EditorView wrapper mirrors its SHAPE, never edits it');
 
         const mainCode = await codeOnlySource('ui/main.js');
         const provideMatches = mainCode.match(/app\.provide\('publicationDistributionCommand', publicationDistributionCommand\)/g) || [];

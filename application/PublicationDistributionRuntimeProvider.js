@@ -132,12 +132,32 @@
 //   can be attempted.** See "Two independent sections," above — the
 //   existing orchestrator alone decides what supplied capabilities mean.
 
+// AMENDED BY 0.9.430 — Announcement/Discovery Provider Selection
+// Reachability. `uploadTaggedTransaction` joins this file's own flat
+// vocabulary, and `arweaveAnnouncement: { uploadTaggedTransaction,
+// gatewayUrl, tagName, discoveryTag }` joins `arweave`/`nostr` as a THIRD
+// regrouped section — still "a regrouping, never a new sufficiency check,"
+// above: whether `uploadTaggedTransaction` is actually usable remains
+// entirely `resolveArweaveAnnouncementPublisherOptions()`'s own decision,
+// one layer down. `gatewayUrl`/`tagName`/`discoveryTag` are deliberately
+// the SAME flat fields the `arweave`/`nostr` sections already read — never
+// three independently-typed literals — because a caller (`ui/main.js`)
+// genuinely means the same Arweave gateway and the same campaign discovery
+// tag for both Arweave roles and for Nostr, exactly the one named constant
+// `ui/main.js`'s own header already insists on ("no second source of
+// truth"). This is the one deliberate exception to "two independent
+// sections, still never a combined credentials shape," above: sharing a
+// FIELD NAME across sections is not combining them into one shape — each
+// section still reads only the fields it needs and still resolves
+// independently, one call to one 0.9.105 resolver, in
+// `PublicationDistributionRuntimeConfiguration.js`.
 // createPublicationDistributionRuntimeProvider({ signer, gatewayUrl,
-//   fetchImpl, publishImpl, relayUrl, discoveryTag, tagName, kind }) ->
-//   { resolveRuntimeCapabilities() -> { arweave, nostr } }. See this file's
-//   own header for the full contract: every field is forwarded verbatim
-//   into whichever of the two sections it belongs to — no field is read,
-//   validated, or defaulted by this function.
+//   fetchImpl, publishImpl, relayUrl, discoveryTag, tagName, kind,
+//   uploadTaggedTransaction }) -> { resolveRuntimeCapabilities() ->
+//   { arweave, nostr, arweaveAnnouncement } }. See this file's own header
+//   for the full contract: every field is forwarded verbatim into whichever
+//   section(s) it belongs to — no field is read, validated, or defaulted by
+//   this function.
 export function createPublicationDistributionRuntimeProvider({
     signer,
     gatewayUrl,
@@ -146,12 +166,14 @@ export function createPublicationDistributionRuntimeProvider({
     relayUrl,
     discoveryTag,
     tagName,
-    kind
+    kind,
+    uploadTaggedTransaction
 } = {}) {
     return Object.freeze({
         resolveRuntimeCapabilities: () => Object.freeze({
             arweave: { signer, gatewayUrl, fetchImpl },
-            nostr: { publishImpl, relayUrl, discoveryTag, tagName, kind }
+            nostr: { publishImpl, relayUrl, discoveryTag, tagName, kind },
+            arweaveAnnouncement: { uploadTaggedTransaction, gatewayUrl, tagName, discoveryTag }
         })
     });
 }

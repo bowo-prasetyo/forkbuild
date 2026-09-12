@@ -173,8 +173,13 @@ async function run() {
         const source = await readFile(sourceUrl, 'utf8');
         const codeOnly = source.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
 
-        assert(codeOnly.includes("import { resolveArweaveUploaderOptions, resolveNostrPublisherOptions } from './PublicationDistributionConfigurationProvider.js'"),
-            '16. imports exactly the existing 0.9.105 resolvers — never a second implementation');
+        // AMENDED BY 0.9.430 — Announcement/Discovery Provider Selection
+        // Reachability. `resolveArweaveAnnouncementPublisherOptions()`
+        // (0.9.430) joined the original two resolvers in this exact same
+        // import — a third existing 0.9.105/0.9.430 resolver, still never a
+        // second, competing implementation of any of the three.
+        assert(codeOnly.includes("import { resolveArweaveUploaderOptions, resolveNostrPublisherOptions, resolveArweaveAnnouncementPublisherOptions } from './PublicationDistributionConfigurationProvider.js'"),
+            '16. imports exactly the existing 0.9.105/0.9.430 resolvers — never a second implementation');
         assert(!codeOnly.includes('ArweavePublicationMaterialUploader') && !codeOnly.includes('NostrPublicationDiscoveryPublisher') && !codeOnly.includes('orchestratePublicationDistribution'),
             '17. never constructs distribution infrastructure or calls the orchestrator directly');
         assert(!codeOnly.includes("'../ui/") && !codeOnly.includes('"../ui/'), '18. no UI import of any kind');
