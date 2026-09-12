@@ -630,9 +630,15 @@ async function run() {
 
         // F3. "Discovery" scope is explained, not left to jargon alone —
         // it names the concrete discovery families, not just the word
-        // "discovery" on its own.
-        assert(/discovery operations, including Publications, Snapshots, and Place Naming/.test(templateText),
-            'F3. "discovery" is grounded with the concrete list of what it covers, never left as an unexplained term of art');
+        // "discovery" on its own. STATUS UPDATE (0.9.452): the list itself
+        // changed — 0.9.451 moved Publication discovery onto the separate
+        // Nostr Publication Relays configuration, and 0.9.452 corrected
+        // this page's own copy to match (it no longer lists Publications).
+        // The invariant this assertion checks — "discovery" is grounded
+        // with a concrete list, never left as unexplained jargon — still
+        // holds, against the updated, accurate list.
+        assert(/discovery operations, including Snapshots and Place Naming/.test(templateText),
+            'F3. "discovery" is grounded with the concrete list of what it covers (Snapshots and Place Naming — Publications moved to its own relay set in 0.9.451/0.9.452), never left as an unexplained term of art');
 
         // F4. The default is clearly identified — grounded with the
         // actual concrete URL in effect, exactly the same discipline

@@ -760,9 +760,17 @@ async function run() {
         const publicationSettingsNamesDiscoveryPage = /Nostr Relay/.test(publicationSettingsSource) && !/inject\('nostrRelayConfigurationStore'/.test(publicationSettingsSource);
         assert(publicationSettingsNamesDiscoveryPage,
             n('M2a. REAL TEXT: /settings/nostr-publication-relays\'s own rendered page names the sibling discovery Nostr Relay page (for symmetry), while never injecting or reading that page\'s own store'));
+        // M2b. STATUS UPDATE (0.9.452): this milestone's own M4 recommendation
+        // — "append '(see Nostr Publication Relays, under Network Settings)'
+        // to the discovery page's own existing disclaimer sentence" — is
+        // exactly what 0.9.452's product completion reassessment applied
+        // (as part of correcting a related, independently-found copy
+        // staleness; see that milestone's own header). The asymmetry this
+        // assertion originally confirmed open is now closed; the assertion
+        // is updated, in place, to confirm the fix.
         const discoverySettingsNamesPublicationPage = /Nostr Publication Relays/.test(discoverySettingsSource) || /nostr-publication-relays/.test(discoverySettingsSource);
-        assert(discoverySettingsNamesPublicationPage === false,
-            n('M2b. REAL TEXT: CONFIRMED — /settings/nostr-relay\'s own rendered page does NOT name or link the sibling Publication Relays page. It correctly states what it is NOT ("does not change where announcements are published") but never says WHERE that actually happens — an asymmetric cross-reference (recorded as an open finding, Section M5), never fixed here'));
+        assert(discoverySettingsNamesPublicationPage === true,
+            n('M2b. REAL TEXT: FIXED BY 0.9.452 — /settings/nostr-relay\'s own rendered page now names the sibling Publication Relays page ("Publication discovery uses the separate Nostr Publication Relays configuration instead") — the cross-reference is now symmetric in both directions'));
 
         // M3. Both routes are named distinctly in the hub itself, each
         // with its own, distinct one-line description — re-confirmed live
@@ -772,40 +780,30 @@ async function run() {
         assert(/Nostr Relay<\/span>/.test(hubSource) && /Nostr Publication Relays<\/span>/.test(hubSource),
             n('M3. REAL TEXT: the Settings hub lists both pages under distinct titles'));
 
-        // M4. NEWLY SURFACED, STILL-OPEN FINDING — surfaced, not fixed
-        // (this milestone makes no production changes). Section M2 above
-        // proved this live: the publication-relay page names its discovery
-        // sibling ("see Nostr Relay, under Network Settings"), but the
-        // discovery page never names its publication-relay sibling back —
-        // a Wanderer who lands on /settings/nostr-relay specifically
-        // because they wanted to configure WHERE announcements are
-        // published learns only that this page won't do that, with no
-        // pointer to the page that will.
+        // M4. STATUS UPDATE (0.9.452): FIXED — this milestone (0.9.448)
+        // originally surfaced this as a still-open finding (the discovery
+        // page never named its publication-relay sibling back). 0.9.452
+        // applied exactly this Section's own recommendation. Recorded here,
+        // not pushed into uxFindings, since it is no longer open.
         if (publicationSettingsNamesDiscoveryPage && discoverySettingsNamesPublicationPage === false) {
             uxFindings.push('ui/views/NostrRelaySettingsView.js\'s own template names no sibling page: it says "This setting affects discovery only; it does not change where announcements are published" but never says where THAT is configured, while ui/views/NostrPublicationRelaySettingsView.js\'s own template DOES name it back ("see Nostr Relay, under Network Settings") — an asymmetric cross-reference. RECOMMENDATION (not this milestone\'s to apply): append "(see Nostr Publication Relays, under Network Settings)" to the discovery page\'s own existing disclaimer sentence — a one-line text edit, no behavior change.');
         }
 
-        // M5. KNOWN, PRE-EXISTING, STILL-OPEN DEFECT — surfaced, not fixed
-        // (this milestone makes no production changes). 0.9.446's own
-        // Section A5 already found that the hub's own "Nostr Relay" row
-        // describes that page as covering "discovery and publishing," which
-        // directly contradicts that same page's own rendered text
-        // ("This setting affects discovery only..."). This audit confirms,
-        // live, that the contradiction is STILL present, unchanged, even
-        // now that a correctly-labeled sibling row exists right below it —
-        // which arguably makes the stale wording MORE confusing than
-        // before, not less, since a Wanderer now has two adjacent rows and
-        // only one of their two descriptions is accurate.
-        const hubStillClaimsPublishing = /Relay used for Nostr-based discovery and publishing\./.test(hubSource);
+        // M5. STATUS UPDATE (0.9.452): 0.9.446's own Section A5 originally
+        // found that the hub's own "Nostr Relay" row described that page as
+        // covering "discovery and publishing," directly contradicting that
+        // same page's own rendered text ("This setting affects discovery
+        // only..."). 0.9.452's own product completion reassessment fixed
+        // this hub row's own copy too (it no longer mentions "publishing"
+        // at all). The assertion below is updated, in place, to confirm the
+        // corrected state.
+        const hubNoLongerClaimsPublishing = !/Relay used for Nostr-based discovery and publishing\./.test(hubSource);
         const settingsPageStillDisclaimsPublishing = /affects discovery only; it does not change where announcements are published/.test(discoverySettingsSource);
-        assert(hubStillClaimsPublishing && settingsPageStillDisclaimsPublishing,
-            n('M5. REAL TEXT: the 0.9.446-identified hub/page contradiction over the "Nostr Relay" row is CONFIRMED STILL OPEN as of this milestone — the hub still says "discovery and publishing," the page it links to still says "discovery only" — recorded here as a known finding, out of this test-only milestone\'s own scope to fix'));
-        if (hubStillClaimsPublishing && settingsPageStillDisclaimsPublishing) {
-            uxFindings.push('ui/views/NetworkSettingsView.js\'s own "Nostr Relay" row still reads "Relay used for Nostr-based discovery and publishing," contradicting ui/views/NostrRelaySettingsView.js\'s own "discovery only" disclaimer — pre-existing since before 0.9.444, named by 0.9.446\'s own Section A5, still unfixed. Now that a correctly-worded "Nostr Publication Relays" row sits directly beneath it, the stale wording risks a Wanderer configuring publishing at the WRONG row. RECOMMENDATION (not this milestone\'s to apply): correct the hub row\'s own one-line description to "Relay used for Nostr-based discovery." — a one-line text edit, no behavior change.');
-        }
+        assert(hubNoLongerClaimsPublishing && settingsPageStillDisclaimsPublishing,
+            n('M5. REAL TEXT: FIXED BY 0.9.452 — the 0.9.446-identified hub/page contradiction over the "Nostr Relay" row is gone: the hub no longer claims "publishing," and the page it links to still, consistently, says "discovery only"'));
 
         console.log('\n=== SECTION M: UX AUDIT ===');
-        console.log('✓ Section M: the two contextual Distribution links carry genuinely distinct labels, and the hub lists both pages under distinct titles — but the cross-reference between the two Settings pages is ASYMMETRIC (the publication page names its discovery sibling; the discovery page does not name its publication sibling back), and one pre-existing defect from 0.9.446 (the hub\'s own stale "discovery and publishing" wording for the Nostr Relay row) remains open — arguably more confusing now that a correctly-worded sibling row sits beside it. Neither is fixed here, per this milestone\'s own test-only scope; both are recorded as open findings below.');
+        console.log('✓ Section M: the two contextual Distribution links carry genuinely distinct labels, and the hub lists both pages under distinct titles. STATUS UPDATE (0.9.452): both defects this milestone (0.9.448) originally found here are now FIXED — the discovery page names its publication sibling back (M2/M4), and the hub\'s own stale "discovery and publishing" wording for the Nostr Relay row is corrected (M5).');
     }
 
     // ===============================================================
@@ -825,16 +823,20 @@ async function run() {
         { finding: 'Persistence degradation semantics (malformed vs. genuine failure)', classification: 'VERIFIED', note: 'Section K — both documented paths behave as documented; neither borrows the discovery relay' },
         { finding: 'Cross-role isolation (Arweave, Bitcoin, Snapshot, discovery)', classification: 'VERIFIED', note: 'Section L' },
         { finding: 'Contextual link/label distinguishability (Distribution card links + hub row titles)', classification: 'VERIFIED', note: 'Section M1/M3 — links and hub titles are distinguishable' },
-        { finding: 'Discovery page never names its publication-relay sibling back (cross-reference asymmetry)', classification: 'KNOWN_OPEN_DEFECT', note: 'Section M2/M4 — newly surfaced by this milestone, still unfixed; out of this milestone\'s own scope' },
-        { finding: 'Settings hub\'s own stale "discovery and publishing" wording for the Nostr Relay row', classification: 'KNOWN_OPEN_DEFECT', note: 'Section M5 — pre-existing since before 0.9.444, named by 0.9.446, still unfixed; out of this milestone\'s own scope' }
+        { finding: 'Discovery page never names its publication-relay sibling back (cross-reference asymmetry)', classification: 'FIXED', note: 'Section M2/M4 — newly surfaced by this milestone (0.9.448); fixed by 0.9.452, applying this Section\'s own recommendation verbatim' },
+        { finding: 'Settings hub\'s own stale "discovery and publishing" wording for the Nostr Relay row', classification: 'FIXED', note: 'Section M5 — pre-existing since before 0.9.444, named by 0.9.446; fixed by 0.9.452, applying this Section\'s own recommendation verbatim' }
     ];
     {
-        const VALID_CLASSIFICATIONS = ['VERIFIED', 'KNOWN_OPEN_DEFECT'];
+        const VALID_CLASSIFICATIONS = ['VERIFIED', 'KNOWN_OPEN_DEFECT', 'FIXED'];
         for (const row of decisionMatrix) {
             assert(VALID_CLASSIFICATIONS.includes(row.classification), n(`N1[${row.finding}]. carries a recognized classification`));
         }
         assert(decisionMatrix.filter((r) => r.classification === 'VERIFIED').length === 13, n('N2. every audited integration seam this milestone\'s own request named is classified VERIFIED'));
-        assert(decisionMatrix.filter((r) => r.classification === 'KNOWN_OPEN_DEFECT').length === 2, n('N3. exactly two pre-existing/newly-surfaced UX defects are recorded, matching Section M\'s own findings — neither silently dropped, neither (incorrectly) fixed by this test-only milestone'));
+        // N3. STATUS UPDATE (0.9.452): both UX defects this milestone
+        // (0.9.448) recorded (M2/M4 and M5) are now FIXED — see the M2b/M5
+        // amendments, above. Zero genuinely open UX defects remain from
+        // this family.
+        assert(decisionMatrix.filter((r) => r.classification === 'KNOWN_OPEN_DEFECT').length === 0, n('N3. zero UX defects from this milestone\'s own Section M remain open — both were fixed by 0.9.452, neither silently dropped nor left stale'));
 
         console.log('\n=== SECTION N: DECISION MATRIX ===');
         console.log('| Finding                                                                          | Classification      |');
@@ -856,10 +858,10 @@ async function run() {
         console.log('failover, Arweave anchoring, Bitcoin anchoring, Snapshot distribution, Nostr discovery querying — shows any trace of this');
         console.log('feature (Section L).');
         console.log('');
-        console.log('Two real UX defects remain open (Section M): the discovery Settings page names no way to find its publication-relay sibling');
-        console.log('(Section M2/M4, newly surfaced by this audit), and the Settings hub\'s own "Nostr Relay" row still claims to cover');
-        console.log('"discovery and publishing," contradicting that very page\'s own text (Section M5, pre-existing, named by 0.9.446). Both are');
-        console.log('one-line text fixes, not architectural gaps, and per this milestone\'s own test-only scope are reported rather than applied.');
+        console.log('STATUS UPDATE (0.9.452): both UX defects Section M originally recorded are now FIXED — the discovery Settings page names');
+        console.log('its publication-relay sibling back (Section M2/M4), and the Settings hub\'s own "Nostr Relay" row no longer claims to cover');
+        console.log('"publishing" (Section M5, pre-existing, named by 0.9.446). Neither was ever an architectural gap — both were one-line text');
+        console.log('fixes, applied by 0.9.452 alongside its own, independently-found copy staleness.');
         console.log('');
         console.log('RECOMMENDATION: per this arc\'s own request, STOP the Nostr publication multi-relay arc here. 0.9.442 through 0.9.448 form');
         console.log('a complete, verified chain: independent multi-relay distribution, persistent user configuration reachable through a real');

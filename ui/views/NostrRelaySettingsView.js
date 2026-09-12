@@ -86,6 +86,16 @@ import { DEFAULT_NOSTR_RELAY_URL } from '../../core/NostrRelayConfiguration.js';
 // unavailable" — that is a separate, later product question (see
 // docs/Roadmap.md, 0.9.372, "distinguishing 'no results' from 'relay
 // unavailable'"), never something this milestone tries to solve.
+//
+// AMENDED BY 0.9.452 — Product Completion Reassessment. This view's own
+// template text below previously listed Publications among the discovery
+// operations this relay preference governs. That was accurate through
+// 0.9.450, but 0.9.451 moved Publication discovery onto the separate
+// Nostr Publication Relays configuration (`ui/views/
+// NostrPublicationRelaySettingsView.js`) instead — see `ui/main.js`'s own
+// 0.9.451 comment. This relay preference now governs Snapshot discovery and
+// Place Naming discovery only; the template text below is corrected
+// accordingly. No behavior changes — documentation/copy correction only.
 export default {
     name: 'NostrRelaySettingsView',
     setup() {
@@ -158,7 +168,7 @@ export default {
         <section class="nostr-relay-settings-view">
             <h1>Nostr Relay</h1>
             <p class="form-hint form-hint--neutral">
-                Relay used for discovery operations, including Publications, Snapshots, and Place Naming. This setting affects discovery only; it does not change where announcements are published.
+                Relay used for discovery operations, including Snapshots and Place Naming. Publication discovery uses the separate Nostr Publication Relays configuration instead (see Nostr Publication Relays, under Network Settings). This setting affects discovery only; it does not change where announcements are published.
             </p>
 
             <p v-if="hasOverride" class="form-hint form-hint--neutral">

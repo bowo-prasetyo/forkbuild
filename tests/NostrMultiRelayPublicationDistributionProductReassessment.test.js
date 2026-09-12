@@ -250,14 +250,22 @@ async function run() {
         assert(mainSource.includes('for a future caller to invoke'),
             n('A9b. ui/main.js\'s own 0.9.447 comment admits, in its own words, that this composition exists "for a future caller to invoke" — this milestone confirms that future caller was never built, through 0.9.448\'s own closing audit'));
 
-        // A10. The Settings page a Wanderer actually reads when configuring
-        // this makes a claim about effect that Section A3-A7 just proved
+        // A10. STATUS UPDATE (0.9.452): at the time this milestone (0.9.449)
+        // ran, the Settings page a Wanderer actually reads when configuring
+        // this made a claim about effect that Section A3-A7 above proved
         // false for Publication distribution's own real command, and (per
-        // A11, below) is architecturally impossible for Snapshot
-        // distribution today.
+        // A11, below) was architecturally impossible for Snapshot
+        // distribution. 0.9.452's own product completion reassessment found
+        // and fixed this exact page copy (alongside a second, related
+        // finding — see that milestone's own header) — the assertion below
+        // is updated, in place, to check the CORRECTED claim, the same
+        // convention this file's own A8 assertion already followed when
+        // 0.9.450 closed A8's own original finding.
         const relaySettingsViewSource = await source('ui/views/NostrPublicationRelaySettingsView.js');
-        assert(/publishes signed announcements to when distributing a Publication or Snapshot over Nostr/.test(relaySettingsViewSource),
-            n('A10. ui/views/NostrPublicationRelaySettingsView.js\'s own page copy tells a Wanderer this setting governs "distributing a Publication or Snapshot over Nostr" — a claim Section A3-A7 just proved false for every real Publication distribution action available today'));
+        assert(!/publishes signed announcements to when distributing a Publication or Snapshot over Nostr/.test(relaySettingsViewSource),
+            n('A10. ui/views/NostrPublicationRelaySettingsView.js\'s own page copy no longer claims to govern Snapshot distribution at all (fixed by 0.9.452) — see A11, below, for why that claim was always architecturally impossible'));
+        assert(/Publication distribution and Publication discovery/.test(relaySettingsViewSource),
+            n('A10b. …and now accurately states it affects both Publication distribution AND Publication discovery — the read-side half closed by 0.9.451, documented by 0.9.452'));
 
         // A11. Snapshot Nostr distribution has no relay-SET concept
         // anywhere in this codebase, and ui/main.js supplies it no
@@ -594,20 +602,30 @@ async function run() {
     // defects, plus one newly-found item in the same family.
     // ===============================================================
     {
+        // I1/I2. STATUS UPDATE (0.9.452): both items this file originally
+        // named here (I1: named 0.9.446 Section A5; I2: named 0.9.448
+        // Section M) are now FIXED by 0.9.452's own product completion
+        // reassessment — see that milestone's own header. Both assertions
+        // are updated, in place, to confirm the corrected state.
         const networkSettingsSource = await source('ui/views/NetworkSettingsView.js');
-        assert(/Relay used for Nostr-based discovery and publishing\./.test(networkSettingsSource),
-            n('I1. KNOWN_OPEN_DEFECT (named 0.9.446 Section A5, reconfirmed still open by 0.9.448 Section M): the Settings hub\'s own "Nostr Relay" row still describes that page as covering "discovery and publishing," contradicting the page\'s own text (Section F6) — still present, unfixed, at this milestone\'s own head commit'));
+        assert(!/Relay used for Nostr-based discovery and publishing\./.test(networkSettingsSource),
+            n('I1. FIXED BY 0.9.452 — the Settings hub\'s own "Nostr Relay" row no longer describes that page as covering "publishing"'));
 
         const readSettingsViewSource = await source('ui/views/NostrRelaySettingsView.js');
-        assert(!readSettingsViewSource.includes('nostr-publication-relay'),
-            n('I2. KNOWN_OPEN_DEFECT (named 0.9.448 Section M, reconfirmed here): /settings/nostr-relay never names or links its publication-relay sibling back — still present, unfixed, at this milestone\'s own head commit'));
+        assert(/Nostr Publication Relays/.test(readSettingsViewSource),
+            n('I2. FIXED BY 0.9.452 — /settings/nostr-relay now names its publication-relay sibling back'));
 
-        const relaySettingsViewSource = await source('ui/views/NostrPublicationRelaySettingsView.js');
-        assert(/publishes signed announcements to when distributing a Publication or Snapshot over Nostr/.test(relaySettingsViewSource),
-            n('I3. NEWLY NAMED THIS MILESTONE: /settings/nostr-publication-relays own page copy overstates its current effect for Publication (unwired, Section A) and names a Snapshot capability that does not exist anywhere in this codebase (Section A11) — a third item in the same "Settings copy ahead of what the product actually does" family as I1/I2'));
+        // I3. STATUS UPDATE (0.9.452): the item this milestone (0.9.449)
+        // newly named here — the publication-relay Settings page's own copy
+        // overstating Publication's own then-unwired effect and naming a
+        // Snapshot capability that never existed — is now fixed, by
+        // 0.9.452, alongside I1/I2's own related family. See A10/A10b,
+        // above, for the live-checked replacement assertion; this file no
+        // longer re-checks the same fixed text twice.
+        console.log('I3. STATUS UPDATE (0.9.452): fixed — see this file\'s own A10/A10b amendment, above.');
 
         console.log('\n=== SECTION I: ARCHITECTURAL RESIDUE ===');
-        console.log('✓ Section I: three textual, non-blocking Settings-copy defects are named — two carried forward as still-open from 0.9.446/0.9.448, one newly found by this milestone\'s own Section A. None is an architecture gap in the sense of missing design; all three compound the real confusion Section A/F\'s own findings create for a Wanderer trying to understand what their own configuration actually does.');
+        console.log('✓ Section I: three textual, non-blocking Settings-copy defects were named — two carried forward from 0.9.446/0.9.448 (I1/I2) and one newly found by this milestone\'s own Section A (I3) — all three are now fixed, by 0.9.452. None was ever an architecture gap in the sense of missing design.');
     }
 
     // ===============================================================
