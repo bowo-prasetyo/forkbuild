@@ -53,6 +53,9 @@ import { CreateExternalPublicationAnchorOrchestratorUseCase } from '../applicati
 import { CreatePublicationAnchorCreationCoordinatorUseCase } from '../application/CreatePublicationAnchorCreationCoordinatorUseCase.js';
 import { CreateBitcoinAnchorEvidenceViewUseCase } from '../application/CreateBitcoinAnchorEvidenceViewUseCase.js';
 import { CreateExternalAnchorEvidenceViewRegistryUseCase } from '../application/CreateExternalAnchorEvidenceViewRegistryUseCase.js';
+import { CreateArweaveAnchorPublisherUseCase } from '../application/CreateArweaveAnchorPublisherUseCase.js';
+import { CreateArweaveAnchorProofVerifierUseCase } from '../application/CreateArweaveAnchorProofVerifierUseCase.js';
+import { CreateArweaveAnchorEvidenceViewUseCase } from '../application/CreateArweaveAnchorEvidenceViewUseCase.js';
 import { CreateBitcoinEsploraTransactionConfirmationObserverUseCase } from '../application/CreateBitcoinEsploraTransactionConfirmationObserverUseCase.js';
 import { CreateBitcoinAnchorConfirmationObserverUseCase } from '../application/CreateBitcoinAnchorConfirmationObserverUseCase.js';
 import { CreateBitcoinAnchorProofReconciliationViewUseCase } from '../application/CreateBitcoinAnchorProofReconciliationViewUseCase.js';
@@ -984,7 +987,13 @@ const { coordinator: publicationKnowledgeSynchronizationCoordinator } = new Crea
     connectedPeerRegistry: peerSessionManager.registry
 });
 const { bitcoinProofVerifier } = new CreateBitcoinAnchorProofVerifierUseCase().execute();
-const { externalAnchorVerifier } = new CreateExternalAnchorVerifierUseCase().execute({
+// 0.9.425 — `proofVerifierRegistry` is captured here (as
+// `externalAnchorProofVerifierRegistry`) alongside `externalAnchorVerifier`
+// itself, purely so this file's own later Arweave wiring can `.register()`
+// a second proofVerifier into the SAME registry instance — nothing about
+// `externalAnchorVerifier`'s own construction or Bitcoin's own wiring
+// changes.
+const { externalAnchorVerifier, proofVerifierRegistry: externalAnchorProofVerifierRegistry } = new CreateExternalAnchorVerifierUseCase().execute({
     proofVerifiers: [bitcoinProofVerifier]
 });
 const { coordinator: publicationEvidenceCoordinator } = new CreatePublicationEvidenceCoordinatorUseCase().execute({
@@ -1990,6 +1999,59 @@ app.provide('publicationDistributionLifecycleStore', publicationDistributionLife
 const arweaveHostSigner = createArweaveInjectedProviderSigner({
     injectedProvider: typeof window !== 'undefined' ? window.arweaveWallet : undefined
 });
+
+// 0.9.425 — Arweave Proof/Anchoring Provider Implementation.
+//
+// 0.9.424's own audit found PROOF_AND_ANCHORING's Arweave gap to be a
+// pure PROVIDER_GAP: application/ExternalAnchorPublisherRegistry.js,
+// application/ExternalProofVerifierRegistry.js, and application/
+// ExternalAnchorEvidenceViewRegistry.js already accept an "arweave" key
+// with zero registry change, and application/
+// PublicationAnchorCreationCoordinator.js#availableAnchorTypes() (already
+// rendered by ui/views/DecentralizedPublicationsView.js's own v-for)
+// already reports whatever those registries hold. This is that missing
+// provider — registered into the exact same registry INSTANCES Bitcoin's
+// own anchor wiring (above, 0.8.9-0.8.14) already constructed, never a
+// second registry or a new UI mechanism.
+//
+// `arweaveHostSigner` IS THE SAME INSTANCE the Publication/Snapshot
+// distribution wiring immediately below already resolves from
+// `window.arweaveWallet` — never a second read of that host capability.
+// `resolvedArweaveGatewayUrl` (resolved once, above, from this device's
+// own ArweaveGatewayConfigurationStore) is reused identically for both
+// the publish (write) and verify (read) side, exactly as Bitcoin's own
+// `network: 'mainnet'` is reused across its publisher and verifier.
+//
+// `arweaveAnchorFallbackSigner` MIRRORS `bitcoinBroadcaster`'S OWN
+// HONEST-UNAVAILABLE PATTERN (0.8.11, above) EXACTLY. When no Arweave
+// wallet extension is installed, `arweaveHostSigner` is `undefined`; this
+// device still gets a REAL, registered `ArweaveAnchorPublisher` — never
+// one hidden from the running app until a wallet happens to be connected
+// — wired against a signer that always, and honestly, rejects with the
+// actual reason. "Create Arweave Anchor" therefore always appears once a
+// person opens the Publication Center, exactly like "Create Bitcoin
+// Anchor" already does, and reports PUBLISH_UNAVAILABLE with a truthful
+// reason until a real wallet extension is connected — never a crash,
+// never a silently absent option.
+const arweaveAnchorFallbackSigner = {
+    async sign() {
+        throw new Error('This device has no Arweave wallet/signing capability configured yet.');
+    }
+};
+const { arweaveAnchorPublisher } = new CreateArweaveAnchorPublisherUseCase().execute({
+    signer: arweaveHostSigner || arweaveAnchorFallbackSigner,
+    gatewayUrl: resolvedArweaveGatewayUrl
+});
+externalAnchorPublisherRegistry.register(arweaveAnchorPublisher);
+
+const { arweaveProofVerifier } = new CreateArweaveAnchorProofVerifierUseCase().execute({
+    gatewayUrl: resolvedArweaveGatewayUrl
+});
+externalAnchorProofVerifierRegistry.register(arweaveProofVerifier);
+
+const { arweaveAnchorEvidenceView } = new CreateArweaveAnchorEvidenceViewUseCase().execute();
+externalAnchorEvidenceViewRegistry.register(arweaveAnchorEvidenceView);
+
 const nostrHostPublisher = createNostrInjectedProviderPublisher({
     injectedProvider: typeof window !== 'undefined' ? window.nostr : undefined
 });
