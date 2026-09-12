@@ -9200,7 +9200,12 @@ export default {
                                          — never collapsed into one aggregate
                                          status. -->
                                     <dl v-if="discoveryObservationsView(entry).length > 0" class="evidence-fields">
-                                        <div v-for="observation in discoveryObservationsView(entry)" :key="observation.discoveryProvider" class="evidence-field">
+                                        <!-- 0.9.443 — keyed by (discoveryProvider, origin),
+                                             never discoveryProvider alone: two Nostr relay
+                                             observations now genuinely coexist here, and a
+                                             shared "nostr" key would collide, letting Vue
+                                             silently reuse one row's DOM for the other. -->
+                                        <div v-for="observation in discoveryObservationsView(entry)" :key="observation.discoveryProvider + ':' + observation.origin" class="evidence-field">
                                             <dt>Discovery ({{ observation.discoveryProvider }})</dt>
                                             <dd>{{ observation.state }}</dd>
                                         </div>

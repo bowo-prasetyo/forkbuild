@@ -4354,7 +4354,12 @@ export default {
                          to the single pre-0.9.433 row, bound to the
                          pre-existing distributionDiscoveryState. -->
                     <template v-if="discoveryObservations.length > 1">
-                        <template v-for="observation in discoveryObservations" :key="observation.discoveryProvider">
+                        <!-- 0.9.443 — keyed by (discoveryProvider, origin),
+                             never discoveryProvider alone: two Nostr relay
+                             observations now genuinely coexist here, and a
+                             shared "nostr" key would collide, letting Vue
+                             silently reuse one row's DOM for the other. -->
+                        <template v-for="observation in discoveryObservations" :key="observation.discoveryProvider + ':' + observation.origin">
                             <dt>Discovery ({{ observation.discoveryProvider }})</dt>
                             <dd>{{ observation.state }}</dd>
                         </template>

@@ -380,10 +380,111 @@
 // - **A generic multi-valued lifecycle storage mechanism.** This addition
 //   is scoped to Announcement/Discovery alone; Content (`material`) and
 //   Proof/Anchor remain entirely outside it.
+//
+// 0.9.443 — NOSTR RELAY OBSERVATION IDENTITY BOUNDARY. 0.9.442's own product
+// reassessment found the exact collision this milestone fixes: two REAL,
+// independently-obtained Nostr relay observations for the SAME publication
+// — attributed under the only `discoveryProvider` value a Nostr caller has
+// ("nostr") — silently collapsed to one at `recordDiscoveryObservation()`'s
+// own `(publicationId, discoveryProvider)` key, exactly the class of loss
+// this same key was originally built to prevent one substrate level up.
+// `recordDiscoveryObservation()` gains one new, OPTIONAL fourth argument,
+// `discoveryOrigin`. Nothing about its existing three-argument call shape,
+// or `getDiscoveryObservations()`'s own signature or return shape, changes.
+//
+//     store.recordDiscoveryObservation(publicationId, discoveryProvider, section);
+//     store.recordDiscoveryObservation(publicationId, discoveryProvider, section, discoveryOrigin);
+//
+// CONCEPTUAL IDENTITY WIDENS TO `(publicationId, discoveryProvider,
+// discoveryOrigin)` — BUT ONLY WHEN A CALLER ACTUALLY SUPPLIES
+// `discoveryOrigin`. Omitting it (as every pre-0.9.443 caller does, and as
+// every non-Nostr caller continues to) keys the observation by
+// `discoveryProvider` alone, byte-identical to 0.9.433's own original
+// behavior:
+//
+//     store.recordDiscoveryObservation('pub-1', 'arweave', sectionA);
+//     store.recordDiscoveryObservation('pub-1', 'arweave', sectionB);
+//     store.getDiscoveryObservations('pub-1');
+//     // -> [{ discoveryProvider: 'arweave', ...sectionB }]   — unchanged from 0.9.433
+//
+// A DIFFERENT `discoveryOrigin` FOR THE SAME `discoveryProvider` COEXISTS,
+// NEVER COLLIDES — THE CENTRAL FIX. Two Nostr relay observations for the
+// same publication, each carrying its own real relay identity as
+// `discoveryOrigin`, are now two independent entries:
+//
+//     store.recordDiscoveryObservation('pub-1', 'nostr', sectionA, 'wss://relay-a.example');
+//     store.recordDiscoveryObservation('pub-1', 'nostr', sectionB, 'wss://relay-b.example');
+//     store.getDiscoveryObservations('pub-1');
+//     // -> [{ discoveryProvider: 'nostr', ...sectionA }, { discoveryProvider: 'nostr', ...sectionB }]
+//
+// RE-OBSERVATION FROM THE SAME `discoveryOrigin` STILL REPLACES, NEVER
+// ACCUMULATES — THE SAME "replacement per provider" RULE ABOVE, HELD HERE
+// AT ONE FINER KEY WHEN `discoveryOrigin` IS SUPPLIED:
+//
+//     store.recordDiscoveryObservation('pub-1', 'nostr', sectionA1, 'wss://relay-a.example');
+//     store.recordDiscoveryObservation('pub-1', 'nostr', sectionA2, 'wss://relay-a.example');
+//     store.getDiscoveryObservations('pub-1');
+//     // -> [{ discoveryProvider: 'nostr', ...sectionA2 }]   — sectionA1 is gone, relay B untouched
+//
+// `discoveryProvider` ITSELF IS NEVER REDEFINED. This file still never
+// validates `discoveryProvider` against any fixed vocabulary, and
+// `discoveryOrigin` is read exactly as opaquely — a non-empty string, or
+// absent. Widening a provider's own key to include origin remains entirely
+// a CALLER's decision, made once per call, never a policy this store
+// imposes on a `discoveryProvider` it doesn't recognize as "Nostr" or
+// anything else. This store still has no idea "Nostr" or "Arweave" exist as
+// concepts, exactly as its own header above already establishes.
+//
+// `getDiscoveryObservations()`'S OWN RETURN SHAPE IS UNCHANGED. An entry
+// keyed by `(discoveryProvider, discoveryOrigin)` still returns as
+// `{ discoveryProvider, ...section }` — no new `discoveryOrigin` field is
+// added to the returned object, because `section` (the discovery lifecycle
+// section a caller already supplies) already carries the identical value
+// under its own existing `origin` field for exactly this purpose — see
+// `application/PublicationDistributionLifecycle.js`'s own `describeDiscoveryState()`.
+// Adding a second, redundant `discoveryOrigin` field here would be exactly
+// the kind of generic endpoint abstraction this milestone's own request
+// deliberately excludes.
+//
+// A MALFORMED `discoveryOrigin` (NOT A NON-EMPTY STRING) DEGRADES TO
+// "ABSENT", NEVER THROWN, NEVER TREATED AS A DISTINGUISHING KEY — the same
+// "malformed input degrades silently" discipline this file already holds
+// for `publicationId`/`discoveryProvider`/`discoverySection`. A caller that
+// passes `null`, `undefined`, `''`, or a non-string `discoveryOrigin` gets
+// exactly 0.9.433's own original, provider-only-keyed behavior.
+//
+// `remove(publicationId)`/`clear()` STILL CLEAR EVERY OBSERVATION FOR THAT
+// PUBLICATION, REGARDLESS OF HOW MANY DISTINCT `discoveryOrigin` VALUES
+// ACCUMULATED UNDER ONE `discoveryProvider` — unchanged from this file's
+// own existing rule, now simply applied to a per-publication map that may
+// hold more entries per provider than before.
+//
+// DELIBERATELY EXCLUDED — NOT THIS MILESTONE, EITHER.
+// - **A relay list, relay configuration, or any Settings UI.** This file
+//   has no idea how many relays exist or should exist — it only stores
+//   whatever `discoveryOrigin` a caller already obtained from a real
+//   publish/query attempt.
+// - **Fan-out, failover, retry, or relay health/ranking of any kind.**
+//   Nothing here decides how many relays get contacted, or in what order —
+//   this file only ever stores whatever ONE call's own caller already
+//   observed; it never coordinates multiple calls itself.
+// - **A generic multi-provider endpoint abstraction.** `discoveryOrigin` is
+//   read as an opaque string for ANY `discoveryProvider` a caller supplies
+//   it for — this file forces no provider to adopt one, and no caller in
+//   this codebase supplies one for `'arweave'` as of this milestone.
+// - **Any change to `getDiscoveryObservations()`'s own return shape**, or
+//   to `get`/`set`/`subscribe`'s own pre-existing contracts.
 
 function isNonEmptyString(value) {
     return typeof value === 'string' && value.length > 0;
 }
+
+// 0.9.443 — the origin-map key used for an observation recorded WITHOUT a
+// `discoveryOrigin`, keeping that observation keyed by `discoveryProvider`
+// alone, byte-identical to 0.9.433's own original per-provider slot. A
+// `Symbol` can never collide with any real `discoveryOrigin` string a
+// caller might supply.
+const DEFAULT_ORIGIN_KEY = Symbol('PublicationDistributionLifecycleStore.DEFAULT_ORIGIN_KEY');
 
 export class PublicationDistributionLifecycleMemoryStore {
     constructor() {
@@ -391,8 +492,13 @@ export class PublicationDistributionLifecycleMemoryStore {
         this._listeners = new Map();
         this._nextListenerId = 0;
         // 0.9.433 — publicationId -> Map(discoveryProvider -> discoverySection).
-        // Additive; never read or written by get()/set()/remove()/clear()'s
-        // own primary `_entries` map.
+        // AMENDED BY 0.9.443 — one level deeper: publicationId ->
+        // Map(discoveryProvider -> Map(originKey -> discoverySection)),
+        // where `originKey` is a supplied `discoveryOrigin` string when one
+        // is given, or the module-level `DEFAULT_ORIGIN_KEY` sentinel when
+        // not — see this file's own 0.9.443 header. Additive; never read or
+        // written by get()/set()/remove()/clear()'s own primary `_entries`
+        // map.
         this._discoveryObservations = new Map();
     }
 
@@ -505,14 +611,26 @@ export class PublicationDistributionLifecycleMemoryStore {
     // falsy — never throws. Additive: never touches `_entries`, never calls
     // `set()`, and never notifies a subscriber — see this file's own
     // header, "No new notification vocabulary."
-    recordDiscoveryObservation(publicationId, discoveryProvider, discoverySection) {
+    //
+    // AMENDED BY 0.9.443 — an optional fourth argument, `discoveryOrigin`,
+    // widens the effective key to `(discoveryProvider, discoveryOrigin)`
+    // ONLY when supplied as a non-empty string; see this file's own header,
+    // "Nostr Relay Observation Identity Boundary," for the full contract.
+    // Omitted (or malformed) `discoveryOrigin` keys by `discoveryProvider`
+    // alone, exactly as 0.9.433 always did.
+    recordDiscoveryObservation(publicationId, discoveryProvider, discoverySection, discoveryOrigin) {
         if (!isNonEmptyString(publicationId) || !isNonEmptyString(discoveryProvider) || !discoverySection) {
             return;
         }
         if (!this._discoveryObservations.has(publicationId)) {
             this._discoveryObservations.set(publicationId, new Map());
         }
-        this._discoveryObservations.get(publicationId).set(discoveryProvider, discoverySection);
+        const byProvider = this._discoveryObservations.get(publicationId);
+        if (!byProvider.has(discoveryProvider)) {
+            byProvider.set(discoveryProvider, new Map());
+        }
+        const originKey = isNonEmptyString(discoveryOrigin) ? discoveryOrigin : DEFAULT_ORIGIN_KEY;
+        byProvider.get(discoveryProvider).set(originKey, discoverySection);
     }
 
     // 0.9.433 — returns every currently-recorded Announcement/Discovery
@@ -522,6 +640,14 @@ export class PublicationDistributionLifecycleMemoryStore {
     // `null`, for a malformed `publicationId` or one nothing has ever been
     // recorded for — see this file's own header, "getDiscoveryObservations()
     // returns [], never null or a thrown error."
+    //
+    // AMENDED BY 0.9.443 — unchanged signature and unchanged return shape.
+    // When one or more entries were recorded with a distinguishing
+    // `discoveryOrigin`, this now returns one entry PER `(discoveryProvider,
+    // discoveryOrigin)` pair rather than one per `discoveryProvider` alone
+    // — each still shaped `{ discoveryProvider, ...discoverySection }`,
+    // `discoverySection` itself already carrying that same origin under its
+    // own existing `origin` field.
     getDiscoveryObservations(publicationId) {
         if (!isNonEmptyString(publicationId)) {
             return [];
@@ -530,7 +656,9 @@ export class PublicationDistributionLifecycleMemoryStore {
         if (!byProvider) {
             return [];
         }
-        return Array.from(byProvider.entries()).map(([discoveryProvider, section]) => ({ discoveryProvider, ...section }));
+        return Array.from(byProvider.entries()).flatMap(([discoveryProvider, byOrigin]) =>
+            Array.from(byOrigin.values()).map((section) => ({ discoveryProvider, ...section }))
+        );
     }
 
     // Invokes every current subscriber of `publicationId` with

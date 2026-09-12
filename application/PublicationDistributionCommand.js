@@ -205,6 +205,23 @@ import { transitionPublicationDistributionLifecycle } from './PublicationDistrib
 // resolves to `'nostr'` exactly where it already did, several layers down,
 // in `PublicationDistributionRuntimeComposition.js`.
 //
+// AMENDED BY 0.9.443 — Nostr Relay Observation Identity Boundary. 0.9.442's
+// own product reassessment found that two independently-real Nostr relay
+// observations for the same publication collapsed to one at
+// `recordDiscoveryObservation()`'s own `(publicationId, discoveryProvider)`
+// key, because `discoveryProvider` names only the substrate ("nostr"),
+// never the relay. `recordPublicationDistributionResult()` now also passes
+// `transitioned.discovery.origin` as `recordDiscoveryObservation()`'s new,
+// optional fourth argument (`discoveryOrigin`) — but ONLY when the resolved
+// provider is `'nostr'`. Every other provider (today: `'arweave'`) is
+// recorded exactly as before, with no fourth argument at all — see
+// `PublicationDistributionLifecycleStore.js`'s own 0.9.443 header, "A
+// generic multi-provider endpoint abstraction," which this file's own
+// narrow, Nostr-only gate deliberately avoids building. `discoveryProvider`
+// itself is still never redefined, still forwarded to the orchestrator
+// exactly as 0.9.430 left it, and `PublicationDistributionRuntimeComposition.js`'s
+// own strict substrate selector is untouched.
+//
 // AMENDED BY 0.9.433 — Concurrent Discovery Observation Preservation.
 // 0.9.430 threaded `discoveryProvider` past this file, unread, to the
 // orchestrator; 0.9.432's own read-only audit found the one place that
@@ -238,6 +255,13 @@ const BASELINE_LIFECYCLE = Object.freeze({
 // — see this file's own header, "Amended by 0.9.433" — attributing the
 // fresh discovery fact to `discoveryProvider` (defaulting to `'nostr'`,
 // matching `PublicationDistributionRuntimeComposition.js`'s own default).
+// AMENDED BY 0.9.443: when the resolved provider is `'nostr'`, also passes
+// `transitioned.discovery.origin` (the real relay this exact call already
+// computed) as `recordDiscoveryObservation()`'s new, optional fourth
+// argument — see this file's own header, "Amended by 0.9.443" — so two
+// different relays' own observations coexist rather than colliding under
+// the shared `'nostr'` provider key. Every other provider still calls
+// `recordDiscoveryObservation()` with exactly three arguments, unchanged.
 function recordPublicationDistributionResult(lifecycleStore, result, discoveryProvider) {
     if (!result) {
         return;
@@ -275,7 +299,9 @@ function recordPublicationDistributionResult(lifecycleStore, result, discoveryPr
             changed = true;
 
             if (typeof lifecycleStore.recordDiscoveryObservation === 'function') {
-                lifecycleStore.recordDiscoveryObservation(result.publication.objectId, discoveryProvider || 'nostr', transitioned.discovery);
+                const resolvedProvider = discoveryProvider || 'nostr';
+                const discoveryOrigin = resolvedProvider === 'nostr' ? transitioned.discovery.origin : undefined;
+                lifecycleStore.recordDiscoveryObservation(result.publication.objectId, resolvedProvider, transitioned.discovery, discoveryOrigin);
             }
         }
     }

@@ -542,10 +542,15 @@ async function run() {
         // that is then assigned to `next.discovery` and passed to
         // `lifecycleStore.set()` — one transition call, one result object,
         // read twice, never two independent computations that could
-        // disagree.
+        // disagree. UPDATED BY 0.9.443: the command now also derives
+        // `discoveryOrigin` from that SAME `transitioned.discovery` object
+        // (its own `.origin` field) rather than from any independently
+        // computed value — the regex below is widened to admit that one
+        // extra, still-derived-from-the-same-object line, never to relax
+        // the underlying "one object, read twice" invariant itself.
         const commandCode = codeOnly(await source('application/PublicationDistributionCommand.js'));
-        assert(/next = transitioned;\s*changed = true;\s*if \(typeof lifecycleStore\.recordDiscoveryObservation === 'function'\) \{\s*lifecycleStore\.recordDiscoveryObservation\(result\.publication\.objectId, discoveryProvider \|\| 'nostr', transitioned\.discovery\);/.test(commandCode),
-            n('E4. CONFIRMED FROM THE SOURCE: recordDiscoveryObservation() is fed the identical `transitioned.discovery` object later assigned into `next` and passed to set() — divergence between the two representations is impossible under this exact call shape, not merely unobserved in this test run'));
+        assert(/next = transitioned;\s*changed = true;\s*if \(typeof lifecycleStore\.recordDiscoveryObservation === 'function'\) \{\s*const resolvedProvider = discoveryProvider \|\| 'nostr';\s*const discoveryOrigin = resolvedProvider === 'nostr' \? transitioned\.discovery\.origin : undefined;\s*lifecycleStore\.recordDiscoveryObservation\(result\.publication\.objectId, resolvedProvider, transitioned\.discovery, discoveryOrigin\);/.test(commandCode),
+            n('E4. CONFIRMED FROM THE SOURCE: recordDiscoveryObservation() is fed the identical `transitioned.discovery` object later assigned into `next` and passed to set(), and its own `discoveryOrigin` argument is derived from that SAME object\'s `.origin` field — divergence between the two representations is impossible under this exact call shape, not merely unobserved in this test run'));
         assert(commandCode.indexOf('lifecycleStore.recordDiscoveryObservation(') < commandCode.indexOf('if (changed) {\n        lifecycleStore.set('),
             n('E5. recordDiscoveryObservation() textually precedes set() in the same synchronous function body — there is no intervening step, branch, or await where the two values could be pulled apart'));
 
