@@ -30,14 +30,30 @@ import { composeDiscoverSnapshotRuntime } from '../application/DiscoverSnapshotR
 // Section B: a configured relayUrl reaches NostrSnapshotDiscoveryQueryService
 //            through composeDiscoverSnapshotRuntime()
 // Section C: a configured relayUrl reaches NostrPlaceNamingDiscoverySource
-// Section D: ui/main.js source sweep — the resolved relayUrl reaches all
-//            THREE read-path call sites, and never reaches any Nostr
-//            publishing call site
+// Section D: ui/main.js source sweep — the resolved relayUrl reaches TWO
+//            of the three read-path call sites (Snapshot discovery, Place
+//            Naming discovery), and never reaches any Nostr publishing
+//            call site
 // Section E: end-to-end resolution — store absent -> deployment default;
 //            store configured -> the user's own override, no merge, for
 //            all three consumers at once
 // Section F: isolation — changing this configuration structurally cannot
 //            reach Arweave, IPFS, Bitcoin, Base, or peer connectivity
+//
+// AMENDED BY 0.9.451 — Nostr Publication Relay Set Discovery Alignment.
+// The THIRD read-path call site, World Encounter (Publication) discovery,
+// no longer receives `resolvedNostrRelayUrl` at all: `application/
+// DecentralizedWorldEncounterMaterialDiscoveryRuntimeComposition.js`'s own
+// `nostrRelayUrls` (plural) amendment now receives `resolvedNostrPublicationRelayUrls`
+// instead (0.9.447's own write-side relay SET, already reachable from
+// distribution since 0.9.450) — see that file's own 0.9.451 header for why.
+// Section D below is amended to assert this directly rather than silently
+// going stale; Section A (below) still proves the composition function's
+// own SINGULAR `nostrRelayUrl` parameter works exactly as before when
+// called directly (it is simply no longer how `ui/main.js` itself calls
+// it for Publication discovery) — the composition function's backward
+// compatibility, not `ui/main.js`'s own real wiring, is what Section A
+// verifies.
 
 function assert(condition, message) {
     if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
@@ -107,9 +123,11 @@ async function run() {
 
     // ===============================================================
     // Section D — ui/main.js source sweep: the resolved relayUrl actually
-    // reaches all THREE read-path call sites, and never reaches any Nostr
-    // publishing call site — run against the real file, never a guess from
-    // this file's own prose.
+    // reaches TWO of the three read-path call sites (Snapshot discovery,
+    // Place Naming discovery), World Encounter (Publication) discovery
+    // instead receives the resolved publication relay SET (0.9.451), and
+    // resolvedNostrRelayUrl never reaches any Nostr publishing call site —
+    // run against the real file, never a guess from this file's own prose.
     // ===============================================================
     {
         const mainSource = await source('ui/main.js');
@@ -122,10 +140,13 @@ async function run() {
         const mainStoreConstructions = (mainSource.match(/new NostrRelayConfigurationStore\(/g) || []).length;
         assert(mainStoreConstructions === 1, `D5. ui/main.js constructs exactly one NostrRelayConfigurationStore instance — found ${mainStoreConstructions}`);
 
-        // All three read-path call sites must receive the resolved relayUrl.
-        assert(/nostrQueryImpl:\s*nostrRelayQueryClient,\s*\n\s*nostrRelayUrl:\s*resolvedNostrRelayUrl/.test(mainSource), 'D6. composeDecentralizedWorldEncounterMaterialDiscoveryServices() (World Encounter discovery) receives the resolved relayUrl');
-        assert(/nostrSnapshotDiscoveryQueryServiceOptions:\s*\{\s*queryImpl:\s*nostrRelayQueryClient,\s*relayUrl:\s*resolvedNostrRelayUrl\s*\}/.test(mainSource), 'D7. composeDiscoverSnapshotRuntime() (Snapshot discovery) receives the resolved relayUrl');
-        assert(/new NostrPlaceNamingDiscoverySource\(\{\s*queryImpl:\s*nostrRelayQueryClient,\s*relayUrl:\s*resolvedNostrRelayUrl\s*\}\)/.test(mainSource), 'D8. NostrPlaceNamingDiscoverySource (Place Naming discovery) receives the resolved relayUrl');
+        // AMENDED BY 0.9.451 — World Encounter (Publication) discovery no
+        // longer receives resolvedNostrRelayUrl; it receives the resolved
+        // publication relay SET instead. See this file's own 0.9.451 header.
+        assert(!/nostrQueryImpl:\s*nostrRelayQueryClient,\s*\n\s*nostrRelayUrl:\s*resolvedNostrRelayUrl/.test(mainSource), 'D6. composeDecentralizedWorldEncounterMaterialDiscoveryServices() (World Encounter discovery) no longer receives resolvedNostrRelayUrl — 0.9.451 moved it onto the publication relay set instead');
+        assert(/nostrQueryImpl:\s*nostrRelayQueryClient,\s*\n\s*nostrRelayUrls:\s*resolvedNostrPublicationRelayUrls/.test(mainSource), 'D6b. composeDecentralizedWorldEncounterMaterialDiscoveryServices() (World Encounter discovery) instead receives resolvedNostrPublicationRelayUrls (0.9.451)');
+        assert(/nostrSnapshotDiscoveryQueryServiceOptions:\s*\{\s*queryImpl:\s*nostrRelayQueryClient,\s*relayUrl:\s*resolvedNostrRelayUrl\s*\}/.test(mainSource), 'D7. composeDiscoverSnapshotRuntime() (Snapshot discovery) still receives the resolved relayUrl, untouched by 0.9.451');
+        assert(/new NostrPlaceNamingDiscoverySource\(\{\s*queryImpl:\s*nostrRelayQueryClient,\s*relayUrl:\s*resolvedNostrRelayUrl\s*\}\)/.test(mainSource), 'D8. NostrPlaceNamingDiscoverySource (Place Naming discovery) still receives the resolved relayUrl, untouched by 0.9.451');
 
         // Publishing (write-path) call sites: none may reference
         // resolvedNostrRelayUrl — see core/NostrRelayConfiguration.js's own
@@ -143,7 +164,7 @@ async function run() {
             assert(!offendingLine, `D10 (${publisherName}). no CODE line in ui/main.js both references this write-path publisher and the resolved relayUrl — confirming resolvedNostrRelayUrl never reaches it through this file`);
         }
 
-        console.log('✓ Section D: ui/main.js source sweep confirms the resolved relayUrl reaches all three read-path composition call sites, and no Nostr publishing call site references it');
+        console.log('✓ Section D: ui/main.js source sweep confirms the resolved relayUrl reaches the two remaining read-path composition call sites (World Encounter discovery now receives the publication relay set instead, per 0.9.451), and no Nostr publishing call site references it');
     }
 
     // ===============================================================

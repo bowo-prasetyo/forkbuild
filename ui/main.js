@@ -1712,17 +1712,24 @@ app.provide('setArweaveGatewayConfigurationUseCase', setArweaveGatewayConfigurat
 // consulted only then.
 //
 // APPLIED ONLY TO READ/DISCOVERY, NEVER TO PUBLISHING. `resolvedNostrRelayUrl`
-// below is threaded into `composeDecentralizedWorldEncounterMaterialDiscoveryServices()`'s
-// own `nostrRelayUrl` (immediately below), into
-// `composeDiscoverSnapshotRuntime()`'s own `nostrSnapshotDiscoveryQueryServiceOptions.relayUrl`
-// (later in this file), and into `NostrPlaceNamingDiscoverySource`'s own
-// `relayUrl` (later in this file) — the three read-path composition sites
-// 0.9.368's own audit traced. It is never threaded into
-// `createNostrInjectedProviderPublisher()` or any of the three Nostr
-// WRITE-path publishers (`NostrPublicationDiscoveryPublisher`,
-// `NostrSnapshotDiscoveryPublisher`, `NostrPlaceNamingDiscoveryPublisher`),
-// exactly the "user setting affects read/discovery, never publishing"
-// boundary this milestone's own brief draws.
+// below is threaded into `composeDiscoverSnapshotRuntime()`'s own
+// `nostrSnapshotDiscoveryQueryServiceOptions.relayUrl` (later in this file)
+// and into `NostrPlaceNamingDiscoverySource`'s own `relayUrl` (later in
+// this file) — two of the three read-path composition sites 0.9.368's own
+// audit traced. It is never threaded into `createNostrInjectedProviderPublisher()`
+// or any of the three Nostr WRITE-path publishers
+// (`NostrPublicationDiscoveryPublisher`, `NostrSnapshotDiscoveryPublisher`,
+// `NostrPlaceNamingDiscoveryPublisher`), exactly the "user setting affects
+// read/discovery, never publishing" boundary this milestone's own brief
+// draws.
+//
+// AMENDED BY 0.9.451 — the third read-path site,
+// `composeDecentralizedWorldEncounterMaterialDiscoveryServices()`'s own
+// Nostr Publication discovery, no longer consults `resolvedNostrRelayUrl`
+// at all — see this file's own 0.9.451 comment, below, where that
+// composition is actually called, for why Publication discovery now
+// consumes `resolvedNostrPublicationRelayUrls` (0.9.447's own write-side
+// relay SET) instead.
 //
 // 0.9.371 — Nostr Relay Settings UI. The WRITE half of the settings entry
 // point, wired against this SAME store instance (never a second,
@@ -1780,9 +1787,22 @@ app.provide('rendezvousConfigurationStore', rendezvousConfigurationStore);
 app.provide('setRendezvousConfigurationUseCase', setRendezvousConfigurationUseCase);
 
 const nostrRelayQueryClient = createNostrRelayQueryClient({});
+// 0.9.451 — Nostr Publication Relay Set Discovery Alignment. Publication
+// discovery now consumes `resolvedNostrPublicationRelayUrls` (the SAME
+// already-resolved array 0.9.450's own multi-relay distribution wiring
+// already reads, above) rather than `resolvedNostrRelayUrl` — see
+// `application/NostrPublicationRelaySetDiscoveryQueryService.js`'s own
+// header for why a publication distributed to a configured relay set must
+// be discoverable through that same set, and `application/
+// DecentralizedWorldEncounterMaterialDiscoveryRuntimeComposition.js`'s own
+// 0.9.451 amendment for how `nostrRelayUrls` (plural) reaches this one
+// call site. Snapshot discovery and place-naming discovery, below, are
+// untouched — both remain wired to `resolvedNostrRelayUrl`, exactly as
+// 0.9.369 left them; this milestone's own scope is Publication discovery
+// only.
 const decentralizedWorldDiscoveryServices = composeDecentralizedWorldEncounterMaterialDiscoveryServices({
     nostrQueryImpl: nostrRelayQueryClient,
-    nostrRelayUrl: resolvedNostrRelayUrl
+    nostrRelayUrls: resolvedNostrPublicationRelayUrls
 });
 const decentralizedWorldEncounterMaterialDiscoveryRuntime = composeDecentralizedWorldEncounterMaterialDiscoveryRuntime({
     discoveryServices: decentralizedWorldDiscoveryServices,

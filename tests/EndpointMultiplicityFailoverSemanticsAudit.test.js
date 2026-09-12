@@ -461,9 +461,17 @@ async function run() {
         const mainSource = await source('ui/main.js');
 
         // F1. Nostr — resolvedNostrRelayUrl (the ONE user-configurable
-        // relay override that exists) is threaded into every READ
-        // composition site and into NONE of the three WRITE publishers.
-        assert(mainSource.includes('nostrRelayUrl: resolvedNostrRelayUrl'), n('F1. resolvedNostrRelayUrl reaches the World Encounter discovery (read) composition site'));
+        // relay override that exists) is threaded into the remaining READ
+        // composition sites and into NONE of the three WRITE publishers.
+        //
+        // AMENDED BY 0.9.451 — World Encounter (Publication) discovery no
+        // longer receives resolvedNostrRelayUrl; it now receives the
+        // resolved publication relay SET instead (resolvedNostrPublicationRelayUrls,
+        // 0.9.447's own write-side relay set, already reachable from
+        // distribution since 0.9.450) — see `application/
+        // NostrPublicationRelaySetDiscoveryQueryService.js`'s own header for
+        // why. Snapshot discovery is untouched.
+        assert(mainSource.includes('nostrRelayUrls: resolvedNostrPublicationRelayUrls'), n('F1. resolvedNostrPublicationRelayUrls reaches the World Encounter (Publication) discovery (read) composition site — 0.9.451'));
         assert(mainSource.includes('relayUrl: resolvedNostrRelayUrl'), n('F1. resolvedNostrRelayUrl reaches the Snapshot discovery (read) composition site'));
         assert(mainSource.includes('APPLIED ONLY TO READ/DISCOVERY, NEVER TO PUBLISHING'),
             n('F1. this file\'s own header names the boundary explicitly, and Section F1\'s two live call-site checks above corroborate it rather than merely citing the comment'));

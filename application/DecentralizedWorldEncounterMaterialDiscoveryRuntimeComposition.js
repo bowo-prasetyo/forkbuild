@@ -1,4 +1,5 @@
 import { NostrDiscoveryQueryService } from './NostrDiscoveryQueryService.js';
+import { NostrPublicationRelaySetDiscoveryQueryService } from './NostrPublicationRelaySetDiscoveryQueryService.js';
 import { ArweaveGraphqlDiscoveryQueryService } from './ArweaveGraphqlDiscoveryQueryService.js';
 import { DecentralizedWorldDiscoveryLeadRegistry } from './DecentralizedWorldDiscoveryLeadRegistry.js';
 import { queryDecentralizedWorldDiscoveryIntoRegistry } from './DecentralizedWorldDiscoveryQueryRegistryBridge.js';
@@ -196,23 +197,34 @@ import { WorldEncounterKind } from '../core/WorldEncounter.js';
 // already do; a malformed `arweaveFetchImpl` (or no `fetch` available at
 // all, e.g. in a bare Node test) throws exactly as
 // `new ArweaveGraphqlDiscoveryQueryService(...)` already throws on its own.
+//
+// AMENDED BY 0.9.451 — Nostr Publication Relay Set Discovery Alignment.
+// `nostrRelayUrls` (PLURAL, an array) is a new, additional way to configure
+// the same one `nostr` field, mirroring the exact "plural is a new,
+// additional way to configure the same one field" precedent `application/
+// DiscoverSnapshotRuntimeComposition.js`'s own 0.9.440 amendment already
+// set for `arweaveContentStoreOptions.gatewayUrls`. Passing a non-empty
+// `nostrRelayUrls` builds a single `application/
+// NostrPublicationRelaySetDiscoveryQueryService.js` instance (0.9.451,
+// wrapping one `NostrDiscoveryQueryService` per configured relay,
+// concurrently) instead of the plain single-relay `NostrDiscoveryQueryService`
+// — see that file's own header for why it reports one composite `origin`
+// rather than one per relay. Passing nothing, or an empty array, is
+// byte-for-byte the pre-0.9.451 behavior: `nostrRelayUrl` (singular) is
+// consulted exactly as before. The two options are mutually exclusive —
+// `nostrRelayUrls` (plural), when it carries at least one entry, always
+// wins over `nostrRelayUrl` (singular); a caller never gets a mix of both.
 export function composeDecentralizedWorldEncounterMaterialDiscoveryServices({
     nostrQueryImpl = null,
     nostrRelayUrl,
+    nostrRelayUrls,
     nostrTagName,
     nostrKinds,
     arweaveFetchImpl,
     arweaveGraphqlUrl,
     arweaveTagName
 } = {}) {
-    const nostr = typeof nostrQueryImpl === 'function'
-        ? new NostrDiscoveryQueryService({
-            queryImpl: nostrQueryImpl,
-            relayUrl: nostrRelayUrl,
-            tagName: nostrTagName,
-            kinds: nostrKinds
-        })
-        : null;
+    const nostr = buildNostrDiscoveryService({ nostrQueryImpl, nostrRelayUrl, nostrRelayUrls, nostrTagName, nostrKinds });
 
     const arweave = new ArweaveGraphqlDiscoveryQueryService({
         fetchImpl: arweaveFetchImpl,
@@ -221,6 +233,32 @@ export function composeDecentralizedWorldEncounterMaterialDiscoveryServices({
     });
 
     return Object.freeze({ nostr, arweave });
+}
+
+// buildNostrDiscoveryService({ nostrQueryImpl, nostrRelayUrl, nostrRelayUrls,
+//   nostrTagName, nostrKinds }) -> NostrPublicationRelaySetDiscoveryQueryService |
+//   NostrDiscoveryQueryService | null. See this file's own 0.9.451 amendment,
+//   above, for the full contract: a non-empty `nostrRelayUrls` always wins
+//   over `nostrRelayUrl`; with no usable `nostrQueryImpl` this resolves
+//   `null` either way, unchanged since 0.9.110.
+function buildNostrDiscoveryService({ nostrQueryImpl, nostrRelayUrl, nostrRelayUrls, nostrTagName, nostrKinds }) {
+    if (typeof nostrQueryImpl !== 'function') {
+        return null;
+    }
+    if (Array.isArray(nostrRelayUrls) && nostrRelayUrls.length > 0) {
+        return new NostrPublicationRelaySetDiscoveryQueryService({
+            queryImpl: nostrQueryImpl,
+            relayUrls: nostrRelayUrls,
+            tagName: nostrTagName,
+            kinds: nostrKinds
+        });
+    }
+    return new NostrDiscoveryQueryService({
+        queryImpl: nostrQueryImpl,
+        relayUrl: nostrRelayUrl,
+        tagName: nostrTagName,
+        kinds: nostrKinds
+    });
 }
 
 // Builds the one application-facing capability a real composition root

@@ -146,8 +146,15 @@ async function run() {
         // split, but this time also checking that the write side's OWN
         // default is untouched by any settings-resolved value at all.
         const mainSource = await source('ui/main.js');
-        assert(mainSource.includes('nostrRelayUrl: resolvedNostrRelayUrl') && mainSource.includes('relayUrl: resolvedNostrRelayUrl'),
-            n('B3. resolvedNostrRelayUrl reaches the read-path composition sites, live-confirmed'));
+        // AMENDED BY 0.9.451 — Nostr Publication Relay Set Discovery
+        // Alignment. World Encounter (Publication) discovery no longer
+        // receives resolvedNostrRelayUrl; it now receives the resolved
+        // publication relay SET instead — see `application/
+        // NostrPublicationRelaySetDiscoveryQueryService.js`'s own header.
+        // The other two read-path sites (Snapshot, Place Naming discovery)
+        // are unaffected.
+        assert(mainSource.includes('nostrRelayUrls: resolvedNostrPublicationRelayUrls') && mainSource.includes('relayUrl: resolvedNostrRelayUrl'),
+            n('B3. resolvedNostrPublicationRelayUrls reaches World Encounter (Publication) discovery, and resolvedNostrRelayUrl still reaches the remaining read-path composition sites, live-confirmed — 0.9.451'));
         assert(!/nostrPublisherOptions[\s\S]{0,120}relayUrl/.test(mainSource) && !/nostrSnapshotDiscoveryPublisherOptions[\s\S]{0,120}relayUrl/.test(mainSource) && !/nostrPlaceNamingDiscoveryPublisherOptions[\s\S]{0,120}relayUrl/.test(mainSource),
             n('B3. none of the three write-path publisher option objects in ui/main.js ever supplies a relayUrl — every publisher falls through to its own class-level DEFAULT_RELAY_URL, entirely unaffected by a user\'s own read-side relay setting'));
 
