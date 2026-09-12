@@ -321,8 +321,13 @@ async function run() {
         // the gap — the rest of this audit's own evidence (Sections A-C,
         // E-J) is unaffected, since none of it depended on the gap
         // staying open.
-        assert(editorViewRaw.includes("inject('publicationDistributionCommand', null)"),
-            '20. EditorView.js now injects publicationDistributionCommand — 0.9.377 closed the gap this section identified, using the exact inject(key, null) shape recommended below');
+        // AMENDED BY 0.9.450 — Nostr Multi-Relay Publication Distribution
+        // Wiring. The injected key renamed from `publicationDistributionCommand`
+        // to `multiRelayNostrPublicationDistributionCommand` — see
+        // EditorView.js's own 0.9.450 amendment — the identical
+        // inject(key, null) shape, unchanged.
+        assert(editorViewRaw.includes("inject('multiRelayNostrPublicationDistributionCommand', null)"),
+            '20. AMENDED BY 0.9.450 — EditorView.js still injects a distribution command via the exact inject(key, null) shape recommended below — now multiRelayNostrPublicationDistributionCommand');
 
         // Option 3 — ActionFeedback as command carrier. Reconfirmed
         // absent and still architecturally rejected (0.9.375, Sections

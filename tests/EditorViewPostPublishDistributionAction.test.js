@@ -2,7 +2,7 @@ import { readFile } from 'node:fs/promises';
 import { execFileSync } from 'node:child_process';
 
 import { executePublicationDistributionCommand } from '../application/PublicationDistributionCommand.js';
-import { composePublicationDistributionCommand } from '../application/PublicationDistributionCommandComposition.js';
+import { composeMultiRelayNostrPublicationDistributionCommand } from '../application/PublicationDistributionCommandComposition.js';
 import { PublicationDistributionLifecycleMemoryStore } from '../application/PublicationDistributionLifecycleStore.js';
 import { PublicationDistributionState } from '../application/PublicationDistributionLifecycle.js';
 import { PublishDocumentUseCase } from '../application/PublishDocumentUseCase.js';
@@ -142,22 +142,23 @@ function gatewayResponse(body, { status = 200 } = {}) {
     return new Response(body, { status });
 }
 
-// Builds the REAL app-wide `publicationDistributionCommand` exactly the
-// way ui/main.js composes it — unmodified, and identical to how
-// tests/EditorViewDistributionCommandChannelAudit.test.js (0.9.376) and
-// tests/WorldViewPublicationDistributionActionIntegration.test.js (0.9.104)
-// each already build it for their own flagship sections.
-function realAppWideDistributionCommand({ lifecycleStore, transactionId = 'EditorActionTransactionId123456789', eventId = 'e'.repeat(64), gatewayHandler, relayHandler }) {
+// AMENDED BY 0.9.450 — Nostr Multi-Relay Publication Distribution Wiring.
+// EditorView.js's own injected command changed from the single-relay
+// `publicationDistributionCommand` to `multiRelayNostrPublicationDistributionCommand`
+// (see that file's own 0.9.450 amendment) — this helper is renamed and
+// rebuilt to compose the REAL app-wide multi-relay command exactly the way
+// `ui/main.js` composes it now, unmodified otherwise.
+function realAppWideDistributionCommand({ lifecycleStore, transactionId = 'EditorActionTransactionId123456789', eventId = 'e'.repeat(64), gatewayHandler, relayHandler, nostrRelayUrls = ['wss://relay.example'] }) {
     const gateway = gatewayHandler || (() => gatewayResponse('accepted'));
     const relay = relayHandler || (() => ({ published: true, id: eventId }));
-    return composePublicationDistributionCommand({
+    return composeMultiRelayNostrPublicationDistributionCommand({
         lifecycleStore,
         arweaveUploaderOptions: {
             signer: { sign: async (material) => ({ id: transactionId, transaction: { data: material } }) },
             fetchImpl: async (url, options) => gateway(url, options)
         },
+        nostrRelayUrls,
         nostrPublisherOptions: {
-            relayUrl: 'wss://relay.example',
             discoveryTag: 'forkbuild-editor-post-publish-action',
             publishImpl: async (relayUrl, eventTemplate) => relay(relayUrl, eventTemplate)
         }
@@ -165,25 +166,25 @@ function realAppWideDistributionCommand({ lifecycleStore, transactionId = 'Edito
 }
 
 // -----------------------------------------------------------------
-// Harness — extracts the REAL, CURRENT 0.9.377 block out of
-// ui/views/EditorView.js (never hand-retyped) and executes it with fake
-// `ref`/`inject` implementations matching exactly the calls that block
-// makes: `ref(initial)` -> `{ value: initial }` (Vue's own contract for
-// every read/write this block performs), `inject('publicationDistributionCommand', null)`
+// Harness — extracts the REAL, CURRENT 0.9.377 block (AMENDED BY 0.9.450)
+// out of ui/views/EditorView.js (never hand-retyped) and executes it with
+// fake `ref`/`inject` implementations matching exactly the calls that
+// block makes: `ref(initial)` -> `{ value: initial }` (Vue's own contract
+// for every read/write this block performs), `inject('multiRelayNostrPublicationDistributionCommand', null)`
 // -> whatever command this harness was given, or `null`.
 // -----------------------------------------------------------------
-function buildHarness(editorViewSource, { publicationDistributionCommand = null } = {}) {
+function buildHarness(editorViewSource, { multiRelayNostrPublicationDistributionCommand = null } = {}) {
     const blockSource = extractRange(
         editorViewSource,
-        "const publicationDistributionCommand = inject('publicationDistributionCommand', null);",
+        "const multiRelayNostrPublicationDistributionCommand = inject('multiRelayNostrPublicationDistributionCommand', null);",
         '// ------------------------- 0.2.21 document lifecycle ------------',
-        '0.9.377 post-publish distribution block'
+        '0.9.377/0.9.450 post-publish distribution block'
     );
 
     function ref(initial) { return { value: initial }; }
     function inject(key, fallback) {
-        if (key === 'publicationDistributionCommand') {
-            return publicationDistributionCommand === null ? fallback : publicationDistributionCommand;
+        if (key === 'multiRelayNostrPublicationDistributionCommand') {
+            return multiRelayNostrPublicationDistributionCommand === null ? fallback : multiRelayNostrPublicationDistributionCommand;
         }
         return fallback;
     }
@@ -192,7 +193,7 @@ function buildHarness(editorViewSource, { publicationDistributionCommand = null 
     const factory = new Function(
         'inject', 'ref',
         `${blockSource}\nreturn {
-            publicationDistributionCommand,
+            multiRelayNostrPublicationDistributionCommand,
             distributeEditorPublication,
             publishedPublication,
             distributionExecuting,
@@ -216,15 +217,15 @@ async function run() {
     // ---------------------------------------------------------------
     {
         const marker = () => Promise.resolve(null);
-        const harness = buildHarness(editorViewSource, { publicationDistributionCommand: marker });
-        assert(harness.publicationDistributionCommand === marker,
-            '1. EditorView\'s own injected publicationDistributionCommand is the EXACT function instance handed in by the app root, never a copy or wrapper of it');
+        const harness = buildHarness(editorViewSource, { multiRelayNostrPublicationDistributionCommand: marker });
+        assert(harness.multiRelayNostrPublicationDistributionCommand === marker,
+            '1. AMENDED BY 0.9.450 — EditorView\'s own injected multiRelayNostrPublicationDistributionCommand is the EXACT function instance handed in by the app root, never a copy or wrapper of it');
 
-        const degraded = buildHarness(editorViewSource, { publicationDistributionCommand: null });
-        assert(degraded.publicationDistributionCommand === null,
+        const degraded = buildHarness(editorViewSource, { multiRelayNostrPublicationDistributionCommand: null });
+        assert(degraded.multiRelayNostrPublicationDistributionCommand === null,
             '2. with no command provided (e.g. a headless/composition-less caller), EditorView degrades to null exactly like every other optional inject(key, null) in this file — never throws at setup time');
 
-        console.log('✓ Section A: EditorView receives the exact application-root publicationDistributionCommand instance, and degrades to null when none is provided');
+        console.log('✓ Section A: AMENDED BY 0.9.450 — EditorView receives the exact application-root multiRelayNostrPublicationDistributionCommand instance, and degrades to null when none is provided');
     }
 
     // ---------------------------------------------------------------
@@ -232,7 +233,7 @@ async function run() {
     // with the exact returned Publication.
     // ---------------------------------------------------------------
     {
-        const harness = buildHarness(editorViewSource, { publicationDistributionCommand: () => Promise.resolve(null) });
+        const harness = buildHarness(editorViewSource, { multiRelayNostrPublicationDistributionCommand: () => Promise.resolve(null) });
         assert(harness.publishedPublication.value === null,
             '3. before any publish, publishedPublication is null — no action renders yet');
 
@@ -254,7 +255,7 @@ async function run() {
     {
         let received = null;
         const command = (request) => { received = request; return Promise.resolve({ publication: { objectId: 'obj-1' }, material: null, discovery: null }); };
-        const harness = buildHarness(editorViewSource, { publicationDistributionCommand: command });
+        const harness = buildHarness(editorViewSource, { multiRelayNostrPublicationDistributionCommand: command });
 
         const publication = publishLocally('Section C Manor');
         harness.onDocumentPublished(publication);
@@ -277,7 +278,7 @@ async function run() {
     {
         let calls = 0;
         const command = () => { calls += 1; return Promise.resolve(null); };
-        const harness = buildHarness(editorViewSource, { publicationDistributionCommand: command });
+        const harness = buildHarness(editorViewSource, { multiRelayNostrPublicationDistributionCommand: command });
 
         const publication = publishLocally('Section D Manor');
         harness.onDocumentPublished(publication);
@@ -293,8 +294,8 @@ async function run() {
         const onPublishedSource = extractRange(editorViewCodeOnly,
             'function onDocumentPublished(publication) {', '\n        }',
             'onDocumentPublished() body');
-        assert(!onPublishedSource.includes('publicationDistributionCommand(') && !onPublishedSource.includes('distributePublishedDocument(') && !onPublishedSource.includes('distributeEditorPublication('),
-            '10. the REAL, extracted onDocumentPublished() source never calls the command or either distribution wrapper itself');
+        assert(!onPublishedSource.includes('multiRelayNostrPublicationDistributionCommand(') && !onPublishedSource.includes('distributePublishedDocument(') && !onPublishedSource.includes('distributeEditorPublication('),
+            '10. AMENDED BY 0.9.450 — the REAL, extracted onDocumentPublished() source never calls the (now multi-relay) command or either distribution wrapper itself');
 
         // Toolbar.js's own publish() still performs no distribution I/O
         // and never calls anything distribution-shaped itself — mirrors
@@ -320,7 +321,7 @@ async function run() {
         const lifecycleStore = new PublicationDistributionLifecycleMemoryStore();
         const publication = publishLocally('Section E Manor');
         const harness = buildHarness(editorViewSource, {
-            publicationDistributionCommand: realAppWideDistributionCommand({ lifecycleStore })
+            multiRelayNostrPublicationDistributionCommand: realAppWideDistributionCommand({ lifecycleStore })
         });
 
         harness.onDocumentPublished(publication);
@@ -331,8 +332,13 @@ async function run() {
 
         assert(harness.distributionExecuting.value === false, '14. execution returns to idle once the real command resolves');
         assert(harness.distributionError.value === null, '15. a genuine successful distribution leaves no error notice');
-        assert(harness.distributionResult.value && harness.distributionResult.value.discovery && harness.distributionResult.value.discovery.id === 'e'.repeat(64),
-            '16. the real orchestrator/executor/lifecycle chain is reached end to end — a real PublicationDistributionResult is stored, live');
+        // AMENDED BY 0.9.450 — the real command is now the multi-relay one,
+        // resolving an ARRAY of PublicationDistributionResult (one per
+        // configured relay — here, a single-relay array, since
+        // realAppWideDistributionCommand() defaults to one relay).
+        assert(Array.isArray(harness.distributionResult.value) && harness.distributionResult.value.length === 1
+            && harness.distributionResult.value[0].discovery && harness.distributionResult.value[0].discovery.id === 'e'.repeat(64),
+            '16. AMENDED BY 0.9.450 — the real orchestrator/executor/lifecycle chain is reached end to end — a real PublicationDistributionResult, wrapped in a one-element array (one configured relay), is stored, live');
         assert(lifecycleStore.get(publication.id).discovery.state === PublicationDistributionState.PRESENT,
             '17. the SAME app-wide lifecycle store a distribution triggered elsewhere (WorldView/OwnPublicationPanel) would also observe now holds this real transition');
 
@@ -348,7 +354,7 @@ async function run() {
         {
             const publication = publishLocally('Section F1 Manor');
             const harness = buildHarness(editorViewSource, {
-                publicationDistributionCommand: () => Promise.reject(new Error('gateway unreachable'))
+                multiRelayNostrPublicationDistributionCommand: () => Promise.reject(new Error('gateway unreachable'))
             });
             harness.onDocumentPublished(publication);
             harness.distributePublishedDocument();
@@ -367,7 +373,7 @@ async function run() {
         {
             const publication = publishLocally('Section F2 Manor');
             const harness = buildHarness(editorViewSource, {
-                publicationDistributionCommand: () => { throw new Error('signer is required'); }
+                multiRelayNostrPublicationDistributionCommand: () => { throw new Error('signer is required'); }
             });
             harness.onDocumentPublished(publication);
             harness.distributePublishedDocument();
@@ -382,7 +388,7 @@ async function run() {
         // inert, never fabricating an error.
         {
             const publication = publishLocally('Section F3 Manor');
-            const harness = buildHarness(editorViewSource, { publicationDistributionCommand: null });
+            const harness = buildHarness(editorViewSource, { multiRelayNostrPublicationDistributionCommand: null });
             harness.onDocumentPublished(publication);
             harness.distributePublishedDocument();
             await flushMicrotasks();
@@ -398,7 +404,7 @@ async function run() {
             let resolveFirst;
             const publication = publishLocally('Section F4 Manor');
             const harness = buildHarness(editorViewSource, {
-                publicationDistributionCommand: () => { calls += 1; return new Promise((resolve) => { resolveFirst = resolve; }); }
+                multiRelayNostrPublicationDistributionCommand: () => { calls += 1; return new Promise((resolve) => { resolveFirst = resolve; }); }
             });
             harness.onDocumentPublished(publication);
 
@@ -437,7 +443,7 @@ async function run() {
             }
             return Promise.resolve({ publication: { objectId: `obj-${received.length}` }, material: null, discovery: null });
         };
-        const harness = buildHarness(editorViewSource, { publicationDistributionCommand: command });
+        const harness = buildHarness(editorViewSource, { multiRelayNostrPublicationDistributionCommand: command });
 
         const publicationA = publishLocally('Section G Manor A');
         const publicationB = publishLocally('Section G Manor B');
@@ -502,12 +508,16 @@ async function run() {
         // EditorView.js's own wrapper is structurally the SAME shape as
         // WorldView.js's — same request fields, same guard, same
         // rejection message — confirmed against the real extracted
-        // source text of both.
+        // source text of both. AMENDED BY 0.9.450: EditorView.js's own
+        // command is now multiRelayNostrPublicationDistributionCommand
+        // (never a substrate choice, since this view offers none — see
+        // that file's own 0.9.450 amendment), the SAME command
+        // WorldView.js's own wrapper calls on its own Nostr branch.
         const editorWrapper = extractRange(editorViewCodeOnly,
             'function distributeEditorPublication(publication) {', '\n        }',
             'distributeEditorPublication() body');
-        assert(editorWrapper.includes('publicationDistributionCommand({') && editorWrapper.includes('serializedMaterial: JSON.stringify(publication.toJSON())'),
-            '37. EditorView.js\'s own distributeEditorPublication() calls the injected command with the identical request shape WorldView.js\'s own wrapper uses');
+        assert(editorWrapper.includes('multiRelayNostrPublicationDistributionCommand({') && editorWrapper.includes('serializedMaterial: JSON.stringify(publication.toJSON())'),
+            '37. AMENDED BY 0.9.450 — EditorView.js\'s own distributeEditorPublication() calls the injected multi-relay command with the identical request shape WorldView.js\'s own wrapper uses on its own Nostr branch');
 
         console.log('✓ Section H: WorldView.js\'s own Publication Distribution path is completely unaffected, and EditorView\'s new wrapper mirrors its exact shape without editing it');
     }
@@ -526,7 +536,7 @@ async function run() {
         // caller already uses.
         const publication = publishLocally('Section I Manor');
         const harness = buildHarness(editorViewSource, {
-            publicationDistributionCommand: () => Promise.reject(new Error('Publication is no longer available for distribution'))
+            multiRelayNostrPublicationDistributionCommand: () => Promise.reject(new Error('Publication is no longer available for distribution'))
         });
         harness.onDocumentPublished(publication);
         harness.distributePublishedDocument();

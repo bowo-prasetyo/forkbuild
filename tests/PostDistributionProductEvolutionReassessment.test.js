@@ -218,18 +218,27 @@ function wrapAsWorldViewDistributionAction(rawCommand) {
 // DistributionAction.test.js (0.9.377) and tests/PostPublishDistribution
 // ActionConvergenceAudit.test.js (0.9.378) already do.
 // -----------------------------------------------------------------
-function buildEditorViewHarness(editorViewSource, { publicationDistributionCommand = null } = {}) {
+// AMENDED BY 0.9.450 — Nostr Multi-Relay Publication Distribution Wiring.
+// EditorView.js's own injected command changed from the single-relay
+// `publicationDistributionCommand` to `multiRelayNostrPublicationDistributionCommand`
+// — see that file's own 0.9.450 amendment. `rawCommand` throughout this
+// file remains built via the single-relay `composePublicationDistributionCommand()`
+// test double (see `realAppWideDistributionCommand()`'s own header) — this
+// file's own convergence/reassessment claims are unaffected by which
+// composer built the shared test double, so every assertion keeps working
+// against a plain, single-object result, unchanged.
+function buildEditorViewHarness(editorViewSource, { multiRelayNostrPublicationDistributionCommand = null } = {}) {
     const blockSource = extractRange(
         editorViewSource,
-        "const publicationDistributionCommand = inject('publicationDistributionCommand', null);",
+        "const multiRelayNostrPublicationDistributionCommand = inject('multiRelayNostrPublicationDistributionCommand', null);",
         '// ------------------------- 0.2.21 document lifecycle ------------',
-        '0.9.377 post-publish distribution block'
+        '0.9.377/0.9.450 post-publish distribution block'
     );
 
     function ref(initial) { return { value: initial }; }
     function inject(key, fallback) {
-        if (key === 'publicationDistributionCommand') {
-            return publicationDistributionCommand === null ? fallback : publicationDistributionCommand;
+        if (key === 'multiRelayNostrPublicationDistributionCommand') {
+            return multiRelayNostrPublicationDistributionCommand === null ? fallback : multiRelayNostrPublicationDistributionCommand;
         }
         return fallback;
     }
@@ -238,7 +247,7 @@ function buildEditorViewHarness(editorViewSource, { publicationDistributionComma
     const factory = new Function(
         'inject', 'ref',
         `${blockSource}\nreturn {
-            publicationDistributionCommand,
+            multiRelayNostrPublicationDistributionCommand,
             distributeEditorPublication,
             publishedPublication,
             distributionExecuting,
@@ -321,7 +330,7 @@ function makeEditorViewSurface(editorViewSource) {
     return {
         name: 'EditorView',
         makeCtx: (publication, rawCommand) => {
-            const harness = buildEditorViewHarness(editorViewSource, { publicationDistributionCommand: rawCommand });
+            const harness = buildEditorViewHarness(editorViewSource, { multiRelayNostrPublicationDistributionCommand: rawCommand });
             harness.onDocumentPublished(publication);
             return harness;
         },
@@ -442,10 +451,10 @@ async function run() {
     // whether a meaningful task still ends prematurely.
     // ---------------------------------------------------------------
     {
-        const editorHarness = buildEditorViewHarness(editorViewSource, { publicationDistributionCommand: null });
+        const editorHarness = buildEditorViewHarness(editorViewSource, { multiRelayNostrPublicationDistributionCommand: null });
         const lifecycleStore = new PublicationDistributionLifecycleMemoryStore();
         const rawCommand = realAppWideDistributionCommand({ lifecycleStore });
-        const editorHarnessLive = buildEditorViewHarness(editorViewSource, { publicationDistributionCommand: rawCommand });
+        const editorHarnessLive = buildEditorViewHarness(editorViewSource, { multiRelayNostrPublicationDistributionCommand: rawCommand });
         const { publishDocumentUseCase } = publishingRig();
 
         const { emittedEvent, emittedArg } = publishThroughRealChain(publishSource, editorHarnessLive, {
@@ -487,7 +496,7 @@ async function run() {
         const lifecycleStore = new PublicationDistributionLifecycleMemoryStore();
         const rawCommand = realAppWideDistributionCommand({ lifecycleStore, eventId: 'c'.repeat(64) });
         const publication = publishLocally('Section C Usability Manor');
-        const editorHarness = buildEditorViewHarness(editorViewSource, { publicationDistributionCommand: rawCommand });
+        const editorHarness = buildEditorViewHarness(editorViewSource, { multiRelayNostrPublicationDistributionCommand: rawCommand });
         editorHarness.onDocumentPublished(publication);
         editorHarness.distributePublishedDocument();
         await flushMicrotasks();
@@ -506,9 +515,13 @@ async function run() {
         const result = editorHarness.distributionResult.value;
         assert(result.material.uri && result.discovery.id === 'c'.repeat(64),
             n('locator/result available: the result carries a real material URI and a real discovery event id, not placeholders'));
-        assert(editorViewSource.includes('{{ distributionResult.material ? distributionResult.material.uri : ') &&
-               editorViewSource.includes('{{ distributionResult.discovery ? distributionResult.discovery.id : '),
-            n('EditorView.js\'s own template actually renders material.uri and discovery.id to the user — the locator is not merely computed and discarded'));
+        // AMENDED BY 0.9.450 — distributionResult is now an ARRAY (one
+        // element per configured relay); the template reads material from
+        // the first element and discovery per relay result — see
+        // EditorView.js's own 0.9.450 amendment.
+        assert(editorViewSource.includes('{{ distributionResult[0].material ? distributionResult[0].material.uri : ') &&
+               editorViewSource.includes('relayResult.discovery ? relayResult.discovery.id : '),
+            n('AMENDED BY 0.9.450 — EditorView.js\'s own template actually renders material.uri and discovery.id to the user — the locator is not merely computed and discarded'));
         const panelSource = await readSource('ui/components/OwnPublicationPanel.js');
         assert(panelSource.includes('{{ publicationDistributionResult.material ? publicationDistributionResult.material.uri : ') &&
                panelSource.includes('{{ publicationDistributionResult.discovery ? publicationDistributionResult.discovery.id : '),
@@ -541,9 +554,9 @@ async function run() {
         // navigation) — unrelated to this finding.
         const editorPostPublishBlock = extractRange(
             editorViewSource,
-            "const publicationDistributionCommand = inject('publicationDistributionCommand', null);",
+            "const multiRelayNostrPublicationDistributionCommand = inject('multiRelayNostrPublicationDistributionCommand', null);",
             '// ------------------------- 0.2.21 document lifecycle ------------',
-            '0.9.377 post-publish distribution block'
+            '0.9.377/0.9.450 post-publish distribution block'
         );
         assert(!editorPostPublishBlock.includes('/publications'),
             n('EditorView.js\'s own 0.9.377/0.9.381 post-publish block still contains no link, route, or navigation toward the Publication Center — 0.9.380\'s own audit proved that destination structurally wrong, and 0.9.381 correctly never built it'));
@@ -573,7 +586,7 @@ async function run() {
 
         const lifecycleStore = new PublicationDistributionLifecycleMemoryStore();
         const rawCommand = realAppWideDistributionCommand({ lifecycleStore });
-        const editorHarness = buildEditorViewHarness(editorViewSource, { publicationDistributionCommand: rawCommand });
+        const editorHarness = buildEditorViewHarness(editorViewSource, { multiRelayNostrPublicationDistributionCommand: rawCommand });
         editorHarness.onDocumentPublished(publication);
         editorHarness.distributePublishedDocument();
         await flushMicrotasks();
@@ -653,7 +666,7 @@ async function run() {
         const lifecycleStore = new PublicationDistributionLifecycleMemoryStore();
         const publication = signedPublication({ id: 'pub-379-partial-1' });
         const rawCommand = realAppWideDistributionCommand({ lifecycleStore, relayHandler: () => null });
-        const editorHarness = buildEditorViewHarness(editorViewSource, { publicationDistributionCommand: rawCommand });
+        const editorHarness = buildEditorViewHarness(editorViewSource, { multiRelayNostrPublicationDistributionCommand: rawCommand });
         editorHarness.onDocumentPublished(publication);
         editorHarness.distributePublishedDocument();
         await flushMicrotasks();

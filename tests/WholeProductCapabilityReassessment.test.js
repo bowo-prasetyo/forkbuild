@@ -194,7 +194,9 @@ async function run() {
                 journey: 'Create -> Edit -> Publish -> Distribute -> Explore',
                 stages: 'entry: /editor | action: write & publish | domain op: PublishDocumentUseCase | persistence/distribution: PublicationDistributionCommand (Arweave+Nostr) | observation: /world/:documentId',
                 proof: '0.9.383 Section B1/B2 (live harness, real router.push onto a genuinely resolvable /world/:documentId) and 0.9.382/0.9.381 before it',
-                fresh: editorViewCode.includes("const publicationDistributionCommand = inject('publicationDistributionCommand', null);") && editorViewCode.includes('viewDistributedPublicationInRepository')
+                // AMENDED BY 0.9.450 — EditorView.js's own injected command
+                // renamed to multiRelayNostrPublicationDistributionCommand.
+                fresh: editorViewCode.includes("const multiRelayNostrPublicationDistributionCommand = inject('multiRelayNostrPublicationDistributionCommand', null);") && editorViewCode.includes('viewDistributedPublicationInRepository')
             },
             {
                 journey: 'Discover -> Resolve -> Retrieve -> Explore',

@@ -536,6 +536,18 @@ export default {
         // view constructs, orchestrates, or writes into the lifecycle
         // store itself.
         const publicationDistributionCommand = inject('publicationDistributionCommand', null);
+        // 0.9.450 — Nostr Multi-Relay Publication Distribution Wiring. The
+        // SAME app-wide `multiRelayNostrPublicationDistributionCommand`
+        // `ui/main.js` has provided since 0.9.447 (composed against the
+        // Wanderer's own persisted `NostrPublicationRelaySetConfigurationProvider`
+        // relay set, bound to the identical `publicationDistributionLifecycleStore`
+        // injected above) — injected here so `distributeWorldEncounterPublication()`
+        // below can reach it for the Nostr path specifically. This view
+        // still constructs no orchestrator, uploader, or publisher of its
+        // own, and makes no relay-set decision of its own: which relays get
+        // used is entirely `ui/main.js`'s own composition-root decision,
+        // exactly as it already is for `publicationDistributionCommand`.
+        const multiRelayNostrPublicationDistributionCommand = inject('multiRelayNostrPublicationDistributionCommand', null);
         // 0.9.138 — World View Snapshot Distribution Action. The SAME
         // app-wide `snapshotDistributionCommand` `ui/main.js` now composes
         // (0.9.137's own `composeSnapshotDistributionRuntime()`, sequenced
@@ -1237,14 +1249,52 @@ export default {
         // `'nostr'` exactly where it already did, several layers down, in
         // `PublicationDistributionRuntimeComposition.js` — see that file's
         // own header, "discoveryProvider itself is the one new option."
+        //
+        // AMENDED BY 0.9.450 — Nostr Multi-Relay Publication Distribution
+        // Wiring. 0.9.449's own product reassessment found this function
+        // was the exact seam that kept the already-built, already-composed
+        // `multiRelayNostrPublicationDistributionCommand` unreachable: every
+        // call, Nostr or Arweave alike, went through the single-relay
+        // command. This function now reads `discoveryProvider` itself for
+        // the first time — the ONE interpretation it did not previously
+        // make — to decide WHICH already-composed command to call, never to
+        // build a request shape either command does not already accept.
+        // `discoveryProvider === 'arweave'` keeps calling the single-relay
+        // `publicationDistributionCommand()` exactly as before, forwarding
+        // `discoveryProvider` verbatim. Every other case (`'nostr'`, or
+        // omitted — the identical default `PublicationDistributionRuntimeComposition.js`
+        // itself already holds) now calls
+        // `multiRelayNostrPublicationDistributionCommand()` instead —
+        // Nostr-specific by construction, so `discoveryProvider` is never
+        // forwarded to it (that command has no such parameter; see
+        // `application/PublicationDistributionCommand.js`'s own 0.9.444
+        // header, "always with discoveryProvider fixed to 'nostr'"). Both
+        // branches resolve to whatever their own already-tested command
+        // resolves to — a single `PublicationDistributionResult` for
+        // Arweave, an array of them (one per configured relay) for Nostr —
+        // never re-shaped or re-described here. `WorldEncounterCanvas`'s
+        // own `distributeSelectedPublication()` never inspects either
+        // shape (see that file's own header, "never inspects a resolved
+        // result") — both branches reach the Wanderer only through
+        // `distributionLifecycleStore`'s own existing subscription,
+        // unaffected by which shape produced the fresh fact.
         function distributeWorldEncounterPublication(publication, discoveryProvider) {
-            if (!publicationDistributionCommand) {
+            if (discoveryProvider === 'arweave') {
+                if (!publicationDistributionCommand) {
+                    return Promise.reject(new Error('Publication distribution is not available.'));
+                }
+                return publicationDistributionCommand({
+                    publication,
+                    serializedMaterial: JSON.stringify(publication.toJSON()),
+                    discoveryProvider
+                });
+            }
+            if (!multiRelayNostrPublicationDistributionCommand) {
                 return Promise.reject(new Error('Publication distribution is not available.'));
             }
-            return publicationDistributionCommand({
+            return multiRelayNostrPublicationDistributionCommand({
                 publication,
-                serializedMaterial: JSON.stringify(publication.toJSON()),
-                discoveryProvider
+                serializedMaterial: JSON.stringify(publication.toJSON())
             });
         }
 

@@ -1,7 +1,7 @@
 import { readFile } from 'node:fs/promises';
 import { execFileSync } from 'node:child_process';
 
-import { composePublicationDistributionCommand } from '../application/PublicationDistributionCommandComposition.js';
+import { composeMultiRelayNostrPublicationDistributionCommand } from '../application/PublicationDistributionCommandComposition.js';
 import { PublicationDistributionLifecycleMemoryStore } from '../application/PublicationDistributionLifecycleStore.js';
 import { PublishDocumentUseCase } from '../application/PublishDocumentUseCase.js';
 import { LocalPublisherProvider } from '../publisher/LocalPublisherProvider.js';
@@ -162,17 +162,23 @@ function realReplicaRig() {
     return { storage, alice, publisherProvider, discoveryProvider, publishDocumentUseCase };
 }
 
-function realAppWideDistributionCommand({ lifecycleStore, transactionId = 'RepositoryNavTransactionId123456', eventId = 'a'.repeat(64), gatewayHandler, relayHandler }) {
+// AMENDED BY 0.9.450 — Nostr Multi-Relay Publication Distribution Wiring.
+// EditorView.js's own injected command changed from the single-relay
+// `publicationDistributionCommand` to `multiRelayNostrPublicationDistributionCommand`
+// (see that file's own 0.9.450 amendment) — this helper is renamed and
+// rebuilt to compose the REAL app-wide multi-relay command exactly the way
+// `ui/main.js` composes it now, unmodified otherwise.
+function realAppWideDistributionCommand({ lifecycleStore, transactionId = 'RepositoryNavTransactionId123456', eventId = 'a'.repeat(64), gatewayHandler, relayHandler, nostrRelayUrls = ['wss://relay.example'] }) {
     const gateway = gatewayHandler || (() => new Response('accepted', { status: 200 }));
     const relay = relayHandler || (() => ({ published: true, id: eventId }));
-    return composePublicationDistributionCommand({
+    return composeMultiRelayNostrPublicationDistributionCommand({
         lifecycleStore,
         arweaveUploaderOptions: {
             signer: { sign: async (material) => ({ id: transactionId, transaction: { data: material } }) },
             fetchImpl: async (url, options) => gateway(url, options)
         },
+        nostrRelayUrls,
         nostrPublisherOptions: {
-            relayUrl: 'wss://relay.example',
             discoveryTag: 'forkbuild-repository-navigation',
             publishImpl: async (relayUrl, eventTemplate) => relay(relayUrl, eventTemplate)
         }
@@ -180,27 +186,27 @@ function realAppWideDistributionCommand({ lifecycleStore, transactionId = 'Repos
 }
 
 // -----------------------------------------------------------------
-// Harness — extracts the REAL, CURRENT 0.9.377/0.9.381 block out of
-// ui/views/EditorView.js (never hand-retyped) and executes it with fake
-// `ref`/`inject` implementations plus a spy `router` object — the block
-// itself references `router` as a bare identifier (closed over the outer
-// setup() scope in production), so it is supplied here as an explicit
-// third parameter to the Function constructor, exactly the way the block
-// already receives `inject`/`ref` as parameters rather than true Vue
-// imports.
+// Harness — extracts the REAL, CURRENT 0.9.377/0.9.381 block (AMENDED BY
+// 0.9.450) out of ui/views/EditorView.js (never hand-retyped) and executes
+// it with fake `ref`/`inject` implementations plus a spy `router` object —
+// the block itself references `router` as a bare identifier (closed over
+// the outer setup() scope in production), so it is supplied here as an
+// explicit third parameter to the Function constructor, exactly the way
+// the block already receives `inject`/`ref` as parameters rather than
+// true Vue imports.
 // -----------------------------------------------------------------
-function buildHarness(editorViewSource, { publicationDistributionCommand = null, router = { push: () => {} } } = {}) {
+function buildHarness(editorViewSource, { multiRelayNostrPublicationDistributionCommand = null, router = { push: () => {} } } = {}) {
     const blockSource = extractRange(
         editorViewSource,
-        "const publicationDistributionCommand = inject('publicationDistributionCommand', null);",
+        "const multiRelayNostrPublicationDistributionCommand = inject('multiRelayNostrPublicationDistributionCommand', null);",
         '// ------------------------- 0.2.21 document lifecycle ------------',
-        '0.9.377/0.9.381 post-publish distribution block'
+        '0.9.377/0.9.381/0.9.450 post-publish distribution block'
     );
 
     function ref(initial) { return { value: initial }; }
     function inject(key, fallback) {
-        if (key === 'publicationDistributionCommand') {
-            return publicationDistributionCommand === null ? fallback : publicationDistributionCommand;
+        if (key === 'multiRelayNostrPublicationDistributionCommand') {
+            return multiRelayNostrPublicationDistributionCommand === null ? fallback : multiRelayNostrPublicationDistributionCommand;
         }
         return fallback;
     }
@@ -209,7 +215,7 @@ function buildHarness(editorViewSource, { publicationDistributionCommand = null,
     const factory = new Function(
         'inject', 'ref', 'router',
         `${blockSource}\nreturn {
-            publicationDistributionCommand,
+            multiRelayNostrPublicationDistributionCommand,
             distributeEditorPublication,
             publishedPublication,
             distributionExecuting,
@@ -237,7 +243,7 @@ async function run() {
         const { publishDocumentUseCase } = realReplicaRig();
         const pushed = [];
         const router = { push: (target) => pushed.push(target) };
-        const harness = buildHarness(editorViewSource, { publicationDistributionCommand: () => Promise.resolve(null), router });
+        const harness = buildHarness(editorViewSource, { multiRelayNostrPublicationDistributionCommand: () => Promise.resolve(null), router });
 
         const publication = publishDocumentUseCase.execute({ document: makeDocument('Section A Manor') });
         harness.onDocumentPublished(publication);
@@ -260,7 +266,7 @@ async function run() {
         const rawCommand = realAppWideDistributionCommand({ lifecycleStore, eventId: 'b'.repeat(64) });
         const { publishDocumentUseCase } = realReplicaRig();
         const router = { push: () => {} };
-        const harness = buildHarness(editorViewSource, { publicationDistributionCommand: rawCommand, router });
+        const harness = buildHarness(editorViewSource, { multiRelayNostrPublicationDistributionCommand: rawCommand, router });
 
         const publication = publishDocumentUseCase.execute({ document: makeDocument('Section B Manor') });
         assert(publication.documentId, '4. a real publish produces a Publication carrying a real documentId');
@@ -295,7 +301,7 @@ async function run() {
         const { publishDocumentUseCase } = realReplicaRig();
         const pushed = [];
         const router = { push: (target) => pushed.push(target) };
-        const harness = buildHarness(editorViewSource, { publicationDistributionCommand: () => Promise.resolve(null), router });
+        const harness = buildHarness(editorViewSource, { multiRelayNostrPublicationDistributionCommand: () => Promise.resolve(null), router });
 
         const publication = publishDocumentUseCase.execute({ document: makeDocument('Section C Manor') });
         harness.onDocumentPublished(publication);
@@ -320,7 +326,7 @@ async function run() {
         const { publishDocumentUseCase } = realReplicaRig();
         const pushed = [];
         const router = { push: (target) => pushed.push(target) };
-        const harness = buildHarness(editorViewSource, { publicationDistributionCommand: rawCommand, router });
+        const harness = buildHarness(editorViewSource, { multiRelayNostrPublicationDistributionCommand: rawCommand, router });
 
         const publication = publishDocumentUseCase.execute({ document: makeDocument('Section D Manor') });
         harness.onDocumentPublished(publication);
@@ -346,7 +352,7 @@ async function run() {
         const { publishDocumentUseCase } = realReplicaRig();
         const pushed = [];
         const router = { push: (target) => pushed.push(target) };
-        const harness = buildHarness(editorViewSource, { publicationDistributionCommand: failingCommand, router });
+        const harness = buildHarness(editorViewSource, { multiRelayNostrPublicationDistributionCommand: failingCommand, router });
 
         const publication = publishDocumentUseCase.execute({ document: makeDocument('Section E Manor') });
         harness.onDocumentPublished(publication);
@@ -377,7 +383,7 @@ async function run() {
         const { publishDocumentUseCase, discoveryProvider, publisherProvider } = realReplicaRig();
         const pushed = [];
         const router = { push: (target) => pushed.push(target) };
-        const harness = buildHarness(editorViewSource, { publicationDistributionCommand: () => Promise.resolve(null), router });
+        const harness = buildHarness(editorViewSource, { multiRelayNostrPublicationDistributionCommand: () => Promise.resolve(null), router });
 
         const publication = publishDocumentUseCase.execute({ document: makeDocument('Section F Manor') });
         harness.onDocumentPublished(publication);
@@ -413,7 +419,7 @@ async function run() {
         // malformed/partial object) produces no navigation action at all.
         const pushed2 = [];
         const router2 = { push: (target) => pushed2.push(target) };
-        const harness2 = buildHarness(editorViewSource, { publicationDistributionCommand: () => Promise.resolve(null), router: router2 });
+        const harness2 = buildHarness(editorViewSource, { multiRelayNostrPublicationDistributionCommand: () => Promise.resolve(null), router: router2 });
         harness2.onDocumentPublished({ documentId: null });
         harness2.viewDistributedPublicationInRepository();
         assert(pushed2.length === 0, '21. with no usable documentId, the navigation call is a silent no-op — never a thrown error, never an invented error state');
@@ -428,7 +434,7 @@ async function run() {
         const { publishDocumentUseCase } = realReplicaRig();
         const pushed = [];
         const router = { push: (target) => pushed.push(target) };
-        const harness = buildHarness(editorViewSource, { publicationDistributionCommand: () => Promise.resolve(null), router });
+        const harness = buildHarness(editorViewSource, { multiRelayNostrPublicationDistributionCommand: () => Promise.resolve(null), router });
 
         const publicationA = publishDocumentUseCase.execute({ document: makeDocument('Section G Manor A') });
         harness.onDocumentPublished(publicationA);
@@ -468,13 +474,20 @@ async function run() {
 
         // The template seam: the row lives inside the SAME
         // <dl class="editor-post-publish-distribution-detail">, immediately
-        // after the existing Discovery row — never a new panel.
+        // after the existing Discovery row — never a new panel. AMENDED BY
+        // 0.9.450: the opening tag's own `v-else-if` condition changed from
+        // `distributionResult` to `distributionResult && distributionResult.length`
+        // (distributionResult is now an array — see EditorView.js's own
+        // 0.9.450 amendment), and the literal `<dt>Discovery</dt>` row
+        // became a `v-for`-driven, per-relay `Discovery` row — this section
+        // checks for the dynamic Discovery LABEL text (present regardless
+        // of relay count) instead of the old static tag.
         const dlBlock = extractRange(editorViewSource,
-            '<dl v-else-if="distributionResult" class="editor-post-publish-distribution-detail">',
+            '<dl v-else-if="distributionResult && distributionResult.length" class="editor-post-publish-distribution-detail">',
             '</dl>',
             'editor-post-publish-distribution-detail dl');
-        assert(dlBlock.includes('<dt>Discovery</dt>') && dlBlock.includes('viewDistributedPublicationInRepository'),
-            '30. the navigation action is rendered inside the SAME <dl> the distribution result already renders in, after the existing Discovery row — no new panel or section was introduced');
+        assert(dlBlock.includes("'Discovery'") && dlBlock.includes('viewDistributedPublicationInRepository'),
+            '30. AMENDED BY 0.9.450 — the navigation action is rendered inside the SAME <dl> the distribution result already renders in, after the existing (now per-relay) Discovery row(s) — no new panel or section was introduced');
         assert(!editorViewSource.includes('class="repository-navigation-panel"') && !editorViewSource.includes('<RepositoryNavigation'),
             '31. no new panel/dialog/component was introduced for this — the action is a plain button inside the existing result <dl>');
 

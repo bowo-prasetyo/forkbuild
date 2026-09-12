@@ -220,13 +220,30 @@ async function run() {
         // own Section J invariant still holds, unchanged, at this
         // milestone's own head commit, and extending it to name the exact
         // three real distribution call sites by their own inject() calls.
+        //
+        // AMENDED BY 0.9.450 — Nostr Multi-Relay Publication Distribution
+        // Wiring. This was the PRECISE gap this milestone's own "final
+        // verdict" (Section J, below) recommended closing next, and 0.9.450
+        // closed it: WorldView.js/DecentralizedPublicationsView.js now
+        // inject BOTH commands (routing per the Wanderer's own Nostr/Arweave
+        // substrate choice — see each file's own 0.9.450 amendment);
+        // EditorView.js, which never offered a substrate choice of its own
+        // and was always Nostr-only, now injects ONLY the multi-relay
+        // command, dropping the single-relay one entirely. This section's
+        // own live check is narrowed to match, in the identical spirit
+        // 0.9.447 itself already narrowed tests/NostrMultiRelayFanOutIntegrationBoundaryAudit.test.js's
+        // own Section J, above, rather than deleted — it is exactly HOW
+        // 0.9.450 fixed the gap this milestone found, not a stale
+        // assumption to discard.
         const worldViewSource = await source('ui/views/WorldView.js');
         const editorViewSource = await source('ui/views/EditorView.js');
         const publicationsViewSource = await source('ui/views/DecentralizedPublicationsView.js');
-        for (const [label, text] of [['WorldView.js', worldViewSource], ['EditorView.js', editorViewSource], ['DecentralizedPublicationsView.js', publicationsViewSource]]) {
-            assert(text.includes("inject('publicationDistributionCommand'"), n(`A8. ${label} injects the SINGLE-relay publicationDistributionCommand — the real, currently-live wiring`));
-            assert(!text.includes('multiRelayNostrPublicationDistributionCommand'), n(`A8. ${label} never injects, imports, or references multiRelayNostrPublicationDistributionCommand anywhere — confirmed live, at this milestone's own head commit`));
+        for (const [label, text] of [['WorldView.js', worldViewSource], ['DecentralizedPublicationsView.js', publicationsViewSource]]) {
+            assert(text.includes("inject('publicationDistributionCommand'"), n(`A8. ${label} still injects the single-relay publicationDistributionCommand — kept for its own Arweave substrate choice, per its own 0.9.450 amendment`));
+            assert(text.includes("inject('multiRelayNostrPublicationDistributionCommand'"), n(`A8. ${label} now ALSO injects multiRelayNostrPublicationDistributionCommand — the exact wiring this milestone's own Section J recommended, closed by 0.9.450`));
         }
+        assert(!editorViewSource.includes("inject('publicationDistributionCommand'"), n('A8. EditorView.js no longer injects the single-relay publicationDistributionCommand at all — it never offered an Arweave substrate choice to keep it for (0.9.450)'));
+        assert(editorViewSource.includes("inject('multiRelayNostrPublicationDistributionCommand'"), n('A8. EditorView.js now injects multiRelayNostrPublicationDistributionCommand as its own SOLE publication distribution command (0.9.450)'));
         const mainSource = await source('ui/main.js');
         assert(mainSource.includes("app.provide('multiRelayNostrPublicationDistributionCommand', multiRelayNostrPublicationDistributionCommand)"),
             n('A9. ui/main.js DOES provide multiRelayNostrPublicationDistributionCommand app-wide — the capability is composed and available, not merely written and forgotten'));
@@ -645,6 +662,9 @@ async function run() {
         console.log('it to audit — relay health/diagnostics, relay priority, per-publication selection, automatic relay discovery — carries no');
         console.log('evidence of need today, and Section G/H/E each explain why pursuing any of them before the wiring gap closes would be solving');
         console.log('problems one step ahead of the one this product actually has.');
+        console.log('');
+        console.log('STATUS UPDATE (0.9.450): the recommended wiring above was implemented — see this file\'s own Section A8 amendment. Section');
+        console.log('F\'s own read-side alignment gap remains open, as this milestone\'s own request anticipated, tracked separately as 0.9.451.');
 
         // J3. Production-change guard — no production file was modified or
         // added by THIS MILESTONE'S OWN COMMIT, matching every prior

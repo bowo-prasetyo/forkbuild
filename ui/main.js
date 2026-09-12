@@ -2182,6 +2182,13 @@ app.provide('publicationDistributionCommand', publicationDistributionCommand);
 // any existing caller's behavior — it only makes the already-implemented
 // multi-relay fan-out capability reachable, configured, from this
 // composition root, for a future caller to invoke.
+//
+// AMENDED BY 0.9.450 — Nostr Multi-Relay Publication Distribution Wiring.
+// That "future caller" is now `ui/views/WorldView.js`/`ui/views/EditorView.js`/
+// `ui/views/DecentralizedPublicationsView.js`'s own Nostr distribution
+// paths — see each file's own 0.9.450 amendment. This composition itself
+// is entirely unchanged: those three views inject the exact instance
+// provided immediately below, never constructing their own.
 const multiRelayNostrPublicationDistributionCommand = composeMultiRelayNostrPublicationDistributionCommand({
     lifecycleStore: publicationDistributionLifecycleStore,
     arweaveUploaderOptions,

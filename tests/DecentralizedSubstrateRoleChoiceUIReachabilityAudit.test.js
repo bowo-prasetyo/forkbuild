@@ -207,7 +207,13 @@ async function run() {
         // per-substrate parameter of any kind.
         const editorSource = await readSource('ui/views/EditorView.js');
         const ownPanelSource = await readSource('ui/components/OwnPublicationPanel.js');
-        assert(/inject\('publicationDistributionCommand', null\)/.test(editorSource), n('B9. ANNOUNCEMENT_AND_DISCOVERY: EditorView.js injects the SAME app-wide publicationDistributionCommand — a single fixed action, never a per-role choice'));
+        // AMENDED BY 0.9.450 — Nostr Multi-Relay Publication Distribution
+        // Wiring. EditorView.js's own injected key renamed from
+        // `publicationDistributionCommand` to
+        // `multiRelayNostrPublicationDistributionCommand` — still exactly
+        // one single, fixed, app-wide command with no per-role SUBSTRATE
+        // choice of its own (EditorView.js has no substrate `<select>`).
+        assert(/inject\('multiRelayNostrPublicationDistributionCommand', null\)/.test(editorSource), n('B9. AMENDED BY 0.9.450 — ANNOUNCEMENT_AND_DISCOVERY: EditorView.js injects the SAME app-wide distribution command (now multiRelayNostrPublicationDistributionCommand) — a single fixed action, never a per-role choice'));
         assert(/publicationDistributionCommand\(\{/.test(editorSource) || /publicationDistributionCommand\(publication\)/.test(ownPanelSource), n('B10. it is called with a publication only — no storage, no anchorType, no relay, no substrate identifier of any kind is ever passed by the UI'));
 
         console.log('\n=== SECTION B: REACHABILITY CHAINS ===');
