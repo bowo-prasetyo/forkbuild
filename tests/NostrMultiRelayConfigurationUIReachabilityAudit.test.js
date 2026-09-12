@@ -243,22 +243,22 @@ async function run() {
                 n(`A4[${label}]. carries no reference to any configuration store or storage provider — nostrRelayUrls is, today, purely a caller-supplied, per-call argument with no persisted home anywhere`));
         }
 
-        // A5. A real, already-shipped, pre-existing contradiction: the
-        // Settings HUB (ui/views/NetworkSettingsView.js) describes the
-        // Nostr Relay row as covering "discovery and publishing," while the
-        // page it links to (Section A2, above) says the opposite about
-        // itself in its own words. Neither string was added or touched by
-        // this milestone or by 0.9.444/0.9.445 — both predate the fan-out
-        // capability entirely; this audit surfaces, but does not fix, the
-        // inconsistency, since fixing UI text is outside this milestone's
-        // own scope (test-only).
+        // A5. STATUS UPDATE (0.9.452): this milestone originally found a
+        // real, already-shipped contradiction: the Settings HUB
+        // (ui/views/NetworkSettingsView.js) described the Nostr Relay row
+        // as covering "discovery and publishing," while the page it links
+        // to (Section A2, above) said the opposite about itself in its own
+        // words. 0.9.452's own product completion reassessment fixed this
+        // hub row's own copy (alongside a related, independently-found
+        // staleness — see that milestone's own header). The assertion below
+        // is updated, in place, to confirm the corrected wording.
         const hubSource = await source('ui/views/NetworkSettingsView.js');
-        assert(/Relay used for Nostr-based discovery and publishing\./.test(hubSource),
-            n('A5a. ui/views/NetworkSettingsView.js — the Settings hub — describes the Nostr Relay row as covering BOTH discovery and publishing'));
+        assert(!/Relay used for Nostr-based discovery and publishing\./.test(hubSource),
+            n('A5a. FIXED BY 0.9.452 — ui/views/NetworkSettingsView.js no longer describes the Nostr Relay row as covering "publishing" at all'));
         assert(/does not change where announcements are published/.test(settingsViewSource),
-            n('A5b. ui/views/NostrRelaySettingsView.js — the page that same hub row links to — states the opposite of its own hub\'s description, in its own words'));
+            n('A5b. ui/views/NostrRelaySettingsView.js — the page that same hub row links to — still states, in its own words, that this setting does not affect where announcements are published — now consistent with the corrected hub row'));
         console.log('\n=== SECTION A: EXISTING CONFIGURATION INVENTORY ===');
-        console.log('✓ Section A: the only existing Nostr relay configuration (core/NostrRelayConfiguration.js + storage/NostrRelayConfigurationStore.js + its Settings view) is a single, application-wide value, deliberately and explicitly scoped to read/discovery only — the real write path (single-relay AND 0.9.444\'s own fan-out) consults no persisted configuration at all today, and the Settings hub\'s own description of that page already, independently, contradicts the page\'s own stated scope.');
+        console.log('✓ Section A: the only existing Nostr relay configuration (core/NostrRelayConfiguration.js + storage/NostrRelayConfigurationStore.js + its Settings view) is a single, application-wide value, deliberately and explicitly scoped to read/discovery only — the real write path (single-relay AND 0.9.444\'s own fan-out) consults no persisted configuration at all today. The Settings hub\'s own description of that page once contradicted the page\'s own stated scope (A5); 0.9.452 fixed it.');
     }
 
     // ===============================================================

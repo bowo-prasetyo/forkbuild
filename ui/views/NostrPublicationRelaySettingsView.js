@@ -30,10 +30,25 @@ import { DEFAULT_NOSTR_PUBLICATION_RELAY_URL } from '../../core/NostrPublication
 // `setNostrPublicationRelaySetConfigurationUseCase` only — a genuinely
 // separate pair, never `nostrRelayConfigurationStore`/
 // `setNostrRelayConfigurationUseCase`. This page configures WHERE this
-// Wanderer's own signed announcements are published; it has no opinion
-// about, and no control over, which relay THIS Wanderer's own discovery
-// queries read from — see `NostrRelaySettingsView.js`'s own template text
-// for that boundary, stated from the read side.
+// Wanderer's own signed Publication announcements are published — see
+// `NostrRelaySettingsView.js`'s own template text for the general
+// discovery-relay preference this page never touches.
+//
+// AMENDED BY 0.9.452 — Product Completion Reassessment. The paragraph
+// above, and this view's own template text below, previously claimed this
+// page "has no opinion about, and no control over, which relay THIS
+// Wanderer's own discovery queries read from." That was accurate through
+// 0.9.450, but 0.9.451 (`application/NostrPublicationRelaySetDiscoveryQueryService.js`)
+// wired Publication discovery to consume this SAME relay set — see
+// `ui/main.js`'s own 0.9.451 comment, "Publication discovery now consumes
+// resolvedNostrPublicationRelayUrls... rather than resolvedNostrRelayUrl."
+// This page's own user-facing copy is corrected accordingly, below: this
+// relay set now governs both Publication distribution AND Publication
+// discovery — never Snapshot (distribution or discovery), and never Place
+// Naming discovery, both of which remain on the general Nostr Relay
+// preference `NostrRelaySettingsView.js` configures. No behavior changes —
+// this is a documentation/copy correction only, matching what 0.9.451
+// already, silently, shipped.
 //
 // ONE RELAY URL PER LINE — A MULTILINE TEXTAREA, NEVER A DYNAMIC
 // REPEATABLE-INPUT LIST. `core/NostrPublicationRelaySetConfiguration.js`'s
@@ -155,7 +170,7 @@ export default {
         <section class="nostr-publication-relay-settings-view">
             <h1>Nostr Publication Relays</h1>
             <p class="form-hint form-hint--neutral">
-                Relays this replica publishes signed announcements to when distributing a Publication or Snapshot over Nostr — one independent fan-out target per line, every relay treated equally. This setting affects publication distribution only; it does not change which relay discovery queries read from (see Nostr Relay, under Network Settings).
+                Relays this replica publishes signed Publication announcements to, and queries when discovering Publications over Nostr — one independent fan-out/query target per line, every relay treated equally. This setting affects Publication distribution and Publication discovery; it does not affect Snapshot distribution or discovery, and it does not change the general Nostr Relay discovery preference used for Place Naming (see Nostr Relay, under Network Settings).
             </p>
 
             <p v-if="hasOverride" class="form-hint form-hint--neutral">
