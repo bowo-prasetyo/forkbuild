@@ -302,6 +302,84 @@
 //   what happens next. Reacting to a notification — retrying, re-deriving
 //   a lifecycle, re-executing a distribution — remains entirely a
 //   subscriber's own, separate, unscheduled job.
+//
+// 0.9.433 — CONCURRENT DISCOVERY OBSERVATION PRESERVATION, ADDED HERE AS A
+// SECOND, INDEPENDENT KEYED STRUCTURE — NEVER A CHANGE TO `get`/`set`/
+// `subscribe`'S OWN EXISTING CONTRACT. 0.9.431 found, and 0.9.432's own
+// read-only audit confirmed in full, that `set(publicationId, lifecycle)`'s
+// own single-slot-per-publication contract (see "Keyed by publication.id,"
+// above) means a second substrate's own independently successful
+// Announcement/Discovery fact silently erases the first — both real, both
+// independently discoverable, only one ever observable through `get()`.
+// 0.9.432's own verdict named the minimal fix: a SECOND, additive keyed
+// structure, scoped to Announcement/Discovery alone, never a change to this
+// store's own primary per-publication slot. This store gains exactly two
+// new methods, `recordDiscoveryObservation(publicationId, discoveryProvider,
+// discoverySection)` and `getDiscoveryObservations(publicationId)`. Nothing
+// about `get`/`set`/`remove`/`clear`/`subscribe`'s own existing behavior,
+// return shape, or notification rule changes; every 0.9.52/0.9.53 test
+// still passes unmodified.
+//
+// KEYED BY `(publicationId, discoveryProvider)` — ONE FINER GRAIN THAN THE
+// PRIMARY SLOT, NEVER A REPLACEMENT FOR IT. `discoveryProvider` is read as
+// an opaque, caller-supplied string, exactly like `publicationId` itself —
+// this file never validates it against `'nostr'`/`'arweave'` or any other
+// fixed vocabulary, and never derives it from a lifecycle section.
+//
+// REPLACEMENT PER PROVIDER, NEVER MERGE, NEVER ACCUMULATION — THE SAME RULE
+// THIS FILE'S OWN "Replacement, never merge," ABOVE, ALREADY HOLDS FOR THE
+// PRIMARY SLOT, HELD HERE AT ONE FINER KEY:
+//
+//     store.recordDiscoveryObservation('pub-1', 'nostr', sectionA);
+//     store.recordDiscoveryObservation('pub-1', 'nostr', sectionB);
+//     store.getDiscoveryObservations('pub-1');
+//     // -> [{ discoveryProvider: 'nostr', ...sectionB }]   — sectionA is gone
+//
+// A DIFFERENT `discoveryProvider` FOR THE SAME `publicationId` COEXISTS,
+// NEVER COLLIDES:
+//
+//     store.recordDiscoveryObservation('pub-1', 'nostr', sectionA);
+//     store.recordDiscoveryObservation('pub-1', 'arweave', sectionB);
+//     store.getDiscoveryObservations('pub-1');
+//     // -> [{ discoveryProvider: 'nostr', ...sectionA },
+//     //     { discoveryProvider: 'arweave', ...sectionB }]   — both present
+//
+// `getDiscoveryObservations(publicationId)` RETURNS `[]`, NEVER `null` OR A
+// THROWN ERROR, FOR A MALFORMED `publicationId` OR ONE NOTHING HAS EVER BEEN
+// RECORDED FOR — the same "missing entries degrade silently" discipline
+// this file's own header already holds for `get()`, expressed at this
+// method's own, list-shaped, return type instead of `null`.
+//
+// `recordDiscoveryObservation()` DEGRADES SILENTLY, NEVER THROWS, FOR A
+// MALFORMED `publicationId` (missing, not a string, empty), A MALFORMED
+// `discoveryProvider` (same rule), OR A FALSY `discoverySection` — the
+// identical rule `set()` already holds for `publicationId`/`lifecycle`,
+// above.
+//
+// `remove(publicationId)`/`clear()` ALSO CLEAR THIS PUBLICATION'S OWN
+// DISCOVERY OBSERVATIONS — NEVER LEAVING A GHOST BEHIND `get()` ALREADY
+// DECLARED ABSENT. A `publicationId` for which `get()` returns `null`
+// (freshly `remove()`d, or after `clear()`) never has a stale, disagreeing
+// `getDiscoveryObservations()` result left over from before.
+//
+// NO NEW NOTIFICATION VOCABULARY. `recordDiscoveryObservation()` never
+// calls `_notify()` — a caller that also calls the pre-existing `set()` for
+// the same fact is notified exactly as it always was, through that
+// existing call alone; this store invents no second subscription channel
+// for the additive structure, and remains just as ignorant of any
+// particular caller as it already was — see this file's own header,
+// "Deliberately dumb," above.
+//
+// DELIBERATELY EXCLUDED — NOT THIS MILESTONE.
+// - **Multi-select fan-out, aggregate distribution status, or a "how many
+//   substrates" count of any kind.** `getDiscoveryObservations()` returns
+//   the current facts, nothing computed on top of them.
+// - **History, retries, provider ranking, or provider health.** Exactly one
+//   current fact per `(publicationId, discoveryProvider)`, replaced, never
+//   accumulated — see "Replacement per provider," above.
+// - **A generic multi-valued lifecycle storage mechanism.** This addition
+//   is scoped to Announcement/Discovery alone; Content (`material`) and
+//   Proof/Anchor remain entirely outside it.
 
 function isNonEmptyString(value) {
     return typeof value === 'string' && value.length > 0;
@@ -312,6 +390,10 @@ export class PublicationDistributionLifecycleMemoryStore {
         this._entries = new Map();
         this._listeners = new Map();
         this._nextListenerId = 0;
+        // 0.9.433 — publicationId -> Map(discoveryProvider -> discoverySection).
+        // Additive; never read or written by get()/set()/remove()/clear()'s
+        // own primary `_entries` map.
+        this._discoveryObservations = new Map();
     }
 
     // The lifecycle value most recently `set()` for `publicationId`, or
@@ -358,6 +440,11 @@ export class PublicationDistributionLifecycleMemoryStore {
             return false;
         }
         const removed = this._entries.delete(publicationId);
+        // 0.9.433 — this publicationId's own discovery observations, if
+        // any, are cleared alongside its primary slot; see this file's
+        // own header, "remove()/clear() also clear this publication's own
+        // discovery observations."
+        this._discoveryObservations.delete(publicationId);
         if (removed) {
             this._notify(publicationId, null);
         }
@@ -370,6 +457,7 @@ export class PublicationDistributionLifecycleMemoryStore {
     // and never removes an existing subscription.
     clear() {
         this._entries.clear();
+        this._discoveryObservations.clear(); // 0.9.433
     }
 
     // Registers `listener` to be called with `(publicationId, lifecycle)`
@@ -404,6 +492,45 @@ export class PublicationDistributionLifecycleMemoryStore {
                 this._listeners.delete(publicationId);
             }
         };
+    }
+
+    // 0.9.433 — records `discoverySection` as the CURRENT Announcement/
+    // Discovery observation for `(publicationId, discoveryProvider)`,
+    // replacing whatever was previously recorded for that exact pair, if
+    // anything — see this file's own header, "Replacement per provider,
+    // never merge, never accumulation." A different `discoveryProvider` for
+    // the same `publicationId` is a different pair, and coexists. Silently
+    // does nothing when `publicationId` or `discoveryProvider` is malformed
+    // (missing, not a string, or empty), or when `discoverySection` is
+    // falsy — never throws. Additive: never touches `_entries`, never calls
+    // `set()`, and never notifies a subscriber — see this file's own
+    // header, "No new notification vocabulary."
+    recordDiscoveryObservation(publicationId, discoveryProvider, discoverySection) {
+        if (!isNonEmptyString(publicationId) || !isNonEmptyString(discoveryProvider) || !discoverySection) {
+            return;
+        }
+        if (!this._discoveryObservations.has(publicationId)) {
+            this._discoveryObservations.set(publicationId, new Map());
+        }
+        this._discoveryObservations.get(publicationId).set(discoveryProvider, discoverySection);
+    }
+
+    // 0.9.433 — returns every currently-recorded Announcement/Discovery
+    // observation for `publicationId`, one entry per `discoveryProvider`
+    // ever recorded via `recordDiscoveryObservation()`, each shaped
+    // `{ discoveryProvider, ...discoverySection }`. Returns `[]`, never
+    // `null`, for a malformed `publicationId` or one nothing has ever been
+    // recorded for — see this file's own header, "getDiscoveryObservations()
+    // returns [], never null or a thrown error."
+    getDiscoveryObservations(publicationId) {
+        if (!isNonEmptyString(publicationId)) {
+            return [];
+        }
+        const byProvider = this._discoveryObservations.get(publicationId);
+        if (!byProvider) {
+            return [];
+        }
+        return Array.from(byProvider.entries()).map(([discoveryProvider, section]) => ({ discoveryProvider, ...section }));
     }
 
     // Invokes every current subscriber of `publicationId` with
