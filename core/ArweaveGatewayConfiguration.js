@@ -82,17 +82,80 @@ const DEFAULT_ARWEAVE_GATEWAY_URL = 'https://arweave.net';
 // that store already does — `https://my-gateway.example/` and
 // `https://my-gateway.example` produce the same stored `gatewayUrl`.
 //
-// DELIBERATELY EXCLUDED — NOT THIS FILE'S JOB.
+// 0.9.440 — Arweave Gateway Read Failover.
+//
+// 0.9.439's own audit classified Arweave gateway read/retrieval as the one
+// MINIMAL_FAILOVER_SEAM in this codebase: content-addressed, byte-identical
+// regardless of which gateway answers, so ordered failover captures all of
+// the resilience benefit with none of fan-out's complexity. This file is
+// extended, narrowly, to be the shape that ordered list travels in — a
+// single `gatewayUrl` string is still accepted, unchanged, and now means
+// exactly "a one-element ordered list." A caller wanting more than one
+// gateway passes `gatewayUrls` (a non-empty array, in priority order)
+// instead — never both in the same call.
+//
+//   { gatewayUrl: 'https://a.example' }            (still valid, unchanged)
+//        │                                          == one-element list
+//        ▼
+//   { gatewayUrls: ['https://a.example', 'https://b.example'] }   (new)
+//        │
+//        ▼
+//   core/ArweaveGatewayConfiguration.js   ★ (THIS)
+//        .gatewayUrl   — the FIRST configured url, unchanged shape, for
+//                         every caller that only ever wanted a single value
+//                         (core/ArweaveGatewayConfiguration.js's own
+//                         pre-0.9.440 callers, and the Arweave Anchor
+//                         publish/verify pair — see below)
+//        .gatewayUrls  — the FULL ordered list, new, for a caller building
+//                         an ordered-failover read collaborator
+//
+// WHY THE SINGLE-VALUE SHAPE ISN'T JUST "A LIST OF ONE" EVERYWHERE. Every
+// existing caller of `.gatewayUrl` — content/ArweaveContentStore.js,
+// application/ArweaveWorldEncounterMaterialResolver.js,
+// application/CreateArweaveAnchorPublisherUseCase.js, application/
+// CreateArweaveAnchorProofVerifierUseCase.js — keeps working unmodified,
+// reading exactly the same field, holding exactly the same value it always
+// did. A caller that wants the new ordered-failover behavior explicitly
+// asks for `.gatewayUrls` and wires a NEW collaborator around it (see
+// content/ArweaveGatewayFailoverContentStore.js and application/
+// ArweaveGatewayFailoverWorldEncounterMaterialResolver.js, this same
+// milestone) — this file itself never decides which collaborator a caller
+// should build from what it hands back.
+//
+// THE ARWEAVE ANCHOR EXCEPTION IS DELIBERATELY UNTOUCHED. 0.9.439's own
+// Section F3 found that ui/main.js already reuses ONE resolved gatewayUrl
+// for BOTH `CreateArweaveAnchorPublisherUseCase` (write) and
+// `CreateArweaveAnchorProofVerifierUseCase` (read) — a real, load-bearing
+// exception to the read/write gateway split every other Arweave-facing
+// composition site holds. This milestone does not extend Anchor to a list
+// on either half; Anchor keeps consuming `.gatewayUrl` (the first
+// configured gateway) exactly as it always has. Whether Anchor should ever
+// gain its own list, shared or independent, is 0.9.439's own "a future
+// list decision must explicitly choose" — explicitly NOT this milestone.
+//
+// WRITE/UPLOAD/DISTRIBUTION IS UNTOUCHED. This file says nothing about
+// where new content gets written — see "a separate object, never a reuse,"
+// above, unchanged by this extension. A `gatewayUrls` list configures
+// ordered READ failover only, never fan-out on `put()`/upload.
+//
+// DELIBERATELY EXCLUDED — NOT THIS FILE'S JOB, STILL.
 // - **Persistence of any kind.** No `localStorage`, no `StorageProvider`
 //   import, no `save()`/`load()`. See storage/
 //   ArweaveGatewayConfigurationStore.js, this same milestone, sibling file.
 // - **A network call of any kind, ever, for any reason.** See "validation
-//   is deliberately modest," above.
-// - **`timeout`/`retry`/`fallbackGateway`/`healthCheck`/`priority` fields,
-//   or any field beyond `gatewayUrl`.** None of these are evidenced by
-//   0.9.363's own audit as needed for a first configuration boundary —
-//   adding them here would be speculative surface, not a real requirement.
-// - **A settings UI, or any `ui/` import.** Unscheduled, later work.
+//   is deliberately modest," above — held for every entry in `gatewayUrls`
+//   too, not just the first.
+// - **`timeout`/`retry`/`healthCheck`/`priority` fields, or any field
+//   beyond `gatewayUrl`/`gatewayUrls`.** Ordering IS the priority — no
+//   separate numeric field, no health check, no automatic reordering.
+// - **Choosing WHICH order to try gateways in, or what "unavailable"
+//   means.** That policy lives in the read collaborator that consumes
+//   `.gatewayUrls` (content/ArweaveGatewayFailoverContentStore.js /
+//   application/ArweaveGatewayFailoverWorldEncounterMaterialResolver.js),
+//   never in this plain value object.
+// - **A settings UI, or any `ui/` import.** See ui/views/
+//   ArweaveGatewaySettingsView.js, this same milestone, for the reachable
+//   surface over this shape.
 // - **IPFS, or any other substrate's gateway.** 0.9.363's own audit named
 //   IPFS Gateway as the SECOND candidate, deliberately separate — see
 //   `docs/Roadmap.md`, 0.9.363, "then IPFS" — this file names itself
@@ -112,28 +175,58 @@ export function isValidArweaveGatewayUrl(value) {
 }
 
 export class ArweaveGatewayConfiguration {
-    constructor({ gatewayUrl } = {}) {
-        if (!isValidArweaveGatewayUrl(gatewayUrl)) {
-            throw new Error(`ArweaveGatewayConfiguration: invalid gatewayUrl "${gatewayUrl}"`);
+    // Exactly one of `gatewayUrl` (a single string — unchanged since
+    // 0.9.364) or `gatewayUrls` (a non-empty array, in priority order —
+    // new, 0.9.440) is accepted; passing both throws, exactly like passing
+    // neither already did. `gatewayUrl: ['a', 'b']` still throws — an array
+    // is never valid under the singular key, only under `gatewayUrls`; see
+    // this file's own header, "why the single-value shape isn't just a
+    // list of one everywhere."
+    constructor({ gatewayUrl, gatewayUrls } = {}) {
+        if (gatewayUrl !== undefined && gatewayUrls !== undefined) {
+            throw new Error('ArweaveGatewayConfiguration: pass exactly one of gatewayUrl or gatewayUrls, never both');
         }
-        this._gatewayUrl = gatewayUrl.trim().replace(/\/+$/, '');
+        const candidates = gatewayUrls !== undefined ? gatewayUrls : [gatewayUrl];
+        if (!Array.isArray(candidates) || candidates.length === 0) {
+            throw new Error('ArweaveGatewayConfiguration: gatewayUrls must be a non-empty array');
+        }
+        this._gatewayUrls = Object.freeze(candidates.map((url) => {
+            if (!isValidArweaveGatewayUrl(url)) {
+                throw new Error(`ArweaveGatewayConfiguration: invalid gatewayUrl "${url}"`);
+            }
+            return url.trim().replace(/\/+$/, '');
+        }));
         Object.freeze(this);
     }
 
-    get gatewayUrl() { return this._gatewayUrl; }
+    // The first configured gateway — unchanged shape/meaning for every
+    // caller that only ever wanted a single value; see this file's own
+    // header.
+    get gatewayUrl() { return this._gatewayUrls[0]; }
+
+    // The full ordered list, one entry per configured gateway — always at
+    // least one entry, even when this instance was constructed from the
+    // singular `gatewayUrl` shape.
+    get gatewayUrls() { return this._gatewayUrls; }
 
     // Value equality, never identity — the same convention this
     // codebase's other small value objects already hold (e.g. content/
-    // ContentReference.js's own verify()).
+    // ContentReference.js's own verify()). Order matters: [A, B] and [B, A]
+    // are different configurations, since order IS the failover policy.
     equals(other) {
-        return other instanceof ArweaveGatewayConfiguration && other._gatewayUrl === this._gatewayUrl;
+        return other instanceof ArweaveGatewayConfiguration &&
+            other._gatewayUrls.length === this._gatewayUrls.length &&
+            other._gatewayUrls.every((url, index) => url === this._gatewayUrls[index]);
     }
 
     // Plain-data convenience for storage/ArweaveGatewayConfigurationStore.js
     // — this class itself never calls it, and never reads or writes any
-    // storage key on its own.
+    // storage key on its own. Always the list shape, even for a
+    // single-gateway configuration — storage/ArweaveGatewayConfigurationStore.js's
+    // own `get()` reads a legacy single-`gatewayUrl` payload back into the
+    // identical one-element-list configuration this would have produced.
     toJSON() {
-        return { gatewayUrl: this._gatewayUrl };
+        return { gatewayUrls: [...this._gatewayUrls] };
     }
 }
 

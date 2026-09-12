@@ -1648,8 +1648,9 @@ const { verifier: worldEncounterMaterialVerifier } = composeWorldEncounterMateri
 // preference is never confused with "the default itself got persisted" —
 // see that file's own header for why.
 //
-// APPLIED ONLY TO RETRIEVAL, NEVER TO DISTRIBUTION. `resolvedArweaveGatewayUrl`
-// below is threaded into `arweaveResolverOptions` (World Encounter material
+// APPLIED ONLY TO RETRIEVAL, NEVER TO DISTRIBUTION. `resolvedArweaveGatewayUrls`
+// (0.9.440 — the ordered list; see this file's own 0.9.440 comment, below)
+// is threaded into `arweaveResolverOptions` (World Encounter material
 // retrieval, immediately below) and into `composeDiscoverSnapshotRuntime()`'s
 // own `arweaveContentStoreOptions` (Snapshot RETRIEVAL, later in this
 // file) — never into `arweaveUploaderOptions` (Signed Claim distribution,
@@ -1662,6 +1663,18 @@ const { verifier: worldEncounterMaterialVerifier } = composeWorldEncounterMateri
 // named but unbuilt.
 const arweaveGatewayConfigurationStore = new ArweaveGatewayConfigurationStore(new LocalStorageProvider());
 const resolvedArweaveGatewayUrl = (arweaveGatewayConfigurationStore.get() || { gatewayUrl: DEFAULT_ARWEAVE_GATEWAY_URL }).gatewayUrl;
+// 0.9.440 — Arweave Gateway Read Failover. The full ORDERED list behind
+// `resolvedArweaveGatewayUrl` above — `resolvedArweaveGatewayUrl` itself
+// stays exactly what it always was (the FIRST configured gateway, still
+// the one value Arweave Anchor's publish/verify pair below reads; see
+// 0.9.439's own Section F3 for why that pair deliberately keeps reusing a
+// single value rather than a list). `resolvedArweaveGatewayUrls` is the
+// new, separate thing: every configured gateway, in priority order, fed
+// only into the two RETRIEVAL composition sites below — World Encounter
+// material resolution and Snapshot retrieval — never into Anchor, never
+// into Snapshot/Publication distribution (write), exactly the same
+// read-only boundary `resolvedArweaveGatewayUrl` itself already holds.
+const resolvedArweaveGatewayUrls = (arweaveGatewayConfigurationStore.get() || { gatewayUrls: [DEFAULT_ARWEAVE_GATEWAY_URL] }).gatewayUrls;
 // 0.9.366 — Arweave Gateway Settings UI. The WRITE half of the settings
 // entry point, wired against this SAME store instance (never a second,
 // disconnected ArweaveGatewayConfigurationStore) — see application/
@@ -1752,7 +1765,7 @@ const decentralizedWorldEncounterMaterialDiscoveryRuntime = composeDecentralized
     discoveryServices: decentralizedWorldDiscoveryServices,
     local: new LocalWorldEncounterMaterialSource(new LocalStorageProvider()),
     verifier: worldEncounterMaterialVerifier,
-    arweaveResolverOptions: { gatewayUrl: resolvedArweaveGatewayUrl }
+    arweaveResolverOptions: { gatewayUrls: resolvedArweaveGatewayUrls }
 });
 const worldDiscoveryLeadRegistry = decentralizedWorldEncounterMaterialDiscoveryRuntime.registry;
 const worldEncounterMaterialSources = decentralizedWorldEncounterMaterialDiscoveryRuntime.materialSources;
@@ -2263,7 +2276,7 @@ app.provide('publishPlaceNamingClaimToNostrCommand', publishPlaceNamingClaimToNo
 // this file's own SECOND Nostr read-path call site, after `nostrRelayUrl`
 // above.
 const { resolver: snapshotResolver, contentStore: snapshotRetrievalContentStore, queryService: snapshotDiscoveryQueryService } = composeDiscoverSnapshotRuntime({
-    arweaveContentStoreOptions: { signer: arweaveHostSigner, gatewayUrl: resolvedArweaveGatewayUrl },
+    arweaveContentStoreOptions: { signer: arweaveHostSigner, gatewayUrls: resolvedArweaveGatewayUrls },
     nostrSnapshotDiscoveryQueryServiceOptions: { queryImpl: nostrRelayQueryClient, relayUrl: resolvedNostrRelayUrl }
 });
 const discoverSnapshotCommand = (contentHash) => executeDiscoverSnapshotCommand({

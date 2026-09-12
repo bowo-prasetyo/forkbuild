@@ -557,10 +557,22 @@ async function runTests() {
     // Section I — Final verdict.
     // ===============================================================
     {
-        const gitDiffStat = execSync('git diff --stat HEAD -- application/ core/ ui/ storage/ identity/ collaboration/ discovery/ publisher/ replication/ 2>/dev/null || true',
-            { cwd: SOURCE_ROOT.pathname }).toString().trim();
+        // 0.9.440 — SCOPED TO THE 0.9.319 COMMIT ITSELF, not live
+        // working-tree state against HEAD — see tests/
+        // EndpointMultiplicityFailoverSemanticsAudit.test.js's own J1 for
+        // the identical fix applied to the identical class of bug: a live
+        // `git diff --stat HEAD` check can never stay passing once any
+        // LATER milestone has in-progress production work of its own.
+        let gitDiffStat = '';
+        try {
+            const commitHash = execSync('git log --grep="^0.9.319 " --format=%H -n 1', { cwd: SOURCE_ROOT.pathname }).toString().trim();
+            if (commitHash) {
+                gitDiffStat = execSync(`git diff --stat ${commitHash}^..${commitHash} -- application/ core/ ui/ storage/ identity/ collaboration/ discovery/ publisher/ replication/ 2>/dev/null || true`,
+                    { cwd: SOURCE_ROOT.pathname }).toString().trim();
+            }
+        } catch { /* git unavailable — not a failure of this decision artifact */ }
         assert(gitDiffStat === '',
-            `I. Zero production files are modified by this milestone — test/document-only. Found: ${gitDiffStat || '(none)'}.`);
+            `I. Zero production files were modified by the 0.9.319 commit itself — test/document-only. Found: ${gitDiffStat || '(none)'}.`);
 
         const verdict = 'STABLE_WITH_DEFERRED_GAPS';
         const CLOSURE_COMPATIBLE = new Set(['STABLE', 'STABLE_WITH_DEFERRED_GAPS']);

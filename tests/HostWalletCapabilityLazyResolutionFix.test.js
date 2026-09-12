@@ -272,7 +272,13 @@ async function run() {
     // ===============================================================
     {
         assert(mainSource.includes('arweaveContentStoreOptions: { signer: arweaveHostSigner },\n    nostrSnapshotDiscoveryPublisherOptions:'), n('D1. the Snapshot DISTRIBUTION (write) composition call site is byte-for-byte unchanged'));
-        assert(/arweaveContentStoreOptions: \{ signer: arweaveHostSigner, gatewayUrl: resolvedArweaveGatewayUrl \}/.test(mainSource), n('D2. the Snapshot RETRIEVAL (read) composition call site is unchanged'));
+        // 0.9.440 — this call site now receives resolvedArweaveGatewayUrls
+        // (plural, the full ordered gateway list) rather than the singular
+        // resolvedArweaveGatewayUrl; see core/ArweaveGatewayConfiguration.js's
+        // own 0.9.440 header. The signer wiring this section actually
+        // exists to guard (arweaveHostSigner, unaffected by that change)
+        // is what the assertion below still confirms.
+        assert(/arweaveContentStoreOptions: \{ signer: arweaveHostSigner, gatewayUrls: resolvedArweaveGatewayUrls \}/.test(mainSource), n('D2. the Snapshot RETRIEVAL (read) composition call site still hands arweaveHostSigner through unchanged'));
         assert(/nostrSnapshotDiscoveryPublisherOptions: \{ publishImpl: nostrHostPublisher, discoveryTag: 'forkbuild-snapshot' \}/.test(mainSource), n('D3. the Snapshot distribution nostrSnapshotDiscoveryPublisherOptions call site is unchanged'));
         assert(/nostrPlaceNamingDiscoveryPublisherOptions: \{ publishImpl: nostrHostPublisher \}/.test(mainSource), n('D4. the Place Naming composition call site is unchanged'));
         assert(/createArweavePublicationDistributionRuntimeAdapter\(\{ signer: arweaveHostSigner \}\)/.test(mainSource), n('D5. the Publication Distribution Arweave adapter call site is unchanged'));

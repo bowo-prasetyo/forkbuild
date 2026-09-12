@@ -466,7 +466,16 @@ async function run() {
         // blocking them either.
         const discoverSnapshotSource = await source('application/DiscoverSnapshotRuntimeComposition.js');
         const discoveryCollaboratorImports = discoverSnapshotSource.split('\n').filter((l) => /^import\b/.test(l) && /Nostr|Arweave/.test(l));
-        assert(discoveryCollaboratorImports.length === 2, 'G2. Snapshot discovery composes exactly two collaborators total (one Discovery-shaped query service, one Content-shaped resolution store) — there is only ever one Discovery-role option here, registry or not');
+        // 0.9.440 — three imports now, not two: content/
+        // ArweaveGatewayFailoverContentStore.js was added alongside content/
+        // ArweaveContentStore.js. This is NOT a second Content-role
+        // PROVIDER (still exactly one substrate, Arweave) — it is an
+        // ordered-gateway-failover ALTERNATIVE IMPLEMENTATION of that same
+        // one substrate, chosen at construction time by how many gateways
+        // are configured (see buildArweaveRetrievalContentStore(), this
+        // same file), never a second option a registry would need to
+        // disambiguate between.
+        assert(discoveryCollaboratorImports.length === 3, 'G2. Snapshot discovery composes exactly three collaborator imports (one Discovery-shaped query service, and two Content-shaped resolution store implementations of the SAME one Arweave substrate) — there is still only ever one Discovery-role OPTION here, registry or not');
 
         const VERDICT = 'NOT_BLOCKING';
         const reasoning = [

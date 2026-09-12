@@ -734,10 +734,27 @@ async function runTests() {
     // Section J — Final product evolution decision.
     // ===============================================================
     {
-        const gitDiffStat = execSync('git diff --stat HEAD -- application/ core/ ui/ storage/ identity/ collaboration/ discovery/ publisher/ 2>/dev/null || true',
-            { cwd: SOURCE_ROOT.pathname }).toString().trim();
+        // 0.9.440 — SCOPED TO THE 0.9.318 COMMIT ITSELF, not live
+        // working-tree state against HEAD. `git diff --stat HEAD` asks
+        // "are there uncommitted production changes right now," which can
+        // never stay true once any LATER milestone (0.9.440 included) has
+        // in-progress production work of its own — that isn't a regression
+        // of 0.9.318's own test/document-only claim, just a live-state
+        // check aimed at the wrong target. This checks the permanent
+        // historical fact instead: did the actual 0.9.318 commit itself
+        // touch production? See tests/EndpointMultiplicityFailoverSemanticsAudit.test.js's
+        // own J1 for the identical fix applied to the identical class of
+        // bug, on a different milestone.
+        let gitDiffStat = '';
+        try {
+            const commitHash = execSync('git log --grep="^0.9.318 " --format=%H -n 1', { cwd: SOURCE_ROOT.pathname }).toString().trim();
+            if (commitHash) {
+                gitDiffStat = execSync(`git diff --stat ${commitHash}^..${commitHash} -- application/ core/ ui/ storage/ identity/ collaboration/ discovery/ publisher/ 2>/dev/null || true`,
+                    { cwd: SOURCE_ROOT.pathname }).toString().trim();
+            }
+        } catch { /* git unavailable — not a failure of this decision artifact */ }
         assert(gitDiffStat === '',
-            `J1. Zero production files are modified by this milestone — test/document-only, exactly as this reassessment's own brief requires. Found: ${gitDiffStat || '(none)'}.`);
+            `J1. Zero production files were modified by the 0.9.318 commit itself — test/document-only, exactly as this reassessment's own brief required. Found: ${gitDiffStat || '(none)'}.`);
 
         const verdict = 'STABLE_WITH_DEFERRED_GAPS';
         const CLOSURE_COMPATIBLE = new Set(['STABLE', 'STABLE_WITH_DEFERRED_GAPS']);

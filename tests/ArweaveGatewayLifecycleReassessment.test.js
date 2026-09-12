@@ -183,10 +183,19 @@ async function run() {
 
         // A6. World Encounter retrieval + A7. Snapshot retrieval — both
         // named call sites actually pass the resolved gateway through.
-        const worldEncounterCallSite = mainSource.includes('arweaveResolverOptions: { gatewayUrl: resolvedArweaveGatewayUrl }');
-        assert(worldEncounterCallSite, 'A6. World Encounter material discovery composition receives the resolved gateway');
-        const snapshotRetrievalCallSite = /composeDiscoverSnapshotRuntime\(\{[\s\S]{0,400}?gatewayUrl:\s*resolvedArweaveGatewayUrl/.test(mainSource);
-        assert(snapshotRetrievalCallSite, 'A7. Snapshot discovery composition receives the resolved gateway');
+        //
+        // 0.9.440 — UPDATED, NOT JUST RECONFIRMED. Both call sites now
+        // receive `resolvedArweaveGatewayUrls` (the full ordered list, new)
+        // rather than the singular `resolvedArweaveGatewayUrl` — see
+        // core/ArweaveGatewayConfiguration.js's own 0.9.440 header and
+        // ui/main.js's own 0.9.440 comment for why. `resolvedArweaveGatewayUrl`
+        // itself still exists, unchanged, and still resolves to the exact
+        // same value (the first configured gateway) — see Section D, below,
+        // for where it is still consumed.
+        const worldEncounterCallSite = mainSource.includes('arweaveResolverOptions: { gatewayUrls: resolvedArweaveGatewayUrls }');
+        assert(worldEncounterCallSite, 'A6. World Encounter material discovery composition receives the resolved gateway list');
+        const snapshotRetrievalCallSite = /composeDiscoverSnapshotRuntime\(\{[\s\S]{0,400}?gatewayUrls:\s*resolvedArweaveGatewayUrls/.test(mainSource);
+        assert(snapshotRetrievalCallSite, 'A7. Snapshot discovery composition receives the resolved gateway list');
 
         // A8. Write-path isolation — Snapshot distribution's own
         // composition call, and the publication uploader's own options,
@@ -310,25 +319,53 @@ async function run() {
     // ===============================================================
     // Section D — scope isolation: exactly the two retrieval call sites,
     // and structural absence everywhere else.
+    //
+    // 0.9.440 — REWRITTEN, NOT JUST RECONFIRMED, and one pre-existing bug
+    // fixed along the way. Before this milestone, `resolvedArweaveGatewayUrl`
+    // (singular) was ALSO consumed by the two Arweave Anchor call sites
+    // (`CreateArweaveAnchorPublisherUseCase`/`CreateArweaveAnchorProofVerifierUseCase`
+    // — 0.9.439's own Section F3 names this deliberate reuse) in addition
+    // to the two retrieval call sites this section originally meant to
+    // isolate — so the original "exactly two consuming call sites" count
+    // below was already wrong (it actually found four) the moment Anchor
+    // shipped, undetected until this milestone touched this exact
+    // neighborhood. 0.9.440 both fixes that miscount AND gives the two
+    // retrieval call sites their own, separate, plural variable
+    // (`resolvedArweaveGatewayUrls`) to consume instead — so this section
+    // now checks each variable's own consumer count independently.
     // ===============================================================
     {
         const mainSource = await source('ui/main.js');
 
-        // Every EXECUTABLE occurrence of the resolved gateway variable in
+        // Every EXECUTABLE occurrence of a resolved-gateway variable in
         // ui/main.js — comment-only lines (this file's own design-rationale
-        // prose, which legitimately discusses the variable by name) are
+        // prose, which legitimately discusses either variable by name) are
         // excluded, exactly like the excluded-vocabulary sweeps elsewhere
         // in this suite exclude comments from what the UI actually renders.
-        const usageLines = mainSource
+        const nonCommentLines = mainSource
             .split('\n')
             .map((line, index) => ({ line, number: index + 1 }))
-            .filter(({ line }) => line.includes('resolvedArweaveGatewayUrl') && !/^\s*\/\//.test(line));
+            .filter(({ line }) => !/^\s*\/\//.test(line));
 
-        // Exactly one declaration + exactly two consuming call sites.
-        const declarationLines = usageLines.filter(({ line }) => /const\s+resolvedArweaveGatewayUrl\s*=/.test(line));
-        assert(declarationLines.length === 1, `D1. resolvedArweaveGatewayUrl is declared exactly once — found ${declarationLines.length}`);
-        const consumingLines = usageLines.filter(({ line }) => !/const\s+resolvedArweaveGatewayUrl\s*=/.test(line));
-        assert(consumingLines.length === 2, `D2. resolvedArweaveGatewayUrl is consumed at exactly two call sites — found ${consumingLines.length}`);
+        // The plural variable's own lines are excluded from the singular
+        // variable's own line set — "resolvedArweaveGatewayUrl" is a
+        // substring of "resolvedArweaveGatewayUrls", so a naive substring
+        // sweep over the singular name would otherwise double-count every
+        // plural declaration/usage as if it were a singular one.
+        const singularLines = nonCommentLines.filter(({ line }) => line.includes('resolvedArweaveGatewayUrl') && !line.includes('resolvedArweaveGatewayUrls'));
+        const pluralLines = nonCommentLines.filter(({ line }) => line.includes('resolvedArweaveGatewayUrls'));
+
+        const singularDeclarationLines = singularLines.filter(({ line }) => /const\s+resolvedArweaveGatewayUrl\s*=/.test(line));
+        assert(singularDeclarationLines.length === 1, `D1. resolvedArweaveGatewayUrl (singular) is declared exactly once — found ${singularDeclarationLines.length}`);
+        const singularConsumingLines = singularLines.filter(({ line }) => !/const\s+resolvedArweaveGatewayUrl\s*=/.test(line));
+        assert(singularConsumingLines.length === 2, `D2. resolvedArweaveGatewayUrl (singular) is consumed at exactly two call sites (the Arweave Anchor publish/verify pair — 0.9.439's own deliberate exception) — found ${singularConsumingLines.length}`);
+
+        const pluralDeclarationLines = pluralLines.filter(({ line }) => /const\s+resolvedArweaveGatewayUrls\s*=/.test(line));
+        assert(pluralDeclarationLines.length === 1, `D1b. resolvedArweaveGatewayUrls (plural) is declared exactly once — found ${pluralDeclarationLines.length}`);
+        const pluralConsumingLines = pluralLines.filter(({ line }) => !/const\s+resolvedArweaveGatewayUrls\s*=/.test(line));
+        assert(pluralConsumingLines.length === 2, `D2b. resolvedArweaveGatewayUrls (plural) is consumed at exactly two call sites (World Encounter material retrieval + Snapshot retrieval) — found ${pluralConsumingLines.length}`);
+
+        const consumingLines = [...singularConsumingLines, ...pluralConsumingLines];
 
         // D3. Never near an uploader, Snapshot distribution, Nostr, IPFS,
         // Bitcoin, Base, or peer-connectivity composition.

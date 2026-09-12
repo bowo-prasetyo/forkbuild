@@ -118,13 +118,21 @@ async function run() {
 
     // ===============================================================
     // Section F — toJSON(): plain-data shape only.
+    //
+    // 0.9.440 — toJSON() now always emits the LIST shape, `{ gatewayUrls }`,
+    // even for a single-gatewayUrl-constructed instance — see core/
+    // ArweaveGatewayConfiguration.js's own 0.9.440 header. This is the one
+    // deliberate shape change this milestone makes to this class; every
+    // other Section in this file (construction, normalization, rejection,
+    // immutability, equals()) is unaffected by it.
     // ===============================================================
     {
         const config = new ArweaveGatewayConfiguration({ gatewayUrl: 'https://my-gateway.example' });
         const json = config.toJSON();
-        assert(JSON.stringify(json) === JSON.stringify({ gatewayUrl: 'https://my-gateway.example' }), 'F1. toJSON() returns exactly { gatewayUrl }, nothing more');
+        assert(JSON.stringify(json) === JSON.stringify({ gatewayUrls: ['https://my-gateway.example'] }), 'F1. toJSON() returns exactly { gatewayUrls }, a one-element array for a single-gatewayUrl configuration');
         assert(Object.keys(json).length === 1, 'F2. toJSON() carries exactly one field');
-        console.log('✓ Section F: toJSON() is a plain, single-field data shape — no extra fields, no methods');
+        assert(Array.isArray(json.gatewayUrls), 'F3. gatewayUrls is always an array, even for a single-gatewayUrl configuration');
+        console.log('✓ Section F: toJSON() is a plain, single-field list-shaped data shape — no extra fields, no methods');
     }
 
     // ===============================================================
@@ -157,6 +165,60 @@ async function run() {
         assert(!/InfrastructureEndpointConfiguration/.test(configExecutable), 'H5. no generic InfrastructureEndpointConfiguration abstraction — this file names itself ArweaveGatewayConfiguration on purpose');
         assert(!/ipfs/i.test(configExecutable), 'H6. no IPFS reference in this file\'s own executable code — IPFS Gateway is a deliberately separate, later candidate');
         console.log('✓ Section H: architecture sweep of the real source file confirms no persistence, no network call, no ui/ dependency, no speculative fields, and no generic endpoint abstraction');
+    }
+
+    // ===============================================================
+    // Section I — 0.9.440: `gatewayUrls` (an ordered list), and the
+    // single-string shape's continued equivalence to a one-element list.
+    // ===============================================================
+    {
+        // I1. A list of two or more constructs, preserves order, and
+        // .gatewayUrl reads back the FIRST entry.
+        const multi = new ArweaveGatewayConfiguration({ gatewayUrls: ['https://a.example', 'https://b.example', 'https://c.example'] });
+        assert(JSON.stringify(multi.gatewayUrls) === JSON.stringify(['https://a.example', 'https://b.example', 'https://c.example']), 'I1. gatewayUrls preserves configured order exactly');
+        assert(multi.gatewayUrl === 'https://a.example', 'I1. gatewayUrl reads back the first configured entry');
+
+        // I2. Reordering [A, B] -> [B, A] changes gatewayUrl/gatewayUrls,
+        // and equals() treats the two as genuinely different configurations
+        // — order IS the policy, never incidental.
+        const ab = new ArweaveGatewayConfiguration({ gatewayUrls: ['https://a.example', 'https://b.example'] });
+        const ba = new ArweaveGatewayConfiguration({ gatewayUrls: ['https://b.example', 'https://a.example'] });
+        assert(ab.gatewayUrl !== ba.gatewayUrl, 'I2. reordering changes which entry gatewayUrl reads back');
+        assert(!ab.equals(ba), 'I2. equals() treats a reordered list as a different configuration');
+
+        // I3. A single string is exactly a one-element list — the
+        // "old configuration -> one-element list -> same behavior"
+        // compatibility rule this milestone's own brief requires.
+        const single = new ArweaveGatewayConfiguration({ gatewayUrl: 'https://only.example' });
+        const singleAsList = new ArweaveGatewayConfiguration({ gatewayUrls: ['https://only.example'] });
+        assert(single.equals(singleAsList), 'I3. gatewayUrl: X and gatewayUrls: [X] construct value-equal configurations');
+        assert(JSON.stringify(single.gatewayUrls) === JSON.stringify(['https://only.example']), 'I3. a single-gatewayUrl configuration still exposes a one-element gatewayUrls array');
+
+        // I4. Passing both throws — never a silent "one wins."
+        expectThrows(() => new ArweaveGatewayConfiguration({ gatewayUrl: 'https://a.example', gatewayUrls: ['https://b.example'] }),
+            'I4. supplying both gatewayUrl and gatewayUrls throws, rather than silently preferring one');
+
+        // I5. An empty gatewayUrls array throws — never "no gateway
+        // configured," which is a caller's own absence to represent, not a
+        // valid-but-empty configuration.
+        expectThrows(() => new ArweaveGatewayConfiguration({ gatewayUrls: [] }), 'I5. an empty gatewayUrls array throws');
+        expectThrows(() => new ArweaveGatewayConfiguration({ gatewayUrls: 'https://not-an-array.example' }), 'I5. a bare string under the gatewayUrls key (not an array) throws');
+
+        // I6. Every entry is independently validated and normalized —
+        // one malformed entry anywhere in the list throws the whole
+        // construction, and trailing slashes are stripped per entry.
+        expectThrows(() => new ArweaveGatewayConfiguration({ gatewayUrls: ['https://good.example', 'not-a-url'] }),
+            'I6. one malformed entry anywhere in the list throws construction of the whole configuration');
+        const trimmed = new ArweaveGatewayConfiguration({ gatewayUrls: ['https://a.example/', 'https://b.example///'] });
+        assert(JSON.stringify(trimmed.gatewayUrls) === JSON.stringify(['https://a.example', 'https://b.example']), 'I6. trailing slashes are normalized per entry, identically to the single-gatewayUrl path');
+
+        // I7. gatewayUrls is frozen — no mutation reaches another read.
+        const frozen = new ArweaveGatewayConfiguration({ gatewayUrls: ['https://a.example', 'https://b.example'] });
+        assert(Object.isFrozen(frozen.gatewayUrls), 'I7. the returned gatewayUrls array is frozen');
+        expectThrows(() => { frozen.gatewayUrls.push('https://c.example'); }, 'I7. push() on the returned array throws rather than silently mutating this instance');
+        assert(frozen.gatewayUrls.length === 2, 'I7. the attempted mutation left this instance unchanged');
+
+        console.log('✓ Section I: gatewayUrls constructs an ordered, frozen, independently-validated list; a single gatewayUrl string remains exactly a one-element list; both fields together throws; an empty/non-array list throws');
     }
 
     console.log('\n✅ All User-Configurable Arweave Gateway Configuration Boundary tests passed.');

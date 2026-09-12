@@ -108,9 +108,17 @@ async function run() {
         assert(mainSource.includes('new ArweaveGatewayConfigurationStore('), 'C3. ui/main.js actually constructs an ArweaveGatewayConfigurationStore, never just imports the class unused');
         assert(/arweaveGatewayConfigurationStore\.get\(\)\s*\|\|\s*\{\s*gatewayUrl:\s*DEFAULT_ARWEAVE_GATEWAY_URL\s*\}/.test(mainSource), 'C4. ui/main.js resolves "absent -> default, present -> override" exactly — never a merge, never silently dropping the persisted store\'s own value');
 
-        // Retrieval call sites: both must receive the resolved gatewayUrl.
-        assert(/arweaveResolverOptions:\s*\{\s*gatewayUrl:\s*resolvedArweaveGatewayUrl\s*\}/.test(mainSource), 'C5. composeDecentralizedWorldEncounterMaterialDiscoveryRuntime() (World Encounter material RETRIEVAL) receives the resolved gatewayUrl');
-        assert(/arweaveContentStoreOptions:\s*\{\s*signer:\s*arweaveHostSigner,\s*gatewayUrl:\s*resolvedArweaveGatewayUrl\s*\}/.test(mainSource), 'C6. composeDiscoverSnapshotRuntime() (Snapshot RETRIEVAL) receives the resolved gatewayUrl alongside its existing signer');
+        // Retrieval call sites: both must receive the resolved gatewayUrls.
+        //
+        // 0.9.440 — both call sites now receive resolvedArweaveGatewayUrls
+        // (plural, the full ordered gateway list) rather than the singular
+        // resolvedArweaveGatewayUrl checked here pre-0.9.440 — see core/
+        // ArweaveGatewayConfiguration.js's own 0.9.440 header. The singular
+        // variable still exists in ui/main.js, still resolving to the
+        // first configured gateway, still consumed by Arweave Anchor
+        // (unaffected by this milestone).
+        assert(/arweaveResolverOptions:\s*\{\s*gatewayUrls:\s*resolvedArweaveGatewayUrls\s*\}/.test(mainSource), 'C5. composeDecentralizedWorldEncounterMaterialDiscoveryRuntime() (World Encounter material RETRIEVAL) receives the resolved gatewayUrls list');
+        assert(/arweaveContentStoreOptions:\s*\{\s*signer:\s*arweaveHostSigner,\s*gatewayUrls:\s*resolvedArweaveGatewayUrls\s*\}/.test(mainSource), 'C6. composeDiscoverSnapshotRuntime() (Snapshot RETRIEVAL) receives the resolved gatewayUrls list alongside its existing signer');
 
         // Distribution (write-path) call sites: neither may be touched by
         // this milestone — see core/ArweaveGatewayConfiguration.js's own
