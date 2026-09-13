@@ -724,6 +724,15 @@ confirmed.
 > evidence is discovered, not when you expand the list. You decide, per
 > anchor, when it's worth the round trip.
 
+**Base anchors verify through this same generic Verify Evidence button —
+there's no separate reconciliation card for them the way Bitcoin has
+one, just below.** A Base anchor — one you created with [Create Base
+Anchor](#creating-a-base-anchor-in-one-step), or received from a peer —
+shows up in the evidence list exactly like any other, and clicking
+**Verify Evidence** reaches Base's own network to check that transaction
+against this anchor's claimed content hash, resolving to the identical
+labels in the table above.
+
 ### Bitcoin Anchor: confirmation and content-proof reconciliation
 
 Every **Bitcoin Op Return** anchor's own expanded card also has a second,
@@ -1251,6 +1260,48 @@ modified first. Outcomes:
 | **Signing declined** | You (or the wallet) declined. |
 | **Wallet unavailable** | No wallet connected, or it couldn't be reached. |
 | **Signing failed** | The wallet claimed success but returned something unusable. |
+
+### Creating a Base anchor in one step
+
+Right inside that same **Base Transaction Review** card, above the
+step-by-step **Sign Reviewed Transaction** button, a **Create Base
+Anchor** section offers a deliberate alternative:
+
+```
+Create Base Anchor
+
+Signs, finalizes, and broadcasts the exact transaction reviewed above in
+one step, then records a Base anchor for this publication — an
+alternative to signing it step by step below.
+
+[Create Base Anchor]
+```
+
+Click **Create Base Anchor** and your wallet extension asks you to
+approve signing exactly the plan shown in the review above — the same
+approval prompt **Sign Reviewed Transaction** would show — and, once
+signed, ForkBuild finalizes and broadcasts it for you, in the same click,
+then catalogs the result as a real **External Evidence** anchor for this
+publication. It's an *alternative* to the granular Sign → Verify &
+Finalize → Broadcast sequence below, never a replacement for it: both
+remain fully usable independently, and using one doesn't disable or
+consume the other. Outcomes:
+
+| Badge | Meaning |
+|---|---|
+| **Anchor created** | The whole sequence succeeded — a real, broadcast Base transaction now exists, and a new anchor for it immediately appears in this publication's own [evidence list](#the-evidence-list), expanded, exactly like clicking **Create Bitcoin Op Return Anchor** would if this build shipped a real Bitcoin wallet. |
+| **Recording rejected** | Signing, finalizing, or broadcasting reached a definite no. |
+| **No anchor was created** | The wallet or network couldn't currently be reached. |
+
+Clicking again after a success offers **Create Another Base Anchor** — a
+second, fully independent anchor, never a replacement for the first —
+exactly like the one-click Bitcoin/Arweave evidence buttons in
+[Creating evidence](#creating-evidence) above. Unlike that Bitcoin
+button, which always reports **No anchor was created** in this build for
+want of a real wallet, this one genuinely works: Base's wallet
+connection is real end to end, so **Create Base Anchor** can and does
+move a real transaction on whatever network your connected wallet
+reports, exactly like the step-by-step pipeline it's an alternative to.
 
 ### Verifying and finalizing
 
@@ -1795,12 +1846,20 @@ more likely correct — and unlike that comparison, this one is never
 affected by whether you've actually resolved any of the placements; it's
 derived purely from the claims themselves, every time.
 
-## Arweave Gateway and Nostr Relay
+## Network Settings
 
-Two independent settings pages, reached from the top bar, let you replace
-the network endpoint ForkBuild retrieves and discovers decentralized
-content through — without touching anything about what gets uploaded or
-announced when you distribute your own content.
+Open **Network Settings** in the top bar for one hub linking every
+endpoint-server settings page ForkBuild has: **Content Provider** (see
+[Using a preferred provider](#using-a-preferred-provider) above),
+**Arweave Gateway** and **Nostr Relay** (below), **Nostr Publication
+Relays** (below), **STUN Servers** and **TURN Server** (see
+[TURN: relaying peer connections that can't find a direct
+path](07-PeerConnectionsAndFriends.md#turn-relaying-peer-connections-that-cant-find-a-direct-path)),
+and **Rendezvous Servers** (see
+[Peer Connections & Friends](07-PeerConnectionsAndFriends.md)). Each still
+keeps its own route and its own **Save** logic, described individually
+below and in the chapters just linked — Network Settings is only a single
+front door to all of them, not a shared form.
 
 ### Arweave Gateway
 
@@ -1850,18 +1909,77 @@ buttons, and equally modest validation: **Save** only ever checks that
 what you typed parses as an absolute `ws:`/`wss:` URL, never that the
 relay is actually reachable or speaks the Nostr protocol.
 
-This setting affects discovery only — never publishing. It's the relay
-consulted by all three of ForkBuild's Nostr read paths: **World
-Encounters**' own decentralized lookups and **Discover Publication** (see
+This setting affects discovery only — never publishing — and, since
+**Nostr Publication Relays** (below) took over Publication discovery,
+it's narrower than it used to be: today it's the relay **Nearby Place
+Names** (see
+[Nearby Place Names](03-WorldView.md#nearby-place-names--discovering-claims-from-anyone))
+and Snapshot discovery consult. Discovering a Publication over Nostr —
+**World Encounters**' own decentralized lookups and **Discover
+Publication** (see
 [World Encounters](03-WorldView.md#world-encounters--publications-and-avatars-your-peers-are-sharing)
 and
-[Discover Publication](03-WorldView.md#discover-publication--searching-decentralized-networks-directly)),
-Snapshot discovery, and **Nearby Place Names** (see
-[Nearby Place Names](03-WorldView.md#nearby-place-names--discovering-claims-from-anyone)).
-None of the places you *announce* something over Nostr — publishing a
-Signed Claim, a Snapshot, or a place-naming claim — ever consult this
-setting; only what those same read paths *look for* does. Exactly like
-Arweave Gateway, a change here only takes effect on the next app load.
+[Discover Publication](03-WorldView.md#discover-publication--searching-decentralized-networks-directly))
+— reads the separate **Nostr Publication Relays** set instead, described
+next. None of the places you *announce* something over Nostr — a
+place-naming claim's own **Publish to Nostr**, or the separate Snapshot
+distribution protocol — ever consult either setting; only the read paths
+named above do. Exactly like Arweave Gateway, a change here only takes
+effect on the next app load.
+
+### Nostr Publication Relays
+
+Open **Nostr Publication Relays** in the top bar
+(`/settings/nostr-publication-relays`) — a genuinely separate page from
+**Nostr Relay** above, covering a genuinely separate concern: the set of
+relays a signed **Publication** (a Repository creation's decentralized
+record, or the Signed Claim behind **Distribute Publication** — see
+[Distributing straight from the Editor](04-PublishingAndForking.md#distributing-straight-from-the-editor)
+and
+[World Encounters](03-WorldView.md#world-encounters--publications-and-avatars-your-peers-are-sharing))
+is announced to, and queried against when **Discover Publication** or
+World Encounters' own decentralized lookup goes looking for one. It never
+affects Snapshot distribution or discovery, and it never changes the
+plain **Nostr Relay** preference above, still used for Place Naming
+discovery.
+
+Rather than one URL, this page shows a multi-line box — one relay URL per
+line, for example:
+
+```
+Current relay set (2): wss://relay-a.example, wss://relay-b.example
+
+wss://relay-a.example
+wss://relay-b.example
+
+[Save]   [Use Deployment Default]
+```
+
+With nothing saved, the page shows "No override configured. Currently
+using the deployment default: `wss://relay.damus.io`" — a single-relay
+fallback, exactly like every other setting on this page starts out. Type
+one relay URL per line and click **Save** to replace the whole set at
+once; **Save** rejects the whole attempt if any line isn't a valid
+absolute `ws:`/`wss:` URL, leaving whatever was previously saved
+untouched, and click **Use Deployment Default** to go back to having no
+override at all.
+
+**Every relay you list is an equal, independent target — never a
+priority order, and never failover.** Announcing a Publication fans out
+to every configured relay at once, each one attempted regardless of
+whether another succeeds or fails — unlike Arweave Gateway's ordered
+list above, where only an unreachable gateway falls through to the next
+one. There's no per-relay status shown on this settings page itself, no
+health check, and no way to mark one relay preferred over another; a
+relay that declines or fails never causes a different one to be skipped
+or retried in its place. (Where a distribution result *is* shown — the
+Editor's **Distribute now** notice, World Encounters' and My
+Publication's own Distribute Publication readouts — it still reports one
+combined **Discovery** outcome for the attempt, not a per-relay
+breakdown.)
+
+A change here, like every other setting on this page, only takes effect
+on the next app load.
 
 ## IPFS Publishing
 
@@ -2181,14 +2299,30 @@ None of MATCH, DIFFERENT, or a difference/replacement review above ever
 states which archive is newer, better, or more correct — only whether
 the two are, or are not, the identical durable bytes.
 
-## Reconciliation Candidate Leaderboard
+## Leaderboard Hub
 
-A further page reads this same durable archive, without a link anywhere
-else in this app: **Reconciliation Candidate Leaderboard**, at
-`/reconciliation-leaderboard`. Type that URL directly to reach it — there's
-no button, menu entry, or card on this page that takes you there yet. Once
-open, it's entirely read-only: nothing on it creates, edits, or deletes
-anything.
+A further page, **Leaderboard**, reads this same durable archive and
+gathers every leaderboard-related page ForkBuild has into one place: the
+**Reconciliation Candidate Leaderboard** (below), **Reconciliation
+Workspace**, **Publisher Snapshot Claim**, and **Publisher Performance
+Leaderboard**, plus the same **Publisher Achievement Profile**, **…
+Badges**, and **… Statistics** cards described in
+[Publisher Identity](#publisher-identity) above — moved here since they
+feed the Performance Leaderboard's own ranking. Reach it by clicking
+**Leaderboard** in the sentence just below the **Publication Archive**
+card, further down this page: "Reconciling this archive against a peer's,
+authoring or exporting your own signed leaderboard snapshot claim, and
+seeing publishers ranked by their own recorded achievements all happen on
+the Leaderboard page." It's deliberately not a top-bar entry of its own —
+one contextual link from Publications, same as the individual pages it
+consolidates used to be.
+
+### Reconciliation Candidate Leaderboard
+
+One of the pages linked from the Leaderboard hub above,
+**Reconciliation Candidate Leaderboard** (`/reconciliation-leaderboard`),
+reads this same durable archive. It's entirely read-only: nothing on it
+creates, edits, or deletes anything.
 
 ```
 Reconciliation Candidate Leaderboard
@@ -2405,6 +2539,12 @@ Filter or the peer archive and click **Export Evidence** again to
 download a document matching the new selection; nothing exports
 automatically.
 
+Beside **Export Evidence** sits a **Compare Exported Evidence** link — a
+plain navigation shortcut to
+[Evidence Export Comparison](#evidence-export-comparison), below. It
+carries nothing across: that page still gets its own two documents by
+paste, exactly as if you'd navigated there yourself.
+
 **Importing a previously exported evidence document, to inspect it.** A
 separate **Import Evidence Export** box, below Evidence Export, offers its
 own paste area and an **Import Evidence** button. Paste any evidence
@@ -2442,9 +2582,8 @@ and clears the imported-evidence summary.
 
 ## Evidence Export Comparison
 
-A second page, also reached only by typing its URL directly (there's no
-button, menu entry, or card that links to it, on this page or anywhere
-else) — `/evidence-export-comparison` — compares two previously exported
+A second page, reached by the **Compare Exported Evidence** link above or
+by typing its URL directly — `/evidence-export-comparison` — compares two previously exported
 evidence documents against each other, rather than a live archive against
 a peer archive. Use it, for example, to compare a report you exported
 last week against one you exported today, or a report you exported

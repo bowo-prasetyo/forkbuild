@@ -164,6 +164,20 @@ instead shows a plain "Snapshot distribution could not be completed."
 notice. Neither the button's state nor its result is remembered anywhere
 — selecting a different encounter, or leaving the page, clears it.
 
+**A publication a peer showed you here doesn't stay stranded in World
+Encounters once it actually resolves.** The moment a peer-shown
+publication's Material reaches **Available** — its content genuinely
+loads and checks out — it's also admitted into the same catalog behind
+the [Repository](04-PublishingAndForking.md#the-repository)'s own search
+and every Author page, exactly as if it had been found the ordinary way:
+searching the Repository, or opening its author's page, now turns it up
+too, for the rest of this browser session (a reload forgets it, the same
+way My Worlds and everything else session-scoped in this app does).
+There's no separate badge or label marking it as "found via a peer" once
+it's in — a Repository card or Author-page listing looks identical either
+way, since by that point your own device has independently verified the
+content itself; only *how you first heard about it* differed.
+
 ### Discover Publication — searching decentralized networks directly
 
 Still inside the World Encounters group, but needing no marker click and
@@ -629,6 +643,20 @@ World you're viewing right now, without a reload. Every one of these is
 its own explicit click — nothing here chains, retries, or ranks a
 candidate for you; it's the same restraint every other manual, one-step-
 at-a-time flow in ForkBuild already holds to.
+
+**The automatic path this popup is a fallback for now draws from more
+than just this device.** As you walk, ForkBuild periodically checks for
+Snapshot candidates behind the scenes — the same check **Discover
+Snapshots** above runs by hand — composing whatever this device already
+holds locally, whatever a connected peer has passively shared (simply by
+being connected, with no action on their part), and whatever Nostr
+reports, into one set of candidates. A candidate that resolves is quietly
+walked through the same resolve → materialize → place → register chain
+described above, and shows up exactly like any other **World Encounter**
+marker — there's no separate "auto-discovered" list or notification, and
+Diagnostic Tools' own manual buttons above still work exactly as
+described, unchanged, for whenever this passive path doesn't turn up
+what you're looking for yourself.
 
 ## The Operation Timeline
 

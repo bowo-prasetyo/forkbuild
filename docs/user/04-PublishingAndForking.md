@@ -148,6 +148,14 @@ everything they've made, including their originals and all the forks that grew
 from them, using the exact same search/sort/pagination catalog as the
 Repository, just scoped to that one author.
 
+The Repository isn't limited to what was published from this device or
+discovered outright, either: a decentralized Repository creation a peer
+showed you in World View's own
+[World Encounters](03-WorldView.md#world-encounters--publications-and-avatars-your-peers-are-sharing)
+map, once its content actually resolves, joins this same search and its
+author's Author view too — see that section for the details. It's shown
+no differently from anything else here once it's in.
+
 ## Forking: make it your own
 
 **Forking** is what makes ForkBuild special. When you fork a creation:

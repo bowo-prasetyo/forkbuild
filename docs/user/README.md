@@ -34,7 +34,11 @@ top-level [docs/](..) folder.
    that queries Arweave/Nostr directly by publication id and a discovery
    tag prefilled with ForkBuild's own shared campaign tag — independent of
    any marker or connected peer — letting you inspect and explicitly
-   select a verified result found that way, a **Nearby Place Names** group that
+   select a verified result found that way, and, once a peer-shown
+   publication's material genuinely resolves this way, quietly admitting
+   it into the same [Repository](04-PublishingAndForking.md#the-repository)
+   search and Author-page catalog everything else lives in, for the rest
+   of that browser session, a **Nearby Place Names** group that
    discovers signed place-naming claims from a decentralized network for
    regions around you (again with no connected peer required), lets you
    **Navigate** to one or **Adopt** it onto your own device, and never
@@ -47,7 +51,11 @@ top-level [docs/](..) folder.
    location that publication is actually placed at, and a **Diagnostic
    Tools** popup gathering its manual, step-by-step Snapshot
    discover/resolve/materialize/place/register recovery tools in one
-   place for when the automatic path doesn't produce what you expect.
+   place for when the automatic path doesn't produce what you expect —
+   increasingly automatic itself, since Snapshot candidates now also
+   surface passively, from local storage, connected peers, and Nostr
+   alike, simply by walking around, appearing as ordinary World
+   Encounter markers with no Diagnostic Tools click required.
 4. **[Publishing & Forking](04-PublishingAndForking.md)** — sharing
    your work, licenses, how forking works (including the automatic
    fork that happens the moment you edit a published creation), a
@@ -71,7 +79,10 @@ top-level [docs/](..) folder.
 7. **[Peer Connections & Friends](07-PeerConnectionsAndFriends.md)** —
    connecting directly to other people, remembering, friending, and
    blocking, plus automatic reconnection to any Known Peer who is
-   currently discoverable, with no manual Reconnect click required.
+   currently discoverable, with no manual Reconnect click required, and a
+   **TURN Server** settings page for supplying your own relay so peer
+   connections behind a restrictive NAT — the ones plain STUN can't find a
+   direct path for — can still get through.
 8. **[Chat & Conversations](08-ChatAndConversations.md)** — direct,
    friends-only messaging, offline delivery, read receipts, and voice
    calls.
@@ -100,12 +111,19 @@ top-level [docs/](..) folder.
    the actual bytes this device holds (from a placement, a peer, or an
    offline file), a **Decentralization** overview comparing your
    evidence and placements, synchronizing knowledge with peers, and
-   seeing how each claim was learned, two independent, mirrored
-   **Anchor Pipelines** — one for **Bitcoin**, one for **Base** — each
-   connecting a real browser wallet and walking a real transaction
-   through funding/observation, construction, review, signing,
-   cryptographic verification, broadcast, and confirmation/inclusion,
-   with each pipeline minting its own durable publication identity and
+   seeing how each claim was learned, a third standing override — **Nostr
+   Publication Relays** — configuring the whole *set* of relays a
+   Publication announcement fans out to and Publication discovery queries
+   (kept genuinely separate from the plain **Nostr Relay** override above
+   it, which now covers only Snapshot and Place Naming discovery), two
+   independent, mirrored **Anchor Pipelines** — one for **Bitcoin**, one
+   for **Base** — each connecting a real browser wallet and walking a real
+   transaction through funding/observation, construction, review, signing,
+   cryptographic verification, broadcast, and confirmation/inclusion, the
+   Base pipeline also offering a one-click **Create Base Anchor** action
+   that signs, finalizes, broadcasts, and catalogs an anchor in a single
+   step as a deliberate alternative to its own granular flow, with each
+   pipeline minting its own durable publication identity and
    lifecycle timeline, and the durable, cross-chain **Publication
    Observation Archive** underlying all of it — a persisted record of
    IPFS, Bitcoin, and Base facts alike, with its own combined timeline,
@@ -118,14 +136,19 @@ top-level [docs/](..) folder.
    milestones (and a per-publication **Achievement Profile**), and a
    **Publisher Identity** layer for explicitly associating a
    self-declared publisher label with your publications and inspecting
-   that publisher's own achievement profile, badges, and statistics, and
-   a read-only **Reconciliation Candidate Leaderboard** page (reached by
-   typing its URL directly — not yet linked anywhere in the app) that
+   that publisher's own achievement profile, badges, and statistics, a
+   **Leaderboard** hub page — reached from a link right on this page,
+   no longer only by typing a URL — consolidating every leaderboard-
+   related page (Reconciliation Workspace, Publisher Snapshot Claim,
+   Publisher Performance Leaderboard, and the Publisher Achievement
+   cards) in one place, including a read-only
+   **Reconciliation Candidate Leaderboard** page that
    summarizes this replica's own recorded reconciliation-decision and
    revalidation-observation evidence per candidate, including a way to
    import and inspect a previously exported evidence document on its own,
-   and a second, separate **Evidence Export Comparison** page (also
-   reached only by URL) that compares two previously exported evidence
+   and a second, separate **Evidence Export Comparison** page (reached
+   from its own **Compare Exported Evidence** link, or by URL) that
+   compares two previously exported evidence
    documents against each other across three independent Source-only/
    Shared/Target-only tables with per-record and per-field identity
    inspection, plus an **Explicit Record Pairing** tool for hand-picking

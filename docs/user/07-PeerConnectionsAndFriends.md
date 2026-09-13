@@ -62,6 +62,52 @@ even though a Known Peer or Friend record survives it.
   from them again, but never restores anything blocking silenced in the
   meantime.
 
+## TURN: relaying peer connections that can't find a direct path
+
+Every peer connection starts by trying to negotiate a direct path between
+two browsers, with ForkBuild's own default public STUN servers helping
+each side discover its own reachable address. That's enough for most
+connections — but some networks (a symmetric NAT, a restrictive corporate
+firewall) never expose a path STUN alone can find. For those, open **TURN
+Server** from **Network Settings** in the top bar
+(`/settings/turn-server`) and configure your own TURN relay: a server
+that actually forwards the connection's data when a direct path can't be
+established.
+
+```
+TURN Server
+
+Your own TURN relay, used for peer connections that can't establish a
+direct or STUN-negotiated path. This setting affects connection setup
+only; it does not change peer identity, authentication, or any existing
+connection.
+
+[ One turn:/turns: URL per line, e.g. turn:relay.example:3478 ]
+
+Username [______________]
+Credential [______________]
+
+[Save]   [Clear]
+```
+
+Enter one or more `turn:`/`turns:` URLs (one per line), a **Username**,
+and a **Credential** — the same shared credential pair is sent for every
+URL you list, never a separate one per server — and click **Save**. Once
+set, the current relay shows as "Current TURN relay (*N* url(s)):
+`<your URLs>` — username: `<your username>`" — the credential itself is
+never shown back to you once saved, only that one is configured. Click
+**Clear** to remove it entirely.
+
+**There is deliberately no "Use Deployment Default" button here.**
+Unlike Arweave Gateway or Nostr Relay, ForkBuild ships no deployment-wide
+TURN server of its own — leaving this unconfigured simply means peer
+connections rely on STUN and direct connectivity alone, exactly as they
+always have. A TURN relay is entirely optional, and something you'd
+supply yourself (many WebRTC hosting providers offer one) only if
+connections to certain peers keep failing to connect directly. Like every
+other Network Settings page, a change here only takes effect on the next
+app load.
+
 ## Reconnecting
 
 A Known Peer or Friend who isn't currently in My Peers shows a **Reconnect**
