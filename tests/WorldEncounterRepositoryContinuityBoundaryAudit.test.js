@@ -261,8 +261,21 @@ async function run() {
     // Section B -- 0.9.329's own citations, reconfirmed fresh.
     // ===============================================================
     {
+        // AMENDED BY 0.9.474 -- Admit World-Encountered Publications into
+        // App-Wide Discovery. At the time this audit was written, every
+        // file in this list -- ui/components/WorldEncounterCanvas.js
+        // included -- carried no reference to Repository's own discovery
+        // catalog or admission gate. 0.9.474 closed exactly the gap
+        // Section I (below) named as the smallest seam: it added
+        // WorldEncounterCanvas.js's own admitToRepositoryDiscovery()
+        // method and a new decentralizedPublicationDiscoveryProvider prop
+        // (a lowercase-`d` variable NAME, never the DecentralizedPublicationDiscoveryProvider
+        // CLASS itself -- that class is still never imported by this file;
+        // see tests/WorldEncounterRepositoryContinuityIntegrationBoundaryAudit
+        // .test.js's own Section G for the dedicated no-duplicate-mechanism
+        // proof). Every OTHER file in this list is untouched -- this
+        // finding stays true, unchanged, for all eight of them.
         const worldEncounterFiles = [
-            'ui/components/WorldEncounterCanvas.js',
             'application/WorldEncounterMaterialLoading.js',
             'application/WorldEncounterMaterialInspection.js',
             'application/PeerWorldEncounterMaterialSource.js',
@@ -277,6 +290,11 @@ async function run() {
             assert(!/LocalPublicationCatalog|DecentralizedPublicationDiscoveryProvider|admitToRepositoryDiscovery/.test(src),
                 `1. ${file} still carries no reference to LocalPublicationCatalog, DecentralizedPublicationDiscoveryProvider, or admitToRepositoryDiscovery -- 0.9.329's own "never persists what it retrieves" finding still holds, unchanged, at this file today.`);
         }
+        const canvasSrc = await readSource('ui/components/WorldEncounterCanvas.js');
+        assert(/admitToRepositoryDiscovery\(loading\) \{/.test(canvasSrc),
+            "1b. AMENDED BY 0.9.474 -- ui/components/WorldEncounterCanvas.js now defines its own admitToRepositoryDiscovery(loading), closing this file's own share of the gap.");
+        assert(!/new DecentralizedPublicationDiscoveryProvider\(|import .*DecentralizedPublicationDiscoveryProvider.* from/.test(canvasSrc),
+            '1c. ... but still never imports or constructs the DecentralizedPublicationDiscoveryProvider CLASS itself -- it only ever receives one instance, injected as a prop, exactly as Section I (below) specified.');
 
         // B2. ui/main.js -- the one file that legitimately constructs
         // BOTH the shared decentralizedPublicationDiscoveryProvider and
@@ -293,7 +311,7 @@ async function run() {
         assert(providerOccurrences === 3,
             `2. ui/main.js references decentralizedPublicationDiscoveryProvider exactly three times -- its own declaration plus its own app.provide() call (key + value) -- never threaded into WorldEncounter composition (found ${providerOccurrences} occurrences).`);
     }
-    console.log('✓ Section B: 0.9.329’s own "never persists what it retrieves" citations are reconfirmed fresh against current HEAD -- the WorldEncounter* family still references neither Repository catalog, anywhere.');
+    console.log('✓ Section B: 0.9.329’s own "never persists what it retrieves" citations are reconfirmed fresh against current HEAD for eight of the nine files originally audited. AMENDED BY 0.9.474 -- the ninth, ui/components/WorldEncounterCanvas.js, now closes its own share of the gap with a real admitToRepositoryDiscovery(), while still never importing the catalog class itself.');
 
     // ===============================================================
     // Section C -- FLAGSHIP, live: a real peer-delivered Publication
@@ -318,7 +336,14 @@ async function run() {
                 resolvedEncounterSelection: selectionOf({ kind: WorldEncounterKind.PUBLICATION, objectId: alicePublication.id, origin }),
                 resolvedLead: null,
                 materialVerifier: null,
-                materialSources: { peer: bobSource }
+                materialSources: { peer: bobSource },
+                // AMENDED BY 0.9.474 -- refreshMaterialInspection() now
+                // also calls this.admitToRepositoryDiscovery(); this fake
+                // ctx has no decentralizedPublicationDiscoveryProvider
+                // (left undefined), so that call is a real, exercised
+                // no-op, exactly like every other optional collaborator
+                // this section's own ctx omits.
+                admitToRepositoryDiscovery: WorldEncounterCanvas.methods.admitToRepositoryDiscovery
             };
 
             WorldEncounterCanvas.methods.refreshMaterialInspection.call(ctx);
@@ -367,36 +392,50 @@ async function run() {
     console.log('✓ Section D: the CONTRACT is not the gap -- handed to a real DecentralizedPublicationDiscoveryProvider, Section C’s own World-Encounter-sourced Publication is found immediately by Repository’s own real, unmodified SearchPublicationsUseCase, no new field or wrapper required.');
 
     // ===============================================================
-    // Section E -- the gap, confirmed live and structurally: no call
-    // path from World Encounter material into the app-wide provider
-    // exists anywhere in production.
+    // Section E -- AMENDED BY 0.9.474. At the time this audit was
+    // written, no call path from World Encounter material into the
+    // app-wide provider existed anywhere in production; this section
+    // proved that both structurally and live. 0.9.474 built exactly the
+    // one call this section found missing -- these assertions are
+    // inverted from their original form to reflect that the gap they once
+    // proved is now closed, rather than deleted, so this file's own
+    // historical narrative stays intact and checkable. See
+    // tests/WorldEncounterRepositoryContinuityIntegrationBoundaryAudit
+    // .test.js for the dedicated, full proof of the closed gap.
     // ===============================================================
     {
-        // E1. Structural: ui/main.js constructs exactly one app-wide
+        // E1. Structural: ui/main.js still constructs exactly one app-wide
         // DecentralizedPublicationDiscoveryProvider and provides it under
-        // one key; the ONLY production reader of that key that also calls
-        // .add() on it is ui/views/DecentralizedPublicationsView.js.
+        // one key. AMENDED BY 0.9.474 -- TWO production readers of that
+        // key now call something shaped like `.add()` reachable from it:
+        // ui/views/DecentralizedPublicationsView.js (0.9.337, unchanged)
+        // and ui/views/WorldView.js's own new binding of that SAME
+        // provider straight into WorldEncounterCanvas.js's own new
+        // decentralizedPublicationDiscoveryProvider prop (never a second,
+        // WorldView.js-local `.add()` call of its own -- WorldView.js
+        // itself still never calls `.add()`, confirmed below).
         const mainSource = await readSource('ui/main.js');
         const provideMatches = mainSource.match(/app\.provide\('decentralizedPublicationDiscoveryProvider'/g) || [];
         assert(provideMatches.length === 1, '1. ui/main.js provides the shared decentralizedPublicationDiscoveryProvider exactly once.');
 
         const injectHits = grepFiles("inject\\('decentralizedPublicationDiscoveryProvider'", ['ui']);
-        const addCallers = [];
-        for (const file of injectHits) {
-            const src = await readFile(new URL(file, SOURCE_ROOT), 'utf8');
-            if (/discoveryProvider\.add\(|decentralizedDiscoveryProviderFor\w*\.add\(/.test(src)) addCallers.push(file);
-        }
         assert(injectHits.includes('ui/views/WorldView.js'), '2. ui/views/WorldView.js already injects the shared provider (0.9.339, for enrichment).');
-        assert(addCallers.length === 1 && addCallers[0] === 'ui/views/DecentralizedPublicationsView.js',
-            `3. exactly one production file ever calls .add() on the shared provider today, and it is the Publications-page flow, not World View (found: ${addCallers.join(', ') || 'none'}).`);
+        assert(/discoveryProvider\.add\(/.test(await readSource('ui/views/DecentralizedPublicationsView.js')),
+            '3a. AMENDED BY 0.9.474 -- ui/views/DecentralizedPublicationsView.js still calls .add() on the shared provider, unchanged (0.9.337).');
+        assert(/:decentralizedPublicationDiscoveryProvider="decentralizedDiscoveryProviderForEnrichment"/.test(await readSource('ui/views/WorldView.js')),
+            "3b. AMENDED BY 0.9.474 -- ui/views/WorldView.js now binds that SAME injected provider straight into <WorldEncounterCanvas>'s own new prop, one production hop from World Encounter's own admission.");
         assert(!/discoveryProvider\.add\(|\.add\(flagship|decentralizedDiscoveryProviderForEnrichment\.add\(/.test(await readSource('ui/views/WorldView.js')),
-            '4. ui/views/WorldView.js itself never calls .add() on the provider it injects -- confirmed structurally, not merely absent from the grep above.');
+            '4. ui/views/WorldView.js itself STILL never calls .add() on the provider it injects -- the admission call lives in WorldEncounterCanvas.js alone, one layer down, exactly as Section I (below) specified.');
 
         // E2. Live, repeating Section C's exact scenario one more time,
-        // this time watching a REAL, freshly-constructed app-wide-shaped
-        // provider that stands in for ui/main.js's own singleton: nothing
-        // in the WorldEncounterCanvas.js call path Section C exercised
-        // ever touches it.
+        // watching a REAL, freshly-constructed app-wide-shaped provider
+        // that stands in for ui/main.js's own singleton: AMENDED BY
+        // 0.9.474 -- the real, unmodified-in-shape refreshMaterialInspection()
+        // now DOES reach it, through this file's own real
+        // admitToRepositoryDiscovery(), handed to this fake ctx the same
+        // way tests/WorldEncounterMaterialInspectionUI.test.js's own
+        // canvasCtx() helper already does for every other WorldEncounterCanvas
+        // collaborator method.
         const watchedProvider = new DecentralizedPublicationDiscoveryProvider();
         const { alicePublication, bobSource, origin, dispose } = await connectAliceAndBob();
         try {
@@ -407,26 +446,28 @@ async function run() {
                 resolvedLead: null,
                 materialVerifier: null,
                 materialSources: { peer: bobSource },
-                // A component that DID admit resolved material would need
-                // some such dependency in scope; WorldEncounterCanvas.js's
-                // own real methods object never reads a property named
-                // anything like this (Section E1 above), so handing it
-                // here changes nothing about what the real method does --
-                // it only gives this section something to assert stayed
-                // empty.
-                decentralizedPublicationDiscoveryProvider: watchedProvider
+                // AMENDED BY 0.9.474 -- this dependency is no longer
+                // inert: WorldEncounterCanvas.js's own real
+                // refreshMaterialInspection() now calls
+                // this.admitToRepositoryDiscovery(result.loading), which
+                // reads exactly this property. admitToRepositoryDiscovery
+                // itself must also be handed to this fake ctx, below, the
+                // same way every other real method this ctx calls already
+                // is.
+                decentralizedPublicationDiscoveryProvider: watchedProvider,
+                admitToRepositoryDiscovery: WorldEncounterCanvas.methods.admitToRepositoryDiscovery
             };
             WorldEncounterCanvas.methods.refreshMaterialInspection.call(ctx);
             for (let i = 0; i < 20 && ctx.materialInspection === null; i++) await wait(20);
             assert(ctx.materialInspection && ctx.materialInspection.loading.material instanceof Publication,
                 '5. setup sanity: the live round trip resolved again, exactly as Section C proved.');
-            assert(watchedProvider.list().length === 0,
-                '6. GAP, confirmed live: after a genuinely successful, real World Encounter resolution, the app-wide-shaped provider still holds zero entries -- nothing in this call path ever calls add().');
+            assert(watchedProvider.list().length === 1 && watchedProvider.list()[0] === ctx.materialInspection.loading.material,
+                '6. GAP CLOSED, confirmed live (AMENDED BY 0.9.474): after a genuinely successful, real World Encounter resolution, the app-wide-shaped provider now holds exactly the one Publication that resolution produced -- the identical instance, not a reconstruction.');
         } finally {
             dispose();
         }
     }
-    console.log('✓ Section E: the gap is confirmed both structurally (the shared provider’s only production .add() caller is the Publications-page flow) and live (a repeat of Section C’s own successful resolution leaves a real, freshly-watched provider at zero entries).');
+    console.log('✓ Section E: AMENDED BY 0.9.474 -- the gap this section once confirmed, both structurally and live, is now closed: WorldView.js binds its own already-injected provider into WorldEncounterCanvas.js\'s own new prop (never calling .add() itself), and a repeat of Section C\'s own successful resolution now leaves a real, freshly-watched provider holding exactly that resolution\'s own Publication.');
 
     // ===============================================================
     // Section F -- content-kind/origin isolation, reconfirmed for free.
@@ -529,16 +570,22 @@ async function run() {
         assert(!rejected && demoProvider.list().length === 1,
             '3. ... and, symmetrically, never admits a failed or non-Publication resolution, exactly as 0.9.337’s own gate never does.');
 
-        // I3. Named, not built: WHERE this call belongs (inside
-        // WorldEncounterCanvas.js's own refreshMaterialInspection(), or an
-        // emitted event WorldView.js consumes) is a real, open choice this
-        // audit deliberately leaves to whichever milestone wires it -- the
-        // identical restraint 0.9.336's own audit already showed for its
-        // own open call-site choice.
-        assert(!/decentralizedPublicationDiscoveryProvider/.test(await readSource('ui/components/WorldEncounterCanvas.js')),
-            '4. confirmed once more: this section adds no such wiring to WorldEncounterCanvas.js itself -- the seam is named, never built, in this milestone.');
+        // I3. AMENDED BY 0.9.474. At the time this audit was written,
+        // WHERE this call belongs (inside WorldEncounterCanvas.js's own
+        // refreshMaterialInspection(), or an emitted event WorldView.js
+        // consumes) was a real, open choice this audit deliberately left
+        // to whichever milestone wired it -- the identical restraint
+        // 0.9.336's own audit already showed for its own open call-site
+        // choice. 0.9.474 answered it: refreshMaterialInspection() itself
+        // calls a real admitToRepositoryDiscovery(loading), inline --
+        // never an emitted event WorldView.js has to separately consume.
+        const canvasSourceForI = await readSource('ui/components/WorldEncounterCanvas.js');
+        assert(/decentralizedPublicationDiscoveryProvider/.test(canvasSourceForI),
+            "4. AMENDED BY 0.9.474 -- the seam this section named IS now built: WorldEncounterCanvas.js references decentralizedPublicationDiscoveryProvider directly, as its own new prop.");
+        assert(/refreshMaterialInspection\(\) \{[\s\S]*?this\.admitToRepositoryDiscovery\(result\.loading\);/.test(canvasSourceForI),
+            '5. AMENDED BY 0.9.474 -- specifically, the open choice this section named is resolved as an INLINE call from refreshMaterialInspection() itself, not a WorldView.js-consumed event.');
     }
-    console.log('✓ Section I: the smallest seam is named, not built -- WorldView.js already holds the one dependency a fix would need, and a gate identical in shape to 0.9.337’s own admitToRepositoryDiscovery() is proven, live, to admit exactly this family’s own resolved output correctly and only on success.');
+    console.log('✓ Section I: AMENDED BY 0.9.474 -- the smallest seam this section named is no longer merely named: WorldEncounterCanvas.js now calls a real admitToRepositoryDiscovery(), identical in shape to the gate proven live above, inline from refreshMaterialInspection() itself.');
 
     // ===============================================================
     // Section J -- no UI change; no production file touched; final
@@ -595,6 +642,14 @@ async function run() {
 'retrieves and verifies it, has no product-level path back to that same Publication from the Repository -- not\n' +
 "because the mechanism is missing (it is proven, live, to already exist and work, one call away) but because nobody\n" +
 'has yet wired the one call. Per this milestone’s own scope, that call is not made here.\n');
+
+    console.log('\nAMENDED BY 0.9.474 — Admit World-Encountered Publications into App-Wide Discovery: the one call this audit found');
+    console.log('missing has since been wired, exactly as scoped above (WorldEncounterCanvas.js\'s own new admitToRepositoryDiscovery(),');
+    console.log('called from refreshMaterialInspection()/refreshComparisonMaterialInspection(), fed by WorldView.js\'s own already-');
+    console.log('injected decentralizedPublicationDiscoveryProvider — no new store, no new persistence layer). See this file\'s own');
+    console.log('amended Sections B/E/I above for the specific findings that changed, and tests/');
+    console.log('WorldEncounterRepositoryContinuityIntegrationBoundaryAudit.test.js for the dedicated, end-to-end verification of the');
+    console.log('closed gap.');
 
     console.log('\n✅ All World Encounter Repository Continuity Boundary Audit tests passed.');
 }

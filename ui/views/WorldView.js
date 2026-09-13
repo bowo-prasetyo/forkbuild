@@ -4419,7 +4419,16 @@ export default {
             exportOwnSnapshot,
             discoverSnapshotCandidatesCommand,
             resolveSelectedSnapshotCommand,
-            materializeSelectedSnapshotCommand
+            materializeSelectedSnapshotCommand,
+            // 0.9.474 — Admit World-Encountered Publications into
+            // App-Wide Discovery. The exact same shared provider this
+            // view already injects, above (0.9.339, for search-result
+            // enrichment only) — exposed to the template so it can also
+            // be handed to WorldEncounterCanvas as its own new
+            // `decentralizedPublicationDiscoveryProvider` prop, below.
+            // No second inject(), no second provider: one dependency,
+            // two consumers.
+            decentralizedDiscoveryProviderForEnrichment
         };
     },
     template: `
@@ -4853,7 +4862,18 @@ export default {
                      application/CreatePublicationCommentaryUseCase.js
                      (0.9.289) composes, was preferred. viewerIdentityId is
                      the SAME myIdentityId already bound to OwnPublicationPanel's
-                     own identical prop, one section below. -->
+                     own identical prop, one section below.
+
+                     0.9.474 — decentralizedPublicationDiscoveryProvider,
+                     a new WorldEncounterCanvas prop, bound to the SAME
+                     decentralizedDiscoveryProviderForEnrichment this view
+                     already injects above (0.9.339) for its own search-
+                     result enrichment — no second inject(), no second
+                     provider. Lets WorldEncounterCanvas admit a resolved
+                     World Encounter Publication into the identical
+                     app-wide catalog ui/views/DecentralizedPublicationsView.js's
+                     own admitToRepositoryDiscovery() (0.9.337) already
+                     writes to, so Repository search can find it afterward. -->
                 <CollapsibleSection
                     title="World Encounters"
                     :collapsed="nearbySectionsCollapsed.worldEncounters"
@@ -4873,6 +4893,7 @@ export default {
                         :addPublicationCommentaryCommand="addPublicationCommentaryCommand"
                         :viewerIdentityId="myIdentityId"
                         :defaultDiscoveryTag="publicationDiscoveryTag"
+                        :decentralizedPublicationDiscoveryProvider="decentralizedDiscoveryProviderForEnrichment"
                     />
                 </CollapsibleSection>
             </div>

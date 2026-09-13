@@ -107,6 +107,21 @@ import { deriveWorldEncounters } from '../core/WorldEncounter.js';
 // separately, in tests/WorldSnapshotContentComparisonView.test.js; this
 // file's own sections stay focused on 0.9.3/0.9.4's own projection/selection
 // contract, unaffected by that addition.
+//
+// 0.9.474 note: WorldEncounterCanvas.js gained one new prop
+// (`decentralizedPublicationDiscoveryProvider`), one new method
+// (`admitToRepositoryDiscovery()`), and one new, non-application/ import —
+// `publisher/Publication.js`'s own `Publication` — the same instanceof gate
+// ui/views/DecentralizedPublicationsView.js's own admitToRepositoryDiscovery()
+// (0.9.337) already established. No new application/ import: this file
+// deliberately compares `loading.status` against the literal `'AVAILABLE'`
+// rather than importing application/WorldEncounterMaterialLoading.js's own
+// WorldEncounterMaterialLoadStatus enum, so Section J's own "never imports
+// ... either loading/verification boundary directly" guarantee stays true,
+// unchanged. Discovery admission is covered end-to-end, live, in
+// tests/WorldEncounterRepositoryContinuityIntegrationBoundaryAudit.test.js;
+// this file's own sections stay focused on 0.9.3/0.9.4's own projection/
+// selection contract, unaffected by that addition.
 
 function assert(condition, message) {
     if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
@@ -363,11 +378,11 @@ async function run() {
     {
         const source = await readFile(new URL('../ui/components/WorldEncounterCanvas.js', import.meta.url), 'utf8');
         const importLines = source.split('\n').filter((line) => line.trim().startsWith('import '));
-        assert(importLines.length === 17, '37. WorldEncounterCanvas.js has exactly seventeen imports as of 0.9.184');
+        assert(importLines.length === 18, '37. WorldEncounterCanvas.js has exactly eighteen imports as of 0.9.474');
         assert(importLines.some((line) => line.includes('./WorldEncounterMarker.js')) && importLines.some((line) => line.includes('./WandererMarker.js')), '38. WorldEncounterCanvas.js still imports its own two sibling marker components');
         assert(!importLines.some((line) => line.includes('core/')), '39. WorldEncounterCanvas.js never imports any core/ module directly — it receives the projected view as a prop, or via the application/ seams below, instead');
         const applicationImportLines = importLines.filter((line) => line.includes('application/'));
-        assert(applicationImportLines.length === 15, '40. WorldEncounterCanvas.js imports exactly fifteen application/ modules as of 0.9.184');
+        assert(applicationImportLines.length === 15, '40. WorldEncounterCanvas.js imports exactly fifteen application/ modules as of 0.9.184 — unchanged by 0.9.474 (see 48j below)');
         assert(applicationImportLines.some((line) => line.includes('WorldDiscoveryRegistryProjection.js') && line.includes('describeWorldFromDiscoveryRegistry')), '41. the 0.9.13 registry-projection import — WorldDiscoveryRegistryProjection.js\'s own describeWorldFromDiscoveryRegistry() — is unchanged');
         assert(applicationImportLines.some((line) => line.includes('WorldEncounterInspection.js') && line.includes('describeWorldEncounterInspection')), '42. the 0.9.18 inspection import — WorldEncounterInspection.js\'s own describeWorldEncounterInspection() — is unchanged');
         assert(applicationImportLines.some((line) => line.includes('WorldEncounterSelectionOutcome.js') && line.includes('describeWorldEncounterSelectionOutcomeFromRegistry')), '43. the 0.9.20 selection-resolution import — WorldEncounterSelectionOutcome.js\'s own describeWorldEncounterSelectionOutcomeFromRegistry() — is unchanged');
@@ -384,8 +399,22 @@ async function run() {
         assert(applicationImportLines.some((line) => line.includes('WorldSnapshotContentView.js') && line.includes('describeWorldSnapshotContentView')), '48h. 0.9.183 adds exactly one new application/ import — WorldSnapshotContentView.js\'s own describeWorldSnapshotContentView(), a pure join over selectedEncounterSnapshotInspection/materialInspection, both already computed');
         assert(applicationImportLines.some((line) => line.includes('WorldSnapshotContentComparisonView.js') && line.includes('describeWorldSnapshotContentComparisonView')), '48i. 0.9.184 adds exactly one new application/ import — WorldSnapshotContentComparisonView.js\'s own describeWorldSnapshotContentComparisonView(), a pure join over worldSnapshotComparisonResult and both sides\' own Content Views, all already computed');
         assert(!importLines.some((line) => line.includes('WorldEncounterIntegration.js') || line.includes('WorldEncounterReadModel.js') || line.includes('WorldEncounterView.js') || line.includes('WorldDiscoverySourceRegistry.js') || line.includes('WorldEncounterSelectionResolution.js') || line.includes('WorldEncounterMaterialLoading.js') || line.includes('DecentralizedWorldEncounterLeadAwareMaterialLoading.js') || line.includes('WorldEncounterMaterialVerification.js') || line.includes('DecentralizedWorldEncounterLeadResolution.js') || line.includes('DecentralizedWorldDiscoveryLeadRegistry.js') || line.includes('DecentralizedWorldEncounterLeadAssociation.js') || line.includes('PublicationDistributionLifecycleStore.js') || line.includes('PublicationDistributionLifecycleTransition.js') || line.includes('PublicationDistributionOrchestrator.js') || line.includes('PublicationDistributionRuntimeComposition.js') || line.includes('PublicationDistributionExecutor.js') || line.includes('ArweavePublicationMaterialUploader.js') || line.includes('NostrPublicationDiscoveryPublisher.js') || line.includes('DecentralizedSnapshotResolver.js') || line.includes('DiscoverSnapshotCommand.js') || line.includes('ArweaveContentStore.js') || line.includes('NostrSnapshotDiscoveryQueryService.js')), '44. WorldEncounterCanvas.js never imports deriveWorldEncounters(), assembleWorldDiscoveryInputs(), describeWorldFromDiscoverySources(), either registry class itself, 0.9.19\'s own candidate function, 0.9.28\'s own resolution function directly, either loading/verification boundary directly, a second lifecycle store/transition, a distribution execution/orchestration collaborator directly, or any Snapshot discovery/resolution/storage collaborator directly — only the fifteen application/ seams it depends on (the Snapshot World registration bridge is now one of them, for its unregister half alone; the comparison candidate/comparison join are two more, as of 0.9.182; the Content View join is a fourteenth, as of 0.9.183; the Content Comparison View join is a fifteenth, as of 0.9.184)');
+        // 48j. 0.9.474 — Admit World-Encountered Publications into
+        // App-Wide Discovery. The one new import this milestone adds is
+        // `publisher/Publication.js`'s own `Publication` — deliberately
+        // NOT an application/ import (so 48/40's own fifteen-module count
+        // stays true, unchanged), and deliberately NOT
+        // application/WorldEncounterMaterialLoading.js either (44's own
+        // blocklist above still holds: this file reaches `loading.status`
+        // through inspectWorldEncounterMaterial()'s own orchestration
+        // result, comparing it to the literal `'AVAILABLE'`, never
+        // importing the loading boundary's own status enum directly).
+        assert(importLines.some((line) => line.includes("from '../../publisher/Publication.js'") && line.includes('Publication')),
+            "48j. 0.9.474 adds exactly one new, non-application/ import — publisher/Publication.js's own Publication — the same instanceof gate ui/views/DecentralizedPublicationsView.js's own admitToRepositoryDiscovery() (0.9.337) already established");
+        assert(!importLines.some((line) => line.includes('publisher/Publication.js')) || importLines.filter((line) => line.includes('publisher/Publication.js')).length === 1,
+            '48k. publisher/Publication.js is imported exactly once, not duplicated');
 
-        console.log('✓ Section J: WorldEncounterCanvas.js never imports core/WorldEncounter.js, and imports exactly fifteen application/ modules — describeWorldFromDiscoveryRegistry(), describeWorldEncounterInspection(), describeWorldEncounterSelectionOutcomeFromRegistry(), inspectWorldEncounterMaterial(), describeDecentralizedWorldEncounterLeadSelectionOutcomeFromRegistry(), PublicationDistributionState, describePublicationMaterialProvenanceFromInspection(), resolveSnapshotPublicationAttribution(), describeWorldEncounterPresentation(), describeWorldSnapshotInspection(), unregisterMaterializedSnapshotWorldSource(), describeWorldEncounterComparisonCandidate(), compareSnapshotWorldPublications(), describeWorldSnapshotContentView(), and describeWorldSnapshotContentComparisonView() — as of 0.9.184');
+        console.log('✓ Section J: WorldEncounterCanvas.js never imports core/WorldEncounter.js, and imports exactly fifteen application/ modules — describeWorldFromDiscoveryRegistry(), describeWorldEncounterInspection(), describeWorldEncounterSelectionOutcomeFromRegistry(), inspectWorldEncounterMaterial(), describeDecentralizedWorldEncounterLeadSelectionOutcomeFromRegistry(), PublicationDistributionState, describePublicationMaterialProvenanceFromInspection(), resolveSnapshotPublicationAttribution(), describeWorldEncounterPresentation(), describeWorldSnapshotInspection(), unregisterMaterializedSnapshotWorldSource(), describeWorldEncounterComparisonCandidate(), compareSnapshotWorldPublications(), describeWorldSnapshotContentView(), and describeWorldSnapshotContentComparisonView() — as of 0.9.184, plus one new non-application/ import (publisher/Publication.js\'s own Publication) as of 0.9.474');
     }
 
     // ---------------------------------------------------------------
