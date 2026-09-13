@@ -236,8 +236,26 @@ async function runTests() {
         // duplicated here.
         assert(!/WorldEncounterMaterialIdentityVerifier|WorldEncounterMaterialSignatureVerifier|WorldEncounterMaterialVerificationComposition/.test(mainCodeOnly),
             '13. ui/main.js never imports or names a concrete verifier class directly — only the composition root that already builds them');
-        assert(!/PeerWorldEncounterMaterialSource|DecentralizedWorldEncounterMaterialSource|ArweaveWorldEncounterMaterialResolver|DecentralizedWorldDiscoveryLeadRegistry/.test(mainCodeOnly),
-            '14. peer/decentralized material sources and decentralized lead resolution stay deliberately unwired this milestone');
+        // AMENDED BY 0.9.475 — Wire Peer World Encounter Material Source
+        // into Production Composition Root. At the time this assertion was
+        // written (0.9.99), ui/main.js referenced none of these four names
+        // at all. 0.9.475 closed exactly the peer half of that gap —
+        // `PeerWorldEncounterMaterialSource` is now imported and
+        // constructed, riding the SAME shared `peerMessageBus`/
+        // `peerSessionManager.registry` pair every other peer protocol in
+        // that file already does (see tests/
+        // PeerWorldEncounterMaterialSourceCompositionRootWiringAudit.test.js
+        // for the dedicated proof) — while the three decentralized-specific
+        // classes stay exactly as unreferenced as they were when this test
+        // was written: ui/main.js still only ever reaches the decentralized
+        // chain through its own composition roots
+        // (`composeDecentralizedWorldEncounterMaterialDiscoveryServices()`/
+        // `...Runtime()`), never by naming a concrete decentralized class
+        // directly.
+        assert(/PeerWorldEncounterMaterialSource/.test(mainCodeOnly),
+            "14a. AMENDED BY 0.9.475 — ui/main.js now references PeerWorldEncounterMaterialSource, no longer 'deliberately unwired'.");
+        assert(!/DecentralizedWorldEncounterMaterialSource|ArweaveWorldEncounterMaterialResolver|DecentralizedWorldDiscoveryLeadRegistry/.test(mainCodeOnly),
+            '14b. ... but the three decentralized-specific concrete classes remain unreferenced directly, unchanged since this milestone — only their own composition roots are ever named.');
 
         console.log('✓ ui/main.js composes the two existing roots verbatim and provides them app-wide');
     }

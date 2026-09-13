@@ -135,6 +135,7 @@ import { NostrPublicationRelaySetConfigurationStore } from '../storage/NostrPubl
 import { SetNostrPublicationRelaySetConfigurationUseCase } from '../application/SetNostrPublicationRelaySetConfigurationUseCase.js';
 import { resolveNostrPublicationRelayUrls } from '../application/NostrPublicationRelaySetConfigurationProvider.js';
 import { LocalWorldEncounterMaterialSource } from '../application/LocalWorldEncounterMaterialSource.js';
+import { PeerWorldEncounterMaterialSource } from '../application/PeerWorldEncounterMaterialSource.js';
 import { composeWorldEncounterMaterialVerifier } from '../application/WorldEncounterMaterialVerifierRuntimeComposition.js';
 import { PublicationDistributionLifecycleMemoryStore } from '../application/PublicationDistributionLifecycleStore.js';
 import { PublicationDistributionLifecyclePersistence } from '../application/PublicationDistributionLifecyclePersistence.js';
@@ -1663,15 +1664,28 @@ app.provide('worldDiscoverySourceRegistry', worldDiscoveryRuntime.registry);
 // `ui/views/WorldView.js` to `inject()` and hand straight through to
 // `WorldEncounterCanvas`'s own existing props.
 //
-// PEER MATERIAL SOURCES STAY DELIBERATELY UNWIRED HERE — the same "local
-// first, everything else a separate, later milestone" restraint 0.9.22
-// itself already held before 0.9.23 built the rest. `PeerWorldEncounterMaterialSource`
-// is a materially larger, network-facing composition decision this file
-// still does not make. A `local`- or decentralized-origin selection (see
-// 0.9.110, immediately below) already exercises the full loading →
-// identity-verification → signature-verification chain end to end; a
-// peer-origin selection still resolves to `UNAVAILABLE`/`UNVERIFIABLE`,
-// exactly as it always has.
+// AMENDED BY 0.9.475 — Wire Peer World Encounter Material Source into
+// Production Composition Root. The paragraph above originally read "PEER
+// MATERIAL SOURCES STAY DELIBERATELY UNWIRED HERE," current as of 0.9.99:
+// `PeerWorldEncounterMaterialSource` (0.9.23) already implemented the
+// contract, `loadWorldEncounterMaterial()` (0.9.21) already routed
+// `peer:<identityId>`-origin selections to `materialSources.peer`, and
+// `composeWorldEncounterMaterialSources()` (0.9.36) already accepted a
+// `peer` argument and forwarded it verbatim — but no composition root in
+// this running app ever constructed one and passed it through, so a
+// peer-origin selection resolved to `UNAVAILABLE`/`UNVERIFIABLE` purely
+// for want of one constructor call, never for any missing capability.
+// `worldEncounterMaterialPeerSource`, immediately below, is that one call:
+// `new PeerWorldEncounterMaterialSource(peerMessageBus, peerSessionManager.registry)`
+// — the SAME shared `peerMessageBus`/`peerSessionManager.registry` pair
+// every other peer/PeerMessageBus.js protocol in this file already rides
+// (see, e.g., `worldDiscoveryRuntime`'s own identical pair, immediately
+// above), never a second, disconnected transport or registry. No new
+// peer subsystem, no new fallback logic: an unanswered or malformed
+// request still resolves to the source's own established `null`
+// (UNAVAILABLE), exactly as `application/PeerWorldEncounterMaterialSource.js`'s
+// own header already specifies.
+const worldEncounterMaterialPeerSource = new PeerWorldEncounterMaterialSource(peerMessageBus, peerSessionManager.registry);
 const { verifier: worldEncounterMaterialVerifier } = composeWorldEncounterMaterialVerifier();
 
 // 0.9.110 — Decentralized Material Retrieval Runtime Composition.
@@ -1705,7 +1719,10 @@ const { verifier: worldEncounterMaterialVerifier } = composeWorldEncounterMateri
 // observe, now genuinely reachable through Nostr as well as Arweave.
 // `worldEncounterMaterialSources` gains its `.decentralized` slot (0.9.36's
 // own unmodified Arweave-backed source) alongside the pre-existing `.local`
-// one; peer stays unwired, per the comment immediately above.
+// one; peer is wired too, as of 0.9.475 — see the comment immediately
+// above, where `worldEncounterMaterialPeerSource` is constructed, and the
+// `peer:` argument passed to `composeDecentralizedWorldEncounterMaterialDiscoveryRuntime()`
+// below.
 //
 // `nostrRelayQueryClient` MAY STILL RESOLVE `undefined` — a bare
 // environment with no `WebSocket` global and no `webSocketImpl` supplied
@@ -1901,6 +1918,9 @@ const decentralizedWorldDiscoveryServices = composeDecentralizedWorldEncounterMa
 const decentralizedWorldEncounterMaterialDiscoveryRuntime = composeDecentralizedWorldEncounterMaterialDiscoveryRuntime({
     discoveryServices: decentralizedWorldDiscoveryServices,
     local: new LocalWorldEncounterMaterialSource(new LocalStorageProvider()),
+    // 0.9.475 — the one argument this file previously left unfilled; see
+    // `worldEncounterMaterialPeerSource`'s own construction, above.
+    peer: worldEncounterMaterialPeerSource,
     verifier: worldEncounterMaterialVerifier,
     arweaveResolverOptions: { gatewayUrls: resolvedArweaveGatewayUrls }
 });

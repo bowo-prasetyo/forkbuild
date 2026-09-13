@@ -402,10 +402,23 @@ async function run() {
         // 0.9.473's own commit (b0d1307) is this milestone's own baseline —
         // the audit that found the gap and named the seam, with zero
         // production changes of its own (enforced by that milestone's own
-        // Section J). Everything this milestone changes, relative to that
-        // baseline, is expected to be exactly the two production files the
-        // audit's own Section I named, plus this milestone's own tests and
-        // Roadmap entry.
+        // Section J). Everything THIS milestone (0.9.474) changed, relative
+        // to that baseline, was exactly the two production files the
+        // audit's own Section I named.
+        //
+        // AMENDED BY 0.9.475 — Wire Peer World Encounter Material Source
+        // into Production Composition Root. A scope guard pinned to a fixed
+        // historical baseline commit, by construction, only ever describes
+        // the ONE milestone that introduced it — every later milestone that
+        // legitimately touches a production file this guard did not yet
+        // know about must widen the allowlist here, in place, exactly as
+        // 0.9.474 itself amended 0.9.473's own findings above rather than
+        // leaving them to silently rot into a false failure. 0.9.475 added
+        // exactly one legitimate line to `ui/main.js` (constructing a
+        // PeerWorldEncounterMaterialSource and threading it into the
+        // pre-existing `peer` composition slot) — see tests/
+        // PeerWorldEncounterMaterialSourceCompositionRootWiringAudit.test.js
+        // for that milestone's own dedicated proof and scope guard.
         const BASELINE_COMMIT = 'b0d1307';
         let changedFiles = [];
         try {
@@ -423,10 +436,10 @@ async function run() {
             changedFiles = null;
         }
         if (changedFiles !== null) {
-            const allowed = new Set(['ui/components/WorldEncounterCanvas.js', 'ui/views/WorldView.js']);
+            const allowed = new Set(['ui/components/WorldEncounterCanvas.js', 'ui/views/WorldView.js', 'ui/main.js']);
             const unexpected = changedFiles.filter((f) => !allowed.has(f));
             assert(unexpected.length === 0,
-                `1. relative to 0.9.473's own baseline, only the intended World/application integration seam changed — no unexpected production file was touched (unexpected: ${unexpected.join(', ') || 'none'}).`);
+                `1. relative to 0.9.473's own baseline, only the intended World/application integration seam (AMENDED BY 0.9.475 to also allow ui/main.js's own composition-root change) changed — no unexpected production file was touched (unexpected: ${unexpected.join(', ') || 'none'}).`);
             console.log(`✓ Section L: production scope guard — relative to 0.9.473's own baseline, exactly the intended files changed (${changedFiles.join(', ') || 'none'}).`);
         }
     }
