@@ -238,7 +238,26 @@ export function createArweaveInjectedProviderSigner({
             throw new Error('ArweaveInjectedProviderSigner: injected provider resolved with no valid transaction id');
         }
 
-        return { id: signed.id, transaction: signed };
+        // AMENDED — `chunks` above exists ONLY to satisfy a real wallet's
+        // OWN internal sign() reconstruction (see that field's own header);
+        // it is never part of Arweave's actual wire format. arweave-js's
+        // own Transaction#toJSON() explicitly excludes `chunks` from what
+        // gets serialized to a gateway — a real wallet's sign() commonly
+        // returns the transaction it received with its own fields merged
+        // in (per this file's own tests' fakeWallet, and per the same
+        // th8ta/ArConnect#31 issue this fix is built on, whose own spread-
+        // based reconstruction preserves whatever it was given), so
+        // `signed` would otherwise still carry it straight into
+        // ArweavePublicationMaterialUploader.js's own POST body — an
+        // unexpected extra field a real gateway's strict schema validator
+        // has no reason to accept. `uploader.upload()`'s own header already
+        // documents treating this returned `transaction` as completely
+        // opaque and POSTing it unread; this is the one, isolated place
+        // that keeps that opaque value limited to fields the network
+        // actually expects.
+        const { chunks: _chunks, ...transaction } = signed;
+
+        return { id: signed.id, transaction };
     }
 
     return Object.freeze({ sign });
