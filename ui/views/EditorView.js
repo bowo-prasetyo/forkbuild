@@ -89,6 +89,84 @@ export default {
                 @recover="recoverDocument"
                 @discard="discardRecovery"
             />
+            <!-- 0.9.377 — EditorView Post-Publish Distribution Action.
+                 Reachable the instant a publish succeeds — never
+                 automatic, never a second way to trigger distribution.
+                 Rendered only while publishedPublication holds the just-
+                 published Publication; dismissing or publishing again
+                 replaces/clears it. Deliberately EditorView-owned rather
+                 than folded into ActionFeedback, which stays exactly as
+                 non-interactive/passive as 0.9.375 left it. Mirrors World
+                 View's own "Distribute Publication" action (0.9.347)
+                 button-and-result shape, one caller over — see this
+                 setup()'s own 0.9.377 comment, below, for the full
+                 lineage.
+
+                 AMENDED — moved to sit directly below RecoveryBanner,
+                 above .editor-body, instead of after it. .editor-body
+                 hosts the 3D viewport, which can fill the entire
+                 remaining height; content placed after it in this flex
+                 column rendered below that canvas — effectively below
+                 the fold, with nothing on screen hinting it was there.
+                 RecoveryBanner already establishes the correct pattern
+                 for a banner that must always be seen the instant it
+                 appears: a full-width bar at the TOP of the view, ahead
+                 of the viewport, never behind or below it. -->
+            <div v-if="publishedPublication || distributionError || (distributionResult && distributionResult.length)" class="editor-post-publish-overlay">
+                <div v-if="publishedPublication" class="editor-post-publish-action">
+                    <span class="editor-post-publish-message">Publication published successfully.</span>
+                    <button
+                        v-if="multiRelayNostrPublicationDistributionCommand"
+                        type="button"
+                        class="action-btn action-btn--primary editor-post-publish-distribute-btn"
+                        :disabled="distributionExecuting"
+                        @click="distributePublishedDocument"
+                    >{{ distributionExecuting ? 'Distributing…' : 'Distribute now' }}</button>
+                    <button
+                        type="button"
+                        class="action-btn action-btn--secondary editor-post-publish-dismiss-btn"
+                        @click="dismissPublishAction"
+                    >Dismiss</button>
+                </div>
+                <p v-if="distributionError" class="editor-post-publish-distribution-error">{{ distributionError }}</p>
+                <!-- AMENDED BY 0.9.450 — distributionResult is now an ARRAY,
+                     one PublicationDistributionResult per configured Nostr
+                     relay (see distributeEditorPublication()'s own 0.9.450
+                     amendment). Material is uploaded once, shared by every
+                     relay result (the multi-relay distribution flow's own
+                     "one material upload, shared across every relay"
+                     invariant), so it is read once, from the first element;
+                     Discovery genuinely differs per relay, so every element
+                     gets its own row — never collapsed into one aggregate
+                     line. -->
+                <dl v-else-if="distributionResult && distributionResult.length" class="editor-post-publish-distribution-detail">
+                    <dt>Publication</dt>
+                    <dd>{{ distributionResult[0].publication.objectId }}</dd>
+                    <dt>Material</dt>
+                    <dd>{{ distributionResult[0].material ? distributionResult[0].material.uri : 'Not yet uploaded' }}</dd>
+                    <template v-for="(relayResult, relayIndex) in distributionResult" :key="relayIndex">
+                        <dt>{{ distributionResult.length > 1 ? \`Discovery (relay \${relayIndex + 1})\` : 'Discovery' }}</dt>
+                        <dd>{{ relayResult.discovery ? relayResult.discovery.id : 'Not yet announced' }}</dd>
+                    </template>
+                    <!-- 0.9.381 — EditorView Distribution Result -> Repository
+                         Navigation. The exact seam 0.9.380's own audit located:
+                         immediately after the Discovery row, inside the SAME
+                         <dl>, never a new panel. Rendered only while there is a
+                         real documentId to navigate to — no documentId, no row
+                         at all, per that audit's own Section F "graceful
+                         inability to navigate, never a thrown error." -->
+                    <template v-if="publishedPublication && publishedPublication.documentId">
+                        <dt>Repository</dt>
+                        <dd>
+                            <button
+                                type="button"
+                                class="action-btn action-btn--secondary editor-post-publish-distribution-view-btn"
+                                @click="viewDistributedPublicationInRepository"
+                            >Explore</button>
+                        </dd>
+                    </template>
+                </dl>
+            </div>
             <div class="editor-body">
                 <div class="sidebar">
                     <div class="tool-switcher">
@@ -185,71 +263,6 @@ export default {
                 @close="closePalette"
             />
             <ActionFeedback :message="feedbackMessage" :visible="feedbackVisible" />
-            <!-- 0.9.377 — EditorView Post-Publish Distribution Action.
-                 Reachable the instant a publish succeeds — never
-                 automatic, never a second way to trigger distribution.
-                 Rendered only while publishedPublication holds the just-
-                 published Publication; dismissing or publishing again
-                 replaces/clears it. Deliberately EditorView-owned rather
-                 than folded into ActionFeedback, which stays exactly as
-                 non-interactive/passive as 0.9.375 left it. Mirrors World
-                 View's own "Distribute Publication" action (0.9.347)
-                 button-and-result shape, one caller over — see this
-                 setup()'s own 0.9.377 comment, below, for the full
-                 lineage. -->
-            <div v-if="publishedPublication" class="editor-post-publish-action">
-                <span class="editor-post-publish-message">Publication published successfully.</span>
-                <button
-                    v-if="multiRelayNostrPublicationDistributionCommand"
-                    type="button"
-                    class="action-btn action-btn--primary editor-post-publish-distribute-btn"
-                    :disabled="distributionExecuting"
-                    @click="distributePublishedDocument"
-                >{{ distributionExecuting ? 'Distributing…' : 'Distribute now' }}</button>
-                <button
-                    type="button"
-                    class="action-btn action-btn--secondary editor-post-publish-dismiss-btn"
-                    @click="dismissPublishAction"
-                >Dismiss</button>
-            </div>
-            <p v-if="distributionError" class="editor-post-publish-distribution-error">{{ distributionError }}</p>
-            <!-- AMENDED BY 0.9.450 — distributionResult is now an ARRAY,
-                 one PublicationDistributionResult per configured Nostr
-                 relay (see distributeEditorPublication()'s own 0.9.450
-                 amendment). Material is uploaded once, shared by every
-                 relay result (the multi-relay distribution flow's own
-                 "one material upload, shared across every relay"
-                 invariant), so it is read once, from the first element;
-                 Discovery genuinely differs per relay, so every element
-                 gets its own row — never collapsed into one aggregate
-                 line. -->
-            <dl v-else-if="distributionResult && distributionResult.length" class="editor-post-publish-distribution-detail">
-                <dt>Publication</dt>
-                <dd>{{ distributionResult[0].publication.objectId }}</dd>
-                <dt>Material</dt>
-                <dd>{{ distributionResult[0].material ? distributionResult[0].material.uri : 'Not yet uploaded' }}</dd>
-                <template v-for="(relayResult, relayIndex) in distributionResult" :key="relayIndex">
-                    <dt>{{ distributionResult.length > 1 ? \`Discovery (relay \${relayIndex + 1})\` : 'Discovery' }}</dt>
-                    <dd>{{ relayResult.discovery ? relayResult.discovery.id : 'Not yet announced' }}</dd>
-                </template>
-                <!-- 0.9.381 — EditorView Distribution Result -> Repository
-                     Navigation. The exact seam 0.9.380's own audit located:
-                     immediately after the Discovery row, inside the SAME
-                     <dl>, never a new panel. Rendered only while there is a
-                     real documentId to navigate to — no documentId, no row
-                     at all, per that audit's own Section F "graceful
-                     inability to navigate, never a thrown error." -->
-                <template v-if="publishedPublication && publishedPublication.documentId">
-                    <dt>Repository</dt>
-                    <dd>
-                        <button
-                            type="button"
-                            class="action-btn action-btn--secondary editor-post-publish-distribution-view-btn"
-                            @click="viewDistributedPublicationInRepository"
-                        >Explore</button>
-                    </dd>
-                </template>
-            </dl>
             <KeyboardShortcutsOverlay
                 v-if="shortcutsOpen"
                 :registry="actionRegistry"
