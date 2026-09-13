@@ -89,24 +89,36 @@ async function run() {
         // with "expected to be not undefined" because this plain object
         // never carried a `chunks` field the real wallet's own internal
         // reconstruction reads (see computeSingleChunkMerkleData()'s own
-        // header for the full chain of evidence). These assertions pin
-        // the hand-rolled single-leaf Chunk/Proof shape this file now
-        // attaches, matching arweave-js's own merkle.ts field names.
+        // header for the full chain of evidence). These assertions pin the
+        // hand-rolled single-leaf Chunk/Proof shape this file attaches to
+        // the transaction it HANDS TO sign() — `wallet.calls.sign[0]`, the
+        // real input the fake wallet recorded, never `signed.transaction`
+        // (the RESOLVED value), since `chunks` is deliberately stripped
+        // from that before this file returns it (see the next assertion).
         const materialBytes = new TextEncoder().encode('hello arweave');
-        assert(signed.transaction.chunks && signed.transaction.chunks.data_root === signed.transaction.data_root,
-            '14b. the attached chunks.data_root matches the transaction\'s own top-level data_root exactly');
-        assert(Array.isArray(signed.transaction.chunks.chunks) && signed.transaction.chunks.chunks.length === 1,
+        const sentTransaction = wallet.calls.sign[wallet.calls.sign.length - 1];
+        assert(sentTransaction.chunks && sentTransaction.chunks.data_root === signed.transaction.data_root,
+            '14b. the chunks handed to sign() carries a data_root matching the transaction\'s own top-level data_root exactly');
+        assert(Array.isArray(sentTransaction.chunks.chunks) && sentTransaction.chunks.chunks.length === 1,
             '14c. exactly one Chunk is attached — this file only ever handles the single-chunk case');
-        const chunk = signed.transaction.chunks.chunks[0];
+        const chunk = sentTransaction.chunks.chunks[0];
         assert(chunk.minByteRange === 0 && chunk.maxByteRange === materialBytes.length && typeof chunk.dataHash === 'string' && chunk.dataHash.length > 0,
             '14d. the Chunk spans the whole single chunk (0..byteLength) and carries a base64url-encoded dataHash');
-        assert(Array.isArray(signed.transaction.chunks.proofs) && signed.transaction.chunks.proofs.length === 1,
+        assert(Array.isArray(sentTransaction.chunks.proofs) && sentTransaction.chunks.proofs.length === 1,
             '14e. exactly one Proof is attached, matching the one Chunk');
-        const proof = signed.transaction.chunks.proofs[0];
+        const proof = sentTransaction.chunks.proofs[0];
         assert(proof.offset === materialBytes.length - 1 && typeof proof.proof === 'string' && proof.proof.length > 0,
             '14f. the Proof\'s offset is the chunk\'s own last byte index (arweave-js\'s own convention), and proof is base64url-encoded');
 
-        console.log('✓ Section B: a fake host wallet produces a real, well-formed, POST-able Arweave transaction, including the chunks structure a real wallet extension\'s own sign() reconstruction reads');
+        // AMENDED — `chunks` is never part of Arweave's actual wire format
+        // (arweave-js's own Transaction#toJSON() excludes it) — sending it
+        // on to a real gateway's /tx endpoint produced a live "Transaction
+        // verification failed" 400. It must reach sign() (assertions
+        // above) but never survive into the transaction this file hands
+        // back to its own caller, which POSTs it unread.
+        assert(!('chunks' in signed.transaction), '14g. the RETURNED transaction never carries a chunks field — stripped before this file hands it back, so it never reaches the gateway POST body');
+
+        console.log('✓ Section B: a fake host wallet produces a real, well-formed, POST-able Arweave transaction — chunks reaches sign() but is stripped from what actually gets POSTed');
     }
 
     // ---------------------------------------------------------------
