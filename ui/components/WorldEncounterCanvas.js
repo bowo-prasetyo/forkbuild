@@ -4,6 +4,23 @@ import { describeWorldFromDiscoveryRegistry } from '../../application/WorldDisco
 import { describeWorldEncounterInspection } from '../../application/WorldEncounterInspection.js';
 import { describeWorldEncounterSelectionOutcomeFromRegistry, WorldEncounterSelectionOutcomeStatus } from '../../application/WorldEncounterSelectionOutcome.js';
 import { inspectWorldEncounterMaterial } from '../../application/WorldEncounterMaterialInspection.js';
+// 0.9.474 — Admit World-Encountered Publications into App-Wide Discovery.
+// `Publication` (never previously imported here) is needed for exactly one
+// check: `loading.status === 'AVAILABLE' && loading.material instanceof
+// Publication` — the identical instanceof-gated admission shape
+// ui/views/DecentralizedPublicationsView.js's own admitToRepositoryDiscovery()
+// (0.9.337) already established for the sibling decentralized-Publications-
+// page encounter flow — see admitToRepositoryDiscovery() below. The
+// `'AVAILABLE'` string is compared directly, matching
+// application/WorldEncounterMaterialInspection.js's own `loading.status`
+// (application/WorldEncounterMaterialLoading.js's own
+// WorldEncounterMaterialLoadStatus.AVAILABLE) verbatim, WITHOUT importing
+// that loading boundary's own module — this file's own established rule
+// (see this file's own header, "never a fourth loader") is that it calls
+// inspectWorldEncounterMaterial()'s own orchestration boundary and reacts
+// only to its result, never reaching past it to a loading/verification
+// boundary module directly.
+import { Publication } from '../../publisher/Publication.js';
 import { PublicationDistributionState } from '../../application/PublicationDistributionLifecycle.js';
 import { describeDecentralizedWorldEncounterLeadSelectionOutcomeFromRegistry, DecentralizedWorldEncounterLeadSelectionOutcomeStatus } from '../../application/DecentralizedWorldEncounterLeadSelection.js';
 import { describePublicationMaterialProvenanceFromInspection } from '../../application/PublicationMaterialProvenance.js';
@@ -2319,6 +2336,24 @@ export default {
             type: Object,
             default: null
         },
+        // 0.9.474 — Admit World-Encountered Publications into App-Wide
+        // Discovery. Optional. The same app-wide
+        // `DecentralizedPublicationDiscoveryProvider` ui/main.js
+        // constructs and ui/views/WorldView.js already injects (0.9.339,
+        // there for search-result enrichment only) — this component's own
+        // admission target, reused verbatim rather than a second provider
+        // or a new store; see admitToRepositoryDiscovery() below. NOT the
+        // same concept as `distributionCommand`'s own `discoveryProvider`
+        // argument, below — that one is the Wanderer's explicit Nostr/
+        // Arweave ANNOUNCEMENT substrate choice (a string), never a
+        // Repository catalog. `null` by default: a mount with no provider
+        // supplied still resolves and renders World Encounter material
+        // exactly as before this milestone — only discovery admission is
+        // skipped. Never constructed by this component itself.
+        decentralizedPublicationDiscoveryProvider: {
+            type: Object,
+            default: null
+        },
         // 0.9.104 — optional. A `(publication, discoveryProvider) -> Promise<PublicationDistributionResult
         // | null>` function, called with exactly the loaded `Publication`
         // domain object for the CURRENTLY selected, local-origin
@@ -3323,6 +3358,61 @@ export default {
             this.resolvedLeadChoice = candidate;
             this.refreshMaterialInspection();
         },
+        // 0.9.474 — Admit World-Encountered Publications into App-Wide
+        // Discovery. The only caller of `.add()` on
+        // `decentralizedPublicationDiscoveryProvider` in this file.
+        // Mirrors ui/views/DecentralizedPublicationsView.js's own
+        // admitToRepositoryDiscovery() (0.9.337) verbatim, one family
+        // over: a resolved selection is a Repository discovery candidate
+        // ONLY on a genuine `AVAILABLE` load whose material is a real
+        // `publisher/Publication.js` instance — never a failed/UNAVAILABLE
+        // load, and never an Avatar encounter or a decentralized envelope
+        // this replica never hydrates into a Publication instance (see
+        // application/DecentralizedWorldEncounterMaterialSource.js's own
+        // header, "no `Publication.fromJSON()`" — Section F of
+        // tests/WorldEncounterRepositoryContinuityBoundaryAudit.test.js
+        // already proved this `instanceof` gate excludes those for free).
+        // No `decentralizedPublicationDiscoveryProvider` supplied is a
+        // silent no-op, exactly like every other optional collaborator in
+        // this file (`materialVerifier`, `worldDiscoveryLeadRegistry`,
+        // ...) — admission is additive to World rendering, never a
+        // precondition for it. Called from BOTH `refreshMaterialInspection()`
+        // and `refreshComparisonMaterialInspection()`, below, unconditionally
+        // on every resolution — deliberately NOT gated behind either
+        // method's own stale-response request-counter guard, since a
+        // resolution superseded for DISPLAY purposes was still a genuine,
+        // successful retrieval this device is entitled to make discoverable.
+        // A repeated resolution of the SAME Publication (re-selecting it,
+        // or a comparison target matching the primary selection) calls
+        // `.add()` again, exactly as ui/views/DecentralizedPublicationsView.js's
+        // own `resolveEntry()`/`retrieve()` already do on every recheck —
+        // an existing, pre-0.9.474 property of `discoveryProvider.add()`
+        // itself (discovery/DecentralizedPublicationDiscoveryProvider.js
+        // keeps no id index), not a new duplication concern this milestone
+        // introduces or is scoped to fix.
+        admitToRepositoryDiscovery(loading) {
+            if (this.decentralizedPublicationDiscoveryProvider
+                && loading
+                && loading.status === 'AVAILABLE'
+                && loading.material instanceof Publication) {
+                try {
+                    this.decentralizedPublicationDiscoveryProvider.add(loading.material);
+                } catch {
+                    // 0.9.474 — a discovery-admission failure (a
+                    // misbehaving injected provider; ordinarily `.add()`
+                    // never throws here, since the `instanceof Publication`
+                    // check above already satisfies its own only
+                    // documented throw condition) must never turn an
+                    // already-successful World Encounter resolution into a
+                    // failed one. This method is called from its own
+                    // callers' `.then()` callback BEFORE the line that
+                    // writes `materialInspection`/`comparisonMaterialInspection`
+                    // — an uncaught throw here would abort that callback
+                    // and silently skip that write, which is exactly the
+                    // coupling this milestone's own product brief rejects.
+                }
+            }
+        },
         // 0.9.39 — the only writer of `materialInspection`, and the only
         // caller of `inspectWorldEncounterMaterial()` in this file. See
         // this file's own header, "materialInspection is data, written by
@@ -3333,7 +3423,12 @@ export default {
         // supplies a `resolvedLead` — see "no resolvedLead is ever
         // supplied," above. As of 0.9.40 this restraint no longer holds —
         // see this file's own "0.9.40" header — this method now forwards
-        // `this.resolvedLead` whenever it resolves.
+        // `this.resolvedLead` whenever it resolves. AMENDED BY 0.9.474 —
+        // see admitToRepositoryDiscovery() above: every resolution this
+        // method produces is now also offered to Repository discovery,
+        // regardless of the outcome — World rendering itself
+        // (`this.materialInspection`, guarded by `requestId` exactly as
+        // before) is completely unchanged.
         refreshMaterialInspection() {
             this.materialInspectionRequestId += 1;
             const requestId = this.materialInspectionRequestId;
@@ -3350,6 +3445,7 @@ export default {
                 materialSources: this.materialSources,
                 verifier: this.materialVerifier
             }).then((result) => {
+                this.admitToRepositoryDiscovery(result.loading);
                 // 0.9.39 — see this file's own header, "a request counter
                 // guards against a stale async response overwriting a
                 // newer one." A superseded response (a newer selection, or
@@ -3685,7 +3781,12 @@ export default {
         // comparison target remains excluded (see this file's own "0.9.184"
         // header). A no-op (`comparisonMaterialInspection` cleared to
         // `null`) whenever there is no current `comparisonResolvedSelection`
-        // or no `materialSources`.
+        // or no `materialSources`. AMENDED BY 0.9.474 — mirrors
+        // `refreshMaterialInspection()`'s own admitToRepositoryDiscovery()
+        // call exactly, one selection over: a comparison target the
+        // Wanderer resolves is just as genuinely encountered as the
+        // primary selection, and gets the identical, unconditional
+        // admission offer.
         refreshComparisonMaterialInspection() {
             this.comparisonMaterialInspectionRequestId += 1;
             const requestId = this.comparisonMaterialInspectionRequestId;
@@ -3702,6 +3803,7 @@ export default {
                 materialSources: this.materialSources,
                 verifier: this.materialVerifier
             }).then((result) => {
+                this.admitToRepositoryDiscovery(result.loading);
                 // 0.9.184 — mirrors `refreshMaterialInspection()`'s own
                 // stale-response guard exactly, one selection over.
                 if (requestId === this.comparisonMaterialInspectionRequestId) {

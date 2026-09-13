@@ -121,6 +121,14 @@ function canvasCtx(overrides = {}) {
         materialVerifier: null,
         materialInspection: null,
         materialInspectionRequestId: 0,
+        // 0.9.474 — refreshMaterialInspection() now also calls
+        // `this.admitToRepositoryDiscovery()`. `decentralizedPublicationDiscoveryProvider`
+        // stays `null` throughout this file's own tests, so that call
+        // always stays a no-op. This file's own sections stay focused on
+        // 0.9.40's own decentralized-lead-selection contract, unaffected
+        // by that addition.
+        decentralizedPublicationDiscoveryProvider: null,
+        admitToRepositoryDiscovery: WorldEncounterCanvas.methods.admitToRepositoryDiscovery,
         worldDiscoveryLeadRegistry: null,
         decentralizedLeadAssociations: [],
         decentralizedLeadOutcome: null,

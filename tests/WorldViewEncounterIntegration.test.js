@@ -96,8 +96,15 @@ async function run() {
         // OwnPublicationPanel — see ui/views/WorldView.js's own "0.9.291"
         // comment immediately above the tag) and now spans multiple lines;
         // this assertion still requires no `view` prop anywhere on the tag
-        // and the registry passed through unchanged.
-        assert(/<WorldEncounterCanvas[\s\S]{0,300}:registry="worldDiscoverySourceRegistry"[\s\S]{0,1000}\/>/.test(worldViewCodeOnly),
+        // and the registry passed through unchanged. AMENDED BY 0.9.474 —
+        // one further prop (decentralizedPublicationDiscoveryProvider,
+        // see tests/WorldEncounterRepositoryContinuityIntegrationBoundaryAudit
+        // .test.js for its own dedicated wiring proof) pushed the tag's
+        // own closing `/>` a little past the previous 1000-character
+        // budget; bumped to 1400 with headroom to spare, never removed —
+        // this assertion still bounds the distance, it just no longer
+        // pretends the tag stays as short as it did in 0.9.20.
+        assert(/<WorldEncounterCanvas[\s\S]{0,300}:registry="worldDiscoverySourceRegistry"[\s\S]{0,1400}\/>/.test(worldViewCodeOnly),
             '4. WorldView.js hands the injected registry straight through as WorldEncounterCanvas\'s own registry prop');
         const worldEncounterCanvasTag = worldViewCodeOnly.slice(
             worldViewCodeOnly.indexOf('<WorldEncounterCanvas'),
