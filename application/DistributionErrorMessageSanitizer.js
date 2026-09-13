@@ -53,9 +53,14 @@ export function sanitizeDistributionErrorMessage(error) {
         .replace(/(?:[A-Za-z]:)?(?:[\\/][^\s\\/:]+){2,}/g, REDACTED)
         // Version-looking tokens that could name a library version.
         .replace(/\bv?\d+\.\d+\.\d+(?:[-.][\w]+)*\b/g, REDACTED)
-        // Long opaque runs — API keys, auth tokens, hashes, internal
-        // identifiers — never an ordinary word a person typed.
-        .replace(/\b[A-Za-z0-9_-]{20,}\b/g, REDACTED)
+        // Long opaque runs — API keys, auth tokens, hashes — but never a
+        // pure-letter PascalCase identifier (a class/file name, the exact
+        // thing that makes "X: wallet extension rejected sign()" useful).
+        // A real secret or hash always mixes in a digit; an identifier like
+        // "ArweaveInjectedProviderSigner" does not, so requiring at least
+        // one digit in the run tells the two apart without a name-specific
+        // allowlist.
+        .replace(/\b[A-Za-z0-9_-]{20,}\b/g, (token) => (/\d/.test(token) ? REDACTED : token))
         .trim();
 
     // Nothing but redaction markers (and punctuation between them)
