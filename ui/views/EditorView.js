@@ -1409,6 +1409,11 @@ export default {
                 })
                 .catch((error) => {
                     if (requestId === distributionRequestId) {
+                        // Full, unsanitized detail goes to the browser
+                        // console only — never the UI — so a real failure
+                        // stays diagnosable without ever showing a user raw
+                        // wallet-extension/stack-trace text.
+                        console.error('Publication distribution failed:', error);
                         // Shows the underlying cause when
                         // sanitizeDistributionErrorMessage() can strip it
                         // down to something safe to display (the common
