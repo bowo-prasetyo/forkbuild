@@ -311,18 +311,27 @@ export class ArweavePublicationMaterialUploader {
 
         const body = JSON.stringify(signed.transaction);
         // Diagnostic only, same restraint as the !response.ok branch below
-        // — never a decision input. A "some wallet returns already-decoded
-        // (Uint8Array) fields rather than the base64url strings this
-        // object was built with" gap would make `body` either enormous
-        // (a Uint8Array serializes as a huge {"0":.., "1":..} object) or
-        // shaped nothing like a real Arweave transaction — both invisible
-        // without seeing the field types and the body's own actual size.
+        // — never a decision input. Field TYPES alone (this log's own
+        // earlier form) already caught one live bug (a Uint8Array field
+        // JSON.stringify() would explode into a huge byte-index object);
+        // this now also prints each field's own VALUE (long binary-ish
+        // fields truncated, never a full material dump) — needed to catch
+        // an internal-consistency bug type checking alone cannot see: a
+        // "Transaction verification failed" the gateway's own signature
+        // check produces, which means SOMETHING in this exact payload
+        // differs from whatever the wallet actually signed over — most
+        // suspiciously `tags`, which arrived non-empty despite this file
+        // sending an empty array, raising the possibility a real wallet
+        // appends its own tags to the RETURNED object after already
+        // computing the signature, the same class of "post-signing
+        // reconstruction drops/changes fields" bug th8ta/ArConnect#31
+        // documents for chunks/data.
+        function truncate(value) {
+            return typeof value === 'string' && value.length > 80 ? `${value.slice(0, 40)}…(${value.length} chars)…${value.slice(-20)}` : value;
+        }
         console.error('ArweavePublicationMaterialUploader: about to POST', {
             bodyLength: body.length,
-            fieldTypes: Object.fromEntries(Object.entries(signed.transaction).map(([key, value]) => [
-                key,
-                Array.isArray(value) ? `array(${value.length})` : (value && value.constructor ? value.constructor.name : typeof value)
-            ]))
+            fields: Object.fromEntries(Object.entries(signed.transaction).map(([key, value]) => [key, truncate(value)]))
         });
 
         const controller = new AbortController();
