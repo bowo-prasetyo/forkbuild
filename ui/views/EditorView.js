@@ -35,6 +35,7 @@ import ActionFeedback from '../components/ActionFeedback.js';
 import RecoveryBanner from '../components/RecoveryBanner.js';
 import TransformFeedback from '../components/TransformFeedback.js';
 import { CreatePublisherUseCase } from '../../application/CreatePublisherUseCase.js';
+import { sanitizeDistributionErrorMessage } from '../../application/DistributionErrorMessageSanitizer.js';
 import { CreateDiscoveryUseCase } from '../../application/CreateDiscoveryUseCase.js';
 import { CreateBlueprintAttributionUseCase } from '../../application/CreateBlueprintAttributionUseCase.js';
 import { CreateBlueprintLineageUseCase } from '../../application/CreateBlueprintLineageUseCase.js';
@@ -1406,13 +1407,18 @@ export default {
                         distributionResult.value = result;
                     }
                 })
-                .catch(() => {
+                .catch((error) => {
                     if (requestId === distributionRequestId) {
-                        // The SAME one fixed, generic failure message
-                        // OwnPublicationPanel.js's own
-                        // distributeOwnPublication() already uses — never
-                        // a distinct, editor-specific string.
-                        distributionError.value = 'Publication distribution could not be completed.';
+                        // Shows the underlying cause when
+                        // sanitizeDistributionErrorMessage() can strip it
+                        // down to something safe to display (the common
+                        // case: no compatible wallet extension installed —
+                        // see that module's own header) — otherwise falls
+                        // back to the SAME one fixed, generic failure
+                        // message OwnPublicationPanel.js's own
+                        // distributeOwnPublication() already uses.
+                        distributionError.value = sanitizeDistributionErrorMessage(error)
+                            || 'Publication distribution could not be completed.';
                     }
                 })
                 .then(() => {

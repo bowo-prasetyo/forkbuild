@@ -2,6 +2,7 @@ import { readFile } from 'node:fs/promises';
 import { execFileSync } from 'node:child_process';
 
 import { executePublicationDistributionCommand } from '../application/PublicationDistributionCommand.js';
+import { sanitizeDistributionErrorMessage } from '../application/DistributionErrorMessageSanitizer.js';
 import { composeMultiRelayNostrPublicationDistributionCommand } from '../application/PublicationDistributionCommandComposition.js';
 import { PublicationDistributionLifecycleMemoryStore } from '../application/PublicationDistributionLifecycleStore.js';
 import { PublicationDistributionState } from '../application/PublicationDistributionLifecycle.js';
@@ -191,7 +192,7 @@ function buildHarness(editorViewSource, { multiRelayNostrPublicationDistribution
 
     // eslint-disable-next-line no-new-func
     const factory = new Function(
-        'inject', 'ref',
+        'inject', 'ref', 'sanitizeDistributionErrorMessage',
         `${blockSource}\nreturn {
             multiRelayNostrPublicationDistributionCommand,
             distributeEditorPublication,
@@ -204,7 +205,7 @@ function buildHarness(editorViewSource, { multiRelayNostrPublicationDistribution
             distributePublishedDocument
         };`
     );
-    return factory(inject, ref);
+    return factory(inject, ref, sanitizeDistributionErrorMessage);
 }
 
 async function run() {
@@ -347,10 +348,16 @@ async function run() {
 
     // ---------------------------------------------------------------
     // Section F — Distribution failure (rejection, synchronous throw,
-    // and "no command supplied") preserves existing behavior.
+    // and "no command supplied"). AMENDED — a rejection's own message now
+    // surfaces through sanitizeDistributionErrorMessage() (see that
+    // module's own header) rather than being swallowed unconditionally:
+    // a safe underlying cause is shown verbatim, and only a message that
+    // sanitizes down to nothing falls back to the pre-existing generic
+    // notice.
     // ---------------------------------------------------------------
     {
-        // F1 — a genuine rejection.
+        // F1 — a genuine rejection with a safe, ordinary message: the
+        // real cause is shown, not the generic notice.
         {
             const publication = publishLocally('Section F1 Manor');
             const harness = buildHarness(editorViewSource, {
@@ -361,8 +368,8 @@ async function run() {
             await flushMicrotasks();
 
             assert(harness.distributionExecuting.value === false, '18. execution returns to idle after a rejection');
-            assert(harness.distributionError.value === 'Publication distribution could not be completed.',
-                '19. a genuine rejection becomes the SAME one fixed, generic notice OwnPublicationPanel.js\'s own distributeOwnPublication() already uses — never a distinct, editor-specific string');
+            assert(harness.distributionError.value === 'gateway unreachable',
+                '19. a genuine rejection with a safe message shows that message verbatim, so the user has something to act on');
             assert(harness.distributionResult.value === null, '20. a failed call never leaves a stale result behind');
         }
 
@@ -380,8 +387,8 @@ async function run() {
             await flushMicrotasks();
 
             assert(harness.distributionExecuting.value === false, '21. execution returns to idle after a synchronous throw');
-            assert(harness.distributionError.value === 'Publication distribution could not be completed.',
-                '22. a synchronous construction throw surfaces the SAME generic notice a rejection would');
+            assert(harness.distributionError.value === 'signer is required',
+                '22. a synchronous construction throw surfaces its own safe message exactly like a rejection would');
         }
 
         // F3 — no command supplied at all: the action stays entirely
@@ -395,6 +402,23 @@ async function run() {
 
             assert(harness.distributionExecuting.value === false, '23. with no command supplied, the action never enters executing state');
             assert(harness.distributionError.value === null, '24. ...and never fabricates an error either — it is simply inert');
+        }
+
+        // F5 — a rejection whose message is ENTIRELY sensitive content
+        // (here, a bare relay URL) sanitizes down to nothing, so the
+        // pre-existing generic notice is exactly what surfaces — the
+        // fallback this milestone preserves, never a raw, unsafe string.
+        {
+            const publication = publishLocally('Section F5 Manor');
+            const harness = buildHarness(editorViewSource, {
+                multiRelayNostrPublicationDistributionCommand: () => Promise.reject(new Error('wss://relay-internal.example.com'))
+            });
+            harness.onDocumentPublished(publication);
+            harness.distributePublishedDocument();
+            await flushMicrotasks();
+
+            assert(harness.distributionError.value === 'Publication distribution could not be completed.',
+                '24b. a rejection message that sanitizes down to nothing falls back to the SAME one fixed, generic notice OwnPublicationPanel.js\'s own distributeOwnPublication() already uses');
         }
 
         // F4 — repeated clicks while a call is in flight never start a
@@ -532,8 +556,8 @@ async function run() {
         // request the same way it would for a Publication the command
         // itself can no longer act on — this action invents no lifecycle
         // classification of its own; it just surfaces whatever the
-        // command reports, through the SAME generic message every other
-        // caller already uses.
+        // command reports (sanitized, per Section F's own amendment),
+        // never a bespoke "unpublished" vocabulary.
         const publication = publishLocally('Section I Manor');
         const harness = buildHarness(editorViewSource, {
             multiRelayNostrPublicationDistributionCommand: () => Promise.reject(new Error('Publication is no longer available for distribution'))
@@ -542,8 +566,8 @@ async function run() {
         harness.distributePublishedDocument();
         await flushMicrotasks();
 
-        assert(harness.distributionError.value === 'Publication distribution could not be completed.',
-            '38. a rejection modeling an unpublished/unavailable Publication surfaces through the SAME existing generic message — never a bespoke "unpublished" notice invented by this view');
+        assert(harness.distributionError.value === 'Publication is no longer available for distribution',
+            '38. a rejection modeling an unpublished/unavailable Publication surfaces its own safe message — never a bespoke "unpublished" notice invented by this view');
 
         const forbiddenVocabulary = [
             'EDITOR_DISTRIBUTION_FAILED', 'EditorDistributionFailed', 'EditorDistributionError',

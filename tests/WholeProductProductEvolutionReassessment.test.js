@@ -2,6 +2,7 @@ import { readFile } from 'node:fs/promises';
 import { execFileSync, execSync } from 'node:child_process';
 
 import { composePublicationDistributionCommand } from '../application/PublicationDistributionCommandComposition.js';
+import { sanitizeDistributionErrorMessage } from '../application/DistributionErrorMessageSanitizer.js';
 import { PublicationDistributionLifecycleMemoryStore } from '../application/PublicationDistributionLifecycleStore.js';
 import { PublicationDistributionState } from '../application/PublicationDistributionLifecycle.js';
 import { PublishDocumentUseCase } from '../application/PublishDocumentUseCase.js';
@@ -179,7 +180,7 @@ function buildEditorViewHarness(editorViewSource, { multiRelayNostrPublicationDi
     const router = { push: (route) => { pushedRoute = route; } };
     // eslint-disable-next-line no-new-func
     const factory = new Function(
-        'inject', 'ref', 'router',
+        'inject', 'ref', 'router', 'sanitizeDistributionErrorMessage',
         `${blockSource}\nreturn {
             distributePublishedDocument,
             viewDistributedPublicationInRepository,
@@ -190,7 +191,7 @@ function buildEditorViewHarness(editorViewSource, { multiRelayNostrPublicationDi
             onDocumentPublished
         };`
     );
-    const harness = factory(inject, ref, router);
+    const harness = factory(inject, ref, router, sanitizeDistributionErrorMessage);
     return { ...harness, getPushedRoute: () => pushedRoute };
 }
 
@@ -591,8 +592,8 @@ async function run() {
 
         harness.distributePublishedDocument();
         await flushMicrotasks();
-        assert(harness.distributionError.value === 'Publication distribution could not be completed.',
-            n('G1. a distribution failure surfaces a real, understandable generic notice — not a raw stack trace or a silent failure'));
+        assert(harness.distributionError.value === 'Section G gateway unavailable',
+            n('G1. AMENDED — a distribution failure now surfaces its own safe, understandable cause (sanitizeDistributionErrorMessage()) rather than a fixed generic notice — a real improvement over "not a raw stack trace or a silent failure," never a regression'));
 
         harness.distributePublishedDocument();
         await flushMicrotasks();
