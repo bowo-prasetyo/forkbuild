@@ -257,6 +257,33 @@ export function createArweaveInjectedProviderSigner({
         // actually expects.
         const { chunks: _chunks, ...transaction } = signed;
 
+        // AMENDED — live-confirmed: a real wallet's sign() resolved with
+        // `data` as a raw Uint8Array rather than the base64url string this
+        // file's own `unsignedTransaction` used — arweave-js's own
+        // Transaction class stores `data` internally exactly that way,
+        // only base64url-encoding it through its own toJSON()/get(), which
+        // a plain object spread (here and, per th8ta/ArConnect#31,
+        // apparently inside the wallet's own reconstruction too) never
+        // calls. `JSON.stringify()` turns a bare Uint8Array into a
+        // "{"0":.., "1":..}" object instead of a string — syntactically
+        // valid JSON, but nothing like the transaction record Arweave's
+        // own gateway expects, hence the live "Invalid JSON" 400. `tags`
+        // gets the identical treatment for the same reason: arweave-js's
+        // own Tag class holds `name`/`value` the same raw way (see
+        // wander-docs' own `tag.get('name', { decode: true })` — decoding
+        // is opt-in, meaning the raw form is Uint8Array too), and this
+        // wallet added its own tags (empty before signing, non-empty
+        // after) that never passed through this file's own base64url
+        // encoding at all.
+        transaction.data = toBase64UrlIfBinary(transaction.data);
+        if (Array.isArray(transaction.tags)) {
+            transaction.tags = transaction.tags.map((tag) => (
+                tag && (tag.name instanceof Uint8Array || tag.value instanceof Uint8Array)
+                    ? { name: toBase64UrlIfBinary(tag.name), value: toBase64UrlIfBinary(tag.value) }
+                    : tag
+            ));
+        }
+
         return { id: signed.id, transaction };
     }
 
@@ -354,6 +381,15 @@ function describeInjectedProviderError(error) {
         return error.message;
     }
     return typeof error === 'string' && error ? error : 'no further detail was given';
+}
+
+// A field a real wallet's own sign() resolution may return already-decoded
+// (a raw Uint8Array) rather than the base64url string Arweave's own wire
+// format expects — see the `sign()` field's own AMENDED comment, above, for
+// the full evidence. Passes anything else through unchanged: a field this
+// file or a wallet already encoded as a string needs no second encoding.
+function toBase64UrlIfBinary(value) {
+    return value instanceof Uint8Array ? base64UrlEncode(value) : value;
 }
 
 // Encodes a non-negative integer into a fixed-width, 32-byte, big-endian

@@ -122,6 +122,65 @@ async function run() {
     }
 
     // ---------------------------------------------------------------
+    // Section B2 — AMENDED: a real wallet's sign() resolution came back
+    // live with `data` as a raw Uint8Array (not the base64url string this
+    // file's own unsignedTransaction sent) and with its own tags added
+    // (empty before signing, non-empty after) — a real Arweave gateway
+    // rejected the resulting body with "Invalid JSON." This section
+    // reproduces exactly that shape with a fake wallet and confirms every
+    // binary field is normalized back to a JSON-safe string before this
+    // file hands the transaction back to its own caller.
+    // ---------------------------------------------------------------
+    {
+        const decodingWallet = () => {
+            const calls = { connect: [], sign: [] };
+            return {
+                calls,
+                connect: async () => {},
+                sign: async (transaction) => {
+                    calls.sign.push(transaction);
+                    // Mimics arweave-js's own Transaction class: `data` is
+                    // decoded back to raw bytes internally, and the wallet
+                    // appended its own app-identifying tag with Uint8Array
+                    // name/value, exactly per wander-docs' own "decoding is
+                    // opt-in" get(name, { decode }) contract.
+                    return {
+                        ...transaction,
+                        data: new TextEncoder().encode(atob(transaction.data.replace(/-/g, '+').replace(/_/g, '/'))),
+                        tags: [
+                            ...transaction.tags,
+                            { name: new TextEncoder().encode('App-Name'), value: new TextEncoder().encode('Wander') }
+                        ],
+                        owner: 'fake-owner-modulus',
+                        signature: 'fake-signature-bytes',
+                        id: `DecodingTx${calls.sign.length}${'A'.repeat(30)}`
+                    };
+                }
+            };
+        };
+        const wallet = decodingWallet();
+        const signer = createArweaveInjectedProviderSigner({ injectedProvider: wallet, fetchImpl: fakeGateway() });
+
+        const signed = await signer.sign('hello arweave, decoded');
+        assert(typeof signed.transaction.data === 'string' && signed.transaction.data.length > 0,
+            '14h. a `data` field that came back as a raw Uint8Array is normalized to a base64url string, never left as binary for JSON.stringify() to explode into a byte-index object');
+        assert(Array.isArray(signed.transaction.tags) && signed.transaction.tags.length === 1,
+            '14i. the wallet\'s own added tag survives (this file adds none of its own, and never drops one)');
+        const addedTag = signed.transaction.tags[0];
+        assert(typeof addedTag.name === 'string' && typeof addedTag.value === 'string' && addedTag.name.length > 0 && addedTag.value.length > 0,
+            '14j. a tag whose name/value came back as raw Uint8Array is normalized to base64url strings the same way `data` is');
+
+        // The whole thing must still be a compact, well-formed JSON body —
+        // never a bloated byte-index object — the exact live failure mode
+        // this section reproduces and fixes.
+        const body = JSON.stringify(signed.transaction);
+        assert(!body.includes('"0":') , '14k. the POST body contains no byte-index object anywhere — the live "Invalid JSON" failure mode is gone');
+        assert(body.length < 2000, `14l. the body stays a compact, well-formed transaction record rather than an exploded byte-index object: got length ${body.length}`);
+
+        console.log('✓ Section B2: a wallet that returns already-decoded (Uint8Array) data/tag fields is normalized back to base64url strings before this file hands the transaction back — the exact live "Invalid JSON" failure this milestone fixes');
+    }
+
+    // ---------------------------------------------------------------
     // Section C — connect() is called with the expected permissions
     // before signing.
     // ---------------------------------------------------------------
