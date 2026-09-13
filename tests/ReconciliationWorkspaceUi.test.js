@@ -163,7 +163,13 @@ async function run() {
         assert(/import\s+ReconciliationWorkspaceView\s+from\s+'[^']+'/.test(routerSource), n('A5. the router genuinely default-imports ReconciliationWorkspaceView, never merely names it'));
 
         const publicationsSource = await readSource('ui/views/DecentralizedPublicationsView.js');
-        assert(/<router-link\s+to="\/reconciliation-workspace"/.test(publicationsSource), n('A6. an existing contextual surface (the Publications page) carries a real <router-link> to /reconciliation-workspace'));
+        // AMENDED — Leaderboard Hub Consolidation. The link moved one hop
+        // further, from the Publications page directly onto ui/views/
+        // LeaderboardHubView.js, itself now reached by the one link
+        // Publications carries onward — see that file's own header.
+        const leaderboardHubSource = await readSource('ui/views/LeaderboardHubView.js');
+        assert(/<router-link\s+to="\/reconciliation-workspace"/.test(leaderboardHubSource), n('A6. an existing contextual surface (the Leaderboard Hub page, reached from the Publications page) carries a real <router-link> to /reconciliation-workspace'));
+        assert(/<router-link\s+to="\/leaderboard">/.test(publicationsSource), n('A6b. the Publications page itself still links onward to that hub'));
 
         console.log('\n=== SECTION A: REACHABILITY ===');
         console.log('✓ Section A: /reconciliation-workspace is a real, registered route, reachable from the Publications page\'s own existing Publication Archive card.');
@@ -427,7 +433,18 @@ async function run() {
             // Each amended file's own "AMENDED BY 0.9.408" comment names
             // exactly which single assertion changed and why.
             'tests/ReconciliationWorkspaceExecutionBoundary.test.js',
-            'tests/ReconciliationLeaderboardEntryPointDecisionAudit.test.js'
+            'tests/ReconciliationLeaderboardEntryPointDecisionAudit.test.js',
+            // AMENDED — Leaderboard Hub Consolidation. Same convention,
+            // later: this milestone's own A6 link relocated onto a new hub
+            // page, alongside three siblings — see ui/views/
+            // LeaderboardHubView.js's own header.
+            'css/main.css',
+            'ui/views/LeaderboardHubView.js',
+            'tests/PublisherPerformanceLeaderboardUi.test.js',
+            'tests/PublisherLeaderboardSnapshotClaimAuthoringUi.test.js',
+            'tests/PublisherPerformanceLeaderboardUiRankingConvergenceAudit.test.js',
+            'tests/PublisherPerformanceLeaderboardProductGapAudit.test.js',
+            'tests/PostLeaderboardProductReassessment.test.js'
         ]);
         const unauthorized = changed.filter((f) => !AUTHORIZED.has(f));
         assert(unauthorized.length === 0, n(`I1. every changed/added file is one this milestone explicitly authorized (found unauthorized: ${JSON.stringify(unauthorized)})`));

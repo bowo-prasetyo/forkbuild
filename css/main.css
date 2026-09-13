@@ -3624,6 +3624,49 @@ html, body {
     color: #e0e0e0;
 }
 
+/* Leaderboard Hub — the identical hub-link-list language
+   .network-settings-list/.network-settings-link above already uses, one
+   page over. Styled by descendant selector rather than a class on the
+   <router-link> tag itself, matching the bare <router-link to="..."> shape
+   this codebase's own test suite scans for everywhere else — see
+   ui/views/LeaderboardHubView.js's own header. */
+.leaderboard-hub-view {
+    padding: 2rem 2.5rem 3rem;
+    max-width: 720px;
+    margin: 0 auto;
+    width: 100%;
+}
+
+.leaderboard-hub-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+    margin: 1.5rem 0 2rem;
+    list-style: none;
+    padding: 0;
+}
+
+.leaderboard-hub-list > li > a {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+    padding: 0.75rem 1rem;
+    background: #121212;
+    border: 1px solid #2a2a2a;
+    border-radius: 4px;
+    text-decoration: none;
+}
+
+.leaderboard-hub-list > li > a:hover {
+    border-color: #4caf7d;
+    background: #182018;
+}
+
+.leaderboard-hub-link-title {
+    font-weight: 600;
+    color: #e0e0e0;
+}
+
 /* 0.9.302 — Content Provider Preference Settings Entry Point. Same card
    language as .avatar-settings-view/.avatar-settings-form above, one
    axis over. */

@@ -26,6 +26,7 @@ import ReconciliationCandidateLeaderboardEvidenceExportComparisonView from '../v
 import ReconciliationWorkspaceView from '../views/ReconciliationWorkspaceView.js';
 import PublisherLeaderboardSnapshotClaimAuthoringView from '../views/PublisherLeaderboardSnapshotClaimAuthoringView.js';
 import PublisherPerformanceLeaderboardView from '../views/PublisherPerformanceLeaderboardView.js';
+import LeaderboardHubView from '../views/LeaderboardHubView.js';
 
 const routes = [
     { path: '/', name: 'home', component: HomeView },
@@ -218,6 +219,19 @@ const routes = [
     // distinct concepts — see 0.9.416's own Section A) and never a
     // top-nav destination.
     { path: '/publisher-leaderboard', name: 'publisher-leaderboard', component: PublisherPerformanceLeaderboardView },
+    // AMENDED — the four routes immediately above this comment
+    // (/reconciliation-leaderboard, /reconciliation-workspace,
+    // /publisher-snapshot-claim, /publisher-leaderboard) were each
+    // originally reached by their own direct contextual link on
+    // /publications' own "Publication Archive" card, per their own
+    // comments above. Those four links (plus the Publisher Achievement
+    // Profile/Badges/Statistics cards that used to sit further down that
+    // same page) are now reached through this one hub route instead — see
+    // ui/views/LeaderboardHubView.js's own header for why those three cards
+    // moved with the links rather than staying behind. The four routes and
+    // their components above are otherwise unchanged; only the caller
+    // moved.
+    { path: '/leaderboard', name: 'leaderboard', component: LeaderboardHubView },
     { path: '/about', name: 'about', component: AboutView }
 ];
 

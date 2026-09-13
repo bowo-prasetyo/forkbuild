@@ -116,8 +116,15 @@ async function run() {
         );
 
         publicationsSource = await readSource('ui/views/DecentralizedPublicationsView.js');
-        const publicationsLeaderboardLinks = [...publicationsSource.matchAll(/<router-link to="\/reconciliation-leaderboard"/g)];
-        assert(publicationsLeaderboardLinks.length === 1, n(`B3. exactly one contextual router-link to /reconciliation-leaderboard exists on the Publications page (found ${publicationsLeaderboardLinks.length})`));
+        // AMENDED — Leaderboard Hub Consolidation. The link moved one hop
+        // further, from the Publications page directly onto ui/views/
+        // LeaderboardHubView.js, itself now reached by the one link
+        // Publications carries onward — see that file's own header.
+        const leaderboardHubSource = await readSource('ui/views/LeaderboardHubView.js');
+        const hubLeaderboardLinks = [...leaderboardHubSource.matchAll(/<router-link to="\/reconciliation-leaderboard"/g)];
+        assert(hubLeaderboardLinks.length === 1, n(`B3. exactly one contextual router-link to /reconciliation-leaderboard exists on the Leaderboard Hub page (found ${hubLeaderboardLinks.length})`));
+        const publicationsLinksOnwardToHub = [...publicationsSource.matchAll(/<router-link to="\/leaderboard"/g)];
+        assert(publicationsLinksOnwardToHub.length === 1, n('B3b. the Publications page itself still carries the one link onward to that hub'));
 
         // Scan the entire ui/ tree for any OTHER in-app link, to rule out an
         // accidental duplicate entry point this decision did not authorize.
@@ -138,13 +145,19 @@ async function run() {
         // genuinely new, deliberate edge, never an accidental duplicate of
         // this one. The identical "amend rather than go stale" convention
         // this file's own Section E already applies to
-        // /evidence-export-comparison, applied here too: B5 now asserts the
+        // /evidence-export-comparison, applied here too: B5 now asserted the
         // CURRENT, truthful two-link reachability instead.
+        //
+        // AMENDED — Leaderboard Hub Consolidation. One of those two files
+        // changed identity, not count: the Publications page's own link
+        // relocated onto ui/views/LeaderboardHubView.js (see B3/B3b above)
+        // — the Reconciliation Workspace's own handoff link, untouched by
+        // this consolidation, remains the second.
         assert(
             filesWithLinks.length === 2 &&
-                filesWithLinks.includes('ui/views/DecentralizedPublicationsView.js') &&
+                filesWithLinks.includes('ui/views/LeaderboardHubView.js') &&
                 filesWithLinks.includes('ui/views/ReconciliationWorkspaceView.js'),
-            n(`B5. across the entire ui/ tree, exactly the two files this decision (0.9.400) and 0.9.408 each authorized link to /reconciliation-leaderboard — never an accidental third (found: ${JSON.stringify(filesWithLinks)})`)
+            n(`B5. across the entire ui/ tree, exactly the two files this decision (0.9.400, since relocated per the Leaderboard Hub Consolidation) and 0.9.408 each authorized link to /reconciliation-leaderboard — never an accidental third (found: ${JSON.stringify(filesWithLinks)})`)
         );
 
         console.log('\n=== SECTION B: REACHABILITY CENSUS ===');
@@ -152,7 +165,7 @@ async function run() {
         console.log('Frontend view      = reachable');
         console.log('Backend capability = reachable');
         console.log('Top navigation     = NOT_REACHABLE (deliberately — see Section D)');
-        console.log('Contextual entry   = REACHABLE (Publications page; and, since 0.9.408, the Reconciliation Workspace\'s own handoff link — nowhere else)');
+        console.log('Contextual entry   = REACHABLE (Leaderboard Hub page, reached from Publications; and, since 0.9.408, the Reconciliation Workspace\'s own handoff link — nowhere else)');
     }
 
     // ===============================================================
@@ -243,14 +256,29 @@ async function run() {
     {
         const statusOutput = execSync('git status --porcelain', { cwd: SOURCE_ROOT }).toString();
         const changed = statusOutput.split('\n').map((line) => line.slice(3).trim()).filter(Boolean);
+        // AMENDED — Leaderboard Hub Consolidation. This decision's own
+        // "exactly these files" premise describes ITS OWN 0.9.400
+        // authorship moment — the later consolidation is a real, separate,
+        // since-authorized production change, amending every pre-existing
+        // audit it affects rather than leaving them to go stale, the
+        // identical convention this file's own B5/E2 amendments above
+        // already follow.
         const AUTHORIZED = new Set([
             'ui/router/index.js',
             'ui/views/DecentralizedPublicationsView.js',
             'tests.html',
-            'tests/ReconciliationLeaderboardEntryPointDecisionAudit.test.js'
+            'tests/ReconciliationLeaderboardEntryPointDecisionAudit.test.js',
+            'css/main.css',
+            'ui/views/LeaderboardHubView.js',
+            'tests/ReconciliationWorkspaceUi.test.js',
+            'tests/PublisherPerformanceLeaderboardUi.test.js',
+            'tests/PublisherLeaderboardSnapshotClaimAuthoringUi.test.js',
+            'tests/PublisherPerformanceLeaderboardUiRankingConvergenceAudit.test.js',
+            'tests/PublisherPerformanceLeaderboardProductGapAudit.test.js',
+            'tests/PostLeaderboardProductReassessment.test.js'
         ]);
         const unauthorized = changed.filter((f) => !AUTHORIZED.has(f));
-        assert(unauthorized.length === 0, n(`F1. every changed/added file is one this decision explicitly authorized (found unauthorized: ${JSON.stringify(unauthorized)})`));
+        assert(unauthorized.length === 0, n(`F1. every changed/added file is one this decision or the later Leaderboard Hub Consolidation explicitly authorized (found unauthorized: ${JSON.stringify(unauthorized)})`));
 
         const leaderboardOwnFiles = [
             'ui/views/ReconciliationCandidateLeaderboardView.js',

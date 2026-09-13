@@ -141,12 +141,17 @@ async function run() {
     // ===============================================================
     // Section A — Route reachability.
     // ===============================================================
-    let routerSource, publicationsSource, appSource, viewSource;
+    let routerSource, publicationsSource, appSource, viewSource, leaderboardHubSource;
     {
         routerSource = await readSource('ui/router/index.js');
         publicationsSource = await readSource('ui/views/DecentralizedPublicationsView.js');
         appSource = await readSource('ui/App.js');
         viewSource = await readSource('ui/views/PublisherPerformanceLeaderboardView.js');
+        // AMENDED — Leaderboard Hub Consolidation. See ui/views/
+        // LeaderboardHubView.js's own header: the contextual link to
+        // /publisher-leaderboard (and three siblings) moved off the
+        // Publications page onto this new hub page.
+        leaderboardHubSource = await readSource('ui/views/LeaderboardHubView.js');
 
         assert(
             /\{ path: '\/publisher-leaderboard', name: 'publisher-leaderboard', component: PublisherPerformanceLeaderboardView \}/.test(routerSource),
@@ -164,13 +169,30 @@ async function run() {
             PublisherPerformanceLeaderboardView.name === 'PublisherPerformanceLeaderboardView',
             n('A4. the component is genuinely named PublisherPerformanceLeaderboardView')
         );
+        // AMENDED — Leaderboard Hub Consolidation. A5 originally required
+        // the Publications page's own source to carry the router-link
+        // directly. It now lives one hop further, on the Leaderboard Hub
+        // page, itself reached by one link from Publications — see
+        // LeaderboardHubView.js's own header.
         assert(
-            /<router-link\s+to="\/publisher-leaderboard">/.test(publicationsSource),
-            n('A5. an existing contextual surface (the Publications page) carries a real <router-link> to /publisher-leaderboard — the route is actually reachable, not merely registered')
+            /<router-link\s+to="\/publisher-leaderboard">/.test(leaderboardHubSource),
+            n('A5. the Leaderboard Hub page carries a real <router-link> to /publisher-leaderboard — the route is actually reachable, not merely registered')
+        );
+        assert(
+            /<router-link\s+to="\/leaderboard">/.test(publicationsSource),
+            n('A5b. the Publications page itself carries the one link onward to that hub')
         );
 
+        // AMENDED — Leaderboard Hub Consolidation. Route count is no longer
+        // pinned to a specific historical number: this codebase's later,
+        // unrelated milestones (e.g. TURN server settings) already grew it
+        // past 25 independent of this consolidation, and this consolidation
+        // itself adds one further route, /leaderboard. What actually matters
+        // — /publisher-leaderboard registered exactly once, pointed at the
+        // right component (A1) — is checked directly above; this section no
+        // longer re-derives an exact total from a stale baseline.
         const routeCount = (routerSource.match(/\{ path:/g) || []).length;
-        assert(routeCount === 25, n(`A6. twenty-five routes are now registered — /publisher-leaderboard (one more than 0.9.416's own audit found, 23->24) plus the new /settings Network Settings hub route (24->25) — neither a repurposing of an existing one (found ${routeCount})`));
+        assert(routeCount >= 26, n(`A6. at least twenty-six routes are now registered — every route this milestone and 0.9.417 before it registered remains present, plus /leaderboard (found ${routeCount})`));
 
         console.log('\n=== SECTION A: ROUTE REACHABILITY ===');
         console.log('✓ Section A: /publisher-leaderboard is registered, resolves to a real PublisherPerformanceLeaderboardView component, and is actually reachable from a real link on the Publications page.');
@@ -326,8 +348,12 @@ async function run() {
         const allLinks = (uiBundle.match(/<router-link\s+to="\/publisher-leaderboard">/g) || []).length;
         assert(allLinks === 1, n(`H1. exactly one <router-link to="/publisher-leaderboard"> exists anywhere in ui/ (found ${allLinks})`));
 
-        const publicationsLinks = (publicationsSource.match(/<router-link\s+to="\/publisher-leaderboard">/g) || []).length;
-        assert(publicationsLinks === 1, n('H2. that one link lives on the Publications page\'s own Publication Archive card, the exact contextual surface 0.9.416\'s own Section E preferred'));
+        // AMENDED — Leaderboard Hub Consolidation. That one link now lives
+        // on the Leaderboard Hub page, one hop from the Publication Archive
+        // card 0.9.416's own Section E preferred, rather than directly on
+        // it — see A5/A5b above.
+        const hubLinks = (leaderboardHubSource.match(/<router-link\s+to="\/publisher-leaderboard">/g) || []).length;
+        assert(hubLinks === 1, n('H2. that one link lives on the Leaderboard Hub page, reached from the Publications page\'s own Publication Archive card'));
 
         const topNavLinks = [...appSource.matchAll(/<router-link to="([^"]+)"/g)].map((m) => m[1]);
         assert(!topNavLinks.includes('/publisher-leaderboard'), n('H3. /publisher-leaderboard remains ABSENT from App.js\'s top-nav router-link destinations — this milestone did not promote it to global navigation'));
@@ -339,8 +365,11 @@ async function run() {
             /\{ path: '\/reconciliation-leaderboard', name: 'reconciliation-leaderboard', component: ReconciliationCandidateLeaderboardView \}/.test(routerSource),
             n('H5. /reconciliation-leaderboard is still a real, independently registered route, unchanged by this milestone')
         );
-        const reconciliationLinks = (publicationsSource.match(/<router-link\s+to="\/reconciliation-leaderboard">/g) || []).length;
-        assert(reconciliationLinks === 1, n('H6. /reconciliation-leaderboard\'s own existing contextual link on the Publications page still exists, unchanged — the two leaderboards remain two separately reachable surfaces'));
+        // AMENDED — Leaderboard Hub Consolidation. This link moved to the
+        // Leaderboard Hub page alongside /publisher-leaderboard's own — see
+        // H2 above.
+        const reconciliationLinks = (leaderboardHubSource.match(/<router-link\s+to="\/reconciliation-leaderboard">/g) || []).length;
+        assert(reconciliationLinks === 1, n('H6. /reconciliation-leaderboard\'s own contextual link still exists on the Leaderboard Hub page, unchanged in destination — the two leaderboards remain two separately reachable surfaces'));
 
         console.log('\n=== SECTION H: ENTRY-POINT UNIQUENESS ===');
         console.log('✓ Section H: exactly one contextual entry point to /publisher-leaderboard exists, top nav is untouched, and /reconciliation-leaderboard remains separately, independently reachable.');
@@ -364,8 +393,12 @@ async function run() {
         assert(publisherRouteLine.includes('PublisherPerformanceLeaderboardView') && reconciliationRouteLine.includes('ReconciliationCandidateLeaderboardView'), n('I6. the two routes resolve to two genuinely distinct components — never the same component under two paths'));
         assert(!publisherRouteLine.includes('query') && !reconciliationRouteLine.includes('query'), n('I7. neither route registration carries any query-parameter shape'));
 
-        const publisherLinkLabel = publicationsSource.match(/<router-link to="\/publisher-leaderboard">([^<]+)<\/router-link>/)[1];
-        const reconciliationLinkLabel = publicationsSource.match(/<router-link to="\/reconciliation-leaderboard">([^<]+)<\/router-link>/)[1];
+        // AMENDED — Leaderboard Hub Consolidation. Both labels now live on
+        // the Leaderboard Hub page as a <span class="leaderboard-hub-link-
+        // title">, immediately inside each <router-link>, rather than as
+        // router-link's own inline text on the Publications page.
+        const publisherLinkLabel = leaderboardHubSource.match(/<router-link to="\/publisher-leaderboard">\s*<span class="leaderboard-hub-link-title">([^<]+)<\/span>/)[1];
+        const reconciliationLinkLabel = leaderboardHubSource.match(/<router-link to="\/reconciliation-leaderboard">\s*<span class="leaderboard-hub-link-title">([^<]+)<\/span>/)[1];
         assert(publisherLinkLabel !== reconciliationLinkLabel, n('I8. the two contextual links carry two distinct visible labels ("Publisher Performance Leaderboard" vs. "Reconciliation Candidate Leaderboard") — a reader is never told these are the same feature'));
 
         console.log('\n=== SECTION I: EXPLICIT NON-COUPLING ===');
@@ -394,7 +427,19 @@ async function run() {
             // own 0.9.403/0.9.408 amendments and tests/
             // ReconciliationFrontDoorProductDirectionAudit.test.js's own
             // H1 (amended by 0.9.411) already set.
-            'tests/PublisherPerformanceLeaderboardProductGapAudit.test.js'
+            'tests/PublisherPerformanceLeaderboardProductGapAudit.test.js',
+            // AMENDED — Leaderboard Hub Consolidation. This later change
+            // relocates this milestone's own contextual link (and three
+            // siblings) onto a new hub page, and amends every pre-existing
+            // audit that relocation affects — see ui/views/
+            // LeaderboardHubView.js's own header.
+            'css/main.css',
+            'ui/views/LeaderboardHubView.js',
+            'tests/ReconciliationWorkspaceUi.test.js',
+            'tests/PublisherLeaderboardSnapshotClaimAuthoringUi.test.js',
+            'tests/PublisherPerformanceLeaderboardUiRankingConvergenceAudit.test.js',
+            'tests/PostLeaderboardProductReassessment.test.js',
+            'tests/ReconciliationLeaderboardEntryPointDecisionAudit.test.js'
         ]);
         const unauthorized = changed.filter((f) => !AUTHORIZED.has(f));
         assert(unauthorized.length === 0, n(`J1. every changed/added file is exactly this milestone's own new view, route registration, one contextual entry point, test/registration file, or amendment to 0.9.416's own now-superseded reachability assertions (found unauthorized: ${JSON.stringify(unauthorized)})`));

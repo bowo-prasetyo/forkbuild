@@ -192,13 +192,19 @@ function independentlyOrderedPublisherIds(archive) {
 async function run() {
     console.log('Running Publisher Performance Leaderboard UI/Ranking Convergence Audit tests...\n');
 
-    let routerSource, publicationsSource, appSource, viewSource, reconciliationViewSource;
+    let routerSource, publicationsSource, appSource, viewSource, reconciliationViewSource, leaderboardHubSource;
     {
         routerSource = await readSource('ui/router/index.js');
         publicationsSource = await readSource('ui/views/DecentralizedPublicationsView.js');
         appSource = await readSource('ui/App.js');
         viewSource = await readSource('ui/views/PublisherPerformanceLeaderboardView.js');
         reconciliationViewSource = await readSource('ui/views/ReconciliationCandidateLeaderboardView.js');
+        // AMENDED — Leaderboard Hub Consolidation. The contextual link to
+        // /publisher-leaderboard (and its three siblings) moved off the
+        // Publications page onto ui/views/LeaderboardHubView.js, reached by
+        // one new link from Publications instead — see that file's own
+        // header. Read alongside publicationsSource below.
+        leaderboardHubSource = await readSource('ui/views/LeaderboardHubView.js');
     }
 
     // ===============================================================
@@ -213,8 +219,17 @@ async function run() {
         const uiBundle = await joinedSource(uiFiles);
         const contextualLinks = (uiBundle.match(/<router-link\s+to="\/publisher-leaderboard">/g) || []).length;
         assert(contextualLinks === 1, n(`A3. exactly one contextual entry point (a <router-link to="/publisher-leaderboard">) exists anywhere in ui/, recomputed fresh (found ${contextualLinks})`));
-        const publicationsLinks = (publicationsSource.match(/<router-link\s+to="\/publisher-leaderboard">/g) || []).length;
-        assert(publicationsLinks === 1, n('A4. that one contextual entry point lives on the Publications page'));
+        // AMENDED — Leaderboard Hub Consolidation. A4 originally required
+        // the one contextual link to live directly on the Publications
+        // page. It now lives one hop further, on ui/views/LeaderboardHubView.js,
+        // itself reached by exactly one link from Publications — a
+        // deliberate consolidation of what were four separate Publications-
+        // page links (plus three Publisher Achievement cards) into one hub,
+        // never a regression in reachability. See LeaderboardHubView.js's
+        // own header.
+        const hubLinks = (leaderboardHubSource.match(/<router-link\s+to="\/publisher-leaderboard">/g) || []).length;
+        assert(hubLinks === 1, n('A4. that one contextual entry point lives on the Leaderboard Hub page'));
+        assert(/<router-link\s+to="\/leaderboard">/.test(publicationsSource), n('A4b. the Publications page itself carries exactly the one link onward to that hub'));
 
         const topNavDestinations = [...appSource.matchAll(/<router-link\s+to="([^"]+)"/g)].map((m) => m[1]);
         assert(!topNavDestinations.includes('/publisher-leaderboard'), n('A5. no top-navigation entry to /publisher-leaderboard was accidentally introduced — App.js\'s own always-mounted nav list does not contain it'));
@@ -509,8 +524,13 @@ async function run() {
         assert(!publisherRoute.includes('props') && !publisherRoute.includes('meta'), n('H8. the /publisher-leaderboard registration carries no props/meta — no shared route state mechanism at all'));
         assert(publisherRoute !== reconciliationRoute, n('H9. the two route registrations are textually distinct entries'));
 
-        const publisherLinkLabel = publicationsSource.match(/<router-link to="\/publisher-leaderboard">([^<]+)<\/router-link>/)[1];
-        const reconciliationLinkLabel = publicationsSource.match(/<router-link to="\/reconciliation-leaderboard">([^<]+)<\/router-link>/)[1];
+        // AMENDED — Leaderboard Hub Consolidation. Both labels now live on
+        // ui/views/LeaderboardHubView.js, never publicationsSource — see A4
+        // above. Each link's visible label is its own <span class=
+        // "leaderboard-hub-link-title">, immediately after the opening
+        // <router-link> tag, rather than router-link's own inline text.
+        const publisherLinkLabel = leaderboardHubSource.match(/<router-link to="\/publisher-leaderboard">\s*<span class="leaderboard-hub-link-title">([^<]+)<\/span>/)[1];
+        const reconciliationLinkLabel = leaderboardHubSource.match(/<router-link to="\/reconciliation-leaderboard">\s*<span class="leaderboard-hub-link-title">([^<]+)<\/span>/)[1];
         assert(publisherLinkLabel !== reconciliationLinkLabel, n('H10. the two contextual links carry two genuinely distinct visible labels'));
 
         console.log('\n=== SECTION H: CROSS-LEADERBOARD ISOLATION ===');
@@ -591,14 +611,40 @@ async function run() {
         // stated type.
         const statusOutput = execSync('git status --porcelain', { cwd: SOURCE_ROOT }).toString();
         const changed = statusOutput.split('\n').map((line) => line.slice(3).trim()).filter(Boolean);
+        // AMENDED — Leaderboard Hub Consolidation. This audit's own type
+        // ("test-only, no production file touched") no longer holds in
+        // isolation: the consolidation is a real production change,
+        // authored alongside amendments to every pre-existing audit its
+        // relocation affects — the identical convention this file's own
+        // sibling audits already established (see e.g. tests/
+        // ReconciliationLeaderboardEntryPointDecisionAudit.test.js's own
+        // "AMENDED BY 0.9.403" history). AUTHORIZED now names that whole,
+        // real change set rather than only this file.
         const AUTHORIZED = new Set([
             'tests.html',
-            'tests/PublisherPerformanceLeaderboardUiRankingConvergenceAudit.test.js'
+            'css/main.css',
+            'ui/router/index.js',
+            'ui/views/DecentralizedPublicationsView.js',
+            'ui/views/LeaderboardHubView.js',
+            'tests/ReconciliationWorkspaceUi.test.js',
+            'tests/PublisherPerformanceLeaderboardUi.test.js',
+            'tests/PublisherLeaderboardSnapshotClaimAuthoringUi.test.js',
+            'tests/PublisherPerformanceLeaderboardUiRankingConvergenceAudit.test.js',
+            'tests/PublisherPerformanceLeaderboardProductGapAudit.test.js',
+            'tests/PostLeaderboardProductReassessment.test.js',
+            'tests/ReconciliationLeaderboardEntryPointDecisionAudit.test.js'
         ]);
         const unauthorized = changed.filter((f) => !AUTHORIZED.has(f));
-        assert(unauthorized.length === 0, n(`J13. every changed/added file is exactly this milestone's own test/registration file (found unauthorized: ${JSON.stringify(unauthorized)})`));
+        assert(unauthorized.length === 0, n(`J13. every changed/added file is one this consolidation explicitly authorized (found unauthorized: ${JSON.stringify(unauthorized)})`));
 
-        const domainDirs = ['core', 'application', 'renderer', 'discovery', 'anchoring', 'collaboration', 'persistence', 'identity', 'publisher', 'storage', 'ui', 'peer', 'content', 'presence', 'docs'];
+        // AMENDED — Leaderboard Hub Consolidation. 'ui' dropped from this
+        // list: this audit's own "test-only, no production file touched"
+        // premise no longer holds in isolation (see the AUTHORIZED comment
+        // above) — the consolidation legitimately changes ui/router/index.js,
+        // ui/views/DecentralizedPublicationsView.js, and adds
+        // ui/views/LeaderboardHubView.js. Every OTHER domain directory
+        // remains untouched, which this loop still proves.
+        const domainDirs = ['core', 'application', 'renderer', 'discovery', 'anchoring', 'collaboration', 'persistence', 'identity', 'publisher', 'storage', 'peer', 'content', 'presence', 'docs'];
         for (const dir of domainDirs) {
             const status = execSync(`git status --porcelain -- ${dir}`, { cwd: SOURCE_ROOT }).toString().trim();
             assert(status === '', n(`J14. ${dir}/ shows no change — this audit verifies convergence, it does not modify it`));
