@@ -807,6 +807,19 @@ const { placementViewRegistry: snapshotPlacementViewRegistry } = new CreateSnaps
 // learned about some other way — see application/
 // CreateSnapshotPlacementOrchestratorUseCase.js's own 0.8.24 comment.
 //
+// 0.9.483 — Activate Production Snapshot Placement Peer Announcement.
+// `peerExchange` threads the SAME `publicationSnapshotPlacementPeerExchange`
+// instance built above — never a second one — so a placement created
+// right here, through this replica's one production creation pipeline,
+// is also announce()d to every currently connected peer, closing the gap
+// 0.9.482's own audit found: this exchange's announce() was already fully
+// implemented and already reachable from THIS replica's live peer
+// connection, but nothing in production ever called it. See application/
+// CreatePublicationSnapshotPlacementUseCase.js's own 0.9.483 comment for
+// the failure-isolation discipline this addition holds to — an
+// unreachable or disconnected peer network never prevents, undoes, or
+// even delays a placement this replica already verified and cataloged.
+//
 // Only `createExternalSnapshotPlacementUseCase` and `storeRegistry` are
 // actually consumed below — `snapshotPlacementResolver`/`verifier`/
 // `createPublicationSnapshotPlacementUseCase` are silently discarded, the
@@ -827,7 +840,8 @@ const {
     placementCatalog: publicationSnapshotPlacementCatalog,
     identityProvider,
     stores: [publicationContentStore, new IpfsContentStore()],
-    knowledgeStore: placementKnowledgeStore
+    knowledgeStore: placementKnowledgeStore,
+    peerExchange: publicationSnapshotPlacementPeerExchange
 });
 const { coordinator: snapshotPlacementCreationCoordinator } = new CreateSnapshotPlacementCreationCoordinatorUseCase().execute({
     createExternalSnapshotPlacementUseCase,
