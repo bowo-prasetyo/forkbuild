@@ -324,6 +324,21 @@ export class ArweavePublicationMaterialUploader {
         }
 
         if (!response.ok) {
+            // Diagnostic only — console output, never a decision input, so
+            // this doesn't touch "the gateway's own response body is never
+            // read for meaning" (see this file's own header): the return
+            // value here is `null` regardless of what the body says, or
+            // whether it can be read at all. Without this, a real gateway
+            // rejection (a malformed transaction, say) was previously
+            // indistinguishable from a network hiccup — silently "not
+            // currently uploadable," with the gateway's own explanation
+            // (Arweave gateways return one on a 400) never seen by anyone.
+            try {
+                const bodyText = await response.text();
+                console.error(`ArweavePublicationMaterialUploader: gateway declined the upload (${response.status})`, bodyText);
+            } catch {
+                console.error(`ArweavePublicationMaterialUploader: gateway declined the upload (${response.status}) — response body could not be read`);
+            }
             return null;
         }
 
