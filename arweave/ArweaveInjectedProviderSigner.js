@@ -277,11 +277,49 @@ export function createArweaveInjectedProviderSigner({
         // encoding at all.
         transaction.data = toBase64UrlIfBinary(transaction.data);
         if (Array.isArray(transaction.tags)) {
-            transaction.tags = transaction.tags.map((tag) => (
-                tag && (tag.name instanceof Uint8Array || tag.value instanceof Uint8Array)
-                    ? { name: toBase64UrlIfBinary(tag.name), value: toBase64UrlIfBinary(tag.value) }
-                    : tag
-            ));
+            transaction.tags = transaction.tags.map((tag) => {
+                if (!tag) {
+                    return tag;
+                }
+                if (tag.name instanceof Uint8Array || tag.value instanceof Uint8Array) {
+                    return { name: toBase64UrlIfBinary(tag.name), value: toBase64UrlIfBinary(tag.value) };
+                }
+                // Diagnostic only — a tag that is neither a plain
+                // { name: string, value: string } pair NOR one with
+                // Uint8Array fields (the two shapes this file knows how to
+                // normalize) means whatever the wallet actually signed
+                // over may not survive into JSON.stringify() the same way
+                // — e.g. a live class instance with getter-only fields,
+                // where `tag.name`/`tag.value` read as `undefined` here
+                // even though the class's own toJSON() might still encode
+                // it correctly for the wire.
+                if (typeof tag.name !== 'string' || typeof tag.value !== 'string') {
+                    console.error('ArweaveInjectedProviderSigner: a wallet-added tag has an unrecognized shape — neither plain strings nor Uint8Array', {
+                        nameType: tag.name && tag.name.constructor ? tag.name.constructor.name : typeof tag.name,
+                        valueType: tag.value && tag.value.constructor ? tag.value.constructor.name : typeof tag.value,
+                        tagConstructor: tag.constructor ? tag.constructor.name : typeof tag
+                    });
+                }
+                return tag;
+            });
+        }
+
+        // Diagnostic only — a direct, offline check of the ONE thing this
+        // file computes itself (data_root) against the ACTUAL final `data`
+        // bytes being sent, catching a "the wallet's own decode of our
+        // base64url data subtly altered it" class of bug that field-type/
+        // value inspection alone cannot: if this ever logs a mismatch, the
+        // gateway's own "Transaction verification failed" is explained —
+        // data_root no longer matches data, so the server's own
+        // independently recomputed root can never match the claimed one.
+        if (typeof transaction.data === 'string') {
+            const recomputedDataRoot = base64UrlEncode((await computeSingleChunkMerkleData(base64UrlDecode(transaction.data))).dataRoot);
+            if (recomputedDataRoot !== transaction.data_root) {
+                console.error('ArweaveInjectedProviderSigner: data_root does not match a fresh recomputation from the final data field', {
+                    claimedDataRoot: transaction.data_root,
+                    recomputedFromFinalData: recomputedDataRoot
+                });
+            }
         }
 
         return { id: signed.id, transaction };
@@ -410,4 +448,16 @@ function base64UrlEncode(bytes) {
         binary += String.fromCharCode(bytes[i]);
     }
     return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+}
+
+// The inverse of base64UrlEncode() — needed only for the diagnostic
+// verification below, never for anything this file sends onward.
+function base64UrlDecode(value) {
+    const padded = value.replace(/-/g, '+').replace(/_/g, '/').padEnd(Math.ceil(value.length / 4) * 4, '=');
+    const binary = atob(padded);
+    const bytes = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i++) {
+        bytes[i] = binary.charCodeAt(i);
+    }
+    return bytes;
 }
