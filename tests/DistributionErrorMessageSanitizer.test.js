@@ -80,6 +80,19 @@ async function run() {
     }
 
     {
+        // FLAGSHIP regression — the exact false positive a real wallet
+        // extension failure produced live: a long, pure-letter PascalCase
+        // class/file name (no digits) is NOT an opaque token and must
+        // survive, since it's exactly what makes an attributed error
+        // ("X: wallet extension rejected sign() — ...") useful in the
+        // first place.
+        const attributed = sanitizeDistributionErrorMessage(new Error('ArweaveInjectedProviderSigner: wallet extension rejected sign() — expected to be not undefined'));
+        assert(attributed === 'ArweaveInjectedProviderSigner: wallet extension rejected sign() — expected to be not undefined',
+            `17b. a long pure-letter identifier with no digits (a class/file name) passes through unredacted: got "${attributed}"`);
+        console.log('✓ Section I2: a long PascalCase identifier with no digits (a class/file name attributing the failure) is never mistaken for an opaque token');
+    }
+
+    {
         const allSensitive = sanitizeDistributionErrorMessage(new Error('https://relay.example.com/9f8a7b6c5d4e3f2a1b0c9d8e7f6a5b4c'));
         assert(allSensitive === null, `18. a message that is ENTIRELY sensitive content redacts down to nothing, and returns null rather than a bare "[redacted]": got "${allSensitive}"`);
         console.log('✓ Section J: a message with no safe residual returns null — never a bare redaction marker standing in for a real message');

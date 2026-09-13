@@ -85,7 +85,28 @@ async function run() {
         const secondSigned = await signer.sign('hello arweave');
         assert(secondSigned.transaction.data_root === signed.transaction.data_root, '14. data_root is a deterministic function of the material alone — no timestamp, no randomness');
 
-        console.log('✓ Section B: a fake host wallet produces a real, well-formed, POST-able Arweave transaction');
+        // AMENDED — a live Wander/ArConnect installation rejected sign()
+        // with "expected to be not undefined" because this plain object
+        // never carried a `chunks` field the real wallet's own internal
+        // reconstruction reads (see computeSingleChunkMerkleData()'s own
+        // header for the full chain of evidence). These assertions pin
+        // the hand-rolled single-leaf Chunk/Proof shape this file now
+        // attaches, matching arweave-js's own merkle.ts field names.
+        const materialBytes = new TextEncoder().encode('hello arweave');
+        assert(signed.transaction.chunks && signed.transaction.chunks.data_root === signed.transaction.data_root,
+            '14b. the attached chunks.data_root matches the transaction\'s own top-level data_root exactly');
+        assert(Array.isArray(signed.transaction.chunks.chunks) && signed.transaction.chunks.chunks.length === 1,
+            '14c. exactly one Chunk is attached — this file only ever handles the single-chunk case');
+        const chunk = signed.transaction.chunks.chunks[0];
+        assert(chunk.minByteRange === 0 && chunk.maxByteRange === materialBytes.length && typeof chunk.dataHash === 'string' && chunk.dataHash.length > 0,
+            '14d. the Chunk spans the whole single chunk (0..byteLength) and carries a base64url-encoded dataHash');
+        assert(Array.isArray(signed.transaction.chunks.proofs) && signed.transaction.chunks.proofs.length === 1,
+            '14e. exactly one Proof is attached, matching the one Chunk');
+        const proof = signed.transaction.chunks.proofs[0];
+        assert(proof.offset === materialBytes.length - 1 && typeof proof.proof === 'string' && proof.proof.length > 0,
+            '14f. the Proof\'s offset is the chunk\'s own last byte index (arweave-js\'s own convention), and proof is base64url-encoded');
+
+        console.log('✓ Section B: a fake host wallet produces a real, well-formed, POST-able Arweave transaction, including the chunks structure a real wallet extension\'s own sign() reconstruction reads');
     }
 
     // ---------------------------------------------------------------

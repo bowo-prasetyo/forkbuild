@@ -694,11 +694,14 @@ async function run() {
         const arweaveSource = await readFile(new URL('../arweave/ArweaveInjectedProviderSigner.js', import.meta.url), 'utf8');
         const arweaveCodeOnly = arweaveSource.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
         // The only genuinely cryptographic/protocol computation in this
-        // file is the single-leaf data_root — everything else is either
+        // file is the single-leaf Merkle math (data_root, plus the
+        // matching chunks/proofs a real wallet's own sign() reconstruction
+        // reads — see computeSingleChunkMerkleData()'s own header for why
+        // that grew beyond data_root alone) — everything else is either
         // wallet-contract plumbing (connect/sign) or gateway plumbing
         // (anchor/price lookups the uploader's own header already
         // documents as the signer's job, not the uploader's).
-        assert(/computeSingleChunkDataRoot/.test(arweaveCodeOnly), 'H. (sanity) the one piece of real Arweave protocol math this file performs is exactly the single-leaf data_root computation named in this section\'s own header');
+        assert(/computeSingleChunkMerkleData/.test(arweaveCodeOnly), 'H. (sanity) the one piece of real Arweave protocol math this file performs is exactly the single-leaf Merkle computation named in this section\'s own header');
         assert(!/RSA|deepHash|jwsSign/i.test(arweaveCodeOnly), 'H. no RSA-PSS signing or deep-hash computation exists in the host adapter\'s own CODE — everything requiring the wallet\'s own private key stays inside injectedProvider.sign()');
 
         console.log('✓ Section H: ArweaveInjectedProviderSigner\'s transaction construction fulfills a contract application/ArweavePublicationMaterialUploader.js already, deliberately, pushed outward at 0.9.45 — no protocol logic has migrated out of the distribution layer; only the wallet\'s own private-key signing stays genuinely delegated');
