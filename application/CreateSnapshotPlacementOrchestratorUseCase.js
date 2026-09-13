@@ -42,11 +42,24 @@ import { SnapshotPlacementResolver } from './SnapshotPlacementResolver.js';
 // constructs no knowledge store of its own, the same "storage lives
 // elsewhere, wiring lives here" restraint this class's own header already
 // holds for `placementCatalog`.
+//
+// 0.9.483 — Activate Production Snapshot Placement Peer Announcement.
+//
+// `peerExchange`: OPTIONAL, an application/
+// PublicationSnapshotPlacementPeerExchange.js instance — passed straight
+// through to application/CreatePublicationSnapshotPlacementUseCase.js, so
+// a locally created placement is also announce()d to this replica's
+// currently connected peers. The identical "wiring lives here, the
+// collaborator lives elsewhere" restraint `knowledgeStore` already holds:
+// this use case constructs no peer exchange of its own — a caller (see
+// ui/main.js) passes the SAME `publicationSnapshotPlacementPeerExchange`
+// instance application/CreatePublicationSnapshotPlacementPeerExchangeUseCase.js
+// already returned, never a second, disconnected one.
 export class CreateSnapshotPlacementOrchestratorUseCase {
-    execute({ discoveryProvider, contentResolver, placementCatalog, identityProvider, stores = [], knowledgeStore = null } = {}) {
+    execute({ discoveryProvider, contentResolver, placementCatalog, identityProvider, stores = [], knowledgeStore = null, peerExchange = null } = {}) {
         const verifier = new LocalAuthorizationVerifier();
         const createPublicationSnapshotPlacementUseCase = new CreatePublicationSnapshotPlacementUseCase(
-            discoveryProvider, identityProvider, verifier, placementCatalog, knowledgeStore
+            discoveryProvider, identityProvider, verifier, placementCatalog, knowledgeStore, peerExchange
         );
         const storeRegistry = new SnapshotPlacementStoreRegistry();
         for (const contentStore of stores) {
