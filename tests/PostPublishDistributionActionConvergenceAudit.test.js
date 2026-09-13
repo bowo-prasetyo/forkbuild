@@ -2,6 +2,7 @@ import { readFile } from 'node:fs/promises';
 import { execFileSync } from 'node:child_process';
 
 import { composePublicationDistributionCommand } from '../application/PublicationDistributionCommandComposition.js';
+import { sanitizeDistributionErrorMessage } from '../application/DistributionErrorMessageSanitizer.js';
 import { PublicationDistributionLifecycleMemoryStore } from '../application/PublicationDistributionLifecycleStore.js';
 import { PublicationDistributionState } from '../application/PublicationDistributionLifecycle.js';
 import { PublishDocumentUseCase } from '../application/PublishDocumentUseCase.js';
@@ -237,7 +238,7 @@ function buildEditorViewHarness(editorViewSource, { multiRelayNostrPublicationDi
 
     // eslint-disable-next-line no-new-func
     const factory = new Function(
-        'inject', 'ref',
+        'inject', 'ref', 'sanitizeDistributionErrorMessage',
         `${blockSource}\nreturn {
             multiRelayNostrPublicationDistributionCommand,
             distributeEditorPublication,
@@ -250,7 +251,7 @@ function buildEditorViewHarness(editorViewSource, { multiRelayNostrPublicationDi
             distributePublishedDocument
         };`
     );
-    return factory(inject, ref);
+    return factory(inject, ref, sanitizeDistributionErrorMessage);
 }
 
 // -----------------------------------------------------------------
@@ -373,7 +374,14 @@ function makeEditorViewSurface(editorViewSource) {
         executing: (ctx) => ctx.distributionExecuting.value,
         error: (ctx) => ctx.distributionError.value,
         result: (ctx) => ctx.distributionResult.value,
-        genericErrorMessage: 'Publication distribution could not be completed.'
+        genericErrorMessage: 'Publication distribution could not be completed.',
+        // AMENDED — EditorView alone now runs a raw failure's own message
+        // through sanitizeDistributionErrorMessage() (see that module's
+        // own header) rather than swallowing it unconditionally: a safe
+        // message surfaces verbatim, so Section F's own raw messages
+        // (plain text, nothing sensitive) are expected here, not the
+        // generic notice OwnPublicationPanel/WorldView still fall back to.
+        expectedFailureMessage: (rawMessage) => sanitizeDistributionErrorMessage(rawMessage) || 'Publication distribution could not be completed.'
     };
 }
 
@@ -384,7 +392,10 @@ const OWN_PUBLICATION_SURFACE = {
     executing: (ctx) => ctx.publicationDistributionExecuting,
     error: (ctx) => ctx.publicationDistributionError,
     result: (ctx) => ctx.publicationDistributionResult,
-    genericErrorMessage: 'Publication distribution could not be completed.'
+    genericErrorMessage: 'Publication distribution could not be completed.',
+    // Unchanged by this milestone — still the one fixed, generic notice
+    // regardless of the raw failure's own message.
+    expectedFailureMessage: () => 'Publication distribution could not be completed.'
 };
 
 const WORLD_ENCOUNTER_SURFACE = {
@@ -403,7 +414,10 @@ const WORLD_ENCOUNTER_SURFACE = {
     // identical WORLD_ENCOUNTER_SURFACE adapter. Success is observed
     // through the shared lifecycle store instead (Sections A/F below).
     result: () => undefined,
-    genericErrorMessage: 'Distribution could not be completed.'
+    genericErrorMessage: 'Distribution could not be completed.',
+    // Unchanged by this milestone — still the one fixed, generic notice
+    // regardless of the raw failure's own message.
+    expectedFailureMessage: () => 'Distribution could not be completed.'
 };
 
 async function run() {
@@ -668,23 +682,25 @@ async function run() {
             // F1 — synchronous throw.
             {
                 const publication = publishLocally(`Section F ${surface.name} sync-throw Manor`);
-                const rawCommand = () => { throw new Error(`${surface.name} signer unavailable`); };
+                const rawMessage = `${surface.name} signer unavailable`;
+                const rawCommand = () => { throw new Error(rawMessage); };
                 const ctx = surface.makeCtx(publication, rawCommand);
                 surface.trigger(ctx);
                 await flushMicrotasks();
                 assert(surface.executing(ctx) === false, n(`${surface.name}: execution returns to idle after a synchronous construction throw`));
-                assert(surface.error(ctx) === surface.genericErrorMessage, n(`${surface.name}: a synchronous throw surfaces as the SAME one fixed, generic notice this surface already used before 0.9.377 — "${surface.genericErrorMessage}"`));
+                assert(surface.error(ctx) === surface.expectedFailureMessage(rawMessage), n(`${surface.name}: a synchronous throw surfaces this surface's own expected notice — "${surface.expectedFailureMessage(rawMessage)}"`));
             }
 
             // F2 — rejected Promise.
             {
                 const publication = publishLocally(`Section F ${surface.name} rejection Manor`);
-                const rawCommand = () => Promise.reject(new Error(`${surface.name} gateway unreachable`));
+                const rawMessage = `${surface.name} gateway unreachable`;
+                const rawCommand = () => Promise.reject(new Error(rawMessage));
                 const ctx = surface.makeCtx(publication, rawCommand);
                 surface.trigger(ctx);
                 await flushMicrotasks();
                 assert(surface.executing(ctx) === false, n(`${surface.name}: execution returns to idle after a genuine rejection`));
-                assert(surface.error(ctx) === surface.genericErrorMessage, n(`${surface.name}: a rejection surfaces the identical generic notice a synchronous throw does — one failure vocabulary, not two`));
+                assert(surface.error(ctx) === surface.expectedFailureMessage(rawMessage), n(`${surface.name}: a rejection surfaces this surface's own expected notice, consistent with the synchronous-throw case above`));
             }
 
             // F3 — successful result, observed through the shared

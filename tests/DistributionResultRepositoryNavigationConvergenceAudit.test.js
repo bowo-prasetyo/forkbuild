@@ -2,6 +2,7 @@ import { readFile } from 'node:fs/promises';
 import { execFileSync } from 'node:child_process';
 
 import { composeMultiRelayNostrPublicationDistributionCommand } from '../application/PublicationDistributionCommandComposition.js';
+import { sanitizeDistributionErrorMessage } from '../application/DistributionErrorMessageSanitizer.js';
 import { PublicationDistributionLifecycleMemoryStore } from '../application/PublicationDistributionLifecycleStore.js';
 import { PublishDocumentUseCase } from '../application/PublishDocumentUseCase.js';
 import { LocalPublisherProvider } from '../publisher/LocalPublisherProvider.js';
@@ -215,7 +216,7 @@ function buildHarness(editorViewSource, { multiRelayNostrPublicationDistribution
 
     // eslint-disable-next-line no-new-func
     const factory = new Function(
-        'inject', 'ref', 'router',
+        'inject', 'ref', 'router', 'sanitizeDistributionErrorMessage',
         `${blockSource}\nreturn {
             multiRelayNostrPublicationDistributionCommand,
             distributeEditorPublication,
@@ -229,7 +230,7 @@ function buildHarness(editorViewSource, { multiRelayNostrPublicationDistribution
             viewDistributedPublicationInRepository
         };`
     );
-    return factory(inject, ref, router);
+    return factory(inject, ref, router, sanitizeDistributionErrorMessage);
 }
 
 async function run() {
