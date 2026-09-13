@@ -157,6 +157,7 @@ import { composeDiscoverSnapshotRuntime } from '../application/DiscoverSnapshotR
 import { executeDiscoverSnapshotCommand } from '../application/DiscoverSnapshotCommand.js';
 import { executeDiscoverSnapshotCandidatesCommand } from '../application/DiscoverSnapshotCandidatesCommand.js';
 import { WorldSnapshotDiscoveryMonitor } from '../application/WorldSnapshotDiscoveryMonitor.js';
+import { composeSnapshotCandidateDiscoveryRuntime } from '../application/SnapshotCandidateDiscoveryRuntimeComposition.js';
 import { NostrPlaceNamingDiscoverySource } from '../application/NostrPlaceNamingDiscoverySource.js';
 import { composePlaceNamingDiscoveryRuntime } from '../application/PlaceNamingDiscoveryRuntimeComposition.js';
 import { executeResolveSelectedSnapshotCommand } from '../application/ResolveSelectedSnapshotCommand.js';
@@ -2543,6 +2544,36 @@ app.provide('discoverSnapshotCandidatesCommand', discoverSnapshotCandidatesComma
 // already was.
 const worldSnapshotDiscoveryMonitor = new WorldSnapshotDiscoveryMonitor({ discoverSnapshotCandidatesCommand });
 app.provide('worldSnapshotDiscoveryMonitor', worldSnapshotDiscoveryMonitor);
+
+// 0.9.485 — Walking-Triggered Snapshot Candidate Query Service.
+//
+// Composes the Local+Nostr candidate query service this milestone builds
+// (application/SnapshotCandidateDiscoveryQueryService.js, application/
+// LocalSnapshotCandidateDiscoveryQueryService.js, and this composition's
+// own application/SnapshotCandidateDiscoveryRuntimeComposition.js) from
+// collaborators this file already built: `snapshotDiscoveryQueryService`
+// (the SAME NostrSnapshotDiscoveryQueryService instance
+// `discoverSnapshotCandidatesCommand` above already calls — never a second
+// Nostr construction) and `publicationSnapshotPlacementCatalog` (the SAME
+// single LocalPublicationSnapshotPlacementCatalog instance this replica
+// uses anywhere — never a second catalog; see that constant's own 0.8.19
+// header, above).
+//
+// PROVIDED, NOT YET WIRED IN. `discoverSnapshotCandidatesCommand` and
+// `worldSnapshotDiscoveryMonitor` immediately above are UNCHANGED by this
+// milestone — they still call `snapshotDiscoveryQueryService` alone.
+// Threading `snapshotCandidateDiscoveryQueryService` into that command (so
+// walking-triggered discovery actually converges Local+Nostr, with Peer
+// arriving passively through the Local catalog) is a separate, later,
+// unscheduled step — see this service's own header, "deliberately
+// excluded... wiring this service into
+// application/DiscoverSnapshotCandidatesCommand.js... a separate, later,
+// unscheduled step (0.9.486)."
+const { queryService: snapshotCandidateDiscoveryQueryService } = composeSnapshotCandidateDiscoveryRuntime({
+    nostrSnapshotDiscoveryQueryService: snapshotDiscoveryQueryService,
+    placementCatalog: publicationSnapshotPlacementCatalog
+});
+app.provide('snapshotCandidateDiscoveryQueryService', snapshotCandidateDiscoveryQueryService);
 
 // 0.9.257 — World View Place Naming Presentation.
 //
