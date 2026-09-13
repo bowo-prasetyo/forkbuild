@@ -116,14 +116,20 @@ export function createNostrInjectedProviderPublisher({
             throw new Error('NostrInjectedProviderPublisher: no WebSocket implementation available — pass webSocketImpl explicitly');
         }
 
-        const pubkey = await injectedProvider.getPublicKey();
-        const signedEvent = await injectedProvider.signEvent({
-            kind: eventTemplate.kind,
-            tags: eventTemplate.tags,
-            content: eventTemplate.content,
-            created_at: Math.floor(Date.now() / 1000),
-            pubkey
-        });
+        let pubkey;
+        let signedEvent;
+        try {
+            pubkey = await injectedProvider.getPublicKey();
+            signedEvent = await injectedProvider.signEvent({
+                kind: eventTemplate.kind,
+                tags: eventTemplate.tags,
+                content: eventTemplate.content,
+                created_at: Math.floor(Date.now() / 1000),
+                pubkey
+            });
+        } catch (error) {
+            throw new Error(`NostrInjectedProviderPublisher: wallet extension rejected getPublicKey()/signEvent() — ${describeInjectedProviderError(error)}`);
+        }
 
         if (!signedEvent || typeof signedEvent.id !== 'string' || signedEvent.id.length === 0 || typeof signedEvent.sig !== 'string' || signedEvent.sig.length === 0) {
             throw new Error('NostrInjectedProviderPublisher: injected provider resolved with no valid signed event');
@@ -189,6 +195,20 @@ function broadcastSignedEvent({ webSocketCtor, relayUrl, signedEvent, timeoutMs 
                 : { published: false, reason: typeof parsed[3] === 'string' ? parsed[3] : 'relay declined the event' });
         };
     });
+}
+
+// A real wallet extension's own rejection reason — often a bare string,
+// not an Error, once it has crossed that extension's own content-script
+// message-passing boundary (which loses any original stack in transit).
+// Reading `.message` first, falling back to the value itself, means
+// whichever shape a given extension rejects with, the re-thrown Error
+// above always carries a readable reason rather than "[object Object]" or
+// an empty string.
+function describeInjectedProviderError(error) {
+    if (error && typeof error.message === 'string' && error.message) {
+        return error.message;
+    }
+    return typeof error === 'string' && error ? error : 'no further detail was given';
 }
 
 createNostrInjectedProviderPublisher.DEFAULT_TIMEOUT_MS = DEFAULT_TIMEOUT_MS;

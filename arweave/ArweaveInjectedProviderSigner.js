@@ -159,7 +159,11 @@ export function createArweaveInjectedProviderSigner({
         }
 
         if (typeof injectedProvider.connect === 'function') {
-            await injectedProvider.connect(permissions);
+            try {
+                await injectedProvider.connect(permissions);
+            } catch (error) {
+                throw new Error(`ArweaveInjectedProviderSigner: wallet extension rejected connect() — ${describeInjectedProviderError(error)}`);
+            }
         }
 
         const [lastTx, reward] = await Promise.all([
@@ -184,7 +188,12 @@ export function createArweaveInjectedProviderSigner({
             signature: ''
         };
 
-        const signed = await injectedProvider.sign(unsignedTransaction);
+        let signed;
+        try {
+            signed = await injectedProvider.sign(unsignedTransaction);
+        } catch (error) {
+            throw new Error(`ArweaveInjectedProviderSigner: wallet extension rejected sign() — ${describeInjectedProviderError(error)}`);
+        }
         if (!signed || typeof signed.id !== 'string' || signed.id.length === 0) {
             throw new Error('ArweaveInjectedProviderSigner: injected provider resolved with no valid transaction id');
         }
@@ -242,6 +251,21 @@ function concatBytes(a, b) {
     out.set(a, 0);
     out.set(b, a.length);
     return out;
+}
+
+// A real wallet extension's own rejection reason — often a bare string,
+// not an Error, once it has crossed that extension's own content-script
+// message-passing boundary (which loses any original stack in transit,
+// per this file's own header on "no transcription of any one wallet's
+// TypeScript definitions"). Reading `.message` first, falling back to the
+// value itself, means whichever shape a given extension rejects with, the
+// re-thrown Error above always carries a readable reason rather than
+// "[object Object]" or an empty string.
+function describeInjectedProviderError(error) {
+    if (error && typeof error.message === 'string' && error.message) {
+        return error.message;
+    }
+    return typeof error === 'string' && error ? error : 'no further detail was given';
 }
 
 // Encodes a non-negative integer into a fixed-width, 32-byte, big-endian
