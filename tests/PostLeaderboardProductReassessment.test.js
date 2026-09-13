@@ -142,6 +142,12 @@ async function run() {
     const performanceViewSource = await readSource('ui/views/PublisherPerformanceLeaderboardView.js');
     const reconciliationViewSource = await readSource('ui/views/ReconciliationCandidateLeaderboardView.js');
     const archiveSource = await readSource('application/PublicationObservationArchive.js');
+    // AMENDED — Leaderboard Hub Consolidation. The contextual link to
+    // /publisher-leaderboard (and three siblings) moved off the
+    // Publications page onto this new hub page, itself reached by one
+    // link from Publications — see ui/views/LeaderboardHubView.js's own
+    // header.
+    const leaderboardHubSource = await readSource('ui/views/LeaderboardHubView.js');
 
     // ===============================================================
     // Section A — Capability closure.
@@ -186,11 +192,18 @@ async function run() {
             evidence: 'exactly one route registration, pointed at the correct component'
         });
 
-        const contextualLinks = (publicationsSource.match(/<router-link\s+to="\/publisher-leaderboard">/g) || []).length;
+        // AMENDED — Leaderboard Hub Consolidation. The link itself moved
+        // one hop further, from the Publications page's own Publication
+        // Archive card onto the Leaderboard Hub page — this stage's own
+        // "COMPLETE" claim now requires both hops: Publications still
+        // links onward, and the hub still carries the real link to the
+        // route.
+        const contextualLinks = (leaderboardHubSource.match(/<router-link\s+to="\/publisher-leaderboard">/g) || []).length;
+        const publicationsLinksOnwardToHub = (publicationsSource.match(/<router-link\s+to="\/leaderboard">/g) || []).length;
         stages.push({
             stage: 'contextual Publications entry point',
-            complete: contextualLinks === 1,
-            evidence: 'exactly one contextual <router-link> on the Publications page\'s own Publication Archive card'
+            complete: contextualLinks === 1 && publicationsLinksOnwardToHub === 1,
+            evidence: 'exactly one contextual <router-link> on the Leaderboard Hub page, itself reached by exactly one link from the Publications page\'s own Publication Archive card'
         });
 
         stages.push({
@@ -227,7 +240,11 @@ async function run() {
         liveLeaderboard = leaderboardOf({ publicationObservationArchiveStorage: new FakePublicationObservationArchiveStorage(archive) });
         assert(liveLeaderboard.entryCount === 1, n('B1. walking Publications -> Publication Archive card -> contextual link -> the rendered leaderboard, with a real publisher and a real publication, produces one genuinely ranked row — the whole path is exercised, not merely its existence'));
 
-        const linkLine = publicationsSource.match(/<router-link to="\/publisher-leaderboard">([^<]+)<\/router-link>/);
+        // AMENDED — Leaderboard Hub Consolidation. The label now lives on
+        // the Leaderboard Hub page, as a <span class="leaderboard-hub-
+        // link-title"> immediately inside the <router-link>, rather than
+        // as router-link's own inline text on the Publications page.
+        const linkLine = leaderboardHubSource.match(/<router-link to="\/publisher-leaderboard">\s*<span class="leaderboard-hub-link-title">([^<]+)<\/span>/);
         assert(linkLine && linkLine[1] === 'Publisher Performance Leaderboard', n(`B2. the visible link label reads "Publisher Performance Leaderboard" verbatim — a user reaches it under its own real name, not a generic "Leaderboard" link (found: ${JSON.stringify(linkLine && linkLine[1])})`));
 
         const h1Match = performanceViewSource.match(/<h1>([^<]+)<\/h1>/);
@@ -295,9 +312,14 @@ async function run() {
         assert(performanceH1 && performanceH1[1] === 'Publisher Performance Leaderboard', n(`D2. the new page's own real, on-screen heading is "Publisher Performance Leaderboard" (found: ${JSON.stringify(performanceH1 && performanceH1[1])})`));
         assert(reconciliationH1[1] !== performanceH1[1], n('D3. the two on-screen headings are genuinely distinct text, not the bare word "Leaderboard" repeated twice'));
 
-        const reconciliationLinkLabel = publicationsSource.match(/<router-link to="\/reconciliation-leaderboard">([^<]+)<\/router-link>/)[1];
-        const performanceLinkLabel = publicationsSource.match(/<router-link to="\/publisher-leaderboard">([^<]+)<\/router-link>/)[1];
-        assert(reconciliationLinkLabel === 'Reconciliation Candidate Leaderboard' && performanceLinkLabel === 'Publisher Performance Leaderboard', n('D4. the two contextual entry points on the SAME Publications card carry the two same, already-distinct labels — a user scanning that one card sees "Reconciliation Candidate Leaderboard" and "Publisher Performance Leaderboard" side by side, never two links both merely reading "Leaderboard"'));
+        // AMENDED — Leaderboard Hub Consolidation. Both labels moved
+        // together from the Publications page's own Publication Archive
+        // card onto the Leaderboard Hub page's own link list — still the
+        // SAME co-located list a user scans side by side, just relocated
+        // one hop further from Publications.
+        const reconciliationLinkLabel = leaderboardHubSource.match(/<router-link to="\/reconciliation-leaderboard">\s*<span class="leaderboard-hub-link-title">([^<]+)<\/span>/)[1];
+        const performanceLinkLabel = leaderboardHubSource.match(/<router-link to="\/publisher-leaderboard">\s*<span class="leaderboard-hub-link-title">([^<]+)<\/span>/)[1];
+        assert(reconciliationLinkLabel === 'Reconciliation Candidate Leaderboard' && performanceLinkLabel === 'Publisher Performance Leaderboard', n('D4. the two contextual entry points on the SAME Leaderboard Hub list carry the two same, already-distinct labels — a user scanning that one list sees "Reconciliation Candidate Leaderboard" and "Publisher Performance Leaderboard" side by side, never two links both merely reading "Leaderboard"'));
 
         // The one place both words genuinely appear near each other:
         // the /publisher-leaderboard page's own copy, which explicitly
@@ -522,8 +544,15 @@ async function run() {
         for (const pattern of antiPatterns) {
             assert(!pattern.test(bundle), n(`I1. no anti-solution pattern ${pattern} exists in real code (comments stripped) anywhere in ui/, application/, or core/`));
         }
+        // AMENDED — Leaderboard Hub Consolidation. This milestone itself
+        // still adds no route (that claim is about ITS OWN, 0.9.419
+        // authorship moment) — but pinning an exact count here has not
+        // survived later, unrelated route growth (e.g. TURN server
+        // settings) or this later consolidation's own new /leaderboard
+        // route. I2 now confirms no route was REMOVED rather than an
+        // exact historical total.
         const routeCount = (routerSource.match(/\{ path:/g) || []).length;
-        assert(routeCount === 24, n(`I2. the router still registers exactly the same twenty-four routes as before this milestone (found ${routeCount}) — no new route was added`));
+        assert(routeCount >= 24, n(`I2. the router still registers at least the same twenty-four routes as before this milestone, never fewer (found ${routeCount}) — this milestone itself added no route; later ones, including the Leaderboard Hub Consolidation's own /leaderboard, legitimately have`));
 
         console.log('\n=== SECTION I: DELIBERATE EXCLUSION CENSUS ===');
         console.log('✓ Section I: none of leaderboard history store, ranking snapshots, rank-change notifications, badges, gamification, provider ranking, decentralized ranking consensus, trust scores, reputation, automatic refresh, or a ranking marketplace exists anywhere in current source, and the router carries no new route.');
@@ -535,14 +564,36 @@ async function run() {
     {
         const statusOutput = execSync('git status --porcelain', { cwd: SOURCE_ROOT }).toString();
         const changed = statusOutput.split('\n').map((line) => line.slice(3).trim()).filter(Boolean);
+        // AMENDED — Leaderboard Hub Consolidation. This milestone's own
+        // "test-only, evaluates the product, does not modify it" premise
+        // describes ITS OWN 0.9.419 authorship moment — the later
+        // consolidation is a real, separate, since-authorized production
+        // change, amending every pre-existing audit it affects rather than
+        // leaving them to go stale (the same convention Section D/I's own
+        // amendments above already follow).
         const AUTHORIZED = new Set([
             'tests.html',
-            'tests/PostLeaderboardProductReassessment.test.js'
+            'tests/PostLeaderboardProductReassessment.test.js',
+            'css/main.css',
+            'ui/router/index.js',
+            'ui/views/DecentralizedPublicationsView.js',
+            'ui/views/LeaderboardHubView.js',
+            'tests/ReconciliationWorkspaceUi.test.js',
+            'tests/PublisherPerformanceLeaderboardUi.test.js',
+            'tests/PublisherLeaderboardSnapshotClaimAuthoringUi.test.js',
+            'tests/PublisherPerformanceLeaderboardUiRankingConvergenceAudit.test.js',
+            'tests/PublisherPerformanceLeaderboardProductGapAudit.test.js',
+            'tests/ReconciliationLeaderboardEntryPointDecisionAudit.test.js'
         ]);
         const unauthorized = changed.filter((f) => !AUTHORIZED.has(f));
-        assert(unauthorized.length === 0, n(`J1. every changed/added file is exactly this milestone's own test/registration file (found unauthorized: ${JSON.stringify(unauthorized)})`));
+        assert(unauthorized.length === 0, n(`J1. every changed/added file is one this milestone or the later Leaderboard Hub Consolidation explicitly authorized (found unauthorized: ${JSON.stringify(unauthorized)})`));
 
-        const domainDirs = ['core', 'application', 'renderer', 'discovery', 'anchoring', 'collaboration', 'persistence', 'identity', 'publisher', 'storage', 'ui', 'peer', 'content', 'presence', 'docs'];
+        // AMENDED — Leaderboard Hub Consolidation. 'ui' dropped from this
+        // list for the reason named above — the consolidation legitimately
+        // changes ui/router/index.js and ui/views/DecentralizedPublicationsView.js,
+        // and adds ui/views/LeaderboardHubView.js. Every other domain
+        // directory remains untouched, which this loop still proves.
+        const domainDirs = ['core', 'application', 'renderer', 'discovery', 'anchoring', 'collaboration', 'persistence', 'identity', 'publisher', 'storage', 'peer', 'content', 'presence', 'docs'];
         for (const dir of domainDirs) {
             const status = execSync(`git status --porcelain -- ${dir}`, { cwd: SOURCE_ROOT }).toString().trim();
             assert(status === '', n(`J2. ${dir}/ shows no change — this reassessment evaluates the product, it does not modify it`));

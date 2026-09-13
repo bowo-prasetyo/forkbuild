@@ -195,7 +195,14 @@ async function run() {
         assert(/import\s+PublisherLeaderboardSnapshotClaimAuthoringView\s+from\s+'[^']+'/.test(routerSource), n('A5. the router genuinely default-imports PublisherLeaderboardSnapshotClaimAuthoringView, never merely names it'));
 
         const publicationsSource = await readSource('ui/views/DecentralizedPublicationsView.js');
-        assert(/<router-link\s+to="\/publisher-snapshot-claim"/.test(publicationsSource), n('A6. an existing contextual surface (the Publications page\'s own Publication Archive card) carries a real <router-link> to /publisher-snapshot-claim'));
+        // AMENDED — Leaderboard Hub Consolidation. The link moved one hop
+        // further, from the Publications page's own Publication Archive
+        // card onto ui/views/LeaderboardHubView.js, itself now reached by
+        // the one link Publications carries onward — see that file's own
+        // header.
+        const leaderboardHubSource = await readSource('ui/views/LeaderboardHubView.js');
+        assert(/<router-link\s+to="\/publisher-snapshot-claim"/.test(leaderboardHubSource), n('A6. an existing contextual surface (the Leaderboard Hub page, reached from the Publications page\'s own Publication Archive card) carries a real <router-link> to /publisher-snapshot-claim'));
+        assert(/<router-link\s+to="\/leaderboard">/.test(publicationsSource), n('A6b. the Publications page itself still links onward to that hub'));
 
         const appSource = await readSource('ui/App.js');
         assert(!appSource.includes('to="/publisher-snapshot-claim"'), n('A7. /publisher-snapshot-claim is NOT promoted to top nav — it stays contextual, the same convention every sibling reconciliation route already uses'));
@@ -499,7 +506,19 @@ async function run() {
             // minimal, clearly labeled amendment rather than silently going
             // stale — the identical, established convention 0.9.408's own
             // commit already set for this exact audit family.
-            'tests/ReconciliationWorkflowProductReassessment.test.js'
+            'tests/ReconciliationWorkflowProductReassessment.test.js',
+            // AMENDED — Leaderboard Hub Consolidation. Same convention,
+            // later: this milestone's own A6 link relocated onto a new hub
+            // page, alongside three siblings — see ui/views/
+            // LeaderboardHubView.js's own header.
+            'css/main.css',
+            'ui/views/LeaderboardHubView.js',
+            'tests/ReconciliationWorkspaceUi.test.js',
+            'tests/PublisherPerformanceLeaderboardUi.test.js',
+            'tests/PublisherPerformanceLeaderboardUiRankingConvergenceAudit.test.js',
+            'tests/PublisherPerformanceLeaderboardProductGapAudit.test.js',
+            'tests/PostLeaderboardProductReassessment.test.js',
+            'tests/ReconciliationLeaderboardEntryPointDecisionAudit.test.js'
         ]);
         const unauthorized = changed.filter((f) => !AUTHORIZED.has(f));
         assert(unauthorized.length === 0, n(`I1. every changed/added file is one this milestone explicitly authorized (found unauthorized: ${JSON.stringify(unauthorized)})`));

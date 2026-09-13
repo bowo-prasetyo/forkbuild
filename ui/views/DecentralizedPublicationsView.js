@@ -136,9 +136,11 @@ import { PublisherIdentityRecord } from '../../application/PublisherIdentityReco
 import { CreatePublisherPublicationAssociationRecordUseCase } from '../../application/CreatePublisherPublicationAssociationRecordUseCase.js';
 import { describePublisherPublicationAssociationRecordHistory } from '../../application/PublisherPublicationAssociationRecordHistoryView.js';
 import { reconstructPublisherAssociatedPublications, reconstructDistinctPublisherIdentifiers } from '../../application/PublisherAssociationView.js';
-import { reconstructPublisherAchievementProfile } from '../../application/PublisherAchievementProfileView.js';
-import { reconstructPublisherAchievementBadges } from '../../application/PublisherAchievementBadgeView.js';
-import { reconstructPublisherAchievementStatistics } from '../../application/PublisherAchievementStatisticsView.js';
+// Publisher Achievement Profile/Badges/Statistics (0.8.109-0.8.111) moved to
+// ui/views/LeaderboardHubView.js — see that file's own header. This page
+// keeps only distinctPublisherIdentifiersView() above (still needed by the
+// "Publisher Associations" card immediately below), never the three
+// publisher-achievement projections built on top of it.
 import {
     PublicationObservationArchiveImportOutcome,
     exportPublicationObservationArchive,
@@ -2553,121 +2555,6 @@ export default {
             return reconstructPublisherAssociatedPublications(
                 publicationObservationArchive.value,
                 new PublisherIdentityRecord({ publisherId: publisherAssociationSelectedPublisherId.value })
-            );
-        }
-
-        // 0.8.109 — Publisher Achievement Profile Projection.
-        //
-        // A PUBLISHER-SCOPED REDUCTION OVER THE SAME ACHIEVEMENT EVENTS THE
-        // "ACHIEVEMENT PROFILE" CARD ABOVE ALREADY READS, THROUGH THE SAME
-        // "PUBLISHER ASSOCIATIONS" RECORDS THE CARD ABOVE ALREADY RECORDS —
-        // application/PublisherAchievementProfileView.js's own
-        // reconstructPublisherAchievementProfile(), never a second,
-        // competing achievement or association computation inline here.
-        // The publisher dropdown reuses the SAME distinctPublisherIdentifiersView()
-        // the "Publisher Associations" card already populates — never a
-        // free-text field, and never a profile inferred from a shared
-        // content hash or wallet. Collapsed by default. Performs ZERO
-        // network operations.
-        const publisherAchievementProfileExpanded = ref(false);
-        const publisherAchievementProfileSelectedPublisherId = ref('');
-
-        function togglePublisherAchievementProfile() {
-            publisherAchievementProfileExpanded.value = !publisherAchievementProfileExpanded.value;
-        }
-
-        // Pure projection — never a second, competing achievement
-        // aggregation computed inline in the template. No publisher
-        // selected yet yields `null` — never an error, and never a profile
-        // guessed from a shared content hash or wallet.
-        function publisherAchievementProfileView() {
-            if (!publisherAchievementProfileSelectedPublisherId.value) return null;
-            return reconstructPublisherAchievementProfile(
-                publicationObservationArchive.value,
-                new PublisherIdentityRecord({ publisherId: publisherAchievementProfileSelectedPublisherId.value })
-            );
-        }
-
-        // 0.8.110 — Publisher Achievement Badge Projection.
-        //
-        // A PUBLISHER-SCOPED REDUCTION OVER THE SAME BADGES THE
-        // "ACHIEVEMENTS" CARD ABOVE ALREADY SHOWS, KEPT TO EXACTLY THE
-        // ACHIEVEMENTS THE "PUBLISHER ACHIEVEMENT PROFILE" CARD ABOVE
-        // ALREADY DECIDED BELONG TO THIS PUBLISHER — application/
-        // PublisherAchievementBadgeView.js's own
-        // reconstructPublisherAchievementBadges(), never a second,
-        // competing badge or profile computation inline here. The
-        // publisher dropdown reuses the SAME distinctPublisherIdentifiersView()
-        // every other publisher-scoped card on this page already
-        // populates — never a free-text field. Collapsed by default.
-        // Performs ZERO network operations.
-        const publisherAchievementBadgesExpanded = ref(false);
-        const publisherAchievementBadgeExpanded = reactive({});
-        const publisherAchievementBadgesSelectedPublisherId = ref('');
-
-        function togglePublisherAchievementBadges() {
-            publisherAchievementBadgesExpanded.value = !publisherAchievementBadgesExpanded.value;
-        }
-
-        // Pure projection — never a second, competing badge computation
-        // inline in the template. No publisher selected yet yields `null`
-        // — never an error, and never a badge list guessed from a shared
-        // content hash or wallet.
-        function publisherAchievementBadgesView() {
-            if (!publisherAchievementBadgesSelectedPublisherId.value) return null;
-            return reconstructPublisherAchievementBadges(
-                publicationObservationArchive.value,
-                new PublisherIdentityRecord({ publisherId: publisherAchievementBadgesSelectedPublisherId.value })
-            );
-        }
-
-        function togglePublisherAchievementBadge(index) {
-            publisherAchievementBadgeExpanded[index] = !publisherAchievementBadgeExpanded[index];
-        }
-
-        function isPublisherAchievementBadgeExpanded(index) {
-            return Boolean(publisherAchievementBadgeExpanded[index]);
-        }
-
-        // "Publisher badge → the exact same badge → the exact same
-        // publication lifecycle." Reuses the identical
-        // canViewAchievementBadgeLifecycle()/viewAchievementBadgeLifecycle()
-        // (0.8.103) the "Achievements" card above already opens with —
-        // never a second lifecycle-navigation mechanism, because a
-        // publisher badge here is the exact same frozen badge object that
-        // card already resolved a lifecycle link for.
-        const canViewPublisherAchievementBadgeLifecycle = canViewAchievementBadgeLifecycle;
-        const viewPublisherAchievementBadgeLifecycle = viewAchievementBadgeLifecycle;
-
-        // 0.8.111 — Publisher Achievement Statistics Projection.
-        //
-        // A PURE TALLY OVER THE SAME TWO ALREADY PUBLISHER-SCOPED
-        // PROJECTIONS THE TWO CARDS ABOVE ALREADY COMPUTE — application/
-        // PublisherAchievementStatisticsView.js's own
-        // reconstructPublisherAchievementStatistics(), never a second,
-        // competing achievement, association, or badge computation inline
-        // here. States measurable facts only — never decides whether they
-        // are good, bad, important, or worthy of a higher rank; never a
-        // score, rank, level, or leaderboard entry. The publisher dropdown
-        // reuses the SAME distinctPublisherIdentifiersView() every other
-        // publisher-scoped card on this page already populates. Collapsed
-        // by default. Performs ZERO network operations.
-        const publisherAchievementStatisticsExpanded = ref(false);
-        const publisherAchievementStatisticsSelectedPublisherId = ref('');
-
-        function togglePublisherAchievementStatistics() {
-            publisherAchievementStatisticsExpanded.value = !publisherAchievementStatisticsExpanded.value;
-        }
-
-        // Pure projection — never a second, competing statistics
-        // computation inline in the template. No publisher selected yet
-        // yields `null` — never an error, and never statistics guessed
-        // from a shared content hash or wallet.
-        function publisherAchievementStatisticsView() {
-            if (!publisherAchievementStatisticsSelectedPublisherId.value) return null;
-            return reconstructPublisherAchievementStatistics(
-                publicationObservationArchive.value,
-                new PublisherIdentityRecord({ publisherId: publisherAchievementStatisticsSelectedPublisherId.value })
             );
         }
 
@@ -6947,14 +6834,6 @@ export default {
             publisherAssociationPublisherId, publisherAssociationPublicationKey, publisherAssociationError,
             recordPublisherAssociation, publisherPublicationAssociationRecordHistoryView,
             distinctPublisherIdentifiersView, publisherAssociationSelectedPublisherId, publisherAssociationProfileView,
-            publisherAchievementProfileExpanded, togglePublisherAchievementProfile,
-            publisherAchievementProfileSelectedPublisherId, publisherAchievementProfileView,
-            publisherAchievementBadgesExpanded, togglePublisherAchievementBadges,
-            publisherAchievementBadgesSelectedPublisherId, publisherAchievementBadgesView,
-            togglePublisherAchievementBadge, isPublisherAchievementBadgeExpanded,
-            canViewPublisherAchievementBadgeLifecycle, viewPublisherAchievementBadgeLifecycle,
-            publisherAchievementStatisticsExpanded, togglePublisherAchievementStatistics,
-            publisherAchievementStatisticsSelectedPublisherId, publisherAchievementStatisticsView,
             decentralizationContrast,
             knowledgeSynchronizationCoordinator, synchronizeWithPeers, synchronizationView, synchronizationBadgeClass, synchronizationButtonLabel,
             toggleReplicaKnowledge, acquisitionBreakdownSentence,
@@ -7644,65 +7523,26 @@ export default {
                         {{ showPublicationArchiveImportForm ? 'Cancel Import' : 'Import Archive' }}
                     </button>
                 </div>
-                <!-- 0.9.400 — Reconciliation Leaderboard Entry Point. An
-                     export from THIS card is the exact peer archive the
-                     Leaderboard's own "Use as Peer Archive" step asks a
-                     person to paste — the two features were already one
-                     workflow split across two pages with no link between
-                     them. Contextual, not top-nav, the identical shape
-                     PeerConnectionsView's own "Chat" button already gives
-                     /chat/:identityId — see ui/router/index.js's own
-                     comment on /reconciliation-leaderboard. -->
+                <!-- 0.9.400/0.9.408/0.9.411/0.9.417 originally linked
+                     /reconciliation-leaderboard, /reconciliation-workspace,
+                     /publisher-snapshot-claim, and /publisher-leaderboard
+                     directly from this card — an export from THIS card is
+                     the exact peer archive the Reconciliation Leaderboard's
+                     own "Use as Peer Archive" step asks a person to paste,
+                     which is why the entry points first landed here. Later
+                     consolidated onto ui/views/LeaderboardHubView.js: all
+                     four had grown into their own multi-card destination in
+                     their own right (the Publisher Achievement Profile/
+                     Badges/Statistics cards that used to sit further down
+                     this same page moved there too — see that file's own
+                     header), so one contextual link now stands in for what
+                     was four, the identical "contextual, not top-nav" shape
+                     this card's links have always used. -->
                 <p class="form-hint form-hint--neutral">
-                    Comparing this archive's decision and observation evidence, candidate
-                    by candidate, against a peer's own exported archive above happens on the
-                    <router-link to="/reconciliation-leaderboard">Reconciliation Candidate Leaderboard</router-link>.
-                </p>
-                <!-- 0.9.408 — Reconciliation Workspace UI. A second,
-                     independent link beside the Leaderboard one above: that
-                     page only ever compares two archives it is handed; this
-                     one explicitly reconciles this replica's own archive
-                     (the SAME one this card exports/imports) against a
-                     single piece of pasted peer evidence, and durably
-                     records what it finds. See ui/views/
-                     ReconciliationWorkspaceView.js's own header. -->
-                <p class="form-hint form-hint--neutral">
-                    Reconciling this archive against a single piece of peer evidence,
-                    explicitly, happens on the
-                    <router-link to="/reconciliation-workspace">Reconciliation Workspace</router-link>.
-                </p>
-                <!-- 0.9.411 — Publisher Leaderboard Snapshot Claim Authoring
-                     & Export. A third, independent link beside the two
-                     above: those two consume peer evidence; this one
-                     authors, signs, and exports THIS replica's own signed
-                     leaderboard snapshot claim — the exact peer-evidence
-                     artifact the Reconciliation Workspace's own "Peer
-                     Evidence" field asks a peer to paste. See ui/views/
-                     PublisherLeaderboardSnapshotClaimAuthoringView.js's own
-                     header. -->
-                <p class="form-hint form-hint--neutral">
-                    Authoring and exporting YOUR OWN signed leaderboard snapshot
-                    claim — the evidence a peer's Workspace expects — happens on
-                    the
-                    <router-link to="/publisher-snapshot-claim">Publisher Snapshot Claim</router-link> page.
-                </p>
-                <!-- 0.9.417 — Publisher Performance Leaderboard UI. A
-                     fourth, independent link beside the three above: those
-                     three read, author, or reconcile PEER evidence; this
-                     one exposes the already-existing publisher
-                     PERFORMANCE ranking (application/PublisherRankingPolicy.js,
-                     0.8.112, and application/PublisherLeaderboardView.js,
-                     0.8.113, both UNCHANGED, composed over THIS replica's
-                     own archive alone — never a peer's) — see ui/views/
-                     PublisherPerformanceLeaderboardView.js's own header.
-                     Deliberately still not a top-nav destination — the
-                     identical "contextual, not global" navigation shape
-                     every other link on this card already uses. -->
-                <p class="form-hint form-hint--neutral">
-                    Seeing publishers ranked by their own recorded achievements and
-                    publications — computed fresh from THIS replica's own archive
-                    alone, never a peer's — happens on the
-                    <router-link to="/publisher-leaderboard">Publisher Performance Leaderboard</router-link> page.
+                    Reconciling this archive against a peer's, authoring or exporting
+                    your own signed leaderboard snapshot claim, and seeing publishers
+                    ranked by their own recorded achievements all happen on the
+                    <router-link to="/leaderboard">Leaderboard</router-link> page.
                 </p>
 
                 <div v-if="publicationArchiveExportedPackage.json" class="evidence-inspection-adapter">
@@ -8811,259 +8651,16 @@ export default {
                 </div>
             </div>
 
-            <!-- 0.8.109 — Publisher Achievement Profile Projection. A
-                 publisher-scoped reduction over the SAME achievement
-                 events the "Achievement Profile" card above already
-                 reads, aggregated across every publication the
-                 "Publisher Associations" card above has EXPLICITLY
-                 recorded for this publisher — application/
-                 PublisherAchievementProfileView.js's own
-                 reconstructPublisherAchievementProfile(). Deliberately NOT
-                 a claim of ownership or human identity: this states that a
-                 publisher who explicitly claims these publications has
-                 these achievements to show for them, never that this
-                 replica has proven who controls any of them. Collapsed by
-                 default. Performs ZERO network operations. -->
-            <div class="identity-mgmt-card">
-                <div class="identity-mgmt-card-header">
-                    <span class="identity-mgmt-name">Publisher Achievement Profile</span>
-                    <span class="peer-badge peer-badge--pending">Persisted locally</span>
-                </div>
-                <p class="form-hint form-hint--neutral">
-                    A publisher's own achievements, aggregated across every publication that publisher
-                    has explicitly claimed above — never inferred from a shared content hash or wallet,
-                    and never a score, rank, or leaderboard entry.
-                </p>
-                <div class="identity-mgmt-actions">
-                    <button type="button" class="action-btn action-btn--secondary" @click="togglePublisherAchievementProfile">
-                        {{ publisherAchievementProfileExpanded ? 'Hide Publisher Achievement Profile' : 'Show Publisher Achievement Profile' }}
-                    </button>
-                </div>
-                <div v-if="publisherAchievementProfileExpanded" class="evidence-inspection-adapter">
-                    <span class="evidence-inspection-adapter-title">Choose A Publisher</span>
-                    <p v-if="distinctPublisherIdentifiersView().length === 0" class="form-hint form-hint--neutral">
-                        No publisher has been associated with anything yet — record one in "Publisher
-                        Associations" above first.
-                    </p>
-                    <label v-else class="form-field">
-                        <span class="form-label">Publisher</span>
-                        <select v-model="publisherAchievementProfileSelectedPublisherId" class="form-input">
-                            <option value="" disabled>Choose a publisher…</option>
-                            <option v-for="publisherId in distinctPublisherIdentifiersView()" :key="'achievement-profile-' + publisherId" :value="publisherId">
-                                {{ publisherId }}
-                            </option>
-                        </select>
-                    </label>
-
-                    <template v-if="publisherAchievementProfileSelectedPublisherId">
-                        <span class="evidence-inspection-adapter-title">Publisher Achievement Profile</span>
-                        <dl class="evidence-fields">
-                            <div class="evidence-field"><dt>Publisher</dt><dd>{{ publisherAchievementProfileView().publisherIdentity.publisherId }}</dd></div>
-                            <div class="evidence-field"><dt>Associated publications</dt><dd>{{ publisherAchievementProfileView().publicationIdentityCount }}</dd></div>
-                            <div class="evidence-field"><dt>Achievements earned</dt><dd>{{ publisherAchievementProfileView().achievementCount }}</dd></div>
-                            <div class="evidence-field"><dt>Distinct achievement kinds</dt><dd>{{ publisherAchievementProfileView().distinctAchievementKindCount }}</dd></div>
-                        </dl>
-                        <p v-if="publisherAchievementProfileView().achievementCount === 0" class="form-hint form-hint--neutral">
-                            None of this publisher's associated publications have earned an achievement
-                            yet.
-                        </p>
-                        <ul v-else class="replica-knowledge-claim-list">
-                            <li v-for="(achievement, achievementIndex) in publisherAchievementProfileView().achievements" :key="achievementIndex" class="replica-knowledge-claim">
-                                <span class="peer-badge peer-badge--pending">🏆 {{ achievement.label }}</span>
-                                <p class="form-hint form-hint--neutral">
-                                    Earned {{ formatWhen(achievement.observedAt) }} by
-                                    {{ achievement.sourcePublicationIdentity.blockchain }} —
-                                    {{ shortId(achievement.sourcePublicationIdentity.chainReference) }}
-                                </p>
-                            </li>
-                        </ul>
-                        <p class="form-hint form-hint--neutral">
-                            These achievements belong to the publications this publisher has explicitly
-                            claimed — never proof that this publisher controls, owns, or is the human
-                            behind any of them.
-                        </p>
-                    </template>
-                </div>
-            </div>
-
-            <!-- 0.8.110 — Publisher Achievement Badge Projection. A
-                 human-facing presentation of the "Publisher Achievement
-                 Profile" card's own achievements above, kept to only
-                 those achievements this replica's own "Achievements"
-                 card can already present as a badge — application/
-                 PublisherAchievementBadgeView.js's own
-                 reconstructPublisherAchievementBadges(). Every badge
-                 here is the exact frozen badge object the "Achievements"
-                 card above already produced; expanding one opens the
-                 identical publication lifecycle link that card already
-                 resolves. A badge is a presentation of an achievement
-                 already earned by an explicitly associated publication —
-                 never a new achievement, never a score, rank, or
-                 leaderboard entry. Some of this publisher's own
-                 achievements (reference-derived ones) have no badge
-                 vocabulary yet and are shown only in the "Publisher
-                 Achievement Profile" card above, not here. Collapsed by
-                 default. Performs ZERO network operations. -->
-            <div class="identity-mgmt-card">
-                <div class="identity-mgmt-card-header">
-                    <span class="identity-mgmt-name">Publisher Achievement Badges</span>
-                    <span class="peer-badge peer-badge--pending">Persisted locally</span>
-                </div>
-                <p class="form-hint form-hint--neutral">
-                    A badge presentation of the achievements this publisher has already earned, across
-                    every publication that publisher has explicitly claimed — never a new achievement,
-                    and never a score, rank, or leaderboard entry. Some achievements (reference-derived
-                    ones) have no badge presentation yet and appear only in the "Publisher Achievement
-                    Profile" card above.
-                </p>
-                <div class="identity-mgmt-actions">
-                    <button type="button" class="action-btn action-btn--secondary" @click="togglePublisherAchievementBadges">
-                        {{ publisherAchievementBadgesExpanded ? 'Hide Publisher Achievement Badges' : 'Show Publisher Achievement Badges' }}
-                    </button>
-                </div>
-                <div v-if="publisherAchievementBadgesExpanded" class="evidence-inspection-adapter">
-                    <span class="evidence-inspection-adapter-title">Choose A Publisher</span>
-                    <p v-if="distinctPublisherIdentifiersView().length === 0" class="form-hint form-hint--neutral">
-                        No publisher has been associated with anything yet — record one in "Publisher
-                        Associations" above first.
-                    </p>
-                    <label v-else class="form-field">
-                        <span class="form-label">Publisher</span>
-                        <select v-model="publisherAchievementBadgesSelectedPublisherId" class="form-input">
-                            <option value="" disabled>Choose a publisher…</option>
-                            <option v-for="publisherId in distinctPublisherIdentifiersView()" :key="'achievement-badges-' + publisherId" :value="publisherId">
-                                {{ publisherId }}
-                            </option>
-                        </select>
-                    </label>
-
-                    <template v-if="publisherAchievementBadgesSelectedPublisherId">
-                        <span class="evidence-inspection-adapter-title">Publisher Achievement Badges</span>
-                        <dl class="evidence-fields">
-                            <div class="evidence-field"><dt>Publisher</dt><dd>{{ publisherAchievementBadgesView().publisherIdentity.publisherId }}</dd></div>
-                            <div class="evidence-field"><dt>Associated publications</dt><dd>{{ publisherAchievementBadgesView().publicationIdentityCount }}</dd></div>
-                            <div class="evidence-field"><dt>Badges earned</dt><dd>{{ publisherAchievementBadgesView().badgeCount }}</dd></div>
-                            <div class="evidence-field"><dt>Distinct badge kinds</dt><dd>{{ publisherAchievementBadgesView().distinctAchievementKindCount }}</dd></div>
-                        </dl>
-                        <p v-if="publisherAchievementBadgesView().badgeCount === 0" class="form-hint form-hint--neutral">
-                            None of this publisher's associated publications have earned a badge-presented
-                            achievement yet.
-                        </p>
-                        <ul v-else class="replica-knowledge-claim-list">
-                            <li v-for="badge in publisherAchievementBadgesView().badges" :key="badge.index" class="replica-knowledge-claim">
-                                <button type="button" class="peer-action-btn" @click="togglePublisherAchievementBadge(badge.index)">
-                                    {{ badge.icon }} {{ badge.title }}
-                                </button>
-                                <p class="form-hint form-hint--neutral">
-                                    {{ badge.description }} — earned {{ formatWhen(badge.earnedAt) }}
-                                </p>
-
-                                <div v-if="isPublisherAchievementBadgeExpanded(badge.index)" class="evidence-list">
-                                    <span class="evidence-convergence-title">Source Publication</span>
-                                    <dl class="evidence-fields">
-                                        <div class="evidence-field"><dt>Blockchain</dt><dd>{{ badge.sourcePublicationIdentity.blockchain }}</dd></div>
-                                        <div class="evidence-field"><dt>Content hash</dt><dd>{{ badge.sourcePublicationIdentity.contentHash }}</dd></div>
-                                        <div class="evidence-field"><dt>Chain reference</dt><dd>{{ badge.sourcePublicationIdentity.chainReference }}</dd></div>
-                                        <div class="evidence-field"><dt>Created</dt><dd>{{ formatWhen(badge.sourcePublicationIdentity.createdAt) }}</dd></div>
-                                    </dl>
-                                    <p class="form-hint form-hint--neutral">
-                                        This badge is a presentation of one achievement already earned by a
-                                        publication this publisher has explicitly claimed — never a new
-                                        achievement, and never a score or a rank.
-                                    </p>
-                                    <button v-if="canViewPublisherAchievementBadgeLifecycle(badge)" type="button" class="action-btn action-btn--secondary"
-                                            @click="viewPublisherAchievementBadgeLifecycle(badge)">
-                                        View Publication Lifecycle Above
-                                    </button>
-                                    <p v-else class="form-hint form-hint--neutral">
-                                        This replica could not resolve this badge's own source anchor to a
-                                        publication lifecycle timeline above.
-                                    </p>
-                                </div>
-                            </li>
-                        </ul>
-                        <p class="form-hint form-hint--neutral">
-                            These badges present achievements already earned by publications this publisher
-                            has explicitly claimed — never proof that this publisher controls, owns, or is
-                            the human behind any of them.
-                        </p>
-                    </template>
-                </div>
-            </div>
-
-            <!-- 0.8.111 — Publisher Achievement Statistics Projection. A
-                 pure tally over the "Publisher Achievement Profile" and
-                 "Publisher Achievement Badges" cards above — application/
-                 PublisherAchievementStatisticsView.js's own
-                 reconstructPublisherAchievementStatistics(). Describes
-                 measurable facts about this publisher's own explicitly
-                 associated publications and their derived achievements —
-                 never decides whether those facts are good, bad,
-                 important, or worthy of a higher rank. No score, rank,
-                 level, tier, or leaderboard entry anywhere on this card.
-                 Collapsed by default. Performs ZERO network operations. -->
-            <div class="identity-mgmt-card">
-                <div class="identity-mgmt-card-header">
-                    <span class="identity-mgmt-name">Publisher Achievement Statistics</span>
-                    <span class="peer-badge peer-badge--pending">Persisted locally</span>
-                </div>
-                <p class="form-hint form-hint--neutral">
-                    Measurable facts about a publisher's explicitly associated publications and their
-                    derived achievements — never a score, rank, level, or leaderboard entry. These
-                    facts alone do not decide who is "better" than anyone else.
-                </p>
-                <div class="identity-mgmt-actions">
-                    <button type="button" class="action-btn action-btn--secondary" @click="togglePublisherAchievementStatistics">
-                        {{ publisherAchievementStatisticsExpanded ? 'Hide Publisher Achievement Statistics' : 'Show Publisher Achievement Statistics' }}
-                    </button>
-                </div>
-                <div v-if="publisherAchievementStatisticsExpanded" class="evidence-inspection-adapter">
-                    <span class="evidence-inspection-adapter-title">Choose A Publisher</span>
-                    <p v-if="distinctPublisherIdentifiersView().length === 0" class="form-hint form-hint--neutral">
-                        No publisher has been associated with anything yet — record one in "Publisher
-                        Associations" above first.
-                    </p>
-                    <label v-else class="form-field">
-                        <span class="form-label">Publisher</span>
-                        <select v-model="publisherAchievementStatisticsSelectedPublisherId" class="form-input">
-                            <option value="" disabled>Choose a publisher…</option>
-                            <option v-for="publisherId in distinctPublisherIdentifiersView()" :key="'achievement-statistics-' + publisherId" :value="publisherId">
-                                {{ publisherId }}
-                            </option>
-                        </select>
-                    </label>
-
-                    <template v-if="publisherAchievementStatisticsSelectedPublisherId">
-                        <span class="evidence-inspection-adapter-title">Publisher Achievement Statistics</span>
-                        <dl class="evidence-fields">
-                            <div class="evidence-field"><dt>Publisher</dt><dd>{{ publisherAchievementStatisticsView().publisherIdentity.publisherId }}</dd></div>
-                            <div class="evidence-field"><dt>Associated publications</dt><dd>{{ publisherAchievementStatisticsView().publicationIdentityCount }}</dd></div>
-                            <div class="evidence-field"><dt>Achievements earned</dt><dd>{{ publisherAchievementStatisticsView().achievementCount }}</dd></div>
-                            <div class="evidence-field"><dt>Distinct achievement kinds</dt><dd>{{ publisherAchievementStatisticsView().distinctAchievementKindCount }}</dd></div>
-                            <div class="evidence-field"><dt>Badges earned</dt><dd>{{ publisherAchievementStatisticsView().badgeCount }}</dd></div>
-                            <div class="evidence-field"><dt>Distinct badge kinds</dt><dd>{{ publisherAchievementStatisticsView().distinctBadgeKindCount }}</dd></div>
-                            <div v-for="chain in publisherAchievementStatisticsView().blockchainPublicationCounts" :key="chain.blockchain" class="evidence-field">
-                                <dt>{{ chain.blockchain }} publications</dt><dd>{{ chain.count }}</dd>
-                            </div>
-                        </dl>
-                        <p v-if="publisherAchievementStatisticsView().achievementKindCounts.length === 0" class="form-hint form-hint--neutral">
-                            None of this publisher's associated publications have earned an achievement
-                            yet.
-                        </p>
-                        <ul v-else class="replica-knowledge-claim-list">
-                            <li v-for="entry in publisherAchievementStatisticsView().achievementKindCounts" :key="entry.achievementKind" class="replica-knowledge-claim">
-                                <span class="peer-badge peer-badge--pending">{{ entry.achievementKind }} — {{ entry.count }}</span>
-                            </li>
-                        </ul>
-                        <p class="form-hint form-hint--neutral">
-                            These are plain counts of already-earned facts — never a score, rank, level,
-                            tier, or leaderboard entry, and never proof that this publisher controls,
-                            owns, or is the human behind any of the publications counted above.
-                        </p>
-                    </template>
-                </div>
-            </div>
-
+            <!-- 0.8.109/0.8.110/0.8.111 — Publisher Achievement Profile,
+                 Publisher Achievement Badges, and Publisher Achievement
+                 Statistics used to live here as three cards. Moved to
+                 ui/views/LeaderboardHubView.js: 0.8.111's own tally feeds
+                 application/PublisherRankingPolicy.js (0.8.112) directly,
+                 which application/PublisherLeaderboardView.js (0.8.113)
+                 presents as the Publisher Performance Leaderboard — these
+                 three cards were genuinely upstream of that leaderboard,
+                 not incidental to it, so they moved there with it. See
+                 that file's own header for the full chain. -->
             </details>
 
             <p v-if="loading" class="locations-panel-empty">Checking cataloged publications…</p>
