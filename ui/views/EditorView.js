@@ -202,13 +202,13 @@ export default {
                 <button
                     v-if="multiRelayNostrPublicationDistributionCommand"
                     type="button"
-                    class="action-btn editor-post-publish-distribute-btn"
+                    class="action-btn action-btn--primary editor-post-publish-distribute-btn"
                     :disabled="distributionExecuting"
                     @click="distributePublishedDocument"
                 >{{ distributionExecuting ? 'Distributing…' : 'Distribute now' }}</button>
                 <button
                     type="button"
-                    class="editor-post-publish-dismiss-btn"
+                    class="action-btn action-btn--secondary editor-post-publish-dismiss-btn"
                     @click="dismissPublishAction"
                 >Dismiss</button>
             </div>
@@ -244,7 +244,7 @@ export default {
                     <dd>
                         <button
                             type="button"
-                            class="action-btn editor-post-publish-distribution-view-btn"
+                            class="action-btn action-btn--secondary editor-post-publish-distribution-view-btn"
                             @click="viewDistributedPublicationInRepository"
                         >Explore</button>
                     </dd>
