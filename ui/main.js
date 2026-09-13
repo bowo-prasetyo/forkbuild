@@ -87,6 +87,7 @@ import { CreateBaseReviewedSigningCoordinatorUseCase } from '../application/Crea
 import { CreateBaseSignedTransactionFinalizerUseCase } from '../application/CreateBaseSignedTransactionFinalizerUseCase.js';
 import { CreateBaseSignedTransactionFinalizationCoordinatorUseCase } from '../application/CreateBaseSignedTransactionFinalizationCoordinatorUseCase.js';
 import { CreateBaseTransactionBroadcasterUseCase } from '../application/CreateBaseTransactionBroadcasterUseCase.js';
+import { CreateBaseAnchorPublisherUseCase } from '../application/CreateBaseAnchorPublisherUseCase.js';
 import { CreateBaseTransactionBroadcastCoordinatorUseCase } from '../application/CreateBaseTransactionBroadcastCoordinatorUseCase.js';
 import { CreateBaseTransactionInclusionObserverUseCase } from '../application/CreateBaseTransactionInclusionObserverUseCase.js';
 import { CreateBaseTransactionInclusionObservationCoordinatorUseCase } from '../application/CreateBaseTransactionInclusionObservationCoordinatorUseCase.js';
@@ -1093,7 +1094,17 @@ const { bitcoinAnchorPublisher } = new CreateBitcoinAnchorPublisherUseCase().exe
     network: 'mainnet',
     broadcaster: bitcoinBroadcaster
 });
-const { createExternalPublicationAnchorUseCase, publisherRegistry: externalAnchorPublisherRegistry } =
+// `createPublicationAnchorUseCase` (0.8.10's own generic, signer/
+// broadcaster-free anchor-catalog use case) is ALSO captured here, in
+// addition to the two bindings every earlier milestone already used — the
+// SAME instance `createExternalPublicationAnchorUseCase` composes
+// internally, never a second, disconnected one. 0.9.472 hands it straight
+// to `CreateBaseAnchorPublisherUseCase` below, exactly as `anchoring/
+// BaseAnchorPublisher.js`'s own header requires ("createPublicationAnchorUseCase
+// ... needs a real publication catalog, identity provider, verifier, and
+// anchor catalog") — reusing this one construction rather than building a
+// second CreatePublicationAnchorUseCase against the same catalogs.
+const { createExternalPublicationAnchorUseCase, publisherRegistry: externalAnchorPublisherRegistry, createPublicationAnchorUseCase } =
     new CreateExternalPublicationAnchorOrchestratorUseCase().execute({
         publicationCatalog,
         anchorCatalog: publicationAnchorCatalog,
@@ -1282,6 +1293,30 @@ const { baseTransactionBroadcaster } = new CreateBaseTransactionBroadcasterUseCa
 });
 const { coordinator: baseTransactionBroadcastCoordinator } = new CreateBaseTransactionBroadcastCoordinatorUseCase().execute({
     baseTransactionBroadcaster
+});
+
+// 0.9.472 — Expose Review-Preserving Base Anchor Action.
+//
+// tests/BaseReviewPreservingAnchorPublishingIntegrationBoundaryAudit.test.js
+// (0.9.471) found anchoring/BaseAnchorPublisher.js (0.9.470) real,
+// review-preserving, and proof-round-trip-complete against entirely real
+// collaborators, but constructed NOWHERE in this file — this is that one
+// missing composition, and nothing else. `baseAnchorPublisher` is built
+// from the SAME `baseTransactionBroadcaster` immediately above and the SAME
+// `createPublicationAnchorUseCase` the Bitcoin/Arweave orchestrator above
+// already constructed — never a second, disconnected broadcaster or anchor
+// use case. Its other three collaborators (`baseReviewedSigningCoordinator`,
+// `baseSignedTransactionFinalizer`, `createBaseAnchorPublicationRecordUseCase`)
+// are left at `CreateBaseAnchorPublisherUseCase`'s own stateless defaults —
+// see that file's own header on why a caller-supplied one would only ever
+// be a test double, never a behavior change. Deliberately NOT registered
+// into `externalAnchorPublisherRegistry` below — see anchoring/
+// BaseAnchorPublisher.js's own header, "NOT REGISTERED IN application/
+// ExternalAnchorPublisherRegistry.js," a decision this milestone does not
+// revisit.
+const { baseAnchorPublisher } = new CreateBaseAnchorPublisherUseCase().execute({
+    baseTransactionBroadcaster,
+    createPublicationAnchorUseCase
 });
 
 // 0.8.96 — Explicit Base Transaction Inclusion & Confirmation Observation.
@@ -1508,6 +1543,8 @@ app.provide('baseSignedTransactionFinalizationCoordinator', baseSignedTransactio
 app.provide('baseTransactionBroadcastCoordinator', baseTransactionBroadcastCoordinator);
 // 0.8.96 — Explicit Base Transaction Inclusion & Confirmation Observation.
 app.provide('baseTransactionInclusionObservationCoordinator', baseTransactionInclusionObservationCoordinator);
+// 0.9.472 — Expose Review-Preserving Base Anchor Action.
+app.provide('baseAnchorPublisher', baseAnchorPublisher);
 // 0.8.61 — Explicit Bitcoin Anchor Transaction Construction UI.
 app.provide('bitcoinAnchorTransactionConstructionCoordinator', bitcoinAnchorTransactionConstructionCoordinator);
 // 0.8.62 — Explicit Reviewed Bitcoin Anchor Signing UI.
