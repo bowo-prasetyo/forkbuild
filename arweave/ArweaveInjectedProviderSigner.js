@@ -171,7 +171,7 @@ export function createArweaveInjectedProviderSigner({
             fetchText(fetchFn, `${base}/price/${dataBytes.length}`, timeoutMs, 'price')
         ]);
 
-        const dataRoot = await computeSingleChunkDataRoot(dataBytes);
+        const { dataRoot, chunks, proofs } = await computeSingleChunkMerkleData(dataBytes);
 
         const unsignedTransaction = {
             format: 2,
@@ -185,7 +185,47 @@ export function createArweaveInjectedProviderSigner({
             data: base64UrlEncode(dataBytes),
             data_size: String(dataBytes.length),
             reward,
-            signature: ''
+            signature: '',
+            // AMENDED — a real Wander/ArConnect installation surfaces
+            // "expected to be not undefined" the instant sign() is called,
+            // live-confirmed (not reproducible in this codebase's own
+            // headless test suite, which only ever exercises a fake
+            // injectedProvider). Per Wander's own docs, sign() expects "an
+            // Arweave transaction instance ... created via
+            // arweave.createTransaction()" — a real arweave-js Transaction,
+            // which carries a `chunks` field this plain object never had.
+            // A known Wander issue (th8ta/ArConnect#31, "arweaveWallet.sign
+            // results in dropped transaction data/chunk keys") independently
+            // confirms sign()'s own internal reconstruction reads `chunks`.
+            // Per arweave-js's own transaction.ts, `getSignatureData()` only
+            // calls `prepareChunks()` itself when `!this.data_root` — since
+            // this file already sets `data_root` up front, that guard never
+            // fires, so `chunks` must already be attached here or signing
+            // has nothing to read.
+            //
+            // Deliberately hand-rolled rather than depending on arweave-js
+            // (this file's own "no external dependency" line, held since
+            // 0.9.121 — see this file's own header) — computed by the SAME
+            // single-leaf Merkle construction `computeSingleChunkMerkleData()`
+            // already uses for `data_root`, matching arweave-js's own
+            // `Chunk`/`Proof` shapes (`merkle.ts`) field-for-field. Every
+            // binary field is base64url-encoded, mirroring `data`/`data_root`
+            // immediately above, rather than arweave-js's own raw-Uint8Array
+            // internal representation, since this object is never anything
+            // but a plain, JSON-safe value crossing a postMessage boundary.
+            //
+            // A BEST-EFFORT TRANSLATION, NOT A CONFIRMED FIX — this codebase
+            // has no way to run a real Wander/ArConnect extension in its own
+            // test suite (see this file's own tests, which only ever exercise
+            // a fake injectedProvider); this is the most faithful
+            // reconstruction available from arweave-js's own published source
+            // and Wander's own documented contract, still awaiting a live
+            // retry to confirm it actually resolves the failure.
+            chunks: {
+                data_root: base64UrlEncode(dataRoot),
+                chunks,
+                proofs
+            }
         };
 
         let signed;
@@ -227,19 +267,48 @@ async function fetchText(fetchFn, url, timeoutMs, label) {
     return (await response.text()).trim();
 }
 
-// The single-leaf case of Arweave's own Merkle `data_root` scheme: for data
-// that fits in exactly one chunk (guaranteed by MAX_SINGLE_CHUNK_BYTES,
-// above), the root is exactly the one leaf's own id —
-// SHA-256(SHA-256(chunkHash) || SHA-256(offsetNote)) — where `chunkHash` is
-// SHA-256(dataBytes) and `offsetNote` is the chunk's own end offset
-// (dataBytes.length for a single chunk) encoded as a big-endian, 32-byte
-// buffer. Returns 32 raw bytes.
-async function computeSingleChunkDataRoot(dataBytes) {
+// The single-leaf case of Arweave's own Merkle scheme: for data that fits
+// in exactly one chunk (guaranteed by MAX_SINGLE_CHUNK_BYTES, above),
+// returns the SAME three facts a real arweave-js Transaction's own
+// `prepareChunks()`/`chunks` property would carry for one chunk (see
+// merkle.ts's own `generateTransactionChunks()`/`generateLeaves()`/
+// `generateProofs()`, and this function's own use at the `chunks:` field
+// above) — computed here directly rather than by building and walking an
+// actual tree, since a one-leaf tree has no branch nodes to build:
+//   - `dataRoot` — the leaf's own id, SHA-256(SHA-256(chunkHash) ||
+//     SHA-256(offsetNote)) — where `chunkHash` is SHA-256(dataBytes) and
+//     `offsetNote` is the chunk's own end offset (dataBytes.length)
+//     encoded as a big-endian, 32-byte buffer (arweave-js's own
+//     `intToBuffer` — see `encodeOffsetNote()` below).
+//   - `chunks` — one `Chunk` (`{ dataHash, minByteRange, maxByteRange }`),
+//     `dataHash` base64url-encoded per this file's own JSON-safe
+//     convention (see `chunks:` field's own comment, above).
+//   - `proofs` — one `Proof` (`{ offset, proof }`); for a single leaf,
+//     `proof` is `chunkHash || offsetNote` (merkle.ts's own
+//     `resolveBranchProofs()` leaf case, starting from an empty
+//     accumulated proof — there are no branch nodes to prepend).
+// Returns `{ dataRoot, chunks, proofs }` — `dataRoot` as 32 raw bytes
+// (matching this function's own pre-existing return shape, still
+// base64url-encoded at each call site), `chunks`/`proofs` already in
+// their final, base64url-safe, JSON-serializable form.
+async function computeSingleChunkMerkleData(dataBytes) {
     const chunkHash = await sha256(dataBytes);
     const offsetNote = encodeOffsetNote(dataBytes.length);
     const hashedChunkHash = await sha256(chunkHash);
     const hashedOffsetNote = await sha256(offsetNote);
-    return sha256(concatBytes(hashedChunkHash, hashedOffsetNote));
+    const dataRoot = await sha256(concatBytes(hashedChunkHash, hashedOffsetNote));
+    return {
+        dataRoot,
+        chunks: [{
+            dataHash: base64UrlEncode(chunkHash),
+            minByteRange: 0,
+            maxByteRange: dataBytes.length
+        }],
+        proofs: [{
+            offset: dataBytes.length - 1,
+            proof: base64UrlEncode(concatBytes(chunkHash, offsetNote))
+        }]
+    };
 }
 
 async function sha256(bytes) {
