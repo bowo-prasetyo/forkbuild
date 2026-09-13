@@ -2788,23 +2788,31 @@ html, body {
 
 /* 0.9.377 — EditorView Post-Publish Distribution Action
    (ui/views/EditorView.js). Mirrors .recovery-banner's own full-width
-   flex-row banner shape immediately above, with the green "success"
-   accent .cta-button/.action-btn--primary already use rather than
-   recovery-banner's amber "attention needed" one — this bar reports
-   good news, not a problem. Previously had no rules at all, so it
-   rendered as a plain, unstyled line of text with no background or
-   spacing, easy to mistake for stray sidebar copy and easy to miss. */
+   banner shape immediately above (including its border-BOTTOM, since
+   both sit at the TOP of the view, ahead of .editor-body's viewport —
+   never after it, where a previous revision placed this and where it
+   rendered below a canvas that can fill the whole remaining height),
+   with the green "success" accent .cta-button/.action-btn--primary
+   already use rather than recovery-banner's amber "attention needed"
+   one — this bar reports good news, not a problem. The wrapper stacks
+   the action/error/detail states (mutually exclusive except the action
+   bar, which can persist alongside a result) without letting them
+   overlap. */
+.editor-post-publish-overlay {
+    display: flex;
+    flex-direction: column;
+}
+
 .editor-post-publish-action {
     display: flex;
     align-items: center;
     gap: 0.75rem;
     padding: 0.6rem 1rem;
     background: rgba(76, 175, 125, 0.12);
-    border-top: 1px solid rgba(76, 175, 125, 0.4);
+    border-bottom: 1px solid rgba(76, 175, 125, 0.4);
 }
 
 .editor-post-publish-message {
-    flex: 1;
     color: #4caf7d;
     font-size: 0.85rem;
     font-weight: 600;
@@ -2814,7 +2822,7 @@ html, body {
     margin: 0;
     padding: 0.6rem 1rem;
     background: rgba(224, 90, 90, 0.12);
-    border-top: 1px solid rgba(224, 90, 90, 0.4);
+    border-bottom: 1px solid rgba(224, 90, 90, 0.4);
     color: #e0a0a0;
     font-size: 0.85rem;
 }
@@ -2830,7 +2838,7 @@ html, body {
     margin: 0;
     padding: 0.6rem 1rem;
     background: rgba(76, 175, 125, 0.12);
-    border-top: 1px solid rgba(76, 175, 125, 0.4);
+    border-bottom: 1px solid rgba(76, 175, 125, 0.4);
     font-size: 0.82rem;
 }
 
