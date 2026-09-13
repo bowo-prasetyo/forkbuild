@@ -78,6 +78,7 @@ import { CreateBitcoinAnchorTransactionBroadcasterUseCase } from '../application
 import { CreateBaseInjectedProviderWalletAdapterUseCase } from '../application/CreateBaseInjectedProviderWalletAdapterUseCase.js';
 import { CreateBaseWalletConnectionUseCase } from '../application/CreateBaseWalletConnectionUseCase.js';
 import { CreateBaseJsonRpcClientUseCase } from '../application/CreateBaseJsonRpcClientUseCase.js';
+import { CreateBaseAnchorProofVerifierUseCase } from '../application/CreateBaseAnchorProofVerifierUseCase.js';
 import { CreateBaseNetworkObserverUseCase } from '../application/CreateBaseNetworkObserverUseCase.js';
 import { CreateBasePublicationTransactionPlannerUseCase } from '../application/CreateBasePublicationTransactionPlannerUseCase.js';
 import { CreateBasePublicationTransactionPlanCoordinatorUseCase } from '../application/CreateBasePublicationTransactionPlanCoordinatorUseCase.js';
@@ -2193,6 +2194,27 @@ const { arweaveProofVerifier } = new CreateArweaveAnchorProofVerifierUseCase().e
     gatewayUrl: resolvedArweaveGatewayUrl
 });
 externalAnchorProofVerifierRegistry.register(arweaveProofVerifier);
+
+// 0.9.465 — Wire Base Proof Verification into the Production Composition
+// Root. tests/BaseProofVerificationIntegrationBoundaryAudit.test.js
+// (0.9.464) found anchoring/BaseProofVerifier.js and application/
+// CreateBaseAnchorProofVerifierUseCase.js (0.9.463) mechanically sound but
+// absent from this file — `CreateBaseAnchorProofVerifierUseCase` was never
+// imported, constructed, or registered here, unlike its Bitcoin/Arweave
+// siblings immediately above. This is that one missing registration, and
+// nothing else: mirrors `bitcoinProofVerifier`'s own bare
+// `new Create...UseCase().execute()` call (no args) rather than
+// `arweaveProofVerifier`'s configured one, because — exactly like Bitcoin's
+// own proof verifier — there is no separately-resolved Base RPC config
+// value anywhere in this file to thread through; omitting `rpcUrl`/
+// `fetchImpl` gets the identical default production endpoint `baseJsonRpcClient`
+// above already resolves to. `baseProofVerifier` is a SEPARATE
+// BaseJsonRpcClient instance from `baseJsonRpcClient` above — never wired
+// to share one — the same "own dedicated client" split this file's
+// existing `bitcoinProofVerifier` already holds apart from
+// `bitcoinEsploraTransactionConfirmationObserver`'s own client.
+const { baseProofVerifier } = new CreateBaseAnchorProofVerifierUseCase().execute();
+externalAnchorProofVerifierRegistry.register(baseProofVerifier);
 
 const { arweaveAnchorEvidenceView } = new CreateArweaveAnchorEvidenceViewUseCase().execute();
 externalAnchorEvidenceViewRegistry.register(arweaveAnchorEvidenceView);
