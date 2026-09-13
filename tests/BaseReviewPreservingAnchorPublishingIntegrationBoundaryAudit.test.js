@@ -292,14 +292,26 @@ async function run() {
         assert(/const \{ baseSignedTransactionFinalizer \} = new CreateBaseSignedTransactionFinalizerUseCase\(\)\.execute\(\)/.test(mainSrc),
             n('B4. ui/main.js already constructs a real baseSignedTransactionFinalizer — the exact class BaseAnchorPublisher itself composes, unchanged'));
 
-        // B5-B7: and yet BaseAnchorPublisher itself — built one milestone
-        // ago specifically to compose these four collaborators — is named
-        // nowhere in this file.
-        assert(!/BaseAnchorPublisher/.test(await source('ui/main.js')), n('B5. ui/main.js never imports anchoring/BaseAnchorPublisher.js'));
-        assert(!/CreateBaseAnchorPublisherUseCase/.test(await source('ui/main.js')), n('B6. ui/main.js never imports application/CreateBaseAnchorPublisherUseCase.js'));
-        assert(!/baseAnchorPublisher/i.test(await source('ui/main.js')), n('B7. ui/main.js names no baseAnchorPublisher of any kind — not a naming mismatch, a genuine absence'));
+        // B5-B7: AMENDED BY 0.9.472 — Expose Review-Preserving Base Anchor
+        // Action. At the time this audit was written, BaseAnchorPublisher
+        // itself — built one milestone before this audit specifically to
+        // compose these four collaborators — was named nowhere in this
+        // file. 0.9.472 closed exactly that gap, the one this audit's own
+        // Section H/L recommended as the next milestone: ui/main.js now
+        // constructs a real baseAnchorPublisher from the SAME
+        // baseTransactionBroadcaster (B3, above) and a createPublicationAnchorUseCase
+        // captured from the existing Bitcoin/Arweave orchestrator call —
+        // see tests/BaseAnchorPublishingUIApplicationIntegrationBoundaryAudit
+        // .test.js's own Section A for the full, dedicated verification of
+        // that wiring. These three assertions are inverted from their
+        // original form to reflect that the gap they once proved is now
+        // closed, rather than deleted, so this file's own historical
+        // narrative stays intact and checkable.
+        assert(/BaseAnchorPublisher/.test(await source('ui/main.js')), n('B5. AMENDED BY 0.9.472 — ui/main.js now imports anchoring/BaseAnchorPublisher.js (transitively, via CreateBaseAnchorPublisherUseCase)'));
+        assert(/CreateBaseAnchorPublisherUseCase/.test(await source('ui/main.js')), n('B6. AMENDED BY 0.9.472 — ui/main.js now imports application/CreateBaseAnchorPublisherUseCase.js'));
+        assert(/baseAnchorPublisher/i.test(await source('ui/main.js')), n('B7. AMENDED BY 0.9.472 — ui/main.js now names a real baseAnchorPublisher, constructed and provided to the app'));
 
-        console.log('✓ Section B: every non-network collaborator BaseAnchorPublisher composes is already a real, live production instance in ui/main.js — but BaseAnchorPublisher itself is never constructed there. The bridge exists in isolation from the pipeline it was built to bridge.');
+        console.log('✓ Section B: every non-network collaborator BaseAnchorPublisher composes is a real, live production instance in ui/main.js. AMENDED BY 0.9.472 — BaseAnchorPublisher itself is now also constructed there, from those same collaborators; the bridge no longer exists in isolation from the pipeline it was built to bridge.');
     }
 
     // ===============================================================
@@ -480,12 +492,14 @@ async function run() {
         const viewSrc = await source('ui/views/DecentralizedPublicationsView.js');
         const viewCodeOnly = codeOnly(viewSrc);
 
-        // H1-H2: confirmed again here (independently of Section B, which
-        // read ui/main.js for construction of the PIPELINE collaborators)
-        // that BaseAnchorPublisher is absent from the file that would need
-        // to construct it to expose any UI affordance at all.
-        assert(!/BaseAnchorPublisher/.test(mainSrc), n('H1. ui/main.js contains no reference to BaseAnchorPublisher of any kind'));
-        assert(!/baseAnchorPublisher/i.test(mainSrc), n('H2. and no lowercase baseAnchorPublisher variable either — this is not a class that exists unwired under a different local name'));
+        // H1-H2: AMENDED BY 0.9.472 — Expose Review-Preserving Base Anchor
+        // Action. At the time this audit was written, BaseAnchorPublisher
+        // was absent from the file that would need to construct it to
+        // expose any UI affordance at all. 0.9.472 closed that gap; see
+        // tests/BaseAnchorPublishingUIApplicationIntegrationBoundaryAudit
+        // .test.js's own Section A for the dedicated verification.
+        assert(/BaseAnchorPublisher/.test(mainSrc), n('H1. AMENDED BY 0.9.472 — ui/main.js now references BaseAnchorPublisher (transitively, via CreateBaseAnchorPublisherUseCase)'));
+        assert(/baseAnchorPublisher/i.test(mainSrc), n('H2. AMENDED BY 0.9.472 — a real, lowercase baseAnchorPublisher variable now exists, constructed and provided to the app'));
 
         // H3-H4: the generic "Create <type> Anchor" surface — the ONLY
         // production UI affordance that ever calls anything shaped like
@@ -506,24 +520,44 @@ async function run() {
         // `baseTransactionInclusionView`/inclusion-observation history and
         // goes no further.
         assert(/entry\.baseTransactionBroadcastOutcome/.test(viewCodeOnly), n('H5. the reviewed Base Publication Transaction UI\'s own broadcast outcome (entry.baseTransactionBroadcastOutcome, carrying its own txid) is real, live application state'));
-        assert(!/createAnchor\([^)]*baseTransactionBroadcastOutcome/.test(viewCodeOnly), n('H6. that broadcast outcome is never passed into createAnchor(), or into any call adjacent to it — no code path connects the two'));
-        assert(!/BaseAnchorPublisher|baseAnchorPublisher/i.test(viewSrc), n('H7. ui/views/DecentralizedPublicationsView.js itself never references BaseAnchorPublisher in any form — the reviewed pipeline\'s own view layer has no seam into it either'));
+        assert(!/createAnchor\([^)]*baseTransactionBroadcastOutcome/.test(viewCodeOnly), n('H6. that broadcast outcome specifically is still never passed into the GENERIC createAnchor(), or into any call adjacent to it — the granular pipeline and the generic Bitcoin/Arweave surface remain exactly as disconnected from each other as this audit originally found'));
+        // H6b: AMENDED BY 0.9.472 — Expose Review-Preserving Base Anchor
+        // Action. A DIFFERENT, NEW connection now exists: not from the
+        // granular pipeline's own broadcast outcome, but directly from the
+        // review card itself (the plan/reviewedTransaction the granular
+        // pipeline also reviews from) into a dedicated createBaseAnchor()
+        // action — see tests/BaseAnchorPublishingUIApplicationIntegrationBoundaryAudit
+        // .test.js's own Sections B-C for the dedicated verification that
+        // this connection is real and review-preserving.
+        assert(/async function createBaseAnchor\(entry\)/.test(viewCodeOnly), n('H6b. AMENDED BY 0.9.472 — a NEW, dedicated createBaseAnchor(entry) action now connects the review card to anchor creation, without ever routing through entry.baseTransactionBroadcastOutcome or the generic createAnchor()'));
+        // H7: AMENDED BY 0.9.472 — at the time this audit was written, this
+        // view never referenced BaseAnchorPublisher in any form. 0.9.472
+        // closed that gap directly.
+        assert(/baseAnchorPublisher/i.test(viewSrc), n('H7. AMENDED BY 0.9.472 — ui/views/DecentralizedPublicationsView.js now injects baseAnchorPublisher and defines a real action against it'));
 
-        // H8: no other production file constructs one — confirmed by a
-        // full-repository search scoped to production directories (never
-        // this milestone's own new test), so this finding rests on more
-        // than ui/main.js and the one view file read above.
+        // H8: AMENDED BY 0.9.472 — ui/main.js and ui/views/
+        // DecentralizedPublicationsView.js now also reference the class,
+        // by design: 0.9.472's own header names these as its two, and only
+        // two, intended integration seams. Anything beyond these four
+        // files would still be a scope violation this section continues
+        // to catch.
         const grepOutput = execSync(
             "grep -rl 'BaseAnchorPublisher' --include='*.js' anchoring application ui base core identity persistence storage 2>/dev/null || true",
             { cwd: SOURCE_ROOT }
         ).toString().trim();
         const filesReferencingIt = grepOutput ? grepOutput.split('\n') : [];
+        const EXPECTED_REFERENCING_FILES = new Set([
+            'anchoring/BaseAnchorPublisher.js',
+            'application/CreateBaseAnchorPublisherUseCase.js',
+            'ui/main.js',
+            'ui/views/DecentralizedPublicationsView.js'
+        ]);
         assert(
-            filesReferencingIt.every((f) => f === 'anchoring/BaseAnchorPublisher.js' || f === 'application/CreateBaseAnchorPublisherUseCase.js'),
-            n(`H8. across every production directory, only anchoring/BaseAnchorPublisher.js and application/CreateBaseAnchorPublisherUseCase.js themselves reference the class — no composition root, view, or other production file constructs or imports it (found: ${JSON.stringify(filesReferencingIt)})`)
+            filesReferencingIt.every((f) => EXPECTED_REFERENCING_FILES.has(f)),
+            n(`H8. AMENDED BY 0.9.472 — across every production directory, only the two originally-defining files plus 0.9.472's own two integration seams reference the class — no OTHER composition root, view, or production file constructs or imports it (found: ${JSON.stringify(filesReferencingIt)})`)
         );
 
-        console.log('✓ Section H (DECISIVE): BaseAnchorPublisher is real, review-preserving, proof-compatible, and composition-compatible with entirely real collaborators (Sections A-G) — but it is invoked from NO production entry point. The generic anchor UI cannot reach it even in principle (it never supplies a plan/reviewedTransaction/wallet), and the one UI surface that DOES produce a reviewed, broadcast Base transaction never hands its outcome to anything anchor-related. This is a genuine, confirmed integration gap — not a hypothesis.');
+        console.log('✓ Section H: BaseAnchorPublisher is real, review-preserving, proof-compatible, and composition-compatible with entirely real collaborators (Sections A-G). AMENDED BY 0.9.472 — it is now invoked from exactly the two production entry points that milestone added (ui/main.js\'s own composition, and a dedicated createBaseAnchor() action in the view); the generic anchor UI still cannot reach it (H3/H4/H6 unchanged), by design.');
     }
 
     // ===============================================================
@@ -629,6 +663,11 @@ async function run() {
         console.log('already-live, already-reviewed Base Publication Transaction flow its own explicit "Create Base Anchor" action —');
         console.log('calling BaseAnchorPublisher.publish() with the plan/reviewedTransaction/wallet that flow already produces — never a');
         console.log('change to anchoring/BaseAnchorPublisher.js itself, and never registration into the generic registry.');
+        console.log('\nAMENDED BY 0.9.472 — Expose Review-Preserving Base Anchor Action: that recommended milestone has since been built,');
+        console.log('exactly as scoped above (ui/main.js composition + one createBaseAnchor() view action, no change to');
+        console.log('anchoring/BaseAnchorPublisher.js or the generic registry). See tests/');
+        console.log('BaseAnchorPublishingUIApplicationIntegrationBoundaryAudit.test.js for the dedicated verification, and this file\'s own');
+        console.log('amended Sections B/H above for the specific findings that changed.');
         console.log(`\nAll ${assertionCount} assertions passed.`);
     }
 

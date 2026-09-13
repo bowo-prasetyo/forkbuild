@@ -1239,6 +1239,14 @@ export default {
         // "broadcast ≠ inclusion; inclusion is an independently observed
         // fact" boundary — see that file's own header.
         const baseTransactionInclusionObservationCoordinator = inject('baseTransactionInclusionObservationCoordinator', null);
+        // 0.9.472 — Expose Review-Preserving Base Anchor Action. Optional —
+        // absent, the "Create Base Anchor" action simply never renders, the
+        // identical degrade-gracefully posture every optional section on
+        // this page already holds. `baseAnchorPublisher` is
+        // anchoring/BaseAnchorPublisher.js's own review-preserving bridge —
+        // never a second, ad hoc sign/finalize/broadcast sequence built
+        // here in the UI layer.
+        const baseAnchorPublisher = inject('baseAnchorPublisher', null);
         // 0.8.59/0.8.62 — Explicit Bitcoin Anchor Transaction Review &
         // Signing UI. `bitcoinAnchorTransactionReview` is now this page's
         // OWN reactive holder (declared below, alongside
@@ -4435,6 +4443,93 @@ export default {
             return describeBasePublicationTransactionReview(entry.basePublicationTransactionConstruction.construction.plan);
         }
 
+        // 0.9.472 — Expose Review-Preserving Base Anchor Action.
+        //
+        // tests/BaseReviewPreservingAnchorPublishingIntegrationBoundaryAudit
+        // .test.js (0.9.471) found anchoring/BaseAnchorPublisher.js (0.9.470)
+        // real, review-preserving, and proof-round-trip-complete, but
+        // reachable from no production entry point — this is that one
+        // missing UI action, and nothing more.
+        //
+        // A DELIBERATE ALTERNATIVE TO THE GRANULAR PIPELINE BELOW, NEVER A
+        // REPLACEMENT FOR IT. `signBaseReviewedTransaction()`/
+        // `finalizeBaseSignedTransaction()`/`broadcastBaseTransaction()`
+        // remain fully usable exactly as before. This function hands
+        // `baseAnchorPublisher.publish()` the EXACT `plan` and the EXACT
+        // `reviewedTransaction` the review card above already rendered on
+        // screen — never a bare contentHash, and never a review this
+        // function reconstructs itself — and lets that one class perform
+        // signing, finalization, and broadcast internally, then catalog a
+        // real core/PublicationAnchor.js the same way "Create Bitcoin/
+        // Arweave Anchor" already does. See anchoring/BaseAnchorPublisher
+        // .js's own header on why this is the only honest way to expose it.
+        //
+        // REUSES application/PublicationAnchorCreationView.js's OWN
+        // describeCreationAttempt()/describeCreationButtonLabel() — never a
+        // second, competing outcome vocabulary. `published`/`unavailable`
+        // from BaseAnchorPublisher's own result maps onto exactly the same
+        // CREATED/PUBLISH_REJECTED/PUBLISH_UNAVAILABLE states application/
+        // ExternalAnchorCreationOutcome.js already names for Bitcoin/
+        // Arweave.
+        async function createBaseAnchor(entry) {
+            if (!baseAnchorPublisher) return;
+            const review = basePublicationTransactionReviewView(entry);
+            if (!review || entry.basePublicationTransactionConstruction.state !== BasePublicationTransactionPlanState.CONSTRUCTED) return;
+            const plan = entry.basePublicationTransactionConstruction.construction.plan;
+
+            entry.baseAnchorCreationAttempt = { creating: true, outcome: null, anchor: null, reason: null, error: null };
+            try {
+                const result = await baseAnchorPublisher.publish(entry.publication.id, {
+                    contentHash: entry.publication.contentReference.hash,
+                    wallet: baseInjectedProviderWalletTransactionSigner,
+                    plan,
+                    reviewedTransaction: review,
+                    archive: publicationObservationArchive.value
+                });
+
+                if (result.published) {
+                    // Mirrors `archiveBaseAnchorPublicationRecord()`'s own
+                    // "append, never mutate" discipline — `result.archive`
+                    // is a NEW PublicationObservationArchive already
+                    // holding the fresh BaseAnchorPublicationRecord.
+                    publicationObservationArchive.value = result.archive;
+                    persistPublicationObservationArchive();
+                    entry.baseAnchorCreationAttempt = {
+                        creating: false, outcome: ExternalAnchorCreationOutcome.CREATED, anchor: result.anchor, reason: null, error: null
+                    };
+                    // Re-discover from the catalog so the newly created
+                    // anchor immediately appears in the ordinary evidence
+                    // list below — mirrors `createAnchor()`'s own identical
+                    // call.
+                    loadEvidence(entry);
+                    entry.evidenceExpanded = true;
+                } else {
+                    const outcome = result.unavailable ? ExternalAnchorCreationOutcome.PUBLISH_UNAVAILABLE : ExternalAnchorCreationOutcome.PUBLISH_REJECTED;
+                    entry.baseAnchorCreationAttempt = { creating: false, outcome, anchor: null, reason: result.reason, error: null };
+                }
+            } catch (error) {
+                // A caller-contract violation (e.g. the plan has drifted
+                // from what was reviewed) never reached a wallet or the
+                // network at all — mirrors `createAnchor()`'s own identical
+                // treatment of a thrown error.
+                entry.baseAnchorCreationAttempt = { creating: false, outcome: null, anchor: null, reason: null, error: error.message };
+            }
+        }
+
+        function baseAnchorCreationView(entry) {
+            return describeCreationAttempt(entry.baseAnchorCreationAttempt);
+        }
+
+        function baseAnchorCreationBadgeClass(entry) {
+            return CREATION_BADGE_CLASSES[baseAnchorCreationView(entry).state] || null;
+        }
+
+        function baseAnchorCreationButtonLabel(entry) {
+            const view = baseAnchorCreationView(entry);
+            const hasExisting = entry.evidenceAnchors.some((anchor) => anchor.anchorType === 'base');
+            return describeCreationButtonLabel('Base', { creating: view.state === ExternalAnchorCreationUiState.CREATING, hasExisting });
+        }
+
         // 0.8.93 — Explicit Base Reviewed Transaction Signing.
         //
         // THE ONE EXPLICIT ACTION THIS WHOLE REVIEW EXISTS TO GATE — nothing
@@ -6881,6 +6976,8 @@ export default {
             basePublicationTransactionPlanView, basePublicationTransactionPlanBadgeClass,
             BasePublicationTransactionPlanState,
             basePublicationTransactionReviewView,
+            baseAnchorPublisher, createBaseAnchor,
+            baseAnchorCreationView, baseAnchorCreationBadgeClass, baseAnchorCreationButtonLabel,
             baseReviewedSigningCoordinator, signBaseReviewedTransaction,
             baseReviewedTransactionSigningView, baseReviewedTransactionSigningBadgeClass, isBaseReviewedTransactionSigning,
             BaseReviewedSigningState,
@@ -9973,6 +10070,42 @@ export default {
                                     <dl class="evidence-fields">
                                         <div class="evidence-field"><dd>{{ basePublicationTransactionReviewView(entry).transactionData }}</dd></div>
                                     </dl>
+                                </div>
+
+                                <!-- 0.9.472 — Expose Review-Preserving Base
+                                     Anchor Action. A deliberate ALTERNATIVE
+                                     to the step-by-step Sign/Verify &amp;
+                                     Finalize/Broadcast pipeline below, never
+                                     a replacement for it — both remain fully
+                                     usable independently. One click hands
+                                     the exact plan and review shown above to
+                                     anchoring/BaseAnchorPublisher.js, which
+                                     signs, finalizes, and broadcasts it,
+                                     then catalogs a real anchor for this
+                                     publication. Absent baseAnchorPublisher,
+                                     this section simply never renders. -->
+                                <div v-if="baseAnchorPublisher" class="evidence-inspection-adapter">
+                                    <span class="evidence-inspection-adapter-title">Create Base Anchor</span>
+                                    <p class="form-hint form-hint--neutral">
+                                        Signs, finalizes, and broadcasts the exact transaction reviewed above in one
+                                        step, then records a Base anchor for this publication — an alternative to
+                                        signing it step by step below.
+                                    </p>
+                                    <button type="button" class="peer-action-btn"
+                                        :disabled="baseAnchorCreationView(entry).state === 'creating'"
+                                        @click="createBaseAnchor(entry)">
+                                        {{ baseAnchorCreationButtonLabel(entry) }}
+                                    </button>
+                                    <span v-if="baseAnchorCreationView(entry).label" class="peer-badge"
+                                        :class="baseAnchorCreationBadgeClass(entry)">
+                                        {{ baseAnchorCreationView(entry).label }}
+                                    </span>
+                                    <p v-if="baseAnchorCreationView(entry).message" class="form-hint form-hint--neutral">
+                                        {{ baseAnchorCreationView(entry).message }}
+                                    </p>
+                                    <p v-if="baseAnchorCreationView(entry).reason" class="form-hint form-hint--neutral">
+                                        {{ baseAnchorCreationView(entry).reason }}
+                                    </p>
                                 </div>
 
                                 <!-- 0.8.93 — Explicit Base Reviewed
