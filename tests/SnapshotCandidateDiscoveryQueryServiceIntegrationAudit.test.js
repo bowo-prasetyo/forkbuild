@@ -372,15 +372,22 @@ async function run() {
         assert(result.length === 1 && result[0].contentHash === 'hash-k',
             '3. the composite service works through the existing, unmodified executeDiscoverSnapshotCandidatesCommand() boundary with no monitor anywhere in the picture.');
 
-        // The pre-existing walking wiring is confirmed UNCHANGED by this
-        // milestone: ui/main.js's own discoverSnapshotCandidatesCommand
-        // still calls the single Nostr queryService alone, not the new
-        // composite — wiring the composite in is 0.9.486's own job.
+        // UPDATED BY 0.9.486. As of THIS milestone (0.9.485),
+        // ui/main.js's own discoverSnapshotCandidatesCommand still called
+        // the single Nostr queryService alone, not the new composite —
+        // wiring the composite in was named, explicitly, as 0.9.486's own
+        // next job. 0.9.486 has since done exactly that job: threaded this
+        // milestone's own already-composed `snapshotCandidateDiscoveryQueryService`
+        // into `discoverSnapshotCandidatesCommand`, with the monitor itself
+        // left unmodified — see tests/WalkingTriggeredSnapshotCandidateDiscoveryIntegrationAudit.test.js
+        // for 0.9.486's own full audit of that wiring. This assertion is
+        // updated in place, rather than left to fail forever, to confirm
+        // the wiring 0.9.485 deferred has genuinely landed.
         const mainSource = readSource('ui/main.js');
-        assert(/const discoverSnapshotCandidatesCommand = \(\) => executeDiscoverSnapshotCandidatesCommand\(\{\s*\n\s*discoveryTag: 'forkbuild-snapshot',\s*\n\s*discoveryQueryService: snapshotDiscoveryQueryService/.test(mainSource),
-            '4. ui/main.js\'s own pre-existing discoverSnapshotCandidatesCommand still calls snapshotDiscoveryQueryService (Nostr) alone, unchanged — this milestone provides the new composite alongside it, without threading it into walking discovery yet.');
+        assert(/const discoverSnapshotCandidatesCommand = \(\) => executeDiscoverSnapshotCandidatesCommand\(\{\s*\n\s*discoveryTag: 'forkbuild-snapshot',\s*\n\s*discoveryQueryService: snapshotCandidateDiscoveryQueryService/.test(mainSource),
+            '4. ui/main.js\'s own discoverSnapshotCandidatesCommand now calls snapshotCandidateDiscoveryQueryService (the Local+Nostr composite this milestone built) — wired in by 0.9.486, as this milestone\'s own header already named.');
 
-        console.log('✓ Section K: the composite service carries no walking-trigger concept of any kind, works standalone through the existing command boundary with no monitor present, and this milestone leaves the walking-triggered monitor\'s own existing wiring completely unchanged.');
+        console.log('✓ Section K: the composite service carries no walking-trigger concept of any kind, works standalone through the existing command boundary with no monitor present, and (updated by 0.9.486) is now the one collaborator the walking-triggered monitor\'s own command reaches through.');
     }
 
     // ===============================================================

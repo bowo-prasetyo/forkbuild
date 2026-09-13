@@ -2509,71 +2509,78 @@ const discoverSnapshotCommand = (contentHash) => executeDiscoverSnapshotCommand(
 });
 app.provide('discoverSnapshotCommand', discoverSnapshotCommand);
 
-// 0.9.151 — World View Snapshot Candidate Browser.
+// 0.9.485 — Walking-Triggered Snapshot Candidate Query Service.
 //
-// `application/DiscoverSnapshotCandidatesCommand.js` (0.9.150) answers a
-// different question than `discoverSnapshotCommand` above — "what has
-// been announced under this discoveryTag, at all?" rather than "can THIS
-// ONE contentHash be resolved?" — and needs the query service ITSELF,
-// never the `resolver` that wraps it. `snapshotDiscoveryQueryService` is
-// the SAME `NostrSnapshotDiscoveryQueryService` instance
-// `composeDiscoverSnapshotRuntime()` immediately above already built
-// (0.9.151's own change to that file exposes it) and already handed to
-// `snapshotResolver` — never a second query service, never a second
-// composition call, and never a second Nostr relay client. `discoveryTag:
+// Composes the Local+Nostr candidate query service
+// (application/SnapshotCandidateDiscoveryQueryService.js, application/
+// LocalSnapshotCandidateDiscoveryQueryService.js, and this composition's
+// own application/SnapshotCandidateDiscoveryRuntimeComposition.js) from
+// collaborators this file already built: `snapshotDiscoveryQueryService`
+// (the SAME NostrSnapshotDiscoveryQueryService instance
+// `composeDiscoverSnapshotRuntime()` immediately above already built —
+// never a second Nostr construction) and `publicationSnapshotPlacementCatalog`
+// (the SAME single LocalPublicationSnapshotPlacementCatalog instance this
+// replica uses anywhere — never a second catalog; see that constant's own
+// 0.8.19 header, above).
+//
+// Composed here, BEFORE `discoverSnapshotCandidatesCommand` immediately
+// below, so that command's own single collaborator can be this composite
+// service rather than the Nostr-only one it used before 0.9.486 — see
+// that milestone's own header on `discoverSnapshotCandidatesCommand`.
+const { queryService: snapshotCandidateDiscoveryQueryService } = composeSnapshotCandidateDiscoveryRuntime({
+    nostrSnapshotDiscoveryQueryService: snapshotDiscoveryQueryService,
+    placementCatalog: publicationSnapshotPlacementCatalog
+});
+app.provide('snapshotCandidateDiscoveryQueryService', snapshotCandidateDiscoveryQueryService);
+
+// 0.9.151 — World View Snapshot Candidate Browser.
+// 0.9.486 — Wire Snapshot Candidate Discovery Query Service into
+// Walking-Triggered Discovery.
+//
+// `application/DiscoverSnapshotCandidatesCommand.js` (0.9.150, UNMODIFIED —
+// this milestone redesigns no command) answers a different question than
+// `discoverSnapshotCommand` above — "what has been announced under this
+// discoveryTag, at all?" rather than "can THIS ONE contentHash be
+// resolved?" — and needs a query service exposing `search(discoveryTag)`,
+// never the `resolver` that wraps one. Before 0.9.486, that collaborator
+// was `snapshotDiscoveryQueryService` (Nostr alone); this milestone's only
+// change is swapping it for `snapshotCandidateDiscoveryQueryService`
+// (immediately above — the SAME Local+Nostr composite instance
+// `app.provide('snapshotCandidateDiscoveryQueryService', ...)` already
+// exposed since 0.9.485, never a second composition call), so that Local
+// catalog entries — including whatever Peer's own passive ANNOUNCE path
+// (application/PublicationSnapshotPlacementPeerExchange.js, production
+// since 0.9.483) has already added to that catalog — and Nostr
+// announcements both reach every caller of this command, walking-triggered
+// discovery included, through the ONE composite. `discoveryTag:
 // 'forkbuild-snapshot'` is the SAME campaign marker `discoverSnapshotCommand`
-// already uses, immediately above — the candidate browser and
-// contentHash-targeted resolution stay two views over one campaign, never
-// two campaigns.
+// already uses, above — the candidate browser and contentHash-targeted
+// resolution stay two views over one campaign, never two campaigns.
 const discoverSnapshotCandidatesCommand = () => executeDiscoverSnapshotCandidatesCommand({
     discoveryTag: 'forkbuild-snapshot',
-    discoveryQueryService: snapshotDiscoveryQueryService
+    discoveryQueryService: snapshotCandidateDiscoveryQueryService
 });
 app.provide('discoverSnapshotCandidatesCommand', discoverSnapshotCandidatesCommand);
 
 // 0.9.186 — World Snapshot Background Discovery.
 //
 // `WorldSnapshotDiscoveryMonitor` (application/WorldSnapshotDiscoveryMonitor.js,
-// NEW) wraps the SAME `discoverSnapshotCandidatesCommand` immediately
-// above — never a second query service, never a second campaign
-// discoveryTag — so `ui/views/WorldView.js` can call `.observe(spatialContext)`
-// from its own existing refreshSpatialUI() tick instead of requiring a
-// person to click "Discover Snapshots" themselves. See that file's own
-// header for why this is an additional trigger, never a replacement: the
-// explicit command above stays wired to OwnPublicationPanel exactly as it
-// already was.
+// UNCHANGED by 0.9.486 — see that milestone's own brief, "the monitor and
+// command should not be redesigned") wraps the SAME
+// `discoverSnapshotCandidatesCommand` immediately above — never a second
+// query service, never a second campaign discoveryTag — so
+// `ui/views/WorldView.js` can call `.observe(spatialContext)` from its own
+// existing refreshSpatialUI() tick instead of requiring a person to click
+// "Discover Snapshots" themselves. This monitor owns WHEN to ask (movement
+// threshold, request-id staleness protection); it has no idea, and never
+// needs to know, that `discoverSnapshotCandidatesCommand` now answers
+// through Local+Nostr rather than Nostr alone — that swap happened
+// entirely inside the command's own one collaborator, above. See that
+// file's own header for why this is an additional trigger, never a
+// replacement: the explicit command above stays wired to
+// OwnPublicationPanel exactly as it already was.
 const worldSnapshotDiscoveryMonitor = new WorldSnapshotDiscoveryMonitor({ discoverSnapshotCandidatesCommand });
 app.provide('worldSnapshotDiscoveryMonitor', worldSnapshotDiscoveryMonitor);
-
-// 0.9.485 — Walking-Triggered Snapshot Candidate Query Service.
-//
-// Composes the Local+Nostr candidate query service this milestone builds
-// (application/SnapshotCandidateDiscoveryQueryService.js, application/
-// LocalSnapshotCandidateDiscoveryQueryService.js, and this composition's
-// own application/SnapshotCandidateDiscoveryRuntimeComposition.js) from
-// collaborators this file already built: `snapshotDiscoveryQueryService`
-// (the SAME NostrSnapshotDiscoveryQueryService instance
-// `discoverSnapshotCandidatesCommand` above already calls — never a second
-// Nostr construction) and `publicationSnapshotPlacementCatalog` (the SAME
-// single LocalPublicationSnapshotPlacementCatalog instance this replica
-// uses anywhere — never a second catalog; see that constant's own 0.8.19
-// header, above).
-//
-// PROVIDED, NOT YET WIRED IN. `discoverSnapshotCandidatesCommand` and
-// `worldSnapshotDiscoveryMonitor` immediately above are UNCHANGED by this
-// milestone — they still call `snapshotDiscoveryQueryService` alone.
-// Threading `snapshotCandidateDiscoveryQueryService` into that command (so
-// walking-triggered discovery actually converges Local+Nostr, with Peer
-// arriving passively through the Local catalog) is a separate, later,
-// unscheduled step — see this service's own header, "deliberately
-// excluded... wiring this service into
-// application/DiscoverSnapshotCandidatesCommand.js... a separate, later,
-// unscheduled step (0.9.486)."
-const { queryService: snapshotCandidateDiscoveryQueryService } = composeSnapshotCandidateDiscoveryRuntime({
-    nostrSnapshotDiscoveryQueryService: snapshotDiscoveryQueryService,
-    placementCatalog: publicationSnapshotPlacementCatalog
-});
-app.provide('snapshotCandidateDiscoveryQueryService', snapshotCandidateDiscoveryQueryService);
 
 // 0.9.257 — World View Place Naming Presentation.
 //
