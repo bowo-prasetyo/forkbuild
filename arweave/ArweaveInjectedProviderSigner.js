@@ -166,6 +166,7 @@ export function createArweaveInjectedProviderSigner({
             }
         }
 
+        const anchorFetchedAt = Date.now();
         const [lastTx, reward] = await Promise.all([
             fetchText(fetchFn, `${base}/tx_anchor`, timeoutMs, 'anchor'),
             fetchText(fetchFn, `${base}/price/${dataBytes.length}`, timeoutMs, 'price')
@@ -256,6 +257,21 @@ export function createArweaveInjectedProviderSigner({
         // that keeps that opaque value limited to fields the network
         // actually expects.
         const { chunks: _chunks, ...transaction } = signed;
+
+        // Diagnostic only — an anchor (last_tx) or reward fetched before a
+        // wallet's own signing popup is approved can go stale by the time
+        // the transaction actually reaches the network: real Arweave nodes
+        // only accept a `last_tx` naming one of a recent range of blocks,
+        // and `reward` must still meet the CURRENT price at submission
+        // time. Both would surface as the SAME generic "Transaction
+        // verification failed" this file has already ruled every field-
+        // encoding cause out for. This has no fix on this file's own side
+        // (there is no way to sign AFTER knowing the exact submission
+        // time) — it only makes a staleness explanation visible instead of
+        // invisible.
+        console.error('ArweaveInjectedProviderSigner: time elapsed between fetching last_tx/reward and sign() resolving', {
+            elapsedMs: Date.now() - anchorFetchedAt
+        });
 
         // AMENDED — live-confirmed: a real wallet's sign() resolved with
         // `data` as a raw Uint8Array rather than the base64url string this
