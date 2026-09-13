@@ -309,6 +309,22 @@ export class ArweavePublicationMaterialUploader {
             throw new Error('ArweavePublicationMaterialUploader: signer resolved with no transaction to upload');
         }
 
+        const body = JSON.stringify(signed.transaction);
+        // Diagnostic only, same restraint as the !response.ok branch below
+        // — never a decision input. A "some wallet returns already-decoded
+        // (Uint8Array) fields rather than the base64url strings this
+        // object was built with" gap would make `body` either enormous
+        // (a Uint8Array serializes as a huge {"0":.., "1":..} object) or
+        // shaped nothing like a real Arweave transaction — both invisible
+        // without seeing the field types and the body's own actual size.
+        console.error('ArweavePublicationMaterialUploader: about to POST', {
+            bodyLength: body.length,
+            fieldTypes: Object.fromEntries(Object.entries(signed.transaction).map(([key, value]) => [
+                key,
+                Array.isArray(value) ? `array(${value.length})` : (value && value.constructor ? value.constructor.name : typeof value)
+            ]))
+        });
+
         const controller = new AbortController();
         const timer = setTimeout(() => controller.abort(), this._timeoutMs);
         let response;
@@ -316,7 +332,7 @@ export class ArweavePublicationMaterialUploader {
             response = await this._fetch(`${this._gatewayUrl}/tx`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(signed.transaction),
+                body,
                 signal: controller.signal
             });
         } finally {
