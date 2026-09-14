@@ -113,6 +113,26 @@ import { DecentralizedWorldEncounterLeadResolutionStatus } from '../application/
 // itself to. GAP 2 (Section E, the flagship) is completely untouched by
 // 0.9.492 and remains exactly as open as this file originally found it.
 //
+// AMENDED BY 0.9.494 — GAP 2 IS NOW CLOSED. `tests/
+// ArweaveDiscoveryUriIdentityBoundaryAudit.test.js` (0.9.493) named the exact
+// invariant Gap 2 violated and proved a fix live via a throwaway prototype;
+// `application/ArweaveGraphqlDiscoveryQueryService.js` (0.9.494) moved that
+// fix into production. `search()` now performs one additional raw gateway
+// fetch per discovered transaction — the same `GET <gatewayUrl>/<id>`
+// primitive `application/ArweaveWorldEncounterMaterialResolver.js` already
+// shipped — decodes each transaction's own signed publication envelope via
+// the existing, unmodified `core/DecentralizedDiscoveryEnvelope.js`, and
+// reports THAT envelope's own claimed `uri` as `candidate.uri`, with the
+// announcement transaction id preserved separately as
+// `candidate.announcementId`. Section E below is updated in place to
+// re-verify the now-CONVERGING round trip against current source, exactly
+// the "test CURRENT source, never cite prior prose" method this whole
+// family already holds itself to; the final VERDICT in Section I is updated
+// the same way. Nothing else in this file changes — Sections C/D/F/G/H's
+// own findings (tag fidelity, transaction identity, discovery-query
+// reachability, failure isolation, Nostr coexistence, role separation) were
+// already correct and remain so.
+//
 // LETTERED SECTIONS:
 //   A. Production composition — is the adapter constructed/reachable from
 //      ui/main.js? (No — Gap 1.)
@@ -477,21 +497,19 @@ async function run() {
         check(services.arweave !== null && services.nostr === null,
             'D3. with only arweaveFetchImpl supplied (exactly production\'s own shape with no host Nostr transport configured), the discovery services shape matches: Arweave always present, Nostr gracefully absent');
         const candidates = await services.arweave.search('campaign-d');
-        check(candidates.length === 1 && candidates[0].uri === `ar://${published.id}`,
-            'D4. the real discovery-services composition genuinely finds the real transaction Section C\'s real adapter announced — DISCOVERY_QUERY_MECHANISM is production-ready today');
+        check(candidates.length === 1 && candidates[0].announcementId === published.id && candidates[0].uri === 'ar://TX-MATERIAL',
+            'D4. the real discovery-services composition genuinely finds the real transaction Section C\'s real adapter announced, decodes its own envelope (0.9.494), and reports the announced material\'s own uri with the announcement transaction id preserved alongside it — DISCOVERY_QUERY_MECHANISM is production-ready today');
 
         console.log('✓ Section D: the discovery/read half of this loop is genuinely, unconditionally wired into production (ui/main.js) and genuinely finds a real announced transaction — a sharp asymmetry with Section A\'s write/announce half.');
     }
 
     // ===============================================================
     // Section E — FLAGSHIP: full round-trip convergence, attempted end
-    // to end through real, unmodified production classes. This is where
-    // GAP 2 (see this file's own header) surfaces: discovery genuinely
-    // finds the real announced transaction, but resolution against a
-    // real Publication does NOT converge, because the reported candidate
-    // uri is the ANNOUNCEMENT transaction's own id, never the uri its
-    // envelope actually claims. The section then pins down the exact
-    // mechanism and its downstream consequence, live.
+    // to end through real, unmodified (as of 0.9.494, envelope-aware)
+    // production classes. GAP 2 (see this file's own header) is now
+    // CLOSED here: discovery finds the real announced transaction AND
+    // reports the announced material's own claimed uri, so resolution
+    // against a real Publication converges all the way to VERIFIED.
     // ===============================================================
     {
         const storage = new InMemoryStorageProvider();
@@ -537,45 +555,45 @@ async function run() {
             publications: [publication]
         });
 
-        check(result.discovery.arweave.length === 1 && result.discovery.arweave[0].uri === `ar://${announced.id}`,
-            'E2. DISCOVER/CANDIDATE — the real discovery composition reports exactly the transaction Section E1 actually announced, never a pre-seeded stand-in. But look at the uri it reports: it is `ar://${announced.id}` — the ANNOUNCEMENT transaction\'s own id — never `ar://TX-MATERIAL`, the uri the announced envelope itself actually claims');
-        check(result.resolution.status === DecentralizedWorldEncounterLeadResolutionStatus.UNAVAILABLE,
-            'E3. SELECT/RESOLVE — GAP 2, LIVE: even though a real candidate was genuinely discovered (E2), resolution against this replica\'s own real, signed Publication (contentReference.uri = "ar://TX-MATERIAL", a genuinely different transaction from the announcement) reports UNAVAILABLE, never RESOLVED — the exact-string-equality association match (application/DecentralizedWorldEncounterLeadAssociationEvidenceIngress.js) never fires, because the candidate uri and the Publication\'s own claimed uri are never the same string');
-        check(result.inspection === null,
-            'E4. ...and with nothing resolved, no material is ever loaded or verified for this real announcement — inspection stays null, honestly, never a guess');
+        // Note: `announcementId` rides on the RAW candidate `search()`
+        // returns (confirmed directly in Section D above); the LEAD shape
+        // `queryDecentralizedWorldDiscovery()` produces here only ever
+        // keeps `{ origin, discoveryTag, uri, storage }` — 0.9.493 Section D
+        // already proved describeDecentralizedWorldDiscoveryLead() silently
+        // drops any other field, so it is expected, not a regression, that
+        // it does not appear on `result.discovery.arweave[0]` itself.
+        check(result.discovery.arweave.length === 1,
+            'E2. DISCOVER/CANDIDATE — the real discovery composition reports exactly the transaction Section E1 actually announced, never a pre-seeded stand-in');
+        check(result.discovery.arweave[0].uri === 'ar://TX-MATERIAL',
+            'E2b. FIXED (0.9.494): candidate.uri is now `ar://TX-MATERIAL` — the uri the announced envelope itself actually claims — never `ar://${announced.id}`, the announcement transaction\'s own id this section used to (incorrectly) find here');
+        check(result.resolution.status === DecentralizedWorldEncounterLeadResolutionStatus.RESOLVED,
+            'E3. SELECT/RESOLVE — GAP 2, CLOSED: resolution against this replica\'s own real, signed Publication (contentReference.uri = "ar://TX-MATERIAL") now reports RESOLVED — the exact-string-equality association match (application/DecentralizedWorldEncounterLeadAssociationEvidenceIngress.js) fires, because the candidate uri and the Publication\'s own claimed uri are now the same string');
+        check(result.inspection !== null && result.inspection.loading.status === WorldEncounterMaterialLoadStatus.AVAILABLE,
+            'E4. ...and the real, unmodified ArweaveWorldEncounterMaterialResolver retrieves the real Publication material directly off that uri — loading succeeds');
+        check(result.inspection.verification.status === WorldEncounterMaterialVerificationStatus.VERIFIED,
+            'E4b. ...and verification reports VERIFIED — the full announce -> discover -> resolve -> verify chain converges end to end, through real production classes alone');
 
         const discoverySource = codeOnlyOf(await source('application/ArweaveGraphqlDiscoveryQueryService.js'));
-        check(/query \{ transactions\(tags: \[\{ name: /.test(discoverySource) && !/\bdata\b\s*[,)]|node\s*\{[^}]*\bdata\b/.test(discoverySource),
-            'E5. DIAGNOSIS, by source: the GraphQL query this service issues requests only `edges { node { id } }` — it never requests, fetches, or parses a matching transaction\'s own `data` field, so the announcement envelope\'s own claimed uri is structurally invisible to it, unlike NostrDiscoveryQueryService.js\'s own event.content parse');
+        check(/query \{ transactions\(tags: \[\{ name: /.test(discoverySource),
+            'E5. the GraphQL query this service issues still requests only `edges { node { id } }` — unchanged by 0.9.494, exactly as Section D already confirmed');
+        check(/parseDecentralizedDiscoveryEnvelope/.test(discoverySource) && /gatewayUrl/.test(discoverySource),
+            'E5b. DIAGNOSIS, by source: the fix is a SECOND, additional raw gateway fetch per candidate transaction (never a GraphQL query-shape change) — the same `GET <gatewayUrl>/<id>` primitive ArweaveWorldEncounterMaterialResolver.js already shipped, decoded via the existing, unmodified parseDecentralizedDiscoveryEnvelope() — exactly mirroring how NostrDiscoveryQueryService.js already parses event.content for exactly this reason');
 
-        // Pin down the mechanism precisely: a SECOND Publication whose own
-        // contentReference.uri is deliberately set to the announcement
-        // transaction's own id DOES resolve — proving this is exactly, and
-        // only, a uri-identity mismatch, never a defect in resolution
-        // itself. But it does not "work" either way: the material the
-        // resolver retrieves from that id is the announcement's own bare
-        // discovery envelope, not a real Publication document, so
-        // verification correctly REJECTS it rather than producing a false
-        // VERIFIED — a fabricated match would be worse than today's honest
-        // UNAVAILABLE, not a usable workaround.
-        const bob = buildRealSigner(new InMemoryStorageProvider(), 'production-integration-bob');
-        const publicationClaimingAnnouncementId = buildSignedPublication(bob, {
-            id: 'pub-production-integration-2',
-            contentReference: { hash: 'placeholder-hash', uri: `ar://${announced.id}`, storage: 'ar' }
-        });
-        const secondResult = await runtime.discoverWorldEncounterPublication({
-            objectId: publicationClaimingAnnouncementId.id,
+        // A transaction the GraphQL step finds but whose own data is not a
+        // well-formed envelope contributes NO candidate at all — 0.9.494
+        // deliberately refuses to substitute that transaction's own id as a
+        // fallback uri, the exact identity violation this milestone exists
+        // to prevent from ever recurring.
+        net.ledger.set('BadAnnounce-NoEnvelope', { data: 'not a forkbuild envelope', tags: [{ name: btoa(ArweaveAnnouncementPublisher.DEFAULT_TAG_NAME).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, ''), value: btoa(campaign).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '') }] });
+        const resultWithBadCandidate = await runtime.discoverWorldEncounterPublication({
+            objectId: publication.id,
             discoveryTag: campaign,
-            publications: [publicationClaimingAnnouncementId]
+            publications: [publication]
         });
-        check(secondResult.resolution.status === DecentralizedWorldEncounterLeadResolutionStatus.RESOLVED,
-            'E6. MECHANISM CONFIRMED: a Publication whose own contentReference.uri is deliberately set to the announcement\'s own transaction id DOES resolve RESOLVED — the mismatch is exactly, and only, uri identity, not a defect in resolution/association logic itself');
-        check(secondResult.inspection.loading.status === WorldEncounterMaterialLoadStatus.AVAILABLE,
-            'E7. ...the resolver does retrieve SOMETHING from that id (the announcement\'s own raw discovery envelope) — loading succeeds');
-        check(secondResult.inspection.verification.status === WorldEncounterMaterialVerificationStatus.REJECTED,
-            'E8. ...but verification correctly REJECTS it — a bare {protocol,version,kind,objectId,uri} discovery envelope is structurally incapable of satisfying real Publication signature verification, so even matching the ids by hand never produces a false VERIFIED, and is not a usable workaround');
+        check(resultWithBadCandidate.discovery.arweave.length === 1 && resultWithBadCandidate.discovery.arweave[0].uri === 'ar://TX-MATERIAL',
+            'E6. a second, malformed transaction sharing the same campaign tag contributes no candidate of its own, and never disturbs the one genuinely well-formed candidate already found — no id is ever substituted as a fallback uri');
 
-        console.log('✓ Section E: FLAGSHIP — the round trip does NOT converge today. Discovery genuinely finds a real announced transaction (E2), but resolution never associates it with the real Publication it announced (E3/E4), because ArweaveGraphqlDiscoveryQueryService reports an announcement transaction\'s own id where NostrDiscoveryQueryService would report the envelope\'s own claimed uri (E5). The mismatch is precise and mechanical (E6), and closing it by matching ids by hand would only relocate the failure to a correctly-REJECTED verification, never a false pass (E7/E8). This is GAP 2 — real, previously unnamed, and genuinely separate from Gap 1\'s composition-root wire.');
+        console.log('✓ Section E: FLAGSHIP — GAP 2 IS NOW CLOSED. Discovery genuinely finds a real announced transaction and decodes its own envelope (E2/E2b), resolution now associates it with the real Publication it announced (E3), and loading/verification both succeed against the real material (E4/E4b) — the full announce -> discover -> resolve -> verify chain converges, live, through real production classes alone. The fix is precisely the one additional gateway fetch Section E5/E5b diagnose, and it never substitutes a transaction id as a fallback uri for a malformed candidate (E6).');
     }
 
     // ===============================================================
@@ -737,7 +755,7 @@ async function run() {
             tagFidelity: 'READY',
             transactionIdentity: 'READY_NO_ALTERNATE_IDENTITY',
             discoveryQueryMechanism: 'PRODUCTION_WIRED_AND_LIVE',
-            roundTripConvergence: 'BLOCKED_ON_URI_IDENTITY_MISMATCH (Gap 2)',
+            roundTripConvergence: 'CONVERGES_END_TO_END (Gap 2 closed by 0.9.494)',
             failureIsolation: 'CONFIRMED_AT_COMPOSITION_BOUNDARY',
             nostrCoexistence: 'CONFIRMED_ADDITIVE_NEVER_FALLBACK',
             duplicateSemantics: 'NONE_DEFINED_NONE_NEEDED',
@@ -751,24 +769,22 @@ async function run() {
             console.log(`  ${key.padEnd(28)} ${value}`);
         }
         console.log('');
-        console.log('  The complete Arweave announcement -> discovery path is NOT production-');
-        console.log('  complete today. GAP 1 is now closed; GAP 2 remains open:');
+        console.log('  The complete Arweave announcement -> discovery path IS production-complete');
+        console.log('  today. Both gaps this audit originally found are now closed:');
         console.log('');
         console.log('  GAP 1 (small, mechanical) — CLOSED BY 0.9.492: ui/main.js now constructs the');
         console.log('  real uploadTaggedTransaction 0.9.490 shipped, so selecting "Arweave" for');
         console.log('  announcement genuinely publishes on a real click (Sections A/B, above).');
         console.log('');
-        console.log('  GAP 2 (real, previously unnamed, architectural) — STILL OPEN: even with Gap 1');
-        console.log('  now wired in production, the round trip does not converge.');
-        console.log('  ArweaveGraphqlDiscoveryQueryService reports an announcement transaction\'s');
-        console.log('  own id as its candidate uri, never the uri the announcement\'s own envelope');
-        console.log('  actually claims (unlike NostrDiscoveryQueryService, which parses');
-        console.log('  event.content for exactly this reason) — so a real Publication\'s own');
-        console.log('  contentReference.uri, a genuinely separate transaction by');
-        console.log('  ArweaveAnnouncementPublisher\'s own design, can never match, and resolution');
-        console.log('  reports UNAVAILABLE. Forcing the ids to match does not help: the material');
-        console.log('  retrieved is the announcement\'s own bare envelope, and verification');
-        console.log('  correctly REJECTS it rather than producing a false pass.');
+        console.log('  GAP 2 (real, previously unnamed, architectural) — CLOSED BY 0.9.494:');
+        console.log('  ArweaveGraphqlDiscoveryQueryService now performs one additional raw gateway');
+        console.log('  fetch per discovered transaction, decodes its own signed publication');
+        console.log('  envelope via the existing, unmodified core/DecentralizedDiscoveryEnvelope.js,');
+        console.log('  and reports the envelope\'s own claimed uri as candidate.uri — exactly what');
+        console.log('  NostrDiscoveryQueryService already did for Nostr — with the announcement');
+        console.log('  transaction id preserved separately as candidate.announcementId. A real');
+        console.log('  Publication\'s own contentReference.uri now matches, and resolution reports');
+        console.log('  RESOLVED, loading AVAILABLE, and verification VERIFIED (Section E, above).');
         console.log('');
         console.log('  Every other boundary this audit checked (tag fidelity, transaction identity,');
         console.log('  discovery query reachability, failure isolation, Nostr coexistence,');
@@ -783,15 +799,14 @@ async function run() {
         console.log('  createPublicationDistributionRuntimeProvider({ ... }). Touched no other file');
         console.log('  this audit reconfirmed correct.');
         console.log('');
-        console.log('  RECOMMENDATION 2 (Gap 2 — its own future milestone, a real design question,');
-        console.log('  not answered here): decide how Arweave\'s discovery-read layer should learn');
-        console.log('  the announcement envelope\'s own claimed uri — teaching');
-        console.log('  ArweaveGraphqlDiscoveryQueryService to fetch+parse a candidate transaction\'s');
-        console.log('  own data (mirroring NostrDiscoveryQueryService exactly) is one candidate');
-        console.log('  shape, never assumed correct here. Landing Gap 1 alone would make');
-        console.log('  announcement reachable but still non-convergent — Gap 2 is the harder,');
-        console.log('  larger, and more important of the two before Arweave can be called a real');
-        console.log('  discovery substrate.');
+        console.log('  RECOMMENDATION 2 (Gap 2) — DONE, 0.9.494: ArweaveGraphqlDiscoveryQueryService');
+        console.log('  now fetches+parses each candidate transaction\'s own data (mirroring');
+        console.log('  NostrDiscoveryQueryService exactly), confined entirely to that one file — see');
+        console.log('  tests/ArweaveEnvelopeAwareDiscoveryQueryService.test.js for the focused');
+        console.log('  coverage of the real fix itself. With both gaps closed, Arweave now');
+        console.log('  functions as a genuine, independent announcement/discovery substrate; a');
+        console.log('  product-scope decision about whether to add it to walking-triggered Snapshot');
+        console.log('  discovery remains separate, unscheduled, later work (0.9.495).');
         console.log('='.repeat(78));
 
         check(Object.values(VERDICT).every((value) => typeof value === 'string' && value.length > 0),

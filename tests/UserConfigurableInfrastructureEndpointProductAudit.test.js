@@ -298,8 +298,20 @@ async function run() {
         // (discovery) — genuinely different endpoints, different paths
         // (`arweave.net` vs `arweave.net/graphql`), different consumers,
         // never sharing a constant.
+        //
+        // AMENDED BY 0.9.494 — ArweaveGraphqlDiscoveryQueryService now
+        // legitimately declares BOTH constants: `graphqlUrl` for the
+        // discovery query itself, and `gatewayUrl` for the one additional
+        // raw-transaction fetch its own `search()` now performs to decode
+        // each discovered transaction's own signed publication envelope
+        // (see that file's own 0.9.494 header). This is not the two
+        // classes SHARING a constant — each still declares its own
+        // independent `DEFAULT_GATEWAY_URL`, never imported from the
+        // other — it is one class legitimately consuming two distinct
+        // Arweave capabilities (discovery-query and raw-content-fetch) it
+        // did not need before.
         const graphqlSource = await rawSource('application/ArweaveGraphqlDiscoveryQueryService.js');
-        assert(!graphqlSource.includes("DEFAULT_GATEWAY_URL"), 'D3. ArweaveGraphqlDiscoveryQueryService never declares a DEFAULT_GATEWAY_URL of its own — it is graphqlUrl only');
+        assert(graphqlSource.includes('DEFAULT_GRAPHQL_URL') && graphqlSource.includes('DEFAULT_GATEWAY_URL'), 'D3. ArweaveGraphqlDiscoveryQueryService declares its own independent DEFAULT_GRAPHQL_URL (discovery) and DEFAULT_GATEWAY_URL (envelope retrieval, 0.9.494) — two distinct endpoints, two distinct constants');
         const arweaveContentSource = await rawSource('content/ArweaveContentStore.js');
         assert(!arweaveContentSource.includes('DEFAULT_GRAPHQL_URL'), 'D3. ArweaveContentStore never declares a DEFAULT_GRAPHQL_URL — it is gatewayUrl only');
 

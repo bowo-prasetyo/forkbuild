@@ -359,7 +359,7 @@ async function run() {
 
         const discoveryQueryService = new ArweaveGraphqlDiscoveryQueryService({ fetchImpl: net.fetchImpl });
         const candidates = await discoveryQueryService.search('campaign-d');
-        check(candidates.length === 1 && candidates[0].uri === `ar://${published.id}`, 'D3. the real, unmodified reader matches this exact tag/value pair and finds exactly this transaction — the application discovery identity and the Arweave transaction identity are already the same tag, never two vocabularies a caller must keep in sync');
+        check(candidates.length === 1 && candidates[0].announcementId === published.id && candidates[0].uri === 'ar://materialtx-d', 'D3. the real reader (0.9.494, envelope-aware) matches this exact tag/value pair and finds exactly this transaction, reporting the announced material\'s own uri with the announcement transaction id preserved alongside it — the application discovery identity and the Arweave transaction identity are already the same tag, never two vocabularies a caller must keep in sync');
 
         const discoverySource = await source('application/ArweaveGraphqlDiscoveryQueryService.js');
         check(!/kind\s*:\s*|objectId\s*:\s*|protocol\s*:\s*['"]forkbuild/.test(discoverySource), 'D4. the reader\'s own matching logic never redefines discovery identity in terms of envelope fields (kind/objectId/protocol) — a discoveryTag is compared to an Arweave Tag value only, confirming application discovery identity and Arweave transaction identity are never conflated into a new, third vocabulary');
@@ -416,16 +416,22 @@ async function run() {
 
         const discoveryQueryService = new ArweaveGraphqlDiscoveryQueryService({ fetchImpl: net.fetchImpl });
         const candidates = await discoveryQueryService.search(campaign);
-        check(candidates.length === 1 && candidates[0].uri === `ar://${result.discovery.id}`, 'F2. DISCOVERY QUERY MECHANISM EXISTS AND WORKS — the real, already-shipped ArweaveGraphqlDiscoveryQueryService genuinely finds this real announcement; this is not a missing piece the brief speculated might be absent — it is already built, already correct, already live');
+        // AMENDED BY 0.9.494: the real reader is now envelope-aware — it
+        // reports the announced MATERIAL's own uri as candidate.uri, with
+        // the announcement transaction id preserved separately as
+        // candidate.announcementId, never conflated. Section D of 0.9.493's
+        // own boundary audit found the pre-0.9.494 shape asserted here
+        // (`candidates[0].uri === ar://<announcement-id>`) to be exactly the
+        // identity violation this milestone closes.
+        check(candidates.length === 1 && candidates[0].announcementId === result.discovery.id && candidates[0].uri === result.material.uri, 'F2. DISCOVERY QUERY MECHANISM EXISTS AND WORKS — the real, envelope-aware (0.9.494) ArweaveGraphqlDiscoveryQueryService genuinely finds this real announcement and reports the announced material\'s own uri, with the announcement transaction id preserved alongside it; this is not a missing piece the brief speculated might be absent — it is already built, already correct, already live');
 
         const materialResolver = new ArweaveWorldEncounterMaterialResolver({ fetchImpl: net.fetchImpl });
         const retrieved = await materialResolver.retrieveByUri(candidates[0].uri);
-        const recoveredEnvelope = describeDecentralizedDiscoveryEnvelope(retrieved);
-        check(recoveredEnvelope !== null && recoveredEnvelope.objectId === publication.id && recoveredEnvelope.uri === result.material.uri, 'F3. upload -> tagged announcement -> discovery query -> candidate -> full envelope recovery -> back to the exact distributed publication, all through already-existing, unmodified production classes — the complete "upload tagged transaction -> discovery mechanism -> candidate" chain the requesting brief asked this section to verify');
+        check(retrieved !== null && JSON.stringify(retrieved) === JSON.stringify({ body: 'round-trip-f' }), 'F3. upload -> tagged announcement -> discovery query -> candidate -> the existing, unmodified material resolver retrieves the exact distributed publication material DIRECTLY off candidate.uri, all through already-existing production classes — the complete "upload tagged transaction -> discovery mechanism -> candidate -> material" chain the requesting brief asked this section to verify, corrected per 0.9.494 to never require a second envelope-recovery hop on the resolve side');
 
         check(!/node\.tags|tags:\s*\{/.test(await source('application/ArweaveGraphqlDiscoveryQueryService.js')), 'F4. this full round trip required zero query-shape change — DISCOVERY_QUERY_MECHANISM is READY today, at the bar production actually needs, confirmed live rather than assumed from 0.9.427/0.9.429\'s own now-stale evidence');
 
-        console.log('✓ Section F: Arweave already has a real, live, working discovery/query mechanism — search() genuinely finds a tagged announcement, and the existing (discovery-unaware) material resolver completes the round trip back to a full, correctly-attributed envelope. If the query side had NOT existed, the missing piece would have been larger than uploadTaggedTransaction; it already exists, so it is not.');
+        console.log('✓ Section F: Arweave already has a real, live, working discovery/query mechanism — search() genuinely finds a tagged announcement and reports the announced material\'s own uri directly, and the existing (discovery-unaware) material resolver completes the round trip straight to the real content. If the query side had NOT existed, the missing piece would have been larger than uploadTaggedTransaction; it already exists, so it is not.');
     }
 
     // ===============================================================
@@ -448,6 +454,16 @@ async function run() {
         // mechanism composes cleanly alongside the write/query roles
         // without either needing to know the other exists.
         const net = makeSharedFakeArweaveSubstrate();
+        // AMENDED BY 0.9.494: candidate.uri is now the announced MATERIAL's
+        // own claimed location, never the announcement transaction id — so
+        // the material this section's discovered candidate actually
+        // resolves against must genuinely exist on the shared substrate
+        // (previously the announcement transaction's own envelope stood in
+        // for it, since candidate.uri used to BE the announcement id).
+        net.ledger.set('materialtx-g', {
+            data: JSON.stringify({ protocol: 'forkbuild', version: 1, kind: 'PUBLICATION', objectId: 'pub-g', uri: 'ar://materialtx-g' }),
+            tag: null
+        });
         const publisher = new ArweaveAnnouncementPublisher({ discoveryTag: 'campaign-g', uploadTaggedTransaction: net.uploadTaggedTransaction });
         const envelope = describeDecentralizedDiscoveryEnvelope({ protocol: 'forkbuild', version: 1, kind: 'PUBLICATION', objectId: 'pub-g', uri: 'ar://materialtx-g' });
         const published = await publisher.publish(envelope);
@@ -580,7 +596,7 @@ async function run() {
 
         const discoveryQueryService = new ArweaveGraphqlDiscoveryQueryService({ fetchImpl: net.fetchImpl });
         const candidates = await discoveryQueryService.search('campaign-j');
-        check(candidates.length === 1 && candidates[0].uri === `ar://${result.discovery.id}`, 'J2. ANNOUNCEMENT ≠ DISCOVERY — writing an announcement and querying for one are two separate operations through two separate classes; the search only ever surfaces the tagged transaction, never the content transaction');
+        check(candidates.length === 1 && candidates[0].announcementId === result.discovery.id && candidates[0].uri === result.material.uri, 'J2. ANNOUNCEMENT ≠ DISCOVERY — writing an announcement and querying for one are two separate operations through two separate classes; the search only ever surfaces the tagged transaction (as announcementId, 0.9.494), reporting the material it claims (never re-deriving or fabricating a second content transaction)');
 
         const announcedEnvelope = describeDecentralizedDiscoveryEnvelope(JSON.parse(net.ledger.get(result.discovery.id).data));
         check(!('signature' in announcedEnvelope), 'J3. DISCOVERY/ANNOUNCEMENT ≠ ATTRIBUTION — the announced envelope carries objectId/uri, never the Publication\'s own signature; attribution remains entirely publisher/Publication.js\'s own concern, never re-derived or re-asserted by the announcement');

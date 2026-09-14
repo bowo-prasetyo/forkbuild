@@ -265,12 +265,27 @@ async function run() {
         check(!/node\s*\{[^}]*\btags\b/.test(discoverySource), 'C3. the query never requests node { tags } — a candidate\'s own tag VALUES (where a kind/objectId-carrying envelope could live) are never fetched back, only the bare transaction id used to build uri');
 
         // Live proof: simulate the GraphQL gateway actually reporting a
-        // transaction whose OTHER tags could carry an envelope; this
-        // reader still reports only { uri, storage } regardless, because
-        // it never even asks for them.
-        const fakeFetch = async (_url, init) => {
+        // transaction whose OTHER tags could carry an envelope; the
+        // GraphQL query itself still never asks for them (C2-C4 above).
+        //
+        // AMENDED BY 0.9.494: this file originally predicted the future
+        // reader change as "extending the query to also select
+        // node { tags { name value } }" — the real fix instead performs a
+        // SEPARATE raw gateway fetch per candidate (the same primitive
+        // application/ArweaveWorldEncounterMaterialResolver.js already
+        // shipped for content), never a GraphQL query-shape change. This
+        // fakeFetch now answers both the GraphQL POST and that second GET,
+        // so the assertion below reflects what the real reader actually
+        // recovers today, not the pre-0.9.494 finding it used to confirm.
+        const fakeFetch = async (url, init = {}) => {
+            if ((init.method || 'GET') === 'GET') {
+                return {
+                    ok: true,
+                    text: async () => JSON.stringify({ protocol: 'forkbuild', version: 1, kind: 'PUBLICATION', objectId: 'pub-c', uri: 'ar://material-c' })
+                };
+            }
             const body = JSON.parse(init.body);
-            check(!/tags/.test(body.query.replace(/tags:\s*\[\{[^}]*\}\]/, '')), 'C4. the outgoing query body itself, inspected live, carries no tags selection on the returned node beyond the filter clause used to MATCH the discoveryTag');
+            check(!/tags/.test(body.query.replace(/tags:\s*\[\{[^}]*\}\]/, '')), 'C4. the outgoing GraphQL query body itself, inspected live, carries no tags selection on the returned node beyond the filter clause used to MATCH the discoveryTag');
             return {
                 ok: true,
                 json: async () => ({ data: { transactions: { edges: [{ node: { id: 'announcetx-c' } }] } } })
@@ -278,9 +293,9 @@ async function run() {
         };
         const arweaveDiscovery = new ArweaveGraphqlDiscoveryQueryService({ fetchImpl: fakeFetch });
         const candidates = await arweaveDiscovery.search('tag-427-c');
-        check(candidates.length === 1 && candidates[0].uri === 'ar://announcetx-c' && candidates[0].storage === 'ar', 'C5. even when the simulated gateway response could carry more, this reader recovers exactly { uri, storage } — never more, because it never asked for more');
+        check(candidates.length === 1 && candidates[0].uri === 'ar://material-c' && candidates[0].storage === 'ar' && candidates[0].announcementId === 'announcetx-c', 'C5. AMENDED BY 0.9.494: the reader now performs one additional raw gateway fetch per candidate and reports the envelope\'s own claimed uri, with the announcement transaction id preserved separately — the GraphQL query itself (C2-C4) still never carries the envelope, exactly as this section originally found, but the reader is no longer limited to what that one query returns');
 
-        console.log('✓ Section C: Arweave Tags are already this codebase\'s own live discovery primitive (C1) — but ArweaveGraphqlDiscoveryQueryService\'s own GraphQL query requests only a matching transaction\'s bare id (C2-C3), never its other tags or its data, confirmed both from the query-building source and from a live simulated round-trip (C4-C5). Representing kind/objectId via additional Arweave Tags is architecturally natural (Tags are exactly the right-shaped primitive) but is NOT already readable by the shipped reader — extending the query to also select node { tags { name value } } is a real, narrow, precisely-scoped future reader change, never a new discovery semantic.');
+        console.log('✓ Section C: Arweave Tags are already this codebase\'s own live discovery primitive (C1) — the GraphQL query itself requests only a matching transaction\'s bare id (C2-C4), unchanged since 0.9.427, but the reader (0.9.494) now performs a second, additional raw gateway fetch per candidate to recover the envelope\'s own claimed uri, never extending the GraphQL query itself to carry it.');
     }
 
     // ===============================================================
@@ -307,41 +322,53 @@ async function run() {
     // bars Sections A and C together establish.
     // ===============================================================
     {
-        // BAR 1 — the bar Section A proved is actually live today: a bare,
-        // discoveryTag-tagged uri. Prove the shipped, UNMODIFIED reader
-        // already recovers this for a hypothetical Arweave announcement
-        // with zero reader change.
-        const fakeFetchBar1 = async () => ({
-            ok: true,
-            json: async () => ({ data: { transactions: { edges: [{ node: { id: 'announcetx-e1' } }] } } })
-        });
+        // AMENDED BY 0.9.494 — this section's own original premise (a
+        // reader that produces a bare, envelope-free `ar://<txid>` lead as
+        // "live today's actual bar") named exactly the shape 0.9.493's own
+        // boundary audit later identified as Gap 2: a candidate uri that is
+        // the ANNOUNCEMENT transaction's own id, never the material it
+        // claims. 0.9.494 closed that gap — the real reader NO LONGER ever
+        // produces a lead without a genuinely decodable envelope; there is
+        // no bare-txid bar left to demonstrate. Both scenarios below are
+        // rewritten to reflect the real, current reader.
+
+        // BAR 1 — the bar Section A proved is actually live today for
+        // Nostr: a bare {uri, storage} lead, its uri/storage recovered from
+        // a real envelope (never a raw event/transaction id). The real
+        // reader (0.9.494) now meets this SAME bar for Arweave too.
+        const fakeFetchBar1 = async (url, init = {}) => {
+            if ((init.method || 'GET') === 'GET') {
+                return { ok: true, text: async () => JSON.stringify({ protocol: 'forkbuild', version: 1, kind: WorldEncounterKind.PUBLICATION, objectId: 'pub-427-e1', uri: 'ar://material-e1' }) };
+            }
+            return { ok: true, json: async () => ({ data: { transactions: { edges: [{ node: { id: 'announcetx-e1' } }] } } }) };
+        };
         const readerBar1 = new ArweaveGraphqlDiscoveryQueryService({ fetchImpl: fakeFetchBar1 });
         const leadsBar1 = await queryDecentralizedWorldDiscovery(readerBar1, 'tag-427-e1');
-        check(leadsBar1.length === 1 && leadsBar1[0].uri === 'ar://announcetx-e1' && leadsBar1[0].storage === 'ar', 'E1. BAR 1 (live today\'s actual bar): the shipped, unmodified ArweaveGraphqlDiscoveryQueryService already produces a real, well-formed DecentralizedWorldDiscoveryLead for a hypothetical tagged Arweave announcement transaction — DISCOVERY_CONTRACT_ALREADY_ARWEAVE_READY at this bar, zero reader change needed');
+        check(leadsBar1.length === 1 && leadsBar1[0].uri === 'ar://material-e1' && leadsBar1[0].storage === 'ar', 'E1. BAR 1 (Section A\'s live bar, now met for Arweave too, 0.9.494): the real reader produces a well-formed DecentralizedWorldDiscoveryLead naming the announced MATERIAL\'s own uri — decoded from a real envelope, never a raw transaction id — DISCOVERY_CONTRACT_ARWEAVE_READY at this bar');
 
         // BAR 2 — the richer, currently production-unused kind/objectId
-        // bar 0.9.30/0.9.32 designed for. Prove the SAME reader cannot
-        // recover it, and name precisely why: it never fetches tags or
-        // data at all, so there is nowhere for an envelope to have ridden.
-        const fakeFetchBar2 = async () => ({
-            ok: true,
-            // Simulate a gateway that WOULD be able to report more, to
-            // show the limitation is this reader's own query, not the
-            // gateway's own capability.
-            json: async () => ({
-                data: {
-                    transactions: {
-                        edges: [{ node: { id: 'announcetx-e2', tags: [{ name: 'ForkBuild-Envelope', value: JSON.stringify({ protocol: 'forkbuild', version: 1, kind: WorldEncounterKind.PUBLICATION, objectId: 'pub-427-e2', uri: 'ar://announcetx-e2' }) }] } }]
-                    }
-                }
-            })
-        });
+        // bar 0.9.30/0.9.32 designed for. The real reader now genuinely
+        // decodes the FULL envelope (including kind/objectId) to recover
+        // uri/storage — but still reports only {uri, storage,
+        // announcementId} on its own candidate, discarding kind/objectId,
+        // the SAME restraint Section A already found NostrDiscoveryQueryService
+        // holds for itself (it also reads a full envelope and keeps only
+        // uri/storage). This is not a query-shape limitation anymore (the
+        // reader now genuinely has the full envelope in hand); it is a
+        // deliberate candidate-shape restraint, applied identically across
+        // both substrates.
+        const fakeFetchBar2 = async (url, init = {}) => {
+            if ((init.method || 'GET') === 'GET') {
+                return { ok: true, text: async () => JSON.stringify({ protocol: 'forkbuild', version: 1, kind: WorldEncounterKind.PUBLICATION, objectId: 'pub-427-e2', uri: 'ar://material-e2' }) };
+            }
+            return { ok: true, json: async () => ({ data: { transactions: { edges: [{ node: { id: 'announcetx-e2' } }] } } }) };
+        };
         const readerBar2 = new ArweaveGraphqlDiscoveryQueryService({ fetchImpl: fakeFetchBar2 });
         const leadsBar2 = await queryDecentralizedWorldDiscovery(readerBar2, 'tag-427-e2');
-        check(leadsBar2.length === 1, 'E2. the reader still reports exactly one lead even when the simulated response carries an embeddable envelope in a tag it never asked for');
-        check(!('kind' in leadsBar2[0]) && !('objectId' in leadsBar2[0]), 'E3. BAR 2 (the richer, currently-unused bar): kind/objectId are NOT recovered, even though this test\'s own fake gateway response carried them — because ArweaveGraphqlDiscoveryQueryService.parseTransactionCandidates() (Section C) never reads anything but node.id — ARWEAVE_DISCOVERY_READER_GAP at this bar, and only this bar');
+        check(leadsBar2.length === 1, 'E2. the reader reports exactly one lead, genuinely decoded from a real envelope this time (0.9.494) — never a simulated tag it declined to fetch');
+        check(!('kind' in leadsBar2[0]) && !('objectId' in leadsBar2[0]), 'E3. BAR 2 (the richer, currently-unused bar): kind/objectId are still NOT carried on the reported lead, even though the reader\'s own new envelope-decoding step (0.9.494) genuinely has them in hand — a deliberate candidate-shape restraint, mirroring exactly what Section A already found NostrDiscoveryQueryService.js does with its own fully-decoded envelope — ARWEAVE_DISCOVERY_READER_GAP at this bar remains a deliberate, substrate-consistent restraint, never a missing capability');
 
-        console.log('✓ Section E: the verdict is bar-dependent, proven live rather than asserted. At the bar this codebase actually runs today (Section A\'s bare lead) the existing Arweave reader is already sufficient — DISCOVERY_CONTRACT_ALREADY_ARWEAVE_READY. At the richer, currently-unwired-for-every-substrate kind/objectId bar, the SAME reader has a real, narrow, precisely-located gap — ARWEAVE_DISCOVERY_READER_GAP, never a semantic impossibility (Section C already showed Arweave Tags are the right-shaped primitive; the gap is one un-requested GraphQL field, not a missing capability).');
+        console.log('✓ Section E: AMENDED BY 0.9.494 — the real reader now meets Section A\'s own live bar for Arweave too (uri/storage decoded from a real envelope, never a raw transaction id), closing the gap this section originally demonstrated. The richer kind/objectId bar remains deliberately unmet, but now for the same reason Nostr\'s own reader leaves it unmet (Section A) — a candidate-shape restraint applied consistently across substrates, never a per-substrate capability gap.');
     }
 
     // ===============================================================

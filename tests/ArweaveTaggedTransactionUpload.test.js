@@ -298,6 +298,16 @@ async function run() {
                 }
                 return new Response(JSON.stringify({ data: { transactions: { edges } } }), { status: 200 });
             }
+            // 0.9.494 — ArweaveGraphqlDiscoveryQueryService now performs one
+            // additional raw GET per discovered transaction to decode its
+            // own signed publication envelope; serve the real transaction's
+            // own data, base64url-DECODED exactly as a real Arweave gateway
+            // already returns raw transaction data (never the wire-encoded
+            // form the signer produced).
+            const getMatch = method === 'GET' && parsed.pathname.match(/^\/([A-Za-z0-9_-]+)$/);
+            if (getMatch && ledger.has(getMatch[1])) {
+                return new Response(decodeBase64Url(ledger.get(getMatch[1]).data), { status: 200 });
+            }
             return new Response('not found', { status: 404 });
         };
 
@@ -340,7 +350,7 @@ async function run() {
         // Now the real, unmodified discovery-query service actually finds it.
         const discoveryQueryService = new ArweaveGraphqlDiscoveryQueryService({ fetchImpl: fakeGatewayFetch, graphqlUrl: 'https://round-trip.example/graphql' });
         const candidates = await discoveryQueryService.search(campaign);
-        assert(candidates.length === 1 && candidates[0].uri === `ar://${published.id}`, 'G8. the real, unmodified ArweaveGraphqlDiscoveryQueryService finds exactly this real, tagged, wallet-signed transaction — the full brief\'s own diagram (ArweaveAnnouncementPublisher -> uploadTaggedTransaction -> Arweave transaction -> data/tags -> ArweaveGraphqlDiscoveryQueryService) closes end to end');
+        assert(candidates.length === 1 && candidates[0].uri === 'ar://material-g-flagship' && candidates[0].announcementId === published.id, 'G8. the real ArweaveGraphqlDiscoveryQueryService (0.9.494, envelope-aware) finds exactly this real, tagged, wallet-signed transaction, decodes its own envelope, and reports the announced MATERIAL\'s own uri — with the announcement transaction id preserved alongside it — the full brief\'s own diagram (ArweaveAnnouncementPublisher -> uploadTaggedTransaction -> Arweave transaction -> data/tags -> ArweaveGraphqlDiscoveryQueryService) closes end to end');
 
         console.log('✓ Section G: FLAGSHIP — the real ArweaveAnnouncementPublisher, wired to this file\'s uploadTaggedTransaction and a REAL (fake-wallet-backed) ArweaveInjectedProviderSigner, publishes a real signed+tagged transaction that the real, unmodified ArweaveGraphqlDiscoveryQueryService actually finds');
     }
