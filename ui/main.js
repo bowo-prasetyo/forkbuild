@@ -93,6 +93,7 @@ import { CreateBaseTransactionBroadcastCoordinatorUseCase } from '../application
 import { CreateBaseTransactionInclusionObserverUseCase } from '../application/CreateBaseTransactionInclusionObserverUseCase.js';
 import { CreateBaseTransactionInclusionObservationCoordinatorUseCase } from '../application/CreateBaseTransactionInclusionObservationCoordinatorUseCase.js';
 import { CreateBitcoinAnchorBroadcastCoordinatorUseCase } from '../application/CreateBitcoinAnchorBroadcastCoordinatorUseCase.js';
+import { CreateBitcoinAnchorPublicationCoordinatorUseCase } from '../application/CreateBitcoinAnchorPublicationCoordinatorUseCase.js';
 import { CreateBitcoinAnchorConfirmationCoordinatorUseCase } from '../application/CreateBitcoinAnchorConfirmationCoordinatorUseCase.js';
 import { CreateIpfsRemotePublicationCoordinatorUseCase } from '../application/CreateIpfsRemotePublicationCoordinatorUseCase.js';
 import { CreateIpfsPublicationContentVerifierUseCase } from '../application/CreateIpfsPublicationContentVerifierUseCase.js';
@@ -1446,6 +1447,34 @@ const { coordinator: bitcoinAnchorBroadcastCoordinator } = new CreateBitcoinAnch
     bitcoinAnchorTransactionBroadcaster
 });
 
+// 0.9.512 — Bitcoin Granular Pipeline Anchor Publication Integration.
+//
+// tests/ProofAnchoringCrossSubstrateCapabilityParityAudit.test.js (0.9.511)
+// found application/BitcoinAnchorPublicationCoordinator.js (0.8.53) real,
+// tested, and unreachable from this file — the ONE missing composition,
+// mirroring exactly how 0.9.472 found anchoring/BaseAnchorPublisher.js
+// (0.9.470) in the identical state one substrate over. `bitcoinAnchorPublicationCoordinator`
+// is built from the SAME `publicationCatalog` and `createPublicationAnchorUseCase`
+// every other Bitcoin/Base/Arweave anchor-creation path above already
+// shares, plus `publicationAnchorCatalog` (also already shared) for its
+// own optional duplicate-anchor guard — never a second, disconnected
+// catalog or anchor use case. Its six from-scratch, one-shot-pipeline
+// collaborators (`bitcoinAnchorTransactionBuilder` and the five others
+// `publishAnchor()` alone still needs) are deliberately left unsupplied —
+// see application/BitcoinAnchorPublicationCoordinator.js's own
+// constructor header on why the real, production Bitcoin anchor UI below
+// only ever calls this instance's OTHER method, `publishBroadcastedAnchor()`,
+// which needs none of them: the granular Bitcoin pipeline wired in 0.8.61
+// through 0.8.64 above — construction, review, reviewed signing,
+// finalization, broadcast — remains this app's sole real Bitcoin write
+// path; this coordinator only ever mints the durable anchor record the
+// moment that pipeline's own broadcast succeeds.
+const { coordinator: bitcoinAnchorPublicationCoordinator } = new CreateBitcoinAnchorPublicationCoordinatorUseCase().execute({
+    publicationCatalog,
+    createPublicationAnchorUseCase,
+    publicationAnchorCatalog
+});
+
 // 0.8.65 — Explicit Bitcoin Anchor Confirmation UI. Closes the gap 0.8.64's
 // own header named directly: "Whether a broadcasted transaction later gets
 // mined into a block is a separate, later question, asked by a separate,
@@ -1583,6 +1612,8 @@ app.provide('bitcoinAnchorReviewedSigningCoordinator', bitcoinAnchorReviewedSign
 app.provide('bitcoinAnchorSignedPsbtFinalizationCoordinator', bitcoinAnchorSignedPsbtFinalizationCoordinator);
 // 0.8.64 — Explicit Bitcoin Anchor Broadcast UI.
 app.provide('bitcoinAnchorBroadcastCoordinator', bitcoinAnchorBroadcastCoordinator);
+// 0.9.512 — Bitcoin Granular Pipeline Anchor Publication Integration.
+app.provide('bitcoinAnchorPublicationCoordinator', bitcoinAnchorPublicationCoordinator);
 // 0.8.65 — Explicit Bitcoin Anchor Confirmation UI.
 app.provide('bitcoinAnchorConfirmationCoordinator', bitcoinAnchorConfirmationCoordinator);
 // 0.8.68 — Explicit Remote IPFS Publishing Configuration & UX.
