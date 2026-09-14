@@ -114,6 +114,24 @@ const MAX_SINGLE_CHUNK_BYTES = 256 * 1024;
 // and every Node version this codebase's own test suite already runs
 // against — never an Arweave SDK loaded from a CDN.
 //
+// 0.9.490 — `sign()` GAINS AN OPTIONAL, NON-EMPTY `tags` PARAMETER — THE
+// EXACT RECOMBINATION `tests/ArweaveAnnouncementDiscoveryCapabilityBoundaryAudit.test.js`
+// (0.9.489) Section C5 named: this file's own `tags: []` field, made
+// non-empty. `sign(material, tags = [])` is fully backward compatible —
+// every existing caller (`application/ArweavePublicationMaterialUploader.js`,
+// `anchoring/ArweaveAnchorPublisher.js`) still calls `sign(material)` with
+// one argument and still gets the identical `tags: []` it always got.
+// `application/ArweaveTaggedTransactionUpload.js` (NEW, 0.9.490) is the one
+// caller passing a real, non-empty `tags` array. Each `{ name, value }` pair
+// is base64url-encoded here, the same JSON-safe convention `data`/
+// `data_root` already use — never left as a raw string, since Arweave Tags,
+// exactly like `data`, are bound into the transaction's own signed fields
+// and must already be wire-ready before `injectedProvider.sign()` is ever
+// called. A malformed tag (missing `name`/`value`, wrong type) throws
+// immediately, before the wallet or gateway are ever consulted — the same
+// "malformed input never reaches signing" restraint this file's own
+// `material` check already holds.
+//
 // DELIBERATELY EXCLUDED — NOT THIS MILESTONE.
 // - **Multi-chunk data, RSA-PSS signing, deep-hash computation, or any
 //   other part of the Arweave protocol not already named above.** See
@@ -139,19 +157,33 @@ export function createArweaveInjectedProviderSigner({
     const fetchFn = fetchImpl || (typeof fetch !== 'undefined' ? fetch.bind(globalThis) : null);
     const base = (typeof gatewayUrl === 'string' && gatewayUrl.length > 0 ? gatewayUrl : DEFAULT_GATEWAY_URL).replace(/\/+$/, '');
 
-    // sign(material) -> Promise<{ id, transaction }>. See this file's own
-    // header for the full contract. Throws for non-string/empty material,
-    // for material exceeding the single-chunk ceiling, for an unavailable
-    // fetch implementation, or for a gateway/wallet response that resolves
-    // but carries no usable id — a genuine gateway or wallet failure
-    // propagates as a rejection, never swallowed.
-    async function sign(material) {
+    // sign(material, tags = []) -> Promise<{ id, transaction }>. See this
+    // file's own header for the full contract. Throws for non-string/empty
+    // material, for a malformed `tags` array or entry, for material
+    // exceeding the single-chunk ceiling, for an unavailable fetch
+    // implementation, or for a gateway/wallet response that resolves but
+    // carries no usable id — a genuine gateway or wallet failure propagates
+    // as a rejection, never swallowed. `tags` defaults to `[]`, identical to
+    // this function's own behavior before 0.9.490.
+    async function sign(material, tags = []) {
         if (typeof material !== 'string' || material.length === 0) {
             throw new Error('ArweaveInjectedProviderSigner: sign() requires a non-empty string material');
         }
         if (typeof fetchFn !== 'function') {
             throw new Error('ArweaveInjectedProviderSigner: no fetch implementation available — pass fetchImpl explicitly');
         }
+        if (!Array.isArray(tags)) {
+            throw new Error('ArweaveInjectedProviderSigner: sign() requires tags to be an array');
+        }
+        const encodedTags = tags.map((tag) => {
+            if (!tag || typeof tag.name !== 'string' || tag.name.length === 0 || typeof tag.value !== 'string') {
+                throw new Error('ArweaveInjectedProviderSigner: sign() requires every tag to be a { name, value } pair of strings');
+            }
+            return {
+                name: base64UrlEncode(new TextEncoder().encode(tag.name)),
+                value: base64UrlEncode(new TextEncoder().encode(tag.value))
+            };
+        });
 
         const dataBytes = new TextEncoder().encode(material);
         if (dataBytes.length > MAX_SINGLE_CHUNK_BYTES) {
@@ -179,7 +211,7 @@ export function createArweaveInjectedProviderSigner({
             id: '',
             last_tx: lastTx,
             owner: '',
-            tags: [],
+            tags: encodedTags,
             target: '',
             quantity: '0',
             data_root: base64UrlEncode(dataRoot),
