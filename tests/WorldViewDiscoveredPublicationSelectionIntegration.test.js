@@ -13,6 +13,8 @@ import { PublicationMaterialProvenanceOrigin } from '../application/PublicationM
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { Publication } from '../publisher/Publication.js';
+import { ArweaveAnnouncementPublisher } from '../application/ArweaveAnnouncementPublisher.js';
+import { describeDecentralizedDiscoveryEnvelope } from '../core/DecentralizedDiscoveryEnvelope.js';
 
 // 0.9.113 — World View Discovered Publication Selection.
 //
@@ -40,6 +42,19 @@ import { Publication } from '../publisher/Publication.js';
 //   Section F: no hidden persistence — a fresh component context always
 //              starts with no selection, never restored from anywhere
 //   Section G: architectural regression — WorldEncounterCanvas.js
+//
+// UPDATE (0.9.515): fixture fix, not a behavior change — identical in
+// kind to the same-dated fix in tests/WorldViewDecentralizedPublicationR
+// etrievalIntegration.test.js (see that file's own header for the full
+// explanation). This file's fake Arweave network boundary predates 0.9.494's
+// envelope-aware `ArweaveGraphqlDiscoveryQueryService#search()` and was
+// never updated; Sections A-D discover real Arweave-origin material
+// through `realDiscoveryCommand()` and were silently asserting against a
+// one-fetch contract this codebase stopped shipping. Fixed the same way:
+// `makeFakeArweaveSubstrate()`, copied verbatim from tests/
+// ArweaveDiscoveryUriIdentityBoundaryAudit.test.js (0.9.494's own
+// convergence proof), plus the real, production `ArweaveAnnouncementPublisher`
+// and `describeDecentralizedDiscoveryEnvelope()`.
 
 function assert(condition, message) {
     if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
@@ -83,37 +98,87 @@ function buildSignedPublication(identityProvider, overrides = {}) {
     return publication;
 }
 
-function graphqlSearchFetch(idsByTag) {
-    return async (url, options) => {
-        const body = JSON.parse(options.body);
-        const match = /values: \["([^"]+)"\]/.exec(body.query);
-        const tag = match ? match[1] : null;
-        const ids = idsByTag[tag] || [];
-        return new Response(JSON.stringify({
-            data: { transactions: { edges: ids.map((id) => ({ node: { id } })) } }
-        }), { status: 200 });
-    };
-}
+// A fake Arweave network — GraphQL search AND raw gateway retrieval over
+// ONE shared ledger, exactly the real `arweave.net` topology. Copied
+// verbatim from tests/ArweaveDiscoveryUriIdentityBoundaryAudit.test.js
+// (0.9.494's own convergence proof for the envelope-aware contract this
+// file's discovery now depends on) rather than re-derived here — see this
+// file's own "UPDATE (0.9.515)" header note.
+function makeFakeArweaveSubstrate() {
+    const ledger = new Map(); // id -> { data, tag: { name, value } | null }
+    let nextId = 0;
+    function newId(prefix) {
+        nextId += 1;
+        return `${prefix}${String(nextId).padStart(8, '0')}`;
+    }
 
-function gatewayRetrievalFetch(materialByTxId) {
-    return async (url) => {
-        const txId = url.split('/').pop();
-        const material = materialByTxId[txId];
-        if (!material) {
-            return new Response('', { status: 404 });
+    async function fetchImpl(url, options = {}) {
+        const parsed = new URL(url);
+        const method = options.method || 'GET';
+
+        if (method === 'POST' && parsed.pathname === '/graphql') {
+            const { query } = JSON.parse(options.body);
+            const match = query.match(/name:\s*"([^"]*)"\s*,\s*values:\s*\[\s*"([^"]*)"\s*\]/);
+            const edges = [];
+            if (match) {
+                const [, matchTagName, matchValue] = match;
+                for (const [id, entry] of ledger.entries()) {
+                    if (entry.tag && entry.tag.name === matchTagName && entry.tag.value === matchValue) {
+                        edges.push({ node: { id } });
+                    }
+                }
+            }
+            return new Response(JSON.stringify({ data: { transactions: { edges } } }), { status: 200 });
         }
-        return new Response(JSON.stringify(material), { status: 200 });
-    };
+
+        const getMatch = parsed.pathname.match(/^\/([A-Za-z0-9_-]+)$/);
+        if (method === 'GET' && getMatch && ledger.has(getMatch[1])) {
+            return new Response(ledger.get(getMatch[1]).data, { status: 200 });
+        }
+        return new Response('not found', { status: 404 });
+    }
+
+    async function uploadTaggedTransaction(material, tag) {
+        const id = newId('Announce');
+        ledger.set(id, { data: material, tag: { name: tag.name, value: tag.value } });
+        return { id };
+    }
+
+    function putContent(id, data) {
+        ledger.set(id, { data, tag: null });
+    }
+
+    return { ledger, fetchImpl, uploadTaggedTransaction, putContent };
 }
 
-function realDiscoveryCommand({ idsByTag, materialByTxId, publications }) {
+// Publishes a real `DecentralizedDiscoveryEnvelope` (0.9.30, unmodified)
+// under `tag`, through the real `ArweaveAnnouncementPublisher` (0.9.494's
+// own precedent), pointing at `materialTxId` — a SEPARATE ledger entry
+// this function also populates with the actual material — rather than the
+// pre-0.9.494 shape where the discovered transaction id WAS the material.
+// `materialTxId` MUST be the id embedded in `publication.contentReference
+// .uri` (the id every section below already fixed on) — association
+// evidence (0.9.29, unmodified) matches a discovered candidate's own uri
+// against a LOCALLY KNOWN publication's own `contentReference.uri`, so the
+// two have to name the same location for resolution to reach RESOLVED.
+async function announceArweaveMaterial(net, { tag, objectId, materialTxId, material }) {
+    net.putContent(materialTxId, JSON.stringify(material));
+    const publisher = new ArweaveAnnouncementPublisher({ discoveryTag: tag, uploadTaggedTransaction: net.uploadTaggedTransaction });
+    const envelope = describeDecentralizedDiscoveryEnvelope({ protocol: 'forkbuild', version: 1, kind: 'PUBLICATION', objectId, uri: `ar://${materialTxId}` });
+    const announced = await publisher.publish(envelope);
+    if (!announced || announced.published !== true) {
+        throw new Error('announceArweaveMaterial: the fake ArweaveAnnouncementPublisher failed to publish — fixture is broken');
+    }
+}
+
+function realDiscoveryCommand({ net, publications }) {
     const services = composeDecentralizedWorldEncounterMaterialDiscoveryServices({
-        arweaveFetchImpl: graphqlSearchFetch(idsByTag)
+        arweaveFetchImpl: net.fetchImpl
     });
     const { verifier } = composeWorldEncounterMaterialVerifier();
     const runtime = composeDecentralizedWorldEncounterMaterialDiscoveryRuntime({
         discoveryServices: services,
-        arweaveResolverOptions: { fetchImpl: gatewayRetrievalFetch(materialByTxId) },
+        arweaveResolverOptions: { fetchImpl: net.fetchImpl },
         verifier
     });
     return composeDiscoverWorldEncounterPublicationCommand({ runtime, discoveryProvider: { list: () => publications } });
@@ -156,12 +221,16 @@ async function runTests() {
         const alice = buildRealSigner(storage, 'select-alice');
         const publication = buildSignedPublication(alice);
 
+        const net = makeFakeArweaveSubstrate();
+        await announceArweaveMaterial(net, {
+            tag: 'forkbuild-select-tag',
+            objectId: publication.id,
+            materialTxId: 'TX-SELECT',
+            material: publication.toJSON()
+        });
+
         const ctx = withComputed(canvasCtx({
-            discoveryCommand: realDiscoveryCommand({
-                idsByTag: { 'forkbuild-select-tag': ['TX-SELECT'] },
-                materialByTxId: { 'TX-SELECT': publication.toJSON() },
-                publications: [publication]
-            }),
+            discoveryCommand: realDiscoveryCommand({ net, publications: [publication] }),
             discoveryObjectId: publication.id,
             discoveryTag: 'forkbuild-select-tag'
         }));
@@ -202,14 +271,18 @@ async function runTests() {
         const bob = buildRealSigner(storage, 'select-bob');
         const publication = buildSignedPublication(bob, { id: 'pub-select-b', contentReference: { hash: 'h-b', uri: 'ar://TX-SELECT-B', storage: 'ar' } });
 
+        const net = makeFakeArweaveSubstrate();
+        await announceArweaveMaterial(net, {
+            tag: 'forkbuild-select-b',
+            objectId: publication.id,
+            materialTxId: 'TX-SELECT-B',
+            material: publication.toJSON()
+        });
+
         const ctx = withComputed(canvasCtx({
             selectedEncounter: localSelection,
             materialInspection: localInspection,
-            discoveryCommand: realDiscoveryCommand({
-                idsByTag: { 'forkbuild-select-b': ['TX-SELECT-B'] },
-                materialByTxId: { 'TX-SELECT-B': publication.toJSON() },
-                publications: [publication]
-            }),
+            discoveryCommand: realDiscoveryCommand({ net, publications: [publication] }),
             discoveryObjectId: publication.id,
             discoveryTag: 'forkbuild-select-b'
         }));
@@ -235,12 +308,16 @@ async function runTests() {
         const carol = buildRealSigner(storage, 'select-carol');
         const publication = buildSignedPublication(carol, { id: 'pub-select-c', contentReference: { hash: 'h-c', uri: 'ar://TX-SELECT-C', storage: 'ar' } });
 
+        const net = makeFakeArweaveSubstrate();
+        await announceArweaveMaterial(net, {
+            tag: 'forkbuild-select-c',
+            objectId: publication.id,
+            materialTxId: 'TX-SELECT-C',
+            material: publication.toJSON()
+        });
+
         const ctx = withComputed(canvasCtx({
-            discoveryCommand: realDiscoveryCommand({
-                idsByTag: { 'forkbuild-select-c': ['TX-SELECT-C'] },
-                materialByTxId: { 'TX-SELECT-C': publication.toJSON() },
-                publications: [publication]
-            }),
+            discoveryCommand: realDiscoveryCommand({ net, publications: [publication] }),
             discoveryObjectId: publication.id,
             discoveryTag: 'forkbuild-select-c'
         }));
@@ -264,12 +341,16 @@ async function runTests() {
         const publication = buildSignedPublication(dave, { id: 'pub-select-d', contentReference: { hash: 'h-d', uri: 'ar://TX-SELECT-D', storage: 'ar' } });
         const tamperedMaterial = { ...publication.toJSON(), title: 'Tampered After Signing' };
 
+        const net = makeFakeArweaveSubstrate();
+        await announceArweaveMaterial(net, {
+            tag: 'forkbuild-select-d',
+            objectId: publication.id,
+            materialTxId: 'TX-SELECT-D',
+            material: tamperedMaterial
+        });
+
         const ctx = withComputed(canvasCtx({
-            discoveryCommand: realDiscoveryCommand({
-                idsByTag: { 'forkbuild-select-d': ['TX-SELECT-D'] },
-                materialByTxId: { 'TX-SELECT-D': tamperedMaterial },
-                publications: [publication]
-            }),
+            discoveryCommand: realDiscoveryCommand({ net, publications: [publication] }),
             discoveryObjectId: publication.id,
             discoveryTag: 'forkbuild-select-d'
         }));

@@ -16,6 +16,22 @@ import { StorageProvider } from '../storage/StorageProvider.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { Publication } from '../publisher/Publication.js';
 
+// UPDATE (0.9.515): fixture fix in Sections B/C/D only, not a behavior
+// change. 0.9.494 amended `application/ArweaveGraphqlDiscoveryQueryService
+// .js#search()` to perform one additional gateway fetch per discovered
+// transaction, decoding it as a real `core/DecentralizedDiscoveryEnvelope
+// .js` envelope rather than treating the discovered transaction's own
+// gateway response as the material directly — see tests/
+// WorldViewDecentralizedPublicationRetrievalIntegration.test.js's own
+// 0.9.515 header for the full explanation, applied there first.
+// `graphqlSearchFetch()` below predates that change; it now also answers
+// the envelope GET fetch, self-referentially (each discovered transaction
+// id's own envelope claims that SAME id as the material uri) — matching
+// each Publication's own pre-existing `contentReference.uri`, which
+// association evidence (0.9.29, unmodified) requires to already agree.
+// `gatewayRetrievalFetch()`/`materialByTxId` (the SEPARATE fetch serving
+// actual material once a lead resolves) is unchanged.
+//
 // 0.9.112 — Publication Provenance in World View.
 // See docs/Roadmap.md, "0.9.112 — Publication Provenance in World View," and
 // application/PublicationMaterialProvenance.js's own header for the full
@@ -69,14 +85,25 @@ function buildSignedPublication(overrides = {}) {
 }
 
 function graphqlSearchFetch(idsByTag) {
-    return async (url, options) => {
-        const body = JSON.parse(options.body);
-        const match = /values: \["([^"]+)"\]/.exec(body.query);
-        const tag = match ? match[1] : null;
-        const ids = idsByTag[tag] || [];
-        return new Response(JSON.stringify({
-            data: { transactions: { edges: ids.map((id) => ({ node: { id } })) } }
-        }), { status: 200 });
+    return async (url, options = {}) => {
+        if ((options.method || 'GET') === 'POST') {
+            const body = JSON.parse(options.body);
+            const match = /values: \["([^"]+)"\]/.exec(body.query);
+            const tag = match ? match[1] : null;
+            const ids = idsByTag[tag] || [];
+            return new Response(JSON.stringify({
+                data: { transactions: { edges: ids.map((id) => ({ node: { id } })) } }
+            }), { status: 200 });
+        }
+        // The 0.9.494 envelope GET fetch — self-referential (a discovered
+        // transaction's own envelope claims ITS OWN id as the material
+        // uri); see this file's own 0.9.515 header note.
+        const txId = url.split('/').pop();
+        const known = Object.values(idsByTag).some((ids) => ids.includes(txId));
+        if (!known) {
+            return new Response('', { status: 404 });
+        }
+        return new Response(JSON.stringify({ protocol: 'forkbuild', version: 1, kind: 'PUBLICATION', objectId: 'irrelevant', uri: `ar://${txId}` }), { status: 200 });
     };
 }
 

@@ -18,6 +18,19 @@ import { resolveNostrPublisherOptions } from '../application/PublicationDistribu
 //
 // Type: test-only, no production changes. Production changes: NONE.
 //
+// UPDATE (0.9.515): fixture fix in Section B only, not a behavior change.
+// 0.9.494 amended `application/ArweaveGraphqlDiscoveryQueryService.js#search()`
+// to perform one additional gateway fetch per discovered transaction,
+// decoding it as a real `core/DecentralizedDiscoveryEnvelope.js` envelope
+// rather than treating the discovered transaction's own gateway response
+// as the material directly — see tests/WorldViewDecentralizedPublicationR
+// etrievalIntegration.test.js's own 0.9.515 header for the full
+// explanation of the same fix, applied there first. Section B's own
+// `graphqlSearchFetchRecordingTags()` predates that change; it now also
+// answers the envelope GET fetch, self-referentially (this section only
+// asserts RESOLVED, never loading/verification, so no second material
+// transaction is needed — see Section B's own inline note).
+//
 // 0.9.357 changed a composition-root value (ui/main.js's own
 // PUBLICATION_DISCOVERY_TAG) that now crosses ui/main.js -> WorldView ->
 // WorldEncounterCanvas. This milestone is the convergence audit that
@@ -112,16 +125,31 @@ function buildSignedPublication(identityProvider, overrides = {}) {
 // actually asked to search for, so Section B can assert on the REAL wire
 // value a live discoverPublication() click produced, not merely on the
 // result it returned.
+// Serves BOTH the GraphQL search POST (recording every tag it was asked
+// to search for) AND the 0.9.494 envelope GET fetch that now follows each
+// discovered id — self-referentially: a discovered transaction's own
+// envelope claims ITS OWN id as the material `uri`. Section B never
+// inspects loading/verification (only resolution), so no second, separate
+// material transaction is needed here — see this file's own 0.9.515
+// header note.
 function graphqlSearchFetchRecordingTags(idsByTag, observedTags) {
-    return async (url, options) => {
-        const body = JSON.parse(options.body);
-        const match = /values: \["([^"]+)"\]/.exec(body.query);
-        const tag = match ? match[1] : null;
-        observedTags.push(tag);
-        const ids = idsByTag[tag] || [];
-        return new Response(JSON.stringify({
-            data: { transactions: { edges: ids.map((id) => ({ node: { id } })) } }
-        }), { status: 200 });
+    return async (url, options = {}) => {
+        if ((options.method || 'GET') === 'POST') {
+            const body = JSON.parse(options.body);
+            const match = /values: \["([^"]+)"\]/.exec(body.query);
+            const tag = match ? match[1] : null;
+            observedTags.push(tag);
+            const ids = idsByTag[tag] || [];
+            return new Response(JSON.stringify({
+                data: { transactions: { edges: ids.map((id) => ({ node: { id } })) } }
+            }), { status: 200 });
+        }
+        const txId = url.split('/').pop();
+        const known = Object.values(idsByTag).some((ids) => ids.includes(txId));
+        if (!known) {
+            return new Response('', { status: 404 });
+        }
+        return new Response(JSON.stringify({ protocol: 'forkbuild', version: 1, kind: 'PUBLICATION', objectId: 'irrelevant', uri: `ar://${txId}` }), { status: 200 });
     };
 }
 
