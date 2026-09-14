@@ -1351,6 +1351,19 @@ export default {
         // captured broadcast identity, that one to a persisted
         // PublicationAnchor's own `proof.txid`.
         const bitcoinAnchorConfirmationCoordinator = inject('bitcoinAnchorConfirmationCoordinator', null);
+        // 0.9.512 — Bitcoin Granular Pipeline Anchor Publication
+        // Integration. Optional — absent here, a successful broadcast
+        // simply never mints a real anchor (only the existing, unchanged
+        // 0.8.80 local publication record still does) — the identical
+        // degrade-gracefully posture every optional coordinator on this
+        // page already holds. `bitcoinAnchorPublicationCoordinator` is the
+        // SAME shared instance ui/main.js constructs from this app's own
+        // `publicationCatalog`/`createPublicationAnchorUseCase`/
+        // `publicationAnchorCatalog` — never a second, disconnected one.
+        // See application/BitcoinAnchorPublicationCoordinator.js's own
+        // header on `publishBroadcastedAnchor()` — the ONE method this
+        // page ever calls on it.
+        const bitcoinAnchorPublicationCoordinator = inject('bitcoinAnchorPublicationCoordinator', null);
         // 0.8.61 — Explicit Bitcoin Anchor Transaction Construction UI.
         // Optional — absent here, no "Create Transaction Plan" action ever
         // renders, the identical degrade-gracefully posture every optional
@@ -1558,6 +1571,25 @@ export default {
         // already-catalogued anchor never gets one, because no independent
         // broadcast observation exists for it in this replica.
         const bitcoinAnchorBroadcastedAt = ref(null);
+
+        // 0.9.512 — Bitcoin Granular Pipeline Anchor Publication
+        // Integration.
+        //
+        // `bitcoinAnchorPublicationAttempt` is the single, page-level
+        // result of the MOST RECENT `bitcoinAnchorPublicationCoordinator
+        // .publishBroadcastedAnchor()` call — called automatically, exactly
+        // once, immediately after `broadcastBitcoinAnchorTransaction()`
+        // below reaches its own real BROADCASTED outcome, never from a
+        // `*View()` projection or any other passive re-observation (see
+        // that function's own comment). Reuses application/
+        // PublicationAnchorCreationView.js's own `describeCreationAttempt()`
+        // — the identical outcome vocabulary `createAnchor()`/`createBaseAnchor()`
+        // already project through, never a second, competing one. Reset to
+        // `null` at the exact same three points `bitcoinAnchorBroadcastOutcome`
+        // itself is retired, immediately below each of those — a freshly
+        // constructed, signed, or finalized transaction never leaves a
+        // previous transaction's own anchor-creation result on screen.
+        const bitcoinAnchorPublicationAttempt = ref(null);
 
         // 0.8.65 — Explicit Bitcoin Anchor Confirmation UI.
         //
@@ -4952,6 +4984,7 @@ export default {
             bitcoinAnchorFinalizedTransaction.value = null;
             bitcoinAnchorBroadcastOutcome.value = null;
             bitcoinAnchorBroadcastedAt.value = null;
+            bitcoinAnchorPublicationAttempt.value = null;
             retireBitcoinAnchorBroadcastConfirmationContext();
             try {
                 entry.bitcoinAnchorTransactionConstruction = bitcoinAnchorTransactionConstructionCoordinator.construct({
@@ -5031,6 +5064,7 @@ export default {
             bitcoinAnchorFinalizedTransaction.value = null;
             bitcoinAnchorBroadcastOutcome.value = null;
             bitcoinAnchorBroadcastedAt.value = null;
+            bitcoinAnchorPublicationAttempt.value = null;
             retireBitcoinAnchorBroadcastConfirmationContext();
             bitcoinAnchorReviewedSigningOutcome.value = { state: BitcoinAnchorReviewedSigningState.SIGNING, psbt: null, signedInputs: null, reason: null };
             try {
@@ -5096,6 +5130,7 @@ export default {
             bitcoinAnchorFinalizedTransaction.value = null;
             bitcoinAnchorBroadcastOutcome.value = null;
             bitcoinAnchorBroadcastedAt.value = null;
+            bitcoinAnchorPublicationAttempt.value = null;
             retireBitcoinAnchorBroadcastConfirmationContext();
             bitcoinAnchorSignedPsbtFinalizationOutcome.value = { state: BitcoinAnchorSignedPsbtFinalizationState.FINALIZING, finalized: false, txid: null, rawTransaction: null, verifiedInputCount: null, reason: null };
             try {
@@ -5207,6 +5242,66 @@ export default {
                 reason: bitcoinAnchorBroadcastOutcome.value.reason,
                 broadcastedAt: bitcoinAnchorBroadcastedAt.value
             });
+
+            // 0.9.512 — Bitcoin Granular Pipeline Anchor Publication
+            // Integration.
+            //
+            // THE ONE place this page ever calls
+            // `bitcoinAnchorPublicationCoordinator.publishBroadcastedAnchor()`
+            // — reached automatically, but only immediately after THIS SAME
+            // broadcast attempt's own outcome just settled to a real
+            // BROADCASTED, never from a `*View()` projection, a re-render,
+            // or any other passive re-observation. Never reached for
+            // REJECTED/UNAVAILABLE/FAILED — no anchor is ever minted for a
+            // transaction the network did not accept, exactly as
+            // `bitcoinAnchorPublicationCoordinator`'s own header requires.
+            // A thrown error (an unknown publicationId — a caller-contract
+            // violation this page's own state should never actually
+            // produce, since `bitcoinAnchorTransactionReview.publicationId`
+            // was set by a real, already-succeeded construction) is caught
+            // HERE, at the UI boundary, mirroring exactly how
+            // `createAnchor()`/`createBaseAnchor()` above already handle
+            // their own coordinator's thrown errors.
+            if (bitcoinAnchorPublicationCoordinator && bitcoinAnchorBroadcastOutcome.value.state === BitcoinAnchorBroadcastState.BROADCASTED) {
+                const publicationId = bitcoinAnchorTransactionReview.publicationId;
+                const network = bitcoinAnchorTransactionReview.description ? bitcoinAnchorTransactionReview.description.network : null;
+                bitcoinAnchorPublicationAttempt.value = { creating: true, outcome: null, anchor: null, reason: null, error: null };
+                try {
+                    const anchorResult = await bitcoinAnchorPublicationCoordinator.publishBroadcastedAnchor(publicationId, {
+                        broadcasted: true,
+                        txid: bitcoinAnchorBroadcastOutcome.value.txid,
+                        network
+                    });
+                    bitcoinAnchorPublicationAttempt.value = {
+                        creating: false, outcome: ExternalAnchorCreationOutcome.CREATED, anchor: anchorResult.anchor, reason: null, error: null
+                    };
+                    // Re-discover from the catalog so the newly minted
+                    // anchor immediately appears in the ordinary evidence
+                    // list below — mirrors `createAnchor()`'s/
+                    // `createBaseAnchor()`'s own identical call.
+                    const broadcastEntry = findEntry(publicationId);
+                    if (broadcastEntry) {
+                        loadEvidence(broadcastEntry);
+                        broadcastEntry.evidenceExpanded = true;
+                    }
+                } catch (error) {
+                    bitcoinAnchorPublicationAttempt.value = { creating: false, outcome: null, anchor: null, reason: null, error: error.message };
+                }
+            }
+        }
+
+        // Pure projection of `bitcoinAnchorPublicationAttempt` through
+        // application/PublicationAnchorCreationView.js's own
+        // `describeCreationAttempt()` — the identical "the UI owns no facts
+        // of its own, it only projects an injected collaborator's own
+        // result" discipline every other `*View()` function on this page
+        // already holds.
+        function bitcoinAnchorPublicationView() {
+            return describeCreationAttempt(bitcoinAnchorPublicationAttempt.value);
+        }
+
+        function bitcoinAnchorPublicationBadgeClass() {
+            return CREATION_BADGE_CLASSES[bitcoinAnchorPublicationView().state] || null;
         }
 
         // Pure projection of `bitcoinAnchorBroadcastOutcome` through
@@ -7071,6 +7166,9 @@ export default {
             bitcoinAnchorBroadcastCoordinator, bitcoinAnchorFinalizedTransaction, broadcastBitcoinAnchorTransaction,
             bitcoinAnchorBroadcastView, bitcoinAnchorBroadcastBadgeClass, isBitcoinAnchorBroadcasting,
             BitcoinAnchorBroadcastState,
+            // 0.9.512 — Bitcoin Granular Pipeline Anchor Publication Integration.
+            bitcoinAnchorPublicationCoordinator, bitcoinAnchorPublicationAttempt,
+            bitcoinAnchorPublicationView, bitcoinAnchorPublicationBadgeClass,
             // 0.8.65 — Explicit Bitcoin Anchor Confirmation UI.
             bitcoinAnchorConfirmationCoordinator, observeBitcoinAnchorBroadcastConfirmation,
             bitcoinAnchorBroadcastConfirmationObserving, bitcoinAnchorBroadcastConfirmationError,
@@ -7498,6 +7596,31 @@ export default {
                             Transaction broadcasted. This is not yet confirmation — observing confirmation is a
                             separate, explicit step.
                         </p>
+
+                        <!-- 0.9.512 — Bitcoin Granular Pipeline Anchor
+                             Publication Integration. Reached automatically
+                             the moment the BROADCASTED outcome immediately
+                             above settled — never a separate click — see
+                             broadcastBitcoinAnchorTransaction()'s own
+                             comment. Absent bitcoinAnchorPublicationCoordinator,
+                             this status simply never renders and only the
+                             existing local publication record above still
+                             exists. -->
+                        <template v-if="bitcoinAnchorPublicationCoordinator">
+                            <span v-if="bitcoinAnchorPublicationView().label" class="peer-badge"
+                                :class="bitcoinAnchorPublicationBadgeClass()">
+                                {{ bitcoinAnchorPublicationView().label }}
+                            </span>
+                            <p v-if="bitcoinAnchorPublicationView().message" class="form-hint form-hint--neutral">
+                                {{ bitcoinAnchorPublicationView().message }}
+                            </p>
+                            <p v-if="bitcoinAnchorPublicationView().reason" class="form-hint form-hint--neutral">
+                                {{ bitcoinAnchorPublicationView().reason }}
+                            </p>
+                            <dl v-if="bitcoinAnchorPublicationView().anchor" class="evidence-fields">
+                                <div class="evidence-field"><dt>Publication Anchor</dt><dd>{{ bitcoinAnchorPublicationView().anchor.id }}</dd></div>
+                            </dl>
+                        </template>
                     </template>
                 </div>
 

@@ -104,15 +104,43 @@ import { BitcoinAnchorPublicationLifecycleState } from './BitcoinAnchorPublicati
 // never held as shared state across calls — exactly as disposable as the
 // tiny, pure `{locator, proof}` transform it exists to perform.
 export class BitcoinAnchorPublicationCoordinator {
+    // 0.9.512 — Bitcoin Granular Pipeline Anchor Publication Integration.
+    //
+    // `bitcoinAnchorTransactionBuilder`/`bitcoinAnchorPsbtBuilder`/
+    // `bitcoinAnchorPsbtSerializer`/`bitcoinAnchorWalletSigner`/
+    // `bitcoinAnchorSignedPsbtFinalizer`/`bitcoinAnchorTransactionBroadcaster`
+    // are now OPTIONAL at construction — validated instead, lazily, at the
+    // top of `publishAnchor()` below, the one method that actually uses
+    // them. This is a construction-time relaxation ONLY; every one of
+    // those six checks still runs, with the identical message, before any
+    // Bitcoin-specific work begins — a caller of `publishAnchor()` sees no
+    // behavior change whatsoever. The reason is `publishBroadcastedAnchor()`
+    // below (also new): a composition root wiring THIS class into a real
+    // app, eagerly, at startup — exactly how every other coordinator in
+    // ui/main.js is already constructed — cannot supply a real
+    // `bitcoinAnchorWalletSigner` at that point, because anchoring/
+    // BitcoinAnchorWalletSigner.js's own constructor REQUIRES an already-
+    // connected `wallet` (throws otherwise), and no wallet is connected
+    // until a person acts. A caller that only ever intends to reach the
+    // granular-pipeline boundary — the real, production Bitcoin path —
+    // never needs to construct a wallet-signing capability this class
+    // would only use for its OWN internal, from-scratch signing sequence.
+    // `publicationCatalog`/`createPublicationAnchorUseCase` stay required
+    // eagerly, unchanged, because BOTH `publishAnchor()` and
+    // `publishBroadcastedAnchor()` need them from the very first line.
+    // `publicationAnchorCatalog` is a THIRD, newly optional dependency,
+    // used only by `publishBroadcastedAnchor()`'s own duplicate-anchor
+    // guard — see that method's own header.
     constructor({
         publicationCatalog,
         createPublicationAnchorUseCase,
-        bitcoinAnchorTransactionBuilder,
-        bitcoinAnchorPsbtBuilder,
-        bitcoinAnchorPsbtSerializer,
-        bitcoinAnchorWalletSigner,
-        bitcoinAnchorSignedPsbtFinalizer,
-        bitcoinAnchorTransactionBroadcaster
+        publicationAnchorCatalog = null,
+        bitcoinAnchorTransactionBuilder = null,
+        bitcoinAnchorPsbtBuilder = null,
+        bitcoinAnchorPsbtSerializer = null,
+        bitcoinAnchorWalletSigner = null,
+        bitcoinAnchorSignedPsbtFinalizer = null,
+        bitcoinAnchorTransactionBroadcaster = null
     } = {}) {
         if (!publicationCatalog || typeof publicationCatalog.get !== 'function') {
             throw new Error('BitcoinAnchorPublicationCoordinator: a publication catalog is required');
@@ -120,26 +148,9 @@ export class BitcoinAnchorPublicationCoordinator {
         if (!createPublicationAnchorUseCase || typeof createPublicationAnchorUseCase.execute !== 'function') {
             throw new Error('BitcoinAnchorPublicationCoordinator: a CreatePublicationAnchorUseCase is required');
         }
-        if (!bitcoinAnchorTransactionBuilder || typeof bitcoinAnchorTransactionBuilder.build !== 'function') {
-            throw new Error('BitcoinAnchorPublicationCoordinator: a BitcoinAnchorTransactionBuilder is required');
-        }
-        if (!bitcoinAnchorPsbtBuilder || typeof bitcoinAnchorPsbtBuilder.build !== 'function') {
-            throw new Error('BitcoinAnchorPublicationCoordinator: a BitcoinAnchorPsbtBuilder is required');
-        }
-        if (!bitcoinAnchorPsbtSerializer || typeof bitcoinAnchorPsbtSerializer.serialize !== 'function') {
-            throw new Error('BitcoinAnchorPublicationCoordinator: a BitcoinAnchorPsbtSerializer is required');
-        }
-        if (!bitcoinAnchorWalletSigner || typeof bitcoinAnchorWalletSigner.requestSignature !== 'function') {
-            throw new Error('BitcoinAnchorPublicationCoordinator: a BitcoinAnchorWalletSigner is required');
-        }
-        if (!bitcoinAnchorSignedPsbtFinalizer || typeof bitcoinAnchorSignedPsbtFinalizer.finalize !== 'function') {
-            throw new Error('BitcoinAnchorPublicationCoordinator: a BitcoinAnchorSignedPsbtFinalizer is required');
-        }
-        if (!bitcoinAnchorTransactionBroadcaster || typeof bitcoinAnchorTransactionBroadcaster.broadcast !== 'function') {
-            throw new Error('BitcoinAnchorPublicationCoordinator: a BitcoinAnchorTransactionBroadcaster is required');
-        }
         this._publicationCatalog = publicationCatalog;
         this._createPublicationAnchorUseCase = createPublicationAnchorUseCase;
+        this._publicationAnchorCatalog = publicationAnchorCatalog;
         this._bitcoinAnchorTransactionBuilder = bitcoinAnchorTransactionBuilder;
         this._bitcoinAnchorPsbtBuilder = bitcoinAnchorPsbtBuilder;
         this._bitcoinAnchorPsbtSerializer = bitcoinAnchorPsbtSerializer;
@@ -179,6 +190,30 @@ export class BitcoinAnchorPublicationCoordinator {
     // BitcoinAnchorPsbtBuilder's own contract) — never for an operational
     // Bitcoin-network outcome, which is always reported via `state`.
     async publishAnchor(publicationId, { utxos, changeAddress, utxoDetails, changeScriptPubKey } = {}) {
+        // 0.9.512 — moved here, verbatim, from the constructor — see this
+        // class's own constructor header on why. Still checked before any
+        // Bitcoin-specific work begins, still the identical message, still
+        // never reached by `publishBroadcastedAnchor()` below, which needs
+        // none of these six collaborators.
+        if (!this._bitcoinAnchorTransactionBuilder || typeof this._bitcoinAnchorTransactionBuilder.build !== 'function') {
+            throw new Error('BitcoinAnchorPublicationCoordinator: a BitcoinAnchorTransactionBuilder is required');
+        }
+        if (!this._bitcoinAnchorPsbtBuilder || typeof this._bitcoinAnchorPsbtBuilder.build !== 'function') {
+            throw new Error('BitcoinAnchorPublicationCoordinator: a BitcoinAnchorPsbtBuilder is required');
+        }
+        if (!this._bitcoinAnchorPsbtSerializer || typeof this._bitcoinAnchorPsbtSerializer.serialize !== 'function') {
+            throw new Error('BitcoinAnchorPublicationCoordinator: a BitcoinAnchorPsbtSerializer is required');
+        }
+        if (!this._bitcoinAnchorWalletSigner || typeof this._bitcoinAnchorWalletSigner.requestSignature !== 'function') {
+            throw new Error('BitcoinAnchorPublicationCoordinator: a BitcoinAnchorWalletSigner is required');
+        }
+        if (!this._bitcoinAnchorSignedPsbtFinalizer || typeof this._bitcoinAnchorSignedPsbtFinalizer.finalize !== 'function') {
+            throw new Error('BitcoinAnchorPublicationCoordinator: a BitcoinAnchorSignedPsbtFinalizer is required');
+        }
+        if (!this._bitcoinAnchorTransactionBroadcaster || typeof this._bitcoinAnchorTransactionBroadcaster.broadcast !== 'function') {
+            throw new Error('BitcoinAnchorPublicationCoordinator: a BitcoinAnchorTransactionBroadcaster is required');
+        }
+
         const publication = this._publicationCatalog.get(publicationId);
         if (!publication) {
             throw new Error(`BitcoinAnchorPublicationCoordinator: publication ${publicationId} not found`);
@@ -265,6 +300,169 @@ export class BitcoinAnchorPublicationCoordinator {
         return this._outcome(BitcoinAnchorPublicationLifecycleState.BROADCASTED, {
             reachedStage: BitcoinAnchorPublicationLifecycleState.BROADCASTED,
             reason: null, contentHash, unsignedPsbt, txid: evidence.proof.txid, anchor
+        });
+    }
+
+    // 0.9.512 — Bitcoin Granular Pipeline Anchor Publication Integration.
+    //
+    // THE ACTIVATED BRIDGE, REACHED FROM THE REAL, PRODUCTION BITCOIN
+    // PATH. `publishAnchor()` above composes six raw anchoring/ primitives
+    // directly — a full, self-contained plan→PSBT→sign→finalize→broadcast
+    // sequence, still exactly as 0.8.53 built it, still exercised in full
+    // by tests/BitcoinAnchorPublicationLifecycle.test.js. But the Bitcoin
+    // anchor UI ui/main.js/ui/views/DecentralizedPublicationsView.js
+    // actually runs in production does not use those six primitives
+    // directly — it runs its OWN, richer, already-reviewed granular
+    // pipeline: application/BitcoinAnchorTransactionConstructionCoordinator.js
+    // (0.8.61) → application/BitcoinAnchorTransactionReviewCoordinator.js
+    // (0.8.62) → application/BitcoinAnchorReviewedSigningCoordinator.js
+    // (0.8.62, review-preserving — see anchoring/BitcoinAnchorReviewedPsbtSigner.js's
+    // own header) → application/BitcoinAnchorSignedPsbtFinalizationCoordinator.js
+    // (0.8.63) → application/BitcoinAnchorBroadcastCoordinator.js (0.8.64).
+    // That pipeline could always reach a real BROADCASTED outcome — a real
+    // txid, from a real, already-reviewed UniSat signature — but nothing
+    // ever turned that fact into a `core/PublicationAnchor.js`; only into
+    // application/BitcoinAnchorPublicationRecord.js, a local, UI-level
+    // observation-history bookkeeping record (0.8.80), never the generic
+    // anchor lifecycle Evidence/Verification already read. This method is
+    // the missing connection — not a second Bitcoin anchoring system, and
+    // not `publishAnchor()`'s own from-scratch sequence run a second way.
+    //
+    //   granular pipeline's own real BROADCASTED outcome
+    //   { broadcasted: true, txid, network }   (application/
+    //                                            BitcoinAnchorBroadcastCoordinator.js,
+    //                                            0.8.64, UNCHANGED)
+    //           │
+    //           │ called ONCE, immediately, by the SAME UI action that just
+    //           │ observed that outcome — never by a re-render, a `*View()`
+    //           │ projection, or any other passive re-observation
+    //           ▼
+    //   BitcoinAnchorPublicationCoordinator.publishBroadcastedAnchor()  (THIS
+    //           │                                                        METHOD)
+    //           ▼
+    //   anchoring/BitcoinAnchorPublisher.js#publish()     (0.8.9, UNCHANGED —
+    //           │                                           the SAME reuse
+    //           │                                           `publishAnchor()`
+    //           │                                           above already
+    //           │                                           performs)
+    //           ▼
+    //   CreatePublicationAnchorUseCase.execute()           (0.8.8, UNCHANGED)
+    //           │
+    //           ▼
+    //   a real, signed, cataloged PublicationAnchor — immediately visible to
+    //   anchoring/BitcoinAnchorEvidenceView.js and anchoring/
+    //   BitcoinOpReturnProofVerifier.js, exactly like any other Bitcoin anchor
+    //
+    // NEVER SIGNS, FINALIZES, OR BROADCASTS ANYTHING. The real broadcast
+    // already happened, exactly once, through the granular pipeline's own
+    // application/BitcoinAnchorBroadcastCoordinator.js — this method is
+    // handed only the FACT that it succeeded (`broadcasted: true` plus the
+    // real `txid`/`network` that call itself returned), never a PSBT,
+    // never a signature, never a rawTransaction. It constructs a
+    // `BitcoinAnchorPublisher` around a broadcaster whose own `broadcast()`
+    // performs NO network operation of its own — it simply hands back the
+    // `txid` this method was already given — mirroring EXACTLY why
+    // `publishAnchor()` above constructs ITS OWN `BitcoinAnchorPublisher`
+    // the identical way, around a broadcaster that has already, separately,
+    // performed the real submission (see this file's own top-of-file
+    // header, "WHY BitcoinAnchorPublisher IS CONSTRUCTED HERE, FRESH, PER
+    // CALL"). This is the ONE, and only, reason UniSat/the granular
+    // pipeline remains the sole real Bitcoin write path: this method adds
+    // no second one.
+    //
+    // THE LIFECYCLE BOUNDARY THIS METHOD REQUIRES IS EXACTLY BROADCASTED —
+    // NEVER EARLIER, NEVER A SEPARATE CONFIRMATION. Mirrors `publishAnchor()`
+    // above precisely: a `core/PublicationAnchor.js` is minted the moment
+    // broadcast is accepted, never delayed for confirmation — see this
+    // file's own header, "BROADCAST ACCEPTANCE IS RECORDED; IT IS NEVER
+    // PROMOTED TO CONFIRMATION." Whether the transaction later gets mined
+    // is answered later, separately, and unchanged, by application/
+    // BitcoinAnchorConfirmationCoordinator.js / anchoring/
+    // BitcoinOpReturnProofVerifier.js — this method never touches either.
+    // `broadcasted` must be exactly `true` — a caller-contract check, thrown
+    // before this publication's identity is even looked up, mirroring
+    // exactly how application/BitcoinAnchorBroadcastCoordinator.js#broadcast()
+    // itself requires `finalized === true` before it ever calls a real
+    // broadcaster.
+    //
+    // NO DUPLICATE ANCHOR FROM REPEATED OBSERVATION. When this coordinator
+    // was constructed with a `publicationAnchorCatalog` (optional — see
+    // this class's own constructor header), a second call naming the exact
+    // same `publicationId`/`txid` returns the ALREADY-cataloged anchor
+    // unchanged rather than minting a second one — protecting against a
+    // caller-side bug (a UI action accidentally re-invoked, a duplicate
+    // event) rather than requiring every caller to hold its own guard.
+    // Without one supplied, this method behaves exactly like `publishAnchor()`
+    // always has — it mints unconditionally — preserving this class's own
+    // pre-0.9.512 behavior for any existing caller that never passed one.
+    //
+    // Resolves to exactly one of:
+    //
+    //   { state: BROADCASTED, reachedStage: BROADCASTED, reason: null,
+    //     contentHash, unsignedPsbt: null, txid, anchor }
+    //
+    // (`unsignedPsbt` is always `null` here — no PSBT was ever built by
+    // this method; a caller wanting to inspect the one the granular
+    // pipeline itself produced already has it from that pipeline's own
+    // review/finalization outcomes.)
+    //
+    // Throws only for a caller-contract violation checked BEFORE this
+    // publication's identity is ever looked up — `broadcasted` is not
+    // `true`, or `txid` is missing — or an unknown `publicationId`, the
+    // identical check `publishAnchor()` above already performs. Never
+    // throws for an operational Bitcoin-network outcome; there is none
+    // left for this method to report — the network was already, separately,
+    // asked, by the granular pipeline's own broadcast coordinator.
+    async publishBroadcastedAnchor(publicationId, { broadcasted, txid, network } = {}) {
+        if (broadcasted !== true) {
+            throw new Error('BitcoinAnchorPublicationCoordinator: broadcasted must be true — broadcast a transaction through the granular Bitcoin pipeline before ever requesting anchor publication');
+        }
+        if (typeof txid !== 'string' || !txid) {
+            throw new Error('BitcoinAnchorPublicationCoordinator: txid is required — broadcast a transaction before ever requesting anchor publication');
+        }
+
+        const publication = this._publicationCatalog.get(publicationId);
+        if (!publication) {
+            throw new Error(`BitcoinAnchorPublicationCoordinator: publication ${publicationId} not found`);
+        }
+        const contentHash = publication.contentReference.hash;
+        const locator = `bitcoin:${txid}`;
+
+        if (this._publicationAnchorCatalog && typeof this._publicationAnchorCatalog.findByPublicationId === 'function') {
+            const existing = this._publicationAnchorCatalog.findByPublicationId(publicationId)
+                .find((candidate) => candidate.locator === locator);
+            if (existing) {
+                return this._outcome(BitcoinAnchorPublicationLifecycleState.BROADCASTED, {
+                    reachedStage: BitcoinAnchorPublicationLifecycleState.BROADCASTED,
+                    reason: null, contentHash, unsignedPsbt: null, txid, anchor: existing
+                });
+            }
+        }
+
+        // A thin, no-network broadcaster — see this method's own header,
+        // "NEVER SIGNS, FINALIZES, OR BROADCASTS ANYTHING" — that only ever
+        // hands back the `txid` the granular pipeline's own real broadcast
+        // already produced, so this call can reuse anchoring/
+        // BitcoinAnchorPublisher.js's own evidence-shape derivation
+        // (`locator: 'bitcoin:<txid>'`, `proof: { txid, network }`)
+        // unchanged, rather than re-deriving it a second time here.
+        const passthroughBroadcaster = { async broadcast() { return { broadcast: true, txid }; } };
+        const bitcoinAnchorPublisher = new BitcoinAnchorPublisher({ network, broadcaster: passthroughBroadcaster });
+        const evidence = await bitcoinAnchorPublisher.publish(contentHash);
+
+        // Stage 6 — the identical durable-record creation `publishAnchor()`
+        // above performs, reusing CreatePublicationAnchorUseCase (0.8.8)
+        // UNCHANGED, fed exactly the evidence BitcoinAnchorPublisher itself
+        // derived. See this file's own header on Stage 6, above.
+        const anchor = this._createPublicationAnchorUseCase.execute(publicationId, {
+            anchorType: bitcoinAnchorPublisher.anchorType,
+            locator: evidence.locator,
+            proof: evidence.proof
+        });
+
+        return this._outcome(BitcoinAnchorPublicationLifecycleState.BROADCASTED, {
+            reachedStage: BitcoinAnchorPublicationLifecycleState.BROADCASTED,
+            reason: null, contentHash, unsignedPsbt: null, txid: evidence.proof.txid, anchor
         });
     }
 
