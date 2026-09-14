@@ -25,7 +25,7 @@ import { PublicationDistributionState } from '../../application/PublicationDistr
 import { describeDecentralizedWorldEncounterLeadSelectionOutcomeFromRegistry, DecentralizedWorldEncounterLeadSelectionOutcomeStatus } from '../../application/DecentralizedWorldEncounterLeadSelection.js';
 import { describePublicationMaterialProvenanceFromInspection } from '../../application/PublicationMaterialProvenance.js';
 import { resolveSnapshotPublicationAttribution } from '../../application/SnapshotPublicationAttribution.js';
-import { describeWorldEncounterPresentation } from '../../application/WorldEncounterPresentation.js';
+import { describeWorldEncounterPresentation, describeWorldEncounterPresentationSourceFamily, WorldEncounterPresentationSourceFamily } from '../../application/WorldEncounterPresentation.js';
 import { describeWorldSnapshotInspection } from '../../application/WorldSnapshotInspection.js';
 import { unregisterMaterializedSnapshotWorldSource } from '../../application/MaterializedSnapshotWorldDiscoveryBridge.js';
 import { describeWorldEncounterComparisonCandidate } from '../../application/WorldEncounterComparisonCandidate.js';
@@ -2251,6 +2251,35 @@ function resolvedEncounterSelectionsEqual(previousResolvedSelection, nextResolve
 // (`distributionMaterialState`/`distributionDiscoveryState`) is unchanged
 // and still the fallback for the common, single-substrate case.
 
+// 0.9.516 — World View / Wanderer Product Experience Reassessment,
+// Section G. Three small, presentation-only lookups/helpers backing
+// `describeSelectionOriginLabel()`/`describeDecentralizedLeadUriLabel()`
+// (below, in `methods`) — kept private to this file, mirroring
+// `ui/views/DecentralizedPublicationsView.js`'s own identically-shaped
+// `STORAGE_TYPE_LABELS`/`shortId()`/`shortHash()` (0.9.510/0.8.13) rather
+// than importing them: neither is exported from that file today, and a
+// World Encounter is not a Decentralized Publications list row — the two
+// views stay independent consumers of the same convention, never coupled
+// through a shared UI import.
+const CONTENT_URI_SCHEME_LABELS = {
+    ar: 'Arweave',
+    ipfs: 'IPFS'
+};
+
+function shortIdentityId(identityId) {
+    if (typeof identityId !== 'string' || identityId.length === 0) {
+        return 'an unknown identity';
+    }
+    return identityId.length > 14 ? identityId.slice(-14) : identityId;
+}
+
+function shortContentHash(contentHash) {
+    if (typeof contentHash !== 'string' || contentHash.length === 0) {
+        return 'an unknown hash';
+    }
+    return contentHash.length > 18 ? `${contentHash.slice(0, 10)}…${contentHash.slice(-6)}` : contentHash;
+}
+
 export default {
     name: 'WorldEncounterCanvas',
     components: { WorldEncounterMarker, WandererMarker },
@@ -3358,6 +3387,91 @@ export default {
             this.resolvedLeadChoice = candidate;
             this.refreshMaterialInspection();
         },
+        // 0.9.516 — World View / Wanderer Product Experience Reassessment,
+        // Section G (vocabulary sweep). The "Choose Source"/"Source: …"
+        // panel immediately below in the template rendered a raw
+        // `WorldDiscoverySource` `origin` string straight to a Wanderer —
+        // `'local'`, but also `'peer:' + identityId` (a raw peer identity
+        // id, `application/PeerWorldEncounterMaterialSource.js`'s own
+        // `PEER_ORIGIN_PREFIX`) and `'snapshot:' + contentHash + ':' +
+        // publicationId` (a raw content hash,
+        // `application/MaterializedSnapshotWorldDiscoveryBridge.js`'s own
+        // `deriveSnapshotWorldDiscoveryOrigin()`). This is a DIFFERENT bug
+        // from the one 0.9.176 already fixed one panel over: that
+        // milestone gave the (already-resolved) inspection panel a
+        // friendly `selectedEncounterPresentationSourceLabel` computed,
+        // immediately above, but never touched THIS panel — the one a
+        // Wanderer actually clicks through, while more than one source
+        // still competes for the same encounter, and the one that keeps
+        // showing its pick's own raw origin once resolved.
+        //
+        // Reuses `describeWorldEncounterPresentationSourceFamily()`
+        // (0.9.176, unmodified) for the SAME three-family classification
+        // the inspection panel's own friendly label already relies on —
+        // never a second, competing classification. Unlike that computed,
+        // this one is a method: it also needs to tell apart more than one
+        // candidate sharing a family (e.g. two different peers each
+        // offering the same encounter), which a bare family name cannot.
+        // Disambiguation reuses this codebase's own existing truncation
+        // convention — `ui/views/DecentralizedPublicationsView.js`'s own
+        // `shortId()`/`shortHash()` (0.8.13 and earlier) — rather than an
+        // arbitrary, meaningless position number: a Peer candidate shows
+        // the last 14 characters of its own identity id, a Snapshot
+        // candidate shows a truncated form of its own content hash, both
+        // already-established "enough to tell two apart, never the full
+        // raw value pretending to be friendly" shapes. A `LOCAL` origin
+        // never needs disambiguation (`WorldDiscoverySourceRegistry` holds
+        // at most one local source) and is never truncated.
+        //
+        // An origin this codebase's own family classifier does not
+        // recognize (`describeWorldEncounterPresentationSourceFamily()`
+        // returns `null` — a future, unimplemented family) still renders,
+        // verbatim, exactly as today — never hidden, never refused, the
+        // SAME restraint `humanizeStorageType()`/`humanizeAnchorType()`
+        // already hold one view over for an unrecognized code.
+        describeSelectionOriginLabel(origin) {
+            const family = describeWorldEncounterPresentationSourceFamily(origin);
+            if (family === WorldEncounterPresentationSourceFamily.LOCAL) {
+                return 'Local';
+            }
+            if (family === WorldEncounterPresentationSourceFamily.PEER) {
+                const identityId = origin.slice('peer:'.length);
+                return `Peer ${shortIdentityId(identityId)}`;
+            }
+            if (family === WorldEncounterPresentationSourceFamily.SNAPSHOT) {
+                const contentHash = origin.slice('snapshot:'.length).split(':')[0];
+                return `Snapshot ${shortContentHash(contentHash)}`;
+            }
+            return origin;
+        },
+        // 0.9.516 — Section G, one panel over: the "Choose Location"/
+        // "Location: …" panel rendered a decentralized lead's own raw
+        // `uri` — a `core/ContentReference.js`-shaped retrieval locator,
+        // literally `'ipfs://' + CID` or `'ar://' + transactionId` per
+        // that file's own header diagram — straight to a Wanderer. Mirrors
+        // `describeSelectionOriginLabel()` immediately above, one
+        // vocabulary over: reuses this codebase's own already-established
+        // `STORAGE_TYPE_LABELS` mapping
+        // (`ui/views/DecentralizedPublicationsView.js`'s own 0.9.510 fix —
+        // `ar` -> "Arweave", `ipfs` -> "IPFS") for the scheme, and the SAME
+        // `shortContentHash()` truncation immediately above for the
+        // scheme-specific identifier that follows it, rather than a
+        // second competing scheme-label table. A `uri` with no recognized
+        // `scheme://` shape (or none at all) still renders, verbatim/
+        // truncated, never hidden or refused.
+        describeDecentralizedLeadUriLabel(uri) {
+            if (typeof uri !== 'string' || uri.length === 0) {
+                return uri;
+            }
+            const schemeSeparator = uri.indexOf('://');
+            if (schemeSeparator === -1) {
+                return shortContentHash(uri);
+            }
+            const scheme = uri.slice(0, schemeSeparator);
+            const identifier = uri.slice(schemeSeparator + 3);
+            const schemeLabel = CONTENT_URI_SCHEME_LABELS[scheme] || scheme;
+            return `${schemeLabel} ${shortContentHash(identifier)}`;
+        },
         // 0.9.474 — Admit World-Encountered Publications into App-Wide
         // Discovery. The only caller of `.add()` on
         // `decentralizedPublicationDiscoveryProvider` in this file.
@@ -4382,13 +4496,13 @@ export default {
                                 class="world-encounter-selection-origin-choice"
                                 :class="{ 'world-encounter-selection-origin-choice-active': resolvedEncounterSelection && resolvedEncounterSelection.origin === candidate.origin }"
                                 @click="chooseSelectionOrigin(candidate)"
-                            >{{ candidate.origin }}</button>
+                            >{{ describeSelectionOriginLabel(candidate.origin) }}</button>
                         </li>
                     </ul>
                 </template>
 
                 <p v-else-if="selectionOutcome.status === 'RESOLVED'" class="world-encounter-selection-origin-resolved">
-                    Source: {{ selectionOutcome.resolvedSelection.origin }}
+                    Source: {{ describeSelectionOriginLabel(selectionOutcome.resolvedSelection.origin) }}
                 </p>
             </div>
 
@@ -4405,13 +4519,13 @@ export default {
                                 class="world-encounter-lead-choice"
                                 :class="{ 'world-encounter-lead-choice-active': resolvedLead && resolvedLead.origin === candidate.origin && resolvedLead.discoveryTag === candidate.discoveryTag && resolvedLead.uri === candidate.uri }"
                                 @click="chooseDecentralizedLead(candidate)"
-                            >{{ candidate.uri }}</button>
+                            >{{ describeDecentralizedLeadUriLabel(candidate.uri) }}</button>
                         </li>
                     </ul>
                 </template>
 
                 <p v-else-if="decentralizedLeadOutcome.status === 'RESOLVED'" class="world-encounter-lead-resolved">
-                    Location: {{ decentralizedLeadOutcome.resolvedLead.uri }}
+                    Location: {{ describeDecentralizedLeadUriLabel(decentralizedLeadOutcome.resolvedLead.uri) }}
                 </p>
             </div>
 
