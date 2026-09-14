@@ -494,7 +494,25 @@ async function run() {
         // singular `resolvedArweaveGatewayUrl` still exists, unchanged, and
         // is still what F3 (below) finds reaching Arweave Anchor.
         assert(mainSource.includes('arweaveResolverOptions: { gatewayUrls: resolvedArweaveGatewayUrls }'), n('F2. resolvedArweaveGatewayUrls reaches World Encounter material RESOLUTION (read)'));
-        assert(mainSource.includes("arweaveContentStoreOptions: { signer: arweaveHostSigner, gatewayUrls: resolvedArweaveGatewayUrls }"), n('F2. resolvedArweaveGatewayUrls reaches Snapshot RETRIEVAL (read)'));
+        // AMENDED BY 0.9.508 — Snapshot Resolution Content Backend Registry
+        // Integration. Snapshot RETRIEVAL no longer holds its own dedicated
+        // ArweaveContentStore built from the PLURAL resolvedArweaveGatewayUrls
+        // — composeDiscoverSnapshotRuntime() no longer receives an
+        // arweaveContentStoreOptions at all (0.9.507's own Section H found
+        // that dedicated store resolved every candidate through ONE FIXED
+        // backend regardless of the candidate's own declared storage).
+        // Snapshot resolution's ContentStore is now resolved per-candidate
+        // from publicationSnapshotPlacementResolutionStoreRegistry, which
+        // (for an "ar" candidate) is the SAME shared arweaveSnapshotPlacementContentStore
+        // Placement resolution already used — built from the SINGULAR
+        // resolvedArweaveGatewayUrl (0.9.505, unmodified), not the plural
+        // list. A genuine, narrowly-scoped trade-off: this one path no
+        // longer has 0.9.440's own multi-gateway read failover.
+        const discoverSnapshotRuntimeCallMatch = mainSource.match(/composeDiscoverSnapshotRuntime\(\{([\s\S]*?)\}\);/);
+        assert(Boolean(discoverSnapshotRuntimeCallMatch) && !discoverSnapshotRuntimeCallMatch[1].includes('arweaveContentStoreOptions'),
+            n('F2. AMENDED BY 0.9.508 — composeDiscoverSnapshotRuntime() no longer receives an arweaveContentStoreOptions of any kind; Snapshot RETRIEVAL\'s ContentStore now comes from the resolution registry instead'));
+        assert(mainSource.includes('storeRegistry: publicationSnapshotPlacementResolutionStoreRegistry') && mainSource.includes('const discoverSnapshotCommand ='),
+            n('F2. AMENDED BY 0.9.508 — discoverSnapshotCommand instead receives storeRegistry: publicationSnapshotPlacementResolutionStoreRegistry, which resolves an "ar" candidate to the shared arweaveSnapshotPlacementContentStore built from the singular resolvedArweaveGatewayUrl'));
         // AMENDED BY 0.9.506 — Make Snapshot Distribution Content Backend
         // Selectable. Snapshot DISTRIBUTION's composeSnapshotDistributionRuntime()
         // call no longer builds an arweaveContentStoreOptions of its own AT
