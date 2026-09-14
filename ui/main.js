@@ -59,6 +59,7 @@ import { CreateExternalAnchorEvidenceViewRegistryUseCase } from '../application/
 import { CreateArweaveAnchorPublisherUseCase } from '../application/CreateArweaveAnchorPublisherUseCase.js';
 import { CreateArweaveAnchorProofVerifierUseCase } from '../application/CreateArweaveAnchorProofVerifierUseCase.js';
 import { CreateArweaveAnchorEvidenceViewUseCase } from '../application/CreateArweaveAnchorEvidenceViewUseCase.js';
+import { CreateBaseAnchorEvidenceViewUseCase } from '../application/CreateBaseAnchorEvidenceViewUseCase.js';
 import { CreateBitcoinEsploraTransactionConfirmationObserverUseCase } from '../application/CreateBitcoinEsploraTransactionConfirmationObserverUseCase.js';
 import { CreateBitcoinAnchorConfirmationObserverUseCase } from '../application/CreateBitcoinAnchorConfirmationObserverUseCase.js';
 import { CreateBitcoinAnchorProofReconciliationViewUseCase } from '../application/CreateBitcoinAnchorProofReconciliationViewUseCase.js';
@@ -2348,6 +2349,16 @@ externalAnchorProofVerifierRegistry.register(baseProofVerifier);
 
 const { arweaveAnchorEvidenceView } = new CreateArweaveAnchorEvidenceViewUseCase().execute();
 externalAnchorEvidenceViewRegistry.register(arweaveAnchorEvidenceView);
+
+// 0.9.511 — Base Anchor Evidence View. The presentation-side counterpart
+// of `baseProofVerifier` above, one axis over — mirrors
+// `arweaveAnchorEvidenceView`'s own registration immediately above
+// exactly. `baseAnchorEvidenceView` never talks to a Base RPC endpoint
+// or wallet — see anchoring/BaseAnchorEvidenceView.js's own header — so
+// it needs no fake/no-op collaborator standing in for a capability this
+// replica doesn't have yet.
+const { baseAnchorEvidenceView } = new CreateBaseAnchorEvidenceViewUseCase().execute();
+externalAnchorEvidenceViewRegistry.register(baseAnchorEvidenceView);
 
 // See the "BUG FIX" comment above `arweaveHostSigner`, above — the
 // identical lazy-resolution fix, one substrate over. `nostrHostPublisher`
