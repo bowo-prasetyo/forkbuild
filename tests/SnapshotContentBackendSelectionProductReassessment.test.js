@@ -329,16 +329,30 @@ async function run() {
             'I. CLOSED — no remaining call site passes placementView.storage into humanizeContentKind()');
 
         // humanizeContentKind() itself is untouched and still exposed —
-        // its own genuine callers (content KIND, anchor TYPE) are a
-        // deliberately separate axis from storage CODE and were never
-        // broken; this regression-checks that this fix did not touch
-        // them.
-        check(/humanizeContentKind, humanizeStorageType, shortId/.test(viewSource),
-            'I. humanizeContentKind is still exposed to the template, unmodified, alongside the new humanizeStorageType — its own real callers (contentKind, anchorType) are untouched');
+        // its own genuine remaining caller (content KIND) is a
+        // deliberately separate axis from storage CODE and was never
+        // broken; this regression-checks that this fix did not touch it.
+        //
+        // UPDATE (0.9.514): anchor TYPE moved off humanizeContentKind()
+        // too, for the identical reason storage CODE did here — see
+        // tests/ProofAnchoringProductCompletionReassessment.test.js's own
+        // Section naming 'bitcoin-op-return' rendering as "Bitcoin Op
+        // Return" (OP_RETURN is a raw Bitcoin script opcode, not a
+        // network name) as its own PRODUCT_AMBIGUITY, closed the same
+        // way this file's own Section I was: a small, presentation-only
+        // humanizeAnchorType(), never a second, disconnected mechanism.
+        // "This fix never widened beyond the four storage-code sites it
+        // named" remains true of the 0.9.510 fix itself; anchor TYPE's
+        // own, later, separately-scoped fix is what the assertions below
+        // now check instead.
+        check(/humanizeContentKind, humanizeStorageType, humanizeAnchorType, shortId/.test(viewSource),
+            'I. humanizeContentKind is still exposed to the template, unmodified, alongside humanizeStorageType and (0.9.514) humanizeAnchorType');
         check(/\{\{ humanizeContentKind\(entry\.publication\.contentKind\) \}\}/.test(viewSource),
             "I. ...and still genuinely used for a real content KIND, exactly as before");
-        check(/\{\{ humanizeContentKind\(anchorType\) \}\}/.test(viewSource) && /\{\{ humanizeContentKind\(anchorView\.anchorType\) \}\}/.test(viewSource),
-            'I. ...and for anchor TYPE, unaffected — this fix never widened beyond the four storage-code sites it named');
+        check(/\{\{ humanizeAnchorType\(anchorType\) \}\}/.test(viewSource) && /\{\{ humanizeAnchorType\(anchorView\.anchorType\) \}\}/.test(viewSource),
+            'I. (0.9.514) ...anchor TYPE now renders through humanizeAnchorType(), not humanizeContentKind() — see that milestone\'s own audit for why');
+        check(!/\{\{ humanizeContentKind\(anchorType\) \}\}/.test(viewSource) && !/\{\{ humanizeContentKind\(anchorView\.anchorType\) \}\}/.test(viewSource),
+            'I. (0.9.514) ...and no remaining call site passes anchorType/anchorView.anchorType into humanizeContentKind() directly');
 
         // The correct words were already known, elsewhere in this exact
         // same file, before this fix — the strongest evidence this was
