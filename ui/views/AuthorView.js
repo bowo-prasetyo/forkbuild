@@ -3,6 +3,18 @@ import { useRoute } from 'vue-router';
 import { CreateDiscoveryUseCase } from '../../application/CreateDiscoveryUseCase.js';
 import PublicationCatalog from '../components/PublicationCatalog.js';
 import ForkTree from '../components/ForkTree.js';
+// 0.9.525 — Repository Discovery & Material Trust Product
+// Reassessment, Section G. See application/
+// PublicationAuthorNameIdentityConvergence.js's own header for why this
+// page — the one Repository surface whose entire premise is "here is
+// one author's work" — is where this check belongs, rather than the
+// paginated catalog card/list views (which never claimed anything about
+// authorship equivalence in the first place, one publication at a
+// time).
+import {
+    derivePublicationAuthorNameIdentityConvergence,
+    describePublicationAuthorNameIdentityConvergence
+} from '../../application/PublicationAuthorNameIdentityConvergence.js';
 
 // As of 0.2.31, the paginated "Publications" listing above is
 // ui/components/PublicationCatalog.js scoped to this author — the
@@ -38,16 +50,35 @@ export default {
             return allPublications.value.filter((p) => !p.parentDocumentId);
         });
 
+        // 0.9.525 — a structural fact about the SAME `allPublications`
+        // this page already loaded for the fork tree, never a second
+        // query: does this typed name cover more than one distinct
+        // signing identity? See application/
+        // PublicationAuthorNameIdentityConvergence.js's own header —
+        // this never adjudicates which identity is "the real" author,
+        // it only ever discloses that more than one exists.
+        const authorNameIdentityConvergence = computed(() => derivePublicationAuthorNameIdentityConvergence({
+            author,
+            publications: allPublications.value
+        }));
+        const authorNameIdentityNotice = computed(() => describePublicationAuthorNameIdentityConvergence(
+            authorNameIdentityConvergence.value
+        ));
+
         return {
             author,
             allPublications,
-            forkTreeRoots
+            forkTreeRoots,
+            authorNameIdentityNotice
         };
     },
     template: `
         <section class="author-view">
             <h1>{{ author || 'Anonymous' }}</h1>
             <p class="author-stats">{{ allPublications.length }} publication(s)</p>
+            <p v-if="authorNameIdentityNotice" class="author-identity-convergence-notice">
+                ⚠ {{ authorNameIdentityNotice }}
+            </p>
 
             <PublicationCatalog :author="author" />
 
