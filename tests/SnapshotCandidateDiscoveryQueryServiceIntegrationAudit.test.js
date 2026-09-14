@@ -49,6 +49,17 @@ import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifi
 //   Section L — No ranking/fallback.
 //   Section M — Production composition root.
 //   Section N — Boundary audit + this milestone's own diff scope.
+//
+// UPDATED BY 0.9.500. This audit's own Section M (production composition
+// root) originally proved a Local+Nostr-only composite; 0.9.500 has since
+// added Arweave as a third, equally-weighted source into the SAME
+// `composeSnapshotCandidateDiscoveryRuntime()` this section already
+// exercises — Section M4's own regex is updated in place to match, and
+// tests/SnapshotCandidateDiscoveryArweaveCompositionIntegrationAudit.test.js
+// is 0.9.500's own dedicated audit of that addition (the Arweave-specific
+// dedup/failure-matrix/query-count coverage this file never needed before
+// now). Every other section here still holds unmodified: Local and Nostr
+// remain exactly as this file already proved them.
 
 function assert(condition, message) {
     if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
@@ -451,10 +462,14 @@ async function run() {
 
         // M4. ui/main.js actually wires this composition from the SAME
         // singleton collaborators — never a second Nostr construction, and
-        // never a second catalog.
+        // never a second catalog. UPDATED BY 0.9.500: a third collaborator,
+        // `arweaveSnapshotDiscoveryQueryService`, now rides between the
+        // Nostr and placementCatalog lines — see tests/
+        // SnapshotCandidateDiscoveryArweaveCompositionIntegrationAudit.test.js
+        // for that milestone's own full audit of the Arweave source itself.
         const mainSource = stripLineComments(readSource('ui/main.js'));
-        assert(/composeSnapshotCandidateDiscoveryRuntime\(\{\s*\n\s*nostrSnapshotDiscoveryQueryService: snapshotDiscoveryQueryService,\s*\n\s*placementCatalog: publicationSnapshotPlacementCatalog/.test(mainSource),
-            '5. ui/main.js composes the runtime from the SAME snapshotDiscoveryQueryService and publicationSnapshotPlacementCatalog instances it already built for other purposes — never a second construction of either.');
+        assert(/composeSnapshotCandidateDiscoveryRuntime\(\{\s*\n\s*nostrSnapshotDiscoveryQueryService: snapshotDiscoveryQueryService,\s*\n\s*arweaveSnapshotDiscoveryQueryService,\s*\n\s*placementCatalog: publicationSnapshotPlacementCatalog/.test(mainSource),
+            '5. ui/main.js composes the runtime from the SAME snapshotDiscoveryQueryService, arweaveSnapshotDiscoveryQueryService, and publicationSnapshotPlacementCatalog instances it already built for other purposes — never a second construction of any of the three.');
         assert(!/new NostrSnapshotDiscoveryQueryService\([^)]*\)[\s\S]{0,400}composeSnapshotCandidateDiscoveryRuntime/.test(mainSource),
             '6. no second NostrSnapshotDiscoveryQueryService is constructed near this wiring.');
         const catalogConstructionSites = grepFiles('new LocalPublicationSnapshotPlacementCatalog\\(', ['application', 'ui']);

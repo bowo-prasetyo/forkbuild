@@ -159,6 +159,7 @@ import { executeDiscoverSnapshotCommand } from '../application/DiscoverSnapshotC
 import { executeDiscoverSnapshotCandidatesCommand } from '../application/DiscoverSnapshotCandidatesCommand.js';
 import { WorldSnapshotDiscoveryMonitor } from '../application/WorldSnapshotDiscoveryMonitor.js';
 import { composeSnapshotCandidateDiscoveryRuntime } from '../application/SnapshotCandidateDiscoveryRuntimeComposition.js';
+import { ArweaveSnapshotDiscoveryQueryService } from '../application/ArweaveSnapshotDiscoveryQueryService.js';
 import { NostrPlaceNamingDiscoverySource } from '../application/NostrPlaceNamingDiscoverySource.js';
 import { composePlaceNamingDiscoveryRuntime } from '../application/PlaceNamingDiscoveryRuntimeComposition.js';
 import { executeResolveSelectedSnapshotCommand } from '../application/ResolveSelectedSnapshotCommand.js';
@@ -2529,24 +2530,40 @@ app.provide('discoverSnapshotCommand', discoverSnapshotCommand);
 
 // 0.9.485 — Walking-Triggered Snapshot Candidate Query Service.
 //
-// Composes the Local+Nostr candidate query service
+// Composes the Local+Nostr+Arweave candidate query service
 // (application/SnapshotCandidateDiscoveryQueryService.js, application/
 // LocalSnapshotCandidateDiscoveryQueryService.js, and this composition's
 // own application/SnapshotCandidateDiscoveryRuntimeComposition.js) from
 // collaborators this file already built: `snapshotDiscoveryQueryService`
 // (the SAME NostrSnapshotDiscoveryQueryService instance
 // `composeDiscoverSnapshotRuntime()` immediately above already built —
-// never a second Nostr construction) and `publicationSnapshotPlacementCatalog`
-// (the SAME single LocalPublicationSnapshotPlacementCatalog instance this
-// replica uses anywhere — never a second catalog; see that constant's own
-// 0.8.19 header, above).
+// never a second Nostr construction), `arweaveSnapshotDiscoveryQueryService`
+// (0.9.500, immediately below — this replica's only instance), and
+// `publicationSnapshotPlacementCatalog` (the SAME single
+// LocalPublicationSnapshotPlacementCatalog instance this replica uses
+// anywhere — never a second catalog; see that constant's own 0.8.19
+// header, above).
 //
+// 0.9.500 — Compose Arweave into Snapshot Candidate Discovery.
+// `arweaveSnapshotDiscoveryQueryService` is this file's own ONE
+// construction site for `application/ArweaveSnapshotDiscoveryQueryService.js`
+// (0.9.499, UNMODIFIED) — a read-only query surface needing no signer and
+// no wallet, so, unlike Nostr, it is built directly here rather than
+// inside a separate composition. `gatewayUrl: resolvedArweaveGatewayUrl`
+// reuses the SAME resolved value (above) the Snapshot RETRIEVAL path
+// (`composeDiscoverSnapshotRuntime()`'s own `arweaveContentStoreOptions`,
+// immediately above) already reads — never a second, independent gateway
+// resolution. `tagName` and `graphqlUrl` are left at their own defaults,
+// which already match `application/ArweaveSnapshotDiscoveryPublisher.js`'s
+// own defaults (see that pair's own headers).
+const arweaveSnapshotDiscoveryQueryService = new ArweaveSnapshotDiscoveryQueryService({ gatewayUrl: resolvedArweaveGatewayUrl });
 // Composed here, BEFORE `discoverSnapshotCandidatesCommand` immediately
 // below, so that command's own single collaborator can be this composite
 // service rather than the Nostr-only one it used before 0.9.486 — see
 // that milestone's own header on `discoverSnapshotCandidatesCommand`.
 const { queryService: snapshotCandidateDiscoveryQueryService } = composeSnapshotCandidateDiscoveryRuntime({
     nostrSnapshotDiscoveryQueryService: snapshotDiscoveryQueryService,
+    arweaveSnapshotDiscoveryQueryService,
     placementCatalog: publicationSnapshotPlacementCatalog
 });
 app.provide('snapshotCandidateDiscoveryQueryService', snapshotCandidateDiscoveryQueryService);
