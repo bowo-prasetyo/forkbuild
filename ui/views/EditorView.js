@@ -116,8 +116,30 @@ export default {
             <div v-if="publishedPublication || distributionError || (distributionResult && distributionResult.length)" class="editor-post-publish-overlay">
                 <div v-if="publishedPublication" class="editor-post-publish-action">
                     <span class="editor-post-publish-message">Publication published successfully.</span>
+                    <!-- 0.9.502 — Editor Announcement/Discovery Provider
+                         Selection. The Wanderer's own explicit Nostr/
+                         Arweave substrate choice for the NEXT click below —
+                         mirrors WorldEncounterCanvas.js's own identical
+                         "Announcement / Discovery substrate" control
+                         (0.9.430) verbatim, one caller over. Rendered
+                         alongside the action it configures; never its own
+                         panel, never a global settings surface. -->
+                    <label
+                        v-if="canDistributePublication"
+                        class="editor-post-publish-provider-label"
+                    >
+                        Announcement / Discovery substrate:
+                        <select
+                            v-model="selectedDiscoveryProvider"
+                            class="form-select editor-post-publish-provider-select"
+                            :disabled="distributionExecuting"
+                        >
+                            <option value="nostr">Nostr</option>
+                            <option value="arweave">Arweave</option>
+                        </select>
+                    </label>
                     <button
-                        v-if="multiRelayNostrPublicationDistributionCommand"
+                        v-if="canDistributePublication"
                         type="button"
                         class="action-btn action-btn--primary editor-post-publish-distribute-btn"
                         :disabled="distributionExecuting"
@@ -1312,18 +1334,71 @@ export default {
         // is no longer injected here at all.
         const multiRelayNostrPublicationDistributionCommand = inject('multiRelayNostrPublicationDistributionCommand', null);
 
+        // AMENDED BY 0.9.502 — Editor Announcement/Discovery Provider
+        // Selection. `ui/views/WorldView.js`'s own distributeWorldEncounterPublication()
+        // (0.9.430) already threads an explicit Nostr/Arweave substrate
+        // choice through this exact command pair — WorldView.js's own
+        // "Distribute Publication" action has offered that choice since
+        // 0.9.430. This view's own "Distribute now" action never did:
+        // every click reached `multiRelayNostrPublicationDistributionCommand`
+        // unconditionally, with no way to reach Arweave at all — see
+        // `tests/AnnouncementDiscoveryProviderExpansionReadinessAudit.test.js`'s
+        // own pre-0.9.502 Section A3 finding. `publicationDistributionCommand`
+        // is the SAME app-wide, single-relay command WorldView.js already
+        // injects for its own `discoveryProvider === 'arweave'` branch —
+        // never a new collaborator, never a second Arweave client, never a
+        // second composition root.
+        const publicationDistributionCommand = inject('publicationDistributionCommand', null);
+
+        // The Wanderer's own freely editable choice of Announcement/
+        // Discovery substrate for the NEXT "Distribute now" click —
+        // page-local UI state only, mirroring `WorldEncounterCanvas.js`'s
+        // own `selectedDiscoveryProvider` (0.9.430) exactly, one caller
+        // over: never persisted, never synchronized, never reset on a
+        // fresh publish. Defaults to `'nostr'`, matching
+        // `PublicationDistributionRuntimeComposition.js`'s own default, so
+        // this view behaves exactly as every pre-0.9.502 mount already did
+        // until the Wanderer explicitly picks Arweave.
+        const selectedDiscoveryProvider = ref('nostr');
+
+        // Whether ANY distribution capability exists at all — read only to
+        // decide whether to render the action/select in the first place.
+        // Never itself a provider choice; see distributeEditorPublication()
+        // below for the one place that choice is actually made. A plain
+        // boolean, not a computed: both injected commands are fixed,
+        // app-wide values that never change after this view mounts.
+        const canDistributePublication = Boolean(multiRelayNostrPublicationDistributionCommand || publicationDistributionCommand);
+
         // The smallest callable contract 0.9.376's own Section A/D
         // identified — identical in shape to WorldView.js's own
-        // distributeWorldEncounterPublication(publication) (0.9.104/
-        // 0.9.347, unchanged): a one-argument (publication) -> Promise
-        // wrapper adding exactly one field (serializedMaterial) to the
-        // injected command's own request shape. Nothing about "Editor"
-        // appears anywhere in its own body. AMENDED BY 0.9.450: resolves
-        // to an ARRAY of `PublicationDistributionResult` (one per
-        // configured Nostr relay) rather than a single result — see
-        // `distributionResult`'s own 0.9.450 amendment, below, for how
-        // this view's own display adapted.
-        function distributeEditorPublication(publication) {
+        // distributeWorldEncounterPublication(publication, discoveryProvider)
+        // (0.9.104/0.9.347/0.9.430, unchanged): a two-argument
+        // (publication, discoveryProvider) -> Promise wrapper adding
+        // exactly one field (serializedMaterial) to whichever injected
+        // command's own request shape `discoveryProvider` selects. Nothing
+        // about "Editor" appears anywhere in its own body. AMENDED BY
+        // 0.9.450: the Nostr branch resolves to an ARRAY of
+        // `PublicationDistributionResult` (one per configured Nostr relay)
+        // rather than a single result — see `distributionResult`'s own
+        // 0.9.450 amendment, below, for how this view's own display
+        // adapted. AMENDED BY 0.9.502: `discoveryProvider === 'arweave'`
+        // now calls the single-relay `publicationDistributionCommand`
+        // instead — byte-for-byte the same branch WorldView.js's own
+        // distributeWorldEncounterPublication() already holds; every other
+        // value (`'nostr'`, or omitted — no pre-0.9.502 caller of this
+        // function exists) still calls the multi-relay Nostr command,
+        // unchanged.
+        function distributeEditorPublication(publication, discoveryProvider) {
+            if (discoveryProvider === 'arweave') {
+                if (!publicationDistributionCommand) {
+                    return Promise.reject(new Error('Publication distribution is not available.'));
+                }
+                return publicationDistributionCommand({
+                    publication,
+                    serializedMaterial: JSON.stringify(publication.toJSON()),
+                    discoveryProvider
+                });
+            }
             if (!multiRelayNostrPublicationDistributionCommand) {
                 return Promise.reject(new Error('Publication distribution is not available.'));
             }
@@ -1386,14 +1461,24 @@ export default {
         // distributeEditorPublication in this view — mirrors
         // OwnPublicationPanel.js's own distributeOwnPublication() exactly,
         // one caller over. A no-op whenever there is no
-        // publishedPublication, no multiRelayNostrPublicationDistributionCommand
-        // (AMENDED BY 0.9.450 — see distributeEditorPublication()'s own
-        // amendment), or a call is already in flight. Reuses the command's
-        // own existing result/failure semantics verbatim — no
+        // publishedPublication, no usable distribution command at all
+        // (AMENDED BY 0.9.502 — see canDistributePublication's own
+        // amendment, below), or a call is already in flight. Reuses the
+        // command's own existing result/failure semantics verbatim — no
         // EDITOR_DISTRIBUTION_* vocabulary of any kind.
+        //
+        // AMENDED BY 0.9.502 — Editor Announcement/Discovery Provider
+        // Selection. The guard now reads `canDistributePublication`
+        // (either command usable) rather than
+        // `multiRelayNostrPublicationDistributionCommand` alone, and
+        // forwards `selectedDiscoveryProvider.value` — the Wanderer's
+        // current substrate choice — as `distributeEditorPublication()`'s
+        // new second argument, exactly like `WorldEncounterCanvas.js`'s
+        // own `distributeSelectedPublication()` already does one caller
+        // over.
         function distributePublishedDocument() {
             const publication = publishedPublication.value;
-            if (!publication || !multiRelayNostrPublicationDistributionCommand || distributionExecuting.value) {
+            if (!publication || !canDistributePublication || distributionExecuting.value) {
                 return;
             }
             distributionExecuting.value = true;
@@ -1401,7 +1486,7 @@ export default {
             distributionRequestId += 1;
             const requestId = distributionRequestId;
             Promise.resolve()
-                .then(() => distributeEditorPublication(publication))
+                .then(() => distributeEditorPublication(publication, selectedDiscoveryProvider.value))
                 .then((result) => {
                     if (requestId === distributionRequestId) {
                         distributionResult.value = result;
@@ -2208,7 +2293,15 @@ export default {
             // AMENDED BY 0.9.450: multiRelayNostrPublicationDistributionCommand
             // replaces publicationDistributionCommand here — see
             // distributeEditorPublication()'s own 0.9.450 amendment.
+            // AMENDED BY 0.9.502: publicationDistributionCommand rejoins
+            // this list (now the Arweave-substrate branch, never the
+            // pre-0.9.450 default), alongside canDistributePublication/
+            // selectedDiscoveryProvider — see this view's own 0.9.502
+            // amendment, above.
             multiRelayNostrPublicationDistributionCommand,
+            publicationDistributionCommand,
+            canDistributePublication,
+            selectedDiscoveryProvider,
             publishedPublication,
             distributionExecuting,
             distributionError,

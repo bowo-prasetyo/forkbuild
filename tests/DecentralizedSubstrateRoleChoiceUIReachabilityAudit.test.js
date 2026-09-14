@@ -203,18 +203,33 @@ async function run() {
         assert(/async function createAnchor\(entry, anchorType\)/.test(viewSource), n('B7. PROOF_AND_ANCHORING: a real createAnchor(entry, anchorType) function exists, taking exactly one anchorType per call'));
         assert(/availableAnchorTypes/.test(viewSource) && /v-for="anchorType in availableAnchorTypes"/.test(viewSource), n('B8. PROOF_AND_ANCHORING: the real template renders one button per entry in availableAnchorTypes() — identical shape to Section B5, one role over'));
 
-        // ANNOUNCEMENT_AND_DISCOVERY chain: a single injected command, no
-        // per-substrate parameter of any kind.
+        // ANNOUNCEMENT_AND_DISCOVERY chain: this section originally found a
+        // single injected command, no per-substrate parameter of any kind,
+        // in EITHER real caller it checks (EditorView.js/OwnPublicationPanel.js).
+        // AMENDED BY 0.9.502 — Editor Announcement/Discovery Provider
+        // Selection: that finding no longer holds for EditorView.js, which
+        // gained the identical Nostr/Arweave substrate `<select>`
+        // WorldEncounterCanvas.js/DecentralizedPublicationsView.js already
+        // had since 0.9.430 (WorldView.js/DecentralizedPublicationsView.js
+        // themselves were never in this section's own scope — see B1/B2,
+        // above, both of which name only EditorView.js and
+        // OwnPublicationPanel.js). OwnPublicationPanel.js's own call site
+        // is untouched by 0.9.502 and still has no substrate choice — B10,
+        // below, still passes on that unmodified fact alone.
         const editorSource = await readSource('ui/views/EditorView.js');
         const ownPanelSource = await readSource('ui/components/OwnPublicationPanel.js');
         // AMENDED BY 0.9.450 — Nostr Multi-Relay Publication Distribution
         // Wiring. EditorView.js's own injected key renamed from
         // `publicationDistributionCommand` to
-        // `multiRelayNostrPublicationDistributionCommand` — still exactly
-        // one single, fixed, app-wide command with no per-role SUBSTRATE
-        // choice of its own (EditorView.js has no substrate `<select>`).
-        assert(/inject\('multiRelayNostrPublicationDistributionCommand', null\)/.test(editorSource), n('B9. AMENDED BY 0.9.450 — ANNOUNCEMENT_AND_DISCOVERY: EditorView.js injects the SAME app-wide distribution command (now multiRelayNostrPublicationDistributionCommand) — a single fixed action, never a per-role choice'));
-        assert(/publicationDistributionCommand\(\{/.test(editorSource) || /publicationDistributionCommand\(publication\)/.test(ownPanelSource), n('B10. it is called with a publication only — no storage, no anchorType, no relay, no substrate identifier of any kind is ever passed by the UI'));
+        // `multiRelayNostrPublicationDistributionCommand`.
+        // AMENDED BY 0.9.502 — publicationDistributionCommand rejoined
+        // EditorView.js's own injections alongside it, as its own new
+        // Arweave substrate choice (see that file's own 0.9.502
+        // amendment) — this assertion checks only that the multi-relay
+        // command is STILL injected, which remains true, never that it is
+        // the only one.
+        assert(/inject\('multiRelayNostrPublicationDistributionCommand', null\)/.test(editorSource), n('B9. AMENDED BY 0.9.450 — ANNOUNCEMENT_AND_DISCOVERY: EditorView.js injects the SAME app-wide distribution command (now multiRelayNostrPublicationDistributionCommand) — since 0.9.502, alongside its own new per-role substrate choice, see above'));
+        assert(/publicationDistributionCommand\(publication\)/.test(ownPanelSource), n('B10. OwnPublicationPanel.js\'s own, separate call site still passes a publication only — no storage, no anchorType, no relay, no substrate identifier of any kind — unmodified by 0.9.502, which touched EditorView.js alone'));
 
         console.log('\n=== SECTION B: REACHABILITY CHAINS ===');
         console.log('✓ Section B: CONTENT and PROOF_AND_ANCHORING each trace a complete, real chain from a registered route through an injected coordinator to a per-item template loop reading a live registry. ANNOUNCEMENT_AND_DISCOVERY traces an equally real chain to an actual, working "Distribute" action — but that chain has no branch point anywhere for a substrate identifier to enter it.');

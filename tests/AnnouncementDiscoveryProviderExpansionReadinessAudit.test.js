@@ -184,10 +184,22 @@ async function run() {
         // `multiRelayNostrPublicationDistributionCommand` (it never offered
         // an Arweave substrate choice to keep the single-relay command
         // for) — still exactly one single, app-wide command, never a
-        // per-action provider PARAMETER of its own (EditorView.js still
-        // has no substrate `<select>` anywhere in its own template).
+        // per-action provider PARAMETER of its own.
+        //
+        // AMENDED BY 0.9.502 — Editor Announcement/Discovery Provider
+        // Selection. That "no per-action provider parameter" fact no
+        // longer holds: EditorView.js gained the identical Nostr/Arweave
+        // substrate `<select>` WorldEncounterCanvas.js already had since
+        // 0.9.430, re-injecting `publicationDistributionCommand` alongside
+        // the multi-relay command and threading the Wanderer's own choice
+        // through `distributeEditorPublication(publication, discoveryProvider)`.
+        // This does not change this milestone's own SECOND_REAL_PROVIDER_PRESENT
+        // entry condition (Section A, above) — the SAME two providers, now
+        // reachable from a second real caller — so the assertion below is
+        // narrowed to the one fact that still holds unconditionally: the
+        // multi-relay command is still injected.
         const editorSource = await readSource('ui/views/EditorView.js');
-        assert(/inject\('multiRelayNostrPublicationDistributionCommand', null\)/.test(editorSource), n('A3. AMENDED BY 0.9.450 — EditorView.js still injects one single, app-wide distribution command (now multiRelayNostrPublicationDistributionCommand) — no per-action provider parameter exists in EditorView.js today'));
+        assert(/inject\('multiRelayNostrPublicationDistributionCommand', null\)/.test(editorSource), n('A3. AMENDED BY 0.9.450 — EditorView.js still injects the app-wide multiRelayNostrPublicationDistributionCommand — since 0.9.502, alongside its own new per-action discoveryProvider choice (see above)'));
         const routerSource = await readSource('ui/router/index.js');
         assert(!/provider-picker|substrate-picker|announcement-provider/i.test(routerSource), n('A4. no announcement/discovery provider-selection route exists anywhere in the real router'));
 
