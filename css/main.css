@@ -5324,6 +5324,18 @@ html, body {
     color: #e0a34c;
 }
 
+/* 0.9.525 — Repository Discovery & Material Trust Product
+   Reassessment. Reuses the identical amber (#e0a34c) .evidence-
+   convergence-conflict already established for "the known evidence
+   disagrees, never a verdict about who to believe" — this is the
+   identical structural warning, one level up, about a NAME rather than
+   a content hash. */
+.author-identity-convergence-notice {
+    margin: 0.35rem 0 0.75rem;
+    font-size: 0.8rem;
+    color: #e0a34c;
+}
+
 /* 0.8.27 — Unified Publication Decentralization View. Sits ABOVE
    .evidence-section/the placement equivalent, always visible once either
    dimension has a known claim — never gated behind "Show Evidence"/"Show
