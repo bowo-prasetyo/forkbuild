@@ -32,6 +32,7 @@ import { describeWorldEncounterComparisonCandidate } from '../../application/Wor
 import { compareSnapshotWorldPublications } from '../../application/WorldSnapshotComparison.js';
 import { describeWorldSnapshotContentView } from '../../application/WorldSnapshotContentView.js';
 import { describeWorldSnapshotContentComparisonView } from '../../application/WorldSnapshotContentComparisonView.js';
+import { describeWorldEncounterMaterialLoadStatusLabel, describeWorldEncounterMaterialVerificationStatusLabel } from '../../application/WorldEncounterMaterialInspectionView.js';
 
 // 0.9.3 — World View UI / Wanderer Presence.
 //
@@ -3472,6 +3473,23 @@ export default {
             const schemeLabel = CONTENT_URI_SCHEME_LABELS[scheme] || scheme;
             return `${schemeLabel} ${shortContentHash(identifier)}`;
         },
+        // 0.9.519 — Publication Evidence & Trust Experience Product
+        // Reassessment, Section A/H. Thin template-callable wrappers around
+        // application/WorldEncounterMaterialInspectionView.js's own two
+        // pure functions — mirroring how every method in this file wraps
+        // an imported application/ view function for template use (this
+        // component's `template` is a runtime-compiled string, not an SFC,
+        // so a bare module-level import is never callable from inside
+        // `{{ }}` on its own; see `describeSelectionOriginLabel()`/
+        // `describeDecentralizedLeadUriLabel()` immediately above for the
+        // identical shape). No logic of their own — see that file's own
+        // header for what each status actually means and does not mean.
+        describeMaterialLoadStatusLabel(status) {
+            return describeWorldEncounterMaterialLoadStatusLabel(status);
+        },
+        describeMaterialVerificationStatusLabel(status) {
+            return describeWorldEncounterMaterialVerificationStatusLabel(status);
+        },
         // 0.9.474 — Admit World-Encountered Publications into App-Wide
         // Discovery. The only caller of `.add()` on
         // `decentralizedPublicationDiscoveryProvider` in this file.
@@ -4529,11 +4547,24 @@ export default {
                 </p>
             </div>
 
+            <!-- 0.9.519 — Publication Evidence & Trust Experience Product
+                 Reassessment, Section A/H. loading.status/
+                 verification.status are routed through application/
+                 WorldEncounterMaterialInspectionView.js's own
+                 describeWorldEncounterMaterialLoadStatusLabel()/
+                 describeWorldEncounterMaterialVerificationStatusLabel()
+                 rather than rendered as the raw
+                 WorldEncounterMaterialLoadStatus/
+                 WorldEncounterMaterialVerificationStatus enum constants —
+                 see that file's own header on why the bare word "VERIFIED"
+                 in particular is the concrete risk this closes: it means
+                 IDENTITY CORRESPONDENCE to the selected encounter, never
+                 authorship, ownership, or general trustworthiness. -->
             <div v-if="selectedEncounter && materialInspection" class="world-encounter-material-panel">
                 <h4 class="world-encounter-material-title">Material</h4>
                 <dl class="world-encounter-material-detail">
                     <dt>Status</dt>
-                    <dd>{{ materialInspection.loading.status }}</dd>
+                    <dd>{{ describeMaterialLoadStatusLabel(materialInspection.loading.status) }}</dd>
                 </dl>
 
                 <!-- 0.9.112 — Publication Provenance in World View. A plain
@@ -4548,7 +4579,7 @@ export default {
                 <h4 class="world-encounter-verification-title">Verification</h4>
                 <dl class="world-encounter-verification-detail">
                     <dt>Status</dt>
-                    <dd>{{ materialInspection.verification.status }}</dd>
+                    <dd>{{ describeMaterialVerificationStatusLabel(materialInspection.verification.status) }}</dd>
                 </dl>
             </div>
 
