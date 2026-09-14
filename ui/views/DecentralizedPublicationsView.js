@@ -616,6 +616,32 @@ function humanizeContentKind(contentKind) {
         .replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
+// 0.9.510 — Snapshot Content Backend Selection Label Fix. A `storage`
+// value ('local'/'ipfs'/'ar', application/SnapshotPlacementStoreRegistry
+// .js's own keys) is NOT a content kind — humanizeContentKind() above
+// title-cases a raw string, which is correct for a real word like
+// 'structure' but wrong for an abbreviation: 'ar' -> 'Ar', 'ipfs' ->
+// 'Ipfs', neither recognizable to an ordinary user as "Arweave"/"IPFS".
+// tests/SnapshotContentBackendSelectionProductReassessment.test.js's own
+// 0.9.509 Section I found exactly this, at four call sites on this page
+// (the Content backend picker, the Placement role's own per-backend card
+// header, the "Create <X> Placement" button label, and an already-created
+// placement's own list-item header) — all four now call this instead.
+// A small, presentation-only lookup, mirroring the existing precedent in
+// application/RoleProviderPreferenceSettingsView.js's own
+// PROVIDER_OPTION_LABELS exactly: a known storage code renders its real
+// name; an unrecognized one still renders, title-cased, via
+// humanizeContentKind() — never hidden, never refused.
+const STORAGE_TYPE_LABELS = {
+    local: 'Local',
+    ipfs: 'IPFS',
+    ar: 'Arweave'
+};
+
+function humanizeStorageType(storage) {
+    return STORAGE_TYPE_LABELS[storage] || humanizeContentKind(storage);
+}
+
 function shortId(identityId) {
     return identityId ? identityId.slice(-14) : 'an unknown identity';
 }
@@ -5874,7 +5900,7 @@ export default {
         function placementCreationButtonLabel(entry, storage) {
             const view = placementCreationView(entry, storage);
             const hasExisting = entry.placements.some((placement) => placement.storage === storage);
-            return describePlacementCreationButtonLabel(humanizeContentKind(storage), { creating: view.state === SnapshotPlacementCreationUiState.CREATING, hasExisting });
+            return describePlacementCreationButtonLabel(humanizeStorageType(storage), { creating: view.state === SnapshotPlacementCreationUiState.CREATING, hasExisting });
         }
 
         // 0.9.301 — Preferred Content Provider Placement Trigger. The "Use
@@ -6886,7 +6912,7 @@ export default {
 
         return {
             entries, loading, retrievalPeers, availableAnchorTypes,
-            humanizeContentKind, shortId, shortHash, formatWhen, badgeClass, statusLabel, availabilityText,
+            humanizeContentKind, humanizeStorageType, shortId, shortHash, formatWhen, badgeClass, statusLabel, availabilityText,
             canRetrieve, retrieve, recheck,
             describeKnownEvidenceCount, toggleEvidence, verifyAnchor, evidenceBadgeClass, lifecycleNote,
             createAnchor, creationView, creationBadgeClass, creationButtonLabel,
@@ -9029,7 +9055,7 @@ export default {
                                         Content
                                         <select v-model="entry.snapshotDistributionStorage" class="form-select"
                                                 :disabled="entry.snapshotDistributionAttempt && entry.snapshotDistributionAttempt.distributing">
-                                            <option v-for="storage in snapshotDistributionStorageTypes" :key="storage" :value="storage">{{ humanizeContentKind(storage) }}</option>
+                                            <option v-for="storage in snapshotDistributionStorageTypes" :key="storage" :value="storage">{{ humanizeStorageType(storage) }}</option>
                                         </select>
                                     </label>
                                     <div class="identity-mgmt-actions">
@@ -9089,7 +9115,7 @@ export default {
                             <div class="evidence-list">
                                 <div v-for="storage in availableStorageTypes" :key="storage" class="evidence-anchor-card">
                                     <div class="evidence-anchor-header">
-                                        <span class="evidence-anchor-type">{{ humanizeContentKind(storage) }}</span>
+                                        <span class="evidence-anchor-type">{{ humanizeStorageType(storage) }}</span>
                                         <span v-if="placementCreationView(entry, storage).label" class="peer-badge" :class="placementCreationBadgeClass(entry, storage)">
                                             {{ placementCreationView(entry, storage).label }}
                                         </span>
@@ -10995,7 +11021,7 @@ export default {
                         <div v-if="entry.placementsExpanded && entry.placementsView.count > 0" class="evidence-list">
                             <div v-for="placementView in entry.placementsView.placements" :key="placementView.placementId" class="evidence-anchor-card">
                                 <div class="evidence-anchor-header">
-                                    <span class="evidence-anchor-type">{{ humanizeContentKind(placementView.storage) }}</span>
+                                    <span class="evidence-anchor-type">{{ humanizeStorageType(placementView.storage) }}</span>
                                     <span class="peer-badge" :class="placementBadgeClass(placementView)">{{ placementView.resolutionLabel }}</span>
                                 </div>
                                 <p v-if="placementView.resolutionReason" class="form-hint form-hint--neutral">

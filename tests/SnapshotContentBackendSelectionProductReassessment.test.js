@@ -269,78 +269,98 @@ async function run() {
     // Section I — THE most important product question: is "Content
     // backend" understandable to an ordinary user? Concretely: what
     // TEXT does the picker, and every other place a storage code is
-    // displayed, actually render for 'ipfs' and 'ar' today?
+    // displayed, actually render for 'ipfs' and 'ar'?
     //
-    // ui/views/DecentralizedPublicationsView.js already carries the
-    // right vocabulary — its own Content card labels the FIELD "Content"
-    // (a meaningful word, not "Content backend"), and its own Configure
-    // link already renders the literal words "Arweave"/"IPFS" via a
-    // manual ternary (line ~9050). But the <option> text inside the
-    // SAME picker, the Placement role's own per-backend card header, the
-    // "Create <X> Placement" button label, and an already-created
-    // placement's own list-item header all instead call
-    // humanizeContentKind(storage) — a function built for content KINDS
-    // like 'forkbuild.structure' (-> 'Structure'), applied here to a raw
-    // STORAGE CODE. For a real word like 'structure' that produces a
-    // real word. For an ABBREVIATION like 'ar' or 'ipfs' it does not:
-    // it title-cases the raw code and stops — 'ar' -> 'Ar', 'ipfs' ->
-    // 'Ipfs'. Neither is a word an ordinary user would recognize as
-    // "Arweave" or "IPFS".
+    // ui/views/DecentralizedPublicationsView.js already carried the
+    // right vocabulary at the time this milestone first ran — its own
+    // Content card labels the FIELD "Content" (a meaningful word, not
+    // "Content backend"), and its own Configure link already rendered
+    // the literal words "Arweave"/"IPFS" via a manual ternary. But the
+    // <option> text inside the SAME picker, the Placement role's own
+    // per-backend card header, the "Create <X> Placement" button label,
+    // and an already-created placement's own list-item header all
+    // instead called humanizeContentKind(storage) — a function built
+    // for content KINDS like 'forkbuild.structure' (-> 'Structure'),
+    // applied there to a raw STORAGE CODE. For a real word like
+    // 'structure' that produces a real word. For an ABBREVIATION like
+    // 'ar' or 'ipfs' it did not: it title-cased the raw code and
+    // stopped — 'ar' -> 'Ar', 'ipfs' -> 'Ipfs'. Neither was a word an
+    // ordinary user would recognize as "Arweave" or "IPFS".
+    //
+    // UPDATE (0.9.510): CLOSED. Rather than reusing humanizeContentKind()
+    // for a storage code at all, ui/views/DecentralizedPublicationsView
+    // .js now carries a small, presentation-only humanizeStorageType(),
+    // mirroring the existing precedent application/
+    // RoleProviderPreferenceSettingsView.js's own PROVIDER_OPTION_LABELS
+    // already established one role over: a known storage code renders
+    // its real name ('ar' -> 'Arweave', 'ipfs' -> 'IPFS', 'local' ->
+    // 'Local'); an unrecognized one still renders, falling back to
+    // humanizeContentKind() rather than being hidden or refused. All
+    // four call sites this section found now use it. This section is
+    // left in place, reworded, as the historical record of the finding
+    // 0.9.510 closed — regression-checked below as CLOSED, not merely
+    // asserted.
     // ===============================================================
     {
-        function humanizeContentKindAsShipped(contentKind) {
-            if (!contentKind) return 'Unknown content';
-            return contentKind
-                .replace(/^forkbuild\./, '')
-                .replace(/[-.]/g, ' ')
-                .replace(/\b\w/g, (c) => c.toUpperCase());
-        }
-
-        check(humanizeContentKindAsShipped('ar') === 'Ar',
-            "I. CONFIRMED, PRODUCT_GAP: humanizeContentKind('ar') renders 'Ar' today — not 'Arweave'");
-        check(humanizeContentKindAsShipped('ipfs') === 'Ipfs',
-            "I. CONFIRMED, PRODUCT_GAP: humanizeContentKind('ipfs') renders 'Ipfs' today — not 'IPFS'");
-
         const viewSource = await rawSource('ui/views/DecentralizedPublicationsView.js');
-        const humanizedStorageCallSites = [
-            [/<option v-for="storage in snapshotDistributionStorageTypes" :key="storage" :value="storage">\{\{ humanizeContentKind\(storage\) \}\}<\/option>/, "the Distribution Content picker's own <option> text"],
-            [/<span class="evidence-anchor-type">\{\{ humanizeContentKind\(storage\) \}\}<\/span>/, "the Placement role's own per-backend card header"],
-            [/describePlacementCreationButtonLabel\(humanizeContentKind\(storage\), \{ creating:/, "the \"Create <X> Placement\" button's own label"],
-            [/<span class="evidence-anchor-type">\{\{ humanizeContentKind\(placementView\.storage\) \}\}<\/span>/, "an already-created placement's own list-item header"]
+
+        check(/const STORAGE_TYPE_LABELS = \{\s*\n\s*local: 'Local',\s*\n\s*ipfs: 'IPFS',\s*\n\s*ar: 'Arweave'\s*\n\s*\};/.test(viewSource),
+            "I. CLOSED — a real, closed name map exists: 'local' -> 'Local', 'ipfs' -> 'IPFS', 'ar' -> 'Arweave'");
+        check(/function humanizeStorageType\(storage\) \{\s*\n\s*return STORAGE_TYPE_LABELS\[storage\] \|\| humanizeContentKind\(storage\);\s*\n\}/.test(viewSource),
+            'I. CLOSED — humanizeStorageType() prefers the real name and only ever falls back to humanizeContentKind() for an unrecognized code, never the reverse');
+
+        const closedStorageCallSites = [
+            [/<option v-for="storage in snapshotDistributionStorageTypes" :key="storage" :value="storage">\{\{ humanizeStorageType\(storage\) \}\}<\/option>/, "the Distribution Content picker's own <option> text"],
+            [/<span class="evidence-anchor-type">\{\{ humanizeStorageType\(storage\) \}\}<\/span>/, "the Placement role's own per-backend card header"],
+            [/describePlacementCreationButtonLabel\(humanizeStorageType\(storage\), \{ creating:/, "the \"Create <X> Placement\" button's own label"],
+            [/<span class="evidence-anchor-type">\{\{ humanizeStorageType\(placementView\.storage\) \}\}<\/span>/, "an already-created placement's own list-item header"]
         ];
-        for (const [pattern, description] of humanizedStorageCallSites) {
-            check(pattern.test(viewSource), `I. CONFIRMED, PRODUCT_GAP: ${description} still renders a raw storage code through humanizeContentKind(), unchanged`);
+        for (const [pattern, description] of closedStorageCallSites) {
+            check(pattern.test(viewSource), `I. CLOSED — ${description} now renders through humanizeStorageType(), not humanizeContentKind()`);
         }
+        // The only remaining `humanizeContentKind(storage)` text in the
+        // whole file is humanizeStorageType()'s own internal fallback
+        // (checked above) — a deliberate, named exception for an
+        // unrecognized future storage code, never a leftover call site.
+        const remainingDirectStorageCalls = (codeOnlyLines(viewSource).join('\n').match(/humanizeContentKind\(storage\)/g) || []).length;
+        check(remainingDirectStorageCalls === 1,
+            `I. CLOSED — exactly one humanizeContentKind(storage) remains in the file (found ${remainingDirectStorageCalls}): humanizeStorageType()'s own internal fallback, not a leftover call site`);
+        check(!/humanizeContentKind\(placementView\.storage\)/.test(viewSource),
+            'I. CLOSED — no remaining call site passes placementView.storage into humanizeContentKind()');
 
-        // The correct words are already known, elsewhere in this exact
-        // same file — proving the fix is a labeling correction, not a
-        // missing capability. This is the strongest evidence this is a
-        // narrow PRODUCT_GAP, never an ARCHITECTURAL_GAP: the words
-        // "Arweave" and "IPFS" are already one file, one line, away.
+        // humanizeContentKind() itself is untouched and still exposed —
+        // its own genuine callers (content KIND, anchor TYPE) are a
+        // deliberately separate axis from storage CODE and were never
+        // broken; this regression-checks that this fix did not touch
+        // them.
+        check(/humanizeContentKind, humanizeStorageType, shortId/.test(viewSource),
+            'I. humanizeContentKind is still exposed to the template, unmodified, alongside the new humanizeStorageType — its own real callers (contentKind, anchorType) are untouched');
+        check(/\{\{ humanizeContentKind\(entry\.publication\.contentKind\) \}\}/.test(viewSource),
+            "I. ...and still genuinely used for a real content KIND, exactly as before");
+        check(/\{\{ humanizeContentKind\(anchorType\) \}\}/.test(viewSource) && /\{\{ humanizeContentKind\(anchorView\.anchorType\) \}\}/.test(viewSource),
+            'I. ...and for anchor TYPE, unaffected — this fix never widened beyond the four storage-code sites it named');
+
+        // The correct words were already known, elsewhere in this exact
+        // same file, before this fix — the strongest evidence this was
+        // always a narrow PRODUCT_GAP, never an ARCHITECTURAL_GAP.
         check(/Configure \{\{ entry\.snapshotDistributionStorage === 'ar' \? 'Arweave' : 'IPFS' \}\}/.test(viewSource),
-            "I. by contrast, the SAME card's own Configure link already renders the real words 'Arweave'/'IPFS' — proving the correct vocabulary already exists in this file, just not reused by the picker/Placement labels above");
-
-        // The card's own explanatory hint sentence ("Distributes this
-        // replica's own locally held Snapshot bytes...") and the field
-        // label itself ("Content", not "Content backend") are already
-        // the plain, consequence-first language the brief asked to
-        // audit for — confirmed still present, nothing to change there.
+            "I. the Configure link's own manual ternary — the vocabulary this fix's map now shares — is unchanged");
         check(/Distributes this replica's own locally held Snapshot bytes/.test(viewSource),
             'I. the Content card\'s own plain-language explanation of WHAT this choice does remains present');
         check(/<label v-if="snapshotDistributionStorageTypes\.length > 0" class="form-label">\s*\n\s*Content\s*\n/.test(viewSource),
-            'I. the field is labeled the plain word "Content", not the architectural term "Content backend" — this part already reads as intended, no rename needed');
+            'I. the field is labeled the plain word "Content", not the architectural term "Content backend" — unchanged, no rename was needed');
 
-        console.log("✓ Section I: PRODUCT_GAP CONFIRMED — narrow and concrete. The Content backend PICKER and the field label around it already speak plainly (\"Content\", a real explanatory sentence, and a Configure link that already says \"Arweave\"/\"IPFS\"). But the picker's own <option> text, and three related storage-code displays elsewhere on this same page, instead render raw internal codes ('Ar', 'Ipfs') that an ordinary user would not recognize. The fix is a labeling correction only — the correct words already exist, one line away, in this exact file.");
+        console.log("✓ Section I: CLOSED by 0.9.510. The Content backend picker's <option> text, the Placement role's per-backend card header, the \"Create <X> Placement\" button, and an already-created placement's list-item header all now render real names (\"Arweave\"/\"IPFS\"/\"Local\") via a small, presentation-only humanizeStorageType(), never a raw internal storage code. humanizeContentKind() itself, and its own genuine content-kind/anchor-type callers, are untouched.");
     }
 
     // ===============================================================
     // Section J — verdict.
     // ===============================================================
     console.log(`\n✅ All Snapshot Content Backend Selection Product Reassessment checks passed (${assertionCount} assertions).\n`);
-    console.log('VERDICT: PRODUCT_GAP.');
-    console.log('  Every question this milestone\'s own brief asked, EXCEPT ONE, resolves PRODUCT_COMPLETE: the journey (Section B/D), Announcement/Discovery independence (Section C), configuration discoverability (Section E), failure semantics (Section F), the Placement relationship (Section G), and the Arweave default (Section H) are all reachable, understandable, and unchanged from their deliberately-chosen shape.');
-    console.log('  The one exception (Section I): the Content backend picker\'s own <option> text, and three related storage-code displays on the same page, render raw internal codes (\'Ar\', \'Ipfs\') rather than the real words (\'Arweave\', \'IPFS\') an ordinary user would recognize — while the correct words already exist, unused for this purpose, one line away in the same file.');
-    console.log('  This is a concrete, narrowly scoped, PURELY PRESENTATIONAL finding — not an architectural gap, not a missing capability, and not evidence for renaming, redesigning, or re-scoping anything else this milestone\'s own brief named for exclusion. Recommended: one small, narrowly scoped follow-up milestone that introduces a presentation-only storage-code label lookup (mirroring the existing precedent in application/RoleProviderPreferenceSettingsView.js\'s own PROVIDER_OPTION_LABELS) and reuses it at exactly the four call sites Section I names — nothing else.');
+    console.log('VERDICT: PRODUCT_COMPLETE (as of 0.9.510).');
+    console.log('  Every question this milestone\'s own brief asked resolves PRODUCT_COMPLETE: the journey (Section B/D), Announcement/Discovery independence (Section C), configuration discoverability (Section E), failure semantics (Section F), the Placement relationship (Section G), the Arweave default (Section H), and — as of 0.9.510 — the Content backend labels themselves (Section I) are all reachable, understandable, correctly worded, and unchanged from their otherwise deliberately-chosen shape.');
+    console.log('  0.9.509\'s own first run found exactly one PRODUCT_GAP: the Content backend picker\'s own <option> text, and three related storage-code displays on the same page, rendered raw internal codes (\'Ar\', \'Ipfs\') rather than the real words (\'Arweave\', \'IPFS\') an ordinary user would recognize. 0.9.510 closed it with a single, narrowly scoped presentation-only label lookup, reused at exactly those four call sites — nothing else touched, per this milestone\'s own exclusion list.');
+    console.log('  Per this milestone\'s own brief: PRODUCT_COMPLETE means STOP. The Snapshot Content Backend Selection arc — 0.9.505 through 0.9.510 — is complete from the user\'s own perspective, not merely the architecture\'s.');
 }
 
 await run();
