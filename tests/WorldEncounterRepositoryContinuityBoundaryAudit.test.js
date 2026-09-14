@@ -291,8 +291,13 @@ async function run() {
                 `1. ${file} still carries no reference to LocalPublicationCatalog, DecentralizedPublicationDiscoveryProvider, or admitToRepositoryDiscovery -- 0.9.329's own "never persists what it retrieves" finding still holds, unchanged, at this file today.`);
         }
         const canvasSrc = await readSource('ui/components/WorldEncounterCanvas.js');
-        assert(/admitToRepositoryDiscovery\(loading\) \{/.test(canvasSrc),
-            "1b. AMENDED BY 0.9.474 -- ui/components/WorldEncounterCanvas.js now defines its own admitToRepositoryDiscovery(loading), closing this file's own share of the gap.");
+        // AMENDED BY 0.9.523 -- Repository / Discovery Product Boundary
+        // Reassessment, Section E closed a real asymmetry this same gate
+        // had against its DecentralizedPublicationsView.js sibling: it
+        // now also requires `verification` (a second parameter) before
+        // admitting -- see that method's own header for why.
+        assert(/admitToRepositoryDiscovery\(loading, verification\) \{/.test(canvasSrc),
+            "1b. AMENDED BY 0.9.474, THEN 0.9.523 -- ui/components/WorldEncounterCanvas.js now defines its own admitToRepositoryDiscovery(loading, verification), closing this file's own share of the gap.");
         assert(!/new DecentralizedPublicationDiscoveryProvider\(|import .*DecentralizedPublicationDiscoveryProvider.* from/.test(canvasSrc),
             '1c. ... but still never imports or constructs the DecentralizedPublicationDiscoveryProvider CLASS itself -- it only ever receives one instance, injected as a prop, exactly as Section I (below) specified.');
 
@@ -444,13 +449,25 @@ async function run() {
                 materialInspection: null,
                 resolvedEncounterSelection: selectionOf({ kind: WorldEncounterKind.PUBLICATION, objectId: alicePublication.id, origin }),
                 resolvedLead: null,
-                materialVerifier: null,
+                // AMENDED BY 0.9.523 -- admitToRepositoryDiscovery() now
+                // also requires verification.status === VERIFIED (see that
+                // method's own header); a `null` materialVerifier would
+                // degrade verification to UNVERIFIABLE and this section's
+                // own assertion 6 (below) would no longer admit anything,
+                // which would prove nothing about the path this section
+                // exists to exercise. A real verifyIdentity() that
+                // confirms correspondence keeps this section proving
+                // exactly what it always proved: a genuinely successful,
+                // genuinely VERIFIED World Encounter resolution reaches
+                // Repository discovery.
+                materialVerifier: { verifyIdentity: async () => true },
                 materialSources: { peer: bobSource },
                 // AMENDED BY 0.9.474 -- this dependency is no longer
                 // inert: WorldEncounterCanvas.js's own real
                 // refreshMaterialInspection() now calls
-                // this.admitToRepositoryDiscovery(result.loading), which
-                // reads exactly this property. admitToRepositoryDiscovery
+                // this.admitToRepositoryDiscovery(result.loading, result.verification),
+                // which reads exactly this property (and, as of 0.9.523,
+                // the verification result too). admitToRepositoryDiscovery
                 // itself must also be handed to this fake ctx, below, the
                 // same way every other real method this ctx calls already
                 // is.
@@ -582,8 +599,8 @@ async function run() {
         const canvasSourceForI = await readSource('ui/components/WorldEncounterCanvas.js');
         assert(/decentralizedPublicationDiscoveryProvider/.test(canvasSourceForI),
             "4. AMENDED BY 0.9.474 -- the seam this section named IS now built: WorldEncounterCanvas.js references decentralizedPublicationDiscoveryProvider directly, as its own new prop.");
-        assert(/refreshMaterialInspection\(\) \{[\s\S]*?this\.admitToRepositoryDiscovery\(result\.loading\);/.test(canvasSourceForI),
-            '5. AMENDED BY 0.9.474 -- specifically, the open choice this section named is resolved as an INLINE call from refreshMaterialInspection() itself, not a WorldView.js-consumed event.');
+        assert(/refreshMaterialInspection\(\) \{[\s\S]*?this\.admitToRepositoryDiscovery\(result\.loading, result\.verification\);/.test(canvasSourceForI),
+            '5. AMENDED BY 0.9.474, THEN 0.9.523 -- specifically, the open choice this section named is resolved as an INLINE call from refreshMaterialInspection() itself, not a WorldView.js-consumed event, and (0.9.523) that call now forwards result.verification too.');
     }
     console.log('✓ Section I: AMENDED BY 0.9.474 -- the smallest seam this section named is no longer merely named: WorldEncounterCanvas.js now calls a real admitToRepositoryDiscovery(), identical in shape to the gate proven live above, inline from refreshMaterialInspection() itself.');
 

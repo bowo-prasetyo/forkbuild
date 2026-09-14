@@ -3504,6 +3504,36 @@ export default {
         // header, "no `Publication.fromJSON()`" — Section F of
         // tests/WorldEncounterRepositoryContinuityBoundaryAudit.test.js
         // already proved this `instanceof` gate excludes those for free).
+        //
+        // AMENDED BY 0.9.523 — Repository / Discovery Product Boundary
+        // Reassessment, Section E. This gate now ALSO requires
+        // `verification.status === VERIFIED`, closing the one asymmetry
+        // that milestone's own audit found between this admission path
+        // and its DecentralizedPublicationsView.js sibling: that sibling's
+        // own gate (`view.resolved`) only ever becomes true after
+        // application/PublicationResolver.js's full envelope/bytes/content
+        // signature-verification pipeline succeeds, whereas this method,
+        // before 0.9.523, admitted on `loading.status === 'AVAILABLE'`
+        // alone — a fact about SUCCESSFUL RETRIEVAL, never about whether
+        // the retrieved bytes are genuine (see
+        // application/DecentralizedWorldEncounterMaterialSource.js's own
+        // header, "NO SIGNATURE VERIFICATION, NO HASH CHECK, NO TRUST
+        // DECISION OF ANY KIND"). Requiring `VERIFIED` means the identical
+        // composed verifier ui/main.js already wires into World rendering
+        // (`WorldEncounterMaterialIdentityVerifier` AND
+        // `WorldEncounterMaterialSignatureVerifier`, ANDed together by
+        // application/WorldEncounterMaterialVerificationComposition.js —
+        // see 0.9.523's own audit, Section E) must have actively confirmed
+        // BOTH structural identity AND a genuine Ed25519 signature before
+        // a World Encounter admits anything into the SAME catalog Open/
+        // Fork/Explore act on app-wide. `REJECTED` (a bad signature) and
+        // `UNVERIFIABLE` (no verifier injected, or nothing to judge) are
+        // now both excluded, exactly like a failed/UNAVAILABLE load
+        // already was — a Repository result must never be indistinguishable
+        // from a verified one when it demonstrably is not (docs/Principles.md,
+        // "Known Evidence Is Not Verified Evidence, And Verified Evidence
+        // Is Not Authority," continued here for this boundary).
+        //
         // No `decentralizedPublicationDiscoveryProvider` supplied is a
         // silent no-op, exactly like every other optional collaborator in
         // this file (`materialVerifier`, `worldDiscoveryLeadRegistry`,
@@ -3513,7 +3543,7 @@ export default {
         // on every resolution — deliberately NOT gated behind either
         // method's own stale-response request-counter guard, since a
         // resolution superseded for DISPLAY purposes was still a genuine,
-        // successful retrieval this device is entitled to make discoverable.
+        // VERIFIED retrieval this device is entitled to make discoverable.
         // A repeated resolution of the SAME Publication (re-selecting it,
         // or a comparison target matching the primary selection) calls
         // `.add()` again, exactly as ui/views/DecentralizedPublicationsView.js's
@@ -3522,11 +3552,13 @@ export default {
         // itself (discovery/DecentralizedPublicationDiscoveryProvider.js
         // keeps no id index), not a new duplication concern this milestone
         // introduces or is scoped to fix.
-        admitToRepositoryDiscovery(loading) {
+        admitToRepositoryDiscovery(loading, verification) {
             if (this.decentralizedPublicationDiscoveryProvider
                 && loading
                 && loading.status === 'AVAILABLE'
-                && loading.material instanceof Publication) {
+                && loading.material instanceof Publication
+                && verification
+                && verification.status === 'VERIFIED') {
                 try {
                     this.decentralizedPublicationDiscoveryProvider.add(loading.material);
                 } catch {
@@ -3557,10 +3589,12 @@ export default {
         // see this file's own "0.9.40" header — this method now forwards
         // `this.resolvedLead` whenever it resolves. AMENDED BY 0.9.474 —
         // see admitToRepositoryDiscovery() above: every resolution this
-        // method produces is now also offered to Repository discovery,
-        // regardless of the outcome — World rendering itself
-        // (`this.materialInspection`, guarded by `requestId` exactly as
-        // before) is completely unchanged.
+        // method produces is now also OFFERED to Repository discovery —
+        // whether it is actually ADMITTED depends on that method's own
+        // gate, tightened by 0.9.523 to require `verification.status ===
+        // VERIFIED` (see that method's own header) — World rendering
+        // itself (`this.materialInspection`, guarded by `requestId`
+        // exactly as before) is completely unchanged either way.
         refreshMaterialInspection() {
             this.materialInspectionRequestId += 1;
             const requestId = this.materialInspectionRequestId;
@@ -3577,7 +3611,7 @@ export default {
                 materialSources: this.materialSources,
                 verifier: this.materialVerifier
             }).then((result) => {
-                this.admitToRepositoryDiscovery(result.loading);
+                this.admitToRepositoryDiscovery(result.loading, result.verification);
                 // 0.9.39 — see this file's own header, "a request counter
                 // guards against a stale async response overwriting a
                 // newer one." A superseded response (a newer selection, or
@@ -3917,8 +3951,9 @@ export default {
         // `refreshMaterialInspection()`'s own admitToRepositoryDiscovery()
         // call exactly, one selection over: a comparison target the
         // Wanderer resolves is just as genuinely encountered as the
-        // primary selection, and gets the identical, unconditional
-        // admission offer.
+        // primary selection, and gets the identical admission offer,
+        // gated by the identical `verification.status === VERIFIED`
+        // requirement (0.9.523).
         refreshComparisonMaterialInspection() {
             this.comparisonMaterialInspectionRequestId += 1;
             const requestId = this.comparisonMaterialInspectionRequestId;
@@ -3935,7 +3970,7 @@ export default {
                 materialSources: this.materialSources,
                 verifier: this.materialVerifier
             }).then((result) => {
-                this.admitToRepositoryDiscovery(result.loading);
+                this.admitToRepositoryDiscovery(result.loading, result.verification);
                 // 0.9.184 — mirrors `refreshMaterialInspection()`'s own
                 // stale-response guard exactly, one selection over.
                 if (requestId === this.comparisonMaterialInspectionRequestId) {

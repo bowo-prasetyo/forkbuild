@@ -179,7 +179,13 @@ function makeCanvasCtx({ alicePublication, bobSource, origin, discoveryProvider 
         resolvedEncounterSelection: selectionOf({ kind: WorldEncounterKind.PUBLICATION, objectId: alicePublication.id, origin }),
         comparisonResolvedSelection: null,
         resolvedLead: null,
-        materialVerifier: null,
+        // AMENDED BY 0.9.523 — admitToRepositoryDiscovery() now also
+        // requires verification.status === VERIFIED (see that method's
+        // own header). A real verifyIdentity() confirming correspondence
+        // keeps every section below proving what it always proved — a
+        // genuinely successful, genuinely VERIFIED resolution is admitted
+        // — rather than silently proving nothing once the gate tightened.
+        materialVerifier: { verifyIdentity: async () => true },
         materialSources: { peer: bobSource },
         decentralizedPublicationDiscoveryProvider: discoveryProvider,
         admitToRepositoryDiscovery: WorldEncounterCanvas.methods.admitToRepositoryDiscovery
@@ -202,8 +208,8 @@ async function run() {
         const canvasSource = await readSource('ui/components/WorldEncounterCanvas.js');
         assert(/decentralizedPublicationDiscoveryProvider:\s*\{\s*\n\s*type: Object,\s*\n\s*default: null\s*\n\s*\},/.test(canvasSource),
             '4. ui/components/WorldEncounterCanvas.js declares decentralizedPublicationDiscoveryProvider as an optional, null-default prop — a mount with none supplied changes nothing about resolution or rendering.');
-        assert(/admitToRepositoryDiscovery\(loading\)\s*\{/.test(canvasSource),
-            '5. ui/components/WorldEncounterCanvas.js defines its own admitToRepositoryDiscovery(loading) method.');
+        assert(/admitToRepositoryDiscovery\(loading, verification\)\s*\{/.test(canvasSource),
+            '5. ui/components/WorldEncounterCanvas.js defines its own admitToRepositoryDiscovery(loading, verification) method (AMENDED BY 0.9.523 — see that method\'s own header for the added verification parameter).');
         assert(/import \{ Publication \} from '\.\.\/\.\.\/publisher\/Publication\.js';/.test(canvasSource),
             "6. ... importing publisher/Publication.js's own Publication for its own instanceof gate.");
     }
