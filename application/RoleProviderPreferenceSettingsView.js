@@ -32,9 +32,21 @@
 // never refused; that map is a PRESENTATION-ONLY convenience local to this
 // file, the same restraint ui/views/AvatarSettingsView.js's own
 // SKIN_TONE_SWATCHES lookup already holds one axis over.
+//
+// 0.9.517 — Decentralized Publication Lifecycle Product Reassessment.
+// `ar` (content/ArweaveContentStore.js's own `storage` name, the SAME key
+// ui/main.js registers `arweaveSnapshotPlacementContentStore` under, into
+// the SAME `snapshotPlacementStoreRegistry` this file's own
+// `availableProviderKeys` is ultimately read from) was missing here —
+// title-casing it through the fallback above produced "Ar" on the Content
+// Provider settings page, the exact unrecognizable-abbreviation defect
+// 0.9.510 already fixed one surface over (STORAGE_TYPE_LABELS, ui/views/
+// DecentralizedPublicationsView.js) but this file's own, separate map
+// never received. `local`/`ipfs` are unchanged.
 const PROVIDER_OPTION_LABELS = {
     local: 'Local',
-    ipfs: 'IPFS'
+    ipfs: 'IPFS',
+    ar: 'Arweave'
 };
 
 function providerOptionLabel(providerKey) {
