@@ -672,9 +672,16 @@ async function run() {
     // file silently wires it into the application's default flow.
     // ===============================================================
     {
+        // UPDATED 0.9.505 — Register Arweave as Snapshot Content Store.
+        // ui/main.js now DOES reference 'ArweaveContentStore' by name — but
+        // only to register it into application/SnapshotPlacementStoreRegistry.js
+        // for Snapshot Placement, an entirely different composition root
+        // from the Distribution/Discovery chain this section audits.
+        // 'ArweaveContentStore' is therefore removed from the forbidden list
+        // below; the other three collaborators of THIS chain remain unwired
+        // into any composition root, unchanged.
         const uiMainCode = await codeOnlySource('ui/main.js');
         const wiringForbidden = [
-            'ArweaveContentStore',
             'NostrSnapshotDiscoveryPublisher',
             'NostrSnapshotDiscoveryQueryService',
             'DecentralizedSnapshotResolver'

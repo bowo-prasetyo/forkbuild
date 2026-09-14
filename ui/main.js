@@ -103,6 +103,7 @@ import { CreateLocalSnapshotPlacementViewUseCase } from '../application/CreateLo
 import { CreateSnapshotPlacementViewRegistryUseCase } from '../application/CreateSnapshotPlacementViewRegistryUseCase.js';
 import { IpfsContentStore } from '../content/IpfsContentStore.js';
 import { IpfsGatewayContentStore } from '../content/IpfsGatewayContentStore.js';
+import { ArweaveContentStore } from '../content/ArweaveContentStore.js';
 import { CreateSnapshotPlacementOrchestratorUseCase } from '../application/CreateSnapshotPlacementOrchestratorUseCase.js';
 import { CreateSnapshotPlacementCreationCoordinatorUseCase } from '../application/CreateSnapshotPlacementCreationCoordinatorUseCase.js';
 import { CreatePreferredSnapshotPlacementCreationCoordinatorUseCase } from '../application/CreatePreferredSnapshotPlacementCreationCoordinatorUseCase.js';
@@ -750,8 +751,16 @@ const { discoveryCoordinator: publicationSnapshotPlacementDiscoveryCoordinator }
 // gateway here never silently overwrites or hides Kubo; it stays
 // registered, unchanged, wherever PUBLISHING actually needs put() — see
 // the 0.8.18 comment below.
+// 0.9.505 — Register Arweave as Snapshot Content Store. `storeRegistry` is
+// now also captured here (previously discarded) so the Arweave wiring
+// below (once `arweaveHostSigner`/`resolvedArweaveGatewayUrl` are
+// resolved) can register the SAME ArweaveContentStore instance into THIS
+// resolution registry too, alongside the CREATION registry — see that
+// wiring's own comment for why one shared instance is registered into
+// both rather than two independently constructed ones.
 const {
-    coordinator: publicationSnapshotPlacementResolutionCoordinator
+    coordinator: publicationSnapshotPlacementResolutionCoordinator,
+    storeRegistry: publicationSnapshotPlacementResolutionStoreRegistry
 } = new CreateSnapshotPlacementResolutionCoordinatorUseCase().execute({
     placementCatalog: publicationSnapshotPlacementCatalog,
     stores: [publicationContentStore, new IpfsGatewayContentStore()]
@@ -2220,6 +2229,47 @@ const arweaveHostSigner = {
             : Promise.reject(new Error('This device has no Arweave wallet/signing capability configured yet.'));
     }
 };
+
+// 0.9.505 — Register Arweave as Snapshot Content Store.
+//
+// tests/SnapshotContentStorageChoiceCapabilityBoundaryAudit.js's own 0.9.504
+// audit found this to be a pure composition-root gap: content/
+// ArweaveContentStore.js (0.9.132) already satisfies content/ContentStore.js's
+// contract exactly like content/IpfsContentStore.js does, and application/
+// SnapshotPlacementStoreRegistry.js already accepts it with zero registry
+// code change (that audit's own Section F). This is that one missing
+// composition — constructing the real store and registering it under its
+// own `storage` key (`'ar'` — content/ArweaveContentStore.js's own label,
+// unchanged) into the two registries Snapshot Placement already uses for
+// CREATION (`snapshotPlacementStoreRegistry`, above) and RESOLUTION
+// (`publicationSnapshotPlacementResolutionStoreRegistry`, above) — the
+// identical two-registry shape 'local'/`publicationContentStore` already
+// shares across both. Registering into both, from ONE shared instance,
+// rather than only the creation side, is what makes an Arweave placement
+// genuinely round-trip through the existing placement mechanism (create,
+// then later resolve) instead of being creatable but permanently
+// STORE_UNAVAILABLE on read-back.
+//
+// `arweaveHostSigner`/`resolvedArweaveGatewayUrl` ARE THE SAME INSTANCES
+// the Arweave anchor wiring immediately below already resolves — never a
+// second read of either. `arweaveHostSigner` is always a real, lazily-
+// resolving object (see its own comment above), so this construction never
+// throws for "no wallet installed" — an absent wallet only ever surfaces
+// later, honestly, the first time a person actually attempts an Arweave
+// placement, exactly as `arweaveAnchorPublisher`'s own identical
+// construction below already handles the same absence.
+//
+// THIS NEVER TOUCHES SNAPSHOT DISTRIBUTION. `snapshotDistributionCommand`'s
+// own `composeSnapshotDistributionRuntime()` call (below) constructs its
+// own, independent ArweaveContentStore — see that 0.9.504 audit's own
+// Section G/H/J for why the two remain deliberately unconnected composition
+// sites, and why closing that gap is separate, later, unscheduled work.
+const arweaveSnapshotPlacementContentStore = new ArweaveContentStore({
+    signer: arweaveHostSigner,
+    gatewayUrl: resolvedArweaveGatewayUrl
+});
+snapshotPlacementStoreRegistry.register(arweaveSnapshotPlacementContentStore);
+publicationSnapshotPlacementResolutionStoreRegistry.register(arweaveSnapshotPlacementContentStore);
 
 // 0.9.425 — Arweave Proof/Anchoring Provider Implementation.
 //

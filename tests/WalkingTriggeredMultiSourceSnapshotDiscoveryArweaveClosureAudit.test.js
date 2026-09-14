@@ -629,12 +629,27 @@ async function run() {
         const arweaveQuerySites = execSync('grep -rlE "new ArweaveSnapshotDiscoveryQueryService\\(" application ui --include="*.js" || true', { cwd: SOURCE_ROOT.pathname }).toString().trim().split('\n').filter(Boolean);
         assert(arweaveQuerySites.length === 1, `2. exactly one production ArweaveSnapshotDiscoveryQueryService construction site exists (found: ${JSON.stringify(arweaveQuerySites)}).`);
 
+        // UPDATED 0.9.505 — Register Arweave as Snapshot Content Store.
+        // 'ui/main.js' is now a third known site: it registers Arweave into
+        // application/SnapshotPlacementStoreRegistry.js for Snapshot
+        // PLACEMENT (create/resolve a placement's own content) — a
+        // genuinely different concern from either pre-existing site
+        // (Discovery's read-only retrieval, Distribution's write+announce),
+        // and still no Snapshot-DISCOVERY-specific material-loading path,
+        // which remains this section's own invariant.
         const arweaveContentStoreSites = execSync('grep -rlE "new ArweaveContentStore\\(" application ui --include="*.js" || true', { cwd: SOURCE_ROOT.pathname }).toString().trim().split('\n').filter(Boolean);
-        const knownPreExistingSites = ['application/DiscoverSnapshotRuntimeComposition.js', 'application/SnapshotDistributionRuntimeComposition.js'];
+        const knownPreExistingSites = ['application/DiscoverSnapshotRuntimeComposition.js', 'application/SnapshotDistributionRuntimeComposition.js', 'ui/main.js'];
         assert(arweaveContentStoreSites.every((f) => knownPreExistingSites.includes(f)),
-            `3. every ArweaveContentStore construction site is one of the two pre-existing, unrelated (read vs. write) composition roots — no new, Snapshot-discovery-specific material-loading path was introduced (found: ${JSON.stringify(arweaveContentStoreSites)}).`);
-        assert(!/new ArweaveContentStore\(/.test(stripLineComments(readSource('ui/main.js'))),
-            '3b. ui/main.js itself constructs no ArweaveContentStore directly — it only ever reuses the one composeDiscoverSnapshotRuntime() already built for retrieval.');
+            `3. every ArweaveContentStore construction site is one of the known, unrelated (discovery/distribution/placement) composition roots — no new, Snapshot-discovery-specific material-loading path was introduced (found: ${JSON.stringify(arweaveContentStoreSites)}).`);
+        // UPDATED 0.9.505 — ui/main.js now constructs exactly ONE
+        // ArweaveContentStore directly, for Snapshot Placement (registered
+        // into application/SnapshotPlacementStoreRegistry.js) — never a
+        // second, Discovery-specific one; Discovery-side retrieval still
+        // goes exclusively through composeDiscoverSnapshotRuntime()'s own
+        // construction, untouched by this milestone.
+        const mainSourceForContentStoreCheck = stripLineComments(readSource('ui/main.js'));
+        assert((mainSourceForContentStoreCheck.match(/new ArweaveContentStore\(/g) || []).length === 1,
+            '3b. ui/main.js constructs exactly one ArweaveContentStore directly (0.9.505, Snapshot Placement) — never a second, Discovery-specific one alongside composeDiscoverSnapshotRuntime()\'s own retrieval-side construction.');
 
         // The composite/composition files, and the cascade itself, stay
         // generic across sources — no `if (storage === 'ar')` branch

@@ -864,8 +864,23 @@ async function run() {
     {
         // I1/I2. UI contains no Nostr/Arweave protocol logic — every file
         // under ui/ (main.js excepted as the one composition root).
+        //
+        // UPDATED 0.9.505 — Register Arweave as Snapshot Content Store.
+        // ui/main.js now directly constructs a real `new ArweaveContentStore(`
+        // to register it into application/SnapshotPlacementStoreRegistry.js
+        // for Snapshot Placement — the identical, already-permitted pattern
+        // `new IpfsContentStore(`/`new IpfsGatewayContentStore(` already held
+        // in ui/main.js before this milestone (neither ever appeared in this
+        // forbidden list). `new ArweaveContentStore(` is therefore carved out
+        // of the general `forbidden` pattern and checked separately below,
+        // permitted for main.js only — every OTHER protocol-level construct
+        // (WebSocket, crypto.subtle, the Nostr/resolver collaborators,
+        // computeContentHash, raw transaction/event construction) remains
+        // forbidden in main.js exactly as before; only this one, already-
+        // precedented ContentStore construction is now allowed there.
         {
-            const forbidden = /crypto\.subtle|new WebSocket\(|new ArweaveContentStore\(|new NostrSnapshotDiscoveryPublisher\(|new NostrSnapshotDiscoveryQueryService\(|new DecentralizedSnapshotResolver\(|computeContentHash\(|createTransaction|signEvent\(/;
+            const forbidden = /crypto\.subtle|new WebSocket\(|new NostrSnapshotDiscoveryPublisher\(|new NostrSnapshotDiscoveryQueryService\(|new DecentralizedSnapshotResolver\(|computeContentHash\(|createTransaction|signEvent\(/;
+            const arweaveStoreConstruction = /new ArweaveContentStore\(/;
             const hostCapabilityRead = /window\.arweaveWallet|window\.nostr\b/;
             const audited = [];
             await walkJsFiles(new URL('../ui/', import.meta.url), '', new Set(), async (relativePath, codeOnly) => {
@@ -873,6 +888,7 @@ async function run() {
                 assert(!forbidden.test(codeOnly), `I1. ui/${relativePath} never constructs an Arweave/Nostr/resolver collaborator or hashes content directly`);
                 if (relativePath !== 'main.js') {
                     assert(!hostCapabilityRead.test(codeOnly), `I2. ui/${relativePath} never reads window.arweaveWallet/window.nostr directly — only ui/main.js may`);
+                    assert(!arweaveStoreConstruction.test(codeOnly), `I2b. ui/${relativePath} never constructs an ArweaveContentStore directly — only ui/main.js, the one composition root, may`);
                 }
             });
             assert(audited.includes('components/OwnPublicationPanel.js') && audited.includes('components/WorldEncounterCanvas.js') && audited.includes('views/WorldView.js') && audited.includes('main.js'),
