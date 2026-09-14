@@ -9183,17 +9183,17 @@ export default {
                                          Selectable. Mirrors the Publication card's own
                                          "Substrate" select immediately above — but selects
                                          WHERE the Snapshot's own bytes are stored (this
-                                         entry's own `snapshotDistributionStorage`), never
+                                         entry's own \`snapshotDistributionStorage\`), never
                                          which Announcement/Discovery substrate carries the
                                          resulting locator; that stays the fixed, unmodified
                                          Nostr discoveryPublisher this family has always used
                                          (see application/SnapshotDistributionCommand.js's own
                                          header). Options come from
-                                         `snapshotDistributionStorageTypes` — the eligible
+                                         \`snapshotDistributionStorageTypes\` — the eligible
                                          ('ipfs'/'ar' only, never 'local') AND currently
                                          registered backends ui/main.js's own
-                                         `snapshotDistributionAvailableStorageTypes` reports —
-                                         never a fixed, hardcoded pair of `<option>`s, so this
+                                         \`snapshotDistributionAvailableStorageTypes\` reports —
+                                         never a fixed, hardcoded pair of \`<option>\`s, so this
                                          picker can never offer a backend this replica cannot
                                          actually distribute onto. Hidden entirely when nothing
                                          is currently eligible, the same degrade-gracefully
