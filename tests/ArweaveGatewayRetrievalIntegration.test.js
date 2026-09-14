@@ -118,7 +118,33 @@ async function run() {
         // first configured gateway, still consumed by Arweave Anchor
         // (unaffected by this milestone).
         assert(/arweaveResolverOptions:\s*\{\s*gatewayUrls:\s*resolvedArweaveGatewayUrls\s*\}/.test(mainSource), 'C5. composeDecentralizedWorldEncounterMaterialDiscoveryRuntime() (World Encounter material RETRIEVAL) receives the resolved gatewayUrls list');
-        assert(/arweaveContentStoreOptions:\s*\{\s*signer:\s*arweaveHostSigner,\s*gatewayUrls:\s*resolvedArweaveGatewayUrls\s*\}/.test(mainSource), 'C6. composeDiscoverSnapshotRuntime() (Snapshot RETRIEVAL) receives the resolved gatewayUrls list alongside its existing signer');
+
+        // AMENDED BY 0.9.508 — Snapshot Resolution Content Backend Registry
+        // Integration. Snapshot RETRIEVAL no longer holds its own, dedicated
+        // ArweaveContentStore built by composeDiscoverSnapshotRuntime() from
+        // `resolvedArweaveGatewayUrls` (plural) — that call site is gone
+        // entirely (tests/SnapshotContentBackendSelectionEndToEndIntegrationAudit
+        // .test.js's own 0.9.507 Section H found it resolved every
+        // candidate through ONE FIXED backend regardless of the candidate's
+        // own declared storage). Snapshot resolution's ContentStore is now
+        // resolved per-candidate from `publicationSnapshotPlacementResolutionStoreRegistry`
+        // instead — for an Arweave candidate, that registry holds the SAME
+        // shared `arweaveSnapshotPlacementContentStore` Placement resolution
+        // already used, built from the SINGULAR `resolvedArweaveGatewayUrl`
+        // (0.9.505, unmodified) — never the plural, failover-capable list.
+        // This is a genuine, narrow trade-off this milestone's own header
+        // names explicitly: Snapshot resolution's Arweave path now matches
+        // Placement resolution's own pre-existing single-gateway behavior,
+        // rather than keeping the dedicated multi-gateway failover
+        // (0.9.440) it held only from 0.9.364 through 0.9.507. Restoring
+        // failover for this shared instance, without also affecting its
+        // own PUT()/creation behavior, is separate, later, unscheduled work.
+        const discoverSnapshotRuntimeCallMatch = mainSource.match(/composeDiscoverSnapshotRuntime\(\{([\s\S]*?)\}\);/);
+        assert(Boolean(discoverSnapshotRuntimeCallMatch), 'C6. AMENDED BY 0.9.508 — the real composeDiscoverSnapshotRuntime() call site is found and isolated for inspection');
+        assert(!discoverSnapshotRuntimeCallMatch[1].includes('arweaveContentStoreOptions'),
+            'C6. AMENDED BY 0.9.508 — composeDiscoverSnapshotRuntime() no longer receives an arweaveContentStoreOptions of any kind; Snapshot RETRIEVAL\'s ContentStore now comes from the resolution registry instead');
+        assert(mainSource.includes("storeRegistry: publicationSnapshotPlacementResolutionStoreRegistry") && mainSource.includes('const discoverSnapshotCommand ='),
+            'C6. AMENDED BY 0.9.508 — discoverSnapshotCommand instead receives storeRegistry: publicationSnapshotPlacementResolutionStoreRegistry, which (for an "ar" candidate) resolves to the shared arweaveSnapshotPlacementContentStore built from the singular resolvedArweaveGatewayUrl (0.9.505, unmodified) — Snapshot RETRIEVAL still reaches a user-configured gateway, just without 0.9.440\'s own multi-gateway failover on this one path');
 
         // Distribution (write-path) call sites: neither may be touched by
         // this milestone — see core/ArweaveGatewayConfiguration.js's own

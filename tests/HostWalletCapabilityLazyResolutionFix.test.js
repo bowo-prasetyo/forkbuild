@@ -284,13 +284,22 @@ async function run() {
         // about ITS lazy-resolution wiring changed either.
         assert(!/composeSnapshotDistributionRuntime\(\{\s*arweaveContentStoreOptions/.test(mainSource), n('D1. AMENDED BY 0.9.506 — the Snapshot DISTRIBUTION composition call site no longer builds its own arweaveContentStoreOptions at all, since it no longer consumes composeSnapshotDistributionRuntime()\'s own contentStore half'));
         assert(/const \{ discoveryPublisher: snapshotDiscoveryPublisher \} = composeSnapshotDistributionRuntime\(\{/.test(mainSource), n('D1b. 0.9.506 — it now calls composeSnapshotDistributionRuntime() for its discoveryPublisher half only'));
-        // 0.9.440 — this call site now receives resolvedArweaveGatewayUrls
-        // (plural, the full ordered gateway list) rather than the singular
-        // resolvedArweaveGatewayUrl; see core/ArweaveGatewayConfiguration.js's
-        // own 0.9.440 header. The signer wiring this section actually
-        // exists to guard (arweaveHostSigner, unaffected by that change)
-        // is what the assertion below still confirms.
-        assert(/arweaveContentStoreOptions: \{ signer: arweaveHostSigner, gatewayUrls: resolvedArweaveGatewayUrls \}/.test(mainSource), n('D2. the Snapshot RETRIEVAL (read) composition call site still hands arweaveHostSigner through unchanged'));
+        // AMENDED BY 0.9.508 — Snapshot Resolution Content Backend Registry
+        // Integration. composeDiscoverSnapshotRuntime() no longer receives
+        // an arweaveContentStoreOptions (or any signer) at all — that call
+        // site is gone entirely; Snapshot RETRIEVAL now resolves its
+        // ContentStore per-candidate from publicationSnapshotPlacementResolutionStoreRegistry
+        // instead. The signer wiring this section actually exists to guard
+        // (arweaveHostSigner's own LAZY resolution) is unaffected: it still
+        // reaches the ONE shared arweaveSnapshotPlacementContentStore
+        // (0.9.505) that registry resolves an "ar" candidate to, exactly
+        // the same construction Section D's own header already names,
+        // below — confirmed directly rather than via the now-removed
+        // composeDiscoverSnapshotRuntime() call site.
+        assert(/const \{ resolver: snapshotResolver, queryService: snapshotDiscoveryQueryService \} = composeDiscoverSnapshotRuntime\(\{\s*\n\s*nostrSnapshotDiscoveryQueryServiceOptions:/.test(mainSource),
+            n('D2. AMENDED BY 0.9.508 — composeDiscoverSnapshotRuntime() now receives only nostrSnapshotDiscoveryQueryServiceOptions, no signer of its own'));
+        assert(/const arweaveSnapshotPlacementContentStore = new ArweaveContentStore\(\{\s*\n\s*signer: arweaveHostSigner,/.test(mainSource),
+            n('D2. AMENDED BY 0.9.508 — arweaveHostSigner still reaches the ONE shared arweaveSnapshotPlacementContentStore unchanged — the SAME instance Snapshot RETRIEVAL now resolves "ar" candidates through, via the resolution registry'));
         assert(/nostrSnapshotDiscoveryPublisherOptions: \{ publishImpl: nostrHostPublisher, discoveryTag: 'forkbuild-snapshot' \}/.test(mainSource), n('D3. the Snapshot distribution nostrSnapshotDiscoveryPublisherOptions call site is unchanged'));
         assert(/nostrPlaceNamingDiscoveryPublisherOptions: \{ publishImpl: nostrHostPublisher \}/.test(mainSource), n('D4. the Place Naming composition call site is unchanged'));
         assert(/createArweavePublicationDistributionRuntimeAdapter\(\{ signer: arweaveHostSigner \}\)/.test(mainSource), n('D5. the Publication Distribution Arweave adapter call site is unchanged'));
