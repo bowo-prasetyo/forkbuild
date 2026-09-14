@@ -1,3 +1,58 @@
+import { TrustStatus } from '../../core/TrustObservation.js';
+
+// 0.9.521 — Close Remaining Raw Status Rendering Boundaries.
+//
+// 0.9.520's own Finding 2 (Section D/I): the Inspect panel's "Discovery
+// status" row rendered `inspected.trust.status` — a raw
+// `core/TrustObservation.js` `TrustStatus` constant — straight to a
+// Wanderer, unhumanized. `TrustStatus.VALID` is literally the bare word
+// "VALID," and `inspectDocument()` (application/WorldNavigationSession.js)
+// populates `trust` from exactly that enum (see this file's own `inspected`
+// prop comment, above/below: "the specific TrustObservation... recorded for
+// this document's placement").
+//
+// 0.9.520's own recommended follow-up assumed the fix was to route this
+// call site through `describeTrustStatus`
+// (application/AvatarPresenceLabels.js), an already-existing humanizer for
+// the identical `TrustStatus` enum. Investigating that assumption is this
+// milestone's own job before writing a label (per its own requesting
+// brief) — and it does NOT hold: `describeTrustStatus` maps
+// `TrustStatus.VALID` to the word **"Trusted."** `core/TrustObservation.js`'s
+// own header is explicit that a TrustObservation is "purely DESCRIPTIVE...
+// not what should happen next" — never a trust verdict. Rendering "Trusted"
+// here would not close the SEMANTIC_BOUNDARY_GAP 0.9.520 found; it would
+// widen it, trading a raw enum for a stronger, unearned claim — exactly the
+// overclaim `docs/Principles.md`'s "Known Evidence Is Not Verified
+// Evidence" line and this codebase's own banned-vocabulary sweep
+// (tests/PublicationEvidenceTrustExperienceProductReassessment.test.js's
+// `trusted|safe|permanent|guaranteed|owns?|owned|authored?|authorship`)
+// both warn against.
+//
+// WHAT `inspected.trust` ACTUALLY MEANS AT THIS CALL SITE. This is not a
+// general "is this Wanderer's discovery trustworthy" verdict — it is one
+// `TrustObservation` about one `placement-record`
+// (`WorldNavigationSession._lookupTrustObservation()`), describing exactly
+// what `core/TrustObservation.js`'s own per-status comments already say:
+// whether that placement record's integrity/signature/authorization
+// checked out, is stale, conflicts with another observation, etc. The
+// labels below describe THAT — the same narrower, WHAT-WAS-CHECKED framing
+// `application/WorldEncounterMaterialInspectionView.js` (0.9.519) already
+// established for a different enum, continued here rather than reinvented.
+//
+// A LOCAL, NARROW FUNCTION — DELIBERATELY NOT A NEW SHARED "TrustView."
+// This component had no `application/` import before this milestone, and
+// gains none: `describeInspectedTrustStatusLabel()`, below, is a plain,
+// pure, read-only function scoped to exactly this one call site, mirroring
+// how `ui/components/WorldEncounterCanvas.js` already defines
+// `describeSelectionOriginLabel()`/`describeDecentralizedLeadUriLabel()`
+// directly as component methods rather than spinning off a file for every
+// one-off label. Inventing a generic, reusable "TrustView" abstraction
+// here — just because the backing enum happens to be named `TrustStatus`
+// — would turn this presentation fix into a new architectural concept
+// nobody asked for; this file's own vocabulary (the row is already labeled
+// "Discovery status," never "Trust status") deliberately stays exactly
+// that narrow.
+//
 // 0.2.29 — World Location Browser: browsing the world by CAMERA
 // POSITION, not by already knowing a document's name or typing raw
 // coordinates. Opened by "Explore Here" / "What's Here?" (WorldView's
@@ -61,6 +116,28 @@
 // diagnostics annotate, they never filter. See docs/Principles.md,
 // "Discovery And Trust Are Related, But They Are Not The Same
 // Operation (0.2.30)."
+// 0.9.521 — see this file's own header. Every current `TrustStatus`
+// member (`core/TrustObservation.js`), labeled by what that status
+// actually establishes about the inspected placement record — never a
+// verdict word ("Trusted"/"Safe"/"Verified"), never a fabricated fourth
+// state. An unrecognized future status falls through to the raw value
+// itself, exactly like every other label map in this codebase
+// (LOAD_STATUS_LABELS, STORAGE_TYPE_LABELS, ...) degrades an unknown key.
+const TRUST_OBSERVATION_LABELS = Object.freeze({
+    [TrustStatus.VALID]: 'Signature and authorization confirmed',
+    [TrustStatus.LEGACY_UNSIGNED]: 'No signature to check (recorded before signing)',
+    [TrustStatus.INVALID_SIGNATURE]: 'Signature does not match',
+    [TrustStatus.UNAUTHORIZED]: 'Signature valid, but signer not authorized',
+    [TrustStatus.STALE]: 'Superseded by a newer observation',
+    [TrustStatus.CONFLICTING]: 'Conflicts with another observation',
+    [TrustStatus.EQUIVOCATING]: 'Signer sent conflicting versions',
+    [TrustStatus.MISSING]: 'Not found in this discovery pass',
+    [TrustStatus.UNAVAILABLE]: 'Found but unreadable',
+    [TrustStatus.INTEGRITY_FAILURE]: 'Content hash does not match',
+    [TrustStatus.REPLAYED]: 'Already seen in an earlier observation',
+    [TrustStatus.BLOCKED]: 'From a signer this replica has blocked'
+});
+
 export default {
     name: 'WorldLocationBrowser',
     props: {
@@ -140,6 +217,12 @@ export default {
         },
         isInspecting(documentId) {
             return !!this.inspected && this.inspected.documentId === documentId;
+        },
+        // 0.9.521 — see this file's own header. Pure; degrades an
+        // unrecognized status to the raw value itself, never a fabricated
+        // label.
+        describeInspectedTrustStatusLabel(status) {
+            return TRUST_OBSERVATION_LABELS[status] || status || null;
         },
         onKeydown(event) {
             if (event.key === 'Escape') {
@@ -269,7 +352,7 @@ export default {
                                 </p>
                                 <div v-if="inspected.trust" class="inspection-row">
                                     <span class="inspection-label">Discovery status</span>
-                                    <span class="inspection-value">{{ inspected.trust.status }}</span>
+                                    <span class="inspection-value">{{ describeInspectedTrustStatusLabel(inspected.trust.status) }}</span>
                                 </div>
                                 <p v-if="inspected.trust && inspected.trust.reason" class="world-location-browser-inspect-note">
                                     {{ inspected.trust.reason }}
