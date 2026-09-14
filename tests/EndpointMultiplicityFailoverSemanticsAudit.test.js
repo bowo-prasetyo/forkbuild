@@ -495,8 +495,17 @@ async function run() {
         // is still what F3 (below) finds reaching Arweave Anchor.
         assert(mainSource.includes('arweaveResolverOptions: { gatewayUrls: resolvedArweaveGatewayUrls }'), n('F2. resolvedArweaveGatewayUrls reaches World Encounter material RESOLUTION (read)'));
         assert(mainSource.includes("arweaveContentStoreOptions: { signer: arweaveHostSigner, gatewayUrls: resolvedArweaveGatewayUrls }"), n('F2. resolvedArweaveGatewayUrls reaches Snapshot RETRIEVAL (read)'));
-        assert(/arweaveContentStoreOptions:\s*\{\s*signer:\s*arweaveHostSigner\s*\}/.test(mainSource),
-            n('F2. Snapshot DISTRIBUTION\'s own arweaveContentStoreOptions carries ONLY `signer`, never `gatewayUrl` — the write half of the identical class stays on its own hardcoded default, live-confirmed at the exact call site, not merely asserted from the header comment'));
+        // AMENDED BY 0.9.506 — Make Snapshot Distribution Content Backend
+        // Selectable. Snapshot DISTRIBUTION's composeSnapshotDistributionRuntime()
+        // call no longer builds an arweaveContentStoreOptions of its own AT
+        // ALL — Content is now resolved from snapshotPlacementStoreRegistry
+        // instead (application/SnapshotDistributionContentBackendSelection.js).
+        // This section's own real claim survives in an even stronger form:
+        // the write path exposes no `gatewayUrl`/`gatewayUrls` of its own
+        // whatsoever, live-confirmed at the exact call site.
+        const distributionCallSiteMatch = mainSource.match(/const \{ discoveryPublisher: snapshotDiscoveryPublisher \} = composeSnapshotDistributionRuntime\(\{([\s\S]*?)\}\);/);
+        assert(Boolean(distributionCallSiteMatch) && !/arweaveContentStoreOptions|gatewayUrl/.test(distributionCallSiteMatch[1]),
+            n('F2. AMENDED BY 0.9.506 — Snapshot DISTRIBUTION\'s own composition call site no longer builds an arweaveContentStoreOptions at all, and carries no `gatewayUrl`/`gatewayUrls` of any kind — the write half of the identical class stays on its own hardcoded default, live-confirmed at the exact call site, not merely asserted from the header comment'));
         assert(mainSource.includes('APPLIED ONLY TO RETRIEVAL, NEVER TO DISTRIBUTION'),
             n('F2. this file\'s own header names the identical boundary for Arweave that F1 found for Nostr — a real, symmetric, already-shipped read/write split across BOTH substrates, exactly what the reviewer\'s own Section 3 asked this audit to determine rather than assume'));
 

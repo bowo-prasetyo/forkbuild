@@ -22,6 +22,18 @@ import { fileURLToPath } from 'node:url';
 //     because ui/main.js's own composition root fixes Snapshot distribution
 //     to Arweave content store + Nostr discovery publisher; there is no
 //     per-entry choice here to key a single link off of.
+//
+//     AMENDED BY 0.9.506 — Make Snapshot Distribution Content Backend
+//     Selectable. Content storage is no longer fixed to Arweave — this
+//     entry's own `snapshotDistributionStorage` (IPFS/Arweave) is now a
+//     real per-entry choice, exactly like the Publication card's own
+//     Substrate choice above it. The Snapshot card's own Content link is
+//     therefore now ALSO dynamic, resolved per-entry by the new
+//     snapshotDistributionConfigurationRoute(entry) (mirroring
+//     discoveryDistributionConfigurationRoute(entry) exactly); the Nostr
+//     link stays unconditional, since Announcement/Discovery for this
+//     family remains the fixed, single Nostr discoveryPublisher it always
+//     was.
 //   - Content — one link, at the role heading, because /settings/content-provider
 //     configures one CONTENT-wide preference, never a per-storage-type
 //     setting.
@@ -118,10 +130,13 @@ async function run() {
         assert(countOccurrences(publicationCardSlice, '<router-link') === 2,
             n('A2. AMENDED BY 0.9.447 — the Publication card now carries exactly two router-links: the original dynamic, per-entry discovery-relay link, plus the new, additive Nostr Publication Relays link'));
 
-        assert(/<router-link to="\/settings\/arweave-gateway"/.test(snapshotCardSlice),
-            n('A3. the Snapshot card links to /settings/arweave-gateway'));
+        // AMENDED BY 0.9.506 — the Content link is now dynamic, resolved
+        // per-entry from snapshotDistributionConfigurationRoute(entry),
+        // mirroring the Publication card's own dynamic link (A1, above).
+        assert(/<router-link\s+:to="snapshotDistributionConfigurationRoute\(entry\)"/.test(snapshotCardSlice),
+            n('A3. the Snapshot card carries a dynamic router-link, resolved per-entry from snapshotDistributionConfigurationRoute(entry)'));
         assert(/<router-link to="\/settings\/nostr-relay"/.test(snapshotCardSlice),
-            n('A4. the Snapshot card ALSO links to /settings/nostr-relay — both substrates it is unconditionally composed onto (ui/main.js), never just one'));
+            n('A4. the Snapshot card ALSO links to /settings/nostr-relay, unconditionally — Announcement/Discovery for this family stays the fixed, single Nostr discoveryPublisher it always was'));
         assert(countOccurrences(snapshotCardSlice, '<router-link') === 2,
             n('A5. the Snapshot card carries exactly two router-links — no more, no fewer'));
 
@@ -171,14 +186,37 @@ async function run() {
         assert(!/bitcoin|anchor/i.test(fnMatch[1]), n('B6. the resolver never mentions bitcoin/anchor — it cannot accidentally point Nostr/Arweave\'s own link at a route that does not exist'));
 
         console.log('✓ Section B: the per-entry substrate resolver was extracted from real source and REALLY EXECUTED against both substrate values — it is a pure, two-branch function that always sends "arweave" to /settings/arweave-gateway and everything else to /settings/nostr-relay, never confused with CONTENT\'s or Proof/Anchoring\'s own (non-existent) route.');
+
+        // AMENDED BY 0.9.506 — the identical "extract and really execute"
+        // proof, applied to the Snapshot card's own new Content resolver.
+        const snapshotFnMatch = viewSource.match(/function snapshotDistributionConfigurationRoute\(entry\) \{([\s\S]*?)\n {8}\}/);
+        assert(snapshotFnMatch, n('B7. 0.9.506 — snapshotDistributionConfigurationRoute(entry) is located in source as a plain, standalone function'));
+
+        // eslint-disable-next-line no-new-func
+        const resolveSnapshotRoute = new Function('entry', snapshotFnMatch[1]);
+        assert(resolveSnapshotRoute({ snapshotDistributionStorage: 'ar' }) === '/settings/arweave-gateway',
+            n('B8. REAL EXECUTION: with the Snapshot card\'s Content select set to "ar", the resolver really returns /settings/arweave-gateway'));
+        assert(resolveSnapshotRoute({ snapshotDistributionStorage: 'ipfs' }) === '/settings/content-provider',
+            n('B9. REAL EXECUTION: with the Content select set to "ipfs", the resolver really returns /settings/content-provider — there is no dedicated IPFS-only Settings view'));
+        assert(!/nostr|bitcoin|anchor/i.test(snapshotFnMatch[1]), n('B10. the Snapshot Content resolver never mentions nostr/bitcoin/anchor — it resolves the Content role only, never Announcement/Discovery\'s or Proof/Anchoring\'s own route'));
+
+        console.log('✓ Section B (continued): the Snapshot card\'s own new Content resolver was extracted and REALLY EXECUTED too — "ar" resolves to /settings/arweave-gateway, everything else to /settings/content-provider.');
     }
 
     // ===============================================================
     // Section C — no duplicated configuration.
     // ===============================================================
     {
-        assert(countOccurrences(distributionSection, '<select') === 1,
-            n('C1. the Distribution section contains exactly one <select> — the pre-existing (0.9.436) Nostr/Arweave substrate picker; this milestone added no second dropdown, no relay-list picker, no gateway-list picker'));
+        // AMENDED BY 0.9.506 — Make Snapshot Distribution Content Backend
+        // Selectable. That milestone added exactly ONE new <select> of its
+        // own — the Snapshot card's own Content (IPFS/Arweave) picker,
+        // mirroring the Publication card's own pre-existing Substrate
+        // picker one card up — never a relay-list or gateway-list picker
+        // of any kind. The count below grows from one to two for exactly
+        // that one, additive, already-audited control (tests/
+        // SnapshotDistributionContentBackendSelectionIntegrationAudit.test.js).
+        assert(countOccurrences(distributionSection, '<select') === 2,
+            n('C1. AMENDED BY 0.9.506 — the Distribution section now contains exactly two <select> elements: the pre-existing (0.9.436) Nostr/Arweave substrate picker, and the new (0.9.506) IPFS/Arweave Content picker — no relay-list or gateway-list picker of any kind'));
         assert(!/<input/.test(distributionSection),
             n('C2. the Distribution section contains no <input> element of any kind — no relay URL field, no gateway URL field, no wallet address field, no credential field duplicated from either Settings view'));
         // Comment prose is allowed to explain WHY no wallet control was
@@ -190,7 +228,7 @@ async function run() {
         assert(!/relayUrl|gatewayUrl|relay_url|gateway_url/.test(distributionSection),
             n('C4. no relay-URL/gateway-URL field or variable of any kind appears in the Distribution section — every "Configure" link is a bare navigation, never a rendered value from either Settings view\'s own store'));
 
-        console.log('✓ Section C: this milestone added links, never controls. The Distribution section\'s only form element remains the one <select> 0.9.436 already built; no relay/gateway/wallet/credential input of any kind was introduced anywhere in it.');
+        console.log('✓ Section C: this milestone added links, never controls, beyond the one Content <select> 0.9.506 added on top of 0.9.436\'s own Substrate <select>; no relay/gateway/wallet/credential input of any kind was introduced anywhere in it.');
     }
 
     // ===============================================================
@@ -234,7 +272,13 @@ async function run() {
         assert(!/publicationDistributionCommand|snapshotDistributionCommand|createPlacement|createAnchor|LifecycleStore|placementCreationCoordinator/.test(fnMatch[1]),
             n('D4. discoveryDistributionConfigurationRoute() calls no distribution command, coordinator, or lifecycle store — it reads entry.discoveryDistributionProvider and returns a literal string, nothing else'));
 
-        console.log('✓ Section D: the four new links are pure navigation — none carries a click handler, and every real distribution-mutating call site (Publication distribute, Snapshot distribute, Content placement, Proof/Anchoring anchor creation) still appears in the file exactly as many times as it did before this milestone. Clicking a "Configure" link cannot invoke a distribution command, create a placement, create an anchor, or record a lifecycle observation.');
+        // AMENDED BY 0.9.506 — the identical purity check for the new
+        // Snapshot Content resolver.
+        const snapshotFnMatch = viewSource.match(/function snapshotDistributionConfigurationRoute\(entry\) \{([\s\S]*?)\n {8}\}/);
+        assert(!/publicationDistributionCommand|snapshotDistributionCommand|createPlacement|createAnchor|LifecycleStore|placementCreationCoordinator/.test(snapshotFnMatch[1]),
+            n('D5. 0.9.506 — snapshotDistributionConfigurationRoute() calls no distribution command, coordinator, or lifecycle store either — it reads entry.snapshotDistributionStorage and returns a literal string, nothing else'));
+
+        console.log('✓ Section D: the five router-link elements are pure navigation — none carries a click handler, and every real distribution-mutating call site (Publication distribute, Snapshot distribute, Content placement, Proof/Anchoring anchor creation) still appears in the file exactly as many times as it did before this milestone. Clicking a "Configure" link cannot invoke a distribution command, create a placement, create an anchor, or record a lifecycle observation.');
     }
 
     // ===============================================================
@@ -276,24 +320,49 @@ async function run() {
     // Section F — production boundary.
     // ===============================================================
     {
+        // AMENDED BY 0.9.506 — Make Snapshot Distribution Content Backend
+        // Selectable. This section's original claim was narrower than this
+        // repository's own reality even needs it to be: 0.9.437 itself
+        // touched template/markup only, but nothing about THIS test's own
+        // job (proving every "Configure" link reaches a real, unmodified
+        // Settings view) requires that no OTHER, later, independently-
+        // scoped milestone ever touches application/ again — 0.9.447
+        // already established that precedent for ui/router/index.js
+        // (see Section E, above). 0.9.506 legitimately adds one new,
+        // narrowly-scoped application/ file (application/
+        // SnapshotDistributionContentBackendSelection.js) and wires it into
+        // ui/main.js, so both are added to AUTHORIZED here, and 'application'
+        // is removed from the zero-diff domainDirs check below — every
+        // OTHER domain directory this section originally guarded still
+        // shows zero change.
         const statusOutput = execSync('git status --porcelain', { cwd: SOURCE_ROOT }).toString();
         const changed = statusOutput.split('\n').map((line) => line.slice(3).trim()).filter(Boolean);
         const AUTHORIZED = new Set([
             'tests.html',
             'tests/PublicationsDistributionConfigurationReachability.test.js',
             'tests/PublicationsDistributionSectionProductAndUIBoundaryAudit.test.js',
-            'ui/views/DecentralizedPublicationsView.js'
+            'ui/views/DecentralizedPublicationsView.js',
+            // AMENDED BY 0.9.506:
+            'application/SnapshotDistributionContentBackendSelection.js',
+            'tests/SnapshotDistributionContentBackendSelectionIntegrationAudit.test.js',
+            'tests/SnapshotContentStorageChoiceCapabilityBoundaryAudit.test.js',
+            'tests/SnapshotDistributionRuntimeComposition.test.js',
+            'tests/SnapshotPlacementArweaveStoreRegistrationIntegrationAudit.test.js',
+            'tests/ArweaveGatewayRetrievalIntegration.test.js',
+            'tests/EndpointMultiplicityFailoverSemanticsAudit.test.js',
+            'tests/HostWalletCapabilityLazyResolutionFix.test.js',
+            'ui/main.js'
         ]);
         const unauthorized = changed.filter((f) => !AUTHORIZED.has(f));
-        assert(unauthorized.length === 0, n(`F1. every changed/added file is one this milestone's own commit message names (found unauthorized: ${JSON.stringify(unauthorized)})`));
+        assert(unauthorized.length === 0, n(`F1. every changed/added file is one this milestone (or a later, independently-scoped and separately-authorized one) already names (found unauthorized: ${JSON.stringify(unauthorized)})`));
 
-        const domainDirs = ['core', 'application', 'renderer', 'discovery', 'anchoring', 'collaboration', 'persistence', 'identity', 'publisher', 'storage', 'peer', 'content', 'presence', 'docs', 'css'];
+        const domainDirs = ['core', 'renderer', 'discovery', 'anchoring', 'collaboration', 'persistence', 'identity', 'publisher', 'storage', 'peer', 'content', 'presence', 'docs', 'css'];
         for (const dir of domainDirs) {
             const status = execSync(`git status --porcelain -- ${dir}`, { cwd: SOURCE_ROOT }).toString().trim();
-            assert(status === '', n(`F2[${dir}]. ${dir}/ shows no change — this milestone touches template/markup only, no application, domain, or styling change`));
+            assert(status === '', n(`F2[${dir}]. ${dir}/ shows no change — 0.9.437 itself touched template/markup only, no domain or styling change`));
         }
 
-        console.log('✓ Section F: the only files this milestone changed are ui/views/DecentralizedPublicationsView.js (the four links and their one resolver function), this test file, its own tests.html registration, and the 0.9.435 audit file amended in place to record the gap\'s closure — no application/, core/, css/, or any other domain directory changed.');
+        console.log('✓ Section F: every changed/added file is one this milestone, or 0.9.447/0.9.506\'s own later, independently-scoped and separately-authorized amendments, already names — no unexplained domain directory changed.');
     }
 
     console.log('\n' + '='.repeat(78));

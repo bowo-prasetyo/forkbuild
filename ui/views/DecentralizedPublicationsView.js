@@ -1073,6 +1073,20 @@ export default {
         // constructs no orchestrator, uploader, or publisher of its own.
         const multiRelayNostrPublicationDistributionCommand = inject('multiRelayNostrPublicationDistributionCommand', null);
         const snapshotDistributionCommand = inject('snapshotDistributionCommand', null);
+        // 0.9.506 — Make Snapshot Distribution Content Backend Selectable.
+        // The SAME app-wide `snapshotDistributionAvailableStorageTypes`
+        // ui/main.js now provides — a plain `() -> string[]` read of the
+        // eligible-and-currently-registered Content backends ('ipfs'/'ar'
+        // only; see application/SnapshotDistributionContentBackendSelection.js's
+        // own header for why 'local' is deliberately never included). Called
+        // once, exactly like `availableStorageTypes` (Placement's own
+        // registry read) immediately below already is — the result is a
+        // plain array, never recomputed reactively, since the underlying
+        // registry is populated once at composition-root startup.
+        const snapshotDistributionAvailableStorageTypesCommand = inject('snapshotDistributionAvailableStorageTypes', null);
+        const snapshotDistributionStorageTypes = snapshotDistributionAvailableStorageTypesCommand
+            ? snapshotDistributionAvailableStorageTypesCommand()
+            : [];
         const publicationDistributionLifecycleStore = inject('publicationDistributionLifecycleStore', null);
         // 0.8.70 — IPFS Publication & Content Verification UI. Optional —
         // absent here (e.g. a test harness that never provides it), the
@@ -3189,6 +3203,17 @@ export default {
                 // fresh through discoveryObservationsView(entry) below.
                 discoveryDistributionProvider: 'nostr',
                 discoveryDistributionAttempt: null,
+                // 0.9.506 — Make Snapshot Distribution Content Backend
+                // Selectable. THIS entry's own explicit IPFS/Arweave
+                // Content choice — mirrors `discoveryDistributionProvider`
+                // immediately above exactly, one role over. Defaults to
+                // the first currently-eligible backend
+                // (`snapshotDistributionStorageTypes`, above) so the picker
+                // never opens on a backend this replica cannot actually
+                // use; falls back to `'ar'` — this family's own pre-0.9.506
+                // behavior — only when nothing is currently eligible at
+                // all.
+                snapshotDistributionStorage: snapshotDistributionStorageTypes[0] || 'ar',
                 snapshotDistributionAttempt: null
             })));
             await Promise.all(entries.filter((entry) => !entry.view && !entry.checking).map(resolveEntry));
@@ -6654,7 +6679,7 @@ export default {
             if (snapshotJson === null) {
                 return Promise.reject(new Error('Snapshot distribution is not available.'));
             }
-            return snapshotDistributionCommand(JSON.stringify(snapshotJson));
+            return snapshotDistributionCommand(JSON.stringify(snapshotJson), entry.snapshotDistributionStorage);
         }
 
         // The only writer of `entry.discoveryDistributionAttempt`, and
@@ -6743,6 +6768,21 @@ export default {
             return entry.discoveryDistributionProvider === 'arweave'
                 ? '/settings/arweave-gateway'
                 : '/settings/nostr-relay';
+        }
+
+        // 0.9.506 — Make Snapshot Distribution Content Backend Selectable.
+        // The Snapshot card's own Content configuration link, resolved the
+        // IDENTICAL way discoveryDistributionConfigurationRoute() immediately
+        // above already resolves the Publication card's own Substrate link —
+        // per-entry, from this entry's own current selection, never a fixed
+        // route. `/settings/content-provider` (not a dedicated IPFS-only
+        // Settings view, which does not exist) is IPFS's own target here,
+        // mirroring the Content role's own picker immediately below this
+        // card, which already links there for the identical reason.
+        function snapshotDistributionConfigurationRoute(entry) {
+            return entry.snapshotDistributionStorage === 'ar'
+                ? '/settings/arweave-gateway'
+                : '/settings/content-provider';
         }
 
         async function recheck(entry) {
@@ -6853,13 +6893,14 @@ export default {
             publicationDistributionCommand, multiRelayNostrPublicationDistributionCommand, snapshotDistributionCommand,
             distributePublicationForEntry, discoveryDistributionButtonLabel,
             distributeSnapshot, snapshotDistributionButtonLabel,
-            discoveryObservationsView, discoveryDistributionConfigurationRoute,
+            discoveryObservationsView, discoveryDistributionConfigurationRoute, snapshotDistributionConfigurationRoute,
             toggleInspect, inspectionExpanded, inspectionDetail, inspectionTypeSpecific, inspectionKnowledge,
             evidenceDiscoveryCoordinator, discoverFromPeers, discoveryView, discoveryBadgeClass, discoveryButtonLabel,
             placementResolutionCoordinator, describeKnownPlacementCount, togglePlacements, resolvePlacement, placementBadgeClass, placementLifecycleNote,
             togglePlacementInspect, placementInspectionExpanded, placementInspectionDetail, placementInspectionTypeSpecific,
             placementInspectionKnowledge,
             availableStorageTypes, createPlacement, placementCreationView, placementCreationBadgeClass, placementCreationButtonLabel,
+            snapshotDistributionStorageTypes,
             preferredPlacementCreationCoordinator, createPreferredPlacement, preferredPlacementCreationView,
             preferredPlacementCreationBadgeClass, preferredPlacementCreationButtonLabel,
             ipfsRemotePublicationCoordinator, publicationCatalogContentResolver,
@@ -8964,19 +9005,50 @@ export default {
                                         Distributes this replica's own locally held Snapshot bytes — never
                                         available when this replica does not currently possess them.
                                     </p>
+                                    <!-- 0.9.506 — Make Snapshot Distribution Content Backend
+                                         Selectable. Mirrors the Publication card's own
+                                         "Substrate" select immediately above — but selects
+                                         WHERE the Snapshot's own bytes are stored (this
+                                         entry's own `snapshotDistributionStorage`), never
+                                         which Announcement/Discovery substrate carries the
+                                         resulting locator; that stays the fixed, unmodified
+                                         Nostr discoveryPublisher this family has always used
+                                         (see application/SnapshotDistributionCommand.js's own
+                                         header). Options come from
+                                         `snapshotDistributionStorageTypes` — the eligible
+                                         ('ipfs'/'ar' only, never 'local') AND currently
+                                         registered backends ui/main.js's own
+                                         `snapshotDistributionAvailableStorageTypes` reports —
+                                         never a fixed, hardcoded pair of `<option>`s, so this
+                                         picker can never offer a backend this replica cannot
+                                         actually distribute onto. Hidden entirely when nothing
+                                         is currently eligible, the same degrade-gracefully
+                                         posture every optional control on this page already
+                                         holds. -->
+                                    <label v-if="snapshotDistributionStorageTypes.length > 0" class="form-label">
+                                        Content
+                                        <select v-model="entry.snapshotDistributionStorage" class="form-select"
+                                                :disabled="entry.snapshotDistributionAttempt && entry.snapshotDistributionAttempt.distributing">
+                                            <option v-for="storage in snapshotDistributionStorageTypes" :key="storage" :value="storage">{{ humanizeContentKind(storage) }}</option>
+                                        </select>
+                                    </label>
                                     <div class="identity-mgmt-actions">
                                         <button class="action-btn action-btn--primary"
                                                 :disabled="entry.snapshotDistributionAttempt && entry.snapshotDistributionAttempt.distributing"
                                                 @click="distributeSnapshot(entry)">
                                             {{ snapshotDistributionButtonLabel(entry) }}
                                         </button>
-                                        <!-- 0.9.437 — Snapshot distribution is composed, at
-                                             ui/main.js's own composition root, onto a fixed
-                                             Arweave content store + Nostr discovery publisher
-                                             pair (application/SnapshotDistributionRuntimeComposition.js)
-                                             — never a per-entry choice like Publication above — so
-                                             both Settings views are linked here, unconditionally. -->
-                                        <router-link to="/settings/arweave-gateway" class="action-btn action-btn--secondary">Configure Arweave</router-link>
+                                        <!-- UPDATED 0.9.506 — the Content configuration link now
+                                             follows this entry's own selection above, mirroring the
+                                             Publication card's own contextual "Configure" link
+                                             immediately above this one; "Configure Nostr" stays
+                                             unconditional since Announcement/Discovery for this
+                                             family is still the fixed, single Nostr
+                                             discoveryPublisher it always was — never a per-entry
+                                             choice. -->
+                                        <router-link :to="snapshotDistributionConfigurationRoute(entry)" class="action-btn action-btn--secondary">
+                                            Configure {{ entry.snapshotDistributionStorage === 'ar' ? 'Arweave' : 'IPFS' }}
+                                        </router-link>
                                         <router-link to="/settings/nostr-relay" class="action-btn action-btn--secondary">Configure Nostr</router-link>
                                     </div>
                                     <p v-if="entry.snapshotDistributionAttempt && entry.snapshotDistributionAttempt.error" class="form-hint form-hint--neutral">

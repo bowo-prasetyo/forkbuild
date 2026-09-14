@@ -391,20 +391,36 @@ async function run() {
     }
 
     // ===============================================================
-    // Section J — boundary audit: Snapshot Distribution is untouched.
+    // Section J — boundary audit: Snapshot Distribution.
+    //
+    // UPDATED 0.9.506 — Make Snapshot Distribution Content Backend
+    // Selectable. This section's original claim (Distribution stays
+    // completely untouched, reading neither registry at all) was true of
+    // 0.9.505 and is now deliberately superseded: 0.9.506 is precisely the
+    // milestone that gives Distribution a Content backend choice by
+    // reusing the CREATION registry this file's own Sections A-I already
+    // proved holds exactly one shared ArweaveContentStore instance. What
+    // remains true, and is reasserted below, is narrower but still real:
+    // `application/SnapshotDistributionCommand.js` itself is still never
+    // modified (the command was already storage-agnostic — see tests/
+    // SnapshotContentStorageChoiceCapabilityBoundaryAudit.test.js's own
+    // Section H), and Distribution still never reads the SEPARATE
+    // RESOLUTION registry (`publicationSnapshotPlacementResolutionStoreRegistry`)
+    // — only the CREATION one, the same registry `snapshotPlacementCreationCoordinator`
+    // above already uses.
     // ===============================================================
     {
         const distributionCommandSource = await codeOnlySource('application/SnapshotDistributionCommand.js');
-        check(!distributionCommandSource.includes('SnapshotPlacementStoreRegistry'), 'J. application/SnapshotDistributionCommand.js never references SnapshotPlacementStoreRegistry — untouched by this milestone');
+        check(!distributionCommandSource.includes('SnapshotPlacementStoreRegistry'), 'J. application/SnapshotDistributionCommand.js never references SnapshotPlacementStoreRegistry — still untouched, exactly as this milestone left it');
 
-        const distributionSiteMatch = mainCodeOnly.match(/const \{ contentStore: snapshotContentStore, discoveryPublisher: snapshotDiscoveryPublisher \} = composeSnapshotDistributionRuntime\(\{([\s\S]*?)\}\);/);
-        check(Boolean(distributionSiteMatch), 'J. ui/main.js\'s real Distribution composition call site is found for inspection');
+        const distributionSiteMatch = mainCodeOnly.match(/const snapshotDistributionCommand = \(bytes, storage = 'ar'\) => executeSnapshotDistributionCommand\(\{([\s\S]*?)\}\);/);
+        check(Boolean(distributionSiteMatch), 'J. ui/main.js\'s real Distribution command call site is found for inspection');
         const distributionSiteBody = distributionSiteMatch[1];
-        check(!distributionSiteBody.includes('snapshotPlacementStoreRegistry'), 'J. the Distribution composition site still never reads snapshotPlacementStoreRegistry');
-        check(!distributionSiteBody.includes('ArweaveContentStore'), 'J. the Distribution composition site still never constructs an ArweaveContentStore directly — it still only calls composeSnapshotDistributionRuntime()');
-        check(!distributionSiteBody.includes('publicationSnapshotPlacementResolutionStoreRegistry'), 'J. the Distribution composition site still never reads the resolution registry either');
+        check(distributionSiteBody.includes('snapshotPlacementStoreRegistry'), 'J. as of 0.9.506, the Distribution command DOES read snapshotPlacementStoreRegistry — the SAME CREATION registry this file\'s own instance-sharing proof (Section I) already covers, reused rather than duplicated');
+        check(!distributionSiteBody.includes('new ArweaveContentStore'), 'J. the Distribution command call site still never constructs an ArweaveContentStore directly — resolution goes through application/SnapshotDistributionContentBackendSelection.js instead');
+        check(!distributionSiteBody.includes('publicationSnapshotPlacementResolutionStoreRegistry'), 'J. the Distribution command call site still never reads the separate RESOLUTION registry — only the CREATION one');
 
-        console.log('✓ J. Snapshot Distribution\'s own composition site and application/SnapshotDistributionCommand.js remain completely untouched by this milestone\'s Placement-only wiring');
+        console.log('✓ J. application/SnapshotDistributionCommand.js remains completely untouched, and Snapshot Distribution now resolves Content through the SAME shared CREATION registry (and the SAME single ArweaveContentStore instance) this file\'s own Sections A-I already proved — never a second, independent one, and never the separate RESOLUTION registry');
     }
 
     console.log(`✅ All Snapshot Placement Arweave Store Registration Integration Audit checks passed (${assertionCount} assertions).`);

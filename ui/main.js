@@ -154,6 +154,7 @@ import { createNostrInjectedProviderPublisher } from '../nostr/NostrInjectedProv
 import { createNostrRelayQueryClient } from '../nostr/NostrRelayQueryClient.js';
 import { composeSnapshotDistributionRuntime } from '../application/SnapshotDistributionRuntimeComposition.js';
 import { executeSnapshotDistributionCommand } from '../application/SnapshotDistributionCommand.js';
+import { availableSnapshotDistributionStorageTypes, resolveSnapshotDistributionContentStore } from '../application/SnapshotDistributionContentBackendSelection.js';
 import { composePlaceNamingPublicationRuntime } from '../application/PlaceNamingPublicationRuntimeComposition.js';
 import { composeDiscoverSnapshotRuntime } from '../application/DiscoverSnapshotRuntimeComposition.js';
 import { executeDiscoverSnapshotCommand } from '../application/DiscoverSnapshotCommand.js';
@@ -2464,24 +2465,50 @@ app.provide('multiRelayNostrPublicationDistributionCommand', multiRelayNostrPubl
 // `'forkbuild-publication'`, ABOVE — the two families announce onto the
 // same Nostr relay without becoming the same discovery stream.
 //
-// `snapshotContentStore`/`snapshotDiscoveryPublisher` MAY BOTH BE `null` —
-// composeSnapshotDistributionRuntime()'s own graceful degradation, unchanged
-// — in which case `snapshotDistributionCommand(bytes)` throws synchronously,
-// exactly as calling `executeSnapshotDistributionCommand()` directly with no
-// usable collaborators already would. `ui/views/WorldView.js`'s own
-// `distributeWorldEncounterSnapshot()` wraps every call to this function in
-// a `Promise.resolve().then(...)`, catching that synchronous throw the same
-// way it already catches a genuine rejection.
-const { contentStore: snapshotContentStore, discoveryPublisher: snapshotDiscoveryPublisher } = composeSnapshotDistributionRuntime({
-    arweaveContentStoreOptions: { signer: arweaveHostSigner },
+// `snapshotDiscoveryPublisher` MAY BE `null` — composeSnapshotDistributionRuntime()'s
+// own graceful degradation, unchanged — in which case `snapshotDistributionCommand(bytes)`
+// throws synchronously, exactly as calling `executeSnapshotDistributionCommand()`
+// directly with no usable discoveryPublisher already would. `ui/views/
+// WorldView.js`'s own `distributeWorldEncounterSnapshot()` wraps every call
+// to this function in a `Promise.resolve().then(...)`, catching that
+// synchronous throw the same way it already catches a genuine rejection.
+//
+// 0.9.506 — Make Snapshot Distribution Content Backend Selectable. This
+// call site no longer asks composeSnapshotDistributionRuntime() to build
+// its own `contentStore` half at all (no `arweaveContentStoreOptions`
+// passed in) — Content is now resolved from `snapshotPlacementStoreRegistry`,
+// the SAME registry Snapshot Placement's own creation coordinator already
+// built and already registers 'local'/'ipfs'/'ar' into (see that wiring,
+// and the 0.9.505 Arweave registration, above). That removes the second,
+// independent ArweaveContentStore instance this call site used to
+// construct for itself — there is now exactly one ArweaveContentStore
+// instance in this file, shared by Placement and Distribution alike.
+// `resolveSnapshotDistributionContentStore()` (application/
+// SnapshotDistributionContentBackendSelection.js) restricts an actual
+// lookup to the closed 'ipfs'/'ar' allowlist that file's own header names
+// — 'local' stays a legitimate Placement backend but is never offered as a
+// Distribution target — and throws synchronously for anything else,
+// exactly the "collaborator contract violations are caught at the start"
+// discipline `executeSnapshotDistributionCommand()`'s own header already
+// holds one layer up. `storage` defaults to `'ar'` so every existing
+// caller that has not been updated to pass one explicitly (`ui/views/
+// WorldView.js`'s own `distributeWorldEncounterSnapshot()`, and everything
+// downstream of it) keeps its exact pre-0.9.506 behavior, unchanged.
+const { discoveryPublisher: snapshotDiscoveryPublisher } = composeSnapshotDistributionRuntime({
     nostrSnapshotDiscoveryPublisherOptions: { publishImpl: nostrHostPublisher, discoveryTag: 'forkbuild-snapshot' }
 });
-const snapshotDistributionCommand = (bytes) => executeSnapshotDistributionCommand({
+const snapshotDistributionCommand = (bytes, storage = 'ar') => executeSnapshotDistributionCommand({
     bytes,
-    contentStore: snapshotContentStore,
+    contentStore: resolveSnapshotDistributionContentStore(snapshotPlacementStoreRegistry, storage),
     discoveryPublisher: snapshotDiscoveryPublisher
 });
 app.provide('snapshotDistributionCommand', snapshotDistributionCommand);
+// 0.9.506 — the eligible-and-currently-registered Content backend list a
+// caller (ui/views/DecentralizedPublicationsView.js) can offer as an
+// explicit Snapshot Distribution picker, without ever hardcoding or
+// re-deriving that list itself.
+const snapshotDistributionAvailableStorageTypes = () => availableSnapshotDistributionStorageTypes(snapshotPlacementStoreRegistry);
+app.provide('snapshotDistributionAvailableStorageTypes', snapshotDistributionAvailableStorageTypes);
 
 // 0.9.320 — Explicit Place Naming Publication Action.
 //
@@ -2561,8 +2588,9 @@ app.provide('publishPlaceNamingClaimToNostrCommand', publishPlaceNamingClaimToNo
 // way it already catches a genuine rejection.
 // 0.9.364 — `gatewayUrl: resolvedArweaveGatewayUrl` (resolved once, above)
 // is this file's own SECOND retrieval call site — see that resolution's
-// own comment for why this differs from `snapshotContentStore`'s own
-// `arweaveContentStoreOptions` immediately above, which stays unconfigured.
+// own comment for why this differs from the Distribution wiring
+// immediately above, which (as of 0.9.506) no longer configures an
+// `arweaveContentStoreOptions` of its own at all.
 // 0.9.369 — `relayUrl: resolvedNostrRelayUrl` (resolved once, above) is
 // this file's own SECOND Nostr read-path call site, after `nostrRelayUrl`
 // above.

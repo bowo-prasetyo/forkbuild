@@ -510,8 +510,22 @@ async function run() {
     }
 
     // ===============================================================
-    // Section J — production composition-root topology, structural: two
-    // independent "storage choice" surfaces exist in ui/main.js today.
+    // Section J — production composition-root topology, structural.
+    //
+    // UPDATED 0.9.506 — Make Snapshot Distribution Content Backend
+    // Selectable. This section's own original verdict — "two independent
+    // storage choice surfaces exist, neither aware of the other" — is
+    // exactly the gap 0.9.506 closed, on purpose, the way this audit's own
+    // Section K already recommended (reuse the existing registry rather
+    // than adding a second one). The assertions below now prove the
+    // OPPOSITE topology on purpose: Distribution's own composition site
+    // now DOES resolve Content through the SAME `snapshotPlacementStoreRegistry`
+    // Placement already builds (application/
+    // SnapshotDistributionContentBackendSelection.js's own
+    // resolveSnapshotDistributionContentStore()), restricted to the closed
+    // 'ipfs'/'ar' eligible list that file's own header names — 'local'
+    // stays registered in the SAME registry for Placement's own use, but
+    // is never an eligible Distribution target.
     // ===============================================================
     {
         const mainSource = await codeOnlySource('ui/main.js');
@@ -519,16 +533,17 @@ async function run() {
         const placementSiteMatch = mainSource.match(/stores:\s*\[publicationContentStore,\s*new IpfsContentStore\(\)\]/);
         check(Boolean(placementSiteMatch), 'J. ui/main.js\'s real Placement composition site registers exactly [publicationContentStore (local), new IpfsContentStore()] — Local + IPFS, never Arweave');
 
-        const distributionSiteMatch = mainSource.match(/const \{ contentStore: snapshotContentStore, discoveryPublisher: snapshotDiscoveryPublisher \} = composeSnapshotDistributionRuntime\(\{([\s\S]*?)\}\);/);
-        check(Boolean(distributionSiteMatch), 'J. ui/main.js\'s real Distribution composition site is found and isolated for inspection');
+        const distributionSiteMatch = mainSource.match(/const snapshotDistributionCommand = \(bytes, storage = 'ar'\) => executeSnapshotDistributionCommand\(\{([\s\S]*?)\}\);/);
+        check(Boolean(distributionSiteMatch), 'J. ui/main.js\'s real Distribution command call site is found and isolated for inspection');
         const distributionSiteBody = distributionSiteMatch[1];
 
-        check(!distributionSiteBody.includes('snapshotPlacementStoreRegistry'), 'J. the Distribution composition site never reads snapshotPlacementStoreRegistry — it builds its own, independent ArweaveContentStore instance from scratch');
-        check(!distributionSiteBody.includes('IpfsContentStore'), 'J. the Distribution composition site never references IpfsContentStore at all');
-        check(!distributionSiteBody.includes('publicationContentStore'), 'J. the Distribution composition site never references the SAME publicationContentStore instance Placement already registers under "local"');
-        check(distributionSiteBody.includes('arweaveContentStoreOptions'), 'J. sanity: the Distribution composition site is genuinely the Arweave-only call this section is inspecting');
+        check(distributionSiteBody.includes('resolveSnapshotDistributionContentStore(snapshotPlacementStoreRegistry, storage)'), 'J. as of 0.9.506, the Distribution command genuinely resolves its contentStore FROM snapshotPlacementStoreRegistry — the SAME registry Placement already builds — never a second, independent ArweaveContentStore instance');
+        check(!distributionSiteBody.includes('new ArweaveContentStore') && !distributionSiteBody.includes('new IpfsContentStore'), 'J. the Distribution command call site itself never constructs a concrete ContentStore — resolution is entirely application/SnapshotDistributionContentBackendSelection.js\'s own job');
 
-        console.log('✓ J. ui/main.js genuinely constructs TWO separate "Snapshot Content storage" surfaces today — Placement\'s own registry (Local+IPFS) and Distribution\'s own freshly-built, registry-blind ArweaveContentStore — neither reads from, defers to, or is aware of the other; this is the concrete, current-source shape of the "two independently maintained storage choices" risk this milestone\'s own brief named in advance');
+        const eligibilitySource = await codeOnlySource('application/SnapshotDistributionContentBackendSelection.js');
+        check(eligibilitySource.includes("['ipfs', 'ar']"), 'J. the closed Distribution-eligible storage list is exactly [\'ipfs\', \'ar\'] — \'local\' is a registry member but deliberately never an eligible Distribution target');
+
+        console.log('✓ J. ui/main.js now genuinely shares ONE Snapshot Content storage-selection registry between Placement and Distribution — the "two independently maintained storage choices" risk this audit originally named has been closed by 0.9.506, exactly along this Section\'s own recommended line (reuse, never a second registry)');
     }
 
     // ===============================================================
