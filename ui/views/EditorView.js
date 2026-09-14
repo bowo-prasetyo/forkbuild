@@ -161,7 +161,23 @@ export default {
                      invariant), so it is read once, from the first element;
                      Discovery genuinely differs per relay, so every element
                      gets its own row — never collapsed into one aggregate
-                     line. -->
+                     line.
+
+                     AMENDED BY 0.9.526 — this v-else-if's own ".length"
+                     guard, and every "[0]"/v-for indexing below it,
+                     assume distributionResult is ALWAYS an array — true
+                     for every pre-0.9.502 (Nostr-only) caller, but not for
+                     0.9.502's own 'arweave' selection, whose command
+                     resolves a bare PublicationDistributionResult.
+                     distributePublishedDocument()'s own
+                     normalizeDistributionResultForDisplay() (see that
+                     function's own 0.9.526 header) now wraps a bare
+                     result into this identical one-element shape before
+                     it ever reaches this ref, so this template needed no
+                     change of its own to correctly display either
+                     substrate — see that fix's own header for the gap
+                     this closes (a successful Arweave-selected
+                     distribution previously rendered nothing at all). -->
                 <dl v-else-if="distributionResult && distributionResult.length" class="editor-post-publish-distribution-detail">
                     <dt>Publication</dt>
                     <dd>{{ distributionResult[0].publication.objectId }}</dd>
@@ -1476,6 +1492,38 @@ export default {
         // new second argument, exactly like `WorldEncounterCanvas.js`'s
         // own `distributeSelectedPublication()` already does one caller
         // over.
+        //
+        // AMENDED BY 0.9.526 — Distribution Result Display Normalization.
+        // 0.9.502 gave `distributeEditorPublication()` a real `'arweave'`
+        // branch that resolves a BARE `PublicationDistributionResult`
+        // (`publicationDistributionCommand`'s own single-relay shape),
+        // never the one-element ARRAY the `'nostr'` branch already
+        // resolves — see `tests/EditorViewAnnouncementDiscoveryProviderSelectionIntegrationAudit
+        // .test.js`'s own Section D2, unchanged, still proving that raw
+        // fact. The template's own `<dl v-else-if="distributionResult &&
+        // distributionResult.length">` (0.9.450) was never revisited to
+        // match: a bare object's own `.length` is `undefined`, so an
+        // otherwise fully successful Arweave-selected distribution — real
+        // material uploaded, real discovery announced, real Repository
+        // link available — rendered NOTHING, silently, indistinguishable
+        // from a still-idle action. This is the one, narrow normalization
+        // that closes that gap: wrap a bare result into the identical
+        // one-element-array shape the Nostr branch already produces
+        // BEFORE it reaches `distributionResult` — the one ref the
+        // template's own guard and `[0]` indexing already assume. Neither
+        // `distributeEditorPublication()` nor either injected command is
+        // touched; both still resolve exactly what they always resolved
+        // (see that same Section D2) — only what THIS view stores for
+        // display is normalized, exactly the "translate a call input/
+        // output, add nothing of its own" restraint this whole
+        // distribution family already holds one layer down.
+        function normalizeDistributionResultForDisplay(result) {
+            if (Array.isArray(result)) {
+                return result;
+            }
+            return result ? [result] : null;
+        }
+
         function distributePublishedDocument() {
             const publication = publishedPublication.value;
             if (!publication || !canDistributePublication || distributionExecuting.value) {
@@ -1489,7 +1537,7 @@ export default {
                 .then(() => distributeEditorPublication(publication, selectedDiscoveryProvider.value))
                 .then((result) => {
                     if (requestId === distributionRequestId) {
-                        distributionResult.value = result;
+                        distributionResult.value = normalizeDistributionResultForDisplay(result);
                     }
                 })
                 .catch((error) => {
