@@ -561,9 +561,21 @@ async function run() {
         // command for — see that file's own 0.9.450 amendment); the wrapper
         // itself, `distributeEditorPublication(publication)`, is unchanged
         // in shape.
+        //
+        // AMENDED BY 0.9.502 — Editor Announcement/Discovery Provider
+        // Selection. EditorView.js now injects `publicationDistributionCommand`
+        // AGAIN, alongside `multiRelayNostrPublicationDistributionCommand`
+        // — its own new Nostr/Arweave substrate choice — and
+        // `distributeEditorPublication()`'s own shape grew a second
+        // parameter, `discoveryProvider`, to select between them. The
+        // assertion below is updated in place to check the CORRECTED
+        // shape, the same convention this file's own header already
+        // establishes for a stale assumption a later milestone corrects.
         const editorViewCode = await codeOnlySource('ui/views/EditorView.js');
-        assert(editorViewCode.includes("inject('multiRelayNostrPublicationDistributionCommand', null)") && editorViewCode.includes('function distributeEditorPublication(publication)'),
-            '35. AMENDED BY 0.9.450 — EditorView.js still has its own distribution-command wiring (0.9.377\'s own Path 2), now through multiRelayNostrPublicationDistributionCommand');
+        assert(editorViewCode.includes("inject('multiRelayNostrPublicationDistributionCommand', null)")
+            && editorViewCode.includes("inject('publicationDistributionCommand', null)")
+            && editorViewCode.includes('function distributeEditorPublication(publication, discoveryProvider)'),
+            '35. AMENDED BY 0.9.502 — EditorView.js still has its own distribution-command wiring (0.9.377\'s own Path 2), now through EITHER multiRelayNostrPublicationDistributionCommand or publicationDistributionCommand, selected by its own new discoveryProvider choice');
 
         // No forbidden shortcut vocabulary (a generic notification
         // manager, a toast-specific distribution wrapper) exists

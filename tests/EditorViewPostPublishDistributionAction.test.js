@@ -167,25 +167,30 @@ function realAppWideDistributionCommand({ lifecycleStore, transactionId = 'Edito
 }
 
 // -----------------------------------------------------------------
-// Harness — extracts the REAL, CURRENT 0.9.377 block (AMENDED BY 0.9.450)
-// out of ui/views/EditorView.js (never hand-retyped) and executes it with
-// fake `ref`/`inject` implementations matching exactly the calls that
-// block makes: `ref(initial)` -> `{ value: initial }` (Vue's own contract
-// for every read/write this block performs), `inject('multiRelayNostrPublicationDistributionCommand', null)`
-// -> whatever command this harness was given, or `null`.
+// Harness — extracts the REAL, CURRENT 0.9.377 block (AMENDED BY 0.9.450,
+// AMENDED BY 0.9.502) out of ui/views/EditorView.js (never hand-retyped)
+// and executes it with fake `ref`/`inject` implementations matching
+// exactly the calls that block makes: `ref(initial)` -> `{ value: initial }`
+// (Vue's own contract for every read/write this block performs),
+// `inject('multiRelayNostrPublicationDistributionCommand', null)` /
+// `inject('publicationDistributionCommand', null)` -> whatever command
+// this harness was given, or `null`.
 // -----------------------------------------------------------------
-function buildHarness(editorViewSource, { multiRelayNostrPublicationDistributionCommand = null } = {}) {
+function buildHarness(editorViewSource, { multiRelayNostrPublicationDistributionCommand = null, publicationDistributionCommand = null } = {}) {
     const blockSource = extractRange(
         editorViewSource,
         "const multiRelayNostrPublicationDistributionCommand = inject('multiRelayNostrPublicationDistributionCommand', null);",
         '// ------------------------- 0.2.21 document lifecycle ------------',
-        '0.9.377/0.9.450 post-publish distribution block'
+        '0.9.377/0.9.450/0.9.502 post-publish distribution block'
     );
 
     function ref(initial) { return { value: initial }; }
     function inject(key, fallback) {
         if (key === 'multiRelayNostrPublicationDistributionCommand') {
             return multiRelayNostrPublicationDistributionCommand === null ? fallback : multiRelayNostrPublicationDistributionCommand;
+        }
+        if (key === 'publicationDistributionCommand') {
+            return publicationDistributionCommand === null ? fallback : publicationDistributionCommand;
         }
         return fallback;
     }
@@ -195,6 +200,9 @@ function buildHarness(editorViewSource, { multiRelayNostrPublicationDistribution
         'inject', 'ref', 'sanitizeDistributionErrorMessage',
         `${blockSource}\nreturn {
             multiRelayNostrPublicationDistributionCommand,
+            publicationDistributionCommand,
+            canDistributePublication,
+            selectedDiscoveryProvider,
             distributeEditorPublication,
             publishedPublication,
             distributionExecuting,
@@ -215,6 +223,12 @@ async function run() {
     // ---------------------------------------------------------------
     // Section A — Command injection: EditorView receives the exact
     // application-root command.
+    //
+    // AMENDED BY 0.9.502 — Editor Announcement/Discovery Provider
+    // Selection. EditorView.js now ALSO injects `publicationDistributionCommand`
+    // — its own new Arweave substrate choice — alongside the multi-relay
+    // Nostr command. This section is extended, never replaced, to cover
+    // both.
     // ---------------------------------------------------------------
     {
         const marker = () => Promise.resolve(null);
@@ -226,7 +240,18 @@ async function run() {
         assert(degraded.multiRelayNostrPublicationDistributionCommand === null,
             '2. with no command provided (e.g. a headless/composition-less caller), EditorView degrades to null exactly like every other optional inject(key, null) in this file — never throws at setup time');
 
-        console.log('✓ Section A: AMENDED BY 0.9.450 — EditorView receives the exact application-root multiRelayNostrPublicationDistributionCommand instance, and degrades to null when none is provided');
+        const arweaveMarker = () => Promise.resolve(null);
+        const harnessWithArweave = buildHarness(editorViewSource, { publicationDistributionCommand: arweaveMarker });
+        assert(harnessWithArweave.publicationDistributionCommand === arweaveMarker,
+            '2a. AMENDED BY 0.9.502 — EditorView\'s own injected publicationDistributionCommand is likewise the EXACT function instance handed in by the app root');
+        assert(harnessWithArweave.canDistributePublication === true,
+            '2b. AMENDED BY 0.9.502 — canDistributePublication is true whenever EITHER command is usable, even with multiRelayNostrPublicationDistributionCommand absent');
+        assert(degraded.canDistributePublication === false,
+            '2c. AMENDED BY 0.9.502 — canDistributePublication is false only when NEITHER command is usable');
+        assert(harness.selectedDiscoveryProvider.value === 'nostr',
+            '2d. AMENDED BY 0.9.502 — selectedDiscoveryProvider defaults to \'nostr\', matching PublicationDistributionRuntimeComposition.js\'s own default, so every pre-0.9.502 mount behaves identically until the Wanderer explicitly picks Arweave');
+
+        console.log('✓ Section A: AMENDED BY 0.9.502 — EditorView receives the exact application-root multiRelayNostrPublicationDistributionCommand AND publicationDistributionCommand instances, degrades each to null when absent, and defaults its own substrate choice to \'nostr\'');
     }
 
     // ---------------------------------------------------------------
@@ -533,15 +558,22 @@ async function run() {
         // WorldView.js's — same request fields, same guard, same
         // rejection message — confirmed against the real extracted
         // source text of both. AMENDED BY 0.9.450: EditorView.js's own
-        // command is now multiRelayNostrPublicationDistributionCommand
-        // (never a substrate choice, since this view offers none — see
-        // that file's own 0.9.450 amendment), the SAME command
-        // WorldView.js's own wrapper calls on its own Nostr branch.
+        // Nostr branch called multiRelayNostrPublicationDistributionCommand
+        // (no substrate choice existed yet). AMENDED BY 0.9.502:
+        // distributeEditorPublication() gained a second parameter,
+        // discoveryProvider, and now branches exactly like WorldView.js's
+        // own distributeWorldEncounterPublication() does — an explicit
+        // 'arweave' selection reaches the single-relay
+        // publicationDistributionCommand; every other value still reaches
+        // the multi-relay command, byte-for-byte the same request shape
+        // as before.
         const editorWrapper = extractRange(editorViewCodeOnly,
-            'function distributeEditorPublication(publication) {', '\n        }',
+            'function distributeEditorPublication(publication, discoveryProvider) {', '\n        }',
             'distributeEditorPublication() body');
+        assert(editorWrapper.includes("if (discoveryProvider === 'arweave')") && editorWrapper.includes('publicationDistributionCommand({') && editorWrapper.includes('discoveryProvider\n'),
+            '37a. AMENDED BY 0.9.502 — EditorView.js\'s own distributeEditorPublication() branches on discoveryProvider === \'arweave\' and, when selected, calls the injected single-relay publicationDistributionCommand, forwarding discoveryProvider verbatim — the identical branch WorldView.js\'s own wrapper already holds');
         assert(editorWrapper.includes('multiRelayNostrPublicationDistributionCommand({') && editorWrapper.includes('serializedMaterial: JSON.stringify(publication.toJSON())'),
-            '37. AMENDED BY 0.9.450 — EditorView.js\'s own distributeEditorPublication() calls the injected multi-relay command with the identical request shape WorldView.js\'s own wrapper uses on its own Nostr branch');
+            '37b. AMENDED BY 0.9.450/0.9.502 — every other discoveryProvider value still calls the injected multi-relay command with the identical request shape WorldView.js\'s own wrapper uses on its own Nostr branch');
 
         console.log('✓ Section H: WorldView.js\'s own Publication Distribution path is completely unaffected, and EditorView\'s new wrapper mirrors its exact shape without editing it');
     }

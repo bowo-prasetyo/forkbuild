@@ -228,22 +228,31 @@ async function run() {
         // inject BOTH commands (routing per the Wanderer's own Nostr/Arweave
         // substrate choice — see each file's own 0.9.450 amendment);
         // EditorView.js, which never offered a substrate choice of its own
-        // and was always Nostr-only, now injects ONLY the multi-relay
-        // command, dropping the single-relay one entirely. This section's
-        // own live check is narrowed to match, in the identical spirit
-        // 0.9.447 itself already narrowed tests/NostrMultiRelayFanOutIntegrationBoundaryAudit.test.js's
+        // and was always Nostr-only, dropped the single-relay command
+        // entirely at 0.9.450, injecting only the multi-relay one. This
+        // section's own live check is narrowed to match, in the identical
+        // spirit 0.9.447 itself already narrowed tests/NostrMultiRelayFanOutIntegrationBoundaryAudit.test.js's
         // own Section J, above, rather than deleted — it is exactly HOW
         // 0.9.450 fixed the gap this milestone found, not a stale
         // assumption to discard.
+        //
+        // AMENDED BY 0.9.502 — Editor Announcement/Discovery Provider
+        // Selection. EditorView.js's own "Distribute now" action offered
+        // no Arweave substrate choice of its own even after 0.9.450 gave
+        // WorldView.js/DecentralizedPublicationsView.js one — 0.9.502
+        // closed that asymmetry by giving EditorView.js the identical
+        // choice, which means it now injects BOTH commands again, exactly
+        // like the other two views already did. The assertion below is
+        // updated in place to check the CORRECTED fact, the same
+        // convention this file's own A10 assertion already followed when
+        // 0.9.452 closed a different, later finding.
         const worldViewSource = await source('ui/views/WorldView.js');
         const editorViewSource = await source('ui/views/EditorView.js');
         const publicationsViewSource = await source('ui/views/DecentralizedPublicationsView.js');
-        for (const [label, text] of [['WorldView.js', worldViewSource], ['DecentralizedPublicationsView.js', publicationsViewSource]]) {
-            assert(text.includes("inject('publicationDistributionCommand'"), n(`A8. ${label} still injects the single-relay publicationDistributionCommand — kept for its own Arweave substrate choice, per its own 0.9.450 amendment`));
-            assert(text.includes("inject('multiRelayNostrPublicationDistributionCommand'"), n(`A8. ${label} now ALSO injects multiRelayNostrPublicationDistributionCommand — the exact wiring this milestone's own Section J recommended, closed by 0.9.450`));
+        for (const [label, text] of [['WorldView.js', worldViewSource], ['EditorView.js', editorViewSource], ['DecentralizedPublicationsView.js', publicationsViewSource]]) {
+            assert(text.includes("inject('publicationDistributionCommand'"), n(`A8. ${label} injects the single-relay publicationDistributionCommand — kept for its own Arweave substrate choice (WorldView.js/DecentralizedPublicationsView.js since 0.9.450, EditorView.js since 0.9.502)`));
+            assert(text.includes("inject('multiRelayNostrPublicationDistributionCommand'"), n(`A8. ${label} now ALSO injects multiRelayNostrPublicationDistributionCommand — the exact wiring this milestone's own Section J recommended, closed by 0.9.450 (and, for EditorView.js, restored alongside its own new substrate choice by 0.9.502)`));
         }
-        assert(!editorViewSource.includes("inject('publicationDistributionCommand'"), n('A8. EditorView.js no longer injects the single-relay publicationDistributionCommand at all — it never offered an Arweave substrate choice to keep it for (0.9.450)'));
-        assert(editorViewSource.includes("inject('multiRelayNostrPublicationDistributionCommand'"), n('A8. EditorView.js now injects multiRelayNostrPublicationDistributionCommand as its own SOLE publication distribution command (0.9.450)'));
         const mainSource = await source('ui/main.js');
         assert(mainSource.includes("app.provide('multiRelayNostrPublicationDistributionCommand', multiRelayNostrPublicationDistributionCommand)"),
             n('A9. ui/main.js DOES provide multiRelayNostrPublicationDistributionCommand app-wide — the capability is composed and available, not merely written and forgotten'));

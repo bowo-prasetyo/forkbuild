@@ -250,11 +250,22 @@ async function run() {
 
     // ===============================================================
     // Section C — EditorView.js reachability.
+    //
+    // AMENDED BY 0.9.502 — Editor Announcement/Discovery Provider
+    // Selection. EditorView.js's own "Distribute now" action offered no
+    // Arweave substrate choice of its own even after this milestone gave
+    // WorldView.js one (Section B, above) — 0.9.502 closed that asymmetry,
+    // giving EditorView.js the identical `distributeEditorPublication(publication,
+    // discoveryProvider)` shape Section B already live-extracts for
+    // WorldView.js. This section is rewritten, in place, to match — the
+    // same convention this file's own Section B already establishes,
+    // never a second, differently-shaped test for the same routing
+    // decision.
     // ===============================================================
     {
         const editorViewSource = await source('ui/views/EditorView.js');
         assert(editorViewSource.includes("inject('multiRelayNostrPublicationDistributionCommand'"), n('C1. ui/views/EditorView.js injects multiRelayNostrPublicationDistributionCommand'));
-        assert(!editorViewSource.includes("inject('publicationDistributionCommand'"), n('C2. ui/views/EditorView.js no longer injects the single-relay publicationDistributionCommand at all — it never offered an Arweave substrate choice'));
+        assert(editorViewSource.includes("inject('publicationDistributionCommand'"), n('C2. ui/views/EditorView.js now ALSO injects the single-relay publicationDistributionCommand — its own new Arweave substrate choice, added by 0.9.502'));
 
         const network = makeRelayNetwork();
         const lifecycleStore = new PublicationDistributionLifecycleMemoryStore();
@@ -266,15 +277,27 @@ async function run() {
             nostrRelayUrls: relayUrls,
             nostrPublisherOptions: { discoveryTag: 'forkbuild-publication', publishImpl: network.publishImpl }
         });
+        let singleRelayCalls = 0;
+        const singleRelayStub = async (request) => {
+            singleRelayCalls += 1;
+            return { publication: request.publication, material: { uri: 'ar://stub' }, discovery: { id: 'stub', origin: 'arweave' } };
+        };
         const liveDistribute = extractLiveFunction(editorViewSource, 'distributeEditorPublication', [
+            'publicationDistributionCommand',
             'multiRelayNostrPublicationDistributionCommand'
         ]);
-        const publication = makeFakePublication('pub-c-editor');
-        const results = await liveDistribute(multiRelayCommand, publication);
-        assert(Array.isArray(results) && results.length === 3, n('C3. the REAL, live-extracted distributeEditorPublication() reaches the configured three-relay multi-relay command on its ONLY code path — this view never offered a substrate choice, so it is always Nostr'));
-        assert(relayUrls.every((relayUrl) => (network.relays.get(relayUrl) || []).length === 1), n('C4. all three configured relays, and only those three, genuinely received the announcement'));
 
-        console.log('✓ Section C: ui/views/EditorView.js\'s own real, live-extracted distributeEditorPublication() reaches the configured multi-relay command — the only Nostr command this view has ever needed, now the only one it calls');
+        const publicationNostr = makeFakePublication('pub-c-editor-nostr');
+        const nostrResults = await liveDistribute(singleRelayStub, multiRelayCommand, publicationNostr, undefined);
+        assert(Array.isArray(nostrResults) && nostrResults.length === 3, n('C3. the REAL, live-extracted distributeEditorPublication(), called with an omitted discoveryProvider (this view\'s own pre-0.9.502 default), reaches the multi-relay command and fans out to all three configured relays'));
+        assert(relayUrls.every((relayUrl) => (network.relays.get(relayUrl) || []).length === 1), n('C4. all three configured relays, and only those three, genuinely received the announcement'));
+        assert(singleRelayCalls === 0, n('C5. the single-relay stub was never called for the Nostr-default path'));
+
+        const publicationArweave = makeFakePublication('pub-c-editor-arweave');
+        const arweaveResult = await liveDistribute(singleRelayStub, multiRelayCommand, publicationArweave, 'arweave');
+        assert(!Array.isArray(arweaveResult) && singleRelayCalls === 1, n('C6. an explicit "arweave" discoveryProvider — this view\'s own new 0.9.502 substrate choice — reaches the single-relay command instead, unaffected by the multi-relay Nostr routing'));
+
+        console.log('✓ Section C: ui/views/EditorView.js\'s own real, live-extracted distributeEditorPublication() routes every Nostr-bound call (omitted or explicit "nostr") through the configured multi-relay command, and its own new explicit Arweave selection through the unmodified single-relay command — the identical routing Section B already proved for WorldView.js');
     }
 
     // ===============================================================
