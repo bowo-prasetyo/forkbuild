@@ -147,6 +147,7 @@ import { resolvePublicationDistributionRuntimeConfiguration } from '../applicati
 import { createPublicationDistributionRuntimeProvider } from '../application/PublicationDistributionRuntimeProvider.js';
 import { createNostrPublicationDistributionRuntimeAdapter } from '../application/NostrPublicationDistributionRuntimeAdapter.js';
 import { createArweavePublicationDistributionRuntimeAdapter } from '../application/ArweavePublicationDistributionRuntimeAdapter.js';
+import { createArweaveTaggedTransactionUpload } from '../application/ArweaveTaggedTransactionUpload.js';
 import { createArweaveInjectedProviderSigner } from '../arweave/ArweaveInjectedProviderSigner.js';
 import { createNostrInjectedProviderPublisher } from '../nostr/NostrInjectedProviderPublisher.js';
 import { createNostrRelayQueryClient } from '../nostr/NostrRelayQueryClient.js';
@@ -2311,24 +2312,41 @@ const nostrHostPublisher = async function nostrHostPublish(relayUrl, eventTempla
 };
 const nostrPublicationRuntimeCapabilities = createNostrPublicationDistributionRuntimeAdapter({ publish: nostrHostPublisher });
 const arweavePublicationRuntimeCapabilities = createArweavePublicationDistributionRuntimeAdapter({ signer: arweaveHostSigner });
+// 0.9.492 — Wire Arweave Tagged Transaction Upload into Production
+// Composition. 0.9.491's own audit (Gap 1) found this exact construction
+// missing: `application/ArweaveTaggedTransactionUpload.js` (0.9.490)
+// shipped a real `uploadTaggedTransaction`, but no production composition
+// ever called `createArweaveTaggedTransactionUpload()`, so selecting
+// "Arweave" for announcement always threw. `arweaveHostSigner` (the same
+// lazy, injected host signer `arweavePublicationRuntimeCapabilities`/
+// `arweaveAnchorPublisher` already share above) and `resolvedArweaveGatewayUrl`
+// (this device's own configured gateway, resolved once at the top of this
+// file) are reused unchanged — no second signer, no second gateway, no new
+// configuration.
+const arweaveAnnouncementUploadTaggedTransaction = createArweaveTaggedTransactionUpload({
+    signer: arweaveHostSigner,
+    gatewayUrl: resolvedArweaveGatewayUrl
+});
 const publicationDistributionRuntimeProvider = createPublicationDistributionRuntimeProvider({
     ...arweavePublicationRuntimeCapabilities,
     ...nostrPublicationRuntimeCapabilities,
+    uploadTaggedTransaction: arweaveAnnouncementUploadTaggedTransaction,
     discoveryTag: PUBLICATION_DISCOVERY_TAG
 });
 // 0.9.430 — Announcement/Discovery Provider Selection Reachability.
 // `createPublicationDistributionRuntimeProvider()`'s own `arweaveAnnouncement`
-// section (see that file's own header, "AMENDED BY 0.9.430") is what now
+// section (see that file's own header, "AMENDED BY 0.9.430") is what
 // produces `arweaveAnnouncementPublisherOptions` below — this file still
 // never imports `application/PublicationDistributionConfigurationProvider.js`
 // directly, exactly the same restraint it already holds for
-// `arweaveUploaderOptions`/`nostrPublisherOptions`. No `uploadTaggedTransaction`
-// host capability exists anywhere in this codebase yet (see 0.9.108's/
-// 0.9.109's own "no host capability exists yet" precedent for the other
-// two substrates before their own adapters existed) — building that
-// adapter is a separate, later, unscheduled milestone, so this section
-// honestly resolves `undefined`, exactly like both siblings did before a
-// real signer/publishImpl existed.
+// `arweaveUploaderOptions`/`nostrPublisherOptions`.
+//
+// AMENDED BY 0.9.492 — `uploadTaggedTransaction` (constructed immediately
+// above) is now forwarded into `createPublicationDistributionRuntimeProvider()`,
+// so this section resolves a real, usable `arweaveAnnouncementPublisherOptions`
+// whenever a wallet is connected, rather than always `undefined`. Whether
+// it is actually usable right now (a wallet is connected) remains entirely
+// `resolveArweaveAnnouncementPublisherOptions()`'s own decision, unchanged.
 const { arweaveUploaderOptions, nostrPublisherOptions, arweaveAnnouncementPublisherOptions } = resolvePublicationDistributionRuntimeConfiguration(publicationDistributionRuntimeProvider.resolveRuntimeCapabilities());
 const publicationDistributionCommand = composePublicationDistributionCommand({
     lifecycleStore: publicationDistributionLifecycleStore,
