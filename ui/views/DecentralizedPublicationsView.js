@@ -642,6 +642,31 @@ function humanizeStorageType(storage) {
     return STORAGE_TYPE_LABELS[storage] || humanizeContentKind(storage);
 }
 
+// 0.9.514 — Proof/Anchoring Product Completion Reassessment. An
+// `anchorType` value (anchoring/BitcoinAnchorPublisher.js's own
+// 'bitcoin-op-return', anchoring/BaseAnchorPublisher.js's own 'base',
+// anchoring/ArweaveAnchorPublisher.js's own 'arweave') is not a content
+// kind either, for the identical reason 0.9.510's STORAGE_TYPE_LABELS
+// immediately above exists: humanizeContentKind() title-cases the raw
+// string, which is correct for a real word like 'structure' but turns
+// 'bitcoin-op-return' into "Bitcoin Op Return" — OP_RETURN is the
+// specific Bitcoin script opcode this anchor's commitment happens to be
+// embedded in, a raw protocol detail with no meaning to an ordinary
+// user, never a name for the destination network the way "Base" and
+// "Arweave" already are for their own anchorType values. A known
+// anchorType renders its real network name; an unrecognized one still
+// renders, title-cased, via humanizeContentKind() — never hidden, never
+// refused.
+const ANCHOR_TYPE_LABELS = {
+    'bitcoin-op-return': 'Bitcoin',
+    base: 'Base',
+    arweave: 'Arweave'
+};
+
+function humanizeAnchorType(anchorType) {
+    return ANCHOR_TYPE_LABELS[anchorType] || humanizeContentKind(anchorType);
+}
+
 function shortId(identityId) {
     return identityId ? identityId.slice(-14) : 'an unknown identity';
 }
@@ -6749,7 +6774,7 @@ export default {
         function creationButtonLabel(entry, anchorType) {
             const view = creationView(entry, anchorType);
             const hasExisting = entry.evidenceAnchors.some((anchor) => anchor.anchorType === anchorType);
-            return describeCreationButtonLabel(humanizeContentKind(anchorType), { creating: view.state === ExternalAnchorCreationUiState.CREATING, hasExisting });
+            return describeCreationButtonLabel(humanizeAnchorType(anchorType), { creating: view.state === ExternalAnchorCreationUiState.CREATING, hasExisting });
         }
 
         // 0.9.436 — Publications Distribution Section Reorganization.
@@ -7007,7 +7032,7 @@ export default {
 
         return {
             entries, loading, retrievalPeers, availableAnchorTypes,
-            humanizeContentKind, humanizeStorageType, shortId, shortHash, formatWhen, badgeClass, statusLabel, availabilityText,
+            humanizeContentKind, humanizeStorageType, humanizeAnchorType, shortId, shortHash, formatWhen, badgeClass, statusLabel, availabilityText,
             canRetrieve, retrieve, recheck,
             describeKnownEvidenceCount, toggleEvidence, verifyAnchor, evidenceBadgeClass, lifecycleNote,
             createAnchor, creationView, creationBadgeClass, creationButtonLabel,
@@ -9282,10 +9307,45 @@ export default {
                              does not exist. -->
                         <div v-if="availableAnchorTypes.length > 0" class="identity-mgmt-distribution-role">
                             <span class="evidence-convergence-title">Proof / Anchoring</span>
+                            <!-- 0.9.514 — Proof/Anchoring Product Completion Reassessment.
+                                 A note ABOVE the generic card loop below, never inside it —
+                                 tests/ArweaveProofAnchorIntegrationBoundaryAudit.test.js's own
+                                 Section B already regression-guards that loop as containing ZERO
+                                 anchorType-specific branches and never naming a substrate
+                                 literally, so a substrate-specific pointer belongs here, at the
+                                 role level, instead.
+
+                                 Bitcoin's own card below is real and always honestly reports the
+                                 true reason it cannot proceed — but on this replica that reason
+                                 ("no wallet/broadcast capability configured") reads as "Bitcoin
+                                 anchoring is unavailable," when a real, working, wallet-guided
+                                 pipeline (fund/construct/review/sign/finalize/broadcast — 0.8.60
+                                 through 0.8.64, published via 0.9.512) is a few sections below on
+                                 this SAME page. Base has no card in the loop at all: creating a
+                                 Base anchor (anchoring/BaseAnchorPublisher.js, exposed via
+                                 0.9.472's "Create Base Anchor") needs an already-reviewed
+                                 transaction plan this generic, one-call-per-anchorType loop has
+                                 no way to supply — see that publisher's own header, and this
+                                 file's own header on why no generic transaction abstraction is
+                                 introduced to paper over that. Left unexplained, both read as
+                                 "unavailable"/"not offered" rather than "wallet-guided, and a few
+                                 sections below." Each half is shown only when its own real
+                                 collaborator is actually provided — never asserting a flow exists
+                                 in a build that lacks it. See
+                                 tests/ProofAnchoringProductCompletionReassessment.test.js. -->
+                            <p v-if="bitcoinWalletConnection || baseAnchorPublisher" class="form-hint form-hint--neutral">
+                                <template v-if="bitcoinWalletConnection">Bitcoin anchoring is wallet-guided and multi-step — the button below only
+                                succeeds once a transaction has been connected, funded, constructed, reviewed, signed,
+                                finalized, and broadcast in the Bitcoin section under &quot;Snapshot, Anchoring, IPFS
+                                &amp; Evidence Details&quot; below.</template>
+                                <template v-if="baseAnchorPublisher"> Base anchoring is also available, through its own
+                                wallet-guided flow — connect a wallet and review a transaction in the Base section under
+                                &quot;Snapshot, Anchoring, IPFS &amp; Evidence Details&quot; below to create one.</template>
+                            </p>
                             <div class="evidence-list">
                                 <div v-for="anchorType in availableAnchorTypes" :key="anchorType" class="evidence-anchor-card">
                                     <div class="evidence-anchor-header">
-                                        <span class="evidence-anchor-type">{{ humanizeContentKind(anchorType) }}</span>
+                                        <span class="evidence-anchor-type">{{ humanizeAnchorType(anchorType) }}</span>
                                         <span v-if="creationView(entry, anchorType).label" class="peer-badge" :class="creationBadgeClass(entry, anchorType)">
                                             {{ creationView(entry, anchorType).label }}
                                         </span>
@@ -10622,7 +10682,7 @@ export default {
                         <div v-if="entry.evidenceExpanded && entry.evidence.count > 0" class="evidence-list">
                             <div v-for="anchorView in entry.evidence.anchors" :key="anchorView.anchorId" class="evidence-anchor-card">
                                 <div class="evidence-anchor-header">
-                                    <span class="evidence-anchor-type">{{ humanizeContentKind(anchorView.anchorType) }}</span>
+                                    <span class="evidence-anchor-type">{{ humanizeAnchorType(anchorView.anchorType) }}</span>
                                     <span class="peer-badge" :class="evidenceBadgeClass(anchorView)">{{ anchorView.verificationLabel }}</span>
                                 </div>
                                 <p v-if="anchorView.verificationReason" class="form-hint form-hint--neutral">
