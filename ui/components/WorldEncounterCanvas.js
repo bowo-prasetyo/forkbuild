@@ -4787,16 +4787,40 @@ export default {
 
                         <p v-if="discoveryError" class="world-encounter-discovery-error">{{ discoveryError }}</p>
                         <template v-else-if="discoveryResult">
+                            <!-- discoveryResult.resolution.status stays raw, deliberately —
+                                 DecentralizedWorldEncounterLeadResolutionStatus's own three
+                                 values (UNAVAILABLE/RESOLVED/AMBIGUOUS, 0.9.28) are plain,
+                                 pre-existing technical tokens with no claim word, this
+                                 file's own header already documents rendering them "as its
+                                 own existing vocabulary," and no humanizer for this enum
+                                 exists anywhere in this codebase to route through. -->
                             <dl class="world-encounter-discovery-detail">
                                 <dt>Discovery</dt>
                                 <dd>{{ discoveryResult.resolution.status }}</dd>
                             </dl>
 
+                            <!-- 0.9.521 — Close Remaining Raw Status Rendering Boundaries.
+                                 0.9.520's own Finding 1 (Section D/I): this Discovery-driven
+                                 panel is a SECOND call site into the exact
+                                 WorldEncounterMaterialLoadStatus/VerificationStatus enums
+                                 0.9.519 already routed through
+                                 describeMaterialLoadStatusLabel()/
+                                 describeMaterialVerificationStatusLabel() for the
+                                 SELECTION-driven Material/Verification panel above — this
+                                 one (0.9.111-0.9.113, predating 0.9.519) rendered the same
+                                 raw enum constants instead. Reusing the SAME two methods
+                                 here, rather than writing a second, competing humanizer,
+                                 is the whole fix: it guarantees this panel can never
+                                 communicate a stronger verification claim than the
+                                 selection-driven panel does for the identical underlying
+                                 fact — see that panel's own comment, above, for why the
+                                 bare word "VERIFIED" in particular is the risk this
+                                 closes. -->
                             <template v-if="discoveryResult.inspection">
                                 <h4 class="world-encounter-material-title">Material</h4>
                                 <dl class="world-encounter-material-detail">
                                     <dt>Status</dt>
-                                    <dd>{{ discoveryResult.inspection.loading.status }}</dd>
+                                    <dd>{{ describeMaterialLoadStatusLabel(discoveryResult.inspection.loading.status) }}</dd>
                                 </dl>
 
                                 <!-- 0.9.112 — discoveryResult.provenance is already
@@ -4815,7 +4839,7 @@ export default {
                                 <h4 class="world-encounter-verification-title">Verification</h4>
                                 <dl class="world-encounter-verification-detail">
                                     <dt>Status</dt>
-                                    <dd>{{ discoveryResult.inspection.verification.status }}</dd>
+                                    <dd>{{ describeMaterialVerificationStatusLabel(discoveryResult.inspection.verification.status) }}</dd>
                                 </dl>
 
                                 <!-- 0.9.113 — see isDiscoveredPublicationSelectable,
