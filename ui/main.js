@@ -1782,16 +1782,21 @@ const { verifier: worldEncounterMaterialVerifier } = composeWorldEncounterMateri
 // APPLIED ONLY TO RETRIEVAL, NEVER TO DISTRIBUTION. `resolvedArweaveGatewayUrls`
 // (0.9.440 — the ordered list; see this file's own 0.9.440 comment, below)
 // is threaded into `arweaveResolverOptions` (World Encounter material
-// retrieval, immediately below) and into `composeDiscoverSnapshotRuntime()`'s
-// own `arweaveContentStoreOptions` (Snapshot RETRIEVAL, later in this
-// file) — never into `arweaveUploaderOptions` (Signed Claim distribution,
-// above) or `composeSnapshotDistributionRuntime()`'s own
-// `arweaveContentStoreOptions` (Snapshot's own `put()`, later in this
+// retrieval, immediately below) — never into `arweaveUploaderOptions`
+// (Signed Claim distribution, above) or `composeSnapshotDistributionRuntime()`'s
+// own `arweaveContentStoreOptions` (Snapshot's own `put()`, later in this
 // file). A user-configured gateway is an explicit replacement for READING
 // already-published content; it says nothing about where THIS replica's
 // own new content gets written, exactly the distinction 0.9.363's own
 // audit drew between the write-path seam and the read-path gap it left
 // named but unbuilt.
+//
+// 0.9.508 — NO LONGER THREADED INTO `composeDiscoverSnapshotRuntime()`'s
+// own `arweaveContentStoreOptions`. Snapshot RETRIEVAL's ContentStore is
+// now resolved from `publicationSnapshotPlacementResolutionStoreRegistry`
+// (keyed by each discovered candidate's own `storage`), never from a
+// second, independently-constructed ArweaveContentStore — see that
+// composition call's own 0.9.508 comment, later in this file.
 const arweaveGatewayConfigurationStore = new ArweaveGatewayConfigurationStore(new LocalStorageProvider());
 const resolvedArweaveGatewayUrl = (arweaveGatewayConfigurationStore.get() || { gatewayUrl: DEFAULT_ARWEAVE_GATEWAY_URL }).gatewayUrl;
 // 0.9.440 — Arweave Gateway Read Failover. The full ORDERED list behind
@@ -2586,23 +2591,47 @@ app.provide('publishPlaceNamingClaimToNostrCommand', publishPlaceNamingClaimToNo
 // `discoverOwnSnapshot()` already wraps every call in a
 // `Promise.resolve().then(...)`, catching that synchronous throw the same
 // way it already catches a genuine rejection.
-// 0.9.364 — `gatewayUrl: resolvedArweaveGatewayUrl` (resolved once, above)
-// is this file's own SECOND retrieval call site — see that resolution's
-// own comment for why this differs from the Distribution wiring
-// immediately above, which (as of 0.9.506) no longer configures an
-// `arweaveContentStoreOptions` of its own at all.
 // 0.9.369 — `relayUrl: resolvedNostrRelayUrl` (resolved once, above) is
 // this file's own SECOND Nostr read-path call site, after `nostrRelayUrl`
 // above.
-const { resolver: snapshotResolver, contentStore: snapshotRetrievalContentStore, queryService: snapshotDiscoveryQueryService } = composeDiscoverSnapshotRuntime({
-    arweaveContentStoreOptions: { signer: arweaveHostSigner, gatewayUrls: resolvedArweaveGatewayUrls },
+//
+// 0.9.508 — Snapshot Resolution Content Backend Registry Integration.
+//
+// `composeDiscoverSnapshotRuntime()` no longer receives an
+// `arweaveContentStoreOptions` of its own — tests/
+// SnapshotContentBackendSelectionEndToEndIntegrationAudit.test.js's own
+// Section H found that `discoverSnapshotCommand`/`resolveSelectedSnapshotCommand`
+// (immediately below) resolved every discovered candidate through the
+// fixed, single ArweaveContentStore this call used to build, regardless
+// of that candidate's own declared `storage` — an IPFS-distributed
+// Snapshot's own candidate was permanently CONTENT_UNAVAILABLE through
+// either production entry point, even though it resolves correctly
+// against `publicationSnapshotPlacementResolutionStoreRegistry` directly
+// (that same audit's own Section G). `resolver` is unaffected — it
+// depends only on `queryService` (application/
+// DiscoverSnapshotRuntimeComposition.js's own header, "resolver depends
+// only on a usable queryImpl") — so dropping `arweaveContentStoreOptions`
+// here removes a now-entirely-unused second ArweaveContentStore
+// construction, never the resolver's own capability.
+const { resolver: snapshotResolver, queryService: snapshotDiscoveryQueryService } = composeDiscoverSnapshotRuntime({
     nostrSnapshotDiscoveryQueryServiceOptions: { queryImpl: nostrRelayQueryClient, relayUrl: resolvedNostrRelayUrl }
 });
+// `storeRegistry: publicationSnapshotPlacementResolutionStoreRegistry` —
+// the SAME resolution-side registry Snapshot Placement's own resolution
+// coordinator already reads (above), already carrying 'local'/'ipfs'
+// (IpfsGatewayContentStore)/'ar' (the shared `arweaveSnapshotPlacementContentStore`,
+// registered above) — replaces the fixed, Arweave-only `contentStore` this
+// call used to pass. `DecentralizedSnapshotResolver#resolve()` (unmodified)
+// looks up the ContentStore by the SELECTED candidate's own `storage`
+// field (`storeRegistry.get(candidate.storage)`) — never by ranking,
+// trying multiple backends, or falling back from one to another. No
+// `contentStore` is passed alongside it, so there is nothing for the
+// registry lookup to be silently overridden by.
 const discoverSnapshotCommand = (contentHash) => executeDiscoverSnapshotCommand({
     discoveryTag: 'forkbuild-snapshot',
     contentHash,
     resolver: snapshotResolver,
-    contentStore: snapshotRetrievalContentStore
+    storeRegistry: publicationSnapshotPlacementResolutionStoreRegistry
 });
 app.provide('discoverSnapshotCommand', discoverSnapshotCommand);
 
@@ -2735,13 +2764,22 @@ app.provide('placeNamingDiscoveryQueryService', placeNamingDiscoveryQueryService
 // is the SAME `DecentralizedSnapshotResolver` instance `discoverSnapshotCommand`
 // already wraps (0.9.152 added `resolveCandidate()` to that same class;
 // see that file's own header, "one actual candidate -> retrieval ->
-// verification path, never two") — never a second resolver construction,
-// and `snapshotRetrievalContentStore` is the SAME Arweave content store
-// `discoverSnapshotCommand` already uses, immediately above.
+// verification path, never two") — never a second resolver construction.
+//
+// 0.9.508 — `storeRegistry: publicationSnapshotPlacementResolutionStoreRegistry`
+// is the SAME resolution registry `discoverSnapshotCommand` now uses,
+// immediately above — replacing the fixed, Arweave-only
+// `snapshotRetrievalContentStore` this call used to pass (see that
+// wiring's own 0.9.508 comment for the full gap this closes). The
+// SELECTED candidate's own `storage` field is what the registry is keyed
+// by — `AutomaticSnapshotEncounterCascade`'s own injected
+// `resolveSelectedSnapshotCommand` (application/
+// AutomaticSnapshotEncounterCascade.js, unmodified) inherits this fix
+// automatically, since it never constructs its own resolution path.
 const resolveSelectedSnapshotCommand = (candidate) => executeResolveSelectedSnapshotCommand({
     candidate,
     resolver: snapshotResolver,
-    contentStore: snapshotRetrievalContentStore
+    storeRegistry: publicationSnapshotPlacementResolutionStoreRegistry
 });
 app.provide('resolveSelectedSnapshotCommand', resolveSelectedSnapshotCommand);
 
