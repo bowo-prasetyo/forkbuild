@@ -314,25 +314,30 @@ async function run() {
         const discoveryQueryService = new ArweaveGraphqlDiscoveryQueryService({ fetchImpl: net.fetchImpl });
         const candidates = await discoveryQueryService.search(campaign);
         check(candidates.length === 1, 'C2. the real ArweaveGraphqlDiscoveryQueryService finds exactly one candidate for this campaign\'s own discoveryTag');
-        check(candidates[0].uri === `ar://${result.discovery.id}`, 'C3. ...naming exactly the announcement transaction id the executor itself reported — the discovery observation and the publish outcome are the same transaction');
+        // AMENDED BY 0.9.494: the real reader is now envelope-aware — it
+        // decodes the announcement transaction's own envelope itself and
+        // reports the announced MATERIAL's own claimed uri as
+        // candidate.uri, with the announcement transaction id preserved
+        // separately as candidate.announcementId. Asserting
+        // `candidate.uri === ar://<announcement-id>`, as this section used
+        // to, is exactly the identity violation 0.9.493's own boundary
+        // audit found and 0.9.494 closes.
+        check(candidates[0].announcementId === result.discovery.id, 'C3. ...naming exactly the announcement transaction id the executor itself reported, preserved alongside the reported material uri — the discovery observation and the publish outcome are the same transaction');
+        check(candidates[0].uri === result.material.uri, 'C3b. ...and candidate.uri is already the announced MATERIAL\'s own claimed uri (0.9.494) — never the announcement transaction id');
 
-        // The candidate names only a LOCATION so far (0.9.427's own live
-        // finding). Recovering the full envelope means fetching that
-        // location's own data — a capability that already exists,
-        // unmodified, one file over, built for CONTENT retrieval and never
-        // imported by, or aware of, the discovery/announcement pipeline.
+        // The candidate now already names the CONTENT's own location
+        // directly (0.9.494) — resolving it means fetching that location's
+        // own data — a capability that already exists, unmodified, one
+        // file over, built for CONTENT retrieval and never imported by, or
+        // aware of, the discovery/announcement pipeline.
         const materialResolver = new ArweaveWorldEncounterMaterialResolver({ fetchImpl: net.fetchImpl });
-        const retrievedCandidate = await materialResolver.retrieveByUri(candidates[0].uri);
-        check(retrievedCandidate !== null, 'C4. ArweaveWorldEncounterMaterialResolver retrieves the announcement transaction\'s own data just as readily as it would retrieve Publication material — Arweave data GET has no notion of role');
+        const retrievedMaterial = await materialResolver.retrieveByUri(candidates[0].uri);
+        check(retrievedMaterial !== null, 'C4. ArweaveWorldEncounterMaterialResolver retrieves the real distributed publication material directly off the discovered candidate\'s own uri — no envelope-recovery hop required on the resolve side (0.9.493 Section E\'s own finding, now true in production)');
+        check(JSON.stringify(retrievedMaterial) === JSON.stringify({ body: 'round-trip-material' }), 'C6. ...and it is byte-identical to the exact material the SAME executor call actually distributed — the discovery observation leads all the way back to the correct publication representation, with no intermediate envelope shape leaking through');
 
-        const recoveredEnvelope = describeDecentralizedDiscoveryEnvelope(retrievedCandidate);
-        check(recoveredEnvelope !== null, 'C5. the retrieved bytes parse as a well-formed discovery envelope via the real, unmodified core/DecentralizedDiscoveryEnvelope.js');
-        check(recoveredEnvelope.objectId === publication.id, 'C6. ...naming exactly the publication that was actually distributed');
-        check(recoveredEnvelope.uri === result.material.uri, 'C7. ...and naming exactly the CONTENT transaction\'s own uri the SAME executor call produced — the discovery observation leads all the way back to the correct publication representation');
+        check(!/node\.tags|tags:\s*\{/.test(await source('application/ArweaveGraphqlDiscoveryQueryService.js')), 'C8. this full round trip required zero node.tags query expansion — the existing bare-id query plus one additional envelope-decoding gateway fetch (0.9.494) already suffice');
 
-        check(!/node\.tags|tags:\s*\{/.test(await source('application/ArweaveGraphqlDiscoveryQueryService.js')), 'C8. this full round trip required zero node.tags query expansion — the existing bare-id query plus the existing, separately-built material resolver already suffice, exactly the restraint 0.9.427/0.9.428 both left deliberately unbuilt');
-
-        console.log('✓ Section C: Arweave functions as a genuine discovery substrate — search finds the real announcement, and the real (unmodified, discovery-unaware) material resolver completes the round trip back to the distributed publication, using only already-existing production classes');
+        console.log('✓ Section C: Arweave functions as a genuine discovery substrate — search finds the real announcement, decodes its own envelope, reports the material\'s own uri directly, and the real (unmodified, discovery-unaware) material resolver completes the round trip back to the distributed publication, using only already-existing production classes');
     }
 
     // ===============================================================
@@ -366,12 +371,18 @@ async function run() {
         const candidates = await discoveryQueryService.search(campaign);
         check(candidates.length === 2, 'D4. the shared campaign discoveryTag now matches both announcements');
 
-        const recoveredObjectIds = new Set();
-        for (const candidate of candidates) {
-            const envelope = describeDecentralizedDiscoveryEnvelope(await materialResolver.retrieveByUri(candidate.uri));
-            recoveredObjectIds.add(envelope.objectId);
-        }
-        check(recoveredObjectIds.has('pub-d-A') && recoveredObjectIds.has('pub-d-B') && recoveredObjectIds.size === 2, 'D5. both publications remain independently recoverable from the shared discovery tag — identical content and a shared campaign never merge their identities');
+        // AMENDED BY 0.9.494: candidate.uri is already the announced
+        // MATERIAL's own claimed uri (never a second envelope-recovery hop
+        // required) — matching each candidate's uri/announcementId against
+        // each publication's own independently-produced material.uri and
+        // discovery.id already proves the two stay pairwise distinguishable.
+        const candidateUris = new Set(candidates.map((c) => c.uri));
+        const candidateAnnouncementIds = new Set(candidates.map((c) => c.announcementId));
+        check(candidateUris.has(resultA.material.uri) && candidateUris.has(resultB.material.uri) && candidateUris.size === 2, 'D5. both publications remain independently recoverable from the shared discovery tag — identical content and a shared campaign never merge their identities');
+        check(candidateAnnouncementIds.has(resultA.discovery.id) && candidateAnnouncementIds.has(resultB.discovery.id), 'D5b. ...and each candidate\'s own announcementId matches back to the correct announcement transaction, never conflated between the two');
+
+        const retrievedMaterials = await Promise.all(candidates.map((c) => materialResolver.retrieveByUri(c.uri)));
+        check(retrievedMaterials.every((m) => JSON.stringify(m) === identicalMaterial), 'D5c. resolving either candidate retrieves the real, byte-identical distributed material directly — no envelope shape leaks through on the resolve side');
 
         console.log('✓ Section D: publicationId, material uri, and announcement transaction id stay pairwise distinct for two publications sharing one materialUri-equivalent content, even under one shared campaign tag');
     }
@@ -406,7 +417,15 @@ async function run() {
 
         const discoveryQueryService = new ArweaveGraphqlDiscoveryQueryService({ fetchImpl: net.fetchImpl });
         const candidates = await discoveryQueryService.search(campaign);
-        check(candidates.length === 1 && candidates[0].uri === `ar://${announcementTxId}`, 'E4. searching by the discovery tag finds ONLY the announcement transaction — the content transaction, holding the exact same publication\'s material, is invisible to a discovery search');
+        // AMENDED BY 0.9.494: the search is still driven purely by the
+        // announcement transaction's own tag (never the content
+        // transaction's, which carries none — E2/E3 already prove that);
+        // the real reader then decodes THAT one transaction's own envelope
+        // and reports the material's own claimed uri as candidate.uri,
+        // with the announcement transaction id preserved as
+        // candidate.announcementId — never the content transaction id
+        // fabricated or independently re-discovered.
+        check(candidates.length === 1 && candidates[0].announcementId === announcementTxId && candidates[0].uri === result.material.uri, 'E4. searching by the discovery tag finds ONLY the announcement transaction (never the untagged content transaction, per E2/E3) and reports the material it claims — the content transaction itself remains invisible to a discovery search by tag');
 
         console.log('✓ Section E: CONTENT and ANNOUNCEMENT stay two distinct Arweave transactions for the same publication, and only the announcement is ever discoverable by tag — the substrate is shared, the application facts are not');
     }

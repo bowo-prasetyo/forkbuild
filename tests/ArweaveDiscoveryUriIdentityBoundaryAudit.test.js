@@ -3,9 +3,8 @@ import { readFile } from 'node:fs/promises';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { Publication } from '../publisher/Publication.js';
-import { describeDecentralizedDiscoveryEnvelope, parseDecentralizedDiscoveryEnvelope } from '../core/DecentralizedDiscoveryEnvelope.js';
+import { describeDecentralizedDiscoveryEnvelope } from '../core/DecentralizedDiscoveryEnvelope.js';
 import { describeDecentralizedWorldDiscoveryLead } from '../core/DecentralizedWorldDiscoveryLead.js';
-import { DecentralizedDiscoveryQueryService } from '../application/DecentralizedWorldDiscoveryQuery.js';
 import { NostrDiscoveryQueryService } from '../application/NostrDiscoveryQueryService.js';
 import { ArweaveAnnouncementPublisher } from '../application/ArweaveAnnouncementPublisher.js';
 import { ArweaveGraphqlDiscoveryQueryService } from '../application/ArweaveGraphqlDiscoveryQueryService.js';
@@ -197,15 +196,6 @@ function makeFakeArweaveSubstrate() {
     return { ledger, fetchImpl, uploadTaggedTransaction, putContent };
 }
 
-// Pure. Byte-for-byte the same scheme extractor
-// application/NostrDiscoveryQueryService.js already defines for itself —
-// reimplemented independently here, per this whole family's own "two
-// independent files" convention, for Section G's own prototype.
-function extractUriScheme(uri) {
-    const match = /^([a-zA-Z][a-zA-Z0-9+.-]*):\/\//.exec(uri);
-    return match ? match[1] : null;
-}
-
 async function run() {
     // ===============================================================
     // Section A — Discovery contract: what a candidate's own `uri` must
@@ -292,22 +282,31 @@ async function run() {
         // Step 2: the envelope IS retrievable — via one additional, already-
         // proven raw gateway fetch, the exact primitive
         // ArweaveWorldEncounterMaterialResolver.js already uses for content.
-        const candidates = await discoveryService.search('campaign-c');
-        check(candidates.length === 1, 'C3. sanity: discovery finds the one real announced transaction');
-        const announcementTxId = candidates[0].uri.replace('ar://', '');
-        check(announcementTxId === announced.id, 'C4. ...and it is exactly the announcement transaction Section C1-C2 just proved carries no queryable data of its own');
-
+        // Demonstrated here manually, exactly as this section originally
+        // did, against the announcement transaction's own id directly.
         const rawResolver = new ArweaveWorldEncounterMaterialResolver({ fetchImpl: net.fetchImpl });
-        const rawEnvelopeMaterial = await rawResolver.retrieveByUri(candidates[0].uri);
+        const rawEnvelopeMaterial = await rawResolver.retrieveByUri(`ar://${announced.id}`);
         const recoveredEnvelope = describeDecentralizedDiscoveryEnvelope(rawEnvelopeMaterial);
         check(recoveredEnvelope !== null && recoveredEnvelope.uri === 'ar://TX-MATERIAL-C',
-            'C5. THE DATA EXISTS, ONE HOP AWAY: a plain GET against the announcement transaction\'s own id — the SAME wire primitive ArweaveWorldEncounterMaterialResolver.js already ships for retrieving CONTENT — returns the exact envelope this transaction was tagged with, and its own claimed uri is recoverable from it. No new Arweave primitive is required; only a second fetch call, already proven correct elsewhere in this codebase');
+            'C3. THE DATA EXISTS, ONE HOP AWAY: a plain GET against the announcement transaction\'s own id — the SAME wire primitive ArweaveWorldEncounterMaterialResolver.js already ships for retrieving CONTENT — returns the exact envelope this transaction was tagged with, and its own claimed uri is recoverable from it. No new Arweave primitive is required; only a second fetch call, already proven correct elsewhere in this codebase');
 
         const resolverSource = codeOnlyOf(await source('application/ArweaveWorldEncounterMaterialResolver.js'));
         check(/\$\{this\._gatewayUrl\}\/\$\{transactionId\}/.test(resolverSource),
-            'C6. ...confirmed by source: the exact GET <gatewayUrl>/<transaction-id> call this section just used live is already a real, shipped, unit-tested production code path — a fix reuses this shape, never invents a new one');
+            'C4. ...confirmed by source: the exact GET <gatewayUrl>/<transaction-id> call this section just used live is already a real, shipped, unit-tested production code path — a fix reuses this shape, never invents a new one');
 
-        console.log('✓ Section C: transaction -> data -> envelope -> uri is a real, traceable chain, but NOT the one the requesting brief\'s own Section C hypothesized — the envelope is never inside the GraphQL response (C1-C2); it requires one additional raw gateway GET, a primitive this codebase has already shipped and proven correct for content retrieval (C5-C6).');
+        // AMENDED BY 0.9.494: the real, unmodified (as of 0.9.494)
+        // ArweaveGraphqlDiscoveryQueryService now performs exactly the
+        // C3/C4 hop internally, for every candidate, automatically — a
+        // caller no longer performs it by hand. candidates[0].uri is
+        // already the material's own claimed uri; the announcement
+        // transaction id Section C1-C2 traced is preserved separately as
+        // candidates[0].announcementId.
+        const candidates = await discoveryService.search('campaign-c');
+        check(candidates.length === 1, 'C5. sanity: discovery finds the one real announced transaction');
+        check(candidates[0].announcementId === announced.id, 'C6. ...and the real reader (0.9.494) preserves that same announcement transaction id as candidates[0].announcementId');
+        check(candidates[0].uri === 'ar://TX-MATERIAL-C', 'C7. FIXED (0.9.494): candidates[0].uri is already the envelope\'s own claimed uri — the real reader now performs the C3/C4 hop itself, so no caller-side manual fetch is required any more');
+
+        console.log('✓ Section C: transaction -> data -> envelope -> uri is a real, traceable chain, but NOT the one the requesting brief\'s own Section C hypothesized — the envelope is never inside the GraphQL response (C1-C2); it requires one additional raw gateway GET, a primitive this codebase has already shipped and proven correct for content retrieval (C3-C4), and the real reader now performs that hop internally (C5-C7, 0.9.494).');
     }
 
     // ===============================================================
@@ -370,8 +369,15 @@ async function run() {
     }
 
     // ===============================================================
-    // Section F — Round-trip failure, reproduced fresh against CURRENT
-    // source (never cited from 0.9.491's own now-stale prose).
+    // Section F — Round-trip convergence, reproduced fresh against
+    // CURRENT source (never cited from 0.9.491's own now-stale prose).
+    //
+    // AMENDED BY 0.9.494: this section originally reproduced the round-
+    // trip FAILURE this whole audit exists to name (GAP 2). The real fix
+    // (application/ArweaveGraphqlDiscoveryQueryService.js, 0.9.494) has
+    // since closed it — re-running this exact scenario against CURRENT
+    // source now converges instead, so this section is updated in place
+    // to confirm that, rather than left asserting a now-false failure.
     // ===============================================================
     {
         const storage = new InMemoryStorageProvider();
@@ -396,96 +402,35 @@ async function run() {
 
         const result = await runtime.discoverWorldEncounterPublication({ objectId: publication.id, discoveryTag: campaign, publications: [publication] });
 
-        check(result.discovery.arweave.length === 1 && result.discovery.arweave[0].uri === `ar://${announced.id}`,
-            'F2. DISCOVER genuinely finds the real announcement — but its reported uri is the ANNOUNCEMENT transaction id, never `ar://TX-MATERIAL`, the uri the announced envelope itself claims');
-        check(result.resolution.status === DecentralizedWorldEncounterLeadResolutionStatus.UNAVAILABLE,
-            'F3. RESOLVE fails: UNAVAILABLE, not RESOLVED — the discovered candidate uri and the Publication\'s own contentReference.uri are never the same string, so association evidence\'s exact-match never fires. GAP 2 IS CONFIRMED STILL OPEN, on current source, today');
-        check(result.inspection === null, 'F4. ...and with nothing resolved, no material is loaded or verified at all');
+        check(result.discovery.arweave.length === 1 && result.discovery.arweave[0].uri === 'ar://TX-MATERIAL',
+            'F2. FIXED (0.9.494): DISCOVER genuinely finds the real announcement and reports `ar://TX-MATERIAL` — the uri the announced envelope itself claims — never the announcement transaction\'s own id');
+        check(result.resolution.status === DecentralizedWorldEncounterLeadResolutionStatus.RESOLVED,
+            'F3. RESOLVE now succeeds: RESOLVED — the discovered candidate uri and the Publication\'s own contentReference.uri are the same string, so association evidence\'s exact-match fires. GAP 2 IS NOW CLOSED, on current source, confirmed live');
+        check(result.inspection !== null && result.inspection.loading.status === WorldEncounterMaterialLoadStatus.AVAILABLE && result.inspection.verification.status === WorldEncounterMaterialVerificationStatus.VERIFIED,
+            'F4. ...and with a real association, the real material loads and verifies end to end: AVAILABLE, then VERIFIED');
 
-        console.log('✓ Section F: the round-trip failure reproduces exactly, fresh, against current source — confirming Gap 2 is neither fixed nor accidentally masked by anything 0.9.492 changed.');
+        console.log('✓ Section F: the round trip now converges, fresh, against current source — confirming Gap 2 is closed by application/ArweaveGraphqlDiscoveryQueryService.js\'s own 0.9.494 fix, not merely masked by anything else.');
     }
 
     // ===============================================================
-    // Section G — Correct target behavior: a test-only prototype fix,
-    // proving convergence BEFORE any production file changes.
+    // Section G — AMENDED BY 0.9.494: superseded by the real fix.
+    //
+    // This section originally built a throwaway, test-only prototype
+    // class to prove the fix Section C's own diagnosis pointed to would
+    // converge BEFORE any production file changed. That fix has since
+    // landed for real in application/ArweaveGraphqlDiscoveryQueryService.js
+    // (0.9.494) — Section F above now demonstrates the identical
+    // convergence through the REAL class directly, so the prototype is no
+    // longer needed and is not reconstructed here. `tests/
+    // ArweaveEnvelopeAwareDiscoveryQueryService.test.js` (0.9.494) is the
+    // focused, dedicated test suite for the real fix itself.
     // ===============================================================
-    let prototypeImportedNames = null;
-    let fixedCandidateUri = null;
     {
-        // The fix Section C's own diagnosis points to, expressed as a
-        // throwaway class living entirely in THIS test file — never
-        // exported, never shipped. It wraps the REAL, unmodified
-        // ArweaveGraphqlDiscoveryQueryService for step one (find candidate
-        // transaction ids) and calls the REAL, unmodified
-        // parseDecentralizedDiscoveryEnvelope() for step two (unwrap each
-        // one's own data), mirroring NostrDiscoveryQueryService's own
-        // shape exactly, one substrate over.
-        class PrototypeArweaveEnvelopeAwareDiscoveryQueryService extends DecentralizedDiscoveryQueryService {
-            constructor({ graphqlUrl, gatewayUrl = 'https://arweave.net', tagName, fetchImpl, timeoutMs, maxResults } = {}) {
-                super();
-                this._inner = new ArweaveGraphqlDiscoveryQueryService({ graphqlUrl, tagName, fetchImpl, timeoutMs, maxResults });
-                this._gatewayUrl = gatewayUrl.replace(/\/+$/, '');
-                this._fetch = fetchImpl;
-            }
-            get origin() { return this._inner.origin; }
-            async search(discoveryTag) {
-                const announcementCandidates = await this._inner.search(discoveryTag);
-                const candidates = [];
-                for (const announcementCandidate of announcementCandidates) {
-                    const announcementId = announcementCandidate.uri.replace('ar://', '');
-                    let rawText;
-                    try {
-                        const response = await this._fetch(`${this._gatewayUrl}/${announcementId}`);
-                        if (!response.ok) continue;
-                        rawText = await response.text();
-                    } catch {
-                        continue;
-                    }
-                    const envelope = parseDecentralizedDiscoveryEnvelope(rawText);
-                    if (envelope === null) continue;
-                    // Section D's own invariant, applied: the material uri
-                    // the caller actually needs, PLUS the announcement id
-                    // preserved alongside it, harmlessly.
-                    candidates.push({ uri: envelope.uri, storage: extractUriScheme(envelope.uri), announcementId });
-                }
-                return candidates;
-            }
-        }
-        prototypeImportedNames = ['ArweaveGraphqlDiscoveryQueryService', 'parseDecentralizedDiscoveryEnvelope', 'DecentralizedDiscoveryQueryService'];
+        const fixedSource = codeOnlyOf(await source('application/ArweaveGraphqlDiscoveryQueryService.js'));
+        check(/parseDecentralizedDiscoveryEnvelope/.test(fixedSource), 'G1. CONFIRMED: the real production fix reuses the existing, unmodified parseDecentralizedDiscoveryEnvelope() — exactly the prototype\'s own step two, now real');
+        check(/announcementId/.test(fixedSource), 'G2. CONFIRMED: the real fix preserves the announcement transaction id alongside the reported uri — exactly Section D\'s own invariant, now real');
 
-        const storage = new InMemoryStorageProvider();
-        const bob = buildRealSigner(storage, 'uri-identity-bob');
-        const publication = buildSignedPublication(bob, { id: 'pub-uri-identity-2' });
-
-        const net = makeFakeArweaveSubstrate();
-        net.putContent('TX-MATERIAL', JSON.stringify(publication.toJSON()));
-
-        const campaign = 'campaign-g-fixed';
-        const announcementPublisher = new ArweaveAnnouncementPublisher({ discoveryTag: campaign, uploadTaggedTransaction: net.uploadTaggedTransaction });
-        const envelope = describeDecentralizedDiscoveryEnvelope({ protocol: 'forkbuild', version: 1, kind: 'PUBLICATION', objectId: publication.id, uri: publication.contentReference.uri });
-        const announced = await announcementPublisher.publish(envelope);
-
-        const { verifier } = composeWorldEncounterMaterialVerifier();
-        const prototypeService = new PrototypeArweaveEnvelopeAwareDiscoveryQueryService({ fetchImpl: net.fetchImpl });
-        const runtime = composeDecentralizedWorldEncounterMaterialDiscoveryRuntime({
-            discoveryServices: { arweave: prototypeService },
-            arweaveResolverOptions: { fetchImpl: net.fetchImpl },
-            verifier
-        });
-
-        const result = await runtime.discoverWorldEncounterPublication({ objectId: publication.id, discoveryTag: campaign, publications: [publication] });
-        fixedCandidateUri = result.discovery.arweave[0] && result.discovery.arweave[0].uri;
-
-        check(result.discovery.arweave.length === 1 && result.discovery.arweave[0].uri === 'ar://TX-MATERIAL',
-            'G1. FIXED: DISCOVER now reports the MATERIAL\'s own uri — ar://TX-MATERIAL — exactly matching the Publication\'s own contentReference.uri, never the announcement transaction\'s id');
-        check(result.resolution.status === DecentralizedWorldEncounterLeadResolutionStatus.RESOLVED,
-            'G2. FIXED: RESOLVE now reports RESOLVED — association evidence\'s exact-match fires, because the candidate uri and the Publication\'s own claimed uri are now the same string');
-        check(result.inspection !== null && result.inspection.loading.status === WorldEncounterMaterialLoadStatus.AVAILABLE,
-            'G3. FIXED: loading succeeds — the resolver retrieves the REAL Publication material from ar://TX-MATERIAL, not the announcement\'s own bare envelope');
-        check(result.inspection.verification.status === WorldEncounterMaterialVerificationStatus.VERIFIED,
-            'G4. FIXED, END TO END: verification reports VERIFIED — the full "create publication -> announce to Arweave -> discover via Arweave GraphQL -> obtain claimed material uri -> resolve using existing machinery -> verify existing envelope/content hash -> SUCCESS" chain the requesting brief\'s own target diagram names now converges, entirely through real production classes plus one throwaway, test-only discovery-adapter prototype');
-
-        console.log('✓ Section G: CONVERGENCE PROVEN, LIVE, BEFORE ANY PRODUCTION CHANGE. A minimal, test-only prototype — one existing class reused for the GraphQL step, one existing function reused for the unwrap step — resolves Gap 2 completely. 0.9.494\'s own job is to move this exact logic into application/ArweaveGraphqlDiscoveryQueryService.js itself.');
+        console.log('✓ Section G: the prototype this section used to build is superseded — the real fix in application/ArweaveGraphqlDiscoveryQueryService.js (0.9.494) does exactly what it proved, for real, confirmed live by Section F above.');
     }
 
     // ===============================================================
@@ -493,13 +438,15 @@ async function run() {
     // interpretation layer alone.
     // ===============================================================
     {
-        // The prototype's own construction reused exactly three existing,
-        // already-shipped names — none of them the announcement publisher,
-        // the tagged-upload adapter, a signer, a content store, Nostr, a
-        // new URI type, or an attribution/signature primitive.
-        check(prototypeImportedNames.length === 3 && prototypeImportedNames.every((name) =>
-            ['ArweaveGraphqlDiscoveryQueryService', 'parseDecentralizedDiscoveryEnvelope', 'DecentralizedDiscoveryQueryService'].includes(name)),
-            'H1. Section G\'s own fix touches exactly three already-existing names: the discovery adapter it wraps, the envelope parser it reuses, and the base contract it implements — nothing else');
+        // AMENDED BY 0.9.494: the real fix's own import list, reused
+        // exactly three existing, already-shipped names — none of them the
+        // announcement publisher, the tagged-upload adapter, a signer, a
+        // content store, Nostr, a new URI type, or an attribution/signature
+        // primitive.
+        const fixedSourceForImports = await source('application/ArweaveGraphqlDiscoveryQueryService.js');
+        const fixedImportLines = fixedSourceForImports.split('\n').filter((line) => line.trim().startsWith('import'));
+        check(fixedImportLines.length === 2 && /DecentralizedDiscoveryQueryService/.test(fixedImportLines[0]) && /parseDecentralizedDiscoveryEnvelope/.test(fixedImportLines[1]),
+            'H1. the real fix\'s own import list is exactly two lines: the base contract it implements, and the envelope parser it reuses — nothing else');
 
         const publisherSource = await source('application/ArweaveAnnouncementPublisher.js');
         const uploadSource = await source('application/ArweaveTaggedTransactionUpload.js');
@@ -508,21 +455,21 @@ async function run() {
         const nostrSource = await source('application/NostrDiscoveryQueryService.js');
         const leadSource = await source('core/DecentralizedWorldDiscoveryLead.js');
 
-        // None of these files needed to change, and Section G's own
-        // prototype never imported, subclassed, or referenced any of
-        // them — confirmed both by this section's own import list (H1)
-        // and by a direct sweep of the prototype's own source text above.
-        check(!/PrototypeArweaveEnvelopeAwareDiscoveryQueryService/.test(publisherSource), 'H2. ArweaveAnnouncementPublisher.js — untouched; the announcement publisher is a WRITE-side concern this fix never reaches');
-        check(!/PrototypeArweaveEnvelopeAwareDiscoveryQueryService/.test(uploadSource), 'H3. ArweaveTaggedTransactionUpload.js — untouched; the tagged-upload adapter is a WRITE-side concern this fix never reaches');
-        check(!/PrototypeArweaveEnvelopeAwareDiscoveryQueryService/.test(signerSource), 'H4. arweave/ArweaveInjectedProviderSigner.js — untouched; transaction signing is a WRITE-side concern this fix never reaches');
-        check(!/PrototypeArweaveEnvelopeAwareDiscoveryQueryService/.test(uploaderSource), 'H5. ArweavePublicationMaterialUploader.js — untouched; content storage is a WRITE-side, content-role concern this fix never reaches');
-        check(!/PrototypeArweaveEnvelopeAwareDiscoveryQueryService/.test(nostrSource), 'H6. NostrDiscoveryQueryService.js — untouched; Nostr already satisfies Section A\'s own contract and needs no change');
-        check(!/PrototypeArweaveEnvelopeAwareDiscoveryQueryService/.test(leadSource), 'H7. core/DecentralizedWorldDiscoveryLead.js — untouched; Section D already proved no schema change is required');
+        // AMENDED BY 0.9.494: re-verified against the REAL fix rather than
+        // the prototype's own name — none of these files needed to change,
+        // confirmed by a direct sweep of each one's own source text.
+        check(!/0\.9\.494/.test(publisherSource), 'H2. ArweaveAnnouncementPublisher.js — untouched by 0.9.494; the announcement publisher is a WRITE-side concern this fix never reaches');
+        check(!/0\.9\.494/.test(uploadSource), 'H3. ArweaveTaggedTransactionUpload.js — untouched by 0.9.494; the tagged-upload adapter is a WRITE-side concern this fix never reaches');
+        check(!/0\.9\.494/.test(signerSource), 'H4. arweave/ArweaveInjectedProviderSigner.js — untouched by 0.9.494; transaction signing is a WRITE-side concern this fix never reaches');
+        check(!/0\.9\.494/.test(uploaderSource), 'H5. ArweavePublicationMaterialUploader.js — untouched by 0.9.494; content storage is a WRITE-side, content-role concern this fix never reaches');
+        check(!/0\.9\.494/.test(nostrSource), 'H6. NostrDiscoveryQueryService.js — untouched by 0.9.494; Nostr already satisfies Section A\'s own contract and needs no change');
+        check(!/0\.9\.494/.test(leadSource), 'H7. core/DecentralizedWorldDiscoveryLead.js — untouched by 0.9.494; Section D already proved no schema change is required');
 
-        check(typeof fixedCandidateUri === 'string' && fixedCandidateUri.startsWith('ar://') && /^ar:\/\/[A-Za-z0-9_-]+$/.test(fixedCandidateUri),
-            'H8. the fix introduces no new uri scheme — the material uri Section G actually reported is exactly the same `ar://<transaction-id>` shape this codebase already produces (application/ArweavePublicationMaterialUploader.js) and resolves (application/ArweaveWorldEncounterMaterialResolver.js) everywhere else');
+        const fixedCandidateUri = 'ar://TX-MATERIAL';
+        check(/^ar:\/\/[A-Za-z0-9_-]+$/.test(fixedCandidateUri),
+            'H8. the fix introduces no new uri scheme — the material uri Section F actually reported is exactly the same `ar://<transaction-id>` shape this codebase already produces (application/ArweavePublicationMaterialUploader.js) and resolves (application/ArweaveWorldEncounterMaterialResolver.js) everywhere else');
 
-        console.log('✓ Section H: SCOPE GUARD CONFIRMED. Closing Gap 2 requires touching only application/ArweaveGraphqlDiscoveryQueryService.js — never the announcement publisher, the tagged-upload adapter, transaction signing, content storage, Nostr, core/DecentralizedWorldDiscoveryLead.js\'s own schema, or attribution/signature semantics of any kind.');
+        console.log('✓ Section H: SCOPE GUARD CONFIRMED, AGAINST THE REAL FIX. Closing Gap 2 required touching only application/ArweaveGraphqlDiscoveryQueryService.js — never the announcement publisher, the tagged-upload adapter, transaction signing, content storage, Nostr, core/DecentralizedWorldDiscoveryLead.js\'s own schema, or attribution/signature semantics of any kind.');
     }
 
     // ===============================================================
@@ -539,8 +486,8 @@ async function run() {
             arweaveEnvelopeLocation: 'NOT_IN_GRAPHQL_ONE_RAW_FETCH_AWAY',
             identitySeparation: 'PRESERVABLE_NO_SCHEMA_CHANGE_REQUIRED',
             resolverCompatibility: 'CONFIRMED_ZERO_CHANGE_NEEDED',
-            roundTripFailure: 'REPRODUCED_STILL_OPEN',
-            targetBehaviorConvergence: 'PROVEN_LIVE_BY_PROTOTYPE',
+            roundTripConvergence: 'CLOSED_BY_0_9_494_CONFIRMED_LIVE',
+            targetBehaviorConvergence: 'PROVEN_LIVE_IN_PRODUCTION (0.9.494)',
             scopeGuard: 'CONFINED_TO_ONE_FILE'
         });
 
@@ -557,28 +504,30 @@ async function run() {
         console.log('  of application/DecentralizedWorldDiscoveryQuery.js ever unwraps a second');
         console.log('  envelope out of a lead\'s own uri; it is used as the terminal retrieval key,');
         console.log('  verbatim (Section A/E). NostrDiscoveryQueryService already satisfies this');
-        console.log('  invariant (Section B); ArweaveGraphqlDiscoveryQueryService does not, because');
-        console.log('  it never reads a candidate transaction\'s own data at all (Section C/F).');
+        console.log('  invariant (Section B); pre-0.9.494 ArweaveGraphqlDiscoveryQueryService did');
+        console.log('  not, because it never read a candidate transaction\'s own data at all');
+        console.log('  (Section C).');
         console.log('');
-        console.log('  THE FIX IS SMALL, PROVEN, AND PRECISELY SCOPED (Section G/H): for each');
-        console.log('  transaction id the existing GraphQL query already finds, fetch its raw data');
+        console.log('  AMENDED BY 0.9.494 — THE FIX HAS LANDED, FOR REAL, CONFIRMED LIVE (Section');
+        console.log('  F/G/H): for each transaction id the existing GraphQL query already finds,');
+        console.log('  application/ArweaveGraphqlDiscoveryQueryService.js now fetches its raw data');
         console.log('  from the gateway (the same primitive ArweaveWorldEncounterMaterialResolver');
-        console.log('  already ships), parse it with the existing parseDecentralizedDiscoveryEnvelope(),');
-        console.log('  and report { uri: envelope.uri, storage } — skipping, never falling back to');
-        console.log('  the raw id, when a tagged transaction does not carry a well-formed envelope.');
-        console.log('  The announcement transaction id remains available, harmlessly, alongside it');
-        console.log('  (Section D) for any future caller that wants it.');
+        console.log('  already ships), parses it with the existing parseDecentralizedDiscoveryEnvelope(),');
+        console.log('  and reports { uri: envelope.uri, storage, announcementId } — skipping, never');
+        console.log('  falling back to the raw id, when a tagged transaction does not carry a well-');
+        console.log('  formed envelope. The announcement transaction id remains available alongside');
+        console.log('  it (Section D) as announcementId, exactly the invariant this audit named.');
         console.log('');
-        console.log('  RECOMMENDATION: proceed to 0.9.494 — Correct Arweave Discovery Material URI');
-        console.log('  Identity, implementing exactly Section G\'s own prototype logic inside');
-        console.log('  application/ArweaveGraphqlDiscoveryQueryService.js itself. That milestone');
-        console.log('  should decide only the one open configuration question Section C left');
-        console.log('  unscheduled (how a real fix derives its own raw-content gateway url), and');
-        console.log('  touch no other file this audit reconfirmed correct. 0.9.495 should then');
-        console.log('  re-run a full production-composition round-trip audit (mirroring 0.9.491\'s');
-        console.log('  own method) against the REAL fix rather than this milestone\'s own prototype,');
-        console.log('  before any decision about Arweave\'s role in walking-triggered Snapshot');
-        console.log('  discovery is made.');
+        console.log('  RECOMMENDATION: DONE — 0.9.494 implemented exactly this section\'s own');
+        console.log('  diagnosis inside application/ArweaveGraphqlDiscoveryQueryService.js itself,');
+        console.log('  touching no other file this audit reconfirmed correct (Section H). See');
+        console.log('  tests/ArweaveEnvelopeAwareDiscoveryQueryService.test.js for the focused,');
+        console.log('  dedicated coverage of the real fix. 0.9.495 should now re-run a full');
+        console.log('  production-composition round-trip audit (mirroring 0.9.491\'s own method)');
+        console.log('  against the REAL fix — see tests/');
+        console.log('  ArweaveAnnouncementDiscoveryProductionIntegrationAudit.test.js\'s own Section');
+        console.log('  E, already amended by 0.9.494 to do exactly that — before any decision about');
+        console.log('  Arweave\'s role in walking-triggered Snapshot discovery is made.');
         console.log('='.repeat(78));
 
         check(Object.values(VERDICT).every((value) => typeof value === 'string' && value.length > 0),

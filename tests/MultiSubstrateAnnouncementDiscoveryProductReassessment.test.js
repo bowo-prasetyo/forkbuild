@@ -137,6 +137,10 @@ function makeFakeArweaveSubstrate() {
             }
             return new Response(JSON.stringify({ data: { transactions: { edges } } }), { status: 200 });
         }
+        const getMatch = method === 'GET' && parsed.pathname.match(/^\/([A-Za-z0-9_-]+)$/);
+        if (getMatch && ledger.has(getMatch[1])) {
+            return new Response(ledger.get(getMatch[1]).data, { status: 200 });
+        }
         return new Response('not found', { status: 404 });
     }
 
@@ -483,12 +487,15 @@ async function run() {
         const lifecycle = lifecycleStore.get(publication.id);
         assert(lifecycle.discovery.origin === NostrPublicationDiscoveryPublisher.DEFAULT_RELAY_URL, n('G1. confirmed (per Section C): this application\'s own lifecycle now shows only Nostr for this publication'));
 
-        // Ground truth: the real, unmodified ArweaveGraphqlDiscoveryQueryService,
-        // querying only the substrate itself — never this application's own
-        // lifecycle store — still finds the earlier Arweave announcement.
+        // Ground truth: the real, unmodified (as of 0.9.494, envelope-aware)
+        // ArweaveGraphqlDiscoveryQueryService, querying only the substrate
+        // itself — never this application's own lifecycle store — still
+        // finds the earlier Arweave announcement, reporting the announced
+        // MATERIAL's own uri (0.9.494) with the announcement transaction id
+        // preserved alongside it.
         const discoveryQueryService = new ArweaveGraphqlDiscoveryQueryService({ fetchImpl: net.fetchImpl });
         const candidates = await discoveryQueryService.search('campaign-g-arweave');
-        assert(candidates.length === 1 && candidates[0].uri === `ar://${arweaveResult.discovery.id}`, n('G2. the EARLIER Arweave announcement remains fully, independently discoverable directly from the Arweave substrate itself, even though this application\'s own lifecycle store no longer shows it — the collapse (Section C/D) never reached the substrate; it is purely local bookkeeping'));
+        assert(candidates.length === 1 && candidates[0].uri === arweaveResult.material.uri && candidates[0].announcementId === arweaveResult.discovery.id, n('G2. the EARLIER Arweave announcement remains fully, independently discoverable directly from the Arweave substrate itself, even though this application\'s own lifecycle store no longer shows it — the collapse (Section C/D) never reached the substrate; it is purely local bookkeeping'));
 
         console.log('✓ Section G: a genuine capability gap would exist if publishing to both substrates were the ONLY way to make a publication discoverable on both — it is not. Both announcements are independently, externally discoverable today via each substrate\'s own reader (Arweave confirmed live here; Nostr\'s own already-tested, unmodified discovery path is not re-derived). What is missing is entirely this application\'s own ability to SHOW a Wanderer that both exist (Section C/D/F) — never the underlying decentralized reach itself');
     }

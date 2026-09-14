@@ -75,15 +75,37 @@ function buildSignedPublication(identityProvider, overrides = {}) {
     return publication;
 }
 
+// AMENDED BY 0.9.494 — ArweaveGraphqlDiscoveryQueryService now performs one
+// additional raw GET per discovered transaction to decode its own signed
+// publication envelope (see that file's own 0.9.494 header). This fake now
+// serves both: the GraphQL POST indexes a synthetic "Announce-<materialTxId>"
+// transaction under each configured tag (never the material id itself,
+// mirroring how ArweaveAnnouncementPublisher tags a SEPARATE announcement
+// transaction in production), and a GET against that announcement id
+// returns a well-formed envelope claiming `ar://<materialTxId>` — exactly
+// the material id `idsByTag` already named, so every section below keeps
+// working against the SAME material ids/uris it already used, unchanged.
 function graphqlSearchFetch(idsByTag) {
-    return async (url, options) => {
-        const body = JSON.parse(options.body);
-        const match = /values: \["([^"]+)"\]/.exec(body.query);
-        const tag = match ? match[1] : null;
-        const ids = idsByTag[tag] || [];
-        return new Response(JSON.stringify({
-            data: { transactions: { edges: ids.map((id) => ({ node: { id } })) } }
-        }), { status: 200 });
+    const ANNOUNCEMENT_PREFIX = 'Announce-';
+    return async (url, options = {}) => {
+        const parsed = new URL(url);
+        const method = options.method || 'GET';
+        if (method === 'POST') {
+            const body = JSON.parse(options.body);
+            const match = /values: \["([^"]+)"\]/.exec(body.query);
+            const tag = match ? match[1] : null;
+            const ids = idsByTag[tag] || [];
+            return new Response(JSON.stringify({
+                data: { transactions: { edges: ids.map((id) => ({ node: { id: `${ANNOUNCEMENT_PREFIX}${id}` } })) } }
+            }), { status: 200 });
+        }
+        const announcementId = parsed.pathname.slice(1);
+        if (!announcementId.startsWith(ANNOUNCEMENT_PREFIX)) {
+            return new Response('not found', { status: 404 });
+        }
+        const materialTxId = announcementId.slice(ANNOUNCEMENT_PREFIX.length);
+        const envelope = { protocol: 'forkbuild', version: 1, kind: 'PUBLICATION', objectId: 'irrelevant', uri: `ar://${materialTxId}` };
+        return new Response(JSON.stringify(envelope), { status: 200 });
     };
 }
 
