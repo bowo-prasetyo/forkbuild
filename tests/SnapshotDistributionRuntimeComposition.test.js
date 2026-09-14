@@ -547,21 +547,34 @@ async function run() {
         // and executeSnapshotDistributionCommand() directly (see that
         // milestone's own tests/WorldViewSnapshotDistribution.test.js,
         // Section I, for the full architectural boundary this supersedes).
-        // The concrete ArweaveContentStore/NostrSnapshotDiscoveryPublisher
-        // classes are still never constructed or referenced BY NAME in
-        // ui/main.js — 0.9.138 calls only composeSnapshotDistributionRuntime()
-        // (this file's own export) and executeSnapshotDistributionCommand()
-        // (0.9.136's own export), never a concrete collaborator class
-        // directly. ui/main.js DOES now import from both files by path
-        // (hence 'SnapshotDistributionRuntimeComposition.js'/
-        // 'SnapshotDistributionCommand.js' themselves are no longer in this
-        // forbidden list — only the concrete classes are).
+        // Within THIS composition's own Distribution call site, the concrete
+        // ArweaveContentStore/NostrSnapshotDiscoveryPublisher classes are
+        // still never constructed or referenced BY NAME — 0.9.138 calls only
+        // composeSnapshotDistributionRuntime() (this file's own export) and
+        // executeSnapshotDistributionCommand() (0.9.136's own export), never
+        // a concrete collaborator class directly.
+        //
+        // UPDATED 0.9.505 — Register Arweave as Snapshot Content Store.
+        // ui/main.js now ALSO imports and directly constructs a real
+        // ArweaveContentStore, but for an entirely different, unrelated
+        // composition site: Snapshot PLACEMENT's own storage-selection
+        // registry (application/SnapshotPlacementStoreRegistry.js), never
+        // this file's own Distribution runtime. 'ArweaveContentStore' is
+        // therefore no longer forbidden in ui/main.js as a whole — only
+        // 'NostrSnapshotDiscoveryPublisher' remains unreferenced by name —
+        // and 39c below confirms THIS composition's own Distribution call
+        // site specifically still never constructs one directly, preserving
+        // the exact boundary this section was written to protect.
         const uiMainCode = await codeOnlySource('ui/main.js');
         assert(uiMainCode.includes('composeSnapshotDistributionRuntime('), "39a. ui/main.js now calls composeSnapshotDistributionRuntime(), wired by 0.9.138 — World View Snapshot Distribution Action");
-        const stillUnreferencedTerms = ['ArweaveContentStore', 'NostrSnapshotDiscoveryPublisher'];
+        const stillUnreferencedTerms = ['NostrSnapshotDiscoveryPublisher'];
         for (const term of stillUnreferencedTerms) {
             assert(!uiMainCode.includes(term), `39b. ui/main.js still never references '${term}' by name — 0.9.138 calls only the composed functions this file and 0.9.136 already export`);
         }
+        assert(uiMainCode.includes('ArweaveContentStore'), "39c. sanity: ui/main.js does now reference 'ArweaveContentStore' — the 0.9.505 Snapshot Placement wiring this update accounts for");
+        const distributionSiteMatch = uiMainCode.match(/const \{ contentStore: snapshotContentStore, discoveryPublisher: snapshotDiscoveryPublisher \} = composeSnapshotDistributionRuntime\(\{([\s\S]*?)\}\);/);
+        assert(Boolean(distributionSiteMatch), '39d. ui/main.js\'s real Distribution composition call site is found and isolated for inspection');
+        assert(!distributionSiteMatch[1].includes('ArweaveContentStore'), "39e. THIS composition's own Distribution call site in ui/main.js still never constructs an ArweaveContentStore directly — the 0.9.505 reference lives entirely in the separate Snapshot Placement wiring");
 
         console.log('✓ Section I: architectural regression — no browser API, no orchestration entry point, no summary availability flag, no coupling to Signed Claim distribution, and (as of 0.9.138) composed into ui/main.js through composition-level functions only, never a concrete collaborator class directly');
     }
