@@ -271,7 +271,19 @@ async function run() {
     // Section D — every other composition call site untouched.
     // ===============================================================
     {
-        assert(mainSource.includes('arweaveContentStoreOptions: { signer: arweaveHostSigner },\n    nostrSnapshotDiscoveryPublisherOptions:'), n('D1. the Snapshot DISTRIBUTION (write) composition call site is byte-for-byte unchanged'));
+        // AMENDED BY 0.9.506 — Make Snapshot Distribution Content Backend
+        // Selectable. The Snapshot DISTRIBUTION composition call site no
+        // longer passes composeSnapshotDistributionRuntime() an
+        // arweaveContentStoreOptions of its own at all — Content is now
+        // resolved from snapshotPlacementStoreRegistry instead (see
+        // application/SnapshotDistributionContentBackendSelection.js). What
+        // this section actually exists to guard — arweaveHostSigner's own
+        // LAZY resolution, unaffected by that change — is still true, and
+        // still confirmed: that same signer instance is what Placement's
+        // own ArweaveContentStore construction (below) uses, and nothing
+        // about ITS lazy-resolution wiring changed either.
+        assert(!/composeSnapshotDistributionRuntime\(\{\s*arweaveContentStoreOptions/.test(mainSource), n('D1. AMENDED BY 0.9.506 — the Snapshot DISTRIBUTION composition call site no longer builds its own arweaveContentStoreOptions at all, since it no longer consumes composeSnapshotDistributionRuntime()\'s own contentStore half'));
+        assert(/const \{ discoveryPublisher: snapshotDiscoveryPublisher \} = composeSnapshotDistributionRuntime\(\{/.test(mainSource), n('D1b. 0.9.506 — it now calls composeSnapshotDistributionRuntime() for its discoveryPublisher half only'));
         // 0.9.440 — this call site now receives resolvedArweaveGatewayUrls
         // (plural, the full ordered gateway list) rather than the singular
         // resolvedArweaveGatewayUrl; see core/ArweaveGatewayConfiguration.js's

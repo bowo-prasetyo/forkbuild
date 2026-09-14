@@ -123,7 +123,18 @@ async function run() {
         // Distribution (write-path) call sites: neither may be touched by
         // this milestone — see core/ArweaveGatewayConfiguration.js's own
         // header, "applied only to retrieval."
-        assert(mainSource.includes('arweaveContentStoreOptions: { signer: arweaveHostSigner },\n    nostrSnapshotDiscoveryPublisherOptions:'), 'C7. composeSnapshotDistributionRuntime() (Snapshot put()/DISTRIBUTION) still receives ONLY signer — this milestone never touches the write path');
+        //
+        // AMENDED BY 0.9.506 — Make Snapshot Distribution Content Backend
+        // Selectable. composeSnapshotDistributionRuntime() no longer
+        // receives an arweaveContentStoreOptions at all for Distribution —
+        // Content is resolved from snapshotPlacementStoreRegistry instead
+        // — so this milestone's own real claim ("this milestone never
+        // touches the write path") is reconfirmed the only way still
+        // possible: resolvedArweaveGatewayUrl(s) never appears anywhere
+        // near the Distribution call site, exactly as before.
+        const distributionCallSiteMatch = mainSource.match(/const \{ discoveryPublisher: snapshotDiscoveryPublisher \} = composeSnapshotDistributionRuntime\(\{([\s\S]*?)\}\);/);
+        assert(Boolean(distributionCallSiteMatch), 'C7. AMENDED BY 0.9.506 — composeSnapshotDistributionRuntime()\'s own Distribution call site is found and isolated for inspection');
+        assert(!/gatewayUrl/.test(distributionCallSiteMatch[1]), 'C7. composeSnapshotDistributionRuntime() (Snapshot DISTRIBUTION) still never receives a gatewayUrl/gatewayUrls of any kind — this milestone never touches the write path');
         // resolvePublicationDistributionRuntimeConfiguration() (Signed
         // Claim distribution) is never called with a gatewayUrl anywhere —
         // resolvedArweaveGatewayUrl must not appear near that call.

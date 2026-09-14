@@ -412,7 +412,23 @@ async function run() {
             assert(!/router-link[^>]*\/settings\//.test(fileSource), n(`E1[${label}]. no router-link to any /settings/* route exists in this file today — 0.9.437's own scope was /publications only, so this surface remains exactly as this audit originally found it`));
         }
         assert(/router-link[^>]*\/settings\/nostr-relay/.test(viewSource), n('E1[DecentralizedPublicationsView.js]a. a contextual /settings/nostr-relay router-link now exists — the gap this audit named is closed for the Nostr substrate'));
-        assert(/router-link[^>]*\/settings\/arweave-gateway/.test(viewSource), n('E1[DecentralizedPublicationsView.js]b. a contextual /settings/arweave-gateway router-link now exists — the gap this audit named is closed for the Arweave substrate'));
+        // AMENDED BY 0.9.506 — Make Snapshot Distribution Content Backend
+        // Selectable. The Snapshot card's own Arweave link is no longer a
+        // bare, unconditional `<router-link to="/settings/arweave-gateway">`
+        // — it is now DYNAMIC, resolved per-entry by
+        // snapshotDistributionConfigurationRoute(entry), mirroring
+        // discoveryDistributionConfigurationRoute(entry) (the Publication
+        // card's own pre-existing dynamic resolver). The gap this audit
+        // originally named is still closed — Arweave configuration is
+        // still reachable from this entry, now contingent on this entry's
+        // own Content selection, exactly as intended — so this check
+        // accepts either a literal router-link (the pre-0.9.506 shape) or
+        // a dynamic one whose own resolver function genuinely returns
+        // that route.
+        const hasLiteralArweaveGatewayLink = /router-link[^>]*\/settings\/arweave-gateway/.test(viewSource);
+        const hasDynamicArweaveGatewayLink = /<router-link\s+:to="snapshotDistributionConfigurationRoute\(entry\)"/.test(viewSource)
+            && /function snapshotDistributionConfigurationRoute\(entry\) \{[\s\S]*?\/settings\/arweave-gateway[\s\S]*?\n {8}\}/.test(viewSource);
+        assert(hasLiteralArweaveGatewayLink || hasDynamicArweaveGatewayLink, n('E1[DecentralizedPublicationsView.js]b. AMENDED BY 0.9.506 — a contextual /settings/arweave-gateway router-link still exists, now resolved per-entry via snapshotDistributionConfigurationRoute(entry) rather than unconditionally — the gap this audit named remains closed for the Arweave substrate'));
         assert(/router-link[^>]*\/settings\/content-provider/.test(viewSource), n('E1[DecentralizedPublicationsView.js]c. a contextual /settings/content-provider router-link now exists — the gap this audit named is closed for CONTENT'));
 
         const routerSource = await source('ui/router/index.js');
