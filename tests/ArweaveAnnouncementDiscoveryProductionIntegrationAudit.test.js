@@ -101,6 +101,18 @@ import { DecentralizedWorldEncounterLeadResolutionStatus } from '../application/
 // coexistence, deduplication, and role separation all hold through the
 // real 0.9.490 adapter.
 //
+// AMENDED BY 0.9.492 — GAP 1 IS NOW CLOSED. `ui/main.js` now constructs
+// `createArweaveTaggedTransactionUpload({ signer: arweaveHostSigner,
+// gatewayUrl: resolvedArweaveGatewayUrl })` and forwards its
+// `uploadTaggedTransaction` into `createPublicationDistributionRuntimeProvider()`,
+// exactly the fix this file's own Section I already named. Sections A and B
+// below, and the final VERDICT in Section I, are updated in place to
+// re-verify that CLOSED state against current source rather than left
+// asserting the now-stale "still broken" finding — the same "test CURRENT
+// source, never cite prior prose" method this whole family already holds
+// itself to. GAP 2 (Section E, the flagship) is completely untouched by
+// 0.9.492 and remains exactly as open as this file originally found it.
+//
 // LETTERED SECTIONS:
 //   A. Production composition — is the adapter constructed/reachable from
 //      ui/main.js? (No — Gap 1.)
@@ -308,70 +320,85 @@ async function run() {
     // ===============================================================
     // Section A — Production composition: is the adapter constructed
     // and reachable from ui/main.js's own composition root?
+    // AMENDED BY 0.9.492 — re-verified against current source: GAP 1 IS
+    // NOW CLOSED. See this file's own header amendment.
     // ===============================================================
     {
         const mainSource = await source('ui/main.js');
         const mainCodeOnly = codeOnlyOf(mainSource);
 
-        check(!/from ['"]\.\.\/application\/ArweaveTaggedTransactionUpload\.js['"]/.test(mainCodeOnly),
-            'A1. ui/main.js never imports application/ArweaveTaggedTransactionUpload.js — the 0.9.490 adapter is not referenced at all in the production composition root');
-        check(!/createArweaveTaggedTransactionUpload/.test(mainCodeOnly),
-            'A2. ...and never calls createArweaveTaggedTransactionUpload() anywhere — CONSTRUCTED? NO');
+        check(/from ['"]\.\.\/application\/ArweaveTaggedTransactionUpload\.js['"]/.test(mainCodeOnly),
+            'A1. ui/main.js now imports application/ArweaveTaggedTransactionUpload.js — the 0.9.490 adapter is referenced from the production composition root');
+        check(/createArweaveTaggedTransactionUpload\(/.test(mainCodeOnly),
+            'A2. ...and calls createArweaveTaggedTransactionUpload() — CONSTRUCTED? YES');
 
-        const providerCallMatch = mainSource.match(/createPublicationDistributionRuntimeProvider\(\{[\s\S]{0,400}?\}\)/);
+        const providerCallMatch = mainCodeOnly.match(/createPublicationDistributionRuntimeProvider\(\{[\s\S]{0,400}?\}\)/);
         check(providerCallMatch !== null, 'A3. sanity: the real composition-root call site is where this section expects it');
-        check(!/uploadTaggedTransaction/.test(providerCallMatch[0]),
-            'A4. INJECTED? NO — the real call site still never supplies uploadTaggedTransaction as an argument, byte-for-byte the same gap 0.9.489 Section B found before the adapter existed');
+        check(/uploadTaggedTransaction\s*:/.test(providerCallMatch[0]),
+            'A4. INJECTED? YES — the real call site now supplies uploadTaggedTransaction as an argument, closing the gap 0.9.489 Section B originally found');
 
-        // The precise, current staleness this section exists to name: the
-        // comment sitting immediately beside that call site still asserts,
-        // in prose, a fact 0.9.490 made false in source.
-        check(/No `uploadTaggedTransaction`[\s\S]{0,10}host capability exists anywhere in this codebase yet/.test(mainSource),
-            'A5. ui/main.js\'s own 0.9.430 comment still reads "No uploadTaggedTransaction host capability exists anywhere in this codebase yet" — literally false since 0.9.490 shipped application/ArweaveTaggedTransactionUpload.js; the composition-root wire this comment describes as absent is still absent, but the REASON given for it is now stale prose, not current fact');
+        // The precise staleness Section A originally named is itself now
+        // gone: the comment sitting immediately beside that call site no
+        // longer asserts "no uploadTaggedTransaction host capability exists
+        // anywhere in this codebase yet" — it names the real 0.9.492 wire.
+        check(!/No `uploadTaggedTransaction`[\s\S]{0,10}host capability exists anywhere in this codebase yet/.test(mainSource),
+            'A5. ui/main.js\'s own composition-root comment no longer carries the stale "No uploadTaggedTransaction host capability exists..." prose 0.9.491 originally found beside an unwired call site');
+        check(/AMENDED BY 0\.9\.492/.test(mainSource) && /arweaveAnnouncementUploadTaggedTransaction/.test(mainCodeOnly),
+            'A5b. ...and the call site names the real capability it now constructs, not merely a stale absence');
 
-        // Contrast with the two capabilities that DID make this exact trip
-        // — a real, injected, production-shaped host adapter constructed in
-        // this same file, right beside the ones that never got one.
+        // Contrast with the two capabilities that already made this exact
+        // trip before 0.9.492 — a real, injected, production-shaped host
+        // adapter constructed in this same file, right beside the one that
+        // now has one too.
         check(/arweaveHostSigner\s*=\s*\{/.test(mainCodeOnly) && /createArweaveInjectedProviderSigner\(/.test(mainCodeOnly),
-            'A6. by contrast, arweaveHostSigner IS constructed here — a real production host-capability adapter for the CONTENT-upload role');
+            'A6. arweaveHostSigner IS constructed here — a real production host-capability adapter for the CONTENT-upload role');
         check(/nostrHostPublisher\s*=\s*async function/.test(mainCodeOnly) && /createNostrInjectedProviderPublisher\(/.test(mainCodeOnly),
-            'A7. ...and nostrHostPublisher IS constructed here too — a real production host-capability adapter for the Nostr announcement role. Both prove this file already knows how to wire a lazy, injected host adapter in; uploadTaggedTransaction simply never received the same treatment');
+            'A7. ...and nostrHostPublisher IS constructed here too — a real production host-capability adapter for the Nostr announcement role. uploadTaggedTransaction (A1-A5b) now receives the identical treatment, reusing the same arweaveHostSigner instance rather than a second one');
 
-        console.log('✓ Section A: NOT_WIRED. application/ArweaveTaggedTransactionUpload.js (0.9.490) exists, is unit-tested, and is production-grade — and is completely unreferenced by ui/main.js. The composition-root change 0.9.490\'s own header explicitly deferred has not happened.');
+        console.log('✓ Section A: WIRED (0.9.492). application/ArweaveTaggedTransactionUpload.js (0.9.490) is now constructed and referenced by ui/main.js\'s own production composition root, closing the composition-root wire 0.9.490\'s own header deferred and 0.9.491 originally found still missing.');
     }
 
     // ===============================================================
     // Section B — Publisher reachability, re-executed live against
-    // CURRENT source. Confirms 0.9.489 Section B's own verdict is
-    // UNCHANGED, not merely still true by citation.
+    // CURRENT source. AMENDED BY 0.9.492 — production composition now
+    // supplies a real uploadTaggedTransaction, so this section re-verifies
+    // that the same real chain 0.9.489/0.9.491 found throwing now
+    // constructs successfully, using a production-shaped (real adapter,
+    // fake wallet/network) uploadTaggedTransaction — never a bare literal.
     // ===============================================================
     {
+        const net = makeRealWireArweaveSubstrate();
+        const realSigner = createArweaveInjectedProviderSigner({ injectedProvider: net.fakeWallet, fetchImpl: net.fetchImpl });
+        const uploadTaggedTransaction = createArweaveTaggedTransactionUpload({ signer: realSigner, gatewayUrl: 'https://production-shaped.example', fetchImpl: net.fetchImpl });
+
         const productionShapedCapabilities = {
-            uploadTaggedTransaction: undefined, // exactly what ui/main.js's real call produces today (Section A4)
+            uploadTaggedTransaction, // exactly what ui/main.js's real call now produces (Section A4)
             gatewayUrl: 'https://arweave.net',
             tagName: ArweaveAnnouncementPublisher.DEFAULT_TAG_NAME,
             discoveryTag: 'forkbuild-publication' // the real, live literal ui/main.js's own PUBLICATION_DISCOVERY_TAG holds
         };
         const resolvedOptions = resolveArweaveAnnouncementPublisherOptions(productionShapedCapabilities);
-        check(resolvedOptions === undefined,
-            'B1. resolveArweaveAnnouncementPublisherOptions(), called with exactly the shape current production supplies, still resolves undefined — dropping the already-configured discoveryTag along with the missing uploadTaggedTransaction, unchanged since 0.9.489');
+        check(resolvedOptions !== undefined,
+            'B1. resolveArweaveAnnouncementPublisherOptions(), called with exactly the shape current production now supplies, resolves a real options object — the already-configured discoveryTag is no longer dropped now that uploadTaggedTransaction is present');
 
-        const thrownError = expectThrowsSync(
-            () => composePublicationDistributionRuntime({
-                discoveryProvider: 'arweave',
-                arweaveUploaderOptions: { signer: { sign: async () => ({ id: 'x', transaction: {} }) } },
-                arweaveAnnouncementPublisherOptions: resolvedOptions
-            }),
-            'B2. selecting "arweave" through the real production composition call, with exactly what current source resolves it to today, still throws synchronously'
-        );
-        check(/discoveryTag/i.test(thrownError.message),
-            'B3. ...and the precise failure mode is unchanged: the constructor never even reaches its uploadTaggedTransaction check — it throws on discoveryTag first');
+        const runtime = composePublicationDistributionRuntime({
+            discoveryProvider: 'arweave',
+            arweaveUploaderOptions: { signer: { sign: async () => ({ id: 'x', transaction: {} }) } },
+            arweaveAnnouncementPublisherOptions: resolvedOptions
+        });
+        check(runtime.publisher instanceof ArweaveAnnouncementPublisher,
+            'B2. selecting "arweave" through the real production composition call, with exactly what current source resolves it to today, now constructs a real ArweaveAnnouncementPublisher instead of throwing');
+
+        const envelope = describeDecentralizedDiscoveryEnvelope({ protocol: 'forkbuild', version: 1, kind: 'PUBLICATION', objectId: 'pub-b', uri: 'ar://TX-MATERIAL' });
+        const published = await runtime.publisher.publish(envelope);
+        check(typeof published.id === 'string' && net.ledger.has(published.id),
+            'B3. ...and the constructed publisher genuinely publishes through the real signer/gateway chain — this is not merely a constructor that no longer throws, it is a working publish path');
 
         const canvasSource = await source('ui/components/WorldEncounterCanvas.js');
         check(/<option value="arweave">Arweave<\/option>/.test(canvasSource) && !/<option value="arweave"[^>]*disabled/.test(canvasSource),
-            'B4. the real <select> still offers "Arweave" as a live, unconditionally clickable choice — the UI-facing consequence of B1-B3 is unchanged: a real click, today, still ends in exactly this throw');
+            'B4. the real <select> still offers "Arweave" as a live, unconditionally clickable choice — a real click, today, now reaches a genuinely working announce path (B1-B3), not a throw');
 
-        console.log('✓ Section B: REACHABLE_BUT_NONFUNCTIONAL, CONFIRMED UNCHANGED. 0.9.490 built the fix; production composition never adopted it, so the live, currently-broken path 0.9.489 found is still exactly as broken today.');
+        console.log('✓ Section B: REACHABLE_AND_WIRED. 0.9.492 adopted the fix 0.9.490 built; the live path 0.9.489/0.9.491 found throwing now genuinely publishes.');
     }
 
     // ===============================================================
@@ -705,8 +732,8 @@ async function run() {
             'I1. this file is registered in tests.html, exactly like every other audit in this family');
 
         const VERDICT = Object.freeze({
-            productionComposition: 'NOT_WIRED (Gap 1)',
-            publisherReachability: 'REACHABLE_BUT_NONFUNCTIONAL_UNCHANGED',
+            productionComposition: 'WIRED (Gap 1 closed by 0.9.492)',
+            publisherReachability: 'REACHABLE_AND_FUNCTIONAL',
             tagFidelity: 'READY',
             transactionIdentity: 'READY_NO_ALTERNATE_IDENTITY',
             discoveryQueryMechanism: 'PRODUCTION_WIRED_AND_LIVE',
@@ -725,14 +752,14 @@ async function run() {
         }
         console.log('');
         console.log('  The complete Arweave announcement -> discovery path is NOT production-');
-        console.log('  complete today, and not for one reason but two, genuinely different in kind:');
+        console.log('  complete today. GAP 1 is now closed; GAP 2 remains open:');
         console.log('');
-        console.log('  GAP 1 (small, mechanical): ui/main.js never constructs the real');
-        console.log('  uploadTaggedTransaction 0.9.490 shipped, so selecting "Arweave" for');
-        console.log('  announcement still throws on every real click, unchanged since 0.9.489.');
+        console.log('  GAP 1 (small, mechanical) — CLOSED BY 0.9.492: ui/main.js now constructs the');
+        console.log('  real uploadTaggedTransaction 0.9.490 shipped, so selecting "Arweave" for');
+        console.log('  announcement genuinely publishes on a real click (Sections A/B, above).');
         console.log('');
-        console.log('  GAP 2 (real, previously unnamed, architectural): even with Gap 1 wired by');
-        console.log('  hand for this audit\'s own Section E, the round trip does not converge.');
+        console.log('  GAP 2 (real, previously unnamed, architectural) — STILL OPEN: even with Gap 1');
+        console.log('  now wired in production, the round trip does not converge.');
         console.log('  ArweaveGraphqlDiscoveryQueryService reports an announcement transaction\'s');
         console.log('  own id as its candidate uri, never the uri the announcement\'s own envelope');
         console.log('  actually claims (unlike NostrDiscoveryQueryService, which parses');
@@ -748,12 +775,12 @@ async function run() {
         console.log('  duplicate semantics, role separation) is production-ready today, confirmed');
         console.log('  live through real adapters and real production composition functions.');
         console.log('');
-        console.log('  RECOMMENDATION 1 (Gap 1 — do this next, it is small and mechanical): construct');
+        console.log('  RECOMMENDATION 1 (Gap 1) — DONE, 0.9.492: constructed');
         console.log('  createArweaveTaggedTransactionUpload({ signer: arweaveHostSigner, gatewayUrl:');
-        console.log('  resolvedArweaveGatewayUrl }) in ui/main.js, exactly beside');
+        console.log('  resolvedArweaveGatewayUrl }) in ui/main.js, beside');
         console.log('  arweavePublicationRuntimeCapabilities/nostrPublicationRuntimeCapabilities, and');
-        console.log('  forward its uploadTaggedTransaction into');
-        console.log('  createPublicationDistributionRuntimeProvider({ ... }). Touches no other file');
+        console.log('  forwarded its uploadTaggedTransaction into');
+        console.log('  createPublicationDistributionRuntimeProvider({ ... }). Touched no other file');
         console.log('  this audit reconfirmed correct.');
         console.log('');
         console.log('  RECOMMENDATION 2 (Gap 2 — its own future milestone, a real design question,');
