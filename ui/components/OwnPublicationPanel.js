@@ -1,4 +1,5 @@
 import { resolveSnapshotPublicationAttribution } from '../../application/SnapshotPublicationAttribution.js';
+import { describeSnapshotResolutionOutcomeLabel, describeSnapshotAttributionOutcomeLabel } from '../../application/SnapshotOutcomeInspectionView.js';
 import { resolveSnapshotWorldPlacement } from '../../application/SnapshotWorldPlacement.js';
 import { registerMaterializedSnapshotWorldSource } from '../../application/MaterializedSnapshotWorldDiscoveryBridge.js';
 import { resolveSnapshotWorldPositionClaim } from '../../application/SnapshotWorldPositionClaim.js';
@@ -2517,6 +2518,22 @@ export default {
             } catch (error) {
                 this.publicationPlacementsError = 'Placements could not be loaded.';
             }
+        },
+        // 0.9.528 — Snapshot Encounter & Placement Product Experience
+        // Reassessment, Section C/I. Thin template-callable wrappers
+        // around application/SnapshotOutcomeInspectionView.js's own two
+        // pure functions — this component's `template` is a
+        // runtime-compiled string, not an SFC, so a bare module-level
+        // import is never callable from inside `{{ }}` on its own; see
+        // ui/components/WorldEncounterCanvas.js's own
+        // `describeMaterialLoadStatusLabel()` for the identical shape,
+        // one component over. No logic of their own — see that file's
+        // own header for what each label does and does not claim.
+        describeSnapshotResolutionLabel(outcome) {
+            return describeSnapshotResolutionOutcomeLabel(outcome);
+        },
+        describeSnapshotAttributionLabel(outcome) {
+            return describeSnapshotAttributionOutcomeLabel(outcome);
         }
     },
     template: `
@@ -2708,12 +2725,19 @@ export default {
             >{{ snapshotDiscoveryExecuting ? 'Checking…' : 'Check Snapshot Match' }}</button>
 
             <!-- The resolver's own DecentralizedSnapshotResolutionOutcome
-                 vocabulary, rendered verbatim — see this file's own
-                 header, "discovery, never attribution." -->
+                 vocabulary — see this file's own header, "discovery, never
+                 attribution." 0.9.528 — Snapshot Encounter & Placement
+                 Product Experience Reassessment, Section C/I: routed
+                 through application/SnapshotOutcomeInspectionView.js's own
+                 describeSnapshotResolutionOutcomeLabel() rather than
+                 rendered as the raw outcome string ('resolved',
+                 'not-discovered', ...) — the identical discipline 0.9.519
+                 established for ui/components/WorldEncounterCanvas.js's
+                 own Material/Verification panel, extended here. -->
             <p v-if="snapshotDiscoveryError" class="own-publication-discovery-error">{{ snapshotDiscoveryError }}</p>
             <dl v-else-if="snapshotDiscoveryResult" class="own-publication-discovery-detail">
                 <dt>Outcome</dt>
-                <dd>{{ snapshotDiscoveryResult.outcome }}</dd>
+                <dd>{{ describeSnapshotResolutionLabel(snapshotDiscoveryResult.outcome) }}</dd>
                 <template v-if="snapshotDiscoveryResult.reason">
                     <dt>Reason</dt>
                     <dd>{{ snapshotDiscoveryResult.reason }}</dd>
@@ -2728,10 +2752,17 @@ export default {
                  never merged into it — see this file's own header, "a
                  separate field, never a replacement," and application/
                  SnapshotPublicationAttribution.js's own header for what
-                 MATCH does and does not mean. -->
+                 MATCH does and does not mean. 0.9.528 — routed through
+                 describeSnapshotAttributionOutcomeLabel(), see the
+                 discovery panel's own comment immediately above: the bare
+                 word "match" is exactly the kind of unqualified claim
+                 docs/Principles.md's 0.8.3 warns against, echoed here as
+                 "Confirmed to match this Publication" — an identity
+                 correspondence between two content hashes, never authorship
+                 or trustworthiness. -->
             <dl v-if="snapshotAttributionResult" class="own-publication-attribution-detail">
                 <dt>Snapshot Attribution</dt>
-                <dd>{{ snapshotAttributionResult.outcome }}</dd>
+                <dd>{{ describeSnapshotAttributionLabel(snapshotAttributionResult.outcome) }}</dd>
             </dl>
 
             <!-- 0.9.324 — Diagnostic Tools Surface. The ENTIRE
@@ -2849,15 +2880,20 @@ export default {
             >{{ selectedSnapshotResolutionExecuting ? 'Resolving…' : 'Resolve Selected Snapshot' }}</button>
 
             <!-- The resolver's own DecentralizedSnapshotResolutionOutcome
-                 vocabulary, rendered verbatim — see this file's own
-                 header, "no automatic attribution": this is a separate
-                 result from snapshotDiscoveryResult/snapshotAttributionResult
-                 above, describing what happened when the SELECTED
-                 candidate (never the Publication) was retrieved/verified. -->
+                 vocabulary — see this file's own header, "no automatic
+                 attribution": this is a separate result from
+                 snapshotDiscoveryResult/snapshotAttributionResult above,
+                 describing what happened when the SELECTED candidate
+                 (never the Publication) was retrieved/verified. 0.9.528 —
+                 routed through describeSnapshotResolutionLabel(), the
+                 identical label table Snapshot Discovery above already
+                 uses (same enum, same meaning, same wording — never two
+                 different sentences for the same outcome depending which
+                 panel shows it). -->
             <p v-if="selectedSnapshotResolutionError" class="own-publication-selected-resolution-error">{{ selectedSnapshotResolutionError }}</p>
             <dl v-else-if="selectedSnapshotResolutionResult" class="own-publication-selected-resolution-detail">
                 <dt>Selected Snapshot Resolution</dt>
-                <dd>{{ selectedSnapshotResolutionResult.outcome }}</dd>
+                <dd>{{ describeSnapshotResolutionLabel(selectedSnapshotResolutionResult.outcome) }}</dd>
                 <template v-if="selectedSnapshotResolutionResult.reason">
                     <dt>Reason</dt>
                     <dd>{{ selectedSnapshotResolutionResult.reason }}</dd>
@@ -2892,10 +2928,14 @@ export default {
                  header, "a separate field, never snapshotAttributionResult."
                  Compares the RESOLVER's own verified bytes against this
                  Publication, never the candidate's own self-declared
-                 contentHash. -->
+                 contentHash. 0.9.528 — routed through
+                 describeSnapshotAttributionLabel(), the identical label
+                 table Snapshot Attribution above already uses (same two
+                 outcomes, same wording, never a stronger claim here than
+                 there). -->
             <dl v-if="selectedSnapshotAttributionResult" class="own-publication-selected-attribution-detail">
                 <dt>Selected Snapshot Attribution</dt>
-                <dd>{{ selectedSnapshotAttributionResult.outcome }}</dd>
+                <dd>{{ describeSnapshotAttributionLabel(selectedSnapshotAttributionResult.outcome) }}</dd>
                 <template v-if="selectedSnapshotAttributionResult.reason">
                     <dt>Reason</dt>
                     <dd>{{ selectedSnapshotAttributionResult.reason }}</dd>
