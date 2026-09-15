@@ -1,6 +1,7 @@
 import PublicationPreview from './PublicationPreview.js';
 import { resolveSigningIdentityId } from '../../identity/resolveSigningIdentityId.js';
 import { formatPublicationDate } from '../../core/PublicationDateAmbiguity.js';
+import { createId } from '../../core/createId.js';
 
 // 0.2.31 — one publication, in card form. Pure presentation: every
 // piece of enriched data (description, parent title, fork count) is
@@ -141,7 +142,25 @@ export default {
             commentaries: [],
             newCommentaryText: '',
             commentarySubmitting: false,
-            commentaryError: null
+            commentaryError: null,
+            // 0.9.542 — Publication Commentary Submission Experience
+            // Product Reassessment. `{ content, commentaryId, createdAt }`
+            // for the CURRENT in-progress compose attempt, or `null`. See
+            // submitCommentary()'s own header for why this exists: it lets
+            // a manual retry of an UNCHANGED draft reuse the store's own
+            // commentaryId-keyed idempotent-retry identity
+            // (storage/PublicationCommentaryStore.js's own "SAME ID +
+            // IDENTICAL RECORD -> IDEMPOTENT SUCCESS") instead of minting
+            // a fresh commentaryId on every submit click. NOT a new
+            // identity mechanism — commentaryId/createdAt are the exact,
+            // already-optional AddPublicationCommentaryUseCase inputs
+            // 0.9.244/0.9.541 already established; this only wires this
+            // component to actually pass them. Cleared on a successful
+            // submit, and regenerated (never reused) the moment the
+            // draft's own text changes from what it was on the last
+            // attempt — an edited draft is a new logical comment, not a
+            // retry of the old one.
+            pendingCommentaryDraft: null
         };
     },
     computed: {
@@ -213,16 +232,41 @@ export default {
         // failure, `newCommentaryText` and `commentaries` are both left
         // UNCHANGED — a rejected attempt never discards what was typed
         // or corrupts what was already displayed.
+        //
+        // 0.9.542 — Publication Commentary Submission Experience Product
+        // Reassessment, Section D. A thrown error here does not always
+        // mean nothing was persisted: PublicationCommentaryNotificationProducer's
+        // own header documents that a notificationSink failure propagates
+        // AFTER the commentary itself was already saved
+        // (`AddPublicationCommentaryUseCase.execute()` already returned).
+        // A user who sees `commentaryError` and clicks Comment again with
+        // the SAME, unedited text is retrying an attempt that may have
+        // already succeeded — before this milestone, that retry sent a
+        // brand-new random `commentaryId`, so PublicationCommentaryStore's
+        // own "same id, identical record" idempotence never engaged, and
+        // the retry created a second, visible, duplicate commentary.
+        // `pendingCommentaryDraft` (data(), above) closes exactly that
+        // gap: the SAME `commentaryId`/`createdAt` is reused across
+        // consecutive submit attempts for byte-identical content, so a
+        // retry of an already-persisted comment is now the store's own
+        // documented no-op (`isNew: false`), never a duplicate. Editing
+        // the draft before retrying mints a fresh id — an edited draft is
+        // a genuinely new comment, never conflated with the old one.
         submitCommentary() {
             const content = this.newCommentaryText.trim();
             if (!this.addPublicationCommentaryCommand || !content || this.commentarySubmitting) {
                 return;
             }
+            if (!this.pendingCommentaryDraft || this.pendingCommentaryDraft.content !== content) {
+                this.pendingCommentaryDraft = { content, commentaryId: createId(), createdAt: new Date() };
+            }
+            const { commentaryId, createdAt } = this.pendingCommentaryDraft;
             this.commentarySubmitting = true;
             try {
-                this.addPublicationCommentaryCommand({ publicationId: this.publication.id, content });
+                this.addPublicationCommentaryCommand({ publicationId: this.publication.id, content, commentaryId, createdAt });
                 this.newCommentaryText = '';
                 this.commentaryError = null;
+                this.pendingCommentaryDraft = null;
                 this.refreshCommentaries();
             } catch (error) {
                 this.commentaryError = (error && error.message) ? error.message : 'Commentary could not be created.';

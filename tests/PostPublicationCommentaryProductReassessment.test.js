@@ -163,8 +163,8 @@ async function runTests() {
         // A1g. WorldNavigationSession — thin delegation, no reimplemented
         // logic, asymmetric failure posture (read degrades, write throws).
         assert(navSession.includes('return this._getPublicationCommentariesUseCase.execute({ publicationId });') &&
-               navSession.includes('return this._addPublicationCommentaryUseCase.execute({ publicationId, content });'),
-            'A1g. application/WorldNavigationSession.js#getPublicationCommentaries()/addPublicationCommentary() still delegate their entire body to the injected use cases (0.9.248).');
+               navSession.includes('return this._addPublicationCommentaryUseCase.execute({ publicationId, content, commentaryId, createdAt });'),
+            'A1g. application/WorldNavigationSession.js#getPublicationCommentaries()/addPublicationCommentary() still delegate their entire body to the injected use cases (0.9.248; commentaryId/createdAt passthrough added 0.9.542, still pure delegation).');
 
         // A1h. WorldView composition root — the SAME storageProvider/
         // discoveryProvider/identityProvider every other local
@@ -528,8 +528,8 @@ async function runTests() {
         // delegate exclusively to the two commentary use cases.
         const navSession = await rawSource('application/WorldNavigationSession.js');
         const getMethodMatch = navSession.match(/getPublicationCommentaries\(publicationId\) \{[\s\S]*?\n    \}/);
-        const addMethodMatch = navSession.match(/addPublicationCommentary\(\{ publicationId, content \}\) \{[\s\S]*?\n    \}/);
-        assert(getMethodMatch && addMethodMatch, 'E2a. Both commentary methods still exist on WorldNavigationSession in their expected shape.');
+        const addMethodMatch = navSession.match(/addPublicationCommentary\(\{ publicationId, content, commentaryId, createdAt \}\) \{[\s\S]*?\n    \}/);
+        assert(getMethodMatch && addMethodMatch, 'E2a. Both commentary methods still exist on WorldNavigationSession in their expected shape (addPublicationCommentary\'s own signature grew commentaryId/createdAt in 0.9.542 — see that method\'s own header).');
         assert(!collaborationVocabulary.test(getMethodMatch[0]) && !collaborationVocabulary.test(addMethodMatch[0]),
             'E2b. WorldNavigationSession#getPublicationCommentaries()/addPublicationCommentary() still reference no collaboration-arc vocabulary in their own method bodies — pure delegation to the two commentary use cases, nothing else.');
 

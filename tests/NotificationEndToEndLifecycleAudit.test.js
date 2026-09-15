@@ -344,8 +344,11 @@ async function runTests() {
             'A5a. WorldView.js\'s own getRecipientNotificationEventsCommand forwards to the real session, unmodified.');
         assert(/<NotificationHistoryPanel[\s\S]{0,200}:getRecipientNotificationEventsCommand="getRecipientNotificationEventsCommand"/.test(await rawSource('ui/views/WorldView.js')),
             'A5b. NotificationHistoryPanel is actually rendered in WorldView.js\'s own template, wired to the real command.');
-        assert(worldViewCode.includes('function addPublicationCommentaryCommand({ publicationId, content }) {') &&
-            worldViewCode.includes('return session.addPublicationCommentary({ publicationId, content });'),
+        // 0.9.542 — this command's own signature grew commentaryId/createdAt
+        // passthrough (see WorldView.js's own 0.9.542 comment); it still
+        // forwards, unmodified otherwise, to the real session.
+        assert(worldViewCode.includes('function addPublicationCommentaryCommand({ publicationId, content, commentaryId, createdAt }) {') &&
+            worldViewCode.includes('return session.addPublicationCommentary({ publicationId, content, commentaryId, createdAt });'),
             'A5c. WorldView.js\'s own addPublicationCommentaryCommand forwards to the real session, unmodified.');
 
         // A6. No stray uncommitted diff on any file this chain depends on

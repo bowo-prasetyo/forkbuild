@@ -231,8 +231,13 @@ async function runTests() {
         ctx.submitPublicationCommentary();
 
         assert(calls === 1, '11. submission calls the injected command exactly once');
-        assert(Object.keys(receivedInput).sort().join(',') === 'content,publicationId',
-            '12. the command receives ONLY publicationId and content — never authorIdentityId or any other field');
+        // 0.9.542 — see OtherPublicationCommentaryEntryPoint.test.js's own
+        // 0.9.542 comment on the identical assertion, one surface over:
+        // commentaryId/createdAt are now wired through for idempotent
+        // manual retry; authorIdentityId is still never among them.
+        assert(Object.keys(receivedInput).sort().join(',') === 'commentaryId,content,createdAt,publicationId',
+            '12. the command receives publicationId, content, commentaryId and createdAt — never authorIdentityId or any other field');
+        assert(!('authorIdentityId' in receivedInput), '12b. authorIdentityId is never among the fields sent');
         assert(receivedInput.publicationId === publication.id && receivedInput.content === 'through the use case',
             '13. the exact publicationId/content typed by the person reaches the command unmodified');
 
@@ -435,13 +440,18 @@ async function runTests() {
             '42. WorldView.js reuses the SAME already-computed myIdentityId — no second identity read for this feature');
         assert(viewCode.includes('session.getPublicationCommentaries(publicationId)'),
             '43. WorldView.js\'s own command forwards to WorldNavigationSession, never a use case directly');
-        assert(viewCode.includes('session.addPublicationCommentary({ publicationId, content })'),
+        // 0.9.542 — these two delegations grew commentaryId/createdAt
+        // passthrough (see WorldView.js's/WorldNavigationSession.js's own
+        // 0.9.542 comments); still no authorIdentityId, still forwarding
+        // to WorldNavigationSession/the use case, never a use case
+        // called directly from the view.
+        assert(viewCode.includes('session.addPublicationCommentary({ publicationId, content, commentaryId, createdAt })'),
             '44. WorldView.js\'s own command forwards to WorldNavigationSession, never a use case directly');
 
         const sessionCode = await codeOnlySource('application/WorldNavigationSession.js');
         assert(sessionCode.includes('this._getPublicationCommentariesUseCase.execute({ publicationId })'),
             '45. WorldNavigationSession delegates reads to the unmodified use case');
-        assert(sessionCode.includes('this._addPublicationCommentaryUseCase.execute({ publicationId, content })'),
+        assert(sessionCode.includes('this._addPublicationCommentaryUseCase.execute({ publicationId, content, commentaryId, createdAt })'),
             '46. WorldNavigationSession delegates writes to the unmodified use case, forwarding no authorIdentityId');
 
         const compositionCode = await codeOnlySource('application/CreateWorldViewUseCase.js');

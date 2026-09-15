@@ -79,7 +79,10 @@ import { NotificationEvent } from '../core/NotificationEvent.js';
 // also the Publication's own publisher. Whether self-notifications should
 // ever be suppressed is a later, separate product decision — this
 // producer's own job is only "a Commentary was created; tell the
-// publisher," unconditionally.
+// publisher," unconditionally. See this file's own `execute()` header
+// (0.9.542) for why an idempotent-retry no-op still reaches this path
+// unconditionally, and why that is correct: the injected
+// `notificationSink`'s own store already deduplicates.
 //
 // PAYLOAD IS DELIBERATELY FACTUAL, NOTHING PRESENTATIONAL. Exactly the
 // three identifiers 0.9.274 Section E already proved sufficient:
@@ -125,6 +128,27 @@ export class PublicationCommentaryNotificationProducer {
     // injected notificationSink. Returns the exact `{ commentary, isNew }`
     // shape the wrapped use case returned, unmodified, whether or not a
     // notification was produced.
+    //
+    // 0.9.542 — Publication Commentary Submission Experience Product
+    // Reassessment confirmed this file needs NO change for the
+    // commentaryId-keyed manual-retry case it added (see
+    // ui/components/PublicationCard.js's own 0.9.542 header): a retry
+    // still constructs and sends a NotificationEvent here, unconditionally,
+    // exactly as before, but `notificationSink` is `(event) =>
+    // notificationEventStore.save(event)` (see
+    // application/CreatePublicationCommentaryUseCase.js /
+    // application/CreateWorldViewUseCase.js), and
+    // `NotificationEventStore.save()` already performs its OWN
+    // deduplication-identity check independent of this file — a retried,
+    // logically-identical event resolves to `EXISTING`, returning the
+    // original on-file record rather than persisting a second one (see
+    // storage/NotificationEventStore.js's own header, and
+    // tests/PublicationCommentaryCrossSurfaceConvergenceAudit.test.js
+    // Section F, which exercises exactly this retry sequence and asserts
+    // `EXISTING` is what comes back). Gating construction on `isNew`
+    // here would have been a SECOND, redundant dedup mechanism layered in
+    // front of one that already exists and is already tested — this file
+    // stays exactly as 0.9.275 left it.
     execute(input) {
         const result = this._addPublicationCommentaryUseCase.execute(input);
         const { commentary } = result;

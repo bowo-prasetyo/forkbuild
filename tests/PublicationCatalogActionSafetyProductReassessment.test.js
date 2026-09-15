@@ -500,7 +500,11 @@ async function run() {
     {
         assert(/toggleCommentary\(\) \{[\s\S]*?if \(opening\) \{\s*this\.refreshCommentaries\(\);\s*\}/.test(cardSource),
             '1. STRUCTURAL: merely OPENING the comment section (an observation — "let me look") only ever calls refreshCommentaries(), a read — never addPublicationCommentaryCommand, a write. Viewing never mutates.');
-        assert(/submitCommentary\(\) \{[\s\S]*?this\.addPublicationCommentaryCommand\(\{ publicationId: this\.publication\.id, content \}\);/.test(cardSource),
+        // 0.9.542 — submitCommentary()'s own call now also passes
+        // commentaryId/createdAt (a stable per-draft retry identity — see
+        // PublicationCard.js's own 0.9.542 header); this pattern is
+        // updated to match, the underlying structural claim unchanged.
+        assert(/submitCommentary\(\) \{[\s\S]*?this\.addPublicationCommentaryCommand\(\{ publicationId: this\.publication\.id, content, commentaryId, createdAt \}\);/.test(cardSource),
             '2. STRUCTURAL: the ONE write in these surfaces (posting a comment) fires only from submitCommentary(), itself only ever reachable via the form\'s own explicit @submit.prevent — never from render, toggle, or any other action\'s own code path.');
         assert(!/unpublish|delete|remove/i.test(cardSource + listSource + forkTreeSource + catalogSource),
             '3. N/A, confirmed rather than assumed: no delete/unpublish/remove action of any kind exists anywhere in the catalog card, list, fork-tree, or host surfaces — that capability lives only in ui/components/OwnPublicationPanel.js (a single-Publication detail panel, already covered by its own 0.9.198 milestone), never in a catalog listing.');

@@ -5498,11 +5498,20 @@ export class WorldNavigationSession {
     // own use case is missing. `authorIdentityId` is deliberately not a
     // parameter here — see AddPublicationCommentaryUseCase's own 0.9.245
     // header for why the caller can't even attempt to supply one.
-    addPublicationCommentary({ publicationId, content }) {
+    // `commentaryId`/`createdAt` are optional passthroughs (unchanged
+    // AddPublicationCommentaryUseCase/PublicationCommentary contract,
+    // 0.9.242/0.9.244) — this method still resolves no identity, checks
+    // no authorization, and constructs nothing itself. 0.9.542 threads
+    // them through so a caller-side manual retry of an unchanged draft
+    // can reuse the store's own idempotent-retry identity instead of
+    // minting a fresh commentaryId (and therefore a fresh, visible
+    // duplicate) on every call — see
+    // ui/components/OwnPublicationPanel.js's own 0.9.542 header.
+    addPublicationCommentary({ publicationId, content, commentaryId, createdAt }) {
         if (!this._addPublicationCommentaryUseCase) {
             throw new Error('WorldNavigationSession: publication commentary cannot be created — no AddPublicationCommentaryUseCase wired');
         }
-        return this._addPublicationCommentaryUseCase.execute({ publicationId, content });
+        return this._addPublicationCommentaryUseCase.execute({ publicationId, content, commentaryId, createdAt });
     }
 
     // 0.9.284 — Notification History UI Boundary. The read-only seam a

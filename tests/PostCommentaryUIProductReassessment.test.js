@@ -131,8 +131,8 @@ async function runTests() {
         assert(/constructor\s*\(\s*store\s*\)/.test(getUseCase),
             'A3d. application/GetPublicationCommentariesUseCase.js still takes only a store — the read side stays thinner than the write side (0.9.247).');
         assert(navSession.includes('return this._getPublicationCommentariesUseCase.execute({ publicationId });') &&
-               navSession.includes('return this._addPublicationCommentaryUseCase.execute({ publicationId, content });'),
-            'A3e. application/WorldNavigationSession.js still delegates both commentary methods entirely to the injected use cases (0.9.248).');
+               navSession.includes('return this._addPublicationCommentaryUseCase.execute({ publicationId, content, commentaryId, createdAt });'),
+            'A3e. application/WorldNavigationSession.js still delegates both commentary methods entirely to the injected use cases (0.9.248; commentaryId/createdAt passthrough added 0.9.542, still pure delegation).');
 
         // A4. 0.9.251's own count closure, re-verified fresh: rendered
         // directly from the existing array, no new state/use case.

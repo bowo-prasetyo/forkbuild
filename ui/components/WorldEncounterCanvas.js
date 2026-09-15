@@ -4,6 +4,7 @@ import { describeWorldFromDiscoveryRegistry } from '../../application/WorldDisco
 import { describeWorldEncounterInspection } from '../../application/WorldEncounterInspection.js';
 import { describeWorldEncounterSelectionOutcomeFromRegistry, WorldEncounterSelectionOutcomeStatus } from '../../application/WorldEncounterSelectionOutcome.js';
 import { inspectWorldEncounterMaterial } from '../../application/WorldEncounterMaterialInspection.js';
+import { createId } from '../../core/createId.js';
 // 0.9.474 — Admit World-Encountered Publications into App-Wide Discovery.
 // `Publication` (never previously imported here) is needed for exactly one
 // check: `loading.status === 'AVAILABLE' && loading.material instanceof
@@ -2810,7 +2811,16 @@ export default {
             // leaves `encounterCommentaries`/`newEncounterCommentaryText`
             // exactly as they were — see `refreshEncounterCommentaries()`/
             // `submitEncounterCommentary()`, below.
-            encounterCommentaryError: null
+            encounterCommentaryError: null,
+            // 0.9.542 — Publication Commentary Submission Experience
+            // Product Reassessment. Mirrors `PublicationCard.js`'s/
+            // `OwnPublicationPanel.js`'s own `pendingCommentaryDraft`
+            // exactly, one surface over — see either file's own 0.9.542
+            // header. `{ content, commentaryId, createdAt }` for the
+            // CURRENT in-progress compose attempt, or `null`; reset on
+            // every fresh selection exactly where `encounterCommentaries`
+            // already is.
+            pendingEncounterCommentaryDraft: null
         };
     },
     computed: {
@@ -3291,6 +3301,12 @@ export default {
             this.newEncounterCommentaryText = '';
             this.encounterCommentarySubmitting = false;
             this.encounterCommentaryError = null;
+            // 0.9.542 — a fresh selection invalidates any pending retry
+            // draft the identical way it already invalidates the draft
+            // text itself, above: a draft's reused commentaryId is only
+            // ever valid for retries against the SAME publicationId it
+            // was minted for.
+            this.pendingEncounterCommentaryDraft = null;
         },
         // 0.9.13 — the only writer of `worldView`, and the only caller
         // of `describeWorldFromDiscoveryRegistry()` in this file. See
@@ -4172,17 +4188,30 @@ export default {
         // `OwnPublicationPanel.js`'s own identical restraint. On failure,
         // `newEncounterCommentaryText`/`encounterCommentaries` are both
         // left UNCHANGED.
+        //
+        // 0.9.542 — see `pendingEncounterCommentaryDraft`'s own data()
+        // header, and `PublicationCard.js`'s own `submitCommentary()`
+        // header for the full rationale: a manual retry of an unedited
+        // draft after an error reuses the SAME commentaryId/createdAt,
+        // landing on the store's own idempotent no-op if the earlier
+        // attempt actually persisted, never a second, duplicate
+        // commentary. Editing the draft before retrying mints a fresh id.
         submitEncounterCommentary() {
             const publicationId = this.encounterCommentaryPublicationId;
             const content = this.newEncounterCommentaryText.trim();
             if (!publicationId || !this.addPublicationCommentaryCommand || !content || this.encounterCommentarySubmitting) {
                 return;
             }
+            if (!this.pendingEncounterCommentaryDraft || this.pendingEncounterCommentaryDraft.content !== content) {
+                this.pendingEncounterCommentaryDraft = { content, commentaryId: createId(), createdAt: new Date() };
+            }
+            const { commentaryId, createdAt } = this.pendingEncounterCommentaryDraft;
             this.encounterCommentarySubmitting = true;
             try {
-                this.addPublicationCommentaryCommand({ publicationId, content });
+                this.addPublicationCommentaryCommand({ publicationId, content, commentaryId, createdAt });
                 this.newEncounterCommentaryText = '';
                 this.encounterCommentaryError = null;
+                this.pendingEncounterCommentaryDraft = null;
                 this.refreshEncounterCommentaries();
             } catch (error) {
                 this.encounterCommentaryError = (error && error.message) ? error.message : 'Commentary could not be created.';

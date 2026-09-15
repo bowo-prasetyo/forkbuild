@@ -1599,8 +1599,13 @@ export default {
             return session.getPublicationCommentaries(publicationId);
         }
 
-        function addPublicationCommentaryCommand({ publicationId, content }) {
-            return session.addPublicationCommentary({ publicationId, content });
+        // 0.9.542 — forwards `commentaryId`/`createdAt` unchanged when a
+        // caller (a manual submission retry) supplies them; still
+        // resolves and decides nothing of its own. See
+        // WorldNavigationSession.addPublicationCommentary()'s own 0.9.542
+        // header.
+        function addPublicationCommentaryCommand({ publicationId, content, commentaryId, createdAt }) {
+            return session.addPublicationCommentary({ publicationId, content, commentaryId, createdAt });
         }
 
         // 0.9.308 — Publication Multi-Placement Visibility. A thin

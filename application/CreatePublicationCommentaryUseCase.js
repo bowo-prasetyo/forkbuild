@@ -117,8 +117,12 @@ export class CreatePublicationCommentaryUseCase {
         // (missing identity, authorization denial, a storage conflict) is
         // for the calling UI component to catch and render as its own
         // commentary error state.
-        function addPublicationCommentaryCommand({ publicationId, content }) {
-            return publicationCommentaryCapability.execute({ publicationId, content });
+        // 0.9.542 — forwards `commentaryId`/`createdAt` unchanged when a
+        // caller supplies them (a manual submission retry); still no
+        // try/catch of its own. See
+        // ui/components/PublicationCard.js's own 0.9.542 header.
+        function addPublicationCommentaryCommand({ publicationId, content, commentaryId, createdAt }) {
+            return publicationCommentaryCapability.execute({ publicationId, content, commentaryId, createdAt });
         }
 
         return { getPublicationCommentariesCommand, addPublicationCommentaryCommand };
