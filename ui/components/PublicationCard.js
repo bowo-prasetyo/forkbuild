@@ -1,5 +1,6 @@
 import PublicationPreview from './PublicationPreview.js';
 import { resolveSigningIdentityId } from '../../identity/resolveSigningIdentityId.js';
+import { formatPublicationDate } from '../../core/PublicationDateAmbiguity.js';
 
 // 0.2.31 — one publication, in card form. Pure presentation: every
 // piece of enriched data (description, parent title, fork count) is
@@ -117,7 +118,14 @@ export default {
         publication: { type: Object, required: true },
         description: { type: String, default: '' },
         parentTitle: { type: String, default: null },
-        forkCount: { type: Number, default: 0 }
+        forkCount: { type: Number, default: 0 },
+        // 0.9.539 — see core/PublicationDateAmbiguity.js's own header.
+        // True only when the host (PublicationCatalog.js) detected
+        // another Publication for the SAME document, published the
+        // same calendar day, also visible on the current page — the
+        // one case where the usual day-level `publishedAt` label would
+        // otherwise render two distinct Publications identically.
+        needsPreciseDate: { type: Boolean, default: false }
     },
     emits: ['open', 'fork', 'explore', 'view-author'],
     data() {
@@ -139,6 +147,16 @@ export default {
     computed: {
         licenseLabel() {
             return this.publication.license ? this.publication.license.id : 'UNSPECIFIED';
+        },
+        // 0.9.539 — the SAME `publishedAt` field, at finer precision,
+        // never a new one. See needsPreciseDate's own comment above.
+        // Milliseconds are included (not just toLocaleString()'s own
+        // second-level precision) because two republishes of an
+        // unmodified document routinely land within the same second —
+        // this label's own job is to actually disambiguate the
+        // collision it was raised for, not merely to look more precise.
+        publishedAtLabel() {
+            return formatPublicationDate(this.publication.publishedAt, this.needsPreciseDate);
         },
         // The currently signed-in identity's own did:key id, or `null` —
         // the SAME tolerant lookup application/WorldNavigationSession.js's
@@ -230,7 +248,7 @@ export default {
                 <template v-else>anonymous</template>
             </p>
             <p class="publication-date" v-if="publication.publishedAt">
-                {{ publication.publishedAt.toLocaleDateString() }} · {{ licenseLabel }}
+                {{ publishedAtLabel }} · {{ licenseLabel }}
             </p>
             <p class="publication-forks" v-if="forkCount > 0">
                 {{ forkCount }} fork(s)
