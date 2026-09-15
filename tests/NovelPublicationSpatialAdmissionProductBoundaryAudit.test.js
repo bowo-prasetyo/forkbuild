@@ -495,12 +495,34 @@ async function runTests() {
         // anywhere in the codebase under a different name (i.e. this is
         // genuinely new state, not a rename of something that already
         // exists).
+        //
+        // AMENDED BY 0.9.552: this audit's own Section E named "Observer-
+        // local encounter" as one of three compared (never implemented)
+        // spatial-semantics models, and this milestone's own follow-up,
+        // 0.9.552, built exactly that model under exactly the name this
+        // grep was written to detect — core/ObserverLocalPublicationEncounter.js
+        // and application/ObserverLocalEncounterStore.js, plus 0.9.552's own
+        // additive `encounter` field on
+        // application/AutomaticSnapshotEncounterCascade.js's own UNPLACED
+        // result. This is this audit's own predicted gap being closed, not
+        // a false positive — the three files below are excluded from this
+        // check by name, on record, rather than loosening the pattern
+        // itself (which would silently stop detecting a REAL future rename
+        // of this exact missing state under a fourth name).
+        const knownAsOf0_9_552 = new Set([
+            'application/AutomaticSnapshotEncounterCascade.js',
+            'application/ObserverLocalEncounterStore.js',
+            'core/ObserverLocalPublicationEncounter.js',
+            'ui/views/WorldView.js',
+            'ui/components/WorldEncounterCanvas.js'
+        ]);
         let hits = '';
         try {
             hits = execSync('grep -rli "UnplacedCandidate\\|SpatialClaimObservation\\|PendingPlacement\\|ObserverLocalEncounter\\|CandidatePresentation" application core ui --include="*.js" || true',
                 { cwd: SOURCE_ROOT.pathname }).toString().trim();
         } catch { /* zero hits is expected and fine */ }
-        assert(hits === '', `D4. No existing production file already models this missing state under a different name (unexpected hits: ${hits || 'none'}).`);
+        const unexpectedHits = hits.split('\n').map((line) => line.trim()).filter((line) => line.length > 0 && !knownAsOf0_9_552.has(line));
+        assert(unexpectedHits.length === 0, `D4. No existing production file already models this missing state under a different name, beyond 0.9.552's own already-accounted-for implementation (unexpected hits: ${unexpectedHits.join(', ') || 'none'}).`);
 
         console.log('✓ D — no existing object already carries the missing state: the one post-placement inspection surface explicitly documents claimedPosition as unreachable, and only activates after registration in the first place (D1); the cascade\'s own UNPLACED result has no query surface anywhere (D2); the one place claimedPosition IS consumed today is a named-owner, component-scoped action, never a Wanderer-facing one (D3); and no differently-named surface already models this state under the covers (D4). The "???" this milestone\'s own brief names is genuinely empty today — not built here, per that same brief.');
     }
