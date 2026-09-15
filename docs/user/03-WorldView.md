@@ -509,8 +509,8 @@ currently editing:
   it's a fork) which world it was forked from. Click **Edit Metadata** to
   change the title, description, or license.
 - **Placement** — *where* that document sits in shared space, in **World
-  Units** (ForkBuild's own coordinate system — not meters, not GPS
-  coordinates, just a shared frame every creation is placed in). Click
+  Units** (ForkBuild's own coordinate system, not GPS coordinates — one
+  World Unit represents one meter of real-world length). Click
   **Move** to give it new X/Y/Z coordinates directly, or use the ± nudge
   buttons (1 / 10 / 100 World Units) to shift the current position
   relatively before confirming. **Focus** flies there.
