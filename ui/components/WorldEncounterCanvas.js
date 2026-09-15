@@ -33,6 +33,7 @@ import { compareSnapshotWorldPublications } from '../../application/WorldSnapsho
 import { describeWorldSnapshotContentView } from '../../application/WorldSnapshotContentView.js';
 import { describeWorldSnapshotContentComparisonView } from '../../application/WorldSnapshotContentComparisonView.js';
 import { describeWorldEncounterMaterialLoadStatusLabel, describeWorldEncounterMaterialVerificationStatusLabel } from '../../application/WorldEncounterMaterialInspectionView.js';
+import { describeSnapshotResolutionOutcomeLabel, describeSnapshotAttributionOutcomeLabel } from '../../application/SnapshotOutcomeInspectionView.js';
 
 // 0.9.3 — World View UI / Wanderer Presence.
 //
@@ -3490,6 +3491,17 @@ export default {
         describeMaterialVerificationStatusLabel(status) {
             return describeWorldEncounterMaterialVerificationStatusLabel(status);
         },
+        // 0.9.528 — Snapshot Encounter & Placement Product Experience
+        // Reassessment, Section C/I. The identical thin-wrapper shape,
+        // one family over — application/SnapshotOutcomeInspectionView.js's
+        // own two pure functions, for the Snapshot Discovery/Attribution
+        // panel immediately below.
+        describeSnapshotResolutionLabel(outcome) {
+            return describeSnapshotResolutionOutcomeLabel(outcome);
+        },
+        describeSnapshotAttributionLabel(outcome) {
+            return describeSnapshotAttributionOutcomeLabel(outcome);
+        },
         // 0.9.474 — Admit World-Encountered Publications into App-Wide
         // Discovery. The only caller of `.add()` on
         // `decentralizedPublicationDiscoveryProvider` in this file.
@@ -4754,12 +4766,19 @@ export default {
                     @click="discoverSelectedSnapshot"
                 >{{ snapshotDiscoveryExecuting ? 'Discovering…' : 'Discover Snapshot' }}</button>
 
-                <!-- The resolver's own outcome vocabulary, rendered
-                     verbatim — see this file's own header. -->
+                <!-- The resolver's own outcome vocabulary — see this
+                     file's own header. 0.9.528 — Snapshot Encounter &
+                     Placement Product Experience Reassessment, Section
+                     C/I: routed through application/
+                     SnapshotOutcomeInspectionView.js's own
+                     describeSnapshotResolutionOutcomeLabel() rather than
+                     rendered as the raw outcome string, the identical
+                     discipline this file's own 0.9.519 already applied to
+                     the Material/Verification panel below, extended here. -->
                 <p v-if="snapshotDiscoveryError" class="world-encounter-snapshot-discovery-error">{{ snapshotDiscoveryError }}</p>
                 <dl v-else-if="snapshotDiscoveryResult" class="world-encounter-snapshot-discovery-detail">
                     <dt>Outcome</dt>
-                    <dd>{{ snapshotDiscoveryResult.outcome }}</dd>
+                    <dd>{{ describeSnapshotResolutionLabel(snapshotDiscoveryResult.outcome) }}</dd>
                     <template v-if="snapshotDiscoveryResult.reason">
                         <dt>Reason</dt>
                         <dd>{{ snapshotDiscoveryResult.reason }}</dd>
@@ -4775,10 +4794,19 @@ export default {
                      "0.9.144 — World View Snapshot Attribution
                      Integration," and application/
                      SnapshotPublicationAttribution.js's own header for what
-                     MATCH does and does not mean. -->
+                     MATCH does and does not mean. 0.9.528 — routed through
+                     describeSnapshotAttributionLabel(): the bare word
+                     "match" is exactly the unqualified claim
+                     docs/Principles.md's 0.8.3 warns against, echoed here
+                     as "Confirmed to match this Publication" — the
+                     identical wording, and the identical narrow meaning
+                     (a content-hash correspondence, never authorship or
+                     trustworthiness), this file's own Material/
+                     Verification panel already uses for the same
+                     underlying kind of evidence. -->
                 <dl v-if="snapshotAttributionResult" class="world-encounter-snapshot-attribution-detail">
                     <dt>Snapshot Attribution</dt>
-                    <dd>{{ snapshotAttributionResult.outcome }}</dd>
+                    <dd>{{ describeSnapshotAttributionLabel(snapshotAttributionResult.outcome) }}</dd>
                 </dl>
             </div>
 

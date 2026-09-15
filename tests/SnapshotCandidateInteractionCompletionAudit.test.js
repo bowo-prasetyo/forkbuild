@@ -674,16 +674,27 @@ async function run() {
     // Section G — FAILURE UX SEMANTICS.
     // ===============================================================
     {
-        // The template renders selectedSnapshotResolutionResult.outcome and
-        // selectedSnapshotAttributionResult.outcome VERBATIM — never
-        // through a boolean/ternary collapse that would erase the
-        // distinction between a resolution failure and NO_MATCH.
+        // 0.9.528 — Snapshot Encounter & Placement Product Experience
+        // Reassessment, Section C. The template renders
+        // selectedSnapshotResolutionResult.outcome and
+        // selectedSnapshotAttributionResult.outcome through
+        // describeSnapshotResolutionLabel()/describeSnapshotAttributionLabel()
+        // (a humanizing, presentation-only pass — see application/
+        // SnapshotOutcomeInspectionView.js's own header) rather than a raw
+        // interpolation — but the underlying invariant this section exists
+        // to protect is unchanged: the exact outcome value still reaches
+        // the screen, unconditionally, NEVER through a boolean/ternary
+        // collapse that would erase the distinction between a resolution
+        // failure and NO_MATCH. Both label functions are 1:1 (never
+        // many-to-one) over every real outcome value — see this milestone's
+        // own tests/SnapshotEncounterPlacementProductExperienceReassessment
+        // .test.js, Section G3, which proves that live.
         const rawTemplateSource = await readFile(new URL('ui/components/OwnPublicationPanel.js', SOURCE_ROOT), 'utf8');
         const templateMatch = rawTemplateSource.match(/template: `([\s\S]*)`\s*};?\s*$/);
         assert(templateMatch, 'G1. sanity: the component template literal was located');
         const template = templateMatch[1];
-        assert(template.includes('{{ selectedSnapshotResolutionResult.outcome }}'), 'G2. the selected-resolution outcome is rendered verbatim, unconditionally on its own value');
-        assert(template.includes('{{ selectedSnapshotAttributionResult.outcome }}'), 'G3. the selected-attribution outcome is rendered verbatim, unconditionally on its own value');
+        assert(template.includes('{{ describeSnapshotResolutionLabel(selectedSnapshotResolutionResult.outcome) }}'), 'G2. the selected-resolution outcome is rendered unconditionally on its own value (through a 1:1 humanizing label, 0.9.528) — never hidden behind a boolean');
+        assert(template.includes('{{ describeSnapshotAttributionLabel(selectedSnapshotAttributionResult.outcome) }}'), 'G3. the selected-attribution outcome is rendered unconditionally on its own value (through the same kind of 1:1 humanizing label) — never hidden behind a boolean');
         assert(!/selectedSnapshotAttributionResult\.outcome\s*===?\s*['"]match['"]\s*\?/i.test(template),
             'G4. the template never collapses the attribution outcome into a boolean success/fail ternary — the exact failure vocabulary (or MATCH/NO_MATCH) always reaches the screen');
         assert(!/selectedSnapshotResolutionResult\.outcome\s*===?\s*['"]resolved['"]\s*\?/i.test(template),
