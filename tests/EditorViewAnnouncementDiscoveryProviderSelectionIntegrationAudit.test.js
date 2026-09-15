@@ -402,6 +402,21 @@ async function run() {
 
     // ---------------------------------------------------------------
     // Section D — Explicit Arweave, through the FULL production chain.
+    //
+    // AMENDED BY 0.9.526 — see EditorView.js's own
+    // normalizeDistributionResultForDisplay() (0.9.526) header for the
+    // full finding. `distributeEditorPublication()` itself is UNCHANGED
+    // and still resolves a bare PublicationDistributionResult for
+    // 'arweave' — re-confirmed live, with zero side effects added here,
+    // by tests/EditorViewAnnouncementDiscoveryProviderSelection.test.js's
+    // own D/F sections and tests/NostrMultiRelayPublicationDistributionWiring
+    // .test.js's own B7/C6 — 0.9.526 touched nothing about what either
+    // provider's own command resolves. What changed is ONLY what
+    // `distributePublishedDocument()` stores into `distributionResult`
+    // for display: a one-element array wrapping that same bare result,
+    // matching the shape the Nostr branch already produced — D2, below,
+    // is that fix's own live proof, through this file's own full
+    // production chain.
     // ---------------------------------------------------------------
     let sectionDResult;
     {
@@ -414,17 +429,18 @@ async function run() {
 
         assert(harness.distributionError.value === null, n('D1. an explicit Arweave selection succeeds through the full production chain'));
         sectionDResult = harness.distributionResult.value;
-        assert(sectionDResult && !Array.isArray(sectionDResult), n('D2. an explicit Arweave selection resolves a single PublicationDistributionResult, never an array'));
-        assert(sectionDResult.material.uri.startsWith('ar://') && hostWallet.ledger.has(sectionDResult.material.uri.slice('ar://'.length)),
+        assert(Array.isArray(sectionDResult) && sectionDResult.length === 1,
+            n('D2. FIX — the view\'s OWN distributionResult (what the shared <dl> actually renders from) now normalizes the Arweave command\'s own bare PublicationDistributionResult into a one-element array — the exact shape the template\'s "distributionResult.length" guard and "[0]" indexing already require, closing the "Arweave selection renders nothing" gap 0.9.526 found'));
+        assert(sectionDResult[0].material.uri.startsWith('ar://') && hostWallet.ledger.has(sectionDResult[0].material.uri.slice('ar://'.length)),
             n('D3. real content material genuinely reached the fake gateway, signed by the fake host wallet, through ArweavePublicationMaterialUploader — never a shortcut'));
-        assert(hostWallet.ledger.has(sectionDResult.discovery.id),
+        assert(hostWallet.ledger.has(sectionDResult[0].discovery.id),
             n('D4. real announcement material genuinely reached the fake gateway through the real ArweaveTaggedTransactionUpload (0.9.490/0.9.492), never a hand-rolled stand-in'));
-        assert(sectionDResult.discovery.relayUrl === ArweaveAnnouncementPublisher.DEFAULT_GATEWAY_URL,
+        assert(sectionDResult[0].discovery.relayUrl === ArweaveAnnouncementPublisher.DEFAULT_GATEWAY_URL,
             n('D5. the discovery fact carries Arweave\'s own default gateway, confirming the real ArweaveAnnouncementPublisher — never NostrPublicationDiscoveryPublisher — was reached'));
         const nostrCallsAfter = relayNetwork.get('wss://editor-integration-audit.example')?.length || 0;
         assert(nostrCallsAfter === nostrCallsBefore, n('D6. the Nostr relay received zero additional publishes for an explicit Arweave selection'));
 
-        console.log('✓ Section D: an explicit Arweave selection reaches the real ArweaveAnnouncementPublisher and real ArweaveTaggedTransactionUpload, through the identical production composition chain ui/main.js itself builds, fed by a fake host wallet — full round trip, zero shortcuts');
+        console.log('✓ Section D: an explicit Arweave selection reaches the real ArweaveAnnouncementPublisher and real ArweaveTaggedTransactionUpload, through the identical production composition chain ui/main.js itself builds, fed by a fake host wallet — full round trip, zero shortcuts — AND (0.9.526) the view\'s own displayed distributionResult now genuinely reflects that success instead of silently rendering nothing');
     }
 
     // ---------------------------------------------------------------
@@ -474,24 +490,28 @@ async function run() {
         harnessF.onDocumentPublished(publication);
         harnessF.distributePublishedDocument();
         await flushMicrotasks();
+        // AMENDED BY 0.9.526 — arweaveResult is now the SAME one-element-
+        // array shape nostrResult already is (see EditorView.js's own
+        // normalizeDistributionResultForDisplay(), 0.9.526); every fact
+        // below is read from its [0], exactly like nostrResult's own.
         const arweaveResult = harnessF.distributionResult.value;
-        assert(arweaveResult && !Array.isArray(arweaveResult), n('F4. FLAGSHIP — the Arweave distribution of the SAME Publication P succeeds'));
-        assert(arweaveResult.publication.objectId === publication.id, n('F5. FLAGSHIP — the Arweave result carries the IDENTICAL publication identity as the Nostr result — the same Publication, never a reconstructed equivalent'));
-        assert(arweaveResult.material.storage === 'ar', n('F6. FLAGSHIP — material storage is identically Arweave-backed for the Arweave selection too — the dimension that ACTUALLY changed is discovery, never material'));
+        assert(arweaveResult && Array.isArray(arweaveResult) && arweaveResult.length === 1, n('F4. FLAGSHIP — the Arweave distribution of the SAME Publication P succeeds, and (0.9.526) is displayed in the identical one-element-array shape the Nostr distribution already was — no longer silently unrendered'));
+        assert(arweaveResult[0].publication.objectId === publication.id, n('F5. FLAGSHIP — the Arweave result carries the IDENTICAL publication identity as the Nostr result — the same Publication, never a reconstructed equivalent'));
+        assert(arweaveResult[0].material.storage === 'ar', n('F6. FLAGSHIP — material storage is identically Arweave-backed for the Arweave selection too — the dimension that ACTUALLY changed is discovery, never material'));
 
         // The publication's own serialized material is byte-identical
         // across both calls — the substrate choice never touched the
         // content being distributed.
         assert(hostWalletF.ledger.get(nostrResult[0].material.uri.slice('ar://'.length)).data === frozenJSON,
             n('F7. FLAGSHIP — the exact bytes uploaded during the Nostr-selected call equal publication.toJSON(), untransformed'));
-        assert(hostWalletF.ledger.get(arweaveResult.material.uri.slice('ar://'.length)).data === frozenJSON,
+        assert(hostWalletF.ledger.get(arweaveResult[0].material.uri.slice('ar://'.length)).data === frozenJSON,
             n('F8. FLAGSHIP — the exact bytes uploaded during the Arweave-selected call are IDENTICAL to the Nostr call\'s own bytes — the same publication, same material, twice'));
 
         // Discovery artifacts genuinely differ — different substrate,
         // different identifiers — never collapsed into one shared id.
-        assert(nostrResult[0].discovery.id !== arweaveResult.discovery.id,
+        assert(nostrResult[0].discovery.id !== arweaveResult[0].discovery.id,
             n('F9. FLAGSHIP — the two distributions produce DISTINCT discovery artifacts — Nostr\'s own relay-observed event id and Arweave\'s own transaction id never collide'));
-        assert(arweaveResult.discovery.relayUrl === ArweaveAnnouncementPublisher.DEFAULT_GATEWAY_URL && nostrResult[0].discovery.relayUrl === 'wss://editor-flagship.example',
+        assert(arweaveResult[0].discovery.relayUrl === ArweaveAnnouncementPublisher.DEFAULT_GATEWAY_URL && nostrResult[0].discovery.relayUrl === 'wss://editor-flagship.example',
             n('F10. FLAGSHIP — each discovery artifact correctly names its own distinct substrate (a Nostr relay URL vs. an Arweave gateway URL)'));
 
         // The lifecycle store's own per-provider observation channel:
@@ -503,7 +523,7 @@ async function run() {
             const byProvider = Object.fromEntries(observations.map((o) => [o.discoveryProvider, o]));
             assert(observations.length === 2 && byProvider.nostr && byProvider.arweave,
                 n('F11. FLAGSHIP — the shared lifecycle store observes BOTH the Nostr and Arweave discovery facts for the SAME publication identity, coexisting under their own provider key rather than one overwriting the other'));
-            assert(byProvider.nostr.id === nostrResult[0].discovery.id && byProvider.arweave.id === arweaveResult.discovery.id,
+            assert(byProvider.nostr.id === nostrResult[0].discovery.id && byProvider.arweave.id === arweaveResult[0].discovery.id,
                 n('F12. FLAGSHIP — each observation carries exactly the discovery id its own provider actually produced'));
         }
 
