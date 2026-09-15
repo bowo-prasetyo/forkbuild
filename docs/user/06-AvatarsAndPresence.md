@@ -71,6 +71,13 @@ and current animation) to open its **Avatar Info Panel**:
 A remote avatar is otherwise view-only — there's no way to move, edit, or
 delete someone else's avatar, only to look, follow, and gesture.
 
+Whether a nearby avatar appears at all depends on where your **camera** is
+currently looking, not which way your own avatar is walking — the two can
+point in different directions, most often right after you free-orbit the
+camera around. Someone standing squarely in your walking path can be
+completely invisible while your camera looks elsewhere; turn or orbit the
+camera back toward them and they reappear.
+
 ## Walking your avatar
 
 World View's camera fly-around ([The Editor](02-TheEditor.md#camera-controls)
@@ -94,6 +101,37 @@ follows your avatar naturally as you move.
 **Follow Avatar** keeps the camera locked to your avatar as it moves, instead
 of orbiting freely. You can also follow other players' avatars to see where
 they're going.
+
+### Camera Perspective
+
+Next to Follow Avatar sits **Camera**, a row of four buttons — **Free**,
+**First Person**, **Third Person**, and **Bird's-Eye** — for locking your
+camera to a fixed offset from your own avatar instead of flying it
+yourself. Like Follow Avatar, they need a local avatar (My Avatar) to
+enable.
+
+- **Free** is the ordinary orbit camera — World View's default, and what
+  every other camera control in this guide assumes.
+- **First Person** puts the camera at your avatar's own eye height,
+  looking the direction it's facing.
+- **Third Person** sits behind and above your avatar, looking slightly
+  down — the classic "see your own character" framing.
+- **Bird's-Eye** looks straight down from high overhead, following your
+  avatar's position but deliberately ignoring its facing, so the view
+  never spins as you turn.
+
+Clicking the already-active button clears back to **Free**. A Camera
+Perspective is purely local — it's never shared with a collaborator and
+never affects what they see.
+
+The two modes behave differently as you turn: with a Perspective locked
+on (First Person or Third Person), the camera re-frames itself to your
+avatar's current heading on every move, so your view turns exactly as you
+do. With **Free** selected, the camera is deliberately orientation-blind
+— turning in place, walking, or mounting a vehicle never moves or rotates
+it on its own, only your own drag/pan/zoom does. If you free-orbit to
+look one way and then walk off in another, the camera keeps looking
+wherever you last pointed it, rather than following you.
 
 ### Hands-free continuous movement
 

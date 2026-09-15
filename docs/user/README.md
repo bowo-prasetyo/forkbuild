@@ -73,9 +73,17 @@ top-level [docs/](..) folder.
 6. **[Avatars & Presence](06-AvatarsAndPresence.md)** — customizing how
    you look, controlling who can see you, seeing (and walking among,
    including a hands-free continuous-movement mode, and around trees the
-   same as buildings) everyone else in World View, mounting and riding a
-   vehicle instead of walking, and understanding what they're doing
-   through spatial awareness.
+   same as buildings) everyone else in World View — noting that whether
+   someone else appears at all tracks where your camera is looking, not
+   which way you're walking, so a camera left pointed elsewhere can hide
+   someone standing right in your path — mounting and riding a vehicle
+   instead of walking, a locked **Camera Perspective** (Free/First
+   Person/Third Person/Bird's-Eye, purely local, sitting right beside
+   Follow Avatar) for seeing through your own avatar's eyes instead of
+   flying the camera yourself, coherent with your avatar's own heading
+   while a Perspective is locked on and deliberately orientation-blind
+   while Free, and understanding what they're doing through spatial
+   awareness.
 7. **[Peer Connections & Friends](07-PeerConnectionsAndFriends.md)** —
    connecting directly to other people, remembering, friending, and
    blocking, plus automatic reconnection to any Known Peer who is
