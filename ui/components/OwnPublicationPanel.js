@@ -4,6 +4,7 @@ import { resolveSnapshotWorldPlacement } from '../../application/SnapshotWorldPl
 import { registerMaterializedSnapshotWorldSource } from '../../application/MaterializedSnapshotWorldDiscoveryBridge.js';
 import { resolveSnapshotWorldPositionClaim } from '../../application/SnapshotWorldPositionClaim.js';
 import { SnapshotWorldPositionClaimOutcome } from '../../application/SnapshotWorldPositionClaimOutcome.js';
+import { createId } from '../../core/createId.js';
 
 // 0.9.140 — Own Publication Distribution Entry Point.
 //
@@ -1753,6 +1754,17 @@ export default {
             // commentary stays on screen instead of being replaced by an
             // empty list.
             publicationCommentaryError: null,
+            // 0.9.542 — Publication Commentary Submission Experience
+            // Product Reassessment. Mirrors
+            // ui/components/PublicationCard.js's own `pendingCommentaryDraft`
+            // exactly — see that file's own 0.9.542 header for the full
+            // rationale. `{ content, commentaryId, createdAt }` for the
+            // CURRENT in-progress compose attempt, or `null`; reused
+            // across a manual retry of byte-identical content so the
+            // store's own commentaryId-keyed idempotent retry actually
+            // engages, and reset by the publication watcher below exactly
+            // where `publicationCommentaries` already is.
+            pendingCommentaryDraft: null,
             // 0.9.308 — Publication Multi-Placement Visibility. Mirrors
             // `publicationCommentaries`/`publicationCommentaryError`'s own
             // shape exactly, one capability over — see this file's own
@@ -1880,6 +1892,12 @@ export default {
             this.newCommentaryText = '';
             this.publicationCommentarySubmitting = false;
             this.publicationCommentaryError = null;
+            // 0.9.542 — a different (or cleared) Publication invalidates
+            // any pending retry draft the identical way it already
+            // invalidates the draft text itself, above: a draft's
+            // reused commentaryId is only ever valid for retries against
+            // the SAME publicationId it was minted for.
+            this.pendingCommentaryDraft = null;
             // 0.9.308 — a different (or cleared) Publication means any
             // prior placement list and error belong to a Publication
             // that is no longer this panel's own — the identical
@@ -2471,17 +2489,31 @@ export default {
         // persists anything (AddPublicationCommentaryUseCase's own
         // header: authentication/authorization run BEFORE construction,
         // so a denied call leaves no partially-built record behind).
+        //
+        // 0.9.542 — see `pendingCommentaryDraft`'s own data() header, and
+        // ui/components/PublicationCard.js's own submitCommentary()
+        // header for the full rationale: a manual retry of an unedited
+        // draft after an error reuses the SAME commentaryId/createdAt, so
+        // it lands on the store's own idempotent no-op if the earlier
+        // attempt actually persisted (a notificationSink failure after a
+        // successful save, in particular) — never a second, duplicate
+        // commentary. Editing the draft before retrying mints a fresh id.
         submitPublicationCommentary() {
             const publication = this.publication;
             const content = this.newCommentaryText.trim();
             if (!publication || !this.addPublicationCommentaryCommand || !content || this.publicationCommentarySubmitting) {
                 return;
             }
+            if (!this.pendingCommentaryDraft || this.pendingCommentaryDraft.content !== content) {
+                this.pendingCommentaryDraft = { content, commentaryId: createId(), createdAt: new Date() };
+            }
+            const { commentaryId, createdAt } = this.pendingCommentaryDraft;
             this.publicationCommentarySubmitting = true;
             try {
-                this.addPublicationCommentaryCommand({ publicationId: publication.id, content });
+                this.addPublicationCommentaryCommand({ publicationId: publication.id, content, commentaryId, createdAt });
                 this.newCommentaryText = '';
                 this.publicationCommentaryError = null;
+                this.pendingCommentaryDraft = null;
                 this.refreshPublicationCommentaries();
             } catch (error) {
                 this.publicationCommentaryError = (error && error.message) ? error.message : 'Commentary could not be created.';

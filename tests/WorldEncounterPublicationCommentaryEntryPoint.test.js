@@ -376,8 +376,13 @@ async function runTests() {
         ctx.submitEncounterCommentary();
 
         assert(receivedInput.publicationId === publication.id, '17. the exact encountered publicationId (selectedEncounter.objectId) is what gets submitted');
-        assert(Object.keys(receivedInput).sort().join(',') === 'content,publicationId',
-            '18. the command receives ONLY publicationId and content — never authorIdentityId or any other field');
+        // 0.9.542 — see OtherPublicationCommentaryEntryPoint.test.js's own
+        // 0.9.542 comment on the identical assertion, one surface over:
+        // commentaryId/createdAt are now wired through for idempotent
+        // manual retry; authorIdentityId is still never among them.
+        assert(Object.keys(receivedInput).sort().join(',') === 'commentaryId,content,createdAt,publicationId',
+            '18. the command receives publicationId, content, commentaryId and createdAt — never authorIdentityId or any other field');
+        assert(!('authorIdentityId' in receivedInput), '18b. authorIdentityId is never among the fields sent');
 
         const canvasCode = await codeOnlySource('ui/components/WorldEncounterCanvas.js');
         assert((canvasCode.match(/this\.addPublicationCommentaryCommand\(/g) || []).length === 1,

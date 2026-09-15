@@ -730,7 +730,10 @@ async function runTests() {
             assert(!sessionCode.includes(term), `J: WorldNavigationSession.js never references '${term}' — it delegates entirely to the injected use cases`);
         }
         assert(sessionCode.includes('this._getPublicationCommentariesUseCase.execute({ publicationId })'), 'J: WorldNavigationSession.getPublicationCommentaries() delegates unmodified to the injected use case');
-        assert(sessionCode.includes('this._addPublicationCommentaryUseCase.execute({ publicationId, content })'), 'J: WorldNavigationSession.addPublicationCommentary() delegates unmodified to the injected use case, forwarding no authorIdentityId');
+        // 0.9.542 — this delegation grew commentaryId/createdAt passthrough
+        // (see WorldNavigationSession.js's own 0.9.542 comment); still no
+        // authorIdentityId, still pure delegation.
+        assert(sessionCode.includes('this._addPublicationCommentaryUseCase.execute({ publicationId, content, commentaryId, createdAt })'), 'J: WorldNavigationSession.addPublicationCommentary() delegates unmodified to the injected use case, forwarding no authorIdentityId');
 
         // No accidental coupling to the 0.9.222-0.9.240 causal
         // collaboration machinery: commentary carries none of that arc's

@@ -219,8 +219,16 @@ async function runTests() {
         ctx.submitCommentary();
 
         assert(calls === 1, '11. submission calls the injected command exactly once');
-        assert(Object.keys(receivedInput).sort().join(',') === 'content,publicationId',
-            '12. the command receives ONLY publicationId and content — never authorIdentityId or any other field');
+        // 0.9.542 — Publication Commentary Submission Experience Product
+        // Reassessment wires a stable commentaryId/createdAt through this
+        // SAME command (see PublicationCard.js's own 0.9.542 header) so a
+        // manual retry of an unchanged draft engages the store's own
+        // idempotent-retry identity. The security-relevant invariant this
+        // assertion actually protects — authorIdentityId can never be
+        // supplied by the caller — is unchanged and re-checked explicitly.
+        assert(Object.keys(receivedInput).sort().join(',') === 'commentaryId,content,createdAt,publicationId',
+            '12. the command receives publicationId, content, commentaryId and createdAt — never authorIdentityId or any other field');
+        assert(!('authorIdentityId' in receivedInput), '12b. authorIdentityId is never among the fields sent');
 
         const cardCode = await codeOnlySource('ui/components/PublicationCard.js');
         const forbidden = [

@@ -354,9 +354,12 @@ async function runTests() {
         // WorldNavigationSession exactly as it always has, unaware the
         // object behind that call is now decorated.
         const worldViewCode = await codeOnlySource('ui/views/WorldView.js');
-        assert(worldViewCode.includes('function addPublicationCommentaryCommand({ publicationId, content }) {') &&
-            worldViewCode.includes('return session.addPublicationCommentary({ publicationId, content });'),
-            'A6. ui/views/WorldView.js\'s own addPublicationCommentaryCommand still forwards exactly {publicationId, content} to session.addPublicationCommentary() — unmodified by this milestone.');
+        // 0.9.542 — this command's own signature grew commentaryId/createdAt
+        // passthrough (see WorldView.js's own 0.9.542 comment); it still
+        // forwards, unmodified otherwise, to the real session.
+        assert(worldViewCode.includes('function addPublicationCommentaryCommand({ publicationId, content, commentaryId, createdAt }) {') &&
+            worldViewCode.includes('return session.addPublicationCommentary({ publicationId, content, commentaryId, createdAt });'),
+            'A6. ui/views/WorldView.js\'s own addPublicationCommentaryCommand still forwards {publicationId, content, commentaryId, createdAt} to session.addPublicationCommentary() — unmodified by this milestone.');
 
         // A7. WorldNavigationSession.js itself is unmodified — it already
         // only ever calls .execute() on whatever it is handed, so it has
