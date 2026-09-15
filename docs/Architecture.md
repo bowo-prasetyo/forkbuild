@@ -2197,18 +2197,17 @@ compose by addition, not one coordinate system with two writers.
   same addition per-mesh via its `_documentOffsets` map and is
   unchanged by this milestone.
 
-The coordinate system itself — origin, axes, unit — is now stated as
-an explicit contract rather than left implicit in whatever Three.js
-happens to default to (see docs/Principles.md, "A World Unit Is Not
-(Yet) A Meter," and docs/Protocol.md's new section for the full
+The coordinate system itself — origin, axes, unit — is stated as an
+explicit contract rather than left implicit in whatever Three.js
+happens to default to (see docs/Principles.md, "A World Unit Is One
+Meter," and docs/Protocol.md's coordinate-system section for the full
 statement): canonical origin `(0, 0, 0)`, right-handed `+X`/`+Y`/`+Z`
 axes with the ground plane at `Y = 0`, and one coordinate unit named a
-**World Unit** — explicitly not claimed to equal one meter or any
-other physical unit, so a later milestone can add that claim without
-touching a single stored coordinate. No code enforces this beyond what
-already existed; it is a documentation contract two independent
-implementations need to agree on to interoperate, which is exactly
-what belongs in docs/Protocol.md.
+**World Unit**, equal to one meter of real-world length for spatial
+quantities (0.9.548, adopted on 0.9.547's own compatibility audit). No
+code enforces this beyond what already existed; it is a documentation
+contract two independent implementations need to agree on to
+interoperate, which is exactly what belongs in docs/Protocol.md.
 
 UI — the Move Placement dialog gains a relative convenience over the
 same absolute fields, not a new persisted primitive:

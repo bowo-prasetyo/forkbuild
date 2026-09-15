@@ -934,11 +934,13 @@ makes it independently constructible/testable outside the renderer.
   viewer — the renderer's underlying Three.js default, now stated as
   protocol, not left implicit in a rendering library's convention that
   happens to currently be Three.js. The ground plane is `Y = 0`.
-- Unit: one coordinate unit is one **World Unit**. This milestone
-  deliberately does NOT claim a World Unit is one meter, or any other
-  physical unit — see docs/Principles.md, "A World Unit Is Not (Yet) A
-  Meter." A future milestone can layer a physical-unit interpretation
-  on top without changing any stored coordinate.
+- Unit: one coordinate unit is one **World Unit**, and one World Unit
+  represents one meter of real-world length — see docs/Principles.md,
+  "A World Unit Is One Meter" (0.9.548). The contract covers spatial
+  length and quantities directly derived from it (distance,
+  dimensions, speed, acceleration); it is not a claim that every
+  numeric value in the World model is a physical measurement in
+  meters.
 
 **Deterministic initial placement (the one behavioral fix):**
 

@@ -419,38 +419,48 @@ async function main() {
         const architectureSrc = normalizeWhitespace(await readSource('docs/Architecture.md'));
         const worldViewUserDocSrc = normalizeWhitespace(await readSource('docs/user/03-WorldView.md'));
 
-        // The brief's own implicit premise was that this convention has
-        // never been stated. Live-checked against current doc source:
-        // it has — four times, including once in USER-FACING copy — as
-        // an explicit DENIAL, not an omission.
-        assert(/A World Unit Is Not \(Yet\) A Meter/.test(principlesSrc),
-            '1. LIVE: docs/Principles.md still carries its own "A World Unit Is Not (Yet) A Meter" section header, unchanged, today.');
-        assert(/deliberately does NOT claim a World Unit equals one real-world meter/.test(principlesSrc),
-            '2. LIVE: that section\'s own real body text is an explicit denial ("deliberately does NOT claim"), not silence or an unstated assumption.');
-        assert(/deliberately does NOT claim a World Unit is one meter/.test(protocolSrc) && /A World Unit Is Not \(Yet\) A/.test(protocolSrc),
-            '3. LIVE: docs/Protocol.md independently restates the identical denial and cross-references docs/Principles.md by name.');
-        assert(/A World Unit Is Not/.test(architectureSrc) && /explicitly not claimed to equal one meter/.test(architectureSrc),
-            '4. LIVE: docs/Architecture.md independently restates the identical denial a third time.');
-        assert(/not meters, not GPS coordinates/.test(worldViewUserDocSrc),
-            '5. LIVE: docs/user/03-WorldView.md — real, USER-FACING documentation, not an internal design note — restates the identical denial a FOURTH time, in plain language a person actually reads ("not meters, not GPS coordinates, just a shared frame").');
+        // AMENDED BY 0.9.548. At the moment this milestone (0.9.547) was
+        // authored, the brief's own implicit premise — that the meter
+        // convention had never been stated — was checked live and found
+        // false: it was already stated four times, as an explicit
+        // DENIAL, not an omission. Section I (below) named the minimal
+        // candidate contract that evidence would support and left
+        // adopting it to "a deliberate follow-up milestone, not decided
+        // here." 0.9.548 was that follow-up: it replaced the denial with
+        // the affirmative contract in all four locations. Per this
+        // codebase's own "live-executed against current source, not
+        // cited from memory" discipline (restated throughout this very
+        // file), the assertions below were updated by 0.9.548 to check
+        // TODAY's superseding reality rather than left pointing at
+        // prose that no longer exists — a stale assertion here would
+        // violate the same discipline this milestone's own header
+        // insists on for everyone else.
+        assert(/A World Unit Is One Meter/.test(principlesSrc),
+            '1. LIVE: docs/Principles.md now carries "A World Unit Is One Meter" (0.9.548), superseding the "...Is Not (Yet) A Meter" header this milestone originally found.');
+        assert(/one World Unit represents one meter of real-world length/.test(principlesSrc),
+            '2. LIVE: that section\'s own real body text is now an explicit AFFIRMATION, not the denial this milestone originally found.');
+        assert(/one World Unit represents one meter of real-world length/.test(protocolSrc) && /A World Unit Is One Meter/.test(protocolSrc),
+            '3. LIVE: docs/Protocol.md independently restates the identical affirmation and cross-references docs/Principles.md\'s new section by name.');
+        assert(/World Unit\*\*, equal to one meter of real-world length/.test(architectureSrc),
+            '4. LIVE: docs/Architecture.md independently restates the identical affirmation.');
+        assert(/one\s+World Unit represents one meter of real-world length/.test(worldViewUserDocSrc) && !/not meters, not GPS coordinates/.test(worldViewUserDocSrc),
+            '5. LIVE: docs/user/03-WorldView.md — real, USER-FACING documentation — now affirms the contract in plain language and no longer denies it.');
         assert(/World Units.*1 \/ 10 \/ 100 World Units/s.test(worldViewUserDocSrc),
-            '6. LIVE: the same user-facing doc confirms the "World Units" label and the 1/10/100 nudge-button convention are still live in the real Placement UI description today.');
+            '6. LIVE: the same user-facing doc confirms the "World Units" label and the 1/10/100 nudge-button convention are still live in the real Placement UI description today, unaffected by the documentation-only contract change.');
 
-        // Genuine drift, found fresh, not fabricated: despite the
-        // standing formal contract, informal "meter" language has
-        // already leaked into comments/docs in several places. Reported
-        // honestly as a finding, per Section K below explicitly NOT
-        // corrected in this milestone (a comment/prose wording edit in a
-        // production source file is still a production change, and this
-        // audit's own discipline — matching every prior test-only
-        // milestone in this codebase — is zero production changes).
+        // The informal "meter" language this milestone originally found
+        // as DRIFT (contradicting the then-standing denial) is no longer
+        // drift now that the contract is affirmative — it is simply
+        // correct, and 0.9.548 deliberately left it untouched rather
+        // than rewriting settled historical/production prose that no
+        // longer needs correction.
         const geoNavSrc = await readSource('core/GeographicPlaceNavigation.js');
-        const driftHits = [];
-        if (/~100m proximity/.test(geoNavSrc)) driftHits.push('core/GeographicPlaceNavigation.js ("~100m proximity window")');
-        if (/\(1\.5 meters\)/.test(await readSource('docs/Roadmap.md'))) driftHits.push('docs/Roadmap.md ("(1.5 meters)")');
-        assert(driftHits.length >= 1, `7. LIVE: at least one real, currently-existing instance of informal "meter" language contradicting the still-standing formal "not (yet) a meter" contract was found fresh by this audit's own live scan (found: ${driftHits.join('; ')}) — named here as a scoped, deferred finding, not silently patched.`);
+        const nowConsistentHits = [];
+        if (/~100m proximity/.test(geoNavSrc)) nowConsistentHits.push('core/GeographicPlaceNavigation.js ("~100m proximity window")');
+        if (/\(1\.5 meters\)/.test(await readSource('docs/Roadmap.md'))) nowConsistentHits.push('docs/Roadmap.md ("(1.5 meters)")');
+        assert(nowConsistentHits.length >= 1, `7. LIVE: the same informal "meter" language this milestone originally flagged as drift still exists (found: ${nowConsistentHits.join('; ')}) — but is no longer a contradiction now that 0.9.548 adopted the affirmative contract, so it required no correction.`);
 
-        console.log(`✓ Section H (FLAGSHIP): the convention the requesting brief asks to "make explicit" is ALREADY explicit — four independent, still-current restatements of "A World Unit Is Not (Yet) A Meter," one of them user-facing — live-reconfirmed against today's doc source, not cited from memory. ${driftHits.length} real instance(s) of informal "meter" language already contradicting that standing contract were found fresh and are named, not corrected, in this test-only milestone.`);
+        console.log(`✓ Section H (FLAGSHIP, amended by 0.9.548): this milestone's original finding — four independent, then-current restatements of "A World Unit Is Not (Yet) A Meter" — is preserved above in narrative; the live assertions were updated to confirm 0.9.548 replaced all four with the affirmative "A World Unit Is One Meter" contract. ${nowConsistentHits.length} instance(s) of informal "meter" language originally named as drift are now simply consistent with the adopted contract.`);
     }
 
     // ===================================================================
@@ -556,11 +566,30 @@ async function main() {
                 });
             })
         );
+        // AMENDED BY 0.9.548: this milestone's own original guard asserted
+        // ZERO documentation changes, because 0.9.547 itself was strictly
+        // test-only. 0.9.548 was the deliberate follow-up Section I named
+        // ("a follow-up 0.9.548 that actually writes Section I's
+        // candidate contract... remains available") and, by design, DOES
+        // touch docs/Principles.md, docs/Protocol.md, docs/Architecture.md,
+        // and docs/user/03-WorldView.md, plus its own new regression test.
+        // The guard below now allows exactly that known, named set —
+        // still failing on any UNEXPECTED file, core/renderer/ui code
+        // included — rather than being widened into a no-op.
         const changedLines = gitLsFiles.split('\n').filter((l) => l.trim().length > 0);
-        const unexpected = changedLines.filter((l) => !l.includes('WorldUnitMetricConventionBoundaryAudit.test.js') && !l.includes('tests.html'));
-        assert(unexpected.length === 0, `1. LIVE: git status reports no changed file besides this milestone's own new test file and its tests.html registration (unexpected: ${JSON.stringify(unexpected)}) — zero production or documentation changes made by this audit.`);
+        const expectedFor548 = [
+            'WorldUnitMetricConventionBoundaryAudit.test.js',
+            'WorldUnitMeterDocumentationContract.test.js',
+            'tests.html',
+            'docs/Principles.md',
+            'docs/Protocol.md',
+            'docs/Architecture.md',
+            'docs/user/03-WorldView.md'
+        ];
+        const unexpected = changedLines.filter((l) => !expectedFor548.some((name) => l.includes(name)));
+        assert(unexpected.length === 0, `1. LIVE: git status reports no changed file besides 0.9.547's own test file, 0.9.548's new regression test, tests.html, and the four documentation files 0.9.548 deliberately updated (unexpected: ${JSON.stringify(unexpected)}) — no core/renderer/ui production code touched by either milestone.`);
 
-        console.log('✓ Section K: no production or documentation file touched by this milestone — findings reported (Section H drift, Section I candidate) rather than silently applied, matching this codebase\'s own established discipline for test-only audit milestones.');
+        console.log('✓ Section K (amended by 0.9.548): no core/renderer/ui production code touched by either milestone — 0.9.547 stayed test-only, and 0.9.548\'s known, named documentation + regression-test changes are exactly what this guard now allows.');
     }
 
     console.log('\nAll World Unit Metric Convention Boundary Audit tests passed.');
@@ -596,7 +625,13 @@ Per the brief's own explicit two-step plan: this milestone (0.9.547) is the audi
 actually writes Section I's candidate contract into docs/Principles.md, docs/Protocol.md, docs/Architecture.md, and
 docs/user/03-WorldView.md, updates Section H's drift instances for consistency, and adds a small regression guard
 against future drift remains available, viable, and — per the brief's own framing — likely small. This milestone
-does not make that call for itself; production changes: none.`);
+does not make that call for itself; production changes: none.
+
+AMENDED BY 0.9.548: that follow-up happened. "A World Unit Is One Meter" is now the live, affirmative contract in
+all four documentation locations named above; Section H and Section K's live assertions were updated in place (per
+this file's own "live-executed, not cited from memory" discipline) to confirm today's superseding reality rather
+than being left to assert prose that no longer exists. This milestone's own numeric evidence (Sections A-G, J) is
+exactly what 0.9.548 rests its adoption on, and remains valid unchanged.`);
 }
 
 main().catch((err) => {

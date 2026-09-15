@@ -549,23 +549,49 @@ that is explicitly out of scope here (see docs/Roadmap.md, "spatial
 allocation / collision policy"); determinism, not collision avoidance,
 is the property this milestone establishes.
 
-### A World Unit Is Not (Yet) A Meter
+### A World Unit Is One Meter (0.9.548)
 
 The World View's coordinate system has a canonical origin `(0, 0, 0)`
 — every replica's `(0, 0, 0)` is the same point in shared space by
 definition — and a fixed, right-handed axis convention (`+X` right,
 `+Y` up, `+Z` toward the viewer, ground plane at `Y = 0`), matching the
-renderer's underlying Three.js default, now stated as protocol rather
-than left implicit in a rendering library's convention that happens to
-currently be Three.js. One coordinate unit is one **World Unit** — a
-name, not a physical quantity. This milestone deliberately does NOT
-claim a World Unit equals one real-world meter, or any other physical
-unit: nothing in the existing brick/document geometry was built
+renderer's underlying Three.js default, stated as protocol rather than
+left implicit in a rendering library's convention that happens to
+currently be Three.js. One coordinate unit is one **World Unit**, and
+**one World Unit represents one meter of real-world length**. The
+contract is scoped to spatial length and quantities derived from it —
+position, distance, dimensions, radius (meters), speed (World
+Units/second → meters/second), acceleration (World Units/second² →
+meters/second²) — never a claim that every numeric value in the World
+model is a physical measurement expressed in meters. A tuned gameplay
+constant such as `GRAVITY` stays exactly what it already is: a
+stylized physics constant expressed in these same length units, not an
+assertion that ForkBuild simulates real Earth gravity (0.9.547 recorded
+its ~43% deviation from 9.8 m/s² honestly, as a deliberate stylization,
+not smoothed away).
+
+Adopting this contract requires no coordinate migration, no scaling
+transform, and no change to any stored value: `12` World Units simply
+acquires the meaning "12 meters" rather than becoming `12 ×
+conversionFactor`. This rests on 0.9.547's own boundary audit — every
+length-derived production constant it inventoried (a ~1×2 door, a
+~0.5×3×0.5 column, a 1.8-unit avatar collision height with a 1.6-unit
+eye height, a 3-unit walk speed) already reads as a physically
+plausible human-scale figure under a meter interpretation, and
+`Position`/`PlacementRecord` already store plain, unit-free numbers
+today. This milestone does not touch avatar or camera geometry: an
+apparent discrepancy there (0.9.547 Section C found none load-bearing)
+is a separate UX/physical-scale question, never a consequence of
+adopting this documentation contract.
+
+**Historical note, superseded by this section:** earlier milestones
+(0.2.24/0.2.25) deliberately declined to make this claim, reasoning
+that "nothing in the existing brick/document geometry was built
 against that assumption, and asserting it now would be a claim the
-system cannot back up. A later milestone can layer a physical-unit
-interpretation (meters, or something else entirely) on top of World
-Units without changing a single stored coordinate — the position data
-itself never encodes a unit, only a number.
+system cannot back up." That caution was correct at the time — it is
+exactly why 0.9.547 was commissioned as a dedicated compatibility audit
+before this section could responsibly replace it, rather than the
+contract being asserted on request without evidence.
 
 ### Overlap Is A Fact; Collision Is A Policy Decision (0.2.25)
 
