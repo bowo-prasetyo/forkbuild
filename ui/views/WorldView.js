@@ -8,6 +8,7 @@ import { WorldSpatialContextService } from '../../application/WorldSpatialContex
 import { AutomaticSnapshotEncounterCascade } from '../../application/AutomaticSnapshotEncounterCascade.js';
 import { AutomaticSnapshotEncounterRetentionReconciliation } from '../../application/AutomaticSnapshotEncounterRetentionReconciliation.js';
 import { SnapshotWorldRegistrationOutcome } from '../../application/SnapshotWorldRegistrationOutcome.js';
+import { ObserverLocalEncounterStore } from '../../application/ObserverLocalEncounterStore.js';
 import ActionFeedback from '../components/ActionFeedback.js';
 import DocumentInfoPanel from '../components/DocumentInfoPanel.js';
 import MetadataEditorDialog from '../components/MetadataEditorDialog.js';
@@ -710,6 +711,15 @@ export default {
         // needed: the cascade never learns WHY the flag changed, only THAT
         // it did.
         let automaticCascadeSessionActive = true;
+        // 0.9.552 — Observer-Local Novel Publication Encounter Presentation.
+        // Scoped to this WorldView's own mount, the same "fresh instance
+        // accompanies each fresh session" posture `automaticSnapshotEncounterCascade`
+        // and `session` above already hold — a fresh, empty store
+        // accompanies each fresh session, never surviving a remount or
+        // shared with any other Wanderer's own session. See
+        // application/ObserverLocalEncounterStore.js's own header for why
+        // this is deliberately NOT the shared `worldDiscoverySourceRegistry`.
+        const observerLocalEncounterStore = new ObserverLocalEncounterStore();
         const automaticSnapshotEncounterCascade = new AutomaticSnapshotEncounterCascade({
             resolveSelectedSnapshotCommand,
             materializeSelectedSnapshotCommand,
@@ -720,7 +730,18 @@ export default {
             findPublicationById: (publicationId) => (typeof session.findPublicationById === 'function'
                 ? session.findPublicationById(publicationId)
                 : null),
-            isSessionActive: () => automaticCascadeSessionActive
+            isSessionActive: () => automaticCascadeSessionActive,
+            // 0.9.552 — the SAME `spatialContext.value.position` read
+            // `refreshSpatialUI()` already recomputes on every tick, below —
+            // never a second position source, and never
+            // `candidate.claimedPosition` (this cascade still never reads
+            // that field). `spatialContext` may still be `null` the very
+            // first time a candidate reaches this cascade before this
+            // view's own first `refreshSpatialUI()` tick has run; returning
+            // `null` here degrades to `encounter: null` on that one run,
+            // exactly like every other optional collaborator this cascade
+            // already tolerates.
+            resolveEncounterPosition: () => (spatialContext.value ? spatialContext.value.position : null)
         });
         // 0.9.190 — Automatic Snapshot Encounter Retention Integration.
         // Scoped to this WorldView's own mount, exactly like `session` and
@@ -1788,6 +1809,20 @@ export default {
                                     publicationId: result.publicationId,
                                     contentHash: result.contentHash
                                 });
+                            }
+                            // 0.9.552 — Observer-Local Novel Publication
+                            // Encounter Presentation. The ONLY place a
+                            // described encounter is ever recorded — see
+                            // application/AutomaticSnapshotEncounterCascade.js's
+                            // own header, "this file never records an
+                            // encounter anywhere itself." `result.encounter`
+                            // is non-null only when this run's own outcome
+                            // was UNPLACED and `resolveEncounterPosition`
+                            // (above) returned a usable position; every
+                            // other outcome — including REGISTERED, above —
+                            // carries `encounter: null` and is a no-op here.
+                            if (result && result.encounter) {
+                                observerLocalEncounterStore.record(result.encounter);
                             }
                         }));
                     }
@@ -4395,6 +4430,7 @@ export default {
             nearbyPlaceNamingClaimRows,
             placeNamingDiscoveryError,
             worldDiscoverySourceRegistry,
+            observerLocalEncounterStore,
             worldEncounterMaterialSources,
             worldEncounterMaterialVerifier,
             publicationDistributionLifecycleStore,
@@ -4943,6 +4979,7 @@ export default {
                         :viewerIdentityId="myIdentityId"
                         :defaultDiscoveryTag="publicationDiscoveryTag"
                         :decentralizedPublicationDiscoveryProvider="decentralizedDiscoveryProviderForEnrichment"
+                        :observerLocalEncounterRegistry="observerLocalEncounterStore"
                     />
                 </CollapsibleSection>
             </div>

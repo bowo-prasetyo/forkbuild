@@ -4,6 +4,7 @@ import { registerMaterializedSnapshotWorldSource } from './MaterializedSnapshotW
 import { StoreSnapshotContentOutcome } from './StoreSnapshotContentOutcome.js';
 import { DecentralizedSnapshotResolutionOutcome } from './DecentralizedSnapshotResolutionOutcome.js';
 import { AutomaticSnapshotEncounterCascadeOutcome } from './AutomaticSnapshotEncounterCascadeOutcome.js';
+import { describeObserverLocalPublicationEncounter } from '../core/ObserverLocalPublicationEncounter.js';
 
 // 0.9.187 — Automatic Snapshot Encounter Cascade.
 //
@@ -245,6 +246,88 @@ import { AutomaticSnapshotEncounterCascadeOutcome } from './AutomaticSnapshotEnc
 //   World-mutating call this file itself makes. See this file's own
 //   "0.9.193" section, above, "only the final World-side side effect is
 //   session-sensitive."
+//
+// 0.9.552 — OBSERVER-LOCAL NOVEL PUBLICATION ENCOUNTER PRESENTATION.
+//
+// 0.9.551's own audit confirmed `UNPLACED` (above) is correct, deliberate
+// restraint AND a real product gap, simultaneously: a Wanderer whose own
+// walking drove a genuinely novel, verified, materialized Publication all
+// the way to this exact stop gets nothing for it — no UI, no record, not
+// even a private acknowledgment. This milestone closes exactly that gap,
+// without touching the boundary itself: `UNPLACED` remains `UNPLACED`,
+// `claimedPosition` remains something this file never imports or reads
+// (see "claimedPosition is never promoted," above, UNCHANGED), and no
+// `PlacementRecord` is ever created here, still.
+//
+// AN OPTIONAL, ADDITIVE `encounter` FIELD ON AN `UNPLACED` RESULT — NEVER A
+// NEW TERMINAL OUTCOME VALUE. Every result this cascade returns now carries
+// `encounter`, defaulting to `null` exactly like `reason` already defaults
+// to `null` — see `_result()`, below. It is populated with core/
+// ObserverLocalPublicationEncounter.js's own `describeObserverLocalPublicationEncounter()`
+// result ONLY when `outcome` is `SnapshotWorldPlacementOutcome.UNPLACED` AND
+// the newly-optional `resolveEncounterPosition` collaborator (below) was
+// supplied and returned a usable position — see that file's own header for
+// why `position` there is the OBSERVER's own encounter position, never
+// `candidate.claimedPosition` (this file still never reads that field, see
+// "claimedPosition is never promoted," above). `outcome` itself is
+// untouched: a caller that only ever read `.outcome` before this milestone
+// observes byte-for-byte identical values for byte-for-byte identical
+// inputs; `.encounter` is new, additive state alongside it, never a
+// replacement for it.
+//
+// `resolveEncounterPosition()` IS OPTIONAL, SYNCHRONOUS, AND CONSULTED AT
+// MOST ONCE PER RUN — THE SAME GRACEFUL-DEGRADATION SHAPE `isSessionActive`
+// ALREADY ESTABLISHED. `null`/absent (the default) means this cascade
+// behaves exactly as it did before this milestone: every `UNPLACED` result
+// carries `encounter: null`, nothing more. When supplied, it is called with
+// no arguments, synchronously, and ONLY at the one instant this cascade is
+// about to return an `UNPLACED` result — never for any other outcome, and
+// never more than once per `processCandidate()` run. This file never
+// imports Vue, never reads World View / spatial-context state itself, and
+// never learns HOW its caller resolved a position — exactly the same
+// opacity `isSessionActive` already holds for session state, one
+// collaborator over.
+//
+// A THROWING OR MALFORMED `resolveEncounterPosition()` DEGRADES TO
+// `encounter: null` — IT NEVER CORRUPTS THE UNDERLYING `UNPLACED` RESULT.
+// Resolution, materialization, and placement have ALL already succeeded by
+// the time this collaborator is ever consulted; a failure in this one,
+// wholly separate, presentational step must never retroactively turn an
+// otherwise-successful `UNPLACED` run into `INELIGIBLE` (`processCandidate()`'s
+// own top-level `.catch()` would otherwise do exactly that — see "never
+// rejects," above). This is 0.9.552's own version of the acquisition/
+// presentation split 0.9.193 already drew one concept over ("acquisition...
+// is NEVER rolled back... only the one World-side side effect... is
+// withheld") — here, a presentational failure withholds only the
+// `encounter` field, never the `outcome` those earlier stages already
+// earned.
+//
+// THIS FILE NEVER RECORDS AN `encounter` ANYWHERE ITSELF. `processCandidate()`
+// hands its caller a plain, frozen result and is done — exactly like every
+// other outcome it has always produced. Whether, and where, a caller
+// chooses to hold onto a returned `encounter` (application/
+// ObserverLocalEncounterStore.js, 0.9.552, is the one such place this
+// codebase's own composition root — `ui/views/WorldView.js` — uses) is
+// entirely that caller's decision, never this file's.
+//
+// DELIBERATELY EXCLUDED — NOT THIS MILESTONE.
+// - **A new terminal outcome value.** See "an optional, additive `encounter`
+//   field," above — `SnapshotWorldPlacementOutcome.UNPLACED` remains the
+//   only outcome this scenario ever produces.
+// - **Reading or consulting `candidate.claimedPosition` in any way.**
+//   Unchanged from every earlier milestone in this file — see
+//   "claimedPosition is never promoted," above.
+// - **Creating, reading, or touching a `PlacementRecord` or a
+//   `PlacementRegistry` of any kind.** See core/ObserverLocalPublicationEncounter.js's
+//   own header — this file inherits that restraint by construction, never
+//   importing either concept.
+// - **Retry of a failed `resolveEncounterPosition()` call, caching its
+//   result across runs, or calling it more than once per run.** A
+//   presentational failure is exactly as terminal, for THIS run, as any
+//   other outcome this cascade produces.
+// - **Recording the described encounter into any store, registry, or UI
+//   state.** See "this file never records an encounter anywhere itself,"
+//   above.
 
 // new AutomaticSnapshotEncounterCascade({ resolveSelectedSnapshotCommand,
 //   materializeSelectedSnapshotCommand, worldDiscoverySourceRegistry,
@@ -292,6 +375,17 @@ import { AutomaticSnapshotEncounterCascadeOutcome } from './AutomaticSnapshotEnc
 //   other collaborator above already follows — means every run behaves
 //   exactly as it did before 0.9.193: no gate, registration proceeds
 //   whenever placement itself reached PLACED.
+// `resolveEncounterPosition()` — (0.9.552, OPTIONAL) a synchronous
+//   `() -> {x,y,z} | null` function returning the OBSERVING Wanderer's own
+//   current World position — never `candidate.claimedPosition`, which this
+//   file still never reads. See this file's own "0.9.552 — Observer-Local
+//   Novel Publication Encounter Presentation" section, above. Consulted at
+//   most once per run, only at the instant this cascade would otherwise
+//   return an `UNPLACED` result; a thrown error or a malformed/missing
+//   position degrades to `encounter: null` on that result, never to a
+//   different `outcome`. `null`/absent (the default) means every `UNPLACED`
+//   result carries `encounter: null` — byte-for-byte the same behavior this
+//   cascade already had before 0.9.552.
 export class AutomaticSnapshotEncounterCascade {
     constructor({
         resolveSelectedSnapshotCommand = null,
@@ -299,7 +393,8 @@ export class AutomaticSnapshotEncounterCascade {
         worldDiscoverySourceRegistry = null,
         resolvePlacementInfo = null,
         findPublicationById = null,
-        isSessionActive = null
+        isSessionActive = null,
+        resolveEncounterPosition = null
     } = {}) {
         this._resolveSelectedSnapshotCommand = resolveSelectedSnapshotCommand;
         this._materializeSelectedSnapshotCommand = materializeSelectedSnapshotCommand;
@@ -307,11 +402,12 @@ export class AutomaticSnapshotEncounterCascade {
         this._resolvePlacementInfo = resolvePlacementInfo;
         this._isSessionActive = isSessionActive;
         this._findPublicationById = findPublicationById;
+        this._resolveEncounterPosition = resolveEncounterPosition;
         this._results = new Map();
     }
 
     // processCandidate(candidate) -> Promise<{ outcome, publicationId,
-    //   contentHash, reason }>. Never rejects.
+    //   contentHash, reason, encounter }>. Never rejects.
     //
     // `candidate` is a plain discovery-candidate object — exactly
     // `WorldSnapshotDiscoveryMonitor#lastResult`'s own element shape (`{
@@ -332,9 +428,14 @@ export class AutomaticSnapshotEncounterCascade {
     //     STORED/ALREADY_AVAILABLE>, publicationId, contentHash, reason } —
     //     materialization did not succeed.
     //   { outcome: SnapshotWorldPlacementOutcome.UNPLACED, publicationId,
-    //     contentHash, reason: null } — materialized, but no authoritative
-    //     World placement is known for this publicationId (or no registry/
-    //     publication lookup was configured to register one against).
+    //     contentHash, reason: null, encounter } — materialized, but no
+    //     authoritative World placement is known for this publicationId (or
+    //     no registry/publication lookup was configured to register one
+    //     against). (0.9.552) `encounter` is a core/
+    //     ObserverLocalPublicationEncounter.js-shaped descriptor when
+    //     `resolveEncounterPosition` was supplied and returned a usable
+    //     position, `null` otherwise — see this file's own "0.9.552" header
+    //     section, above.
     //   { outcome: AutomaticSnapshotEncounterCascadeOutcome.SUPPRESSED,
     //     publicationId, contentHash, reason: null } — (0.9.193) resolved,
     //     materialized, and PLACED, but the caller-supplied `isSessionActive()`
@@ -393,17 +494,17 @@ export class AutomaticSnapshotEncounterCascade {
             : null;
         const placement = resolveSnapshotWorldPlacement(materialization, placementInfo);
         if (placement.outcome !== SnapshotWorldPlacementOutcome.PLACED) {
-            return this._result(placement.outcome, publicationId, contentHash, placement.reason);
+            return this._resultForPlacementOutcome(placement.outcome, publicationId, contentHash, placement.reason);
         }
 
         if (!this._worldDiscoverySourceRegistry) {
-            return this._result(placement.outcome, publicationId, contentHash, placement.reason);
+            return this._resultForPlacementOutcome(placement.outcome, publicationId, contentHash, placement.reason);
         }
         const publication = (typeof this._findPublicationById === 'function')
             ? (this._findPublicationById(publicationId) || null)
             : null;
         if (!publication || publication.id !== placement.publicationId) {
-            return this._result(SnapshotWorldPlacementOutcome.UNPLACED, publicationId, contentHash, null);
+            return this._resultForPlacementOutcome(SnapshotWorldPlacementOutcome.UNPLACED, publicationId, contentHash, null);
         }
 
         // 0.9.193 — Automatic Snapshot Session-Lifetime Guard. The ONE
@@ -422,7 +523,34 @@ export class AutomaticSnapshotEncounterCascade {
         return this._result(registration.outcome, publicationId, contentHash, registration.reason);
     }
 
-    _result(outcome, publicationId, contentHash, reason = null) {
-        return { outcome, publicationId, contentHash, reason: reason || null };
+    _result(outcome, publicationId, contentHash, reason = null, encounter = null) {
+        return { outcome, publicationId, contentHash, reason: reason || null, encounter: encounter || null };
+    }
+
+    // 0.9.552 — the ONE call site that may attach a non-null `encounter`.
+    // Every other `_result()` call in this file (INELIGIBLE, a resolution/
+    // materialization failure, SUPPRESSED, REGISTERED) goes straight
+    // through `_result()` above and always carries `encounter: null` — see
+    // this file's own "0.9.552" header section, "an optional, additive
+    // encounter field... ONLY when outcome is... UNPLACED."
+    _resultForPlacementOutcome(outcome, publicationId, contentHash, reason) {
+        if (outcome !== SnapshotWorldPlacementOutcome.UNPLACED || typeof this._resolveEncounterPosition !== 'function') {
+            return this._result(outcome, publicationId, contentHash, reason);
+        }
+        // A throwing or malformed resolveEncounterPosition() degrades to
+        // `encounter: null` — see this file's own header, "a throwing or
+        // malformed resolveEncounterPosition() degrades... it never
+        // corrupts the underlying UNPLACED result." Never let a
+        // presentational failure here escape into processCandidate()'s own
+        // top-level `.catch()`, which would otherwise remap an
+        // already-earned UNPLACED into INELIGIBLE.
+        let encounter = null;
+        try {
+            const encounterPosition = this._resolveEncounterPosition();
+            encounter = describeObserverLocalPublicationEncounter({ publicationId, contentHash, encounterPosition });
+        } catch (error) {
+            encounter = null;
+        }
+        return this._result(outcome, publicationId, contentHash, reason, encounter);
     }
 }

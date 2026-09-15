@@ -2283,6 +2283,96 @@ function shortContentHash(contentHash) {
     return contentHash.length > 18 ? `${contentHash.slice(0, 10)}…${contentHash.slice(-6)}` : contentHash;
 }
 
+// 0.9.552 — Observer-Local Novel Publication Encounter Presentation.
+//
+// application/AutomaticSnapshotEncounterCascade.js gained an additive
+// `encounter` field on its own `UNPLACED` result; application/
+// ObserverLocalEncounterStore.js gained a session-scoped place to hold one
+// across ticks. Nothing until now rendered either. This milestone is that
+// rendering, and nothing more:
+//
+//   observerLocalEncounterRegistry (new prop)  ─┐
+//                                                ▼
+//                        mounted(): seed, then subscribe
+//                    (mirrors `registry`'s own pattern exactly)
+//                                                │
+//                                                ▼
+//               observerLocalEncounters (new page-local state)
+//                                                │
+//                                                ▼
+//         projectedObserverLocalEncounters (new computed)
+//                                                │
+//                                                ▼
+//              a THIRD, separate <g> v-for block, in the template
+//
+// A THIRD, SEPARATE PROP AND PROJECTED ARRAY, NEVER A MERGE INTO
+// `registry`/`projectedPublications`. See this file's own header, "no
+// runtime registry prop swapping" and the several "architectural boundary"
+// notes above — `registry` stays the ONE seam this component reads
+// authoritative World state through. `observerLocalEncounterRegistry` is a
+// second, independent, optional prop, duck-typed to exactly the same
+// `{ list(), subscribe(listener) }` shape `registry` already exposes (see
+// application/ObserverLocalEncounterStore.js's own header, "modeled
+// directly on WorldDiscoverySourceRegistry's own subscribe()/_notify()
+// contract"), never the same object, never read through `effectiveView`,
+// and never combined with `worldView`/`publicationRows` in any way. A
+// mount supplied `registry` but not `observerLocalEncounterRegistry` (or
+// vice versa) renders exactly the corresponding half — the two are
+// entirely independent.
+//
+// NOT SELECTABLE — NOT A `WorldEncounterMarker`, NOT WIRED TO
+// `selectEncounter()`. An observer-local encounter has no `origin` a
+// `WorldDiscoverySourceRegistry`-backed `selectionOutcome` could ever
+// resolve (it was never registered with that registry at all — see
+// application/AutomaticSnapshotEncounterCascade.js's own header, "this file
+// never records an encounter anywhere itself... never a PlacementRecord"),
+// so wiring it into the existing selection/inspection/material-loading
+// machinery would only ever resolve to `'UNAVAILABLE'` — a false "this
+// left the World" notice for something that was never a `WorldEncounter`
+// in the first place. This milestone renders a plain `<g>`, not a
+// `<WorldEncounterMarker>`, and binds no `@select` handler to it at all.
+// Wiring a dedicated inspection surface for THIS kind of encounter is
+// separate, later, unscheduled work.
+//
+// VOCABULARY: "DISCOVERED HERE," NEVER "PLACED." The rendered label and
+// `<title>` tooltip deliberately avoid "Placed"/"Official location"/
+// "Located by publisher"/"Trusted location"/"Verified location"/
+// "Authoritative"/"Owned" — see this milestone's own brief. "Discovered
+// here" names the observation that actually happened (a Wanderer's own
+// walking triggered real discovery, resolution, content-hash verification,
+// and materialization for this exact publicationId/contentHash — see
+// application/AutomaticSnapshotEncounterCascade.js's own header, "0.9.552,"
+// for why `AVAILABLE + VERIFIED` remains a hard precondition, unweakened);
+// it never claims the publisher's own `claimedPosition` was honored, used,
+// or trusted, because it was not — see core/ObserverLocalPublicationEncounter.js's
+// own header for why `position` here is the Wanderer's OWN encounter
+// position, never a publisher's claim.
+//
+// `objectId`/`kind`/`title`/`publisherIdentity`/`isSigned`/`anchorCount`/
+// `placementCount` DO NOT EXIST ON THIS SHAPE, AND THIS MILESTONE NEVER
+// FABRICATES THEM. `projectedObserverLocalEncounters` carries exactly
+// `publicationId`, `contentHash`, `x`, `y` — see core/
+// ObserverLocalPublicationEncounter.js's own header for why that identity
+// (`publicationId` + `contentHash`) is deliberately never a `documentId`,
+// a `locator`, or `claimedPosition` itself.
+//
+// DELIBERATELY EXCLUDED — NOT THIS MILESTONE.
+// - **Selection, inspection, material loading, commentary, or distribution
+//   for an observer-local encounter.** See "not selectable," above.
+// - **Merging `observerLocalEncounterRegistry` into `registry`, or reading
+//   one through the other.** See "a third, separate prop," above.
+// - **Any change to `registry`/`worldView`/`effectiveView`/
+//   `publicationRows`/`projectedPublications`.** All are byte-for-byte
+//   unchanged by this milestone.
+// - **A new glyph, marker component, or change to
+//   `ui/components/WorldEncounterMarker.js`.** That component's own "dumb,
+//   zero-import" contract stays untouched; this milestone renders a plain
+//   `<g>` of its own instead.
+// - **Persistence, expiry, or cross-Wanderer sharing of a rendered
+//   encounter.** See application/ObserverLocalEncounterStore.js's own
+//   header — this component only ever reflects whatever that store
+//   currently holds.
+
 export default {
     name: 'WorldEncounterCanvas',
     components: { WorldEncounterMarker, WandererMarker },
@@ -2309,6 +2399,23 @@ export default {
         // component an already-computed `view` instead keeps working
         // exactly as before this milestone.
         registry: {
+            type: Object,
+            default: null
+        },
+        // 0.9.552 — optional. A live `ObserverLocalEncounterStore`
+        // (application/ObserverLocalEncounterStore.js). When supplied, this
+        // component subscribes to it in `mounted()` and keeps its own
+        // `observerLocalEncounters` in sync for as long as it stays
+        // mounted — the SAME "seed, then subscribe" pattern `registry`
+        // above already establishes, applied to a second, entirely
+        // separate, session-scoped store. `null` by default: a mount with
+        // no store supplied renders no observer-local encounters at all,
+        // exactly as if this milestone had never shipped. Deliberately
+        // NEVER the same object as `registry` — see that file's own
+        // header, "a session-scoped store, never the shared
+        // WorldDiscoverySourceRegistry" — this component never merges the
+        // two or reads one through the other.
+        observerLocalEncounterRegistry: {
             type: Object,
             default: null
         },
@@ -2532,6 +2639,17 @@ export default {
             // itself returned, held only so `beforeUnmount()` can call
             // it. `null` whenever this mount never subscribed.
             unsubscribeWorldRegistry: null,
+            // 0.9.552 — page-local, `observerLocalEncounterRegistry`-derived
+            // snapshot — the SAME "seed, then subscribe" shape `worldView`
+            // above already holds, one store over. `[]` until `mounted()`
+            // seeds it (only ever happens when an
+            // `observerLocalEncounterRegistry` prop was supplied).
+            observerLocalEncounters: [],
+            // 0.9.552 — the `unsubscribe` function
+            // `observerLocalEncounterRegistry.subscribe()` itself returned,
+            // held only so `beforeUnmount()` can call it. `null` whenever
+            // this mount never subscribed.
+            unsubscribeObserverLocalEncounterRegistry: null,
             // 0.9.20 — page-local, registry-derived classification of the
             // CURRENT `selectedEncounter`. `null` until `refreshSelectionOutcome()`
             // writes it (see this file's own header, "selectionOutcome is
@@ -2849,6 +2967,26 @@ export default {
                 label: row.displayName,
                 x: projectToCanvas(row.x),
                 y: projectToCanvas(row.z)
+            }));
+        },
+        // 0.9.552 — entirely independent of `publicationRows`/`effectiveView`
+        // above: these rows come from `observerLocalEncounters`
+        // (`observerLocalEncounterRegistry`-derived, never `registry`/`view`),
+        // and are projected the SAME way `projectedPublications` already
+        // projects world x/z onto screen x/y — see this file's own header,
+        // "0.9.552," for why this stays a THIRD, separate projected array
+        // rather than being merged into `projectedPublications`: an
+        // observer-local encounter carries no `title`/`publisherIdentity`/
+        // `isSigned`/anchor or placement count of any kind (it was never
+        // joined against a WorldPlacement in the first place), so treating
+        // it as just another publication row would either fabricate those
+        // fields or silently render blanks for them.
+        projectedObserverLocalEncounters() {
+            return this.observerLocalEncounters.map((encounter) => ({
+                publicationId: encounter.publicationId,
+                contentHash: encounter.contentHash,
+                x: projectToCanvas(encounter.position.x),
+                y: projectToCanvas(encounter.position.z)
             }));
         },
         projectedWanderer() {
@@ -3318,6 +3456,17 @@ export default {
                 return;
             }
             this.worldView = describeWorldFromDiscoveryRegistry(this.registry);
+        },
+        // 0.9.552 — the only writer of `observerLocalEncounters`, and the
+        // only caller of `observerLocalEncounterRegistry.list()` in this
+        // file — mirroring `refreshWorldViewFromRegistry()` immediately
+        // above exactly, one store over. A no-op when no
+        // `observerLocalEncounterRegistry` was supplied.
+        refreshObserverLocalEncountersFromRegistry() {
+            if (!this.observerLocalEncounterRegistry || typeof this.observerLocalEncounterRegistry.list !== 'function') {
+                return;
+            }
+            this.observerLocalEncounters = this.observerLocalEncounterRegistry.list();
         },
         // 0.9.20 — the only writer of `selectionOutcome`, and the only
         // caller of `describeWorldEncounterSelectionOutcomeFromRegistry()`
@@ -4272,6 +4421,15 @@ export default {
                 this.refreshMaterialInspection();
             });
         }
+        // 0.9.552 — a third, independent optional subscription, mirroring
+        // the `registry` block at the top of this method exactly, one
+        // store over: seed, then subscribe.
+        if (this.observerLocalEncounterRegistry && typeof this.observerLocalEncounterRegistry.subscribe === 'function') {
+            this.refreshObserverLocalEncountersFromRegistry();
+            this.unsubscribeObserverLocalEncounterRegistry = this.observerLocalEncounterRegistry.subscribe(() => {
+                this.refreshObserverLocalEncountersFromRegistry();
+            });
+        }
     },
     // 0.9.13 — unsubscribes, unconditionally and idempotently; see this
     // file's own header, "`beforeUnmount()` unsubscribes." As of 0.9.101
@@ -4285,6 +4443,9 @@ export default {
         // 0.9.40 — unsubscribes the lead registry too, unconditionally and
         // idempotently, mirroring the block immediately above.
         this.stopSubscription('unsubscribeWorldDiscoveryLeadRegistry');
+        // 0.9.552 — unsubscribes the observer-local encounter store too,
+        // unconditionally and idempotently, mirroring the two blocks above.
+        this.stopSubscription('unsubscribeObserverLocalEncounterRegistry');
         // 0.9.39 — invalidates any still-pending `inspectWorldEncounterMaterial()`
         // request; see this file's own header, "beforeUnmount() also
         // invalidates any in-flight request."
@@ -4349,6 +4510,19 @@ export default {
                     :y="marker.y"
                     @select="selectEncounter"
                 />
+
+                <!-- 0.9.552 — see this file's own header, above, "vocabulary: discovered here, never placed." -->
+                <g
+                    v-for="marker in projectedObserverLocalEncounters"
+                    :key="'observer-local:' + marker.publicationId + ':' + marker.contentHash"
+                    class="world-encounter-observer-local-marker"
+                    :transform="'translate(' + marker.x + ',' + marker.y + ')'"
+                    :data-publication-id="marker.publicationId"
+                >
+                    <text class="world-encounter-marker-glyph" text-anchor="middle" dy="4">📄</text>
+                    <text class="world-encounter-observer-local-label" text-anchor="middle" dy="18">Discovered here</text>
+                    <title>This publication was discovered while you were here. Its publisher's own location claim has not been used as a World placement.</title>
+                </g>
 
                 <WandererMarker :x="projectedWanderer.x" :y="projectedWanderer.y" />
             </svg>
