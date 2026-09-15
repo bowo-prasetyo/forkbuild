@@ -55,6 +55,7 @@ selection, or edit anything. See
 | **Home** | Reset the camera to the default view |
 | **Locations** | Open a list of Home plus every structure known this session, each with a **Focus** button |
 | **Notifications** | Open your **Notification History** — a read-only log, not a camera action; see [World View](03-WorldView.md#orientation-and-locations) |
+| **Camera**: Free / First Person / Third Person / Bird's-Eye | Lock the camera to a fixed offset from your own avatar instead of flying it yourself; click the active one again to return to Free — see [Avatars & Presence](06-AvatarsAndPresence.md#camera-perspective) |
 
 ### Contextual location descriptions
 
