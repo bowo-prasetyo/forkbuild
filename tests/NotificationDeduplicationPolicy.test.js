@@ -73,6 +73,25 @@ import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 //
 // See docs/Roadmap.md, 0.9.280, for the full milestone entry, and
 // docs/Principles.md for the prose form of this file's own findings.
+//
+// FLAKE FIX (notification lifecycle reassessment): Sections G, H, and J
+// each simulate a "genuine retry" — the same commentaryId submitted
+// twice — by omitting `createdAt` from their fixed input and letting
+// `PublicationCommentary`'s own `new Date()` default apply per call.
+// storage/PublicationCommentaryStore.js's own header is explicit that
+// "two commentaries constructed separately with the same id but even a
+// millisecond apart are NOT identical" — so the two calls almost always
+// landed a millisecond apart and threw `PublicationCommentaryConflictError`
+// instead of exercising the dedup policy these sections exist to test
+// (confirmed by direct repeated runs: NotificationDeduplicationPolicy
+// failed roughly 80% of the time before this fix). Every sibling test
+// file with this same "retry" shape (e.g.
+// tests/NotificationPersistenceSemanticsAudit.test.js,
+// tests/PublicationCommentaryNotificationProducerLifecycleAudit.test.js)
+// already pins `createdAt` explicitly for this exact reason; these three
+// sections, and the identical gap in
+// tests/NotificationDeduplicationIdentityAudit.test.js's own Section H,
+// were the only ones that hadn't.
 
 // ---------------------------------------------------------------------
 // Helpers — identical shape to
@@ -361,7 +380,7 @@ async function runTests() {
 
         const produced = [];
         const producer = buildProducer({ discoveryProvider, commentaryStore, commentAuthorProvider: alice, sink: (e) => produced.push(e) });
-        const selfInput = { publicationId: 'pub-self', commentaryId: 'self-id', content: 'Commenting on my own Publication' };
+        const selfInput = { publicationId: 'pub-self', commentaryId: 'self-id', content: 'Commenting on my own Publication', createdAt: new Date('2024-09-13T00:00:00.000Z') };
         producer.execute(selfInput);
         producer.execute({ ...selfInput });
         assert(produced.length === 2, 'G1. a self-comment retry still produces two NotificationEvent instances');
@@ -402,7 +421,7 @@ async function runTests() {
 
         const produced = [];
         const producer = buildProducer({ discoveryProvider, commentaryStore, commentAuthorProvider: bob, sink: (e) => produced.push(e) });
-        const fixedInput = { publicationId: 'pub-compatible', commentaryId: 'compatible-id', content: 'Compatible collision probe' };
+        const fixedInput = { publicationId: 'pub-compatible', commentaryId: 'compatible-id', content: 'Compatible collision probe', createdAt: new Date('2024-09-11T00:00:00.000Z') };
         producer.execute(fixedInput);
         producer.execute({ ...fixedInput });
         assert(produced.length === 2, 'H1. sanity: a genuine retry produced two instances');
@@ -492,7 +511,7 @@ async function runTests() {
 
         const produced = [];
         const producer = buildProducer({ discoveryProvider, commentaryStore, commentAuthorProvider: bob, sink: (e) => produced.push(e) });
-        const fixedInput = { publicationId: 'pub-invocation', commentaryId: 'invocation-id', content: 'Two genuinely separate producer calls' };
+        const fixedInput = { publicationId: 'pub-invocation', commentaryId: 'invocation-id', content: 'Two genuinely separate producer calls', createdAt: new Date('2024-09-12T00:00:00.000Z') };
 
         // TWO genuinely separate `.execute()` invocations — not a
         // hand-built pair — of the identical underlying fact.
@@ -543,8 +562,8 @@ async function runTests() {
         const commentaryStore = new PublicationCommentaryStore(new InMemoryStorageProvider());
         const produced = [];
         const producer = buildProducer({ discoveryProvider, commentaryStore, commentAuthorProvider: bob, sink: (e) => produced.push(e) });
-        producer.execute({ publicationId: 'pub-purity', commentaryId: 'purity-id', content: 'Determinism probe' });
-        producer.execute({ publicationId: 'pub-purity', commentaryId: 'purity-id', content: 'Determinism probe' });
+        producer.execute({ publicationId: 'pub-purity', commentaryId: 'purity-id', content: 'Determinism probe', createdAt: new Date('2024-09-14T00:00:00.000Z') });
+        producer.execute({ publicationId: 'pub-purity', commentaryId: 'purity-id', content: 'Determinism probe', createdAt: new Date('2024-09-14T00:00:00.000Z') });
         const [eventA, eventB] = produced;
 
         const snapshotA = JSON.stringify(eventA.toJSON());
