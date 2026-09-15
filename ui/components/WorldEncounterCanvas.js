@@ -3333,7 +3333,21 @@ export default {
             // selection's own resolved identity untouched retains the
             // existing `materialInspection` instead of redundantly
             // recomputing it — see this file's own "0.9.169" header.
+            //
+            // 0.9.535 — a GENUINE change clears `materialInspection`
+            // synchronously, BEFORE `refreshMaterialInspection()`'s own
+            // async load/verify round trip even starts. Without this, the
+            // previous selection's own already-resolved `materialInspection`
+            // (its `loading.status`/`verification.status`, and — through
+            // `distributablePublication` — its own loaded `Publication`
+            // instance) stayed readable, and the Distribute/Snapshot-
+            // Distribute/Discover-Snapshot actions stayed enabled against
+            // it, for the entire gap between selecting a NEW encounter and
+            // that encounter's own material actually resolving. See
+            // tests/WandererWorldSessionContinuityProductReassessment.test.js
+            // Section F for the live reproduction this fixes.
             if (!resolvedEncounterSelectionsEqual(previousResolvedSelection, this.resolvedEncounterSelection)) {
+                this.materialInspection = null;
                 this.refreshMaterialInspection();
             }
         },
@@ -3948,7 +3962,14 @@ export default {
                     registry: this.registry
                 });
             }
+            // 0.9.535 — mirrors `refreshSelectionOutcome()`'s own
+            // identical fix exactly, one selection over: a genuine change
+            // clears `comparisonMaterialInspection` synchronously before
+            // the async reload starts, so the previous comparison
+            // target's own material/verification never lingers, readable,
+            // under the NEW comparison target's identity.
             if (!resolvedEncounterSelectionsEqual(previousComparisonResolvedSelection, this.comparisonResolvedSelection)) {
+                this.comparisonMaterialInspection = null;
                 this.refreshComparisonMaterialInspection();
             }
         },
