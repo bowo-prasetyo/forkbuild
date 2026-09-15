@@ -54,6 +54,31 @@
 // polling, no subscription — per this milestone's own brief, that stays
 // a separate, later, evidence-driven decision.
 //
+// 0.9.530 — Notification → Publication Navigation. `viewPublicationCommand`
+// (`(publicationId) -> boolean`, injected by WorldView.js the same way
+// `getRecipientNotificationEventsCommand` already is) is the one
+// navigation capability this milestone's own reassessment found genuinely
+// missing: a notification could name a `publicationId` in its own payload
+// but offered no way to reach it. This panel reads ONLY
+// `event.payload.publicationId` — the same well-known field name
+// `application/PublicationCommentaryNotificationProducer.js` already
+// writes — never `event.eventType`, so `notificationPublicationId()`
+// below stays exactly as eventType-agnostic as `notificationDetails()`
+// above; a future producer that also addresses a Publication under that
+// same payload key is reachable for free, without this panel learning a
+// new eventType. Absent `viewPublicationCommand` (no capability wired) or
+// a payload with no `publicationId`, the action is hidden entirely — the
+// same "feature hidden when its collaborator is absent" gate every other
+// optional capability in this codebase's UI layer already follows. A call
+// that resolves to `false` (the Publication is no longer resolvable —
+// unpublished, or never known to this replica) marks that ONE
+// notification unavailable in local, ephemeral UI state only
+// (`unavailablePublicationNotificationIds`) — the underlying
+// NotificationEvent is never read back, mutated, or re-fetched because of
+// it; this panel still has no opinion on read/unread/seen, and a stale
+// target is never treated as a reason to hide or rewrite the historical
+// fact itself.
+//
 // A MISSING CAPABILITY DEGRADES GRACEFULLY; A FAILED READ DOES NOT. A
 // panel handed no `getRecipientNotificationEventsCommand` (every
 // pre-0.9.284 caller, and every session built without
@@ -77,13 +102,23 @@ export default {
         getRecipientNotificationEventsCommand: {
             type: Function,
             default: null
+        },
+        // 0.9.530 — `(publicationId) -> boolean`. See this file's own
+        // header, "Notification → Publication Navigation."
+        viewPublicationCommand: {
+            type: Function,
+            default: null
         }
     },
     emits: ['cancel'],
     data() {
         return {
             notifications: [],
-            notificationHistoryError: null
+            notificationHistoryError: null,
+            // 0.9.530 — notificationIds whose viewPublicationCommand()
+            // call already resolved to `false` this panel-open. Reset on
+            // every refreshNotificationHistory(), never persisted.
+            unavailablePublicationNotificationIds: new Set()
         };
     },
     mounted() {
@@ -98,6 +133,11 @@ export default {
         // leaves `notifications` untouched and records the message —
         // see this file's own header.
         refreshNotificationHistory() {
+            // 0.9.530 — a fresh read invalidates any prior
+            // "unavailable" verdict recorded against the OLD list; the
+            // new list is checked again, lazily, only if/when a viewed
+            // item's own button is actually clicked.
+            this.unavailablePublicationNotificationIds = new Set();
             if (!this.getRecipientNotificationEventsCommand) {
                 this.notifications = [];
                 this.notificationHistoryError = null;
@@ -109,6 +149,27 @@ export default {
                 this.notificationHistoryError = null;
             } catch (error) {
                 this.notificationHistoryError = (error && error.message) ? error.message : 'Notifications could not be loaded.';
+            }
+        },
+        // 0.9.530 — the one payload field this panel treats as
+        // meaningful by NAME rather than by rendering it generically —
+        // see this file's own header for why that stays eventType-
+        // agnostic. `null` for any event with no string `publicationId`.
+        notificationPublicationId(event) {
+            const publicationId = event && event.payload && event.payload.publicationId;
+            return (typeof publicationId === 'string' && publicationId.length > 0) ? publicationId : null;
+        },
+        // The only call site of viewPublicationCommand(). A `false`
+        // result (see this file's own header) marks just this ONE
+        // notification unavailable for the rest of this panel-open;
+        // it never throws, and never touches `notifications` itself.
+        viewNotificationPublication(event) {
+            if (!this.viewPublicationCommand) return;
+            const publicationId = this.notificationPublicationId(event);
+            if (!publicationId) return;
+            const navigated = this.viewPublicationCommand(publicationId);
+            if (!navigated) {
+                this.unavailablePublicationNotificationIds.add(event.notificationId);
             }
         },
         formatNotificationTimestamp(createdAt) {
@@ -177,6 +238,17 @@ export default {
                             >
                                 {{ detail.label }}: {{ detail.value }}
                             </span>
+                        </div>
+                        <div
+                            v-if="viewPublicationCommand && notificationPublicationId(event)"
+                            class="locations-panel-item-actions"
+                        >
+                            <button
+                                v-if="!unavailablePublicationNotificationIds.has(event.notificationId)"
+                                class="action-btn action-btn--explore"
+                                @click="viewNotificationPublication(event)"
+                            >Explore</button>
+                            <span v-else class="notification-history-item-unavailable">No longer available</span>
                         </div>
                     </li>
                 </ul>
