@@ -1639,6 +1639,49 @@ export default {
             showNotificationHistoryPanel.value = false;
         }
 
+        // 0.9.530 — Notification → Publication Navigation. Resolves a
+        // NotificationEvent's own `payload.publicationId` to the SAME
+        // Publication object `session.findPublicationById()` already
+        // exposes (0.9.187, built for AutomaticSnapshotEncounterCascade)
+        // and, when found, reuses `focusWorld()` below — the exact "move
+        // camera + make active + sync route" mechanism Search/Nearby
+        // Worlds/Documents-Here already share (see
+        // `focusLocationDocument()`, further down) — never a second
+        // navigation mechanism, never a bare `router.push()` of this
+        // panel's own. This is deliberate: a bare `router.push({ path:
+        // '/world/' + documentId })` — the shape 0.9.381's own Repository
+        // navigation uses from EditorView — would silently do nothing
+        // useful here, because NotificationHistoryPanel is only ever
+        // reachable from INSIDE an already-mounted WorldView, which has
+        // no reactive watcher on `route.params.documentId` (route changes
+        // are a CONSEQUENCE of session state changing here, never the
+        // reverse — see `focusWorld()`'s own body). `focusWorld()` is the
+        // one mechanism in this file that already changes the session's
+        // own active document correctly from inside a live WorldView
+        // mount, so this reuses it verbatim rather than reintroducing the
+        // "navigate to self" gap 0.9.380 Section E already found and
+        // deliberately avoided.
+        //
+        // A stale or unresolvable target (the Publication was
+        // unpublished, or this replica never knew it) returns `false` and
+        // navigates nowhere — mirroring
+        // tests/DistributionResultPublicationCenterDeepLinkAudit.test.js's
+        // own Section F precedent: a missing target degrades silently,
+        // never a thrown error. The NotificationEvent itself is never
+        // read back or touched here beyond the `publicationId` the panel
+        // already handed this function — this stays navigation only.
+        function viewNotificationPublicationCommand(publicationId) {
+            const publication = typeof session.findPublicationById === 'function'
+                ? session.findPublicationById(publicationId)
+                : null;
+            if (!publication || !publication.documentId) {
+                return false;
+            }
+            focusWorld(publication.documentId);
+            closeNotificationHistoryPanel();
+            return true;
+        }
+
         // Tool switching (Select/Place) — REMOVED (0.5.9). World View
         // only ever has one "mode" left: look around and pick/hover for
         // focus and inspection. See docs/Principles.md, "World View
@@ -4237,6 +4280,7 @@ export default {
             getPublicationPlacementsCommand,
             addPublicationCommentaryCommand,
             getRecipientNotificationEventsCommand,
+            viewNotificationPublicationCommand,
             showNotificationHistoryPanel,
             openNotificationHistoryPanel,
             closeNotificationHistoryPanel,
@@ -5438,6 +5482,7 @@ export default {
             <NotificationHistoryPanel
                 v-if="showNotificationHistoryPanel"
                 :getRecipientNotificationEventsCommand="getRecipientNotificationEventsCommand"
+                :viewPublicationCommand="viewNotificationPublicationCommand"
                 @cancel="closeNotificationHistoryPanel"
             />
             <!-- 0.2.94/0.3.6 — Navigation HUD: camera coordinates
