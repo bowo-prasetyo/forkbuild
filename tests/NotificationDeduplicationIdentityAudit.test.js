@@ -606,7 +606,7 @@ async function runTests() {
         const produced = [];
         const tracker = makeInvocationTracker();
         const producer = buildProducer({ discoveryProvider, commentaryStore, commentAuthorProvider: alice, sink: (e) => produced.push(e) });
-        const selfInput = { publicationId: 'pub-self', commentaryId: 'self-comment-id', content: 'Commenting on my own Publication' };
+        const selfInput = { publicationId: 'pub-self', commentaryId: 'self-comment-id', content: 'Commenting on my own Publication', createdAt: new Date('2024-08-09T00:00:00.000Z') };
         tracker.invoke(producer, selfInput, produced);
 
         assert(produced.length === 1, 'H1. a self-authored Commentary still produces a NotificationEvent — unmodified from 0.9.275\'s own contract');
