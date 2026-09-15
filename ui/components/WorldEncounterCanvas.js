@@ -3346,8 +3346,46 @@ export default {
             // that encounter's own material actually resolving. See
             // tests/WandererWorldSessionContinuityProductReassessment.test.js
             // Section F for the live reproduction this fixes.
+            //
+            // 0.9.536 — a GENUINE change ALSO invalidates the Distribute/
+            // Snapshot-Distribute/Discover-Snapshot action state the SAME
+            // way `selectEncounter()` already does (0.9.104/0.9.138/
+            // 0.9.144, mirrored here verbatim, one seam over). Before this,
+            // that reset ran only from `selectEncounter()` — an EXPLICIT
+            // marker click. But this branch runs from HERE too, reached
+            // from `mounted()`'s own registry `subscribe()` callback with
+            // no `selectEncounter()` call anywhere on that path — e.g. an
+            // AMBIGUOUS/RESOLVED transition
+            // (application/WorldEncounterSelectionOutcome.js's own
+            // candidate-count reclassification) as a second source starts
+            // or stops offering the SAME still-selected encounter, with no
+            // click of any kind. Without this, a Distribute/Snapshot action
+            // already in flight against the OLD resolution kept its
+            // `distributionRequestId`/`snapshotDistributionRequestId`/
+            // `snapshotDiscoveryRequestId` guard unbumped, so its late
+            // result (or error) still passed that guard and was written —
+            // `snapshotDistributionResult`/`snapshotDiscoveryResult`/
+            // `snapshotAttributionResult`/`distributionError` are plain
+            // `data()`, never live computeds like `distributablePublication`
+            // itself — rendering evidence of an action taken against a
+            // resolution the Wanderer's own selection has already moved
+            // past. See
+            // tests/WorldEncounterActionStateBoundaryProductReassessment.test.js
+            // Section I for the live reproduction this fixes.
             if (!resolvedEncounterSelectionsEqual(previousResolvedSelection, this.resolvedEncounterSelection)) {
                 this.materialInspection = null;
+                this.distributionExecuting = false;
+                this.distributionError = null;
+                this.distributionRequestId += 1;
+                this.snapshotDistributionExecuting = false;
+                this.snapshotDistributionError = null;
+                this.snapshotDistributionResult = null;
+                this.snapshotDistributionRequestId += 1;
+                this.snapshotDiscoveryExecuting = false;
+                this.snapshotDiscoveryError = null;
+                this.snapshotDiscoveryResult = null;
+                this.snapshotAttributionResult = null;
+                this.snapshotDiscoveryRequestId += 1;
                 this.refreshMaterialInspection();
             }
         },
