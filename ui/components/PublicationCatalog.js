@@ -4,6 +4,7 @@ import { CreateDiscoveryUseCase } from '../../application/CreateDiscoveryUseCase
 import { PublicationQuery, DEFAULT_PAGE_SIZE } from '../../core/PublicationQuery.js';
 import { PublicationSort } from '../../core/PublicationSort.js';
 import { GroupBy, groupPublications } from '../../core/PublicationGrouping.js';
+import { computeAmbiguousPublishedDateIds } from '../../core/PublicationDateAmbiguity.js';
 import PublicationCatalogToolbar from './PublicationCatalogToolbar.js';
 import PublicationCard from './PublicationCard.js';
 import PublicationList from './PublicationList.js';
@@ -166,6 +167,15 @@ export default {
             return groupPublications(pageResult.value.items, groupBy.value);
         });
 
+        // 0.9.539 — see core/PublicationDateAmbiguity.js's own header:
+        // the ids (never a documentId — the same document is exactly
+        // what collides) needing the full timestamp instead of the
+        // usual day-level label, scoped to whatever is actually visible
+        // together on THIS page.
+        const preciseDateIds = computed(() => {
+            return pageResult.value ? computeAmbiguousPublishedDateIds(pageResult.value.items) : new Set();
+        });
+
         const emptyMessage = computed(() => {
             if (!catalogHasAnyPublications.value) {
                 return props.author
@@ -191,7 +201,7 @@ export default {
 
         return {
             sort, view, groupBy, pageResult, groups, emptyMessage,
-            descriptions, parentTitles, forkCounts,
+            descriptions, parentTitles, forkCounts, preciseDateIds,
             onSearch, onChangeSort, onChangeView, onChangeGroupBy, onGoPage,
             openPublication, forkPublication, viewWorld, viewAuthor
         };
@@ -225,6 +235,7 @@ export default {
                             :description="descriptions[pub.documentId]"
                             :parent-title="parentTitles[pub.documentId]"
                             :fork-count="forkCounts[pub.documentId] || 0"
+                            :needs-precise-date="preciseDateIds.has(pub.id)"
                             @open="openPublication"
                             @fork="forkPublication"
                             @explore="viewWorld"
@@ -237,6 +248,7 @@ export default {
                         :descriptions="descriptions"
                         :parent-titles="parentTitles"
                         :fork-counts="forkCounts"
+                        :precise-date-ids="preciseDateIds"
                         @open="openPublication"
                         @fork="forkPublication"
                         @explore="viewWorld"

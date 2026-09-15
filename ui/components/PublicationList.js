@@ -1,4 +1,5 @@
 import PublicationPreview from './PublicationPreview.js';
+import { formatPublicationDate } from '../../core/PublicationDateAmbiguity.js';
 
 // 0.2.31 — the compact table/row view of a page of publications —
 // "best when there are hundreds or thousands," per the design doc,
@@ -14,12 +15,23 @@ export default {
         items: { type: Array, required: true },
         descriptions: { type: Object, default: () => ({}) },
         parentTitles: { type: Object, default: () => ({}) },
-        forkCounts: { type: Object, default: () => ({}) }
+        forkCounts: { type: Object, default: () => ({}) },
+        // 0.9.539 — see core/PublicationDateAmbiguity.js's own header.
+        // Keyed by publicationId (unlike the three caches above, which
+        // are keyed by documentId) because the collision this guards
+        // against is between two Publication INSTANCES of the same
+        // document, not the document itself.
+        preciseDateIds: { type: Set, default: () => new Set() }
     },
     emits: ['open', 'fork', 'explore', 'view-author'],
     methods: {
         licenseLabel(pub) {
             return pub.license ? pub.license.id : 'UNSPECIFIED';
+        },
+        // 0.9.539 — the SAME `publishedAt` field, at finer precision,
+        // never a new one.
+        publishedAtLabel(pub) {
+            return formatPublicationDate(pub.publishedAt, this.preciseDateIds.has(pub.id)) || '—';
         }
     },
     template: `
@@ -55,7 +67,7 @@ export default {
                             </template>
                             <template v-else>anonymous</template>
                         </td>
-                        <td class="publication-date">{{ pub.publishedAt ? pub.publishedAt.toLocaleDateString() : '—' }}</td>
+                        <td class="publication-date">{{ publishedAtLabel(pub) }}</td>
                         <td class="publication-date">{{ licenseLabel(pub) }}</td>
                         <td>
                             <div class="publication-actions publication-actions--row">
