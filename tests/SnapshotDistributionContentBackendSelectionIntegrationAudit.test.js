@@ -203,8 +203,8 @@ async function run() {
         check(mainSource.includes("import { availableSnapshotDistributionStorageTypes, resolveSnapshotDistributionContentStore } from '../application/SnapshotDistributionContentBackendSelection.js';"),
             'A. ui/main.js imports the new 0.9.506 selection module');
 
-        const commandMatch = mainSource.match(/const snapshotDistributionCommand = \(bytes, storage = 'ar'\) => executeSnapshotDistributionCommand\(\{([\s\S]*?)\}\);/);
-        check(Boolean(commandMatch), 'A. ui/main.js\'s real snapshotDistributionCommand is found, taking an explicit (bytes, storage = \'ar\') pair');
+        const commandMatch = mainSource.match(/const snapshotDistributionCommand = \(bytes, storage = 'ar', publicationId, claimedPosition\) => executeSnapshotDistributionCommand\(\{([\s\S]*?)\}\);/);
+        check(Boolean(commandMatch), 'A. (0.9.566) ui/main.js\'s real snapshotDistributionCommand is found, taking an explicit (bytes, storage = \'ar\', publicationId, claimedPosition) tuple');
         check(commandMatch[1].includes('resolveSnapshotDistributionContentStore(snapshotPlacementStoreRegistry, storage)'), 'A. it resolves contentStore from the SAME snapshotPlacementStoreRegistry Placement already builds, keyed by the caller\'s own storage choice');
         check(!commandMatch[1].includes('new ArweaveContentStore') && !commandMatch[1].includes('new IpfsContentStore'), 'A. the command call site itself constructs no concrete ContentStore');
 

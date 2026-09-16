@@ -115,32 +115,42 @@ async function run() {
 
     // =======================================================================
     // Section B — The exact production boundary where the claim is dropped.
+    //
+    // AMENDED BY 0.9.566 — Distribute Existing Claimed Position Through
+    // Snapshot Distribution, in place, mirroring this codebase's own
+    // established amendment precedent (e.g. 0.9.558 amending 0.9.557's own
+    // Section H for the identical situation) rather than leaving a
+    // now-false "the gap exists" assertion behind. This audit's own
+    // Section I verdict named exactly two closing points; 0.9.566 closed
+    // both, so this section now reconfirms the OPPOSITE fact at each one:
+    // the fields this audit found dropped are now genuinely forwarded.
     // =======================================================================
     {
         const commandSource = await readSource('application/SnapshotDistributionCommand.js');
         const runFnMatch = commandSource.match(/async function runSnapshotDistribution\([\s\S]*?\n\}/);
         assert(runFnMatch, '1. application/SnapshotDistributionCommand.js#runSnapshotDistribution() exists as an isolable function.');
         const runFnBody = runFnMatch[0];
-        assert(/discoveryPublisher\.publish\(\{\s*contentHash:\s*contentReference\.hash,\s*locator:\s*contentReference\.uri,\s*storage:\s*contentReference\.storage\s*\}\)/.test(runFnBody),
-            '2. its own discoveryPublisher.publish() call site supplies exactly three fields — contentHash/locator/storage — and nothing else.');
-        assert(!/publicationId/.test(runFnBody) && !/claimedPosition/.test(runFnBody),
-            '3. neither `publicationId` nor `claimedPosition` appears anywhere in runSnapshotDistribution() — the exact production boundary named in this audit\'s own brief.');
+        assert(/discoveryPublisher\.publish\(\{\s*contentHash:\s*contentReference\.hash,\s*locator:\s*contentReference\.uri,\s*storage:\s*contentReference\.storage,\s*publicationId,\s*claimedPosition\s*\}\)/.test(runFnBody),
+            '2. (0.9.566) its own discoveryPublisher.publish() call site now supplies publicationId/claimedPosition alongside contentHash/locator/storage, forwarded unmodified from this function\'s own parameters.');
+        assert(/publicationId/.test(runFnBody) && /claimedPosition/.test(runFnBody),
+            '3. (0.9.566) both `publicationId` and `claimedPosition` now appear in runSnapshotDistribution() — the exact production boundary this audit\'s own brief named is closed.');
 
         const exportedFnMatch = commandSource.match(/export function executeSnapshotDistributionCommand\(\{[\s\S]*?\n\}\s*=\s*\{\}\)/);
         assert(exportedFnMatch, '4. the exported entry point exists as an isolable signature.');
-        assert(!/publicationId/.test(exportedFnMatch[0]) && !/claimedPosition/.test(exportedFnMatch[0]),
-            '5. executeSnapshotDistributionCommand()\'s own public parameter list carries only bytes/contentStore/discoveryPublisher — a caller has no parameter through which to hand in a Publication identity or a position at all, even one who already computed both.');
+        assert(/publicationId/.test(exportedFnMatch[0]) && /claimedPosition/.test(exportedFnMatch[0]),
+            '5. (0.9.566) executeSnapshotDistributionCommand()\'s own public parameter list now carries publicationId/claimedPosition alongside bytes/contentStore/discoveryPublisher — a caller who already computed both (Section A) now has a parameter through which to hand them in.');
 
         const worldViewSource = await readSource('ui/views/WorldView.js');
         const distributeFnMatch = worldViewSource.match(/function distributeWorldEncounterSnapshot\(publication\)\s*\{[\s\S]*?\n        \}/);
         assert(distributeFnMatch, '6. ui/views/WorldView.js#distributeWorldEncounterSnapshot(publication) exists as an isolable function — the ONE production call site that invokes Snapshot distribution.');
         const distributeFnBody = distributeFnMatch[0];
-        assert(/snapshotDistributionCommand\(JSON\.stringify\(snapshotJson\)\)/.test(distributeFnBody),
-            '7. it calls snapshotDistributionCommand() with exactly one positional argument — the serialized bytes — even though it is handed the full `publication` object (carrying `publication.id`) as its own parameter.');
-        assert(!/getPlacementInfoForPublication/.test(distributeFnBody) && !/claimedPosition/.test(distributeFnBody),
-            '8. it never calls getPlacementInfoForPublication(), and never references claimedPosition — the already-available position (Section A) is never read here, let alone forwarded.');
+        assert(/getPlacementInfoForPublication\(publication\.id\)/.test(distributeFnBody),
+            '7. (0.9.566) it now calls session.getPlacementInfoForPublication(publication.id) — the full `publication` object it is handed is finally read for its own id, exactly as Section A\'s own already-available lookup allows.');
+        assert(/placementInfo \? placementInfo\.publicationId : undefined/.test(distributeFnBody)
+            && /placementInfo \? placementInfo\.position : undefined/.test(distributeFnBody),
+            '8. (0.9.566) it now forwards placementInfo.publicationId/placementInfo.position into snapshotDistributionCommand() — both `undefined` (never a fabricated fallback) when this Publication has no placementInfo at all.');
     }
-    console.log('✓ Section B (FLAGSHIP): the claim is dropped at TWO stacked points on the one real production path — application/SnapshotDistributionCommand.js never accepts or forwards publicationId/claimedPosition, and its only production caller, ui/views/WorldView.js#distributeWorldEncounterSnapshot(), never computes or supplies either even though it already holds `publication.id` and a working lookup for the position exists (Section A).');
+    console.log('✓ Section B (FLAGSHIP, AMENDED BY 0.9.566): the claim is no longer dropped at either stacked point on the one real production path — application/SnapshotDistributionCommand.js now accepts and forwards publicationId/claimedPosition, and its only production caller, ui/views/WorldView.js#distributeWorldEncounterSnapshot(), now reads publication.id through session.getPlacementInfoForPublication() and forwards the result unmodified.');
 
     // =======================================================================
     // Section C — Announcement contracts already support the claim, live.
@@ -337,9 +347,13 @@ async function run() {
 
     // =======================================================================
     // Section I — Classification and the smallest closing seam.
+    //
+    // AMENDED BY 0.9.566 — findings 1 and 2 below are now closed (Section B,
+    // amended above); the verdict text is left otherwise intact as the
+    // historical record of what this audit found, plus this note.
     // =======================================================================
-    console.log('✓ Section I — VERDICT.\n\n' +
-        '  CLASSIFICATION: PRODUCT_GAP, not ARCHITECTURAL_GAP.\n\n' +
+    console.log('✓ Section I — VERDICT (findings 1–2 CLOSED by 0.9.566; see Section B).\n\n' +
+        '  CLASSIFICATION (AS OF 0.9.565): PRODUCT_GAP, not ARCHITECTURAL_GAP.\n\n' +
         '  Every primitive this feature needs already exists, is already tested, and (on the consumer side) is already\n' +
         '  shipped in production UI:\n' +
         '    - the position source            (application/WorldNavigationSession.js#getPlacementInfoForPublication)\n' +
