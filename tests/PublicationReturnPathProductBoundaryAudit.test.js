@@ -375,6 +375,16 @@ async function runTests() {
 
     // ===============================================================
     // Section H — Product-language audit.
+    //
+    // AMENDED BY 0.9.558 — Known Publication Encounter Continuation, in
+    // place, exactly like this arc's own established precedent (0.9.552
+    // amending 0.9.551's own D4, 0.9.554 amending 0.9.553's own F/G/L, for
+    // the identical situation each time). H3/H4 originally reconfirmed
+    // that NO available-action or navigation-destination information was
+    // rendered — precisely the wiring gap this audit's own verdict named
+    // as the only concrete work left. 0.9.558 closed exactly that gap, so
+    // H3/H4 now confirm the OPPOSITE fact: the actions this audit found
+    // already resolvable are now actually rendered.
     // ===============================================================
     {
         const canvasSource = await rawSource('ui/components/WorldEncounterCanvas.js');
@@ -384,15 +394,20 @@ async function runTests() {
 
         // H1. Reconfirm 0.9.556 D1/D2 fresh: the panel shows identity
         // information (publicationId/contentHash) and a coarse
-        // retrievability signal (Material/Verification status labels),
-        // but no available-action and no navigation-destination
-        // information at all.
+        // retrievability signal (Material/Verification status labels).
         assert(panel.includes('<dt>Publication</dt>') && panel.includes('<dt>Content Hash</dt>'), 'H1. Identity information: publicationId and contentHash are shown, labeled plainly ("Publication", "Content Hash") rather than as raw technical field names.');
         assert(panel.includes('describeMaterialLoadStatusLabel') && panel.includes('describeMaterialVerificationStatusLabel'), 'H2. Retrievability information: Material/Verification status labels ARE shown — a Wanderer can already tell whether the material is available and verified.');
-        assert(!/Open Publication|Fork|Explore|forkPublication|openPublication|viewWorld|Repository|Catalog/i.test(panel), 'H3. Available-action information: NONE shown — no button or label answers "what can I do with this."');
-        assert(!/title|author/i.test(panel.replace(/world-encounter-inspection-title|world-encounter-material-title|world-encounter-verification-title/g, '')), 'H4. Navigation-destination information: NONE shown either, and (per Section B4) not because the title is unknown — it is already resolved and simply not rendered.');
+        // H3. AMENDED: 0.9.558 now renders exactly Open/Explore/Fork,
+        // gated on observerLocalEncounterActionablePublication — see that
+        // file's own "0.9.558" header.
+        assert(panel.includes('>Open</button>') && panel.includes('>Explore</button>') && panel.includes('>Fork</button>') && panel.includes('observerLocalEncounterActionablePublication'),
+            'H3. AMENDED by 0.9.558: available-action information IS now shown — Open/Explore/Fork buttons, gated on the already-resolved, AVAILABLE + VERIFIED observerLocalEncounterActionablePublication.');
+        // H4. AMENDED: the resolved material's own .title is now rendered
+        // as the actions block's own heading.
+        assert(panel.includes('observerLocalEncounterActionablePublication.title'),
+            'H4. AMENDED by 0.9.558: navigation-destination information IS now shown too — the resolved Publication\'s own .title, exactly the field Section B4 already proved was resolved but unrendered.');
 
-        console.log('✓ H — The panel already communicates identity and retrievability clearly. It communicates zero available-action or navigation-destination information — not because that information is unavailable (Section B/E already proved the resolved material carries title/documentId/author), but because nothing in the template reads those fields yet. This is a presentation gap over already-resolved data, consistent with Section E\'s own finding, not a new fact.');
+        console.log('✓ H — AMENDED: the panel now communicates identity, retrievability, AND available-action/navigation-destination information. 0.9.558 closed the presentation gap this audit itself identified as the only concrete work remaining, using the exact seam (the already-resolved material object) this audit\'s own verdict named.');
     }
 
     // ===============================================================

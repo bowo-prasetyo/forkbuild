@@ -322,16 +322,25 @@ async function runTests() {
     // reading PublicationQuery.js's own comment alone.
     // ===============================================================
     {
-        // D1. Reconfirm 0.9.555 Section F fresh, against the CURRENT
-        // inspection panel template — a Wanderer with a fully VERIFIED
-        // observer-local encounter in front of them has no Open/Explore/
-        // Fork/Repository/Catalog action in that panel at all.
+        // D1/D2. AMENDED BY 0.9.558 — Known Publication Encounter
+        // Continuation, mirroring this arc's own established amendment
+        // precedent (0.9.552 amending 0.9.551, 0.9.554 amending 0.9.553,
+        // for the identical situation each time). This section's own
+        // finding was the named PRODUCT_GAP 0.9.557's audit then traced
+        // to an EXISTING, already-resolved seam, and 0.9.558 wired: the
+        // panel now DOES expose Open/Explore/Fork (gated on a genuine
+        // AVAILABLE + VERIFIED resolution, never merely a "fully VERIFIED
+        // encounter in front of them" fact alone) — reusing the SAME
+        // Repository-independent seam D3-D6 below still show Repository
+        // SEARCH itself can never reach.
         const canvasSource = await rawSource('ui/components/WorldEncounterCanvas.js');
         const panelStart = canvasSource.indexOf('world-encounter-observer-local-inspection-panel');
         const panelEnd = canvasSource.indexOf('0.9.183', panelStart);
         const panel = canvasSource.slice(panelStart, panelEnd);
-        assert(!/Open Publication|Fork|Explore|forkPublication|openPublication|viewWorld|Repository|Catalog/i.test(panel), 'D1. Reconfirmed fresh: the observer-local inspection panel exposes no Open/Explore/Fork action and no Repository/Catalog navigation of any kind — only Close.');
-        assert(!/\btitle\b|\bauthor\b/i.test(panel.replace(/world-encounter-inspection-title|world-encounter-material-title|world-encounter-verification-title/g, '')), 'D2. The panel shows neither the Publication\'s title nor its author anywhere — only publicationId and contentHash (plus Material/Verification status), confirmed against the real template, not inferred.');
+        assert(panel.includes('>Open</button>') && panel.includes('>Explore</button>') && panel.includes('>Fork</button>'),
+            'D1. AMENDED by 0.9.558: the observer-local inspection panel now DOES expose Open/Explore/Fork — reached through the already-resolved Publication object this section itself already found in hand, never through Repository/Catalog search.');
+        assert(panel.includes('observerLocalEncounterActionablePublication.title'),
+            'D2. AMENDED by 0.9.558: the panel now shows the Publication\'s own title (as the actions block\'s own heading) — the resolved material always carried it; only the template read publicationId/contentHash alone before this milestone.');
 
         // D3-D6. Empirically: can EITHER identifier the panel DOES show
         // (publicationId, contentHash) find this Publication through the

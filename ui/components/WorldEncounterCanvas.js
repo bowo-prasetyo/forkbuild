@@ -2578,6 +2578,80 @@ function shortContentHash(contentHash) {
 //   `admitToRepositoryDiscovery()` itself.** All are byte-for-byte
 //   unchanged by this milestone — see "a third, genuinely separate
 //   selection concept," above.
+//
+// 0.9.558 — Known Publication Encounter Continuation.
+//
+// 0.9.557 found EXISTING_RETURN_SEAM: `observerLocalEncounterInspection.
+// loading.material`, immediately above, ALREADY resolves to the exact same
+// `publisher/Publication.js` instance `ui/components/PublicationCatalog.js`'s
+// own Open/Fork/Explore actions need (`documentId`/`id`), and
+// `ui/components/PublicationCard.js`'s own Comment action needs (`id`
+// alone) — never routed through Repository search. This milestone wires
+// that seam to the inspection panel, and nothing else:
+//
+//   observerLocalEncounterActionablePublication   (computed)   ★ (THIS)
+//        = observerLocalEncounterInspection.loading.material, but ONLY
+//          once AVAILABLE + VERIFIED (mirrors admitToRepositoryDiscovery()'s
+//          own gate verbatim — see that computed's own header)
+//                      │
+//                      ▼
+//   openObserverLocalEncounterPublication() /
+//   forkObserverLocalEncounterPublication() /
+//   exploreObserverLocalEncounterPublication()   ★ (THIS)
+//        each call `openPublicationCommand`/`forkPublicationCommand`/
+//        `explorePublicationCommand` — three NEW, optional command props
+//        — with that SAME resolved object, never
+//        `selectedObserverLocalEncounter.publicationId` alone
+//                      │
+//                      ▼
+//   ui/views/WorldView.js's own wiring (this milestone) reuses
+//   PublicationCatalog.js's own `/editor?load=`/`/editor?fork=`
+//   navigations verbatim for Open/Fork, and its own existing
+//   `focusWorld(documentId)` for Explore — NO new navigation mechanism
+//
+// Commentary reuses `getPublicationCommentariesCommand`/
+// `addPublicationCommentaryCommand` (0.9.291) — the SAME two props this
+// file already threads through for the PRIMARY selection — via a
+// deliberately SEPARATE `observerLocalEncounterCommentary*` state block,
+// mirroring `encounterCommentary*` exactly, one selection concept over,
+// for the same reason `selectedObserverLocalEncounter` itself is separate
+// from `selectedEncounter` (see the "0.9.554" header above, "a third,
+// genuinely separate selection concept").
+//
+// NEVER A SECOND LOOKUP, NEVER REPOSITORY SEARCH. None of this milestone's
+// new code calls `findById()` or reaches into Repository's own free-text
+// search machinery (see 0.9.557 Section E/C5 for exactly which two
+// modules that means, and why this file still imports neither). The
+// identity handed to
+// every one of the four actions is always the SAME object instance
+// `refreshObserverLocalEncounterInspection()` already wrote, read fresh
+// on each click — never re-derived, never re-fetched.
+//
+// STILL NEVER `admitToRepositoryDiscovery()`. This milestone's own
+// `observerLocalEncounterActionablePublication` reuses that method's gate
+// CONDITION (read-only) but never calls the method itself, and none of
+// the three new action methods do either — 0.9.553's/0.9.554's own
+// DELIBERATE_BOUNDARY (an observer-local encounter has no path into
+// app-wide Repository discovery) stays exactly where it was.
+//
+// NOT A FOURTH ACTION SET. `openPublicationCommand`/`forkPublicationCommand`/
+// `explorePublicationCommand` are plain `(publication) -> void` functions,
+// each invoking the IDENTICAL route PublicationCatalog.js's own
+// openPublication()/forkPublication()/viewWorld() already build — never a
+// parallel implementation, and never constructed by this component
+// itself (mirroring every other optional command prop in this file).
+//
+// DELIBERATELY EXCLUDED — NOT THIS MILESTONE.
+// - **Any change to the four route-building functions themselves
+//   (`PublicationCatalog.js`'s own openPublication()/forkPublication()/
+//   viewWorld(), or `PublicationCard.js`'s own commentary methods).** All
+//   are reused exactly as 0.9.557 found them.
+// - **A fifth action, a catalog listing, or any browse/search surface for
+//   observer-local encounters.** See this file's own "0.9.554" header,
+//   "never the Publication Catalog/Repository browser" — unweakened.
+// - **Persistence of the encounter past this component's own lifetime, or
+//   any change to 0.9.555's World-lifecycle destruction of the
+//   session-local encounter store.** Unaffected by this milestone.
 
 export default {
     name: 'WorldEncounterCanvas',
@@ -2824,6 +2898,43 @@ export default {
         viewerIdentityId: {
             type: String,
             default: null
+        },
+        // 0.9.558 — Known Publication Encounter Continuation. Optional. A
+        // `(publication) -> void` function, or `null` when the capability
+        // is unavailable — called with the SAME already-resolved
+        // `publisher/Publication.js` instance
+        // `observerLocalEncounterActionablePublication` (below) already
+        // produces, never a bare id. In the real running app,
+        // `ui/views/WorldView.js` wires this to the IDENTICAL
+        // `/editor?load=<documentId>` navigation
+        // `ui/components/PublicationCatalog.js`'s own `openPublication(pub)`
+        // already performs — see 0.9.557's own Section A1/E for why that
+        // route, built from an already-in-hand object, is the correct
+        // reuse target. Never constructed by this component itself.
+        openPublicationCommand: {
+            type: Function,
+            default: null
+        },
+        // 0.9.558 — optional. A `(publication) -> void` function mirroring
+        // `openPublicationCommand` immediately above, one action over —
+        // the SAME `/editor?fork=<documentId>&publication=<id>` navigation
+        // `PublicationCatalog.js`'s own `forkPublication(pub)` already
+        // performs (0.9.557 Section A2/E).
+        forkPublicationCommand: {
+            type: Function,
+            default: null
+        },
+        // 0.9.558 — optional. A `(publication) -> void` function mirroring
+        // `openPublicationCommand` above, one action over — the SAME
+        // `/world/<documentId>` navigation `PublicationCatalog.js`'s own
+        // `viewWorld(pub)` already performs, and the SAME destination
+        // `ui/views/WorldView.js`'s own `focusWorld(documentId)` already
+        // reaches (0.9.557 Section A3/F1/F2) — which function actually
+        // executes it is `WorldView.js`'s own choice, not this
+        // component's concern.
+        explorePublicationCommand: {
+            type: Function,
+            default: null
         }
     },
     data() {
@@ -2881,6 +2992,32 @@ export default {
             // newer one (bumped on every fresh selection, every dismissal,
             // and on unmount).
             observerLocalEncounterInspectionRequestId: 0,
+            // 0.9.558 — mirrors `encounterCommentaryOpen` (0.9.291) exactly,
+            // one selection concept over: `true` for as long as the
+            // Wanderer has explicitly clicked "Comment" for the CURRENT
+            // `selectedObserverLocalEncounter`. Deliberately a SEPARATE
+            // field from `encounterCommentaryOpen` — see this file's own
+            // "0.9.554" header, "a third, genuinely separate selection
+            // concept" — so both panels' own commentary sections can be
+            // open independently, exactly like the two selections
+            // themselves already can be.
+            observerLocalEncounterCommentaryOpen: false,
+            // 0.9.558 — mirrors `encounterCommentaries` (0.9.291) exactly,
+            // one selection concept over. Reset to `[]` on every fresh
+            // `selectObserverLocalEncounter()` call and on dismissal.
+            observerLocalEncounterCommentaries: [],
+            // 0.9.558 — mirrors `newEncounterCommentaryText` (0.9.291)
+            // exactly, one selection concept over.
+            newObserverLocalEncounterCommentaryText: '',
+            // 0.9.558 — mirrors `encounterCommentarySubmitting` (0.9.291)
+            // exactly, one selection concept over.
+            observerLocalEncounterCommentarySubmitting: false,
+            // 0.9.558 — mirrors `encounterCommentaryError` (0.9.291)
+            // exactly, one selection concept over.
+            observerLocalEncounterCommentaryError: null,
+            // 0.9.558 — mirrors `pendingEncounterCommentaryDraft` (0.9.542)
+            // exactly, one selection concept over.
+            pendingObserverLocalEncounterCommentaryDraft: null,
             // 0.9.20 — page-local, registry-derived classification of the
             // CURRENT `selectedEncounter`. `null` until `refreshSelectionOutcome()`
             // writes it (see this file's own header, "selectionOutcome is
@@ -3306,6 +3443,59 @@ export default {
                 objectId: this.selectedObserverLocalEncounter.publicationId,
                 origin
             });
+        },
+        // 0.9.558 — Known Publication Encounter Continuation. The ONE gate
+        // for all three route-based continuation actions below (Open/
+        // Fork/Explore): the already-resolved `publisher/Publication.js`
+        // instance `observerLocalEncounterInspection.loading.material`
+        // already carries — see 0.9.557's own verdict, "the resolved
+        // object itself is the correct hand-off object" — but ONLY once
+        // this specific inspection has actually finished as a genuine
+        // `AVAILABLE` load of a real `Publication` AND an actively
+        // `VERIFIED` signature. Mirrors `admitToRepositoryDiscovery()`'s
+        // own gate condition verbatim, one boundary over (see that
+        // method's own header for the full 0.9.523 rationale on why
+        // `VERIFIED` specifically, not merely `AVAILABLE`, is required
+        // before anything acts on retrieved material) — but this getter
+        // NEVER calls `admitToRepositoryDiscovery()` itself, and never
+        // writes to `decentralizedPublicationDiscoveryProvider`; it only
+        // READS the same two already-computed facts
+        // `observerLocalEncounterInspection` already holds. `null` for a
+        // still-loading, unavailable, unverifiable, or rejected
+        // inspection — never a partially-resolved object, and never
+        // `selectedObserverLocalEncounter.publicationId` alone (0.9.557
+        // Section E's own point: a bare publicationId lacks the
+        // documentId/id an Open/Fork/Explore route needs).
+        observerLocalEncounterActionablePublication() {
+            if (!this.observerLocalEncounterInspection) {
+                return null;
+            }
+            const { loading, verification } = this.observerLocalEncounterInspection;
+            if (!loading || loading.status !== 'AVAILABLE' || !(loading.material instanceof Publication)) {
+                return null;
+            }
+            if (!verification || verification.status !== 'VERIFIED') {
+                return null;
+            }
+            return loading.material;
+        },
+        // 0.9.558 — mirrors `encounterCommentaryPublicationId` (0.9.291)
+        // exactly, one selection concept over: the publicationId Commentary
+        // is scoped to for the CURRENT `selectedObserverLocalEncounter`, or
+        // `null` when there isn't one. Deliberately independent of
+        // `observerLocalEncounterInspection`/
+        // `observerLocalEncounterActionablePublication` immediately
+        // above — exactly like its primary-selection counterpart, this
+        // never waits on material loading, fetching, or verification: an
+        // `ObserverLocalPublicationEncounter`'s own `publicationId` is
+        // already a known, complete identity the moment it's selected
+        // (core/ObserverLocalPublicationEncounter.js's own header), and
+        // `getPublicationCommentariesCommand`/`addPublicationCommentaryCommand`
+        // (0.9.291) already take exactly that bare id, never a resolved
+        // object — see `ui/components/PublicationCard.js`'s own
+        // `this.publication.id` (0.9.557 Section A5).
+        observerLocalEncounterCommentaryPublicationId() {
+            return this.selectedObserverLocalEncounter ? this.selectedObserverLocalEncounter.publicationId : null;
         },
         // 0.9.176 — the smallest possible World Snapshot Presentation seam:
         // a pure join of `selectedEncounterInspection` (0.9.16/0.9.18) and
@@ -3751,6 +3941,17 @@ export default {
             }
             this.selectedObserverLocalEncounter = { publicationId: marker.publicationId, contentHash: marker.contentHash };
             this.refreshObserverLocalEncounterInspection();
+            // 0.9.558 — a fresh observer-local selection never carries a
+            // stale open/closed state, commentary list, draft, or error
+            // from whatever was previously selected — mirrors
+            // `selectEncounter()`'s own identical 0.9.291 reset, one
+            // selection concept over.
+            this.observerLocalEncounterCommentaryOpen = false;
+            this.observerLocalEncounterCommentaries = [];
+            this.newObserverLocalEncounterCommentaryText = '';
+            this.observerLocalEncounterCommentarySubmitting = false;
+            this.observerLocalEncounterCommentaryError = null;
+            this.pendingObserverLocalEncounterCommentaryDraft = null;
         },
         // 0.9.554 — the only writer of `observerLocalEncounterInspection`,
         // and the only caller of `inspectWorldEncounterMaterial()` for an
@@ -3803,6 +4004,103 @@ export default {
             this.selectedObserverLocalEncounter = null;
             this.observerLocalEncounterInspection = null;
             this.observerLocalEncounterInspectionRequestId += 1;
+            // 0.9.558 — a dismissed selection never leaves its own
+            // commentary state rendering implicitly for whatever gets
+            // selected next — mirrors the reset `selectObserverLocalEncounter()`
+            // itself now also performs, immediately above.
+            this.observerLocalEncounterCommentaryOpen = false;
+            this.observerLocalEncounterCommentaries = [];
+            this.newObserverLocalEncounterCommentaryText = '';
+            this.observerLocalEncounterCommentarySubmitting = false;
+            this.observerLocalEncounterCommentaryError = null;
+            this.pendingObserverLocalEncounterCommentaryDraft = null;
+        },
+        // 0.9.558 — Known Publication Encounter Continuation. The only
+        // call site of `openPublicationCommand` in this file. Hands it the
+        // ALREADY-RESOLVED `observerLocalEncounterActionablePublication`
+        // object directly — never `selectedObserverLocalEncounter.publicationId`,
+        // never a second `findById()` lookup (see that computed's own
+        // header, and 0.9.557's own Section E). A no-op whenever no
+        // command was injected or the current inspection isn't actionable
+        // yet (still loading, unavailable, or unverified) — mirrors this
+        // file's own established "no command, no action" restraint for
+        // every other optional collaborator (`discoveryCommand`,
+        // `distributionCommand`, ...).
+        openObserverLocalEncounterPublication() {
+            const publication = this.observerLocalEncounterActionablePublication;
+            if (!publication || !this.openPublicationCommand) {
+                return;
+            }
+            this.openPublicationCommand(publication);
+        },
+        // 0.9.558 — mirrors `openObserverLocalEncounterPublication()`
+        // exactly, one action over.
+        forkObserverLocalEncounterPublication() {
+            const publication = this.observerLocalEncounterActionablePublication;
+            if (!publication || !this.forkPublicationCommand) {
+                return;
+            }
+            this.forkPublicationCommand(publication);
+        },
+        // 0.9.558 — mirrors `openObserverLocalEncounterPublication()`
+        // exactly, one action over.
+        exploreObserverLocalEncounterPublication() {
+            const publication = this.observerLocalEncounterActionablePublication;
+            if (!publication || !this.explorePublicationCommand) {
+                return;
+            }
+            this.explorePublicationCommand(publication);
+        },
+        // 0.9.558 — mirrors `toggleEncounterCommentary()` (0.9.291)
+        // exactly, one selection concept over.
+        toggleObserverLocalEncounterCommentary() {
+            if (!this.getPublicationCommentariesCommand || !this.observerLocalEncounterCommentaryPublicationId) {
+                return;
+            }
+            const opening = !this.observerLocalEncounterCommentaryOpen;
+            this.observerLocalEncounterCommentaryOpen = opening;
+            if (opening) {
+                this.refreshObserverLocalEncounterCommentaries();
+            }
+        },
+        // 0.9.558 — mirrors `refreshEncounterCommentaries()` (0.9.291)
+        // exactly, one selection concept over.
+        refreshObserverLocalEncounterCommentaries() {
+            if (!this.getPublicationCommentariesCommand || !this.observerLocalEncounterCommentaryPublicationId) {
+                return;
+            }
+            try {
+                const result = this.getPublicationCommentariesCommand(this.observerLocalEncounterCommentaryPublicationId);
+                this.observerLocalEncounterCommentaries = Array.isArray(result) ? result : [];
+                this.observerLocalEncounterCommentaryError = null;
+            } catch (error) {
+                this.observerLocalEncounterCommentaryError = 'Commentary could not be loaded.';
+            }
+        },
+        // 0.9.558 — mirrors `submitEncounterCommentary()` (0.9.291/0.9.542)
+        // exactly, one selection concept over.
+        submitObserverLocalEncounterCommentary() {
+            const publicationId = this.observerLocalEncounterCommentaryPublicationId;
+            const content = this.newObserverLocalEncounterCommentaryText.trim();
+            if (!publicationId || !this.addPublicationCommentaryCommand || !content || this.observerLocalEncounterCommentarySubmitting) {
+                return;
+            }
+            if (!this.pendingObserverLocalEncounterCommentaryDraft || this.pendingObserverLocalEncounterCommentaryDraft.content !== content) {
+                this.pendingObserverLocalEncounterCommentaryDraft = { content, commentaryId: createId(), createdAt: new Date() };
+            }
+            const { commentaryId, createdAt } = this.pendingObserverLocalEncounterCommentaryDraft;
+            this.observerLocalEncounterCommentarySubmitting = true;
+            try {
+                this.addPublicationCommentaryCommand({ publicationId, content, commentaryId, createdAt });
+                this.newObserverLocalEncounterCommentaryText = '';
+                this.observerLocalEncounterCommentaryError = null;
+                this.pendingObserverLocalEncounterCommentaryDraft = null;
+                this.refreshObserverLocalEncounterCommentaries();
+            } catch (error) {
+                this.observerLocalEncounterCommentaryError = (error && error.message) ? error.message : 'Commentary could not be created.';
+            } finally {
+                this.observerLocalEncounterCommentarySubmitting = false;
+            }
         },
         // 0.9.20 — the only writer of `selectionOutcome`, and the only
         // caller of `describeWorldEncounterSelectionOutcomeFromRegistry()`
@@ -5034,6 +5332,103 @@ export default {
                 <p v-else class="world-encounter-inspection-unavailable">
                     This publication's material could not be inspected.
                 </p>
+
+                <!-- 0.9.558 — Known Publication Encounter Continuation.
+                     Rendered ONLY once observerLocalEncounterActionablePublication
+                     is non-null — a genuine AVAILABLE + VERIFIED
+                     resolution, never a still-loading, unavailable, or
+                     unverified one. Every action below is handed that
+                     SAME already-resolved object directly; none of them
+                     re-derive identity from selectedObserverLocalEncounter
+                     or perform a second lookup of any kind — see 0.9.557's
+                     own verdict, "the resolved object itself is the
+                     correct hand-off object." Presented in ordinary
+                     vocabulary (the Publication's own title, and plain
+                     action verbs) — publicationId/contentHash stay exactly
+                     where the detail list above already shows them, never
+                     repeated here as if they were the primary affordance. -->
+                <div v-if="observerLocalEncounterActionablePublication" class="world-encounter-observer-local-actions">
+                    <h4 class="world-encounter-observer-local-actions-title">{{ observerLocalEncounterActionablePublication.title || 'This publication' }}</h4>
+                    <button
+                        v-if="openPublicationCommand"
+                        type="button"
+                        class="action-btn world-encounter-observer-local-open"
+                        @click="openObserverLocalEncounterPublication"
+                    >Open</button>
+                    <button
+                        v-if="explorePublicationCommand"
+                        type="button"
+                        class="action-btn world-encounter-observer-local-explore"
+                        @click="exploreObserverLocalEncounterPublication"
+                    >Explore</button>
+                    <button
+                        v-if="forkPublicationCommand"
+                        type="button"
+                        class="action-btn world-encounter-observer-local-fork"
+                        @click="forkObserverLocalEncounterPublication"
+                    >Fork</button>
+                </div>
+
+                <!-- 0.9.558 — Commentary for a known observer-local
+                     encounter. Mirrors the primary selection's own
+                     Commentary panel (0.9.291) verbatim, structure for
+                     structure, bound to this file's own SEPARATE
+                     observerLocalEncounterCommentary-prefixed state (never
+                     encounterCommentary* itself) — both panels' own
+                     Commentary sections may be open independently, exactly
+                     like the two selections themselves already can be.
+                     Deliberately NOT gated on
+                     observerLocalEncounterActionablePublication above —
+                     see that computed's own sibling,
+                     observerLocalEncounterCommentaryPublicationId's own
+                     header, for why Commentary never waits on material
+                     loading/verification. -->
+                <div v-if="observerLocalEncounterCommentaryPublicationId && getPublicationCommentariesCommand" class="world-encounter-observer-local-commentary-panel">
+                    <h4 class="world-encounter-observer-local-commentary-title">Commentary</h4>
+
+                    <button
+                        type="button"
+                        class="action-btn world-encounter-observer-local-commentary-toggle"
+                        @click="toggleObserverLocalEncounterCommentary"
+                    >{{ observerLocalEncounterCommentaryOpen ? 'Hide Comments' : 'Comment' }}</button>
+
+                    <div v-if="observerLocalEncounterCommentaryOpen" class="world-encounter-observer-local-commentary-body">
+                        <p v-if="observerLocalEncounterCommentaryError" class="world-encounter-observer-local-commentary-error">{{ observerLocalEncounterCommentaryError }}</p>
+
+                        <p v-if="!observerLocalEncounterCommentaries.length" class="world-encounter-observer-local-commentary-empty">No commentary yet.</p>
+                        <ul v-else class="world-encounter-observer-local-commentary-list">
+                            <li
+                                v-for="commentary in observerLocalEncounterCommentaries"
+                                :key="commentary.commentaryId"
+                                class="world-encounter-observer-local-commentary-entry"
+                            >
+                                <span class="world-encounter-observer-local-commentary-author">{{ commentary.authorIdentityId }}</span>
+                                <p class="world-encounter-observer-local-commentary-content">{{ commentary.content }}</p>
+                            </li>
+                        </ul>
+
+                        <p v-if="addPublicationCommentaryCommand && !viewerIdentityId" class="world-encounter-observer-local-commentary-signin-hint">
+                            Sign in to add commentary.
+                        </p>
+                        <form
+                            v-else-if="addPublicationCommentaryCommand"
+                            class="world-encounter-observer-local-commentary-form"
+                            @submit.prevent="submitObserverLocalEncounterCommentary"
+                        >
+                            <textarea
+                                v-model="newObserverLocalEncounterCommentaryText"
+                                class="world-encounter-observer-local-commentary-input"
+                                :disabled="observerLocalEncounterCommentarySubmitting"
+                                placeholder="Add a comment…"
+                            ></textarea>
+                            <button
+                                type="submit"
+                                class="action-btn world-encounter-observer-local-commentary-submit-action"
+                                :disabled="!newObserverLocalEncounterCommentaryText.trim() || observerLocalEncounterCommentarySubmitting"
+                            >{{ observerLocalEncounterCommentarySubmitting ? 'Posting…' : 'Post Comment' }}</button>
+                        </form>
+                    </div>
+                </div>
 
                 <button
                     type="button"
