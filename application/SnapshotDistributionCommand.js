@@ -210,13 +210,33 @@
 //   into one coordinated publication.** See "No coupling to Signed Claim
 //   distribution," above — that remains a separate, higher-level,
 //   unscheduled concern, if ever built at all.
+//
+// 0.9.566 — Distribute Existing Claimed Position Through Snapshot
+// Distribution. `executeSnapshotDistributionCommand()`/
+// `runSnapshotDistribution()` now accept two additional, optional
+// parameters — `publicationId`/`claimedPosition` — and forward them
+// verbatim into `discoveryPublisher.publish()`'s own call, which has
+// accepted this identical optional pair since 0.9.171. This file computes
+// neither field, validates neither field (`discoveryPublisher.publish()`'s
+// own `describeSnapshotDiscoveryEnvelope()` call already does that), and
+// still calls `discoveryPublisher.publish()` at most once — the "AN
+// ASSEMBLY BOUNDARY" restraint above holds unchanged. A caller who omits
+// both (every caller before 0.9.566, and any caller with no placement
+// claim to carry) gets the identical `{ contentHash, locator, storage }`-
+// only announcement this file has always produced.
 
 function isNonEmptyString(value) {
     return typeof value === 'string' && value.length > 0;
 }
 
 // executeSnapshotDistributionCommand({ bytes, contentStore,
-//   discoveryPublisher }) -> Promise<{ contentReference, announcement }>.
+//   discoveryPublisher, publicationId, claimedPosition }) ->
+//   Promise<{ contentReference, announcement }>.
+//
+// `publicationId`/`claimedPosition` (0.9.566, both optional, and travel
+// together or not at all — see `core/SnapshotDiscoveryEnvelope.js`'s own
+// header) pass straight through to `discoveryPublisher.publish()`
+// unmodified; this file neither computes nor validates either.
 //
 // Sequences `contentStore.put(bytes)` and `discoveryPublisher.publish()`
 // — see this file's own header, "Placement failure prevents discovery,"
@@ -232,7 +252,9 @@ function isNonEmptyString(value) {
 export function executeSnapshotDistributionCommand({
     bytes,
     contentStore,
-    discoveryPublisher
+    discoveryPublisher,
+    publicationId,
+    claimedPosition
 } = {}) {
     if (!contentStore || typeof contentStore.put !== 'function') {
         throw new Error('executeSnapshotDistributionCommand: a contentStore with a put() method is required');
@@ -244,7 +266,7 @@ export function executeSnapshotDistributionCommand({
         throw new Error('executeSnapshotDistributionCommand: discoveryPublisher must expose a non-empty discoveryTag');
     }
 
-    return runSnapshotDistribution({ bytes, contentStore, discoveryPublisher });
+    return runSnapshotDistribution({ bytes, contentStore, discoveryPublisher, publicationId, claimedPosition });
 }
 
 // The actual async sequence — split out of executeSnapshotDistributionCommand()
@@ -253,13 +275,15 @@ export function executeSnapshotDistributionCommand({
 // own first `await` ever suspends execution; see this file's own header,
 // "Collaborator contract violations are caught at the start, not
 // discovered mid-sequence."
-async function runSnapshotDistribution({ bytes, contentStore, discoveryPublisher }) {
+async function runSnapshotDistribution({ bytes, contentStore, discoveryPublisher, publicationId, claimedPosition }) {
     const contentReference = await contentStore.put(bytes);
 
     const announcement = await discoveryPublisher.publish({
         contentHash: contentReference.hash,
         locator: contentReference.uri,
-        storage: contentReference.storage
+        storage: contentReference.storage,
+        publicationId,
+        claimedPosition
     });
 
     return { contentReference, announcement };

@@ -1352,6 +1352,21 @@ export default {
         // `snapshotDistributionCommand` injected above — the same restraint
         // `distributeWorldEncounterPublication()` already holds, one family
         // over.
+        //
+        // 0.9.566 — Distribute Existing Claimed Position Through Snapshot
+        // Distribution. This function now also reads this Publication's own
+        // ALREADY-COMPUTED placement, exactly the same
+        // `session.getPlacementInfoForPublication(publicationId)` lookup
+        // `automaticSnapshotEncounterCascade`'s own `resolvePlacementInfo`
+        // above already calls, and forwards its `publicationId`/`position`
+        // as `claimedPosition` into `snapshotDistributionCommand` unchanged.
+        // NO NEW POSITION SOURCE: when this Publication has no authoritative
+        // `WorldPlacement` (`placementInfo` is `null` — a Publication that
+        // was never placed in THIS Wanderer's own World, not merely "not
+        // currently on screen"), both fields are omitted, exactly as before
+        // 0.9.566 — this function never falls back to the Wanderer's own
+        // current position, the encounter's position, or any other spatial
+        // state as a substitute claim.
         function distributeWorldEncounterSnapshot(publication) {
             if (!snapshotDistributionCommand || !publicationCatalogContentResolver) {
                 return Promise.reject(new Error('Snapshot distribution is not available.'));
@@ -1360,7 +1375,15 @@ export default {
             if (snapshotJson === null) {
                 return Promise.reject(new Error('Snapshot distribution is not available.'));
             }
-            return snapshotDistributionCommand(JSON.stringify(snapshotJson));
+            const placementInfo = typeof session.getPlacementInfoForPublication === 'function'
+                ? session.getPlacementInfoForPublication(publication.id)
+                : null;
+            return snapshotDistributionCommand(
+                JSON.stringify(snapshotJson),
+                undefined,
+                placementInfo ? placementInfo.publicationId : undefined,
+                placementInfo ? placementInfo.position : undefined
+            );
         }
 
         // 0.9.142 — World View Snapshot Discovery Command. The one thing

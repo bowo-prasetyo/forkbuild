@@ -2541,13 +2541,22 @@ app.provide('multiRelayNostrPublicationDistributionCommand', multiRelayNostrPubl
 // caller that has not been updated to pass one explicitly (`ui/views/
 // WorldView.js`'s own `distributeWorldEncounterSnapshot()`, and everything
 // downstream of it) keeps its exact pre-0.9.506 behavior, unchanged.
+//
+// 0.9.566 — this wrapper now also accepts, and forwards unmodified, the
+// identical optional `publicationId`/`claimedPosition` pair
+// `executeSnapshotDistributionCommand()` itself has accepted since 0.9.566
+// (and `discoveryPublisher.publish()` has accepted since 0.9.171) — this
+// call site computes neither field itself; see `ui/views/WorldView.js`'s
+// own `distributeWorldEncounterSnapshot()` for where they come from.
 const { discoveryPublisher: snapshotDiscoveryPublisher } = composeSnapshotDistributionRuntime({
     nostrSnapshotDiscoveryPublisherOptions: { publishImpl: nostrHostPublisher, discoveryTag: 'forkbuild-snapshot' }
 });
-const snapshotDistributionCommand = (bytes, storage = 'ar') => executeSnapshotDistributionCommand({
+const snapshotDistributionCommand = (bytes, storage = 'ar', publicationId, claimedPosition) => executeSnapshotDistributionCommand({
     bytes,
     contentStore: resolveSnapshotDistributionContentStore(snapshotPlacementStoreRegistry, storage),
-    discoveryPublisher: snapshotDiscoveryPublisher
+    discoveryPublisher: snapshotDiscoveryPublisher,
+    publicationId,
+    claimedPosition
 });
 app.provide('snapshotDistributionCommand', snapshotDistributionCommand);
 // 0.9.506 — the eligible-and-currently-registered Content backend list a

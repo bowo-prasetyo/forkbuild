@@ -520,8 +520,8 @@ async function runTests() {
         assert(/:snapshotDistributionCommand="distributeWorldEncounterSnapshot"/.test(viewCode),
             '37. WorldView.js forwards its own wrapper to WorldEncounterCanvas as its new snapshotDistributionCommand prop');
         assert(viewCode.includes('function distributeWorldEncounterSnapshot(publication)')
-            && viewCode.includes('return snapshotDistributionCommand(JSON.stringify(snapshotJson));'),
-            '38. distributeWorldEncounterSnapshot calls the injected snapshotDistributionCommand — never a second command');
+            && /return snapshotDistributionCommand\(\s*JSON\.stringify\(snapshotJson\),/.test(viewCode),
+            '38. (0.9.566) distributeWorldEncounterSnapshot still calls the injected snapshotDistributionCommand — never a second command — now forwarding placementInfo.publicationId/placementInfo.position alongside the serialized bytes.');
         assert(!/publication\.toJSON\(\)/.test(viewCode.split('function distributeWorldEncounterSnapshot')[1]?.split('\n\n')[0] || ''),
             '39. distributeWorldEncounterSnapshot never re-serializes the publication itself — it reads already-stored bytes back instead');
 

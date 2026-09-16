@@ -255,7 +255,7 @@ async function run() {
     // ===============================================================
     {
         const mainSource = await rawSource('ui/main.js');
-        check(/const snapshotDistributionCommand = \(bytes, storage = 'ar'\)/.test(mainSource),
+        check(/const snapshotDistributionCommand = \(bytes, storage = 'ar', publicationId, claimedPosition\)/.test(mainSource),
             "H. an omitted `storage` argument still defaults to 'ar' — every caller that has not been updated keeps its exact pre-0.9.506 Arweave-only behavior");
 
         const viewSource = await rawSource('ui/views/DecentralizedPublicationsView.js');
