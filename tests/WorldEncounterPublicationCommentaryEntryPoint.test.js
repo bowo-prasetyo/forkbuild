@@ -384,9 +384,19 @@ async function runTests() {
             '18. the command receives publicationId, content, commentaryId and createdAt — never authorIdentityId or any other field');
         assert(!('authorIdentityId' in receivedInput), '18b. authorIdentityId is never among the fields sent');
 
+        // AMENDED BY 0.9.558 — Known Publication Encounter Continuation.
+        // addPublicationCommentaryCommand is now called from exactly TWO
+        // places: submitEncounterCommentary() (the primary selection,
+        // reconfirmed by this very section) and
+        // submitObserverLocalEncounterCommentary() — a deliberately
+        // SEPARATE call site for a deliberately separate selection
+        // concept (see WorldEncounterCanvas.js's own "0.9.558" header),
+        // never a second, divergent commentary implementation. Both call
+        // sites send the identical shape this section already asserted
+        // above (18/18b).
         const canvasCode = await codeOnlySource('ui/components/WorldEncounterCanvas.js');
-        assert((canvasCode.match(/this\.addPublicationCommentaryCommand\(/g) || []).length === 1,
-            '19. addPublicationCommentaryCommand is called from exactly one place');
+        assert((canvasCode.match(/this\.addPublicationCommentaryCommand\(/g) || []).length === 2,
+            '19. AMENDED by 0.9.558: addPublicationCommentaryCommand is called from exactly two places — the primary selection\'s own submitEncounterCommentary(), and the new, separate submitObserverLocalEncounterCommentary() for an observer-local encounter.');
 
         console.log('✓ Section D: the exact encountered publicationId is what gets submitted and later queried');
     }

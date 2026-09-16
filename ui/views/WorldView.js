@@ -2468,6 +2468,40 @@ export default {
             refreshSpatialUI();
         }
 
+        // 0.9.558 — Known Publication Encounter Continuation. Reuses the
+        // EXACT SAME `/editor?load=<documentId>` navigation
+        // ui/components/PublicationCatalog.js's own openPublication(pub)
+        // already performs (0.9.557 Section A1) — never a second Open
+        // mechanism. Wired to WorldEncounterCanvas's own new
+        // `openPublicationCommand` prop, below, called with the already-
+        // resolved Publication instance its own observer-local encounter
+        // inspection produced — never a bare id string.
+        function openEncounteredPublicationCommand(publication) {
+            router.push({ path: '/editor', query: { load: publication.documentId } });
+        }
+
+        // 0.9.558 — mirrors openEncounteredPublicationCommand() exactly,
+        // one action over — the EXACT SAME `/editor?fork=<documentId>&
+        // publication=<id>` navigation PublicationCatalog.js's own
+        // forkPublication(pub) already performs (0.9.557 Section A2).
+        function forkEncounteredPublicationCommand(publication) {
+            router.push({ path: '/editor', query: { fork: publication.documentId, publication: publication.id } });
+        }
+
+        // 0.9.558 — mirrors openEncounteredPublicationCommand() exactly,
+        // one action over — reuses focusWorld(), immediately above,
+        // rather than a bare router.push(): 0.9.557 Section F1/F2 already
+        // established that PublicationCatalog.js's own viewWorld(pub) and
+        // this file's own focusWorld() reach the identical
+        // `/world/<documentId>` destination, and focusWorld() is this
+        // file's own established "move to another place in World"
+        // mechanism — never a second one, just for a Publication reached
+        // through an observer-local encounter rather than a Locations
+        // panel or Search result.
+        function exploreEncounteredPublicationCommand(publication) {
+            focusWorld(publication.documentId);
+        }
+
         function focusSelection() {
             session.focusSelection();
             refreshSpatialUI();
@@ -4492,6 +4526,9 @@ export default {
             feedbackMessage,
             feedbackVisible,
             focusWorld,
+            openEncounteredPublicationCommand,
+            forkEncounteredPublicationCommand,
+            exploreEncounteredPublicationCommand,
             focusSelection,
             openStructureSource,
             editInspectedCopy,
@@ -4958,7 +4995,24 @@ export default {
                      World Encounter Publication into the identical
                      app-wide catalog ui/views/DecentralizedPublicationsView.js's
                      own admitToRepositoryDiscovery() (0.9.337) already
-                     writes to, so Repository search can find it afterward. -->
+                     writes to, so Repository search can find it afterward.
+
+                     0.9.558 — openPublicationCommand/forkPublicationCommand/
+                     explorePublicationCommand, three new WorldEncounterCanvas
+                     props, bound to this file's own thin
+                     openEncounteredPublicationCommand()/
+                     forkEncounteredPublicationCommand()/
+                     exploreEncounteredPublicationCommand() wrappers,
+                     immediately above focusWorld()'s own definition —
+                     each reusing an EXISTING navigation exactly
+                     (PublicationCatalog.js's own openPublication()/
+                     forkPublication() route shapes, and this file's own
+                     focusWorld() for Explore). Lets WorldEncounterCanvas's
+                     own observer-local encounter inspection panel continue
+                     into Open/Fork/Explore for a Publication it already
+                     fully resolved, without this component ever
+                     performing navigation of its own — see
+                     WorldEncounterCanvas.js's own "0.9.558" header. -->
                 <CollapsibleSection
                     title="World Encounters"
                     :collapsed="nearbySectionsCollapsed.worldEncounters"
@@ -4980,6 +5034,9 @@ export default {
                         :defaultDiscoveryTag="publicationDiscoveryTag"
                         :decentralizedPublicationDiscoveryProvider="decentralizedDiscoveryProviderForEnrichment"
                         :observerLocalEncounterRegistry="observerLocalEncounterStore"
+                        :openPublicationCommand="openEncounteredPublicationCommand"
+                        :forkPublicationCommand="forkEncounteredPublicationCommand"
+                        :explorePublicationCommand="exploreEncounteredPublicationCommand"
                     />
                 </CollapsibleSection>
             </div>

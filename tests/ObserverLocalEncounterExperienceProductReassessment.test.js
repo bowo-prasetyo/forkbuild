@@ -900,13 +900,23 @@ async function runTests() {
         // change" — mirroring tests/NovelPublicationSpatialAdmissionProductBoundaryAudit.test.js's
         // own "knownAsOf0_9_552" precedent for the identical situation, one
         // milestone earlier in this same chain.
-        const knownAsOf0_9_554 = new Set([
+        // AMENDED AGAIN BY 0.9.558 — Known Publication Encounter
+        // Continuation, mirroring the 0.9.554 amendment immediately above
+        // exactly, one milestone later in the same chain: 0.9.557's own
+        // audit (a sibling test-only milestone) named the narrow wiring
+        // gap 0.9.558 then closed with real production changes to
+        // ui/views/WorldView.js (three new thin command wrappers) in
+        // addition to WorldEncounterCanvas.js itself — an accountable,
+        // named continuation of this same PRODUCT_GAP, not an unrelated
+        // change.
+        const knownAsOf0_9_558 = new Set([
             'ui/components/WorldEncounterCanvas.js',
+            'ui/views/WorldView.js',
             'css/main.css'
         ]);
-        const unexpectedProductionChanges = productionChanges.filter((path) => !knownAsOf0_9_554.has(path));
+        const unexpectedProductionChanges = productionChanges.filter((path) => !knownAsOf0_9_558.has(path));
         assert(unexpectedProductionChanges.length === 0,
-            `L3. No production file is modified beyond 0.9.554's own already-accounted-for interaction-capability implementation (unexpected changes: ${unexpectedProductionChanges.join(', ') || 'none'}).`);
+            `L3. No production file is modified beyond 0.9.554's/0.9.558's own already-accounted-for interaction-capability implementation (unexpected changes: ${unexpectedProductionChanges.join(', ') || 'none'}).`);
 
         console.log(`
 --------------------------------------------------------------------

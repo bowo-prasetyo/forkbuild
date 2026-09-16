@@ -572,8 +572,19 @@ async function runTests() {
         const panelEnd = canvasSource.indexOf('</div>\n\n            <!-- 0.9.183', panelBlockStart);
         const panel = canvasSource.slice(panelBlockStart, panelEnd > 0 ? panelEnd : panelBlockStart + 3000);
         assert(panelStart > 0, 'F0. Sanity: the dedicated observer-local inspection panel exists.');
-        assert(!/Open Publication|Fork|Explore|forkPublication|openPublication|viewWorld|Repository|Catalog/i.test(panel), 'F1. Reconfirmed: the inspection panel exposes no Open/Explore/Fork action and no Repository/Catalog navigation of any kind — a Wanderer who has fully inspected X (Material: AVAILABLE, Verification: VERIFIED) still cannot, from this panel, DO anything further with it.');
-        assert(/publicationId\s*\}\}/.test(panel) && /contentHash\s*\}\}/.test(panel), 'F2. The panel DOES render the raw publicationId and contentHash as plain, visible text (not merely internal state) — the one continuity mechanism a Wanderer has today: manually noting an identity string.');
+        // F1. AMENDED BY 0.9.558 — Known Publication Encounter
+        // Continuation, mirroring this arc's own established amendment
+        // precedent. The gap this section named ("no in-app action
+        // consumes the noted identity") is exactly what 0.9.557 traced to
+        // an already-existing seam and 0.9.558 then wired: the panel now
+        // DOES expose Open/Explore/Fork, gated on a genuine AVAILABLE +
+        // VERIFIED resolution — reusing the SAME already-resolved object,
+        // never a new "resolve by typed publicationId" mechanism (F4,
+        // below, still correctly finds none — this milestone never built
+        // one).
+        assert(panel.includes('>Open</button>') && panel.includes('>Explore</button>') && panel.includes('>Fork</button>'),
+            'F1. AMENDED by 0.9.558: the inspection panel now DOES expose Open/Explore/Fork — a Wanderer who has fully inspected X (Material: AVAILABLE, Verification: VERIFIED) can now act on it directly from this panel.');
+        assert(/publicationId\s*\}\}/.test(panel) && /contentHash\s*\}\}/.test(panel), 'F2. The panel still ALSO renders the raw publicationId and contentHash as plain, visible text — unchanged.');
 
         // F3 — is there another existing surface a Wanderer could reach
         // with that noted publicationId? PublicationCatalog.js is the real,
@@ -583,9 +594,9 @@ async function runTests() {
         // never by an arbitrary typed-in publicationId.
         const catalogSource = await rawSource('ui/components/PublicationCatalog.js');
         assert(/openPublication|forkPublication|viewWorld/.test(catalogSource), 'F3. Sanity: PublicationCatalog.js really does have Open/Fork/Explore (openPublication/forkPublication/viewWorld) — confirming SOME existing catalog concept exists in this codebase, exactly as the milestone brief speculated it might.');
-        assert(!/typed.*publicationId|manual.*publicationId|enter.*publication.*id/i.test(catalogSource), 'F4. But that catalog has no manual "resolve by typed publicationId" entry point — it is driven entirely by discoveryProvider-admitted entries. Noting the identity string from F2 has no known in-app destination today.');
+        assert(!/typed.*publicationId|manual.*publicationId|enter.*publication.*id/i.test(catalogSource), 'F4. That catalog still has no manual "resolve by typed publicationId" entry point — unaffected: 0.9.558 wired the observer-local panel to the ALREADY-RESOLVED object directly, never through a new typed-identity lookup into PublicationCatalog.js.');
 
-        console.log('✓ F — "remember this encounter" and "retain access to this Publication" are indeed different requirements, exactly as the milestone brief anticipated: the inspection panel exposes the Publication\'s real identity as text, but no in-app action consumes it, and the one existing catalog with real Open/Explore/Fork actions (PublicationCatalog.js) is reachable only via prior Repository admission — which Section G shows never happens for an observer-local encounter. Continuity through "the existing Open/Explore/Fork capabilities" is a real, but currently unrealized, possibility, not something already quietly available.');
+        console.log('✓ F — AMENDED: "remember this encounter" and "retain access to this Publication" remain different requirements, but 0.9.558 closed the "retain access" gap this section named for the encounter\'s own lifetime — Open/Explore/Fork now act on the already-resolved Publication directly, without ever routing through PublicationCatalog.js\'s own Repository-admission-gated catalog or inventing a typed-identity lookup.');
     }
 
     // ===============================================================

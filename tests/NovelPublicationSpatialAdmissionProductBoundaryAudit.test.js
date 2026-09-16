@@ -753,8 +753,26 @@ async function runTests() {
             .filter((line) => line.trim().length > 0)
             .map((line) => line.slice(3).trim())
             .filter((path) => !path.startsWith('tests/') && path !== 'tests.html');
-        assert(productionChanges.length === 0,
-            `I3. No production file is modified by this milestone (unexpected changes: ${productionChanges.join(', ') || 'none'}).`);
+        // AMENDED BY 0.9.558 — Known Publication Encounter Continuation,
+        // mirroring tests/ObserverLocalEncounterExperienceProductReassessment.test.js's
+        // own identical amendment, one file over: this milestone's own
+        // brief named a PRODUCT_GAP (0.9.556 Section D) that 0.9.557's
+        // audit traced to an existing seam and 0.9.558 then wired with
+        // real, accountable production changes to exactly these two
+        // files. `git status --porcelain` reflects whatever is currently
+        // uncommitted in the working tree at test-run time, not this
+        // milestone's own historical commit — narrowing to "no
+        // UNEXPLAINED change" keeps this assertion meaningful across a
+        // later milestone's own in-progress work, rather than failing for
+        // the correct reason that a later, accountable milestone touched
+        // these files.
+        const knownAsOf0_9_558 = new Set([
+            'ui/components/WorldEncounterCanvas.js',
+            'ui/views/WorldView.js'
+        ]);
+        const unexpectedProductionChanges = productionChanges.filter((path) => !knownAsOf0_9_558.has(path));
+        assert(unexpectedProductionChanges.length === 0,
+            `I3. No production file is modified by this milestone beyond 0.9.558's own already-accounted-for continuation wiring (unexpected changes: ${unexpectedProductionChanges.join(', ') || 'none'}).`);
 
         console.log(`
 --------------------------------------------------------------------
