@@ -143,6 +143,11 @@ Every creation offers three actions:
 | **Fork** | Copy it into your own editable creation |
 | **Explore** | Fly to it in World View |
 
+(**My Worlds**' own **Continue Exploring** button — see
+[My Worlds](03-WorldView.md#my-worlds--worlds-youve-actually-been-to) — does
+the same thing as **Explore** here, just worded for a World you've already
+visited rather than one you're finding for the first time.)
+
 Click any **author's name** to visit their **Author view** — a portfolio of
 everything they've made, including their originals and all the forks that grew
 from them, using the exact same search/sort/pagination catalog as the
@@ -168,6 +173,20 @@ It works just like forking a project in Git: you branch off, do your own thing,
 and the family tree keeps track of everyone. (It also happens automatically
 the moment you edit a published creation directly — see
 [Editing a published creation](#editing-a-published-creation) above.)
+
+> **Also called "Edit a Copy" in World View.** When you're looking at
+> something specific in World View — a region, a landmark, a placed
+> structure, a brick — its info panel offers this exact same action under
+> the label **Edit a Copy** instead of **Fork**. It's the same underlying
+> operation either way: a brand-new, independent copy; the original left
+> untouched; the same license rules above; and the same
+> [Fork Unavailable](#when-a-fork-cant-complete) handling if it can't go
+> through. The label just changes with where you're standing — Repository
+> and Author show you a *list* to pick a creation from, so "Fork" reads as
+> an action on a listed item; World View already has you looking at one
+> specific thing, so "Edit a Copy" describes what you're about to get
+> instead. See [Edit a Copy](03-WorldView.md#edit-a-copy--taking-something-into-the-editor)
+> for World View's own walkthrough of it.
 
 ### How to fork
 

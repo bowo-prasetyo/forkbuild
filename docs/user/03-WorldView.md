@@ -297,6 +297,15 @@ geographic place is a grouping of several people's own regions with no
 single document of its own to copy (open one of its regions instead), and
 a person is not a document at all.
 
+**This is the same action as the Repository, Author view, and World
+Encounters' own "Fork" button** — see
+[Forking: make it your own](04-PublishingAndForking.md#forking-make-it-your-own).
+Whichever label you click, you get the identical outcome: a brand-new,
+independent copy, the original left exactly as it was, and the same
+license rules. "Edit a Copy" is only worded differently here because
+you're already looking at the one specific thing being copied, rather
+than picking it out of a list.
+
 This is the *only* door out of World View's read-only surface. Everything
 else here — flying around, Search, Explore Here/What's Here?, the compass,
 the Map, Info — only ever looks.
@@ -379,12 +388,26 @@ camera nowhere the second time, yet the header still tells you which one
 you're now editing. Flying around and looking at things never changes what
 you're editing on its own; only actually selecting a brick or a document does.
 
+**"Go," on Explore's Nearby rows and on the Focus panel's own camera-move
+button (see [Edit a Copy](#edit-a-copy--taking-something-into-the-editor)
+above), names the same camera-move mechanic as the "Focus" buttons in
+Search, Locations, and Placement above** — a different word for the
+identical kind of operation depending on which panel you're in, not a
+different one. What else moving the camera does — whether it also
+changes the document you're editing, as Search's own Focus does above —
+still depends on context exactly as described in each panel's own
+section; saying "Go" instead of "Focus" changes none of that.
+
 ## My Worlds — worlds you've actually been to
 
 Click **My Worlds** in the top bar to see every World this device has
 visited before, most-recently-visited first, each showing its title,
-author, and structure/landmark counts where known. Click any card to fly
-straight back in.
+author, and structure/landmark counts where known. Click a card's
+**Continue Exploring** button to fly straight back in — the same fresh
+entry into World View as the Repository and Author view's own **Explore**
+button (see [The Repository](04-PublishingAndForking.md#the-repository)),
+just worded for a World you've already visited rather than one you're
+finding for the first time.
 
 This is a purely local, personal history — never a shared or published
 list, and not the same as the Repository or a search result: a World only
