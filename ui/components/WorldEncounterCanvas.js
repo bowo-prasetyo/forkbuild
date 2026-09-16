@@ -28,7 +28,7 @@ import { describePublicationMaterialProvenanceFromInspection } from '../../appli
 import { resolveSnapshotPublicationAttribution } from '../../application/SnapshotPublicationAttribution.js';
 import { describeWorldEncounterPresentation, describeWorldEncounterPresentationSourceFamily, WorldEncounterPresentationSourceFamily } from '../../application/WorldEncounterPresentation.js';
 import { describeWorldSnapshotInspection } from '../../application/WorldSnapshotInspection.js';
-import { unregisterMaterializedSnapshotWorldSource } from '../../application/MaterializedSnapshotWorldDiscoveryBridge.js';
+import { unregisterMaterializedSnapshotWorldSource, materializedSnapshotWorldOrigin } from '../../application/MaterializedSnapshotWorldDiscoveryBridge.js';
 import { describeWorldEncounterComparisonCandidate } from '../../application/WorldEncounterComparisonCandidate.js';
 import { compareSnapshotWorldPublications } from '../../application/WorldSnapshotComparison.js';
 import { describeWorldSnapshotContentView } from '../../application/WorldSnapshotContentView.js';
@@ -2372,6 +2372,212 @@ function shortContentHash(contentHash) {
 //   encounter.** See application/ObserverLocalEncounterStore.js's own
 //   header — this component only ever reflects whatever that store
 //   currently holds.
+//
+// 0.9.554 — AMENDED. "Selection, inspection, material loading... for an
+// observer-local encounter," immediately above, was this milestone's own
+// named exclusion — 0.9.553's own Section G confirmed it as the resulting
+// PRODUCT_GAP: an observer-local encounter rendered, but supported no
+// interaction of any kind, and routing it through the EXISTING selection
+// machinery (`selectEncounter()`/`selectionOutcome`/`resolvedEncounterSelection`)
+// resolved to a false `'UNAVAILABLE'` — a "this left the World" notice for
+// something that was never a registered `WorldEncounter` to begin with
+// (0.9.553's own Section G4, live-proven). See "0.9.554 — Observer-Local
+// Encounter Inspection Capability," below, for the narrow, genuinely
+// separate surface that closes exactly that gap without touching this
+// exclusion's own remaining restraint — see that section's own header for
+// why "not selectable" (this marker still binds no `@select`, is still
+// never a `<WorldEncounterMarker>`, and still never enters
+// `selectedEncounter`/`selectionOutcome`) is NOT the same restraint as "not
+// inspectable."
+//
+// 0.9.554 — OBSERVER-LOCAL ENCOUNTER INSPECTION CAPABILITY.
+//
+// 0.9.553's own Section G named the gap precisely: a Wanderer can PERCEIVE
+// that something was discovered ("Discovered here"), but has no way to ask
+// for more — and that same section's own G4 proved, empirically, that the
+// obvious-looking fix (routing an observer-local encounter through the
+// EXISTING `selectEncounter()` -> `selectionOutcome` -> `resolvedEncounterSelection`
+// chain) does not work: that chain answers "which currently-registered
+// `WorldDiscoverySource` offers this identity," and an observer-local
+// encounter, by construction (core/ObserverLocalPublicationEncounter.js's
+// own header, "no I/O... never registered with that registry at all"), is
+// never one. This milestone builds the narrow, SEPARATE surface 0.9.553's
+// own verdict called for instead:
+//
+//   click on the observer-local marker (a plain `<g>`, still never a
+//   `<WorldEncounterMarker>` — see "not selectable," above, unweakened)
+//                      │
+//                      ▼
+//   selectObserverLocalEncounter({ publicationId, contentHash })   ★ (THIS)
+//                      │
+//                      ▼
+//   selectedObserverLocalEncounter = { publicationId, contentHash }
+//                      │
+//                      ▼
+//   observerLocalEncounterResolvedSelection   (computed)   ★ (THIS)
+//        { kind: 'PUBLICATION', objectId: publicationId, origin }
+//                      │
+//        origin = materializedSnapshotWorldOrigin(contentHash, publicationId)
+//        (application/MaterializedSnapshotWorldDiscoveryBridge.js, 0.9.160/
+//         0.9.163, REUSED VERBATIM, never reimplemented)
+//                      │
+//                      ▼
+//   refreshObserverLocalEncounterInspection()   ★ (THIS)
+//        inspectWorldEncounterMaterial({ resolvedSelection, materialSources,
+//        verifier })   (application/WorldEncounterMaterialInspection.js,
+//        0.9.39, UNMODIFIED — the SAME orchestration boundary the primary
+//        selection already calls)
+//                      │
+//                      ▼
+//   observerLocalEncounterInspection = { selection, lead, loading, verification }
+//                      │
+//                      ▼
+//   a THIRD, separate inspection panel (never merged into the "World
+//   Encounter" panel, and never the Publication Catalog/Repository)
+//
+// WHY THIS WORKS WITHOUT THE REGISTRY: `application/
+// MaterializedSnapshotWorldDiscoveryBridge.js`'s own `materializedSnapshotWorldOrigin()`
+// derives `"snapshot:<contentHash>:<publicationId>"` as a PURE function of
+// exactly the two facts an observer-local encounter already carries — no
+// registry lookup, no candidate search. `application/
+// WorldEncounterMaterialLoading.js`'s own `materialSourceFor()` (0.9.166)
+// already routes any `"snapshot:*"`-prefixed origin to the SAME
+// `materialSources.local` slot a REGISTERED Snapshot's own material would
+// use — because a Snapshot's bytes are ALREADY LOCAL by the time a caller
+// ever reaches this point, whether or not this replica has ever placed it.
+// An observer-local encounter's own `AutomaticSnapshotEncounterCascade.js`
+// pipeline already reached exactly that point (DISCOVER -> RESOLVE ->
+// VERIFY -> MATERIALIZE) before ever producing the encounter in the first
+// place — see core/ObserverLocalPublicationEncounter.js's own header,
+// "AVAILABLE + VERIFIED remains a hard precondition." This milestone
+// therefore reuses the IDENTICAL local-origin material slot a placed
+// Snapshot already resolves through, computing the identical origin STRING
+// a future `registerMaterializedSnapshotWorldSource()` call for the SAME
+// publicationId/contentHash pair would itself derive — never a new loading
+// path, never a second `materialSources` slot, and never a guess at where
+// the bytes might be.
+//
+// NO SECOND DOWNLOAD, NO SECOND VERIFICATION MECHANISM — THE SAME
+// ORCHESTRATION BOUNDARY, CALLED FRESH. `refreshObserverLocalEncounterInspection()`
+// calls `inspectWorldEncounterMaterial()` — the IDENTICAL function
+// `refreshMaterialInspection()` already calls for the primary selection —
+// with the SAME `materialSources`/`materialVerifier` props this component
+// already holds. Because the resolved origin always names
+// `materialSources.local` for an observer-local encounter (see above), the
+// resulting `load()` call reads bytes this replica's own cascade already
+// materialized — a local read, never a second network fetch — and
+// `verifyWorldEncounterMaterial()` is the SAME verification boundary/
+// verifier every other World Encounter inspection already uses, never a
+// second, independently-invented check. This is composition, not a new
+// interpretation of identity or verification — see this file's own
+// long-held "never a fourth loader... never a second verifier" restraint,
+// continued here for a third selection concept.
+//
+// A THIRD, GENUINELY SEPARATE SELECTION CONCEPT — NEVER
+// `selectedEncounter`, NEVER `resolvedEncounterSelection`. Exactly the
+// restraint this milestone's own product brief asked for: "avoid reusing a
+// production method whose semantic meaning is specifically selection of an
+// authoritative resolvedEncounterSelection." `selectedObserverLocalEncounter`/
+// `observerLocalEncounterResolvedSelection`/`observerLocalEncounterInspection`/
+// `observerLocalEncounterInspectionRequestId` are FOUR new, independent
+// pieces of state, each mirroring an existing primary-selection counterpart
+// one concept over, and `selectObserverLocalEncounter()`/
+// `refreshObserverLocalEncounterInspection()`/
+// `dismissObserverLocalEncounterInspection()` never read or write
+// `selectedEncounter`, `selectionOutcome`, `resolvedSelectionChoice`,
+// `materialInspection`, or any comparison-panel state above — selecting
+// (or inspecting, or dismissing) an observer-local encounter never
+// disturbs the primary/comparison selection, and vice versa. Both may be
+// open, independently, at once — mirroring 0.9.553's own Section K, which
+// already proved the two rendering CHANNELS coexist without merging or
+// cross-counting; this milestone extends that same coexistence to
+// selection and inspection.
+//
+// NEVER `admitToRepositoryDiscovery()` — 0.9.553's OWN SECTION H BOUNDARY
+// STAYS EXACTLY WHERE IT WAS. `refreshMaterialInspection()` calls
+// `admitToRepositoryDiscovery()` unconditionally on every resolution (see
+// that method's own header); `refreshObserverLocalEncounterInspection()`
+// deliberately never does. Reusing `refreshMaterialInspection()` itself,
+// verbatim, for an observer-local encounter would have silently reversed
+// 0.9.553's own DELIBERATE_BOUNDARY finding (Section H: "an observer-local
+// encounter has no path, automatic or manual, into app-wide Repository
+// discovery today... a real product decision, not a repurposing of
+// anything that already bridges the two"). This milestone does not make
+// that decision — it writes its own, narrower `refreshObserverLocalEncounterInspection()`
+// specifically so Repository admission stays exactly as unreachable from
+// an observer-local encounter as it already was.
+//
+// NEVER THE PUBLICATION CATALOG/REPOSITORY BROWSER. This milestone's own
+// product brief was explicit: "I would not automatically open the full
+// Publication Catalog when the user selects an encounter... a lightweight
+// inspection surface... may be appropriate, but those actions should be
+// deliberately evaluated rather than inherited accidentally." The new
+// inspection panel below renders exactly `publicationId`, `contentHash`,
+// and the SAME Material/Verification vocabulary the primary panel already
+// renders — no Open/Explore/Fork action, no catalog navigation, no
+// Repository admission (see immediately above). Those remain deliberately
+// unbuilt, later, separately-evaluated work.
+//
+// EXACT PUBLICATION IDENTITY, NEVER SUBSTITUTED. `observerLocalEncounterResolvedSelection.objectId`
+// is always `selectedObserverLocalEncounter.publicationId` — the exact
+// field name core/ObserverLocalPublicationEncounter.js's own header already
+// drew this identity around. `contentHash` appears only inside the derived
+// `origin` string (as `materializedSnapshotWorldOrigin()` itself already
+// composes it) and in the panel's own display row — it is never treated as
+// a second, competing notion of "which Publication this is."
+//
+// STILL NEVER SELECTABLE THROUGH THE EXISTING MACHINERY, STILL NEVER A
+// PLACEMENT. This milestone changes nothing about "not selectable," above:
+// the marker is still a plain `<g>`, still binds no `@select`, and still
+// never becomes a `<WorldEncounterMarker>` or an entry in
+// `selectedEncounter`/`selectionOutcome`. It gains its OWN, narrow `@click`
+// binding — a different event, to a different method, writing different,
+// parallel state — never a repurposing of the existing selection concept
+// this file has held one meaning for since 0.9.4. Nothing in this
+// milestone constructs, reads, or references a `PlacementRecord` or a
+// `PlacementRegistry` of any kind, and no `WorldDiscoverySourceRegistry` is
+// ever mutated by any of it.
+//
+// A STALE OR DISMISSED SELECTION RENDERS NOTHING STALE. Mirroring
+// `materialInspectionRequestId`'s own guard (0.9.39) exactly, one selection
+// concept over: `observerLocalEncounterInspectionRequestId` is bumped on
+// every call to `refreshObserverLocalEncounterInspection()` (including on
+// `dismissObserverLocalEncounterInspection()` and on unmount), and a
+// resolved `inspectWorldEncounterMaterial()` response is only ever written
+// when it is still the most recent request. A late response for an
+// encounter the Wanderer has since dismissed, replaced with a different
+// selection, or that disappeared entirely (this component unmounted) is
+// silently discarded, never resurrecting stale state.
+//
+// DELIBERATELY EXCLUDED — NOT THIS MILESTONE.
+// - **"Find it again" / persistence / rediscovery of any kind.** Per this
+//   milestone's own product brief: "Because the encounter is intentionally
+//   ephemeral, 'find it again' raises a different product question...
+//   [it] should not be silently solved by making the encounter
+//   persistent." `selectedObserverLocalEncounter` holds exactly as long as
+//   this component instance does — no different than `selectedEncounter`
+//   itself already does.
+// - **Reputation, trust scores, spatial voting, or community moderation of
+//   any kind.** Unaffected by this milestone — inherited unchanged from
+//   0.9.552/0.9.553.
+// - **Promotion to a `PlacementRecord`, or admission into app-wide
+//   Repository discovery.** See "never `admitToRepositoryDiscovery()`,"
+//   above.
+// - **Open/Explore/Fork, commentary, or distribution actions for an
+//   observer-local encounter.** See "never the Publication Catalog/
+//   Repository browser," above — deliberately evaluated, later,
+//   unscheduled work.
+// - **A comparison surface, a "choose source" panel, or a decentralized
+//   lead resolution for an observer-local encounter.** This encounter's
+//   own material always resolves through `materialSources.local` alone
+//   (see "why this works without the registry," above) — there is no
+//   ambiguity to resolve and no lead to choose among.
+// - **Any change to `selectEncounter()`, `selectionOutcome`,
+//   `resolvedEncounterSelection`, `resolvedSelectionChoice`,
+//   `materialInspection`, `materialInspectionRequestId`, or
+//   `admitToRepositoryDiscovery()` itself.** All are byte-for-byte
+//   unchanged by this milestone — see "a third, genuinely separate
+//   selection concept," above.
 
 export default {
     name: 'WorldEncounterCanvas',
@@ -2650,6 +2856,31 @@ export default {
             // held only so `beforeUnmount()` can call it. `null` whenever
             // this mount never subscribed.
             unsubscribeObserverLocalEncounterRegistry: null,
+            // 0.9.554 — Observer-Local Encounter Inspection Capability.
+            // The Wanderer's own explicit pick of ONE observer-local
+            // encounter to inspect — `{ publicationId, contentHash }`,
+            // taken verbatim from a `projectedObserverLocalEncounters` row.
+            // `null` until `selectObserverLocalEncounter()` writes it.
+            // Deliberately NEVER `selectedEncounter` itself — see this
+            // file's own "0.9.554" header for why an observer-local
+            // encounter gets its own, separate selection concept rather
+            // than being folded into the authoritative one.
+            selectedObserverLocalEncounter: null,
+            // 0.9.554 — orchestration-derived material/verification
+            // snapshot for the CURRENT `selectedObserverLocalEncounter`,
+            // mirroring `materialInspection` (0.9.39) exactly, one
+            // selection concept over. `null` until
+            // `refreshObserverLocalEncounterInspection()` writes it; stays
+            // `null` whenever there is no current selection or no
+            // `materialSources`.
+            observerLocalEncounterInspection: null,
+            // 0.9.554 — mirrors `materialInspectionRequestId` (0.9.39)
+            // exactly, one selection concept over: a monotonically
+            // increasing counter guarding against a stale
+            // `inspectWorldEncounterMaterial()` response overwriting a
+            // newer one (bumped on every fresh selection, every dismissal,
+            // and on unmount).
+            observerLocalEncounterInspectionRequestId: 0,
             // 0.9.20 — page-local, registry-derived classification of the
             // CURRENT `selectedEncounter`. `null` until `refreshSelectionOutcome()`
             // writes it (see this file's own header, "selectionOutcome is
@@ -3042,6 +3273,39 @@ export default {
                 return stillOffered ? choice : null;
             }
             return null;
+        },
+        // 0.9.554 — a pure derivation of a resolvedSelection-shaped
+        // identity for the CURRENT `selectedObserverLocalEncounter` alone —
+        // `{ kind: 'PUBLICATION', objectId: publicationId, origin }`, where
+        // `origin` is EXACTLY `materializedSnapshotWorldOrigin()`'s own
+        // derivation (application/MaterializedSnapshotWorldDiscoveryBridge.js,
+        // reused verbatim, never reimplemented) for the encounter's own
+        // `contentHash`/`publicationId` pair. Deliberately never
+        // `resolvedEncounterSelection` immediately above itself, and never
+        // routed through `describeWorldEncounterSelectionOutcomeFromRegistry()`
+        // — see this file's own "0.9.554" header for why an observer-local
+        // encounter's own material is reachable WITHOUT the registry-
+        // candidate-search machinery a 0.9.553 Section G empirical probe
+        // already proved gives it a false UNAVAILABLE. `null` whenever
+        // there is no current `selectedObserverLocalEncounter`, or its own
+        // `contentHash`/`publicationId` fail `materializedSnapshotWorldOrigin()`'s
+        // own validation.
+        observerLocalEncounterResolvedSelection() {
+            if (!this.selectedObserverLocalEncounter) {
+                return null;
+            }
+            const origin = materializedSnapshotWorldOrigin(
+                this.selectedObserverLocalEncounter.contentHash,
+                this.selectedObserverLocalEncounter.publicationId
+            );
+            if (!origin) {
+                return null;
+            }
+            return Object.freeze({
+                kind: 'PUBLICATION',
+                objectId: this.selectedObserverLocalEncounter.publicationId,
+                origin
+            });
         },
         // 0.9.176 — the smallest possible World Snapshot Presentation seam:
         // a pure join of `selectedEncounterInspection` (0.9.16/0.9.18) and
@@ -3467,6 +3731,78 @@ export default {
                 return;
             }
             this.observerLocalEncounters = this.observerLocalEncounterRegistry.list();
+        },
+        // 0.9.554 — the only writer of `selectedObserverLocalEncounter`.
+        // Takes exactly one row of `projectedObserverLocalEncounters`'s own
+        // shape (the template's own click handler passes the marker
+        // verbatim) and stores just its `{ publicationId, contentHash }`
+        // identity — no lookup, no re-derivation. Deliberately NEVER
+        // touches `selectedEncounter`, `selectionOutcome`,
+        // `resolvedSelectionChoice`, or any comparison-panel state above —
+        // see this file's own "0.9.554" header, "a third, genuinely
+        // separate selection concept." Always triggers a fresh
+        // `refreshObserverLocalEncounterInspection()`, mirroring
+        // `selectEncounter()`'s own tail call to `refreshSelectionOutcome()`
+        // one selection concept over. A malformed `marker` (missing either
+        // identity field) is silently ignored, never throws.
+        selectObserverLocalEncounter(marker) {
+            if (!marker || typeof marker.publicationId !== 'string' || typeof marker.contentHash !== 'string') {
+                return;
+            }
+            this.selectedObserverLocalEncounter = { publicationId: marker.publicationId, contentHash: marker.contentHash };
+            this.refreshObserverLocalEncounterInspection();
+        },
+        // 0.9.554 — the only writer of `observerLocalEncounterInspection`,
+        // and the only caller of `inspectWorldEncounterMaterial()` for an
+        // observer-local encounter in this file. Mirrors
+        // `refreshMaterialInspection()` (0.9.39) exactly, one selection
+        // concept over, with two deliberate differences: it reads
+        // `observerLocalEncounterResolvedSelection` (never
+        // `resolvedEncounterSelection`), and it NEVER calls
+        // `admitToRepositoryDiscovery()` — see this file's own "0.9.554"
+        // header, "never admitToRepositoryDiscovery()," for why. Never
+        // supplies a `resolvedLead` — this encounter's own material always
+        // resolves through `materialSources.local` (its own derived
+        // `origin` names exactly that slot), so no decentralized lead
+        // resolution ever applies. A no-op (`observerLocalEncounterInspection`
+        // cleared to `null`) whenever there is no current
+        // `observerLocalEncounterResolvedSelection` or no `materialSources`
+        // — mirroring `refreshMaterialInspection()`'s own "no material
+        // source, no material inspection" restraint.
+        refreshObserverLocalEncounterInspection() {
+            this.observerLocalEncounterInspectionRequestId += 1;
+            const requestId = this.observerLocalEncounterInspectionRequestId;
+            const resolvedSelection = this.observerLocalEncounterResolvedSelection;
+
+            if (!resolvedSelection || !this.materialSources) {
+                this.observerLocalEncounterInspection = null;
+                return;
+            }
+
+            inspectWorldEncounterMaterial({
+                resolvedSelection,
+                materialSources: this.materialSources,
+                verifier: this.materialVerifier
+            }).then((result) => {
+                // 0.9.554 — mirrors `refreshMaterialInspection()`'s own
+                // stale-response guard exactly: a superseded response (a
+                // newer observer-local selection, a dismissal, or this
+                // component having since unmounted) is discarded, never
+                // written.
+                if (requestId === this.observerLocalEncounterInspectionRequestId) {
+                    this.observerLocalEncounterInspection = result;
+                }
+            });
+        },
+        // 0.9.554 — the only writer that ever clears
+        // `selectedObserverLocalEncounter` back to `null`. Also bumps
+        // `observerLocalEncounterInspectionRequestId` so a still-in-flight
+        // `inspectWorldEncounterMaterial()` call from the dismissed
+        // selection can never resurrect it.
+        dismissObserverLocalEncounterInspection() {
+            this.selectedObserverLocalEncounter = null;
+            this.observerLocalEncounterInspection = null;
+            this.observerLocalEncounterInspectionRequestId += 1;
         },
         // 0.9.20 — the only writer of `selectionOutcome`, and the only
         // caller of `describeWorldEncounterSelectionOutcomeFromRegistry()`
@@ -4455,6 +4791,11 @@ export default {
         // target too, mirroring the invalidation immediately above exactly,
         // one selection over.
         this.comparisonMaterialInspectionRequestId += 1;
+        // 0.9.554 — invalidates any still-pending
+        // `inspectWorldEncounterMaterial()` request for an observer-local
+        // encounter selection too, mirroring the invalidation immediately
+        // above, one selection concept over.
+        this.observerLocalEncounterInspectionRequestId += 1;
         // 0.9.100 — unsubscribes from `distributionLifecycleStore` too,
         // unconditionally and idempotently, mirroring the two blocks above.
         this.stopSubscription('unsubscribeDistributionLifecycle');
@@ -4511,13 +4852,17 @@ export default {
                     @select="selectEncounter"
                 />
 
-                <!-- 0.9.552 — see this file's own header, above, "vocabulary: discovered here, never placed." -->
+                <!-- 0.9.552 — see this file's own header, above, "vocabulary: discovered here, never placed."
+                     0.9.554 — @click added: see this file's own "0.9.554" header, "still never selectable
+                     through the existing machinery" — a genuinely separate event, bound to a genuinely
+                     separate method, never @select and never <WorldEncounterMarker>. -->
                 <g
                     v-for="marker in projectedObserverLocalEncounters"
                     :key="'observer-local:' + marker.publicationId + ':' + marker.contentHash"
                     class="world-encounter-observer-local-marker"
                     :transform="'translate(' + marker.x + ',' + marker.y + ')'"
                     :data-publication-id="marker.publicationId"
+                    @click="selectObserverLocalEncounter(marker)"
                 >
                     <text class="world-encounter-marker-glyph" text-anchor="middle" dy="4">📄</text>
                     <text class="world-encounter-observer-local-label" text-anchor="middle" dy="18">Discovered here</text>
@@ -4631,6 +4976,70 @@ export default {
                         </form>
                     </div>
                 </div>
+            </div>
+
+            <!-- 0.9.554 — Observer-Local Encounter Inspection Capability.
+                 A THIRD, separate inspection panel — never merged into the
+                 "World Encounter" panel above, and never a re-shaping of it.
+                 See this file's own "0.9.554" header for why:
+                 selectedObserverLocalEncounter names an ephemeral,
+                 session-local observation with no World-placement
+                 standing of its own, never
+                 selectedEncounter/resolvedEncounterSelection. Both
+                 panels may be open at once, independently — mirroring
+                 0.9.553's own Section K, which already proved the two
+                 rendering channels coexist without merging or
+                 cross-counting. -->
+            <div v-if="selectedObserverLocalEncounter" class="world-encounter-inspection-panel world-encounter-observer-local-inspection-panel">
+                <h4 class="world-encounter-inspection-title">Discovered Publication</h4>
+
+                <!-- Answers "is it temporary?" explicitly — see this
+                     milestone's own product brief, item 3: "The UI can
+                     explain that... This accurately reflects the
+                     session-scoped store without implying World
+                     placement." -->
+                <p class="world-encounter-observer-local-inspection-note">
+                    This was discovered during your current World session. It has not been placed
+                    anywhere in the shared World, and will not be found here again after you leave
+                    or reload.
+                </p>
+
+                <dl class="world-encounter-inspection-detail">
+                    <dt>Publication</dt>
+                    <dd>{{ selectedObserverLocalEncounter.publicationId }}</dd>
+                    <dt>Content Hash</dt>
+                    <dd class="world-encounter-inspection-content-hash">{{ selectedObserverLocalEncounter.contentHash }}</dd>
+                </dl>
+
+                <!-- Reuses the EXACT same Material/Verification vocabulary
+                     (and the same describeMaterialLoadStatusLabel()/
+                     describeMaterialVerificationStatusLabel() view helpers,
+                     application/WorldEncounterMaterialInspectionView.js) the
+                     primary selection's own panel already renders below —
+                     see this file's own "0.9.554" header, "the same
+                     orchestration boundary, called fresh." -->
+                <template v-if="observerLocalEncounterInspection">
+                    <h4 class="world-encounter-material-title">Material</h4>
+                    <dl class="world-encounter-material-detail">
+                        <dt>Status</dt>
+                        <dd>{{ describeMaterialLoadStatusLabel(observerLocalEncounterInspection.loading.status) }}</dd>
+                    </dl>
+
+                    <h4 class="world-encounter-verification-title">Verification</h4>
+                    <dl class="world-encounter-verification-detail">
+                        <dt>Status</dt>
+                        <dd>{{ describeMaterialVerificationStatusLabel(observerLocalEncounterInspection.verification.status) }}</dd>
+                    </dl>
+                </template>
+                <p v-else class="world-encounter-inspection-unavailable">
+                    This publication's material could not be inspected.
+                </p>
+
+                <button
+                    type="button"
+                    class="action-btn world-encounter-observer-local-inspection-close"
+                    @click="dismissObserverLocalEncounterInspection"
+                >Close</button>
             </div>
 
             <!-- 0.9.183 — a SEPARATE panel from the inspection actions row
