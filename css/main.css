@@ -5902,6 +5902,19 @@ html, body {
     cursor: pointer;
 }
 
+/* 0.9.554 — Observer-Local Encounter Inspection Capability. Clickable now,
+   mirroring .world-encounter-marker's own cursor above, one marker family
+   over. */
+.world-encounter-observer-local-marker {
+    cursor: pointer;
+}
+
+.world-encounter-observer-local-inspection-note {
+    margin: 0 0 0.5rem;
+    font-size: 11px;
+    color: #a0a0a0;
+}
+
 .world-encounter-marker-glyph {
     font-size: 16px;
     pointer-events: none;

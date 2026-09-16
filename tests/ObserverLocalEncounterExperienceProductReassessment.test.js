@@ -26,6 +26,7 @@ import { Position } from '../core/Position.js';
 import { Publication } from '../publisher/Publication.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import WorldEncounterCanvas from '../ui/components/WorldEncounterCanvas.js';
+import { materializedSnapshotWorldOrigin } from '../application/MaterializedSnapshotWorldDiscoveryBridge.js';
 
 // 0.9.553 — Observer-Local Encounter Experience Product Reassessment.
 //
@@ -257,6 +258,11 @@ function buildCanvasInstance({ registry = null, observerLocalEncounterRegistry =
     });
     Object.defineProperty(ctx, 'resolvedLead', {
         get() { return WorldEncounterCanvas.computed.resolvedLead.call(ctx); }
+    });
+    // 0.9.554 — mirrors the two getters immediately above, exactly, for
+    // the new observer-local-encounter-only resolved-selection computed.
+    Object.defineProperty(ctx, 'observerLocalEncounterResolvedSelection', {
+        get() { return WorldEncounterCanvas.computed.observerLocalEncounterResolvedSelection.call(ctx); }
     });
     return ctx;
 }
@@ -572,14 +578,22 @@ async function runTests() {
             'F3. "Is it real material or merely a claim?" and "Is it verified?" are UNANSWERED in the visible presentation — even though verification is, in fact, a hard precondition for this marker to exist at all (0.9.552\'s own "AVAILABLE + VERIFIED remains mandatory"). The invariant is real; it is simply never communicated.');
         assert(!/\btemporary\b|\bephemeral\b|\bsession\b|\bexpire[sd]?\b|\breload\b/i.test(block),
             'F4. "Is it temporary?" is UNANSWERED — nothing in the rendered presentation hints that this marker will not survive a reload (see Section B6) or another Wanderer\'s own separate session (see Section J).');
-        assert(!/@select|@click|cursor:\s*pointer/i.test(block),
-            'F5. "Can I inspect it?" is UNANSWERED, and — see Section G — the true answer today is no: there is no click handler of any kind bound to this marker.');
+        // AMENDED BY 0.9.554 — Observer-Local Encounter Inspection
+        // Capability. This assertion originally asserted the ABSENCE of
+        // any click handler on this marker, naming that absence as exactly
+        // the PRODUCT_GAP Section G went on to detail. 0.9.554 closed that
+        // gap with a narrow, separate inspection surface (see that
+        // milestone's own header in ui/components/WorldEncounterCanvas.js)
+        // — this now asserts the fact that closure actually produced,
+        // rather than loosening the check to stop noticing either way.
+        assert(/@click/.test(block), 'F5. AMENDED BY 0.9.554: "Can I inspect it?" now has an answer — a dedicated @click handler is bound to this marker (see tests/ObserverLocalEncounterInspectionCapability.test.js for the full new capability).');
+        assert(!/@select/i.test(block), 'F5b. Still never wired through the existing WorldEncounterMarker\'s own @select emission, and still never routed through selectEncounter()/selectionOutcome — see Section G below, unchanged: that machinery still resolves an observer-local encounter to a false UNAVAILABLE.');
         assert(!/\bagain\b|\bpersist/i.test(block),
             'F6. "Can I find it again?" is UNANSWERED — and, per Section B6, the honest answer is usually no.');
         assert(!/Placed|Official location|Located by publisher|Trusted location|Authoritative|Owned/i.test(block),
             'F7. Confirmed ALREADY_CORRECT: the vocabulary this milestone\'s own brief cared most about avoiding (a false claim of placement/trust/authority) is genuinely absent from the rendered text.');
 
-        console.log('✓ F — of the seven questions this milestone\'s own brief posed, the rendered presentation answers "why is it here" (partially) and implicitly signals non-placement (F7, correctly); it leaves "what is it," "is it verified," "is it temporary," "can I inspect it," and "can I find it again" genuinely unanswered. None of these are safety problems — the underlying invariants (verification, ephemerality) are all real and already correctly enforced (see Sections A, B) — they are simply never communicated to the Wanderer today.');
+        console.log('✓ F — AMENDED BY 0.9.554: of the seven questions this milestone\'s own brief posed, "can I inspect it" is now answered (F5) by that follow-up\'s own dedicated click handler and inspection panel — see tests/ObserverLocalEncounterInspectionCapability.test.js. The rendered marker itself still leaves "what is it," "is it verified," "is it temporary," and "can I find it again" unanswered (0.9.554 answers the first three in its own, separate inspection panel instead, deliberately never inside this marker\'s own <g> block — see that milestone\'s own header); it still answers "why is it here" (partially) and implicitly signals non-placement (F7, correctly).');
     }
 
     // ===============================================================
@@ -589,7 +603,12 @@ async function runTests() {
         const canvasSource = await rawSource('ui/components/WorldEncounterCanvas.js');
         const blockStart = canvasSource.indexOf('world-encounter-observer-local-marker');
         const block = canvasSource.slice(blockStart, canvasSource.indexOf('</g>', blockStart));
-        assert(!block.includes('@select'), 'G1. Structurally: the observer-local marker binds no @select handler of any kind — clicking it (if a Wanderer tried) does literally nothing today.');
+        // AMENDED BY 0.9.554: the marker now DOES bind a click handler
+        // (@click, checked in Section F's own F5) — this assertion still
+        // holds, and still matters, for a narrower reason: it confirms
+        // that handler is never @select, i.e. never a repurposing of the
+        // EXISTING selection component's own emission contract (0.9.4).
+        assert(!block.includes('@select'), 'G1. Structurally: the observer-local marker still binds no @select handler of any kind — 0.9.554\'s own @click (see Section F\'s F5) is a genuinely separate event, never this one.');
         assert(!block.includes('<WorldEncounterMarker'), 'G2. Structurally: it is a plain <g>, never a <WorldEncounterMarker> — it never enters the existing selection component at all.');
         assert(!/PlacementRecord/.test(block), 'G3. Sanity: nothing near this marker constructs or references a PlacementRecord — a future inspect affordance here would not need to touch that machinery either (the tooltip\'s own single, deliberate mention of "placement" is the disclaiming sentence itself, checked in Section F).');
 
@@ -611,9 +630,21 @@ async function runTests() {
         mountCanvas(ctx);
         ctx.selectEncounter({ kind: WorldEncounterKind.PUBLICATION, objectId: publicationId });
         assert(ctx.selectionOutcome && ctx.selectionOutcome.status === WorldEncounterSelectionOutcomeStatus.UNAVAILABLE,
-            `G4. Confirms 0.9.552's own header verbatim: routing an observer-local encounter through the EXISTING selection machinery resolves to UNAVAILABLE — a false "this left the World" notice for something that was never a registered WorldEncounter (got ${ctx.selectionOutcome && ctx.selectionOutcome.status}). This is exactly why 0.9.552 correctly declined to wire @select here — but it also means there is, TODAY, no working alternative path to inspect one either.`);
+            `G4. Confirms 0.9.552's own header verbatim: routing an observer-local encounter through the EXISTING selection machinery STILL resolves to UNAVAILABLE — a false "this left the World" notice for something that was never a registered WorldEncounter (got ${ctx.selectionOutcome && ctx.selectionOutcome.status}). 0.9.554 did not fix this path, and was never supposed to (see this file's own G1 amendment) — it built a genuinely separate one instead (see G5 below).`);
 
-        console.log('✓ G — PRODUCT_GAP, confirmed: an observer-local encounter renders, but supports no interaction of any kind — not selectable, not inspectable, no affordance signaling that this is deliberate rather than broken. Wiring the EXISTING selection machinery would only produce a false UNAVAILABLE notice (G4); a real fix would need a genuinely separate, narrow "observe -> select -> inspect" surface — never "observe -> select -> modify World placement" (G3: nothing here should ever construct a PlacementRecord). This file builds no such surface — see this milestone\'s own "deliberately excluded," above.');
+        // AMENDED BY 0.9.554 — the narrow, separate path G4 shows is
+        // missing from the EXISTING machinery now exists, alongside it,
+        // never through it: selectObserverLocalEncounter() resolves this
+        // exact publicationId/contentHash straight to materialSources.local
+        // (via materializedSnapshotWorldOrigin(), reused verbatim), with no
+        // registry candidate search at all.
+        ctx.selectObserverLocalEncounter({ publicationId, contentHash: result.encounter.contentHash });
+        assert(ctx.selectedObserverLocalEncounter && ctx.selectedObserverLocalEncounter.publicationId === publicationId,
+            'G5. AMENDED BY 0.9.554: the SAME observer-local encounter G4 just proved unreachable through the existing selection machinery IS reachable through the new, separate one.');
+        assert(ctx.observerLocalEncounterResolvedSelection && ctx.observerLocalEncounterResolvedSelection.origin === materializedSnapshotWorldOrigin(result.encounter.contentHash, publicationId),
+            'G6. The new path resolves to the EXACT snapshot:<contentHash>:<publicationId> origin a future registration for this same pair would itself derive — never a guess, never a re-implementation.');
+
+        console.log('✓ G — AMENDED BY 0.9.554: an observer-local encounter now supports a genuinely separate, narrow "observe -> select -> inspect" surface (G5-G6) — never "observe -> select -> modify World placement" (G3, still true: nothing here constructs a PlacementRecord), and never a repurposing of the EXISTING selection machinery, which G4 confirms still correctly reports this identity as UNAVAILABLE through that unrelated path. See tests/ObserverLocalEncounterInspectionCapability.test.js for the full new capability\'s own acceptance criteria.');
     }
 
     // ===============================================================
@@ -819,8 +850,8 @@ async function runTests() {
             ['Cross-Wanderer isolation, and its genuine difference from ordinary decentralized discovery', 'ALREADY_CORRECT — Section J: isolation holds; independent, per-observer decentralized discovery is unweakened.'],
             ['Async ownership under concurrent/interleaved candidates (no single "current" slot)', 'ALREADY_CORRECT — Section I: keyed per-subject; no re-emergence of the class of bug 0.9.536-0.9.537 closed.'],
             ['Mechanical separation between authoritative Placement and observer-local Encounter rendering', 'ALREADY_CORRECT — Section K: both channels coexist correctly in one mount without merging or cross-counting.'],
-            ['Whether the rendered presentation communicates what/verified/temporary/inspectable/findable-again', 'DOCUMENTATION_GAP — Section F: the underlying invariants (verification, ephemerality) are all real and already correctly enforced; none of the five is ever communicated to the Wanderer in the rendered text.'],
-            ['A Wanderer\'s ability to interact with (select/inspect) an observer-local encounter', 'PRODUCT_GAP — Section G: no interaction of any kind is supported; the existing selection machinery would only produce a false UNAVAILABLE notice if wired in as-is.'],
+            ['Whether the rendered presentation communicates what/verified/temporary/inspectable/findable-again', 'DOCUMENTATION_GAP, PARTIALLY CLOSED BY 0.9.554 — Section F: "inspectable" is now answered (a click handler and a dedicated inspection panel); "what/verified/temporary" are answered inside that new panel (never inside the marker\'s own rendered text); "findable-again" remains unanswered, deliberately (see 0.9.554\'s own "deliberately excluded").'],
+            ['A Wanderer\'s ability to interact with (select/inspect) an observer-local encounter', 'PRODUCT_GAP, CLOSED BY 0.9.554 — Section G: a narrow, separate "observe -> select -> inspect" surface now exists (G5-G6), reusing the existing material inspection orchestration boundary without routing through the existing selection machinery, which G4 confirms still correctly reports UNAVAILABLE for this unrelated path.'],
             ['Automatic or manual promotion of an observer-local encounter into Repository discovery', 'DELIBERATE_BOUNDARY — Section H: genuinely, mechanically separate today; a real product decision, not a repurposing of anything that already bridges the two.']
         ];
         for (const [surface, verdict] of classifications) {
@@ -855,8 +886,27 @@ async function runTests() {
             .filter((line) => line.trim().length > 0)
             .map((line) => line.slice(3).trim())
             .filter((path) => !path.startsWith('tests/') && path !== 'tests.html');
-        assert(productionChanges.length === 0,
-            `L3. No production file is modified by this milestone (unexpected changes: ${productionChanges.join(', ') || 'none'}).`);
+        // AMENDED BY 0.9.554 — Observer-Local Encounter Inspection
+        // Capability. This reassessment's OWN commit still shipped zero
+        // production changes (unchanged fact, see the header above,
+        // "Production changes: none"). But this milestone's own G/L
+        // sections went on to name a real PRODUCT_GAP that a subsequent,
+        // accountable milestone (0.9.554) then closed with real production
+        // changes to exactly the two files below — precisely the outcome
+        // Section G called for, not an unrelated or accidental one. Rather
+        // than assert zero production changes forever (which would make
+        // THIS test fail for the correct reason that its own named gap got
+        // fixed), this narrows the check to "no UNEXPLAINED production
+        // change" — mirroring tests/NovelPublicationSpatialAdmissionProductBoundaryAudit.test.js's
+        // own "knownAsOf0_9_552" precedent for the identical situation, one
+        // milestone earlier in this same chain.
+        const knownAsOf0_9_554 = new Set([
+            'ui/components/WorldEncounterCanvas.js',
+            'css/main.css'
+        ]);
+        const unexpectedProductionChanges = productionChanges.filter((path) => !knownAsOf0_9_554.has(path));
+        assert(unexpectedProductionChanges.length === 0,
+            `L3. No production file is modified beyond 0.9.554's own already-accounted-for interaction-capability implementation (unexpected changes: ${unexpectedProductionChanges.join(', ') || 'none'}).`);
 
         console.log(`
 --------------------------------------------------------------------
@@ -908,6 +958,16 @@ correctly so, not a gap to close.
 Per this milestone's own brief, no interaction surface, persistence,
 reputation, or Repository-promotion mechanism is built here. No
 production code changes ship with this milestone.
+
+AMENDED BY 0.9.554 — Observer-Local Encounter Inspection Capability.
+The PRODUCT_GAP above is now closed: ui/components/WorldEncounterCanvas.js
+gained a narrow, separate "observe -> select -> inspect" surface (this
+file's own Sections F/G, amended in place rather than rewritten) — never
+routed through the existing selection machinery, never a Repository/
+Catalog action, and never a PlacementRecord. Persistence ("find it again")
+and Repository promotion remain exactly as unbuilt as this reassessment
+found them. See tests/ObserverLocalEncounterInspectionCapability.test.js
+for that milestone's own full acceptance criteria.
 --------------------------------------------------------------------
 `);
     }
