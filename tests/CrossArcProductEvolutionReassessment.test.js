@@ -414,31 +414,31 @@ async function runTests() {
             'E4b. ui/components/OwnPublicationPanel.js is that one component.');
 
         // E5. The six UI surfaces that render OTHER Wanderers'
-        // Publications, as this milestone found them — four still carry
-        // zero commentary vocabulary; two, PublicationCard.js (0.9.289)
-        // and WorldEncounterCanvas.js (0.9.291), were wired since (see
-        // docs/Roadmap.md's own 0.9.289/0.9.291 entries). This section is
-        // re-checked fresh against real source on every run, so it now
-        // documents both transitions explicitly rather than asserting a
-        // fact either milestone deliberately made false for its own
-        // surface.
+        // Publications, as this milestone found them — three still carry
+        // zero commentary vocabulary; three, PublicationCard.js (0.9.289),
+        // WorldEncounterCanvas.js (0.9.291), and PublicationList.js
+        // (0.9.561), were wired since (see docs/Roadmap.md's own
+        // 0.9.289/0.9.291 entries and tests/PublicationListCommentaryParity.test.js
+        // for 0.9.561). This section is re-checked fresh against real
+        // source on every run, so it now documents all three transitions
+        // explicitly rather than asserting a fact a later milestone
+        // deliberately made false for its own surface.
         const stillUnwiredOtherPublicationSurfaces = [
             'ui/components/PublicationCatalog.js',
             'ui/components/PublicationPreview.js',
-            'ui/components/PublicationList.js',
             'ui/views/DecentralizedPublicationsView.js'
         ];
         for (const path of stillUnwiredOtherPublicationSurfaces) {
             assert(await sourceExists(path), `E5a. ${path} still exists.`);
             const source = await rawSource(path);
             assert(!/[Cc]ommentary/.test(source),
-                `E5b. ${path} still carries zero commentary vocabulary — 0.9.289/0.9.291 deliberately wired only TWO of the six surfaces this section named.`);
+                `E5b. ${path} still carries zero commentary vocabulary — 0.9.289/0.9.291/0.9.561 deliberately wired only THREE of the six surfaces this section named.`);
         }
-        for (const path of ['ui/components/PublicationCard.js', 'ui/components/WorldEncounterCanvas.js']) {
+        for (const path of ['ui/components/PublicationCard.js', 'ui/components/WorldEncounterCanvas.js', 'ui/components/PublicationList.js']) {
             assert(await sourceExists(path), `E5c. ${path} still exists.`);
             const source = await rawSource(path);
             assert(/[Cc]ommentary/.test(source),
-                `E5d. ${path} now carries commentary vocabulary — 0.9.289/0.9.291 closed this Section's own finding for exactly these two surfaces, per its own recommendation.`);
+                `E5d. ${path} now carries commentary vocabulary — 0.9.289/0.9.291/0.9.561 closed this Section's own finding for exactly these three surfaces, per its own recommendation.`);
         }
 
         // E6. Each of those six surfaces already resolves a concrete

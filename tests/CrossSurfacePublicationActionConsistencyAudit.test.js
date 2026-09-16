@@ -490,15 +490,20 @@ async function runTests() {
         assert(retry.isNew === false, 'G3b. A same-id, same-content retry — the exact shape every one of the four UI call sites reuses on an unchanged draft — is reported as a no-op, never a duplicate.');
         assert(getCommentaries.execute({ publicationId }).length === 1, 'G3c. Exactly one commentary persisted despite two submit calls — the shared contract every consumer relies on holds.');
 
-        // G4. THE real, named gap: PublicationList.js — the alternate
-        // row/list view of the IDENTICAL Repository/Author catalog data
-        // PublicationCard.js already offers Commentary for — has NO
-        // commentary UI at all. Same publications, same catalog, same
-        // page; only the chosen VIEW MODE decides whether Commentary is
-        // reachable.
-        assert(!/getPublicationCommentariesCommand|addPublicationCommentaryCommand|commentary/i.test(publicationListSource), 'G4. Confirmed: PublicationList.js has zero commentary references — switching a Repository/Author page from cards to list view silently hides Commentary for the exact same publications.');
+        // G4. THE gap this milestone (0.9.560) itself named: PublicationList.js
+        // — the alternate row/list view of the IDENTICAL Repository/Author
+        // catalog data PublicationCard.js already offers Commentary for —
+        // had NO commentary UI at all. CLOSED by 0.9.561, exactly along the
+        // lines this milestone's own "CONCRETE RECOMMENDATION" (see Section
+        // J below) described: PublicationList.js now injects the SAME
+        // getPublicationCommentariesCommand/addPublicationCommentaryCommand
+        // PublicationCard.js already injects — no new command, no new
+        // composition root. Re-checked here fresh against current source
+        // rather than left asserting a fact 0.9.561 deliberately made false.
+        assert(/getPublicationCommentariesCommand/.test(publicationListSource) && /addPublicationCommentaryCommand/.test(publicationListSource),
+            'G4. 0.9.561 closed this milestone\'s own named gap: PublicationList.js now carries commentary wiring — switching a Repository/Author page from cards to list view no longer hides Commentary for the same publications.');
 
-        console.log('✓ G — Commentary is publicationId-keyed and retry-idempotent, identically, everywhere it exists (proven structurally across all three composing files, and live against the real store\'s own shared contract). One real, narrow, PREVIOUSLY-NAMED-BUT-STILL-OPEN gap survives: PublicationList.js, the alternate view of the SAME Repository/Author catalog PublicationCard.js already serves, offers no Commentary at all (see Section J for classification).');
+        console.log('✓ G — Commentary is publicationId-keyed and retry-idempotent, identically, everywhere it exists (proven structurally across all three composing files, and live against the real store\'s own shared contract). The one real, narrow gap this milestone named — PublicationList.js offering no Commentary at all — was CLOSED by 0.9.561 (see Section J for the original classification and this note for its resolution).');
     }
 
     // ===============================================================
@@ -648,14 +653,16 @@ correctness a prior milestone already closed.
 
   G — ALREADY_CORRECT for identity/idempotency (proven structurally
       across all three composing files and live against the real
-      store's shared contract), plus one real, narrow PRODUCT_GAP:
-      PublicationList.js — the alternate view of the SAME Repository/
-      Author catalog PublicationCard.js already serves Commentary for —
-      offers none. Already self-documented as a deliberate, scoped
-      0.9.289 exclusion, not a regression; this milestone's own
-      contribution is confirming it is STILL open, at the cross-surface
-      altitude that makes it visible as a within-surface inconsistency
-      rather than a merely-deferred feature.
+      store's shared contract). The one real, narrow PRODUCT_GAP this
+      milestone named — PublicationList.js, the alternate view of the
+      SAME Repository/Author catalog PublicationCard.js already served
+      Commentary for, offering none — was CLOSED by 0.9.561 (Publication
+      List Commentary Parity), which wired PublicationList.js to the
+      SAME getPublicationCommentariesCommand/addPublicationCommentaryCommand
+      PublicationCard.js already injects, per this milestone's own
+      "CONCRETE RECOMMENDATION" below. G4 (above) is re-checked live
+      against current source rather than left asserting the now-closed
+      gap.
 
   H — ALREADY_CORRECT. One failure-presentation path (one
       forkFailure.value assignment, one <ForkFailureDialog>) for every
@@ -674,15 +681,16 @@ correctness a prior milestone already closed.
       and because every comment audited explains a genuine, considered
       reason for the specific word chosen on each surface.
 
-CONCRETE RECOMMENDATION, IF EITHER GAP IS EVER ACTED ON (neither is
-acted on in this test-only milestone):
+CONCRETE RECOMMENDATION (neither gap was acted on in this original,
+test-only milestone; G's gap was later acted on by 0.9.561):
 
-  - G's gap: wire PublicationList.js's row template to accept the SAME
+  - G's gap: CLOSED by 0.9.561 (Publication List Commentary Parity) —
+    PublicationList.js now injects the SAME
     getPublicationCommentariesCommand/addPublicationCommentaryCommand
-    injected props PublicationCard.js already consumes (both already
-    sit inside the identical PublicationCatalog.js, receiving the
-    identical injected commands via Vue's inject() — no new composition,
-    no new command, no new use case). A single, narrow, well-understood
+    PublicationCard.js already consumes (both sit inside the identical
+    PublicationCatalog.js, receiving the identical injected commands via
+    Vue's inject() — no new composition, no new command, no new use
+    case, exactly as recommended here). A single, narrow, well-understood
     seam — never an "Action Framework."
 
   - I's gap: a short glossary entry in user-facing help (or a tooltip)

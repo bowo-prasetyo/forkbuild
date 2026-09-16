@@ -328,12 +328,21 @@ async function runTests() {
 
         // C6. Discovery-level Commentary-activity signal — already
         // established (0.9.307 F1) as a real, but unestablished-semantics
-        // gap. Reconfirmed unchanged: the app-wide Discovery listing still
-        // carries zero commentary vocabulary.
+        // gap. Reconfirmed for the THREE surfaces still true of: Catalog
+        // (the host) and Preview (a thumbnail tile) never gained full
+        // Commentary; DecentralizedPublicationsView stays a deliberately
+        // different, verification-technical surface (0.9.290/0.9.305's
+        // own classification, unchanged). PublicationList.js is excluded
+        // from this check as of 0.9.561 (Publication List Commentary
+        // Parity), which gave it the SAME full commentary thread
+        // PublicationCard.js already carries — the narrower "bare
+        // activity COUNT, no thread" question this sub-finding names no
+        // longer applies to List either, the same way it never applied
+        // to Card.
         const discoveryHits = await grepCount('ommentary', ['ui/views/DecentralizedPublicationsView.js',
-            'ui/components/PublicationCatalog.js', 'ui/components/PublicationList.js', 'ui/components/PublicationPreview.js']);
-        assert(discoveryHits === 0, 'C6. The app-wide Discovery listing and its catalog/list/preview components still carry zero commentary vocabulary.');
-        classifications.push(['Discovery-level Commentary-activity count', 'DEFER — real gap, unestablished semantics (0.9.307\'s own finding: 0.9.305 already answered "should the FULL Commentary UI live here" (no) without separately answering "should a bare COUNT"). Unchanged since 0.9.307; still not selected.']);
+            'ui/components/PublicationCatalog.js', 'ui/components/PublicationPreview.js']);
+        assert(discoveryHits === 0, 'C6. The app-wide Discovery listing and its remaining catalog/preview components still carry zero commentary vocabulary.');
+        classifications.push(['Discovery-level Commentary-activity count', 'DEFER — real gap, unestablished semantics (0.9.307\'s own finding: 0.9.305 already answered "should the FULL Commentary UI live here" (no) without separately answering "should a bare COUNT"). Unchanged since 0.9.307 for Catalog/Preview/DecentralizedPublicationsView; moot for PublicationList.js since 0.9.561 gave it the full thread, not merely a count.']);
 
         // C7. Editor Structure-Document history timeline / World-Document
         // autosave-recovery parity — already established (0.9.307 C3/C4/D4)

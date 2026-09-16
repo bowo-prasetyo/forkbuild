@@ -833,31 +833,30 @@ async function runTests() {
     }
 
     // ---------------------------------------------------------------
-    // Section K — Remaining four surfaces, classified rather than
-    // wired; the fifth this section originally classified,
-    // WorldEncounterCanvas.js, was picked up by 0.9.291 exactly as this
+    // Section K — Remaining three surfaces, classified rather than
+    // wired; the other two this section originally classified,
+    // WorldEncounterCanvas.js and PublicationList.js, were picked up by
+    // 0.9.291 and 0.9.561 respectively — 0.9.291 exactly as this
     // Section's own original rationale anticipated ("a real 0.9.291
-    // candidate") — see the trailing block below this one for that
-    // transition, checked fresh against current source rather than
-    // asserted from this milestone's own frozen header. This section
-    // makes no production change of its own; it records, with concrete
-    // evidence from each remaining file's own current source, why each
-    // of the four still-unwired surfaces 0.9.288 named stays unwired for
-    // now.
+    // candidate"), and 0.9.561 after 0.9.560's own cross-surface audit
+    // reconfirmed PublicationList.js's exclusion (below) as a genuine,
+    // still-open gap rather than a permanently-settled one — see the
+    // trailing block below this one for both transitions, checked fresh
+    // against current source rather than asserted from this milestone's
+    // own frozen header. This section makes no production change of its
+    // own; it records, with concrete evidence from each remaining file's
+    // own current source, why each of the three still-unwired surfaces
+    // 0.9.288 named stays unwired for now.
     // ---------------------------------------------------------------
     {
         const classifications = {
             'ui/components/PublicationCatalog.js': {
                 label: 'no additional action justified',
-                reason: 'the shared HOST that mounts PublicationCard/PublicationList — it never itself renders a single Publication\'s identity long enough to host a comment thread; commentary already reaches every Publication it lists, through the card it already mounts.'
+                reason: 'the shared HOST that mounts PublicationCard/PublicationList — it never itself renders a single Publication\'s identity long enough to host a comment thread; commentary already reaches every Publication it lists, through the card (and, since 0.9.561, the list row) it already mounts.'
             },
             'ui/components/PublicationPreview.js': {
                 label: 'semantically awkward',
-                reason: 'a small thumbnail/placeholder tile embedded INSIDE PublicationCard/PublicationList — a compose form or comment list has no natural home inside a preview tile, and the host that already carries commentary is one component away.'
-            },
-            'ui/components/PublicationList.js': {
-                label: 'PublicationCard already indirectly covers the use case',
-                reason: 'the compact table alternate view of the exact SAME PublicationCatalog/Publications PublicationCard already serves — its own header names its purpose as "scanning a lot of results quickly," which a full commentary thread per row would directly undermine; a viewer who wants to comment already has Card view available for the identical Publication.'
+                reason: 'a small thumbnail/placeholder tile embedded INSIDE PublicationCard/PublicationList — a compose form or comment list has no natural home inside a preview tile, and the hosts that already carry commentary are one component away.'
             },
             'ui/views/DecentralizedPublicationsView.js': {
                 label: 'genuinely awkward, different domain concern',
@@ -871,7 +870,7 @@ async function runTests() {
                 `68. ${file} still carries no commentary wiring — classified '${label}', not implemented`);
             assert(reason.length > 0, `69. ${file} has a recorded, evidence-based rationale`);
         }
-        assert(Object.keys(classifications).length === 4, '70. all four surfaces still unwired since 0.9.288 are accounted for — none silently dropped, none silently added');
+        assert(Object.keys(classifications).length === 3, '70. all three surfaces still unwired since 0.9.288/0.9.561 are accounted for — none silently dropped, none silently added');
 
         // K1. WorldEncounterCanvas.js, this Section's own original fifth
         // entry, now carries commentary wiring — 0.9.291 picked up
@@ -883,7 +882,21 @@ async function runTests() {
         assert(worldEncounterCode.includes('getPublicationCommentariesCommand') && worldEncounterCode.includes('addPublicationCommentaryCommand'),
             '70b. ui/components/WorldEncounterCanvas.js now carries commentary wiring — 0.9.291 closed this Section\'s own named candidate');
 
-        console.log('✓ Section K: the four remaining surfaces stay classified and unwired (one host, one preview tile, one alternate list view, one unrelated verification surface). The fifth this Section named as a genuine future candidate, WorldEncounterCanvas, was picked up by 0.9.291.');
+        // K2. PublicationList.js, this Section's own original third entry
+        // ("PublicationCard already indirectly covers the use case"), now
+        // carries commentary wiring too — 0.9.560's later cross-surface
+        // audit reconfirmed this "indirect coverage" reasoning was never
+        // actually true for a Wanderer scanning results in list mode
+        // (Card and List are alternate VIEWS of the same page, not
+        // alternate paths to the same interaction), and 0.9.561 closed it
+        // by injecting the SAME getPublicationCommentariesCommand/
+        // addPublicationCommentaryCommand PublicationCard.js/
+        // WorldEncounterCanvas.js already use — no third composition root.
+        const listCode = await codeOnlySource('ui/components/PublicationList.js');
+        assert(listCode.includes('getPublicationCommentariesCommand') && listCode.includes('addPublicationCommentaryCommand'),
+            '70c. ui/components/PublicationList.js now carries commentary wiring — 0.9.561 closed this Section\'s own named candidate');
+
+        console.log('✓ Section K: the three remaining surfaces stay classified and unwired (one host, one preview tile, one unrelated verification surface). The two this Section named as future candidates — WorldEncounterCanvas (0.9.291) and PublicationList (0.9.561) — were both later picked up.');
     }
 
     // ---------------------------------------------------------------
@@ -928,16 +941,21 @@ async function runTests() {
             assert(!code.includes('OtherPublicationCommentaryUseCase') && !code.includes('AddCommentToOtherPublicationUseCase'),
                 `82. ${file} introduces neither forbidden Commentary use case name`);
         }
-        // 12. Only the two DELIBERATE UI surfaces (0.9.289's
-        // PublicationCard.js, 0.9.291's WorldEncounterCanvas.js) — the
-        // remaining four stay untouched.
+        // 12. Only the three DELIBERATE UI surfaces (0.9.289's
+        // PublicationCard.js, 0.9.291's WorldEncounterCanvas.js, 0.9.561's
+        // PublicationList.js) — the remaining three stay untouched.
         for (const file of [
-            'ui/components/PublicationCatalog.js', 'ui/components/PublicationPreview.js', 'ui/components/PublicationList.js',
+            'ui/components/PublicationCatalog.js', 'ui/components/PublicationPreview.js',
             'ui/views/DecentralizedPublicationsView.js'
         ]) {
             const code = await codeOnlySource(file);
             assert(!code.includes('getPublicationCommentariesCommand') && !code.includes('addPublicationCommentaryCommand'),
-                `83. ${file} still carries no commentary wiring — the reachability surface has grown only through 0.9.289/0.9.291's own deliberate, named surfaces`);
+                `83. ${file} still carries no commentary wiring — the reachability surface has grown only through 0.9.289/0.9.291/0.9.561's own deliberate, named surfaces`);
+        }
+        {
+            const code = await codeOnlySource('ui/components/PublicationList.js');
+            assert(code.includes('getPublicationCommentariesCommand') && code.includes('addPublicationCommentaryCommand'),
+                '83b. ui/components/PublicationList.js now carries commentary wiring — 0.9.561, one of the exactly three deliberate, named surfaces');
         }
         assert(mainCode.includes("new CreatePublicationCommentaryUseCase().execute(identityProvider)"),
             '84. ui/main.js still composes commentary through exactly one, app-wide instance of the new composition root — not one per card, not one per render');

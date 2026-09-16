@@ -382,11 +382,15 @@ async function runTests() {
     {
         // F1. Publication { Commentary, Notification, Discovery }.
         // The app-wide discovery listing shows zero commentary-activity
-        // signal — checked directly, the same four files 0.9.305 itself
+        // signal — checked directly, the same files 0.9.305 itself
         // audited for full Commentary UI (a different, larger ask).
+        // PublicationList.js is excluded as of 0.9.561 (Publication List
+        // Commentary Parity), which gave it the SAME full commentary
+        // thread PublicationCard.js already carries — see
+        // tests/PublicationListCommentaryParity.test.js.
         const discoveryHits = await grepCount('ommentary', ['ui/views/DecentralizedPublicationsView.js',
-            'ui/components/PublicationCatalog.js', 'ui/components/PublicationList.js', 'ui/components/PublicationPreview.js']);
-        assert(discoveryHits === 0, 'F1. The app-wide Discovery listing and its catalog/list/preview components still carry zero commentary vocabulary of any kind — not even a count.');
+            'ui/components/PublicationCatalog.js', 'ui/components/PublicationPreview.js']);
+        assert(discoveryHits === 0, 'F1. The app-wide Discovery listing and its remaining catalog/preview components still carry zero commentary vocabulary of any kind — not even a count.');
 
         // F2. Snapshot { Distribution, Attribution, Comparison, World
         // placement }. Checked directly: all four already converge on
