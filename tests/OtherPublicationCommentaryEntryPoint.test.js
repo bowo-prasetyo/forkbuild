@@ -503,15 +503,17 @@ async function runTests() {
         // Exactly one of the six other-Publication surfaces 0.9.288
         // Section E named is wired BY THIS milestone — the other five stay
         // byte-for-byte untouched by 0.9.289. (WorldEncounterCanvas.js was
-        // later wired by 0.9.291, its own separate milestone — see
-        // tests/CrossArcProductEvolutionReassessment.test.js's own Section
-        // E5 for that later transition; it is deliberately excluded from
-        // this list so this file continues to describe exactly what
-        // 0.9.289 itself did, not what is true of the codebase today.)
+        // later wired by 0.9.291, and PublicationList.js was later wired by
+        // 0.9.561 — Publication List Commentary Parity — each its own
+        // separate milestone; see tests/CrossArcProductEvolutionReassessment.test.js's
+        // own Section E5 and tests/PublicationListCommentaryParity.test.js
+        // respectively for those later transitions. Both are deliberately
+        // excluded from this list so this file continues to describe
+        // exactly what 0.9.289 itself did, not what is true of the
+        // codebase today.)
         const untouchedSurfaces = [
             'ui/components/PublicationCatalog.js',
             'ui/components/PublicationPreview.js',
-            'ui/components/PublicationList.js',
             'ui/views/DecentralizedPublicationsView.js'
         ];
         for (const file of untouchedSurfaces) {
@@ -519,6 +521,13 @@ async function runTests() {
             assert(!code.includes('getPublicationCommentariesCommand') && !code.includes('addPublicationCommentaryCommand'),
                 `48. ${file} carries no commentary wiring — this milestone deliberately wires only ONE surface`);
         }
+
+        // 48b. PublicationList.js — later wired by 0.9.561 — now carries
+        // commentary wiring, checked fresh against current source rather
+        // than silently dropped from this file's own sweep.
+        const listCode = await codeOnlySource('ui/components/PublicationList.js');
+        assert(listCode.includes('getPublicationCommentariesCommand') && listCode.includes('addPublicationCommentaryCommand'),
+            '48b. ui/components/PublicationList.js now carries commentary wiring — 0.9.561 closed this file\'s own then-deliberate exclusion');
 
         console.log('✓ Section K: exactly one new UI surface is wired, through a second composition of the identical, unmodified application layer');
     }

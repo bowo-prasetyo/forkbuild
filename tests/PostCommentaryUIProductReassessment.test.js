@@ -219,19 +219,19 @@ async function runTests() {
         // B12d. And the discovery/catalog-facing components that render
         // OTHER users' Publications (the one place a non-own
         // publicationId would actually be in hand) carry zero commentary
-        // vocabulary of any kind — EXCEPT two later milestones deliberately
-        // closed this exact gap for two of the six: PublicationCard.js
-        // (0.9.289) and WorldEncounterCanvas.js (0.9.291). This section is
-        // re-checked fresh against real source on every run, so it now
-        // documents both transitions explicitly rather than asserting a
-        // fact either milestone deliberately made false for its own
-        // surface — see tests/OtherPublicationCommentaryEntryPoint.test.js
-        // and tests/CrossArcProductEvolutionReassessment.test.js's own
-        // Section E5 for the fuller record of each.
+        // vocabulary of any kind — EXCEPT three later milestones deliberately
+        // closed this exact gap for three of the six: PublicationCard.js
+        // (0.9.289), WorldEncounterCanvas.js (0.9.291), and PublicationList.js
+        // (0.9.561). This section is re-checked fresh against real source on
+        // every run, so it now documents all three transitions explicitly
+        // rather than asserting a fact a later milestone deliberately made
+        // false for its own surface — see tests/OtherPublicationCommentaryEntryPoint.test.js,
+        // tests/CrossArcProductEvolutionReassessment.test.js's own Section
+        // E5, and tests/PublicationListCommentaryParity.test.js for the
+        // fuller record of each.
         const discoveryFacingFiles = [
             'ui/components/PublicationCatalog.js',
             'ui/components/PublicationPreview.js',
-            'ui/components/PublicationList.js',
             'ui/views/DecentralizedPublicationsView.js'
         ];
         for (const path of discoveryFacingFiles) {
@@ -239,10 +239,10 @@ async function runTests() {
             assert(!/ommentary/.test(code),
                 `B12d. ${path} still contains no commentary vocabulary of any kind — Discovery's own publication-facing surfaces carry no path to Commentary at all.`);
         }
-        for (const path of ['ui/components/PublicationCard.js', 'ui/components/WorldEncounterCanvas.js']) {
+        for (const path of ['ui/components/PublicationCard.js', 'ui/components/WorldEncounterCanvas.js', 'ui/components/PublicationList.js']) {
             const code = await rawSource(path);
             assert(/ommentary/.test(code),
-                `B12e. ${path} now carries commentary vocabulary — 0.9.289/0.9.291 closed this Section's own finding for exactly these two surfaces.`);
+                `B12e. ${path} now carries commentary vocabulary — 0.9.289/0.9.291/0.9.561 closed this Section's own finding for exactly these three surfaces.`);
         }
 
         assert(capabilityRegister.length === 12 && capabilityRegister.every(([, status]) => status.startsWith('COMPLETE')),

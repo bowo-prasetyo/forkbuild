@@ -1,5 +1,7 @@
 import PublicationPreview from './PublicationPreview.js';
+import { resolveSigningIdentityId } from '../../identity/resolveSigningIdentityId.js';
 import { formatPublicationDate } from '../../core/PublicationDateAmbiguity.js';
+import { createId } from '../../core/createId.js';
 
 // 0.2.31 — the compact table/row view of a page of publications —
 // "best when there are hundreds or thousands," per the design doc,
@@ -8,9 +10,74 @@ import { formatPublicationDate } from '../../core/PublicationDateAmbiguity.js';
 // a lot of results quickly. Same pure-presentation contract as
 // PublicationCard — every row's description/parent-title/fork-count
 // is resolved by the host and handed down already-computed.
+//
+// 0.9.561 — Publication List Commentary Parity.
+//
+// 0.9.560's own Section G named the one real gap its cross-surface
+// audit found: PublicationCard.js (this catalog's "cards" view) has
+// carried full Commentary since 0.9.289 — view, compose, retry — while
+// this file, the alternate "list" view of the IDENTICAL
+// PublicationCatalog.js/Publications, carried none. Same catalog, same
+// page, same Publications; only the chosen view mode decided whether
+// Commentary was reachable. This milestone closes exactly that gap,
+// exactly the way 0.9.560's own "if ever acted on" recommendation
+// described: reuse PublicationCard.js's own inject/command contract
+// verbatim, never a new composition, never a new command, never a new
+// use case.
+//
+//   getPublicationCommentariesCommand(publicationId)   (inject — the
+//        │        SAME app-wide command ui/main.js already provides
+//        │        (`app.provide('getPublicationCommentariesCommand', ...)`,
+//        │        0.9.289) and PublicationCard.js already injects one
+//        │        component over. No new provide/inject key, no prop
+//        │        threaded through PublicationCatalog.js — Vue's own
+//        │        provide/inject already reaches every descendant of
+//        │        the app root, PublicationList.js included.
+//        ▼
+//   commentaryState[pub.id]   (THIS component's own local state, below)
+//
+//   addPublicationCommentaryCommand({ publicationId, content,
+//        commentaryId, createdAt })   (inject — the SAME command,
+//        the SAME contract, the SAME 0.9.542 stable-retry-identity
+//        shape PublicationCard.js already sends.)
+//
+// ONE COMPONENT, MANY ROWS — the one real structural difference from
+// PublicationCard.js (one component instance PER publication). This
+// file renders every row of the current page from a single instance,
+// so "which row is this?" has to be part of the state shape itself:
+// `commentaryState` is keyed by publicationId, never a single shared
+// `commentaryOpen`/`commentaries`/etc. the way PublicationCard.js's own
+// per-instance data() gets away with. `rowCommentaryState(pub)` is the
+// one place that key is read or created — every other method below
+// goes through it, mirroring ReconciliationCandidateLeaderboardTable.js's
+// own per-row `expandedKeys` pattern (keyed there by candidateKey, here
+// by publicationId) for the identical reason: many rows, one instance,
+// no cross-row bleed.
+//
+// NEVER GATED ON OWNERSHIP, IDENTICAL TO PublicationCard.js's OWN
+// RESTRAINT — this table renders for the local user's own Publications
+// and every other Wanderer's alike (see PublicationCatalog.js's own
+// header, "the ONE and only thing that distinguishes" Repository from
+// Author is the `author` query, never a different list component or a
+// different commentary gate); CanCommentOnPublicationUseCase is already
+// ownership-agnostic, so this component adds no "is this mine" check.
+//
+// COLLAPSED BY DEFAULT, LOADED ONLY ON FIRST EXPANSION PER ROW — the
+// identical restraint PublicationCard.js's own toggleCommentary()
+// already established, extended here per-row rather than per-instance.
+//
+// AUTHORSHIP IS NEVER UI-SUPPLIED, IDENTICAL TO PublicationCard.js's
+// OWN RESTRAINT. submitCommentary() sends ONLY
+// `{ publicationId, content, commentaryId, createdAt }` — no
+// `authorIdentityId` field exists on that call.
 export default {
     name: 'PublicationList',
     components: { PublicationPreview },
+    inject: {
+        getPublicationCommentariesCommand: { default: null },
+        addPublicationCommentaryCommand: { default: null },
+        identityUseCase: { default: null }
+    },
     props: {
         items: { type: Array, required: true },
         descriptions: { type: Object, default: () => ({}) },
@@ -24,6 +91,29 @@ export default {
         preciseDateIds: { type: Set, default: () => new Set() }
     },
     emits: ['open', 'fork', 'explore', 'view-author'],
+    data() {
+        return {
+            // publicationId -> { open, commentaries, newText,
+            // submitting, error, pendingDraft } — see this file's own
+            // header, "one component, many rows." Never pre-populated;
+            // rowCommentaryState() below creates an entry on first
+            // touch, the same lazy pattern PublicationCard.js's own
+            // data() establishes at the per-instance level.
+            commentaryState: {}
+        };
+    },
+    computed: {
+        // The currently signed-in identity's own did:key id, or `null` —
+        // byte-identical to PublicationCard.js's own computed of the
+        // same name; this table has exactly one viewer, so this stays a
+        // single computed rather than per-row state.
+        viewerIdentityId() {
+            if (!this.identityUseCase) {
+                return null;
+            }
+            return resolveSigningIdentityId(this.identityUseCase.provider);
+        }
+    },
     methods: {
         licenseLabel(pub) {
             return pub.license ? pub.license.id : 'UNSPECIFIED';
@@ -32,6 +122,96 @@ export default {
         // never a new one.
         publishedAtLabel(pub) {
             return formatPublicationDate(pub.publishedAt, this.preciseDateIds.has(pub.id)) || '—';
+        },
+        // The one reader/creator of a row's own commentary state. Every
+        // other commentary method below calls this rather than touching
+        // `commentaryState` directly.
+        rowCommentaryState(pub) {
+            if (!this.commentaryState[pub.id]) {
+                this.commentaryState[pub.id] = {
+                    open: false, commentaries: [], newText: '',
+                    submitting: false, error: null, pendingDraft: null
+                };
+            }
+            return this.commentaryState[pub.id];
+        },
+        isCommentaryOpen(pub) {
+            return this.rowCommentaryState(pub).open;
+        },
+        // The only writer of a row's own `open` flag. A no-op whenever
+        // no getPublicationCommentariesCommand was ever injected —
+        // mirrors PublicationCard.js's own toggleCommentary(). The
+        // FIRST time a row is expanded, this also performs the first
+        // read for THAT row only — every other row's own state is
+        // untouched.
+        toggleCommentary(pub) {
+            if (!this.getPublicationCommentariesCommand) {
+                return;
+            }
+            const state = this.rowCommentaryState(pub);
+            state.open = !state.open;
+            if (state.open) {
+                this.refreshCommentaries(pub);
+            }
+        },
+        // The only writer of a row's own `commentaries`/`error` from a
+        // read. A FAILED read leaves that row's `commentaries` exactly
+        // as it was — never wiped — and only sets that row's own
+        // `error`; every OTHER row's state is untouched, mirroring
+        // PublicationCard.js's own refreshCommentaries().
+        refreshCommentaries(pub) {
+            if (!this.getPublicationCommentariesCommand) {
+                return;
+            }
+            const state = this.rowCommentaryState(pub);
+            try {
+                const result = this.getPublicationCommentariesCommand(pub.id);
+                state.commentaries = Array.isArray(result) ? result : [];
+                state.error = null;
+            } catch (error) {
+                state.error = 'Commentary could not be loaded.';
+            }
+        },
+        // The only call site of addPublicationCommentaryCommand in this
+        // file. Sends ONLY `{ publicationId, content, commentaryId,
+        // createdAt }` — see this file's own header, "authorship is
+        // never UI-supplied." On success, clears that row's own compose
+        // draft and RE-QUERIES through refreshCommentaries() rather than
+        // appending the returned commentary — one source of truth, per
+        // row, mirroring PublicationCard.js's own identical restraint.
+        // On failure, that row's own `newText`/`commentaries` are left
+        // UNCHANGED, and every OTHER row stays entirely untouched — the
+        // per-row keying in rowCommentaryState() is what makes that
+        // isolation structural rather than merely intended.
+        //
+        // 0.9.542's own stable-retry-identity pattern — reused verbatim,
+        // per row: a manual retry of an UNCHANGED draft reuses the same
+        // commentaryId/createdAt so PublicationCommentaryStore's own
+        // "SAME ID + IDENTICAL RECORD -> IDEMPOTENT SUCCESS" engages
+        // instead of minting a fresh id (and a fresh, duplicate record)
+        // on every click.
+        submitCommentary(pub) {
+            const state = this.rowCommentaryState(pub);
+            const content = state.newText.trim();
+            if (!this.addPublicationCommentaryCommand || !content || state.submitting) {
+                return;
+            }
+            if (!state.pendingDraft || state.pendingDraft.content !== content) {
+                state.pendingDraft = { content, commentaryId: createId(), createdAt: new Date() };
+            }
+            const { commentaryId, createdAt } = state.pendingDraft;
+            state.submitting = true;
+            try {
+                this.addPublicationCommentaryCommand({ publicationId: pub.id, content, commentaryId, createdAt });
+                state.newText = '';
+                state.error = null;
+                state.pendingDraft = null;
+                this.refreshCommentaries(pub);
+            } catch (error) {
+                state.error = (error && error.message) ? error.message : 'Commentary could not be created.';
+            } finally {
+                state.submitting = false;
+            }
         }
     },
     template: `
@@ -48,35 +228,89 @@ export default {
                     </tr>
                 </thead>
                 <tbody>
-                    <tr v-for="pub in items" :key="pub.id">
-                        <td class="publication-table-preview-col">
-                            <PublicationPreview :publication="pub" size="list" />
-                        </td>
-                        <td class="publication-table-title-col">
-                            <span class="publication-table-title">{{ pub.title }}</span>
-                            <span v-if="pub.parentDocumentId" class="publication-fork-of">
-                                ↳ Fork of {{ parentTitles[pub.documentId] || 'Unknown' }}
-                            </span>
-                            <span v-if="descriptions[pub.documentId]" class="publication-description publication-description--list">
-                                {{ descriptions[pub.documentId] }}
-                            </span>
-                        </td>
-                        <td>
-                            <template v-if="pub.author">
-                                <a @click.prevent="$emit('view-author', pub.author)" class="publication-author-link">{{ pub.author }}</a>
-                            </template>
-                            <template v-else>anonymous</template>
-                        </td>
-                        <td class="publication-date">{{ publishedAtLabel(pub) }}</td>
-                        <td class="publication-date">{{ licenseLabel(pub) }}</td>
-                        <td>
-                            <div class="publication-actions publication-actions--row">
-                                <button class="action-btn action-btn--open" @click="$emit('open', pub)">Open</button>
-                                <button class="action-btn action-btn--fork" @click="$emit('fork', pub)">Fork</button>
-                                <button class="action-btn action-btn--explore" @click="$emit('explore', pub)">Explore</button>
-                            </div>
-                        </td>
-                    </tr>
+                    <template v-for="pub in items" :key="pub.id">
+                        <tr>
+                            <td class="publication-table-preview-col">
+                                <PublicationPreview :publication="pub" size="list" />
+                            </td>
+                            <td class="publication-table-title-col">
+                                <span class="publication-table-title">{{ pub.title }}</span>
+                                <span v-if="pub.parentDocumentId" class="publication-fork-of">
+                                    ↳ Fork of {{ parentTitles[pub.documentId] || 'Unknown' }}
+                                </span>
+                                <span v-if="descriptions[pub.documentId]" class="publication-description publication-description--list">
+                                    {{ descriptions[pub.documentId] }}
+                                </span>
+                            </td>
+                            <td>
+                                <template v-if="pub.author">
+                                    <a @click.prevent="$emit('view-author', pub.author)" class="publication-author-link">{{ pub.author }}</a>
+                                </template>
+                                <template v-else>anonymous</template>
+                            </td>
+                            <td class="publication-date">{{ publishedAtLabel(pub) }}</td>
+                            <td class="publication-date">{{ licenseLabel(pub) }}</td>
+                            <td>
+                                <div class="publication-actions publication-actions--row">
+                                    <button class="action-btn action-btn--open" @click="$emit('open', pub)">Open</button>
+                                    <button class="action-btn action-btn--fork" @click="$emit('fork', pub)">Fork</button>
+                                    <button class="action-btn action-btn--explore" @click="$emit('explore', pub)">Explore</button>
+                                    <button
+                                        v-if="getPublicationCommentariesCommand"
+                                        class="action-btn action-btn--comment"
+                                        @click="toggleCommentary(pub)"
+                                    >{{ isCommentaryOpen(pub) ? 'Hide Comments' : 'Comment' }}</button>
+                                </div>
+                            </td>
+                        </tr>
+
+                        <!-- 0.9.561 — Publication List Commentary Parity.
+                             Rendered only when a caller supplied
+                             getPublicationCommentariesCommand AND this
+                             specific row is expanded — mirrors
+                             ReconciliationCandidateLeaderboardTable.js's
+                             own detail-row pattern one component over. -->
+                        <tr v-if="getPublicationCommentariesCommand && isCommentaryOpen(pub)" class="publication-table-commentary-row">
+                            <td colspan="6" class="publication-table-commentary-cell">
+                                <div class="publication-table-commentary">
+                                    <p v-if="rowCommentaryState(pub).error" class="publication-table-commentary-error">{{ rowCommentaryState(pub).error }}</p>
+
+                                    <p v-if="!rowCommentaryState(pub).commentaries.length" class="publication-table-commentary-empty">No commentary yet.</p>
+                                    <ul v-else class="publication-table-commentary-list">
+                                        <li
+                                            v-for="commentary in rowCommentaryState(pub).commentaries"
+                                            :key="commentary.commentaryId"
+                                            class="publication-table-commentary-entry"
+                                        >
+                                            <span class="publication-table-commentary-author">{{ commentary.authorIdentityId }}</span>
+                                            <p class="publication-table-commentary-content">{{ commentary.content }}</p>
+                                        </li>
+                                    </ul>
+
+                                    <p v-if="addPublicationCommentaryCommand && !viewerIdentityId" class="publication-table-commentary-signin-hint">
+                                        Sign in to add commentary.
+                                    </p>
+                                    <form
+                                        v-else-if="addPublicationCommentaryCommand"
+                                        class="publication-table-commentary-form"
+                                        @submit.prevent="submitCommentary(pub)"
+                                    >
+                                        <textarea
+                                            v-model="rowCommentaryState(pub).newText"
+                                            class="publication-table-commentary-input"
+                                            :disabled="rowCommentaryState(pub).submitting"
+                                            placeholder="Add a comment…"
+                                        ></textarea>
+                                        <button
+                                            type="submit"
+                                            class="action-btn publication-table-commentary-submit-action"
+                                            :disabled="!rowCommentaryState(pub).newText.trim() || rowCommentaryState(pub).submitting"
+                                        >{{ rowCommentaryState(pub).submitting ? 'Posting…' : 'Post Comment' }}</button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    </template>
                 </tbody>
             </table>
         </div>

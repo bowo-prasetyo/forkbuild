@@ -671,7 +671,6 @@ async function runTests() {
         const stillUnwiredSurfaces = [
             'ui/components/PublicationCatalog.js',
             'ui/components/PublicationPreview.js',
-            'ui/components/PublicationList.js',
             'ui/views/DecentralizedPublicationsView.js'
         ];
         for (const file of stillUnwiredSurfaces) {
@@ -679,6 +678,16 @@ async function runTests() {
             assert(!code.includes('getPublicationCommentariesCommand') && !code.includes('addPublicationCommentaryCommand'),
                 `54. ${file} carries no commentary wiring — this milestone wires only WorldEncounterCanvas.js, the second of the six 0.9.288 named`);
         }
+
+        // PublicationList.js — later wired by 0.9.561, its own separate
+        // milestone (see tests/PublicationListCommentaryParity.test.js) —
+        // is deliberately excluded from stillUnwiredSurfaces above and
+        // checked fresh here instead, so this file continues to describe
+        // exactly what THIS milestone (0.9.291) did, not what is true of
+        // the codebase today.
+        const listCode = await codeOnlySource('ui/components/PublicationList.js');
+        assert(listCode.includes('getPublicationCommentariesCommand') && listCode.includes('addPublicationCommentaryCommand'),
+            '54b. ui/components/PublicationList.js now carries commentary wiring — 0.9.561 closed this file\'s own then-still-open surface');
 
         console.log('✓ Section L: OwnPublicationPanel/PublicationCard/both composition roots stay byte-for-byte regression passes; the four remaining 0.9.288 surfaces stay untouched');
     }

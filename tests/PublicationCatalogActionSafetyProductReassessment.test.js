@@ -215,8 +215,15 @@ async function run() {
 
         // PublicationList.js: v-for="pub in items" :key="pub.id", every
         // emit sends `pub` (or `pub.author`) directly — the identical
-        // invariant, one view over.
-        assert(/<tr v-for="pub in items" :key="pub\.id">/.test(listSource),
+        // invariant, one view over. 0.9.561 (Publication List Commentary
+        // Parity) moved v-for/:key from the row's own <tr> onto a
+        // wrapping <template> — the same convention
+        // ReconciliationCandidateLeaderboardTable.js's own detail-row
+        // pattern already uses — so a second, conditional <tr> (the
+        // commentary row) can share the identical loop key; the
+        // invariant this assertion protects (each row keyed by pub.id,
+        // from the SAME pub its emits below use) is unchanged.
+        assert(/<template v-for="pub in items" :key="pub\.id">\s*<tr>/.test(listSource),
             '5. PublicationList.js keys each row by pub.id, from the same `pub` its emits below use.');
         const listEmits = [...listSource.matchAll(/\$emit\('(open|fork|explore|view-author)',\s*([^)]+)\)/g)];
         assert(listEmits.length === 4, `6. PublicationList.js emits exactly 4 action events, found ${listEmits.length}.`);
