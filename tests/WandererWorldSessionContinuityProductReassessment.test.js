@@ -353,12 +353,25 @@ async function main() {
         // by reading its own unmodified source, rather than assumed:
         const sessionSource = await readSource('application/WorldNavigationSession.js');
         // (a) findPublicationById() is confirmed, verbatim, to be a
-        // one-line delegate to the injected discoveryProvider's own
+        // one-line delegate to an injected discovery capability's own
         // findById() — so exercising discoveryProvider.findById() twice,
         // directly, IS exercising the identical code path a Wanderer's
         // own "arrive at A, arrive at B, arrive at A again" would run.
-        assert(sessionSource.includes("findPublicationById(publicationId) {\n        if (!this._discoveryProvider || typeof publicationId !== 'string' || publicationId.length === 0) return null;\n        return this._discoveryProvider.findById(publicationId) || null;\n    }"),
-            '1. sanity — findPublicationById() is confirmed, verbatim, to be a direct one-line delegate to discoveryProvider.findById(), never a re-derivation.');
+        //
+        // AMENDED BY 0.9.597 — Publication Action Provider Continuity
+        // Fix. findPublicationById() now delegates to
+        // `_publicationActionDiscoveryProvider` — a SEPARATE, optional
+        // capability that falls back to `discoveryProvider` itself when
+        // none is supplied (see WorldNavigationSession's own constructor
+        // comment) — rather than to `_discoveryProvider` directly. This
+        // section's own harness never wires `publicationActionDiscoveryProvider`
+        // (see its own session-construction code, below), so the fallback
+        // applies and `_publicationActionDiscoveryProvider === discoveryProvider`
+        // here — the "exercising discoveryProvider.findById() twice IS
+        // exercising the identical code path" claim above still holds,
+        // it is just no longer a literal one-line body to match verbatim.
+        assert(sessionSource.includes("findPublicationById(publicationId) {\n        if (!this._publicationActionDiscoveryProvider || typeof publicationId !== 'string' || publicationId.length === 0) return null;\n        return this._publicationActionDiscoveryProvider.findById(publicationId) || null;\n    }"),
+            '1. AMENDED BY 0.9.597 — sanity — findPublicationById() is confirmed, verbatim, to be a direct one-line delegate to `_publicationActionDiscoveryProvider.findById()`, never a re-derivation; that capability itself falls back to `discoveryProvider` (this section\'s own, unmodified injected instance) when no separate one is wired.');
         // (b) focusDocument()'s own body never names discovery or
         // verification — 0.9.532 Section G's own extraction, reconfirmed
         // fresh — so a THIRD call (the return trip) is still proven
