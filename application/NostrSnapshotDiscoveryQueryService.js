@@ -1,4 +1,5 @@
 import { parseSnapshotDiscoveryEnvelope } from '../core/SnapshotDiscoveryEnvelope.js';
+import { SnapshotCandidateDiscoveryOutcome } from './SnapshotCandidateDiscoveryOutcome.js';
 
 const DEFAULT_RELAY_URL = 'wss://relay.damus.io';
 const DEFAULT_TAG_NAME = 't';
@@ -214,6 +215,53 @@ export class NostrSnapshotDiscoveryQueryService {
         const candidates = await this.search(discoveryTag);
         const match = candidates.find((candidate) => candidate.contentHash === contentHash);
         return match ? match.locator : null;
+    }
+
+    // 0.9.589 — searchWithOutcome(discoveryTag) -> Promise<{ outcome,
+    // candidates }>.
+    //
+    // A SIBLING OF `search()`, NEVER A REPLACEMENT — `search()` above is
+    // completely unmodified, byte-for-byte, by this addition, and every
+    // caller of it keeps receiving exactly the same `[]`-on-failure
+    // contract described in this file's own header, "never throws." This
+    // method exists only because that same collapse throws away
+    // information `ui/components/OwnPublicationPanel.js` needs at its own
+    // presentation boundary (see application/
+    // SnapshotCandidateDiscoveryOutcome.js's own header) — a caller who
+    // does not need the distinction keeps calling `search()`.
+    //
+    // Runs the identical filter/query/timeout/parse sequence `search()`
+    // itself runs, against the SAME `buildDiscoveryFilter()`/
+    // `withTimeout()`/`parseEnvelopeCandidates()` helpers, below — never a
+    // second query implementation. Classifies the result rather than
+    // discarding the classification:
+    //   - `queryImpl` rejects, or `withTimeout()`'s own timer fires first,
+    //     or the resolved value is not an array — `UNAVAILABLE`. The
+    //     query could not be completed; this is NEVER treated as "zero
+    //     candidates."
+    //   - `queryImpl` resolves to an array and zero candidates parse out
+    //     of it — `EMPTY`. The query completed; nothing has been
+    //     announced under this `discoveryTag`, as far as this relay
+    //     reports.
+    //   - At least one candidate parses out — `FOUND`.
+    async searchWithOutcome(discoveryTag) {
+        const filter = buildDiscoveryFilter(this._tagName, this._kinds, discoveryTag, this._maxResults);
+
+        let events;
+        try {
+            events = await withTimeout(this._queryImpl(this._relayUrl, filter), this._timeoutMs);
+        } catch {
+            return { outcome: SnapshotCandidateDiscoveryOutcome.UNAVAILABLE, candidates: [] };
+        }
+        if (!Array.isArray(events)) {
+            return { outcome: SnapshotCandidateDiscoveryOutcome.UNAVAILABLE, candidates: [] };
+        }
+
+        const candidates = parseEnvelopeCandidates(events);
+        return {
+            outcome: candidates.length > 0 ? SnapshotCandidateDiscoveryOutcome.FOUND : SnapshotCandidateDiscoveryOutcome.EMPTY,
+            candidates
+        };
     }
 }
 

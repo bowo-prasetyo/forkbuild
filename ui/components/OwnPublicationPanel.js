@@ -1514,6 +1514,20 @@ export default {
             type: Function,
             default: null
         },
+        // 0.9.589 — optional. A `() -> Promise<{ outcome, candidates }>`
+        // function, or `null` when unavailable — see this file's own
+        // header, "0.9.589 — Distinguish Snapshot Discovery Absence from
+        // Discovery Failure." A SIBLING of `discoverSnapshotCandidatesCommand`
+        // above, never a replacement: when supplied, `discoverSnapshotCandidates()`
+        // (below) calls this instead, so it can render the honest
+        // `snapshotCandidateDiscoveryOutcome === 'unavailable'` case
+        // rather than always claiming "no Snapshots have been announced."
+        // A host that supplies only the legacy `discoverSnapshotCandidatesCommand`
+        // keeps the exact pre-0.9.589 behavior — see `discoverSnapshotCandidates()`.
+        discoverSnapshotCandidatesWithOutcomeCommand: {
+            type: Function,
+            default: null
+        },
         // 0.9.152 — optional. A `(candidate) -> Promise<{ outcome, bytes,
         // candidates, locator, storage, reason }>` function, or `null`
         // when the capability is unavailable — see this file's own
@@ -1667,6 +1681,15 @@ export default {
             // an error — see `discoverSnapshotCandidates()`, below.
             snapshotCandidateDiscoveryResult: null,
             snapshotCandidateDiscoveryRequestId: 0,
+            // 0.9.589 — `null` until a candidate discovery call resolves
+            // THROUGH `discoverSnapshotCandidatesWithOutcomeCommand`;
+            // stays `null` forever when only the legacy
+            // `discoverSnapshotCandidatesCommand` was supplied — see this
+            // file's own header, "0.9.589." One of
+            // `SnapshotCandidateDiscoveryOutcome`'s own `found`/`empty`/
+            // `unavailable` values — never written by anything but
+            // `discoverSnapshotCandidates()`, below.
+            snapshotCandidateDiscoveryOutcome: null,
             // `null` until the user clicks a candidate row — see this
             // file's own header, "selection is deliberately boring."
             selectedSnapshotCandidate: null,
@@ -1840,6 +1863,10 @@ export default {
             this.snapshotCandidateDiscoveryExecuting = false;
             this.snapshotCandidateDiscoveryError = null;
             this.snapshotCandidateDiscoveryResult = null;
+            // 0.9.589 — reset for the identical lifecycle-safety reason,
+            // one field over: a prior outcome described a call for a
+            // Publication that is no longer this panel's own.
+            this.snapshotCandidateDiscoveryOutcome = null;
             this.snapshotCandidateDiscoveryRequestId += 1;
             this.selectedSnapshotCandidate = null;
             // 0.9.152 — reset for the identical lifecycle-safety reason,
@@ -2125,18 +2152,32 @@ export default {
         },
         // 0.9.151 — the only writer of `snapshotCandidateDiscoveryExecuting`/
         // `snapshotCandidateDiscoveryError`/`snapshotCandidateDiscoveryResult`,
-        // and the only caller of `discoverSnapshotCandidatesCommand` in
-        // this file — mirrors `discoverOwnSnapshot()`'s own guard/requestId
-        // pattern exactly, one operation over. Unlike `discoverOwnSnapshot()`,
-        // this method needs no `publication` at all — see this file's own
+        // and the only caller of `discoverSnapshotCandidatesCommand`/
+        // `discoverSnapshotCandidatesWithOutcomeCommand` in this file —
+        // mirrors `discoverOwnSnapshot()`'s own guard/requestId pattern
+        // exactly, one operation over. Unlike `discoverOwnSnapshot()`, this
+        // method needs no `publication` at all — see this file's own
         // header, "a completely independent request... needing no
-        // publication at all." A no-op whenever there is no
-        // `discoverSnapshotCandidatesCommand`, or a call is already in
-        // flight.
+        // publication at all." A no-op whenever neither command prop was
+        // supplied, or a call is already in flight.
+        //
+        // 0.9.589 — PREFERS `discoverSnapshotCandidatesWithOutcomeCommand`
+        // WHEN SUPPLIED, FALLS BACK TO THE LEGACY `discoverSnapshotCandidatesCommand`
+        // UNCHANGED OTHERWISE. A host that supplies only the legacy prop
+        // (every test in this codebase predating 0.9.589, and any future
+        // caller with no need for the distinction) gets EXACTLY the
+        // pre-0.9.589 behavior: `snapshotCandidateDiscoveryResult` set to
+        // the bare array, `snapshotCandidateDiscoveryOutcome` left `null`
+        // forever, and the template's own pre-existing empty-state copy
+        // shown for a `[]` result — see the template's own `v-else-if`
+        // chain, below. Only when the outcome-aware command is supplied
+        // does `snapshotCandidateDiscoveryOutcome` ever become non-null.
         discoverSnapshotCandidates() {
-            if (!this.discoverSnapshotCandidatesCommand || this.snapshotCandidateDiscoveryExecuting) {
+            if ((!this.discoverSnapshotCandidatesCommand && !this.discoverSnapshotCandidatesWithOutcomeCommand) || this.snapshotCandidateDiscoveryExecuting) {
                 return;
             }
+
+            const withOutcome = Boolean(this.discoverSnapshotCandidatesWithOutcomeCommand);
 
             this.snapshotCandidateDiscoveryExecuting = true;
             this.snapshotCandidateDiscoveryError = null;
@@ -2144,13 +2185,14 @@ export default {
             const requestId = this.snapshotCandidateDiscoveryRequestId;
 
             Promise.resolve()
-                .then(() => this.discoverSnapshotCandidatesCommand())
+                .then(() => (withOutcome ? this.discoverSnapshotCandidatesWithOutcomeCommand() : this.discoverSnapshotCandidatesCommand()))
                 .then((result) => {
                     if (requestId === this.snapshotCandidateDiscoveryRequestId) {
                         // Rendered verbatim, in this exact order — see
                         // this file's own header, "no derived metadata,
                         // no ranking, no preference of any kind."
-                        this.snapshotCandidateDiscoveryResult = result;
+                        this.snapshotCandidateDiscoveryResult = withOutcome ? result.candidates : result;
+                        this.snapshotCandidateDiscoveryOutcome = withOutcome ? result.outcome : null;
                     }
                 })
                 .catch(() => {
@@ -2852,10 +2894,12 @@ export default {
                  Publication at all: browsing what has been announced
                  under the shared campaign discoveryTag never depends on
                  "which Publication," so this button is disabled only
-                 while a call is already in flight. Rendered only when a
-                 caller supplied a discoverSnapshotCandidatesCommand. -->
+                 while a call is already in flight. Rendered when a caller
+                 supplied either discoverSnapshotCandidatesCommand or its
+                 0.9.589 discoverSnapshotCandidatesWithOutcomeCommand
+                 sibling. -->
             <button
-                v-if="discoverSnapshotCandidatesCommand"
+                v-if="discoverSnapshotCandidatesCommand || discoverSnapshotCandidatesWithOutcomeCommand"
                 type="button"
                 class="action-btn own-publication-candidate-discovery-action"
                 :disabled="snapshotCandidateDiscoveryExecuting"
@@ -2871,10 +2915,23 @@ export default {
                  ranking, no preference of any kind" — every candidate is
                  rendered, in the exact order discovered, with no sort,
                  dedup, "best"/"trusted" label, or storage-type
-                 preference of any kind. -->
+                 preference of any kind.
+
+                 0.9.589 — an empty result no longer asserts a single flat
+                 fact. snapshotCandidateDiscoveryOutcome === 'unavailable'
+                 (only ever set through discoverSnapshotCandidatesWithOutcomeCommand
+                 — see discoverSnapshotCandidates(), above) means the
+                 query itself could not be completed, and says so honestly
+                 instead of claiming certainty about what has or hasn't
+                 been announced. Every other case — a genuine 'empty'
+                 result, or the legacy path where the outcome is unknown
+                 (null) — keeps the original wording unchanged. -->
             <div v-else-if="snapshotCandidateDiscoveryResult" class="own-publication-candidate-list">
                 <h5 class="own-publication-candidate-list-title">Discovered Snapshots</h5>
-                <p v-if="snapshotCandidateDiscoveryResult.length === 0" class="own-publication-candidate-list-empty">
+                <p v-if="snapshotCandidateDiscoveryResult.length === 0 && snapshotCandidateDiscoveryOutcome === 'unavailable'" class="own-publication-candidate-list-unavailable">
+                    Snapshot discovery is currently unavailable.
+                </p>
+                <p v-else-if="snapshotCandidateDiscoveryResult.length === 0" class="own-publication-candidate-list-empty">
                     No Snapshots have been announced under this discoveryTag yet.
                 </p>
                 <ul v-else class="own-publication-candidate-list-items">

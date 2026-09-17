@@ -144,3 +144,28 @@ export function executeDiscoverSnapshotCandidatesCommand({
 
     return discoveryQueryService.search(discoveryTag);
 }
+
+// 0.9.589 — executeDiscoverSnapshotCandidatesCommandWithOutcome({
+//   discoveryTag, discoveryQueryService }) -> Promise<{ outcome,
+//   candidates }>.
+//
+// A SIBLING OF `executeDiscoverSnapshotCandidatesCommand()` ABOVE, NEVER A
+// REPLACEMENT — that function, and every existing caller of it, are
+// completely unmodified. This is the identical assembly-boundary
+// forwarding, one level up, for a caller that needs `discoveryQueryService`'s
+// own `searchWithOutcome()` (application/SnapshotCandidateDiscoveryOutcome.js;
+// application/NostrSnapshotDiscoveryQueryService.js and application/
+// SnapshotCandidateDiscoveryQueryService.js's own 0.9.589 additions)
+// rather than a bare candidate array — see this file's own header, "an
+// assembly boundary, never a second discovery algorithm," held here
+// unchanged.
+export function executeDiscoverSnapshotCandidatesCommandWithOutcome({
+    discoveryTag,
+    discoveryQueryService
+} = {}) {
+    if (!discoveryQueryService || typeof discoveryQueryService.searchWithOutcome !== 'function') {
+        throw new Error('executeDiscoverSnapshotCandidatesCommandWithOutcome: a discoveryQueryService with searchWithOutcome() is required');
+    }
+
+    return discoveryQueryService.searchWithOutcome(discoveryTag);
+}

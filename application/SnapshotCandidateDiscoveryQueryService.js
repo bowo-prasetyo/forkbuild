@@ -1,3 +1,5 @@
+import { SnapshotCandidateDiscoveryOutcome } from './SnapshotCandidateDiscoveryOutcome.js';
+
 // 0.9.485 — Walking-Triggered Snapshot Candidate Query Service.
 //
 // application/PlaceNamingDiscoveryQueryService.js (0.9.253) already proved
@@ -241,5 +243,104 @@ export class SnapshotCandidateDiscoveryQueryService {
         }
 
         return results;
+    }
+
+    // 0.9.589 — searchWithOutcome(discoveryTag) -> Promise<{ outcome,
+    // candidates }>.
+    //
+    // A SIBLING OF `search()` ABOVE, NEVER A REPLACEMENT — `search()` is
+    // completely unmodified by this addition, and every existing caller
+    // (`application/DiscoverSnapshotCandidatesCommand.js`'s own
+    // `executeDiscoverSnapshotCandidatesCommand()`, `application/
+    // WorldSnapshotDiscoveryMonitor.js`) keeps receiving exactly the same
+    // plain candidate array it always has. This method exists only for a
+    // caller that needs to tell "every consulted source genuinely found
+    // nothing" apart from "at least one source's query could not be
+    // completed" — see application/SnapshotCandidateDiscoveryOutcome.js's
+    // own header.
+    //
+    // PER-SOURCE CLASSIFICATION, NEVER A SECOND DISCOVERY ALGORITHM. A
+    // source exposing its own `searchWithOutcome()` (as application/
+    // NostrSnapshotDiscoveryQueryService.js now does, 0.9.589) is asked
+    // through that method, so a transport failure IT already knows about
+    // is never mistaken for a genuine empty result. A source exposing only
+    // `search()` (every other source composed today — Local, Arweave) is
+    // classified from the OUTSIDE, by the identical rule `search()` above
+    // already applies to isolate a failure: a rejected/synchronously-
+    // throwing/non-array result is `UNAVAILABLE`, otherwise `FOUND`/`EMPTY`
+    // by whether it returned anything. This does not teach this file
+    // anything new about Local or Arweave's OWN internal failure handling
+    // — see this file's own header, "an assembly boundary, never a second
+    // discovery algorithm" — it only asks the identical question `search()`
+    // already asks of `Promise.allSettled()`, and reports the answer
+    // instead of discarding it.
+    //
+    // THE COMPOSITE OUTCOME NAMES WHETHER ANY SOURCE COULD BE ASKED AT
+    // ALL, NEVER WHETHER EVERY SOURCE SUCCEEDED. `FOUND` when at least one
+    // well-formed candidate survives dedup (identical to `search()`'s own
+    // result being non-empty); otherwise `EMPTY` when at least one source
+    // was actually consulted successfully (however few candidates it
+    // reported); otherwise `UNAVAILABLE` — every source failed, or there
+    // were no sources to ask. A caller with three sources, two of which
+    // fail and one of which genuinely finds nothing, sees `EMPTY`: SOME
+    // answer was obtained, so "nothing has been announced" remains an
+    // honest description of what this replica currently knows — the same
+    // restraint `application/NostrSnapshotDiscoveryQueryService.js`'s own
+    // `searchWithOutcome()` already holds for its own single relay.
+    async searchWithOutcome(discoveryTag) {
+        const settled = await Promise.allSettled(
+            this._sources.map((source) => {
+                try {
+                    if (typeof source.searchWithOutcome === 'function') {
+                        return Promise.resolve(source.searchWithOutcome(discoveryTag));
+                    }
+                    return Promise.resolve(source.search(discoveryTag)).then((candidates) => (
+                        Array.isArray(candidates)
+                            ? {
+                                outcome: candidates.length > 0 ? SnapshotCandidateDiscoveryOutcome.FOUND : SnapshotCandidateDiscoveryOutcome.EMPTY,
+                                candidates
+                            }
+                            : { outcome: SnapshotCandidateDiscoveryOutcome.UNAVAILABLE, candidates: [] }
+                    ));
+                } catch (error) {
+                    return Promise.reject(error);
+                }
+            })
+        );
+
+        const seen = new Set();
+        const results = [];
+        let anySourceSucceeded = false;
+
+        for (const settledSource of settled) {
+            if (settledSource.status !== 'fulfilled') {
+                continue;
+            }
+            const sourceOutcome = settledSource.value;
+            if (!isPlainObject(sourceOutcome)) {
+                continue;
+            }
+            if (sourceOutcome.outcome !== SnapshotCandidateDiscoveryOutcome.UNAVAILABLE) {
+                anySourceSucceeded = true;
+            }
+            const rawCandidates = Array.isArray(sourceOutcome.candidates) ? sourceOutcome.candidates : [];
+            for (const rawCandidate of rawCandidates) {
+                if (!isWellFormedCandidate(rawCandidate)) {
+                    continue;
+                }
+                const identity = candidateIdentity(rawCandidate);
+                if (seen.has(identity)) {
+                    continue;
+                }
+                seen.add(identity);
+                results.push(rawCandidate);
+            }
+        }
+
+        const outcome = results.length > 0
+            ? SnapshotCandidateDiscoveryOutcome.FOUND
+            : (anySourceSucceeded ? SnapshotCandidateDiscoveryOutcome.EMPTY : SnapshotCandidateDiscoveryOutcome.UNAVAILABLE);
+
+        return { outcome, candidates: results };
     }
 }
