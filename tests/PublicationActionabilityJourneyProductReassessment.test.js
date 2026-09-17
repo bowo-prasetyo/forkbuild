@@ -514,16 +514,37 @@ async function run() {
         assert(/this\._placePublicationUseCase\.execute\(publication\.id, position\);/.test(publishDocumentSource),
             'D1. PublishDocumentUseCase._placeInitially() is a real call site of PlacePublicationUseCase.execute() — confirmed against the current source.');
 
+        // AMENDED BY 0.9.601 — Discovered Publication Placement Journey
+        // Closure Audit. D2's own original assertion (`!/placePublicationUseCase/
+        // .test(...)`) asserted that WorldNavigationSession.js referenced
+        // placePublicationUseCase NOWHERE — true when this file was
+        // written, and superseded BY DESIGN, not by accident, the moment
+        // 0.9.600 shipped exactly the fix this file's own Section H
+        // recommended: an optional placePublicationUseCase collaborator
+        // and a new, explicit placePublication(publicationId, position)
+        // method. This is not a re-opening of Section D's own finding —
+        // see tests/DiscoveredPublicationPlacementJourneyClosureAudit.test.js
+        // (0.9.601) for the full, live-reconfirmed closure of exactly
+        // this gap — it is this file staying internally consistent with
+        // the codebase it inspects, the same posture 0.9.600 itself took
+        // amending tests/PublicationMultiPlacementVisibility.test.js's own
+        // superseded assertion in place rather than leaving it false.
         const worldNavigationSessionSource = await readSource('application/WorldNavigationSession.js');
-        assert(!/placePublicationUseCase/.test(worldNavigationSessionSource),
-            'D2. WorldNavigationSession.js never references placePublicationUseCase at all — it is not a constructor parameter, not a field, not called from anywhere in this class. movePlacement()/removePlacement() (below) are the ONLY placement-mutating methods this class exposes.');
+        assert(/placePublicationUseCase = null,/.test(worldNavigationSessionSource) && /placePublication\(publicationId, position\) \{/.test(worldNavigationSessionSource),
+            'D2. AS OF 0.9.600 (superseding this file\'s own original D2 finding): WorldNavigationSession.js now accepts an optional placePublicationUseCase collaborator and exposes a publicationId-keyed placePublication() method — the smallest legitimate next step this file\'s own Section H named. movePlacement()/removePlacement() (below) remain the only DOCUMENT-ID-keyed placement-mutating methods; placePublication() is PUBLICATION-ID-keyed and deliberately separate — see 0.9.600\'s own WorldNavigationSession.js header.');
         assert(/movePlacement\(documentId, newPosition\) \{[\s\S]{0,300}if \(!record\) \{\s*\n\s*throw new Error/.test(worldNavigationSessionSource),
-            'D3. movePlacement() requires an EXISTING placement record and throws when none exists — structurally, it can only move a placement, never create the first one.');
+            'D3. movePlacement() still requires an EXISTING placement record and throws when none exists — structurally, it can still only move a placement, never create the first one. Unaffected by 0.9.600\'s own, entirely separate placePublication() method.');
         assert(/removePlacement\(documentId, expectedPlacementId = null\) \{[\s\S]{0,500}if \(!record\) \{\s*\n\s*throw new Error/.test(worldNavigationSessionSource),
-            'D4. removePlacement() requires the same — the mirror capability, same restriction. Neither of this session\'s two placement-mutating methods can ever produce a Publication\'s FIRST placement.');
+            'D4. removePlacement() requires the same — the mirror capability, same restriction, still unaffected.');
 
-        // D5: live proof of D2-D4 — a Repository-admitted Publication
-        // with no placement anywhere cannot be moved into one.
+        // D5: live proof of D3/D4 — a Repository-admitted Publication
+        // with no placement anywhere still cannot be MOVED into one
+        // (movePlacement() itself is unchanged) — AMENDED BY 0.9.601 to
+        // no longer claim "no other method exists to try instead," since
+        // 0.9.600 added exactly one, deliberately separate, explicit
+        // method (placePublication()) that this section's own original
+        // point (movePlacement()/removePlacement() cannot create a first
+        // placement) never anticipated and is not about.
         const publicationId = 'placement-gap-pub-d';
         const documentId = 'placement-gap-doc-d';
         const decentralizedPublicationDiscoveryProvider = new DecentralizedPublicationDiscoveryProvider();
@@ -535,7 +556,7 @@ async function run() {
         assert(session.getPlacementInfo(documentId) === null, 'D5-1. Sanity: genuinely no placement exists yet.');
         let moveThrew = false;
         try { session.movePlacement(documentId, { x: 1, y: 0, z: 1 }); } catch (e) { moveThrew = true; }
-        assert(moveThrew, 'D5. LIVE PROOF: the real, current session has no method that can give this reachable, resolvable, Repository-admitted Publication its first placement — movePlacement() refuses, and no other method exists to try instead.');
+        assert(moveThrew, 'D5. movePlacement() itself still refuses to create a first placement for this reachable, resolvable, Repository-admitted Publication — unaffected by 0.9.600\'s own, separate placePublication() method, which this buildProductionShapedSession() harness does not even wire (see this file\'s own buildProductionShapedSession(), which predates and is untouched by 0.9.600).');
 
         // D6: OwnPublicationPanel's own "Place Materialized Snapshot" /
         // "Register Placed Snapshot" — the two actions its own header
