@@ -2254,6 +2254,36 @@ export default {
             if (unsubDocumentState) {
                 unsubDocumentState();
             }
+            // 0.9.580 — Editor Trailing-Autosave Loss Window closure.
+            // Flushes whatever checkpoint is still pending — the exact
+            // bounded gap 0.9.579 Section C proved: stop() below cancels
+            // rather than flushes, so a timer in flight at this exact
+            // moment (the most recent edit(s), still inside the
+            // debounce delay) would otherwise be discarded unfired and
+            // unwarned. See application/AutosaveScheduler.js's own
+            // flush() header for why it is always a safe no-op once an
+            // autosave has already fired, or when nothing is pending.
+            //
+            // Caught, not left to propagate like Toolbar.js's own
+            // save(): everything below this line in this SAME hook
+            // (recoveryObserver.stop(), every unsubscribe/
+            // removeEventListener, editorSession.dispose(), the two
+            // peer dispose() calls) still needs to run regardless — an
+            // uncaught throw here would skip all of them, leaking
+            // exactly what those calls exist to prevent. Logged, not
+            // swallowed: a failed flush leaves DocumentManager state
+            // (and therefore the still-dirty document) completely
+            // untouched — see AutosaveDocumentUseCase's own atomic
+            // failure behavior — so nothing here ever claims a save
+            // that did not happen, and navigation itself is never
+            // gated on this succeeding (see Section C1's own finding
+            // that no navigation-blocking guard exists anywhere in
+            // this view).
+            try {
+                autosaveScheduler.flush();
+            } catch (e) {
+                console.error('Editor exit: failed to flush the pending autosave checkpoint', e);
+            }
             // 0.9.204 — the negative test this milestone's own brief
             // names as the important one: an unmounted Editor must not
             // go on producing autosaves or recovery probes. Both stop()

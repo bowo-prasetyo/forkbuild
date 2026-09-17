@@ -59,6 +59,41 @@ export class AutosaveScheduler {
         }
     }
 
+    // 0.9.580 — Editor Trailing-Autosave Loss Window closure. Intended
+    // caller: EditorView.js's own onBeforeUnmount(), immediately before
+    // stop() below — closing the exact gap 0.9.579 Section C proved:
+    // stop() alone is cancel()-then-unsubscribe, so a timer pending at
+    // the moment of a genuine exit was simply discarded, silently
+    // losing whatever edit(s) triggered it.
+    //
+    // Fires the checkpoint early ONLY when a timer is actually PENDING
+    // — i.e. there is scheduled work this exit would otherwise cancel
+    // unfired. That, not `state.dirty` alone, is what distinguishes "an
+    // edit is still waiting on its debounce" from "the debounce already
+    // fired": AutosaveDocumentUseCase deliberately never clears dirty
+    // (see that class's own header), so a checkpoint that already ran
+    // still leaves the document reading dirty, with no timer pending. A
+    // trailing flush() call after a normal firing (or with no edit ever
+    // made) is therefore always a safe no-op, never a redundant second
+    // write — see this class's own test suite for both orderings.
+    //
+    // Propagates whatever AutosaveDocumentUseCase.execute() throws,
+    // unchanged: the same "no try/catch here" contract this codebase
+    // already applies to an explicit Save failure (ui/components/
+    // Toolbar.js's own save()) — no new failure vocabulary invented for
+    // this narrower, exit-time case. AutosaveDocumentUseCase's own
+    // atomic failure behavior (see that class's own test coverage)
+    // already guarantees a thrown failure here leaves DocumentManager
+    // state, and the recovery store, completely untouched.
+    flush() {
+        const wasPending = this._timer !== null;
+        this.cancel();
+        if (!wasPending || !this._documentManager.state.dirty) {
+            return null;
+        }
+        return this._autosaveDocumentUseCase.execute(this._documentManager);
+    }
+
     stop() {
         this.cancel();
         if (this._unsubscribe) {
