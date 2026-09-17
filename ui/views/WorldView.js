@@ -586,6 +586,14 @@ export default {
         // straight through to `OwnPublicationPanel`, with no wrapper
         // function of this view's own.
         const discoverSnapshotCandidatesCommand = inject('discoverSnapshotCandidatesCommand', null);
+        // 0.9.589 — Distinguish Snapshot Discovery Absence from Discovery
+        // Failure. The SAME app-wide `discoverSnapshotCandidatesWithOutcomeCommand`
+        // `ui/main.js` now composes alongside `discoverSnapshotCandidatesCommand`
+        // above — a `() -> Promise<{ outcome, candidates }>` capability, handed
+        // straight through to `OwnPublicationPanel` exactly like its sibling.
+        // `discoverSnapshotCandidatesCommand` above stays wired unchanged, still
+        // the one `worldSnapshotDiscoveryMonitor` below calls.
+        const discoverSnapshotCandidatesWithOutcomeCommand = inject('discoverSnapshotCandidatesWithOutcomeCommand', null);
         // 0.9.186 — World Snapshot Background Discovery. The SAME app-wide
         // `WorldSnapshotDiscoveryMonitor` instance `ui/main.js` composes
         // around the exact `discoverSnapshotCandidatesCommand` above —
@@ -4563,6 +4571,7 @@ export default {
             discoverOwnSnapshot,
             exportOwnSnapshot,
             discoverSnapshotCandidatesCommand,
+            discoverSnapshotCandidatesWithOutcomeCommand,
             resolveSelectedSnapshotCommand,
             materializeSelectedSnapshotCommand,
             // 0.9.474 — Admit World-Encountered Publications into
@@ -4716,6 +4725,7 @@ export default {
                     :addPublicationCommentaryCommand="addPublicationCommentaryCommand"
                     :viewerIdentityId="myIdentityId"
                     :getPublicationPlacementsCommand="getPublicationPlacementsCommand"
+                    :discoverSnapshotCandidatesWithOutcomeCommand="discoverSnapshotCandidatesWithOutcomeCommand"
                 />
             <!-- 0.5.7 — World View UX & Progressive Exploration. Home
                  and Locations stay plain navigation utilities; Explore /

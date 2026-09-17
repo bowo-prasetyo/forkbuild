@@ -160,7 +160,7 @@ import { availableSnapshotDistributionStorageTypes, resolveSnapshotDistributionC
 import { composePlaceNamingPublicationRuntime } from '../application/PlaceNamingPublicationRuntimeComposition.js';
 import { composeDiscoverSnapshotRuntime } from '../application/DiscoverSnapshotRuntimeComposition.js';
 import { executeDiscoverSnapshotCommand } from '../application/DiscoverSnapshotCommand.js';
-import { executeDiscoverSnapshotCandidatesCommand } from '../application/DiscoverSnapshotCandidatesCommand.js';
+import { executeDiscoverSnapshotCandidatesCommand, executeDiscoverSnapshotCandidatesCommandWithOutcome } from '../application/DiscoverSnapshotCandidatesCommand.js';
 import { WorldSnapshotDiscoveryMonitor } from '../application/WorldSnapshotDiscoveryMonitor.js';
 import { composeSnapshotCandidateDiscoveryRuntime } from '../application/SnapshotCandidateDiscoveryRuntimeComposition.js';
 import { ArweaveSnapshotDiscoveryQueryService } from '../application/ArweaveSnapshotDiscoveryQueryService.js';
@@ -2754,6 +2754,29 @@ const discoverSnapshotCandidatesCommand = () => executeDiscoverSnapshotCandidate
     discoveryQueryService: snapshotCandidateDiscoveryQueryService
 });
 app.provide('discoverSnapshotCandidatesCommand', discoverSnapshotCandidatesCommand);
+
+// 0.9.589 — Distinguish Snapshot Discovery Absence from Discovery
+// Failure.
+//
+// A SIBLING PROVIDE, NEVER A REPLACEMENT of `discoverSnapshotCandidatesCommand`
+// immediately above — that command stays wired exactly as it was, still
+// the one `application/WorldSnapshotDiscoveryMonitor.js`'s own
+// walking-triggered background discovery calls (see that file's own
+// header; this milestone does not touch it). This second command reuses
+// the SAME `snapshotCandidateDiscoveryQueryService`/`discoveryTag` —
+// never a second composition, never a second network round trip beyond
+// whichever of the two a caller actually invokes — and calls that
+// service's own `searchWithOutcome()` (application/
+// SnapshotCandidateDiscoveryQueryService.js, 0.9.589) instead of
+// `search()`, so `ui/components/OwnPublicationPanel.js`'s own explicit
+// "Discover Snapshots" button can tell a genuinely empty result apart
+// from one where discovery could not be completed. See application/
+// SnapshotCandidateDiscoveryOutcome.js's own header for the vocabulary.
+const discoverSnapshotCandidatesWithOutcomeCommand = () => executeDiscoverSnapshotCandidatesCommandWithOutcome({
+    discoveryTag: 'forkbuild-snapshot',
+    discoveryQueryService: snapshotCandidateDiscoveryQueryService
+});
+app.provide('discoverSnapshotCandidatesWithOutcomeCommand', discoverSnapshotCandidatesWithOutcomeCommand);
 
 // 0.9.186 — World Snapshot Background Discovery.
 //

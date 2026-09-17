@@ -96581,3 +96581,50 @@ This closes the one `DOCUMENTATION_GAP` 0.9.586 raised. Per that milestone's own
 narrow findings (two presentation leaks, two silent fallbacks, one justified protocol branch) are not
 automatically another audit — each should be evaluated on its own terms, separately, only if and when evidence
 says it is worth a milestone of its own.
+
+## 0.9.589 — Distinguish Snapshot Discovery Absence from Discovery Failure
+
+**Type:** narrow production fix + focused audit. **Production changes:** one new vocabulary file
+(`application/SnapshotCandidateDiscoveryOutcome.js`), one new sibling method each on
+`application/NostrSnapshotDiscoveryQueryService.js` and `application/SnapshotCandidateDiscoveryQueryService.js`
+(`searchWithOutcome()`, alongside their existing, byte-for-byte unmodified `search()`), one new sibling export on
+`application/DiscoverSnapshotCandidatesCommand.js`, one new app-wide provide in `ui/main.js`, and
+`ui/components/OwnPublicationPanel.js`/`ui/views/WorldView.js` wiring to use it.
+
+A follow-up (not the Silent Fallback Semantics audit itself, which stayed test-only) to the one real
+`PRESENTATION_GAP` that audit's own Section E named: `NostrSnapshotDiscoveryQueryService#search()` correctly
+degrades every query failure — a rejecting/timed-out `queryImpl`, a malformed response — to the identical `[]` a
+genuine "nothing has been announced" result also produces (a deliberate, documented contract; see that file's own
+header, "never throws"). `OwnPublicationPanel.js`'s own candidate-discovery empty state then rendered that `[]`
+as a flat "No Snapshots have been announced under this discoveryTag yet." — a claim the underlying mechanism
+never actually verified for the failure case.
+
+**The fix, precisely.** `search()`/`executeDiscoverSnapshotCandidatesCommand()`/
+`application/WorldSnapshotDiscoveryMonitor.js` (the walking-triggered background path) are all untouched — the
+graceful-degradation contract this milestone was explicitly asked not to change stays exactly as it was. A new,
+additive `searchWithOutcome()` sibling exists on both `NostrSnapshotDiscoveryQueryService` and the production
+Local+Nostr+Arweave composite (`SnapshotCandidateDiscoveryQueryService`, the collaborator
+`discoverSnapshotCandidatesCommand` actually resolves through in production, one layer beyond what the requesting
+brief's own simpler mental model named) — each classifying its own result as `FOUND`/`EMPTY`/`UNAVAILABLE`
+(`application/SnapshotCandidateDiscoveryOutcome.js`) rather than discarding that distinction. The composite's own
+rule: `FOUND` when at least one candidate survives dedup; otherwise `EMPTY` when at least one source was actually
+asked successfully (an honest answer was obtained, however few candidates it reported); otherwise `UNAVAILABLE` —
+every source failed, or there was nothing to ask. `ui/main.js` provides a new, sibling
+`discoverSnapshotCandidatesWithOutcomeCommand` alongside the existing `discoverSnapshotCandidatesCommand` — the
+monitor keeps using the original, unchanged. `OwnPublicationPanel.js` prefers the outcome-aware command when a
+host supplies it, and renders "Snapshot discovery is currently unavailable." only for `UNAVAILABLE`, keeping its
+original empty-state copy for a genuine `EMPTY` result and for the legacy path (a host supplying only the
+original command sees pre-0.9.589 behavior, unchanged, forever).
+
+**Regression sweep.** Reconfirmed, live, that `application/StructureDocumentResolver.js`'s own identical
+degrade-to-`null` mechanism (the audit's other finding, I3b) has no consuming UI overclaim to fix — 0.9.588's own
+Section E already established `renderer/WorldRenderer.js` asserts nothing about why a placement is absent — and
+that no other UI surface in this codebase makes the same "empty discovery result proves absence" claim
+`OwnPublicationPanel.js` did.
+
+### What this milestone deliberately excludes
+
+Per its own brief: no change to `NostrSnapshotDiscoveryQueryService#search()`'s own `[]` contract; no retries, no
+fallback providers, no provider health state; no Nostr implementation detail exposed to the UI; no redesign of
+Snapshot discovery; no change to Repository behavior or to Snapshot resolution/verification/placement; discovery
+failure still never blocks any other capability.
