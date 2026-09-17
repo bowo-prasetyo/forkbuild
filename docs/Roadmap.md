@@ -97141,3 +97141,53 @@ drift guard, not something this milestone introduces.
 Retain -> Find -> Inspect -> Place journey, to determine whether it now works naturally through existing
 surfaces or whether genuine evidence remains for a new "Unplaced Publications" surface — deliberately not
 attempted by this milestone.
+
+## 0.9.598 — Publication Actionability Journey Product Reassessment
+
+**Type:** test-only product-boundary audit. **Production changes:** none. Adds
+`tests/PublicationActionabilityJourneyProductReassessment.test.js`.
+
+**Objective.** 0.9.597's own "what comes next," implemented verbatim: reassess the complete
+Observer-local encounter -> DISCOVER -> RESOLVE -> VERIFY -> Repository admission -> Repository retention ->
+Find Publication -> Publication action surface -> Explicit Place -> PlacementRecord journey against the real,
+current production composition, to determine whether a user can now practically recover, inspect, and place a
+verified Publication discovered locally, without a new persistent "Unplaced Publications" surface.
+
+**Findings.** Sections A/B/C/E/F live-reconfirm, through the real production composition (never a bespoke
+stand-in for it) — including one fact no prior audit had asserted, that `ui/views/WorldView.js` binds the
+identical `decentralizedDiscoveryProviderForEnrichment` variable to both `WorldEncounterCanvas`'s own
+admission-side prop and `CreateWorldViewUseCase.js`'s own action-resolution parameter — that discovery,
+verification, Repository admission, retention past the encounter's own disappearance, Repository search, real
+Explore navigation, and Publication-fact resolution (`getPublicationForDocument()`/`findPublicationById()`) all
+now work end to end for a Publication the current replica never itself published. Open/Fork/Explore/Comment
+remain reachable throughout.
+
+Section D is this milestone's own new finding, not previously measured: no production code path anywhere in
+this codebase creates a Publication's FIRST placement except `PublishDocumentUseCase`'s own automatic,
+best-effort initial placement at the moment of a replica's own publish action. `PlacePublicationUseCase.execute()`
+has exactly one call site (`PublishDocumentUseCase._placeInitially()`) in the entire codebase.
+`WorldNavigationSession` exposes only `movePlacement()`/`removePlacement()`, both of which require an existing
+placement and throw otherwise — live-reproduced by calling `movePlacement()` on a reachable, resolvable,
+Repository-admitted Publication with no placement. `OwnPublicationPanel`'s own "Place Materialized
+Snapshot"/"Register Placed Snapshot" — despite their names, and despite 0.9.595's own header describing them as
+the action that "creates the PlacementRecord" — never reference `PlacementRecord`/`placementRegistry` at all:
+`resolveSnapshotWorldPlacement()` BORROWS an already-existing placement's position and reports UNPLACED when
+none exists, and `registerMaterializedSnapshotWorldSource()` registers nothing for an UNPLACED result — live-
+reproduced end to end, confirming both buttons are a complete no-op for any Publication with no placement yet.
+This is a real, by-design restraint (`SnapshotWorldPlacementOutcome.js`'s own header: "no placement is ever
+invented"), not a bug — but its consequence for a Repository-admitted Publication authored by someone else had
+never previously been measured against the specific "Explicit Place -> PlacementRecord" step.
+
+Section G reconfirms none of the eight items the original 0.9.594 brief was skeptical of (a new notification, a
+persistent "Unplaced Publications" list, observer-local persistence, a new Publication database, automatic
+placement, a new discovery protocol, provider ranking/fallback, automatic marker reappearance) are newly
+warranted, and draws an explicit line between that list and Section D's own, different-in-kind finding.
+
+**Classification: `PRODUCT_GAP_CONFIRMED`** — narrow, and specific to explicit placement only. Every other step
+in the requested journey is `ALREADY_CORRECT`. **Recommendation:** a single, narrow, explicit write action —
+mirroring `movePlacement()`/`removePlacement()`'s own existing shape — that wires the already-constructed,
+already-tested `PlacePublicationUseCase` into `WorldNavigationSession` (e.g. `session.placePublication(documentId,
+position)`), reached from one new, explicit, deliberate UI action — never a byproduct of resolution, discovery,
+or materialization, and never a new persistent surface. Any authorization question that action should ask (who
+may place someone else's discovered work, and where) is a separate product decision this reassessment does not
+answer — consistent with this milestone's own type: a test-only audit that implements nothing.
