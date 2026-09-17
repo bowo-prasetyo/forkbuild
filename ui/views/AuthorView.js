@@ -3,6 +3,7 @@ import { useRoute } from 'vue-router';
 import { CreateDiscoveryUseCase } from '../../application/CreateDiscoveryUseCase.js';
 import PublicationCatalog from '../components/PublicationCatalog.js';
 import ForkTree from '../components/ForkTree.js';
+import { computeAmbiguousPublishedDateIds, formatPublicationDate } from '../../core/PublicationDateAmbiguity.js';
 // 0.9.525 — Repository Discovery & Material Trust Product
 // Reassessment, Section G. See application/
 // PublicationAuthorNameIdentityConvergence.js's own header for why this
@@ -50,6 +51,20 @@ export default {
             return allPublications.value.filter((p) => !p.parentDocumentId);
         });
 
+        // 0.9.572 — see core/PublicationDateAmbiguity.js's own header
+        // and ui/components/PublicationCatalog.js's own identical
+        // computed one component over. The "Original Works & Forks"
+        // tree below renders from this SAME `allPublications` array —
+        // republishing an unmodified Document (0.9.539's own flagship
+        // scenario: same documentId, no parentDocumentId, so both
+        // land in forkTreeRoots as siblings) previously rendered two
+        // pixel-identical root nodes here, because this page's own
+        // inline fork-tree markup never went through the 0.9.539 fix
+        // at all — only ui/components/PublicationCard.js/
+        // PublicationList.js did. Scoped to the whole author page,
+        // mirroring PublicationCatalog.js's own per-page scope.
+        const preciseDateIds = computed(() => computeAmbiguousPublishedDateIds(allPublications.value));
+
         // 0.9.525 — a structural fact about the SAME `allPublications`
         // this page already loaded for the fork tree, never a second
         // query: does this typed name cover more than one distinct
@@ -69,7 +84,9 @@ export default {
             author,
             allPublications,
             forkTreeRoots,
-            authorNameIdentityNotice
+            authorNameIdentityNotice,
+            preciseDateIds,
+            formatPublicationDate
         };
     },
     template: `
@@ -88,10 +105,10 @@ export default {
                     <div class="fork-node fork-node--root">
                         <strong>{{ root.title }}</strong>
                         <span class="fork-node-date" v-if="root.publishedAt">
-                            {{ new Date(root.publishedAt).toLocaleDateString() }}
+                            {{ formatPublicationDate(root.publishedAt, preciseDateIds.has(root.id)) }}
                         </span>
                     </div>
-                    <ForkTree :publications="allPublications" :root-document-id="root.documentId" />
+                    <ForkTree :publications="allPublications" :root-document-id="root.documentId" :precise-date-ids="preciseDateIds" />
                 </div>
             </div>
         </section>
