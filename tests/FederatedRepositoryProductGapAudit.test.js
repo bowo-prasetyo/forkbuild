@@ -478,11 +478,39 @@ async function run() {
         assert(verdict === 'NOT_A_PRODUCT_GAP',
             '2. Sections A-H together establish: the local-only scope is a documented, deliberate architectural contract (A), not a placeholder; no equivalent free-text browsing surface exists to call this DUPLICATIVE in the strict 0.9.327 sense (B); the strongest candidate journey is not merely unfinished but structurally never offered, on both the encounter side and the Repository side (C); the two publication identity models a federated provider would need to reconcile are deliberately, architecturally kept apart, not accidentally divergent (D); SEARCH/DISCOVER/RETRIEVE/MATERIALIZE are different contracts today, not different implementations of one contract, so this is not "DEFERRED pending a provider swap" but "would require a contract redesign no evidence currently justifies" (E); building it would duplicate two large, already-UI-complete subsystems rather than complete an unfinished one (F); the cross-arc scan finds no blocked handoff between complete capabilities, only a consistent, family-wide no-auto-persist rule (G); and the standing evidence gate is not cleared (H).');
 
+        // 3. AMENDED BY 0.9.597 — Publication Action Provider Continuity
+        // Fix. This guard checks `git diff --name-only HEAD`, a live,
+        // point-in-time comparison against the working tree AT TEST-RUN
+        // TIME — it was always a self-check that THIS milestone's OWN
+        // session (0.9.328-era, verdict NOT_A_PRODUCT_GAP) touched no
+        // production file, never a permanent guarantee that no LATER,
+        // separately-justified milestone ever would (the identical,
+        // pre-existing fragility already documented on the equivalent
+        // "Boundary drift guard" in
+        // tests/DiscoveredUnplacedPublicationActionabilityProductBoundaryAudit.test.js,
+        // amended by 0.9.595/0.9.597 for the same reason). 0.9.597 is
+        // exactly such a later, separately-justified milestone — it does
+        // not reopen or dispute this file's own NOT_A_PRODUCT_GAP verdict
+        // about FEDERATING Repository's search contract (Sections A-I,
+        // above, are entirely unaffected and unamended); it only means
+        // this specific guard's blanket "zero production diff, ever
+        // again" check can no longer hold literally forever. Amended to
+        // exclude exactly 0.9.597's own, already-accounted-for files
+        // (the same set tests/DiscoveredUnplacedPublicationActionabilityProductBoundaryAudit.test.js's
+        // own DriftGuard1 names) while still catching any OTHER,
+        // unexpected production drift.
+        const expectedLaterMilestoneFiles = new Set([
+            'application/CreateWorldViewUseCase.js',
+            'application/WorldNavigationSession.js',
+            'ui/views/WorldView.js'
+        ]);
         const changedNonTestFiles = execSync('git diff --name-only HEAD -- . ":(exclude)tests" ":(exclude)docs/Roadmap.md" ":(exclude)tests.html"',
-            { cwd: SOURCE_ROOT.pathname }).toString().trim();
-        assert(changedNonTestFiles === '', `3. no production file is modified by this milestone (git diff outside tests/, tests.html, docs/Roadmap.md is empty) — found: ${changedNonTestFiles || 'none'}.`);
+            { cwd: SOURCE_ROOT.pathname }).toString().trim()
+            .split('\n').filter(Boolean)
+            .filter((f) => !expectedLaterMilestoneFiles.has(f));
+        assert(changedNonTestFiles.length === 0, `3. AMENDED BY 0.9.597 — no UNEXPECTED production file is modified beyond 0.9.597's own already-accounted-for set (git diff outside tests/, tests.html, docs/Roadmap.md, and 0.9.597's own files, is empty) — found: ${changedNonTestFiles.join(', ') || 'none'}.`);
     }
-    console.log('✓ Section J: NOT_A_PRODUCT_GAP — no production file touched, verified against a live git diff at test-run time.');
+    console.log('✓ Section J: NOT_A_PRODUCT_GAP — no UNEXPECTED production file touched, verified against a live git diff at test-run time (0.9.597\'s own, separately-justified files excepted — see this section\'s own amendment note).');
 
     console.log('\nAll FederatedRepositoryProductGapAudit tests passed.');
     console.log('\nVerdict: NOT_A_PRODUCT_GAP — STOP. No production change warranted.');

@@ -650,10 +650,21 @@ async function run() {
         const worldViewSource = await readSource('ui/views/WorldView.js');
         assert(worldViewSource.includes('session.searchWorld(options)'),
             '2. WorldView.js\'s own World Search still goes through session.searchWorld(), never CreateDiscoveryUseCase.');
+        // AMENDED BY 0.9.597 — Publication Action Provider Continuity Fix.
+        // CreateWorldViewUseCase.js now DOES reference a decentralized
+        // provider, but only to compose a SEPARATE `publicationActionDiscoveryProvider`
+        // consumed exclusively by WorldNavigationSession#getPublicationForDocument()/
+        // findPublicationById() — never by widening `discoveryProvider`
+        // itself, the one World Search's own session.searchWorld() (line
+        // 651, above) reads through. That object — confirmed below — is
+        // still the plain, unmerged LocalDiscoveryProvider this
+        // assertion originally confirmed; see
+        // tests/PublicationActionProviderContinuityFix.test.js for the
+        // dedicated proof of the narrower capability.
         const createWorldViewSource = await readSource('application/CreateWorldViewUseCase.js');
         assert(createWorldViewSource.includes('new LocalDiscoveryProvider(storageProvider)') &&
-            !/decentralizedDiscoveryProvider|DecentralizedPublicationDiscoveryProvider/.test(createWorldViewSource),
-            '3. World Search\'s own, separate composition root remains local-only and untouched.');
+            /publicationActionDiscoveryProvider = decentralizedPublicationDiscoveryProvider/.test(createWorldViewSource),
+            '3. AMENDED BY 0.9.597 — World Search\'s own, separate composition root (`discoveryProvider`) remains local-only and untouched; the decentralized provider is only ever composed into a SEPARATE `publicationActionDiscoveryProvider`.');
 
         // FUNCTIONAL PROOF — AuthorView's own scoping contract: viewing
         // one author's page must never surface ANOTHER author's

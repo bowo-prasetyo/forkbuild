@@ -569,10 +569,26 @@ async function run() {
             '2. WorldView.js now merges in the shared provider for its own title/author enrichment.');
         assert(worldViewSource.includes('session.searchWorld(options)'),
             '3. ...while World Search itself still goes through session.searchWorld(), never CreateDiscoveryUseCase.');
+        // 4. AMENDED BY 0.9.597 — Publication Action Provider Continuity
+        // Fix. At the time this assertion was written, CreateWorldViewUseCase.js
+        // referenced no decentralized provider at all. 0.9.597 gave it an
+        // OPTIONAL `decentralizedPublicationDiscoveryProvider` parameter —
+        // but only to compose a SEPARATE `publicationActionDiscoveryProvider`
+        // consumed exclusively by WorldNavigationSession#getPublicationForDocument()/
+        // findPublicationById() (OwnPublicationPanel reachability). World
+        // Search's own, separate composition root — `discoveryProvider`,
+        // the plain LocalDiscoveryProvider `session.searchWorld()` reads
+        // through — remains untouched and still local-only; docs/Principles.md's own
+        // "Discovery Is One Path, Not Two" (which names fork-policy checks,
+        // not Publication-action resolution) is unaffected because this
+        // milestone never merged anything into THAT path. See
+        // tests/PublicationActionProviderContinuityFix.test.js for the
+        // dedicated proof this narrower distinction holds.
         const createWorldViewSource = await readSource('application/CreateWorldViewUseCase.js');
         assert(createWorldViewSource.includes('new LocalDiscoveryProvider(storageProvider)') &&
-            !/decentralizedDiscoveryProvider|DecentralizedPublicationDiscoveryProvider/.test(createWorldViewSource),
-            '4. application/CreateWorldViewUseCase.js — World Search\'s own, separate composition root — is untouched and still local-only, exactly as tests/FederatedRepositoryProductGapAudit.test.js already established; docs/Principles.md\'s own "Discovery Is One Path, Not Two" is unaffected because this milestone never touched that path.');
+            /decentralizedPublicationDiscoveryProvider\s*=\s*null/.test(createWorldViewSource) &&
+            /publicationActionDiscoveryProvider\s*=\s*decentralizedPublicationDiscoveryProvider/.test(createWorldViewSource),
+            '4. AMENDED BY 0.9.597 — application/CreateWorldViewUseCase.js is untouched and still local-only for World Search\'s own purposes -- `discoveryProvider` itself, the one session.searchWorld() reads through, is still the plain, unmerged LocalDiscoveryProvider this assertion originally confirmed. The file now ALSO accepts an optional decentralized provider, but composes it ONLY into a separate `publicationActionDiscoveryProvider`, consumed exclusively by WorldNavigationSession#getPublicationForDocument()/findPublicationById() -- see tests/PublicationActionProviderContinuityFix.test.js for that narrower capability\'s own dedicated proof.');
 
         // I3. ui/views/RecentWorldsView.js — discoveryProvider is used
         // only via findByDocumentId(documentId), where `documentId`

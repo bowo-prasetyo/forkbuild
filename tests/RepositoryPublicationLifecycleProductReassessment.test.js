@@ -546,10 +546,17 @@ async function main() {
         // navigation cannot itself rewrite what a later Repository read
         // would find, under either catalog shape.
         const sessionSrc = await readSource('application/WorldNavigationSession.js');
+        // AMENDED BY 0.9.597 — Publication Action Provider Continuity Fix.
+        // findPublicationById() now delegates to `_publicationActionDiscoveryProvider`
+        // (a separate, optional capability falling back to `discoveryProvider`
+        // itself when unwired — see WorldNavigationSession's own
+        // constructor comment) rather than to `_discoveryProvider`
+        // directly. Still a pure delegation — no write, no admission, no
+        // removal — just to a different-named, still-read-only collaborator.
         const findByIdBody = sessionSrc.match(/findPublicationById\(publicationId\) \{([\s\S]*?)\n {4}\}/);
-        assert(findByIdBody && /return this\._discoveryProvider\.findById\(publicationId\) \|\| null;/.test(findByIdBody[1])
+        assert(findByIdBody && /return this\._publicationActionDiscoveryProvider\.findById\(publicationId\) \|\| null;/.test(findByIdBody[1])
             && !/\.save\(|\.add\(|\.remove\(/.test(findByIdBody[1]),
-            '4. findPublicationById()\'s own body is a pure delegation to discoveryProvider.findById() — no write, no admission, no removal.');
+            '4. AMENDED BY 0.9.597 — findPublicationById()\'s own body is a pure delegation to `_publicationActionDiscoveryProvider.findById()` — no write, no admission, no removal.');
     }
     console.log('✓ Section F: treating the Repository entry as the long-lived object, World navigation never creates or replaces it — the in-memory (decentralized) catalog conserves the exact object REFERENCE across a before/after navigation search, and the storage-backed (local) catalog, which honestly reconstructs a fresh value on every read rather than caching a reference, still conserves the VALUE (id/documentId/contentHash) exactly. findPublicationById() is proven, structurally, to be pure delegation — no write path exists for navigation to abuse.');
 

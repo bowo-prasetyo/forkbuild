@@ -253,6 +253,32 @@ export class WorldNavigationSession {
 	    identityProvider = null,
 	    documentCloneService = null,
     	discoveryProvider = null, // <-- Fixed: Added missing parameter
+	    // 0.9.597 — Publication Action Provider Continuity Fix. A SEPARATE,
+	    // OPTIONAL discovery capability, consulted ONLY by
+	    // getPublicationForDocument()/findPublicationById() (see both,
+	    // below) — never by _isKnownPublication()/_checkForkPolicy()/
+	    // _loadWorld()'s publish-marking, and never by worldLayoutProvider's
+	    // own position enrichment (constructed upstream, in
+	    // application/CreateWorldViewUseCase.js, from the plain
+	    // `discoveryProvider` above, unchanged). 0.9.596's own Section D
+	    // live-proved that widening `discoveryProvider` ITSELF (the shared
+	    // choke point _findPublications() reads for every one of those other
+	    // callers) to also see decentralized/Repository-admitted
+	    // Publications would silently extend fork-policy license
+	    // enforcement to a plain, never-locally-published document merely
+	    // because an unrelated encounter admitted a Publication sharing its
+	    // documentId. This constructor parameter exists so that widening
+	    // never has to happen: a caller (CreateWorldViewUseCase.js) that
+	    // wants OwnPublicationPanel's own `publication` prop
+	    // (getPublicationForDocument()) to see a Repository-admitted
+	    // Publication passes a SEPARATE, already-merged provider here,
+	    // leaving `discoveryProvider` itself exactly as narrow as it always
+	    // was. A caller that doesn't supply one (every pre-0.9.597 caller,
+	    // and every existing test) falls back to `discoveryProvider` itself
+	    // — see this constructor's own assignment, below — so
+	    // getPublicationForDocument()/findPublicationById() degrade to
+	    // their exact pre-0.9.597 behavior, byte for byte.
+	    publicationActionDiscoveryProvider = null,
 	    placementRegistry = null,
 	    moveWorldPlacementUseCase = null,
 	    // 0.9.197 — World Placement Removal UI Action. The mirror
@@ -820,6 +846,11 @@ export class WorldNavigationSession {
         this._activeDocumentId = null;
         this._eventBus = null;
 	    this._discoveryProvider = discoveryProvider;
+	    // 0.9.597 — see this constructor's own parameter comment, above.
+	    // Falls back to `discoveryProvider` itself when no separate one is
+	    // supplied, so a caller that never wires this (every pre-0.9.597
+	    // caller/test) gets IDENTICAL behavior to before this milestone.
+	    this._publicationActionDiscoveryProvider = publicationActionDiscoveryProvider || discoveryProvider;
 
         // 0.2.20: documentIds currently loaded straight from a
         // publication — immutable as far as this session is concerned,
@@ -4995,17 +5026,27 @@ export class WorldNavigationSession {
         };
     }
 
-    // 0.9.187 — the SAME `_discoveryProvider.findById()` lookup
-    // _describeSpatialOccupant() already performs privately, exposed
-    // publicly for application/AutomaticSnapshotEncounterCascade.js's own
+    // 0.9.187 — originally the SAME `_discoveryProvider.findById()` lookup
+    // _describeSpatialOccupant() performs privately, exposed publicly for
+    // application/AutomaticSnapshotEncounterCascade.js's own
     // `findPublicationById` collaborator — the actual Publication instance
     // `registerMaterializedSnapshotWorldSource()` requires alongside
     // `getPlacementInfoForPublication()`'s own placementInfo, never just an
-    // id. `null` when there is no discoveryProvider wired, or the
+    // id. `null` when there is no discovery capability wired, or the
     // publication is not locally known — never throws.
+    //
+    // 0.9.597 — now reads `_publicationActionDiscoveryProvider` (see this
+    // class's own constructor comment) rather than `_discoveryProvider`
+    // directly, per 0.9.596's own D6 recommendation: an exact-id lookup
+    // carries none of `_findPublications()`'s documentId-collision risk,
+    // so widening it to also see Repository-admitted Publications is safe
+    // on its own terms. `_describeSpatialOccupant()`'s OWN, separate
+    // `_discoveryProvider.findById()` call is deliberately left untouched
+    // — spatial-occupant/collision reporting is out of this milestone's
+    // scope, and this method's own callers never route through it.
     findPublicationById(publicationId) {
-        if (!this._discoveryProvider || typeof publicationId !== 'string' || publicationId.length === 0) return null;
-        return this._discoveryProvider.findById(publicationId) || null;
+        if (!this._publicationActionDiscoveryProvider || typeof publicationId !== 'string' || publicationId.length === 0) return null;
+        return this._publicationActionDiscoveryProvider.findById(publicationId) || null;
     }
 
     // Pre-flight query for an EXPLICIT placement request — "if I moved
@@ -5742,8 +5783,40 @@ export class WorldNavigationSession {
     // a discovery provider of its own. null, never throws, for a
     // document with no known Publication (an unpublished fork, or a
     // plain loaded document that was never published at all).
+    //
+    // 0.9.597 — Publication Action Provider Continuity Fix. This is the
+    // ONE method ui/views/WorldView.js's own `ownPublication` computation
+    // binds to `OwnPublicationPanel`'s own `publication` prop
+    // (0.9.596's own Section C, "the exact input OwnPublicationPanel's
+    // own `publication` prop is bound to"). It no longer reuses
+    // `_resolvePublicationForPlacement()` verbatim — that method (and
+    // `_findPublications()` beneath it) stays exactly as local-only as
+    // before, still the sole authority for placement resolution
+    // (`_resolvePlacementRecord`/`getPlacementInfo`/`checkPlacementOverlap`/
+    // `unpublishDocument`) and for fork-policy (`_isKnownPublication`/
+    // `_checkForkPolicy`)/`getPublicationIdForDocument`. This method now
+    // performs the IDENTICAL "most recent Publication for this documentId
+    // wins" reduction independently, over
+    // `_publicationActionDiscoveryProvider` (see this class's own
+    // constructor comment) — so a Repository-admitted Publication
+    // (0.9.595) that this replica never locally published becomes
+    // resolvable here without also making `_isKnownPublication()` decide
+    // a plain, never-published document is "known" or `_checkForkPolicy()`
+    // apply that Publication's license to it, which is exactly the
+    // ripple-effect risk 0.9.596's own Section D live-proved a shared
+    // `_findPublications()` lookup would create. A caller that never
+    // wires `publicationActionDiscoveryProvider` (every pre-0.9.597
+    // caller, and every existing test) gets `_publicationActionDiscoveryProvider
+    // === discoveryProvider`, so this method's observable behavior is
+    // byte-for-byte identical to calling `_resolvePublicationForPlacement()`
+    // as before.
     getPublicationForDocument(documentId) {
-        return this._resolvePublicationForPlacement(documentId);
+        if (!this._publicationActionDiscoveryProvider || typeof this._publicationActionDiscoveryProvider.findByDocumentId !== 'function') {
+            return null;
+        }
+        const publications = this._publicationActionDiscoveryProvider.findByDocumentId(documentId) || [];
+        if (publications.length === 0) return null;
+        return publications.reduce((latest, p) => (!latest || p.publishedAt > latest.publishedAt) ? p : latest, null);
     }
 
     // Remaps this session's live references — selection, focus, active

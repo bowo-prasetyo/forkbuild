@@ -679,13 +679,27 @@ export default {
         // Discovery-tag input's own starting value and never touches how
         // discoverWorldEncounterPublicationCommand itself is called.
         const publicationDiscoveryTag = inject('publicationDiscoveryTag', '');
+        // 0.9.597 — Publication Action Provider Continuity Fix. The SAME
+        // app-wide discovery/DecentralizedPublicationDiscoveryProvider.js
+        // instance ui/main.js already provides (0.9.337), and this view
+        // already injects, further below, for Repository search
+        // enrichment only (see `decentralizedDiscoveryProviderForEnrichment`'s
+        // own comment) — hoisted up here so the SAME injected value can
+        // also reach CreateWorldViewUseCase.js, which now (0.9.597) uses
+        // it to give WorldNavigationSession#getPublicationForDocument()/
+        // findPublicationById() a route to a Repository-admitted
+        // Publication, without touching World Search's own local-only
+        // discoveryProvider. `inject()` with the same key is idempotent —
+        // this is not a second, competing injection.
+        const decentralizedDiscoveryProviderForEnrichment = inject('decentralizedPublicationDiscoveryProvider', null);
         const registry = new CreateBrickRegistryUseCase().execute();
         const worldViewFactory = new CreateWorldViewUseCase().execute(identityUseCase.provider, {
             peerMessageBus,
             connectedPeerRegistry: peerSessionManager ? peerSessionManager.registry : null,
             friendRelationshipUseCase,
             peerBlockUseCase,
-            deviceAuthorizationPropagationUseCase: deviceAuthorizationUseCase
+            deviceAuthorizationPropagationUseCase: deviceAuthorizationUseCase,
+            decentralizedPublicationDiscoveryProvider: decentralizedDiscoveryProviderForEnrichment
         });
         const session = worldViewFactory.createSession(registry);
         // 0.9.187 — Automatic Snapshot Encounter Cascade. Composes the SAME
@@ -901,8 +915,10 @@ export default {
         // milestone and stays local-only, exactly as
         // tests/FederatedRepositoryProductGapAudit.test.js already
         // established; see docs/Principles.md, "Discovery Is One Path,
-        // Not Two."
-        const decentralizedDiscoveryProviderForEnrichment = inject('decentralizedPublicationDiscoveryProvider', null);
+        // Not Two." `decentralizedDiscoveryProviderForEnrichment` itself
+        // is now injected earlier, above (0.9.597), so it can also reach
+        // CreateWorldViewUseCase.js — reused here verbatim, never a
+        // second injection.
         const { listPublicationsUseCase } = new CreateDiscoveryUseCase().execute({
             decentralizedDiscoveryProvider: decentralizedDiscoveryProviderForEnrichment
         });
