@@ -1,4 +1,4 @@
-import { describeLifecycleState, describeTrustStatus } from '../../application/AvatarPresenceLabels.js';
+import { describeLifecycleState, describeTrustStatus, describeAnimationState } from '../../application/AvatarPresenceLabels.js';
 
 // 0.2.43 — the design doc's own mockup, verbatim:
 //
@@ -43,6 +43,9 @@ export default {
         trustLabel(status) {
             return describeTrustStatus(status);
         },
+        animationLabel(state) {
+            return describeAnimationState(state);
+        },
         statusDotClass(entry) {
             if (entry.trustStatus === 'EQUIVOCATING' || entry.trustStatus === 'UNAUTHORIZED') {
                 return 'avatar-info-status-dot--conflicting';
@@ -69,7 +72,7 @@ export default {
                             {{ entry.displayName }}
                         </span>
                         <span class="nearby-avatars-item-distance">{{ entry.distance.toFixed(1) }} World Units</span>
-                        <span class="nearby-avatars-item-detail">{{ entry.animation }} · {{ lifecycleLabel(entry.lifecycleState) }} · {{ trustLabel(entry.trustStatus) }}</span>
+                        <span class="nearby-avatars-item-detail">{{ animationLabel(entry.animation) }} · {{ lifecycleLabel(entry.lifecycleState) }} · {{ trustLabel(entry.trustStatus) }}</span>
                     </div>
                 </li>
             </ul>

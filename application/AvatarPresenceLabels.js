@@ -1,5 +1,6 @@
 import { PresenceLifecycleState } from '../core/PresenceLifecycleState.js';
 import { TrustStatus } from '../core/TrustObservation.js';
+import { AvatarAnimationState } from '../core/AvatarAnimationState.js';
 
 // 0.2.39 — human-readable labels for PresenceLifecycleState/TrustStatus,
 // shared by ui/components/AvatarInfoPanel.js's read view. One place,
@@ -35,4 +36,26 @@ const TRUST_LABELS = Object.freeze({
 
 export function describeTrustStatus(status) {
     return TRUST_LABELS[status] || 'Unknown';
+}
+
+// 0.9.583 — the same "raw enum never reaches a viewer" discipline
+// LIFECYCLE_LABELS/TRUST_LABELS already enforce, extended to the one
+// status word this file had never covered: core/AvatarAnimationState.js's
+// own values ('walking', 'idle', ...) are an internal, lowercase,
+// typo-proof vocabulary (see that file's own header), never player-facing
+// copy — ui/components/AvatarInfoPanel.js's and
+// ui/components/NearbyAvatarsPanel.js's own design-doc mockups (see each
+// file's own header comment) both show "Walking"/"Idle" capitalized;
+// before this, both panels interpolated `info.animation`/`entry.animation`
+// directly, so a real avatar's presence rendered the internal enum word
+// verbatim (lowercase) instead of that mockup's own copy.
+const ANIMATION_LABELS = Object.freeze({
+    [AvatarAnimationState.IDLE]: 'Idle',
+    [AvatarAnimationState.WALKING]: 'Walking',
+    [AvatarAnimationState.RUNNING]: 'Running',
+    [AvatarAnimationState.JUMPING]: 'Jumping'
+});
+
+export function describeAnimationState(state) {
+    return ANIMATION_LABELS[state] || 'Unknown';
 }
