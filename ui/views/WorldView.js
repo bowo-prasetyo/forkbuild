@@ -1644,6 +1644,34 @@ export default {
             refreshSpatialUI();
         }
 
+        // 0.9.600 — Publication First-Placement Action Wiring Fix. Mirrors
+        // unpublishOwnPublication()'s own restraint immediately above:
+        // this view resolves nothing about the Publication itself, and
+        // hands publication.id straight to
+        // WorldNavigationSession.placePublication() —
+        // PlacePublicationUseCase remains the sole authority for
+        // actually constructing the WorldPlacement/PlacementRecord. The
+        // ONE thing this view DOES resolve is WHERE "here" means — the
+        // SAME getAvatarPosition() || getCameraPosition() fallback
+        // WorldNavigationSession itself already uses internally for
+        // createLandmarkHere()/createRegionHere() (see that file's own
+        // header), never a second, view-local notion of "current
+        // position." A world with no live avatar or camera position at
+        // all (this button is only ever rendered once a World is loaded
+        // — see cameraPosition's own v-if gate on OwnPublicationPanel
+        // below) falls back to the World origin, exactly like
+        // PlacePublicationUseCase's own bounds fallback degrades rather
+        // than refusing.
+        function placeOwnPublication(publication) {
+            if (!publication) return;
+            guarded(() => {
+                const position = session.getAvatarPosition() || session.getCameraPosition() || { x: 0, y: 0, z: 0 };
+                session.placePublication(publication.id, position);
+                feedback.show('Publication placed in World');
+            });
+            refreshSpatialUI();
+        }
+
         // 0.9.248 — Publication Commentary UI Integration. Thin wrappers
         // around session.getPublicationCommentaries()/
         // addPublicationCommentary(), mirroring distributeWorldEncounterSnapshot()'s
@@ -4397,6 +4425,7 @@ export default {
             onMovePlacement,
             removePlacementFromPanel,
             unpublishOwnPublication,
+            placeOwnPublication,
             getPublicationCommentariesCommand,
             getPublicationPlacementsCommand,
             addPublicationCommentaryCommand,
@@ -4699,6 +4728,14 @@ export default {
                      removePlacementFromPanel's own wrap of
                      session.removePlacement() one authority up.
 
+                     0.9.600 — placePublicationCommand is
+                     placeOwnPublication, above: a thin wrapper around
+                     session.placePublication(), mirroring
+                     unpublishOwnPublication's own restraint immediately
+                     above — see ui/components/OwnPublicationPanel.js's
+                     own header, "0.9.600 — Publication First-Placement
+                     Action Wiring Fix."
+
                      0.9.215 — exportSnapshotCommand is exportOwnSnapshot,
                      above: a thin wrapper around the app-wide
                      exportSnapshotCommand injected above, mirroring
@@ -4728,6 +4765,7 @@ export default {
                     v-if="cameraPosition"
                     :publication="ownPublication"
                     :unpublishCommand="unpublishOwnPublication"
+                    :placePublicationCommand="placeOwnPublication"
                     :snapshotDistributionCommand="distributeWorldEncounterSnapshot"
                     :publicationDistributionCommand="distributeWorldEncounterPublication"
                     :discoverSnapshotCommand="discoverOwnSnapshot"

@@ -279,6 +279,26 @@ export class WorldNavigationSession {
 	    // getPublicationForDocument()/findPublicationById() degrade to
 	    // their exact pre-0.9.597 behavior, byte for byte.
 	    publicationActionDiscoveryProvider = null,
+	    // 0.9.600 — Publication First-Placement Action Wiring Fix. The
+	    // SAME PlacePublicationUseCase instance
+	    // application/CreateWorldViewUseCase.js already builds for
+	    // PublishDocumentUseCase's own automatic initial placement —
+	    // never a second one, and never reconstructed here. As of this
+	    // milestone that upstream instance is itself constructed with
+	    // `publicationActionDiscoveryProvider` (above) rather than the
+	    // narrow `discoveryProvider` (see that file's own 0.9.600
+	    // comment) — the ONE change tests/
+	    // FirstPublicationPlacementCapabilityBoundaryAudit.test.js
+	    // (0.9.599, Section C-Wiring) proved live is sufficient for it
+	    // to resolve a Repository-admitted-only Publication. This
+	    // constructor parameter exists purely so this session can
+	    // delegate an EXPLICIT, user-triggered placePublication() call
+	    // (below) to it — optional, same "enforce/offer only when
+	    // actually wired" posture as moveWorldPlacementUseCase/
+	    // removeWorldPlacementUseCase below: a session built without one
+	    // (every pre-0.9.600 caller, and every existing test) simply
+	    // can't place a Publication explicitly.
+	    placePublicationUseCase = null,
 	    placementRegistry = null,
 	    moveWorldPlacementUseCase = null,
 	    // 0.9.197 — World Placement Removal UI Action. The mirror
@@ -457,6 +477,8 @@ export class WorldNavigationSession {
 	    // exactly the same "enforce/offer only when the collaborator is
 	    // actually wired" pattern discoveryProvider already follows.
 	    this._placementRegistry = placementRegistry;
+	    // 0.9.600: see placePublication() below.
+	    this._placePublicationUseCase = placePublicationUseCase;
 	    this._moveWorldPlacementUseCase = moveWorldPlacementUseCase;
 	    // 0.9.197: see removePlacement() below.
 	    this._removeWorldPlacementUseCase = removeWorldPlacementUseCase;
@@ -5392,6 +5414,54 @@ export class WorldNavigationSession {
                 ? match.freshness.toJSON()
                 : match.freshness
         };
+    }
+
+    // 0.9.600 — Publication First-Placement Action Wiring Fix.
+    // PUBLICATION-ID-KEYED, unlike movePlacement()/removePlacement()
+    // below, which are both documentId-keyed — deliberately: the whole
+    // point of this method is reaching a Publication that documentId-
+    // based resolution structurally does not (and, per 0.9.596's own
+    // fork-policy rationale, should not) — a Repository-admitted-only
+    // Publication this replica never locally published, and so has no
+    // documentId path to at all (see tests/
+    // FirstPublicationPlacementCapabilityBoundaryAudit.test.js, 0.9.599,
+    // Section G).
+    //
+    // Delegates directly to the already-injected placePublicationUseCase
+    // — this method resolves and decides nothing of its own beyond "is
+    // one wired." PlacePublicationUseCase.execute() (unmodified — see
+    // its own header) remains the sole authority for constructing the
+    // WorldPlacement/PlacementRecord: it already, unconditionally,
+    // supports creating a Publication's first placement AND every
+    // subsequent one (multi-placement, 0.2.23) with no first-vs-later
+    // distinction anywhere in its own logic (0.9.599 Section C1) — so
+    // this method carries no "already placed" guard either. The
+    // PlacementRecord's owner is always the identity that calls this
+    // method, never the Publication's own author (0.9.599 Section D) —
+    // "place this already-known Publication in my local World" cannot
+    // become "I now own or authored this Publication."
+    //
+    // Authorization: UNGATED, identically to PlacePublicationUseCase's
+    // own current, pre-existing behavior for its one other caller
+    // (PublishDocumentUseCase's automatic initial placement) — see
+    // 0.9.599 Section F. This method introduces no new fork-policy or
+    // ownership check of its own; deciding whether one belongs here is
+    // an explicit, separate product decision 0.9.599 raised and left
+    // open, not a technical gap this milestone silently closes.
+    //
+    // Throws (never returns null) when no placePublicationUseCase is
+    // wired, matching movePlacement()/removePlacement()'s own posture
+    // immediately below — a caller that didn't ask for this capability
+    // (every pre-0.9.600 caller, and every existing test) simply can't
+    // reach it.
+    placePublication(publicationId, position) {
+        if (!this._placePublicationUseCase) {
+            throw new Error('WorldNavigationSession: publication cannot be placed — no PlacePublicationUseCase wired');
+        }
+        if (typeof publicationId !== 'string' || publicationId.length === 0) {
+            throw new Error('WorldNavigationSession: placePublication requires a publicationId');
+        }
+        return this._placePublicationUseCase.execute(publicationId, position);
     }
 
     // Moves a placement to a new position — this is NOT a document

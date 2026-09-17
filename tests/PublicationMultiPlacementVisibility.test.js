@@ -292,14 +292,32 @@ async function runTests() {
         for (const term of forbidden) {
             assert(!panelCode.includes(term), `27. OwnPublicationPanel.js never references '${term}'`);
         }
-        // The new placements section itself emits no event and calls no
-        // method beyond its own refresh — no click handler anywhere in
-        // its own markup block.
+        // 0.9.600 — AMENDED. tests/
+        // FirstPublicationPlacementCapabilityBoundaryAudit.test.js
+        // (0.9.599) found the ONE thing genuinely missing from this
+        // surface was an explicit "Place" action for a Publication with
+        // no placement yet, and named this EXACT section — never a new
+        // panel — as its smallest natural home (that audit's own Section
+        // G). This section is therefore no longer purely read-only: it
+        // now hosts EXACTLY ONE interactive control, the "Place" action
+        // (ui/components/OwnPublicationPanel.js's own "0.9.600" header),
+        // and no other. Every OTHER read-only guarantee immediately
+        // above (26/27) still holds, unamended: this section still never
+        // mutates the registry merely by being rendered, and
+        // placeOwnPublication() still never imports or constructs
+        // PlacePublicationUseCase itself — it only ever forwards to the
+        // injected placePublicationCommand prop, exactly like every
+        // other command-invoking method in this file (27 already
+        // confirms no such import/construction exists anywhere in this
+        // file, this section included).
         const placementsSection = panelCode.split('own-publication-placements"')[1].split('</div>')[0];
-        assert(!/@click|v-model|type="submit"/.test(placementsSection),
-            '28. the placements section renders no interactive control of any kind — pure, read-only presentation');
+        const clickHandlers = placementsSection.match(/@click="[^"]+"/g) || [];
+        assert(clickHandlers.length === 1 && clickHandlers[0] === '@click="placeOwnPublication"',
+            '28. AMENDED BY 0.9.600 — the placements section hosts EXACTLY ONE interactive control, the Place action bound to placeOwnPublication, and no other click handler.');
+        assert(!/v-model|type="submit"/.test(placementsSection),
+            '28b. still no form input or submit control of any kind — the Place action is a single button, never a form.');
 
-        console.log('✓ Section H: the placements surface is strictly read-only — no creation, removal, movement, or mutation');
+        console.log('✓ Section H: AMENDED BY 0.9.600 — the placements surface remains read-only for every prior guarantee (no direct mutation, no mutating-use-case reference), with exactly one new, explicit interactive exception: the Place action.');
     }
 
     // ---------------------------------------------------------------

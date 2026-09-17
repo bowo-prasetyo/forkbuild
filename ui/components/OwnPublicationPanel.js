@@ -1629,6 +1629,24 @@ export default {
         getPublicationPlacementsCommand: {
             type: Function,
             default: null
+        },
+        // 0.9.600 — Publication First-Placement Action Wiring Fix. A
+        // `(publication) -> WorldPlacement` function, or `null` when the
+        // capability is unavailable — mirrors `unpublishCommand` exactly:
+        // synchronous (WorldNavigationSession.placePublication() performs
+        // no network I/O), `null`-default, feature hidden when absent,
+        // forwards the WHOLE `publication` object, unread, exactly like
+        // `unpublishCommand`/`snapshotDistributionCommand` above — this
+        // component never resolves a position or a publicationId itself.
+        // Rendered beside the EXISTING, already publicationId-keyed
+        // `.own-publication-placements` listing (see this file's own
+        // `getPublicationPlacementsCommand` immediately above) — never a
+        // new panel or a new surface (see tests/
+        // FirstPublicationPlacementCapabilityBoundaryAudit.test.js,
+        // 0.9.599, Section G).
+        placePublicationCommand: {
+            type: Function,
+            default: null
         }
     },
     data() {
@@ -1996,6 +2014,28 @@ export default {
                 return;
             }
             this.unpublishCommand(publication);
+        },
+        // 0.9.600 — the only call site of `placePublicationCommand` in
+        // this file. A no-op whenever there is no `publication` or no
+        // `placePublicationCommand` — the identical gate every sibling
+        // action's own guard clause in this file already applies.
+        // Synchronous, mirroring `unpublishOwnPublication()` immediately
+        // above — no executing/error state of its own. A successful
+        // placement is observed entirely through
+        // `getPublicationPlacementsCommand` on this component's next
+        // refresh (see `refreshPublicationPlacements()`), so this
+        // re-runs that same read immediately after, exactly like a
+        // fresh `publication` prop change already triggers — never a
+        // second, invented "placed" field of its own.
+        placeOwnPublication() {
+            const publication = this.publication;
+            if (!publication || !this.placePublicationCommand) {
+                return;
+            }
+            this.placePublicationCommand(publication);
+            if (typeof this.refreshPublicationPlacements === 'function') {
+                this.refreshPublicationPlacements();
+            }
         },
         // The only writer of `snapshotDistributionExecuting`/
         // `snapshotDistributionError`/`snapshotDistributionResult`, and
@@ -2677,6 +2717,29 @@ export default {
                         </dl>
                     </li>
                 </ul>
+
+                <!-- 0.9.600 — Publication First-Placement Action Wiring
+                     Fix. Rendered only when a caller supplied
+                     placePublicationCommand, mirroring every other
+                     optional capability section in this file. Disabled
+                     whenever there is no publication to place — no
+                     "already placed" disabling of any kind, since
+                     PlacePublicationUseCase already, unconditionally,
+                     supports creating a Publication's first AND every
+                     subsequent placement (see this file's own header,
+                     "0.9.600" and tests/
+                     FirstPublicationPlacementCapabilityBoundaryAudit.
+                     test.js, 0.9.599, Section C1). Deliberately placed
+                     inside THIS listing, never a new panel — the
+                     smallest natural home per that audit's own Section
+                     G. -->
+                <button
+                    v-if="placePublicationCommand"
+                    type="button"
+                    class="action-btn own-publication-place-action"
+                    :disabled="!publication"
+                    @click="placeOwnPublication"
+                >Place</button>
             </div>
 
             <!-- 0.9.198 — Publication Unpublish/Retract UI Action.
