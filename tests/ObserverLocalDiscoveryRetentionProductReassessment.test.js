@@ -602,11 +602,23 @@ async function runTests() {
     // ===============================================================
     // Section G — Interaction with Repository, from the user's own
     // "do I need to retain this Publication" perspective.
+    //
+    // AMENDED BY 0.9.595 — Admit Verified Observer-Local Publications into
+    // Repository Discovery. At the time this section was written
+    // (0.9.555), G1/G2 reconfirmed 0.9.553/0.9.554's own boundary: even
+    // fully AVAILABLE + VERIFIED observer-local material was never
+    // admitted. 0.9.594's own audit measured the downstream continuity
+    // cost that boundary left unmeasured, and 0.9.595 closed the
+    // admission half of it (never the OwnPublicationPanel-reachability
+    // half — see ui/components/WorldEncounterCanvas.js's own "0.9.595"
+    // header, "A KNOWN, PRE-EXISTING LIMIT," and
+    // tests/AdmitVerifiedObserverLocalPublicationsIntoRepositoryDiscoveryAudit.test.js
+    // for the full account). G2 is amended in place to prove the current,
+    // opposite fact: this exact scenario now DOES admit.
     // ===============================================================
     {
-        // G1 — reconfirm 0.9.553/0.9.554's own boundary still holds: even
-        // fully AVAILABLE + VERIFIED observer-local material is never
-        // admitted to Repository discovery.
+        // G1 — the identical AVAILABLE+VERIFIED case admitToRepositoryDiscovery()
+        // gates on for the authoritative selection path.
         const host = makeHost('0.9.555-section-g');
         const storageProvider = new InMemoryStorageProvider();
         const publicationId = 'repository-need-pub-g';
@@ -626,7 +638,7 @@ async function runTests() {
         ctx.selectObserverLocalEncounter({ publicationId, contentHash: reference.hash });
         await flush();
         assert(ctx.observerLocalEncounterInspection.verification.status === 'VERIFIED', 'G1. Sanity: exactly the case admitToRepositoryDiscovery() acts on for the authoritative selection path.');
-        assert(addCalls === 0, 'G2. Reconfirmed: decentralizedPublicationDiscoveryProvider.add() is still never called for an observer-local encounter, even fully verified.');
+        assert(addCalls === 1, 'G2. AMENDED BY 0.9.595: decentralizedPublicationDiscoveryProvider.add() IS now called, exactly once, for a fully verified observer-local encounter — through the same, unmodified admitToRepositoryDiscovery() gate G3/G4 (below) prove the authoritative path already used.');
 
         // G3 — the SAME provider, for the SAME publication, reached through
         // the AUTHORITATIVE path, DOES get admitted — proving the "existing
@@ -640,7 +652,7 @@ async function runTests() {
         assert(canvasSource.includes('refreshMaterialInspection() {') && canvasSource.indexOf('this.admitToRepositoryDiscovery(result.loading, result.verification);', canvasSource.indexOf('refreshMaterialInspection() {')) > 0, 'G4. The authoritative path\'s own refreshMaterialInspection() calls admitToRepositoryDiscovery() unconditionally on every resolution — confirming the ONLY thing standing between an observer-local encounter and this existing catalog is which method inspected it, never a difference in the material\'s own trustworthiness.');
 
         unmountCanvas(ctx);
-        console.log('✓ G — "retain Publication" already has a real, existing, app-wide mechanism in this codebase (decentralizedPublicationDiscoveryProvider, feeding PublicationCatalog.js\'s own Open/Fork/Explore) — a Wanderer\'s observer-local encounter simply never reaches it, by the SAME deliberate 0.9.553 Section H boundary, reconfirmed here from the retention angle rather than the interaction angle. "Retain the spatial encounter itself" (a NEW, much larger concept — a private, persistent record of WHERE and WHEN this Wanderer stood) remains a genuinely separate, unbuilt idea. Neither is built by this milestone — see Section L.');
+        console.log('✓ G — AMENDED BY 0.9.595: "retain Publication" already had a real, existing, app-wide mechanism in this codebase (decentralizedPublicationDiscoveryProvider, feeding Repository search and PublicationCatalog.js\'s own Open/Fork/Explore) — a Wanderer\'s observer-local encounter now DOES reach it, once 0.9.553\'s own Section H boundary was superseded by 0.9.595 for exactly this admission call. "Retain the spatial encounter itself" (a NEW, much larger concept — a private, persistent record of WHERE and WHEN this Wanderer stood) remains a genuinely separate, unbuilt idea, untouched by this amendment. Neither the encounter\'s own retention, nor full OwnPublicationPanel reachability (a separate, still-open limit — see G2\'s own header, above), is built by this milestone.');
     }
 
     // ===============================================================
@@ -838,8 +850,8 @@ async function runTests() {
             ['Session-scoped, ephemeral encounter lifecycle (no persistence, no eviction, fresh store per mount)', 'DELIBERATE_BOUNDARY, reconfirmed — Section C: unchanged since 0.9.552/0.9.553, and still the intended consequence of the chosen model.'],
             ['Rediscovery of the identical Publication via the ordinary walking-triggered mechanism, with no persistent encounter storage', 'ALREADY_CORRECT — Section D: works today, at the real (small) cost of a fresh resolve/verify pass, contingent on the Publication remaining externally discoverable — a pre-existing property of decentralized discovery this milestone neither weakens nor depends on strengthening.'],
             ['Publication identity under retention pressure (same publicationId+contentHash vs. different publicationId+same contentHash)', 'ALREADY_CORRECT — Section E: no content-hash-based identity shortcut exists or is introduced; the 0.9.539-onward identity discipline holds unchanged.'],
-            ['Inspection continuity without retaining the encounter itself ("retain Publication" vs. "retain spatial encounter")', 'PRODUCT_GAP, narrow, NOT recommended for immediate action — Section F/G: a real, existing, app-wide catalog mechanism (decentralizedPublicationDiscoveryProvider -> PublicationCatalog.js\'s own Open/Fork/Explore) already exists and already admits identically AVAILABLE+VERIFIED material reached through the authoritative selection path; an observer-local encounter reaching the SAME state is deliberately never admitted. This is the one place a future, SMALL, well-scoped feature ("retain Publication" — reusing an existing mechanism) is distinguishable from a much LARGER one ("retain the spatial encounter" — a new persistence concept) — see the milestone brief\'s own framing. Neither is built here.'],
-            ['Automatic or manual promotion of an observer-local encounter into Repository discovery', 'DELIBERATE_BOUNDARY, reconfirmed — Section G: the 0.9.553 Section H boundary holds unchanged; the PRODUCT_GAP above is about whether that boundary should eventually be revisited, a genuinely separate, later product decision this milestone does not make.'],
+            ['Inspection continuity without retaining the encounter itself ("retain Publication" vs. "retain spatial encounter")', 'ALREADY_CORRECT, AMENDED BY 0.9.595 (was PRODUCT_GAP at 0.9.555 time) — Section F/G: the real, existing, app-wide catalog mechanism (decentralizedPublicationDiscoveryProvider -> Repository search + PublicationCatalog.js\'s own Open/Fork/Explore) this row named now DOES admit an observer-local encounter\'s own AVAILABLE+VERIFIED material, exactly the small, well-scoped "retain Publication" feature this row distinguished from the much larger "retain the spatial encounter" (still unbuilt, still correctly excluded). See tests/AdmitVerifiedObserverLocalPublicationsIntoRepositoryDiscoveryAudit.test.js for the dedicated closure proof.'],
+            ['Automatic or manual promotion of an observer-local encounter into Repository discovery', 'ALREADY_CORRECT, AMENDED BY 0.9.595 (was DELIBERATE_BOUNDARY at 0.9.555 time) — Section G: the 0.9.553 Section H boundary was superseded by 0.9.595, which extends the existing admitToRepositoryDiscovery() call (already used by the authoritative selection path) to this path too. One narrower PRODUCT_GAP remains, NOT closed by this: admission alone does not make an observer-local Publication reachable through OwnPublicationPanel — WorldNavigationSession\'s own discoveryProvider is a structurally separate instance that never consults decentralizedPublicationDiscoveryProvider (a pre-existing limit shared with the authoritative path\'s own 0.9.474 admission, not introduced by 0.9.595) — see ui/components/WorldEncounterCanvas.js\'s own "0.9.595" header, "A KNOWN, PRE-EXISTING LIMIT."'],
             ['claimedPosition promotion into placement, under repeated visits/inspection/rediscovery over time', 'ALREADY_CORRECT — Section H: no code path anywhere in this feature constructs, reads, or references a PlacementRecord/PlacementRegistry; four simulated returning visits never register anything.'],
             ['Multi-publication retention pressure (several discovered, only some inspected, more discovered later)', 'ALREADY_CORRECT — Section I: nothing is lost, hidden, or penalized by selective inspection. One out-of-scope polish observation: no "already inspected" visual state on markers.'],
             ['Reload losing the encounter', 'DELIBERATE_BOUNDARY, reconfirmed and clarified — Section J: the encounter (marker/position/session record) is lost, but the underlying materialized, verified content is not (it is backed by window.localStorage, a genuinely different, already-persistent layer this milestone did not need to touch).'],
@@ -894,19 +906,31 @@ not a gap in this feature, and persistent encounter storage would not
 fix it either: it would only let a Wanderer see a record of something
 they can no longer actually retrieve.
 
-One real, narrow, genuinely actionable finding survives this
-reassessment:
+AMENDED BY 0.9.595. The one real, narrow, genuinely actionable finding
+this reassessment originally surfaced is now built:
 
-  PRODUCT_GAP (Sections F/G) — "retain Publication" (small: admit an
-  observer-local encounter's own already-VERIFIED material into the
-  SAME existing catalog (decentralizedPublicationDiscoveryProvider ->
-  PublicationCatalog.js) the authoritative selection path already
-  admits into) is mechanically distinguishable from, and much smaller
-  than, "retain the spatial encounter" (large: a new, persistent,
-  per-Wanderer record of WHERE and WHEN a discovery happened). The
-  milestone brief asked this reassessment to make exactly that
-  distinction, and to build neither — this verdict does the former and
-  stops there.
+  PRODUCT_GAP (Sections F/G), AT 0.9.555 TIME — "retain Publication"
+  (small: admit an observer-local encounter's own already-VERIFIED
+  material into the SAME existing catalog
+  (decentralizedPublicationDiscoveryProvider -> PublicationCatalog.js)
+  the authoritative selection path already admits into) is mechanically
+  distinguishable from, and much smaller than, "retain the spatial
+  encounter" (large: a new, persistent, per-Wanderer record of WHERE and
+  WHEN a discovery happened). The milestone brief asked this
+  reassessment to make exactly that distinction, and to build neither —
+  this verdict did the former and stopped there.
+
+  NOW ALREADY_CORRECT — 0.9.595 (Admit Verified Observer-Local
+  Publications into Repository Discovery) built exactly the small
+  feature this finding named: one call, admitToRepositoryDiscovery(),
+  added to refreshObserverLocalEncounterInspection(), reusing the
+  IDENTICAL gate and target the authoritative path already used — no new
+  store, no new persistence layer. "Retain the spatial encounter" is
+  still, correctly, unbuilt. One narrower limit 0.9.595 did NOT close:
+  Repository admission does not, by itself, make OwnPublicationPanel
+  resolve the Publication — see ui/components/WorldEncounterCanvas.js's
+  own "0.9.595" header, "A KNOWN, PRE-EXISTING LIMIT," for why, and for
+  what a future milestone closing THAT would need to change.
 
 One narrow DOCUMENTATION_GAP (Section K): the inspection panel's own
 honest "will not be found here again" disclosure is slightly bleaker

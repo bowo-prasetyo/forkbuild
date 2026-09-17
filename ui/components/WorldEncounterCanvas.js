@@ -2509,19 +2509,36 @@ function shortContentHash(contentHash) {
 // cross-counting; this milestone extends that same coexistence to
 // selection and inspection.
 //
-// NEVER `admitToRepositoryDiscovery()` — 0.9.553's OWN SECTION H BOUNDARY
-// STAYS EXACTLY WHERE IT WAS. `refreshMaterialInspection()` calls
-// `admitToRepositoryDiscovery()` unconditionally on every resolution (see
-// that method's own header); `refreshObserverLocalEncounterInspection()`
-// deliberately never does. Reusing `refreshMaterialInspection()` itself,
-// verbatim, for an observer-local encounter would have silently reversed
-// 0.9.553's own DELIBERATE_BOUNDARY finding (Section H: "an observer-local
-// encounter has no path, automatic or manual, into app-wide Repository
-// discovery today... a real product decision, not a repurposing of
-// anything that already bridges the two"). This milestone does not make
-// that decision — it writes its own, narrower `refreshObserverLocalEncounterInspection()`
-// specifically so Repository admission stays exactly as unreachable from
-// an observer-local encounter as it already was.
+// (AS OF 0.9.554) NEVER `admitToRepositoryDiscovery()` — 0.9.553's OWN
+// SECTION H BOUNDARY STAYS EXACTLY WHERE IT WAS, AT THE TIME. This
+// milestone writes its own, narrower `refreshObserverLocalEncounterInspection()`
+// — never reusing `refreshMaterialInspection()` verbatim — specifically so
+// this file keeps a genuinely separate selection concept for an
+// observer-local encounter (see "a third, genuinely separate selection
+// concept," above); AT THE TIME this method deliberately never calls
+// `admitToRepositoryDiscovery()`, matching 0.9.553's own DELIBERATE_BOUNDARY
+// finding (Section H: "an observer-local encounter has no path, automatic
+// or manual, into app-wide Repository discovery today... a real product
+// decision, not a repurposing of anything that already bridges the two").
+//
+// SUPERSEDED BY 0.9.595 — Admit Verified Observer-Local Publications into
+// Repository Discovery. 0.9.553's Section H finding described the
+// codebase as it stood in 0.9.553, not a permanent restriction; 0.9.594's
+// own audit measured the downstream continuity cost that restriction left
+// unmeasured (a verified observer-local Publication had no route into
+// Explore/OwnPublicationPanel's existing placement UI, ever, for the rest
+// of that Wanderer's session) and reclassified it CONTINUITY_GAP_CONFIRMED.
+// `refreshObserverLocalEncounterInspection()` now DOES call
+// `admitToRepositoryDiscovery()` — see that method's own "AMENDED BY
+// 0.9.595" header, below — reusing the identical method, the identical
+// `AVAILABLE + VERIFIED` gate, and the identical target provider
+// `refreshMaterialInspection()` already writes into; nothing about the
+// "third, genuinely separate selection concept" restraint immediately
+// above changes: `observerLocalEncounterInspection` is still never merged
+// into `materialInspection`, and `selectedObserverLocalEncounter` is still
+// never merged into `selectedEncounter`. Only Repository admission — a
+// side effect neither selection concept exposes to its own template — is
+// now shared.
 //
 // NEVER THE PUBLICATION CATALOG/REPOSITORY BROWSER. This milestone's own
 // product brief was explicit: "I would not automatically open the full
@@ -2576,9 +2593,13 @@ function shortContentHash(contentHash) {
 // - **Reputation, trust scores, spatial voting, or community moderation of
 //   any kind.** Unaffected by this milestone — inherited unchanged from
 //   0.9.552/0.9.553.
-// - **Promotion to a `PlacementRecord`, or admission into app-wide
-//   Repository discovery.** See "never `admitToRepositoryDiscovery()`,"
-//   above.
+// - **Promotion to a `PlacementRecord`.** Still true, unamended — see
+//   this file's own "0.9.595" header, above `refreshObserverLocalEncounterInspection()`,
+//   Acceptance Criterion E: nothing in Repository admission creates a
+//   `PlacementRecord`; only the existing, explicit placement action in
+//   `OwnPublicationPanel` ever does. (Admission into app-wide Repository
+//   discovery ITSELF was later added by 0.9.595 — see "SUPERSEDED BY
+//   0.9.595," above, for why this bullet no longer covers that half.)
 // - **Open/Explore/Fork, commentary, or distribution actions for an
 //   observer-local encounter.** See "never the Publication Catalog/
 //   Repository browser," above — deliberately evaluated, later,
@@ -2643,12 +2664,23 @@ function shortContentHash(contentHash) {
 // `refreshObserverLocalEncounterInspection()` already wrote, read fresh
 // on each click — never re-derived, never re-fetched.
 //
-// STILL NEVER `admitToRepositoryDiscovery()`. This milestone's own
+// (AS OF 0.9.558) NEITHER OF THESE NEW METHODS CALLS
+// `admitToRepositoryDiscovery()` EITHER. This milestone's own
 // `observerLocalEncounterActionablePublication` reuses that method's gate
 // CONDITION (read-only) but never calls the method itself, and none of
-// the three new action methods do either — 0.9.553's/0.9.554's own
-// DELIBERATE_BOUNDARY (an observer-local encounter has no path into
-// app-wide Repository discovery) stays exactly where it was.
+// the three new action methods do either — Repository admission for an
+// observer-local encounter is NOT introduced here.
+//
+// (0.9.558's own closing clause here used to read: "0.9.553's/0.9.554's
+// own DELIBERATE_BOUNDARY (an observer-local encounter has no path into
+// app-wide Repository discovery) stays exactly where it was." 0.9.595
+// SUPERSEDED that boundary — see this file's own "0.9.595" header, above
+// `refreshObserverLocalEncounterInspection()` — by adding an
+// `admitToRepositoryDiscovery()` call to THAT method, not to any of the
+// four methods this "0.9.558" section documents. Every fact this section
+// states about ITS OWN four methods remains true unchanged: Open/Fork/
+// Explore/Comment still never call `admitToRepositoryDiscovery()`, and
+// still never construct, read, or reference a `PlacementRecord`.)
 //
 // NOT A FOURTH ACTION SET. `openPublicationCommand`/`forkPublicationCommand`/
 // `explorePublicationCommand` are plain `(publication) -> void` functions,
@@ -2668,6 +2700,163 @@ function shortContentHash(contentHash) {
 // - **Persistence of the encounter past this component's own lifetime, or
 //   any change to 0.9.555's World-lifecycle destruction of the
 //   session-local encounter store.** Unaffected by this milestone.
+//
+// 0.9.595 — Admit Verified Observer-Local Publications into Repository
+// Discovery.
+//
+// 0.9.594's own audit (Discovered-Unplaced Publication Actionability
+// Product Boundary Audit) found CONTINUITY_GAP_CONFIRMED: a Wanderer who
+// encounters a novel, verified Publication through the observer-local path
+// can perceive it, understand it, and even Open/Fork/Explore/Comment on it
+// (0.9.554/0.9.558) for as long as this component instance survives — but
+// has no route whatsoever into `OwnPublicationPanel`'s existing placement
+// capability, because `WorldNavigationSession#getPublicationForDocument()`
+// resolves through `discoveryProvider.findByDocumentId()`
+// (discovery/DecentralizedPublicationDiscoveryProvider.js), and nothing in
+// this file's observer-local path had ever called `.add()` on that same
+// provider — every one of 0.9.553, 0.9.554, and 0.9.558 deliberately
+// withheld it, each correct in its own narrower scope (see the "0.9.554"
+// and "0.9.558" headers, above, both now amended in place), but none
+// measured this specific downstream cost.
+//
+// THIS MILESTONE CLOSES PART OF THAT GAP, NOT ALL OF IT — see "A KNOWN,
+// PRE-EXISTING LIMIT," below, before assuming the full
+// Explore -> OwnPublicationPanel -> Place journey now works: it does not,
+// for a structural reason unrelated to this file, that equally affects
+// the already-shipped primary/registered encounter family.
+//
+// THE FIX IS ONE CALL, NOT A NEW MECHANISM.
+// `refreshObserverLocalEncounterInspection()` (below) now calls
+// `admitToRepositoryDiscovery(result.loading, result.verification)`, on
+// `this`, in its own `.then()` callback — the IDENTICAL method
+// `refreshMaterialInspection()` (0.9.474) already calls for the PRIMARY
+// encounter family, with the IDENTICAL `AVAILABLE + VERIFIED` gate
+// (0.9.523), admitting into the IDENTICAL `decentralizedPublicationDiscoveryProvider`
+// prop this component already receives (0.9.474) — no new prop, no new
+// store, no new provider, no observer-local-specific admission API. This
+// is exactly the remedy 0.9.474 already applied to close the structurally
+// identical gap 0.9.473 found for the PRIMARY/registered encounter family,
+// one milestone later — this milestone applies that same, unmodified
+// remedy to its observer-local sibling.
+//
+// WHAT THIS MEANS FOR THE FOUR ACCEPTANCE FACTS.
+//   A. A verified observer-local Publication (`AVAILABLE` load of a real
+//      `publisher/Publication.js` instance, `verification.status ===
+//      'VERIFIED'`) is now Repository-admissible — `admitToRepositoryDiscovery()`'s
+//      own unchanged gate decides exactly as it always has.
+//   B. `AVAILABLE + UNVERIFIABLE`, `AVAILABLE + REJECTED`, and
+//      `UNAVAILABLE + *` remain excluded — same gate, same file, same
+//      method, zero new logic to diverge.
+//   C. The admitted object is the EXACT `loading.material` instance
+//      `inspectWorldEncounterMaterial()` resolved — never reconstructed
+//      from `contentHash`, locator, observer position, `claimedPosition`,
+//      or announcement id. `.add()` (discovery/DecentralizedPublicationDiscoveryProvider.js)
+//      takes that instance directly and nothing here or downstream
+//      rebuilds it.
+//   D. `OwnPublicationPanel`'s existing placement action is completely
+//      untouched — this milestone changes zero lines in that file, zero
+//      lines in application/WorldNavigationSession.js, and adds no second
+//      placement mechanism of any kind.
+//
+// `claimedPosition` REMAINS INERT — THE 0.9.551 BOUNDARY IS UNTOUCHED.
+// `admitToRepositoryDiscovery()` never reads `claimedPosition`, never has,
+// and this milestone adds no code path that does either. Repository
+// admission is a fact about WHICH Publication is now knowable app-wide,
+// never a fact about WHERE it claims to belong — that remains exclusively
+// the explicit, human "Place" action's own decision, exactly as 0.9.551
+// established.
+//
+// GHOST SUPPRESSION (0.9.570/0.9.571) IS UNTOUCHED. This milestone adds no
+// code to `selectedObserverLocalEncounter`, `observerLocalEncounters`, or
+// either marker-rendering branch — an observer-local marker is suppressed
+// once an authoritative `PlacementRecord` exists for the same Publication,
+// and reappears if that record is removed, exactly as before. Repository
+// admission and placement remain two independent facts about the same
+// Publication; only an explicit "Place" action, still performed entirely
+// inside `OwnPublicationPanel`, ever creates the `PlacementRecord` that
+// suppression keys on.
+//
+// FAILURE ISOLATION IS INHERITED, NOT REIMPLEMENTED.
+// `admitToRepositoryDiscovery()`'s own try/catch (0.9.474) already
+// guarantees a discovery-admission failure can never turn an
+// already-successful resolution into a failed one, for either encounter
+// family — this milestone adds no second failure-handling path, because
+// none is needed: the exact same call, in the exact same position
+// relative to the stale-response guard, gets the exact same guarantee for
+// free.
+//
+// DELIBERATELY EXCLUDED — NOT THIS MILESTONE.
+// - **A persistent "Discovered, Not Yet Placed" list, or any client-side
+//   persistence of the observer-local encounter itself.** The requesting
+//   brief's own instruction: test whether Repository admission alone
+//   closes the continuity gap before building a second, narrower surface.
+//   `selectedObserverLocalEncounter`/`observerLocalEncounters` remain
+//   exactly as session-scoped as 0.9.554 left them.
+// - **A new `NotificationEvent` kind, a toast, or any other announcement
+//   that admission occurred.** Admission is silent, exactly like
+//   `refreshMaterialInspection()`'s own admission already is for the
+//   primary encounter family.
+// - **Automatic placement, or any use of `claimedPosition` for anything.**
+//   See "`claimedPosition` remains inert," above.
+// - **A new `PlacementRecord` API, a new Repository category, or a new
+//   discovery protocol.** Repository admission reuses
+//   `DecentralizedPublicationDiscoveryProvider.add()` (0.9.335) verbatim —
+//   the identical call, the identical provider, the identical `list()`/
+//   `findById()`/`findByDocumentId()` read surface Repository's own
+//   search machinery (application/CreateDiscoveryUseCase.js) already
+//   uses. This file itself still never imports or calls into that
+//   machinery directly — see this file's own "never a second lookup,
+//   never Repository search" restraint, unweakened.
+//
+// A KNOWN, PRE-EXISTING LIMIT THIS MILESTONE DOES NOT CLOSE — READ BEFORE
+// ASSUMING "EXPLORE -> OWNPUBLICATIONPANEL -> PLACE" WORKS END TO END.
+// `decentralizedPublicationDiscoveryProvider` (the object this milestone's
+// one new call admits into) is wired, app-wide, into exactly two things:
+// this component's own admission target, and `CreateDiscoveryUseCase.js`'s
+// `discoveryProvider` (a `CompositeDiscoveryProvider` of it plus a plain
+// `LocalDiscoveryProvider`) — used ONLY to build
+// `listPublicationsUseCase`/`findPublicationUseCase`/`searchPublicationsUseCase`
+// for Repository's own search UI (`ui/views/WorldView.js`'s own
+// `decentralizedDiscoveryProviderForEnrichment`, 0.9.339, "for search-result
+// enrichment only," in its own words). `application/WorldNavigationSession.js`'s
+// own `_discoveryProvider` — the ONE thing `getPublicationForDocument()`
+// (and therefore `OwnPublicationPanel`'s own `publication` prop, per
+// `ui/views/WorldView.js`'s `ownPublication` computation) ever reads — is a
+// COMPLETELY SEPARATE, freshly-constructed `LocalDiscoveryProvider`, built
+// entirely inside `application/CreateWorldViewUseCase.js#execute()`, whose
+// own signature has no parameter to receive
+// `decentralizedPublicationDiscoveryProvider` at all. Admitting a
+// Publication here therefore makes it findable via Repository's own search
+// UI, and (already true since 0.9.558, unaffected by this milestone)
+// Open/Fork/Explore/Comment-able via the already-resolved object this
+// file's own inspection holds — but it does NOT, by itself, make
+// `OwnPublicationPanel` resolve it, because `WorldNavigationSession` never
+// consults this provider at all. This is not a regression this milestone
+// introduces: the IDENTICAL limit already existed, unexamined, for the
+// PRIMARY/registered encounter family's own 0.9.474 admission call —
+// `tests/WorldEncounterRepositoryContinuityIntegrationBoundaryAudit.test.js`'s
+// own "Section F — Openability" proves only `findById`/documentId fidelity
+// on the isolated provider instance that test itself constructs, never
+// `WorldNavigationSession`/`OwnPublicationPanel` reachability specifically.
+// This milestone brings the observer-local path to exact PARITY with that
+// already-shipped, already-real capability — genuinely closing the part of
+// 0.9.594's own gap that IS closable this way (Repository search
+// visibility) — and knowingly leaves the `OwnPublicationPanel`-specific
+// part of Acceptance Criterion D open, as a separate, pre-existing,
+// not-yet-scoped limitation affecting both encounter families equally, for
+// a possible later milestone (composing `WorldNavigationSession`'s own
+// `_discoveryProvider` the same way `CreateDiscoveryUseCase.js` already
+// composes its own, via the existing, unmodified `CompositeDiscoveryProvider`)
+// — never invented or half-built here.
+// - **Any change to `admitToRepositoryDiscovery()` itself, `refreshMaterialInspection()`,
+//   `refreshComparisonMaterialInspection()`, `observerLocalEncounterActionablePublication`,
+//   or any of the four Open/Fork/Explore/Comment action methods 0.9.558
+//   added.** All are byte-for-byte unchanged — this milestone adds exactly
+//   one call, inside `refreshObserverLocalEncounterInspection()`'s own
+//   `.then()` callback, and touches no other method in this file.
+//
+// See tests/AdmitVerifiedObserverLocalPublicationsIntoRepositoryDiscoveryAudit.test.js
+// and docs/Roadmap.md's own 0.9.595 entry.
 
 export default {
     name: 'WorldEncounterCanvas',
@@ -4009,19 +4198,33 @@ export default {
         // and the only caller of `inspectWorldEncounterMaterial()` for an
         // observer-local encounter in this file. Mirrors
         // `refreshMaterialInspection()` (0.9.39) exactly, one selection
-        // concept over, with two deliberate differences: it reads
+        // concept over, with one remaining deliberate difference: it reads
         // `observerLocalEncounterResolvedSelection` (never
-        // `resolvedEncounterSelection`), and it NEVER calls
-        // `admitToRepositoryDiscovery()` — see this file's own "0.9.554"
-        // header, "never admitToRepositoryDiscovery()," for why. Never
-        // supplies a `resolvedLead` — this encounter's own material always
-        // resolves through `materialSources.local` (its own derived
-        // `origin` names exactly that slot), so no decentralized lead
-        // resolution ever applies. A no-op (`observerLocalEncounterInspection`
-        // cleared to `null`) whenever there is no current
+        // `resolvedEncounterSelection`). Never supplies a `resolvedLead` —
+        // this encounter's own material always resolves through
+        // `materialSources.local` (its own derived `origin` names exactly
+        // that slot), so no decentralized lead resolution ever applies. A
+        // no-op (`observerLocalEncounterInspection` cleared to `null`)
+        // whenever there is no current
         // `observerLocalEncounterResolvedSelection` or no `materialSources`
         // — mirroring `refreshMaterialInspection()`'s own "no material
         // source, no material inspection" restraint.
+        //
+        // AMENDED BY 0.9.595 — Admit Verified Observer-Local Publications
+        // into Repository Discovery. This method now ALSO calls
+        // `admitToRepositoryDiscovery()` in its own `.then()` callback,
+        // exactly where `refreshMaterialInspection()` already does — see
+        // that call's own inline header for why, and this file's own
+        // "0.9.595" header, above, for the full rationale. The 0.9.554-era
+        // restraint this comment used to describe ("it NEVER calls
+        // admitToRepositoryDiscovery()") is hereby SUPERSEDED, not
+        // extended — 0.9.553's own Section H finding that "an observer-local
+        // encounter has no path into app-wide Repository discovery" was a
+        // correct description of the codebase AS IT STOOD THEN, not a
+        // permanent restriction; 0.9.594's own audit found the resulting
+        // continuity gap and this milestone closes it, the same way 0.9.474
+        // already closed the identical gap for the PRIMARY encounter family
+        // one milestone after 0.9.473 found it.
         refreshObserverLocalEncounterInspection() {
             this.observerLocalEncounterInspectionRequestId += 1;
             const requestId = this.observerLocalEncounterInspectionRequestId;
@@ -4037,6 +4240,22 @@ export default {
                 materialSources: this.materialSources,
                 verifier: this.materialVerifier
             }).then((result) => {
+                // 0.9.595 — Admit Verified Observer-Local Publications into
+                // Repository Discovery. Mirrors `refreshMaterialInspection()`'s
+                // own call verbatim, one selection concept over: offered to
+                // `admitToRepositoryDiscovery()` UNCONDITIONALLY on every
+                // resolution, deliberately NOT gated behind the
+                // stale-response `requestId` guard immediately below — see
+                // that method's own header, "a resolution superseded for
+                // DISPLAY purposes was still a genuine, VERIFIED retrieval
+                // this device is entitled to make discoverable." Whether
+                // this resolution is actually ADMITTED still depends
+                // entirely on that method's own unchanged gate (`AVAILABLE`
+                // + a real `Publication` instance + `verification.status
+                // === 'VERIFIED'`) — see this file's own "0.9.595" header,
+                // above `refreshObserverLocalEncounterInspection()`, for why
+                // this call now exists here at all.
+                this.admitToRepositoryDiscovery(result.loading, result.verification);
                 // 0.9.554 — mirrors `refreshMaterialInspection()`'s own
                 // stale-response guard exactly: a superseded response (a
                 // newer observer-local selection, a dismissal, or this

@@ -464,11 +464,19 @@ async function runTests() {
 
         ctx.selectObserverLocalEncounter({ publicationId, contentHash });
         await flush();
+        // AMENDED BY 0.9.595 — Admit Verified Observer-Local Publications
+        // into Repository Discovery. At the time this section was written
+        // (0.9.558), selecting/inspecting never admitted at all, so
+        // addCalls was 0 even before any action. 0.9.595 added exactly one
+        // admission call to refreshObserverLocalEncounterInspection()
+        // itself — triggered by selectObserverLocalEncounter() above, NOT
+        // by any of the three action methods below.
+        assert(addCalls === 1, 'J1-pre. AMENDED BY 0.9.595: selecting/inspecting this AVAILABLE + VERIFIED encounter now admits it exactly once, via refreshObserverLocalEncounterInspection() — before any of the three actions below run at all.');
         ctx.openObserverLocalEncounterPublication();
         ctx.forkObserverLocalEncounterPublication();
         ctx.exploreObserverLocalEncounterPublication();
 
-        assert(addCalls === 0, 'J1. None of the three new actions ever calls decentralizedPublicationDiscoveryProvider.add() — no Repository insertion, even after a fully AVAILABLE + VERIFIED resolution acted upon three times.');
+        assert(addCalls === 1, 'J1. AMENDED BY 0.9.595: none of the three new actions themselves EVER calls decentralizedPublicationDiscoveryProvider.add() — addCalls stays at exactly 1 (the one admission from selection/inspection, above) after all three actions run; this section\'s own original point (these actions never trigger a SECOND, independent Repository insertion of their own) still holds, unweakened.');
 
         const canvasSource = await rawSource('ui/components/WorldEncounterCanvas.js');
         const milestoneSectionStart = canvasSource.indexOf('// 0.9.558 — Known Publication Encounter Continuation.\n//');
@@ -477,7 +485,7 @@ async function runTests() {
         assert(milestoneHeader.includes('NOT A FOURTH ACTION SET') && milestoneHeader.includes('never the Publication Catalog/Repository browser'), 'J2. Sanity: this milestone\'s own header documents the boundary it holds to — no fifth action, no catalog/search surface.');
         assert(!canvasSource.includes('function searchObserverLocalEncounters') && !canvasSource.includes('observerLocalEncounterCatalog'), 'J3. No catalog/search surface of any kind was introduced for observer-local encounters.');
 
-        console.log('✓ J — observer-local encounters remain a temporary, session-local spatial presentation of an already-known Publication: acting on one never inserts into Repository discovery, and no catalog/search surface was introduced.');
+        console.log('✓ J — AMENDED BY 0.9.595: observer-local encounters remain a temporary, session-local spatial presentation of an already-known Publication. Selecting/inspecting one now DOES admit it into Repository discovery (0.9.595, exactly once) — but none of the three continuation actions (Open/Fork/Explore) themselves ever triggers a second, independent insertion, and no catalog/search surface was introduced by this file.');
     }
 
     console.log('\n✅ All Known Publication Encounter Continuation tests passed.');

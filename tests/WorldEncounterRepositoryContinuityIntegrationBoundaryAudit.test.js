@@ -313,6 +313,15 @@ async function run() {
 
     // ===============================================================
     // Section G — No duplicate discovery mechanism.
+    //
+    // AMENDED BY 0.9.595 — Admit Verified Observer-Local Publications into
+    // Repository Discovery. At the time this section was written (0.9.474),
+    // admitToRepositoryDiscovery() had exactly two callers. 0.9.595 added a
+    // third — refreshObserverLocalEncounterInspection() — reusing the
+    // IDENTICAL method, never forking a second admission mechanism. This
+    // section's own point ("no duplicate discovery mechanism") is
+    // unweakened by a third CALLER of the same, unmodified method; assertion
+    // 4 is amended in place to expect three.
     // ===============================================================
     {
         const canvasSource = await readSource('ui/components/WorldEncounterCanvas.js');
@@ -322,12 +331,12 @@ async function run() {
             '2. ... confirmed structurally: it never even imports that catalog class.');
         const addCallSites = (canvasSource.match(/decentralizedPublicationDiscoveryProvider\.add\(/g) || []);
         assert(addCallSites.length === 1,
-            `3. exactly one call site invokes .add() on the injected provider — inside admitToRepositoryDiscovery() itself, reused by both refresh methods rather than forked (found ${addCallSites.length}).`);
+            `3. exactly one call site invokes .add() on the injected provider — inside admitToRepositoryDiscovery() itself, reused by every refresh method rather than forked (found ${addCallSites.length}).`);
         const callerCount = (canvasSource.match(/this\.admitToRepositoryDiscovery\(/g) || []).length;
-        assert(callerCount === 2,
-            `4. admitToRepositoryDiscovery() itself is called from exactly two places — refreshMaterialInspection() and refreshComparisonMaterialInspection() — never a third, standalone admission path (found ${callerCount}).`);
+        assert(callerCount === 3,
+            `4. AMENDED BY 0.9.595 — admitToRepositoryDiscovery() itself is now called from exactly three places — refreshMaterialInspection(), refreshComparisonMaterialInspection(), and (since 0.9.595) refreshObserverLocalEncounterInspection() — never a fourth, standalone admission path (found ${callerCount}).`);
     }
-    console.log('✓ Section G: no duplicate discovery mechanism — WorldEncounterCanvas.js constructs no catalog of its own, and reuses one admission method from both its own refresh call sites rather than forking a second.');
+    console.log('✓ Section G: AMENDED BY 0.9.595 — still no duplicate discovery mechanism: WorldEncounterCanvas.js constructs no catalog of its own, and reuses ONE admission method from all three of its own refresh call sites rather than forking a second.');
 
     // ===============================================================
     // Section H — World isolation.
