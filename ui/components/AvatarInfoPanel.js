@@ -1,4 +1,4 @@
-import { describeLifecycleState, describeTrustStatus } from '../../application/AvatarPresenceLabels.js';
+import { describeLifecycleState, describeTrustStatus, describeAnimationState } from '../../application/AvatarPresenceLabels.js';
 
 // 0.2.39 — the World Entity Interaction & Selection design doc's own
 // mockup, verbatim in what it shows AND in what it deliberately never
@@ -64,6 +64,9 @@ export default {
         trustLabel(status) {
             return describeTrustStatus(status);
         },
+        animationLabel(state) {
+            return describeAnimationState(state);
+        },
         statusDotClass(info) {
             if (info.trustStatus === 'EQUIVOCATING' || info.trustStatus === 'UNAUTHORIZED') {
                 return 'avatar-info-status-dot--conflicting';
@@ -114,7 +117,7 @@ export default {
 
             <div class="info-row">
                 <span class="info-label">Animation</span>
-                <span class="info-value">{{ info.animation }}</span>
+                <span class="info-value">{{ animationLabel(info.animation) }}</span>
             </div>
 
             <div class="info-actions" v-if="!info.isLocal">
