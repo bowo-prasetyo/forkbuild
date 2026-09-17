@@ -48,8 +48,19 @@ import WorldEncounterCanvas from '../ui/components/WorldEncounterCanvas.js';
 // `registerMaterializedSnapshotWorldSource()` itself would use for the
 // identical publicationId/contentHash pair), then calls the EXISTING
 // `inspectWorldEncounterMaterial()` orchestration boundary — never a
-// second loader, never a second verifier, never a PlacementRecord, and
-// never Repository/Catalog admission.
+// second loader, never a second verifier, and never a PlacementRecord.
+//
+// AMENDED BY 0.9.595 — Admit Verified Observer-Local Publications into
+// Repository Discovery. At the time this file was written, this surface
+// also never reached Repository/Catalog admission (0.9.553's own Section
+// H boundary, held here too). Section K below is amended IN PLACE, per
+// this codebase's own established convention (see immediately above, "the
+// PRODUCT_GAP... closed here, in place"), to prove the current, opposite
+// behavior: a fully AVAILABLE + VERIFIED resolution now DOES admit,
+// through the identical, unmodified `admitToRepositoryDiscovery()` gate
+// the primary encounter family already used — see
+// tests/AdmitVerifiedObserverLocalPublicationsIntoRepositoryDiscoveryAudit.test.js
+// for the full, dedicated flagship proof of that journey end to end.
 //
 // This file verifies that surface's own acceptance criteria A-L against
 // the real, unmodified production cascade, store, descriptor, and the real
@@ -641,7 +652,18 @@ async function runTests() {
     }
 
     // ===============================================================
-    // Section K — Never admits to Repository discovery.
+    // Section K — AMENDED BY 0.9.595 (Admit Verified Observer-Local
+    // Publications into Repository Discovery). At the time this file was
+    // written (0.9.554), an observer-local encounter never reached
+    // app-wide Repository discovery, matching 0.9.553's own Section H
+    // boundary. 0.9.594's own audit found the downstream continuity cost
+    // that restriction left unmeasured, and 0.9.595 closed it by adding
+    // exactly one call — `admitToRepositoryDiscovery()`, the identical,
+    // unmodified method the PRIMARY encounter family already used — to
+    // `refreshObserverLocalEncounterInspection()`. This section now proves
+    // the OPPOSITE of its original name: a fully AVAILABLE + VERIFIED
+    // observer-local resolution now DOES admit, through that same,
+    // unmodified gate.
     // ===============================================================
     {
         const publicationId = 'repository-boundary-pub-k';
@@ -652,14 +674,77 @@ async function runTests() {
         const verifier = new MapVerifier({ [publicationId]: true });
 
         let addCalls = 0;
+        let lastAdded = null;
+        const discoveryProvider = { add: (publication) => { addCalls += 1; lastAdded = publication; } };
+
+        const ctx = buildCanvasInstance({ materialSources: { local: localSource }, materialVerifier: verifier, decentralizedPublicationDiscoveryProvider: discoveryProvider });
+        ctx.selectObserverLocalEncounter({ publicationId, contentHash });
+        await flush();
+        assert(ctx.observerLocalEncounterInspection.verification.status === 'VERIFIED', 'K0. Sanity: a genuine, VERIFIED resolution — precisely the case admitToRepositoryDiscovery() acts on.');
+        assert(addCalls === 1, 'K1. AMENDED BY 0.9.595 — a fully AVAILABLE + VERIFIED observer-local resolution now DOES call decentralizedPublicationDiscoveryProvider.add(), exactly once, through the same admitToRepositoryDiscovery() gate the PRIMARY encounter family already used.');
+        assert(lastAdded === ctx.observerLocalEncounterInspection.loading.material, 'K2. The admitted object is the EXACT Publication instance the inspection resolved — never reconstructed.');
+        console.log('✓ K — AMENDED BY 0.9.595: an observer-local encounter now reaches app-wide Repository discovery once its own material resolves fully AVAILABLE and VERIFIED, admitting the exact resolved instance.');
+    }
+
+    // ===============================================================
+    // Section K2 — 0.9.595: the same AVAILABLE + VERIFIED gate still
+    // excludes everything it always excluded (UNVERIFIABLE, REJECTED,
+    // UNAVAILABLE) — admitToRepositoryDiscovery()'s own gate is reused
+    // verbatim, never loosened for this new call site.
+    // ===============================================================
+    {
+        const publicationId = 'repository-boundary-pub-k2';
+        const contentHash = 'repository-boundary-hash-k2';
+        const storageProvider = new InMemoryStorageProvider();
+        knowPublicationLocally(storageProvider, { id: publicationId, contentHash });
+        const localSource = new LocalWorldEncounterMaterialSource(storageProvider);
+        // A verifier that never confirms this identity — verification.status
+        // resolves to UNVERIFIABLE/REJECTED, never VERIFIED.
+        const verifier = new MapVerifier({});
+
+        let addCalls = 0;
         const discoveryProvider = { add: () => { addCalls += 1; } };
 
         const ctx = buildCanvasInstance({ materialSources: { local: localSource }, materialVerifier: verifier, decentralizedPublicationDiscoveryProvider: discoveryProvider });
         ctx.selectObserverLocalEncounter({ publicationId, contentHash });
         await flush();
-        assert(ctx.observerLocalEncounterInspection.verification.status === 'VERIFIED', 'K0. Sanity: a genuine, VERIFIED resolution — precisely the case admitToRepositoryDiscovery() would act on for the EXISTING selection path.');
-        assert(addCalls === 0, 'K1. Despite a fully AVAILABLE + VERIFIED resolution, decentralizedPublicationDiscoveryProvider.add() is NEVER called for an observer-local encounter — 0.9.553\'s own Section H boundary (no automatic or manual Repository promotion) stays exactly where it was.');
-        console.log('✓ K — an observer-local encounter never reaches app-wide Repository discovery, even when its own material resolves fully AVAILABLE and VERIFIED.');
+        assert(ctx.observerLocalEncounterInspection.loading.status === 'AVAILABLE', 'K2-0. Sanity: material was found.');
+        assert(ctx.observerLocalEncounterInspection.verification.status !== 'VERIFIED', 'K2-1. Sanity: verification did NOT confirm — UNVERIFIABLE or REJECTED.');
+        assert(addCalls === 0, 'K2-2. An AVAILABLE-but-not-VERIFIED observer-local resolution is still never admitted — the exact same exclusion admitToRepositoryDiscovery() already applied to the primary encounter family.');
+        console.log('✓ K2 — an unverified observer-local resolution is still excluded from Repository admission, exactly like its primary-encounter sibling.');
+    }
+
+    // ===============================================================
+    // Section K3 — 0.9.595: Repository admission never creates a
+    // PlacementRecord, and claimedPosition remains completely unread.
+    // ===============================================================
+    {
+        const host = makeHost('0.9.595-section-k3');
+        const publicationId = 'no-auto-placement-pub-k3';
+        const maliciousClaim = { x: 12345, y: 0, z: 12345 };
+        const worldModel = makeWorldModel();
+        const registry = new WorldDiscoverySourceRegistry();
+        const cascade = makeCascade(host, worldModel, registry, { resolveEncounterPosition: () => ({ x: 2, y: 0, z: 2 }) });
+
+        const reference = await placeAndAnnounce(host, 'novel-bytes-k3', { publicationId, claimedPosition: maliciousClaim });
+        const [candidate] = await host.discoverSnapshotCandidatesCommand();
+        const result = await cascade.processCandidate(candidate);
+        assert(result.encounter !== null, 'K3-0. Sanity.');
+
+        const storageProvider = new InMemoryStorageProvider();
+        knowPublicationLocally(storageProvider, { id: publicationId, contentHash: reference.hash });
+        const localSource = new LocalWorldEncounterMaterialSource(storageProvider);
+
+        let addCalls = 0;
+        const discoveryProvider = { add: () => { addCalls += 1; } };
+
+        const ctx = buildCanvasInstance({ registry, materialSources: { local: localSource }, materialVerifier: new MapVerifier({ [publicationId]: true }), decentralizedPublicationDiscoveryProvider: discoveryProvider });
+        ctx.selectObserverLocalEncounter({ publicationId: result.encounter.publicationId, contentHash: result.encounter.contentHash });
+        await flush();
+
+        assert(addCalls === 1, 'K3-1. Sanity: Repository admission occurred.');
+        assert(worldModel.placementRegistry.findByPublicationId(publicationId).length === 0, 'K3-2. Repository admission never created a PlacementRecord — the malicious claimedPosition never reached the World, admitted or not.');
+        console.log('✓ K3 — Repository admission is a fact about which Publication is now knowable, never a fact about where it belongs: no PlacementRecord is ever created by admission, and claimedPosition stays completely unread.');
     }
 
     // ===============================================================

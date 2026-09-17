@@ -96943,3 +96943,71 @@ audit and resolved as `DELIBERATE_BOUNDARY` rather than acted on as gaps. Per th
 instruction — "If 0.9.593 concludes that the three validators are legitimate, close the entire remaining 0.9.586
 architectural-drift investigation rather than invent another refactoring target" — 0.9.586's architectural-drift
 investigation is hereby **closed**. No further milestone is queued from it.
+
+## 0.9.595 — Admit Verified Observer-Local Publications into Repository Discovery
+
+**Type:** narrow production implementation. **Production changes:** exactly one — `ui/components/
+WorldEncounterCanvas.js` gains a single new call, `this.admitToRepositoryDiscovery(result.loading,
+result.verification)`, inside the existing `refreshObserverLocalEncounterInspection()`'s own `.then()` callback.
+No new prop, no new store, no new provider, and no other production file touched.
+
+0.9.594's own audit (Discovered-Unplaced Publication Actionability Product Boundary Audit) found
+`CONTINUITY_GAP_CONFIRMED`: a Wanderer who encounters a novel, verified Publication through the observer-local
+World Encounter path can perceive it, understand it, and Open/Fork/Explore/Comment on it (0.9.554/0.9.558), but
+had no route into Repository discovery — because `refreshObserverLocalEncounterInspection()` never called
+`admitToRepositoryDiscovery()`, the method `refreshMaterialInspection()` already calls, unconditionally, for the
+PRIMARY/registered encounter family (0.9.474). 0.9.553, 0.9.554, and 0.9.558 had each deliberately withheld that
+call, correctly in each milestone's own narrower scope, but none measured this specific downstream cost.
+
+The fix is exactly the one call 0.9.594's own recommendation named: mirror `refreshMaterialInspection()`'s
+existing, unmodified `admitToRepositoryDiscovery()` call, in the same position (unconditional, ahead of the
+stale-response `requestId` guard), reusing the identical `AVAILABLE + VERIFIED` gate (0.9.523) and the identical
+`decentralizedPublicationDiscoveryProvider` prop this component already receives (0.9.474). `admitToRepositoryDiscovery()`
+itself is unchanged, byte for byte, and is now called from three places instead of two.
+
+**What this closes.** A verified observer-local Publication now becomes findable through Repository's own search
+UI (`SearchPublicationsUseCase`, via `CreateDiscoveryUseCase.js`'s `decentralizedDiscoveryProvider` composition),
+automatically, the moment its material resolves `AVAILABLE + VERIFIED` — never requiring the Wanderer to act
+first. The admitted object is the exact resolved `Publication` instance, never reconstructed from `contentHash`,
+locator, position, `claimedPosition`, or announcement id. `claimedPosition` stays completely inert (0.9.551
+unmodified); admission never creates a `PlacementRecord`; ghost suppression (0.9.570/0.9.571) is unaffected,
+keying exclusively on an authoritative placement, never on Repository admission; a discovery-admission failure
+still can never turn an already-successful resolution into a failed one (0.9.474's own try/catch, inherited).
+
+**What this does NOT close — a genuine, pre-existing limit, discovered while implementing this milestone.**
+`decentralizedPublicationDiscoveryProvider` is wired app-wide into exactly two things: this component's own
+admission target, and `CreateDiscoveryUseCase.js`'s own search-enrichment composite. `application/
+WorldNavigationSession.js`'s own `_discoveryProvider` — the one thing `getPublicationForDocument()`, and
+therefore `OwnPublicationPanel`'s own `publication` prop, ever reads — is a structurally separate, freshly
+constructed `LocalDiscoveryProvider`, built entirely inside `application/CreateWorldViewUseCase.js#execute()`,
+whose own signature has no parameter to receive the decentralized provider at all. Admitting a Publication here
+therefore does **not**, by itself, make `OwnPublicationPanel` resolve it — live-proven against a real
+`WorldNavigationSession`, not merely assumed from a comment (see `tests/AdmitVerifiedObserverLocalPublicationsIntoRepositoryDiscoveryAudit.test.js`,
+Section I, and `tests/DiscoveredUnplacedPublicationActionabilityProductBoundaryAudit.test.js`'s own new Section
+B-Wiring). This is not a regression this milestone introduces: the identical limit already existed, unexamined,
+for the primary/registered encounter family's own 0.9.474 admission call — that family's own integration test
+(`WorldEncounterRepositoryContinuityIntegrationBoundaryAudit.test.js`, Section F "Openability") only ever proved
+`findById`/documentId fidelity on an isolated provider instance, never `WorldNavigationSession`/`OwnPublicationPanel`
+reachability specifically. A prior comment asserting the two providers were "the exact same instance... composed
+from at application startup" did not hold up against the real wiring and has been corrected in place.
+
+Closing that further limit — composing `WorldNavigationSession`'s own `discoveryProvider` the same way
+`CreateDiscoveryUseCase.js` already composes its own, via the existing, unmodified `CompositeDiscoveryProvider`
+— is a materially larger change (touches `CreateWorldViewUseCase.js`'s signature and `WorldView.js`'s session
+construction, with unknown ripple effects on fork-policy/`isKnownPublication` checks for publications a device
+merely encountered but doesn't own) and is deliberately left open, as a separate, later, not-yet-scoped decision,
+for both encounter families at once.
+
+**Deliberately excluded — not this milestone:** a persistent "Discovered, Not Yet Placed" list; a new
+`NotificationEvent` kind; automatic placement or any use of `claimedPosition`; a new `PlacementRecord` API, a new
+Repository category, or a new discovery protocol; any change to `admitToRepositoryDiscovery()` itself,
+`refreshMaterialInspection()`, `refreshComparisonMaterialInspection()`, `observerLocalEncounterActionablePublication`,
+or any of the four Open/Fork/Explore/Comment action methods 0.9.558 added.
+
+Several prior test files that had reconfirmed the pre-0.9.595 boundary — `tests/ObserverLocalEncounterInspectionCapability.test.js`
+(Section K), `tests/DiscoveredUnplacedPublicationActionabilityProductBoundaryAudit.test.js` (Sections B/J and its
+own drift guard), `tests/ObserverLocalDiscoveryRetentionProductReassessment.test.js` (Section G and its own
+classification table/verdict), and `tests/WorldEncounterRepositoryContinuityIntegrationBoundaryAudit.test.js`
+(Section G's call-site count) — are amended in place, each with an explicit "AMENDED BY 0.9.595" marker,
+following this codebase's own established convention rather than deleting or silently invalidating prior audit
+work.

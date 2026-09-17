@@ -25,6 +25,22 @@ import { ContentReference } from '../core/ContentReference.js';
 import { Publication } from '../publisher/Publication.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import WorldEncounterCanvas from '../ui/components/WorldEncounterCanvas.js';
+// 0.9.595 — Section B-Wiring (below): a real, direct `WorldNavigationSession`,
+// built the SAME minimal way tests/ForkOnEdit.test.js already builds one,
+// to live-prove whether admission into `decentralizedPublicationDiscoveryProvider`
+// actually reaches `getPublicationForDocument()` in a real session — never
+// assumed from a comment.
+import { WorldNavigationSession } from '../application/WorldNavigationSession.js';
+import { LocalDiscoveryProvider } from '../discovery/LocalDiscoveryProvider.js';
+import { LocalWorldLayoutProvider } from '../world-layout/LocalWorldLayoutProvider.js';
+import { LocalSpatialIndexProvider } from '../spatial/LocalSpatialIndexProvider.js';
+import { LocalPublisherProvider } from '../publisher/LocalPublisherProvider.js';
+import { LoadPublicationDocumentUseCase } from '../application/LoadPublicationDocumentUseCase.js';
+import { SaveDocumentUseCase } from '../application/SaveDocumentUseCase.js';
+import { PublishDocumentUseCase } from '../application/PublishDocumentUseCase.js';
+import { DocumentCloneService } from '../application/DocumentCloneService.js';
+import { CreateBrickRegistryUseCase } from '../application/CreateBrickRegistryUseCase.js';
+import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 
 // 0.9.594 — Discovered-Unplaced Publication Actionability Product Boundary
 // Audit.
@@ -335,6 +351,19 @@ async function run() {
     // ===============================================================
     // Section B — the crux: does an EXISTING placement capability
     // already reach from the discovered Publication?
+    //
+    // AMENDED BY 0.9.595 — Admit Verified Observer-Local Publications into
+    // Repository Discovery. At the time this audit was written, the
+    // answer was live-proven no (B2-B4 all proved absence, B5-B8 traced
+    // why in real source). This milestone's own CLASSIFICATION block,
+    // below, recommended exactly the narrow follow-up 0.9.595 then
+    // implemented: one new `admitToRepositoryDiscovery()` call inside
+    // `refreshObserverLocalEncounterInspection()`. B2-B4 are amended IN
+    // PLACE to prove the current, opposite answer: yes, now, through that
+    // one call — B5-B8 (the structural trace of WorldNavigationSession/
+    // WorldView/OwnPublicationPanel) are UNCHANGED, since 0.9.595 touched
+    // none of those three files; the same wiring they already proved now
+    // simply has something to find.
     // ===============================================================
     {
         const publicationId = 'section-b-pub';
@@ -352,7 +381,7 @@ async function run() {
         await flush();
         assert(ctx.observerLocalEncounterActionablePublication instanceof Publication, n('B1. Sanity: the encounter resolves to a real, actionable, AVAILABLE+VERIFIED Publication — exactly the condition admitToRepositoryDiscovery() itself gates on.'));
 
-        assert(addCalls === 0, n('B2. Live proof: even though this inspection reached the identical AVAILABLE+VERIFIED condition admitToRepositoryDiscovery() checks, admitToRepositoryDiscovery() itself is never called on the observer-local path — the real, injected decentralizedPublicationDiscoveryProvider.add() was invoked zero times.'));
+        assert(addCalls === 1, n('B2. AMENDED BY 0.9.595 — live proof of the closure: this inspection reaches the identical AVAILABLE+VERIFIED condition admitToRepositoryDiscovery() checks, and admitToRepositoryDiscovery() IS now called on the observer-local path — the real, injected decentralizedPublicationDiscoveryProvider.add() was invoked exactly once.'));
 
         // This is the EXACT provider WorldNavigationSession's own
         // discoveryProvider (application/CreateDiscoveryUseCase.js) is
@@ -360,12 +389,12 @@ async function run() {
         // the same predicate WorldNavigationSession#getPublicationForDocument()
         // (the one input ui/components/OwnPublicationPanel.js's own
         // `publication` prop is keyed on) relies on.
-        assert(decentralizedPublicationDiscoveryProvider.findByDocumentId(env.publication.documentId).length === 0,
-            n('B3. Live proof of the actual consequence: findByDocumentId(documentId) — the exact method application/WorldNavigationSession.js#_findPublications() calls — returns EMPTY for this Publication\'s own documentId, on the SAME provider instance a running app shares between WorldEncounterCanvas and WorldNavigationSession.'));
+        assert(decentralizedPublicationDiscoveryProvider.findByDocumentId(env.publication.documentId).length === 1,
+            n('B3. AMENDED BY 0.9.595 — live proof of the actual consequence: findByDocumentId(documentId) — the exact method application/WorldNavigationSession.js#_findPublications() calls — now returns exactly this Publication for its own documentId, on the SAME provider instance a running app shares between WorldEncounterCanvas and WorldNavigationSession.'));
 
         const searchUseCase = new SearchPublicationsUseCase(decentralizedPublicationDiscoveryProvider);
         const results = searchUseCase.execute({});
-        assert(!results.items.some((r) => r.id === publicationId), n('B4. Repository\'s own real, unmodified SearchPublicationsUseCase — the actual query behind the Repository UI — cannot find this Publication either, for the identical reason.'));
+        assert(results.items.some((r) => r.id === publicationId), n('B4. AMENDED BY 0.9.595 — Repository\'s own real, unmodified SearchPublicationsUseCase — the actual query behind the Repository UI — now finds this Publication too, for the identical reason.'));
 
         unmountCanvas(ctx);
 
@@ -383,7 +412,97 @@ async function run() {
         assert(/function exploreEncounteredPublicationCommand\(publication\) \{\s*\n\s*focusWorld\(publication\.documentId\);/.test(worldViewSrc),
             n('B8. "Explore," the one observer-local action (0.9.558) that keeps a Wanderer inside World View rather than routing to the Editor, calls focusWorld(documentId) — which session.focusDocument()s that documentId as the new ACTIVE document, the exact activeId ownPublication is then computed from.'));
 
-        console.log('✓ Section B: the ONE structural route from an observer-local encounter toward a placement-capable panel — Explore -> active document -> WorldNavigationSession#getPublicationForDocument() -> OwnPublicationPanel — is gated on Repository/discovery-provider admission at every step (live-proven B2-B4, source-confirmed B5-B8), and this path never performs that admission. This is the brief\'s own "no legitimate route today" case, not "existing seam is enough."');
+        console.log('✓ Section B: AMENDED BY 0.9.595 — admission into decentralizedPublicationDiscoveryProvider now DOES happen for this path (live-proven B2-B4), and B5-B8 (unchanged) confirm the REAL source shape of the Explore -> WorldNavigationSession#getPublicationForDocument() -> OwnPublicationPanel chain. Whether that chain actually SHARES this provider instance in a real running app is a separate question B5-B8 never answered on their own — see Section B-Wiring, immediately below, for the live answer.');
+    }
+
+    // ===============================================================
+    // Section B-Wiring — NEW IN 0.9.595. Does admission into
+    // decentralizedPublicationDiscoveryProvider actually reach
+    // WorldNavigationSession#getPublicationForDocument() in a REAL running
+    // app — never assumed from a comment, live-proven either way.
+    //
+    // This section exists because this audit's own ORIGINAL Section B
+    // prose (0.9.594) asserted, uncontested: "This is the EXACT provider
+    // WorldNavigationSession's own discoveryProvider... is composed from
+    // at application startup." That claim was never actually live-tested
+    // against a real WorldNavigationSession/CreateWorldViewUseCase — it
+    // was a comment, not a proof. This section supplies the proof, and the
+    // real answer is NO: they are two independent provider instances.
+    // ===============================================================
+    {
+        // A real WorldNavigationSession, built the SAME minimal way
+        // tests/ForkOnEdit.test.js already builds one — never a mock of
+        // WorldNavigationSession itself, only of its own renderer (which
+        // this section never exercises).
+        const storage = new InMemoryStorageProvider();
+        const alice = new LocalIdentityProvider(storage);
+        alice.login('alice');
+        const registry = new CreateBrickRegistryUseCase().execute();
+        const contentStore = new LocalContentStore(storage);
+        const publisher = new LocalPublisherProvider(storage, contentStore);
+        // This is WorldNavigationSession's OWN discoveryProvider — a plain
+        // LocalDiscoveryProvider, exactly what application/CreateWorldViewUseCase.js#execute()
+        // itself unconditionally constructs (source-confirmed BW-5, below)
+        // — never the app-wide decentralizedPublicationDiscoveryProvider.
+        const sessionDiscoveryProvider = new LocalDiscoveryProvider(storage);
+        const spatialIndexProvider = new LocalSpatialIndexProvider(storage);
+        const worldLayoutProvider = new LocalWorldLayoutProvider(spatialIndexProvider, sessionDiscoveryProvider);
+        const session = new WorldNavigationSession({
+            registry,
+            loadPublicationDocumentUseCase: new LoadPublicationDocumentUseCase(storage),
+            worldLayoutProvider,
+            saveDocumentUseCase: new SaveDocumentUseCase(storage),
+            publishDocumentUseCase: new PublishDocumentUseCase(publisher, alice),
+            identityProvider: alice,
+            documentCloneService: new DocumentCloneService(),
+            discoveryProvider: sessionDiscoveryProvider
+        });
+
+        // Meanwhile: the SAME kind of Publication this milestone's own
+        // Section B admits, admitted into the SEPARATE, app-wide
+        // decentralizedPublicationDiscoveryProvider — never into
+        // sessionDiscoveryProvider above.
+        const decentralizedPublicationDiscoveryProvider = new DecentralizedPublicationDiscoveryProvider();
+        const publication = new Publication({
+            id: 'section-b2-pub',
+            documentId: 'section-b2-doc',
+            title: 'B2 Publication',
+            author: 'alice',
+            contentReference: new ContentReference({ hash: 'b'.repeat(64) }),
+            publishedAt: Date.now()
+        });
+        decentralizedPublicationDiscoveryProvider.add(publication);
+        assert(decentralizedPublicationDiscoveryProvider.findByDocumentId('section-b2-doc').length === 1, n('BW-1. Sanity: the decentralized provider itself found it (same mechanism Section B already proved).'));
+
+        assert(session.getPublicationForDocument('section-b2-doc') === null,
+            n('BW-2. LIVE PROOF: a real WorldNavigationSession\'s own getPublicationForDocument() returns null for a Publication that exists ONLY in decentralizedPublicationDiscoveryProvider — this session\'s own discoveryProvider is a genuinely separate instance that never sees it. Admission into Repository discovery does NOT, by itself, make OwnPublicationPanel resolve this Publication.'));
+
+        // Confirm it DOES resolve once actually known to the SAME instance
+        // session.getPublicationForDocument() reads from — proving BW-2 is
+        // a real instance-identity fact, not a bug in this section's own
+        // Publication construction. LocalDiscoveryProvider (unlike
+        // DecentralizedPublicationDiscoveryProvider) has no .add() of its
+        // own — it reads live from storage, exactly like
+        // knowPublicationLocally() (above) already writes for it.
+        storage.save('forkbuild-publications', [publication.toJSON()]);
+        assert(session.getPublicationForDocument('section-b2-doc') !== null,
+            n('BW-3. Sanity check on BW-2: the SAME session DOES resolve a Publication once it exists in ITS OWN discoveryProvider — confirming BW-2\'s null was about provider identity, never about getPublicationForDocument() being broken or this fixture being malformed.'));
+
+        // Source-confirm WHY: application/CreateWorldViewUseCase.js#execute()
+        // — the one place a real app ever builds a WorldNavigationSession
+        // (via ui/views/WorldView.js) — has no parameter to receive
+        // decentralizedPublicationDiscoveryProvider at all, and
+        // unconditionally builds its own LocalDiscoveryProvider.
+        const createWorldViewSrc = await source('application/CreateWorldViewUseCase.js');
+        assert(!/decentralizedPublicationDiscoveryProvider|decentralizedDiscoveryProvider/.test(createWorldViewSrc),
+            n('BW-4. application/CreateWorldViewUseCase.js never references decentralizedPublicationDiscoveryProvider/decentralizedDiscoveryProvider at all, confirmed in real source — there is no parameter, anywhere in this file, to inject it.'));
+        assert(/const discoveryProvider = new LocalDiscoveryProvider\(storageProvider\);/.test(createWorldViewSrc),
+            n('BW-5. ...and unconditionally constructs its own, fresh LocalDiscoveryProvider instead — the exact instance WorldNavigationSession\'s own constructor receives as its discoveryProvider, confirmed in real source.'));
+        const worldViewSrc2 = await source('ui/views/WorldView.js');
+        assert(/new CreateWorldViewUseCase\(\)\.execute\(/.test(worldViewSrc2),
+            n('BW-6. ui/views/WorldView.js — the one real caller — constructs its session through exactly this use case, confirmed in real source; no override or post-construction rewiring of session\'s own discoveryProvider happens anywhere in that file.'));
+
+        console.log('✓ Section B-Wiring: LIVE-PROVEN, not assumed — decentralizedPublicationDiscoveryProvider (what this milestone\'s own admitToRepositoryDiscovery() call admits into) and WorldNavigationSession\'s own discoveryProvider (what OwnPublicationPanel\'s own placement action ultimately reads through) are two independent instances in this real, unmodified codebase. This milestone\'s own admission genuinely reaches Repository search (Section B, D2) and the already-existing Open/Fork/Explore/Comment actions (0.9.558, unaffected) — it does NOT reach OwnPublicationPanel. This is a pre-existing limit, not a regression: the IDENTICAL gap already existed, unexamined, for the primary/registered encounter family\'s own 0.9.474 admission call. See ui/components/WorldEncounterCanvas.js\'s own "0.9.595" header, "A KNOWN, PRE-EXISTING LIMIT," for the full account and what a future milestone closing it would need to change.');
     }
 
     // ===============================================================
@@ -575,32 +694,44 @@ async function run() {
         assert(ctx.observerLocalEncounterActionablePublication instanceof Publication, n('J1. Alice walks, encounters P, and understands it: a real, verified Publication instance resolves.'));
 
         const methodNames = Object.keys(WorldEncounterCanvas.methods).filter((k) => /ObserverLocal/.test(k) && /place/i.test(k));
-        assert(methodNames.length === 0, n('J2. Alice has no "place P here" action to take — none exists in the real component.'));
-        assert(decentralizedPublicationDiscoveryProvider.findByDocumentId(env.publication.documentId).length === 0, n('J3. The one structural bridge toward a placement-capable panel remains closed, live-confirmed (Section B\'s own mechanism, reconfirmed here end to end).'));
+        assert(methodNames.length === 0, n('J2. Alice still has no "place P here" action to take — none exists in the real component, unchanged by 0.9.595: admission is not placement.'));
+        assert(decentralizedPublicationDiscoveryProvider.findByDocumentId(env.publication.documentId).length === 1, n('J3. AMENDED BY 0.9.595 — P is now findable by documentId on Repository\'s own decentralized catalog, live-confirmed. This lookup is on decentralizedPublicationDiscoveryProvider directly, never through a real WorldNavigationSession — Section B-Wiring live-proves that a real session\'s own getPublicationForDocument() does NOT share this provider, so this specific finding does not by itself mean OwnPublicationPanel resolves P.'));
         unmountCanvas(ctx);
 
-        // J2 (the brief's own SECOND flagship): Alice does NOT place P — P
-        // remains non-authoritative and untraceable through every existing
-        // durable surface.
-        assert(env.worldModel.placementRegistry.findByPublicationId(publicationId).length === 0, n('J4. No PlacementRecord exists for P — it never became authoritative World state.'));
-        assert(decentralizedPublicationDiscoveryProvider.list().length === 0, n('J5. P is not in Repository\'s own decentralized catalog.'));
+        // J2 (the brief's own SECOND flagship, AMENDED BY 0.9.595): Alice
+        // does NOT place P — Repository now KNOWS P (admission happened at
+        // encounter time, automatically), but P still remains
+        // non-authoritative: no PlacementRecord exists anywhere unless
+        // Alice performs the existing, explicit placement action herself.
+        assert(env.worldModel.placementRegistry.findByPublicationId(publicationId).length === 0, n('J4. Still no PlacementRecord exists for P — it never became authoritative World state merely by being encountered or admitted. Acceptance Criterion E holds: Repository admission is never placement.'));
+        assert(decentralizedPublicationDiscoveryProvider.list().some((p) => p.id === publicationId), n('J5. AMENDED BY 0.9.595 — P now IS in Repository\'s own decentralized catalog, admitted the moment Alice\'s encounter resolved AVAILABLE + VERIFIED — never requiring her to take any further action first.'));
         const searchUseCase = new SearchPublicationsUseCase(decentralizedPublicationDiscoveryProvider);
-        assert(searchUseCase.execute({}).items.length === 0, n('J6. Repository search finds nothing for P.'));
+        assert(searchUseCase.execute({}).items.some((item) => item.id === publicationId), n('J6. AMENDED BY 0.9.595 — Repository search now finds P.'));
         const freshWanderer = new ObserverLocalEncounterStore();
-        assert(freshWanderer.list().length === 0, n('J7. A second Wanderer\'s own, entirely separate session (or Alice\'s own, after a reload) knows nothing about P either — the encounter leaves no durable trace anywhere in this application today.'));
+        assert(freshWanderer.list().length === 0, n('J7. Unchanged: a second Wanderer\'s own, entirely separate ObserverLocalEncounterStore (or Alice\'s own, after a reload) still knows nothing about the ENCOUNTER itself — that store stays exactly as session-scoped as 0.9.552/0.9.553 left it. What now persists app-wide is knowledge of the PUBLICATION (via Repository, J5-J6), never the encounter (see this file\'s own "0.9.595" closure note, below, "Repository = persistent Publication knowledge" vs. "ObserverLocalEncounter = ephemeral observation").'));
 
-        console.log('✓ Section J: both of the brief\'s own decisive scenarios hold, live, end to end — Alice can perceive and understand P but has no way to place it (J1-J3), and if she does not, P correctly remains non-authoritative and leaves no durable trace anywhere this codebase already persists a fact (J4-J7). Nothing here is a fabricated (0,0,0) or an automatic placement — the 0.9.551 invariant (discovery is never authority) holds throughout; the gap is a missing PATH to an explicit, human decision, not excess authority.');
+        console.log('✓ Section J: AMENDED BY 0.9.595 — the brief\'s own decisive scenarios resolve differently now, and correctly, though not as far as the brief\'s own framing assumed: Alice can perceive, understand, and (J3, J5-J6) make P findable through Repository\'s own search UI, automatically, without any action first. She still cannot reach OwnPublicationPanel for P this way — Section B-Wiring live-proves that specific chain stays closed, a pre-existing limit shared with the primary/registered encounter family, not something this milestone was scoped to fix. If she does not explicitly place P (J4, J7), P correctly remains non-authoritative (no PlacementRecord) even though Repository now knows it exists and can find it. Nothing here is a fabricated (0,0,0) or an automatic placement — the 0.9.551 invariant (discovery is never authority) holds throughout; the part of the gap this section originally confirmed that IS closable this way — Repository knowledge, findable and searchable, without requiring a first action — is now closed.');
     }
 
     // ===============================================================
-    // Boundary drift guard — zero production changes.
+    // Boundary drift guard — AMENDED BY 0.9.595. At 0.9.594 time (a pure
+    // audit, this file's own only change was itself), the guard below
+    // asserted literally zero production drift. 0.9.595 is the
+    // documented, narrowly-scoped implementation this audit's own
+    // RECOMMENDATION named — it is expected, not drift, to touch exactly
+    // one production file. This guard is amended to assert THAT: the
+    // change is real, and it is exactly as narrow as recommended.
     // ===============================================================
     {
-        const changesToProduction = execSync('git status --porcelain -- core/ application/ ui/ discovery/ placement/ storage/', { cwd: SOURCE_ROOT }).toString().trim();
-        assert(changesToProduction === '', n('DriftGuard1. this milestone made zero changes to any file under core/, application/, ui/, discovery/, placement/, or storage/ — a pure audit, exactly as scoped.'));
-        const untrackedProduction = execSync('git status --porcelain --untracked-files=all -- core/ application/ ui/ discovery/ placement/ storage/', { cwd: SOURCE_ROOT }).toString().trim();
-        assert(untrackedProduction === '', n('DriftGuard2. no new, untracked production file exists either — no new store, no new notification kind, no new "Place Here" button.'));
-        console.log('✓ Boundary drift guard: zero production changes, tracked or untracked.');
+        const changedProductionFiles = execSync('git status --porcelain -- core/ application/ ui/ discovery/ placement/ storage/', { cwd: SOURCE_ROOT })
+            .toString().split('\n').filter((line) => line.trim().length > 0)
+            .map((line) => line.replace(/^.{2}\s+/, '').trim());
+        assert(changedProductionFiles.length === 1 && changedProductionFiles[0] === 'ui/components/WorldEncounterCanvas.js',
+            n(`DriftGuard1. 0.9.595 touches EXACTLY the one production file its own recommendation named — ui/components/WorldEncounterCanvas.js — and no other file under core/, application/, ui/, discovery/, placement/, or storage/ (found: ${JSON.stringify(changedProductionFiles)}).`));
+        const untrackedProduction = execSync('git status --porcelain --untracked-files=all -- core/ application/ ui/ discovery/ placement/ storage/', { cwd: SOURCE_ROOT }).toString().trim()
+            .split('\n').filter(Boolean).filter((line) => !line.includes('ui/components/WorldEncounterCanvas.js'));
+        assert(untrackedProduction.length === 0, n('DriftGuard2. No new, untracked production file exists either — no new store, no new notification kind, no new "Place Here" button, no new discovery protocol.'));
+        console.log('✓ Boundary drift guard: AMENDED BY 0.9.595 — exactly one, already-recommended production file changed; no other drift, tracked or untracked.');
     }
 
     // ===============================================================
@@ -608,6 +739,9 @@ async function run() {
     // ===============================================================
     console.log('\n=== 0.9.594 CLASSIFICATION ===');
     console.log('CONTINUITY_GAP_CONFIRMED — the same vocabulary tests/WorldEncounterRepositoryContinuityBoundaryAudit.test.js (0.9.473) used for the structurally identical gap in this component\'s OTHER (primary/registered) encounter family, closed one milestone later by 0.9.474\'s own admitToRepositoryDiscovery() call. Today, an observer-local encounter genuinely supports perception (a real marker), understanding (a real Material/Verification inspection, 0.9.554), and Open/Fork/Explore/Comment on the underlying Publication (0.9.558, Section A) — but Section B proves, live, that the one structural route toward this application\'s OWN existing placement-capable surface (OwnPublicationPanel, reached via Explore -> WorldNavigationSession#getPublicationForDocument()) is closed, because that call resolves entirely through discoveryProvider.findByDocumentId(), which is never populated for this path (0.9.553/0.9.554/0.9.558 each deliberately withheld admitToRepositoryDiscovery() here, on grounds that were correct in each milestone\'s own narrower scope, but none of the three measured this specific downstream cost). Per the requesting brief\'s own Possibility A: Repository (discovery/LocalDiscoveryProvider.js + discovery/DecentralizedPublicationDiscoveryProvider.js) is ALREADY persistent (Section D2) and ALREADY has a working search/open/place-adjacent surface for anything admitted to it (0.9.474/0.9.585) — the missing piece is narrower than "build a new collection surface": it is exactly the one call 0.9.474 already built, tested, and proved safe for the sibling encounter family, never yet extended to this one. Sections D/H additionally establish that no new persistence mechanism is warranted for RETENTION: this codebase\'s own established pattern (WorldDiscoverySourceRegistry, ObserverLocalEncounterStore alike) is to re-derive a live, position-based World fact by walking back to it through the real pipeline, never to persist an observation client-side — recommending a new "discovered" list here would cut against that pattern, not extend it. Section E establishes no new NotificationEvent kind is warranted either: this pipeline is observably silent today, and nothing here is closer to "an awareness-worthy fact happened while you were elsewhere" than to "you are standing right where the missing action already lives" — a navigation/action-seam problem, not a reminder problem.\n\nRECOMMENDATION for a SEPARATE, later, narrowly-scoped implementation milestone (0.9.595 in this sequence, not built by this audit): extend the EXISTING, unmodified admitToRepositoryDiscovery(loading, verification) call — already used identically by refreshMaterialInspection()/refreshComparisonMaterialInspection() — to refreshObserverLocalEncounterInspection() too, gated on the SAME AVAILABLE+VERIFIED condition observerLocalEncounterActionablePublication already computes read-only (0.9.558). No new store, no new persistence layer, no new NotificationEvent kind, no new UI surface, and no automatic placement of any kind — Repository admission makes a Publication FINDABLE and OPENABLE; the explicit, human "Place Materialized Snapshot"/"Register Placed Snapshot" click inside OwnPublicationPanel (0.9.159/0.9.160), unmodified by this recommendation, remains the sole authority that ever produces a PlacementRecord, preserving the 0.9.551 invariant this audit reconfirmed live in Section C/J: discovery is never authority. A smaller, separate friction Section B also surfaced but does NOT classify as blocking — OwnPublicationPanel\'s own "Place Materialized Snapshot" reads from its own independent Discover/Resolve/Materialize workflow rather than the observer-local encounter\'s already-materialized bytes, so even after Repository admission a Wanderer placing P would re-run discovery once more inside that panel — is named here as a candidate for a future, separate milestone\'s own consideration, not something this audit\'s own recommendation is scoped to fix.');
+
+    console.log('\n=== PARTIALLY CLOSED BY 0.9.595 ===');
+    console.log('The RECOMMENDATION above is now implemented, verbatim: refreshObserverLocalEncounterInspection() (ui/components/WorldEncounterCanvas.js) now calls admitToRepositoryDiscovery(result.loading, result.verification) in its own .then() callback, unconditionally, mirroring refreshMaterialInspection() exactly — no new store, no new persistence layer, no new NotificationEvent kind, no new UI surface, and no automatic placement. Section B above is amended in place (assertions B2-B4) to prove admission itself now happens live; Sections C/F/G/H, unamended, are reconfirmed live to prove nothing else this audit found moved. Section B-Wiring is NEW: it live-proves, against a real WorldNavigationSession (not merely an isolated provider instance), that this admission does NOT reach OwnPublicationPanel — WorldNavigationSession\'s own discoveryProvider is a structurally separate LocalDiscoveryProvider instance, application/CreateWorldViewUseCase.js#execute() has no parameter to receive the decentralized provider at all, and no other file rewires this afterward. This is a genuine, pre-existing limit this milestone\'s own recommendation did not anticipate (its own original Section B prose asserted the opposite, uncontested and unproven) — it equally affects the ALREADY-SHIPPED primary/registered encounter family\'s own 0.9.474 admission call, which this audit also newly confirms (Section B-Wiring\'s own BW-4/BW-5/BW-6). What 0.9.595 DOES close: Repository search visibility, automatically, without requiring the Wanderer to place P first (the flagship\'s own J5-J6). What it deliberately leaves open, as a separate, later, not-yet-scoped decision: composing WorldNavigationSession\'s own discoveryProvider the same way CreateDiscoveryUseCase.js already composes its own (via the existing, unmodified CompositeDiscoveryProvider) — see ui/components/WorldEncounterCanvas.js\'s own "0.9.595" header, "A KNOWN, PRE-EXISTING LIMIT," for the full account. See tests/AdmitVerifiedObserverLocalPublicationsIntoRepositoryDiscoveryAudit.test.js for the dedicated flagship proof of exactly what this closure does and does not enable, and docs/Roadmap.md\'s own 0.9.595 entry.');
 
     console.log(`\n✅ All DiscoveredUnplacedPublicationActionabilityProductBoundaryAudit tests passed (${assertionCount} assertions).`);
 }
