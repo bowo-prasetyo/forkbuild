@@ -6286,6 +6286,92 @@ SAME world state produce the SAME `getWorldLocations()` list and the
 SAME final framing for the SAME location, with nothing route- or
 timing-dependent about either result.
 
+### World Navigation Is Position Replacement, Not A Page Stack — Except At The Boundary Into World View (0.9.587)
+
+`ui/router/index.js` mounts a real, browser-integrated history
+(`createWebHashHistory()`) — the browser's own Back/Forward buttons are
+never intercepted or disabled anywhere in this codebase. What was never
+written down anywhere, until now, is that this codebase deliberately
+uses TWO different router primitives for two different kinds of move,
+and the choice is not incidental:
+
+- **Entering World View from somewhere else — Editor, Publication
+  Catalog, a fresh URL — is a real, `router.push()`-based navigation.**
+  `ui/views/EditorView.js#backToWorld()` and
+  `ui/components/PublicationCatalog.js`'s own Explore action both call
+  `router.push({ path: '/world/' + id })`. Each of these adds one entry
+  to the browser's history stack, and browser Back correctly reverses
+  it — there is no second, competing "return" mechanism to keep in
+  sync with the browser's own.
+- **Moving World-to-World, or refocusing within World View, is
+  `router.replace()`.** `ui/views/WorldView.js#focusWorld()` — the one
+  canonical mechanism every Search result, Nearby-Worlds entry,
+  overlap-panel action, and Notification's "view publication" action
+  converges on (see "Focus Is Navigation, Not Discovery," 0.2.26, and
+  0.9.531's own closure audit) — is exactly `session.focusDocument(id)`
+  followed by `router.replace()`, never `router.push()`. So is the
+  camera-only `focusLocation()`/`goHome()` pair immediately above.
+  `router.replace()` overwrites the CURRENT history entry instead of
+  adding a new one, so a session that focuses World A, then B, then C
+  never accumulates a three-deep back-stack of visited Worlds: exactly
+  one entry exists throughout, and it always points at the World
+  currently on screen. Browser Back from World C after such a chain
+  does not step back to World B — it leaves World View entirely, to
+  whatever the ONE `push()`-based hop into World View originally came
+  from. This is the intended shape, not a gap: World-to-World focus is
+  designed to behave like panning a map, never like turning pages in a
+  book, and "which World was I looking at three hops ago" is a question
+  this codebase never promises to answer.
+
+**Navigation position is never duplicated as session state.**
+`application/WorldNavigationSession.js` holds no history/back-stack
+field of its own anywhere — the browser's history and the router are
+the only record of "where has this tab been," and `WorldNavigationSession`
+never keeps a second, competing copy that could drift out of sync with
+it. What the session DOES keep, independently of navigation position,
+is genuinely different state: `application/LocalWorldExperienceStore.js`
+(0.3.10) persists camera framing per World, keyed by document id, so
+that returning to a World — however the return happens, push or
+replace, in-app or by direct URL — restores the LAST camera framing
+that World's own experience store recorded, never a framing derived
+from, or dependent on, the router's own history stack. **"Return to
+World A" and "restore World A's previous session state" are two
+genuinely different operations that happen to run back-to-back**:
+`ui/views/WorldView.js`'s own `onMounted()` return-navigation handler
+(0.6.1) proves this apart — the navigation itself is
+`session.navigateToDocument(initialDocumentId)` (a fresh focus, exactly
+as if the World were being opened for the first time), and camera
+restoration is a SEPARATE effect of that same call, driven entirely by
+`LocalWorldExperienceStore`, not by anything the router carried. The
+`returnLocation` query parameter this handler reads is consumed exactly
+once and then stripped via `router.replace()` — the identical
+"consume once, strip the URL" convention `ui/views/EditorView.js`'s own
+fork/load handler already uses — so a reload or a Forward-button replay
+of that same URL can never re-open the same focus panel a second time
+from stale query state.
+
+**A Publication navigated to is never itself kept as navigation-history
+state.** Every navigation surface above (`PublicationCatalog.js`'s
+Explore action, `WorldView.js`'s notification-view action) reads a
+Publication only long enough to extract its `documentId` at click time;
+the URL and the router carry that one string, never the Publication
+object, so the Publication a viewer returns to is always looked up
+fresh, by id, never replayed from a cached navigation-history entry.
+
+**What this leaves deliberately unbuilt**: a custom back-stack, a
+breadcrumb trail, bookmarks, a "recently visited Worlds" navigation
+affordance beyond the pre-existing, independently-scoped
+`ui/views/RecentWorldsView.js` (0.3.10 — a local visit index, not a
+history mechanism), World caching or pre-fetch keyed by navigation
+position, and any interception of the browser's own Back/Forward
+behavior. None of these were found missing by any prior milestone's own
+live evidence — see `tests/WorldNavigationHistoryDocumentationClosureAudit.test.js`
+— this section exists because 0.9.586's own Section G3 found the
+distinction above stated nowhere, not because any mechanism it
+describes was found broken.
+
+See `docs/Roadmap.md`, 0.9.587, for the full milestone entry.
+
 ### World Mutation Requires Explicit Document Editing Authority (0.2.95)
 
 0.2.93's own framing was "Selection In World View Does Not Imply
