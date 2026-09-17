@@ -1,4 +1,5 @@
 import { parseSnapshotDiscoveryEnvelope } from '../core/SnapshotDiscoveryEnvelope.js';
+import { SnapshotCandidateDiscoveryOutcome } from './SnapshotCandidateDiscoveryOutcome.js';
 
 const DEFAULT_GRAPHQL_URL = 'https://arweave.net/graphql';
 // Deliberately the same host application/ArweaveGraphqlDiscoveryQueryService.js's
@@ -286,6 +287,75 @@ export class ArweaveSnapshotDiscoveryQueryService {
         return match ? match.locator : null;
     }
 
+    // 0.9.591 — searchWithOutcome(discoveryTag) -> Promise<{ outcome,
+    // candidates }>.
+    //
+    // A SIBLING OF `search()`, NEVER A REPLACEMENT — `search()` above is
+    // completely unmodified, byte-for-byte, by this addition, and every
+    // existing caller of it keeps receiving exactly the same `[]`-on-failure
+    // contract described in this file's own header, "never throws." This
+    // method exists only to give `application/
+    // SnapshotCandidateDiscoveryQueryService.js#searchWithOutcome()` the
+    // identical per-source classification it has already had for
+    // `application/NostrSnapshotDiscoveryQueryService.js` since 0.9.589 —
+    // see that file's own `searchWithOutcome()` header for the vocabulary
+    // this method reuses unchanged.
+    //
+    // THE GRAPHQL STEP ALONE DECIDES `UNAVAILABLE` VS. `EMPTY`/`FOUND` —
+    // a per-candidate gateway read failing, being malformed, or being
+    // skipped NEVER turns a result `UNAVAILABLE` by itself, the identical
+    // restraint this file's own header already holds for `search()`
+    // ("one unreadable announcement never prevents another... graceful
+    // degradation"). Concretely:
+    //   - the GraphQL POST throws, resolves non-2xx, returns an
+    //     unparseable body, or returns a body whose own
+    //     `data.transactions.edges` is not an array — `UNAVAILABLE`. The
+    //     query could not be completed; this is NEVER treated as "zero
+    //     candidates," the identical line `NostrSnapshotDiscoveryQueryService
+    //     #searchWithOutcome()` already draws for "the resolved value is
+    //     not an array."
+    //   - the GraphQL step completes (however many, or few, transaction
+    //     ids it names) and zero candidates survive the SAME per-candidate
+    //     gateway-read-and-parse `search()` already performs — `EMPTY`.
+    //     The query completed; nothing announced under this
+    //     `discoveryTag` could be read back as a well-formed candidate, as
+    //     far as this gateway reports.
+    //   - at least one candidate survives — `FOUND`.
+    //
+    // REUSES THE EXISTING PRIMITIVES, NEVER A SECOND GATEWAY IMPLEMENTATION.
+    // The GraphQL request itself is re-sent through `_searchAnnouncementTransactionIdsWithOutcome()`
+    // (sibling, private, below) — the identical query `buildDiscoveryTagQuery()`
+    // already builds — and each candidate is still read through
+    // `_fetchAnnouncementEnvelope()`, completely unmodified, the SAME method
+    // `search()` itself calls. No retry, no fallback, no second graphqlUrl
+    // or gatewayUrl, no caching, no ranking — see this file's own header,
+    // "deliberately excluded."
+    async searchWithOutcome(discoveryTag) {
+        const { succeeded, announcementIds } = await this._searchAnnouncementTransactionIdsWithOutcome(discoveryTag);
+        if (!succeeded) {
+            return { outcome: SnapshotCandidateDiscoveryOutcome.UNAVAILABLE, candidates: [] };
+        }
+
+        const candidates = [];
+        for (const announcementId of announcementIds) {
+            const envelope = await this._fetchAnnouncementEnvelope(announcementId);
+            if (envelope === null) {
+                continue;
+            }
+            const candidate = { contentHash: envelope.contentHash, locator: envelope.locator, storage: envelope.storage };
+            if (envelope.publicationId !== undefined) {
+                candidate.publicationId = envelope.publicationId;
+                candidate.claimedPosition = envelope.claimedPosition;
+            }
+            candidates.push(candidate);
+        }
+
+        return {
+            outcome: candidates.length > 0 ? SnapshotCandidateDiscoveryOutcome.FOUND : SnapshotCandidateDiscoveryOutcome.EMPTY,
+            candidates
+        };
+    }
+
     // Pure I/O, private. Duplicated from `application/
     // ArweaveGraphqlDiscoveryQueryService.js`'s own identically-named
     // method rather than shared — see this file's own header, "a
@@ -321,6 +391,55 @@ export class ArweaveSnapshotDiscoveryQueryService {
         }
 
         return parseTransactionIds(body);
+    }
+
+    // Pure I/O, private. The outcome-aware sibling of
+    // `_searchAnnouncementTransactionIds()` immediately above — see this
+    // file's own `searchWithOutcome()` header, "the GraphQL step alone
+    // decides." Sends the IDENTICAL GraphQL POST that method already
+    // sends, but reports whether the GraphQL step itself completed,
+    // rather than collapsing every failure to the same `[]` a genuine
+    // zero-transaction response also produces. Resolves to
+    // `{ succeeded: true, announcementIds }` when the request sent,
+    // returned a 2xx response, the body parsed as JSON, and that body's
+    // own `data.transactions.edges` was an array (however many entries it
+    // held, including zero) — resolves to
+    // `{ succeeded: false, announcementIds: [] }` for a throwing fetch, a
+    // non-2xx response, an unparseable body, or a body whose own shape
+    // does not describe a transactions/edges list at all. Never throws.
+    async _searchAnnouncementTransactionIdsWithOutcome(discoveryTag) {
+        const controller = new AbortController();
+        const timer = setTimeout(() => controller.abort(), this._timeoutMs);
+        let response;
+        try {
+            response = await this._fetch(this._graphqlUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ query: buildDiscoveryTagQuery(this._tagName, discoveryTag, this._maxResults) }),
+                signal: controller.signal
+            });
+        } catch {
+            return { succeeded: false, announcementIds: [] };
+        } finally {
+            clearTimeout(timer);
+        }
+
+        if (!response.ok) {
+            return { succeeded: false, announcementIds: [] };
+        }
+
+        let body;
+        try {
+            body = await response.json();
+        } catch {
+            return { succeeded: false, announcementIds: [] };
+        }
+
+        if (!hasWellFormedTransactionsShape(body)) {
+            return { succeeded: false, announcementIds: [] };
+        }
+
+        return { succeeded: true, announcementIds: parseTransactionIds(body) };
     }
 
     // Pure I/O, private. Fetches `<gatewayUrl>/<transactionId>` and decodes
@@ -405,6 +524,19 @@ function parseTransactionIds(body) {
         ids.push(id);
     }
     return ids;
+}
+
+// Pure. 0.9.591 — the shape check `_searchAnnouncementTransactionIdsWithOutcome()`
+// (private, above) uses to tell "the GraphQL step completed, however few
+// transactions it named" apart from "the GraphQL step returned something
+// this class does not recognize as a transactions/edges list at all." The
+// IDENTICAL structural condition `parseTransactionIds()` immediately above
+// already tests before falling back to `[]` — duplicated as a standalone
+// predicate rather than refactoring that function, so `search()` and its
+// own `parseTransactionIds()` call stay completely unmodified, byte for
+// byte, by this milestone.
+function hasWellFormedTransactionsShape(body) {
+    return Boolean(body && body.data && body.data.transactions && Array.isArray(body.data.transactions.edges));
 }
 
 // Pure. Byte-for-byte the same private helper `application/
