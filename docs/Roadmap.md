@@ -97011,3 +97011,75 @@ classification table/verdict), and `tests/WorldEncounterRepositoryContinuityInte
 (Section G's call-site count) — are amended in place, each with an explicit "AMENDED BY 0.9.595" marker,
 following this codebase's own established convention rather than deleting or silently invalidating prior audit
 work.
+
+## 0.9.596 — Repository Admission to Publication Action Continuity Audit
+
+**Type:** test-only boundary/product audit. **Production changes:** none. Adds exactly one file,
+`tests/RepositoryAdmissionToPublicationActionContinuityAudit.test.js` — no production file touched, only read
+(via `readFile`) to confirm claims against the literal, current source.
+
+**Central question.** 0.9.595 closed Repository admission but flagged, without a dedicated audit, that
+`WorldNavigationSession`'s own `discoveryProvider` — the one thing `getPublicationForDocument()` (and therefore
+`OwnPublicationPanel`'s own `publication` prop, per `ui/views/WorldView.js`) ever reads — is a structurally
+separate instance from `decentralizedPublicationDiscoveryProvider`. This milestone is that dedicated audit: does
+Repository admission actually reach the existing Publication action/placement journey, or does it stop short?
+
+**Section A — the split, reproduced.** `application/CreateWorldViewUseCase.js#execute()` constructs a bare,
+fresh `LocalDiscoveryProvider` for the `discoveryProvider` it hands `WorldNavigationSession`, and never imports,
+references, or accepts a decentralized provider anywhere in its own source — confirmed against the literal
+current source, not a comment. By contrast, `application/CreateDiscoveryUseCase.js` (Repository/Author/Editor
+fork-load/Recent Worlds' own real composition root) already accepts an optional `decentralizedDiscoveryProvider`
+and merges it in via the existing, unmodified `CompositeDiscoveryProvider`. Live-proven, not assumed: admitting a
+Publication into `decentralizedPublicationDiscoveryProvider` never appears through a real session's own
+`findPublicationById()` — the two providers share no underlying state.
+
+**Section B — Repository visibility, independently reconfirmed.** Through the REAL `CreateDiscoveryUseCase.js`
+composition (not a hand-rolled `SearchPublicationsUseCase` call), an admitted Publication is present, searchable
+by text and by author, represented by the exact (`===`) resolved instance, and still findable after both the
+`WorldEncounterCanvas` mount unmounts and the observer-local encounter itself is cleared. 0.9.595's own closure
+holds independently of this milestone's own findings below.
+
+**Section C — navigation resolution, pinpointed.** `findPublicationById()` and `getPublicationForDocument()`
+both return `null` for a Repository-admitted-only Publication, live-proven against a real `WorldNavigationSession`
+built exactly the way `CreateWorldViewUseCase.js` builds its own. Three alternative explanations are ruled out,
+each live: identity-key mismatch (the SAME publicationId/documentId resolve correctly once the session's own
+discoveryProvider is a `CompositeDiscoveryProvider` merging in the same `decentralizedPublicationDiscoveryProvider`
+instance); lifecycle timing (admitting before or after constructing the merged session resolves identically,
+since `DecentralizedPublicationDiscoveryProvider.list()`/`findById()` are always live reads, never a snapshot);
+and method-specificity (`getPublicationIdForDocument()`, sharing the identical `_findPublications()` lookup, is
+equally blind). The sole cause is provider-instance isolation.
+
+**Section D — classification, with a live-proven caveat.** This is a genuine composition-root integration gap,
+not an "existing shared authority, just needs wiring" case (that mechanism already exists elsewhere and was
+never extended here) and not a documented "independent scopes, intentional" case either: `docs/Principles.md`'s
+own "Discovery Is One Path, Not Two" (0.2.26) explicitly names fork-policy checks as a surface that must read the
+same discovery source as Repository View/Author View, and the one rationale on record for the separation
+(`tests/DecentralizedPublicationRepositoryMerge.test.js`'s own "untouched and still local-only" judgment, 0.9.339)
+predates `decentralizedPublicationDiscoveryProvider` carrying any real content at all (0.9.474/0.9.595 shipped
+later). **But** the naive fix — sharing the identical `CompositeDiscoveryProvider` instance already used for
+search — is live-proven NOT free: because `_findPublications()` backs `getPublicationForDocument()`,
+`_isKnownPublication()`, and `_checkForkPolicy()` alike, that naive fix would make a plain, never-locally-
+published, merely-loaded document become fork-policy BLOCKED purely because an unrelated observer-local
+encounter elsewhere admitted a restrictively-licensed Publication sharing its documentId — reproduced live
+against a real `WorldNavigationSession`, `_loadWorld()`, and `getEditabilityNotice()`. The correctly-scoped fix
+repairs `getPublicationForDocument()`/`findPublicationById()` specifically, leaving `_isKnownPublication()`/
+`_checkForkPolicy()`/`_loadWorld()`'s publish-marking and `LocalWorldLayoutProvider`'s own enrichment on the
+existing, narrower, local-only source until a separate, explicit milestone decides otherwise.
+
+**Sections E-I.** Identity continuity holds end to end (the exact `===` instance, never reconstructed from
+documentId/contentHash/locator/position). Placement reachability: the real, current, unmodified wiring stops at
+`OwnPublicationPanel`'s own `publication` prop — classified, not worked around — and, diagnostically only, even a
+repaired resolution path still requires the exact same, sole, explicit placement action this codebase already
+has. Negative cases hold (UNAVAILABLE/UNVERIFIABLE/REJECTED excluded; `claimedPosition` stays inert even once
+reachable). A three-Publication scenario (two verified, one rejected) confirms no accidental "current Publication"
+caching or cross-publication conflation. Lifecycle holds in both directions: persistent knowledge survives
+leaving and returning to the World, and survives the observer-local encounter itself disappearing.
+
+**Classification: `INTEGRATION_GAP`.** Not `ALREADY_CORRECT` (Section C proves real breakage) and not
+`PRODUCT_GAP` (Section D proves the separation is accidental, not an intentional architectural boundary). The
+smallest correct fix is a narrow composition-root wiring change — repairing Publication resolution specifically,
+explicitly scoped out of fork-policy/world-layout enrichment — not a new Repository mechanism, not a persistent
+"Discovered, Not Yet Placed" list, and not a new `NotificationEvent` kind. This milestone implements nothing;
+per the requesting brief, the next milestone should be that narrow wiring fix, followed by a reassessment of the
+complete Discover -> Retain -> Find -> Inspect -> Place journey before any new persistent UI surface is
+considered.
