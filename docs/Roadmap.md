@@ -96837,3 +96837,109 @@ carrying its own "restated here rather than imported" comment — is the next co
 `DELIBERATE_BOUNDARY`). Per the same discipline this milestone and 0.9.590 both already held: the audit determines
 whether the three represent legitimate, independent boundaries or three copies of one invariant that can drift,
 before any consolidation is designed.
+
+## 0.9.593 — Content Hash Validation Boundary Audit
+
+**Type:** test-only architectural audit. **Production changes:** none — every section in
+`tests/ContentHashValidationBoundaryAudit.test.js` is either a regex/substring match against the real, unmodified
+`application/PeerContentProtocol.js`, `application/PeerSnapshotPossessionProtocol.js`, `application/
+PeerSnapshotContentProtocol.js`, `application/PublicationSnapshotTransferPackage(Validator).js`, `core/
+ContentReference.js`, or `serializer/contentHash.js` source, or a live execution of the real, imported
+`isValidContentHash()` exports themselves — never a reproduction, so this audit cannot silently drift from what
+production actually runs.
+
+The question, taken from the requesting brief: are the three `isValidContentHash()` definitions genuinely
+different boundary validations, or duplicated definitions of one invariant that can silently drift? 0.9.586's own
+inventory (`ProductCapabilitySurfaceInventoryGapClassificationAudit.test.js`, Section C2) had already found the
+live duplication and provisionally labeled it `ARCHITECTURAL_GAP`. This milestone put that provisional label
+through the same full A-J audit 0.9.592 already modeled for a different provisional label, rather than accepting
+it on the strength of the earlier one-line observation.
+
+- **A — Inventory.** Exactly three production definitions, all byte-identical at the source level (same
+  `MAX_HASH_LENGTH = 128`, same `HASH_PATTERN = /^[0-9a-f]+$/i`, same function body): `application/
+  PeerContentProtocol.js` (0.7.4), `application/PeerSnapshotPossessionProtocol.js` (0.8.40), and `application/
+  PeerSnapshotContentProtocol.js` (0.8.37). Two more production files — `application/
+  PublicationSnapshotTransferPackage.js` and its `Validator` — import Definition #1 rather than redefining it.
+  `core/ContentReference.js`, the identity object `hash` actually belongs to, defines no format check at all.
+- **B — Behavioral equivalence.** A 20-entry adversarial corpus (valid/invalid hex, case variants, boundary
+  lengths, empty/whitespace, a `0x` prefix, a Unicode look-alike, `null`/`undefined`/numbers/objects/arrays/`NaN`)
+  run against all three real, imported functions produced zero disagreements — one behavioral invariant, not
+  three merely similar-looking ones.
+- **C — Boundary semantics.** All three headers state "Structural validity ONLY" in their own words, and none
+  ever computes or compares a hash. The real verification layer, `core/ContentReference.js#verify(bytes)`,
+  recomputes the hash from actual bytes via the single `serializer/contentHash.js#computeContentHash()` and
+  compares — a structurally distinct operation none of the three approximates.
+- **D — Failure behavior.** Identical across all three: a pure, non-throwing boolean predicate, even against a
+  Proxy engineered to throw on property access. The only throwing in any of these files belongs to the CALLER
+  (`toXRequestMessage`/`toXResponseMessage`), one line after the check, never to `isValidContentHash` itself — no
+  boundary-specific divergence exists to justify separate failure semantics.
+- **E — Dependency direction.** Empirically confirmed: six peer wire-protocol modules (the three above, plus
+  `PublicationAnchorPeerProtocol.js`, `PublicationPeerProtocol.js`, `PublicationSnapshotPlacementPeerProtocol.js`)
+  have exactly zero import statements between them — a hard, codebase-wide invariant for this module family, not
+  an `isValidContentHash`-specific choice, corroborated by the identical restate-don't-import pattern for
+  `isValidPublicationId` across four of those files. The one `*Protocol.js` sibling with a non-zero import count
+  (`PeerWorldEncounterMaterialProtocol.js`) imports a plain `core/` enum, never a validator function from another
+  protocol module — the narrower, unbroken rule holds across all seven files. The two files that DO import
+  `isValidContentHash` belong to a different module category (offline Package/Validator) that already imports
+  freely elsewhere (3-5 imports per sibling file), so that reuse costs nothing architecturally.
+- **F — Consumer semantics.** All five real call sites use the answer identically: gate acceptance of a
+  hash-shaped field at a message/package boundary, never to decide trust or storage. `StoreSnapshotContentUseCase`
+  — the codebase's own sole content-trust boundary per its own header — never calls `isValidContentHash` at all;
+  the two boundaries are consumed by entirely disjoint call graphs.
+- **G — Drift experiment.** The key test, answered honestly both ways: on SEMANTIC grounds alone, changing one
+  definition's accepted hash shape without changing the other two would NOT be legitimate (all three describe the
+  identical wire concept — `core/ContentReference.js#hash`, unmodified — and a real encoding change would need to
+  reach all three to avoid a silent interop bug). What justifies the duplication anyway is a DIFFERENT,
+  independently-verified fact from Section E: a hard, zero-exception, zero-import policy for this module family,
+  applied identically to `isValidPublicationId`, that values each wire module's independent replaceability over
+  eliminating this one small, corpus-tested duplication. `serializer/contentHash.js#computeContentHash()` itself
+  remains the codebase's one non-duplicated hashing implementation, confirming this is a narrow, contained
+  exception rather than a general duplication habit.
+- **H — Cross-system identity boundary.** Confirmed disjoint from `publicationId` (a separate predicate, separate
+  field, even where both travel together), anchor-transaction identity (`TX_HASH_PATTERN`, a completely separate
+  file family and pattern in `base/`/`anchoring/`, zero overlap), and Publication identity (`DecentralizedPublication`
+  never referenced by any of the three).
+- **I — Mechanical sweep.** A whole-repository, production-directories-only sweep confirms exactly these three
+  definitions and two importers exist — no fourth definition anywhere. One look-alike hex predicate,
+  `application/BasePublicationCommitmentEncoding.js`'s even-length byte-encodability check, is a genuinely
+  different invariant (whole-byte transaction-data encodability, not wire-message hash syntax), never named
+  `isValidContentHash` and never sharing a call site with it — correctly out of scope.
+- **J — Flagship.** Live, end to end: a real hash of real bytes passes `isValidContentHash` (valid shape). Paired
+  with deliberately non-matching material, it sails straight through `buildPublicationSnapshotTransferPackage()`
+  and `validatePublicationSnapshotTransferPackage()` — both accept it outright, exactly as designed — and is only
+  caught at the actual verification boundary: `ContentReference#verify()` returns `false`, and the real
+  `StoreSnapshotContentUseCase` rejects it as `HASH_MISMATCH`, storing nothing. A positive control — the identical
+  pipeline with material that actually matches — succeeds end to end and is `STORED`, confirming the rejection was
+  for the right reason. `isValidContentHash(hash) === true` is never, anywhere in this codebase, evidence that
+  material matches hash.
+
+### Verdict
+
+**`DELIBERATE_BOUNDARY`.** The three definitions implement one genuinely identical invariant (B, D) answering one
+genuinely identical question (C) — on semantic grounds alone, independent evolution would never be legitimate
+(G). What makes three copies the correct architecture anyway is a different, independently-verified fact: this
+codebase holds a hard, zero-exception, zero-import dependency policy for its entire peer wire-protocol module
+family (E) — a family whose entire design value is that each wire module is an independently understandable,
+independently replaceable, zero-dependency description of one message shape. A shared `ContentHashService`, or
+moving `isValidContentHash` into `core/`, would force exactly the kind of manufactured cross-module dependency the
+requesting brief itself warns against onto a module family that currently has none, to save three lines of
+already-corpus-tested duplication. 0.9.586's own provisional `ARCHITECTURAL_GAP` label (Section C2) is hereby
+**overturned** to `DELIBERATE_BOUNDARY` — the same kind of overturn 0.9.592 performed one milestone before this
+one, for a different provisional label. No production refactoring follows from this milestone: no
+`ContentHashService` is introduced, and all three definitions plus both importers are unchanged.
+
+### What this milestone deliberately excludes
+
+Consolidating the three functions. Introducing a `ContentHashService`. Changing the hash algorithm or length.
+Changing Publication, Snapshot, or any other identity. Changing verification, storage, discovery, or Repository
+admission. Altering error vocabulary. Any change to `application/PeerContentProtocol.js`, `application/
+PeerSnapshotPossessionProtocol.js`, `application/PeerSnapshotContentProtocol.js`, or any other production file.
+
+### What comes after
+
+With this milestone's overturn, both concrete findings 0.9.586's own inventory left open (EditorView's similarity
+ranking, Section C1; the `isValidContentHash` triplication, Section C2) have now been put through the full A-J
+audit and resolved as `DELIBERATE_BOUNDARY` rather than acted on as gaps. Per the requesting brief's own
+instruction — "If 0.9.593 concludes that the three validators are legitimate, close the entire remaining 0.9.586
+architectural-drift investigation rather than invent another refactoring target" — 0.9.586's architectural-drift
+investigation is hereby **closed**. No further milestone is queued from it.
