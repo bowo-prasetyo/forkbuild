@@ -94,14 +94,16 @@ import WorldEncounterCanvas from '../ui/components/WorldEncounterCanvas.js';
 //   Section C. Distributed claim -> encounter — connecting 0.9.567's own
 //              claim-consumption chain to 0.9.552-0.9.554's own
 //              observer-local machinery for the first time.
-//   Section D. FLAGSHIP FINDING — an existing authoritative placement
-//              that becomes known AFTER an observer-local encounter was
-//              already recorded, within the SAME session, produces a
-//              genuine, reproducible double presentation: the identical
-//              Publication renders as BOTH a permanent, fully-actionable
-//              marker AND a stale "Discovered here" ghost, simultaneously,
-//              with the ghost's own vocabulary now factually false.
-//              PRODUCT_GAP.
+//   Section D. FLAGSHIP FINDING (AMENDED BY 0.9.570, FIXED) — an existing
+//              authoritative placement that becomes known AFTER an
+//              observer-local encounter was already recorded, within the
+//              SAME session, used to produce a genuine, reproducible
+//              double presentation: the identical Publication rendered as
+//              BOTH a permanent, fully-actionable marker AND a stale
+//              "Discovered here" ghost, simultaneously. 0.9.570 shipped a
+//              presentational filter in WorldEncounterCanvas.js's own
+//              projectedObserverLocalEncounters that suppresses the ghost;
+//              see this section's own in-line amendment notes.
 //   Section E. Multiple Publications, shared position — identity never
 //              collapses onto coordinates.
 //   Section F. Republished identical content, different positions —
@@ -631,6 +633,17 @@ async function run() {
 
     // =======================================================================
     // Section D — FLAGSHIP FINDING: double presentation of one Publication.
+    //
+    // AMENDED BY 0.9.570 — Suppress Observer-Local Ghosts After
+    // Authoritative Placement, in place, mirroring this codebase's own
+    // established amendment precedent (e.g. 0.9.566 amending 0.9.565's own
+    // Section B, and 0.9.570 itself amending 0.9.569's own Sections A/E/F/K
+    // for the identical situation) rather than leaving a now-false "both
+    // markers coexist" assertion behind. D1-D4, D7, D9-D10 are unchanged;
+    // D5/D6/D8 are updated below to the opposite, now-true fact: the
+    // shipped filter suppresses the stale marker. See
+    // tests/SuppressObserverLocalGhostsAfterAuthoritativePlacement.test.js
+    // for the full production-fix test suite.
     // =======================================================================
     {
         const storageProvider = new InMemoryStorageProvider();
@@ -707,19 +720,18 @@ async function run() {
         const observerLocalAfter = projectedObserverLocalEncountersOf(afterCtx);
         assert(primaryAfter.length === 1 && primaryAfter[0].objectId === publication.id,
             'D4. The primary channel now correctly, permanently renders the Publication at its real, claim-derived position.');
-        assert(observerLocalAfter.length === 1 && observerLocalAfter[0].publicationId === publication.id,
-            'D5. THE FINDING: the SAME publicationId is STILL rendered by the observer-local channel — nothing in this journey ever retired, superseded, or removed the T0 encounter. Both markers coexist, for the identical Publication, in the identical mount, at genuinely different screen coordinates (D4/D5 above never share x/y).');
-        assert(!(primaryAfter[0].x === observerLocalAfter[0].x && primaryAfter[0].y === observerLocalAfter[0].y),
-            'D6. The two markers render at visibly DIFFERENT positions — not a harmless exact-overlap, but two distinct dots on the same canvas claiming to be the same Publication.');
+        assert(observerLocalAfter.length === 0,
+            'D5. (AMENDED BY 0.9.570) THE FINDING, FIXED: the observer-local channel no longer renders a marker for this SAME publicationId — WorldEncounterCanvas.js\'s own projectedObserverLocalEncounters now suppresses any row whose publicationId already has a publicationRows entry.');
+        assert(store.list().some((e) => e.publicationId === publication.id),
+            'D6. (AMENDED BY 0.9.570) The underlying ObserverLocalEncounterStore recorded encounter from T0 is untouched — only the RENDERED projection changed; this remains a presentation-only fix, exactly as 0.9.569 Section J/L located it.');
 
         // The observer-local panel's OWN real vocabulary, quoted verbatim
-        // from live source, is now factually inaccurate for this exact
-        // Publication.
+        // from live source.
         const canvasSource = await readSource('ui/components/WorldEncounterCanvas.js');
         assert(canvasSource.includes('This was discovered during your current World session. It has not been placed'),
             'D7. The real, shipped observer-local inspection panel text is confirmed, verbatim, against live source.');
         assert(receiverPlacementRegistry.findByPublicationId(publication.id).length === 0,
-            'D8. To be precise about WHAT is stale: "has not been placed" is still literally true of the PlacementRecord layer (the receiver still holds zero authoritative PlacementRecords) — what is now misleading is the SENTENCE AS A WHOLE, read by a Wanderer looking at a canvas that also shows this same Publication permanently registered one panel over. The text was never wrong about PlacementRecord; it is silent about the primary WorldDiscoverySourceRegistry channel a Wanderer can plainly see with their own eyes.');
+            'D8. (AMENDED BY 0.9.570) To be precise about WHAT this text still describes: "has not been placed" remains literally true of the PlacementRecord layer (the receiver still holds zero authoritative PlacementRecords) — and, unlike the pre-0.9.570 finding this section used to make, the sentence is no longer shown alongside a permanent marker for the SAME Publication on the same canvas: the marker that would have made it misleading (D5, above) no longer renders. An inspection panel already open before convergence is a separate, deliberately-preserved case — see 0.9.569 Section H / this file\'s own Section K, unaffected by this amendment.');
 
         // Re-processing the identical candidate a second time (an ordinary
         // later observation tick, e.g. the Wanderer walks past again) does
@@ -735,7 +747,7 @@ async function run() {
         assert(secondResult.outcome === SnapshotWorldPlacementOutcome.UNPLACED,
             'D10. Yet re-processing the SAME candidate on this SAME cascade instance still returns the memoized UNPLACED result — 0.9.187\'s own idempotency ("the FIRST call... stores its own result... every SUBSEQUENT call... receives that SAME stored promise back") means an observer-local encounter, once recorded, has no path back to REGISTERED for its own cascade instance, even after an authoritative placement becomes known.');
 
-        console.log('✓ D — FLAGSHIP FINDING (PRODUCT_GAP): once a Publication is discovered while UNPLACED (recording a session-scoped observer-local "Discovered here" encounter) and LATER, within the SAME session, reaches the primary WorldDiscoverySourceRegistry channel by any real, already-shipped means, BOTH markers render simultaneously, at different positions, for the rest of that session — reproduced here through two entirely real, already-shipped production paths (automatic cascade + explicit OwnPublicationPanel registration) sharing the one registry ui/main.js genuinely hands both. This is a presentation defect, not an authority leak — see Section K.');
+        console.log('✓ D — (AMENDED BY 0.9.570) FLAGSHIP FINDING, FIXED: once a Publication is discovered while UNPLACED (recording a session-scoped observer-local "Discovered here" encounter) and LATER, within the SAME session, reaches the primary WorldDiscoverySourceRegistry channel by any real, already-shipped means, only the permanent, authoritative marker now renders — the stale observer-local ghost is suppressed by WorldEncounterCanvas.js\'s own projectedObserverLocalEncounters, reproduced here through the same two entirely real, already-shipped production paths (automatic cascade + explicit OwnPublicationPanel registration) sharing the one registry ui/main.js genuinely hands both. The underlying ObserverLocalEncounterStore record is untouched (D6); this remains presentation-only — see Section K.');
     }
 
     // =======================================================================
@@ -1057,6 +1069,15 @@ async function run() {
 
     // =======================================================================
     // Section K — consumer action safety under Section D's own condition.
+    //
+    // AMENDED BY 0.9.570 — K0 updated to the now-fixed rendering fact (see
+    // Section D's own amendment note); K1-K6 are unchanged and still prove
+    // exactly what they always did: an observer-local SELECTION, made
+    // directly (never through the now-filtered projected marker list),
+    // stays fully actionable and uncorrupted even once the marker that
+    // would have led a Wanderer to make it has stopped rendering — the
+    // "inspection continuity" property 0.9.569 Section H and this
+    // milestone's own Section F/H already established.
     // =======================================================================
     {
         const storageProvider = new InMemoryStorageProvider();
@@ -1093,8 +1114,8 @@ async function run() {
             openPublicationCommand, forkPublicationCommand, explorePublicationCommand, getPublicationCommentariesCommand
         });
         mountCanvas(ctx);
-        assert(projectedPublicationsOf(ctx).length === 1 && projectedObserverLocalEncountersOf(ctx).length === 1,
-            'K0. Sanity — the double presentation genuinely reproduces here too.');
+        assert(projectedPublicationsOf(ctx).length === 1 && projectedObserverLocalEncountersOf(ctx).length === 0,
+            'K0. (AMENDED BY 0.9.570) Sanity — the primary marker renders; the observer-local marker for the SAME publicationId is now suppressed, exactly as Section D\'s own fix produces. K1-K6, below, confirm this does not corrupt a direct observer-local SELECTION made despite the marker no longer rendering.');
 
         // K1 — the PRIMARY marker's own Open/Fork/Explore/Comment (via
         // ordinary selection) act on the resolved Publication, never
@@ -1220,9 +1241,10 @@ async function run() {
         const primaryAfter = projectedPublicationsOf(ctx);
         const observerLocalAfter = projectedObserverLocalEncountersOf(ctx);
         assert(primaryAfter.length === 1 && primaryAfter[0].objectId === p1.id, 'L11. Only P1 reaches the primary channel.');
-        assert(observerLocalAfter.length === 2, 'L12. Both P1 and P2 still render observer-locally (Section D\'s own gap, reproduced once more) — but P2\'s own marker, position, and actions remain completely untouched by P1\'s own promotion; the gap is confirmed local to the specific identity it affects, never a cross-Publication corruption.');
+        assert(observerLocalAfter.length === 1 && observerLocalAfter[0].publicationId === p2.id,
+            'L12. (AMENDED BY 0.9.570) P1\'s own observer-local marker is now suppressed by the shipped fix; P2\'s own marker, position, and actions remain completely untouched by P1\'s own promotion — the suppression is confirmed local to the specific identity it affects, never a cross-Publication corruption, and never triggered by the shared contentHash the two happen to share.');
 
-        console.log('✓ L — FLAGSHIP: two Publications sharing one contentHash, each with its own real, distributed claim, discovered together, remain fully independent across discovery, claim resolution, observer-local rendering, inspection, and every continuation action (Open/Fork/Explore) — no content-hash shortcut ever collapses P1 and P2\'s spatial or object identity, including under Section D\'s own double-presentation condition applied to only one of the two.');
+        console.log('✓ L — FLAGSHIP: two Publications sharing one contentHash, each with its own real, distributed claim, discovered together, remain fully independent across discovery, claim resolution, observer-local rendering, inspection, and every continuation action (Open/Fork/Explore) — no content-hash shortcut ever collapses P1 and P2\'s spatial or object identity, and (AMENDED BY 0.9.570) P1\'s own convergence-driven suppression never touches P2\'s own still-rendering marker.');
     }
 
     // =======================================================================
@@ -1233,7 +1255,7 @@ async function run() {
             ['Three spatial concepts (PlacementRecord, claimedPosition, observer-local encounter) sharing a type, store, or merge point', 'ALREADY_CORRECT — Section A: verified distinct by type and by live cross-reference.'],
             ['Coincidental coordinate equality between a claim and an existing placement implying interchangeability', 'ALREADY_CORRECT — Section B: equality is never treated as identity; divergence never corrupts the authoritative side.'],
             ['A distributed claim reaching an observer-local encounter\'s own presentation', 'ALREADY_CORRECT — Section C: two real, independent consumption paths for the same candidate, connected for the first time; neither ever substitutes for the other.'],
-            ['A Publication rendering simultaneously as a primary, permanent, fully-actionable marker AND a stale "Discovered here" observer-local marker, within one session, once an authoritative/registered placement becomes known after the observer-local encounter was already recorded', 'PRODUCT_GAP — Section D (FLAGSHIP): real, reproducible via two independent, already-shipped production paths sharing one registry; the cascade\'s own idempotency means it can never self-heal for its own instance\'s lifetime.'],
+            ['A Publication rendering simultaneously as a primary, permanent, fully-actionable marker AND a stale "Discovered here" observer-local marker, within one session, once an authoritative/registered placement becomes known after the observer-local encounter was already recorded', '(AMENDED BY 0.9.570) FIXED — Section D (FLAGSHIP): was real, reproducible via two independent, already-shipped production paths sharing one registry; 0.9.570 added a presentational filter to WorldEncounterCanvas.js\'s own projectedObserverLocalEncounters that suppresses the stale marker once its publicationId also has an authoritative publicationRows entry.'],
             ['Spatial coincidence collapsing distinct Publication identity (same position, or shared contentHash)', 'ALREADY_CORRECT — Sections E, F, L: verified with real, independently-addressable, independently-actionable Publications throughout.'],
             ['Discovery-to-work continuity for a purely observer-local-originated Publication', 'ALREADY_CORRECT — Section G: the complete Walk->Discover->Inspect->Open/Fork/Explore/Comment->walk away->rediscover journey holds, built on real 0.9.552-0.9.559 machinery.'],
             ['Vocabulary implying ownership, authenticity, or authority for either a distributed claim or an observer-local encounter', 'ALREADY_CORRECT — Section H: both are already explicit and disclaiming, verified verbatim against live source.'],
@@ -1252,7 +1274,7 @@ async function run() {
         }
 
         console.log('\n✅ All Decentralized Publication Spatial Continuity Product Reassessment tests passed.');
-        console.log('CLASSIFICATION: PRODUCT_GAP (narrow, presentational) — the overall three-mechanism spatial model is coherent, safe, and well-vocabularied everywhere this milestone checked, EXCEPT one concrete, reproducible defect (Section D): a Publication discovered while UNPLACED, then later placed/registered within the SAME session by any real means, renders BOTH as a permanent marker and a stale, factually-outdated "Discovered here" ghost simultaneously, for the rest of that session. Section K confirms this is presentation-only — no authority leak, no PlacementRecord corruption, no broken action. RECOMMENDATION: a narrowly-scoped 0.9.569 should make the observer-local rendering layer (ui/components/WorldEncounterCanvas.js\'s own `projectedObserverLocalEncounters`, or the `ObserverLocalEncounterStore`/`AutomaticSnapshotEncounterCascade` composition in ui/views/WorldView.js) stop presenting a publicationId that is ALSO present in the current `registry` — a presentational filter, requiring no new PlacementRecord, no automatic promotion, and no change to either mechanism\'s own authority boundary. "Use Claimed Position" as a new placement mechanism is explicitly NOT recommended by this milestone — see this file\'s own header.');
+        console.log('CLASSIFICATION (AMENDED BY 0.9.570): ALREADY_CORRECT, throughout — the overall three-mechanism spatial model is coherent, safe, and well-vocabularied everywhere this milestone checked, INCLUDING the one concrete, reproducible defect this milestone originally found (Section D): a Publication discovered while UNPLACED, then later placed/registered within the SAME session by any real means, used to render BOTH as a permanent marker and a stale, factually-outdated "Discovered here" ghost simultaneously; 0.9.569 located the fix and 0.9.570 shipped it, in ui/components/WorldEncounterCanvas.js\'s own `projectedObserverLocalEncounters` — a presentational filter, requiring no new PlacementRecord, no automatic promotion, and no change to either mechanism\'s own authority boundary. "Use Claimed Position" as a new placement mechanism remains NOT recommended — see this file\'s own header.');
     }
 }
 

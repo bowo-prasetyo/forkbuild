@@ -2373,6 +2373,22 @@ function shortContentHash(contentHash) {
 //   header — this component only ever reflects whatever that store
 //   currently holds.
 //
+// 0.9.570 — AMENDED. "Merging `observerLocalEncounterRegistry` into
+// `registry`... or reading one through the other," above, still holds — the
+// two remain fully independent props and stores. What changed: 0.9.568
+// Section D found that a Publication discovered while UNPLACED, then
+// authoritatively registered within the SAME session, rendered BOTH its
+// permanent primary marker AND its now-stale observer-local ghost,
+// simultaneously, for the rest of that session; 0.9.569 located the fix as
+// a filtering step inside `projectedObserverLocalEncounters` itself, keyed
+// by `publicationId` against `publicationRows`'s own `objectId`. See that
+// computed's own 0.9.570 header, below, for the filter and its rationale.
+// This remains a presentational suppression only — `observerLocalEncounters`
+// (this component's copy of the store's own list) is untouched, nothing is
+// ever written back to `ObserverLocalEncounterStore.js`, and an inspection
+// already open on a converging encounter is deliberately left alone (see
+// that computed's own header, and 0.9.569 Section H).
+//
 // 0.9.554 — AMENDED. "Selection, inspection, material loading... for an
 // observer-local encounter," immediately above, was this milestone's own
 // named exclusion — 0.9.553's own Section G confirmed it as the resulting
@@ -3349,13 +3365,49 @@ export default {
         // joined against a WorldPlacement in the first place), so treating
         // it as just another publication row would either fabricate those
         // fields or silently render blanks for them.
+        //
+        // 0.9.570 — AMENDED. Now also filters out any row whose
+        // `publicationId` already has an authoritative `publicationRows`
+        // entry (matched by `objectId`, the only identity field the two
+        // sides share — see 0.9.569 Section E/F, `contentHash` and
+        // coordinate (dis)agreement each independently produce a wrong
+        // result on a real fixture). 0.9.568 Section D found that a
+        // Publication discovered while UNPLACED, then registered within
+        // the SAME session, otherwise renders BOTH a permanent marker AND
+        // a stale observer-local ghost, simultaneously, for the rest of
+        // that session; 0.9.569 located this exact computed as the
+        // narrowest seam capable of the fix (Section J) and confirmed it
+        // introduces no new race and cannot corrupt an already-open
+        // inspection (Sections H/I). This filter suppresses only the
+        // RENDERED row — it never writes to `ObserverLocalEncounterStore`,
+        // never touches `selectedObserverLocalEncounter`/
+        // `observerLocalEncounterInspection` (an inspection already open
+        // on a converging encounter is deliberately left alone; see
+        // 0.9.569 Section H — the existing product vocabulary already
+        // disclaims permanence for it, so a stale-but-still-open panel is
+        // not a correctness bug), and is purely reactive: a publicationId
+        // that leaves `publicationRows` again (an existing lifecycle path,
+        // unrelated to this milestone) makes its observer-local marker
+        // reappear on the very next recomputation, never a one-way
+        // "once placed, forever hidden" flag.
         projectedObserverLocalEncounters() {
-            return this.observerLocalEncounters.map((encounter) => ({
-                publicationId: encounter.publicationId,
-                contentHash: encounter.contentHash,
-                x: projectToCanvas(encounter.position.x),
-                y: projectToCanvas(encounter.position.z)
-            }));
+            // `|| []` — never live in a real mount (`publicationRows` above
+            // always returns an array), but several pre-existing test
+            // harnesses across this codebase call this computed directly,
+            // via `WorldEncounterCanvas.computed.projectedObserverLocalEncounters.call(ctx)`,
+            // without first priming `ctx.publicationRows` the way a real
+            // Vue instance's own reactivity would; this mirrors
+            // `publicationRows`'s own existing defensive style immediately
+            // above rather than requiring every such harness to change.
+            const placedPublicationIds = new Set((this.publicationRows || []).map((row) => row.objectId));
+            return this.observerLocalEncounters
+                .filter((encounter) => !placedPublicationIds.has(encounter.publicationId))
+                .map((encounter) => ({
+                    publicationId: encounter.publicationId,
+                    contentHash: encounter.contentHash,
+                    x: projectToCanvas(encounter.position.x),
+                    y: projectToCanvas(encounter.position.z)
+                }));
         },
         projectedWanderer() {
             return {

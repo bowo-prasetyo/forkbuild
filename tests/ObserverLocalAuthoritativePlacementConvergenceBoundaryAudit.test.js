@@ -236,9 +236,18 @@ function projectedPublicationsOf(ctx) {
 }
 function publicationRowsOf(ctx) {
     ctx.effectiveView = WorldEncounterCanvas.computed.effectiveView.call(ctx);
-    return WorldEncounterCanvas.computed.publicationRows.call(ctx);
+    ctx.publicationRows = WorldEncounterCanvas.computed.publicationRows.call(ctx);
+    return ctx.publicationRows;
 }
+// AMENDED BY 0.9.570 — `projectedObserverLocalEncounters` now itself reads
+// `this.publicationRows` (the shipped filter), so this helper must prime
+// `ctx.effectiveView`/`ctx.publicationRows` first, exactly as
+// `projectedPublicationsOf()`/`publicationRowsOf()` already do — mirroring
+// what a real Vue re-render's own dependency chain would already keep
+// current on its own.
 function projectedObserverLocalEncountersOf(ctx) {
+    ctx.effectiveView = WorldEncounterCanvas.computed.effectiveView.call(ctx);
+    ctx.publicationRows = WorldEncounterCanvas.computed.publicationRows.call(ctx);
     return WorldEncounterCanvas.computed.projectedObserverLocalEncounters.call(ctx);
 }
 
@@ -259,6 +268,17 @@ async function run() {
 
     // =======================================================================
     // Section A — reproduce the exact duplicate directly.
+    //
+    // AMENDED BY 0.9.570 — Suppress Observer-Local Ghosts After
+    // Authoritative Placement, in place, mirroring this codebase's own
+    // established amendment precedent (e.g. 0.9.566 amending 0.9.565's own
+    // Section B for the identical situation) rather than leaving a
+    // now-false "the duplicate still renders" assertion behind. This
+    // section's own T0/T1 setup, and A1-A3, are unchanged; A4/A5 (which
+    // asserted the duplicate itself) are replaced below with the opposite,
+    // now-true fact: the shipped filter suppresses it. See
+    // tests/SuppressObserverLocalGhostsAfterAuthoritativePlacement.test.js
+    // for the full production-fix test suite this milestone added.
     // =======================================================================
     {
         const registry = new WorldDiscoverySourceRegistry();
@@ -287,13 +307,13 @@ async function run() {
         const observerLocalAfter = projectedObserverLocalEncountersOf(ctx);
         assert(primaryAfter.length === 1 && primaryAfter[0].objectId === publication.id,
             'A3. After registration: the primary channel correctly, permanently renders the Publication.');
-        assert(observerLocalAfter.length === 1 && observerLocalAfter[0].publicationId === publication.id,
-            'A4. THE DUPLICATE, REPRODUCED: the identical publicationId is STILL rendered by the observer-local channel — reproducing 0.9.568 Section D through a leaner, presentation-layer-only construction.');
-        assert(!(primaryAfter[0].x === observerLocalAfter[0].x && primaryAfter[0].y === observerLocalAfter[0].y),
-            'A5. The two renders sit at genuinely different screen coordinates — two distinct dots claiming to be the same Publication, not a harmless exact overlap.');
+        assert(observerLocalAfter.length === 0,
+            'A4. (AMENDED BY 0.9.570) THE DUPLICATE, FIXED: the observer-local ghost for this same publicationId no longer renders — projectedObserverLocalEncounters now suppresses any row whose publicationId already has a publicationRows entry.');
+        assert(store.list().length === 1 && store.list()[0].publicationId === publication.id,
+            'A5. (AMENDED BY 0.9.570) The underlying recorded encounter itself is untouched — ObserverLocalEncounterStore.js still holds it (Section C\'s own "no removal seam" finding still holds); only the RENDERED projection changed. This is the presentation-only boundary 0.9.569 Section J/L called for.');
         unmountCanvas(ctx);
 
-        console.log('✓ A: the double presentation reproduces directly, at the presentation layer alone, confirming 0.9.568 Section D\'s own finding is not an artifact of that section\'s own specific (cascade + OwnPublicationPanel) reproduction path.');
+        console.log('✓ A: (AMENDED BY 0.9.570) the double presentation this section used to reproduce is now fixed at the presentation layer alone — the observer-local encounter stays recorded in the store, but no longer renders once its publicationId also has an authoritative placement.');
     }
 
     // =======================================================================
@@ -399,6 +419,17 @@ async function run() {
     // =======================================================================
     // Section E — identity matching: `publicationId`, never `contentHash`,
     // never a coordinate.
+    //
+    // AMENDED BY 0.9.570 — E2/E3/E4 below now read the RAW, pre-projection
+    // store contents (`store.list()`) rather than `projectedObserverLocalEncountersOf(ctx)`
+    // directly, since that projection is now itself filtered by the
+    // shipped fix — reading it directly would make the reference-filter
+    // simulation these three checks perform trivially idempotent rather
+    // than a genuine cross-check. E2b/E3b, new, confirm the shipped
+    // production filter's live output agrees with the reference filter
+    // applied to those same raw contents. E1, E5, E6 are unchanged — E5/E6
+    // never depended on a pre-existing duplicate in the first place (Q1
+    // was only ever placed, never observer-local-recorded).
     // =======================================================================
     {
         // E1/E2 — two DIFFERENT Publications sharing one contentHash: a
@@ -418,19 +449,27 @@ async function run() {
         mountCanvas(ctx);
         const publicationRows = publicationRowsOf(ctx);
         const observerLocalRows = projectedObserverLocalEncountersOf(ctx);
+        const rawObserverLocalRows = store.list().map((e) => ({ publicationId: e.publicationId, contentHash: e.contentHash }));
         assert(publicationRows.length === 1 && publicationRows[0].objectId === p1.id, 'E1. Only P1 reaches the primary channel.');
-        assert(observerLocalRows.length === 2, 'E2. Sanity — both P1 and P2 still render observer-locally (0.9.568 Section L\'s own gap, reproduced once more).');
+        assert(rawObserverLocalRows.length === 2, 'E2. Sanity — the store itself still holds both P1 and P2\'s recorded encounters (Section C\'s own "no removal seam" finding) — the fix, below, changes only the RENDERED projection, never the store.');
+        assert(observerLocalRows.length === 1 && observerLocalRows[0].publicationId === p2.id,
+            'E2b. (AMENDED BY 0.9.570) The shipped production filter already suppresses ONLY P1\'s own stale marker, live — P2\'s marker survives.');
 
-        const converged = hypotheticalConvergedObserverLocalRows(observerLocalRows, publicationRows);
+        const converged = hypotheticalConvergedObserverLocalRows(rawObserverLocalRows, publicationRows);
         assert(converged.length === 1 && converged[0].publicationId === p2.id,
-            'E3. A publicationId-keyed filter correctly suppresses ONLY P1\'s own stale marker — P2\'s marker survives, confirming a contentHash-keyed filter would have been WRONG here (it would have suppressed P2 too, despite P2 having no authoritative placement of its own at all).');
+            'E3. A publicationId-keyed filter, applied to the RAW store contents, correctly suppresses ONLY P1\'s own stale marker — P2\'s marker survives, confirming a contentHash-keyed filter would have been WRONG here (it would have suppressed P2 too, despite P2 having no authoritative placement of its own at all).');
+        assert(converged.length === observerLocalRows.length && converged.every((row, i) => row.publicationId === observerLocalRows[i].publicationId),
+            'E3b. (AMENDED BY 0.9.570) The reference filter, applied to the raw store contents, agrees row-for-row with the shipped production filter\'s own live output — confirming 0.9.570 implemented the exact identity key this audit located.');
 
         // E4 — the reverse sanity: a naive contentHash-keyed filter would
         // fail this exact fixture, proving the choice of key is not
-        // incidental.
+        // incidental. Deliberately re-derived from the RAW store contents
+        // (see this section's own 0.9.570 amendment note) so this
+        // demonstration keeps exercising a genuine two-row fixture rather
+        // than the now-already-filtered production output.
         const contentHashKeyedPlacedHashes = new Set(publicationRows.map(() => sharedHash));
-        const wronglyConverged = observerLocalRows.filter((row) => !contentHashKeyedPlacedHashes.has(row.contentHash));
-        assert(wronglyConverged.length === 0, 'E4. Demonstrated failure mode: a contentHash-keyed filter over this SAME fixture wrongly suppresses BOTH P1 and P2 — confirming `contentHash` is the wrong identity key, exactly as 0.9.568 Section L\'s own finding ("no content-hash shortcut ever collapses P1 and P2\'s spatial or object identity") already implied for this convergence question specifically.');
+        const wronglyConverged = rawObserverLocalRows.filter((row) => !contentHashKeyedPlacedHashes.has(row.contentHash));
+        assert(wronglyConverged.length === 0, 'E4. Demonstrated failure mode: a contentHash-keyed filter over this SAME raw fixture wrongly suppresses BOTH P1 and P2 — confirming `contentHash` is the wrong identity key, exactly as 0.9.568 Section L\'s own finding ("no content-hash shortcut ever collapses P1 and P2\'s spatial or object identity") already implied for this convergence question specifically.');
         unmountCanvas(ctx);
 
         // E5/E6 — two DIFFERENT Publications claiming the SAME position: a
@@ -461,6 +500,10 @@ async function run() {
     // =======================================================================
     // Section F — position disagreement: convergence is decided by
     // identity, never by coordinate (dis)agreement.
+    //
+    // AMENDED BY 0.9.570 — F1/F2 now read the RAW store contents, for the
+    // same reason given in Section E's own 0.9.570 amendment note; F3, new,
+    // confirms the shipped filter's live output.
     // =======================================================================
     {
         const registry = new WorldDiscoverySourceRegistry();
@@ -473,11 +516,14 @@ async function run() {
         mountCanvas(ctx);
         const publicationRows = publicationRowsOf(ctx);
         const observerLocalRows = projectedObserverLocalEncountersOf(ctx);
-        assert(observerLocalRows[0].publicationId === publicationRows[0].objectId, 'F1. Sanity — same publicationId, deliberately DIFFERENT recorded positions ((12,0,8) vs (10,0,10)).');
+        const rawObserverLocalRows = store.list().map((e) => ({ publicationId: e.publicationId, contentHash: e.contentHash }));
+        assert(rawObserverLocalRows[0].publicationId === publicationRows[0].objectId, 'F1. Sanity — same publicationId, deliberately DIFFERENT recorded positions ((12,0,8) vs (10,0,10)).');
 
-        const converged = hypotheticalConvergedObserverLocalRows(observerLocalRows, publicationRows);
+        const converged = hypotheticalConvergedObserverLocalRows(rawObserverLocalRows, publicationRows);
         assert(converged.length === 0,
             'F2. The publicationId-keyed filter suppresses the stale marker despite the position disagreement — convergence is an identity decision, never a coordinate-equality one. This mirrors 0.9.568\'s own spatial-continuity finding that coordinate equality never implies identity, applied here in the opposite direction: coordinate DISAGREEMENT must not block a convergence that identity alone already justifies.');
+        assert(observerLocalRows.length === 0,
+            'F3. (AMENDED BY 0.9.570) The shipped production filter already suppresses this marker live, agreeing with the reference filter above — the position disagreement does not block it in production either.');
         unmountCanvas(ctx);
 
         console.log('✓ F: convergence is correctly decided by `publicationId` identity alone; a genuinely different observer-local position never blocks it, and (per Section E) a genuinely coincidental shared position never forces it for an unrelated Publication.');
@@ -655,6 +701,11 @@ async function run() {
 
     // =======================================================================
     // Section K — reference-filter validation.
+    //
+    // AMENDED BY 0.9.570 — K1 now reads the RAW store contents (see Section
+    // E's own amendment note); K2 cross-checks the reference filter against
+    // the raw contents; K2b, new, confirms the shipped filter's own live
+    // output agrees.
     // =======================================================================
     {
         // Re-run the adversarial fixtures from Sections E/F through the
@@ -675,11 +726,14 @@ async function run() {
         mountCanvas(ctx);
         const publicationRows = publicationRowsOf(ctx);
         const observerLocalRows = projectedObserverLocalEncountersOf(ctx);
-        assert(observerLocalRows.length === 2, 'K1. Sanity — both markers exist pre-filter.');
+        const rawObserverLocalRows = store.list().map((e) => ({ publicationId: e.publicationId, contentHash: e.contentHash }));
+        assert(rawObserverLocalRows.length === 2, 'K1. Sanity — both markers exist in the raw store, pre-filter.');
 
-        const converged = hypotheticalConvergedObserverLocalRows(observerLocalRows, publicationRows);
+        const converged = hypotheticalConvergedObserverLocalRows(rawObserverLocalRows, publicationRows);
         assert(converged.length === 1 && converged[0].publicationId === unplaced.id,
             'K2. The reference filter, applied to a fixture combining shared contentHash AND position disagreement AND a genuine placement in one scenario, produces exactly the right result: the placed Publication\'s own stale marker is gone, the unplaced one (despite sharing its contentHash) remains.');
+        assert(observerLocalRows.length === 1 && observerLocalRows[0].publicationId === unplaced.id,
+            'K2b. (AMENDED BY 0.9.570) The shipped production filter\'s own live output agrees exactly, on this same compound fixture.');
 
         // O(1)-per-row shape: the filter never does anything more
         // expensive than a Set lookup per observer-local row — confirming
@@ -717,7 +771,7 @@ async function run() {
             console.log(`  - ${question}\n    -> ${verdict}`);
         }
 
-        console.log('\nRECOMMENDATION FOR 0.9.570 (not implemented here): add exactly one new computed step to `ui/components/WorldEncounterCanvas.js`\'s own `projectedObserverLocalEncounters` — filtering out any observer-local row whose `publicationId` already appears (by `objectId`) in `publicationRows` — with no change to `ObserverLocalEncounterStore.js`, `WorldView.js`, `PlacementRecord`, or `WorldDiscoverySourceRegistry`, and no new prop, event, or subscription. 0.9.570 should also make its own explicit, documented decision (left open by this audit\'s own Section H) about whether an inspection panel already open on a converging encounter should be left alone, dismissed, or transitioned — this audit establishes only that the existing seams permit any of the three without corruption, not which one the product should choose.');
+        console.log('\nRECOMMENDATION FOR 0.9.570 (IMPLEMENTED — see AMENDED notes on Sections A/E/F/K, above, and tests/SuppressObserverLocalGhostsAfterAuthoritativePlacement.test.js): add exactly one new computed step to `ui/components/WorldEncounterCanvas.js`\'s own `projectedObserverLocalEncounters` — filtering out any observer-local row whose `publicationId` already appears (by `objectId`) in `publicationRows` — with no change to `ObserverLocalEncounterStore.js`, `WorldView.js`, `PlacementRecord`, or `WorldDiscoverySourceRegistry`, and no new prop, event, or subscription. 0.9.570 also made its own explicit, documented decision (left open by this audit\'s own Section H) about whether an inspection panel already open on a converging encounter should be left alone, dismissed, or transitioned: LEFT ALONE — an already-open observer-local inspection is independent selection state, never re-derived from the projected marker list, and the existing product copy already disclaims permanence for it.');
     }
 
     console.log('\n✅ All Observer-Local to Authoritative Placement Presentation Convergence Boundary Audit tests passed.');
