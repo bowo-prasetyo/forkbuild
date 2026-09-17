@@ -96727,3 +96727,113 @@ into application-level decision-making?) remains the next concrete, unexamined f
 inventory, and is not automatically expanded by this milestone's own Section I finding — that finding is
 independent, narrow, and named for separate evaluation, exactly as 0.9.586's own closing recommendation asks of
 every finding it did not itself resolve.
+
+## 0.9.592 — Editor Similarity Ranking Boundary Audit
+
+**Type:** test-only architectural/product boundary audit. **Production changes:** none — every section in
+`tests/EditorSimilarityRankingBoundaryAudit.test.js` is either a regex/substring match against the real,
+unmodified `ui/views/EditorView.js`, `ui/components/StructureInfoPanel.js`, `application/BlueprintLineageUseCase.js`,
+`core/BlueprintSimilarity.js`, or `docs/Principles.md`, or a live execution of `computeSimilarityCandidates()` —
+reproduced verbatim from `EditorView.js` and guarded by literal-text assertions against that same file — against
+the real `compareBlueprintSimilarity()`/`isPossibleLineageCandidate()` and real `core/Structure.js`/`Brick.js`/
+`Position.js` instances.
+
+The question, taken verbatim from the requesting brief: does the similarity ranking performed by `EditorView`
+belong to the presentation layer, or is it application-level decision logic? 0.9.586's own inventory
+(`ProductCapabilitySurfaceInventoryGapClassificationAudit.test.js`, Section C1) had already flagged this as a
+real, live, UI-owned ranking decision and provisionally labeled it `PRESENTATION_GAP` rather than
+`ARCHITECTURAL_GAP`. This milestone put that provisional label through the full ten-part audit the brief specified
+(A-J) rather than accepting it on the strength of the earlier one-line observation.
+
+- **A — Path.** The complete path is five distinct steps, each precisely located: candidate acquisition
+  (`structureRegistry.getAll()` + `personalStructureLibraryStore.listStructures()`, the identical pair
+  `BuildLibraryPanel.js` already shows side by side) → similarity calculation (one call per candidate into the
+  real `core/BlueprintSimilarity.js#compareBlueprintSimilarity()`) → candidacy filter (the shared core/
+  `isPossibleLineageCandidate()` threshold, ANDed with an Editor-local "already claimed" exclusion) → ordering
+  (`candidates.sort()`, descending by score) → display window (`slice(0, 3)`) → an unmodified ref → a plain Array
+  prop `StructureInfoPanel.js` only ever iterates with `v-for`, never re-sorting or re-filtering.
+- **B — What the score means.** Exercised live with three genuinely distinct, real computed scores (0.8, 0.67, and
+  ~0.13 — the last deliberately built below `DEFAULT_SIMILARITY_THRESHOLD`). The below-threshold candidate never
+  appears in the result at all — membership is decided by the shared core/ function before ordering is ever
+  consulted. `core/BlueprintSimilarity.js`'s own header and `docs/Principles.md`'s own "Similarity Is Evidence; It
+  Never Becomes Lineage (0.6.8)" section both confirm, in their own words, that the number is candidacy for a
+  human's attention, never proof of derivation.
+- **C — Selection semantics.** `claimLineage(sourceStructure)` is the ONLY production path from a ranked candidate
+  to an actual lineage assertion, wired to exactly one per-row button click in `StructureInfoPanel.js`; neither
+  `inspectStructure()` nor `computeSimilarityCandidates()` itself ever calls it. No template logic anywhere singles
+  out the top-ranked (index 0) candidate for different treatment — first-in-list is the only sense in which
+  anything is "top ranked." Place/Export, the panel's other two primary actions, never read the similarity
+  candidates at all.
+- **D — Cross-surface reuse.** `compareBlueprintSimilarity`/`isPossibleLineageCandidate` are referenced nowhere
+  else in `ui/` or `application/` except one negative reference (`BlueprintLineageUseCase.js`'s own header,
+  confirmed by comment text, explicitly saying it never calls the similarity module). Of the three non-trivial
+  (non-date/name/radius) `.sort()` calls left anywhere in `ui/` — `EditorView.js`, `WorldCollaborationRoster.js`,
+  `PublicationPagination.js` — EditorView's is the only one that pairs a computed relevance score with a real
+  membership-gating threshold; the other two only ever reorder an already-complete list. `core/BlueprintAttributionView.js`'s
+  own ranking (`rankAttributionsByAuthor`) shares no code and answers a structurally different question (which
+  distinct signed-claim author has the most support for an already-known fingerprint, never which unclaimed
+  candidate resembles this one enough to even show).
+- **E — Dependency direction.** `structureRegistry`/`personalStructureLibraryStore` are constructed in exactly one
+  `ui/` file, `EditorView.js` — Editor-local from every other surface's perspective even though the classes
+  themselves live in `application/`. `computeSimilarityCandidates()`'s own body contains no `.save(`, `.publish(`,
+  `.announce(`, `signCanonical`, `fetch(`, or `await` — it reads two already-in-memory local catalogs and calls one
+  pure function. The one genuine relevance rule it depends on (the 0.5 threshold) is already core-owned; only the
+  display window and the sort direction are EditorView's own.
+- **F — Purity and determinism.** Three repeated calls with identical inputs produce byte-identical ordering and
+  scores; no candidate's or the source's own bricks are ever mutated. A genuine similarity tie (two candidates both
+  scoring 0.8) resolves deterministically by catalog-insertion order (JS's stable sort) — confirmed reproducible
+  both ways depending on catalog order, a legibility observation rather than a defect. The top-3 cap demonstrably
+  drops a real fourth qualifying candidate. The already-claimed exclusion and the identical-twin exclusion
+  (fingerprint-equal, per `core/BlueprintFingerprint.js`'s inclusion of name/category/description alongside
+  geometry) both hold under live execution.
+- **G — User-visible consequences.** Re-ordering the underlying catalog itself changes nothing about which
+  candidates qualify; every ranking call in this audit left every Structure's own bricks untouched. Ranking is
+  read-only from end to end and never substitutes for the one human click that actually changes application state.
+- **H — Existing seams.** No `application/*.js` file names anything resembling a similarity-ranking use case or
+  seam. The pattern used one concept over — `BlueprintAttributionUseCase`/`BlueprintLineageUseCase` wrapping a
+  *persisted signed-claim store* read with a core/ view function — does not structurally apply here: there is no
+  persisted state for an application/ class to own, only an on-demand pairwise comparison over two in-memory
+  catalogs that never leave `EditorView`'s own hands today. Every OTHER application/ mention of the word
+  "similarity" (in `AchievementEvent.js` and a `PublisherLeaderboard...` comparison view) is itself a refusal to
+  use similarity as a decision input — corroborating, not undermining, the same pattern.
+- **I — Boundary drift guard.** Zero production changes anywhere under `core/`, `application/`, or `ui/`, tracked
+  or untracked. None of the excluded topics (a new ranking algorithm, ML similarity, personalization, fuzzy
+  search, recommendation systems, caching, a new `RankingService`) were introduced.
+- **J — Flagship.** Candidate data available → similarity calculated → ordered presentation (A: 0.8, B: 0.67).
+  Perturbing candidate B's own design content (removing the two changed bricks) moves it to first place (1.0),
+  proving the ranking recomputes from real content every time rather than caching a stale decision. EditorView
+  owns the order a person sees; the human decides whether to act on any one row; the actual lineage decision
+  remains exclusively `application/BlueprintLineageUseCase.js#publish()`, reachable only through the explicit
+  click confirmed in Section C.
+
+### Verdict
+
+**`DELIBERATE_BOUNDARY`.** `EditorView.js`'s similarity-candidate ranking (acquisition + sort + top-3 display
+window) is presentation-layer behavior sitting atop an already core-owned, pure, deterministic evidence function.
+It depends only on candidate data and Editor-local state, is never reused elsewhere, has no half-built or
+naturally-fitting application-layer seam to move into, and never triggers any automatic selection, opening,
+publishing, forking, or default — every consequence of rank is either what a person sees (order, membership) or a
+decision made by an explicit, individual human click. This is the same boundary `docs/Principles.md`'s own 0.6.8
+section already documented as deliberate: "The two modules meet only in `ui/views/EditorView.js`, where a person
+reads the evidence and decides." 0.9.586's own provisional `PRESENTATION_GAP` label is hereby **confirmed** as
+`DELIBERATE_BOUNDARY`, not overturned into `ARCHITECTURAL_GAP`. No refactoring follows from this milestone —
+`EditorView.js` and `StructureInfoPanel.js` are unchanged.
+
+### What this milestone deliberately excludes
+
+Moving any code. Changing the similarity algorithm, the top-3 cap, or the 0.5 threshold. Unifying this with
+`core/BlueprintAttributionView.js#rankAttributionsByAuthor()` or any other ranking in the codebase (Section D found
+no genuine duplication to unify). Consolidating `isValidContentHash` — that is 0.9.593's own, separate audit,
+deliberately not pulled forward into this one. Any change to `core/BlueprintSimilarity.js`,
+`application/BlueprintLineageUseCase.js`, `ui/views/EditorView.js`, or `ui/components/StructureInfoPanel.js`
+themselves.
+
+### What comes after
+
+The `isValidContentHash` boundary — three independently-defined copies across `application/PeerContentProtocol.js`,
+`application/PeerSnapshotPossessionProtocol.js`, and `application/PeerSnapshotContentProtocol.js`, one of them
+carrying its own "restated here rather than imported" comment — is the next concrete, unexamined finding from
+0.9.586's own inventory (Section C2, labeled `ARCHITECTURAL_GAP` there already, unlike this milestone's own
+`DELIBERATE_BOUNDARY`). Per the same discipline this milestone and 0.9.590 both already held: the audit determines
+whether the three represent legitimate, independent boundaries or three copies of one invariant that can drift,
+before any consolidation is designed.
