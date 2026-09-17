@@ -96493,3 +96493,91 @@ production-code change of any kind.
 This milestone does not reopen the product-direction question 0.9.397 already closed, and does not replace
 0.9.398's own closure verdict — it narrows and hardens one mechanism that closure's own flagship finding exposed.
 The recommendation to stop the milestone-number sequence, from 0.9.398, stands unchanged.
+
+## 0.9.587 — World Navigation History Documentation Closure Audit
+
+**Type:** test-first documentation-closure audit. **Production changes:** one documentation section
+(`docs/Principles.md`, "World Navigation Is Position Replacement, Not A Page Stack — Except At The Boundary Into
+World View"). No `application/`, `ui/`, `core/`, or `router/` file is touched.
+
+0.9.586's own Section G3 searched `docs/Principles.md` and `docs/Roadmap.md`, live, for the exact phrase
+"navigation history" named as a deliberate exclusion, and found nothing — a genuine, narrow `DOCUMENTATION_GAP`,
+not a `PRODUCT_GAP`: no prior milestone's own evidence ever found the underlying navigation mechanism broken,
+missing, or user-visibly confusing, only undocumented as a single, citable statement. This milestone's own
+brief asks the question that finding leaves open: does ForkBuild already have an intentional navigation-history
+model, and can it be stated in one place well enough that the absence of a richer back-stack/breadcrumb/bookmark
+system can never again be mistaken for an unfinished feature — rather than simply building browser-like
+Back/Forward behavior because a user might expect it.
+
+### What this milestone found
+
+`tests/WorldNavigationHistoryDocumentationClosureAudit.test.js`, nine lettered sections, every claim a live
+`readSource()`/regex/substring check against the real, unmodified production files it names:
+
+- **A — Six real entry points, two router primitives.** `ui/router/index.js` mounts `createWebHashHistory()` — a
+  real, browser-integrated history the app never intercepts. Of the navigation surfaces this milestone's own
+  brief named, two are genuine `router.push()` hops that grow the browser's history stack (Editor → World via
+  `EditorView.js#backToWorld()`; Publication → World via `PublicationCatalog.js`'s own Explore action), and two
+  converge on `WorldView.js#focusWorld()` — `router.replace()`, never `push()` — for World → World focus and for
+  Notification → World (`viewNotificationPublicationCommand()`, reachable only from inside an already-mounted
+  World View). Direct URL/deep-link load and browser reload are the browser's own native navigation, resolved on
+  mount by `session.navigateToDocument()` — confirmed, by 0.9.584 Section K, to be a synchronous alias for the
+  identical `focusDocument()` every in-app `focusWorld()` call already uses.
+- **B — Back/Forward semantics, by construction rather than assumption.** Because `focusWorld()`/`focusLocation()`/
+  `goHome()` all use `replace()`, a session that focuses World A, then B, then C never accumulates a three-deep
+  back-stack: exactly one history entry exists throughout, always pointing at the World on screen. Browser Back
+  from World C after such a chain leaves World View entirely, landing wherever the one `push()`-based hop into
+  World View originally came from — never at World B. This is confirmed as the intended shape, not a discovered
+  gap: World-to-World focus is designed to behave like panning a map, not like turning pages in a book.
+- **C — Navigation state is never duplicated as World/session state.** `application/WorldNavigationSession.js`
+  is confirmed, live, to hold no history/back-stack field anywhere; the browser's own history is the only record
+  of "where has this tab been." Camera framing, avatar state, encounter state, and Publication selection are each
+  confirmed to remain owned by their own pre-existing, independently-scoped mechanism (`LocalWorldExperienceStore`
+  for camera, 0.9.582's own presence/encounter isolation for avatar/encounter, a fresh per-click `documentId` read
+  for Publication) — none of them reads from, or is reachable through, navigation-history state.
+- **D — Return semantics, precisely distinguished.** `ui/views/WorldView.js`'s own `onMounted()` return-navigation
+  handler (0.6.1) proves "return to World A" (a fresh `session.navigateToDocument()` focus) and "restore World A's
+  previous session state" (a SEPARATE, `LocalWorldExperienceStore`-driven effect of that same call) are two
+  different operations that merely happen to run back-to-back — never one operation replaying cached
+  navigation-history state. The handler's own `returnLocation` query parameter is consumed exactly once and
+  stripped via `router.replace()`, so a reload or a Forward-button replay of the same URL cannot re-trigger it.
+- **E — Publication-driven navigation never becomes navigation-history state.** Every navigation surface reads a
+  Publication only long enough to extract its `documentId` at click time; the Publication object itself never
+  travels through the router or through any history mechanism, so the Publication a viewer returns to is always
+  looked up fresh, by id, confirmed live against `PublicationCatalog.js` and `WorldView.js` alike.
+- **F — Async boundary.** Reuses, rather than re-derives, 0.9.584 Section G's own live proof that
+  `WorldNavigationSession.js` contains zero `await`/`async`/`.then()`/`Promise` anywhere, so the classic
+  "stale operation mutates the newly active World" race is structurally impossible inside this class.
+- **G — Documentation completeness, reconfirmed.** A fresh live search of `docs/Principles.md`/`docs/Roadmap.md`
+  finds the same scattered-but-real coverage 0.9.586 Section G already catalogued (0.2.26 "Focus Is Navigation,"
+  0.2.94 "World View Navigation Operates On Spatial Observation," 0.6.1's own "Browser Back still works exactly
+  as before") and confirms, again by live regex, that no single passage previously stated the `push`-vs-`replace`
+  distinction Section A/B rely on, or named "navigation history" as a deliberate exclusion.
+- **H — Classification.** `DOCUMENTATION_GAP`, reconfirmed rather than upgraded or downgraded: the mechanism was
+  never broken, so not `PRODUCT_GAP`; it was never previously stated as deliberate, so not `ALREADY_DOCUMENTED` or
+  `DELIBERATE_BOUNDARY` as they stood before this milestone.
+- **I — Regression guard.** Asserts, live, that `docs/Principles.md` now contains the new section's exact title
+  and its central "one entry exists throughout" claim — the same "read the real file, not a summary" discipline
+  0.9.586 Section G3 used to find the gap, now guarding against its silent removal.
+
+### Verdict
+
+**`DOCUMENTATION_GAP`, closed.** ForkBuild already had an intentional, evidence-backed navigation-history model —
+`push()` at the boundary into World View, `replace()` for every World-to-World and camera-only move inside it,
+with navigation position, camera state, and session state kept in three separate, non-overlapping mechanisms.
+That model is now stated once, in `docs/Principles.md`, citably, with a permanent regression guard. No
+back-stack, breadcrumb, bookmark, or navigation-state-persistence mechanism was built, and none was found missing.
+
+### What this milestone deliberately excludes
+
+Per its own brief: a back-stack implementation; custom navigation history; World session restoration beyond what
+`LocalWorldExperienceStore` already does; browser-history interception; breadcrumbs; bookmarks; a "recent Worlds"
+redesign beyond the pre-existing, independently-scoped `RecentWorldsView`; caching; preloading; a new router;
+navigation-state persistence. No production behavior changed for any user of World View.
+
+### What comes after
+
+This closes the one `DOCUMENTATION_GAP` 0.9.586 raised. Per that milestone's own recommendation, the remaining
+narrow findings (two presentation leaks, two silent fallbacks, one justified protocol branch) are not
+automatically another audit — each should be evaluated on its own terms, separately, only if and when evidence
+says it is worth a milestone of its own.
