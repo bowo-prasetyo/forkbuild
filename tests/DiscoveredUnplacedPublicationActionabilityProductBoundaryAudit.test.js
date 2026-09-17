@@ -721,13 +721,34 @@ async function run() {
     // RECOMMENDATION named — it is expected, not drift, to touch exactly
     // one production file. This guard is amended to assert THAT: the
     // change is real, and it is exactly as narrow as recommended.
+    //
+    // AMENDED BY 0.9.595 A SECOND TIME — SCOPED TO THE 0.9.595 COMMIT,
+    // NOT LIVE WORKING-TREE STATE. DriftGuard1's first form (`git status
+    // --porcelain`) asked "is there an uncommitted production change
+    // right now" — true only at the instant 0.9.595 itself was authored,
+    // and false forever after the moment this codebase's own
+    // one-commit-per-milestone convention actually committed it, which
+    // defeats this guard's own purpose as a regression test rather than
+    // a one-time pre-commit check. tests/NotificationEventBoundaryAudit.
+    // test.js's own G5 and tests/EndpointMultiplicityFailoverSemanticsAudit.
+    // test.js's own J1 both already named and fixed the identical class
+    // of bug the identical way: ask the permanent historical question
+    // instead — did the commit whose message starts "0.9.595 " touch
+    // exactly ui/components/WorldEncounterCanvas.js and no other
+    // production file? That fact never changes, regardless of what any
+    // later milestone does in its own, separate commit.
     // ===============================================================
     {
-        const changedProductionFiles = execSync('git status --porcelain -- core/ application/ ui/ discovery/ placement/ storage/', { cwd: SOURCE_ROOT })
-            .toString().split('\n').filter((line) => line.trim().length > 0)
-            .map((line) => line.replace(/^.{2}\s+/, '').trim());
+        let changedProductionFiles = [];
+        try {
+            const commitHash = execSync('git log --grep="^0.9.595 " --format=%H -n 1', { cwd: SOURCE_ROOT }).toString().trim();
+            if (commitHash) {
+                const diffOutput = execSync(`git diff-tree --no-commit-id --name-only -r ${commitHash} -- core/ application/ ui/ discovery/ placement/ storage/`, { cwd: SOURCE_ROOT }).toString();
+                changedProductionFiles = diffOutput.split('\n').filter(Boolean);
+            }
+        } catch { /* git unavailable — not a failure of this decision artifact */ }
         assert(changedProductionFiles.length === 1 && changedProductionFiles[0] === 'ui/components/WorldEncounterCanvas.js',
-            n(`DriftGuard1. 0.9.595 touches EXACTLY the one production file its own recommendation named — ui/components/WorldEncounterCanvas.js — and no other file under core/, application/, ui/, discovery/, placement/, or storage/ (found: ${JSON.stringify(changedProductionFiles)}).`));
+            n(`DriftGuard1. AMENDED BY 0.9.595 — the commit whose message starts "0.9.595 " touches EXACTLY the one production file its own recommendation named — ui/components/WorldEncounterCanvas.js — and no other file under core/, application/, ui/, discovery/, placement/, or storage/ (found: ${JSON.stringify(changedProductionFiles)}).`));
         const untrackedProduction = execSync('git status --porcelain --untracked-files=all -- core/ application/ ui/ discovery/ placement/ storage/', { cwd: SOURCE_ROOT }).toString().trim()
             .split('\n').filter(Boolean).filter((line) => !line.includes('ui/components/WorldEncounterCanvas.js'));
         assert(untrackedProduction.length === 0, n('DriftGuard2. No new, untracked production file exists either — no new store, no new notification kind, no new "Place Here" button, no new discovery protocol.'));
