@@ -10,6 +10,7 @@ import { DocumentMetadata } from '../core/DocumentMetadata.js';
 import { DocumentSerializer } from '../serializer/DocumentSerializer.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { LoadDocumentUseCase } from '../application/LoadDocumentUseCase.js';
+import { LoadFailureReason } from '../application/LoadFailureReason.js';
 import { ForkDocumentUseCase } from '../application/ForkDocumentUseCase.js';
 import { LocalDiscoveryProvider } from '../discovery/LocalDiscoveryProvider.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
@@ -698,21 +699,33 @@ async function runTests() {
         const actionsBlock = canvasSource.slice(actionsBlockStart, actionsBlockEnd);
         assert(!/UNVERIFIABLE|contentHash|publicationId/.test(actionsBlock), 'I1. The actions block itself never renders raw internal identifiers/vocabulary as the primary affordance.');
 
-        // I2. A REAL, NEW finding this milestone's own cross-surface
-        // reach (Sections B/H3/H4, which none of 0.9.551-0.9.558 checked)
-        // surfaces: a failed Open/Fork's own feedback text DOES leak
-        // internal vocabulary — the use case's own class name and a raw
-        // storage identifier — verbatim into a Wanderer-facing toast/
-        // dialog.
+        // I2. A REAL finding this milestone's own cross-surface reach
+        // (Sections B/H3/H4, which none of 0.9.551-0.9.558 checked)
+        // originally surfaced: a failed Open/Fork's own feedback text
+        // DID leak internal vocabulary — the use case's own class name
+        // and a raw storage identifier — verbatim into a Wanderer-
+        // facing toast/dialog. Named, not fixed, here (see Section J's
+        // own verdict text below, left as originally written for the
+        // historical record).
+        //
+        // AMENDED BY 0.9.574 — Repository Publication Lifecycle &
+        // Currency Product Reassessment, the "future milestone" Section
+        // J's own verdict named. application/LoadFailureReason.js now
+        // gives LoadDocumentUseCase a real error.reason, and
+        // ui/views/EditorView.js's own toast branches on it rather than
+        // interpolating err.message — this section now reconfirms the
+        // FIXED state live rather than re-proving the original leak.
         const editorViewSource = await rawSource('ui/views/EditorView.js');
-        assert(editorViewSource.includes('feedback.show(`Load failed: ${err.message}`);'), 'I2a. Sanity: EditorView.js\'s own real failed-Open toast interpolates the raw thrown error message verbatim.');
-        let leakedMessage = null;
+        assert(!editorViewSource.includes('feedback.show(`Load failed: ${err.message}`);'),
+            'I2a. AMENDED BY 0.9.574 — EditorView.js no longer interpolates the raw thrown error message verbatim into the failed-Open toast.');
+        let openError = null;
         try {
             new LoadDocumentUseCase(new InMemoryStorageProvider()).execute({ load() {} }, 'some-internal-doc-id-42');
-        } catch (e) { leakedMessage = `Load failed: ${e.message}`; }
-        assert(leakedMessage === 'Load failed: LoadDocumentUseCase: no document found with id "some-internal-doc-id-42"', 'I2b. The resulting toast text a Wanderer would actually see names the use case\'s own internal CLASS NAME ("LoadDocumentUseCase") and a raw storage identifier verbatim — exactly the kind of internal vocabulary Section I asks to audit for.');
+        } catch (e) { openError = e; }
+        assert(openError.reason === LoadFailureReason.MATERIAL_UNAVAILABLE,
+            'I2b. AMENDED BY 0.9.574 — LoadDocumentUseCase now attaches a structural error.reason (application/LoadFailureReason.js) that EditorView.js branches on, rather than a Wanderer-facing toast being built by interpolating the use case\'s own internal class name and a raw storage identifier, the exact leak this section originally found.');
 
-        console.log('✓ I — the observer-local actions panel itself communicates in ordinary vocabulary (title + plain verbs), holding the standard this arc has held to since 0.9.554. One real presentation paper-cut survives OUTSIDE that panel, newly surfaced by this milestone\'s own cross-surface reach: a failed Open/Fork\'s toast/dialog leaks a use case\'s own internal class name and a raw storage identifier. See Section J for why this is named, not fixed, here.');
+        console.log('✓ I — the observer-local actions panel itself communicates in ordinary vocabulary (title + plain verbs), holding the standard this arc has held to since 0.9.554. The one real presentation paper-cut this milestone originally found OUTSIDE that panel — a failed Open/Fork\'s toast/dialog leaking a use case\'s own internal class name and a raw storage identifier — was named, not fixed, here; AMENDED BY 0.9.574, which closed it (reconfirmed live, I2a/I2b).');
     }
 
     // ===============================================================
@@ -807,6 +820,13 @@ first time in this arc.
       precedent for exactly that shape of fix already exists —
       application/DistributionErrorMessageSanitizer.js — should a future
       milestone take it on).
+
+      AMENDED BY 0.9.574 — Repository Publication Lifecycle & Currency
+      Product Reassessment took it on, narrowly: application/
+      LoadFailureReason.js (new) plus a small EditorView.js change, not
+      the general Editor error-message hygiene sweep this paragraph
+      speculated might eventually be needed. See this file's own I2a/I2b
+      above, reconfirmed live against the fix.
 
 Per the originating brief's own central question: after a Wanderer
 discovers a novel Publication in World and chooses to continue with it,

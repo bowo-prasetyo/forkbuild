@@ -1,5 +1,6 @@
 import { DocumentSerializer } from '../serializer/DocumentSerializer.js';
 import { DocumentManifest } from './DocumentManifest.js';
+import { LoadFailureReason } from './LoadFailureReason.js';
 
 // StorageProvider -> DocumentSerializer -> Document, loaded into a
 // DocumentManager (DocumentManager.load(), the only correct way
@@ -22,7 +23,12 @@ export class LoadDocumentUseCase {
     execute(documentManager, id, eventBus = null) {
         const json = this._storageProvider.load(id);
         if (json === null) {
-            throw new Error(`LoadDocumentUseCase: no document found with id "${id}"`);
+            const error = new Error(`LoadDocumentUseCase: no document found with id "${id}"`);
+            // 0.9.574 — see application/LoadFailureReason.js's own header:
+            // a structural signal a caller can branch on, never a string
+            // it has to pattern-match out of `.message`.
+            error.reason = LoadFailureReason.MATERIAL_UNAVAILABLE;
+            throw error;
         }
 
         const document = this._documentSerializer.deserialize(json, eventBus);

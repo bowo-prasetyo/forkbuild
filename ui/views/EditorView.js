@@ -5,6 +5,7 @@ import { CreateStructureRegistryUseCase } from '../../application/CreateStructur
 import { CreatePersonalStructureLibraryUseCase } from '../../application/CreatePersonalStructureLibraryUseCase.js';
 import { CreateLibraryUsageHistoryUseCase } from '../../application/CreateLibraryUsageHistoryUseCase.js';
 import { ForkStructureUseCase } from '../../application/ForkStructureUseCase.js';
+import { LoadFailureReason } from '../../application/LoadFailureReason.js';
 import { CopyStructureIntoDocumentUseCase } from '../../application/CopyStructureIntoDocumentUseCase.js';
 import { CreateEditorContextUseCase } from '../../application/CreateEditorContextUseCase.js';
 import { CreateToolRegistryUseCase } from '../../application/CreateToolRegistryUseCase.js';
@@ -2040,7 +2041,26 @@ export default {
                 try {
                     editorSession.loadDocument(route.query.load);
                 } catch (err) {
-                    feedback.show(`Load failed: ${err.message}`);
+                    // 0.9.574 — Repository Publication Lifecycle & Currency
+                    // Product Reassessment, Section G. Used to interpolate
+                    // `err.message` verbatim — for LoadDocumentUseCase's own
+                    // failure that read `Load failed: LoadDocumentUseCase:
+                    // no document found with id "..."`, leaking the use
+                    // case's own internal class name and a raw storage
+                    // identifier straight into a Wanderer-facing toast.
+                    // Named, not fixed, by tests/
+                    // PublicationDiscoveryToWorkContinuityProductReassessment.test.js
+                    // Section I (0.9.559) as a genuine paper-cut out of
+                    // that milestone's own scope; this is that named
+                    // future milestone. Branches on err.reason (a
+                    // LoadFailureReason value) the same way
+                    // ForkFailureDialog.js already reads err.reason rather
+                    // than pattern-matching ForkDocumentUseCase's message —
+                    // an unnamed cause still shows a plain, safe fallback,
+                    // never the raw message.
+                    feedback.show(err.reason === LoadFailureReason.MATERIAL_UNAVAILABLE
+                        ? "This Publication's material is currently unavailable."
+                        : 'This document could not be opened.');
                 }
                 router.replace({ path: '/editor' });
             }
