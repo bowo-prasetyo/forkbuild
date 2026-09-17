@@ -160,9 +160,30 @@ export class CreateWorldViewUseCase {
         // PlacementRecords — see core/PlacementRecord.js) — a richer
         // sibling of the plain WorldPlacement the spatial index stores.
         const placementRegistry = new LocalPlacementRegistry(storageProvider, spatialIndexProvider);
+        // 0.9.600 — Publication First-Placement Action Wiring Fix. Given
+        // `publicationActionDiscoveryProvider` (above) instead of the
+        // plain `discoveryProvider` — the ONE-ARGUMENT change
+        // tests/FirstPublicationPlacementCapabilityBoundaryAudit.test.js
+        // (0.9.599, Section C-Wiring) already proved live is both
+        // necessary and sufficient: PlacePublicationUseCase.execute()
+        // resolves a publicationId through this argument alone, so this
+        // is what lets it place a Repository-admitted-only Publication
+        // (WorldNavigationSession#placePublication(), below) while every
+        // pre-existing caller — PublishDocumentUseCase's own automatic
+        // initial placement, immediately below — keeps working
+        // unchanged: publicationActionDiscoveryProvider degrades to
+        // exactly `discoveryProvider` itself whenever no
+        // decentralizedPublicationDiscoveryProvider was supplied, and
+        // even when one was, it still includes `discoveryProvider` as
+        // its first, narrower member (see CompositeDiscoveryProvider),
+        // so a document this replica just published is resolved exactly
+        // as before. Never widens `discoveryProvider` itself, which
+        // `worldLayoutProvider`/`_findPublications()`/fork-policy above
+        // all keep reading unchanged — see this method's own 0.9.596/
+        // 0.9.597 header comments.
         const placePublicationUseCase = new PlacePublicationUseCase(
             spatialIndexProvider,
-            discoveryProvider,
+            publicationActionDiscoveryProvider,
             new LoadPublicationDocumentUseCase(storageProvider),
             new CreateBrickRegistryUseCase().execute(),
             placementRegistry,
@@ -647,6 +668,15 @@ export class CreateWorldViewUseCase {
                     // movePlacement.
                     placementRegistry,
                     moveWorldPlacementUseCase,
+                    // 0.9.600 — the SAME placePublicationUseCase instance
+                    // PublishDocumentUseCase already uses for automatic
+                    // initial placement (above), now ALSO handed to the
+                    // session itself so an explicit, user-triggered
+                    // placePublication() call (see
+                    // WorldNavigationSession's own constructor comment
+                    // and placePublication() method) reuses this exact
+                    // instance rather than constructing a second one.
+                    placePublicationUseCase,
                     // 0.9.197: the removal counterpart — see
                     // getPlacementInfo/removePlacement.
                     removeWorldPlacementUseCase,
