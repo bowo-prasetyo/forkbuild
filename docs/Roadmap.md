@@ -97191,3 +97191,49 @@ position)`), reached from one new, explicit, deliberate UI action — never a by
 or materialization, and never a new persistent surface. Any authorization question that action should ask (who
 may place someone else's discovered work, and where) is a separate product decision this reassessment does not
 answer — consistent with this milestone's own type: a test-only audit that implements nothing.
+
+## 0.9.599 — First Publication Placement Capability Boundary Audit
+
+**Type:** test-only audit. **Production changes:** none. Adds
+`tests/FirstPublicationPlacementCapabilityBoundaryAudit.test.js`.
+
+**Objective.** Before building anything, determine whether 0.9.598's own Section D finding — no user-reachable
+action creates a Publication's FIRST placement outside `PublishDocumentUseCase`'s own internal call — is a
+missing product capability, a deliberate architectural boundary, or something already supported and merely
+unwired. The central question, verbatim from the requesting brief: should an already-published/discovered
+Publication with no existing placement be explicitly placeable by the user, and can the existing placement
+machinery support that without violating Publication/World ownership boundaries?
+
+**Findings.** `PlacePublicationUseCase.execute()`, called directly and live, has no logic anywhere that
+distinguishes or rejects a "first" placement — calling it twice for the same `publicationId` produces two
+independent, revision-1 `PlacementRecord`s (multi-placement, per `docs/Principles.md`'s own "an exhibition copy
+here, a personal copy... there," is the ordinary case, never a special one). But the EXACT instance
+`application/CreateWorldViewUseCase.js` constructs today is wired to the same narrow, fork-policy-sensitive
+`discoveryProvider` `WorldNavigationSession` uses — never the already-composed, already-safe
+`publicationActionDiscoveryProvider` 0.9.597 built for exactly this kind of exact-id lookup — so it throws
+"not found" for a Repository-admitted-only Publication. Swapping that one constructor argument (mirroring
+0.9.597's own precedent for `findPublicationById()`/`getPublicationForDocument()`) is sufficient, live-confirmed,
+to make first placement succeed, fully signed and causally-stamped, indistinguishable in kind from an
+automatic initial placement. The one candidate missing prerequisite the brief raised — a discovered
+Publication's own loadable world document, for real spatial bounds — is already handled by an existing,
+tested fallback (a default unit-box `SpatialBounds`) that predates this milestone; nothing new needs to be
+invented there. Placement ownership already tracks the placer's identity, never the Publication's author field,
+structurally and live, so explicit placement cannot become implicit authorship or republication. `claimedPosition`
+remains structurally unreachable from `PlacePublicationUseCase`'s own inputs. One real, pre-existing, and
+previously unmeasured fact surfaced along the way: placement is currently ungated by any fork-policy or
+authorization check for the one production call site that exists today — true before this milestone, and not
+resolved by it, but now explicit and testable rather than assumed. Finally, `OwnPublicationPanel` already has a
+publicationId-keyed placement surface (`getPublicationPlacementsCommand`, 0.9.308) that is the natural home for
+a future "Place" action — the older `placementInfo`/`movePlacement` family is documentId-keyed and, by design,
+cannot reach this family at all.
+
+**Classification: `CAPABILITY_GAP`** — narrower than it first appeared, and smaller than a new use case: not
+`ALREADY_SUPPORTED` (today's actual wiring throws), not `BOUNDARY_CONFLICT` (nothing about closing the gap
+blurs any existing ownership/authorization invariant). **Recommendation, precisely scoped:** (1) construct
+`PlacePublicationUseCase` with `publicationActionDiscoveryProvider` instead of the plain `discoveryProvider` in
+`CreateWorldViewUseCase.js`; (2) add `WorldNavigationSession#placePublication(publicationId, position)` —
+publication-id-keyed, unlike `movePlacement()`/`removePlacement()`'s own document-id shape, precisely because
+the point is reaching Publications documentId-based resolution deliberately does not; (3) surface a "Place"
+action from `OwnPublicationPanel`'s existing `.own-publication-placements` listing. Authorization — who may
+place someone else's discovered work — is explicitly left open, a genuine product decision this audit surfaces
+but does not answer, consistent with this milestone's own type: a test-only audit that implements nothing.
