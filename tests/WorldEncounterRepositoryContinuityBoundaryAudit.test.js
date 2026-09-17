@@ -502,21 +502,44 @@ async function run() {
     // Section G -- the family this is NOT about.
     // ===============================================================
     {
+        // AMENDED BY 0.9.597 — Publication Action Provider Continuity Fix.
+        // At the time this section was written, findPublicationById()
+        // delegated to `_discoveryProvider.findById()` directly, and
+        // CreateWorldViewUseCase.js referenced no decentralized provider
+        // at all. 0.9.596's own D6 recommendation (repair
+        // getPublicationForDocument()/findPublicationById() specifically)
+        // named findPublicationById() as SAFE to widen — an exact-id
+        // lookup carries none of `_findPublications()`'s
+        // documentId-collision risk that made fork-policy/`discoveryProvider`
+        // itself off-limits. This section's own reasoning about WHY the
+        // cascade cannot exhibit the originating brief's symptom still
+        // holds after 0.9.597, for a DIFFERENT reason than "the lookup is
+        // local-only": `_findPublicationById` (above) only ever runs
+        // AFTER `placement.outcome === PLACED` already resolved via
+        // `_resolvePlacementInfo`/`getPlacementInfoForPublication` —
+        // itself keyed on `_placementRegistry`, which "bypasses
+        // discoveryProvider entirely" (WorldNavigationSession's own
+        // 0.9.187 comment on that method, unmodified) — so widening
+        // WHICH Publication OBJECT gets fetched, once a real, local
+        // PlacementRecord is already known to exist, never widens WHEN
+        // the cascade fires at all. Assertions 1/3 are amended to prove
+        // the new, narrower fact directly rather than assert the
+        // now-superseded absence.
         const sessionSource = await readSource('application/WorldNavigationSession.js');
-        assert(/findPublicationById\(publicationId\) \{[\s\S]{0,200}_discoveryProvider\.findById\(publicationId\)/.test(sessionSource),
-            '1. WorldNavigationSession#findPublicationById() delegates to its own injected _discoveryProvider.findById() -- the exact collaborator application/AutomaticSnapshotEncounterCascade.js reads (see 0.9.187’s own comment, quoted in source, "null ... when ... the publication is not locally known").');
+        assert(/findPublicationById\(publicationId\) \{[\s\S]{0,300}_publicationActionDiscoveryProvider\.findById\(publicationId\)/.test(sessionSource),
+            '1. AMENDED BY 0.9.597 — WorldNavigationSession#findPublicationById() now delegates to its own `_publicationActionDiscoveryProvider.findById()` — a SEPARATE collaborator from fork-policy/world-layout\'s own `_discoveryProvider` (see that constructor\'s own comment) — the exact collaborator application/AutomaticSnapshotEncounterCascade.js reads, unchanged (still "null ... when ... the publication is not locally known", now meaning "not known to EITHER local or Repository-admitted discovery").');
 
         const createWorldViewSource = await readSource('application/CreateWorldViewUseCase.js');
         assert(/new LocalDiscoveryProvider\(storageProvider\)/.test(createWorldViewSource),
-            "2. application/CreateWorldViewUseCase.js constructs a plain, local-only LocalDiscoveryProvider for that session -- never composed with decentralizedPublicationDiscoveryProvider, confirmed directly against 0.9.339's own explicit note that session.searchWorld() stays local-only and untouched.");
-        assert(!/decentralizedPublicationDiscoveryProvider|DecentralizedPublicationDiscoveryProvider/.test(createWorldViewSource),
-            '3. ... confirmed by absence: the file carries no reference to the decentralized provider at all.');
+            "2. UNCHANGED BY 0.9.597 — application/CreateWorldViewUseCase.js still constructs a plain, local-only LocalDiscoveryProvider for `discoveryProvider` -- still never composed with decentralizedPublicationDiscoveryProvider itself, confirmed directly against 0.9.339's own explicit note that session.searchWorld() stays local-only and untouched.");
+        assert(/publicationActionDiscoveryProvider\s*=\s*decentralizedPublicationDiscoveryProvider/.test(createWorldViewSource),
+            '3. AMENDED BY 0.9.597 — the file now DOES reference a decentralized provider, but only to compose a SEPARATE `publicationActionDiscoveryProvider` (confirmed present); `discoveryProvider` itself — assertion 2, above — is untouched by that composition.');
 
         const worldViewSource = await readSource('ui/views/WorldView.js');
         assert(/findPublicationById: \(publicationId\) => \(typeof session\.findPublicationById/.test(worldViewSource),
-            '4. ui/views/WorldView.js wires the Automatic Snapshot Encounter Cascade’s own findPublicationById collaborator straight through to this same local-only session, unmodified.');
+            '4. UNCHANGED BY 0.9.597 — ui/views/WorldView.js still wires the Automatic Snapshot Encounter Cascade’s own findPublicationById collaborator straight through to this same session, unmodified.');
     }
-    console.log('✓ Section G: the Automatic Snapshot Encounter Cascade -- the family whose own vocabulary most closely echoes the originating brief’s "automatic encounter... materialized" language -- is structurally gated on a Publication already being locally known via a plain, local-only LocalDiscoveryProvider. It cannot exhibit the brief’s own symptom (encountering something new with no way back to it), and is not this audit’s subject.');
+    console.log('✓ Section G: AMENDED BY 0.9.597 — the Automatic Snapshot Encounter Cascade -- the family whose own vocabulary most closely echoes the originating brief’s "automatic encounter... materialized" language -- now resolves a Publication through `_publicationActionDiscoveryProvider` (local + Repository-admitted) rather than a plain, local-only LocalDiscoveryProvider, but only ever AFTER a real, local PlacementRecord already resolved this exact publicationId as PLACED (see this section\'s own amendment note, above) — so it still cannot exhibit the brief’s own symptom (encountering something new with no way back to it, before any placement exists), and is still not this audit’s subject.');
 
     // ===============================================================
     // Section H -- has 0.9.329's own grounding eroded?
@@ -614,7 +637,20 @@ async function run() {
             'git diff --name-only HEAD -- . ":(exclude)tests" ":(exclude)docs/Roadmap.md" ":(exclude)tests.html"',
             { cwd: SOURCE_ROOT.pathname }
         ).toString().trim();
-        assert(changedNonTestFiles === '', `1. no production file is modified by this milestone (found: ${changedNonTestFiles || 'none'}).`);
+        // AMENDED BY 0.9.597 — Publication Action Provider Continuity Fix.
+        // This guard is a live, point-in-time git-diff check at test-run
+        // time, not a permanent guarantee — it always meant "this
+        // milestone's OWN session touched nothing," never "no later,
+        // separately-justified milestone ever will" (same, pre-existing
+        // fragility already documented on the equivalent guard in
+        // tests/FederatedRepositoryProductGapAudit.test.js, amended for
+        // the same reason). Amended to exclude exactly 0.9.597's own,
+        // already-accounted-for files, while still catching any OTHER,
+        // unexpected production drift.
+        const expectedLaterMilestoneFiles = new Set(['application/CreateWorldViewUseCase.js', 'application/WorldNavigationSession.js', 'ui/views/WorldView.js']);
+        const unexpectedNonTestFiles = changedNonTestFiles.split('\n').filter(Boolean)
+            .filter((f) => !expectedLaterMilestoneFiles.has(f));
+        assert(unexpectedNonTestFiles.length === 0, `1. AMENDED BY 0.9.597 — no UNEXPECTED production file is modified by this milestone (0.9.597's own, separately-justified files excepted) — found: ${unexpectedNonTestFiles.join(', ') || 'none'}.`);
 
         const CLASSIFICATIONS = [
             'NOT_A_PRODUCT_GAP',

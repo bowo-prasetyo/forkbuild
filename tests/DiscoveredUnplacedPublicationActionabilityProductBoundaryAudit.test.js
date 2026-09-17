@@ -402,8 +402,22 @@ async function run() {
         // confirming B2/B3 are not an artifact of this test's own fixture
         // but a real property of the wiring between these three files.
         const worldNavSrc = await source('application/WorldNavigationSession.js');
-        assert(/getPublicationForDocument\(documentId\) \{\s*\n\s*return this\._resolvePublicationForPlacement\(documentId\);/.test(worldNavSrc),
-            n('B5. application/WorldNavigationSession.js#getPublicationForDocument() — the sole input to OwnPublicationPanel\'s own `publication` prop, per ui/views/WorldView.js — is a thin wrapper over _resolvePublicationForPlacement(), confirmed in real source.'));
+        // B5 AMENDED BY 0.9.597 — Publication Action Provider Continuity
+        // Fix. At the time this audit was written, getPublicationForDocument()
+        // was a thin wrapper over _resolvePublicationForPlacement() (and
+        // therefore, transitively, over `this._discoveryProvider` — B6's
+        // own point). 0.9.597 gave it its OWN resolution, reading a
+        // SEPARATE `this._publicationActionDiscoveryProvider` instead —
+        // precisely so a Repository-admitted Publication like this
+        // section's own `env.publication` CAN reach OwnPublicationPanel's
+        // `publication` prop once WorldView.js's own composition root
+        // (ui/views/WorldView.js) actually wires the shared decentralized
+        // provider through (see tests/PublicationActionProviderContinuityFix.test.js
+        // for the dedicated proof). B6, immediately below, still holds
+        // unamended: _findPublications()/`this._discoveryProvider` — the
+        // fork-policy/_isKnownPublication() choke point — is untouched.
+        assert(/getPublicationForDocument\(documentId\) \{\s*\n\s*if \(!this\._publicationActionDiscoveryProvider/.test(worldNavSrc),
+            n('B5. AMENDED BY 0.9.597 — application/WorldNavigationSession.js#getPublicationForDocument() — the sole input to OwnPublicationPanel\'s own `publication` prop, per ui/views/WorldView.js — now resolves through its own, separate `_publicationActionDiscoveryProvider`, confirmed in real source, rather than delegating to _resolvePublicationForPlacement()/`_discoveryProvider`.'));
         assert(/_findPublications\(documentId\) \{\s*\n\s*if \(!this\._discoveryProvider \|\| typeof this\._discoveryProvider\.findByDocumentId !== 'function'\) \{\s*\n\s*return \[\];\s*\n\s*\}\s*\n\s*return this\._discoveryProvider\.findByDocumentId\(documentId\) \|\| \[\];/.test(worldNavSrc),
             n('B6. ...which itself resolves entirely through `this._discoveryProvider.findByDocumentId(documentId)` — confirmed in real source — the SAME predicate B3 just proved returns empty for an observer-local-only encounter.'));
         const worldViewSrc = await source('ui/views/WorldView.js');
@@ -488,21 +502,37 @@ async function run() {
         assert(session.getPublicationForDocument('section-b2-doc') !== null,
             n('BW-3. Sanity check on BW-2: the SAME session DOES resolve a Publication once it exists in ITS OWN discoveryProvider — confirming BW-2\'s null was about provider identity, never about getPublicationForDocument() being broken or this fixture being malformed.'));
 
-        // Source-confirm WHY: application/CreateWorldViewUseCase.js#execute()
-        // — the one place a real app ever builds a WorldNavigationSession
-        // (via ui/views/WorldView.js) — has no parameter to receive
+        // Source-confirm WHY: at the time this section was written,
+        // application/CreateWorldViewUseCase.js#execute() — the one place
+        // a real app ever builds a WorldNavigationSession (via
+        // ui/views/WorldView.js) — had no parameter to receive
         // decentralizedPublicationDiscoveryProvider at all, and
-        // unconditionally builds its own LocalDiscoveryProvider.
+        // unconditionally built its own LocalDiscoveryProvider.
+        //
+        // BW-4 AMENDED BY 0.9.597 — Publication Action Provider Continuity
+        // Fix, per this file's own Section B "B5" amendment, above. This
+        // section's own BW-2/BW-3 (immediately above) are UNCHANGED and
+        // still hold exactly as written: `session` here is built by hand,
+        // never through CreateWorldViewUseCase.js, and never passes the
+        // new `publicationActionDiscoveryProvider` parameter — so it still
+        // falls back to its own `discoveryProvider` (BW-2/BW-3's own
+        // point), byte for byte as before 0.9.597. What changed is only
+        // that CreateWorldViewUseCase.js NOW HAS the parameter this
+        // section originally found missing.
         const createWorldViewSrc = await source('application/CreateWorldViewUseCase.js');
-        assert(!/decentralizedPublicationDiscoveryProvider|decentralizedDiscoveryProvider/.test(createWorldViewSrc),
-            n('BW-4. application/CreateWorldViewUseCase.js never references decentralizedPublicationDiscoveryProvider/decentralizedDiscoveryProvider at all, confirmed in real source — there is no parameter, anywhere in this file, to inject it.'));
+        assert(/decentralizedPublicationDiscoveryProvider\s*=\s*null/.test(createWorldViewSrc),
+            n('BW-4. AMENDED BY 0.9.597 — application/CreateWorldViewUseCase.js now HAS an optional decentralizedPublicationDiscoveryProvider parameter, confirmed in real source — this is exactly the missing route this section originally documented.'));
         assert(/const discoveryProvider = new LocalDiscoveryProvider\(storageProvider\);/.test(createWorldViewSrc),
-            n('BW-5. ...and unconditionally constructs its own, fresh LocalDiscoveryProvider instead — the exact instance WorldNavigationSession\'s own constructor receives as its discoveryProvider, confirmed in real source.'));
+            n('BW-5. UNCHANGED BY 0.9.597 — CreateWorldViewUseCase.js still unconditionally constructs its own, fresh LocalDiscoveryProvider for `discoveryProvider` — the exact instance WorldNavigationSession\'s own constructor still receives as `discoveryProvider` (fork-policy/world-layout/placement resolution) — confirmed in real source. 0.9.597 adds a SEPARATE `publicationActionDiscoveryProvider` alongside it; it never replaces this one.'));
+        assert(/publicationActionDiscoveryProvider\s*=\s*decentralizedPublicationDiscoveryProvider/.test(createWorldViewSrc),
+            n('BW-5b. AMENDED BY 0.9.597 — ...and now ALSO composes a separate `publicationActionDiscoveryProvider`, handed to WorldNavigationSession alongside (never instead of) `discoveryProvider` — confirmed in real source.'));
         const worldViewSrc2 = await source('ui/views/WorldView.js');
         assert(/new CreateWorldViewUseCase\(\)\.execute\(/.test(worldViewSrc2),
             n('BW-6. ui/views/WorldView.js — the one real caller — constructs its session through exactly this use case, confirmed in real source; no override or post-construction rewiring of session\'s own discoveryProvider happens anywhere in that file.'));
+        assert(/decentralizedPublicationDiscoveryProvider:\s*decentralizedDiscoveryProviderForEnrichment/.test(worldViewSrc2),
+            n('BW-6b. AMENDED BY 0.9.597 — and now passes the SAME app-wide `decentralizedDiscoveryProviderForEnrichment` it already injects for Repository-search enrichment (0.9.339) through to CreateWorldViewUseCase.js\'s own new parameter, confirmed in real source — never a second, competing injection.'));
 
-        console.log('✓ Section B-Wiring: LIVE-PROVEN, not assumed — decentralizedPublicationDiscoveryProvider (what this milestone\'s own admitToRepositoryDiscovery() call admits into) and WorldNavigationSession\'s own discoveryProvider (what OwnPublicationPanel\'s own placement action ultimately reads through) are two independent instances in this real, unmodified codebase. This milestone\'s own admission genuinely reaches Repository search (Section B, D2) and the already-existing Open/Fork/Explore/Comment actions (0.9.558, unaffected) — it does NOT reach OwnPublicationPanel. This is a pre-existing limit, not a regression: the IDENTICAL gap already existed, unexamined, for the primary/registered encounter family\'s own 0.9.474 admission call. See ui/components/WorldEncounterCanvas.js\'s own "0.9.595" header, "A KNOWN, PRE-EXISTING LIMIT," for the full account and what a future milestone closing it would need to change.');
+        console.log('✓ Section B-Wiring: AMENDED BY 0.9.597 — decentralizedPublicationDiscoveryProvider (what admitToRepositoryDiscovery() admits into) and WorldNavigationSession\'s own `discoveryProvider` (fork-policy/world-layout/placement resolution) remain two independent instances, exactly as this section\'s own BW-2/BW-3 still live-prove for a hand-built session. But in the REAL app (ui/views/WorldView.js -> CreateWorldViewUseCase.js), WorldNavigationSession now ALSO receives a separate `publicationActionDiscoveryProvider` composed from both — so getPublicationForDocument()/findPublicationById() (and therefore OwnPublicationPanel\'s own `publication` prop) DO now see a Repository-admitted Publication, without `discoveryProvider` itself ever being widened. See tests/PublicationActionProviderContinuityFix.test.js for the dedicated end-to-end proof through the real composition root.');
     }
 
     // ===============================================================
@@ -714,24 +744,48 @@ async function run() {
     }
 
     // ===============================================================
-    // Boundary drift guard — AMENDED BY 0.9.595. At 0.9.594 time (a pure
-    // audit, this file's own only change was itself), the guard below
-    // asserted literally zero production drift. 0.9.595 is the
-    // documented, narrowly-scoped implementation this audit's own
-    // RECOMMENDATION named — it is expected, not drift, to touch exactly
-    // one production file. This guard is amended to assert THAT: the
-    // change is real, and it is exactly as narrow as recommended.
+    // Boundary drift guard — AMENDED BY 0.9.595, AMENDED AGAIN BY 0.9.597.
+    // At 0.9.594 time (a pure audit, this file's own only change was
+    // itself), the guard below asserted literally zero production drift.
+    // 0.9.595 was the documented, narrowly-scoped implementation this
+    // audit's own RECOMMENDATION named — exactly one production file.
+    // 0.9.597 (Publication Action Provider Continuity Fix) is the NEXT
+    // documented, narrowly-scoped implementation 0.9.596's own
+    // recommendation named (repair getPublicationForDocument()/
+    // findPublicationById() specifically) — touching exactly the
+    // composition-root file (CreateWorldViewUseCase.js), the session
+    // class those two methods live on (WorldNavigationSession.js), and
+    // the one real caller that needed to thread the already-injected
+    // decentralized provider through (ui/views/WorldView.js). This guard
+    // is amended again to assert THAT set, specifically — not "zero
+    // drift," and not 0.9.595's own now-historical one-file set.
+    //
+    // NOTE ON THIS GUARD'S OWN SHAPE: `git status --porcelain` reports
+    // UNCOMMITTED working-tree drift relative to HEAD — it is a
+    // point-in-time, pre-commit gate for the session actually
+    // implementing a milestone, not a permanent regression assertion
+    // (once a milestone's own commit lands, its production files are no
+    // longer "changed" relative to HEAD at all). This is an existing,
+    // inherited property of this guard's own design (see 0.9.595's own
+    // amendment note, above) — not something 0.9.597 introduces.
     // ===============================================================
     {
+        const expectedChangedProductionFiles = new Set([
+            'application/CreateWorldViewUseCase.js',
+            'application/WorldNavigationSession.js',
+            'ui/views/WorldView.js'
+        ]);
         const changedProductionFiles = execSync('git status --porcelain -- core/ application/ ui/ discovery/ placement/ storage/', { cwd: SOURCE_ROOT })
             .toString().split('\n').filter((line) => line.trim().length > 0)
             .map((line) => line.replace(/^.{2}\s+/, '').trim());
-        assert(changedProductionFiles.length === 1 && changedProductionFiles[0] === 'ui/components/WorldEncounterCanvas.js',
-            n(`DriftGuard1. 0.9.595 touches EXACTLY the one production file its own recommendation named — ui/components/WorldEncounterCanvas.js — and no other file under core/, application/, ui/, discovery/, placement/, or storage/ (found: ${JSON.stringify(changedProductionFiles)}).`));
+        const unexpected = changedProductionFiles.filter((f) => !expectedChangedProductionFiles.has(f));
+        assert(unexpected.length === 0,
+            n(`DriftGuard1. AMENDED BY 0.9.597 — every changed production file is one 0.9.596's own recommendation (or 0.9.595's, already landed) named — no unexpected drift under core/, application/, ui/, discovery/, placement/, or storage/ (found: ${JSON.stringify(changedProductionFiles)}).`));
         const untrackedProduction = execSync('git status --porcelain --untracked-files=all -- core/ application/ ui/ discovery/ placement/ storage/', { cwd: SOURCE_ROOT }).toString().trim()
-            .split('\n').filter(Boolean).filter((line) => !line.includes('ui/components/WorldEncounterCanvas.js'));
-        assert(untrackedProduction.length === 0, n('DriftGuard2. No new, untracked production file exists either — no new store, no new notification kind, no new "Place Here" button, no new discovery protocol.'));
-        console.log('✓ Boundary drift guard: AMENDED BY 0.9.595 — exactly one, already-recommended production file changed; no other drift, tracked or untracked.');
+            .split('\n').filter(Boolean)
+            .filter((line) => !Array.from(expectedChangedProductionFiles).some((expected) => line.includes(expected)));
+        assert(untrackedProduction.length === 0, n('DriftGuard2. AMENDED BY 0.9.597 — no new, untracked production file exists either — no new store, no new notification kind, no new "Place Here" button, no new discovery protocol, beyond the expected modified set DriftGuard1 already named.'));
+        console.log('✓ Boundary drift guard: AMENDED BY 0.9.597 — exactly the composition-root/session/caller set 0.9.596\'s own recommendation named changed; no other drift, tracked or untracked.');
     }
 
     // ===============================================================

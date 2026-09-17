@@ -97083,3 +97083,61 @@ explicitly scoped out of fork-policy/world-layout enrichment — not a new Repos
 per the requesting brief, the next milestone should be that narrow wiring fix, followed by a reassessment of the
 complete Discover -> Retain -> Find -> Inspect -> Place journey before any new persistent UI surface is
 considered.
+
+## 0.9.597 — Publication Action Provider Continuity Fix
+
+**Type:** production implementation. **Production changes:** exactly three files —
+`application/CreateWorldViewUseCase.js` (composition root), `application/WorldNavigationSession.js` (the two
+repaired methods), and `ui/views/WorldView.js` (threading the already-injected decentralized provider through).
+Adds `tests/PublicationActionProviderContinuityFix.test.js` as the dedicated flagship proof.
+
+**Objective.** 0.9.596's own D6 recommendation, implemented verbatim: repair `getPublicationForDocument()`/
+`findPublicationById()` — the exact inputs `OwnPublicationPanel`'s own `publication` prop and
+`AutomaticSnapshotEncounterCascade`'s own `findPublicationById` collaborator read — so a Repository-admitted
+Publication (0.9.595) becomes reachable through the existing Publication action/placement journey, WITHOUT
+widening fork-policy (`_isKnownPublication()`/`_checkForkPolicy()`) or `LocalWorldLayoutProvider`'s own position
+enrichment — the ripple-effect risk 0.9.596's own Section D live-proved a shared `_findPublications()` lookup
+would create.
+
+**The fix.** `CreateWorldViewUseCase.js#execute()` now accepts an optional
+`decentralizedPublicationDiscoveryProvider` (the SAME app-wide instance `CreateDiscoveryUseCase.js` already
+accepts under this identical name) and composes it into a NEW, SEPARATE `publicationActionDiscoveryProvider` —
+via the existing, unmodified `discovery/CompositeDiscoveryProvider.js`, falling back to `discoveryProvider`
+itself when none is supplied. `discoveryProvider` — the one `_findPublications()`/`worldLayoutProvider` read —
+is completely untouched, still a plain, local-only `LocalDiscoveryProvider`. `WorldNavigationSession` gains one
+new, optional constructor parameter, `publicationActionDiscoveryProvider` (falling back to `discoveryProvider`
+when absent, so every pre-0.9.597 caller/test observes byte-for-byte identical behavior). `getPublicationForDocument()`
+and `findPublicationById()` now read this separate provider directly, independently of
+`_resolvePublicationForPlacement()`/`_findPublications()`, which remain exactly as local-only as before —
+still the sole authority for placement resolution and fork-policy. `ui/views/WorldView.js` threads the SAME
+`decentralizedDiscoveryProviderForEnrichment` it already injects for Repository-search enrichment (0.9.339)
+through to this new parameter — never a second injection.
+
+**Verification.** The dedicated flagship test replicates the exact production composition (never the full
+factory, which has no clean Node-only lifetime) and proves, live: (A) the composition-root wiring matches the
+real source; (B) backward compatibility — no decentralized provider supplied behaves exactly as before,
+for both the negative and the genuinely-local-Publication case; (C) a Repository-admitted-only Publication now
+resolves through both `getPublicationForDocument()` and `findPublicationById()`, by exact instance; (D) — the
+critical regression guard — a plain, never-locally-published document sharing a documentId with a
+restrictively-licensed, Repository-admitted-only Publication is NOT fork-policy blocked, and
+`getPublicationIdForDocument()` (which feeds `ForkDocumentUseCase`'s own license enforcement for "Edit a
+Copy") still resolves `null` for it; (E) multi-publication identity continuity, with no cross-publication
+conflation and un-admitted Publications staying unresolvable; (F) no automatic placement — resolution alone
+creates no `PlacementRecord`; the existing, explicit placement mechanism remains the sole authority.
+
+Five prior test files whose own assertions described the now-closed gap or checked live `git diff`/`git status`
+state at their own commit time — `tests/RepositoryAdmissionToPublicationActionContinuityAudit.test.js`,
+`tests/DiscoveredUnplacedPublicationActionabilityProductBoundaryAudit.test.js`,
+`tests/DecentralizedPublicationRepositoryMerge.test.js`, `tests/FederatedRepositoryProductGapAudit.test.js`, and
+`tests/WorldEncounterRepositoryContinuityBoundaryAudit.test.js` — are amended in place, each with an explicit
+"AMENDED BY 0.9.597" marker, following this codebase's own established convention. Several other test files'
+own point-in-time drift guards (a live `git diff`/`git status` check asserting "this milestone's own session
+touched nothing") are similarly amended to exclude this milestone's own, already-accounted-for files while
+still catching any other, unexpected production drift — the same, pre-existing fragility already documented on
+0.9.595's own amendment of `tests/DiscoveredUnplacedPublicationActionabilityProductBoundaryAudit.test.js`'s
+drift guard, not something this milestone introduces.
+
+**What comes next.** Per the recommended sequence: a small product reassessment of the complete Discover ->
+Retain -> Find -> Inspect -> Place journey, to determine whether it now works naturally through existing
+surfaces or whether genuine evidence remains for a new "Unplaced Publications" surface — deliberately not
+attempted by this milestone.

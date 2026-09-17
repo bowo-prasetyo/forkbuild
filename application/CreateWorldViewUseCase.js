@@ -1,5 +1,6 @@
 import { LocalStorageProvider } from '../storage/LocalStorageProvider.js';
 import { LocalDiscoveryProvider } from '../discovery/LocalDiscoveryProvider.js';
+import { CompositeDiscoveryProvider } from '../discovery/CompositeDiscoveryProvider.js';
 import { LocalSpatialIndexProvider } from '../spatial/LocalSpatialIndexProvider.js';
 import { LocalWorldLayoutProvider } from '../world-layout/LocalWorldLayoutProvider.js';
 import { LocalPublisherProvider } from '../publisher/LocalPublisherProvider.js';
@@ -110,10 +111,43 @@ export class CreateWorldViewUseCase {
     // device case, just unaware that a second device could ever speak
     // for the same identity. See application/WorldAuthorizationService.js's
     // own header.
-    execute(identityProvider = null, { peerMessageBus = null, connectedPeerRegistry = null, friendRelationshipUseCase = null, peerBlockUseCase = null, deviceAuthorizationPropagationUseCase = null } = {}) {
+    // 0.9.597 — Publication Action Provider Continuity Fix. `decentralizedPublicationDiscoveryProvider`
+    // is the SAME optional, app-wide discovery/DecentralizedPublicationDiscoveryProvider.js
+    // instance ui/main.js already builds and shares (0.9.337), and that
+    // application/CreateDiscoveryUseCase.js already accepts under this
+    // identical name to build Repository search's own CompositeDiscoveryProvider
+    // (0.9.339) — never a second provider or a new discovery mechanism.
+    // 0.9.596's own audit found that `discoveryProvider` below (the one
+    // WorldNavigationSession has always used for fork-policy/placement/
+    // world-layout) must NOT be widened to include it: `_findPublications()`
+    // is the shared choke point behind `_isKnownPublication()`/
+    // `_checkForkPolicy()`, and merging a decentralized/Repository-admitted
+    // catalog into it would silently extend fork-policy license enforcement
+    // to a plain, never-locally-published document merely because an
+    // unrelated encounter admitted a Publication sharing its documentId.
+    // See application/WorldNavigationSession.js's own constructor comment
+    // on `publicationActionDiscoveryProvider`, below, for the narrow
+    // capability this composes instead.
+    execute(identityProvider = null, { peerMessageBus = null, connectedPeerRegistry = null, friendRelationshipUseCase = null, peerBlockUseCase = null, deviceAuthorizationPropagationUseCase = null, decentralizedPublicationDiscoveryProvider = null } = {}) {
         const storageProvider = new LocalStorageProvider();
         const contentStore = new LocalContentStore(storageProvider);
         const discoveryProvider = new LocalDiscoveryProvider(storageProvider);
+        // 0.9.597 — a SEPARATE discovery capability, consulted only by
+        // WorldNavigationSession#getPublicationForDocument()/findPublicationById()
+        // (never by fork-policy, never by worldLayoutProvider below, both
+        // of which keep reading the plain `discoveryProvider` above,
+        // unchanged). Reuses discovery/CompositeDiscoveryProvider.js
+        // verbatim — the exact same, small, generic merge
+        // CreateDiscoveryUseCase.js already applies for Repository search
+        // — never a new merge mechanism. A caller that doesn't supply
+        // `decentralizedPublicationDiscoveryProvider` (every pre-0.9.597
+        // caller, and every existing test) gets back `discoveryProvider`
+        // itself, unchanged — see CompositeDiscoveryProvider's own "falsy
+        // provider is simply skipped" degradation, mirrored here by never
+        // constructing one at all when there is nothing to merge.
+        const publicationActionDiscoveryProvider = decentralizedPublicationDiscoveryProvider
+            ? new CompositeDiscoveryProvider([discoveryProvider, decentralizedPublicationDiscoveryProvider])
+            : discoveryProvider;
 
         // 0.2.5: Wire the spatial index
         const spatialIndexProvider = new LocalSpatialIndexProvider(storageProvider);
@@ -603,6 +637,10 @@ export class CreateWorldViewUseCase {
                     // world's Publication to check its fork policy
                     // before lazily forking it.
                     discoveryProvider,
+                    // 0.9.597: see this method's own header comment,
+                    // above, and WorldNavigationSession's own constructor
+                    // comment on this exact parameter.
+                    publicationActionDiscoveryProvider,
                     // 0.2.23: placement is where a published world
                     // sits in shared space — a separate concern from
                     // the document itself; see getPlacementInfo/

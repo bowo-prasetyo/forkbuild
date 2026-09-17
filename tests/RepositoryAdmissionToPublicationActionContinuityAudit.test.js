@@ -103,6 +103,27 @@ import { DocumentSerializer } from '../serializer/DocumentSerializer.js';
 // entirely inside this test file, never in a production file, and is
 // never presented as the recommended fix itself — only as the mechanism
 // that proves the classification and its cost.
+//
+// SUPERSEDED IN PART BY 0.9.597 — Publication Action Provider Continuity
+// Fix. This audit's own Section D conclusion (repair
+// getPublicationForDocument()/findPublicationById() specifically, without
+// widening _isKnownPublication()/_checkForkPolicy()/_loadWorld()'s
+// publish-marking or LocalWorldLayoutProvider's enrichment) is exactly
+// what 0.9.597 implemented: application/CreateWorldViewUseCase.js now
+// accepts an optional `decentralizedPublicationDiscoveryProvider` and
+// composes a SEPARATE `publicationActionDiscoveryProvider` (via the
+// existing, unmodified discovery/CompositeDiscoveryProvider.js) that
+// application/WorldNavigationSession.js's own getPublicationForDocument()/
+// findPublicationById() now read — `discoveryProvider` itself (fork
+// policy, world-layout enrichment, placement resolution) is untouched.
+// Section A's A2/A3 (below) are amended in place, per this codebase's own
+// established convention, to assert the new, current production fact
+// instead of the now-superseded absence; every other section in this file
+// (B through J) was independently re-run against the 0.9.597 production
+// code with NO changes needed — see
+// tests/PublicationActionProviderContinuityFix.test.js for the dedicated
+// flagship proof of what 0.9.597 closes, and for the regression guard
+// proving fork-policy/world-layout enrichment stayed local-only.
 
 function assert(condition, message) {
     if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
@@ -372,12 +393,25 @@ async function run() {
         // composition root) already knows how to merge them, while
         // CreateWorldViewUseCase.js (World View's own) has no parameter
         // through which to receive one at all.
+        //
+        // A2/A3 AMENDED BY 0.9.597 — Publication Action Provider
+        // Continuity Fix (see this file's own "SUPERSEDED IN PART BY
+        // 0.9.597" header, above). At the time this audit was written,
+        // CreateWorldViewUseCase.js had no route to a decentralized
+        // discovery provider at all; 0.9.597 closed exactly that gap by
+        // adding an optional `decentralizedPublicationDiscoveryProvider`
+        // parameter and composing it into a NEW, separate
+        // `publicationActionDiscoveryProvider` — never by widening
+        // `discoveryProvider` itself, which A1's own assertion (above)
+        // still confirms is untouched.
         assert(/const discoveryProvider = new LocalDiscoveryProvider\(storageProvider\);/.test(createWorldViewSource),
-            'A1. application/CreateWorldViewUseCase.js constructs a bare, fresh LocalDiscoveryProvider for the discoveryProvider it hands WorldNavigationSession — confirmed against the literal current source, not assumed.');
-        assert(!/DecentralizedPublicationDiscoveryProvider|CompositeDiscoveryProvider|decentralizedDiscoveryProvider|decentralizedPublicationDiscoveryProvider/.test(createWorldViewSource),
-            'A2. CreateWorldViewUseCase.js never imports, references, or accepts a decentralized discovery provider anywhere in its own source — the separation is total, not partial.');
-        assert(!/execute\([^)]*decentralized/i.test(createWorldViewSource),
-            'A3. CreateWorldViewUseCase.js#execute()\'s own signature has no parameter through which a caller COULD supply one, even if WorldView.js wanted to.');
+            'A1. application/CreateWorldViewUseCase.js constructs a bare, fresh LocalDiscoveryProvider for the discoveryProvider it hands WorldNavigationSession — confirmed against the literal current source, not assumed. UNCHANGED BY 0.9.597: this is still the exact object fork-policy/world-layout/placement resolution read.');
+        assert(/CompositeDiscoveryProvider/.test(createWorldViewSource),
+            'A2. AMENDED BY 0.9.597 — CreateWorldViewUseCase.js now imports and uses CompositeDiscoveryProvider, but only to build a SEPARATE `publicationActionDiscoveryProvider`, never to replace `discoveryProvider` itself (see A1).');
+        assert(/decentralizedPublicationDiscoveryProvider\s*=\s*null/.test(createWorldViewSource),
+            'A3. AMENDED BY 0.9.597 — CreateWorldViewUseCase.js#execute()\'s own signature now HAS an optional `decentralizedPublicationDiscoveryProvider` parameter, exactly the route this audit found missing.');
+        assert(/publicationActionDiscoveryProvider\s*=\s*decentralizedPublicationDiscoveryProvider[\s\S]{0,80}\?[\s\S]{0,80}new CompositeDiscoveryProvider\(\[discoveryProvider, decentralizedPublicationDiscoveryProvider\]\)[\s\S]{0,40}:\s*discoveryProvider/.test(createWorldViewSource),
+            'A3b. AMENDED BY 0.9.597 — and the composed value falls back to the exact, unmodified `discoveryProvider` instance when no decentralized provider is supplied, so every pre-0.9.597 caller (and every existing test that builds a session directly, like this file\'s own buildProductionShapedSession) observes byte-for-byte identical behavior.');
         assert(/decentralizedDiscoveryProvider\s*=\s*null[\s\S]{0,600}CompositeDiscoveryProvider/.test(createDiscoverySource),
             'A4. By contrast, CreateDiscoveryUseCase.js (Repository/Author/Editor fork-load/Recent Worlds\' own real composition root) already accepts an optional decentralizedDiscoveryProvider and merges it in via the existing, unmodified CompositeDiscoveryProvider — the mechanism this milestone might eventually reuse already exists and is already load-bearing elsewhere.');
 
