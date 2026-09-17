@@ -513,60 +513,81 @@ async function runTests() {
     }
 
     // ---------------------------------------------------------------
-    // Section I — FINDING (not fixed by this milestone): a genuine
-    // classification gap for Arweave, surfaced by Section A's own evidence.
+    // Section I — CLOSED BY 0.9.591: the classification gap this audit
+    // originally found for Arweave (Section A's own evidence) has since
+    // been fixed by application/ArweaveSnapshotDiscoveryQueryService.js's
+    // own 0.9.591 `searchWithOutcome()` addition — reconfirmed live, here,
+    // rather than left as a standing, stale "not fixed" assertion.
     // ---------------------------------------------------------------
     {
-        // ArweaveSnapshotDiscoveryQueryService never received the
-        // searchWithOutcome() sibling NostrSnapshotDiscoveryQueryService did.
+        // ArweaveSnapshotDiscoveryQueryService now carries the identical
+        // searchWithOutcome() sibling NostrSnapshotDiscoveryQueryService
+        // already had.
         const arweaveSourceText = await readSource('application/ArweaveSnapshotDiscoveryQueryService.js');
-        assert(!/searchWithOutcome/.test(arweaveSourceText),
-            '54. FINDING (1/3): ArweaveSnapshotDiscoveryQueryService has no searchWithOutcome() of its own — confirmed live, not assumed');
+        assert(/searchWithOutcome/.test(arweaveSourceText),
+            '54. CLOSED (1/3): ArweaveSnapshotDiscoveryQueryService now exposes its own searchWithOutcome() — confirmed live, not assumed');
 
-        // Its own search() swallows every failure to [] — the identical
-        // pre-0.9.589 contract Nostr's search() still holds, by design, per
-        // this file's own header ("Never throws — resolves to [] when the
-        // GraphQL step fails").
+        // search() itself is untouched — still swallows every failure to
+        // [], the identical pre-0.9.589 contract Nostr's search() also
+        // still holds, by design, per this file's own header ("Never
+        // throws — resolves to [] when the GraphQL step fails").
         const arweaveDown = arweaveSource({ failing: true });
         const arweaveResult = await arweaveDown.search('t');
         assert(Array.isArray(arweaveResult) && arweaveResult.length === 0,
-            '55. FINDING (2/3): a genuinely failing Arweave query still resolves to [] from search() — indistinguishable, on its own, from a real empty result');
+            '55. CLOSED (2/3): search() still degrades a genuinely failing Arweave query to [], byte-for-byte unmodified by the 0.9.591 fix');
 
-        // Consequence, proven live: when EVERY real source fails and Arweave
-        // is one of them, the composite's own OUTSIDE classification (which
-        // treats a rejection/non-array as UNAVAILABLE) never sees a rejection
-        // from Arweave — only its own swallowed []. The composite reports
-        // EMPTY, not UNAVAILABLE, reintroducing exactly the user-facing
-        // overclaim 0.9.589 set out to fix, reachable through the ONE source
-        // that was never given the same treatment as Nostr.
+        // Its own searchWithOutcome() now correctly reports UNAVAILABLE for
+        // that identical failure, rather than collapsing it to EMPTY.
+        assert((await arweaveDown.searchWithOutcome('t')).outcome === SnapshotCandidateDiscoveryOutcome.UNAVAILABLE,
+            '56. CLOSED (3/3): ArweaveSnapshotDiscoveryQueryService#searchWithOutcome() now reports UNAVAILABLE for the identical failure search() still degrades to []');
+
+        // Consequence, reconfirmed live: when EVERY real source fails and
+        // Arweave is one of them, the composite's own per-source
+        // classification now sees Arweave's own genuine UNAVAILABLE
+        // (through its new searchWithOutcome(), duck-typed exactly like
+        // Nostr's own) rather than only a swallowed []. The composite now
+        // reports UNAVAILABLE, closing exactly the user-facing overclaim
+        // this audit originally surfaced.
         const bothDown = new SnapshotCandidateDiscoveryQueryService([
             new NostrSnapshotDiscoveryQueryService({ queryImpl: async () => { throw new Error('relay down'); } }),
             arweaveSource({ failing: true })
         ]);
         const bothDownOutcome = await bothDown.searchWithOutcome('t');
-        assert(bothDownOutcome.outcome === SnapshotCandidateDiscoveryOutcome.EMPTY,
-            '56. FINDING (3/3), live reproduction: Nostr AND Arweave both genuinely down -> composite reports EMPTY (current, actual behavior) — OwnPublicationPanel would render "No Snapshots have been announced," the exact overclaim this whole investigation exists to prevent, whenever Arweave is among the failing sources');
+        assert(bothDownOutcome.outcome === SnapshotCandidateDiscoveryOutcome.UNAVAILABLE,
+            '57. CLOSED, live reproduction: Nostr AND Arweave both genuinely down -> composite now reports UNAVAILABLE — OwnPublicationPanel now renders "Snapshot discovery is currently unavailable," never the "No Snapshots have been announced" overclaim, whenever Arweave is among the failing sources');
 
-        // This is not a hypothetical: `ui/main.js`'s own
+        // The EMPTY-still-wins-over-UNAVAILABLE invariant (0.9.589's own
+        // Section A, case 5) still holds with the real Arweave source in
+        // the mix: Nostr genuinely empty + Arweave genuinely down -> EMPTY,
+        // never UNAVAILABLE — a real answer from one source is still
+        // enough, exactly as this milestone's own boundary requires.
+        const nostrEmptyArweaveDown = new SnapshotCandidateDiscoveryQueryService([
+            new NostrSnapshotDiscoveryQueryService({ queryImpl: async () => [] }),
+            arweaveSource({ failing: true })
+        ]);
+        assert((await nostrEmptyArweaveDown.searchWithOutcome('t')).outcome === SnapshotCandidateDiscoveryOutcome.EMPTY,
+            '58. CLOSED, invariant preserved: Nostr genuinely empty + Arweave down still reports EMPTY, never UNAVAILABLE — one honest answer remains enough');
+
+        // Not a hypothetical: `ui/main.js`'s own
         // `composeSnapshotCandidateDiscoveryRuntime()` composes the REAL
         // production discoverSnapshotCandidatesWithOutcomeCommand from
         // Nostr + Local + Arweave together (see that file's own 0.9.500/
         // 0.9.486 headers) — confirmed live, not assumed. Section H's own
-        // flagship journey 2 (immediately above) had to be narrowed to
-        // Nostr + Local specifically BECAUSE including the real Arweave
-        // source there reproduces this exact finding: the literal
-        // "all sources unavailable -> UNAVAILABLE" flagship this milestone's
-        // own brief asked for does not currently hold for the real
-        // production composite whenever Arweave is the (or a) source that
-        // is actually down.
+        // flagship journey 2 (above) was originally narrowed to Nostr +
+        // Local specifically because the real Arweave source used to
+        // reproduce this finding; with the fix in place that journey's own
+        // narrowing is a historical artifact, not a currently-required
+        // workaround — see tests/ArweaveSnapshotDiscoveryOutcomeParityIntegrationAudit.test.js's
+        // own Section E/G for the identical journey run WITH Arweave
+        // included, end to end.
         const mainSourceForFinding = await readSource('ui/main.js');
         assert(/arweaveSnapshotDiscoveryQueryService/.test(mainSourceForFinding) && /nostrSnapshotDiscoveryQueryService: snapshotDiscoveryQueryService/.test(mainSourceForFinding),
-            '57. FINDING, production confirmation: the real discoverSnapshotCandidatesWithOutcomeCommand is composed from Nostr + Local + Arweave together — this finding is reachable in production, not only in this test\'s own constructed scenario');
+            '59. production confirmation: the real discoverSnapshotCandidatesWithOutcomeCommand is composed from Nostr + Local + Arweave together — this fix is reachable in production, not only in this test\'s own constructed scenario');
 
-        console.log('⚠ Section I FINDING (test-only, NOT fixed by this milestone): ArweaveSnapshotDiscoveryQueryService needs the identical searchWithOutcome() sibling NostrSnapshotDiscoveryQueryService already has — the composite\'s own "classify from the outside" heuristic can never detect an Arweave failure, because Arweave\'s own search() never rejects. This is a narrow, mechanical, already-proven-pattern fix (mirror NostrSnapshotDiscoveryQueryService\'s own 0.9.589 addition, one source over) — named here for evaluation as its own, separate, later milestone, never silently patched in by this audit.');
+        console.log('✓ Section I CLOSED (0.9.591): ArweaveSnapshotDiscoveryQueryService now carries the identical searchWithOutcome() sibling NostrSnapshotDiscoveryQueryService already had — the composite\'s own "classify from the outside" heuristic now correctly detects an Arweave failure as UNAVAILABLE, while a genuine Arweave EMPTY still reports EMPTY, exactly mirroring NostrSnapshotDiscoveryQueryService\'s own 0.9.589 addition, one source over.');
     }
 
-    console.log('\n✅ All Snapshot Discovery Outcome Presentation Closure Audit tests passed (Sections A-H clean; Section I names one real, narrow, unfixed finding).');
+    console.log('\n✅ All Snapshot Discovery Outcome Presentation Closure Audit tests passed (Sections A-H clean; Section I\'s own originally-named finding is now closed by 0.9.591).');
 }
 
 runTests().catch((error) => {
