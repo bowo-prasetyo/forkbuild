@@ -96628,3 +96628,102 @@ Per its own brief: no change to `NostrSnapshotDiscoveryQueryService#search()`'s 
 fallback providers, no provider health state; no Nostr implementation detail exposed to the UI; no redesign of
 Snapshot discovery; no change to Repository behavior or to Snapshot resolution/verification/placement; discovery
 failure still never blocks any other capability.
+
+## 0.9.590 — Snapshot Discovery Outcome Presentation Closure Audit
+
+**Type:** test-only product/boundary audit. **Production changes:** none — every section in
+`tests/SnapshotDiscoveryOutcomePresentationClosureAudit.test.js` is live evidence (real construction/execution of
+`NostrSnapshotDiscoveryQueryService`, `LocalSnapshotCandidateDiscoveryQueryService`,
+`ArweaveSnapshotDiscoveryQueryService`, the real `SnapshotCandidateDiscoveryQueryService` composite, and
+`OwnPublicationPanel.js`'s own methods, or a `readSource()` + regex/substring match against the real, unmodified
+production files it names) rather than a description of what the code is believed to do.
+
+The requesting brief asked this milestone to close 0.9.588–0.9.589 by proving `SnapshotCandidateDiscoveryOutcome`
+is complete without having accidentally created a second discovery mechanism. Eight lettered sections, plus one
+that the audit's own evidence forced into existence:
+
+- **A — Outcome semantics.** `FOUND`/`EMPTY`/`UNAVAILABLE` reconfirmed at the single-source layer, then every
+  mixed-source case the brief named — Nostr unavailable + Local empty (`EMPTY`), Nostr empty + Arweave unavailable
+  (`EMPTY`), Nostr unavailable + Local unavailable (`UNAVAILABLE`), one source finds + another fails (`FOUND`) —
+  proven against the REAL production `NostrSnapshotDiscoveryQueryService`/`LocalSnapshotCandidateDiscoveryQueryService`/
+  `ArweaveSnapshotDiscoveryQueryService` composed through the real `SnapshotCandidateDiscoveryQueryService`, never
+  generic stand-ins alone. The named invariant ("one successful empty source is enough to establish `EMPTY`;
+  failure of another source does not turn the overall result into `UNAVAILABLE`") holds at three real sources too.
+- **B — Legacy-contract preservation.** `search() -> []` reconfirmed unchanged on both `NostrSnapshotDiscoveryQueryService`
+  and the composite; `resolveLocator()` still calls `this.search()` directly; `executeDiscoverSnapshotCandidatesCommand()`
+  still forwards to `search()` verbatim; `ui/main.js` still constructs `WorldSnapshotDiscoveryMonitor` with the
+  LEGACY `discoverSnapshotCandidatesCommand`, never the outcome-aware sibling, confirmed by regex against the real
+  file; a host supplying only the legacy prop still works end to end against a real source; `search()`/
+  `searchWithOutcome()` coexist as true siblings on the same instance.
+- **C — Candidate fidelity.** `search()` and `searchWithOutcome()` report byte-identical candidates for the
+  identical query, at both the single-source and composite layers, including which candidate composite
+  deduplication keeps — outcome classification is observational enrichment, never a second candidate pipeline.
+- **D — UI truthfulness.** `EMPTY`/`UNAVAILABLE`/`FOUND`/legacy/malformed outcomes each render correctly; an
+  unexpected outcome string falls through to the pre-existing empty-state copy rather than leaking raw internal
+  vocabulary (the template gates on `outcome === 'unavailable'` exactly, never on anything else); the rendered
+  template (HTML comments stripped, since this file's own documentation legitimately discusses Nostr/Arweave
+  throughout) contains no "Nostr" or "relay" text a viewer would actually see.
+- **E — Failure isolation.** A Nostr timeout reaches `UNAVAILABLE` and the UI's honest copy while leaving
+  resolution/materialization/placement/registration sentinel state completely untouched; `discoverSnapshotCandidates()`'s
+  own method body is confirmed, structurally, to reference no other family's fields; neither `searchWithOutcome()`
+  implementation schedules more than its one existing timeout guard — no retry loop exists anywhere in this
+  vocabulary's own files; `DiscoverSnapshotCandidatesCommand.js` imports nothing at all, so it cannot reach a
+  Repository, resolver, or verifier even by accident.
+- **F — Identity and boundary regression.** `SnapshotCandidateDiscoveryOutcome` is frozen with exactly three
+  values; a `searchWithOutcome()` result carries exactly `{outcome, candidates}`, no verified/authoritative/valid
+  field of any kind; the vocabulary file itself imports nothing, so it cannot become a second representation of
+  `Publication`/`Snapshot`/`contentHash`/verification state.
+- **G — Mechanical drift guard.** An independent re-sweep of `ui/` for the same "empty network-discovery result
+  proves absence" mistake. `WorldView.js`'s own "Nearby Place Names" empty copy already says "were discovered,"
+  never a flat existence claim, and already carries its own separate "temporarily unavailable" indicator —
+  reconfirmed live, no gap. `PlaceNamingPanel.js`'s superficially similar "Nobody has published..." copy is ruled
+  OUT on inspection: its `namingView` prop is documented, live, as `core/PlaceNamingView.js#namingView()`'s own
+  shape — a LOCAL, pure view over already-known claims, never a network `search()` result that can itself fail.
+  `DecentralizedPublicationsView.js`'s "Nothing cataloged yet." is ruled out on the same grounds — a local
+  catalog, not this milestone's discovery mechanism. No second genuine overclaim of the Snapshot-discovery kind
+  exists elsewhere in `ui/`.
+- **H — Flagship.** Both named journeys (Nostr available, `FOUND` then `EMPTY`; every source down, `UNAVAILABLE`),
+  run twice, through the real production command chain. Journey 2 ("every source unavailable") is composed from
+  Nostr + Local specifically — see Section I for why the real THIRD production source, Arweave, had to be left
+  out of this one journey, and what happens when it is not. The ordinary selection path (`selectSnapshotCandidate()`)
+  is reconfirmed untouched.
+- **I — FINDING, not fixed by this milestone.** `ArweaveSnapshotDiscoveryQueryService` never received the
+  `searchWithOutcome()` sibling `NostrSnapshotDiscoveryQueryService` got in 0.9.589 — confirmed live, by regex,
+  against the real file. Its own `search()` swallows every failure to `[]` (documented, deliberate, and identical
+  to the pre-0.9.589 Nostr contract), so the composite's own "classify from the outside" heuristic — which treats
+  a rejection or non-array result as `UNAVAILABLE` — can never observe an Arweave failure as anything other than a
+  successful, genuinely empty answer. Live reproduction: Nostr AND Arweave both down reports `EMPTY`, not
+  `UNAVAILABLE`. This is reachable in production, not only in a constructed test: `ui/main.js`'s own
+  `composeSnapshotCandidateDiscoveryRuntime()` composes the real `discoverSnapshotCandidatesWithOutcomeCommand`
+  from exactly Nostr + Local + Arweave together. Whenever Arweave is the (or a) source that is actually down,
+  `OwnPublicationPanel.js` would render "No Snapshots have been announced under this discoveryTag yet." — the
+  precise overclaim the 0.9.588–0.9.589 investigation exists to prevent, reachable through the one source that
+  was never given the same treatment as Nostr.
+
+### Verdict
+
+Sections A–H are clean: the `FOUND`/`EMPTY`/`UNAVAILABLE` distinction is complete, additive, and introduces no new
+discovery mechanism or identity semantics, and no comparable overclaim exists elsewhere in `ui/`. Per this
+milestone's own brief, that would ordinarily close the investigation and stop here. Section I's own live evidence
+keeps it open one seam further: the distinction 0.9.589 built for Nostr was never extended to the one other real
+production source (Arweave) capable of reaching the identical "genuinely empty" vs "could not be asked"
+ambiguity — a narrow, mechanical gap (mirror `NostrSnapshotDiscoveryQueryService`'s own 0.9.589
+`searchWithOutcome()` addition, one source over — no new vocabulary, no new UI copy, no design work), named here
+for evaluation as its own, separate, later milestone rather than silently patched in by this test-only audit.
+
+### What this milestone deliberately excludes
+
+Per its own brief, and per the discipline every closure audit in this codebase already holds: no production code
+of any kind. No fix to the Section I finding — naming it precisely is this milestone's entire job; deciding
+whether and when to act on it is a separate, later milestone's own. No retry, timeout policy change, health
+monitoring, automatic fallback, provider ranking, or new discovery provider. No change to `search()`, to
+`WorldSnapshotDiscoveryMonitor.js`, to Repository behavior, or to Snapshot resolution/verification/placement. No
+new user-facing technical error category.
+
+### What comes after
+
+The Editor Similarity Ranking boundary (is the ranking inside `EditorView` presentation-local, or does it cross
+into application-level decision-making?) remains the next concrete, unexamined finding from 0.9.586's own
+inventory, and is not automatically expanded by this milestone's own Section I finding — that finding is
+independent, narrow, and named for separate evaluation, exactly as 0.9.586's own closing recommendation asks of
+every finding it did not itself resolve.
