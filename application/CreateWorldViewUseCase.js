@@ -23,6 +23,8 @@ import { DocumentCloneService } from './DocumentCloneService.js';
 import { WorldNavigationSession } from './WorldNavigationSession.js';
 import { WorldCommandPropagationUseCase } from './WorldCommandPropagationUseCase.js';
 import { LocalContentStore } from '../content/LocalContentStore.js';
+import { LoadPublishedWorldSessionUseCase } from './LoadPublishedWorldSessionUseCase.js';
+import { DocumentSerializer } from '../serializer/DocumentSerializer.js';
 import { SearchWorldUseCase } from './SearchWorldUseCase.js';
 import { CreateAvatarPresenceSessionUseCase } from './CreateAvatarPresenceSessionUseCase.js';
 import { CreateAvatarTemplateRegistryUseCase } from './CreateAvatarTemplateRegistryUseCase.js';
@@ -151,9 +153,22 @@ export class CreateWorldViewUseCase {
 
         // 0.2.5: Wire the spatial index
         const spatialIndexProvider = new LocalSpatialIndexProvider(storageProvider);
+        // 0.9.605 — Wire Publication Discovery into World Rendering.
+        // worldLayoutProvider now reads `publicationActionDiscoveryProvider`
+        // (above) rather than the plain `discoveryProvider` — the ONE
+        // constructor-argument substitution
+        // tests/PublicationWorldRenderingDiscoveryBoundaryAudit.test.js
+        // (0.9.604, Section D) already proved live is both necessary and
+        // sufficient for a Repository-admitted, explicitly-placed
+        // Publication to become visible/positioned. `discoveryProvider`
+        // itself — what fork-policy/_findPublications() reads — is
+        // untouched (0.9.596), and publicationActionDiscoveryProvider
+        // degrades to exactly `discoveryProvider` whenever no
+        // decentralizedPublicationDiscoveryProvider was supplied, so
+        // every pre-0.9.605 caller/test sees identical behavior.
         const worldLayoutProvider = new LocalWorldLayoutProvider(
             spatialIndexProvider,
-            discoveryProvider
+            publicationActionDiscoveryProvider
         );
 
         // 0.2.23: the placement registry (revisioned, signed
@@ -208,6 +223,20 @@ export class CreateWorldViewUseCase {
 
         // 0.2.14: Inject the contentStore into the publisher
         const publisherProvider = new LocalPublisherProvider(storageProvider, contentStore);
+        // 0.9.605 — the read-through material bridge
+        // tests/PublicationWorldMaterializationBoundaryAudit.test.js
+        // (0.9.603) already proved sufficient: given the SAME
+        // contentStore/publisherProvider this method already builds, it
+        // resolves a Publication's verified snapshot without ever
+        // copying content-hash-addressed bytes into storage[documentId].
+        // Consulted only by WorldNavigationSession#_loadWorld()'s own
+        // fallback, when this replica has no LOCAL copy of the
+        // document — never a replacement for loadPublicationDocumentUseCase.
+        const loadPublishedWorldSessionUseCase = new LoadPublishedWorldSessionUseCase(
+            publisherProvider,
+            new DocumentSerializer(),
+            contentStore
+        );
         // 0.9.198 — Publication Unpublish/Retract UI Action. The mirror
         // capability to removeWorldPlacementUseCase above, one authority
         // up: takes a PUBLICATION out of the publication-facing catalog
@@ -642,6 +671,11 @@ export class CreateWorldViewUseCase {
                 const session = new WorldNavigationSession({
                     registry,
                     loadPublicationDocumentUseCase,
+                    // 0.9.605: the material-bridge fallback — see this
+                    // method's own comment on loadPublishedWorldSessionUseCase,
+                    // above, and WorldNavigationSession#_loadWorld()'s own
+                    // comment on where it is actually consulted.
+                    loadPublishedWorldSessionUseCase,
                     worldLayoutProvider,
                     saveDocumentUseCase,
                     publishDocumentUseCase,

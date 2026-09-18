@@ -208,14 +208,15 @@ async function run() {
             'A7. The ABSTRACT contract (WorldLayoutProvider.js itself) never mentions publicationId at all — every public signature is documentId-in, documentId/WorldPosition-out. `publicationId` is an implementation detail LocalWorldLayoutProvider introduces internally (Section A2-A4) to bridge to the spatial index; a caller of this class\'s public API never needs to know Publication identity exists.');
 
         const compositionSrc = await readSource('application/CreateWorldViewUseCase.js');
-        assert(/const worldLayoutProvider = new LocalWorldLayoutProvider\(\s*spatialIndexProvider,\s*discoveryProvider\s*\);/.test(compositionSrc),
-            'A8. TODAY\'s real composition root (application/CreateWorldViewUseCase.js) constructs worldLayoutProvider from the plain, narrow `discoveryProvider` — the SAME LocalDiscoveryProvider instance _findPublications()/fork-policy also reads (see Section E) — never `publicationActionDiscoveryProvider`, the already-composed, wider capability that exists a few lines above it in the exact same method (Section C).');
+        assert(/const worldLayoutProvider = new LocalWorldLayoutProvider\(\s*spatialIndexProvider,\s*publicationActionDiscoveryProvider\s*\);/.test(compositionSrc),
+            'A8. UPDATED BY 0.9.605 (Wire Publication Discovery into World Rendering): production\'s composition root (application/CreateWorldViewUseCase.js) now constructs worldLayoutProvider from `publicationActionDiscoveryProvider` — the ONE constructor-argument substitution this audit\'s own Section D/K identified as necessary and sufficient. At the time this audit was written it still read the plain, narrow `discoveryProvider` — the SAME LocalDiscoveryProvider instance _findPublications()/fork-policy also reads (see Section E, still passing, still unchanged) — this assertion is updated to reflect that 0.9.605 performed exactly the substitution this file recommended, nothing more.');
 
         const sessionSrc = await readSource('application/WorldNavigationSession.js');
-        assert(/const document = this\._loadPublicationDocumentUseCase\.execute\(documentId, this\._eventBus\);/.test(sessionSrc),
-            'A9. Where the discovered document is SUBSEQUENTLY loaded: _loadWorld(documentId) (application/WorldNavigationSession.js), called once updateSpatialView() has a documentId from worldLayoutProvider.findVisibleDocuments() — a COMPLETELY SEPARATE collaborator (loadPublicationDocumentUseCase) and a completely separate call, never a method on WorldLayoutProvider itself. This textually confirms the brief\'s own required distinction: discovery-for-rendering (WHICH documents, WHERE) and material loading (WHAT is in them) are two already-separate steps in the real pipeline, exactly mirroring the two separate arrows out of PlacementRecord in the brief\'s own target-path diagram.');
+        assert(/const \{ document, isMaterializedPublication \} = this\._resolveWorldDocument\(documentId\);/.test(sessionSrc)
+            && /return \{ document: this\._loadPublicationDocumentUseCase\.execute\(documentId, this\._eventBus\), isMaterializedPublication: false \};/.test(sessionSrc),
+            'A9. UPDATED BY 0.9.605: where the discovered document is SUBSEQUENTLY loaded: _loadWorld(documentId) (application/WorldNavigationSession.js), called once updateSpatialView() has a documentId from worldLayoutProvider.findVisibleDocuments(), now delegates to _resolveWorldDocument(documentId) — still a COMPLETELY SEPARATE collaborator/step from WorldLayoutProvider itself, and still tries loadPublicationDocumentUseCase FIRST, exactly as before. 0.9.605 added exactly one thing here: a fallback to the material bridge (loadPublishedWorldSessionUseCase, Section D/K) for the specific case this document\'s own local storage[documentId] is empty — never a method on WorldLayoutProvider, never merged into discovery itself. This textually confirms the brief\'s own required distinction still holds after 0.9.605: discovery-for-rendering (WHICH documents, WHERE) and material loading (WHAT is in them) remain two separate steps in the real pipeline.');
 
-        console.log('✓ A — WorldLayoutProvider\'s real discovery contract, traced from source: it receives ONE discoveryProvider at construction (A2), needs exactly three of its methods (list/findById/findByDocumentId — A5/A6), works entirely in documentId terms at its own public boundary while resolving publicationId only as an internal bridging detail (A3/A4/A7), and never itself loads a document (A1/A9 — that is a separate collaborator, called at a separate, later step). Production wires it to the narrow discoveryProvider today (A8).');
+        console.log('✓ A — WorldLayoutProvider\'s real discovery contract, traced from source: it receives ONE discoveryProvider at construction (A2), needs exactly three of its methods (list/findById/findByDocumentId — A5/A6), works entirely in documentId terms at its own public boundary while resolving publicationId only as an internal bridging detail (A3/A4/A7), and never itself loads a document (A1/A9 — that is a separate collaborator, called at a separate, later step). Production wires it to publicationActionDiscoveryProvider as of 0.9.605 (A8).');
     }
 
     // ===============================================================
@@ -695,13 +696,17 @@ already offers, not a capability that provider lacks.
     // Section K — Closure classification.
     // ===============================================================
     {
-        // Final reconfirmation: production is untouched by this entire
-        // audit.
+        // UPDATED BY 0.9.605: at the time this audit was written,
+        // production was untouched by it (a test-only audit, PRODUCTION
+        // CHANGES: none). 0.9.605 (Wire Publication Discovery into
+        // World Rendering) is the milestone that actually performed the
+        // exact substitution this file's own Section D/K identified as
+        // the smallest sufficient production change — reconfirmed here.
         const compositionSrc = await readSource('application/CreateWorldViewUseCase.js');
-        assert(/const worldLayoutProvider = new LocalWorldLayoutProvider\(\s*spatialIndexProvider,\s*discoveryProvider\s*\);/.test(compositionSrc),
-            'K1. Production composition is unchanged by this audit — worldLayoutProvider is still built from the narrow discoveryProvider.');
-        assert(!/new LocalWorldLayoutProvider\(\s*spatialIndexProvider,\s*publicationActionDiscoveryProvider/.test(compositionSrc),
-            'K2. Confirmed: this audit did not wire the substitution it examined into the actual composition root — every widened instance in this file was constructed inline, inside this test, over hand-built collaborators.');
+        assert(/const worldLayoutProvider = new LocalWorldLayoutProvider\(\s*spatialIndexProvider,\s*publicationActionDiscoveryProvider\s*\);/.test(compositionSrc),
+            'K1. Production composition now (0.9.605) builds worldLayoutProvider from publicationActionDiscoveryProvider — the exact seam this audit named below.');
+        assert(!/new LocalWorldLayoutProvider\(\s*spatialIndexProvider,\s*discoveryProvider\s*\);/.test(compositionSrc),
+            'K2. Confirmed: the OLD, narrow wiring this audit\'s own Section A8/B reproduced no longer appears anywhere in this composition root — it was replaced, not duplicated alongside a second worldLayoutProvider.');
 
         console.log(`
 ================================================================

@@ -304,8 +304,8 @@ async function run() {
             'E1. application/CreateWorldViewUseCase.js already constructs a LocalContentStore, at composition time, unconditionally — Section D\'s own adapter needs no NEW content-hash store of its own.');
         assert(/contentStore\s*\n\s*\};/.test(compositionSrc) || /contentStore\s*$/m.test(compositionSrc),
             'E2. That SAME contentStore is already returned/exposed from execute() (with the comment "Expose the spatial index and content store so the application layer can construct spatial use cases for the UI to consume") — it is not private, internal-only state a bridge would have to newly thread through.');
-        assert(!/LoadPublishedWorldSessionUseCase|ResolvePublicationUseCase/.test(compositionSrc),
-            'E3. Confirmed: this composition root does not currently construct either existing content-hash-resolution class — reconfirming this is a genuine wiring gap, never a false negative from this audit misreading an already-solved case.');
+        assert(/LoadPublishedWorldSessionUseCase/.test(compositionSrc),
+            'E3. UPDATED BY 0.9.605 (Wire Publication Discovery into World Rendering): this composition root now DOES construct LoadPublishedWorldSessionUseCase — the exact, smallest wiring this audit\'s own Section D/E identified as sufficient, threaded into WorldNavigationSession#_loadWorld() as a fallback for exactly the case this section\'s own closing paragraph named: storage[documentId] empty, Publication carries a contentReference. At the time this audit was written the gap was still open; 0.9.605 closed it.');
 
         // Confirm, structurally, that no OTHER production composition
         // root reaches LoadPublishedWorldSessionUseCase either — this
@@ -528,10 +528,10 @@ async function run() {
     // ===============================================================
     {
         const compositionSrc = await readSource('application/CreateWorldViewUseCase.js');
-        assert(/const worldLayoutProvider = new LocalWorldLayoutProvider\(\s*spatialIndexProvider,\s*discoveryProvider\s*\);/.test(compositionSrc),
-            'J1. Production composition is unchanged by this audit.');
-        assert(!/LoadPublishedWorldSessionUseCase/.test(compositionSrc),
-            'J2. Confirmed one more time: this audit wired NOTHING new into the actual composition root — Section D/E\'s own construction happened entirely inside this test file, over hand-built collaborators, exactly like every other isolated hypothesis in this audit family.');
+        assert(/const worldLayoutProvider = new LocalWorldLayoutProvider\(\s*spatialIndexProvider,\s*publicationActionDiscoveryProvider\s*\);/.test(compositionSrc),
+            'J1. UPDATED BY 0.9.605: production composition now wires worldLayoutProvider to publicationActionDiscoveryProvider (the discovery-side bridge, Section G\'s own (i)) — this audit\'s own PRODUCTION CHANGES: none applied only at the time it was written; 0.9.605 is the milestone that actually performed the wiring both this file and 0.9.604 identified as the smallest sufficient change.');
+        assert(/LoadPublishedWorldSessionUseCase/.test(compositionSrc),
+            'J2. UPDATED BY 0.9.605: the material bridge (Section G\'s own (ii)) is now ALSO wired into the actual composition root, exactly as this section\'s own Section E closing paragraph specified — never a new class, never a new collaborator, only the one new call site (WorldNavigationSession#_loadWorld()\'s own fallback) this audit already named.');
         const placePublicationSrc = await readSource('application/PlacePublicationUseCase.js');
         assert(!/publication\.author/.test(placePublicationSrc),
             'J3. RECONFIRMED (0.9.601/0.9.602): PlacePublicationUseCase.js still never reads publication.author.');

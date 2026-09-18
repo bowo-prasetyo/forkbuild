@@ -245,6 +245,17 @@ export class WorldNavigationSession {
 	constructor({
 	    registry,
 	    loadPublicationDocumentUseCase,
+	    // 0.9.605 — Wire Publication Discovery into World Rendering. The
+	    // SAME read-through material bridge (LoadPublishedWorldSessionUseCase
+	    // + contentStore) tests/PublicationWorldMaterializationBoundaryAudit.test.js
+	    // (0.9.603) already proved sufficient — consulted ONLY by
+	    // _loadWorld()'s own fallback (see its own comment), when a
+	    // documentId that worldLayoutProvider now surfaces (below) has no
+	    // LOCAL copy in storage[documentId] at all. Optional: a caller
+	    // that doesn't wire one (every pre-0.9.605 caller/test) simply
+	    // never gets this fallback — _loadWorld() then fails exactly as
+	    // it always has for a document this replica has no local copy of.
+	    loadPublishedWorldSessionUseCase = null,
 	    worldLayoutProvider,
 	    saveDocumentUseCase = null,
 	    publishDocumentUseCase = null,
@@ -462,6 +473,8 @@ export class WorldNavigationSession {
 	}) {
 	    this._registry = registry;
 	    this._loadPublicationDocumentUseCase = loadPublicationDocumentUseCase;
+	    // 0.9.605: see this constructor's own parameter comment, above.
+	    this._loadPublishedWorldSessionUseCase = loadPublishedWorldSessionUseCase;
 	    this._worldLayoutProvider = worldLayoutProvider;
 	    this._saveDocumentUseCase = saveDocumentUseCase;
 	    this._publishDocumentUseCase = publishDocumentUseCase;
@@ -5992,8 +6005,66 @@ export class WorldNavigationSession {
         return this._commandHistories.get(document.world.id) || null;
     }
 
+	// 0.9.605 — Wire Publication Discovery into World Rendering. Tries
+	// the ordinary LOCAL lookup first, exactly as every prior milestone
+	// — this is the only path a locally-published document, or a
+	// lazily-forked one, has ever used, and it is completely unchanged
+	// here. Only when storage[documentId] comes back empty (never for
+	// any OTHER failure, e.g. a corrupted local document failing
+	// validation, which still propagates unmodified) does it fall
+	// through to the read-through material bridge
+	// (loadPublishedWorldSessionUseCase) for a Publication
+	// worldLayoutProvider's own widened discovery (see
+	// application/CreateWorldViewUseCase.js) may now have surfaced but
+	// this replica never locally published — resolving it via
+	// `.getDocument()` so `_loadedDocuments` holds the exact same
+	// Document shape (`.world`) every other caller already expects,
+	// never a PublishedWorldSession itself and never a copy into
+	// storage[documentId].
+	// Returns { document, isMaterializedPublication }. The second field
+	// tells _loadWorld() below whether `document` came from a genuinely
+	// resolved Publication object via the fallback (always true there —
+	// _resolvePublicationMaterial() never returns anything else), so it
+	// can be marked immutable in `_publishedDocumentIds` exactly like
+	// any other published snapshot, WITHOUT reading _findPublications()/
+	// _discoveryProvider (fork-policy's own narrow choke point) to
+	// decide it.
+	_resolveWorldDocument(documentId) {
+	    try {
+	        return { document: this._loadPublicationDocumentUseCase.execute(documentId, this._eventBus), isMaterializedPublication: false };
+	    } catch (error) {
+	        if (!/no document found/.test(error.message)) {
+	            throw error;
+	        }
+	        const publication = this._resolvePublicationMaterial(documentId);
+	        if (!publication) {
+	            throw error;
+	        }
+	        const document = this._loadPublishedWorldSessionUseCase.execute(publication, this._eventBus).getDocument();
+	        return { document, isMaterializedPublication: true };
+	    }
+	}
+
+	// Resolves a materializable Publication for `documentId` through
+	// `_publicationActionDiscoveryProvider` — the SAME wider capability
+	// getPublicationForDocument()/findPublicationById() already read
+	// (0.9.597), never `_discoveryProvider`/_findPublications()'s own
+	// narrow, fork-policy-governing choke point. Returns null (never
+	// throws) whenever no fallback is possible, so
+	// _resolveWorldDocument() above can cleanly re-throw the ORIGINAL
+	// "not found" error instead.
+	_resolvePublicationMaterial(documentId) {
+	    if (!this._loadPublishedWorldSessionUseCase || !this._publicationActionDiscoveryProvider
+	        || typeof this._publicationActionDiscoveryProvider.findByDocumentId !== 'function') {
+	        return null;
+	    }
+	    const publications = this._publicationActionDiscoveryProvider.findByDocumentId(documentId) || [];
+	    const publication = publications[0];
+	    return (publication && publication.contentReference) ? publication : null;
+	}
+
 	_loadWorld(documentId) {
-	    const document = this._loadPublicationDocumentUseCase.execute(documentId, this._eventBus);
+	    const { document, isMaterializedPublication } = this._resolveWorldDocument(documentId);
 	    this._loadedDocuments.set(documentId, document);
 	    // 0.2.20: a world streamed in this way is a published snapshot,
 	    // immutable until (and unless) an edit forks it — see
@@ -6007,7 +6078,14 @@ export class WorldNavigationSession {
 	    // loaded document, so it does not claim to — exactly the same
 	    // "enforce only when we can" rule _checkForkPolicy already
 	    // follows for license checks.
-	    if (this._isKnownPublication(documentId)) {
+	    // 0.9.605: `isMaterializedPublication` is a SECOND, independent
+	    // path to the same conclusion — a documentId resolved through
+	    // the material bridge is, by construction, a genuine Publication
+	    // (_resolvePublicationMaterial() never returns anything else),
+	    // so it is marked immutable here too, without ever consulting
+	    // _isKnownPublication()/_findPublications() (fork-policy's own
+	    // narrow choke point, left exactly as 0.9.596 established it).
+	    if (isMaterializedPublication || this._isKnownPublication(documentId)) {
 	        this._publishedDocumentIds.add(documentId);
 	    }
 	    if (!this._focusedDocumentId) {
