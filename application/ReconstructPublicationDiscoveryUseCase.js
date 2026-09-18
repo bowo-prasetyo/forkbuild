@@ -43,6 +43,24 @@ import { Publication } from '../publisher/Publication.js';
 // class only ever populates discoveryProvider — it never mutates the
 // catalog it reads from, and never constructs, modifies, or infers a
 // placement.
+//
+// 0.9.609 — idempotent by publicationId, deliberately NOT by changing
+// discovery/DecentralizedPublicationDiscoveryProvider.js's own add().
+// That provider's 0.9.335 header commits it to "no invented
+// deduplication policy" for ITS callers in general (a provider may
+// legitimately be fed the same Publication from more than one discovery
+// source). This class's own contract is narrower and does own an
+// idempotence guarantee: ui/main.js calls execute() exactly once against
+// a freshly-constructed, still-empty provider today, but nothing about
+// that composition-root fact is enforced by this class itself, and the
+// lifecycle-closure audit (tests/PublicationDiscoveryReconstructionLifecycleClosureAudit.test.js,
+// Section B) requires execute() to be safely callable more than once
+// against the SAME provider without doubling its discoverable set —
+// Reconstruct(Reconstruct(S)) = Reconstruct(S). Skipping an id the
+// provider already knows about (via its own pre-existing findById())
+// keeps that guarantee local to this use case, changes zero behavior for
+// the single-call production wiring (the provider is always empty at
+// that point), and adds no new store, cache, or class.
 export class ReconstructPublicationDiscoveryUseCase {
     constructor(catalog, coordinator, kindPlugins, discoveryProvider) {
         if (!catalog || typeof catalog.list !== 'function') {
@@ -61,16 +79,19 @@ export class ReconstructPublicationDiscoveryUseCase {
     }
 
     // Resolves every cataloged entry and admits into discoveryProvider
-    // exactly those that resolve. Each entry is resolved and admitted
-    // independently: one entry that fails resolution (missing material,
-    // a content-hash mismatch, an incomplete record, a tampered
-    // signature) never prevents any other, independently valid entry
-    // from reconstructing.
+    // exactly those that resolve and are not already present by id. Each
+    // entry is resolved and admitted independently: one entry that fails
+    // resolution (missing material, a content-hash mismatch, an
+    // incomplete record, a tampered signature) never prevents any other,
+    // independently valid entry from reconstructing. `reconstructed`
+    // counts only ids newly added by THIS call — see this class's own
+    // 0.9.609 header for why a repeated call against the same provider
+    // reports 0 rather than re-adding what is already discoverable.
     async execute() {
         let reconstructed = 0;
         for (const entry of this._catalog.list()) {
             const view = await resolvePublicationView(entry, { coordinator: this._coordinator, kindPlugins: this._kindPlugins });
-            if (view.resolved && view.content instanceof Publication) {
+            if (view.resolved && view.content instanceof Publication && this._provider.findById(view.content.id) === null) {
                 this._provider.add(view.content);
                 reconstructed += 1;
             }
