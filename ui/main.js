@@ -5,6 +5,8 @@ import { CreateIdentityProviderUseCase } from '../application/CreateIdentityProv
 import { IdentityUseCase } from '../application/IdentityUseCase.js';
 import { CreatePublicationCommentaryUseCase } from '../application/CreatePublicationCommentaryUseCase.js';
 import { CreatePublicationCommentaryDistributionPeerExchangeUseCase } from '../application/CreatePublicationCommentaryDistributionPeerExchangeUseCase.js';
+import { PublicationCommentaryRemoteNotificationBridge } from '../application/PublicationCommentaryRemoteNotificationBridge.js';
+import { NotificationEventStore } from '../storage/NotificationEventStore.js';
 import { PeerSessionManager } from '../application/PeerSessionManager.js';
 import { WebRtcPeerConnectionProvider } from '../peer/WebRtcPeerConnectionProvider.js';
 import { WebSocketRendezvousTransport } from '../peer/WebSocketRendezvousTransport.js';
@@ -708,6 +710,49 @@ function addPublicationCommentaryCommand(input) {
     }
     return result;
 }
+
+// 0.9.623 — Wire Remote Commentary Arrival into Local Notifications.
+//
+// 0.9.622's own Section E flagship finding: `publicationCommentaryDistributionPeerExchange`
+// above already fires `onCommentaryReceived()` for every verified remote
+// arrival, but nothing here ever subscribed to it, so a remote Commentary
+// never produced the SAME `publication.commented` NotificationEvent local
+// creation already does (via `createPublicationCommentaryCommand` above,
+// through `PublicationCommentaryNotificationProducer`, 0.9.275). This is
+// that missing subscription, and only that — see application/
+// PublicationCommentaryRemoteNotificationBridge.js's own header for the
+// full contract (gated on `isNew`, gated on this replica's own identity
+// actually being the resolved Publication's publisher, and reusing the
+// IDENTICAL `publication.commented` event-type constant, never a second
+// notification vocabulary).
+//
+// `publicationCommentaryRemoteDiscoveryProvider`/`publicationCommentaryRemoteNotificationEventStore`
+// are fresh instances reading/writing the SAME `forkbuild-publications`/
+// `notification-events:entries` `window.localStorage` keys every other
+// composition in this file already reads/writes — the identical "a second
+// composition, never a second source of truth" discipline application/
+// CreatePublicationCommentaryUseCase.js's own 0.9.289 header already
+// documents. `identityProvider` is the SAME app-wide instance every other
+// use case here already rides — never a second identity mechanism.
+const publicationCommentaryRemoteNotificationBridge = new PublicationCommentaryRemoteNotificationBridge(
+    new LocalDiscoveryProvider(new LocalStorageProvider()),
+    identityProvider,
+    (notificationEvent) => new NotificationEventStore(new LocalStorageProvider()).save(notificationEvent)
+);
+// Best-effort only, mirroring `addPublicationCommentaryCommand`'s own
+// try/catch around `announce()` immediately above: `onCommentaryReceived()`
+// fires synchronously from inside PeerMessageBus's own message dispatch
+// (application/PublicationCommentaryDistributionPeerExchange.js's own
+// EventBus does not isolate subscribers), and a notification failure here
+// must never be allowed to propagate back into, or disrupt, message
+// handling for an already-verified, already-stored remote Commentary.
+publicationCommentaryDistributionPeerExchange.onCommentaryReceived((result) => {
+    try {
+        publicationCommentaryRemoteNotificationBridge.handleCommentaryReceived(result);
+    } catch {
+        // Best-effort only — see this section's own header, above.
+    }
+});
 
 // 0.8.3 — Publication Center: External Evidence UX. The first UI wiring
 // for the anchor catalog/verifier pipeline 0.8.0-0.8.2 built with no UI
