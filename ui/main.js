@@ -4,6 +4,7 @@ import { router } from './router/index.js';
 import { CreateIdentityProviderUseCase } from '../application/CreateIdentityProviderUseCase.js';
 import { IdentityUseCase } from '../application/IdentityUseCase.js';
 import { CreatePublicationCommentaryUseCase } from '../application/CreatePublicationCommentaryUseCase.js';
+import { CreatePublicationCommentaryDistributionPeerExchangeUseCase } from '../application/CreatePublicationCommentaryDistributionPeerExchangeUseCase.js';
 import { PeerSessionManager } from '../application/PeerSessionManager.js';
 import { WebRtcPeerConnectionProvider } from '../peer/WebRtcPeerConnectionProvider.js';
 import { WebSocketRendezvousTransport } from '../peer/WebSocketRendezvousTransport.js';
@@ -189,7 +190,21 @@ const identityUseCase = new IdentityUseCase(identityProvider);
 // below) can still reach the identical read/write commentary path.
 // Shares the SAME identityProvider every other app-wide use case here
 // already does.
-const { getPublicationCommentariesCommand, addPublicationCommentaryCommand } =
+//
+// 0.9.620 — Wire Publication Commentary Peer Distribution. The RHS below
+// is UNCHANGED from 0.9.289 — still `new CreatePublicationCommentaryUseCase().execute(identityProvider)`,
+// still returning only its own two commands, never a third
+// announce/peerExchange capability (see that file's own header, also
+// unmodified by this milestone). Only the LOCAL binding name on the
+// left changes, from `addPublicationCommentaryCommand` to
+// `createPublicationCommentaryCommand` — freeing that name for the
+// distribution-wrapped command defined further below, once
+// `publicationCommentaryDistributionPeerExchange` exists (it needs the
+// app-wide `peerMessageBus`/`peerSessionManager.registry` pair, both
+// constructed later in this file). `getPublicationCommentariesCommand`
+// is untouched: reading Commentary back is a purely local concern this
+// milestone does not change.
+const { getPublicationCommentariesCommand, addPublicationCommentaryCommand: createPublicationCommentaryCommand } =
     new CreatePublicationCommentaryUseCase().execute(identityProvider);
 // 0.2.66 — real ICE (STUN/TURN) configuration and a real, networked
 // rendezvous bootstrap, both wired the same way: a plain, inspectable
@@ -635,6 +650,64 @@ const decentralizedPublicationDiscoveryProvider = new DecentralizedPublicationDi
 await new ReconstructPublicationDiscoveryUseCase(
     publicationCatalog, publicationResolutionCoordinator, publicationDisplayKindPlugins, decentralizedPublicationDiscoveryProvider
 ).execute();
+
+// 0.9.620 — Wire Publication Commentary Peer Distribution.
+//
+// application/CreatePublicationCommentaryDistributionPeerExchangeUseCase.js's
+// own composition-root shape (mirroring application/
+// CreatePublicationAnchorPeerExchangeUseCase.js one domain over), riding
+// the SAME app-wide `peerMessageBus`/`peerSessionManager.registry` every
+// other peer/PeerMessageBus.js protocol in this file already does. Shares
+// the SAME app-wide `identityProvider` every other use case here already
+// does — `PublicationCommentaryDistributionExchange`'s own constructor
+// (0.9.618, unmodified) is what enforces "only the commentary's own
+// author may sign it for distribution," so this composition introduces
+// no separate signing identity of its own.
+//
+// `publicationCommentaryDistributionStore` reads/writes the SAME
+// underlying `window.localStorage` keys `createPublicationCommentaryCommand`'s
+// own internal PublicationCommentaryStore instance already does — the
+// identical "a second composition, never a second source of truth"
+// discipline application/CreatePublicationCommentaryUseCase.js's own
+// 0.9.289 header already documents for its two independently-constructed
+// PublicationCommentaryStore instances. storage/PublicationCommentaryStore.js
+// itself keeps no in-memory cache (every read re-loads through its own
+// injected StorageProvider — see that file's own header), so a Commentary
+// saved through `createPublicationCommentaryCommand` below is immediately
+// visible to `publicationCommentaryDistributionPeerExchange`'s own
+// `announce()` the moment it is called.
+const { peerExchange: publicationCommentaryDistributionPeerExchange } = new CreatePublicationCommentaryDistributionPeerExchangeUseCase().execute({
+    identityProvider,
+    peerMessageBus,
+    connectedPeerRegistry: peerSessionManager.registry
+});
+
+// Composes `createPublicationCommentaryCommand` (0.9.289, unmodified)
+// with a distribution side effect: ANNOUNCE, after local creation
+// succeeds, never before it and never in place of it. Mirrors this
+// milestone's own central invariant (see docs/Roadmap.md's 0.9.620
+// entry): local Commentary creation is the primary operation, and a
+// distribution attempt's own failure — no connected peers, a signing
+// error, anything `announce()` itself can throw (see application/
+// PublicationCommentaryDistributionPeerExchange.js's own header) — is
+// deliberately swallowed here, never allowed to undo or mask an already-
+// successful local persist, and never surfaced to the caller as a
+// Commentary-creation failure. Zero connected peers is never an error,
+// only an announcement nobody happened to be listening for — the exact
+// restraint `publicationCommentaryDistributionPeerExchange.announce()`
+// itself already documents.
+function addPublicationCommentaryCommand(input) {
+    const result = createPublicationCommentaryCommand(input);
+    try {
+        publicationCommentaryDistributionPeerExchange.announce(result.commentary);
+    } catch {
+        // Best-effort distribution only. Local persistence already
+        // succeeded above (or this line would never have been reached —
+        // createPublicationCommentaryCommand throws, unmodified, before
+        // announcing anything), so nothing here ever needs to be undone.
+    }
+    return result;
+}
 
 // 0.8.3 — Publication Center: External Evidence UX. The first UI wiring
 // for the anchor catalog/verifier pipeline 0.8.0-0.8.2 built with no UI

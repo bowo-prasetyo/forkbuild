@@ -90,6 +90,40 @@ import { LocalStorageProvider } from '../storage/LocalStorageProvider.js';
 //               only direct import(), never a live delivery).
 //   Section J — classification and verdict.
 //   Section K — deliberate exclusions; no production file touched.
+//
+// AMENDED BY 0.9.620 — Wire Publication Commentary Peer Distribution,
+// which implemented exactly this audit's own recommendation: application/
+// CreatePublicationCommentaryDistributionPeerExchangeUseCase.js (a new
+// composition root, mirroring application/
+// CreatePublicationAnchorPeerExchangeUseCase.js's own exact shape) is now
+// constructed in ui/main.js, on the SAME app-wide peerMessageBus/
+// peerSessionManager.registry/identityProvider every sibling capability
+// already rides, and the EXISTING addPublicationCommentaryCommand
+// (application/CreatePublicationCommentaryUseCase.js, still completely
+// unmodified) is now wrapped, at the ui/main.js composition boundary
+// only, with an ANNOUNCE side effect that fires after local creation
+// succeeds. Only Section B's own four production-absence assertions and
+// Section C's closing narration are amended in place, plus this note —
+// per this codebase's own established convention (see e.g. 0.9.618's own
+// amend of tests/PublicationCommentaryDistributionBoundaryAudit.test.js)
+// for a prior audit whose own assertion described a gap a later
+// milestone closed. Every other section holds EXACTLY as measured:
+// Sections A and D-I exercised the CAPABILITY layer directly (0.9.618's
+// own classes), never the production wiring — nothing about those
+// classes changed, so nothing there needed amending. Section C's own
+// live reproduction of application/CreatePublicationCommentaryUseCase.js
+// in isolation (never through ui/main.js's own wrapper) also still holds
+// unchanged: that one file, by itself, still returns exactly its
+// original two commands, with no announce/peerExchange capability of its
+// own — 0.9.620 deliberately added the distribution side effect at the
+// ui/main.js composition boundary, never inside
+// CreatePublicationCommentaryUseCase.js itself, so this section's own
+// per-assertion findings about that one file remain literally true; only
+// its closing paragraph, which generalized from that file to "the one
+// composition a real caller actually uses," is amended, since a real
+// caller (ui/main.js) now uses that file wrapped, not raw. See
+// tests/PublicationCommentaryDistributionWiring.test.js for 0.9.620's own
+// full coverage, including its own real-composition FLAGSHIP delivery.
 
 let assertionCount = 0;
 function assert(condition, message) {
@@ -184,18 +218,24 @@ async function run() {
     // Section B — THE FLAGSHIP FINDING: production wiring census.
     // ===============================================================
     {
-        // B1. No production file (ui/ or application/, never tests/)
-        // constructs either commentary-distribution class at all.
+        // B1. AMENDED BY 0.9.620. At the time this audit originally ran,
+        // no production file constructed either commentary-distribution
+        // class. 0.9.620 closed exactly that gap: application/
+        // CreatePublicationCommentaryDistributionPeerExchangeUseCase.js
+        // now constructs both, mirroring application/
+        // CreatePublicationAnchorPeerExchangeUseCase.js's own shape.
         const constructionSites = grepFiles('new PublicationCommentaryDistribution(Exchange|PeerExchange)\\(', ['ui', 'application']);
-        assert(constructionSites.length === 0,
-            n(`no file in ui/ or application/ ever constructs a PublicationCommentaryDistributionExchange or PublicationCommentaryDistributionPeerExchange — found: ${constructionSites.join(', ') || 'none'}`));
+        assert(constructionSites.length === 1 && constructionSites[0].includes('CreatePublicationCommentaryDistributionPeerExchangeUseCase.js'),
+            n(`exactly one file in ui/ or application/ now constructs the commentary-distribution classes — application/CreatePublicationCommentaryDistributionPeerExchangeUseCase.js (0.9.620), the new composition root this audit's own recommendation named — found: ${constructionSites.join(', ') || 'none'}`));
 
-        // B2. No production file ever calls .announce() on a commentary
-        // peer exchange specifically — the identical census method
+        // B2. AMENDED BY 0.9.620. ui/main.js now wraps
+        // addPublicationCommentaryCommand with a real
+        // publicationCommentaryDistributionPeerExchange.announce() call —
+        // the identical census method
         // tests/PassivePeerContributionToWalkingTriggeredSnapshotDiscoveryProductAudit.test.js
         // (0.9.482) already established for the placement family, applied
         // here to commentary. Every `.announce(` site found is
-        // classified; none may belong to commentary.
+        // classified; exactly one now belongs to commentary.
         const announceCallSites = grepFiles('\\.announce\\(', ['ui', 'application']);
         const commentaryAnnounceCallSites = [];
         for (const file of announceCallSites) {
@@ -204,13 +244,14 @@ async function run() {
                 commentaryAnnounceCallSites.push(file);
             }
         }
-        assert(commentaryAnnounceCallSites.length === 0,
-            n(`no production file anywhere in ui/ or application/ ever calls a commentary peerExchange's own announce() — every one of the ${announceCallSites.length} \`.announce(\` call site(s) this audit found belongs to Publication, Anchor, or Snapshot Placement, never Commentary`));
+        assert(commentaryAnnounceCallSites.length === 1 && commentaryAnnounceCallSites.some((file) => file.includes('ui/main.js')),
+            n(`exactly one production \`.announce(\` call site now belongs to commentary — ui/main.js's own new addPublicationCommentaryCommand wrapper (0.9.620) — found: ${commentaryAnnounceCallSites.join(', ') || 'none'}`));
         assert(announceCallSites.length > 0,
-            n('by contrast, sibling capabilities really do have real production .announce() call sites (ui/views/EditorView.js\'s explicit "Publish to Network" click, application/PublicationPeerConnectionSync.js\'s automatic connection sync, application/CreatePublicationSnapshotPlacementUseCase.js\'s automatic post-save announce) — this is a genuine asymmetry, not an artifact of an overly narrow search'));
+            n('sibling capabilities continue to have their own real production .announce() call sites (ui/views/EditorView.js\'s explicit "Publish to Network" click, application/PublicationPeerConnectionSync.js\'s automatic connection sync, application/CreatePublicationSnapshotPlacementUseCase.js\'s automatic post-save announce) — commentary\'s own new call site (above) joins them rather than replacing any of them'));
 
-        // B3. Every sibling capability has its own Create*PeerExchangeUseCase.js
-        // composition root, wired into ui/main.js. Commentary has none.
+        // B3. AMENDED BY 0.9.620. Every sibling capability has its own
+        // Create*PeerExchangeUseCase.js composition root, wired into
+        // ui/main.js. Commentary now does too.
         const siblingFactories = [
             'application/CreatePublicationPeerExchangeUseCase.js',
             'application/CreatePublicationAnchorPeerExchangeUseCase.js',
@@ -221,18 +262,18 @@ async function run() {
         for (const file of siblingFactories) {
             assert(await sourceExists(file), n(`sanity: ${file} really does exist, on disk, as the established composition-root pattern this section measures Commentary against`));
         }
-        assert(!(await sourceExists('application/CreatePublicationCommentaryDistributionPeerExchangeUseCase.js')),
-            n('no application/CreatePublicationCommentaryDistributionPeerExchangeUseCase.js (or any equivalent composition root) exists on disk — every sibling capability has exactly this shape; Commentary distribution does not'));
+        assert(await sourceExists('application/CreatePublicationCommentaryDistributionPeerExchangeUseCase.js'),
+            n('application/CreatePublicationCommentaryDistributionPeerExchangeUseCase.js (0.9.620) now exists on disk — Commentary distribution now has exactly the same composition-root shape every sibling capability already had'));
 
-        // B4. ui/main.js — the one file that actually assembles the
-        // running application's app-wide peerMessageBus/registry and
-        // wires every sibling capability onto it — never mentions
-        // Commentary distribution in any form.
+        // B4. AMENDED BY 0.9.620. ui/main.js — the one file that actually
+        // assembles the running application's app-wide peerMessageBus/
+        // registry and wires every sibling capability onto it — now
+        // mentions and wires Commentary distribution.
         const mainSource = codeOnly(await readSource('ui/main.js'));
-        assert(!/CommentaryDistribution/.test(mainSource),
-            n('ui/main.js — the real, single composition root for the running app\'s peer wiring — never mentions "CommentaryDistribution" in any form: not imported, not constructed, not threaded onto the app-wide peerMessageBus'));
+        assert(/CommentaryDistribution/.test(mainSource),
+            n('ui/main.js — the real, single composition root for the running app\'s peer wiring — now imports, constructs, and threads Commentary distribution onto the app-wide peerMessageBus (0.9.620)'));
 
-        console.log('✓ B: FLAGSHIP FINDING — the capability 0.9.618 built is fully correct and completely unreachable from the real, running application today. No composition root exists, ui/main.js never wires it, and it has zero production .announce() call sites — unlike every sibling capability, which has at least one.');
+        console.log('✓ B: AMENDED BY 0.9.620 — the capability 0.9.618 built is now reachable from the real, running application. Exactly one composition root exists (application/CreatePublicationCommentaryDistributionPeerExchangeUseCase.js), ui/main.js wires it on the app-wide peerMessageBus/registry, and it has exactly one production .announce() call site — matching every sibling capability\'s own shape. See tests/PublicationCommentaryDistributionWiring.test.js for 0.9.620\'s own full coverage.');
     }
 
     // ===============================================================
@@ -289,7 +330,20 @@ async function run() {
         assert(readBack.length === 1 && readBack[0].commentaryId === commentary.commentaryId,
             n('and it is genuinely readable back through the SAME real composition root — local behavior through this path is fully functional; only the cross-device leg is missing'));
 
-        console.log('✓ C: the real, app-facing composition root works end to end for local create/read, and is structurally incapable of ever reaching a peer — confirming Section B\'s finding is not an artifact of which file this audit happened to grep, but a real property of the one composition a real caller actually uses.');
+        // AMENDED BY 0.9.620: this section's own findings about
+        // application/CreatePublicationCommentaryUseCase.js IN ISOLATION
+        // all still hold, byte-for-byte — that file is completely
+        // unmodified by 0.9.620, still imports nothing peer-shaped, and
+        // still returns exactly its original two commands. What changed
+        // is that ui/main.js — the real caller — no longer hands this
+        // file's own addPublicationCommentaryCommand straight to
+        // app.provide(): it wraps it with a distribution announce side
+        // effect first (see application/
+        // CreatePublicationCommentaryDistributionPeerExchangeUseCase.js
+        // and tests/PublicationCommentaryDistributionWiring.test.js's own
+        // Sections B/C for the real, wired composition this section did
+        // not reproduce).
+        console.log('✓ C: application/CreatePublicationCommentaryUseCase.js, in isolation, still works end to end for local create/read and still imports nothing peer-shaped — but (0.9.620) it is no longer the LAST composition step a real caller sees: ui/main.js now wraps its own addPublicationCommentaryCommand with a distribution announce, closing the gap this section\'s own isolated reproduction first proved.');
     }
 
     // ===============================================================
