@@ -119,9 +119,24 @@ export class PickingService {
             return null;
         }
 
+        // 0.9.611 — the same face-normal extraction pickRich() already
+        // does above, reused verbatim: StructurePlacementTool needs a
+        // hit face's normal to snap a new structure flush against this
+        // one, exactly like PlacementTool already does for bricks via
+        // pickedBrick.normal.
+        let normal = { x: 0, y: 1, z: 0 };
+        if (hit.face) {
+            const n = hit.face.normal.clone().transformDirection(hit.object.matrixWorld).normalize();
+            const nx = Math.abs(n.x) > 0.5 ? Math.sign(n.x) : 0;
+            const ny = Math.abs(n.y) > 0.5 ? Math.sign(n.y) : 0;
+            const nz = Math.abs(n.z) > 0.5 ? Math.sign(n.z) : 0;
+            normal = { x: nx, y: ny, z: nz };
+        }
+
         return {
             placementId,
             point: new Position(hit.point.x, hit.point.y, hit.point.z),
+            normal,
             distance: hit.distance
         };
     }

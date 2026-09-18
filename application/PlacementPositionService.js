@@ -76,4 +76,62 @@ export class PlacementPositionService {
 
         return new Position(newX, newY, newZ);
     }
+
+    // 0.9.611 — the structure-placement counterpart to calculateStack()
+    // above. Generalizes the same per-axis half-extent math from a
+    // BrickDefinition's width/height/depth to a SpatialBounds' size,
+    // placing `movingBounds` flush against whichever horizontal face of
+    // `anchorBounds` the normal points away from. anchorPosition/
+    // anchorBounds describe the EXISTING, already-placed structure being
+    // snapped against — this never changes anchorPosition, only computes
+    // where the NEW structure should sit (see StructurePlacementTool's
+    // own header: "snap the structure being placed, never the one it
+    // snaps against").
+    //
+    // Matches calculateStructureGround()'s own "Y always 0, ground-plane
+    // only" invariant: there is no structure-on-structure Y-stacking, so
+    // a Y-dominant normal (the anchor's top or bottom face) resolves to
+    // neither branch below and returns null — exactly like a missing
+    // BrickDefinition does in calculateStack() above — leaving the
+    // caller to fall back to calculateStructureGround(), mirroring
+    // PlacementTool's own pickedBrick-first/ground-fallback shape.
+    //
+    // Unlike calculateStack(), the TOUCHING axis itself is left
+    // unsnapped: a forked structure's footprint has no reason to sum to
+    // a whole grid multiple, and rounding it back onto the grid would
+    // reintroduce exactly the "adjacent structures can appear slightly
+    // separated" gap this method exists to close (see
+    // tests/StructureRelativeSnappingBoundaryAudit.test.js, assertions
+    // 26-27). Only the carried-over axis is grid-snapped, matching
+    // calculateStructureGround()'s existing behavior for that axis.
+    calculateStructureStack(anchorPosition, anchorBounds, normal, movingBounds, settings = {}) {
+        if (!anchorPosition || !anchorBounds || !normal || !movingBounds) {
+            return null;
+        }
+
+        const snapEnabled = settings.gridSnapEnabled !== false;
+        const snapSize = settings.gridSnapSize || 1;
+        const anchorGlobal = anchorBounds.getGlobalBounds(anchorPosition);
+        const movingMin = movingBounds.min;
+        const movingMax = movingBounds.max;
+
+        let x = anchorPosition.x;
+        let z = anchorPosition.z;
+
+        if (Math.abs(normal.x) > 0.5) {
+            x = Math.sign(normal.x) > 0
+                ? anchorGlobal.max.x - movingMin.x
+                : anchorGlobal.min.x - movingMax.x;
+            if (snapEnabled) z = Math.round(z / snapSize) * snapSize;
+        } else if (Math.abs(normal.z) > 0.5) {
+            z = Math.sign(normal.z) > 0
+                ? anchorGlobal.max.z - movingMin.z
+                : anchorGlobal.min.z - movingMax.z;
+            if (snapEnabled) x = Math.round(x / snapSize) * snapSize;
+        } else {
+            return null;
+        }
+
+        return new Position(x, 0, z);
+    }
 }

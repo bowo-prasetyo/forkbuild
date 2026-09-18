@@ -59,6 +59,30 @@ import { StorageProvider } from '../storage/StorageProvider.js';
 //   G. Non-interference — brick paths, and the no-neighbor structure
 //      path, are unaffected by everything above.
 //   H. Classification and recommendation.
+//
+// SUPERSEDED IN PART BY 0.9.611 — Add Structure Relative Face Snapping.
+// This audit's own Section D/H recommendation (extract a face normal in
+// PickingService#pickPlacement(), mirroring pickRich(); read it first in
+// StructurePlacementTool#onPointerMove(), mirroring PlacementTool's own
+// pickedBrick-first/ground-fallback shape; generalize calculateStack()'s
+// per-axis half-extent math to SpatialBounds sizes as a new
+// calculateStructureStack() method) is exactly what 0.9.611 implemented,
+// with the touching axis left UNSNAPPED (Section E's own "explicitly
+// left open" note, resolved in favor of always-exact contact — see
+// tests/StructureRelativeFaceSnapping.test.js, Section C, for the
+// worked non-grid-aligned example that decision was based on). Section
+// A's assertions 1 and 3, and Section D's assertion 20, are amended in
+// place, per this codebase's own established convention, to assert the
+// new, current production fact instead of the now-superseded absence;
+// every other section in this file (B, C, E, F, G) was independently
+// re-run against the 0.9.611 production code with NO changes needed —
+// SpatialBounds, StructurePlacementValidator, and
+// StructureDocumentResolver are still completely untouched, exactly as
+// this audit's own classification said they would remain. See
+// tests/StructureRelativeFaceSnapping.test.js for the dedicated flagship
+// coverage of what 0.9.611 closes, and
+// tests/StructureRelativeFaceSnappingRendering.test.js for the real-
+// raycast proof of the PickingService half.
 
 function assert(condition, message) {
     if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
@@ -117,12 +141,18 @@ async function run() {
     // ===============================================================
     {
         const placementToolSrc = await readSource('application/tools/StructurePlacementTool.js');
-        assert(!placementToolSrc.includes('pickedPlacement'),
-            '1. StructurePlacementTool never references pointerEvent.pickedPlacement anywhere in its own source');
+        // 1/3 AMENDED BY 0.9.611 — Add Structure Relative Face Snapping
+        // (see this file's own "SUPERSEDED IN PART BY 0.9.611" header,
+        // above). At the time this audit was written, StructurePlacementTool
+        // never read pointerEvent.pickedPlacement at all; 0.9.611 closed
+        // exactly that gap with a pickedPlacement-first branch mirroring
+        // PlacementTool's own pickedBrick-first/ground-fallback shape.
+        assert(placementToolSrc.includes('pointerEvent.pickedPlacement'),
+            '1. AMENDED BY 0.9.611 — StructurePlacementTool now reads pointerEvent.pickedPlacement, in a NEW _resolvePosition() helper, exactly the route this audit found missing.');
         assert(placementToolSrc.includes('calculateStructureGround('),
-            '2. StructurePlacementTool.onPointerMove() computes position via calculateStructureGround() alone');
-        assert(!/calculateStack|calculateStructureStack/.test(placementToolSrc),
-            '3. StructurePlacementTool has no dimension-aware/relative offset call of any kind today');
+            '2. StructurePlacementTool.onPointerMove() still calls calculateStructureGround() — UNCHANGED BY 0.9.611: it is now the FALLBACK for "no usable face hit" rather than the only path (see assertion 1).');
+        assert(/calculateStructureStack/.test(placementToolSrc),
+            '3. AMENDED BY 0.9.611 — StructurePlacementTool now has a dimension-aware/relative offset call (calculateStructureStack()), the new PlacementPositionService method this audit\'s own Section E prototyped and Section H recommended by name.');
 
         const positionServiceSrc = await readSource('application/PlacementPositionService.js');
         const structureGroundBody = positionServiceSrc.split('calculateStructureGround(')[1].split('calculateStack(')[0];
@@ -232,12 +262,26 @@ async function run() {
 
         assert(pickRichBody.includes('hit.face') && pickRichBody.includes('normal,'),
             '19. pickRich() (bricks) extracts and returns a face normal from the raycast hit...');
-        assert(!pickPlacementBody.includes('hit.face') && !pickPlacementBody.includes('normal'),
-            '20. ...pickPlacement() (placements) discards it: the exact same intersections[0] hit is available, but only { placementId, point, distance } is ever read off it — no normal field exists in its return shape at all');
+        // 20 AMENDED BY 0.9.611 — Add Structure Relative Face Snapping
+        // (see this file's own "SUPERSEDED IN PART BY 0.9.611" header,
+        // above). pickPlacement() now extracts a face normal too, the
+        // same ~6-line pattern pickRich() already had — proven against
+        // real Three.js raycasting in
+        // tests/StructureRelativeFaceSnappingRendering.test.js.
+        assert(pickPlacementBody.includes('hit.face') && pickPlacementBody.includes('normal,'),
+            '20. AMENDED BY 0.9.611 — ...pickPlacement() (placements) now extracts it too: the same intersections[0] hit pickRich() reads, with the identical hit.face.normal.clone().transformDirection(...) pattern, now also returned as a normal field.');
 
-        // Live proof of the SECOND, independent gap: even a pointerEvent
-        // carrying a pickedPlacement (exactly InputDispatcher's own
-        // shape) has zero effect on StructurePlacementTool's output.
+        // Live proof of what the SECOND, independent gap looked like
+        // before 0.9.611: a pointerEvent carrying a pickedPlacement with
+        // NO normal field (an older/partial shape, or InputDispatcher
+        // reporting a genuine miss) still has zero effect on
+        // StructurePlacementTool's output — assertions 21/22 below are
+        // UNCHANGED BY 0.9.611 for that reason: this specific pointerEvent
+        // never supplies a normal, so it still exercises the (still
+        // correct, still necessary) ground-snap fallback, not the new
+        // snapping path. See tests/StructureRelativeFaceSnapping.test.js,
+        // Section E, for live proof that a pickedPlacement WITH a normal
+        // now drives a different, snapped result.
         const storage = new InMemoryStorageProvider();
         const serializer = new DocumentSerializer();
         const resolver = new StructureDocumentResolver(storage, serializer);
@@ -265,7 +309,7 @@ async function run() {
             pickedPlacement: { placementId: world.getStructurePlacements()[0].id, point: { x: 0.3, y: 0.5, z: 0.3 }, distance: 4.2 }
         });
         assert(editorContext.structurePreview.position.x === 0 && editorContext.structurePreview.position.z === 0,
-            '21. today, pickedPlacement being present changes NOTHING — the preview is still the plain ground-snapped worldPosition (0.3 rounds to 0), unconditionally');
+            '21. UNCHANGED BY 0.9.611 — a pickedPlacement with NO normal field still changes nothing: the preview is still the plain ground-snapped worldPosition (0.3 rounds to 0). This no longer means "pickedPlacement is never read" (see assertion 1\'s amendment) — it means the fallback for "no usable face hit" is still exactly this ground snap.');
         assert(editorContext.structurePreview.valid === false,
             '22. (it is correctly flagged invalid, since (0,0) overlaps A\'s [0,1]x[0,1] footprint — but that is collision detection, a pre-existing, separate concern from relative SNAPPING, exactly the distinction this audit was asked to keep separate)');
     }

@@ -18,7 +18,7 @@
 //       screenPosition: { x, y },
 //       worldPosition,            // core/Position | null — ground-plane hit
 //       pickedBrick,               // { brickId, buildingId } | null
-//       pickedPlacement            // { placementId, point } | null (0.2.91)
+//       pickedPlacement            // { placementId, point, normal, distance } | null (0.2.91; normal added 0.9.611)
 //   }
 //
 // pickedBrick, pickedPlacement, and worldPosition are always computed,
