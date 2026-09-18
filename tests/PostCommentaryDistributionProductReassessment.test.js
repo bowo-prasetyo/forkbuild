@@ -97,6 +97,26 @@ import { PeerMessageBus } from '../peer/PeerMessageBus.js';
 //               said this," never "this identity owns this Publication."
 //   Section H — production-change guard.
 //   Section I — classification and verdict.
+//
+// AMENDED BY 0.9.629 — Publication Commentary Nostr Asynchronous
+// Distribution Closure Audit, documenting a gap this file's own Section E
+// named that was actually closed two milestones earlier, by 0.9.623 —
+// Wire Remote Commentary Arrival into Local Notifications
+// (application/PublicationCommentaryRemoteNotificationBridge.js, wired in
+// ui/main.js), left unamended at the time per this codebase's own
+// established convention (see e.g. 0.9.620's own amendment of tests/
+// PublicationCommentaryCrossDeviceProductClosureAudit.test.js) until this
+// milestone's own Section A re-execution of the full arc surfaced it as a
+// live regression rather than a merely-read one. Only Section E's own two
+// production-absence assertions and closing narration are amended in
+// place, below, plus this note — every other section holds exactly as
+// measured: onCommentaryReceived() itself (application/
+// PublicationCommentaryDistributionPeerExchange.js) is unmodified, and
+// 0.9.623's own bridge is an ADAPTER subscribing to it, never a
+// replacement for it — see that bridge's own header, "an adapter, never a
+// second producer." See tests/PublicationCommentaryRemoteNotificationWiring.test.js
+// for 0.9.623's own full coverage, including its own real-composition
+// FLAGSHIP delivery-to-notification round trip.
 
 let assertionCount = 0;
 function assert(condition, message) {
@@ -378,11 +398,25 @@ async function run() {
         assert(/onCommentaryReceived\(callback\)/.test(peerExchangeSource),
             n('the capability to observe a newly-arrived Commentary locally already exists — application/PublicationCommentaryDistributionPeerExchange.js#onCommentaryReceived(), built at 0.9.618'));
 
+        // AMENDED BY 0.9.629 — see this file's own header note, above.
+        // grepFiles matches raw file text, comments included, so
+        // application/PublicationCommentaryRemoteNotificationBridge.js
+        // appears here purely because its own header comment QUOTES
+        // `onCommentaryReceived()` (see that file's own line "The
+        // intended call shape is `peerExchange.onCommentaryReceived(...)`
+        // ") — codeOnly() strips that out, leaving zero REAL call sites
+        // in that file; ui/main.js's own real subscription (0.9.623) is
+        // the one genuine production call site.
         const productionCallSites = grepFiles('\\.onCommentaryReceived\\(', ['ui', 'application']);
-        assert(productionCallSites.length === 0,
-            n(`zero production call sites subscribe to it — found: ${productionCallSites.join(', ') || 'none'}; every existing call site (tests/*.test.js only) is a test harness observing the fact for its own assertions, never a real notification`));
-        assert(!/onCommentaryReceived/.test(mainSource),
-            n('ui/main.js itself — the one composition root that wires publicationCommentaryDistributionPeerExchange at all — never once reads this event; the capability was built, exposed, and then never connected to anything downstream'));
+        assert(productionCallSites.length === 2
+            && productionCallSites.some((file) => file.includes('ui/main.js'))
+            && productionCallSites.some((file) => file.includes('PublicationCommentaryRemoteNotificationBridge.js')),
+            n(`exactly one production call site now subscribes to it — ui/main.js's own real subscription (0.9.623) — found: ${productionCallSites.join(', ') || 'none'}; the second file matched is application/PublicationCommentaryRemoteNotificationBridge.js's own header comment naming the intended call shape, not a real call site (see codeOnly() check immediately below)`));
+        const bridgeSourceStripped = codeOnly(await rawSource('application/PublicationCommentaryRemoteNotificationBridge.js'));
+        assert(!/\.onCommentaryReceived\(/.test(bridgeSourceStripped),
+            n('with comments stripped, application/PublicationCommentaryRemoteNotificationBridge.js itself never calls .onCommentaryReceived() — it is an adapter CALLED BY a subscription, never the subscriber itself; see that file\'s own header, "an adapter, never a second producer"'));
+        assert(/onCommentaryReceived/.test(mainSource),
+            n('ui/main.js itself — the one composition root that wires publicationCommentaryDistributionPeerExchange at all — now reads this event (0.9.623) and feeds every result into application/PublicationCommentaryRemoteNotificationBridge.js#handleCommentaryReceived()'));
 
         // The product-level fact this asymmetry produces, restated from
         // what is ALREADY live-proven rather than re-derived: 0.9.621's
@@ -404,10 +438,10 @@ async function run() {
             n('that promise\'s own implementation has exactly one entry point (AddPublicationCommentaryUseCase.execute(), reached only from LOCAL creation) — the distribution import path (importCommentaryEnvelope) is a second, independent way the SAME store gains a new row, and this producer never wraps or observes it'));
 
         console.log(
-            '✓ E: two Commentaries about the same Publication — one authored on the publisher\'s own device, one authored on a remote peer\'s device and delivered by exactly the capability 0.9.617-0.9.621 built — currently produce two DIFFERENT publisher-facing outcomes. The local one keeps the product\'s own already-shipped promise (a NotificationEvent, visible in ui/components/NotificationHistoryPanel.js). The remote one, despite being an equally genuine, equally signed, equally durable fact, produces silence — not because distribution is incomplete, but because the one local wire this milestone found (onCommentaryReceived -> a NotificationEvent, using ENTIRELY existing infrastructure: NotificationEvent, NotificationEventStore, the discoveryProvider lookup PublicationCommentaryNotificationProducer.js already performs) was never connected.'
+            '✓ E (AMENDED BY 0.9.629): at the time this audit originally ran, two Commentaries about the same Publication — one authored locally, one delivered remotely by exactly the capability 0.9.617-0.9.621 built — produced two DIFFERENT publisher-facing outcomes; the remote one produced silence. 0.9.623 closed exactly that gap: ui/main.js now subscribes to onCommentaryReceived() and feeds every result into application/PublicationCommentaryRemoteNotificationBridge.js, which produces the IDENTICAL publication.commented NotificationEvent shape 0.9.275 already defined for local creation, through the identical notificationEventStore.save() sink — gated on isNew and on this replica\'s own identity actually being the resolved Publication\'s publisher, exactly this section\'s own original recommendation.'
         );
         console.log(
-            'Classification: CONCRETE_PRODUCT_GAP. This is deliberately NOT "distributed notifications" (excluded, per this milestone\'s own brief, and per 0.9.618\'s own "notification stays downstream and local" header, which stays correct and unchanged) — the recommendation is not to make Notification travel the network. It is to complete the LOCAL producer\'s own already-local, already-built job at its SECOND entry point into the SAME store, the same way 0.9.275 completed it for the first: a purely local reaction to a purely local event (onCommentaryReceived fires after verification and storage complete, on the receiving device, using data already on that device), producing the identical NotificationEvent shape 0.9.275 already defined, through the identical notificationEventStore.save() sink ui/main.js already owns. Smallest justified next milestone (NOT built here, per this milestone\'s own test-only scope): wire publicationCommentaryDistributionPeerExchange.onCommentaryReceived() in ui/main.js to construct and save a publication.commented NotificationEvent when isNew is true and the local discoveryProvider resolves the Commentary\'s own publicationId to a Publication this replica\'s own identity publishes — reusing PublicationCommentaryNotificationProducer\'s own payload shape and discoveryProvider lookup verbatim, never inventing a second notification vocabulary.'
+            'Classification (AMENDED BY 0.9.629): RESOLVED — was CONCRETE_PRODUCT_GAP at 0.9.622, closed by 0.9.623\'s own narrowly-scoped wiring (never "distributed notifications" — Notification still never travels the network; see application/PublicationCommentaryRemoteNotificationBridge.js\'s own header). See tests/PublicationCommentaryNostrAsynchronousDistributionClosureAudit.test.js (0.9.629) Section G for live confirmation that this same bridge now also serves the Nostr arrival path, never a second, transport-specific notification mechanism.'
         );
     }
 
@@ -458,27 +492,25 @@ async function run() {
     // ===============================================================
     {
         console.log(
-            '\nClassification table:\n'
+            '\nClassification table (AMENDED BY 0.9.629 — Section E only; see this file\'s own header note):\n'
             + '  B. Publication-unaware storage/observation ....... ALREADY_CORRECT + INTENTIONAL_BOUNDARY + NO_REQUIREMENT\n'
             + '  C. Multi-Commentary / multi-author semantics ...... ALREADY_CORRECT\n'
             + '  D. Ordering under scrambled network arrival ....... ALREADY_CORRECT / INTENTIONAL_BOUNDARY\n'
-            + '  E. Notification on remote arrival .................. CONCRETE_PRODUCT_GAP\n'
+            + '  E. Notification on remote arrival .................. RESOLVED (0.9.623) — was CONCRETE_PRODUCT_GAP\n'
             + '  F. Offline/disconnected creation ................... INTENTIONAL_BOUNDARY / NO_REQUIREMENT\n'
             + '  G. Authorization/trust semantics .................... ALREADY_CORRECT / INTENTIONAL_BOUNDARY\n'
         );
         console.log(
-            '0.9.622 verdict: exactly ONE CONCRETE_PRODUCT_GAP survives this reassessment (Section E) — every other audited '
-            + 'dimension of the post-distribution Commentary experience is already correct or is a deliberate, still-justified '
-            + 'boundary this milestone leaves exactly where 0.9.617-0.9.621 drew it. RECOMMENDATION: do not resume general Commentary '
-            + 'distribution work. Scope a single, small, separately-numbered next milestone (0.9.623) to wire the ALREADY-BUILT '
-            + 'onCommentaryReceived() local observation to the ALREADY-BUILT PublicationCommentaryNotificationProducer\'s own '
-            + 'NotificationEvent/NotificationEventStore machinery, gated on isNew and on this replica\'s own identity actually being '
-            + 'the resolved Publication\'s publisher — no new store, no new envelope, no new protocol, no distributed notification of '
-            + 'any kind. If, once that lands, no further gap survives a comparable reassessment, STOP Commentary work entirely and move '
-            + 'to another product area, exactly as this milestone\'s own brief anticipated. Deliberately excluded here, unchanged: '
-            + 'historical synchronization, guaranteed delivery, offline queues, retry protocols, subscriptions, distributed '
-            + 'notifications, global Commentary search, new Commentary APIs, new storage, new deduplication, new conflict resolution, '
-            + 'Publication synchronization, Commentary editing/mutation, and provider ranking/fallback.'
+            '0.9.622 verdict, AS ORIGINALLY WRITTEN: exactly ONE CONCRETE_PRODUCT_GAP survived this reassessment (Section E) — every '
+            + 'other audited dimension of the post-distribution Commentary experience was already correct or a deliberate, '
+            + 'still-justified boundary. RECOMMENDATION (as originally written): scope a single, small, separately-numbered next '
+            + 'milestone (0.9.623) to wire the ALREADY-BUILT onCommentaryReceived() local observation to the ALREADY-BUILT '
+            + 'PublicationCommentaryNotificationProducer\'s own NotificationEvent/NotificationEventStore machinery. THAT MILESTONE '
+            + 'SHIPPED — this text is preserved for its own historical record; see Section E\'s own amended narration, above, for '
+            + 'what actually landed. Deliberately excluded here, unchanged: historical synchronization, guaranteed delivery, offline '
+            + 'queues, retry protocols, subscriptions, distributed notifications, global Commentary search, new Commentary APIs, new '
+            + 'storage, new deduplication, new conflict resolution, Publication synchronization, Commentary editing/mutation, and '
+            + 'provider ranking/fallback.'
         );
         console.log(`✅ All Post-Commentary-Distribution Product Reassessment tests passed (${assertionCount} assertions).`);
     }

@@ -104,6 +104,24 @@ import { NostrDiscoveryQueryService } from '../application/NostrDiscoveryQuerySe
 //   Section K — exclusion guard: nothing on the requesting brief's
 //               "deliberately excluded" list was built.
 //   Section L — verdict table.
+//
+// AMENDED BY 0.9.629 — Publication Commentary Nostr Asynchronous
+// Distribution Closure Audit. This audit's own RECOMMENDATION (Section L,
+// below) was implemented next, exactly as named: 0.9.628 built "a single
+// small production adapter file wiring the two raw transport primitives
+// together exactly as this test's own ComposedNostrTransportCommentarySubstrate
+// does" (application/PublicationCommentaryNostrDistribution.js) plus its
+// own admission boundary (application/
+// DiscoverPublicationCommentaryFromNostrUseCase.js) — a CONCRETE_PRODUCT_GAP
+// closed, never a NEW_SUBSTRATE_BOUNDARY crossed; Arweave remains untouched,
+// exactly as this audit's own closing line anticipated. Only Section K's
+// own now-stale file-census assertion and closing narration are amended in
+// place, below, plus this note — every other section, including this
+// file's own live Nostr round-trip flagship (Section C/J) and its own
+// SEMANTIC_GAP finding about PERSISTENTLY_PUBLISHED (Section L), holds
+// exactly as measured and remains the reason 0.9.628's own header
+// documents that same distinction rather than silently promising
+// Arweave-grade durability.
 
 let assertionCount = 0;
 function assert(condition, message) {
@@ -817,6 +835,11 @@ async function run() {
         assert(!/nostrEventId\s*[:=]|arweaveTransactionId\s*[:=]/.test(codeOnly),
             n('no new Commentary identity field introduced anywhere in this test\'s own code'));
 
+        // AMENDED BY 0.9.629 — see this file's own header note, above.
+        // Two such files now exist — 0.9.628's own adapter and admission
+        // boundary — built AFTER this milestone, per this audit's own
+        // recommendation, never by this milestone itself. Zero
+        // Arweave-flavored ones exist, exactly as originally measured.
         const commentaryNostrOrArweaveFiles = (() => {
             let hits = '';
             try {
@@ -824,10 +847,13 @@ async function run() {
             } catch { /* zero hits */ }
             return hits.trim() ? hits.trim().split('\n') : [];
         })();
-        assert(commentaryNostrOrArweaveFiles.length === 0,
-            n(`still zero Nostr- or Arweave-flavored Commentary production files anywhere — found: ${commentaryNostrOrArweaveFiles.join(', ') || 'none'}`));
+        assert(commentaryNostrOrArweaveFiles.length === 2
+            && commentaryNostrOrArweaveFiles.every((f) => /Nostr/.test(f))
+            && commentaryNostrOrArweaveFiles.some((f) => f.includes('PublicationCommentaryNostrDistribution.js'))
+            && commentaryNostrOrArweaveFiles.some((f) => f.includes('DiscoverPublicationCommentaryFromNostrUseCase.js')),
+            n(`exactly 0.9.628's own two Nostr-flavored Commentary production files exist, and zero Arweave-flavored ones — found: ${commentaryNostrOrArweaveFiles.join(', ') || 'none'}; neither existed when THIS milestone (0.9.627) ran, and this milestone itself still built neither — both were built by 0.9.628, one milestone later, exactly per this audit's own recommendation`));
 
-        console.log('✓ K: nothing on the requesting brief\'s own "deliberately excluded" list — a Nostr Commentary publisher/query service, an Arweave implementation, multi-relay fan-out, relay ranking/fallback, retry queues, background sync, a new Commentary identity field, or a WebRTC/Publication-discovery change — was built by this milestone.');
+        console.log('✓ K (AMENDED BY 0.9.629): nothing on the requesting brief\'s own "deliberately excluded" list — an Arweave implementation, multi-relay fan-out, relay ranking/fallback, retry queues, background sync, a new Commentary identity field, or a WebRTC/Publication-discovery change — was built by THIS milestone (0.9.627), still true. A Nostr Commentary publisher/admission boundary, the one item this audit\'s own verdict table (Section L) explicitly recommended rather than excluded, was subsequently built by 0.9.628, one milestone later.');
     }
 
     // ===============================================================

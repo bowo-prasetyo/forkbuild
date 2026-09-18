@@ -98,6 +98,41 @@ import { ArweaveAnnouncementPublisher } from '../application/ArweaveAnnouncement
 //               FAN-OUT — reconfirmed live from its own source.
 //   Section J — production-change guard.
 //   Section K — classification and verdict.
+//
+// AMENDED BY 0.9.629 — Publication Commentary Nostr Asynchronous
+// Distribution Closure Audit. This audit's own RECOMMENDATION (Section K,
+// below) was: "if a genuine product need for asynchronous/offline
+// Commentary delivery emerges later, scope it as its own small, explicit,
+// SELECTION-never-fan-out capability... choosing ONE new substrate seam at
+// a time, built as a new envelope/publisher/query-service family rather
+// than a repurposing of the Publication/Snapshot discovery-envelope
+// classes." 0.9.626 (a new, substrate-neutral delivery CONTRACT —
+// deliberately no envelope of its own, reusing 0.9.618's existing one
+// instead, per that milestone's own finding that Commentary needs no
+// second envelope), 0.9.627 (a test-only proof that composing two already-
+// existing, genuinely substrate-neutral Nostr transport PRIMITIVES
+// satisfies that contract), and 0.9.628 (application/
+// PublicationCommentaryNostrDistribution.js + application/
+// DiscoverPublicationCommentaryFromNostrUseCase.js — a real, permanent,
+// production-wired adapter, built and wired into ui/main.js) did exactly
+// that, in that order — a genuinely NEW family, never a repurposing of
+// NostrPublicationDiscoveryPublisher/NostrDiscoveryQueryService, exactly
+// as Section G/I below anticipated. Only Section G's own two now-stale
+// file-census assertions and closing narration are amended in place,
+// below, plus this note — every other section holds exactly as measured:
+// Section D's own bidirectional structural-incompatibility finding for
+// the two existing LOCATOR envelope families is UNCHANGED and remains the
+// reason 0.9.626-0.9.628 built a NEW family rather than reusing either;
+// Section H's own product-requirement census is scoped to nostr/, arweave/,
+// and replication/ directories specifically (never application/), and
+// remains literally true — application/PublicationCommentaryNostrDistribution.js
+// itself never imports storage/PublicationCommentaryStore.js, exactly like
+// every raw nostr/ transport primitive it composes (see that file's own
+// header, "an opaque envelope carrier, never a second Commentary
+// authority"); Section I's own SELECTION-NEVER-FAN-OUT precedent is
+// likewise unchanged and is exactly what 0.9.628 followed (one relay, one
+// discovery tag, per instance — no automatic fan-out to Nostr AND WebRTC;
+// each is its own explicit, independent, best-effort call).
 
 let assertionCount = 0;
 function assert(condition, message) {
@@ -188,28 +223,28 @@ async function run() {
         assert(wiringSuite.passed,
             n('0.9.623\'s own wiring integration suite, re-executed live, still exits 0 — that file\'s own Section A already re-runs 0.9.620\'s wiring suite, 0.9.275\'s producer suite, and 0.9.623\'s own bridge unit suite together, so the full arc through local notification bridging is reconfirmed live, right now, against current source'));
 
-        // A GENUINE, LIVE FINDING, SURFACED RATHER THAN HIDDEN: 0.9.622's
-        // own test file is now stale BY DESIGN, not by neglect. Its own
-        // Section E asserted "zero production call sites subscribe to
-        // onCommentaryReceived" as the CONCRETE_PRODUCT_GAP it measured;
-        // 0.9.623 then deliberately closed exactly that gap (ui/main.js
-        // and application/PublicationCommentaryRemoteNotificationBridge.js
-        // now both do subscribe). Nobody updated 0.9.622's own now-obsolete
-        // assertion to match — the same "a stored fact from before is
-        // never silently rewritten" restraint this whole codebase already
-        // holds for durable domain records, observed here for a durable
-        // TEST record instead. This audit does not repair 0.9.622's own
-        // file (a production-adjacent test-history edit no requesting
-        // brief asked for, and out of this milestone's own scope) — it
-        // only confirms, live, that the failure is this one exact,
-        // expected, already-explained assertion, never a surprise.
-        const staleReassessment = runGuardLive('tests/PostCommentaryDistributionProductReassessment.test.js');
-        assert(!staleReassessment.passed && /zero production call sites subscribe to it — found: ui\/main\.js, application\/PublicationCommentaryRemoteNotificationBridge\.js/.test(staleReassessment.stdout),
-            n('0.9.622\'s own test file, re-executed live, now fails at EXACTLY the one assertion its own finding predicted would need revisiting once fixed — its own Sections A-D (stored/observable/discoverable, multi-Commentary, ordering) still print their own passing checkmarks first, confirmed in this same subprocess output, before Section E\'s now-superseded assertion halts it. This is 0.9.623 having done its job, not a regression this milestone introduces or needs to fix.'));
-        assert(/✓ A:.*✓ B:.*✓ C:.*✓ D:/s.test(staleReassessment.stdout),
-            n('confirmed directly in that same subprocess output: Sections A through D all printed their own passing checkmark before Section E\'s now-stale assertion halted the file — the staleness is scoped to exactly the one finding 0.9.623 fixed, nothing broader'));
+        // AMENDED BY 0.9.629 — at the time this audit originally ran,
+        // 0.9.622's own test file was stale BY DESIGN (Section E asserted
+        // "zero production call sites subscribe to onCommentaryReceived"
+        // as the CONCRETE_PRODUCT_GAP it measured; 0.9.623 then closed
+        // exactly that gap without anyone amending 0.9.622's own now-
+        // obsolete assertion to match), and this section deliberately
+        // surfaced that staleness live rather than hiding it. 0.9.629's
+        // own Section A re-execution of the FULL 0.9.617-0.9.628 arc
+        // needs every one of those files to pass live — so 0.9.629 itself
+        // amended tests/PostCommentaryDistributionProductReassessment.test.js
+        // in place (its own Section E only; see that file's own header
+        // note), the same "amend a prior audit's now-stale assertion,
+        // never its substantive finding" convention this codebase already
+        // used for 0.9.620's amendment of tests/
+        // PublicationCommentaryCrossDeviceProductClosureAudit.test.js.
+        // This section now reconfirms it passes live, rather than
+        // confirming its own expected failure.
+        const reassessment = runGuardLive('tests/PostCommentaryDistributionProductReassessment.test.js');
+        assert(reassessment.passed && /All Post-Commentary-Distribution Product Reassessment tests passed/.test(reassessment.stdout),
+            n('0.9.622\'s own test file, re-executed live, now exits 0 again — 0.9.629 amended its one now-stale assertion (Section E) in place; every other section, including this file\'s own Sections A-D and F-H, is unmodified and holds exactly as originally measured'));
 
-        console.log('✓ A: the entire 0.9.617-0.9.623 arc reconfirmed live — this milestone builds on that result, never re-derives it, adds no wiring of its own to it, and surfaces (without repairing) one now-expected stale assertion in 0.9.622\'s own file that its own successor milestone already superseded.');
+        console.log('✓ A: the entire 0.9.617-0.9.628 arc reconfirmed live — this milestone builds on that result, never re-derives it, adds no wiring of its own to it, and (this same milestone, elsewhere) repaired the one stale assertion in 0.9.622\'s own file that 0.9.623 had already superseded but nobody had yet amended.');
     }
 
     // ===============================================================
@@ -378,10 +413,23 @@ async function run() {
     // ground, not an unwired existing class.
     // ===============================================================
     {
+        // AMENDED BY 0.9.629 — see this file's own header note, above.
+        // Two such files now exist, built by 0.9.628 exactly along the
+        // lines this audit's own Section D/G/I anticipated: a NEW family,
+        // never a repurposing of NostrPublicationDiscoveryPublisher or
+        // NostrDiscoveryQueryService (neither of which gained, references,
+        // or was repurposed toward any Commentary vocabulary — reconfirmed
+        // by the second half of this assertion, unchanged).
         const commentaryNostrFiles = grepFiles('Commentary', ['nostr', 'application'], { ignoreCase: false })
             .filter((f) => /Nostr/.test(f) && /Commentary/i.test(f));
-        assert(commentaryNostrFiles.length === 0,
-            n(`zero Nostr-flavored Commentary files of any kind exist anywhere (no NostrCommentaryDiscoveryPublisher, no NostrCommentaryDiscoveryQueryService) — found: ${commentaryNostrFiles.join(', ') || 'none'}. This is unlike 0.9.619's own finding for the peer transport (a real capability existed but nothing called it); here, no such capability exists to call at all.`));
+        assert(commentaryNostrFiles.length === 2
+            && commentaryNostrFiles.some((f) => f.includes('PublicationCommentaryNostrDistribution.js'))
+            && commentaryNostrFiles.some((f) => f.includes('DiscoverPublicationCommentaryFromNostrUseCase.js')),
+            n(`exactly the two Nostr-flavored Commentary files 0.9.628 built now exist — application/PublicationCommentaryNostrDistribution.js (the adapter) and application/DiscoverPublicationCommentaryFromNostrUseCase.js (the admission boundary) — found: ${commentaryNostrFiles.join(', ') || 'none'}`));
+        const discoveryPublisherSource = codeOnly(await rawSource('application/NostrPublicationDiscoveryPublisher.js'));
+        const discoveryQueryServiceSource = codeOnly(await rawSource('application/NostrDiscoveryQueryService.js'));
+        assert(!/Commentary/.test(discoveryPublisherSource) && !/Commentary/.test(discoveryQueryServiceSource),
+            n('neither existing discovery-specific Nostr class (application/NostrPublicationDiscoveryPublisher.js, application/NostrDiscoveryQueryService.js) gained, references, or was repurposed toward any Commentary vocabulary — 0.9.628 built a genuinely new family instead, exactly this audit\'s own Section D/G/I recommendation'));
         const commentaryArweaveFiles = grepFiles('Commentary', ['arweave', 'application'], { ignoreCase: false })
             .filter((f) => /Arweave/.test(f) && /Commentary/i.test(f));
         assert(commentaryArweaveFiles.length === 0,
@@ -392,7 +440,7 @@ async function run() {
         assert(peerExchangeFlat.includes('REQUEST/RESPONSE pair (find every commentary a peer knows about a publicationId, for a late-joining replica) is exactly the kind of seam a LATER, separately-scoped milestone could add'),
             n('the ONE forward-reference this codebase\'s own source already names for Commentary\'s next distribution step is a peer REQUEST/RESPONSE protocol (find every commentary a peer knows about a publicationId, for a late-joining replica) — modeled explicitly on application/PublicationAnchorPeerProtocol.js\'s own 0.8.5 precedent. That forward-reference names a PEER extension, never Nostr or Arweave.'));
 
-        console.log('✓ G: a Nostr/Arweave-flavored Commentary distribution capability is not a wiring gap in something that already exists (0.9.619\'s own pattern) — it would be an entirely new envelope, publisher, and query-service family, mirroring Publication/Snapshot\'s own four-to-six-file pattern (envelope, exchange, Nostr publisher, Arweave announcement publisher, query services) from scratch. The one extension this codebase\'s own source already anticipates for Commentary is a peer-based request/response protocol, not a persistent-substrate one.');
+        console.log('✓ G (AMENDED BY 0.9.629): at the time this audit originally ran, a Nostr/Arweave-flavored Commentary distribution capability was not a wiring gap in something that already existed (0.9.619\'s own pattern) — it would need an entirely new envelope, publisher, and query-service family, mirroring Publication/Snapshot\'s own multi-file pattern from scratch. 0.9.626-0.9.628 built exactly that NEW family for Nostr (never Arweave, still untouched) — a substrate-neutral delivery contract (0.9.626), a test-proven raw-transport composition (0.9.627), and a real, permanent, production-wired adapter plus admission boundary (0.9.628) — reusing the EXISTING 0.9.618 envelope unmodified rather than inventing a second one, since Section D\'s own finding was that Commentary needed no second envelope, only a substrate that could carry the existing one. The one extension this codebase\'s own source anticipated for Commentary BEYOND Nostr remains a peer-based request/response protocol; Arweave remains exactly as untouched by Commentary as this audit originally measured.');
     }
 
     // ===============================================================
@@ -417,9 +465,20 @@ async function run() {
         // "share," "sync," or "offline" about a Commentary, beyond the
         // existing best-effort peer announce already reconfirmed live in
         // Section A?
+        // AMENDED BY 0.9.629: ui/main.js now also matches, purely because
+        // its own 0.9.628 section header comments literally read
+        // "Publication Commentary Nostr Asynchronous Distribution" twice
+        // — codeOnly() below strips comment lines before re-checking, the
+        // same technique this file's own other sections already use, to
+        // confirm no REAL UI affordance is what matched.
         const commentaryUiHits = grepFiles('share.{0,20}commentary|distribute.{0,20}commentary|commentary.{0,20}(share|distribute|sync|offline)', ['ui'], { ignoreCase: true });
-        assert(commentaryUiHits.length === 1 && commentaryUiHits[0] === 'ui/views/WorldView.js',
-            n(`the only UI hit for "share/distribute/sync/offline"-adjacent Commentary vocabulary is ui/views/WorldView.js, inspected directly: a 0.9.248 header comment reading "mirroring distributeWorldEncounterSnapshot()'s own restraint" — describing this view's OWN CODE-STYLE restraint (a thin wrapper that decides nothing) by comparison to a differently-named Snapshot function, never a Commentary distribution/share feature of any kind. No genuine UI affordance asks a user to persist or distribute a Commentary beyond the automatic, best-effort peer announce already made on creation. Found: ${commentaryUiHits.join(', ') || 'none'}`));
+        assert(commentaryUiHits.length === 2
+            && commentaryUiHits.includes('ui/views/WorldView.js')
+            && commentaryUiHits.includes('ui/main.js'),
+            n(`the UI hits for "share/distribute/sync/offline"-adjacent Commentary vocabulary are ui/views/WorldView.js (a 0.9.248 header comment describing its OWN code-style restraint, never a Commentary feature) and, as of 0.9.628, ui/main.js (its own section header comments naming "Publication Commentary Nostr Asynchronous Distribution") — found: ${commentaryUiHits.join(', ') || 'none'}`));
+        const mainCodeOnly = codeOnly(await rawSource('ui/main.js'));
+        assert(!/share.{0,20}commentary|distribute.{0,20}commentary|commentary.{0,20}(share|distribute|sync|offline)/i.test(mainCodeOnly),
+            n('with comments stripped, ui/main.js has no REAL affordance matching that vocabulary either — every 0.9.628 hit was a section-header comment naming the milestone, never a UI feature; the two genuine new production call sites 0.9.628 added (a best-effort Nostr publish after creation, and an explicitly-invoked discoverPublicationCommentaryFromNostrCommand) are named `publish`/`discover`, not `share`/`sync`/`offline`, and neither is a user-facing "share this Commentary" affordance of any kind'));
 
         const roadmapHitCount = Number(execSync(
             'grep -ciE "decentralized commentary|commentary.{0,15}(nostr|arweave)" docs/Roadmap.md || true',
@@ -471,32 +530,32 @@ async function run() {
     // ===============================================================
     {
         console.log(
-            '\nClassification table:\n'
+            '\nClassification table (AMENDED BY 0.9.629 — Section G only; see this file\'s own header note):\n'
             + '  B. Nostr substrate role (Publication/Snapshot) ....... ALREADY_CORRECT (locator-only, unsigned, live-wired)\n'
             + '  C. Arweave substrate roles (Publication/Snapshot) ..... ALREADY_CORRECT (two independent roles, live-wired)\n'
             + '  D. Envelope structural compatibility .................. ARCHITECTURAL_MISMATCH for direct reuse; PREPARED_SEAM for the PATTERN only\n'
             + '  E. Five-identity independence .......................... ALREADY_CORRECT\n'
             + '  F. Announcement-of-a-locator vs. delivery-of-content ... ARCHITECTURAL_MISMATCH (Commentary needs the opposite shape)\n'
-            + '  G. Historical/asynchronous acquisition for Nostr/Arweave  NO_REQUIREMENT / new ground, not an unwired class\n'
-            + '  H. Product requirement (Models 2/3/4) .................. NO_REQUIREMENT\n'
-            + '  I. Fan-out policy ....................................... INTENTIONAL_BOUNDARY (selection, never fan-out) — precedent, not yet a Commentary decision\n'
+            + '  G. Historical/asynchronous acquisition for Nostr/Arweave  RESOLVED for Nostr (0.9.626-0.9.628) — was NO_REQUIREMENT / new ground; Arweave still untouched\n'
+            + '  H. Product requirement (Models 2/3/4) .................. NO_REQUIREMENT, AS ORIGINALLY MEASURED — superseded for Nostr by a later, separate product argument (0.9.626\'s own header)\n'
+            + '  I. Fan-out policy ....................................... INTENTIONAL_BOUNDARY (selection, never fan-out) — precedent 0.9.628 itself followed\n'
         );
         console.log(
-            '0.9.625 verdict: NO CONCRETE_PRODUCT_GAP survives this audit. The existing Nostr and Arweave substrate seams — genuinely live, '
-            + 'genuinely production-wired, for Publication and Snapshot — CANNOT carry the existing PublicationCommentaryDistributionEnvelope '
-            + 'unmodified (Section D, proven bidirectionally and live against real classes): the discovery-envelope family is an unsigned '
-            + 'LOCATOR shape built to announce where large material already stored elsewhere can be found, while Commentary is a small, '
-            + 'REQUIRED-signature, self-contained payload that already travels whole today, over WebRTC. Building Nostr/Arweave Commentary '
-            + 'distribution would mean a genuinely new envelope, publisher, and query-service family from scratch — never a rewiring of the '
-            + 'existing one, and never a repurposing 0.9.618\'s own header already explicitly declined. No concrete product requirement for '
-            + 'that work exists anywhere in this codebase\'s UI, tests, or roadmap today (Section H); the one forward-reference this codebase\'s '
-            + 'own source anticipates for Commentary is a peer-based request/response extension (Section G), not a persistent-substrate one. '
-            + 'RECOMMENDATION: do not build Nostr or Arweave Commentary distribution now. If a genuine product need for asynchronous/offline '
-            + 'Commentary delivery emerges later, scope it as its own small, explicit, SELECTION-never-fan-out capability (Section I\'s own '
-            + 'precedent), choosing ONE new substrate seam at a time, built as a new envelope/publisher/query-service family rather than a '
-            + 'repurposing of the Publication/Snapshot discovery-envelope classes. Deliberately excluded here, unchanged: any new envelope, '
-            + 'publisher, query service, signing capability, fan-out policy, historical sync, or UI affordance for Commentary distribution of '
-            + 'any kind.'
+            '0.9.625 verdict, AS ORIGINALLY WRITTEN: NO CONCRETE_PRODUCT_GAP survived this audit. The existing Nostr and Arweave substrate '
+            + 'seams — genuinely live, genuinely production-wired, for Publication and Snapshot — CANNOT carry the existing '
+            + 'PublicationCommentaryDistributionEnvelope unmodified (Section D, proven bidirectionally and live against real classes, still '
+            + 'true today). No concrete product requirement for asynchronous Commentary delivery existed anywhere in this codebase\'s UI, '
+            + 'tests, or roadmap at the time (Section H, still literally true of that scope). RECOMMENDATION (as originally written): do not '
+            + 'build Nostr or Arweave Commentary distribution now; if a genuine product need emerges later, scope it as its own small, '
+            + 'explicit, SELECTION-never-fan-out capability, choosing ONE new substrate seam at a time, built as a new envelope/publisher/'
+            + 'query-service family rather than a repurposing of the Publication/Snapshot discovery-envelope classes. A follow-up product '
+            + 'argument SUBSEQUENTLY reopened this question on grounds this audit never measured (WebRTC\'s own live-only reachability gap — '
+            + 'see 0.9.626\'s own header) and 0.9.626-0.9.628 built exactly the recommended shape for Nostr: a new, substrate-neutral contract, '
+            + 'reusing the EXISTING envelope (never a second one — Section D\'s own finding held, so no new envelope was needed after all, only '
+            + 'a substrate that could carry the existing one whole), a new adapter, and a new admission boundary — never a repurposing of '
+            + 'NostrPublicationDiscoveryPublisher/NostrDiscoveryQueryService. Arweave remains exactly where this audit left it: NO_REQUIREMENT, '
+            + 'untouched, independently assessable later on its own evidence — see tests/PublicationCommentaryNostrAsynchronousDistributionClosureAudit.test.js '
+            + '(0.9.629) Section L for that later assessment.'
         );
         console.log(`✅ All Publication Commentary Persistent Distribution Boundary Audit tests passed (${assertionCount} assertions).`);
     }
