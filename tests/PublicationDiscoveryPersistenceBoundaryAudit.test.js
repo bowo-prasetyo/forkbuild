@@ -701,13 +701,16 @@ async function run() {
         assert(mainSource.includes("app.provide('decentralizedPublicationDiscoveryProvider', decentralizedPublicationDiscoveryProvider);"),
             '2. ...provided app-wide, exactly once, under exactly one name.');
 
-        // J2. Confirm no reconstruction step already exists at that
-        // composition root — the gap really is "never populated from
-        // storage," not "populated, but from the wrong place."
+        // J2. 0.9.608 — Reconstruct Publication Discovery at Application
+        // Composition — wired exactly the seam this Section named, at
+        // exactly this construction site: reconfirm the reconstruction
+        // call now exists here, reusing `publicationCatalog` (never a
+        // second LocalPublicationCatalog instance), rather than
+        // re-deriving whether it does from scratch.
         const constructionIndex = mainSource.indexOf('const decentralizedPublicationDiscoveryProvider = new DecentralizedPublicationDiscoveryProvider();');
         const nearbyWindow = mainSource.slice(constructionIndex, constructionIndex + 2000);
-        assert(!/publicationCatalog\.list\(\)|LocalPublicationCatalog/.test(nearbyWindow),
-            '3. no reconstruction call against application/LocalPublicationCatalog.js exists anywhere near this construction site today — the seam identified by this audit (Section D) is genuinely unwired, not merely misplaced.');
+        assert(/new ReconstructPublicationDiscoveryUseCase\(\s*publicationCatalog, publicationResolutionCoordinator, publicationDisplayKindPlugins, decentralizedPublicationDiscoveryProvider\s*\)\.execute\(\);/.test(nearbyWindow),
+            '3. a reconstruction call now exists immediately at this construction site — application/ReconstructPublicationDiscoveryUseCase.js, wired by 0.9.608, populating this SAME provider instance from the SAME publicationCatalog/publicationResolutionCoordinator/publicationDisplayKindPlugins this file already composed. The seam this Section identified is no longer merely identified — it is wired.');
 
         // J3. The ownership-semantics argument for WHERE reconstruction
         // belongs: 0.9.337's own "one instance, threaded everywhere"
@@ -723,7 +726,7 @@ async function run() {
         assert(/performs\s*\n\/\/ no decentralized discovery of its own/.test(providerSource),
             '4. discovery/DecentralizedPublicationDiscoveryProvider.js\'s own header still commits it to knowing nothing about resolution or storage — confirming reconstruction must live at the composition root (or a use case it calls), never inside this class.');
 
-        console.log('✓ Section J: the reconstruction seam belongs at ui/main.js\'s own composition root, populating the SAME single provider instance already constructed there, before app.provide() — reusing reconstructDiscoveryProvider()\'s own shape (Section D) verbatim. No new class, no change to DecentralizedPublicationDiscoveryProvider itself, no wrapper.');
+        console.log('✓ Section J: the reconstruction seam belongs at ui/main.js\'s own composition root, populating the SAME single provider instance already constructed there, before app.provide() — reusing reconstructDiscoveryProvider()\'s own shape (Section D) verbatim. No new class, no change to DecentralizedPublicationDiscoveryProvider itself, no wrapper. 0.9.608 wired exactly this — see tests/ReconstructPublicationDiscoveryUseCase.test.js for the production-class regression suite.');
     }
 
     // ===============================================================
