@@ -103,6 +103,30 @@ import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifi
 //   Section J — classification, one fixed vocabulary, one primary
 //               finding, not eight separate verdicts standing in for one
 //               "yes, but only here" answer.
+//
+// AMENDED BY 0.9.618 — Publication Commentary Distribution Envelope,
+// which implemented exactly this audit's own recommendation: a new
+// sibling envelope (core/PublicationCommentaryDistributionEnvelope.js),
+// a signing descriptor and a verifyPublicationCommentaryDistributionEnvelope()
+// branch on identity/LocalAuthorizationVerifier.js, and reuse — never
+// reinvention — of this file's own Section G/I finding (the existing
+// storage/PublicationCommentaryStore.js commentaryId identity already
+// gives idempotent-arrival/conflict-refusal semantics for free). Only
+// assertion 29 (Section F) is amended in place, plus this note — per
+// this codebase's own established convention (see e.g. 0.9.611's amend
+// of tests/StructureRelativeSnappingBoundaryAudit.test.js) for a prior
+// audit whose own assertion described a gap a later milestone closed.
+// Every other section was independently re-verified against the 0.9.618
+// production code with no changes needed: Section C's Device A/Device B
+// persistence-boundary reproduction and Section H's flagship both still
+// hold EXACTLY as measured — 0.9.618 added a NEW, separate distribution
+// path (application/PublicationCommentaryDistributionExchange.js +
+// PublicationCommentaryDistributionPeerExchange.js), never a change to
+// AddPublicationCommentaryUseCase.js/PublicationCommentaryNotificationProducer.js
+// or the plain local write/read chain those two sections exercise. See
+// tests/PublicationCommentaryDistribution.test.js for 0.9.618's own full
+// coverage, including its own Device A -> Device B flagship over the
+// real peer transport.
 
 function assert(condition, message) {
     if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
@@ -436,9 +460,24 @@ async function run() {
         assert(JSON.stringify(baseMethods.sort()) === JSON.stringify(['verifyIndexRoot', 'verifyPlacement', 'verifyPublication'].sort()),
             '28. the base AuthorizationVerifier contract declares exactly three verification methods, live — Publication, Placement, IndexRoot — no fourth, Commentary-shaped method already sitting there unused');
 
+        // AMENDED BY 0.9.618 — Publication Commentary Distribution
+        // Envelope, which closed exactly this gap: a new sibling
+        // envelope (core/PublicationCommentaryDistributionEnvelope.js,
+        // never core/PublicationCommentary.js itself, which stays
+        // unsigned — see assertions 2-3 above, still true, unmodified)
+        // now carries a signature, and LocalAuthorizationVerifier now
+        // does verify it — via verifyPublicationCommentaryDistributionEnvelope(),
+        // a differently-named method than the hypothetical
+        // verifyCommentary()/verifyPublicationCommentary() assertion 27
+        // above already ruled out and still correctly rules out (0.9.618
+        // named it after the ENVELOPE it verifies, matching every other
+        // verify*() method in this file, never after the bare domain
+        // fact it wraps). See tests/PublicationCommentaryDistribution.test.js
+        // for the full 0.9.618 coverage.
         const verifierSrc = await rawSource('identity/LocalAuthorizationVerifier.js');
-        assert(!verifierSrc.includes('Commentary') && !verifierSrc.includes('PublicationCommentary'),
-            '29. identity/LocalAuthorizationVerifier.js never imports or mentions PublicationCommentary — it is absent from the actual signing-descriptor whitelist, not merely undocumented');
+        assert(verifierSrc.includes('PublicationCommentaryDistributionEnvelope')
+            && typeof verifier.verifyPublicationCommentaryDistributionEnvelope === 'function',
+            '29. identity/LocalAuthorizationVerifier.js now imports and verifies a PublicationCommentaryDistributionEnvelope (0.9.618) — the signing-descriptor whitelist gap this audit measured is closed, via a NEW sibling envelope, never by adding a signature to PublicationCommentary itself');
 
         // Two different, real identities can each author commentary on the
         // SAME publication — proving there is no per-author cryptographic
@@ -467,7 +506,7 @@ async function run() {
         assert(!commentaryOnlySrc.includes('publisherIdentity'),
             '32. core/PublicationCommentary.js\'s own source never mentions publisherIdentity at all — the separation in assertion 31 cannot be accidentally erased by a future edit that merely forgets to check');
 
-        console.log('✓ F: Commentary has no signature, no signing descriptor, and is absent from the real verification whitelist — a remotely-received Commentary could not be authenticated today without new machinery, and author identity is already, structurally, kept apart from Publication attribution.');
+        console.log('✓ F: Commentary itself still has no signature or signing descriptor (unmodified core/PublicationCommentary.js) — but a remotely-received Commentary CAN now be authenticated, via 0.9.618\'s own sibling envelope and its LocalAuthorizationVerifier branch — and author identity is still, structurally, kept apart from Publication attribution.');
     }
 
     // -------------------------------------------------------------
