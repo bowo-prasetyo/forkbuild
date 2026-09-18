@@ -8,6 +8,8 @@ import { CreatePublicationCommentaryDistributionPeerExchangeUseCase } from '../a
 import { PublicationCommentaryRemoteNotificationBridge } from '../application/PublicationCommentaryRemoteNotificationBridge.js';
 import { PublicationCommentaryNostrDistribution } from '../application/PublicationCommentaryNostrDistribution.js';
 import { DiscoverPublicationCommentaryFromNostrUseCase } from '../application/DiscoverPublicationCommentaryFromNostrUseCase.js';
+import { PublicationCommentaryArweaveDistribution } from '../application/PublicationCommentaryArweaveDistribution.js';
+import { DiscoverPublicationCommentaryFromArweaveUseCase } from '../application/DiscoverPublicationCommentaryFromArweaveUseCase.js';
 import { NotificationEventStore } from '../storage/NotificationEventStore.js';
 import { PeerSessionManager } from '../application/PeerSessionManager.js';
 import { WebRtcPeerConnectionProvider } from '../peer/WebRtcPeerConnectionProvider.js';
@@ -701,20 +703,37 @@ const {
 // constructing anything Nostr-shaped itself, so this stays the one place
 // that ever wires the two together.
 let publicationCommentaryNostrDistribution = null;
+// 0.9.631 — Publication Commentary Arweave Asynchronous Distribution.
+// Same "starts null, filled in once its own host capabilities exist below"
+// shape `publicationCommentaryNostrDistribution` immediately above already
+// holds — see this file's own later 0.9.631 section.
+let publicationCommentaryArweaveDistribution = null;
 
-// Composes `createPublicationCommentaryCommand` (0.9.289, unmodified)
-// with two independent, best-effort distribution side effects — WebRTC
-// ANNOUNCE (0.9.620) and, as of 0.9.628, a Nostr publish — after local
-// creation succeeds, never before it and never in place of it. Mirrors
-// this milestone's own central invariant (see docs/Roadmap.md's 0.9.620
-// entry): local Commentary creation is the primary operation, and
-// EITHER distribution attempt's own failure — no connected peers, no
-// configured Nostr relay capability, a signing error, anything either
-// call can throw or reject with — is deliberately swallowed here, never
-// allowed to undo or mask an already-successful local persist, and never
-// surfaced to the caller as a Commentary-creation failure. The two
-// transports are genuinely parallel and independent: a Nostr publish
-// failure never skips or retries the WebRTC announce, and vice versa.
+// Composes `createPublicationCommentaryCommand` (0.9.289, unmodified) with
+// two independent, best-effort distribution side effects — WebRTC ANNOUNCE
+// (0.9.620), always attempted, and EXACTLY ONE asynchronous substrate
+// publish (Nostr, as of 0.9.628; Arweave, as of 0.9.631) — after local
+// creation succeeds, never before it and never in place of it. Mirrors this
+// milestone's own central invariant (see docs/Roadmap.md's 0.9.620 entry):
+// local Commentary creation is the primary operation, and EITHER
+// distribution attempt's own failure — no connected peers, no configured
+// relay/gateway capability, a signing error, anything either call can throw
+// or reject with — is deliberately swallowed here, never allowed to undo or
+// mask an already-successful local persist, and never surfaced to the
+// caller as a Commentary-creation failure.
+//
+// SELECTION, NEVER FAN-OUT — 0.9.631's OWN ADDITION, EXTENDING `application/
+// PublicationDistributionRuntimeComposition.js`'s OWN INVARIANT OF THE SAME
+// NAME TO COMMENTARY. `input.discoveryProvider` chooses AT MOST ONE
+// asynchronous substrate to publish to — `'nostr'` (the default, preserving
+// every existing caller's behavior unchanged since 0.9.628) or `'arweave'`
+// — never both from a single call, exactly as `composePublicationDistributionRuntime()`
+// already selects exactly one discovery-substrate collaborator for
+// Publication distribution. WebRTC remains a wholly separate, always-on
+// LIVE-dissemination mechanism (0.9.620), untouched by this selection —
+// see docs/Roadmap.md's own 0.9.626 entry, "substrate selection ≠ transport
+// fan-out." A caller wanting Commentary on both Nostr and Arweave calls this
+// command twice, is not something this milestone builds a shortcut for.
 function addPublicationCommentaryCommand(input) {
     const result = createPublicationCommentaryCommand(input);
     try {
@@ -725,16 +744,20 @@ function addPublicationCommentaryCommand(input) {
         // createPublicationCommentaryCommand throws, unmodified, before
         // announcing anything), so nothing here ever needs to be undone.
     }
-    if (publicationCommentaryNostrDistribution) {
+    const discoveryProvider = (input && input.discoveryProvider) || 'nostr';
+    const asynchronousDistribution = discoveryProvider === 'arweave'
+        ? publicationCommentaryArweaveDistribution
+        : publicationCommentaryNostrDistribution;
+    if (asynchronousDistribution) {
         try {
             const envelopeJson = publicationCommentaryDistributionExchange.exportCommentary(result.commentary);
             // Deliberately not awaited — see this function's own header,
-            // "genuinely parallel and independent." A rejection (no relay
-            // reachable, no Nostr capability configured, a timeout) is
-            // swallowed here exactly like the WebRTC announce() failure
-            // immediately above; nothing downstream of local persistence
-            // is ever undone by it.
-            publicationCommentaryNostrDistribution.publish(envelopeJson).catch(() => {});
+            // "genuinely parallel and independent." A rejection (no relay/
+            // gateway reachable, no signing capability configured, a
+            // timeout) is swallowed here exactly like the WebRTC announce()
+            // failure immediately above; nothing downstream of local
+            // persistence is ever undone by it.
+            asynchronousDistribution.publish(envelopeJson).catch(() => {});
         } catch {
             // Same restraint as the WebRTC try/catch above, for a
             // synchronous failure (e.g. exportCommentary() itself throws).
@@ -2431,11 +2454,22 @@ function resolveArweaveHostSigner() {
         injectedProvider: typeof window !== 'undefined' ? window.arweaveWallet : undefined
     });
 }
+// AMENDED BY 0.9.631 — `sign()` NOW FORWARDS AN OPTIONAL `tags` ARGUMENT.
+// `arweave/ArweaveInjectedProviderSigner.js`'s own `sign(material, tags = [])`
+// has accepted a tags parameter since 0.9.490 — this delegate's own
+// signature was never updated to match, so every existing
+// `uploadTaggedTransaction(material, tag)` call already routed through this
+// wrapper (`arweaveAnnouncementUploadTaggedTransaction`, 0.9.492, and now
+// `publicationCommentaryArweaveDistribution`, this same milestone) silently
+// dropped its own tag before it ever reached the real host wallet. Fully
+// backward compatible: a caller that still calls `sign(material)` alone
+// gets the identical `tags = []` default the underlying signer itself
+// already defaults to.
 const arweaveHostSigner = {
-    sign(material) {
+    sign(material, tags = []) {
         const signer = resolveArweaveHostSigner();
         return signer
-            ? signer.sign(material)
+            ? signer.sign(material, tags)
             : Promise.reject(new Error('This device has no Arweave wallet/signing capability configured yet.'));
     }
 };
@@ -2644,6 +2678,71 @@ function discoverPublicationCommentaryFromNostrCommand(publicationId) {
     });
 }
 app.provide('discoverPublicationCommentaryFromNostrCommand', discoverPublicationCommentaryFromNostrCommand);
+
+// 0.9.631 — Publication Commentary Arweave Asynchronous Distribution.
+//
+// `arweaveHostSigner`/`resolvedArweaveGatewayUrl` both already exist above
+// (this file's own existing Arweave wiring, unmodified) — this is another
+// independent consumer of the same two values, exactly like
+// `arweaveSnapshotDiscoveryQueryService`'s own reuse of
+// `resolvedArweaveGatewayUrl` elsewhere in this file: no second gateway
+// resolution, no second signer-resolution mechanism. `graphqlUrl`/`tagName`
+// are left at their own defaults on `PublicationCommentaryArweaveDistribution`
+// — this substrate's own, separate campaign namespace (see that class's own
+// header) — the identical "left at its own defaults" restraint
+// `arweaveSnapshotDiscoveryQueryService`'s own construction site already
+// holds. `discoveryTag` defaults to `'forkbuild-commentary'`, matching
+// `PublicationCommentaryNostrDistribution`'s own default VALUE while
+// remaining a separate campaign at the transport level (see that class's
+// own header).
+//
+// Assigning the outer `publicationCommentaryArweaveDistribution` binding
+// (declared `null` earlier in this file, where `addPublicationCommentaryCommand`
+// closes over it) is what actually turns on the best-effort Arweave publish
+// path inside that function whenever a caller selects
+// `discoveryProvider: 'arweave'` — before this line runs, that selection
+// resolves to a silent no-op (the `if (asynchronousDistribution)` guard),
+// never a throw, the identical restraint the Nostr binding already held
+// before its own 0.9.628 assignment above.
+publicationCommentaryArweaveDistribution = new PublicationCommentaryArweaveDistribution({
+    signer: arweaveHostSigner,
+    gatewayUrl: resolvedArweaveGatewayUrl
+});
+
+// The explicit, separately-invoked acquisition boundary this milestone's
+// own requesting brief called for — never wired into
+// `getPublicationCommentariesCommand`, mirroring
+// `discoverPublicationCommentaryFromNostrUseCase`/
+// `discoverPublicationCommentaryFromNostrCommand` immediately above,
+// substrate for substrate. Reuses the SAME `publicationCommentaryDistributionExchange`
+// instance `addPublicationCommentaryCommand`, the WebRTC peer exchange, and
+// the Nostr discovery use case above already share — no second store, no
+// second exchange, no second verifier.
+const discoverPublicationCommentaryFromArweaveUseCase = new DiscoverPublicationCommentaryFromArweaveUseCase(
+    publicationCommentaryArweaveDistribution,
+    publicationCommentaryDistributionExchange
+);
+// A newly-admitted remote Commentary is fed into the SAME
+// `publicationCommentaryRemoteNotificationBridge` instance WebRTC and Nostr
+// already use — never a third, transport-specific notification mechanism.
+// Best-effort, mirroring `discoverPublicationCommentaryFromNostrCommand`'s
+// own restraint immediately above: a notification failure for one admitted
+// Commentary must never stop the remaining ones in the same batch from
+// being processed.
+function discoverPublicationCommentaryFromArweaveCommand(publicationId) {
+    return discoverPublicationCommentaryFromArweaveUseCase.execute({ publicationId }).then((results) => {
+        for (const result of results) {
+            try {
+                publicationCommentaryRemoteNotificationBridge.handleCommentaryReceived(result);
+            } catch {
+                // Best-effort only — see this section's own header, above.
+            }
+        }
+        return results;
+    });
+}
+app.provide('discoverPublicationCommentaryFromArweaveCommand', discoverPublicationCommentaryFromArweaveCommand);
+
 const arweavePublicationRuntimeCapabilities = createArweavePublicationDistributionRuntimeAdapter({ signer: arweaveHostSigner });
 // 0.9.492 — Wire Arweave Tagged Transaction Upload into Production
 // Composition. 0.9.491's own audit (Gap 1) found this exact construction
