@@ -155,19 +155,40 @@ export class PublicationCommentaryNotificationProducer {
 
         const publication = this._discoveryProvider.findById(commentary.publicationId);
         if (publication) {
-            const notificationEvent = new NotificationEvent({
-                eventType: PUBLICATION_COMMENTED_EVENT_TYPE,
-                recipientIdentityId: publication.publisherIdentity.id,
-                createdAt: commentary.createdAt,
-                payload: {
-                    publicationId: commentary.publicationId,
-                    commentaryId: commentary.commentaryId,
-                    authorIdentityId: commentary.authorIdentityId
-                }
-            });
+            const notificationEvent = buildPublicationCommentedNotificationEvent(commentary, publication);
             this._notificationSink(notificationEvent);
         }
 
         return result;
     }
+}
+
+// 0.9.623 — extracted, unchanged in shape, so
+// application/PublicationCommentaryRemoteNotificationBridge.js's own
+// remote-arrival entry point can build the IDENTICAL `publication.commented`
+// NotificationEvent execute() above already builds for local creation,
+// without a second, independent construction of the same shape living in a
+// second file. This is the SAME three-identifier payload
+// (`publicationId`/`commentaryId`/`authorIdentityId`) and the SAME
+// `publication.publisherIdentity.id` recipient this file has built since
+// 0.9.275 — pulled out to a plain, side-effect-free function rather than
+// re-typed, still the only place in this codebase that ever reaches for
+// NotificationEvent's own constructor for a Commentary. execute() above
+// calls this function itself, unmodified in behavior by this extraction;
+// it is declared below the class only so its own textual position in this
+// file stays after execute()'s own delegation to the wrapped use case —
+// function declarations hoist, so this ordering has no effect on runtime
+// behavior, only on where a reader (or a source-level regression test)
+// finds it.
+export function buildPublicationCommentedNotificationEvent(commentary, publication) {
+    return new NotificationEvent({
+        eventType: PUBLICATION_COMMENTED_EVENT_TYPE,
+        recipientIdentityId: publication.publisherIdentity.id,
+        createdAt: commentary.createdAt,
+        payload: {
+            publicationId: commentary.publicationId,
+            commentaryId: commentary.commentaryId,
+            authorIdentityId: commentary.authorIdentityId
+        }
+    });
 }
