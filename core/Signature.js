@@ -255,7 +255,24 @@ export const SignatureType = Object.freeze({
     // other claim type in this file already holds. See core/
     // PublisherLeaderboardSnapshotClaim.js's own
     // getPublisherLeaderboardSnapshotClaimSigningDescriptor().
-    PUBLISHER_LEADERBOARD_SNAPSHOT_CLAIM: 'publisher-leaderboard-snapshot-claim'
+    PUBLISHER_LEADERBOARD_SNAPSHOT_CLAIM: 'publisher-leaderboard-snapshot-claim',
+    // 0.9.618 — a REQUIRED signature (never optional — see this file's
+    // own "no unsigned claims" rule above), over a
+    // core/PublicationCommentaryDistributionEnvelope.js record. Proves
+    // "identity X itself signed exactly this commentaryId/publicationId/
+    // content/createdAt tuple for distribution" — deliberately the SAME
+    // shape of claim as PLACE_NAMING_CLAIM/BLUEPRINT_ATTRIBUTION above:
+    // it never authorizes anything, never requires the signer to hold
+    // any relationship to the Publication being commented on, and says
+    // nothing about Publication authorship/ownership, which remains an
+    // entirely independent identity claim (publisher/Publication.js's
+    // own `publisherIdentity`). The signer MUST equal the envelope's own
+    // `authorIdentityId` — a commentary distribution has exactly one
+    // party to it, the identity that wrote the comment. See core/
+    // PublicationCommentaryDistributionEnvelope.js's own
+    // getPublicationCommentaryDistributionSigningDescriptor() and this
+    // file's own header, "no unsigned claims."
+    PUBLICATION_COMMENTARY_DISTRIBUTION: 'publication-commentary-distribution'
 });
 
 export class Signature {

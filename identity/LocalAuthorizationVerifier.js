@@ -22,6 +22,7 @@ import { getDecentralizedPublicationSigningDescriptor } from '../core/Decentrali
 import { getPublicationAnchorSigningDescriptor } from '../core/PublicationAnchor.js';
 import { getPublicationSnapshotPlacementSigningDescriptor } from '../core/PublicationSnapshotPlacement.js';
 import { getPublisherLeaderboardSnapshotClaimSigningDescriptor } from '../core/PublisherLeaderboardSnapshotClaim.js';
+import { getPublicationCommentaryDistributionSigningDescriptor } from '../core/PublicationCommentaryDistributionEnvelope.js';
 import { computeContentHash } from '../serializer/contentHash.js';
 import * as Ed25519 from './Ed25519.js';
 
@@ -690,6 +691,41 @@ export class LocalAuthorizationVerifier extends AuthorizationVerifier {
         }
         const identity = { id: sig.signer, algorithm: 'Ed25519', publicKey: Ed25519.bytesToHex(publicKeyBytes) };
         return this.verifyDescriptor(getPublisherLeaderboardSnapshotClaimSigningDescriptor(record), record.signature, identity);
+    }
+
+    // 0.9.618 — a PublicationCommentaryDistributionEnvelope is NEVER
+    // tolerated unsigned, the same REQUIRED discipline as
+    // verifyPlaceNamingClaim()/verifyBlueprintAttribution() above. The
+    // signer MUST equal the envelope's own `authorIdentityId` — a
+    // commentary distribution has exactly one party to it, the identity
+    // that wrote the comment. STRUCTURAL verification only: this method
+    // never reads, checks, or even knows about a Publication's own
+    // publisherIdentity — see core/PublicationCommentaryDistributionEnvelope.js's
+    // own header, "a narrow, structural claim, never Publication
+    // ownership." A signature that verifies here proves only that
+    // `authorIdentityId` genuinely signed exactly this commentary tuple;
+    // it never implies anything about who published, owns, or is
+    // otherwise associated with the Publication being commented on.
+    verifyPublicationCommentaryDistributionEnvelope(record) {
+        if (!record) {
+            return { valid: false, signed: false, reason: 'no publication commentary distribution envelope' };
+        }
+        if (!record.signature) {
+            return { valid: false, signed: false, reason: 'a publication commentary distribution envelope must be signed' };
+        }
+        const sig = Signature.fromJSON(record.signature);
+        if (!sig) {
+            return { valid: false, signed: true, reason: 'malformed signature' };
+        }
+        if (sig.signer !== record.authorIdentityId) {
+            return { valid: false, signed: true, reason: 'signer does not match the commentary\'s own author' };
+        }
+        const publicKeyBytes = Ed25519.didKeyToPublicKey(sig.signer);
+        if (!publicKeyBytes) {
+            return { valid: false, signed: true, reason: 'unknown signer identity' };
+        }
+        const identity = { id: sig.signer, algorithm: 'Ed25519', publicKey: Ed25519.bytesToHex(publicKeyBytes) };
+        return this.verifyDescriptor(getPublicationCommentaryDistributionSigningDescriptor(record), record.signature, identity);
     }
 
     // The core check, exposed for direct use (tests, future verifiers).
