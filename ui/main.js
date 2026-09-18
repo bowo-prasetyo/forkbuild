@@ -42,6 +42,7 @@ import { CreatePublicationPeerExchangeUseCase } from '../application/CreatePubli
 import { CreatePeerContentExchangeUseCase } from '../application/CreatePeerContentExchangeUseCase.js';
 import { CreatePublicationResolutionCoordinatorUseCase } from '../application/CreatePublicationResolutionCoordinatorUseCase.js';
 import { CreatePublicationDisplayKindRegistryUseCase } from '../application/CreatePublicationDisplayKindRegistryUseCase.js';
+import { ReconstructPublicationDiscoveryUseCase } from '../application/ReconstructPublicationDiscoveryUseCase.js';
 import { CreatePublicationAnchorPeerExchangeUseCase } from '../application/CreatePublicationAnchorPeerExchangeUseCase.js';
 import { CreatePublicationAnchorDiscoveryCoordinatorUseCase } from '../application/CreatePublicationAnchorDiscoveryCoordinatorUseCase.js';
 import { CreatePublicationSnapshotPlacementPeerExchangeUseCase } from '../application/CreatePublicationSnapshotPlacementPeerExchangeUseCase.js';
@@ -613,6 +614,27 @@ const { kindPlugins: publicationDisplayKindPlugins } = new CreatePublicationDisp
 // no decentralized discovery or resolution of its own (see its own
 // header) — this is only its first real production caller.
 const decentralizedPublicationDiscoveryProvider = new DecentralizedPublicationDiscoveryProvider();
+
+// 0.9.608 — Reconstruct Publication Discovery at Application Composition.
+// 0.9.606's own Section F found that this provider's own in-memory
+// accumulator loses every Repository-admitted Publication across a real
+// session boundary, while its PlacementRecord (LocalPlacementRegistry is
+// storage-backed) survives. 0.9.607 proved the fix live: every fact
+// needed to reconstruct a Publication already survives, durably, in
+// `publicationCatalog` (application/LocalPublicationCatalog.js) and its
+// own ContentStore — the gap is a missing INDEX, not a missing FACT.
+// Populates the SAME single provider instance constructed immediately
+// above, before app.provide() hands it out below, by reusing the SAME
+// `publicationCatalog`/`publicationResolutionCoordinator`/
+// `publicationDisplayKindPlugins` this replica already composed above —
+// never a second catalog, resolver, or coordinator. See
+// application/ReconstructPublicationDiscoveryUseCase.js's own header for
+// why this never triggers network retrieval, even though
+// `publicationResolutionCoordinator` was itself built with a live
+// peerContentExchange.
+await new ReconstructPublicationDiscoveryUseCase(
+    publicationCatalog, publicationResolutionCoordinator, publicationDisplayKindPlugins, decentralizedPublicationDiscoveryProvider
+).execute();
 
 // 0.8.3 — Publication Center: External Evidence UX. The first UI wiring
 // for the anchor catalog/verifier pipeline 0.8.0-0.8.2 built with no UI
