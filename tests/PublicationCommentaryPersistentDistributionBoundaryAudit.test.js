@@ -430,10 +430,25 @@ async function run() {
         const discoveryQueryServiceSource = codeOnly(await rawSource('application/NostrDiscoveryQueryService.js'));
         assert(!/Commentary/.test(discoveryPublisherSource) && !/Commentary/.test(discoveryQueryServiceSource),
             n('neither existing discovery-specific Nostr class (application/NostrPublicationDiscoveryPublisher.js, application/NostrDiscoveryQueryService.js) gained, references, or was repurposed toward any Commentary vocabulary — 0.9.628 built a genuinely new family instead, exactly this audit\'s own Section D/G/I recommendation'));
+        // AMENDED AGAIN BY 0.9.631 — Publication Commentary Arweave
+        // Asynchronous Distribution built exactly the Arweave counterpart
+        // 0.9.628 already built for Nostr, following this same audit's own
+        // Section D/G/I recommendation one substrate over: application/
+        // PublicationCommentaryArweaveDistribution.js (the adapter) and
+        // application/DiscoverPublicationCommentaryFromArweaveUseCase.js
+        // (the admission boundary) — a genuinely new family, never a
+        // repurposing of ArweaveAnnouncementPublisher/
+        // ArweaveGraphqlDiscoveryQueryService.
         const commentaryArweaveFiles = grepFiles('Commentary', ['arweave', 'application'], { ignoreCase: false })
             .filter((f) => /Arweave/.test(f) && /Commentary/i.test(f));
-        assert(commentaryArweaveFiles.length === 0,
-            n(`zero Arweave-flavored Commentary files of any kind exist anywhere either — found: ${commentaryArweaveFiles.join(', ') || 'none'}`));
+        assert(commentaryArweaveFiles.length === 2
+            && commentaryArweaveFiles.some((f) => f.includes('PublicationCommentaryArweaveDistribution.js'))
+            && commentaryArweaveFiles.some((f) => f.includes('DiscoverPublicationCommentaryFromArweaveUseCase.js')),
+            n(`exactly the two Arweave-flavored Commentary files 0.9.631 built now exist — found: ${commentaryArweaveFiles.join(', ') || 'none'}`));
+        const arweaveAnnouncementSource = codeOnly(await rawSource('application/ArweaveAnnouncementPublisher.js'));
+        const arweaveQueryServiceSource = codeOnly(await rawSource('application/ArweaveGraphqlDiscoveryQueryService.js'));
+        assert(!/Commentary/.test(arweaveAnnouncementSource) && !/Commentary/.test(arweaveQueryServiceSource),
+            n('neither existing discovery-specific Arweave class (application/ArweaveAnnouncementPublisher.js, application/ArweaveGraphqlDiscoveryQueryService.js) gained, references, or was repurposed toward any Commentary vocabulary — 0.9.631 built a genuinely new family instead, exactly this audit\'s own Section D/G/I recommendation, one substrate over'));
 
         const peerExchangeHeader = await rawSource('application/PublicationCommentaryDistributionPeerExchange.js');
         const peerExchangeFlat = peerExchangeHeader.replace(/\r?\n/g, ' ').replace(/\/\/ ?/g, '');

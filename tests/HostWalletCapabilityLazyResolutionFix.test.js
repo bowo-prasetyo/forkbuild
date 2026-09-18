@@ -153,7 +153,17 @@ async function run() {
         assert(/function resolveNostrHostPublisher\(\) \{/.test(mainSource), n('A2. ui/main.js now defines resolveNostrHostPublisher() — the identical shape, one substrate over'));
         assert(!/const arweaveHostSigner = createArweaveInjectedProviderSigner\(/.test(mainSource), n('A3. arweaveHostSigner is no longer assigned directly from one eager createArweaveInjectedProviderSigner() call'));
         assert(!/const nostrHostPublisher = createNostrInjectedProviderPublisher\(/.test(mainSource), n('A4. nostrHostPublisher is no longer assigned directly from one eager createNostrInjectedProviderPublisher() call'));
-        assert(/const arweaveHostSigner = \{\s*\n\s*sign\(material\) \{/.test(mainSource), n('A5. arweaveHostSigner is now a plain always-present object whose own sign() re-resolves per call'));
+        // AMENDED BY 0.9.631 — Publication Commentary Arweave Asynchronous
+        // Distribution fixed a latent bug in this exact object: sign()
+        // never forwarded an optional `tags` argument to the real host
+        // signer (arweave/ArweaveInjectedProviderSigner.js's own
+        // sign(material, tags = []) has accepted one since 0.9.490),
+        // silently dropping every tag on every uploadTaggedTransaction()
+        // call routed through it. The regex below now matches the fixed,
+        // two-parameter signature; the invariant this assertion actually
+        // protects — a plain, always-present object whose own sign()
+        // re-resolves per call — is unchanged.
+        assert(/const arweaveHostSigner = \{\s*\n\s*sign\(material, tags = \[\]\) \{/.test(mainSource), n('A5. arweaveHostSigner is now a plain always-present object whose own sign() re-resolves per call'));
         assert(/const nostrHostPublisher = async function nostrHostPublish\(relayUrl, eventTemplate\) \{/.test(mainSource), n('A6. nostrHostPublisher is now a plain always-present function that re-resolves per call'));
         assert(!/arweaveAnchorFallbackSigner/.test(codeOnly(mainSource)), n('A7. the now-redundant arweaveAnchorFallbackSigner declaration/usage is gone from real code (a plain-text mention in an explanatory comment is fine) — arweaveHostSigner itself already produces the identical honest rejection'));
         assert(/signer: arweaveHostSigner,\s*\n\s*gatewayUrl: resolvedArweaveGatewayUrl/.test(mainSource), n('A8. the Arweave anchor publisher wiring now hands arweaveHostSigner directly, with no `|| fallback` of any kind'));
