@@ -6,6 +6,8 @@ import { IdentityUseCase } from '../application/IdentityUseCase.js';
 import { CreatePublicationCommentaryUseCase } from '../application/CreatePublicationCommentaryUseCase.js';
 import { CreatePublicationCommentaryDistributionPeerExchangeUseCase } from '../application/CreatePublicationCommentaryDistributionPeerExchangeUseCase.js';
 import { PublicationCommentaryRemoteNotificationBridge } from '../application/PublicationCommentaryRemoteNotificationBridge.js';
+import { PublicationCommentaryNostrDistribution } from '../application/PublicationCommentaryNostrDistribution.js';
+import { DiscoverPublicationCommentaryFromNostrUseCase } from '../application/DiscoverPublicationCommentaryFromNostrUseCase.js';
 import { NotificationEventStore } from '../storage/NotificationEventStore.js';
 import { PeerSessionManager } from '../application/PeerSessionManager.js';
 import { WebRtcPeerConnectionProvider } from '../peer/WebRtcPeerConnectionProvider.js';
@@ -678,26 +680,41 @@ await new ReconstructPublicationDiscoveryUseCase(
 // saved through `createPublicationCommentaryCommand` below is immediately
 // visible to `publicationCommentaryDistributionPeerExchange`'s own
 // `announce()` the moment it is called.
-const { peerExchange: publicationCommentaryDistributionPeerExchange } = new CreatePublicationCommentaryDistributionPeerExchangeUseCase().execute({
+const {
+    exchange: publicationCommentaryDistributionExchange,
+    peerExchange: publicationCommentaryDistributionPeerExchange
+} = new CreatePublicationCommentaryDistributionPeerExchangeUseCase().execute({
     identityProvider,
     peerMessageBus,
     connectedPeerRegistry: peerSessionManager.registry
 });
 
+// 0.9.628 — Publication Commentary Nostr Asynchronous Distribution.
+//
+// Assigned once, below, after this file's own existing Nostr host
+// capability (`nostrHostPublisher`) and relay query client
+// (`nostrRelayQueryClient`) are constructed — both are declared much
+// later in this file, so this binding starts `null` and is filled in by
+// the time any real Commentary is ever submitted (see this file's own
+// later 0.9.628 section). `addPublicationCommentaryCommand`, below,
+// closes over this SAME mutable binding rather than importing/
+// constructing anything Nostr-shaped itself, so this stays the one place
+// that ever wires the two together.
+let publicationCommentaryNostrDistribution = null;
+
 // Composes `createPublicationCommentaryCommand` (0.9.289, unmodified)
-// with a distribution side effect: ANNOUNCE, after local creation
-// succeeds, never before it and never in place of it. Mirrors this
-// milestone's own central invariant (see docs/Roadmap.md's 0.9.620
-// entry): local Commentary creation is the primary operation, and a
-// distribution attempt's own failure — no connected peers, a signing
-// error, anything `announce()` itself can throw (see application/
-// PublicationCommentaryDistributionPeerExchange.js's own header) — is
-// deliberately swallowed here, never allowed to undo or mask an already-
-// successful local persist, and never surfaced to the caller as a
-// Commentary-creation failure. Zero connected peers is never an error,
-// only an announcement nobody happened to be listening for — the exact
-// restraint `publicationCommentaryDistributionPeerExchange.announce()`
-// itself already documents.
+// with two independent, best-effort distribution side effects — WebRTC
+// ANNOUNCE (0.9.620) and, as of 0.9.628, a Nostr publish — after local
+// creation succeeds, never before it and never in place of it. Mirrors
+// this milestone's own central invariant (see docs/Roadmap.md's 0.9.620
+// entry): local Commentary creation is the primary operation, and
+// EITHER distribution attempt's own failure — no connected peers, no
+// configured Nostr relay capability, a signing error, anything either
+// call can throw or reject with — is deliberately swallowed here, never
+// allowed to undo or mask an already-successful local persist, and never
+// surfaced to the caller as a Commentary-creation failure. The two
+// transports are genuinely parallel and independent: a Nostr publish
+// failure never skips or retries the WebRTC announce, and vice versa.
 function addPublicationCommentaryCommand(input) {
     const result = createPublicationCommentaryCommand(input);
     try {
@@ -707,6 +724,21 @@ function addPublicationCommentaryCommand(input) {
         // succeeded above (or this line would never have been reached —
         // createPublicationCommentaryCommand throws, unmodified, before
         // announcing anything), so nothing here ever needs to be undone.
+    }
+    if (publicationCommentaryNostrDistribution) {
+        try {
+            const envelopeJson = publicationCommentaryDistributionExchange.exportCommentary(result.commentary);
+            // Deliberately not awaited — see this function's own header,
+            // "genuinely parallel and independent." A rejection (no relay
+            // reachable, no Nostr capability configured, a timeout) is
+            // swallowed here exactly like the WebRTC announce() failure
+            // immediately above; nothing downstream of local persistence
+            // is ever undone by it.
+            publicationCommentaryNostrDistribution.publish(envelopeJson).catch(() => {});
+        } catch {
+            // Same restraint as the WebRTC try/catch above, for a
+            // synchronous failure (e.g. exportCommentary() itself throws).
+        }
     }
     return result;
 }
@@ -2550,6 +2582,68 @@ const nostrHostPublisher = async function nostrHostPublish(relayUrl, eventTempla
     return publishImpl(relayUrl, eventTemplate);
 };
 const nostrPublicationRuntimeCapabilities = createNostrPublicationDistributionRuntimeAdapter({ publish: nostrHostPublisher });
+
+// 0.9.628 — Publication Commentary Nostr Asynchronous Distribution.
+//
+// `nostrHostPublisher`/`nostrRelayQueryClient`/`resolvedNostrRelayUrl` all
+// already exist above (this file's own existing Nostr wiring, unmodified)
+// — this is a fourth, independent consumer of the same three values,
+// exactly like `nostrPublicationRuntimeCapabilities` immediately above it
+// and `nostrSnapshotDiscoveryPublisherOptions` further below: no second
+// relay-configuration mechanism, no second host-capability resolution.
+// `PublicationCommentaryNostrDistribution` (application/, this same
+// milestone) is the small, permanent adapter 0.9.627's own audit
+// recommended — the identical composition that test file's own
+// `ComposedNostrTransportCommentarySubstrate` already proved conforms to
+// core/PublicationCommentaryAsynchronousDeliveryContract.js's own
+// publish()/retrieve() contract, given a real home. `discoveryTag`
+// defaults to `'forkbuild-commentary'` (see that class's own header) — a
+// separate campaign from `PUBLICATION_DISCOVERY_TAG`/`'forkbuild-snapshot'`,
+// never reusing either.
+//
+// Assigning the outer `publicationCommentaryNostrDistribution` binding
+// (declared `null` earlier in this file, where `addPublicationCommentaryCommand`
+// closes over it) is what actually turns on the best-effort Nostr publish
+// inside that function — before this line runs, every Commentary
+// submission's own Nostr publish attempt above is a silent no-op (the
+// `if (publicationCommentaryNostrDistribution)` guard), never a throw.
+publicationCommentaryNostrDistribution = new PublicationCommentaryNostrDistribution({
+    publishImpl: nostrHostPublisher,
+    queryImpl: nostrRelayQueryClient,
+    relayUrl: resolvedNostrRelayUrl
+});
+
+// The explicit, separately-invoked acquisition boundary this milestone's
+// own requesting brief called for — never wired into
+// `getPublicationCommentariesCommand` (see application/
+// DiscoverPublicationCommentaryFromNostrUseCase.js's own header on why).
+// Reuses the SAME `publicationCommentaryDistributionExchange` instance
+// `addPublicationCommentaryCommand` and the WebRTC peer exchange already
+// share — no second store, no second exchange, no second verifier.
+const discoverPublicationCommentaryFromNostrUseCase = new DiscoverPublicationCommentaryFromNostrUseCase(
+    publicationCommentaryNostrDistribution,
+    publicationCommentaryDistributionExchange
+);
+// A newly-admitted remote Commentary is fed into the SAME
+// `publicationCommentaryRemoteNotificationBridge` instance the WebRTC
+// path already uses (constructed earlier in this file, 0.9.623) — never a
+// second, transport-specific notification mechanism. Best-effort,
+// mirroring that same bridge's own existing WebRTC subscription: a
+// notification failure for one admitted Commentary must never stop the
+// remaining ones in the same batch from being processed.
+function discoverPublicationCommentaryFromNostrCommand(publicationId) {
+    return discoverPublicationCommentaryFromNostrUseCase.execute({ publicationId }).then((results) => {
+        for (const result of results) {
+            try {
+                publicationCommentaryRemoteNotificationBridge.handleCommentaryReceived(result);
+            } catch {
+                // Best-effort only — see this section's own header, above.
+            }
+        }
+        return results;
+    });
+}
+app.provide('discoverPublicationCommentaryFromNostrCommand', discoverPublicationCommentaryFromNostrCommand);
 const arweavePublicationRuntimeCapabilities = createArweavePublicationDistributionRuntimeAdapter({ signer: arweaveHostSigner });
 // 0.9.492 — Wire Arweave Tagged Transaction Upload into Production
 // Composition. 0.9.491's own audit (Gap 1) found this exact construction
