@@ -12,6 +12,9 @@ import { AvatarVisual } from '../renderer/AvatarVisual.js';
 import { RemoteSpatialPresenceRenderer } from '../renderer/RemoteSpatialPresenceRenderer.js';
 import { VehicleFieldRenderer } from '../renderer/VehicleFieldRenderer.js';
 import { WorldSpatialPresentationMode } from '../core/WorldSpatialAnchor.js';
+import { surfaceCategoryAt, SURFACE_CATEGORY } from '../core/TerrainSurface.js';
+import { LAKE_SURFACE_HEIGHT } from '../core/Hydrology.js';
+import { DEFAULT_WORLD_SEED } from '../core/TerrainHeightField.js';
 
 // World View's render wiring. Exposes the same narrow gizmo surface
 // RenderWorldUseCase does — one shared TransformGizmoController design,
@@ -149,10 +152,36 @@ export class RenderWorldViewUseCase {
         // touching movement/collision. See docs/Principles.md, "Terrain
         // Elevation Is A Rendering-Time Offset, Never A Presence Or
         // Placement Fact."
+        //
+        // 0.9.615 — Avatar Basic Water Surface Constraint. A SECOND,
+        // independent input combined at this SAME rendering-time layer,
+        // never a change to what renderer.terrainHeightAt() itself
+        // returns (that stays the one shared ground-height authority
+        // renderer/WorldRenderer.js's buildings and this facade's
+        // avatars both read from unmodified — see renderer/Renderer.js's
+        // own header). Wherever the real ground at (x, z) is classified
+        // SURFACE_CATEGORY.WATER (a still LAKE — core/Hydrology.js's own
+        // term; a river is deliberately never this category, see that
+        // file's own "A River Is Ground Color" design), the avatar's
+        // rendered floor is the HIGHER of the real terrain height and
+        // the lake's own fixed surface height, so the avatar's rendered
+        // position never sinks below it. A dry coordinate is completely
+        // unaffected. Stateless and per-call — no AvatarPresence field,
+        // no AvatarMovementState value, and no SWIMMING vocabulary is
+        // introduced anywhere; leaving the water returns to ordinary
+        // terrain-following on the very next call, with nothing to
+        // reset. See tests/AvatarBasicWaterTraversalBoundaryAudit.test.js
+        // (0.9.614) Section C for the audit that established this as the
+        // minimum coherent behavior, and
+        // tests/AvatarBasicWaterSurfaceConstraint.test.js for this
+        // milestone's own invariants.
         function withGroundElevation(position) {
+            const groundHeight = renderer.terrainHeightAt(position.x, position.z);
+            const isWaterGround = surfaceCategoryAt(DEFAULT_WORLD_SEED, position.x, position.z) === SURFACE_CATEGORY.WATER;
+            const floorHeight = isWaterGround ? Math.max(groundHeight, LAKE_SURFACE_HEIGHT) : groundHeight;
             return {
                 x: position.x,
-                y: position.y + renderer.terrainHeightAt(position.x, position.z),
+                y: position.y + floorHeight,
                 z: position.z
             };
         }

@@ -52,6 +52,26 @@ import { deriveSpatialContext } from '../core/WorldSpatialContext.js';
 // hand-picked "this happens to work" magic number — the same discipline
 // tests/Hydrology.test.js's own Section B already established ("scanning
 // thousands of coordinates").
+//
+// PARTIALLY SUPERSEDED BY 0.9.615 — Avatar Basic Water Surface
+// Constraint. This audit's own flagship (Section B, assertion 14) named
+// the gap this classification recommended closing; 0.9.614 then
+// narrowed it to a minimal, render-time-only candidate, and 0.9.615
+// installed exactly that candidate for real in
+// application/RenderWorldViewUseCase.js#withGroundElevation(). Assertion
+// 14's own comment and message are amended in place, below, to say what
+// they now measure precisely (the PRE-0.9.615 raw formula, replicated by
+// hand, not what a viewer watching a real avatar actually sees anymore)
+// — the numeric fact it checks (`maxSubmersion > 0`) is unchanged and
+// still true, since AvatarPresence.position.y and terrainHeightAt() are
+// both still exactly what they always were; only what sits ON TOP of
+// that raw number, at the rendering layer, changed. Every other section
+// (A, C, D) was independently re-verified against the 0.9.615 production
+// code with NO changes needed — VehiclePlacement's own ground gate and
+// WorldSpatialContext's own wire shape are still completely untouched,
+// exactly as this audit's own classification said they would remain. See
+// tests/AvatarBasicWaterSurfaceConstraint.test.js for the dedicated
+// coverage of what 0.9.615 actually closes.
 
 function assert(condition, message) {
     if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
@@ -225,12 +245,25 @@ async function runTests() {
             cursor = stepResult.position;
             if (surfaceCategoryAt(seed, cursor.x, cursor.z) === SURFACE_CATEGORY.WATER) {
                 sawWaterGround = true;
-                // Real rendered Y, replicated from application/RenderWorldViewUseCase.js's
-                // own `y: position.y + renderer.terrainHeightAt(x, z)` (that
-                // file's own avatar-elevation line) — AvatarPresence.position.y
-                // itself stays the flat 0 ground-level fact (docs/Principles.md,
-                // "Terrain Elevation Is A Rendering-Time Offset"); this is what a
-                // viewer actually SEES the avatar's feet do.
+                // The RAW pre-0.9.615 formula, replicated by hand:
+                // position.y + terrainHeightAt(seed, x, z), with NO water
+                // floor applied — AvatarPresence.position.y itself still
+                // stays the flat 0 ground-level fact (docs/Principles.md,
+                // "Terrain Elevation Is A Rendering-Time Offset"), exactly
+                // as it did before and after 0.9.615.
+                //
+                // AMENDED BY 0.9.615 — Avatar Basic Water Surface
+                // Constraint (see this file's own "PARTIALLY SUPERSEDED"
+                // header note, above). This is no longer "what a viewer
+                // actually sees": application/RenderWorldViewUseCase.js's
+                // own withGroundElevation() now floors the AVATAR's own
+                // rendered Y at max(terrainHeight, LAKE_SURFACE_HEIGHT)
+                // wherever ground is WATER — see
+                // tests/AvatarBasicWaterSurfaceConstraint.test.js for the
+                // dedicated coverage of the real, shipped function. This
+                // raw value remains useful as the UNCONSTRAINED input the
+                // real fix now floors, never as a description of the
+                // final rendered result.
                 const renderedY = cursor.y + terrainHeightAt(seed, cursor.x, cursor.z);
                 const submersion = LAKE_SURFACE_HEIGHT - renderedY;
                 if (submersion > maxSubmersion) maxSubmersion = submersion;
@@ -240,7 +273,7 @@ async function runTests() {
             `12. FLAGSHIP: ${stepCount} real steps (${(stepSize * stepCount).toFixed(0)} world units) straight into the lake interior are NEVER blocked by the real, unmodified AvatarTerrainConstraint`);
         assert(sawWaterGround === true, '13. FLAGSHIP: the walk genuinely crosses onto WATER-classified ground, not merely toward it');
         assert(maxSubmersion > 0,
-            '14. FLAGSHIP: the avatar\'s own real rendered elevation (per RenderWorldViewUseCase\'s own formula) sinks BELOW the fixed LAKE_SURFACE_HEIGHT the farther it walks — a visible submersion with no floor, clamp, or state change of any kind');
+            '14. AMENDED BY 0.9.615 — FLAGSHIP (historical): the RAW position.y + terrainHeightAt() value (still exactly what AvatarPresence/terrain kinematics produce, unchanged by 0.9.615) sinks below the fixed LAKE_SURFACE_HEIGHT the farther the avatar walks. This is no longer the avatar\'s own real rendered elevation — application/RenderWorldViewUseCase.js#withGroundElevation() now floors it at the lake surface before anything reaches the screen; see tests/AvatarBasicWaterSurfaceConstraint.test.js, Section B, for proof against the real, shipped rendering function.');
 
         // The exact same coordinate the avatar just walked onto,
         // unblocked, is independently confirmed to be real WATER ground

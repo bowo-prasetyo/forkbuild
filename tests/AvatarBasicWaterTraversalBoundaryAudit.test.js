@@ -62,6 +62,21 @@ import { resolveAvatarVehicleMovementCapability } from '../core/AvatarVehicleMov
 //   Section H: classification — a fixed, closed vocabulary, per finding,
 //              never a single verdict papering over five different
 //              answers.
+//
+// SUPERSEDED IN PART BY 0.9.615 — Avatar Basic Water Surface Constraint.
+// Section C's own candidate below (candidateWaterFloorRenderedY) was
+// installed for real, in this exact form, as
+// application/RenderWorldViewUseCase.js#withGroundElevation()'s new
+// water-floor gate — see that file's own 0.9.615 header. Section C's
+// TEST-LOCAL function and its own assertions are left completely
+// unchanged below: they still independently verify the underlying
+// formula's coherence (shoreline continuity, depth fidelity, river
+// no-op) on their own terms, and remain correct as a description of
+// that formula: only the narrative claim that it is "never installed
+// anywhere" is now historical, not current. See
+// tests/AvatarBasicWaterSurfaceConstraint.test.js for the dedicated
+// proof that the REAL, shipped function (extracted from its own source,
+// never re-typed) satisfies the same invariants.
 
 function assert(condition, message) {
     if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
@@ -105,18 +120,30 @@ function realRenderedY(seed, position) {
 }
 
 // ---------------------------------------------------------------------
-// Section C's own candidate — TEST-LOCAL ONLY. Never imported by, or
-// copied into, any file under application/ or core/. Modeled as the
-// SMALLEST possible extension of the existing rendering-time-offset
-// pattern: wherever the ground is WATER-classified, the rendered floor
-// is the HIGHER of the real terrain height and the lake's own fixed
-// surface plane — otherwise, byte-identical to the existing formula.
-// This changes nothing about AvatarPresence.position.y, nothing about
+// Section C's own candidate — TEST-LOCAL, standing on its own as an
+// independent re-derivation of the formula, never imported FROM this
+// file BY any production file. Modeled as the SMALLEST possible
+// extension of the existing rendering-time-offset pattern: wherever the
+// ground is WATER-classified, the rendered floor is the HIGHER of the
+// real terrain height and the lake's own fixed surface plane —
+// otherwise, byte-identical to the existing formula. This changes
+// nothing about AvatarPresence.position.y, nothing about
 // core/AvatarMovementSimulation.js, and nothing about any constraint —
 // it is exactly one more input combined at the exact same layer
 // docs/Principles.md's own "Terrain Elevation Is A Rendering-Time
 // Offset, Never A Presence Or Placement Fact (0.2.76)" already
 // describes RenderWorldViewUseCase.js as owning.
+//
+// AMENDED BY 0.9.615 — this exact rule (same gate, same Math.max, same
+// two inputs) was independently installed for real inside
+// application/RenderWorldViewUseCase.js#withGroundElevation() — see
+// this file's own "SUPERSEDED IN PART BY 0.9.615" header note, above.
+// It was not extracted from this test file (production code never
+// imports a test); it was written fresh, to this same design, directly
+// in that file. This function stays exactly what it always was: a
+// standalone, test-local re-derivation used to verify the DESIGN, now
+// independently re-verified against the SHIPPED code by
+// tests/AvatarBasicWaterSurfaceConstraint.test.js.
 // ---------------------------------------------------------------------
 function candidateWaterFloorRenderedY(seed, position) {
     const groundHeight = terrainHeightAt(seed, position.x, position.z);
