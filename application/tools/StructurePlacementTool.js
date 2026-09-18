@@ -57,13 +57,49 @@ export class StructurePlacementTool extends Tool {
             return;
         }
 
-        const position = this._positionService.calculateStructureGround(
-            pointerEvent.worldPosition,
-            this.context.editorContext.settings
-        );
+        const position = this._resolvePosition(active, pointerEvent);
 
         this._lastPosition = position;
         this._showPreview(active, position);
+    }
+
+    // 0.9.611 — mirrors PlacementTool#onPointerMove()'s pickedBrick-first/
+    // ground-fallback shape exactly, one rung up: a face hit on an
+    // already-placed structure (pointerEvent.pickedPlacement.normal, now
+    // populated by PickingService#pickPlacement()) snaps the structure
+    // being placed flush against it via calculateStructureStack(), the
+    // same touching-position convention calculateStack() already
+    // provides for bricks. Falls back to today's global-grid ground snap
+    // whenever there's no face hit, the hit face is the anchor's top/
+    // bottom (calculateStructureStack() returns null — no Y-stacking),
+    // the anchor placement can no longer be resolved, or either
+    // structure's Document can't be resolved — every one of those simply
+    // degrades to pre-0.9.611 behavior, never throws.
+    _resolvePosition(active, pointerEvent) {
+        const picked = pointerEvent.pickedPlacement;
+        if (picked && picked.normal) {
+            const resolver = this.context.structureResolver;
+            const registry = this.context.registry;
+            const anchorPlacement = this.context.world.getStructurePlacement(picked.placementId);
+            const anchorWorld = anchorPlacement && resolver ? resolver.resolve(anchorPlacement.documentId) : null;
+            const movingWorld = resolver ? resolver.resolve(active.documentId) : null;
+            if (anchorWorld && movingWorld) {
+                const anchorBounds = SpatialBounds.fromWorld(anchorWorld, registry);
+                const movingBounds = SpatialBounds.fromWorld(movingWorld, registry);
+                const stacked = this._positionService.calculateStructureStack(
+                    anchorPlacement.position, anchorBounds, picked.normal, movingBounds,
+                    this.context.editorContext.settings
+                );
+                if (stacked) {
+                    return stacked;
+                }
+            }
+        }
+
+        return this._positionService.calculateStructureGround(
+            pointerEvent.worldPosition,
+            this.context.editorContext.settings
+        );
     }
 
     onPointerDown() {
