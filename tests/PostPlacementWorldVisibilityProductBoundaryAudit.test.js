@@ -430,8 +430,8 @@ and materially larger piece of work.
             'E2. RECONFIRMED (0.9.601 Section F2): _findPublications() — fork-policy\'s own choke point (_isKnownPublication()/_checkForkPolicy()) — still reads ONLY the narrow discoveryProvider. A worldLayoutProvider widening (Section D3/D4\'s own hypothetical) is a COMPLETELY SEPARATE constructor argument in application/CreateWorldViewUseCase.js from the one _findPublications() reads — the two have never been the same object since 0.9.597, and this audit changes nothing about that.');
 
         const composition = await readSource('application/CreateWorldViewUseCase.js');
-        assert(/const worldLayoutProvider = new LocalWorldLayoutProvider\(\s*spatialIndexProvider,\s*discoveryProvider\s*\);/.test(composition),
-            'E3. RECONFIRMED: production still builds worldLayoutProvider from the plain, narrow discoveryProvider — this audit\'s own Section D matrix is entirely a controlled, isolated hypothetical; nothing about today\'s actual wiring was touched to produce it.');
+        assert(/const worldLayoutProvider = new LocalWorldLayoutProvider\(\s*spatialIndexProvider,\s*publicationActionDiscoveryProvider\s*\);/.test(composition),
+            'E3. UPDATED BY 0.9.605 (Wire Publication Discovery into World Rendering): production now builds worldLayoutProvider from publicationActionDiscoveryProvider — this audit\'s own Section D matrix was, at the time it was written, a controlled, isolated hypothetical over an untouched composition root; 0.9.605 performed exactly the widening this section (E) found structurally safe.');
 
         console.log('✓ E — the SPECIFIC widening Section D\'s own D3/D4 cells rely on (worldLayoutProvider\'s own discoveryProvider argument -> publicationActionDiscoveryProvider) is, on its own, structurally SAFE: LocalWorldLayoutProvider has no fork-policy coupling to violate, and fork-policy\'s own _findPublications() choke point reads a completely different, already-separate constructor argument that this hypothetical does not touch. If a future milestone pursues ONLY this half of Section D\'s matrix, it would not recreate the 0.9.596 boundary problem. It would, however, land in cell (widened, absent) — Section D\'s own trap — unless Section F\'s own, separate gap is also closed.');
     }
@@ -478,10 +478,18 @@ and materially larger piece of work.
         assert(/this\._contentStore\.get\(publication\.contentReference\)/.test(loadPublishedSrc),
             'F8. application/LoadPublishedWorldSessionUseCase.js likewise resolves a Document directly from a Publication\'s own contentReference via a contentStore — exactly the content-hash-addressed shape F4-F6 showed the live streaming path lacks. This pattern is not hypothetical; it already exists and is exercised by tests/PublishedWorld.test.js, tests/DecentralizedContent.test.js, and others.');
 
-        // But confirm this precedent is never wired into the LIVE World
-        // View streaming path.
-        assert(!/LoadPublishedWorldSessionUseCase|ResolvePublicationUseCase/.test(sessionSrc),
-            'F9. application/WorldNavigationSession.js — the class whose _loadWorld()/updateSpatialView() actually drives live World View streaming — imports neither of these classes.');
+        // UPDATED BY 0.9.605 (Wire Publication Discovery into World
+        // Rendering): at the time this audit was written, this
+        // precedent was never wired into the LIVE World View streaming
+        // path — confirmed the exact opposite is now true, narrowly:
+        // _loadWorld()'s own fallback (_resolveWorldDocument(), see that
+        // method's own comment) now consults
+        // loadPublishedWorldSessionUseCase, but ONLY when
+        // storage[documentId] comes back empty — LoadPublicationDocumentUseCase
+        // (F1/F2, above) is still tried FIRST, unconditionally, exactly
+        // as before.
+        assert(/this\._loadPublishedWorldSessionUseCase\.execute\(publication, this\._eventBus\)\.getDocument\(\)/.test(sessionSrc),
+            'F9. application/WorldNavigationSession.js — the class whose _loadWorld()/updateSpatialView() actually drives live World View streaming — now DOES consult LoadPublishedWorldSessionUseCase, as a fallback, exactly the seam this section (F) originally identified as the one remaining piece of real integration work.');
         const mainSrc = await readSource('ui/main.js');
         assert(/CreateWorldViewUseCase/.test(mainSrc) && !/CreateWorldViewStreamingUseCase/.test(mainSrc),
             'F10. ui/main.js — the app\'s own real composition root — wires CreateWorldViewUseCase.js (the narrow-discoveryProvider, storage[documentId]-based World View this whole arc has been examining) and never wires application/CreateWorldViewStreamingUseCase.js, a SEPARATE, parallel World View streaming subsystem (world/WorldViewStreamingSession.js) that DOES use ResolvePublicationUseCase\'s content-hash-based resolution. That second subsystem exists in this codebase but is orphaned — never reachable from the actual running app.');
@@ -606,8 +614,8 @@ and materially larger piece of work.
     // ===============================================================
     {
         const composition = await readSource('application/CreateWorldViewUseCase.js');
-        assert(/const worldLayoutProvider = new LocalWorldLayoutProvider\(\s*spatialIndexProvider,\s*discoveryProvider\s*\);/.test(composition),
-            'J1. Production composition is unchanged by this audit — reconfirmed one more time at the very end, the same invariant Section E already established.');
+        assert(/const worldLayoutProvider = new LocalWorldLayoutProvider\(\s*spatialIndexProvider,\s*publicationActionDiscoveryProvider\s*\);/.test(composition),
+            'J1. UPDATED BY 0.9.605: production composition is no longer the pre-0.9.605 snapshot this audit examined — reconfirmed here the same way Section E already updated it.');
         const placePublicationSrc = await readSource('application/PlacePublicationUseCase.js');
         assert(!/publication\.author/.test(placePublicationSrc),
             'J2. RECONFIRMED (0.9.601 Section B7): PlacePublicationUseCase.js still never reads publication.author — placement-authoring logic itself is untouched by anything in this file; see 0.9.601 Section B/C/G/H for that arc\'s own exhaustive regression coverage.');

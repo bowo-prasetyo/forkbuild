@@ -235,8 +235,8 @@ async function run() {
     // ===============================================================
     {
         const composition = await readSource('application/CreateWorldViewUseCase.js');
-        assert(/const worldLayoutProvider = new LocalWorldLayoutProvider\(\s*spatialIndexProvider,\s*discoveryProvider\s*\);/.test(composition),
-            'E1. worldLayoutProvider is still built from the plain, narrow discoveryProvider — never widened.');
+        assert(/const worldLayoutProvider = new LocalWorldLayoutProvider\(\s*spatialIndexProvider,\s*publicationActionDiscoveryProvider\s*\);/.test(composition),
+            'E1. UPDATED BY 0.9.605 (Wire Publication Discovery into World Rendering): worldLayoutProvider is now built from publicationActionDiscoveryProvider — at the time this milestone (0.9.600) was written it was still the plain, narrow discoveryProvider; that later, separate widening is this file\'s own Section E4/fork-policy boundary unaffected.');
 
         const decentralized = new DecentralizedPublicationDiscoveryProvider();
         const p1 = new Publication({ id: 'e-pub', documentId: 'e-doc', title: 'E Pub', author: 'bob', contentReference: new ContentReference({ hash: '4'.repeat(64) }) });
@@ -244,7 +244,7 @@ async function run() {
         const { session, discoveryProvider } = buildSession({ decentralizedPublicationDiscoveryProvider: decentralized });
 
         assert(discoveryProvider.findById(p1.id) === null,
-            'E2. Live: the narrow discoveryProvider — what fork-policy/_findPublications/world-layout all still read — genuinely cannot see a Repository-admitted-only Publication.');
+            'E2. Live: the narrow discoveryProvider — what fork-policy/_findPublications() still reads (world-layout was separately widened by 0.9.605, unrelated to this fork-policy boundary) — genuinely cannot see a Repository-admitted-only Publication.');
         // _isKnownPublication()/_checkForkPolicy() both key off _findPublications(documentId),
         // which reads _discoveryProvider (narrow) — confirmed structurally in WorldNavigationSession.js.
         const sessionSrc = await readSource('application/WorldNavigationSession.js');

@@ -628,8 +628,8 @@ async function run() {
     // ===============================================================
     {
         const composition = await readSource('application/CreateWorldViewUseCase.js');
-        assert(/const worldLayoutProvider = new LocalWorldLayoutProvider\(\s*spatialIndexProvider,\s*discoveryProvider\s*\);/.test(composition),
-            'F1. worldLayoutProvider is still built from the plain, narrow discoveryProvider — never widened. This is the SAME invariant 0.9.596/0.9.599/0.9.600 each reconfirmed.');
+        assert(/const worldLayoutProvider = new LocalWorldLayoutProvider\(\s*spatialIndexProvider,\s*publicationActionDiscoveryProvider\s*\);/.test(composition),
+            'F1. UPDATED BY 0.9.605 (Wire Publication Discovery into World Rendering): worldLayoutProvider is now built from publicationActionDiscoveryProvider — this exact composition point was still the plain, narrow discoveryProvider when this audit was written (0.9.596/0.9.599/0.9.600 each reconfirmed that, then), and the finding below (F2-F5) is unaffected: it concerns _findPublications()/getPlacementInfo(), a completely separate call path this milestone left untouched.');
 
         const sessionSrc = await readSource('application/WorldNavigationSession.js');
         const findPublicationsBody = sessionSrc.match(/_findPublications\(documentId\) \{[\s\S]*?\n {4}\}/);
