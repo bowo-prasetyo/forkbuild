@@ -35,6 +35,15 @@ import CollapsibleSection from './CollapsibleSection.js';
 // Runs through the exact same run()/isDisabled()/reasonFor() as
 // Duplicate/Delete/Clear above it — no second enablement rule for one
 // more button.
+//
+// 0.9.661 — Add Editor Selection Focus Action. A fourth actions-row
+// button, "Focus Selection" (`selection.focus`), joining Duplicate/
+// Delete/Clear rather than the Advanced section below — like them, it's
+// a common, always-reachable entry point, not an occasional operation.
+// Disabled under the exact same isDisabled('selection.focus') call as
+// every other button here; the action itself already resolves to
+// disabled whenever `summary` (and so this whole template) wouldn't be
+// rendering in the first place.
 export default {
     name: 'SelectionInspector',
     components: { CollapsibleSection },
@@ -118,6 +127,12 @@ export default {
                     :title="isDisabled('selection.clear') ? reasonFor('selection.clear') : 'Clear the selection'"
                     @click="run('selection.clear')"
                 >Clear</button>
+                <button
+                    type="button" class="structure-instance-btn"
+                    :disabled="isDisabled('selection.focus')"
+                    :title="isDisabled('selection.focus') ? reasonFor('selection.focus') : 'Frame the camera on the selection'"
+                    @click="run('selection.focus')"
+                >Focus Selection</button>
             </div>
             <CollapsibleSection
                 title="Advanced"

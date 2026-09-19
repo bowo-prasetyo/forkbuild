@@ -429,15 +429,30 @@ async function run() {
 
     // ===============================================================
     // Section H — The natural UI seam.
+    //
+    // AMENDED BY 0.9.661 (Add Editor Selection Focus Action). H1 and H3
+    // originally proved 'selection.focus' was UNBUILT (H1 asserted
+    // `.get('selection.focus') === null`) and probed a throwaway action
+    // on a scratch registry to show the shape would fit (H3). 0.9.661
+    // implemented exactly the shape this section predicted, verbatim,
+    // in the real application/EditorActionRegistry.js — so H1/H3 now
+    // assert against the REAL 'selection.focus' action instead of its
+    // absence or a disposable stand-in. H2 and H4 are unchanged: they
+    // were already checking real, pre-existing production code.
     // ===============================================================
     {
-        // H1. No 'selection.focus' (or similarly-named) action id already
-        // exists — confirming this really is unbuilt, not merely unwired.
+        // H1. 'selection.focus' now exists in the real
+        // EditorActionRegistry (0.9.661) — the exact id/category/shape
+        // this section's own pre-implementation probe (H3, below)
+        // predicted, built with zero framework change.
         const feedback = { show() {} };
         const actions = createStandardActions({ session: editorSession, feedback, ui: {} });
         const actionRegistry = new EditorActionRegistry(actions);
-        assert(actionRegistry.get('selection.focus') === null,
-            n('H1. no selection.focus action exists yet in the real EditorActionRegistry — genuinely unbuilt'));
+        const focusAction = actionRegistry.get('selection.focus');
+        assert(focusAction !== null,
+            n('H1. selection.focus now exists in the real EditorActionRegistry (0.9.661) — the gap this audit identified is closed'));
+        assert(focusAction.category === 'Selection',
+            n('H1. ...filed under the same "Selection" category as selectAll/clear/duplicate/delete, exactly as this section predicted'));
 
         // H2. The exact enablement rule a focus action would need
         // (ctx.hasSelection) already exists and is already used by
@@ -448,45 +463,49 @@ async function run() {
         assert(clearAction.enabled(emptyContext) === false && clearAction.enabled(withSelectionContext) === true,
             n('H2. ctx.hasSelection already gates a sibling Selection-category action (selection.clear) exactly the way a selection.focus action would need — no new context field required'));
 
-        // H3. The registry itself has no structural obstacle to adding
-        // one more Selection-category action alongside the existing four
-        // — proven by registering a zero-risk probe action and removing
-        // it via a fresh registry, never mutating the real one.
-        const probeRegistry = new EditorActionRegistry(actions);
-        probeRegistry.register({
-            id: 'selection.focus',
-            label: 'Focus Selection',
-            category: 'Selection',
-            tier: 'common',
-            enabled: (ctx) => ctx.hasSelection,
-            disabledReason: (ctx) => (ctx.hasSelection ? null : 'No bricks selected'),
-            execute: () => {
-                const summary = editorSession.getSelectionSummary();
-                if (summary) editorSession.frameCameraOn(summary.bounds.center);
-            }
-        });
-        assert(probeRegistry.get('selection.focus') !== null,
-            n('H3. a selection.focus action registers cleanly alongside selection.selectAll/clear/duplicate/delete — same shape, same category, no framework change'));
-        assert(probeRegistry.getByCategory('Selection').length === actionRegistry.getByCategory('Selection').length + 1,
-            n('H3. it joins the existing "Selection" category group exactly like every other action already there — CommandPalette/EditingSidebar/keyboard dispatch would surface it with zero additional wiring, per this registry\'s own "one registry, every surface" contract'));
+        // H3. The real selection.focus action gates identically
+        // (ctx.hasSelection, the exact rule H2 confirmed) and its
+        // execute() composes the same two existing methods Section K's
+        // own flagship composition proof used — no bespoke camera or
+        // geometry code inside the action itself.
+        assert(focusAction.enabled(emptyContext) === false && focusAction.enabled(withSelectionContext) === true,
+            n('H3. selection.focus enables/disables on the identical ctx.hasSelection rule as selection.clear/duplicate/delete — the same, not a second, enablement convention'));
+        assert(actionRegistry.getByCategory('Selection').length === 5,
+            n('H3. it joins the "Selection" category as a fifth action (selectAll/clear/duplicate/delete/focus) — CommandPalette/EditingSidebar/keyboard dispatch surface it with zero additional wiring, per this registry\'s own "one registry, every surface" contract'));
+        {
+            const { document: h3Doc, building: h3Building } = makeStandaloneDocument();
+            const h3Brick = new Brick({ definitionId: 'core:cube', position: new Position(6, 0, -3) });
+            h3Building.addBrick(h3Brick);
+            openDocument(editorSession, documentManager, h3Doc);
+            editorContext.setSelection(new SelectionState({ items: [{ type: 'brick', buildingId: h3Building.id, brickId: h3Brick.id }] }));
+            editorSession._session.setCameraState({ position: { x: -50, y: 80, z: 12 }, target: { x: 1, y: 1, z: 1 }, zoom: 3.7 });
+            focusAction.execute({ context: withSelectionContext });
+            const cam = editorSession._session.getCameraState();
+            assert(cam.target.x === 6 && cam.target.y === 0 && cam.target.z === -3,
+                n('H3. ...and actually invoking it frames the real selected brick, composed live from getSelectionSummary()+frameCameraOn() — never a reimplementation of either'));
+        }
 
         // H4. SelectionInspector.js — the surface the brief itself
         // suggests (selection/inspector area) — already computes
         // summary.bounds.center for its own live position readout,
         // confirming it is already handed exactly the value a Focus
-        // button's execute() would need, with no new prop.
+        // button's execute() would need, with no new prop. 0.9.661
+        // added that fourth button, run('selection.focus'), to the
+        // same actions row.
         const inspectorSource = await (await import('node:fs/promises')).readFile(
             new URL('../ui/components/SelectionInspector.js', import.meta.url), 'utf8');
         assert(inspectorSource.includes('this.summary.bounds.center'),
             n('H4. SelectionInspector already reads summary.bounds.center — the identical value a Focus action\'s execute() would pass to frameCameraOn(), with no new prop threading required'));
         assert(inspectorSource.includes("run('selection.duplicate')") && inspectorSource.includes("run('selection.clear')"),
             n('H4. SelectionInspector already has a registry-driven actions row (Duplicate/Delete/Clear) that a Focus button would join as a fourth entry — the natural seam the brief asks this audit to identify'));
+        assert(inspectorSource.includes("run('selection.focus')"),
+            n('H4. 0.9.661 wired that fourth entry: SelectionInspector now runs selection.focus from the same actions row'));
 
         console.log('\n=== SECTION H: NATURAL UI SEAM ===');
-        console.log('✓ SelectionInspector\'s existing actions row is the natural home: it already has the bounds');
-        console.log('  center in scope and an identical run()/isDisabled() convention for three sibling actions.');
-        console.log('  Adding a fourth (selection.focus) needs no registry change, no new context field, and no');
-        console.log('  new prop on the component that would host its button.');
+        console.log('✓ SelectionInspector\'s existing actions row was the natural home this section predicted, and');
+        console.log('  0.9.661 built exactly that: selection.focus (Selection category, ctx.hasSelection-gated,');
+        console.log('  composed from getSelectionSummary()+frameCameraOn()) plus a fourth SelectionInspector');
+        console.log('  button — no registry change, no new context field, no new prop.');
     }
 
     // ===============================================================
@@ -621,6 +640,11 @@ async function run() {
         console.log('Recommended 0.9.661 shape: one new EditorActionRegistry action (`selection.focus`), reusing');
         console.log('getSelectionSummary()+frameCameraOn() verbatim as Section K proves, plus one SelectionInspector');
         console.log('button — no new use case class, no new geometry, no new camera controller.');
+        console.log('');
+        console.log('0.9.661 IMPLEMENTED THIS VERDICT: selection.focus, brick selections only (decision 1 resolved');
+        console.log('as "brick selections only" — structure-placement focus stays explicitly out of scope), and');
+        console.log('frameCameraOn()\'s existing instant behavior kept unchanged (decision 2). Section H above was');
+        console.log('amended in place to assert against that real action instead of its pre-implementation absence.');
 
         assert(true, n('L1. verdict recorded: NARROW_WIRING_GAP — camera-movement implementation is sized correctly for a small, well-contained 0.9.661'));
 

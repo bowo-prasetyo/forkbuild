@@ -105,6 +105,7 @@ vehicle to mount it.
 | `Ctrl/Cmd+A` | Select All | |
 | `Esc` | Clear Selection | Editor's own Escape chain, below — World View's own Escape only ever closes whichever panel is open |
 | `Delete` / `Backspace` | Delete Selection — **Editor only** | one undo step; no keyboard binding at all in World View |
+| Selection panel's **Focus Selection** button — **Editor only** | Frame the camera on the selected brick(s), instantly | no keyboard shortcut; camera-only — never touches the document, selection, or undo history; brick selections only, not structure placements |
 
 ## Transform — keyboard (Editor only)
 
