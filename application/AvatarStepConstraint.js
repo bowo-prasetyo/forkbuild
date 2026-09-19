@@ -66,7 +66,12 @@ const FLAT_GROUND_Y = 0;
 // milestone is exactly the moment that simplification was named to
 // wait for.
 const DEFAULT_QUERY_RADIUS = 12; // world units — mirrors AvatarMovementConstraint's own reasoning
-const MAX_DOCUMENT_SPAN_MARGIN = 64;
+// Bug fix — see application/AvatarMovementConstraint.js's own matching
+// constant for the full reasoning (a real, reported 576-brick pyramid
+// whose bricks sat well over 64 units from its document's own local
+// origin lost ALL walkable-surface support the same way it lost
+// collision). Kept in lockstep with that file's own value.
+const MAX_DOCUMENT_SPAN_MARGIN = 200;
 
 export class AvatarStepConstraint {
     // `groundHeight` is an injectable override for FLAT_GROUND_Y — a
