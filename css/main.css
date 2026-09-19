@@ -445,6 +445,20 @@ html, body {
     padding: 1rem;
 }
 
+/* 0.9.647 — Editor Sidebar Scroll Ownership. .sidebar itself stays exactly
+   as it was (fixed 220px, no overflow of its own) — this wrapper is its
+   ONLY direct child and is the sidebar's sole scroll owner, mirroring the
+   World left panel's own scroll-wrapper shape (see the World View UX
+   section further below in this file, 0.5.7): a single scrollable wrapper
+   around the panel's entire content, so the sidebar always fits its
+   allotted height instead of overflowing into the canvas beside it. */
+.sidebar-scroll {
+    height: 100%;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding-right: 0.25rem;
+}
+
 .brick-palette {
     display: flex;
     flex-direction: column;
