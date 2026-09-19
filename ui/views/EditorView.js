@@ -211,6 +211,7 @@ export default {
             </div>
             <div class="editor-body">
                 <div class="sidebar">
+                  <div class="sidebar-scroll">
                     <div class="tool-switcher">
                         <button
                             :class="['tool-btn', { 'tool-btn--active': activeTool === ToolId.SELECT }]"
@@ -287,6 +288,7 @@ export default {
                         :repeat="repeatSelection"
                         :select-group="selectGroup"
                     />
+                  </div>
                 </div>
                 <div :style="{ position: 'relative', flex: 1, minWidth: 0, display: 'flex' }">
                     <div ref="viewport" class="viewport"></div>
