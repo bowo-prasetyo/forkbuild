@@ -69,6 +69,13 @@ import { compareBlueprintSimilarity, isPossibleLineageCandidate } from '../../co
 // view-local: they are not editing actions.
 const TOOL_SHORTCUTS = { 1: ToolId.SELECT, 2: ToolId.PLACE };
 
+// 0.9.653 — matches ui/components/Toolbar.js's own SAVE_FAILURE_MESSAGE
+// verbatim, so Ctrl+S and the toolbar Save button carry identical
+// user-visible failure semantics for the same underlying
+// SaveDocumentUseCase.execute() failure (see
+// tests/DocumentSaveFailureHandlingBoundaryAudit.test.js).
+const SAVE_FAILURE_MESSAGE = 'Save failed — your changes are still here, but were not saved. Try again.';
+
 export default {
     name: 'EditorView',
     components: { Toolbar, BuildLibraryPanel, EditingSidebar, StructureInstancePanel, SelectionInspector, CommandPalette, KeyboardShortcutsOverlay, ActionFeedback, RecoveryBanner, DocumentInfoPanel, MetadataEditorDialog, CreateBlueprintDialog, StructureInfoPanel, TransformFeedback, ForkFailureDialog },
@@ -2248,7 +2255,12 @@ export default {
                 }
                 if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 's') {
                     event.preventDefault();
-                    saveDocumentUseCase.execute(documentManager);
+                    try {
+                        saveDocumentUseCase.execute(documentManager);
+                    } catch (error) {
+                        console.error('Save failed:', error);
+                        feedback.show(SAVE_FAILURE_MESSAGE);
+                    }
                     return;
                 }
                 // 4.1 — Editor UX Consolidation: '?' opens the Keyboard

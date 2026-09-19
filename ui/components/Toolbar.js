@@ -24,6 +24,15 @@ import { ref, computed, onMounted, onBeforeUnmount } from 'vue';
 // scrolling alone stops being the fastest way to find one.
 const SEARCH_THRESHOLD = 8;
 
+// 0.9.653 — SaveDocumentUseCase.execute() performs multiple independent
+// StorageProvider writes (document blob, then manifest — see
+// tests/DocumentSaveFailureHandlingBoundaryAudit.test.js Section B5) and
+// can throw raw, technical storage exceptions. Never shown to the user
+// verbatim — this stays deliberately generic and storage-agnostic,
+// matching the identical string EditorView.js's own Ctrl+S save path
+// shows on the same failure.
+const SAVE_FAILURE_MESSAGE = 'Save failed — your changes are still here, but were not saved. Try again.';
+
 export default {
     name: 'Toolbar',
     props: {
@@ -115,7 +124,13 @@ export default {
         }
 
         function save() {
-            props.saveDocumentUseCase.execute(props.documentManager);
+            try {
+                props.saveDocumentUseCase.execute(props.documentManager);
+            } catch (error) {
+                console.error('Save failed:', error);
+                report(SAVE_FAILURE_MESSAGE);
+                return;
+            }
             report('Saved');
         }
 

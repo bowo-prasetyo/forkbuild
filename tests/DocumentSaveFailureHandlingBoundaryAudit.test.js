@@ -49,6 +49,20 @@ import { World } from '../core/World.js';
 //      own mirror-image gap named and classified separately.
 //   I. Production-change guard.
 //   J. Verdict and recommendation.
+//
+// AMENDED BY 0.9.653 — Surface Document Save Failures. This milestone's own
+// RECOMMENDATION (Section J, below) was built one milestone later: both
+// real call sites (Toolbar.js's Save button, EditorView.js's Ctrl+S/Cmd+S)
+// now wrap SaveDocumentUseCase.execute() in a try/catch that calls the
+// existing feedback.show() boundary this audit's own Section E identified,
+// with a generic, storage-agnostic message. Sections A4, A5, A6, and G2
+// below — which asserted the PRE-FIX unwrapped shape — are amended in
+// place to reconfirm the POST-FIX shape instead, mirroring the precedent
+// tests/PublicationCommentaryNostrRoundTripBoundaryAudit.test.js's own
+// 0.9.629 amendment already set. Finding #2 (Section B5's own partial-
+// persistence/manifest-atomicity gap) remains deliberately OPEN — 0.9.653
+// explicitly did not attempt it, exactly as this audit's own Section J
+// recommended.
 
 let assertionCount = 0;
 function assert(condition, message) {
@@ -117,18 +131,26 @@ async function run() {
         const manifestSaveCalls = (manifestSource.match(/this\._storageProvider\.save\(/g) || []).length;
         assert(manifestSaveCalls === 2, n(`A3. application/DocumentManifest.js itself calls storageProvider.save() twice more (upsert, remove) — found ${manifestSaveCalls}. THE STRUCTURAL FACT SECTION B5 IS BUILT ON: one explicit Save performs up to three separate StorageProvider.save() calls (document, manifest, [recovery-store remove is a StorageProvider.remove(), not save()]) plus two load()-driven reads, any one of which can fail independently, not one atomic operation.`));
 
-        // Both real production call sites, reconfirmed unwrapped.
+        // Both real production call sites. AMENDED BY 0.9.653: each now
+        // wraps SaveDocumentUseCase.execute() in a try/catch that reports
+        // through the identical existing feedback boundary Section E
+        // identified — reconfirmed structurally here, post-fix.
         const toolbarSource = codeOnly(await rawSource('ui/components/Toolbar.js'));
-        assert(/function save\(\) \{\s*props\.saveDocumentUseCase\.execute\(props\.documentManager\);\s*report\('Saved'\);\s*\}/.test(toolbarSource.replace(/\s+/g, ' ')),
-            n('A4. Toolbar.js\'s Save button: saveDocumentUseCase.execute() unwrapped, matching 0.9.650 G2c.'));
+        assert(/function save\(\) \{\s*try \{\s*props\.saveDocumentUseCase\.execute\(props\.documentManager\);\s*\} catch \(error\) \{\s*console\.error\('Save failed:', error\);\s*report\(SAVE_FAILURE_MESSAGE\);\s*return;\s*\}\s*report\('Saved'\);\s*\}/.test(toolbarSource.replace(/\s+/g, ' ')),
+            n('A4 (AMENDED BY 0.9.653). Toolbar.js\'s Save button: saveDocumentUseCase.execute() is now wrapped in a try/catch — success still calls report(\'Saved\') exactly as 0.9.650 G2c found it, but a thrown error is now caught, logged (console.error, matching this codebase\'s own existing diagnostic-logging convention — e.g. EditorView.js\'s "Publication distribution failed:" precedent), and reported through the same report()/feedback.show() seam via a new module-level SAVE_FAILURE_MESSAGE constant, never the raw error.'));
+        assert(/const SAVE_FAILURE_MESSAGE = '[^']+';/.test(toolbarSource),
+            n('A4b (0.9.653). ...and that constant is a fixed, generic, storage-agnostic string — never QuotaExceededError or any other raw storage exception name — matching Section E3\'s own "report()/feedback.show() takes a plain string, already storage-agnostic" finding.'));
 
         const editorViewSource = codeOnly(await rawSource('ui/views/EditorView.js'));
-        assert(/event\.key\.toLowerCase\(\) === 's'\) \{\s*event\.preventDefault\(\);\s*saveDocumentUseCase\.execute\(documentManager\);\s*return;/.test(editorViewSource.replace(/\s+/g, ' ')),
-            n('A5. EditorView.js\'s own Ctrl+S/Cmd+S shortcut is a SECOND, independent unwrapped call site — same use case, same lack of a try/catch, never previously enumerated as its own call site by 0.9.650 (which cited Toolbar.js only). A fix that only wraps the toolbar button would leave this one silent.'));
+        assert(/event\.key\.toLowerCase\(\) === 's'\) \{\s*event\.preventDefault\(\);\s*try \{\s*saveDocumentUseCase\.execute\(documentManager\);\s*\} catch \(error\) \{\s*console\.error\('Save failed:', error\);\s*feedback\.show\(SAVE_FAILURE_MESSAGE\);\s*\}\s*return;/.test(editorViewSource.replace(/\s+/g, ' ')),
+            n('A5 (AMENDED BY 0.9.653). EditorView.js\'s own Ctrl+S/Cmd+S shortcut — the SECOND, independent call site this section\'s own original finding flagged as the gap a toolbar-only fix would leave silent — is now wrapped too, reporting through the same local `feedback` object Toolbar.js\'s `props.feedback` is the prop-passed form of (Section E2\'s own seam), via the identical SAVE_FAILURE_MESSAGE text Toolbar.js uses (see A5b).'));
+        assert(editorViewSource.includes("const SAVE_FAILURE_MESSAGE = 'Save failed — your changes are still here, but were not saved. Try again.';")
+            && toolbarSource.includes("const SAVE_FAILURE_MESSAGE = 'Save failed — your changes are still here, but were not saved. Try again.';"),
+            n('A5b (0.9.653). ...and that string is IDENTICAL, byte-for-byte, between the two files — the milestone\'s own "same user-visible failure semantics" requirement, verified directly rather than assumed from each file only declaring a same-named constant.'));
         assert(/onKeyDown = \(event\) => \{\s*handleKeyDown\(event\);\s*refreshSelectedPlacementInfo\(\);\s*refreshSelectionSummary\(\);/.test(editorViewSource.replace(/\s+/g, ' ')),
-            n('A6. ...and because that call sits inside handleKeyDown(), an uncaught throw there also skips onKeyDown()\'s own trailing refreshSelectedPlacementInfo()/refreshSelectionSummary() calls for that keystroke — a small, real ripple effect of the same missing boundary, not a second independent bug.'));
+            n('A6 (AMENDED BY 0.9.653). ...and because that call sits inside handleKeyDown(), this section\'s own original finding — that an uncaught throw there also skipped onKeyDown()\'s own trailing refreshSelectedPlacementInfo()/refreshSelectionSummary() calls for that keystroke — is now CLOSED as a side effect of catching the error one level down: handleKeyDown() itself no longer throws on a Save failure, so onKeyDown()\'s trailing calls (still present here, unchanged) now always run for that keystroke, matching this file\'s own structural shape both before and after 0.9.653.'));
 
-        console.log('✓ A: two real, independent, unwrapped call sites confirmed (Toolbar.js Save button, EditorView.js Ctrl+S) — not one. Both route through the identical unwrapped SaveDocumentUseCase.execute(), which itself performs up to three separate StorageProvider writes, not a single atomic one.');
+        console.log('✓ A (AMENDED BY 0.9.653): both real call sites (Toolbar.js Save button, EditorView.js Ctrl+S) now wrap SaveDocumentUseCase.execute() in a try/catch reporting through the pre-existing feedback boundary, with byte-identical failure text. SaveDocumentUseCase.execute() itself remains completely unwrapped and unmodified — it still performs up to three separate StorageProvider writes, not a single atomic one (Section A3, below, unaffected) — 0.9.653 deliberately fixed only the UI-boundary gap this section originally measured, not Finding #2\'s own manifest-write atomicity question.');
     }
 
     // ===============================================================
@@ -459,12 +481,22 @@ async function run() {
         // worth stating precisely so a fix is scoped at translating
         // silence into a message, not merely sanitizing a message that
         // was never going to reach the screen in the first place.
+        // AMENDED BY 0.9.653 — Toolbar.js's save() now HAS a catch block
+        // (this section's own G2 originally confirmed it did not). The
+        // brace-balance-naive regex this assertion used pre-0.9.653
+        // ([^}]*, which stops at the FIRST literal `}` — the try block's
+        // own closing brace, not save()'s) would silently keep "passing"
+        // today even though it no longer captures the whole function body,
+        // which would make this assertion falsely claim "no catch" by
+        // accident of regex construction rather than by fact. Rewritten to
+        // check the true condition directly instead of relying on that
+        // now-broken brace-matching trick.
         const toolbarSource = codeOnly(await rawSource('ui/components/Toolbar.js'));
-        const saveFunctionBody = toolbarSource.match(/function save\(\) \{[^}]*\}/);
-        assert(saveFunctionBody && !/catch/.test(saveFunctionBody[0]),
-            n('G2. confirmed (again, precisely): Toolbar.js\'s own save() function body has no catch block of any kind (Toolbar.js DOES have one elsewhere, for publish() — scoped deliberately to save() only here), so there is no code path — sanitized or not — that could currently put ANY text, safe or unsafe, in front of the user on Save failure. Today\'s actual failure mode is total silence, not information leakage.'));
+        const saveFunctionMatch = toolbarSource.match(/function save\(\) \{[\s\S]*?\n {8}\}/);
+        assert(saveFunctionMatch && /catch \(error\)/.test(saveFunctionMatch[0]),
+            n('G2 (AMENDED BY 0.9.653). Toolbar.js\'s own save() function now DOES have a catch block — this section\'s own pre-0.9.653 finding (total silence on any Save failure) is CLOSED. The catch calls report(SAVE_FAILURE_MESSAGE) — a fixed, generic, sanitized-by-construction string, never the caught error\'s own .message — so this remains, correctly, the DistributionErrorMessageSanitizer.js-style "never show raw text" policy Section E5 named as one of the two available precedents, not the LoadFailureReason.js-style typed-.reason branching Section E6 named as the other.'));
 
-        console.log('✓ G: today\'s exact failure mode is verified to be complete silence — no global safety net, no local catch, so no error text of any kind (raw or sanitized) ever reaches the user today. A correct fix is therefore an information-POLICY design task from a blank slate (per DistributionErrorMessageSanitizer.js/LoadFailureReason.js\'s own established precedents, Section E), not a matter of tightening an existing but over-verbose message.');
+        console.log('✓ G (AMENDED BY 0.9.653): today\'s failure mode is no longer silence — Toolbar.js\'s save() and EditorView.js\'s Ctrl+S handler both now report a fixed, generic SAVE_FAILURE_MESSAGE through the pre-existing feedback.show() boundary on any Save failure, never the raw underlying error. Diagnostic detail is preserved via console.error(\'Save failed:\', error), matching this codebase\'s own existing convention (e.g. EditorView.js\'s pre-existing "Publication distribution failed:" logging) rather than being discarded.');
     }
 
     // ===============================================================
