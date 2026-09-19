@@ -950,8 +950,14 @@ export class AvatarMovementController {
         // simulateAvatarMovement() defaults `groundHeight` to its own
         // original flat-plane constant in that case, so behavior is
         // unchanged from before this milestone.
+        // `currentPosition.y` is passed as supportHeightAt()'s own
+        // `referenceHeight` — see that method's own header — so a brick
+        // floating far above the avatar's ACTUAL current height (e.g. a
+        // bridge deck overhead) can never masquerade as "the ground
+        // right here." Omitting it (pre-fix behavior) let such a brick
+        // win the max regardless of reachability.
         const currentSupportHeight = this._stepConstraint
-            ? this._stepConstraint.supportHeightAt(currentPosition.x, currentPosition.z)
+            ? this._stepConstraint.supportHeightAt(currentPosition.x, currentPosition.z, currentPosition.y)
             : undefined;
 
         // 0.9.634 — read BEFORE simulating, against the avatar's CURRENT
