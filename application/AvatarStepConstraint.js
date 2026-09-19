@@ -1,5 +1,6 @@
 import { isStepClimbable, DEFAULT_MAX_STEP_HEIGHT } from '../core/BrickWalkability.js';
 import { resolveWalkableSurfaceAt, walkableSurfaceKindFor } from '../core/WalkableSurface.js';
+import { TransformMath } from './TransformMath.js';
 
 // The flat plane core/AvatarMovementSimulation.js has always walked on
 // — see that file's own (pre-0.3.2) GROUND_Y constant. Deliberately
@@ -71,13 +72,20 @@ export class AvatarStepConstraint {
     // `groundHeight` is an injectable override for FLAT_GROUND_Y — a
     // plain number, purely so a test can exercise a non-zero baseline
     // without needing to fake terrain — never a real terrain lookup.
+    // `structureResolver` (optional) — see
+    // application/AvatarMovementConstraint.js's own constructor header;
+    // this class needs the same collaborator for the same reason: a
+    // StructurePlacement instance's bricks are as walkable as an
+    // ordinary building's. Omitting it reproduces the exact prior
+    // behavior, byte for byte.
     constructor({
         groundHeight = FLAT_GROUND_Y,
         loadedDocuments,
         getWorldPosition,
         brickRegistry,
         queryRadius = DEFAULT_QUERY_RADIUS,
-        maxStepHeight = DEFAULT_MAX_STEP_HEIGHT
+        maxStepHeight = DEFAULT_MAX_STEP_HEIGHT,
+        structureResolver = null
     } = {}) {
         this._groundHeight = Number.isFinite(groundHeight) ? groundHeight : FLAT_GROUND_Y;
         this._loadedDocuments = loadedDocuments;
@@ -85,6 +93,7 @@ export class AvatarStepConstraint {
         this._brickRegistry = brickRegistry;
         this._queryRadius = queryRadius;
         this._maxStepHeight = maxStepHeight;
+        this._structureResolver = structureResolver;
     }
 
     get maxStepHeight() {
@@ -177,6 +186,55 @@ export class AvatarStepConstraint {
                         height: definition.height,
                         depth: definition.depth,
                         rotationDegrees: brick.rotation
+                    }, x, z);
+                    if (surface !== null && surface.height > height) {
+                        height = surface.height;
+                    }
+                }
+            }
+            height = this._supportHeightFromPlacements(document, worldPosition, x, z, referenceHeight, hasReference, height);
+        }
+        return height;
+    }
+
+    // Mirrors the building-brick loop above for StructurePlacement
+    // instances — see application/AvatarMovementConstraint.js#
+    // _collectPlacementObstacles()'s own header for why this needs the
+    // same collaborator and composes rotation the same way
+    // renderer/WorldRenderer.js#_renderStructurePlacement() does
+    // (brick.rotation + placement.rotation). A silent no-op without a
+    // structureResolver or an unresolvable placement.documentId.
+    _supportHeightFromPlacements(document, worldPosition, x, z, referenceHeight, hasReference, height) {
+        if (!this._structureResolver) return height;
+        for (const placement of document.world.getStructurePlacements()) {
+            const placementWorldPosition = {
+                x: placement.position.x + worldPosition.x,
+                y: placement.position.y + worldPosition.y,
+                z: placement.position.z + worldPosition.z
+            };
+            if (flatDistance(placementWorldPosition, x, z) > this._queryRadius + MAX_DOCUMENT_SPAN_MARGIN) continue;
+            const placedWorld = this._structureResolver.resolve(placement.documentId);
+            if (!placedWorld) continue;
+            for (const building of placedWorld.getBuildings()) {
+                for (const brick of building.getBricks()) {
+                    const definition = this._brickRegistry ? this._brickRegistry.get(brick.definitionId) : null;
+                    if (!definition) continue;
+                    const localPoint = placement.rotation
+                        ? TransformMath.rotatePointAroundPivotY(brick.position, { x: 0, y: 0, z: 0 }, placement.rotation)
+                        : brick.position;
+                    const center = {
+                        x: localPoint.x + placementWorldPosition.x,
+                        y: localPoint.y + placementWorldPosition.y,
+                        z: localPoint.z + placementWorldPosition.z
+                    };
+                    if (hasReference && (center.y - definition.height / 2) - referenceHeight > this._maxStepHeight) continue;
+                    const surface = resolveWalkableSurfaceAt({
+                        shapeKind: walkableSurfaceKindFor(brick.definitionId),
+                        center,
+                        width: definition.width,
+                        height: definition.height,
+                        depth: definition.depth,
+                        rotationDegrees: brick.rotation + placement.rotation
                     }, x, z);
                     if (surface !== null && surface.height > height) {
                         height = surface.height;
