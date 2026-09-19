@@ -652,12 +652,20 @@ import { AvatarVehicleBrakingIntent, isValidAvatarVehicleBrakingIntent } from '.
 const EPSILON = 1e-6;
 
 export class AvatarMovementController {
-    constructor(avatarPresenceSession, movementConstraint = null, terrainConstraint = null, stepConstraint = null, treeConstraint = null) {
+    // 0.9.634 — `waterConstraint` (optional, same "enforce/offer only
+    // when wired" posture as every other constraint above) is APPENDED
+    // last, following the exact same append-only convention
+    // `treeConstraint` itself already followed relative to
+    // `stepConstraint` — see application/AvatarWaterConstraint.js's own
+    // header. A controller built without one computes none of this and
+    // behaves exactly as it did before this milestone.
+    constructor(avatarPresenceSession, movementConstraint = null, terrainConstraint = null, stepConstraint = null, treeConstraint = null, waterConstraint = null) {
         this._avatarPresenceSession = avatarPresenceSession;
         this._movementConstraint = movementConstraint;
         this._terrainConstraint = terrainConstraint;
         this._stepConstraint = stepConstraint;
         this._treeConstraint = treeConstraint;
+        this._waterConstraint = waterConstraint;
         this._keys = { forward: false, backward: false, left: false, right: false, running: false, jumpHeld: false };
         this._verticalVelocity = 0;
         this._grounded = true;
@@ -711,6 +719,8 @@ export class AvatarMovementController {
         // 0.9.63 — same posture again, for the tree-collision
         // equivalent.
         this._collidedWithTree = false;
+        // 0.9.634 — same posture again, for the water-depth equivalent.
+        this._blockedByWaterDepth = false;
     }
 
     // Returns true when `key` is one this controller understands (so
@@ -944,6 +954,19 @@ export class AvatarMovementController {
             ? this._stepConstraint.supportHeightAt(currentPosition.x, currentPosition.z)
             : undefined;
 
+        // 0.9.634 — read BEFORE simulating, against the avatar's CURRENT
+        // position — the identical "read the current surface before
+        // simulating" posture `currentSupportHeight` above already
+        // establishes: how deep the avatar is ALREADY standing decides
+        // how fast it can move THIS tick, not how deep the step it is
+        // about to take would land it in. `undefined` when no
+        // waterConstraint is wired — simulateAvatarMovement() defaults
+        // `waterSpeedFactor` to its own no-op `1` in that case, so
+        // behavior is unchanged from before this milestone.
+        const currentWaterSpeedFactor = this._waterConstraint
+            ? this._waterConstraint.speedFactorAt(currentPosition.x, currentPosition.z)
+            : undefined;
+
         const result = simulateAvatarMovement({
             position: currentPosition,
             rotationY: currentRotationY,
@@ -956,7 +979,8 @@ export class AvatarMovementController {
             acceleration: this._resolvedAcceleration(),
             braking: this._resolvedBraking(),
             currentMovementSpeed: this._currentMovementSpeed,
-            steeringRate: this._resolvedSteeringRate()
+            steeringRate: this._resolvedSteeringRate(),
+            waterSpeedFactor: currentWaterSpeedFactor
         });
         this._verticalVelocity = result.verticalVelocity;
         this._grounded = result.grounded;
@@ -985,6 +1009,26 @@ export class AvatarMovementController {
             const terrainResult = this._terrainConstraint.apply(currentPosition, finalPosition);
             finalPosition = terrainResult.position;
             this._blockedBySlope = terrainResult.blocked;
+        }
+
+        // 0.9.634 — applied right after terrain slope, on whatever
+        // position building collision and slope have already resolved:
+        // the same "a candidate step can still be rejected by the REAL
+        // ground it would land on" reasoning terrain slope itself
+        // already uses, one gate later — building collision decides what
+        // blocks passage at all, terrain slope decides whether the
+        // remaining step is too steep to climb, and this decides whether
+        // it would wade the avatar in deeper than it can walk. Applied
+        // BEFORE step height, for the same reason terrain slope is:
+        // step height is the one constraint that snaps the avatar's
+        // final Y onto whatever surface the resolved X/Z actually landed
+        // on, so every constraint that can still revert X/Z must run
+        // first. See application/AvatarWaterConstraint.js's own header.
+        this._blockedByWaterDepth = false;
+        if (this._waterConstraint) {
+            const waterResult = this._waterConstraint.apply(currentPosition, finalPosition);
+            finalPosition = waterResult.position;
+            this._blockedByWaterDepth = waterResult.blocked;
         }
 
         // 0.3.2 — applied LAST: decides the avatar's final Y (snapped
@@ -1065,6 +1109,17 @@ export class AvatarMovementController {
     // surface, not something any other internal logic reads.
     isBlockedByStepHeight() {
         return this._blockedByStepHeight;
+    }
+
+    // 0.9.634 — whether the MOST RECENT tick's desired movement was
+    // altered because the candidate step's water depth exceeded what
+    // application/AvatarWaterConstraint.js considers walkable. Same
+    // posture as isCollided()/isBlockedBySlope()/isBlockedByStepHeight()
+    // above: transient, recomputed fresh every tick, never persisted,
+    // never part of AvatarPresence. A debug/UI surface, not something
+    // any other internal logic reads.
+    isBlockedByWaterDepth() {
+        return this._blockedByWaterDepth;
     }
 
     // 0.9.63 — whether the MOST RECENT tick's desired movement was

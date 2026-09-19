@@ -210,7 +210,8 @@ export function simulateAvatarMovement({
     acceleration,
     braking,
     currentMovementSpeed,
-    steeringRate
+    steeringRate,
+    waterSpeedFactor
 }) {
     const floorY = Number.isFinite(groundHeight) ? groundHeight : GROUND_Y;
     const dt = sanitizeDeltaSeconds(deltaSeconds);
@@ -277,7 +278,22 @@ export function simulateAvatarMovement({
     }
 
     const baseSpeed = Number.isFinite(movementSpeed) && movementSpeed > 0 ? movementSpeed : WALK_SPEED;
-    const speed = movementState.running ? baseSpeed * RUN_SPEED_MULTIPLIER : baseSpeed;
+    // 0.9.634 — Avatar Shallow-Water Ground Traversal. `waterSpeedFactor`
+    // (optional, a plain [0, 1] multiplier — application/
+    // AvatarMovementController.js's own job to have already resolved it,
+    // via application/AvatarWaterConstraint.js#speedFactorAt(), from the
+    // avatar's CURRENT position, BEFORE this tick simulates) multiplies
+    // whatever base speed is already active, the exact same "multiply
+    // whatever base speed a caller supplies" role RUN_SPEED_MULTIPLIER
+    // already plays for running — composing with it, never replacing it:
+    // a running avatar wading through shallow water is slowed by BOTH.
+    // Omitted, non-finite, or outside [0, 1] degrades to `1` — a no-op —
+    // so every existing caller (every test that has never heard of
+    // water, and ordinary dry-land movement) is byte-for-byte unchanged.
+    const resolvedWaterSpeedFactor = Number.isFinite(waterSpeedFactor) && waterSpeedFactor >= 0 && waterSpeedFactor <= 1
+        ? waterSpeedFactor
+        : 1;
+    const speed = (movementState.running ? baseSpeed * RUN_SPEED_MULTIPLIER : baseSpeed) * resolvedWaterSpeedFactor;
     const targetMovementSpeed = movementState.forwardAxis * speed;
 
     // 0.9.91 — Vehicle Acceleration State Integration. `acceleration`

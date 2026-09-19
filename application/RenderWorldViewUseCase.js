@@ -15,6 +15,7 @@ import { WorldSpatialPresentationMode } from '../core/WorldSpatialAnchor.js';
 import { surfaceCategoryAt, SURFACE_CATEGORY } from '../core/TerrainSurface.js';
 import { LAKE_SURFACE_HEIGHT } from '../core/Hydrology.js';
 import { DEFAULT_WORLD_SEED } from '../core/TerrainHeightField.js';
+import { DEFAULT_MAX_WALKING_DEPTH } from '../core/AvatarWaterWalkability.js';
 
 // World View's render wiring. Exposes the same narrow gizmo surface
 // RenderWorldUseCase does — one shared TransformGizmoController design,
@@ -175,10 +176,33 @@ export class RenderWorldViewUseCase {
         // minimum coherent behavior, and
         // tests/AvatarBasicWaterSurfaceConstraint.test.js for this
         // milestone's own invariants.
+        //
+        // 0.9.634 — Avatar Shallow-Water Ground Traversal. Within
+        // DEFAULT_MAX_WALKING_DEPTH (application/AvatarWaterConstraint.js's
+        // own walkable-depth limit — the SAME constant that governs
+        // whether AvatarMovementController's own waterConstraint blocks
+        // a step, so the rendered "wading" look never extends past the
+        // depth movement actually allows, and never falls short of it
+        // either), the rendered floor now follows the REAL underwater
+        // terrain — feet on the lakebed, legs in the translucent water
+        // plane — rather than being floored at the lake's own surface.
+        // 0.9.615's own clamp is NOT deleted: it remains exactly what
+        // happens once depth exceeds that limit, so a coordinate a real
+        // avatar could never walk to anyway (see AvatarWaterConstraint's
+        // own apply()) still renders exactly as it always has — standing
+        // visibly ON the surface, never sinking below it. At
+        // maxWalkingDepth = 0 this collapses BYTE-FOR-BYTE onto the
+        // pre-0.9.634 formula at every depth — a strict additive
+        // generalization, never a second, competing formula (see
+        // tests/AvatarShallowWaterTraversalBoundaryAudit.test.js (0.9.633)
+        // Section D, which test-drove this exact candidate before it was
+        // ever installed here).
         function withGroundElevation(position) {
             const groundHeight = renderer.terrainHeightAt(position.x, position.z);
             const isWaterGround = surfaceCategoryAt(DEFAULT_WORLD_SEED, position.x, position.z) === SURFACE_CATEGORY.WATER;
-            const floorHeight = isWaterGround ? Math.max(groundHeight, LAKE_SURFACE_HEIGHT) : groundHeight;
+            const floorHeight = isWaterGround
+                ? (LAKE_SURFACE_HEIGHT - groundHeight <= DEFAULT_MAX_WALKING_DEPTH ? groundHeight : Math.max(groundHeight, LAKE_SURFACE_HEIGHT))
+                : groundHeight;
             return {
                 x: position.x,
                 y: position.y + floorHeight,

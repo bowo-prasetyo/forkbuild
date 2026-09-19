@@ -3,7 +3,7 @@ import { readFile } from 'node:fs/promises';
 import { terrainHeightAt, DEFAULT_WORLD_SEED } from '../core/TerrainHeightField.js';
 import { surfaceCategoryAt, SURFACE_CATEGORY, WATER_LEVEL } from '../core/TerrainSurface.js';
 import { hydrologyFeatureAt, HYDROLOGY_FEATURE, LAKE_SURFACE_HEIGHT, isRiverAt } from '../core/Hydrology.js';
-import { AvatarTerrainConstraint } from '../application/AvatarTerrainConstraint.js';
+import { DEFAULT_MAX_WALKING_DEPTH } from '../core/AvatarWaterWalkability.js';
 
 // 0.9.615 — Avatar Basic Water Surface Constraint.
 //
@@ -133,21 +133,39 @@ async function run() {
     const dryPoint = findDryCoordinate(seed, SCAN_HALF_EXTENT);
     assert(dryPoint !== null, 'setup: an ordinary dry coordinate exists in the scanned region under the default world seed');
 
-    // Reproduce 0.9.613/0.9.614's own interior walk to obtain a genuine
-    // deep lake coordinate — never hand-picked.
-    const constraint = new AvatarTerrainConstraint({ seed });
-    const stepSize = 0.3;
-    const stepCount = 200;
-    let cursor = { x: shoreline.shoreX, y: 0, z: shoreline.shoreZ };
-    for (let i = 0; i < stepCount; i++) {
-        const desired = { x: cursor.x + shoreline.dirX * stepSize, y: 0, z: cursor.z + shoreline.dirZ * stepSize };
-        const stepResult = constraint.apply(cursor, desired);
-        if (stepResult.blocked) break;
-        cursor = stepResult.position;
+    // AMENDED BY 0.9.634 — this setup originally reproduced 0.9.613/
+    // 0.9.614's own interior walk (via AvatarTerrainConstraint, which
+    // only ever blocks on SLOPE) to obtain a "deep lake" coordinate. That
+    // walk never actually guaranteed a depth beyond any particular
+    // threshold — it simply followed gentle real terrain until slope
+    // blocked it, and happened to land on a genuinely SHALLOW coordinate
+    // (depth well under DEFAULT_MAX_WALKING_DEPTH). Now that 0.9.634 has
+    // installed a genuine walkable-depth limit, this section's own
+    // "deep lake" assertions (Section B) need a coordinate that is
+    // ACTUALLY beyond DEFAULT_MAX_WALKING_DEPTH to remain meaningful —
+    // found here by the identical real-terrain census technique
+    // tests/AvatarShallowWaterTraversalBoundaryAudit.test.js (0.9.633)
+    // already established, never a hand-picked coordinate.
+    function findDeepestWaterCoordinate(seedValue, halfExtent, step) {
+        let deepest = null;
+        for (let x = -halfExtent; x < halfExtent; x += step) {
+            for (let z = -halfExtent; z < halfExtent; z += step) {
+                const height = terrainHeightAt(seedValue, x, z);
+                if (height > WATER_LEVEL) continue;
+                const depth = LAKE_SURFACE_HEIGHT - height;
+                if (!deepest || depth > deepest.depth) deepest = { x, z, depth };
+            }
+        }
+        return deepest;
     }
-    const deepInterior = { x: cursor.x, y: 0, z: cursor.z };
+    const DEEP_SCAN_HALF_EXTENT = 1000;
+    const DEEP_SCAN_STEP = 2;
+    const deepestFound = findDeepestWaterCoordinate(seed, DEEP_SCAN_HALF_EXTENT, DEEP_SCAN_STEP);
+    assert(deepestFound !== null && deepestFound.depth > DEFAULT_MAX_WALKING_DEPTH,
+        `setup: a real, scanned WATER coordinate exists whose depth (${deepestFound ? deepestFound.depth.toFixed(4) : 'n/a'}) genuinely exceeds DEFAULT_MAX_WALKING_DEPTH (${DEFAULT_MAX_WALKING_DEPTH}) — this milestone's own real "too deep to walk" case, not a hypothetical one`);
+    const deepInterior = { x: deepestFound.x, y: 0, z: deepestFound.z };
     assert(surfaceCategoryAt(seed, deepInterior.x, deepInterior.z) === SURFACE_CATEGORY.WATER,
-        'setup: the reproduced walk genuinely ends on real WATER ground');
+        'setup: the scanned deepest coordinate is independently reconfirmed WATER via the real surfaceCategoryAt()');
 
     // -------------------------------------------------------------
     // Section A — extraction: pull the REAL withGroundElevation()
@@ -159,8 +177,13 @@ async function run() {
     assert(functionBody.includes('surfaceCategoryAt') && functionBody.includes('LAKE_SURFACE_HEIGHT') && functionBody.includes('Math.max'),
         '2. the extracted function body genuinely contains the water-floor gate (surfaceCategoryAt/LAKE_SURFACE_HEIGHT/Math.max) — this is testing the shipped fix, not a stand-in for it');
 
+    // AMENDED BY 0.9.634 — the real, current source text now references
+    // DEFAULT_MAX_WALKING_DEPTH (core/AvatarWaterWalkability.js) as a
+    // free identifier; this dynamic extraction must supply it too, the
+    // same reasoning tests/AvatarShallowWaterTraversalBoundaryAudit.test.js
+    // (0.9.633) already applied to its own identical extraction.
     const buildWithGroundElevation = new Function(
-        'renderer', 'surfaceCategoryAt', 'SURFACE_CATEGORY', 'LAKE_SURFACE_HEIGHT', 'DEFAULT_WORLD_SEED',
+        'renderer', 'surfaceCategoryAt', 'SURFACE_CATEGORY', 'LAKE_SURFACE_HEIGHT', 'DEFAULT_WORLD_SEED', 'DEFAULT_MAX_WALKING_DEPTH',
         `${functionBody}\nreturn withGroundElevation;`
     );
     // The exact behavioral stand-in for renderer/Renderer.js's own
@@ -168,7 +191,7 @@ async function run() {
     // own pure function with this renderer's fixed DEFAULT_WORLD_SEED"
     // (that file's own 0.2.76 header, unchanged by this milestone).
     const fakeRenderer = { terrainHeightAt: (x, z) => terrainHeightAt(seed, x, z) };
-    const withGroundElevation = buildWithGroundElevation(fakeRenderer, surfaceCategoryAt, SURFACE_CATEGORY, LAKE_SURFACE_HEIGHT, DEFAULT_WORLD_SEED);
+    const withGroundElevation = buildWithGroundElevation(fakeRenderer, surfaceCategoryAt, SURFACE_CATEGORY, LAKE_SURFACE_HEIGHT, DEFAULT_WORLD_SEED, DEFAULT_MAX_WALKING_DEPTH);
 
     function rawRenderedY(position) {
         return position.y + terrainHeightAt(seed, position.x, position.z);
@@ -239,8 +262,17 @@ async function run() {
 
         assert(beforeY === rawRenderedY(dryBefore),
             '11. the dry shoreline cell, before entering water, renders at its own ordinary terrain height — no floor applied yet');
-        assert(wetY >= LAKE_SURFACE_HEIGHT - 1e-9,
-            '12. the very next wet cell is floored at (or above) the lake surface, the moment the avatar steps onto WATER ground');
+        // AMENDED BY 0.9.634 — the very next wet cell adjacent to a real
+        // shoreline is, by construction, barely wet (a shallow depth well
+        // under DEFAULT_MAX_WALKING_DEPTH) — exactly the case 0.9.634
+        // exists to change. It no longer floors to the lake surface; it
+        // now follows the real lakebed instead (which, at this shallow a
+        // depth, is simply its own real, raw terrain height) — the whole
+        // point of this milestone. See
+        // tests/AvatarShallowWaterTraversal.test.js for the dedicated
+        // shallow-water coverage this milestone adds.
+        assert(Math.abs(wetY - rawRenderedY(wet)) < 1e-9,
+            '12. AMENDED BY 0.9.634: the very next wet cell — genuinely shallow — now renders at its own real (raw) lakebed height, no longer floored up to the lake surface the way 0.9.615\'s original, depth-blind clamp always did; see tests/AvatarShallowWaterTraversal.test.js for the dedicated shallow-water coverage this milestone adds');
         assert(afterY === beforeY,
             '13. calling withGroundElevation() on the SAME dry coordinate again, after the water call, returns the byte-identical result — nothing about visiting water leaves the dry coordinate permanently constrained; the function is stateless, so "returning to land" needs no reset of anything');
 
@@ -326,7 +358,7 @@ async function run() {
         // structural proof that nothing is remembered tick to tick.
         const a = withGroundElevation(deepInterior);
         const b = buildWithGroundElevation(
-            { terrainHeightAt: (x, z) => terrainHeightAt(seed, x, z) }, surfaceCategoryAt, SURFACE_CATEGORY, LAKE_SURFACE_HEIGHT, DEFAULT_WORLD_SEED
+            { terrainHeightAt: (x, z) => terrainHeightAt(seed, x, z) }, surfaceCategoryAt, SURFACE_CATEGORY, LAKE_SURFACE_HEIGHT, DEFAULT_WORLD_SEED, DEFAULT_MAX_WALKING_DEPTH
         )(deepInterior);
         assert(a.y === b.y,
             '21. a completely fresh instance of the extracted function, given the same position, produces the byte-identical result — confirms there is no persisted avatar/world state anywhere backing this constraint, exactly per this milestone\'s own brief');
