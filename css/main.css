@@ -452,11 +452,24 @@ html, body {
    section further below in this file, 0.5.7): a single scrollable wrapper
    around the panel's entire content, so the sidebar always fits its
    allotted height instead of overflowing into the canvas beside it. */
+/* 0.9.655 — padding-right widened from 0.25rem (4px) to 1.0625rem
+   (17px): 0.9.654 live-measured .tool-btn stretching flush to this
+   wrapper's own edge with only that 4px as clearance. Under a classic
+   (space-reserving) scrollbar the browser already shrinks this box's
+   content width on its own, so 4px was merely thin; under an OVERLAY
+   scrollbar (this sandbox's own Chromium regime, and macOS/touch/
+   "Always show scrollbars"-off configurations generally) the browser
+   reserves no width at all, so the scrollbar paints on top of whatever
+   sits within 4px of the edge. 17px matches Windows' own classic-
+   scrollbar default (GetSystemMetrics(SM_CXVSCROLL)) — the widest
+   common affordance any platform's real scrollbar/thumb actually
+   occupies — so this wrapper now reserves its own clearance instead of
+   assuming the browser will. */
 .sidebar-scroll {
     height: 100%;
     overflow-y: auto;
     overflow-x: hidden;
-    padding-right: 0.25rem;
+    padding-right: 1.0625rem;
 }
 
 .brick-palette {
@@ -1669,8 +1682,15 @@ html, body {
 /* Hardening: World View had no Save/Publish surface at all — the
    Editor's Toolbar equivalent, scoped to the active document (see
    WorldView.js's saveActiveDocument/publishActiveDocument). */
+/* 0.9.655 — flex-wrap:wrap added: Save/Publish/Edit Metadata/Undo/Redo/
+   History is six fixed-content buttons in a 234px-wide row (0.9.654
+   Section B) that never fit on one line — without an escape hatch they
+   were unconditionally clipped by the overlay's own scroll wrapper's
+   overflow-x:hidden, not merely crowded. Same convention as
+   EditingSidebar.js's own rowStyle(). */
 .world-view-actions {
     display: flex;
+    flex-wrap: wrap;
     gap: 0.5rem;
     margin-top: 0.5rem;
 }
@@ -2100,8 +2120,12 @@ html, body {
    Locations row. Sits directly under the camera coordinate readout,
    same placement logic as world-view-actions--explore above — these
    act on "where the camera is/is going," not the world in general. */
+/* 0.9.655 — flex-wrap:wrap added: same unconditional-overflow gap as
+   .world-view-actions above (0.9.654 Section E), an independent
+   occurrence of the identical missing escape hatch. */
 .world-view-actions--navigation {
     display: flex;
+    flex-wrap: wrap;
     align-items: center;
     gap: 0.5rem;
     margin-top: 0.4rem;
@@ -5025,14 +5049,14 @@ html, body {
    working unchanged: it targets this one wrapper instead of many
    siblings, and every click inside it still reaches its target exactly
    as before. */
+/* 0.9.655 — padding-right widened 0.25rem -> 1.0625rem, matching
+   .sidebar-scroll above: an overlay scrollbar reserves no layout width
+   of its own, so this wrapper must declare its own clearance. */
 .world-view-overlay-scroll {
     max-height: calc(100vh - 3rem);
     overflow-y: auto;
     overflow-x: hidden;
-    /* a hair of right padding keeps the scrollbar off the content
-       itself, matching .naming-panel-list's own scrollable-list
-       treatment above */
-    padding-right: 0.25rem;
+    padding-right: 1.0625rem;
 }
 
 /* The three PRIMARY modes — Explore / Map / Places — replacing the

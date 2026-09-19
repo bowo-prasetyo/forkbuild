@@ -5,8 +5,20 @@ import { fileURLToPath } from 'node:url';
 
 // 0.9.654 — Sidebar Scrollbar Content Occlusion Boundary Audit.
 //
-// TYPE: test-only boundary audit. PRODUCTION CHANGES: none (Section I's
-// own guard re-runs 0.9.647's file-manifest technique to prove it).
+// TYPE (at authoring): test-only boundary audit. PRODUCTION CHANGES (at
+// authoring): none (Section J's own guard re-ran 0.9.647's file-manifest
+// technique to prove it).
+//
+// AMENDED BY 0.9.655: every gap this audit found below has since been
+// fixed in css/main.css (flex-wrap:wrap on .world-view-actions and
+// .world-view-actions--navigation; .sidebar-scroll/.world-view-overlay-
+// scroll padding-right widened 0.25rem -> 1.0625rem). This file's own
+// narrative and live-measured numbers below are left as the historical
+// record of what was found and how; each Section's own assertions have
+// been updated in place (marked "AMENDED (0.9.655)" / "FIXED (0.9.655)")
+// to check the CORRECTED behavior rather than silently going stale. See
+// tests/SidebarActionOverflowAndScrollbarClearanceClosureAudit.test.js
+// (0.9.656) for the dedicated closure audit.
 //
 // The brief: 0.9.647 gave the Editor sidebar a scroll owner
 // (.sidebar-scroll) so overflowing content is REACHABLE. The new report
@@ -215,10 +227,17 @@ async function run() {
     // ===============================================================
     {
         // A1 — World's Save/Publish/Edit Metadata/Undo/Redo/History row:
-        // confirm the real template renders all six buttons inside ONE
-        // non-wrapping .world-view-actions row, and that the CSS gives
-        // that row no escape hatch (no flex-wrap, no flex-basis sharing
-        // on .action-btn itself).
+        // confirm the real template renders all six buttons inside the
+        // real .world-view-actions row, and that the CSS now gives that
+        // row an escape hatch.
+        //
+        // AMENDED (0.9.655): this section originally found the row had
+        // NO escape hatch (no flex-wrap, no flex-basis sharing on
+        // .action-btn itself), so six fixed-content buttons could not
+        // fit and were unconditionally clipped. 0.9.655 added
+        // flex-wrap:wrap to .world-view-actions (EditingSidebar.js's own
+        // rowStyle() convention) — this section now asserts that fix is
+        // in place.
         const actionsOpenIdx = worldViewSrc.indexOf('class="world-view-actions">');
         assert(actionsOpenIdx !== -1, n('A: WorldView.js template opens a bare .world-view-actions row'));
         const actionsRowSrc = worldViewSrc.slice(actionsOpenIdx, actionsOpenIdx + 1500);
@@ -229,17 +248,17 @@ async function run() {
         }
         const worldActionsBodies = findAllRuleBodies(css, '.world-view-actions');
         assert(worldActionsBodies.length >= 1, n('A: .world-view-actions has at least one CSS rule'));
-        for (const body of worldActionsBodies) {
-            assert(!/flex-wrap/.test(body),
-                n('A: every .world-view-actions rule in css/main.css declares no flex-wrap — six fixed-content buttons have no way to drop to a second line'));
-        }
+        assert(worldActionsBodies.some((b) => /flex-wrap\s*:\s*wrap/.test(b)),
+            n('FIXED (0.9.655): .world-view-actions now declares flex-wrap:wrap — six fixed-content buttons can drop to a second line instead of overflowing the panel'));
         const actionBtnBody = findExactRuleBody(css, '.action-btn');
         assert(actionBtnBody && !/flex\s*:/.test(actionBtnBody) && !/width\s*:/.test(actionBtnBody),
-            n('A: the base .action-btn rule sets neither flex nor width — inside a plain (non-wrapping) flex row it sizes to its own text, six of them simply do not fit a 280px-max-width panel'));
+            n('A: the base .action-btn rule still sets neither flex nor width of its own — each button still sizes to its own text; it is the row\'s own flex-wrap, not a change to the buttons, that now lets six of them fit a 280px-max-width panel'));
 
         // A2 — .world-view-actions--navigation (Home/Locations/
-        // Notifications): the same missing-escape-hatch shape, a second,
-        // independent instance of the identical gap.
+        // Notifications): the identical fix, a second, independent
+        // instance of the same gap.
+        //
+        // AMENDED (0.9.655): flex-wrap:wrap added here too.
         const navOpenIdx = worldViewSrc.indexOf('class="world-view-actions world-view-actions--navigation"');
         assert(navOpenIdx !== -1, n('A: WorldView.js template opens .world-view-actions.world-view-actions--navigation'));
         const navRowSrc = worldViewSrc.slice(navOpenIdx, navOpenIdx + 1300);
@@ -248,17 +267,20 @@ async function run() {
                 n(`A: the navigation row really does contain a real ${label.replace(/<\/?button>/g, '')} button`));
         }
         const navBody = findExactRuleBody(css, '.world-view-actions--navigation');
-        assert(navBody && !/flex-wrap/.test(navBody),
-            n('A: .world-view-actions--navigation also declares no flex-wrap — Home/Locations/Notifications share the identical unwrapped-row gap as the six-button row above, an independent occurrence of the same root cause, not a one-off'));
+        assert(navBody && /flex-wrap\s*:\s*wrap/.test(navBody),
+            n('FIXED (0.9.655): .world-view-actions--navigation now declares flex-wrap:wrap — Home/Locations/Notifications share the identical fix as the six-button row above, an independent occurrence of the same root cause, not a one-off'));
 
         // A3 — Editor's .tool-switcher (Select/Place): confirm it really
         // does stretch to fill .sidebar-scroll's own width (column flex,
         // no align-items override — default stretch applies) with no
         // width of its own set on .tool-btn, then confirm .sidebar-
-        // scroll's only horizontal clearance is its own 4px padding-right
-        // — exactly what live measurement found (buttons' right edge
-        // sat exactly 4px from .sidebar-scroll's own padding-box edge,
-        // with zero incidental extra margin).
+        // scroll's own horizontal clearance.
+        //
+        // AMENDED (0.9.655): live measurement found this clearance was
+        // exactly 4px (0.25rem), genuinely thin under the overlay
+        // scrollbar regime. 0.9.655 widened it to 1.0625rem (17px,
+        // matching Windows' own classic-scrollbar default) — this
+        // section now asserts that fix is in place.
         const toolSwitcherBody = findExactRuleBody(css, '.tool-switcher');
         assert(toolSwitcherBody && /flex-direction\s*:\s*column/.test(toolSwitcherBody) && !/align-items/.test(toolSwitcherBody),
             n('A: .tool-switcher is flex-direction:column with no align-items override — default stretch applies, so .tool-btn fills its full cross-axis width'));
@@ -266,8 +288,8 @@ async function run() {
         assert(toolBtnBody && !/width\s*:/.test(toolBtnBody),
             n('A: .tool-btn itself declares no width of its own — its rendered width comes entirely from .tool-switcher\'s stretch, i.e. from .sidebar-scroll\'s own content width'));
         const sidebarScrollBody = findExactRuleBody(css, '.sidebar-scroll');
-        assert(sidebarScrollBody && /padding-right\s*:\s*0\.25rem/.test(sidebarScrollBody) && !/padding-left/.test(sidebarScrollBody),
-            n('A: .sidebar-scroll\'s ONLY horizontal padding is padding-right:0.25rem (4px) — .tool-switcher, mounted as a direct child with no wrapper of its own, inherits exactly that 4px as its right-hand clearance, nothing more'));
+        assert(sidebarScrollBody && /padding-right\s*:\s*1\.0625rem/.test(sidebarScrollBody) && !/padding-left/.test(sidebarScrollBody),
+            n('FIXED (0.9.655): .sidebar-scroll\'s ONLY horizontal padding is now padding-right:1.0625rem (17px) — .tool-switcher, mounted as a direct child with no wrapper of its own, now inherits 17px as its right-hand clearance, enough to cover a classic scrollbar\'s own affordance too'));
 
         // A4 — NumericTransformPanel's X/Y/Z/R inputs: confirm they are
         // NOT direct children of .sidebar-scroll but sit inside
@@ -302,7 +324,7 @@ async function run() {
         assert(filterSelectBody && /flex\s*:\s*1/.test(filterSelectBody) && /min-width\s*:\s*0/.test(filterSelectBody),
             n('A: .build-library-filter-select is flex:1 with min-width:0 — the correct pattern for a control that must shrink with its row rather than resist and overflow it; not an occlusion candidate under either scrollbar regime'));
 
-        console.log('✓ A: real production markup/CSS/inline-styles confirm three distinct outcomes — World\'s .world-view-actions/.world-view-actions--navigation rows overflow their panel unconditionally (no flex-wrap, no flex-basis sharing, confirmed against the real six- and three-button rows); Editor\'s .tool-switcher buttons stretch flush to .sidebar-scroll\'s own edge with only its bare 4px padding-right as clearance; the Transform section\'s numeric inputs get an accidental ~14px buffer from an unrelated section-padding convention, and BuildLibraryPanel\'s filter selects and RepeatPanel\'s fixed-width inputs are both structurally safe.');
+        console.log('✓ A (AMENDED 0.9.655): World\'s .world-view-actions/.world-view-actions--navigation rows now declare flex-wrap:wrap (fixed) instead of overflowing their panel unconditionally; Editor\'s .tool-switcher buttons now get 17px of .sidebar-scroll padding-right instead of 4px (fixed); the Transform section\'s numeric inputs still get their accidental ~14px buffer from an unrelated section-padding convention (untouched, not at risk), and BuildLibraryPanel\'s filter selects and RepeatPanel\'s fixed-width inputs remain structurally safe (untouched).');
     }
 
     // ===============================================================
@@ -322,28 +344,34 @@ async function run() {
         assert(sidebarContentWidth === 187,
             n(`B: .sidebar's own content-box width computes to ${sidebarContentWidth}px (220 - 2*16 padding - 1 border) — matches the live-measured .sidebar-scroll clientWidth exactly`));
 
-        // .sidebar-scroll adds no padding of its own except the 4px
-        // right value already read in Section A — content available to
-        // a DIRECT child (e.g. .tool-switcher) is 187 - 4 = 183px,
-        // matching the live-measured .tool-btn width (183px).
-        const directChildWidth = sidebarContentWidth - 4;
-        assert(directChildWidth === 183,
-            n(`B: width available to a control mounted directly inside .sidebar-scroll (no section wrapper) computes to ${directChildWidth}px — matches the live-measured .tool-btn width exactly`));
+        // AMENDED (0.9.655): .sidebar-scroll's own padding-right widened
+        // from 4px to 17px (Section A) — every downstream figure in this
+        // section that was derived FROM that padding is re-derived here
+        // from the real, current CSS value (not a re-typed literal),
+        // rather than left describing the pre-fix geometry.
+        const sidebarScrollPaddingPx = sidebarScrollPaddingRightPx(css);
+        assert(sidebarScrollPaddingPx === 17,
+            n('B: .sidebar-scroll\'s own padding-right, read from real CSS, is now 17px'));
+
+        // content available to a DIRECT child (e.g. .tool-switcher) is
+        // now 187 - 17 = 170px (was 183px pre-fix).
+        const directChildWidth = sidebarContentWidth - sidebarScrollPaddingPx;
+        assert(directChildWidth === 170,
+            n(`B: width available to a control mounted directly inside .sidebar-scroll (no section wrapper) now computes to ${directChildWidth}px (was 183px pre-0.9.655) — .tool-btn is narrower than before, not occluded, since it is a stretch child sized relative to its true scrolling ancestor (Section C)`));
 
         // A control inside EditingSidebar's own 10px-padded section box
-        // gets 183 - 20 = 163px; the Transform row's own label (16px)
-        // + gap (6px) leaves 163 - 22 = 141px for the input itself,
-        // matching the live-measured input width (139px, the 2px gap
-        // being the input's own 1px+1px border in the border-box model
-        // that same computation doesn't add back in).
+        // now gets 170 - 20 = 150px; the Transform row's own label +
+        // gap are unaffected by this fix (neither lives inside
+        // .sidebar-scroll's own padding), so they still leave the same
+        // 22px, now against a smaller base.
         const sectionedChildWidth = directChildWidth - 20;
         const labelStyleBody = findMethodReturnObject(numericTransformPanelSrc, 'labelStyle');
         const labelWidth = parseInt(styleProp(labelStyleBody, 'width'), 10);
         const rowStyleBody = findMethodReturnObject(numericTransformPanelSrc, 'rowStyle');
         const rowGap = parseInt(styleProp(rowStyleBody, 'gap'), 10);
         const numericInputAvailableWidth = sectionedChildWidth - labelWidth - rowGap;
-        assert(numericInputAvailableWidth === 141,
-            n(`B: width available to the Transform section's own X/Y/Z/R input computes to ${numericInputAvailableWidth}px (163 section content - ${labelWidth}px label - ${rowGap}px gap) — within 2px of the live-measured input width (139px), the difference being the input's own border in the border-box model`));
+        assert(numericInputAvailableWidth === 128,
+            n(`B: width available to the Transform section's own X/Y/Z/R input now computes to ${numericInputAvailableWidth}px (150 section content - ${labelWidth}px label - ${rowGap}px gap; was 141px pre-0.9.655) — narrower, still comfortably positive, and this input was never an occlusion candidate (Section A/F: NOT touched by this milestone)`));
 
         // World: .world-view-overlay (280px max-width, border-box, 1px
         // border, padding 1rem 1.25rem) -> content box
@@ -358,14 +386,19 @@ async function run() {
         assert(overlayContentWidth === 238,
             n(`B: .world-view-overlay's own content-box width computes to ${overlayContentWidth}px (280 - 2*20 padding - 2 border) — matches the live-measured .world-view-overlay-scroll offsetWidth exactly`));
 
-        // .world-view-overlay-scroll's own 4px right padding leaves 234px
-        // for a direct child, matching the live-measured
-        // .world-view-actions clientWidth exactly (234).
-        const worldDirectChildWidth = overlayContentWidth - 4;
-        assert(worldDirectChildWidth === 234,
-            n(`B: width available to .world-view-actions (a direct child of .world-view-overlay-scroll) computes to ${worldDirectChildWidth}px — matches the live-measured clientWidth exactly, and is far short of the row's own live-measured scrollWidth (434px for the six-button row) — this overflow is a plain "too much content for the box" gap, not a scrollbar-adjacency one`));
+        // AMENDED (0.9.655): .world-view-overlay-scroll's own
+        // padding-right widened from 4px to 17px too (the same shared
+        // value as .sidebar-scroll — Section I), so the direct-child
+        // figure below is re-derived from the current CSS value.
+        const worldScrollBodyForPadding = findExactRuleBody(css, '.world-view-overlay-scroll');
+        const worldScrollPaddingPx = remToPx(parseFloat((worldScrollBodyForPadding.match(/padding-right\s*:\s*([\d.]+)rem/) || [null, '1.0625'])[1]));
+        assert(worldScrollPaddingPx === 17,
+            n('B: .world-view-overlay-scroll\'s own padding-right, read from real CSS, is now 17px — the identical value as .sidebar-scroll'));
+        const worldDirectChildWidth = overlayContentWidth - worldScrollPaddingPx;
+        assert(worldDirectChildWidth === 221,
+            n(`B: width available to .world-view-actions (a direct child of .world-view-overlay-scroll) now computes to ${worldDirectChildWidth}px (was 234px pre-0.9.655) — this figure was never the row's actual constraint anyway: the row's own live-measured content width (434px for the six-button row) dwarfs even the pre-fix 234px, which is why flex-wrap (Section A), not scrollbar clearance, is this row's own fix`));
 
-        console.log('✓ B: every content-width figure this audit\'s live pass measured is independently re-derivable from real, unmodified CSS and inline-style source — .sidebar-scroll\'s content width (187px), a direct child\'s available width (183px, .tool-switcher\'s real measured width), a sectioned child\'s available width (141px, within 2px of the Transform input\'s real measured width), .world-view-overlay-scroll\'s content width (238px), and .world-view-actions\'s own available width (234px, dwarfed by its real 434px content width).');
+        console.log('✓ B (AMENDED 0.9.655): every content-width figure this audit\'s live pass originally measured is independently re-derivable from real, unmodified CSS and inline-style source, and the figures downstream of the two widened padding-right rules are re-derived against the CURRENT (post-fix) values — .sidebar-scroll\'s content width (187px, unchanged), a direct child\'s available width (170px, was 183px), a sectioned child\'s available width (128px, was 141px), .world-view-overlay-scroll\'s content width (238px, unchanged), and .world-view-actions\'s own available width (221px, was 234px, and dwarfed either way by its real 434px content width — flex-wrap, not clearance, is what actually fixes that row).');
     }
 
     // ===============================================================
@@ -395,31 +428,40 @@ async function run() {
         // already there, full width, right to .sidebar-scroll's own
         // edge — so the only thing that matters is how much of
         // .sidebar-scroll's OWN padding-right sits between a stretched
-        // child's right edge and that edge. .tool-btn's answer,
-        // confirmed in Section A, is exactly 4px — genuinely thin
-        // against ANY visible scrollbar affordance, live-confirmed in
-        // this sandbox's own overlay-scrollbar rendering.
-        assert(sidebarScrollPaddingRightPx(css) === 4,
-            n('C: .sidebar-scroll\'s own clearance is 4px — the ONLY number that matters under the overlay regime, and it is thin by any standard (a scrollbar affordance narrower than 4px is not a documented convention on any current desktop or mobile platform)'));
+        // child's right edge and that edge.
+        //
+        // AMENDED (0.9.655): .tool-btn's clearance, confirmed 4px pre-fix
+        // (genuinely thin against any visible scrollbar affordance,
+        // live-confirmed in this sandbox's own overlay-scrollbar
+        // rendering), is now 17px — matching Windows' own classic-
+        // scrollbar default, the widest common affordance any platform's
+        // real scrollbar/thumb actually occupies. The overlay-regime risk
+        // this section originally flagged as CONDITIONAL-BUT-REAL is now
+        // closed for both regimes.
+        assert(sidebarScrollPaddingRightPx(css) === 17,
+            n('FIXED (0.9.655): .sidebar-scroll\'s own clearance is now 17px — sufficient under the overlay regime (the ONLY number that matters there) and still additive, not merely non-harmful, under the classic regime'));
 
-        // World's own .world-view-actions overflow is NOT a scrollbar-
+        // World's own .world-view-actions overflow was NOT a scrollbar-
         // relationship question at all — Section B already showed its
-        // 434px real content width dwarfs its 234px available width
+        // 434px real content width dwarfed its available width
         // independent of any scrollbar, and Section A already showed
         // .world-view-overlay-scroll has no vertical scrollbar condition
         // attached to that overflow (the live pass reproduced it with
         // hasVScroll: false). Re-confirm here that .world-view-overlay-
-        // scroll's OWN overflow-x is hidden, i.e. this excess is
-        // silently clipped rather than wrapped, scrolled, or visible.
+        // scroll's OWN overflow-x is still hidden — unchanged and
+        // irrelevant to the fix, since flex-wrap (Section A) means the
+        // row's own content no longer exceeds a single line's worth of
+        // WIDTH in the way that property polices; it wraps to additional
+        // lines within the box instead.
         const worldScrollBody = findExactRuleBody(css, '.world-view-overlay-scroll');
         assert(worldScrollBody && /overflow-x\s*:\s*hidden/.test(worldScrollBody),
-            n('C: .world-view-overlay-scroll is overflow-x:hidden — World\'s six-button row\'s 200px excess (Section B) is silently clipped, not wrapped, scrolled, or visible; the fix for this gap is not scrollbar geometry at all, it is flex-wrap'));
+            n('C: .world-view-overlay-scroll is still overflow-x:hidden (unchanged) — irrelevant now that flex-wrap (Section A, FIXED) lets the row\'s six buttons wrap onto additional lines instead of exceeding the box\'s width at all'));
 
-        console.log('✓ C: the Editor risk (.tool-switcher, 4px clearance) is real but CONDITIONAL — safe under the classic/space-reserving scrollbar regime because CSS correctly shrinks properly relative-sized children with their scrolling ancestor, genuinely thin only under the overlay regime this sandbox itself renders. World\'s own .world-view-actions gap is UNCONDITIONAL and has nothing to do with scrollbar rendering at all — its content is simply too wide for its box, silently clipped by overflow-x:hidden.');
+        console.log('✓ C (AMENDED 0.9.655): the Editor risk (.tool-switcher clearance) that was real-but-CONDITIONAL (safe under the classic scrollbar regime, genuinely thin under the overlay regime this sandbox itself renders) is now closed under BOTH regimes — clearance widened from 4px to 17px. World\'s own .world-view-actions gap, which was UNCONDITIONAL and had nothing to do with scrollbar rendering, is now closed by flex-wrap: the row\'s content wraps onto additional lines within its box instead of exceeding the box\'s width.');
     }
     function sidebarScrollPaddingRightPx(cssText) {
         const body = findExactRuleBody(cssText, '.sidebar-scroll');
-        return remToPx(parseFloat((body.match(/padding-right\s*:\s*([\d.]+)rem/) || [null, '0.25'])[1]));
+        return remToPx(parseFloat((body.match(/padding-right\s*:\s*([\d.]+)rem/) || [null, '1.0625'])[1]));
     }
 
     // ===============================================================
@@ -458,27 +500,33 @@ async function run() {
     // Section E — World regression (not assumed correct; it isn't).
     // ===============================================================
     {
-        // Re-state, from source, the two real gaps Section A found —
-        // grouped here as "World's own regression," the brief's own
-        // framing, rather than repeating the Section A derivations.
+        // AMENDED (0.9.655): this section originally re-stated, from
+        // source, the two real gaps Section A found ("World's own
+        // regression" — no flex-wrap anywhere on either row). Both are
+        // now fixed; this section asserts the fix from source instead.
         const worldActionsBodies = findAllRuleBodies(css, '.world-view-actions');
-        const anyWraps = worldActionsBodies.some((b) => /flex-wrap/.test(b));
-        assert(!anyWraps,
-            n('E: World\'s .world-view-actions (both the base rule and any element carrying it) has no flex-wrap escape hatch anywhere in css/main.css — this is a real, present-tense gap, not a historical one 0.5.7 already closed'));
+        const anyWraps = worldActionsBodies.some((b) => /flex-wrap\s*:\s*wrap/.test(b));
+        assert(anyWraps,
+            n('FIXED (0.9.655): World\'s .world-view-actions now has a flex-wrap:wrap escape hatch in css/main.css — no longer the real, present-tense gap this section originally found'));
 
         const navBody = findExactRuleBody(css, '.world-view-actions--navigation');
-        assert(navBody && !/flex-wrap/.test(navBody),
-            n('E: .world-view-actions--navigation carries the identical gap — two independent occurrences inside the SAME file, not a single isolated mistake'));
+        assert(navBody && /flex-wrap\s*:\s*wrap/.test(navBody),
+            n('FIXED (0.9.655): .world-view-actions--navigation now carries the identical fix — two independent occurrences of the same root cause, both closed'));
 
-        // Contrast with the ONE World rule that already gets this right
-        // — .world-view-primary-nav .action-btn's flex:1 — proving the
-        // gap is inconsistency within World's own CSS, not a limitation
-        // World as a surface is somehow subject to.
+        // Contrast with the World rules that already got this right
+        // — .world-view-primary-nav .action-btn's flex:1 — the pattern
+        // 0.9.654 found World's own CSS already knew, just not
+        // consistently; 0.9.655 brought the two broken rows into line
+        // with it (via flex-wrap, the sibling convention used one file
+        // over in EditingSidebar.js's own rowStyle()) rather than
+        // switching them to flex:1, since these rows' buttons are not
+        // meant to share a row's width evenly — they are meant to fit,
+        // wrapping onto a second line when they don't.
         const primaryNavBtnBody = findExactRuleBody(css, '.world-view-primary-nav .action-btn');
         assert(primaryNavBtnBody && /flex\s*:\s*1/.test(primaryNavBtnBody),
-            n('E: .world-view-primary-nav .action-btn (Explore/Map/Places, immediately below the broken rows) already uses flex:1 to share width instead of overflowing — proving World\'s own CSS already knows how to avoid this, just not consistently'));
+            n('E: .world-view-primary-nav .action-btn (Explore/Map/Places, immediately below the fixed rows) still uses flex:1 to share width instead of overflowing — unchanged, and was never part of this gap'));
 
-        console.log('✓ E: World is NOT merely "unaudited since it predates Editor\'s fix" — it has a real, live, present-tense content-overflow defect in two of its own action rows, confirmed by real template markup and real CSS, made worse (not better) by the fact the very next rule in the same file already shows the working pattern.');
+        console.log('✓ E (AMENDED 0.9.655): World\'s real, live, present-tense content-overflow defect in its two action rows — confirmed by real template markup and real CSS in 0.9.654 — is now closed by flex-wrap:wrap on both rules, the same convention EditingSidebar.js\'s own rowStyle() already used. .world-view-primary-nav .action-btn\'s own flex:1 pattern is untouched.');
     }
 
     // ===============================================================
@@ -486,13 +534,17 @@ async function run() {
     // ===============================================================
     {
         // World: Undo/Redo/History (and Notifications) are rendered
-        // ENTIRELY outside .world-view-overlay's own clientWidth once
-        // overflow-x:hidden clips them (live-measured: Undo's own left
-        // edge alone already exceeds the panel's visible right edge) —
-        // these are not "partially obscured," they render nowhere a
-        // pointer can reach them at all. Confirm from source that no
-        // OTHER path reaches the same actions (e.g. a keyboard shortcut)
-        // before calling this unconditionally unreachable.
+        // AMENDED (0.9.655): were rendered ENTIRELY outside
+        // .world-view-overlay's own clientWidth once overflow-x:hidden
+        // clipped them (live-measured: Undo's own left edge alone
+        // already exceeded the panel's visible right edge) — not
+        // "partially obscured," rendered nowhere a pointer could reach
+        // them at all. flex-wrap:wrap (Section A/E, FIXED) now wraps
+        // them onto additional lines instead, so all six/three buttons
+        // render within the panel and are pointer-reachable. Confirm
+        // from source that no OTHER path reaches the same actions (e.g.
+        // a keyboard shortcut) — recorded for completeness, not because
+        // reachability still depends on it.
         const undoShortcutExists = /ctrl.*z|cmd.*z|metaKey.*key\s*===\s*'z'/i.test(worldViewSrc) || /undoAction/.test(worldViewSrc) && /keydown/i.test(worldViewSrc);
         // This audit does not assert on undoShortcutExists's boolean
         // value either way — a keyboard path, if one exists, would mean
@@ -503,18 +555,22 @@ async function run() {
         assert(typeof undoShortcutExists === 'boolean',
             n('F: recorded (not asserted true/false) whether WorldView.js wires a keyboard path to undo/redo, for 0.9.655\'s own scoping — it does not change that the on-screen Undo/Redo/History buttons themselves are unreachable by pointer'));
 
-        // Editor: .tool-btn's reachability is conditional, exactly as
-        // Section C established — under the classic regime it is fully
+        // Editor: .tool-btn's reachability was conditional, exactly as
+        // Section C established — under the classic regime fully
         // clickable (narrower, not covered); under the overlay regime
-        // its own rightmost ~few px sit under the scrollbar's own paint
+        // its own rightmost ~few px sat under the scrollbar's own paint
         // region, where overlay scrollbars (by design, so their own
         // thumb stays draggable) intercept the pointer rather than
         // passing the click through to content beneath them.
+        //
+        // AMENDED (0.9.655): 17px of clearance (Section C, FIXED) keeps
+        // .tool-btn's own right edge clear of that paint region under
+        // either regime, so this is no longer conditional.
         const scrollWrapperRule = findExactRuleBody(css, '.sidebar-scroll');
         assert(/overflow-y\s*:\s*auto/.test(scrollWrapperRule),
-            n('F: confirmed .sidebar-scroll uses overflow-y:auto (not scroll) — the scrollbar/thumb, and therefore this conditional reachability risk, only exists at all once content actually overflows, exactly the condition 0.9.646/0.9.647 already established is the common case'));
+            n('F: confirmed .sidebar-scroll uses overflow-y:auto (not scroll) — unchanged; the scrollbar/thumb only exists at all once content actually overflows, exactly the condition 0.9.646/0.9.647 already established is the common case'));
 
-        console.log('✓ F: World\'s Undo/Redo/History (and Notifications) are unconditionally unreachable by pointer — not merely visually crowded. Editor\'s .tool-btn reachability is conditional on the OS/browser scrollbar regime, genuinely broken under the overlay regime, genuinely fine under the classic one.');
+        console.log('✓ F (AMENDED 0.9.655): World\'s Undo/Redo/History (and Notifications), unconditionally unreachable by pointer pre-fix, are now reachable — flex-wrap wraps them onto additional lines within the panel. Editor\'s .tool-btn reachability, conditional on the OS/browser scrollbar regime pre-fix (genuinely broken under overlay, fine under classic), is now unconditional — 17px of clearance covers both.');
     }
 
     // ===============================================================
@@ -621,9 +677,16 @@ async function run() {
     // Section J — Non-interference / production-change guard.
     // ===============================================================
     {
-        // This milestone is test-only — confirm, the same way 0.9.647
-        // Section F did, that the only files this commit touches are
-        // this test file and its registration in tests.html.
+        // AMENDED (0.9.655): this guard originally required a test-only
+        // diff (this file + tests.html), matching 0.9.654's own
+        // "test-only" brief. 0.9.655 is deliberately NOT test-only — it
+        // is the narrow production fix this audit itself recommended —
+        // so the allowed set now includes exactly the one production
+        // file the fix brief named: css/main.css. Everything else this
+        // audit ever read (EditorView.js, WorldView.js,
+        // EditingSidebar.js, NumericTransformPanel.js, RepeatPanel.js,
+        // BuildLibraryPanel.js) remains excluded — none of those needed
+        // to change for either the flex-wrap or the padding-right fix.
         let changedFiles = [];
         try {
             const diffOutput = execSync('git diff --name-only HEAD', { cwd: SOURCE_ROOT, encoding: 'utf8' });
@@ -635,9 +698,10 @@ async function run() {
             changedFiles = null;
         }
         if (changedFiles !== null) {
-            const unexpected = changedFiles.filter((f) => f !== 'tests.html' && !f.startsWith('tests/SidebarScrollbarContentOcclusionBoundaryAudit'));
+            const allowed = new Set(['tests.html', 'css/main.css']);
+            const unexpected = changedFiles.filter((f) => !allowed.has(f) && !f.startsWith('tests/SidebarScrollbarContentOcclusionBoundaryAudit'));
             assert(unexpected.length === 0,
-                n(`J: no file outside {tests.html, tests/SidebarScrollbarContentOcclusionBoundaryAudit.test.js} is modified (found unexpected: ${JSON.stringify(unexpected)}) — this milestone is test-only, exactly as its own brief required; css/main.css, EditorView.js, WorldView.js, EditingSidebar.js, NumericTransformPanel.js, RepeatPanel.js, and BuildLibraryPanel.js are all read-only source-of-truth for this audit, never edited by it`));
+                n(`J: no file outside {tests.html, tests/SidebarScrollbarContentOcclusionBoundaryAudit.test.js, css/main.css} is modified (found unexpected: ${JSON.stringify(unexpected)}) — 0.9.655's production change is confined to css/main.css exactly as its own brief required; EditorView.js, WorldView.js, EditingSidebar.js, NumericTransformPanel.js, RepeatPanel.js, and BuildLibraryPanel.js remain read-only source-of-truth for this audit, never edited by it`));
         } else {
             console.log('  (J: git not available in this environment to enumerate changed files — skipped, not failed)');
         }
@@ -648,10 +712,10 @@ async function run() {
         assert(editorBodyRule && /display\s*:\s*flex/.test(editorBodyRule) && /flex\s*:\s*1/.test(editorBodyRule),
             n('J: .editor-body is unchanged (still display:flex; flex:1; min-height:0) — the canvas column beside the sidebar is untouched'));
 
-        console.log('✓ J: this milestone is test-only — the only files it changes are this test file and its registration in tests.html; the Editor canvas, World\'s spatial canvas, both panels\' own width/max-width, both panels\' vertical scroll, the toolbar, and every other panel are all read from, never written to.');
+        console.log('✓ J (AMENDED 0.9.655): the only files this commit changes are this test file, css/main.css, and tests.html\'s registration of the new 0.9.656 closure audit; the Editor canvas, World\'s spatial canvas, both panels\' own width/max-width, both panels\' vertical scroll, the toolbar, and every other panel are all read from, never written to.');
     }
 
-    console.log(`\n✅ 0.9.654 Sidebar Scrollbar Content Occlusion Boundary Audit complete (${assertionCount} assertions) — the reported symptom is CONFIRMED, but narrower and more precisely located than the initial hypothesis: World's own .world-view-actions/.world-view-actions--navigation rows overflow their panel unconditionally (a plain missing-flex-wrap bug, nothing to do with scrollbars), while Editor's .tool-switcher buttons have a genuine but scrollbar-regime-CONDITIONAL 4px-clearance gap (unsafe under overlay scrollbars, safe under classic ones) — and the Transform section's own numeric inputs, RepeatPanel's inputs, and BuildLibraryPanel's filter selects are all already safe. Recommends a narrow 0.9.655: flex-wrap:wrap on World's two broken rows (EditingSidebar.js's own existing convention) and a single shared padding-right widen on .sidebar-scroll/.world-view-overlay-scroll (already one shared value, not two).`);
+    console.log(`\n✅ 0.9.654 Sidebar Scrollbar Content Occlusion Boundary Audit complete (${assertionCount} assertions) — AMENDED BY 0.9.655: both gaps this audit found are now fixed. World's own .world-view-actions/.world-view-actions--navigation rows, which overflowed their panel unconditionally (a plain missing-flex-wrap bug, nothing to do with scrollbars), now wrap. Editor's .tool-switcher buttons, which had a genuine scrollbar-regime-CONDITIONAL 4px-clearance gap (unsafe under overlay scrollbars, safe under classic ones), now get 17px, safe under either regime. The Transform section's own numeric inputs, RepeatPanel's inputs, and BuildLibraryPanel's filter selects remain untouched and were never at risk. See 0.9.656 for the dedicated closure audit.`);
 }
 
 run().catch((err) => {
