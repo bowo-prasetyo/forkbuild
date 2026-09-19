@@ -672,8 +672,24 @@ async function run() {
         const wrapperMatch = mainSource.match(/function addPublicationCommentaryCommand\(input\) \{([\s\S]*?)\n\}/);
         const wrapperBody = wrapperMatch ? wrapperMatch[1] : '';
 
+        // AMENDED BY 0.9.631 — Publication Commentary Arweave Asynchronous
+        // Distribution added a `discoveryProvider` STRING parameter to the
+        // ui/main.js wrapper (`input.discoveryProvider`, 'nostr' | 'arweave')
+        // selecting which asynchronous TRANSPORT SUBSTRATE to publish
+        // through — the exact term application/PublicationDistributionRuntimeComposition.js's
+        // own `discoveryProvider` option already uses for the identical
+        // concept, one layer over. This is a different thing from what this
+        // assertion actually guards against: a Publication EXISTENCE/
+        // ownership lookup COLLABORATOR (an object with its own
+        // `.findById()`, such as `LocalDiscoveryProvider`) leaking into the
+        // write path. The two happen to share a name; only the collaborator
+        // class pattern (capitalized `DiscoveryProvider`, matching
+        // `LocalDiscoveryProvider`/`NostrDiscoveryProvider`/etc. by
+        // substring) is still guarded here — a bare, lowercase, string-
+        // valued `discoveryProvider` selecting a substrate is not the
+        // invariant this section protects.
         for (const [label, source] of [['composition root', useCaseSource], ['peer exchange', peerExchangeSource], ['exchange', exchangeSource], ['ui/main.js wrapper', wrapperBody]]) {
-            assert(!/CanCommentOnPublicationUseCase|publisherIdentity|publicationCatalog|discoveryProvider|DiscoveryProvider/.test(source),
+            assert(!/CanCommentOnPublicationUseCase|publisherIdentity|publicationCatalog|DiscoveryProvider/.test(source),
                 n(`the ${label} imports or mentions no Publication ownership/authorship/discovery/existence collaborator of any kind`));
         }
 

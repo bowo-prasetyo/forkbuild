@@ -108,8 +108,16 @@ import {
 //       PublicationCommentaryNostrDistribution.js, application/
 //       DiscoverPublicationCommentaryFromNostrUseCase.js) — CONFORMING TO
 //       this contract, never modifying it (reconfirmed live in Section H,
-//       below). Arweave remains untouched, exactly as this section
-//       originally measured.
+//       below).
+//
+// AMENDED AGAIN BY 0.9.631 — Publication Commentary Arweave Asynchronous
+// Distribution. Section H's own "Arweave remains untouched" half of point
+// (2), above, went stale the same way its Nostr half already had: 0.9.631
+// built exactly the Arweave adapter/admission-boundary pair this contract's
+// own header anticipated (application/PublicationCommentaryArweaveDistribution.js,
+// application/DiscoverPublicationCommentaryFromArweaveUseCase.js), also
+// CONFORMING TO this unmodified contract — reconfirmed live in Section H,
+// below.
 
 let assertionCount = 0;
 function assert(condition, message) {
@@ -524,21 +532,32 @@ async function run() {
         }
 
         // AMENDED BY 0.9.629 — see this file's own header note, above.
-        // Two Nostr-flavored Commentary files now exist (0.9.628); zero
-        // Arweave-flavored ones do — Arweave remains exactly as untouched
-        // as this section originally measured.
+        // Two Nostr-flavored Commentary files now exist (0.9.628).
+        //
+        // AMENDED AGAIN BY 0.9.631 — three Arweave-flavored ones now exist
+        // too (application/PublicationCommentaryArweaveDistribution.js,
+        // application/DiscoverPublicationCommentaryFromArweaveUseCase.js,
+        // application/ArweaveTaggedTransactionSearch.js), built by that
+        // later milestone against this file's own unmodified contract,
+        // exactly as 0.9.628 already did for Nostr.
         const commentaryNostrFiles = grepFiles('Commentary', ['nostr', 'application']).filter((f) => /Nostr/.test(f) && /Commentary/i.test(f));
         const commentaryArweaveFiles = grepFiles('Commentary', ['arweave', 'application']).filter((f) => /Arweave/.test(f) && /Commentary/i.test(f));
         assert(commentaryNostrFiles.length === 2
             && commentaryNostrFiles.some((f) => f.includes('PublicationCommentaryNostrDistribution.js'))
             && commentaryNostrFiles.some((f) => f.includes('DiscoverPublicationCommentaryFromNostrUseCase.js')),
             n(`0.9.628's own two Nostr-flavored Commentary files exist — found: ${commentaryNostrFiles.join(', ') || 'none'}; this milestone itself (0.9.626) built a substrate-neutral CONTRACT only, never a substrate implementation — 0.9.628 is what later implemented one, against this file's own unmodified contract`));
-        assert(commentaryArweaveFiles.length === 0,
-            n(`still zero Arweave-flavored Commentary files anywhere — found: ${commentaryArweaveFiles.join(', ') || 'none'}`));
+        assert(commentaryArweaveFiles.length === 2
+            && commentaryArweaveFiles.some((f) => f.includes('PublicationCommentaryArweaveDistribution.js'))
+            && commentaryArweaveFiles.some((f) => f.includes('DiscoverPublicationCommentaryFromArweaveUseCase.js')),
+            n(`0.9.631's own two Arweave-flavored Commentary files (grep-matched on both "Arweave" and "Commentary" in the same filename) exist — found: ${commentaryArweaveFiles.join(', ') || 'none'}; built one further milestone later, against this file's own unmodified contract, exactly as 0.9.628 already did for Nostr`));
 
         const nostrDistributionSource = execSync('cat application/PublicationCommentaryNostrDistribution.js', { cwd: SOURCE_ROOT.pathname, encoding: 'utf8' });
         assert(/publish\(envelopeJson\)|async publish\(/.test(nostrDistributionSource) && /async retrieve\(/.test(nostrDistributionSource),
             n('the later Nostr adapter (0.9.628) exposes exactly the publish(envelopeJson)/retrieve(locator) shape this milestone\'s own contract describes — a real, live-verified conformance, never a coincidence of naming'));
+
+        const arweaveDistributionSource = execSync('cat application/PublicationCommentaryArweaveDistribution.js', { cwd: SOURCE_ROOT.pathname, encoding: 'utf8' });
+        assert(/publish\(envelopeJson\)|async publish\(/.test(arweaveDistributionSource) && /async retrieve\(/.test(arweaveDistributionSource),
+            n('the later Arweave adapter (0.9.631) exposes the identical publish(envelopeJson)/retrieve(locator) shape too — a real, live-verified conformance one substrate over'));
 
         const contractSource = execSync('git show HEAD:core/PublicationCommentaryAsynchronousDeliveryContract.js 2>/dev/null || cat core/PublicationCommentaryAsynchronousDeliveryContract.js',
             { cwd: SOURCE_ROOT.pathname, encoding: 'utf8' });
@@ -558,7 +577,7 @@ async function run() {
         assert(!/AsynchronousDeliveryContract/.test(peerExchangeSource),
             n('the existing WebRTC peer exchange class does not import or reference this milestone\'s own new contract file at all — the live-dissemination path is completely unchanged and unaware of it'));
 
-        console.log('✓ H (AMENDED BY 0.9.629): at the time this section originally ran, no Nostr/Arweave Commentary capability existed anywhere; 0.9.628 subsequently built a real Nostr one, conforming to (and never modifying) this milestone\'s own contract — reconfirmed live, above. The contract file itself remains genuinely substrate-neutral and I/O-free, Commentary\'s own identity still carries no new field, and the existing WebRTC path remains entirely untouched and unaware of this file. Arweave remains exactly as untouched as originally measured.');
+        console.log('✓ H (AMENDED BY 0.9.629, AMENDED AGAIN BY 0.9.631): at the time this section originally ran, no Nostr/Arweave Commentary capability existed anywhere; 0.9.628 subsequently built a real Nostr one and 0.9.631 a real Arweave one, both conforming to (and never modifying) this milestone\'s own contract — reconfirmed live, above, for both. The contract file itself remains genuinely substrate-neutral and I/O-free, Commentary\'s own identity still carries no new field, and the existing WebRTC path remains entirely untouched and unaware of this file.');
     }
 
     console.log(`✅ All Publication Commentary Asynchronous Delivery Contract tests passed (${assertionCount} assertions).`);

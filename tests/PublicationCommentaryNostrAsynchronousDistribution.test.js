@@ -468,8 +468,20 @@ async function run() {
         const publishIndex = wrapperBody.indexOf('.publish(');
         assert(createIndex >= 0 && announceIndex >= 0 && publishIndex >= 0 && createIndex < announceIndex && announceIndex < publishIndex,
             n('source order inside the wrapper: local creation, then WebRTC announce, then Nostr publish — never a reordering that could make either distribution attempt precede local persistence'));
-        assert(wrapperBody.includes('publicationCommentaryNostrDistribution.publish(envelopeJson).catch(() => {})'),
-            n('the Nostr publish call is fire-and-forget with its own rejection handler — never awaited inline, so a slow or unreachable relay can never block a Commentary submission'));
+        // AMENDED BY 0.9.631 — Publication Commentary Arweave Asynchronous
+        // Distribution added exactly-one-of-Nostr-or-Arweave SELECTION to
+        // this same wrapper (`asynchronousDistribution`, resolved from
+        // `input.discoveryProvider`, defaulting to Nostr — see that
+        // milestone's own header on `addPublicationCommentaryCommand`), so
+        // the publish call no longer names `publicationCommentaryNostrDistribution`
+        // literally. The invariant this assertion actually protects —
+        // fire-and-forget, with its own rejection handler, never awaited
+        // inline — still holds, on whichever substrate was selected.
+        assert(wrapperBody.includes('asynchronousDistribution.publish(envelopeJson).catch(() => {})'),
+            n('the asynchronous-substrate publish call (Nostr or Arweave, per 0.9.631\'s own selection) is fire-and-forget with its own rejection handler — never awaited inline, so a slow or unreachable relay/gateway can never block a Commentary submission'));
+        assert(wrapperBody.includes("? publicationCommentaryArweaveDistribution\n        : publicationCommentaryNostrDistribution;")
+            || /publicationCommentaryArweaveDistribution[\s\S]{0,80}publicationCommentaryNostrDistribution/.test(wrapperBody),
+            n('0.9.631: the wrapper selects between the two asynchronous substrates rather than fanning out to both — the identical "selection, never fan-out" invariant application/PublicationDistributionRuntimeComposition.js already holds, extended here to Commentary'));
 
         console.log('✓ I (source): create → persist → announce → Nostr publish, confirmed by source order.');
     }
@@ -544,9 +556,16 @@ async function run() {
             n('application/PublicationCommentaryRemoteNotificationBridge.js is unmodified by this milestone — it still mentions nothing Nostr-shaped, because it does not need to: it already accepts the transport-agnostic { commentary, isNew } shape'));
 
         const mainSource = codeOnly(await rawSource('ui/main.js'));
+        // AMENDED BY 0.9.631 — Publication Commentary Arweave Asynchronous
+        // Distribution added a third call site, `discoverPublicationCommentaryFromArweaveCommand`,
+        // mirroring the Nostr one exactly and funneling into the SAME
+        // bridge instance — never a second, transport-specific
+        // notification mechanism. The count this assertion protects
+        // becomes three, never a fixed "two" that this milestone's own
+        // brief never actually required.
         assert(mainSource.includes('publicationCommentaryRemoteNotificationBridge.handleCommentaryReceived(result)') &&
-            (mainSource.match(/publicationCommentaryRemoteNotificationBridge\.handleCommentaryReceived\(/g) || []).length === 2,
-            n('exactly two production call sites feed publicationCommentaryRemoteNotificationBridge.handleCommentaryReceived() — the pre-existing WebRTC onCommentaryReceived() subscription (0.9.623) and this milestone\'s own Nostr discovery command — both funneling into the SAME bridge instance, never a second, transport-specific notification path'));
+            (mainSource.match(/publicationCommentaryRemoteNotificationBridge\.handleCommentaryReceived\(/g) || []).length === 3,
+            n('exactly three production call sites feed publicationCommentaryRemoteNotificationBridge.handleCommentaryReceived() — the pre-existing WebRTC onCommentaryReceived() subscription (0.9.623), the Nostr discovery command (0.9.628), and 0.9.631\'s own Arweave discovery command — all funneling into the SAME bridge instance, never a second, transport-specific notification path'));
 
         console.log('✓ K: a newly-admitted Nostr Commentary reaches the identical local-notification boundary the WebRTC path already uses — no duplicate notification mechanism was built.');
     }

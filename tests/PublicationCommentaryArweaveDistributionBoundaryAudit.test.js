@@ -670,12 +670,21 @@ async function run() {
         // measured asymmetry with Nostr's own raw REQ primitive.
         assert(typeof ArweaveGraphqlDiscoveryQueryService.prototype._searchAnnouncementTransactionIds === 'function',
             n('the tag-search step itself (_searchAnnouncementTransactionIds) exists as a private INSTANCE method, requiring a fully constructed ArweaveGraphqlDiscoveryQueryService (graphqlUrl, gatewayUrl, tagName, fetchImpl all bound at construction) — never a standalone, importable function the way nostr/NostrRelayQueryClient.js\'s own createNostrRelayQueryClient() is'));
+        // AMENDED BY 0.9.631 — Publication Commentary Arweave Asynchronous
+        // Distribution built exactly the standalone primitive this section
+        // named as a CONCRETE_PRODUCT_GAP: application/
+        // ArweaveTaggedTransactionSearch.js#createArweaveTaggedTransactionSearch(),
+        // the Nostr-equivalent of createNostrRelayQueryClient() this
+        // section's own assertion asked for by name. One now exists — the
+        // identical "recommended here, built one milestone later" pattern
+        // tests/PublicationCommentaryNostrRoundTripBoundaryAudit.test.js's
+        // own 0.9.629 amendment already established for Nostr.
         let standaloneTagSearchExport = '';
         try {
             standaloneTagSearchExport = execSync('grep -rlE "export function.*[Tt]agged?[Tt]ransaction(Id)?s?[Ss]earch|export function.*[Gg]raphql.*[Ss]earch" application arweave --include="*.js" || true', { cwd: SOURCE_ROOT.pathname }).toString().trim();
         } catch { /* zero hits */ }
-        assert(standaloneTagSearchExport.length === 0,
-            n('no standalone "search Arweave transactions by tag, return ids" function is exported anywhere in application/ or arweave/ — confirmed by grep, not merely narrated; this is a CONCRETE_PRODUCT_GAP (the GraphQL query itself is small, content-agnostic, and already proven correct — application/ArweaveGraphqlDiscoveryQueryService.js\'s own existing tests cover it), never an ARCHITECTURAL_MISMATCH the way the discovery-envelope decode step is'));
+        assert(standaloneTagSearchExport === 'application/ArweaveTaggedTransactionSearch.js',
+            n(`exactly one standalone "search Arweave transactions by tag, return ids" function is now exported, by 0.9.631's own application/ArweaveTaggedTransactionSearch.js — found: ${standaloneTagSearchExport || 'none'}; this CONCRETE_PRODUCT_GAP is CLOSED, one milestone after this audit named it, never by this audit itself`));
 
         // Does Commentary need a second discovery system, or can it reuse
         // the already-precedented "one substrate stores AND is tagged"
@@ -1072,15 +1081,28 @@ async function run() {
         assert(!/composePublicationCommentaryDistributionRuntime\s*\(/.test(codeOnlyBeforeO.replace(/typeof globalThis\.composePublicationCommentaryDistributionRuntime/g, '')),
             n('no selection-composition function is actually called or defined anywhere in this file — Section J only checks that one does not exist'));
 
+        // AMENDED BY 0.9.631 — Publication Commentary Arweave Asynchronous
+        // Distribution built exactly the production adapter/admission pair
+        // this audit's own Section P recommendation named (application/
+        // PublicationCommentaryArweaveDistribution.js, application/
+        // DiscoverPublicationCommentaryFromArweaveUseCase.js), plus the
+        // standalone search primitive Section F/P also named (application/
+        // ArweaveTaggedTransactionSearch.js — its own header prose mentions
+        // "Commentary" when explaining why it was built, hence this same
+        // grep also matches it) — all three one milestone after this
+        // audit, never by this audit itself.
         let commentaryArweaveProductionFiles = '';
         try {
             commentaryArweaveProductionFiles = execSync('grep -rlE "Commentary" application arweave --include="*.js" | grep -Ei "arweave" || true', { cwd: SOURCE_ROOT.pathname }).toString();
         } catch { /* zero hits */ }
         const hits = commentaryArweaveProductionFiles.trim() ? commentaryArweaveProductionFiles.trim().split('\n') : [];
-        assert(hits.length === 0,
-            n(`zero production files anywhere under application/ or arweave/ mention both "Commentary" and "arweave" — found: ${hits.join(', ') || 'none'} — confirming, live, that no Arweave-flavored Commentary production file of any kind exists after this milestone, exactly as none existed before it`));
+        assert(hits.length === 3
+            && hits.some((f) => f.includes('PublicationCommentaryArweaveDistribution.js'))
+            && hits.some((f) => f.includes('DiscoverPublicationCommentaryFromArweaveUseCase.js'))
+            && hits.some((f) => f.includes('ArweaveTaggedTransactionSearch.js')),
+            n(`exactly 0.9.631's own three Arweave-flavored Commentary production files mention both "Commentary" and "arweave" — found: ${hits.join(', ') || 'none'} — confirming, live, that this audit's own Section P recommendation was built one milestone later, never by this milestone itself`));
 
-        console.log('✓ O: nothing on the requesting brief\'s own "deliberately excluded" list — an Arweave Commentary implementation, a new Commentary identity field, multi-substrate fan-out, automatic fallback, substrate ranking, a new discovery system, new deduplication, new authorization rules, a new notification system, or any change to WebRTC or Snapshot distribution — was built by this milestone.');
+        console.log('✓ O (AMENDED BY 0.9.631): nothing else on the requesting brief\'s own "deliberately excluded" list — multi-substrate fan-out, automatic fallback, substrate ranking, a new discovery system, new deduplication, new authorization rules, a new notification system, or any change to WebRTC or Snapshot distribution — was built by this milestone. An Arweave Commentary implementation itself was, correctly, left for 0.9.631, exactly as this audit\'s own Section P recommended.');
     }
 
     // ===============================================================

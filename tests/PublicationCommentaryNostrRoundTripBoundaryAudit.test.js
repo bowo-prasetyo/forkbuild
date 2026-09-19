@@ -838,8 +838,16 @@ async function run() {
         // AMENDED BY 0.9.629 — see this file's own header note, above.
         // Two such files now exist — 0.9.628's own adapter and admission
         // boundary — built AFTER this milestone, per this audit's own
-        // recommendation, never by this milestone itself. Zero
-        // Arweave-flavored ones exist, exactly as originally measured.
+        // recommendation, never by this milestone itself.
+        //
+        // AMENDED AGAIN BY 0.9.631 — 0.9.630's own, later, Arweave-focused
+        // audit made the same recommendation for Arweave that THIS
+        // milestone's audit made for Nostr; 0.9.631, one further milestone
+        // on, built exactly that adapter/admission/search-primitive trio,
+        // never this milestone. Five such files now exist, never zero —
+        // the identical "recommended here, built one or more milestones
+        // later" pattern this file's own 0.9.629 amendment already
+        // established for Nostr, now reconfirmed for Arweave too.
         const commentaryNostrOrArweaveFiles = (() => {
             let hits = '';
             try {
@@ -847,11 +855,13 @@ async function run() {
             } catch { /* zero hits */ }
             return hits.trim() ? hits.trim().split('\n') : [];
         })();
-        assert(commentaryNostrOrArweaveFiles.length === 2
-            && commentaryNostrOrArweaveFiles.every((f) => /Nostr/.test(f))
+        assert(commentaryNostrOrArweaveFiles.length === 5
             && commentaryNostrOrArweaveFiles.some((f) => f.includes('PublicationCommentaryNostrDistribution.js'))
-            && commentaryNostrOrArweaveFiles.some((f) => f.includes('DiscoverPublicationCommentaryFromNostrUseCase.js')),
-            n(`exactly 0.9.628's own two Nostr-flavored Commentary production files exist, and zero Arweave-flavored ones — found: ${commentaryNostrOrArweaveFiles.join(', ') || 'none'}; neither existed when THIS milestone (0.9.627) ran, and this milestone itself still built neither — both were built by 0.9.628, one milestone later, exactly per this audit's own recommendation`));
+            && commentaryNostrOrArweaveFiles.some((f) => f.includes('DiscoverPublicationCommentaryFromNostrUseCase.js'))
+            && commentaryNostrOrArweaveFiles.some((f) => f.includes('PublicationCommentaryArweaveDistribution.js'))
+            && commentaryNostrOrArweaveFiles.some((f) => f.includes('DiscoverPublicationCommentaryFromArweaveUseCase.js'))
+            && commentaryNostrOrArweaveFiles.some((f) => f.includes('ArweaveTaggedTransactionSearch.js')),
+            n(`exactly 0.9.628's own two Nostr-flavored Commentary production files AND 0.9.631's own three Arweave-flavored ones exist — found: ${commentaryNostrOrArweaveFiles.join(', ') || 'none'}; none of the five existed when THIS milestone (0.9.627) ran, and this milestone itself still built none of them — each was built by a later milestone, per this audit's own (and 0.9.630's own) recommendation`));
 
         console.log('✓ K (AMENDED BY 0.9.629): nothing on the requesting brief\'s own "deliberately excluded" list — an Arweave implementation, multi-relay fan-out, relay ranking/fallback, retry queues, background sync, a new Commentary identity field, or a WebRTC/Publication-discovery change — was built by THIS milestone (0.9.627), still true. A Nostr Commentary publisher/admission boundary, the one item this audit\'s own verdict table (Section L) explicitly recommended rather than excluded, was subsequently built by 0.9.628, one milestone later.');
     }
