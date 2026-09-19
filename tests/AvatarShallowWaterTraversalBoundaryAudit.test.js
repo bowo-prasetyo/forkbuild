@@ -10,6 +10,7 @@ import { resolveAvatarVehicleMovementCapability } from '../core/AvatarVehicleMov
 import { terrainHeightAt, DEFAULT_WORLD_SEED, TERRAIN_HEIGHT_BOUND } from '../core/TerrainHeightField.js';
 import { surfaceCategoryAt, SURFACE_CATEGORY, WATER_LEVEL } from '../core/TerrainSurface.js';
 import { hydrologyFeatureAt, HYDROLOGY_FEATURE, LAKE_SURFACE_HEIGHT, isRiverAt } from '../core/Hydrology.js';
+import { DEFAULT_MAX_WALKING_DEPTH } from '../core/AvatarWaterWalkability.js';
 
 // 0.9.633 — Avatar Shallow-Water Traversal Boundary Audit.
 //
@@ -293,20 +294,47 @@ async function runTests() {
         const renderWorldViewSource = await readSource('application/RenderWorldViewUseCase.js');
         const withGroundElevationBody = extractFunctionBody(renderWorldViewSource, 'function withGroundElevation(position) {');
         assert(withGroundElevationBody !== null, 'setup: application/RenderWorldViewUseCase.js#withGroundElevation() is located and extracted from its real, current source text');
+        // AMENDED BY 0.9.634 — Avatar Shallow-Water Ground Traversal
+        // installed exactly this file's own Section D candidate into
+        // withGroundElevation() itself, so its real, current source text
+        // now references DEFAULT_MAX_WALKING_DEPTH (core/
+        // AvatarWaterWalkability.js) as a free identifier. This dynamic
+        // extraction re-executes whatever the REAL, CURRENT source says,
+        // so it must supply that identifier too, or the extracted body
+        // throws a ReferenceError the moment it is called — the same
+        // "keep the built function callable against today's real source"
+        // discipline this setup already required for every constant it
+        // already threaded through.
         const buildWithGroundElevation = new Function(
-            'renderer', 'surfaceCategoryAt', 'SURFACE_CATEGORY', 'LAKE_SURFACE_HEIGHT', 'DEFAULT_WORLD_SEED',
+            'renderer', 'surfaceCategoryAt', 'SURFACE_CATEGORY', 'LAKE_SURFACE_HEIGHT', 'DEFAULT_WORLD_SEED', 'DEFAULT_MAX_WALKING_DEPTH',
             `${withGroundElevationBody}\nreturn withGroundElevation;`
         );
         const fakeRenderer = { terrainHeightAt: (x, z) => terrainHeightAt(seed, x, z) };
-        realWithGroundElevation = buildWithGroundElevation(fakeRenderer, surfaceCategoryAt, SURFACE_CATEGORY, LAKE_SURFACE_HEIGHT, DEFAULT_WORLD_SEED);
+        realWithGroundElevation = buildWithGroundElevation(fakeRenderer, surfaceCategoryAt, SURFACE_CATEGORY, LAKE_SURFACE_HEIGHT, DEFAULT_WORLD_SEED, DEFAULT_MAX_WALKING_DEPTH);
 
+        // AMENDED BY 0.9.634 — this section's own original assertion 8
+        // measured 0.9.615's own PRE-0.9.634 depth-blindness: a barely-wet
+        // shoreline cell rendered at exactly LAKE_SURFACE_HEIGHT, standing
+        // visibly ON the surface. That was this milestone's OWN target
+        // gap, now closed: the real, current withGroundElevation() renders
+        // the SAME shallow coordinate (depth well under
+        // DEFAULT_MAX_WALKING_DEPTH) at the real lakebed height instead —
+        // feet on the bottom, no longer floating on the surface plane.
         const shallowRenderedY = realWithGroundElevation(shallowPoint).y;
-        assert(Math.abs(shallowRenderedY - LAKE_SURFACE_HEIGHT) < 1e-9,
-            `8. the real, shipped withGroundElevation() renders the avatar at the real SHALLOW shoreline coordinate (real lakebed depth only ${shallowDepth.toFixed(4)}) at exactly LAKE_SURFACE_HEIGHT — standing visibly ON the water's own rendered surface plane rather than ankle-deep in it; this "walking on water" look already reproduces in barely-wet water today, not only in deep water`);
+        assert(Math.abs(shallowRenderedY - (shallowPoint.y + shallowHeight)) < 1e-9,
+            `8. AMENDED BY 0.9.634: the real, current withGroundElevation() now renders the avatar at the real SHALLOW shoreline coordinate (real lakebed depth only ${shallowDepth.toFixed(4)}, well under DEFAULT_MAX_WALKING_DEPTH) AT THE REAL LAKEBED HEIGHT — feet on the bottom, no longer floored at LAKE_SURFACE_HEIGHT — closing exactly the gap this milestone's own original assertion 8 measured as still open`);
 
+        // AMENDED BY 0.9.634 — the deep coordinate's own clamp is
+        // UNCHANGED (its depth still exceeds DEFAULT_MAX_WALKING_DEPTH,
+        // so 0.9.615's own existing Math.max(...) fallback still applies
+        // there, byte for byte); what changed is that it no longer
+        // renders IDENTICALLY to the shallow coordinate — the two are now
+        // visually distinct, which was this milestone's own explicit
+        // goal (see this file's own header) rather than a regression of
+        // the original assertion's own invariant.
         const deepRenderedY = realWithGroundElevation(deepPoint).y;
-        assert(Math.abs(deepRenderedY - LAKE_SURFACE_HEIGHT) < 1e-9 && Math.abs(deepRenderedY - shallowRenderedY) < 1e-9,
-            `9. ...and the SAME shipped function renders the real deep coordinate (lakebed depth ${census.deepest.depth.toFixed(4)}) at the IDENTICAL apparent height as the barely-wet shoreline cell above — today's shipped code cannot visually distinguish "ankle-deep" from "over the avatar's own head," by design (0.9.615's own documented, deliberate depth-blindness), which is exactly the gap this milestone's own brief is asking about`);
+        assert(Math.abs(deepRenderedY - LAKE_SURFACE_HEIGHT) < 1e-9 && Math.abs(deepRenderedY - shallowRenderedY) > 1e-6,
+            `9. AMENDED BY 0.9.634: the SAME real, current function still clamps the real deep coordinate (lakebed depth ${census.deepest.depth.toFixed(4)}, beyond DEFAULT_MAX_WALKING_DEPTH) to exactly LAKE_SURFACE_HEIGHT, unchanged — but now renders it VISIBLY DIFFERENTLY from the barely-wet shoreline cell above (delta ${(deepRenderedY - shallowRenderedY).toFixed(4)}), closing exactly the "cannot visually distinguish ankle-deep from over the avatar's own head" gap the original assertion 9 named`);
     }
 
     // -------------------------------------------------------------
@@ -348,23 +376,38 @@ async function runTests() {
     // candidate: never installed, tested here only for coherence.
     // -------------------------------------------------------------
     {
+        // AMENDED BY 0.9.634 — this file's own Section D candidate is no
+        // longer merely a TEST-LOCAL proposal: it is now byte-for-byte
+        // what withGroundElevation() actually does (see assertion 8's own
+        // amendment, above). The candidate therefore no longer DIFFERS
+        // from the shipped formula at the shallow coordinate — it now
+        // AGREES with it exactly, which is the stronger, more meaningful
+        // fact once a candidate has actually been installed.
         const candidateShallowY = candidateShallowWaterFloorRenderedY(seed, shallowPoint, MAX_WALKING_DEPTH_CANDIDATE).y;
-        assert(Math.abs(candidateShallowY - (shallowPoint.y + shallowHeight)) < 1e-9,
-            `14. at the real shallow coordinate, the candidate renders the avatar AT the real lakebed height (feet on the bottom, legs in the translucent water plane) rather than clamped to LAKE_SURFACE_HEIGHT — a genuine, measurable difference from the shipped formula at that exact coordinate (assertion 8): ${(LAKE_SURFACE_HEIGHT - candidateShallowY).toFixed(4)} world units lower`);
+        assert(Math.abs(candidateShallowY - (shallowPoint.y + shallowHeight)) < 1e-9 && Math.abs(candidateShallowY - realWithGroundElevation(shallowPoint).y) < 1e-9,
+            `14. AMENDED BY 0.9.634: at the real shallow coordinate, the candidate renders the avatar AT the real lakebed height (feet on the bottom, legs in the translucent water plane), and — now that 0.9.634 has installed exactly this candidate — AGREES EXACTLY with the real, current, shipped withGroundElevation() at that same coordinate: ${(LAKE_SURFACE_HEIGHT - candidateShallowY).toFixed(4)} world units below LAKE_SURFACE_HEIGHT, on both sides`);
 
         const candidateDeepY = candidateShallowWaterFloorRenderedY(seed, deepPoint, MAX_WALKING_DEPTH_CANDIDATE).y;
         const shippedDeepY = realWithGroundElevation(deepPoint).y;
         assert(Math.abs(candidateDeepY - shippedDeepY) < 1e-9,
             '15. at the real DEEP coordinate (beyond the candidate\'s own maxWalkingDepth), the candidate falls back to the EXACT same clamp the real shipped withGroundElevation() already produces there — a deliberate, explicit fallback for a position Section E argues below should never be reachable by ordinary movement anyway, not a second, competing formula');
 
-        // Strict-superset check: maxWalkingDepth = 0 collapses the
-        // candidate onto the shipped formula at EVERY point this file
-        // has found so far — shallow, deep, and river alike.
+        // AMENDED BY 0.9.634 — the original "maxWalkingDepth forced to 0
+        // collapses the candidate onto the shipped formula" check tested
+        // the candidate against the PRE-0.9.634 shipped formula, which
+        // never knew about maxWalkingDepth at all (any value collapsed
+        // it identically). Now that the real, current withGroundElevation()
+        // itself accepts DEFAULT_MAX_WALKING_DEPTH, the meaningful strict-
+        // superset check is the mirror image: the candidate, given the
+        // SAME real maxWalkingDepth production actually uses, must agree
+        // with the real shipped formula EXACTLY, at every point this file
+        // has found — proving 0.9.634 installed this candidate verbatim,
+        // never a second, quietly-diverging formula.
         for (const point of [shallowPoint, deepPoint, { x: river.x, y: 0, z: river.z }]) {
-            const collapsedY = candidateShallowWaterFloorRenderedY(seed, point, 0).y;
+            const candidateY = candidateShallowWaterFloorRenderedY(seed, point, MAX_WALKING_DEPTH_CANDIDATE).y;
             const shippedY = realWithGroundElevation(point).y;
-            assert(Math.abs(collapsedY - shippedY) < 1e-9,
-                '16. with maxWalkingDepth forced to 0, the candidate is byte-identical to the real shipped withGroundElevation() at every real point this audit has found — proving the candidate is a strict ADDITIVE generalization of the existing 0.9.615 rule, never a replacement or a second competing formula');
+            assert(Math.abs(candidateY - shippedY) < 1e-9,
+                '16. AMENDED BY 0.9.634: given the SAME real maxWalkingDepth production now actually uses, the candidate is byte-identical to the real shipped withGroundElevation() at every real point this audit has found — proving 0.9.634 installed this candidate verbatim, never a second, competing formula');
         }
 
         // Shoreline continuity, identical bound to 0.9.614's own Section
@@ -398,9 +441,17 @@ async function runTests() {
             '20. at the real deep coordinate, the depth gate returns blocked:true with X/Z reverted to the caller\'s own current position and Y passed through from the desired position unchanged — the IDENTICAL revert shape AvatarTerrainConstraint.apply()\'s own slope rejection already uses, never a new result shape this codebase has not already seen');
 
         const controllerSource = codeOnly(await readSource('application/AvatarMovementController.js'));
-        const constructorMatch = controllerSource.match(/constructor\(avatarPresenceSession, movementConstraint = null, terrainConstraint = null, stepConstraint = null, treeConstraint = null\)/);
+        // AMENDED BY 0.9.634 — Avatar Shallow-Water Ground Traversal took
+        // exactly this section's own recommendation: a fifth, optional,
+        // append-only `waterConstraint` parameter, following the
+        // identical convention the original regex below matched for the
+        // first four. The ORIGINAL four-parameter regex therefore no
+        // longer matches the real, current source (a fifth parameter now
+        // follows `treeConstraint = null`) — this is the predicted
+        // pattern being followed, not a broken one.
+        const constructorMatch = controllerSource.match(/constructor\(avatarPresenceSession, movementConstraint = null, terrainConstraint = null, stepConstraint = null, treeConstraint = null, waterConstraint = null\)/);
         assert(constructorMatch !== null,
-            '21. AvatarMovementController\'s own constructor already accepts FOUR independent, optional, append-only constraints (movementConstraint/terrainConstraint/stepConstraint/treeConstraint, each defaulting to null, added one per milestone since 0.2.42/0.2.77/0.3.2/0.9.63) — confirmed against its real, current source text; a fifth water-depth constraint slot would follow an already-four-times-precedented pattern, not a new architectural shape');
+            '21. AMENDED BY 0.9.634: AvatarMovementController\'s own constructor now accepts FIVE independent, optional, append-only constraints (movementConstraint/terrainConstraint/stepConstraint/treeConstraint/waterConstraint, each defaulting to null, added one per milestone since 0.2.42/0.2.77/0.3.2/0.9.63/0.9.634) — confirmed against its real, current source text; the water-depth constraint slot this section predicted now exists, following the already-four-times-precedented pattern verbatim');
 
         const riverGateResult = candidateWaterDepthConstraint(seed, { x: river.x - 1, y: 0, z: river.z }, { x: river.x, y: 0, z: river.z }, MAX_WALKING_DEPTH_CANDIDATE);
         assert(riverGateResult.blocked === false,

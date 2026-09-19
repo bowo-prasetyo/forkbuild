@@ -29,6 +29,7 @@ import { AvatarMovementConstraint } from './AvatarMovementConstraint.js';
 import { AvatarTerrainConstraint } from './AvatarTerrainConstraint.js';
 import { AvatarStepConstraint } from './AvatarStepConstraint.js';
 import { AvatarTreeConstraint } from './AvatarTreeConstraint.js';
+import { AvatarWaterConstraint } from './AvatarWaterConstraint.js';
 import { AvatarVehicleInteractionController } from './AvatarVehicleInteractionController.js';
 import { VehicleRuntimeInstances } from './VehicleRuntimeInstances.js';
 import { AvatarVehicleMovementController } from './AvatarVehicleMovementController.js';
@@ -1251,7 +1252,14 @@ export class WorldNavigationSession {
             movementConstraint,
             this._buildAvatarTerrainConstraint(),
             this._buildAvatarStepConstraint(),
-            treeConstraint
+            treeConstraint,
+            // 0.9.634 — avatar-only, the same posture terrainConstraint/
+            // stepConstraint already have (see this constructor call's own
+            // surrounding comment): a mounted vehicle's own movement stays
+            // completely untouched by water depth, unrelated scope for
+            // this milestone (see application/AvatarWaterConstraint.js's
+            // own header).
+            this._buildAvatarWaterConstraint()
         );
         // 0.9.83 — built alongside the movement controller, from the
         // same avatarPresenceSession. See
@@ -1565,6 +1573,22 @@ export class WorldNavigationSession {
     // _buildAvatarTerrainConstraint() already established.
     _buildAvatarTreeConstraint() {
         return new AvatarTreeConstraint();
+    }
+
+    // 0.9.634 — builds the LOCAL avatar's shallow-water depth constraint.
+    // Like _buildAvatarTerrainConstraint()/_buildAvatarTreeConstraint()
+    // above, this needs no state from this session at all: water depth
+    // is a pure function of (seed, x, z), always computable for any
+    // coordinate regardless of which documents happen to be streamed in
+    // nearby — see application/AvatarWaterConstraint.js's own header.
+    // AvatarWaterConstraint's own constructor defaults (the same shared
+    // DEFAULT_WORLD_SEED every other seed-driven query point in this
+    // codebase reads, and core/AvatarWaterWalkability.js's own default
+    // walking-depth limit) are exactly what a real session wants, so
+    // nothing is passed here — always built, unconditionally, the same
+    // posture _buildAvatarTerrainConstraint() already established.
+    _buildAvatarWaterConstraint() {
+        return new AvatarWaterConstraint();
     }
 
     // -----------------------------------------------------------------

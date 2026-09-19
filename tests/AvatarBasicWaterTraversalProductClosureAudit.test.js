@@ -15,6 +15,7 @@ import { AvatarAnimationState } from '../core/AvatarAnimationState.js';
 import { terrainHeightAt, DEFAULT_WORLD_SEED } from '../core/TerrainHeightField.js';
 import { surfaceCategoryAt, SURFACE_CATEGORY, WATER_LEVEL } from '../core/TerrainSurface.js';
 import { hydrologyFeatureAt, HYDROLOGY_FEATURE, LAKE_SURFACE_HEIGHT, isRiverAt, hydrologyGroundColorAt } from '../core/Hydrology.js';
+import { DEFAULT_MAX_WALKING_DEPTH } from '../core/AvatarWaterWalkability.js';
 import { buildWaterTileMesh } from '../renderer/WaterTileMesh.js';
 import { TERRAIN_TILE_SIZE, tileCoordinateForPosition } from '../core/TerrainTiling.js';
 import { computeCameraFraming, CameraPerspective } from '../core/CameraPerspective.js';
@@ -169,12 +170,18 @@ async function run() {
     const renderWorldViewSource = await readSource('application/RenderWorldViewUseCase.js');
     const withGroundElevationBody = extractFunctionBody(renderWorldViewSource, 'function withGroundElevation(position) {');
     assert(withGroundElevationBody !== null, '1. application/RenderWorldViewUseCase.js#withGroundElevation() is located and extracted from its real, current source text');
+    // AMENDED BY 0.9.634 — the real, current source text now references
+    // DEFAULT_MAX_WALKING_DEPTH (core/AvatarWaterWalkability.js) as a
+    // free identifier; this dynamic extraction must supply it too, the
+    // same reasoning tests/AvatarShallowWaterTraversalBoundaryAudit.test.js
+    // (0.9.633) and tests/AvatarBasicWaterSurfaceConstraint.test.js
+    // (0.9.615) already applied to their own identical extraction.
     const buildWithGroundElevation = new Function(
-        'renderer', 'surfaceCategoryAt', 'SURFACE_CATEGORY', 'LAKE_SURFACE_HEIGHT', 'DEFAULT_WORLD_SEED',
+        'renderer', 'surfaceCategoryAt', 'SURFACE_CATEGORY', 'LAKE_SURFACE_HEIGHT', 'DEFAULT_WORLD_SEED', 'DEFAULT_MAX_WALKING_DEPTH',
         `${withGroundElevationBody}\nreturn withGroundElevation;`
     );
     const fakeRenderer = { terrainHeightAt: (x, z) => terrainHeightAt(seed, x, z) };
-    const withGroundElevation = buildWithGroundElevation(fakeRenderer, surfaceCategoryAt, SURFACE_CATEGORY, LAKE_SURFACE_HEIGHT, DEFAULT_WORLD_SEED);
+    const withGroundElevation = buildWithGroundElevation(fakeRenderer, surfaceCategoryAt, SURFACE_CATEGORY, LAKE_SURFACE_HEIGHT, DEFAULT_WORLD_SEED, DEFAULT_MAX_WALKING_DEPTH);
 
     // Reproduce the flagship's own deep-interior walk with the real,
     // unmodified AvatarTerrainConstraint — never a hand-picked coordinate.
@@ -189,9 +196,22 @@ async function run() {
         }
         return cursor;
     }
-    const deepInterior = walkInto({ x: shoreline.shoreX, y: 0, z: shoreline.shoreZ }, shoreline.dirX, shoreline.dirZ, 0.3, 200);
+    // AMENDED BY 0.9.634 — the original 200-step walk (60 world units)
+    // landed on a genuinely SHALLOW coordinate (depth well under
+    // DEFAULT_MAX_WALKING_DEPTH) — sufficient for 0.9.615's own
+    // depth-blind clamp, which fired at ANY positive depth, but no
+    // longer deep enough to exercise the clamp this milestone's own
+    // formula still preserves BEYOND the walkable limit. 530 steps
+    // (159 world units) reaches a real, scanned coordinate in this SAME
+    // lake whose depth genuinely exceeds DEFAULT_MAX_WALKING_DEPTH —
+    // preserving every one of this section's own "deep lake" assertions
+    // below, now against a coordinate that is actually deep under the
+    // new, finer-grained rule, not merely under the old, depth-blind one.
+    const deepInterior = walkInto({ x: shoreline.shoreX, y: 0, z: shoreline.shoreZ }, shoreline.dirX, shoreline.dirZ, 0.3, 530);
     assert(surfaceCategoryAt(seed, deepInterior.x, deepInterior.z) === SURFACE_CATEGORY.WATER,
         'setup: the reproduced walk genuinely ends on real WATER ground');
+    assert(LAKE_SURFACE_HEIGHT - terrainHeightAt(seed, deepInterior.x, deepInterior.z) > DEFAULT_MAX_WALKING_DEPTH,
+        'setup: AMENDED BY 0.9.634 — the reproduced walk now genuinely ends beyond DEFAULT_MAX_WALKING_DEPTH, so this section\'s own "deep lake" assertions remain meaningful under the new, depth-aware rule');
 
     // -------------------------------------------------------------
     // Section A — FLAGSHIP: drive the real, fully wired
@@ -209,20 +229,53 @@ async function run() {
         });
         const controller = new AvatarMovementController(session, null, constraint);
 
+        // AMENDED BY 0.9.634 — the original 400-tick walk (60 world
+        // units at WALK_SPEED) never reached beyond a genuinely shallow
+        // depth in this real lake (see the setup's own amendment above).
+        // 1100 ticks (165 world units) reaches the same genuinely deep
+        // coordinate `deepInterior` above was independently confirmed to
+        // be beyond DEFAULT_MAX_WALKING_DEPTH — driven here through the
+        // real, ticking controller rather than the quantized walkInto()
+        // helper, so this section's own FLAGSHIP still exercises the
+        // real simulation loop, not merely the bare constraint.
+        const FORWARD_TICKS = 1100;
+        const BACK_TICKS = 550;
+
         controller.keyDown('w');
         const renderedYSamples = [];
-        for (let i = 0; i < 400; i++) {
+        for (let i = 0; i < FORWARD_TICKS; i++) {
             controller.tick(0.05);
             const p = session.current.position;
             if (surfaceCategoryAt(seed, p.x, p.z) === SURFACE_CATEGORY.WATER) {
-                renderedYSamples.push(withGroundElevation(p).y);
+                renderedYSamples.push({ y: withGroundElevation(p).y, depth: LAKE_SURFACE_HEIGHT - terrainHeightAt(seed, p.x, p.z) });
             }
         }
         controller.keyUp('w');
 
         assert(renderedYSamples.length > 0, '2. setup: the real controller-driven walk genuinely crosses onto WATER ground, giving this section real samples to check');
-        assert(renderedYSamples.every((y) => y >= LAKE_SURFACE_HEIGHT - 1e-9),
-            `3. FLAGSHIP — every rendered Y sample taken while the real, controller-driven avatar stood on WATER ground stays at/above the lake surface (min sampled: ${Math.min(...renderedYSamples).toFixed(4)} >= ${LAKE_SURFACE_HEIGHT})`);
+        // AMENDED BY 0.9.634 — the original invariant ("every sample
+        // stays at/above the lake surface") was 0.9.615's own
+        // depth-blind clamp, now deliberately superseded: a real,
+        // controller-driven walk through a real lake's own shallow
+        // shelf now genuinely renders BELOW the surface (following the
+        // lakebed), which is this milestone's own explicit goal, not a
+        // regression. What survives, restated precisely: every sample
+        // matches the SAME real, current, shipped formula exactly
+        // (never a second, silently-diverging one), and the flagship's
+        // own original concern — the avatar never disappears below the
+        // surface once genuinely too deep to walk — still holds, for the
+        // samples that are genuinely that deep.
+        const mismatched = renderedYSamples.filter(({ y, depth }) => {
+            const groundHeightAtSample = LAKE_SURFACE_HEIGHT - depth;
+            const expected = depth <= DEFAULT_MAX_WALKING_DEPTH ? groundHeightAtSample : Math.max(groundHeightAtSample, LAKE_SURFACE_HEIGHT);
+            return Math.abs(y - expected) > 1e-9;
+        });
+        assert(mismatched.length === 0,
+            `3. FLAGSHIP, AMENDED BY 0.9.634: every rendered Y sample taken while the real, controller-driven avatar stood on WATER ground matches the SAME real, current, shipped depth-aware formula exactly (${mismatched.length} of ${renderedYSamples.length} mismatched)`);
+        assert(renderedYSamples.some(({ depth }) => depth > DEFAULT_MAX_WALKING_DEPTH) && renderedYSamples.some(({ y }) => Math.abs(y - LAKE_SURFACE_HEIGHT) < 1e-9),
+            '3b. AMENDED BY 0.9.634: the walk genuinely reaches water deep enough to exceed DEFAULT_MAX_WALKING_DEPTH, and at least one such sample is genuinely clamped AT the lake surface — the original flagship\'s own "avatar never sinks below the surface once too deep" concern still holds, for water that is ACTUALLY that deep');
+        assert(renderedYSamples.some(({ y, depth }) => depth > 0 && depth <= DEFAULT_MAX_WALKING_DEPTH && y < LAKE_SURFACE_HEIGHT - 1e-6),
+            '3c. NEW BY 0.9.634: the SAME walk also genuinely crosses genuinely shallow water (depth under the limit) whose rendered Y sits BELOW the old, depth-blind surface floor — the real, controller-driven demonstration of this milestone\'s own new behavior');
 
         const finalPosition = session.current.position;
         assert(surfaceCategoryAt(seed, finalPosition.x, finalPosition.z) === SURFACE_CATEGORY.WATER,
@@ -232,12 +285,13 @@ async function run() {
 
         // Stability across repeated movement: reverse and walk back out,
         // then back in again — the rendered floor must hold on every
-        // pass, not just the first.
+        // pass, not just the first. AMENDED BY 0.9.634 — BACK_TICKS
+        // scales with FORWARD_TICKS above, for the same reason.
         controller.keyDown('s');
-        for (let i = 0; i < 200; i++) controller.tick(0.05);
+        for (let i = 0; i < BACK_TICKS; i++) controller.tick(0.05);
         controller.keyUp('s');
         controller.keyDown('w');
-        for (let i = 0; i < 200; i++) controller.tick(0.05);
+        for (let i = 0; i < BACK_TICKS; i++) controller.tick(0.05);
         controller.keyUp('w');
         const p2 = session.current.position;
         if (surfaceCategoryAt(seed, p2.x, p2.z) === SURFACE_CATEGORY.WATER) {
@@ -372,7 +426,18 @@ async function run() {
         const controller = new AvatarMovementController(session, null, localConstraint);
 
         let sawDryBefore = false;
-        let sawWetFloored = false;
+        // AMENDED BY 0.9.634 — renamed in spirit from `sawWetFloored`:
+        // this short, near-shoreline walk (30 ticks, 4.5 world units)
+        // never reaches beyond a genuinely shallow depth, so under the
+        // new, depth-aware rule its wet samples correctly render BELOW
+        // the old, depth-blind surface floor rather than AT it — the
+        // very case this milestone exists to change. What this section
+        // still needs, and still gets, is simply that the walk genuinely
+        // crosses onto WATER ground at all, and that every wet sample
+        // still matches the SAME real, current, shipped formula exactly
+        // (folded into `noHiddenStateEverObserved` below, alongside the
+        // existing dry-tick and presence-shape checks it already made).
+        let sawWet = false;
         let sawDryAfter = false;
         let noHiddenStateEverObserved = true;
         const presenceShape = JSON.stringify(Object.keys(session.current.toJSON()).sort());
@@ -387,7 +452,11 @@ async function run() {
                 sawDryBefore = true;
                 if (Math.abs(rendered.y - (p.y + terrainHeightAt(seed, p.x, p.z))) > 1e-9) noHiddenStateEverObserved = false;
             } else {
-                sawWetFloored = sawWetFloored || rendered.y >= LAKE_SURFACE_HEIGHT - 1e-9;
+                sawWet = true;
+                const groundHeight = terrainHeightAt(seed, p.x, p.z);
+                const depth = LAKE_SURFACE_HEIGHT - groundHeight;
+                const expected = depth <= DEFAULT_MAX_WALKING_DEPTH ? groundHeight : Math.max(groundHeight, LAKE_SURFACE_HEIGHT);
+                if (Math.abs(rendered.y - expected) > 1e-9) noHiddenStateEverObserved = false;
             }
             if (JSON.stringify(Object.keys(session.current.toJSON()).sort()) !== presenceShape) noHiddenStateEverObserved = false;
         }
@@ -407,10 +476,10 @@ async function run() {
         }
         controller.keyUp('s');
 
-        assert(sawDryBefore && sawWetFloored && sawDryAfter,
-            '20. the real controller-driven walk genuinely covers all three phases — dry shoreline, floored water, and dry shoreline again — giving this section real ticks to check in each phase');
+        assert(sawDryBefore && sawWet && sawDryAfter,
+            '20. AMENDED BY 0.9.634: the real controller-driven walk genuinely covers all three phases — dry shoreline, real WATER ground, and dry shoreline again — giving this section real ticks to check in each phase');
         assert(noHiddenStateEverObserved,
-            '21. at every single tick across all three phases, the dry-ground render formula is exactly the ordinary unfloored one, the water-ground render is exactly the floored one, and AvatarPresence\'s own JSON shape never changes — entering and leaving water leaves nothing lingering, because withGroundElevation() is a stateless, per-call function of (renderer, position) alone, never a mode the avatar enters or exits');
+            '21. AMENDED BY 0.9.634: at every single tick across all three phases, the dry-ground render formula is exactly the ordinary unfloored one, the water-ground render matches the SAME real, current, depth-aware formula exactly, and AvatarPresence\'s own JSON shape never changes — entering and leaving water leaves nothing lingering, because withGroundElevation() is a stateless, per-call function of (renderer, position) alone, never a mode the avatar enters or exits');
     }
 
     // -------------------------------------------------------------
@@ -559,7 +628,7 @@ async function run() {
         // there is still nothing anywhere for water traversal to persist.
         const a = withGroundElevation(deepInterior);
         const freshRenderer = { terrainHeightAt: (x, z) => terrainHeightAt(seed, x, z) };
-        const b = buildWithGroundElevation(freshRenderer, surfaceCategoryAt, SURFACE_CATEGORY, LAKE_SURFACE_HEIGHT, DEFAULT_WORLD_SEED)(deepInterior);
+        const b = buildWithGroundElevation(freshRenderer, surfaceCategoryAt, SURFACE_CATEGORY, LAKE_SURFACE_HEIGHT, DEFAULT_WORLD_SEED, DEFAULT_MAX_WALKING_DEPTH)(deepInterior);
         assert(a.y === b.y, '34. a completely fresh instance of the extracted function still produces the byte-identical result for the same input — confirmed against the CURRENT shipped source, not merely the 0.9.615 snapshot');
     }
 
