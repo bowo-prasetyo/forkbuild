@@ -263,7 +263,24 @@ export class AvatarMovementConstraint {
 // range. Deliberately generous rather than exact: this is a broad
 // phase, not the actual collision test — see core/AvatarCollision.js
 // for the real, precise geometry.
-const MAX_DOCUMENT_SPAN_MARGIN = 64;
+//
+// Bug fix — was 64, which silently discarded an entire document's
+// worth of obstacles whenever ANY of its own bricks sat farther than
+// that from the document's own local (0, 0, 0): nothing requires a
+// building's bricks to be authored near its own local origin, and a
+// real, reported case (a 576-brick pyramid whose footprint runs from
+// local x -86 to -63, z 112 to 135) put its nearest corner ~128 units
+// out and its farthest ~160 — an avatar standing INSIDE the pyramid
+// was still being measured against the document's distant, empty
+// local origin and excluded outright, walking through every brick as
+// though the whole building were never loaded. 200 comfortably covers
+// that case (and a good deal more) while staying well within
+// WorldNavigationSession's own STREAMING_RADIUS (150) — a document
+// whose placement origin is farther than that from the avatar was
+// never streamed in to begin with, so a much larger margin here would
+// buy nothing. Still a heuristic, not an exact bound: an even larger
+// or more distantly-authored structure could still exceed it.
+const MAX_DOCUMENT_SPAN_MARGIN = 200;
 
 function flatDistance(a, b) {
     const dx = a.x - b.x;
