@@ -4093,6 +4093,23 @@ html, body {
     gap: 0.3rem;
 }
 
+/* 0.9.649 — Align Publications with the Application's Identity-Management
+   Convention. Publications' own markup (tools panel + entries list, see
+   ui/views/DecentralizedPublicationsView.js) has always been built
+   exclusively from the .identity-mgmt-list/.identity-mgmt-card vocabulary
+   shared by IdentityManagementView/PeerConnectionsView/ConversationsView/
+   LeaderboardHubView — it simply never joined those views' own outer
+   container rule. This is that same, byte-identical 720px "social
+   surface" convention (see .identity-management-view above), not the
+   1400px grid-catalog convention used by .repository-view/.author-view/
+   .recent-worlds-view, which Publications' content shape does not match. */
+.publications-view {
+    padding: 2rem 2.5rem 3rem;
+    max-width: 720px;
+    margin: 0 auto;
+    width: 100%;
+}
+
 /* Page-level wallet/archive/publisher tools panel on the Publications
    page — same disclosure pattern, one level up. */
 .publications-tools-panel {
