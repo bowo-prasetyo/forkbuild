@@ -156,6 +156,24 @@ html, body {
     background: #262626;
 }
 
+/* 0.9.641 — Editor Document Export. Same visual weight as .toolbar-new
+   — a secondary action, never as loud as .toolbar-save/.toolbar-publish
+   — since exporting doesn't change the document's own saved/dirty
+   state. */
+.toolbar-export {
+    padding: 0.3rem 0.8rem;
+    background: transparent;
+    color: #d0d0d0;
+    border: 1px solid #3a3a3a;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    cursor: pointer;
+}
+
+.toolbar-export:hover {
+    background: #262626;
+}
+
 .toolbar-dirty {
     color: #e0a34c;
     font-size: 0.8rem;

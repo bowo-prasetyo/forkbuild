@@ -36,6 +36,7 @@ import { ForkStructureUseCase } from './ForkStructureUseCase.js';
 import { CopyStructureIntoDocumentUseCase } from './CopyStructureIntoDocumentUseCase.js';
 import { CreateStructureFromSelectionUseCase } from './CreateStructureFromSelectionUseCase.js';
 import { ExportBlueprintUseCase } from './ExportBlueprintUseCase.js';
+import { ExportDocumentUseCase } from './ExportDocumentUseCase.js';
 import { ImportBlueprintUseCase } from './ImportBlueprintUseCase.js';
 import { deriveBlueprintFingerprint } from '../core/BlueprintFingerprint.js';
 import { ForkStructureToLibraryUseCase } from './ForkStructureToLibraryUseCase.js';
@@ -118,6 +119,11 @@ export class EditorSession {
         // methods — nothing else here depends on them existing.
         exportBlueprintUseCase = new ExportBlueprintUseCase(),
         importBlueprintUseCase = new ImportBlueprintUseCase(),
+        // 0.9.641 — Editor Document Export. Same optional-in-shape-only
+        // posture as exportBlueprintUseCase above, except this one has
+        // no external dependency to omit — every EditorSession, old or
+        // new, gets a working exportDocument() for free.
+        exportDocumentUseCase = new ExportDocumentUseCase(),
         // 0.6.6 — Decentralized Blueprint Exchange. Optional, same
         // graceful-degradation posture as every other optional
         // collaborator here — an EditorSession built without one (older
@@ -198,6 +204,7 @@ export class EditorSession {
         this._personalStructureLibraryStore = personalStructureLibraryStore;
         this._exportBlueprintUseCase = exportBlueprintUseCase;
         this._importBlueprintUseCase = importBlueprintUseCase;
+        this._exportDocumentUseCase = exportDocumentUseCase;
         this._blueprintAttributionExchange = blueprintAttributionExchange;
         this._blueprintLineageExchange = blueprintLineageExchange;
         this._forkStructureToLibraryUseCase = forkStructureToLibraryUseCase;
@@ -1416,6 +1423,24 @@ export class EditorSession {
     //
     // 0.6.8 — Blueprint Lineage & Revision Discovery. `lineageClaims` is
     // the identical OPTIONAL, additive third argument, one concept over.
+    // 0.9.641 — Editor Document Export. Deliberately reads
+    // this._documentManager.document directly rather than accepting a
+    // Document argument — unlike exportBlueprint() (which exports
+    // whatever Structure a caller hands it, not necessarily the open
+    // document), Export always means "the document currently open in
+    // THIS session," the same document Save would persist. Returns the
+    // exact JSON ExportDocumentUseCase/DocumentSerializer.serialize()
+    // produces — no envelope, no wrapping, nothing UI-specific mixed in
+    // — so the caller (ui/views/EditorView.js#exportDocument()) is free
+    // to stringify and offer it as a file without this method knowing
+    // anything about browsers, downloads, or file names.
+    exportDocument() {
+        if (!this._exportDocumentUseCase) {
+            return null;
+        }
+        return this._exportDocumentUseCase.execute(this._documentManager.document);
+    }
+
     exportBlueprint(structure, attributions = [], lineageClaims = []) {
         if (!this._exportBlueprintUseCase) {
             return null;

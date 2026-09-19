@@ -665,21 +665,28 @@ async function run() {
         assert(/function publish\(/.test(toolbarSource) || /publish/.test(toolbarSource),
             n('Toolbar.js already surfaces Publish alongside Save/Load/New — confirming this is the general document-lifecycle surface, not a Save-only widget'));
 
-        // Confirm no DOCUMENT Export/Import surface exists on Toolbar.js
-        // or EditorView.js yet — this audit finds a gap here, it does
-        // not fill it. "Export"/"Import" as UI vocabulary already exists
-        // elsewhere in the app (IdentityManagementView.js's key backup,
-        // StructureInfoPanel.js/PlaceNamingPanel.js's lineage-claim
-        // evidence export) — a useful precedent for the WORDS, but for
-        // an entirely different concern than Editor document content.
+        // AMENDED by 0.9.641 — Editor Document Export. At the time this
+        // audit originally ran, no document-content Export/Import
+        // surface existed on Toolbar.js or EditorView.js; that absence
+        // was this Section's own finding, not an assumption. 0.9.641
+        // then implemented exactly the recommendation two paragraphs
+        // below (Export only, on this same Toolbar.js surface, via
+        // application/ExportDocumentUseCase.js wrapping the existing
+        // DocumentSerializer seam) — see tests/EditorDocumentExport.test.js
+        // for that milestone's own full verification. This assertion is
+        // updated to match current reality rather than left asserting a
+        // fact 0.9.641 deliberately made false; Import (0.9.642) remains
+        // genuinely not yet implemented.
         const editorViewSource = await rawSource('ui/views/EditorView.js');
-        assert(!/exportDocument|importDocument|toolbar-export|toolbar-import/i.test(toolbarSource + editorViewSource),
-            n('no document-content Export/Import action, handler, or CSS hook exists yet in Toolbar.js or EditorView.js — confirmed absent by direct inspection, not assumed absent'));
+        assert(/toolbar-export/.test(toolbarSource) && /exportDocument/.test(toolbarSource + editorViewSource),
+            n('0.9.641 added exactly one document-content action — Export — to Toolbar.js/EditorView.js, on this same surface; Import is not present, confirmed by the check below'));
+        assert(!/importDocument|toolbar-import/i.test(toolbarSource + editorViewSource),
+            n('no document-content IMPORT action, handler, or CSS hook exists yet — that remains 0.9.642\'s own, still-unimplemented recommendation'));
         const identityExportImportSource = await rawSource('ui/views/IdentityManagementView.js');
         assert(/confirmExport/.test(identityExportImportSource) && /confirmImport/.test(identityExportImportSource),
             n('"Export"/"Import" already exist as real UI vocabulary elsewhere in this app (IdentityManagementView.js\'s identity-key backup/restore) — a different concern (cryptographic identity, not document content) but a confirmed, live precedent that these words and this pattern are already familiar to a ForkBuild user, not a foreign concept a document Export/Import would be introducing for the first time'));
 
-        console.log('✓ J: ui/components/Toolbar.js is the real, current, already-existing document lifecycle surface — Save, New, Load, Recent Documents, and Publish already live together there, driven by the same DocumentManager/SaveDocumentUseCase/LoadDocumentUseCase this audit\'s other sections exercise directly. No document-content Export/Import exists there (or anywhere) yet, confirmed absent rather than assumed. A future Export/Import belongs alongside Save/Load/New/Publish, on this same surface — not a generic application-wide menu — and can reuse UI vocabulary ("Export"/"Import") this app\'s users already see in IdentityManagementView.js today.');
+        console.log('✓ J (AMENDED by 0.9.641): ui/components/Toolbar.js is the real, current, already-existing document lifecycle surface — Save, Export, New, Load, Recent Documents, and Publish now live together there, driven by the same DocumentManager/SaveDocumentUseCase/LoadDocumentUseCase/ExportDocumentUseCase this audit\'s other sections exercise directly. Document Export was implemented by 0.9.641 exactly on this surface, per this Section\'s own original recommendation; Import remains open for 0.9.642, and can reuse the same UI vocabulary ("Export"/"Import") this app\'s users already see in IdentityManagementView.js today.');
     }
 
     // ===============================================================
