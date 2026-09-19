@@ -90,7 +90,15 @@ export default {
     // editorSession.exportDocument() and turns the result into an actual
     // browser download. Toolbar itself never touches `document.createElement`
     // or a data: URI.
-    emits: ['back-to-world', 'open-shortcuts', 'published', 'export-document'],
+    //
+    // 0.9.642 — Editor Document Import. `import-document` carries the
+    // raw text of whatever file the hidden input below read off disk —
+    // untrusted, unparsed — mirroring 'import-blueprint's own division
+    // of labor one component up (ui/components/BuildLibraryPanel.js):
+    // THIS component owns the native file picker (browser mechanics
+    // only), EditorView owns JSON.parse and everything after it. Toolbar
+    // never calls editorSession.importDocument() itself.
+    emits: ['back-to-world', 'open-shortcuts', 'published', 'export-document', 'import-document'],
     setup(props, { emit }) {
         const dirty = ref(props.documentManager.state.dirty);
         const recentDocuments = ref(props.loadDocumentUseCase.listSavedDocuments());
@@ -168,6 +176,33 @@ export default {
             emit('back-to-world');
         }
 
+        // 0.9.642 — Editor Document Import. The exact
+        // <input type="file"> + FileReader shape
+        // ui/components/BuildLibraryPanel.js#triggerImportBlueprint()/
+        // onImportBlueprintFileChosen() already established for
+        // 'import-blueprint' — Toolbar reads the raw file text and hands
+        // it up unparsed; EditorView.js owns JSON.parse and everything
+        // downstream of it (see this component's own emits comment).
+        const importFileInput = ref(null);
+        function triggerImportDocument() {
+            if (importFileInput.value) {
+                importFileInput.value.click();
+            }
+        }
+
+        function onImportDocumentFileChosen(event) {
+            const file = event.target.files && event.target.files[0];
+            event.target.value = ''; // allow re-choosing the same file later
+            if (!file) {
+                return;
+            }
+            const reader = new FileReader();
+            reader.onload = () => {
+                emit('import-document', String(reader.result || ''));
+            };
+            reader.readAsText(file);
+        }
+
         function toggleRecent() {
             recentOpen.value = !recentOpen.value;
             if (!recentOpen.value) {
@@ -205,7 +240,8 @@ export default {
             dirty, recentDocuments, sortedRecentDocuments, filteredRecentDocuments,
             recentOpen, recentQuery, toggleRecent, formatModified,
             searchThreshold: SEARCH_THRESHOLD,
-            save, createNew, load, place, publish, saveAndReturnToWorld
+            save, createNew, load, place, publish, saveAndReturnToWorld,
+            importFileInput, triggerImportDocument, onImportDocumentFileChosen
         };
     },
     template: `
@@ -232,6 +268,15 @@ export default {
 
             <button class="toolbar-save" @click="save">Save</button>
             <button class="toolbar-export" @click="$emit('export-document')">Export</button>
+            <button class="toolbar-import" @click="triggerImportDocument">Import</button>
+            <input
+                ref="importFileInput"
+                type="file"
+                accept="application/json"
+                class="toolbar-import-input"
+                aria-label="Import document file"
+                @change="onImportDocumentFileChosen"
+            />
             <button class="toolbar-publish" @click="publish">Publish</button>
             <button class="toolbar-new" @click="createNew">New</button>
             <button
