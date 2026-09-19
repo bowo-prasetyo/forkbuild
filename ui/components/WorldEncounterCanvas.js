@@ -2978,6 +2978,30 @@ export default {
             type: Object,
             default: null
         },
+        // 0.9.651 — Persist World-Encounter Publication Admissions.
+        // Optional. A duck-typed `{ add(publication) }` sink — in
+        // production, ui/main.js's own
+        // `application/CreateWorldEncounterPublicationAdmissionLogUseCase.js`-composed
+        // `LocalWorldEncounterPublicationAdmissionLog`, reconstructed back
+        // into `decentralizedPublicationDiscoveryProvider` at startup via
+        // `application/ReconstructWorldEncounterPublicationDiscoveryUseCase.js`
+        // — never `LocalPublicationCatalog` itself: that class stores
+        // signed `core/DecentralizedPublication.js` locator envelopes, a
+        // shape World Encounter admission never produces, and handing it a
+        // plain `publisher/Publication.js` instance instead is actively
+        // unsafe (see that log's own header, and
+        // tests/DistributionResultPublicationCenterDeepLinkAudit.test.js's
+        // own Section B6). Wholly independent of
+        // `decentralizedPublicationDiscoveryProvider` above — a mount can
+        // supply either, both, or neither; see `admitToRepositoryDiscovery()`
+        // below for how the two are admitted into separately, each behind
+        // its own failure isolation. `null` by default: a mount with no log
+        // supplied behaves exactly as before this milestone — admission
+        // stays in-memory-only. Never constructed by this component itself.
+        publicationAdmissionLog: {
+            type: Object,
+            default: null
+        },
         // 0.9.104 — optional. A `(publication, discoveryProvider) -> Promise<PublicationDistributionResult
         // | null>` function, called with exactly the loaded `Publication`
         // domain object for the CURRENTLY selected, local-origin
@@ -4686,13 +4710,29 @@ export default {
         // itself (discovery/DecentralizedPublicationDiscoveryProvider.js
         // keeps no id index), not a new duplication concern this milestone
         // introduces or is scoped to fix.
+        // AMENDED BY 0.9.651 — Persist World-Encounter Publication
+        // Admissions. The identical `AVAILABLE + VERIFIED` eligibility
+        // check now gates TWO independent, optional sinks rather than one:
+        // the pre-existing in-memory `decentralizedPublicationDiscoveryProvider`
+        // (unchanged — same call, same try/catch, same failure isolation),
+        // and the new durable `publicationAdmissionLog`. Neither sink's
+        // presence is required for the other to run — a mount supplying
+        // only one of the two still gets exactly that one's admission —
+        // and each has its OWN try/catch, so a misbehaving log never
+        // blocks in-memory discovery and a misbehaving provider never
+        // blocks durable persistence. See `publicationAdmissionLog`'s own
+        // prop header, above, for why this is a NEW, purpose-built log
+        // rather than `LocalPublicationCatalog` itself.
         admitToRepositoryDiscovery(loading, verification) {
-            if (this.decentralizedPublicationDiscoveryProvider
-                && loading
+            const eligible = loading
                 && loading.status === 'AVAILABLE'
                 && loading.material instanceof Publication
                 && verification
-                && verification.status === 'VERIFIED') {
+                && verification.status === 'VERIFIED';
+            if (!eligible) {
+                return;
+            }
+            if (this.decentralizedPublicationDiscoveryProvider) {
                 try {
                     this.decentralizedPublicationDiscoveryProvider.add(loading.material);
                 } catch {
@@ -4708,6 +4748,19 @@ export default {
                     // — an uncaught throw here would abort that callback
                     // and silently skip that write, which is exactly the
                     // coupling this milestone's own product brief rejects.
+                }
+            }
+            if (this.publicationAdmissionLog) {
+                try {
+                    this.publicationAdmissionLog.add(loading.material);
+                } catch {
+                    // 0.9.651 — identical failure-isolation rationale to
+                    // the `decentralizedPublicationDiscoveryProvider` branch
+                    // above, applied to the new durable sink: a misbehaving
+                    // or storage-exhausted log must never turn an
+                    // already-successful World Encounter resolution into a
+                    // failed one, and must never suppress the in-memory
+                    // admission this method already performed above.
                 }
             }
         },

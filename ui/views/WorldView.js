@@ -692,6 +692,18 @@ export default {
         // discoveryProvider. `inject()` with the same key is idempotent —
         // this is not a second, competing injection.
         const decentralizedDiscoveryProviderForEnrichment = inject('decentralizedPublicationDiscoveryProvider', null);
+        // 0.9.651 — Persist World-Encounter Publication Admissions. The
+        // SAME app-wide `LocalWorldEncounterPublicationAdmissionLog` ui/main.js
+        // constructs and already reconstructs into
+        // `decentralizedPublicationDiscoveryProvider` at startup — forwarded
+        // to `WorldEncounterCanvas`'s own new `publicationAdmissionLog` prop,
+        // below, so a World Encounter admission this replica verifies right
+        // now survives a restart exactly the way one admitted through
+        // ui/views/DecentralizedPublicationsView.js's own catalog already
+        // does. `null` when nothing provides it — an existing, harmless
+        // no-op for `WorldEncounterCanvas`, matching every other optional
+        // collaborator here.
+        const worldEncounterPublicationAdmissionLog = inject('worldEncounterPublicationAdmissionLog', null);
         const registry = new CreateBrickRegistryUseCase().execute();
         const worldViewFactory = new CreateWorldViewUseCase().execute(identityUseCase.provider, {
             peerMessageBus,
@@ -4627,7 +4639,11 @@ export default {
             // `decentralizedPublicationDiscoveryProvider` prop, below.
             // No second inject(), no second provider: one dependency,
             // two consumers.
-            decentralizedDiscoveryProviderForEnrichment
+            decentralizedDiscoveryProviderForEnrichment,
+            // 0.9.651 — exposed to the template so it can be handed to
+            // WorldEncounterCanvas as its own new `publicationAdmissionLog`
+            // prop, below.
+            worldEncounterPublicationAdmissionLog
         };
     },
     template: `
@@ -5099,7 +5115,19 @@ export default {
                      into Open/Fork/Explore for a Publication it already
                      fully resolved, without this component ever
                      performing navigation of its own — see
-                     WorldEncounterCanvas.js's own "0.9.558" header. -->
+                     WorldEncounterCanvas.js's own "0.9.558" header.
+
+                     0.9.651 — publicationAdmissionLog, a new
+                     WorldEncounterCanvas prop, bound to this file's own
+                     setup()-level worldEncounterPublicationAdmissionLog
+                     (injected above) — the SAME app-wide
+                     LocalWorldEncounterPublicationAdmissionLog ui/main.js
+                     already reconstructs into
+                     decentralizedDiscoveryProviderForEnrichment at startup.
+                     Lets a resolved, AVAILABLE+VERIFIED World Encounter
+                     admission durably survive a restart, independent of
+                     decentralizedPublicationDiscoveryProvider above — see
+                     WorldEncounterCanvas.js's own "0.9.651" header. -->
                 <CollapsibleSection
                     title="World Encounters"
                     :collapsed="nearbySectionsCollapsed.worldEncounters"
@@ -5119,6 +5147,7 @@ export default {
                         :addPublicationCommentaryCommand="addPublicationCommentaryCommand"
                         :viewerIdentityId="myIdentityId"
                         :defaultDiscoveryTag="publicationDiscoveryTag"
+                        :publicationAdmissionLog="worldEncounterPublicationAdmissionLog"
                         :decentralizedPublicationDiscoveryProvider="decentralizedDiscoveryProviderForEnrichment"
                         :observerLocalEncounterRegistry="observerLocalEncounterStore"
                         :openPublicationCommand="openEncounteredPublicationCommand"
